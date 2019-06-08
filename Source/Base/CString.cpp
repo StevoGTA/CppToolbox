@@ -250,22 +250,22 @@ bool CString::isValidEmailAddress() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Must have at least one "@"
-	TArray<CString*>	array1 = breakUp(CString("@"));
-	bool				isValid = array1.getCount() >= 2;
+	TArray<CString>	array1 = breakUp(CString("@"));
+	bool			isValid = array1.getCount() >= 2;
 	if (isValid) {
 		// Before the last "@", can be pretty much anything.
-		TArray<CString*>	array2 = array1[array1.getCount() - 1]->breakUp(CString("."));
+		TArray<CString>	array2 = array1[array1.getCount() - 1].breakUp(CString("."));
 
 		// After the last "@", must have at least one "."
 		isValid = array2.getCount() >= 2;
 
 		// Each segment separated by "." must have at least one character
 		for (CArrayItemIndex i = 0; isValid && (i < array2.getCount()); i++)
-			isValid = !(*array2[i]).isEmpty();
+			isValid = !array2[i].isEmpty();
 
 		if (isValid) {
 			// The last segment must be an established domain or 2 letter country code
-			CString	string = *array2.getLast();
+			CString	string = array2.getLast();
 			isValid =
 					(string == CString("aero")) ||
 					(string == CString("biz")) ||

@@ -20,11 +20,6 @@ const	CDataSize	kCDataSizeUnknown = 0;
 typedef	UInt32	CDataByteIndex;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Events
-
-const	OSType	kEventParamData	= MAKE_OSTYPE('D', 'a', 't', 'a');	// CData*
-
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CData
 
 class CDataInternals;

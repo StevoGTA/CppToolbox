@@ -280,7 +280,7 @@ class CSetInternals {
 												DisposeOf(itemInfo);
 											}
 
-				TIterator<CHashable>	getIterator() const
+				TIteratorS<CHashable>	getIterator() const
 											{
 												// Setup
 												CSetIteratorInfo*	iteratorInfo =
@@ -300,7 +300,7 @@ class CSetInternals {
 																	&mItemInfos[iteratorInfo->mCurrentIndex]->mHashable;
 												}
 
-												return TIterator<CHashable>(firstValue, iteratorAdvance, *iteratorInfo);
+												return TIteratorS<CHashable>(firstValue, iteratorAdvance, *iteratorInfo);
 											}
 
 		static	void*					iteratorAdvance(CIteratorInfo& iteratorInfo)
@@ -427,7 +427,7 @@ CSet& CSet::removeAll()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIterator<CHashable> CSet::getIterator() const
+TIteratorS<CHashable> CSet::getIterator() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getIterator();
@@ -438,7 +438,7 @@ CSet& CSet::apply(CSetApplyProc applyProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all hashables
-	for (TIterator<CHashable> iterator = getIterator(); iterator.hasValue(); iterator.advance())
+	for (TIteratorS<CHashable> iterator = getIterator(); iterator.hasValue(); iterator.advance())
 		// Call proc
 		applyProc(iterator.getValue(), userData);
 

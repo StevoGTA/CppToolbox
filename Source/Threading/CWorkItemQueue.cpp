@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	COperationQueue.cpp			©2012 Stevo Brock	All rights reserved.
+//	CWorkItemQueue.cpp			©2012 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "COperationQueue.h"
+#include "CWorkItemQueue.h"
 
 #include "CArray.h"
 #include "CCoreServices.h"
@@ -10,121 +10,120 @@
 #include "CThread.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SOperationInfo
+// MARK: SWorkItemInfo
 
-struct SOperationInfo {
+struct SWorkItemInfo {
 	// Lifecycle methods
-	SOperationInfo(COperationQueueInternals& owningOperationQueueInternals, COperation& operation,
-			EOperationPriority priority) :
-		mOwningOperationQueueInternals(owningOperationQueueInternals), mOperation(operation), mPriority(priority),
+	SWorkItemInfo(CWorkItemQueueInternals& owningWorkItemQueueInternals, CWorkItem& workItem,
+			EWorkItemPriority priority) :
+		mOwningWorkItemQueueInternals(owningWorkItemQueueInternals), mWorkItem(workItem), mPriority(priority),
 				mIsPaused(false)
 		{}
 
 	// Properties
-	COperationQueueInternals&	mOwningOperationQueueInternals;
-	COperation&					mOperation;
-	EOperationPriority			mPriority;
+	CWorkItemQueueInternals&	mOwningWorkItemQueueInternals;
+	CWorkItem&					mWorkItem;
+	EWorkItemPriority			mPriority;
 	bool						mIsPaused;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - SOperationThreadInfo
-struct SOperationThreadInfo {
+// MARK: - SWorkItemThreadInfo
+
+struct SWorkItemThreadInfo {
 	// Lifecycle methods
-	SOperationThreadInfo(SOperationInfo* initialOperationInfo, CThreadProc threadProc, const CString& name) :
-		mOperationInfo(initialOperationInfo), mThread(threadProc, this, name)
+	SWorkItemThreadInfo(SWorkItemInfo* initialWorkItemInfo, CThreadProc threadProc, const CString& name) :
+		mWorkItemInfo(initialWorkItemInfo), mThread(threadProc, this, name)
 		{}
 
 	// Properties
 	CSemaphore		mSemaphore;
 	CThread			mThread;
-	SOperationInfo*	mOperationInfo;
+	SWorkItemInfo*	mWorkItemInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COperationInternals
+// MARK: - CWorkItemInternals
 
-class COperationInternals {
+class CWorkItemInternals {
 	public:
-		COperationInternals(bool disposeOnCompletion) :
+		CWorkItemInternals(bool disposeOnCompletion) :
 			mDisposeOnCompletion(disposeOnCompletion), mIsActive(false), mIsCancelled(false)
 			{}
-		~COperationInternals() {}
+		~CWorkItemInternals() {}
 
-		bool		mDisposeOnCompletion;
-		bool		mIsActive;
-		bool		mIsCancelled;
+		bool	mDisposeOnCompletion;
+		bool	mIsActive;
+		bool	mIsCancelled;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COperationQueueInternals
+// MARK: - CWorkItemQueueInternals
 
-class COperationQueueInternals {
+class CWorkItemQueueInternals {
 	public:
-		COperationQueueInternals() {}
-		~COperationQueueInternals() {}
+		CWorkItemQueueInternals() {}
+		~CWorkItemQueueInternals() {}
 
-		TArray<SOperationInfo*>	mOperationInfos;
+		TPtrArray<SWorkItemInfo*>	mWorkItemInfos;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CProcOperation
+// MARK: - CProcWorkItem
 
-class CProcOperation : public COperation {
+class CProcWorkItem : public CWorkItem {
 	public:
-				CProcOperation(CProcOperationProc proc, void* userData) :
-						COperation(true), mProc(proc), mUserData(userData)
-						{}
-				~CProcOperation() {}
+				CProcWorkItem(CWorkItemProc proc, void* userData) : CWorkItem(true), mProc(proc), mUserData(userData) {}
+				~CProcWorkItem() {}
 
 		void	perform()
 					{ mProc(mUserData, *this); }
 
-		CProcOperationProc	mProc;
-		void*				mUserData;
+		CWorkItemProc	mProc;
+		void*			mUserData;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local data
 
-static	TArray<SOperationInfo*>	sOperationInfos;
-static	CLock					sOperationInfosLock;
+static	TPtrArray<SWorkItemInfo*>	sWorkItemInfos;
+static	CLock						sWorkItemInfosLock;
 
-static	TArray<SOperationThreadInfo*>	sActiveOperationThreadInfos;
-static	TArray<SOperationThreadInfo*>	sIdleOperationThreadInfos;
-static	CLock							sOperationThreadInfosLock;
-static	CArrayItemCount					sMaxOperationThreads = CCoreServices::getTotalProcessorCoresCount() - 1;
+static	TPtrArray<SWorkItemThreadInfo*>	sActiveWorkitemThreadInfos;
+static	TPtrArray<SWorkItemThreadInfo*>	sIdleWorkitemThreadInfos;
+static	CLock							sWorkItemThreadInfosLock;
+static	CArrayItemCount					sMaxWorkItemThreads = CCoreServices::getTotalProcessorCoresCount() - 1;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	ECompareResult	sOperationInfoCompareProc(SOperationInfo* const operationInfo1,
-								SOperationInfo* const operationInfo2, void* userData);
-static	void			sProcessOperations();
+static	ECompareResult	sWorkItemInfoCompareProc(SWorkItemInfo* const workItemInfo1, SWorkItemInfo* const workItemInfo2,
+								void* userData);
+static	void			sProcessWorkItems();
 static	void			sThreadProc(const CThread& thread, void* userData);
-static	void			sOperationInfoCleanup(SOperationInfo* operationInfo);
+static	void			sWorkItemInfoCleanup(SWorkItemInfo* workItemInfo);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COperation
+// MARK: - CWorkItem
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-COperation::COperation(bool disposeOnCompletion)
+CWorkItem::CWorkItem(bool disposeOnCompletion)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COperationInternals(disposeOnCompletion);
+	mInternals = new CWorkItemInternals(disposeOnCompletion);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-COperation::~COperation()
+CWorkItem::~CWorkItem()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	DisposeOf(mInternals);
@@ -133,60 +132,60 @@ COperation::~COperation()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void COperation::cancel()
+void CWorkItem::cancel()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mIsCancelled = true;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool COperation::isCancelled() const
+bool CWorkItem::isCancelled() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mIsCancelled;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COperation::setActive(bool isActive)
+void CWorkItem::setActive(bool isActive)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mIsActive = isActive;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool COperation::isActive() const
+bool CWorkItem::isActive() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mIsActive;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COperation::finished() const
+void CWorkItem::finished() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if need dispose
 	if (mInternals->mDisposeOnCompletion) {
 		// Dispose
-		COperation*	THIS = (COperation*) this;
+		CWorkItem*	THIS = (CWorkItem*) this;
 		DisposeOf(THIS);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COperationQueue
+// MARK: - CWorkItemQueue
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-COperationQueue::COperationQueue()
+CWorkItemQueue::CWorkItemQueue()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COperationQueueInternals();
+	mInternals = new CWorkItemQueueInternals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-COperationQueue::~COperationQueue()
+CWorkItemQueue::~CWorkItemQueue()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	DisposeOf(mInternals);
@@ -195,60 +194,60 @@ COperationQueue::~COperationQueue()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void COperationQueue::add(COperation& operation, EOperationPriority priority)
+void CWorkItemQueue::add(CWorkItem& workItem, EWorkItemPriority priority)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SOperationInfo*	operationInfo = new SOperationInfo(*mInternals, operation, priority);
+	SWorkItemInfo*	workItemInfo = new SWorkItemInfo(*mInternals, workItem, priority);
 
 	// Add
-	sOperationInfosLock.lock();
-	mInternals->mOperationInfos += operationInfo;
-	sOperationInfos += operationInfo;
-	sOperationInfosLock.unlock();
+	sWorkItemInfosLock.lock();
+	mInternals->mWorkItemInfos += workItemInfo;
+	sWorkItemInfos += workItemInfo;
+	sWorkItemInfosLock.unlock();
 
-	// Process operations
-	sProcessOperations();
+	// Process work items
+	sProcessWorkItems();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-COperation& COperationQueue::add(CProcOperationProc proc, void* userData, EOperationPriority priority)
+CWorkItem& CWorkItemQueue::add(CWorkItemProc proc, void* userData, EWorkItemPriority priority)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create operation
-	CProcOperation*	procOperation = new CProcOperation(proc, userData);
+	// Create workItem
+	CProcWorkItem*	procWorkItem = new CProcWorkItem(proc, userData);
 
 	// Add
-	add(*procOperation, priority);
+	add(*procWorkItem, priority);
 
-	return *procOperation;
+	return *procWorkItem;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COperationQueue::pause()
+void CWorkItemQueue::pause()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Iterate all operation infos
-	sOperationInfosLock.lock();
-	for (CArrayItemIndex i = 0; i < mInternals->mOperationInfos.getCount(); i++)
+	// Iterate all workItem infos
+	sWorkItemInfosLock.lock();
+	for (CArrayItemIndex i = 0; i < mInternals->mWorkItemInfos.getCount(); i++)
 		// Mark as paused
-		mInternals->mOperationInfos[i]->mIsPaused = true;
-	sOperationInfosLock.unlock();
+		mInternals->mWorkItemInfos[i]->mIsPaused = true;
+	sWorkItemInfosLock.unlock();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COperationQueue::resume()
+void CWorkItemQueue::resume()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Iterate all operation infos
-	sOperationInfosLock.lock();
-	for (CArrayItemIndex i = 0; i < mInternals->mOperationInfos.getCount(); i++)
+	// Iterate all workItem infos
+	sWorkItemInfosLock.lock();
+	for (CArrayItemIndex i = 0; i < mInternals->mWorkItemInfos.getCount(); i++)
 		// Mark as not paused
-		mInternals->mOperationInfos[i]->mIsPaused = false;
-	sOperationInfosLock.unlock();
+		mInternals->mWorkItemInfos[i]->mIsPaused = false;
+	sWorkItemInfosLock.unlock();
 
-	// Process operations
-	sProcessOperations();
+	// Process work items
+	sProcessWorkItems();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -256,7 +255,7 @@ void COperationQueue::resume()
 // MARK: Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-ECompareResult sOperationInfoCompareProc(SOperationInfo* const operationInfo1, SOperationInfo* const operationInfo2,
+ECompareResult sWorkItemInfoCompareProc(SWorkItemInfo* const workItemInfo1, SWorkItemInfo* const workItemInfo2,
 		void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -264,23 +263,23 @@ ECompareResult sOperationInfoCompareProc(SOperationInfo* const operationInfo1, S
 	//	Active
 	//	Cancelled
 	//	Priority
-	if (operationInfo1->mOperation.isActive())
-		// Operation 1 is acive
+	if (workItemInfo1->mWorkItem.isActive())
+		// Work item 1 is acive
 		return kCompareResultBefore;
-	else if (operationInfo2->mOperation.isActive())
-		// Operation 2 is active
+	else if (workItemInfo2->mWorkItem.isActive())
+		// Work item 2 is active
 		return kCompareResultAfter;
-	else if (operationInfo1->mOperation.isCancelled())
-		// Operation 1 is cancelled
+	else if (workItemInfo1->mWorkItem.isCancelled())
+		// Work item 1 is cancelled
 		return kCompareResultBefore;
-	else if (operationInfo2->mOperation.isCancelled())
-		// Operation 2 is cancelled
+	else if (workItemInfo2->mWorkItem.isCancelled())
+		// Work item 2 is cancelled
 		return kCompareResultAfter;
-	else if (operationInfo1->mPriority < operationInfo2->mPriority)
-		// Operation 1 has a higher priority
+	else if (workItemInfo1->mPriority < workItemInfo2->mPriority)
+		// Work item 1 has a higher priority
 		return kCompareResultBefore;
-	else if (operationInfo2->mPriority < operationInfo1->mPriority)
-		// Operation 2 has a higher priority
+	else if (workItemInfo2->mPriority < workItemInfo1->mPriority)
+		// Work item 2 has a higher priority
 		return kCompareResultAfter;
 	else
 		// They be equivalent
@@ -288,63 +287,63 @@ ECompareResult sOperationInfoCompareProc(SOperationInfo* const operationInfo1, S
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void sProcessOperations()
+void sProcessWorkItems()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if can do another operation
-	sOperationThreadInfosLock.lock();
-	if (sActiveOperationThreadInfos.getCount() < sMaxOperationThreads) {
+	// Check if can do another workItem
+	sWorkItemThreadInfosLock.lock();
+	if (sActiveWorkitemThreadInfos.getCount() < sMaxWorkItemThreads) {
 		// Lock
-		sOperationInfosLock.lock();
+		sWorkItemInfosLock.lock();
 
 		// Sort
-		sOperationInfos.sort(sOperationInfoCompareProc);
+		sWorkItemInfos.sort(sWorkItemInfoCompareProc);
 
-		// Iterate until we find an operation to perform
-		for (CArrayItemIndex i = 0; i < sOperationInfos.getCount();) {
-			// Check next operation
-			SOperationInfo*	operationInfo = sOperationInfos[i];
+		// Iterate until we find an workItem to perform
+		for (CArrayItemIndex i = 0; i < sWorkItemInfos.getCount();) {
+			// Check next workItem
+			SWorkItemInfo*	workItemInfo = sWorkItemInfos[i];
 
 			// Check if active
-			if (operationInfo->mOperation.isActive()) {
+			if (workItemInfo->mWorkItem.isActive()) {
 				// Skip
 				i++;
 				continue;
 			}
 
-			if (operationInfo->mOperation.isCancelled())
+			if (workItemInfo->mWorkItem.isCancelled())
 				// Cancelled
-				sOperationInfoCleanup(operationInfo);
-			else if (operationInfo->mIsPaused)
+				sWorkItemInfoCleanup(workItemInfo);
+			else if (workItemInfo->mIsPaused)
 				// Skip
 				i++;
 			else {
-				// Perform this operation
-				operationInfo->mOperation.setActive(true);
-				if (sIdleOperationThreadInfos.getCount() > 0) {
+				// Perform this workItem
+				workItemInfo->mWorkItem.setActive(true);
+				if (sIdleWorkitemThreadInfos.getCount() > 0) {
 					// Resume an idle thread
-					SOperationThreadInfo*	operationThreadInfo = sIdleOperationThreadInfos[0];
-					sIdleOperationThreadInfos.removeAtIndex(0);
+					SWorkItemThreadInfo*	workItemThreadInfo = sIdleWorkitemThreadInfos[0];
+					sIdleWorkitemThreadInfos.removeAtIndex(0);
 
-					operationThreadInfo->mOperationInfo = operationInfo;
-					operationThreadInfo->mSemaphore.signal();
+					workItemThreadInfo->mWorkItemInfo = workItemInfo;
+					workItemThreadInfo->mSemaphore.signal();
 
-					sActiveOperationThreadInfos += operationThreadInfo;
+					sActiveWorkitemThreadInfos += workItemThreadInfo;
 				} else
 					// Create new active thread
-					sActiveOperationThreadInfos +=
-							new SOperationThreadInfo(operationInfo, sThreadProc,
-									CString("COperationQueue Thread #") +
-											CString(sActiveOperationThreadInfos.getCount() + 1));
+					sActiveWorkitemThreadInfos +=
+							new SWorkItemThreadInfo(workItemInfo, sThreadProc,
+									CString("CWorkItemQueue Thread #") +
+											CString(sActiveWorkitemThreadInfos.getCount() + 1));
 
 				break;
 			}
 		}
 
 		// Unlock
-		sOperationInfosLock.unlock();
+		sWorkItemInfosLock.unlock();
 	}
-	sOperationThreadInfosLock.unlock();
+	sWorkItemThreadInfosLock.unlock();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -352,42 +351,42 @@ void sThreadProc(const CThread& thread, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SOperationThreadInfo*	operationThreadInfo = (SOperationThreadInfo*) userData;
+	SWorkItemThreadInfo*	workItemThreadInfo = (SWorkItemThreadInfo*) userData;
 
 	// Run forever
 	while (true) {
-		// Run operation
-		SOperationInfo*	operationInfo = operationThreadInfo->mOperationInfo;
-		operationInfo->mOperation.perform();
-		operationInfo->mOperation.setActive(false);
-		operationInfo->mOperation.finished();
+		// Run workItem
+		SWorkItemInfo*	workItemInfo = workItemThreadInfo->mWorkItemInfo;
+		workItemInfo->mWorkItem.perform();
+		workItemInfo->mWorkItem.setActive(false);
+		workItemInfo->mWorkItem.finished();
 
 		// Update
-		sOperationInfoCleanup(operationInfo);
-		operationThreadInfo->mOperationInfo = nil;
+		sWorkItemInfoCleanup(workItemInfo);
+		workItemThreadInfo->mWorkItemInfo = nil;
 
-		sOperationThreadInfosLock.lock();
-		sActiveOperationThreadInfos -= operationThreadInfo;
-		sIdleOperationThreadInfos += operationThreadInfo;
-		sOperationThreadInfosLock.unlock();
+		sWorkItemThreadInfosLock.lock();
+		sActiveWorkitemThreadInfos -= workItemThreadInfo;
+		sIdleWorkitemThreadInfos += workItemThreadInfo;
+		sWorkItemThreadInfosLock.unlock();
 
 		// Next
-		sProcessOperations();
+		sProcessWorkItems();
 
-		// Check if waiting on operation info
-		if (operationThreadInfo->mOperationInfo == nil)
+		// Check if waiting on workItem info
+		if (workItemThreadInfo->mWorkItemInfo == nil)
 			// Wait
-			operationThreadInfo->mSemaphore.waitFor();
+			workItemThreadInfo->mSemaphore.waitFor();
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void sOperationInfoCleanup(SOperationInfo* operationInfo)
+void sWorkItemInfoCleanup(SWorkItemInfo* workItemInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove from arrays
-	sOperationInfosLock.lock();
-	sOperationInfos -= operationInfo;
-	operationInfo->mOwningOperationQueueInternals.mOperationInfos -= operationInfo;
-	sOperationInfosLock.unlock();
+	sWorkItemInfosLock.lock();
+	sWorkItemInfos -= workItemInfo;
+	workItemInfo->mOwningWorkItemQueueInternals.mWorkItemInfos -= workItemInfo;
+	sWorkItemInfosLock.unlock();
 }

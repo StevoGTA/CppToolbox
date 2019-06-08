@@ -26,14 +26,14 @@ template <typename T> struct T2DPoint {
 						T2DPoint(const CString& string)
 							{
 								// {0.0,0.0} => ,0.0,0.0}
-								CString				stringUse(string);
-								TArray<CString*>	array =
-															stringUse.replaceSubStrings(CString("{"), CString(","))
-																	.breakUp(CString(","));
+								CString			stringUse(string);
+								TArray<CString>	array =
+														stringUse.replaceSubStrings(CString("{"), CString(","))
+																.breakUp(CString(","));
 								if (array.getCount() >= 3) {
 									// Extract values
-									mX = array[1]->getFloat32();
-									mY = array[2]->getFloat32();
+									mX = array[1].getFloat32();
+									mY = array[2].getFloat32();
 								} else {
 									// Use default values
 									mX = 0.0;
@@ -100,14 +100,14 @@ template <typename T> struct T2DSize {
 					T2DSize(const CString& string)
 						{
 							// {0.0,0.0} => ,0.0,0.0}
-							CString				stringUse(string);
-							TArray<CString*>	array =
-														stringUse.replaceSubStrings(CString("{"), CString(","))
-																.breakUp(CString(","));
+							CString			stringUse(string);
+							TArray<CString>	array =
+													stringUse.replaceSubStrings(CString("{"), CString(","))
+															.breakUp(CString(","));
 							if (array.getCount() >= 3) {
 								// Extract values
-								mWidth = array[1]->getFloat32();
-								mHeight = array[2]->getFloat32();
+								mWidth = array[1].getFloat32();
+								mHeight = array[2].getFloat32();
 							} else {
 								// Use default values
 								mWidth = 0.0;
@@ -197,16 +197,16 @@ template <typename T> struct T2DRect {
 					T2DRect(const CString& string)
 						{
 							// {{0.0,0.0},{0.0,0.0}} => ,,0.0,0.0},,0.0,0.0}}
-							CString				stringUse(string);
-							TArray<CString*>	array =
-														stringUse.replaceSubStrings(CString("{"), CString(","))
-																.breakUp(CString(","));
+							CString			stringUse(string);
+							TArray<CString>	array =
+													stringUse.replaceSubStrings(CString("{"), CString(","))
+															.breakUp(CString(","));
 							if (array.getCount() >= 7) {
 								// Extract values
-								mOrigin.mX = array[2]->getFloat32();
-								mOrigin.mY = array[3]->getFloat32();
-								mSize.mWidth = array[5]->getFloat32();
-								mSize.mHeight = array[6]->getFloat32();
+								mOrigin.mX = array[2].getFloat32();
+								mOrigin.mY = array[3].getFloat32();
+								mSize.mWidth = array[5].getFloat32();
+								mSize.mHeight = array[6].getFloat32();
 							} else {
 								// Use default values
 								mOrigin.mX = 0.0;

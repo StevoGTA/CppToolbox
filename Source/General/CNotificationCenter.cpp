@@ -46,7 +46,7 @@ class CNotificationCenterInternals {
 		void	registerObserver(const CString& notificationName, SNotificationObserverInfo* observerInfo)
 					{
 						// Get existing observer infos
-						TArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
+						TPtrArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
 
 						// Add
 						if (array != nil)
@@ -54,12 +54,12 @@ class CNotificationCenterInternals {
 							array->add(observerInfo);
 						else
 							// First
-							mInfo.set(notificationName, new TArray<SNotificationObserverInfo*>(observerInfo, true));
+							mInfo.set(notificationName, new TPtrArray<SNotificationObserverInfo*>(observerInfo, true));
 					}
 		void	unregisterObserver(const CString& notificationName, const void* observerRef)
 					{
 						// Get existing observer infos
-						TArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
+						TPtrArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
 
 						// Check if have any observer infos
 						if (array != nil) {
@@ -87,11 +87,11 @@ class CNotificationCenterInternals {
 		void	unregisterObserver(const void* observerRef)
 					{
 						// Iterate all notification names
-						for (TIterator<CString> iterator = mInfo.getKeys().getIterator(); iterator.hasValue();
+						for (TIteratorS<CString> iterator = mInfo.getKeys().getIterator(); iterator.hasValue();
 								iterator.advance()) {
 							// Get existing observer infos
 							CString&							notificationName = iterator.getValue();
-							TArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
+							TPtrArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
 							for (CArrayItemIndex i = array->getCount(); i > 0; i--) {
 								// Get info
 								SNotificationObserverInfo*	observerInfo = (*array)[i - 1];
@@ -113,11 +113,11 @@ class CNotificationCenterInternals {
 					{
 						// Iterate all notification names
 						bool	found = false;
-						for (TIterator<CString> iterator = mInfo.getKeys().getIterator(); iterator.hasValue();
+						for (TIteratorS<CString> iterator = mInfo.getKeys().getIterator(); iterator.hasValue();
 								iterator.advance()) {
 							// Get existing observer infos
 							CString&							notificationName = iterator.getValue();
-							TArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
+							TPtrArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
 							for (CArrayItemIndex i = array->getCount(); !found && (i > 0); i--) {
 								// Get info
 								SNotificationObserverInfo*	observerInfo = (*array)[i - 1];
@@ -142,7 +142,7 @@ class CNotificationCenterInternals {
 						}
 					}
 
-		TDictionary<TArray<SNotificationObserverInfo*>*>	mInfo;
+		TDictionary<TPtrArray<SNotificationObserverInfo*>*>	mInfo;
 		UInt32												mNextObserverIndex;
 };
 
@@ -221,12 +221,12 @@ void CNotificationCenter::send(const CString& notificationName, const void* send
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArray<SNotificationObserverInfo*>*	array = mInternals->mInfo[notificationName];
+	TPtrArray<SNotificationObserverInfo*>*	array = mInternals->mInfo[notificationName];
 
 	// Do we have observer infos?
 	if (array != nil) {
 		// Iterate observer infos
-		for (TIterator<SNotificationObserverInfo*> iterator = array->getIterator(); iterator.hasValue();
+		for (TIteratorS<SNotificationObserverInfo*> iterator = array->getIterator(); iterator.hasValue();
 				iterator.advance())
 			// Call proc
 			iterator.getValue()->callProc(notificationName, senderRef, info);

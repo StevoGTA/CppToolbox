@@ -11,11 +11,11 @@
 // MARK: Array utilities
 
 //----------------------------------------------------------------------------------------------------------------------
-TArrayT<CData> eArrayOfDatasFrom(CFArrayRef arrayRef)
+TArray<CData> eArrayOfDatasFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArrayT<CData>	array;
+	TArray<CData>	array;
 
 	// Get values
 	CFIndex		count = ::CFArrayGetCount(arrayRef);
@@ -29,11 +29,11 @@ TArrayT<CData> eArrayOfDatasFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArrayT<CDictionary> eArrayOfDictionariesFrom(CFArrayRef arrayRef)
+TArray<CDictionary> eArrayOfDictionariesFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArrayT<CDictionary>	array;
+	TArray<CDictionary>	array;
 
 	// Get values
 	CFIndex			count = ::CFArrayGetCount(arrayRef);
@@ -47,7 +47,7 @@ TArrayT<CDictionary> eArrayOfDictionariesFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFArrayRef eArrayCopyCFArrayRef(const TArrayT<CDictionary>& array)
+CFArrayRef eArrayCopyCFArrayRef(const TArray<CDictionary>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -214,7 +214,7 @@ CFDictionaryRef eDictionaryCopyCFDictionaryRef(const CDictionary& dictionary)
 											&kCFTypeDictionaryValueCallBacks);
 
 	// Copy all items
-	for (TIterator<SDictionaryItem> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TIteratorS<SDictionaryItem> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Get info
 		const	CString&			key = iterator.getValue().mKey;
 				CFStringRef			keyStringRef = eStringCopyCFStringRef(key);

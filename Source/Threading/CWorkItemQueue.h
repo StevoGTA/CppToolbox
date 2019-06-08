@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	COperationQueue.h			©2012 Stevo Brock	All rights reserved.
+//	CWorkItemQueue.h			©2012 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -7,28 +7,28 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Procs
 
-class COperation;
-typedef	void	(*CProcOperationProc)(void* userData, COperation& operation);
+class CWorkItem;
+typedef	void	(*CWorkItemProc)(void* userData, CWorkItem& workItem);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Priority
 
-enum EOperationPriority {
-	kOperationPriorityHigh,
-	kOperationPriorityNormal,
-	kOperationPriorityBackground,
+enum EWorkItemPriority {
+	kWorkItemPriorityHigh,
+	kWorkItemPriorityNormal,
+	kWorkItemPriorityBackground,
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COperation
+// MARK: - CWorkItem
 
-class COperationInternals;
-class COperation {
+class CWorkItemInternals;
+class CWorkItem {
 	// Methods
 	public:
 						// Lifecycle methods
-						COperation(bool disposeOnCompletion = false);
-		virtual			~COperation();
+						CWorkItem(bool disposeOnCompletion = false);
+		virtual			~CWorkItem();
 		
 						// Instance methods
 				void	cancel();
@@ -43,32 +43,32 @@ class COperation {
 
 	// Properties
 	private:
-		COperationInternals*	mInternals;
+		CWorkItemInternals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COperationQueue
+// MARK: - CWorkItemQueue
 
-class COperationQueueInternals;
-class COperationQueue {
+class CWorkItemQueueInternals;
+class CWorkItemQueue {
 	// Methods
 	public:
 							// Lifecycle methods
-							COperationQueue();
-		virtual				~COperationQueue();
+							CWorkItemQueue();
+		virtual				~CWorkItemQueue();
 		
 							// Instance methods
-				void		add(COperation& operation, EOperationPriority priority = kOperationPriorityNormal);
-				COperation&	add(CProcOperationProc proc, void* userData,
-									EOperationPriority priority = kOperationPriorityNormal);
+				void		add(CWorkItem& workItem, EWorkItemPriority priority = kWorkItemPriorityNormal);
+				CWorkItem&	add(CWorkItemProc proc, void* userData,
+									EWorkItemPriority priority = kWorkItemPriorityNormal);
 
 				void		pause();
 				void		resume();
 
 	// Properties
 	public:
-		static	COperationQueue&			mDefault;
+		static	CWorkItemQueue&				mDefault;
 
 	private:
-				COperationQueueInternals*	mInternals;
+				CWorkItemQueueInternals*	mInternals;
 };

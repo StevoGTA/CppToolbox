@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CIteratorInfo
-//	Will be deleted when the TIterator is deleted
+//	Will be deleted when the Iterator is deleted
 
 class CIteratorInfo {
 	// Methods
@@ -28,20 +28,20 @@ typedef	void*	(*CIteratorAdvanceProc)(CIteratorInfo& iteratorInfo);		// Return n
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TIterator
+// MARK: - TIteratorS (for single dereference!)
 
-template <typename T> class TIterator /* : public CIterator */ {
+template <typename T> class TIteratorS {
 	// Methods
 	public:
 				// Lifecycle methods
-				TIterator(T* firstValue, CIteratorAdvanceProc advanceProc, CIteratorInfo& iteratorInfo) :
+				TIteratorS(T* firstValue, CIteratorAdvanceProc advanceProc, CIteratorInfo& iteratorInfo) :
 					mCurrentValue(firstValue), mAdvanceProc(advanceProc), mIteratorInfo(iteratorInfo)
 					{}
-				TIterator(const TIterator* other) :
+				TIteratorS(const TIteratorS* other) :
 					mCurrentValue(other->mCurrentValue), mAdvanceProc(other->mAdvanceProc),
 							mIteratorInfo(*other->mIteratorInfo.copy())
 					{}
-				~TIterator()
+				~TIteratorS()
 					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; DisposeOf(iteratorInfo); }
 
 				// Instance methods
@@ -58,4 +58,38 @@ template <typename T> class TIterator /* : public CIterator */ {
 		CIteratorAdvanceProc	mAdvanceProc;
 		CIteratorInfo&			mIteratorInfo;
 		T*						mCurrentValue;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TIteratorD (for double dereference!)
+
+template <typename T> class TIteratorD {
+	// Methods
+	public:
+				// Lifecycle methods
+				TIteratorD(T** firstValue, CIteratorAdvanceProc advanceProc, CIteratorInfo& iteratorInfo) :
+					mCurrentValue(firstValue), mAdvanceProc(advanceProc), mIteratorInfo(iteratorInfo)
+					{}
+				TIteratorD(const TIteratorD* other) :
+					mCurrentValue(other->mCurrentValue), mAdvanceProc(other->mAdvanceProc),
+							mIteratorInfo(*other->mIteratorInfo.copy())
+					{}
+				~TIteratorD()
+					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; DisposeOf(iteratorInfo); }
+
+				// Instance methods
+		bool	advance()
+					{ mCurrentValue = (T**) mAdvanceProc(mIteratorInfo); return mCurrentValue != nil; }
+		bool	hasValue() const
+					{ return mCurrentValue != nil; }
+
+		T&		getValue() const
+					{ return **mCurrentValue; }
+
+	// Properties
+	private:
+		CIteratorAdvanceProc	mAdvanceProc;
+		CIteratorInfo&			mIteratorInfo;
+		T**						mCurrentValue;
 };

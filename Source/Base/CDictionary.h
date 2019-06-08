@@ -39,8 +39,8 @@ struct SDictionaryValue {
 	EDictionaryValueType	mValueType;
 	union {
 		bool					mBool;
-		TArrayT<CDictionary>*	mArrayOfDictionaries;
-		TArrayT<CString>*		mArrayOfStrings;
+		TArray<CDictionary>*	mArrayOfDictionaries;
+		TArray<CString>*		mArrayOfStrings;
 		CData*					mData;
 		CDictionary*			mDictionary;
 		CString*				mString;
@@ -89,11 +89,11 @@ class CDictionary {
 				bool						contains(const CString& key) const;
 
 				bool						getBool(const CString& key, bool notFoundValue = false) const;
-				TArrayT<CDictionary>		getArrayOfDictionaries(const CString& key,
-													const TArrayT<CDictionary>& notFoundValue = TArrayT<CDictionary>())
+				TArray<CDictionary>			getArrayOfDictionaries(const CString& key,
+													const TArray<CDictionary>& notFoundValue = TArray<CDictionary>())
 													const;
-				TArrayT<CString>			getArrayOfStrings(const CString& key,
-													const TArrayT<CString>& notFoundValue = TArrayT<CString>()) const;
+				TArray<CString>				getArrayOfStrings(const CString& key,
+													const TArray<CString>& notFoundValue = TArray<CString>()) const;
 				CData						getData(const CString& key, const CData& notFoundValue = CData::mEmpty)
 													const;
 				CDictionary					getDictionary(const CString& key,
@@ -143,8 +143,8 @@ class CDictionary {
 												{ outValue = getUInt64(key, notFoundValue); }
 
 				void						set(const CString& key, bool value);
-				void						set(const CString& key, const TArrayT<CDictionary>& value);
-				void						set(const CString& key, const TArrayT<CString>& value);
+				void						set(const CString& key, const TArray<CDictionary>& value);
+				void						set(const CString& key, const TArray<CString>& value);
 				void						set(const CString& key, const CData& value);
 				void						set(const CString& key, const CDictionary& value);
 				void						set(const CString& key, const CString& value);
@@ -163,7 +163,7 @@ class CDictionary {
 	virtual		void						remove(const CString& key);
 	virtual		void						removeAll();
 
-				TIterator<SDictionaryItem>	getIterator() const;
+				TIteratorS<SDictionaryItem>	getIterator() const;
 
 				CDictionary&				operator=(const CDictionary& other);
 //				bool						operator==(const CDictionary& other) const;
@@ -193,11 +193,11 @@ template <typename T> class TDictionary : public CDictionary {
 		const	T			get(const CString& key) const
 								{ return (T) CDictionary::getItemRef(key); }
 
-		const	TArray<T>	getValues() const
+		const	TPtrArray<T>	getValues() const
 								{
 									// Get values
-									TArray<T>	values;
-									for (TIterator<SDictionaryItem> iterator = getIterator();
+									TPtrArray<T>	values;
+									for (TIteratorS<SDictionaryItem> iterator = getIterator();
 											iterator.hasValue(); iterator.advance())
 										// Insert value
 										values.add((T) iterator.getValue().mValue.mValue.mItemRef);
@@ -234,7 +234,7 @@ template <typename T> class TDictionary : public CDictionary {
 				void		removeAll()
 								{
 									// Dispose all values
-									for (TIterator<SDictionaryItem> iterator = getIterator();
+									for (TIteratorS<SDictionaryItem> iterator = getIterator();
 											iterator.hasValue(); iterator.advance()) {
 										// Dispose of existing value
 										T	t = (T) iterator.getValue().mValue.mValue.mItemRef;
@@ -266,11 +266,11 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 		const	T			get(K key) const
 								{ return (T) CDictionary::getItemRef(CString(key)); }
 
-		const	TArray<T>	getValues() const
+		const	TPtrArray<T>	getValues() const
 								{
 									// Get values
-									TArray<T>	values;
-									for (TIterator<SDictionaryItem> iterator = getIterator();
+									TPtrArray<T>	values;
+									for (TIteratorS<SDictionaryItem> iterator = getIterator();
 											iterator.hasValue(); iterator.advance())
 										// Insert value
 										values.add((T) iterator.getValue().mValue.mValue.mItemRef);
@@ -307,7 +307,7 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 				void		removeAll()
 								{
 									// Dispose all values
-									for (TIterator<SDictionaryItem> iterator = getIterator();
+									for (TIteratorS<SDictionaryItem> iterator = getIterator();
 											iterator.hasValue(); iterator.advance()) {
 										// Dispose of existing value
 										T	t = (T) iterator.getValue().mValue.mValue.mItemRef;

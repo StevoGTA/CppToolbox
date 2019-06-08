@@ -243,14 +243,14 @@ class CArrayInternals {
 													return arrayInternals;
 												}
 
-				TIterator<CArrayItemRef>	getIterator() const
+				TIteratorS<CArrayItemRef>	getIterator() const
 												{
 													// Setup
 													CArrayIteratorInfo*	iteratorInfo =
 																				new CArrayIteratorInfo(*this,
 																						mReference);
 
-													return TIterator<CArrayItemRef>(
+													return TIteratorS<CArrayItemRef>(
 															(mCurrentCount > 0) ? mItemRefs : nil, iteratorAdvance,
 															*iteratorInfo);
 												}
@@ -494,7 +494,7 @@ CArray& CArray::removeAll()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIterator<CArrayItemRef> CArray::getIterator() const
+TIteratorS<CArrayItemRef> CArray::getIterator() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getIterator();

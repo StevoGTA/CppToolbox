@@ -863,11 +863,11 @@ CString CString::getCommonBeginning(const CString& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString*> CString::breakUp(const CString& delimiterString, bool respectQuotes) const
+TArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuotes) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArray<CString*>	array;
+	TArray<CString>	array;
 
 	if (respectQuotes) {
 		// Quotes around a string with the delimiter is not a real delimiter
@@ -880,7 +880,7 @@ TArray<CString*> CString::breakUp(const CString& delimiterString, bool respectQu
 				i++;
 			} else if (!inQuotes && (getSubString(i).beginsWith(delimiterString))) {
 				// Found delimiter
-				array.add(new CString(tempString));
+				array += tempString;
 				tempString = mEmpty;
 				i += delimiterString.getLength();
 			} else {
@@ -891,7 +891,7 @@ TArray<CString*> CString::breakUp(const CString& delimiterString, bool respectQu
 		}
 		
 		if (!tempString.isEmpty())
-			array.add(new CString(tempString));
+			array += tempString;
 	} else {
 		// Just do break up
 		CFStringRef	delimiterStringRef = eStringCopyCFStringRef(delimiterString);
@@ -901,11 +901,8 @@ TArray<CString*> CString::breakUp(const CString& delimiterString, bool respectQu
 		::CFRelease(delimiterStringRef);
 
 		for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++)
-			array.add(new CString((CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i)));
-
+			array += CString((CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i));
 		::CFRelease(arrayRef);
-		
-		return array;
 	}
 	
 	return array;

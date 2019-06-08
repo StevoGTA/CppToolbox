@@ -22,11 +22,11 @@ struct SDictionaryItemInfo {
 					if (mItem.mValue.mValueType == kDictionaryValueTypeArrayOfDictionaries)
 						// Array of dictionaries
 						mItem.mValue.mValue.mArrayOfDictionaries =
-								new TArrayT<CDictionary>(*mItem.mValue.mValue.mArrayOfDictionaries);
+								new TArray<CDictionary>(*mItem.mValue.mValue.mArrayOfDictionaries);
 					else if (mItem.mValue.mValueType == kDictionaryValueTypeArrayOfStrings)
 						// Array of strings
 						mItem.mValue.mValue.mArrayOfStrings =
-								new TArrayT<CString>(*mItem.mValue.mValue.mArrayOfStrings);
+								new TArray<CString>(*mItem.mValue.mValue.mArrayOfStrings);
 					else if (mItem.mValue.mValueType == kDictionaryValueTypeData)
 						// Data
 						mItem.mValue.mValue.mData = new CData(*mItem.mValue.mValue.mData);
@@ -321,7 +321,7 @@ class CDictionaryInternals {
 													DisposeOf(itemInfo);
 												}
 
-				TIterator<SDictionaryItem>	getIterator() const
+				TIteratorS<SDictionaryItem>	getIterator() const
 												{
 													// Setup
 													CDictionaryIteratorInfo*	iteratorInfo =
@@ -340,7 +340,7 @@ class CDictionaryInternals {
 														firstItem = &mItemInfos[iteratorInfo->mCurrentIndex]->mItem;
 													}
 
-													return TIterator<SDictionaryItem>(firstItem, iteratorAdvance,
+													return TIteratorS<SDictionaryItem>(firstItem, iteratorAdvance,
 															*iteratorInfo);
 												}
 
@@ -445,7 +445,7 @@ TSet<CString> CDictionary::getKeys() const
 	TSet<CString>	keys;
 
 	// Iterate all items
-	for (TIterator<SDictionaryItem> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance())
+	for (TIteratorS<SDictionaryItem> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance())
 		// Add key
 		keys.add(iterator.getValue().mKey);
 
@@ -481,7 +481,7 @@ bool CDictionary::getBool(const CString& key, bool notFoundValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArrayT<CDictionary> CDictionary::getArrayOfDictionaries(const CString& key, const TArrayT<CDictionary>& notFoundValue)
+TArray<CDictionary> CDictionary::getArrayOfDictionaries(const CString& key, const TArray<CDictionary>& notFoundValue)
 		const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -503,7 +503,7 @@ TArrayT<CDictionary> CDictionary::getArrayOfDictionaries(const CString& key, con
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArrayT<CString> CDictionary::getArrayOfStrings(const CString& key, const TArrayT<CString>& notFoundValue) const
+TArray<CString> CDictionary::getArrayOfStrings(const CString& key, const TArray<CString>& notFoundValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
@@ -903,26 +903,26 @@ void CDictionary::set(const CString& key, bool value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDictionary::set(const CString& key, const TArrayT<CDictionary>& value)
+void CDictionary::set(const CString& key, const TArray<CDictionary>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	SDictionaryValue	dictionaryValue;
 	dictionaryValue.mValueType = kDictionaryValueTypeArrayOfDictionaries;
-	dictionaryValue.mValue.mArrayOfDictionaries = new TArrayT<CDictionary>(value);
+	dictionaryValue.mValue.mArrayOfDictionaries = new TArray<CDictionary>(value);
 
 	// Store
 	mInternals = mInternals->set(key, dictionaryValue);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDictionary::set(const CString& key, const TArrayT<CString>& value)
+void CDictionary::set(const CString& key, const TArray<CString>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	SDictionaryValue	dictionaryValue;
 	dictionaryValue.mValueType = kDictionaryValueTypeArrayOfStrings;
-	dictionaryValue.mValue.mArrayOfStrings = new TArrayT<CString>(value);
+	dictionaryValue.mValue.mArrayOfStrings = new TArray<CString>(value);
 
 	// Store
 	mInternals = mInternals->set(key, dictionaryValue);
@@ -1127,7 +1127,7 @@ void CDictionary::removeAll()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIterator<SDictionaryItem> CDictionary::getIterator() const
+TIteratorS<SDictionaryItem> CDictionary::getIterator() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getIterator();

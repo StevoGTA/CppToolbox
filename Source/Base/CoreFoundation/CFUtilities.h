@@ -8,9 +8,9 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Array utilities
-extern	TArrayT<CData>			eArrayOfDatasFrom(CFArrayRef arrayRef);
-extern	TArrayT<CDictionary>	eArrayOfDictionariesFrom(CFArrayRef arrayRef);
-extern	CFArrayRef				eArrayCopyCFArrayRef(const TArrayT<CDictionary>& array);
+extern	TArray<CData>		eArrayOfDatasFrom(CFArrayRef arrayRef);
+extern	TArray<CDictionary>	eArrayOfDictionariesFrom(CFArrayRef arrayRef);
+extern	CFArrayRef			eArrayCopyCFArrayRef(const TArray<CDictionary>& array);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Data utilities

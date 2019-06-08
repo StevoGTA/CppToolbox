@@ -45,7 +45,7 @@ class CSet {
 				CSet&					remove(const CHashable& hashable);
 				CSet&					removeAll();
 
-				TIterator<CHashable>	getIterator() const;
+				TIteratorS<CHashable>	getIterator() const;
 				CSet&					apply(CSetApplyProc applyProc, void* userData = nil);
 
 				CSet&					operator=(const CSet& other);
@@ -73,7 +73,7 @@ template <typename T> class TSet : public CSet {
 		TSet<T>&		addFrom(const TSet<T>& other)
 							{
 								// Iterate all
-								for (TIterator<T> iterator = other.getIterator(); iterator.hasValue();
+								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
 										iterator.advance())
 									// Add
 									CSet::add(new T(iterator.getValue()));
@@ -86,7 +86,7 @@ template <typename T> class TSet : public CSet {
 		TSet<T>&		removeFrom(const TSet<T>& other)
 							{
 								// Iterate all
-								for (TIterator<T> iterator = other.getIterator(); iterator.hasValue();
+								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
 										iterator.advance())
 									// Add
 									CSet::remove(T(iterator.getValue()));
@@ -99,9 +99,9 @@ template <typename T> class TSet : public CSet {
 		TSet<T>&		apply(void (proc)(const T item, void* userData), void* userData = nil)
 							{ CSet::apply((CSetApplyProc) proc, userData); return *this; }
 
-		TIterator<T>	getIterator() const
-							{ TIterator<CHashable> iterator = CSet::getIterator();
-									return TIterator<T>((TIterator<T>*) &iterator); }
+		TIteratorS<T>	getIterator() const
+							{ TIteratorS<CHashable> iterator = CSet::getIterator();
+									return TIteratorS<T>((TIteratorS<T>*) &iterator); }
 
 		TSet<T>&		operator=(const TSet<T>& other)
 							{ CSet::operator=(other); return *this; }
