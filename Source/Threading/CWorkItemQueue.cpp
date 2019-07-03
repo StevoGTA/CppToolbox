@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CWorkItemQueue.cpp			©2012 Stevo Brock	All rights reserved.
+//	CWorkItemQueue.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CWorkItemQueue.h"
@@ -91,8 +91,8 @@ class CProcWorkItem : public CWorkItem {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local data
 
-static	TPtrArray<SWorkItemInfo*>	sWorkItemInfos;
-static	CLock						sWorkItemInfosLock;
+static	TPtrArray<SWorkItemInfo*>		sWorkItemInfos;
+static	CLock							sWorkItemInfosLock;
 
 static	TPtrArray<SWorkItemThreadInfo*>	sActiveWorkitemThreadInfos;
 static	TPtrArray<SWorkItemThreadInfo*>	sIdleWorkitemThreadInfos;

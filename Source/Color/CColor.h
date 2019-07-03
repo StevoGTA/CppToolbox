@@ -160,7 +160,7 @@ struct SHSVColorTransform {
 // MARK: - CColor
 
 class CColorInternals;
-class CColor {
+class CColor : public CEquatable {
 	// Methods
 	public:
 									// Lifecycle methods
@@ -173,6 +173,10 @@ class CColor {
 									CColor(EColorType type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha);
 								
 									~CColor();
+
+									// CEquatable methods
+						bool		operator==(const CEquatable& other) const
+											{ return equals((const CColor&) other); }
 
 									// Instance methods
 						Float32		getRed() const;
@@ -187,10 +191,10 @@ class CColor {
 
 						CDictionary	getInfo() const;
 						CString		getInfoAsString() const;
-				
+
+						bool		equals(const CColor& other) const;
+
 						CColor&		operator=(const CColor& other);
-						bool		operator==(const CColor& other) const;
-						bool		operator!=(const CColor& other) const;
 
 						CColor		operator+(const CColor& other) const;
 
@@ -201,6 +205,8 @@ class CColor {
 
 									// Class methods
 		static	const	CColor*		getColorWithName(const CString& colorName);
+		static			bool		areEqual(const CColor& color1, const CColor& color2)
+											{ return color1 == color2; }
 
 	// Properties
 	public:

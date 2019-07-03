@@ -745,6 +745,21 @@ CString CColor::getInfoAsString() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+bool CColor::equals(const CColor& other) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mR == other.mInternals->mR &&
+			mInternals->mG == other.mInternals->mG &&
+			mInternals->mB == other.mInternals->mB &&
+
+			mInternals->mH == other.mInternals->mH &&
+			mInternals->mS == other.mInternals->mS &&
+			mInternals->mV == other.mInternals->mV &&
+
+			mInternals->mA == other.mInternals->mA;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CColor& CColor::operator=(const CColor& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -761,36 +776,6 @@ CColor& CColor::operator=(const CColor& other)
 	}
 	
 	return *this;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-bool CColor::operator==(const CColor& other) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mR == other.mInternals->mR &&
-			mInternals->mG == other.mInternals->mG &&
-			mInternals->mB == other.mInternals->mB &&
-
-			mInternals->mH == other.mInternals->mH &&
-			mInternals->mS == other.mInternals->mS &&
-			mInternals->mV == other.mInternals->mV &&
-
-			mInternals->mA == other.mInternals->mA;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-bool CColor::operator!=(const CColor& other) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mR != other.mInternals->mR ||
-			mInternals->mG != other.mInternals->mG ||
-			mInternals->mB != other.mInternals->mB ||
-
-			mInternals->mH != other.mInternals->mH ||
-			mInternals->mS != other.mInternals->mS ||
-			mInternals->mV != other.mInternals->mV ||
-
-			mInternals->mA != other.mInternals->mA;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

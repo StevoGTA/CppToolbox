@@ -28,9 +28,9 @@ class CStringInternals {
 				if (mStringRef != nil)
 					::CFRelease(mStringRef);
 			}
-		
-	char*				mBuffer;
-	CFMutableStringRef	mStringRef;
+			
+		char*				mBuffer;
+		CFMutableStringRef	mStringRef;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

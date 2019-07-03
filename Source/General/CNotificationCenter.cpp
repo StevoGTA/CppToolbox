@@ -5,33 +5,18 @@
 #include "CNotificationCenter.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SNotificationObserverInfo
+// MARK: SNotificationObserverFullInfo
 
-struct SNotificationObserverInfo {
+struct SNotificationObserverFullInfo {
 			// Lifecycle methods
-			SNotificationObserverInfo(const void* observerRef, NotificationProc proc, void* userData) :
-				mIsObserverRef(true), mProc(proc), mUserData(userData)
-				{
-					mObserverInfo.mObserverRef = observerRef;
-				}
-			SNotificationObserverInfo(UInt32 observerIndex, NotificationProc proc, void* userData) :
-				mIsObserverRef(false), mProc(proc), mUserData(userData)
-				{
-					mObserverInfo.mObserverIndex = observerIndex;
-				}
-
-			// Instance methods
-	void	callProc(const CString& notificationName, const void* senderRef, const CDictionary& info)
-				{ mProc(notificationName, senderRef, info, mUserData); }
+			SNotificationObserverFullInfo(const void* senderRef,
+					const SNotificationObserverInfo& notificationObserverInfo) :
+				mSenderRef(senderRef), mNotificationObserverInfo(notificationObserverInfo)
+				{}
 
 	// Properties
-	bool					mIsObserverRef;
-	union {
-		const	void*			mObserverRef;
-				UInt32			mObserverIndex;
-	}						mObserverInfo;
-	NotificationProc		mProc;
-	void*					mUserData;
+	const	void*						mSenderRef;
+			SNotificationObserverInfo	mNotificationObserverInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -40,110 +25,86 @@ struct SNotificationObserverInfo {
 
 class CNotificationCenterInternals {
 	public:
-				CNotificationCenterInternals() : mNextObserverIndex(0) {}
+				CNotificationCenterInternals() {}
 				~CNotificationCenterInternals() {}
 
-		void	registerObserver(const CString& notificationName, SNotificationObserverInfo* observerInfo)
+		void	registerObserver(const CString& notificationName, const void* senderRef,
+						const SNotificationObserverInfo& notificationObserverInfo)
 					{
+						// Setup
+						SNotificationObserverFullInfo*	notificationObserverFullInfo =
+																new SNotificationObserverFullInfo(senderRef,
+																		notificationObserverInfo);
+
 						// Get existing observer infos
-						TPtrArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
+						TPtrArray<SNotificationObserverFullInfo*>*	array = mInfo[notificationName];
 
 						// Add
 						if (array != nil)
 							// Add to existing set
-							array->add(observerInfo);
+							array->add(notificationObserverFullInfo);
 						else
 							// First
-							mInfo.set(notificationName, new TPtrArray<SNotificationObserverInfo*>(observerInfo, true));
+							mInfo.set(notificationName,
+									new TPtrArray<SNotificationObserverFullInfo*>(notificationObserverFullInfo, true));
 					}
 		void	unregisterObserver(const CString& notificationName, const void* observerRef)
 					{
 						// Get existing observer infos
-						TPtrArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
+						TPtrArray<SNotificationObserverFullInfo*>*	notificationObserverFullInfos =
+																			mInfo[notificationName];
+						if (notificationObserverFullInfos == nil)
+							// No observers
+							return;
 
-						// Check if have any observer infos
-						if (array != nil) {
-							// Iterate array
-							for (CArrayItemIndex i = 0; i < array->getCount(); i++) {
-								// Get info
-								SNotificationObserverInfo*	observerInfo = (*array)[i];
+						// Remove observers
+						unregisterObserver(observerRef, notificationObserverFullInfos);
 
-								// Check for match
-								if (observerInfo->mIsObserverRef &&
-										(observerInfo->mObserverInfo.mObserverRef == observerRef)) {
-									// Match
-									array->removeAtIndex(i);
-
-									// Check for empty array
-									if (array->getCount() == 0)
-										// Remove
+						// Check if have any left
+						if (notificationObserverFullInfos->isEmpty())
+							// No more observers for this notification name
 										mInfo.remove(notificationName);
-
-									return;
-								}
-							}
-						}
 					}
 		void	unregisterObserver(const void* observerRef)
 					{
 						// Iterate all notification names
-						for (TIteratorS<CString> iterator = mInfo.getKeys().getIterator(); iterator.hasValue();
+						TSet<CString>	keys = mInfo.getKeys();
+						for (TIteratorS<CString> iterator = keys.getIterator(); iterator.hasValue();
 								iterator.advance()) {
 							// Get existing observer infos
 							CString&							notificationName = iterator.getValue();
-							TPtrArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
-							for (CArrayItemIndex i = array->getCount(); i > 0; i--) {
-								// Get info
-								SNotificationObserverInfo*	observerInfo = (*array)[i - 1];
+							TPtrArray<SNotificationObserverFullInfo*>*	notificationObserverFullInfos =
+																				mInfo[notificationName];
 
-								// Check for match
-								if (observerInfo->mIsObserverRef &&
-										(observerInfo->mObserverInfo.mObserverRef == observerRef))
-									// Match
-									array->removeAtIndex(i - 1);
-							}
+							// Remove observers
+							unregisterObserver(observerRef, notificationObserverFullInfos);
 
-							// Check for empty array
-							if (array->getCount() == 0)
-								// Remove
+							// Check if have any left
+							if (notificationObserverFullInfos->isEmpty())
+								// No more observers for this notification name
 								mInfo.remove(notificationName);
 						}
 					}
-		void	unregisterObserver(UInt32 observerReference)
+
+	private:
+		void	unregisterObserver(const void* observerRef,
+						TPtrArray<SNotificationObserverFullInfo*>* notificationObserverFullInfos)
 					{
-						// Iterate all notification names
-						bool	found = false;
-						for (TIteratorS<CString> iterator = mInfo.getKeys().getIterator(); iterator.hasValue();
-								iterator.advance()) {
-							// Get existing observer infos
-							CString&							notificationName = iterator.getValue();
-							TPtrArray<SNotificationObserverInfo*>*	array = mInfo[notificationName];
-							for (CArrayItemIndex i = array->getCount(); !found && (i > 0); i--) {
+						// Iterate array
+						for (CArrayItemIndex i = notificationObserverFullInfos->getCount(); i > 0; i--) {
 								// Get info
-								SNotificationObserverInfo*	observerInfo = (*array)[i - 1];
+							SNotificationObserverFullInfo*	notificationObserverFullInfo =
+																	(*notificationObserverFullInfos)[i - 1];
 
 								// Check for match
-								if (!observerInfo->mIsObserverRef &&
-										(observerInfo->mObserverInfo.mObserverIndex == observerReference)) {
+							if (notificationObserverFullInfo->mNotificationObserverInfo.mObserverRef == observerRef)
 									// Match
-									array->removeAtIndex(i - 1);
-									found = true;
-								}
-							}
-
-							// Check for empty array
-							if (array->getCount() == 0)
-								// Remove
-								mInfo.remove(notificationName);
-
-							// Check found
-							if (found)
-								return;
+								notificationObserverFullInfos->removeAtIndex(i - 1);
 						}
 					}
 
-		TDictionary<TPtrArray<SNotificationObserverInfo*>*>	mInfo;
-		UInt32												mNextObserverIndex;
+	public:
+		TDictionary<TPtrArray<SNotificationObserverFullInfo*>*>	mInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -173,23 +134,21 @@ CNotificationCenter::~CNotificationCenter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::registerObserver(const CString& notificationName, const void* observerRef,
-		NotificationProc proc, void* userData)
+void CNotificationCenter::registerObserver(const CString& notificationName, const void* senderRef,
+		const SNotificationObserverInfo& notificationObserverInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add observer
-	mInternals->registerObserver(notificationName, new SNotificationObserverInfo(observerRef, proc, userData));
+	mInternals->registerObserver(notificationName, senderRef, notificationObserverInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CNotificationCenter::registerObserver(const CString& notificationName, NotificationProc proc, void* userData)
+void CNotificationCenter::registerObserver(const CString& notificationName,
+		const SNotificationObserverInfo& notificationObserverInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add observer
-	UInt32	observerIndex = mInternals->mNextObserverIndex++;
-	mInternals->registerObserver(notificationName, new SNotificationObserverInfo(observerIndex, proc, userData));
-
-	return observerIndex;
+	mInternals->registerObserver(notificationName, nil, notificationObserverInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -217,19 +176,29 @@ void CNotificationCenter::unregisterObserver(UInt32 observerReference)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::send(const CString& notificationName, const void* senderRef, const CDictionary& info)
+void CNotificationCenter::send(const CString& notificationName, const void* senderRef, const CDictionary& info) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TPtrArray<SNotificationObserverInfo*>*	array = mInternals->mInfo[notificationName];
+	TPtrArray<SNotificationObserverFullInfo*>*	array = mInternals->mInfo[notificationName];
+	if (array == nil)
+		// No observers
+		return;
 
-	// Do we have observer infos?
-	if (array != nil) {
 		// Iterate observer infos
-		for (TIteratorS<SNotificationObserverInfo*> iterator = array->getIterator(); iterator.hasValue();
-				iterator.advance())
+	for (TIteratorS<SNotificationObserverFullInfo*> iterator = array->getIterator(); iterator.hasValue();
+			iterator.advance()) {
+		// Get info
+		SNotificationObserverFullInfo*	notificationObserverFullInfo = iterator.getValue();
+
+		// Check sender
+		if ((notificationObserverFullInfo->mSenderRef != nil) &&
+				(notificationObserverFullInfo->mSenderRef != senderRef))
+			// Sender does not match
+			return;
+
 			// Call proc
-			iterator.getValue()->callProc(notificationName, senderRef, info);
+		notificationObserverFullInfo->mNotificationObserverInfo.callProc(notificationName, senderRef, info);
 	}
 }
 

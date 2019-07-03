@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CEquatable.h"
 #include "CIterator.h"
 #include "Compare.h"
 #include "SNumber.h"
@@ -24,6 +25,7 @@ typedef			UInt32	CArrayItemCount;
 typedef	void			(*CArrayApplyProc)(CArrayItemRef itemRef, void* userData);
 typedef	CArrayItemRef	(*CArrayItemCopyProc)(CArrayItemRef itemRef);
 typedef	void			(*CArrayItemDisposeProc)(CArrayItemRef itemRef);
+typedef bool			(*CArrayItemIsIncludedProc)(CArrayItemRef itemRef, void* userData);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Sorting
@@ -39,11 +41,15 @@ typedef	ECompareResult	(*CArrayCompareProc)(CArrayItemRef itemRef1, CArrayItemRe
 // MARK: - CArray
 
 class CArrayInternals;
-class CArray {
+class CArray : public CEquatable {
 	// Methods
 	public:
 											// Lifecycle methods
 		virtual								~CArray();
+
+											// CEquatable methods
+				bool						operator==(const CEquatable& other) const
+												{ return equals((const CArray&) other); }
 
 											// Instance methods
 				CArrayItemCount				getCount() const;
@@ -80,15 +86,17 @@ class CArray {
 				CArray&						removeAtIndex(CArrayItemIndex itemIndex);
 				CArray&						removeAll();
 
+				bool						equals(const CArray& other) const;
+
 				TIteratorS<CArrayItemRef>	getIterator() const;
 				CArray&						apply(CArrayApplyProc applyProc, void* userData = nil);
 
 				CArray&						sort(CArrayCompareProc compareProc, void* userData = nil);
+				CArray						sorted(CArrayCompareProc compareProc, void* userData = nil) const;
+
+				CArray						filtered(CArrayItemIsIncludedProc isIncludedProc, void* userData = nil);
 
 				CArray&						operator=(const CArray& other);
-				bool						operator==(const CArray& other) const;
-				bool						operator!=(const CArray& other) const
-												{ return !operator==(other); }
 				CArray&						operator+=(const CArray& other)
 												{ return addFrom(other); }
 
@@ -238,39 +246,56 @@ template <typename T> class TNumericArray : public CArray {
 
 	// Methods
 	public:
-											// Lifecycle methods
-											TNumericArray(CArrayItemCount initialCapacity = 0) :
-												CArray(initialCapacity, (CArrayItemCopyProc) copy, dispose)
-												{}
-											TNumericArray(const CArray& array, T (mappingProc)(CArrayItemRef item)) :
-												CArray(0, (CArrayItemCopyProc) copy, dispose)
-												{
-													for (CArrayItemIndex i = 0; i < array.getCount(); i++)
-														CArray::add(mappingProc(array.getItemAt(i)));
-												}
-											TNumericArray(const TNumericArray<T>& array) : CArray(array) {}
+													// Lifecycle methods
+													TNumericArray(CArrayItemCount initialCapacity = 0) :
+														CArray(initialCapacity, (CArrayItemCopyProc) copy, dispose)
+														{}
+													TNumericArray(const CArray& array,
+															T (mappingProc)(CArrayItemRef item)) :
+														CArray(0, (CArrayItemCopyProc) copy, dispose)
+														{
+															for (CArrayItemIndex i = 0; i < array.getCount(); i++)
+																CArray::add(mappingProc(array.getItemAt(i)));
+														}
+													TNumericArray(const TNumericArray<T>& array) : CArray(array) {}
 
-											// CArray methods
-						TNumericArray<T>&	add(T value)
-												{ CArray::add(new SNumberWrapper<T>(value)); return *this; }
+													// CArray methods
+				TNumericArray<T>&					add(T value)
+														{ CArray::add(new SNumberWrapper<T>(value)); return *this; }
 
-						T					getAt(CArrayItemIndex index) const
-												{ return ((SNumberWrapper<T>*) getItemAt(index))->mValue; }
+				T									getAt(CArrayItemIndex index) const
+														{ return ((SNumberWrapper<T>*) getItemAt(index))->mValue; }
 
-											// Instance methods
-						T					operator[] (CArrayItemIndex index) const
-												{ return ((SNumberWrapper<T>*) getItemAt(index))->mValue; }
-						TNumericArray<T>&	operator+=(T value)
-												{ CArray::add(new SNumberWrapper<T>(value)); return *this; }
+				TIteratorM<SNumberWrapper<T>, T>	getIterator() const
+														{
+															TIteratorS<CArrayItemRef> iterator = CArray::getIterator();
 
-											// Class methods
-		static	SNumberWrapper<T>*			copy(CArrayItemRef itemRef)
-												{ return new SNumberWrapper<T>(*((SNumberWrapper<T>*) itemRef)); }
-		static	void						dispose(CArrayItemRef itemRef)
-												{
-													SNumberWrapper<T>*	numberWrapper = (SNumberWrapper<T>*) itemRef;
-													DisposeOf(numberWrapper);
-												}
+															return TIteratorM<SNumberWrapper<T>, T>(
+																	(TIteratorM<SNumberWrapper<T>, T>*) &iterator,
+																	getValueForRawValue);
+														}
+
+													// Instance methods
+				T									operator[] (CArrayItemIndex index) const
+														{ return ((SNumberWrapper<T>*) getItemAt(index))->mValue; }
+				TNumericArray<T>&					operator+=(T value)
+														{ CArray::add(new SNumberWrapper<T>(value)); return *this; }
+
+													// Class methods
+		static	SNumberWrapper<T>*					copy(CArrayItemRef itemRef)
+														{ return new SNumberWrapper<T>(
+																*((SNumberWrapper<T>*) itemRef)); }
+		static	void								dispose(CArrayItemRef itemRef)
+														{
+															SNumberWrapper<T>*	numberWrapper =
+																						(SNumberWrapper<T>*) itemRef;
+															DisposeOf(numberWrapper);
+														}
+
+	private:
+													// Class methods
+		static	T									getValueForRawValue(SNumberWrapper<T>** rawValue)
+														{ return (*rawValue)->mValue; }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

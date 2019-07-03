@@ -15,7 +15,7 @@ struct SDictionaryItemInfo {
 			SDictionaryItemInfo(UInt32 keyHashValue, const SDictionaryItem& item) :
 				mKeyHashValue(keyHashValue), mItem(item), mNextItemInfo(nil)
 				{}
-			SDictionaryItemInfo(const SDictionaryItemInfo& itemInfo) :
+			SDictionaryItemInfo(const SDictionaryItemInfo& itemInfo, CDictionaryItemCopyProc itemCopyProc) :
 				mKeyHashValue(itemInfo.mKeyHashValue), mItem(itemInfo.mItem), mNextItemInfo(nil)
 				{
 					// Check value type
@@ -36,12 +36,15 @@ struct SDictionaryItemInfo {
 					else if (mItem.mValue.mValueType == kDictionaryValueTypeString)
 						// String
 						mItem.mValue.mValue.mString = new CString(*mItem.mValue.mValue.mString);
+					else if ((mItem.mValue.mValueType == kDictionaryValueTypeItemRef) && (itemCopyProc != nil))
+						// Item Ref and have item copy proc
+						mItem.mValue.mValue.mItemRef = itemCopyProc(mItem.mValue.mValue.mItemRef);
 				}
 
 			// Instance methods
 	bool	doesMatch(UInt32 hashValue, const CString& key)
 				{ return (hashValue == mKeyHashValue) && (key == mItem.mKey); }
-	void	disposeValue()
+	void	disposeValue(CDictionaryItemDisposeProc itemDisposeProc)
 				{
 					// Check value type
 					if (mItem.mValue.mValueType == kDictionaryValueTypeArrayOfDictionaries) {
@@ -59,7 +62,9 @@ struct SDictionaryItemInfo {
 					} else if (mItem.mValue.mValueType == kDictionaryValueTypeString) {
 						// String
 						DisposeOf(mItem.mValue.mValue.mString);
-					}
+					} else if ((mItem.mValue.mValueType == kDictionaryValueTypeItemRef) && (itemDisposeProc != nil))
+						// Item Ref and have item dispose proc
+						itemDisposeProc(mItem.mValue.mValue.mItemRef);
 				}
 
 	// Properties
@@ -107,8 +112,12 @@ struct CDictionaryIteratorInfo : public CIteratorInfo {
 
 class CDictionaryInternals {
 	public:
-											CDictionaryInternals() :
-												mCount(0), mReferenceCount(1), mReference(0), mItemInfosCount(16)
+											CDictionaryInternals(CDictionaryItemCopyProc itemCopyProc,
+													CDictionaryItemDisposeProc itemDisposeProc,
+													CDictionaryItemEqualsProc itemEqualsProc) :
+												mItemCopyProc(itemCopyProc), mItemDisposeProc(itemDisposeProc),
+														mItemEqualsProc(itemEqualsProc), mCount(0), mItemInfosCount(16),
+														mReferenceCount(1), mReference(0)
 												{
 													mItemInfos =
 															(SDictionaryItemInfo**)
@@ -117,6 +126,10 @@ class CDictionaryInternals {
 												}
 											~CDictionaryInternals()
 												{
+													// Remove all
+													removeAllInternal();
+
+													// Cleanup
 													::free(mItemInfos);
 												}
 
@@ -140,7 +153,10 @@ class CDictionaryInternals {
 													if (mReferenceCount > 1) {
 														// Multiple references, copy
 														CDictionaryInternals*	dictionaryInternals =
-																						new CDictionaryInternals();
+																						new CDictionaryInternals(
+																								mItemCopyProc,
+																								mItemDisposeProc,
+																								mItemEqualsProc);
 														dictionaryInternals->mCount = mCount;
 														dictionaryInternals->mReference = mReference;
 
@@ -154,13 +170,15 @@ class CDictionaryInternals {
 																if (dictionaryInternalsItemInfo == nil) {
 																	// First in this linked list
 																	dictionaryInternals->mItemInfos[i] =
-																			new SDictionaryItemInfo(*itemInfo);
+																			new SDictionaryItemInfo(*itemInfo,
+																					mItemCopyProc);
 																	dictionaryInternalsItemInfo =
 																			dictionaryInternals->mItemInfos[i];
 																} else {
 																	// Next one in this linked list
 																	dictionaryInternalsItemInfo->mNextItemInfo =
-																			new SDictionaryItemInfo(*itemInfo);
+																			new SDictionaryItemInfo(*itemInfo,
+																					mItemCopyProc);
 																	dictionaryInternalsItemInfo =
 																			dictionaryInternalsItemInfo->mNextItemInfo;
 																}
@@ -234,7 +252,7 @@ class CDictionaryInternals {
 														dictionaryInternals->mReference++;
 													} else {
 														// Did find a match
-														currentItemInfo->disposeValue();
+														currentItemInfo->disposeValue(mItemDisposeProc);
 														currentItemInfo->mItem.mValue = value;
 													}
 
@@ -287,26 +305,36 @@ class CDictionaryInternals {
 												}
 				CDictionaryInternals*		removeAll()
 												{
+													// Check if empty
+													if (mCount == 0)
+														// Nothing to remove
+														return this;
+
 													// Prepare for write
 													CDictionaryInternals*	dictionaryInternals = prepareForWrite();
 
-													// Iterate all item infos
-													for (UInt32 i = 0; i < dictionaryInternals->mItemInfosCount; i++) {
-														// Check if have an item info
-														if (dictionaryInternals->mItemInfos[i] != nil) {
-															// Remove this chain
-															remove(dictionaryInternals->mItemInfos[i], true);
-
-															// Clear
-															dictionaryInternals->mItemInfos[i] = nil;
-														}
-													}
+													// Remove all
+													dictionaryInternals->removeAllInternal();
 
 													// Update info
 													dictionaryInternals->mCount = 0;
 													dictionaryInternals->mReference++;
 
 													return dictionaryInternals;
+												}
+				void						removeAllInternal()
+												{
+													// Iterate all item infos
+													for (UInt32 i = 0; i < mItemInfosCount; i++) {
+														// Check if have an item info
+														if (mItemInfos[i] != nil) {
+															// Remove this chain
+															remove(mItemInfos[i], true);
+
+															// Clear
+															mItemInfos[i] = nil;
+														}
+													}
 												}
 				void						remove(SDictionaryItemInfo* itemInfo, bool removeAll)
 												{
@@ -316,7 +344,7 @@ class CDictionaryInternals {
 														remove(itemInfo->mNextItemInfo, true);
 
 													// Dispose
-													itemInfo->disposeValue();
+													itemInfo->disposeValue(mItemDisposeProc);
 
 													DisposeOf(itemInfo);
 												}
@@ -388,13 +416,22 @@ class CDictionaryInternals {
 															nil;
 												}
 
-		CDictionaryKeyCount		mCount;
-		UInt32					mReferenceCount;
-		UInt32					mReference;
-
-		SDictionaryItemInfo**	mItemInfos;
-		UInt32					mItemInfosCount;
+		CDictionaryItemCopyProc		mItemCopyProc;
+		CDictionaryItemDisposeProc	mItemDisposeProc;
+		CDictionaryItemEqualsProc	mItemEqualsProc;
+		CDictionaryKeyCount			mCount;
+		SDictionaryItemInfo**		mItemInfos;
+		UInt32						mItemInfosCount;
+		UInt32						mReferenceCount;
+		UInt32						mReference;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc declarations
+
+static	bool	sDictionaryValueIsEqualProc(const SDictionaryValue& value1, const SDictionaryValue& value2,
+						CDictionaryItemEqualsProc itemEqualsProc);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -405,11 +442,12 @@ CDictionary	CDictionary::mEmpty;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary::CDictionary()
+CDictionary::CDictionary(CDictionaryItemCopyProc itemCopyProc, CDictionaryItemDisposeProc itemDisposeProc,
+		CDictionaryItemEqualsProc itemEqualsProc)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDictionaryInternals();
+	mInternals = new CDictionaryInternals(itemCopyProc, itemDisposeProc, itemEqualsProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -881,8 +919,8 @@ CDictionaryItemRef CDictionary::getItemRef(const CString& key) const
 		return nil;
 
 	// Verify value type
-	AssertFailIf(value->mValueType != kDictionaryValueItemRef);
-	if (value->mValueType != kDictionaryValueItemRef)
+	AssertFailIf(value->mValueType != kDictionaryValueTypeItemRef);
+	if (value->mValueType != kDictionaryValueTypeItemRef)
 		// Return not found value
 		return nil;
 
@@ -1103,7 +1141,7 @@ void CDictionary::set(const CString& key, CDictionaryItemRef value)
 {
 	// Setup
 	SDictionaryValue	dictionaryValue;
-	dictionaryValue.mValueType = kDictionaryValueItemRef;
+	dictionaryValue.mValueType = kDictionaryValueTypeItemRef;
 	dictionaryValue.mValue.mItemRef = value;
 
 	// Store
@@ -1127,6 +1165,28 @@ void CDictionary::removeAll()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+bool CDictionary::equals(const CDictionary& other, void* itemCompareProcUserData) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check count
+	if (mInternals->mCount != other.mInternals->mCount)
+		// Counts differ
+		return false;
+
+	// Iterate all items
+	for (TIteratorS<SDictionaryItem> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance()) {
+		// Get value
+		SDictionaryItem		item = iterator.getValue();
+		SDictionaryValue*	value = other.mInternals->getValue(item.mKey);
+		if ((value == nil) || !sDictionaryValueIsEqualProc(item.mValue, *value, mInternals->mItemEqualsProc))
+			// Value not found or value is not the same
+			return false;
+	}
+
+	return true;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TIteratorS<SDictionaryItem> CDictionary::getIterator() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -1146,8 +1206,88 @@ CDictionary& CDictionary::operator=(const CDictionary& other)
 	return *this;
 }
 
-////----------------------------------------------------------------------------------------------------------------------
-//bool CDictionary::operator==(const CDictionary& other) const
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//}
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc definitions
+//----------------------------------------------------------------------------------------------------------------------
+bool sDictionaryValueIsEqualProc(const SDictionaryValue& value1, const SDictionaryValue& value2,
+		CDictionaryItemEqualsProc itemEqualsProc)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check value type
+	if (value1.mValueType != value2.mValueType)
+		// Mismatch
+		return false;
+
+	switch (value1.mValueType) {
+		case kDictionaryValueTypeBool:
+			// Bool
+			return value1.mValue.mBool == value2.mValue.mBool;
+
+		case kDictionaryValueTypeArrayOfDictionaries:
+			// Array of Dictionaries
+			return *value1.mValue.mArrayOfDictionaries == *value2.mValue.mArrayOfDictionaries;
+
+		case kDictionaryValueTypeArrayOfStrings:
+			// Array of Strings
+			return *value1.mValue.mArrayOfStrings == *value2.mValue.mArrayOfStrings;
+
+		case kDictionaryValueTypeData:
+			// Data
+			return *value1.mValue.mData == *value2.mValue.mData;
+
+		case kDictionaryValueTypeDictionary:
+			// Dictionary
+			return *value1.mValue.mDictionary == *value2.mValue.mDictionary;
+
+		case kDictionaryValueTypeString:
+			// String
+			return *value1.mValue.mString == *value2.mValue.mString;
+
+		case kDictionaryValueTypeFloat32:
+			// Float32
+			return value1.mValue.mFloat32 == value2.mValue.mFloat32;
+
+		case kDictionaryValueTypeFloat64:
+			// Float64
+			return value1.mValue.mFloat64 == value2.mValue.mFloat64;
+
+		case kDictionaryValueTypeSInt8:
+			// SInt8
+			return value1.mValue.mSInt8 == value2.mValue.mSInt8;
+
+		case kDictionaryValueTypeSInt16:
+			// SInt16
+			return value1.mValue.mSInt16 == value2.mValue.mSInt16;
+
+		case kDictionaryValueTypeSInt32:
+			// SInt32
+			return value1.mValue.mSInt32 == value2.mValue.mSInt32;
+
+		case kDictionaryValueTypeSInt64:
+			// SInt64
+			return value1.mValue.mSInt64 == value2.mValue.mSInt64;
+
+		case kDictionaryValueTypeUInt8:
+			// UInt8
+			return value1.mValue.mUInt8 == value2.mValue.mUInt8;
+
+		case kDictionaryValueTypeUInt16:
+			// UInt16
+			return value1.mValue.mUInt16 == value2.mValue.mUInt16;
+
+		case kDictionaryValueTypeUInt32:
+			// UInt32
+			return value1.mValue.mUInt32 == value2.mValue.mUInt32;
+
+		case kDictionaryValueTypeUInt64:
+			// UInt64
+			return value1.mValue.mUInt64 == value2.mValue.mUInt64;
+
+		case kDictionaryValueTypeItemRef:
+			// ItemRef
+			return (itemEqualsProc != nil) ?
+					itemEqualsProc(value1.mValue.mItemRef, value2.mValue.mItemRef) :
+					(value1.mValue.mItemRef == value2.mValue.mItemRef);
+	}
+}

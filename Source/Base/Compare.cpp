@@ -1,21 +1,20 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	Compare.h			©2019 Stevo Brock	All rights reserved.
+//	Compare.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#pragma once
-
-#include "PlatformDefinitions.h"
+#include "Compare.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Compare result
-
-enum ECompareResult {
-	kCompareResultBefore		= -1,
-	kCompareResultEquivalent	= 0,
-	kCompareResultAfter			= 1,
-};
+// MARK: Compare procs
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Compare procs
-
-extern	ECompareResult	eCompare(UInt32 value1, UInt32 value2);
+ECompareResult eCompare(UInt32 value1, UInt32 value2)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	if (value1 < value2)
+		return kCompareResultBefore;
+	else if (value1 > value2)
+		return kCompareResultAfter;
+	else
+		return kCompareResultEquivalent;
+}

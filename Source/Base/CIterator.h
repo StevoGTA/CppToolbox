@@ -23,8 +23,9 @@ class CIteratorInfo {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Types
-typedef	void*	(*CIteratorAdvanceProc)(CIteratorInfo& iteratorInfo);		// Return next value
+// MARK: - Procs
+
+typedef	void*	(*CIteratorAdvanceProc)(CIteratorInfo& iteratorInfo);	// Return next value
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -92,4 +93,41 @@ template <typename T> class TIteratorD {
 		CIteratorAdvanceProc	mAdvanceProc;
 		CIteratorInfo&			mIteratorInfo;
 		T**						mCurrentValue;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TIteratorM (for mapping dereference!)
+
+template <typename K, typename T> class TIteratorM {
+	// Methods
+	public:
+				// Lifecycle methods
+				TIteratorM(K** firstRawValue, T (mapProc)(K** rawValue), CIteratorAdvanceProc advanceProc,
+						CIteratorInfo& iteratorInfo) :
+					mCurrentRawValue(firstRawValue), mMapProc(mapProc), mAdvanceProc(advanceProc),
+							mIteratorInfo(iteratorInfo)
+					{}
+				TIteratorM(const TIteratorM* other, T (mapProc)(K** rawValue)) :
+					mCurrentRawValue(other->mCurrentRawValue), mAdvanceProc(other->mAdvanceProc),
+							mMapProc(mapProc), mIteratorInfo(*other->mIteratorInfo.copy())
+					{}
+				~TIteratorM()
+					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; DisposeOf(iteratorInfo); }
+
+				// Instance methods
+		bool	advance()
+					{ mCurrentRawValue = (K**) mAdvanceProc(mIteratorInfo); return mCurrentRawValue != nil; }
+		bool	hasValue() const
+					{ return mCurrentRawValue != nil; }
+
+		T		getValue() const
+					{ return mMapProc(mCurrentRawValue); }
+
+	// Properties
+	private:
+		CIteratorAdvanceProc	mAdvanceProc;
+		CIteratorInfo&			mIteratorInfo;
+		K**						mCurrentRawValue;
+		T 						(*mMapProc)(K** rawValue);
 };

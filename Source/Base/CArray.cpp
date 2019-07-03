@@ -52,7 +52,7 @@ class CArrayInternals {
 											CArrayInternals(CArrayItemCount initialCapacity,
 													CArrayItemCopyProc itemCopyProc,
 													CArrayItemDisposeProc itemDisposeProc) :
-												mCurrentCount(0), mIsSorted(true), mItemCopyProc(itemCopyProc),
+												mIsSorted(true), mCount(0), mItemCopyProc(itemCopyProc),
 														mItemDisposeProc(itemDisposeProc), mReferenceCount(1),
 														mReference(0)
 												{
@@ -64,18 +64,8 @@ class CArrayInternals {
 												}
 											~CArrayInternals()
 												{
-													// Setup
-													CArrayItemCount	itemCount = mCurrentCount;
-													mCurrentCount = 0;
-
-													// Check if owns items
-													if (mItemDisposeProc != nil) {
-														// Dispose each item
-														for (CArrayItemIndex i = 0; i < itemCount; i++) {
-															// Dispose
-															mItemDisposeProc(mItemRefs[i]);
-														}
-													}
+													// Remove all
+													removeAllInternal();
 
 													// Cleanup
 													::free(mItemRefs);
@@ -101,21 +91,21 @@ class CArrayInternals {
 													if (mReferenceCount > 1) {
 														// Multiple references, copy
 														CArrayInternals*	arrayInternals =
-																					new CArrayInternals(mCurrentCount,
+																					new CArrayInternals(mCount,
 																							mItemCopyProc,
 																							mItemDisposeProc);
-														arrayInternals->mCurrentCount = mCurrentCount;
+														arrayInternals->mCount = mCount;
 														arrayInternals->mIsSorted = mIsSorted;
 														if (mItemCopyProc != nil) {
 															// Copy each item
-															for (CArrayItemIndex i = 0; i < mCurrentCount; i++)
+															for (CArrayItemIndex i = 0; i < mCount; i++)
 																// Copy item
 																arrayInternals->mItemRefs[i] =
 																		mItemCopyProc(mItemRefs[i]);
 														} else
 															// Copy item refs
 															::memcpy(arrayInternals->mItemRefs, mItemRefs,
-																	mCurrentCount * sizeof(CArrayItemRef));
+																	mCount * sizeof(CArrayItemRef));
 
 														// One less reference here
 														mReferenceCount--;
@@ -133,7 +123,7 @@ class CArrayInternals {
 													CArrayInternals*	arrayInternals = prepareForWrite();
 
 													// Setup
-													CArrayItemCount	neededCount = arrayInternals->mCurrentCount + count;
+													CArrayItemCount	neededCount = arrayInternals->mCount + count;
 
 													// Check storage
 													if (neededCount > arrayInternals->mCapacity) {
@@ -148,9 +138,9 @@ class CArrayInternals {
 													}
 
 													// Append itemRefs into place
-													::memcpy(arrayInternals->mItemRefs + arrayInternals->mCurrentCount,
+													::memcpy(arrayInternals->mItemRefs + arrayInternals->mCount,
 															itemRefs, count * sizeof(CFArrayRef));
-													arrayInternals->mCurrentCount = neededCount;
+													arrayInternals->mCount = neededCount;
 
 													// Update info
 													arrayInternals->mIsSorted = false;
@@ -164,7 +154,7 @@ class CArrayInternals {
 													CArrayInternals*	arrayInternals = prepareForWrite();
 
 													// Setup
-													CArrayItemCount	neededCount = arrayInternals->mCurrentCount + 1;
+													CArrayItemCount	neededCount = arrayInternals->mCount + 1;
 
 													// Check storage
 													if (neededCount > arrayInternals->mCapacity) {
@@ -181,12 +171,12 @@ class CArrayInternals {
 													// Move following itemRefs back
 													::memmove(arrayInternals->mItemRefs + itemIndex + 1,
 															arrayInternals->mItemRefs + itemIndex,
-															(arrayInternals->mCurrentCount - itemIndex) *
+															(arrayInternals->mCount - itemIndex) *
 																	sizeof(CArrayItemRef));
 
 													// Store new itemRef
 													arrayInternals->mItemRefs[itemIndex] = itemRef;
-													arrayInternals->mCurrentCount++;
+													arrayInternals->mCount++;
 
 													// Update info
 													arrayInternals->mIsSorted = false;
@@ -207,11 +197,11 @@ class CArrayInternals {
 													// Move following itemRefs forward
 													::memmove(arrayInternals->mItemRefs + itemIndex,
 															arrayInternals->mItemRefs + itemIndex + 1,
-															(arrayInternals->mCurrentCount - itemIndex - 1) *
+															(arrayInternals->mCount - itemIndex - 1) *
 																	sizeof(CArrayItemRef));
 
 													// Update info
-													arrayInternals->mCurrentCount--;
+													arrayInternals->mCount--;
 													arrayInternals->mReference++;
 
 													return arrayInternals;
@@ -219,28 +209,32 @@ class CArrayInternals {
 				CArrayInternals*			removeAll()
 												{
 													// Check if empty
-													if (mCurrentCount == 0)
+													if (mCount == 0)
 														// Nothing to remove
 														return this;
 
 													// Prepare for write
 													CArrayInternals*	arrayInternals = prepareForWrite();
 
-													// Check if owns items
-													if (mItemDisposeProc != nil) {
-														// Dispose each item
-														for (CArrayItemIndex i = 0; i < arrayInternals->mCurrentCount;
-																i++) {
-															// Dispose
-															mItemDisposeProc(arrayInternals->mItemRefs[i]);
-														}
-													}
+													// Remove all
+													arrayInternals->removeAllInternal();
 
 													// Update info
-													arrayInternals->mCurrentCount = 0;
+													arrayInternals->mCount = 0;
 													arrayInternals->mReference++;
 
 													return arrayInternals;
+												}
+				void						removeAllInternal()
+												{
+													// Check if have item dispose proc
+													if (mItemDisposeProc != nil) {
+														// Dispose each item
+														for (CArrayItemIndex i = 0; i < mCount; i++) {
+															// Dispose
+															mItemDisposeProc(mItemRefs[i]);
+														}
+													}
 												}
 
 				TIteratorS<CArrayItemRef>	getIterator() const
@@ -250,9 +244,8 @@ class CArrayInternals {
 																				new CArrayIteratorInfo(*this,
 																						mReference);
 
-													return TIteratorS<CArrayItemRef>(
-															(mCurrentCount > 0) ? mItemRefs : nil, iteratorAdvance,
-															*iteratorInfo);
+													return TIteratorS<CArrayItemRef>((mCount > 0) ? mItemRefs : nil,
+															iteratorAdvance, *iteratorInfo);
 												}
 
 		static	void*						iteratorAdvance(CIteratorInfo& iteratorInfo)
@@ -262,19 +255,19 @@ class CArrayInternals {
 																				(CArrayIteratorInfo&) iteratorInfo;
 
 													return (++arrayIteratorInfo.mCurrentIndex <
-																	arrayIteratorInfo.mInternals.mCurrentCount) ?
+																	arrayIteratorInfo.mInternals.mCount) ?
 															arrayIteratorInfo.mInternals.mItemRefs +
 																	arrayIteratorInfo.mCurrentIndex :
 															nil;
 
 												}
 
+		bool					mIsSorted;
 		CArrayItemCount			mCapacity;
-		CArrayItemCount			mCurrentCount;
+		CArrayItemCount			mCount;
 		CArrayItemRef*			mItemRefs;
 		CArrayItemCopyProc		mItemCopyProc;
 		CArrayItemDisposeProc	mItemDisposeProc;
-		bool					mIsSorted;
 		UInt32					mReferenceCount;
 		UInt32					mReference;
 };
@@ -283,7 +276,7 @@ class CArrayInternals {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-int sSortProc(void* info, const void* itemRef1, const void* itemRef2);
+static	int sSortProc(void* info, const void* itemRef1, const void* itemRef2);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -337,12 +330,12 @@ CArray& CArray::addFrom(const CArray& other, bool avoidDuplicates)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	if (other.mInternals->mCurrentCount == 0)
+	if (other.mInternals->mCount == 0)
 		// Nothing to add
 		return *this;
 
 	// Add items
-	mInternals = mInternals->append(other.mInternals->mItemRefs, other.mInternals->mCurrentCount, avoidDuplicates);
+	mInternals = mInternals->append(other.mInternals->mItemRefs, other.mInternals->mCount, avoidDuplicates);
 
 	return *this;
 }
@@ -358,7 +351,7 @@ bool CArray::contains(const CArrayItemRef itemRef) const
 
 	// Scan
 	CArrayItemIndex	itemIndex = 0;
-	for (CArrayItemRef* testItemRef = mInternals->mItemRefs; itemIndex < mInternals->mCurrentCount;
+	for (CArrayItemRef* testItemRef = mInternals->mItemRefs; itemIndex < mInternals->mCount;
 			itemIndex++, testItemRef++) {
 		// Check test item ref
 		if (*testItemRef == itemRef)
@@ -380,7 +373,7 @@ CArrayItemIndex CArray::getIndexOf(const CArrayItemRef itemRef) const
 
 	// Scan
 	CArrayItemIndex	itemIndex = 0;
-	for (CArrayItemRef* testItemRef = mInternals->mItemRefs; itemIndex < mInternals->mCurrentCount;
+	for (CArrayItemRef* testItemRef = mInternals->mItemRefs; itemIndex < mInternals->mCount;
 			itemIndex++, testItemRef++) {
 		// Check test item ref
 		if (*testItemRef == itemRef)
@@ -396,8 +389,8 @@ CArrayItemRef CArray::getItemAt(CArrayItemIndex itemIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertFailIf(itemIndex >= mInternals->mCurrentCount);
-	if (itemIndex >= mInternals->mCurrentCount)
+	AssertFailIf(itemIndex >= mInternals->mCount);
+	if (itemIndex >= mInternals->mCount)
 		return nil;
 
 	return mInternals->mItemRefs[itemIndex];
@@ -407,14 +400,14 @@ CArrayItemRef CArray::getItemAt(CArrayItemIndex itemIndex) const
 CArrayItemRef CArray::getLast() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (mInternals->mCurrentCount > 0) ? mInternals->mItemRefs[mInternals->mCurrentCount - 1] : nil;
+	return (mInternals->mCount > 0) ? mInternals->mItemRefs[mInternals->mCount - 1] : nil;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CArrayItemCount CArray::getCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mCurrentCount;
+	return mInternals->mCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -426,8 +419,8 @@ CArray& CArray::insertAtIndex(const CArrayItemRef itemRef, CArrayItemIndex itemI
 	if (itemRef == nil)
 		return *this;
 
-	AssertFailIf(itemIndex > mInternals->mCurrentCount);
-	if (itemIndex > mInternals->mCurrentCount)
+	AssertFailIf(itemIndex > mInternals->mCount);
+	if (itemIndex > mInternals->mCount)
 		return *this;
 
 	// Insert at index
@@ -456,8 +449,8 @@ CArray& CArray::removeAtIndex(CArrayItemIndex itemIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertFailIf(itemIndex >= mInternals->mCurrentCount);
-	if (itemIndex >= mInternals->mCurrentCount)
+	AssertFailIf(itemIndex >= mInternals->mCount);
+	if (itemIndex >= mInternals->mCount)
 		return *this;
 
 	// Remove
@@ -471,7 +464,7 @@ CArray& CArray::removeFrom(const CArray& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all in the other
-	for (CArrayItemIndex otherItemIndex = 0; otherItemIndex < other.mInternals->mCurrentCount; otherItemIndex++) {
+	for (CArrayItemIndex otherItemIndex = 0; otherItemIndex < other.mInternals->mCount; otherItemIndex++) {
 		// Check if other item is in local storage
 		CArrayItemRef	otherItemRef = other.mInternals->mItemRefs[otherItemIndex];
 		CArrayItemIndex	itemIndex = getIndexOf(otherItemRef);
@@ -494,6 +487,16 @@ CArray& CArray::removeAll()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+bool CArray::equals(const CArray& other) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Compare
+	return (mInternals->mCount == other.mInternals->mCount) &&
+			(::memcmp(mInternals->mItemRefs, other.mInternals->mItemRefs,
+					mInternals->mCount * sizeof(CArrayItemRef)) == 0);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TIteratorS<CArrayItemRef> CArray::getIterator() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -505,7 +508,7 @@ CArray& CArray::apply(CArrayApplyProc applyProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all item refs
-	for (CArrayItemIndex i = 0; i < mInternals->mCurrentCount; i++)
+	for (CArrayItemIndex i = 0; i < mInternals->mCount; i++)
 		// Call proc
 		applyProc(mInternals->mItemRefs[i], userData);
 
@@ -534,14 +537,14 @@ CArray& CArray::sort(CArrayCompareProc compareProc, void* userData)
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	// BSD platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
-	qsort_r(mInternals->mItemRefs, mInternals->mCurrentCount, sizeof(CArrayItemRef), &sortInfo, sSortProc);
+	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), &sortInfo, sSortProc);
 #elif defined(TARGET_OS_LINUX)
 	// GLibc platforms
-	qsort_r(mInternals->mItemRefs, mInternals->mCurrentCount, sizeof(CArrayItemRef), sSortProc, userData);
+	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), sSortProc, userData);
 #elif defined(TARGET_OS_WINDOWS)
 	// Windows platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
-	qsort_s(*mInternals->mItemRefs, mInternals->mCurrentCount, sizeof(CArrayItemRef), sSortProc, &sortInfo);
+	qsort_s(*mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), sSortProc, &sortInfo);
 #else
 	// Unknown platform
 	AssertFailWith(kUnimplementedError);
@@ -551,6 +554,37 @@ CArray& CArray::sort(CArrayCompareProc compareProc, void* userData)
 	mInternals->mIsSorted = true;
 
 	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CArray CArray::sorted(CArrayCompareProc compareProc, void* userData) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CArray	array = *this;
+
+	// Sort
+	array.sort(compareProc, userData);
+
+	return array;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CArray CArray::filtered(CArrayItemIsIncludedProc isIncludedProc, void* userData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CArray	array;
+
+	// Iterate all item refs
+	for (CArrayItemIndex i = 0; i < mInternals->mCount; i++) {
+		// Call proc
+		if (isIncludedProc(mInternals->mItemRefs[i], userData))
+			// Included
+			array.add(mInternals->mItemRefs[i]);
+	}
+
+	return array;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -564,16 +598,6 @@ CArray& CArray::operator=(const CArray& other)
 	mInternals = other.mInternals->addReference();
 
 	return *this;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-bool CArray::operator==(const CArray& other) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Compare
-	return (mInternals->mCurrentCount == other.mInternals->mCurrentCount) &&
-			(::memcmp(mInternals->mItemRefs, other.mInternals->mItemRefs,
-					mInternals->mCurrentCount * sizeof(CArrayItemRef)) == 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

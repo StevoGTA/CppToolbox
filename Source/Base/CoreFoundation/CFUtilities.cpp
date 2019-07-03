@@ -335,7 +335,7 @@ CFDictionaryRef eDictionaryCopyCFDictionaryRef(const CDictionary& dictionary)
 				::CFRelease(numberRef);
 				} break;
 
-			case kDictionaryValueItemRef:
+			case kDictionaryValueTypeItemRef:
 				// Something else that cannot be represented by Core Foundation
 				break;
 		}
