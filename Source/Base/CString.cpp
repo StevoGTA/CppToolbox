@@ -223,7 +223,7 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CString::getAsBytes() const
+UInt64 CString::getAsByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CString	string(*this);
@@ -243,6 +243,16 @@ UInt64 CString::getAsBytes() const
 		return (UInt64) (getFloat64() * 1000.0);
 	else
 		return getUInt64();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CString::replacingSubStrings(const CString& subStringToReplace, const CString& replacementString) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	CString	string(*this);
+	string.replaceSubStrings(subStringToReplace, replacementString);
+
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

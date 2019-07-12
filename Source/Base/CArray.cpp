@@ -82,6 +82,20 @@ class CArrayInternals {
 													}
 												}
 
+				CArrayItemIndex				getIndexOf(const CArrayItemRef itemRef) const
+												{
+													// Scan
+													CArrayItemIndex	itemIndex = 0;
+													for (CArrayItemRef* testItemRef = mItemRefs; itemIndex < mCount;
+															itemIndex++, testItemRef++) {
+														// Check test item ref
+														if (*testItemRef == itemRef)
+															// Found
+															return itemIndex;
+													}
+
+													return kCArrayItemIndexNotFound;
+												}
 				CArrayInternals*			prepareForWrite()
 												{
 													// Check reference count.  If there is more than 1 reference, we
@@ -116,31 +130,27 @@ class CArrayInternals {
 														return this;
 												}
 
-				CArrayInternals*			append(const CArrayItemRef itemRefs, CArrayItemCount count,
+				CArrayInternals*			append(const CArrayItemRef* itemRefs, CArrayItemCount count,
 													bool avoidDuplicates)
 												{
 													// Prepare for write
 													CArrayInternals*	arrayInternals = prepareForWrite();
 
-													// Setup
-													CArrayItemCount	neededCount = arrayInternals->mCount + count;
+													if (!avoidDuplicates)
+														// General case
+														append(itemRefs, count);
+													else {
+														// Must ensure we are not adding an itemRef we already have
+														for (CArrayItemCount i = 0; i < count; i++) {
+															// Get itemRef
+															CArrayItemRef	itemRef = itemRefs[i];
 
-													// Check storage
-													if (neededCount > arrayInternals->mCapacity) {
-														// Expand storage
-														arrayInternals->mCapacity =
-																std::max(neededCount, arrayInternals->mCapacity * 2);
-														arrayInternals->mItemRefs =
-																(CArrayItemRef*)
-																		::realloc(mItemRefs,
-																				arrayInternals->mCapacity *
-																						sizeof(CArrayItemRef));
+															// Check if found
+															if (getIndexOf(itemRef) == kCArrayItemIndexNotFound)
+																// Not found
+																append(&itemRef, 1);
+														}
 													}
-
-													// Append itemRefs into place
-													::memcpy(arrayInternals->mItemRefs + arrayInternals->mCount,
-															itemRefs, count * sizeof(CFArrayRef));
-													arrayInternals->mCount = neededCount;
 
 													// Update info
 													arrayInternals->mIsSorted = false;
@@ -184,13 +194,13 @@ class CArrayInternals {
 
 													return arrayInternals;
 												}
-				CArrayInternals*			removeAtIndex(CArrayItemIndex itemIndex)
+				CArrayInternals*			removeAtIndex(CArrayItemIndex itemIndex, bool performDispose)
 												{
 													// Prepare for write
 													CArrayInternals*	arrayInternals = prepareForWrite();
 
 													// Check if owns items
-													if (mItemDisposeProc != nil)
+													if (performDispose && (mItemDisposeProc != nil))
 														// Dispose
 														mItemDisposeProc(arrayInternals->mItemRefs[itemIndex]);
 
@@ -262,6 +272,31 @@ class CArrayInternals {
 
 												}
 
+	private:
+				void						append(const CArrayItemRef itemRefs, CArrayItemCount count)
+												{
+													// Setup
+													CArrayItemCount	neededCount = mCount + count;
+
+													// Check storage
+													if (neededCount > mCapacity) {
+														// Expand storage
+														mCapacity =
+																std::max(neededCount, mCapacity * 2);
+														mItemRefs =
+																(CArrayItemRef*)
+																		::realloc(mItemRefs,
+																				mCapacity *
+																						sizeof(CArrayItemRef));
+													}
+
+													// Append itemRefs into place
+													::memcpy(mItemRefs + mCount,
+															itemRefs, count * sizeof(CFArrayRef));
+													mCount = neededCount;
+												}
+
+	public:
 		bool					mIsSorted;
 		CArrayItemCount			mCapacity;
 		CArrayItemCount			mCount;
@@ -371,17 +406,7 @@ CArrayItemIndex CArray::getIndexOf(const CArrayItemRef itemRef) const
 	if (itemRef == nil)
 		return false;
 
-	// Scan
-	CArrayItemIndex	itemIndex = 0;
-	for (CArrayItemRef* testItemRef = mInternals->mItemRefs; itemIndex < mInternals->mCount;
-			itemIndex++, testItemRef++) {
-		// Check test item ref
-		if (*testItemRef == itemRef)
-			// Found
-			return itemIndex;
-	}
-
-	return kCArrayItemIndexNotFound;
+	return mInternals->getIndexOf(itemRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -430,6 +455,36 @@ CArray& CArray::insertAtIndex(const CArrayItemRef itemRef, CArrayItemIndex itemI
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CArray& CArray::detach(const CArrayItemRef itemRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get index of itemRef
+	CArrayItemIndex	itemIndex = getIndexOf(itemRef);
+
+	// Check if itemRef was found
+	if (itemIndex != kCArrayItemIndexNotFound)
+		// Remove
+		mInternals = mInternals->removeAtIndex(itemIndex, false);
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CArray& CArray::detachAtIndex(CArrayItemIndex itemIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertFailIf(itemIndex >= mInternals->mCount);
+	if (itemIndex >= mInternals->mCount)
+		return *this;
+
+	// Remove
+	mInternals = mInternals->removeAtIndex(itemIndex, false);
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CArray& CArray::remove(const CArrayItemRef itemRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -439,7 +494,7 @@ CArray& CArray::remove(const CArrayItemRef itemRef)
 	// Check if itemRef was found
 	if (itemIndex != kCArrayItemIndexNotFound)
 		// Remove
-		mInternals = mInternals->removeAtIndex(itemIndex);
+		mInternals = mInternals->removeAtIndex(itemIndex, true);
 
 	return *this;
 }
@@ -454,7 +509,7 @@ CArray& CArray::removeAtIndex(CArrayItemIndex itemIndex)
 		return *this;
 
 	// Remove
-	mInternals = mInternals->removeAtIndex(itemIndex);
+	mInternals = mInternals->removeAtIndex(itemIndex, true);
 
 	return *this;
 }
@@ -470,7 +525,7 @@ CArray& CArray::removeFrom(const CArray& other)
 		CArrayItemIndex	itemIndex = getIndexOf(otherItemRef);
 		if (itemIndex != kCArrayItemIndexNotFound)
 			// Remove
-			mInternals = mInternals->removeAtIndex(itemIndex);
+			mInternals = mInternals->removeAtIndex(itemIndex, true);
 	}
 
 	return *this;
@@ -603,6 +658,7 @@ CArray& CArray::operator=(const CArray& other)
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
+
 //----------------------------------------------------------------------------------------------------------------------
 int sSortProc(void* info, const void* itemRef1, const void* itemRef2)
 //----------------------------------------------------------------------------------------------------------------------

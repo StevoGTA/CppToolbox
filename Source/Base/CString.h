@@ -271,7 +271,7 @@ class CString : public CHashable {
 						UInt64			getUInt64(UInt8 base = 10) const;
 						void			getValue(UInt64& value, UInt8 base = 10) const
 											{ value = getUInt64(base); }
-						UInt64			getAsBytes() const;
+						UInt64			getAsByteCount() const;
 						
 						CData			getData(EStringEncoding encoding = kStringEncodingTextDefault) const;
 						
@@ -279,6 +279,8 @@ class CString : public CHashable {
 												CStringLength charCount = kCStringDefaultMaxLength) const;
 						CString&		replaceSubStrings(const CString& subStringToReplace,
 												const CString& replacementString = CString::mEmpty);
+						CString			replacingSubStrings(const CString& subStringToReplace,
+												const CString& replacementString = CString::mEmpty) const;
 						CString&		replaceCharacters(CStringCharIndex startIndex = 0,
 												CStringLength charCount = kCStringDefaultMaxLength,
 												const CString& replacementString = CString::mEmpty);

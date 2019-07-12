@@ -59,12 +59,7 @@ CString::CString(const CString& other) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CStringInternals();
-
-	CFStringRef	stringRef =
-						::CFStringCreateWithCString(kCFAllocatorDefault, other.getCString(kStringEncodingUTF8),
-								kCFStringEncodingUTF8);
-	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
-	::CFRelease(stringRef);
+	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, other.mInternals->mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -693,12 +688,8 @@ CString CString::getSubString(CStringCharIndex startIndex, CStringLength charCou
 CString& CString::replaceSubStrings(const CString& subStringToReplace, const CString& replacementString)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	subStringToReplaceStringRef = eStringCopyCFStringRef(subStringToReplace);
-	CFStringRef	replacementStringStringRef = eStringCopyCFStringRef(replacementString);
-	::CFStringFindAndReplace(mInternals->mStringRef, subStringToReplaceStringRef, replacementStringStringRef,
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-	::CFRelease(subStringToReplaceStringRef);
-	::CFRelease(replacementStringStringRef);
+	::CFStringFindAndReplace(mInternals->mStringRef, subStringToReplace.mInternals->mStringRef,
+			replacementString.mInternals->mStringRef, ::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
 
 	return *this;
 }
@@ -711,9 +702,8 @@ CString& CString::replaceCharacters(CStringCharIndex startIndex, CStringLength c
 	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mInternals->mStringRef))
 		charCount = (CStringLength) (::CFStringGetLength(mInternals->mStringRef) - startIndex);
 
-	CFStringRef	replacementStringRef = eStringCopyCFStringRef(replacementString);
-	::CFStringReplace(mInternals->mStringRef, ::CFRangeMake(startIndex, charCount), replacementStringRef);
-	::CFRelease(replacementStringRef);
+	::CFStringReplace(mInternals->mStringRef, ::CFRangeMake(startIndex, charCount),
+			replacementString.mInternals->mStringRef);
 
 	return *this;
 }
@@ -894,11 +884,9 @@ TArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuo
 			array += tempString;
 	} else {
 		// Just do break up
-		CFStringRef	delimiterStringRef = eStringCopyCFStringRef(delimiterString);
 		CFArrayRef	arrayRef =
 							::CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, mInternals->mStringRef,
-									delimiterStringRef);
-		::CFRelease(delimiterStringRef);
+									delimiterString.mInternals->mStringRef);
 
 		for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++)
 			array += CString((CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i));
@@ -965,11 +953,9 @@ CString& CString::convertFromPercentEscapes()
 ECompareResult CString::compareTo(const CString& string, EStringCompareFlags flags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef		stringRef = eStringCopyCFStringRef(string);
 	ECompareResult	compareResult =
-							(ECompareResult) ::CFStringCompare(mInternals->mStringRef, stringRef,
+							(ECompareResult) ::CFStringCompare(mInternals->mStringRef, string.mInternals->mStringRef,
 									sGetCFOptionFlagsForCStringOptionFlags(flags));
-	::CFRelease(stringRef);
 
 	return compareResult;
 }
@@ -978,46 +964,31 @@ ECompareResult CString::compareTo(const CString& string, EStringCompareFlags fla
 bool CString::equals(const CString& string, EStringCompareFlags flags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = eStringCopyCFStringRef(string);
-	bool		result =
-						::CFStringCompare(mInternals->mStringRef, stringRef,
-								sGetCFOptionFlagsForCStringOptionFlags(flags)) == kCFCompareEqualTo;
-	::CFRelease(stringRef);
-
-	return result;
+	return ::CFStringCompare(mInternals->mStringRef, string.mInternals->mStringRef,
+			sGetCFOptionFlagsForCStringOptionFlags(flags)) == kCFCompareEqualTo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CString::beginsWith(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = eStringCopyCFStringRef(string);
-	bool		result = ::CFStringHasPrefix(mInternals->mStringRef, stringRef);
-	::CFRelease(stringRef);
-
-	return result;
+	return ::CFStringHasPrefix(mInternals->mStringRef, string.mInternals->mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CString::endsWith(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = eStringCopyCFStringRef(string);
-	bool		result = ::CFStringHasSuffix(mInternals->mStringRef, stringRef);
-	::CFRelease(stringRef);
-
-	return result;
+	return ::CFStringHasSuffix(mInternals->mStringRef, string.mInternals->mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CString::contains(const CString& string, EStringCompareFlags flags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = eStringCopyCFStringRef(string);
-	CFRange		range =
-						::CFStringFind(mInternals->mStringRef, stringRef,
-								sGetCFOptionFlagsForCStringOptionFlags(flags));
-	::CFRelease(stringRef);
+	CFRange	range =
+					::CFStringFind(mInternals->mStringRef, string.mInternals->mStringRef,
+							sGetCFOptionFlagsForCStringOptionFlags(flags));
 
 	return range.location != kCFNotFound;
 }
@@ -1028,10 +999,8 @@ bool CString::contains(const CString& string, EStringCompareFlags flags) const
 CString& CString::operator=(const CString& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = eStringCopyCFStringRef(other);
-	::CFStringReplaceAll(mInternals->mStringRef, stringRef);
-	::CFRelease(stringRef);
-	
+	::CFStringReplaceAll(mInternals->mStringRef, other.mInternals->mStringRef);
+
 	return *this;
 }
 
@@ -1040,9 +1009,7 @@ CString& CString::operator+=(const CString& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Append
-	CFStringRef	stringRef = eStringCopyCFStringRef(other);
-	::CFStringAppend(mInternals->mStringRef, stringRef);
-	::CFRelease(stringRef);
+	::CFStringAppend(mInternals->mStringRef, other.mInternals->mStringRef);
 
 	return *this;
 }

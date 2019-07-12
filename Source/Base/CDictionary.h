@@ -222,44 +222,8 @@ template <typename T> class TDictionary : public CDictionary {
 									}
 
 				void			set(const CString& key, const T item)
-									{
-										// Get existing value
-										CDictionaryItemRef	itemRef = getItemRef(key);
-										if (itemRef != nil) {
-											// Dispose of existing value
-											T	t = (T) itemRef;
-											DisposeOf(t);
-										}
+									{ CDictionary::set(key, item); }
 
-										// Update to new value
-										CDictionary::set(key, item);
-									}
-
-				void			remove(const CString& key)
-									{
-										// Get
-										T	t = (T) getItemRef(key);
-										if (t != nil) {
-											// Remove
-											CDictionary::remove(key);
-
-											// Dispose
-											DisposeOf(t);
-										}
-									}
-				void			removeAll()
-									{
-										// Dispose all values
-										for (TIteratorS<SDictionaryItem> iterator = getIterator();
-												iterator.hasValue(); iterator.advance()) {
-											// Dispose of existing value
-											T	t = (T) iterator.getValue().mValue.mValue.mItemRef;
-											DisposeOf(t);
-										}
-
-										// Remove all
-										CDictionary::removeAll();
-									}
 
 		const	T				operator[](const CString& key) const
 									{ return (T) CDictionary::getItemRef(key); }

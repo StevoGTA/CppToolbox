@@ -81,6 +81,9 @@ class CArray : public CEquatable {
 
 				CArray&						insertAtIndex(const CArrayItemRef itemRef, CArrayItemIndex itemIndex);
 
+				CArray&						detach(const CArrayItemRef itemRef);		// Removes itemRef without calling itemDisposeProc
+				CArray&						detachAtIndex(CArrayItemIndex itemIndex);	// Removes at itemIndex without calling itemDisposeProc
+
 				CArray&						remove(const CArrayItemRef itemRef);
 				CArray&						removeFrom(const CArray& other);
 				CArray&						removeAtIndex(CArrayItemIndex itemIndex);
@@ -342,6 +345,10 @@ template <typename T> class TPtrArray : public CArray {
 						TPtrArray<T>&	insertAtIndex(const T item, CArrayItemIndex itemIndex)
 											{ CArray::insertAtIndex(item, itemIndex); return *this; }
 
+						TPtrArray<T>&	detach(const T item)
+											{ CArray::detach(item); return *this; }
+						TPtrArray<T>&	detachAtIndex(CArrayItemIndex itemIndex)
+											{ CArray::detachAtIndex(itemIndex); return *this; }
 						TPtrArray<T>&	remove(const T item)
 											{ CArray::remove(item); return *this; }
 						TPtrArray<T>&	removeFrom(const TPtrArray<T>& array)
