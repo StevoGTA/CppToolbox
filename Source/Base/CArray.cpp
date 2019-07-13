@@ -138,7 +138,7 @@ class CArrayInternals {
 
 													if (!avoidDuplicates)
 														// General case
-														append(itemRefs, count);
+														arrayInternals->append(itemRefs, count);
 													else {
 														// Must ensure we are not adding an itemRef we already have
 														for (CArrayItemCount i = 0; i < count; i++) {
@@ -146,9 +146,9 @@ class CArrayInternals {
 															CArrayItemRef	itemRef = itemRefs[i];
 
 															// Check if found
-															if (getIndexOf(itemRef) == kCArrayItemIndexNotFound)
+															if (arrayInternals->getIndexOf(itemRef) == kCArrayItemIndexNotFound)
 																// Not found
-																append(&itemRef, 1);
+																arrayInternals->append(&itemRef, 1);
 														}
 													}
 
