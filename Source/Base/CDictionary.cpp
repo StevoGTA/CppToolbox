@@ -636,13 +636,24 @@ Float32 CDictionary::getFloat32(const CString& key, Float32 notFoundValue) const
 		// Return not found value
 		return notFoundValue;
 
-	// Verify value type
-	AssertFailIf(value->mValueType != kDictionaryValueTypeFloat32);
-	if (value->mValueType != kDictionaryValueTypeFloat32)
-		// Return not found value
-		return notFoundValue;
+	// Check value type
+	switch (value->mValueType) {
+		case kDictionaryValueTypeFloat32:	return value->mValue.mFloat32;
+		case kDictionaryValueTypeFloat64:	return value->mValue.mFloat64;
+		case kDictionaryValueTypeSInt8:		return value->mValue.mSInt8;
+		case kDictionaryValueTypeSInt16:	return value->mValue.mSInt16;
+		case kDictionaryValueTypeSInt32:	return value->mValue.mSInt32;
+		case kDictionaryValueTypeSInt64:	return value->mValue.mSInt64;
+		case kDictionaryValueTypeUInt8:		return value->mValue.mUInt8;
+		case kDictionaryValueTypeUInt16:	return value->mValue.mUInt16;
+		case kDictionaryValueTypeUInt32:	return value->mValue.mUInt32;
+		case kDictionaryValueTypeUInt64:	return value->mValue.mUInt64;
+		default:
+			// Cannot coerce value
+			AssertFailWith(kAssertFailedError);
 
-	return value->mValue.mFloat32;
+			return notFoundValue;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -657,13 +668,24 @@ Float64 CDictionary::getFloat64(const CString& key, Float64 notFoundValue) const
 		// Return not found value
 		return notFoundValue;
 
-	// Verify value type
-	AssertFailIf(value->mValueType != kDictionaryValueTypeFloat64);
-	if (value->mValueType != kDictionaryValueTypeFloat64)
-		// Return not found value
-		return notFoundValue;
+	// Check value type
+	switch (value->mValueType) {
+		case kDictionaryValueTypeFloat32:	return value->mValue.mFloat32;
+		case kDictionaryValueTypeFloat64:	return value->mValue.mFloat64;
+		case kDictionaryValueTypeSInt8:		return value->mValue.mSInt8;
+		case kDictionaryValueTypeSInt16:	return value->mValue.mSInt16;
+		case kDictionaryValueTypeSInt32:	return value->mValue.mSInt32;
+		case kDictionaryValueTypeSInt64:	return value->mValue.mSInt64;
+		case kDictionaryValueTypeUInt8:		return value->mValue.mUInt8;
+		case kDictionaryValueTypeUInt16:	return value->mValue.mUInt16;
+		case kDictionaryValueTypeUInt32:	return value->mValue.mUInt32;
+		case kDictionaryValueTypeUInt64:	return value->mValue.mUInt64;
+		default:
+			// Cannot coerce value
+			AssertFailWith(kAssertFailedError);
 
-	return value->mValue.mFloat64;
+			return notFoundValue;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
