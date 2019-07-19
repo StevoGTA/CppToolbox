@@ -358,3 +358,27 @@ CFStringRef eStringCopyCFStringRef(const CString& string)
 	return ::CFStringCreateWithCString(kCFAllocatorDefault, string.getCString(kStringEncodingUTF8),
 			kCFStringEncodingUTF8);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - FilesystemPath utilities
+
+//----------------------------------------------------------------------------------------------------------------------
+CFStringRef eFilesystemPathCopyStringRef(const CFilesystemPath& filesystemPath)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return eStringCopyCFStringRef(filesystemPath.getString());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CFURLRef eFilesystemPathCopyURLRef(const CFilesystemPath& filesystemPath, bool isFolder)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create URLRef
+	CFStringRef	stringRef = eStringCopyCFStringRef(filesystemPath.getString());
+	CFURLRef	urlRef =
+						::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, stringRef, kCFURLPOSIXPathStyle, isFolder);
+	::CFRelease(stringRef);
+
+	return urlRef;
+}

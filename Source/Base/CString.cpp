@@ -19,6 +19,7 @@ CString	CString::mEmpty;
 
 CString	CString::mCommaCharacter(",");
 CString	CString::mSpaceCharacter(" ");
+CString	CString::mSpaceX4("    ");
 CString	CString::mTabCharacter("\t");
 
 CString	CString::sNewlineCharacter("\n");
