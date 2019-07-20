@@ -33,7 +33,7 @@ CString CFileReader::readStringToEOL(UError& outError) const
 		UInt64	bytesRead = std::min<UInt64>(1024, getFile().getSize() - getPos());
 		if (bytesRead == 0) {
 			// EOF
-			outError = kCFileEOFError;
+			outError = kFileEOFError;
 
 			return outString;
 		}

@@ -29,12 +29,12 @@ UError CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destination
 {
 	// Parameter check
 	if (!sourceFolder.doesExist())
-		CFilesystemReportErrorAndReturnError(kCFolderDoesNotExistError, "checking source folder when copying",
+		CFilesystemReportErrorAndReturnError(kFolderDoesNotExistError, "checking source folder when copying",
 				sourceFolder);
 
 	// Internals check
 	if (!destinationFolder.doesExist())
-		CFilesystemReportErrorAndReturnError(kCFolderDoesNotExistError, "checking destination folder when copying",
+		CFilesystemReportErrorAndReturnError(kFolderDoesNotExistError, "checking destination folder when copying",
 				destinationFolder);
 
 	// Get contents of source folder

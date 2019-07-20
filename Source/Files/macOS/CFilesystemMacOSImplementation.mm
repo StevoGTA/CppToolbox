@@ -130,7 +130,7 @@ UError CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 {
 	// Parameter check
 	if (!file.doesExist())
-		CFilesystemReportErrorFileFolderX1AndReturnError(kCFileDoesNotExistError, "checking source file", file);
+		CFilesystemReportErrorFileFolderX1AndReturnError(kFileDoesNotExistError, "checking source file", file);
 
 	// Setup
 	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
@@ -258,7 +258,7 @@ UError CFilesystem::revealInFinder(const CFolder& folder)
 	if ([[NSWorkspace sharedWorkspace] openURL:url])
 		return kNoError;
 	else
-		CFilesystemReportErrorFileFolderX1AndReturnError(kCFileUnableToRevealInFinderError, "revealing in Finder",
+		CFilesystemReportErrorFileFolderX1AndReturnError(kFileUnableToRevealInFinderError, "revealing in Finder",
 				folder);
 }
 

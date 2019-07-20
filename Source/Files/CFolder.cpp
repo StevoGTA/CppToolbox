@@ -11,8 +11,8 @@ class CFolderSetup {
 	public:
 		CFolderSetup()
 			{
-				CErrorRegistry::registerError(kCFolderDoesNotExistError, CString("Folder Does Not Exist"));
-				CErrorRegistry::registerError(kCFolderAlreadyExistsError, CString("Folder Already Exists"));
+				CErrorRegistry::registerError(kFolderDoesNotExistError, CString("Folder Does Not Exist"));
+				CErrorRegistry::registerError(kFolderAlreadyExistsError, CString("Folder Already Exists"));
 			}
 };
 

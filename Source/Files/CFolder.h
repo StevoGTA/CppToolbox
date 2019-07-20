@@ -11,10 +11,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Error Codes
 
-const	UErrorDomain	kCFolderErrorDomain	= MAKE_OSTYPE('F', 'o', 'l', 'd');
+const	UErrorDomain	kFolderErrorDomain	= MAKE_OSTYPE('F', 'o', 'l', 'd');
 
-const	UError	kCFolderDoesNotExistError	= MAKE_UError(kCFolderErrorDomain, 100);
-const	UError	kCFolderAlreadyExistsError	= MAKE_UError(kCFolderErrorDomain, 101);
+const	UError	kFolderDoesNotExistError	= MAKE_UError(kFolderErrorDomain, 100);
+const	UError	kFolderAlreadyExistsError	= MAKE_UError(kFolderErrorDomain, 101);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFolder

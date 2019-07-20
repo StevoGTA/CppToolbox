@@ -97,10 +97,10 @@ class CFileReaderInternals {
 												return kNoError;
 											else if (::feof(mFILE))
 												// EOF
-												return kCFileEOFError;
+												return kFileEOFError;
 											else
 												// Unable to read
-												return kCFileUnableToReadError;
+												return kFileUnableToReadError;
 										} else if (mFD != -1) {
 											// Read from file
 											ssize_t bytesRead = ::read(mFD, buffer, (size_t) byteCount);
@@ -109,13 +109,13 @@ class CFileReaderInternals {
 												return kNoError;
 											else if (bytesRead == 0)
 												// EOF
-												return kCFileEOFError;
+												return kFileEOFError;
 											else
 												// Unable to read
 												return MAKE_UError(kPOSIXErrorDomain, errno);
 										} else
 											// Not open
-											return kCFileNotOpenError;
+											return kFileNotOpenError;
 									}
 		UError					close()
 									{
@@ -231,7 +231,7 @@ UError CFileReader::readData(void* buffer, UInt64 byteCount) const
 {
 	// Read
 	UError	error = mInternals->read(buffer, byteCount);
-	if ((error != kNoError) && (error != kCFileEOFError))
+	if ((error != kNoError) && (error != kFileEOFError))
 		CFileReaderReportError(error, "reading data");
 
 	return error;
@@ -256,7 +256,7 @@ SInt64 CFileReader::getPos() const
 			CFileReaderReportErrorAndReturnValue(MAKE_UError(kPOSIXErrorDomain, errno), "getting position", 0);
 	} else
 		// File not open!
-		CFileReaderReportErrorAndReturnValue(kCFileNotOpenError, "getting position", 0);
+		CFileReaderReportErrorAndReturnValue(kFileNotOpenError, "getting position", 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -300,7 +300,7 @@ UError CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
 			CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting position");
 	} else
 		// File not open!
-		CFileReaderReportErrorAndReturnError(kCFileNotOpenError, "setting position");
+		CFileReaderReportErrorAndReturnError(kFileNotOpenError, "setting position");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -313,7 +313,7 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 	// Is the file open?
 	if (mInternals->mFD == -1) {
 		// File not open!
-		outError = kCFileNotOpenError;
+		outError = kFileNotOpenError;
 		CFileReaderReportErrorAndReturnValue(outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
 	}
 

@@ -68,7 +68,7 @@ class CFileWriterInternals {
 												return kNoError;
 											else
 												// Unable to write
-												return kCFileUnableToWriteError;
+												return kFileUnableToWriteError;
 										} else if (mFD != -1) {
 											// Write to file
 											ssize_t	bytes = ::write(mFD, buffer, (size_t) byteCount);
@@ -80,7 +80,7 @@ class CFileWriterInternals {
 												return MAKE_UError(kPOSIXErrorDomain, errno);
 										} else
 											// Not open
-											return kCFileNotOpenError;
+											return kFileNotOpenError;
 									}
 		UError					close()
 									{
@@ -217,7 +217,7 @@ SInt64 CFileWriter::getPos() const
 			CFileWriterReportErrorAndReturnValue(MAKE_UError(kPOSIXErrorDomain, errno), "getting position", 0);
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnValue(kCFileNotOpenError, "getting position", 0);
+		CFileWriterReportErrorAndReturnValue(kFileNotOpenError, "getting position", 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -261,7 +261,7 @@ UError CFileWriter::setPos(EFileWriterPositionMode mode, SInt64 newPos) const
 			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting position");
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnError(kCFileNotOpenError, "setting position");
+		CFileWriterReportErrorAndReturnError(kFileNotOpenError, "setting position");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -287,7 +287,7 @@ UError CFileWriter::setSize(UInt64 newSize) const
 			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting size");
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnError(kCFileNotOpenError, "setting size");
+		CFileWriterReportErrorAndReturnError(kFileNotOpenError, "setting size");
 }
 
 //----------------------------------------------------------------------------------------------------------------------

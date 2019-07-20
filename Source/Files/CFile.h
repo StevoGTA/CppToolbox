@@ -10,20 +10,20 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Error Codes
 
-const	UErrorDomain	kCFileErrorDomain	= MAKE_OSTYPE('F', 'I', 'L', 'E');
+const	UErrorDomain	kFileErrorDomain	= MAKE_OSTYPE('F', 'I', 'L', 'E');
 
-const	UError	kCFileDoesNotExistError				= MAKE_UError(kCFileErrorDomain, 1);
-const	UError	kCFileIsOpenError					= MAKE_UError(kCFileErrorDomain, 2);
-const	UError	kCFileNotOpenError					= MAKE_UError(kCFileErrorDomain, 3);
-const	UError	kCFileNotFoundError					= MAKE_UError(kCFileErrorDomain, 4);
-const	UError	kCFileUnableToRevealInFinderError	= MAKE_UError(kCFileErrorDomain, 5);
-const	UError	kCFileUnableToReadError				= MAKE_UError(kCFileErrorDomain, 6);
-const	UError	kCFileUnableToWriteError			= MAKE_UError(kCFileErrorDomain, 7);
+const	UError	kFileDoesNotExistError				= MAKE_UError(kFileErrorDomain, 1);
+const	UError	kFileIsOpenError					= MAKE_UError(kFileErrorDomain, 2);
+const	UError	kFileNotOpenError					= MAKE_UError(kFileErrorDomain, 3);
+const	UError	kFileNotFoundError					= MAKE_UError(kFileErrorDomain, 4);
+const	UError	kFileUnableToRevealInFinderError	= MAKE_UError(kFileErrorDomain, 5);
+const	UError	kFileUnableToReadError				= MAKE_UError(kFileErrorDomain, 6);
+const	UError	kFileUnableToWriteError				= MAKE_UError(kFileErrorDomain, 7);
 
 #if TARGET_OS_MACOS
-const	UError	kCFileEOFError						= MAKE_UErrorFromOSStatus(eofErr);
+const	UError	kFileEOFError						= MAKE_UErrorFromOSStatus(eofErr);
 #else
-const	UError	kCFileEOFError						= MAKE_UError(kCFileErrorDomain, 8);
+const	UError	kFileEOFError						= MAKE_UError(kFileErrorDomain, 8);
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
