@@ -29,7 +29,9 @@ static	CFileSetup	sFileSetup;
 
 class CFileInternals {
 	public:
-						CFileInternals(const CFilesystemPath& filesystemPath) : mFilesystemPath(filesystemPath) {}
+						CFileInternals(const CFilesystemPath& filesystemPath) :
+							mFilesystemPath(filesystemPath), mReferenceCount(1)
+							{}
 						~CFileInternals() {}
 
 		CFileInternals*	addReference()

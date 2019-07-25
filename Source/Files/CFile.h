@@ -8,7 +8,7 @@
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Error Codes
+// MARK: Errors
 
 const	UErrorDomain	kFileErrorDomain	= MAKE_OSTYPE('F', 'I', 'L', 'E');
 

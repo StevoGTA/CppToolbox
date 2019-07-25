@@ -49,7 +49,9 @@ struct SFileMemoryMapSetupInfo {
 
 class CFileReaderInternals {
 	public:
-								CFileReaderInternals(const CFile& file) : mFile(file), mFILE(nil), mFD(-1) {}
+								CFileReaderInternals(const CFile& file) :
+									mFile(file), mReferenceCount(1), mFILE(nil), mFD(-1)
+									{}
 								~CFileReaderInternals()
 									{
 										close();

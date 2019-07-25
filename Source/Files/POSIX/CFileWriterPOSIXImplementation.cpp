@@ -29,7 +29,7 @@
 class CFileWriterInternals {
 	public:
 								CFileWriterInternals(const CFile& file) :
-									mFile(file), mRemoveIfNotClosed(false), mFILE(nil), mFD(-1)
+									mFile(file), mReferenceCount(1), mRemoveIfNotClosed(false), mFILE(nil), mFD(-1)
 									{}
 								~CFileWriterInternals()
 									{

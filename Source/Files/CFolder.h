@@ -9,12 +9,12 @@
 #include "CppToolboxError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Error Codes
+// MARK: Errors
 
 const	UErrorDomain	kFolderErrorDomain	= MAKE_OSTYPE('F', 'o', 'l', 'd');
 
-const	UError	kFolderDoesNotExistError	= MAKE_UError(kFolderErrorDomain, 100);
-const	UError	kFolderAlreadyExistsError	= MAKE_UError(kFolderErrorDomain, 101);
+const	UError	kFolderDoesNotExistError	= MAKE_UError(kFolderErrorDomain, 1);
+const	UError	kFolderAlreadyExistsError	= MAKE_UError(kFolderErrorDomain, 2);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFolder

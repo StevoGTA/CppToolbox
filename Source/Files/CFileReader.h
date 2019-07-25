@@ -61,7 +61,6 @@ class CFileReader {
 
 				UError			readData(void* buffer, UInt64 byteCount) const;
 				CData			readData(UInt64 byteCount, UError& outError) const;
-				CString			readStringToEOL(UError& outError) const;
 				SInt8			readSInt8(UError& outError) const
 									{
 										// Read

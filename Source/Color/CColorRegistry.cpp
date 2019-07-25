@@ -230,7 +230,7 @@ CDictionary CColorSet::getInfo() const
 		CDictionary	colorSetColorInfo;
 		colorSetColorInfo.set(sColorGroupIDKey, colorGroupID);
 		colorSetColorInfo.set(sColorIDKey, colorID);
-		colorSetColorInfo.set(sColorInfoKey, ((CColor*) iterator.getValue().mValue.mValue.mItemRef)->getInfo());
+		colorSetColorInfo.set(sColorInfoKey, ((CColor*) iterator.getValue().mValue.getItemRef())->getInfo());
 
 		// Add to array
 		colorSetColorInfos += colorSetColorInfo;

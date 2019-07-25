@@ -12,7 +12,9 @@
 
 extern	TArray<CData>		eArrayOfDatasFrom(CFArrayRef arrayRef);
 extern	TArray<CDictionary>	eArrayOfDictionariesFrom(CFArrayRef arrayRef);
+extern	TArray<CString>		eArrayOfStringsFrom(CFArrayRef arrayRef);
 extern	CFArrayRef			eArrayCopyCFArrayRef(const TArray<CDictionary>& array);
+extern	CFArrayRef			eArrayCopyCFArrayRef(const TArray<CString>& array);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Data utilities

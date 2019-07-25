@@ -24,7 +24,9 @@ static	CFolderSetup	sFolderSetup;
 
 class CFolderInternals {
 	public:
-							CFolderInternals(const CFilesystemPath& filesystemPath) : mFilesystemPath(filesystemPath) {}
+							CFolderInternals(const CFilesystemPath& filesystemPath) :
+								mFilesystemPath(filesystemPath), mReferenceCount(1)
+								{}
 							~CFolderInternals() {}
 
 		CFolderInternals*	addReference()

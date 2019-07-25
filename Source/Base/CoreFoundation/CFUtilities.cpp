@@ -47,6 +47,24 @@ TArray<CDictionary> eArrayOfDictionariesFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TArray<CString> eArrayOfStringsFrom(CFArrayRef arrayRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TArray<CString>	array;
+
+	// Get values
+	CFIndex		count = ::CFArrayGetCount(arrayRef);
+	CFStringRef	stringRefs[count];
+	::CFArrayGetValues(arrayRef, CFRangeMake(0, count), (const void**) &stringRefs);
+	for (CFIndex i = 0; i < count; i++)
+		// Add data
+		array += CString(stringRefs[i]);
+
+	return array;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CFArrayRef eArrayCopyCFArrayRef(const TArray<CDictionary>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -58,6 +76,23 @@ CFArrayRef eArrayCopyCFArrayRef(const TArray<CDictionary>& array)
 		CFDictionaryRef	dictionaryRef = eDictionaryCopyCFDictionaryRef(array[i]);
 		::CFArrayAppendValue(arrayRef, dictionaryRef);
 		::CFRelease(dictionaryRef);
+	}
+
+	return arrayRef;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CFArrayRef eArrayCopyCFArrayRef(const TArray<CString>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFMutableArrayRef	arrayRef =
+								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
+	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
+		// Add dictionary
+		CFStringRef	stringRef = eStringCopyCFStringRef(array[i]);
+		::CFArrayAppendValue(arrayRef, stringRef);
+		::CFRelease(stringRef);
 	}
 
 	return arrayRef;
@@ -221,91 +256,99 @@ CFDictionaryRef eDictionaryCopyCFDictionaryRef(const CDictionary& dictionary)
 
 		// Store value in dictionary
 		const	SDictionaryValue&	value = iterator.getValue().mValue;
-		switch (value.mValueType) {
+		switch (value.getType()) {
 			case kDictionaryValueTypeBool:
 				// Bool
 				::CFDictionarySetValue(dictionaryRef, keyStringRef,
-						value.mValue.mBool ? kCFBooleanTrue : kCFBooleanFalse);
+						value.getBool() ? kCFBooleanTrue : kCFBooleanFalse);
 				break;
 
 			case kDictionaryValueTypeArrayOfDictionaries: {
 				// Array of dictionaries
-				CFArrayRef	arrayRef = eArrayCopyCFArrayRef(*value.mValue.mArrayOfDictionaries);
+				CFArrayRef	arrayRef = eArrayCopyCFArrayRef(value.getArrayOfDictionaries());
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, arrayRef);
+				::CFRelease(arrayRef);
+				} break;
+
+			case kDictionaryValueTypeArrayOfStrings: {
+				// Array of strings
+				CFArrayRef	arrayRef = eArrayCopyCFArrayRef(value.getArrayOfStrings());
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, arrayRef);
 				::CFRelease(arrayRef);
 				} break;
 
 			case kDictionaryValueTypeData: {
 				// Data
-				CFDataRef	dataRef = eDataCopyCFDataRef(*value.mValue.mData);
+				CFDataRef	dataRef = eDataCopyCFDataRef(value.getData());
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, dataRef);
 				::CFRelease(dataRef);
 				} break;
 
 			case kDictionaryValueTypeDictionary: {
 				// Dictionary
-				CFDictionaryRef	valueDictionaryRef = eDictionaryCopyCFDictionaryRef(*value.mValue.mDictionary);
+				CFDictionaryRef	valueDictionaryRef = eDictionaryCopyCFDictionaryRef(value.getDictionary());
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, valueDictionaryRef);
 				::CFRelease(valueDictionaryRef);
 				} break;
 
 			case kDictionaryValueTypeString: {
 				// String
-				CFStringRef	stringRef = eStringCopyCFStringRef(*value.mValue.mString);
+				CFStringRef	stringRef = eStringCopyCFStringRef(value.getString());
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, stringRef);
 				::CFRelease(stringRef);
 				} break;
 
 			case kDictionaryValueTypeFloat32: {
 				// Float32
-				CFNumberRef	numberRef =
-									::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &value.mValue.mFloat32);
+				Float32		float32	= value.getFloat32();
+				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &float32);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
 				} break;
 
 			case kDictionaryValueTypeFloat64: {
 				// Float64
-				CFNumberRef	numberRef =
-									::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value.mValue.mFloat64);
+				Float64		float64 = value.getFloat64();
+				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &float64);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
 				} break;
 
 			case kDictionaryValueTypeSInt8: {
 				// SInt8
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, &value.mValue.mSInt8);
+				SInt8		sInt8 = value.getSInt8();
+				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, &sInt8);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
 				} break;
 
 			case kDictionaryValueTypeSInt16: {
 				// SInt16
-				CFNumberRef	numberRef =
-									::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &value.mValue.mSInt16);
+				SInt16		sInt16 = value.getSInt16();
+				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &sInt16);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
 				} break;
 
 			case kDictionaryValueTypeSInt32: {
 				// SInt32
-				CFNumberRef	numberRef =
-									::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &value.mValue.mSInt32);
+				SInt32		sInt32 = value.getSInt32();
+				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &sInt32);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
 				} break;
 
 			case kDictionaryValueTypeSInt64: {
 				// SInt64
-				CFNumberRef	numberRef =
-									::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &value.mValue.mSInt64);
+				SInt64		sInt64 = value.getSInt64();
+				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
 				} break;
 
 			case kDictionaryValueTypeUInt8: {
 				// UInt8
-				SInt64		sInt64 = value.mValue.mUInt8;
+				SInt64		sInt64 = value.getUInt8();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
@@ -313,7 +356,7 @@ CFDictionaryRef eDictionaryCopyCFDictionaryRef(const CDictionary& dictionary)
 
 			case kDictionaryValueTypeUInt16: {
 				// UInt16
-				SInt64		sInt64 = value.mValue.mUInt16;
+				SInt64		sInt64 = value.getUInt16();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
@@ -321,7 +364,7 @@ CFDictionaryRef eDictionaryCopyCFDictionaryRef(const CDictionary& dictionary)
 
 			case kDictionaryValueTypeUInt32: {
 				// UInt32
-				SInt64		sInt64 = value.mValue.mUInt32;
+				SInt64		sInt64 = value.getUInt32();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
@@ -329,7 +372,7 @@ CFDictionaryRef eDictionaryCopyCFDictionaryRef(const CDictionary& dictionary)
 
 			case kDictionaryValueTypeUInt64: {
 				// UInt64
-				SInt64		sInt64 = value.mValue.mUInt64;
+				SInt64		sInt64 = value.getUInt64();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
 				::CFRelease(numberRef);
