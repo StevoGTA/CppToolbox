@@ -76,6 +76,14 @@ class CSetInternals {
 											}
 										~CSetInternals()
 											{
+												// Iterate all item infos
+												for (UInt32 i = 0; i < mItemInfosCount; i++) {
+													// Check if have an item info
+													if (mItemInfos[i] != nil)
+														// Remove this chain
+														remove(mItemInfos[i], mOwnsItems);
+												}
+
 												::free(mItemInfos);
 											}
 

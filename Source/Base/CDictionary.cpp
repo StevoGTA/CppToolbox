@@ -7,10 +7,35 @@
 #include "CppToolboxAssert.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SDictionaryItemInfo
+// MARK: CDictionaryInternals
+
+class CDictionaryInternals {
+	// Methods
+	public:
+											// Lifecycle methods
+											CDictionaryInternals() {}
+		virtual								~CDictionaryInternals() {}
+
+											// Instance methods
+		virtual	CDictionaryInternals*		addReference() = 0;
+		virtual	void						removeReference() = 0;
+
+		virtual	CDictionaryKeyCount			getKeyCount() = 0;
+		virtual	SDictionaryValue*			getValue(const CString& key) = 0;
+		virtual	CDictionaryInternals*		set(const CString& key, const SDictionaryValue& value) = 0;
+		virtual	CDictionaryInternals*		remove(const CString& key) = 0;
+		virtual	CDictionaryInternals*		removeAll() = 0;
+
+		virtual	TIteratorS<SDictionaryItem>	getIterator() const = 0;
+
+		virtual	CDictionaryItemEqualsProc	getItemEqualsProc() const = 0;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SDictionaryItemInfo
 
 struct SDictionaryItemInfo {
-
 			// Lifecycle methods
 			SDictionaryItemInfo(UInt32 keyHashValue, const CString& key, const SDictionaryValue& value) :
 				mKeyHashValue(keyHashValue), mItem(key, value), mNextItemInfo(nil)
@@ -35,351 +60,486 @@ struct SDictionaryItemInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDictionaryIteratorInfo
 
+class CStandardDictionaryInternals;
+
 struct CDictionaryIteratorInfo : public CIteratorInfo {
 	// Methods
 	public:
-					// Lifecycle methods
-					CDictionaryIteratorInfo(const CDictionaryInternals& internals, UInt32 initialReference) :
-						CIteratorInfo(), mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0),
-								mCurrentItemInfo(nil)
-						{}
+						// Lifecycle methods
+						CDictionaryIteratorInfo(const CStandardDictionaryInternals& internals,
+								UInt32 initialReference) :
+							CIteratorInfo(), mInternals(internals), mInitialReference(initialReference),
+									mCurrentIndex(0), mCurrentItemInfo(nil)
+							{}
 
-					// CIteratorInfo methods
-	CIteratorInfo*	copy()
-						{
-							// Make copy
-							CDictionaryIteratorInfo*	iteratorInfo =
-																new CDictionaryIteratorInfo(mInternals,
-																		mInitialReference);
-							iteratorInfo->mCurrentIndex = mCurrentIndex;
-							iteratorInfo->mCurrentItemInfo = mCurrentItemInfo;
+						// CIteratorInfo methods
+		CIteratorInfo*	copy()
+							{
+								// Make copy
+								CDictionaryIteratorInfo*	iteratorInfo =
+																	new CDictionaryIteratorInfo(mInternals,
+																			mInitialReference);
+								iteratorInfo->mCurrentIndex = mCurrentIndex;
+								iteratorInfo->mCurrentItemInfo = mCurrentItemInfo;
 
-							return iteratorInfo;
-						}
+								return iteratorInfo;
+							}
 
 	// Properties
-	const	CDictionaryInternals&	mInternals;
-			UInt32					mInitialReference;
-			UInt32					mCurrentIndex;
-			SDictionaryItemInfo*	mCurrentItemInfo;
+	const	CStandardDictionaryInternals&	mInternals;
+			UInt32							mInitialReference;
+			UInt32							mCurrentIndex;
+			SDictionaryItemInfo*			mCurrentItemInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDictionaryInternals
+// MARK: - CStandardDictionaryInternals
 
-class CDictionaryInternals {
+class CStandardDictionaryInternals : public CDictionaryInternals {
 	public:
-											CDictionaryInternals(CDictionaryItemCopyProc itemCopyProc,
-													CDictionaryItemDisposeProc itemDisposeProc,
-													CDictionaryItemEqualsProc itemEqualsProc) :
-												mItemCopyProc(itemCopyProc), mItemDisposeProc(itemDisposeProc),
-														mItemEqualsProc(itemEqualsProc), mCount(0), mItemInfosCount(16),
-														mReferenceCount(1), mReference(0)
-												{
-													mItemInfos =
-															(SDictionaryItemInfo**)
-																	::calloc(mItemInfosCount,
-																			sizeof(SDictionaryItemInfo*));
-												}
-											~CDictionaryInternals()
-												{
-													// Remove all
-													removeAllInternal();
+												// Lifecycle methods
+												CStandardDictionaryInternals(CDictionaryItemCopyProc itemCopyProc,
+														CDictionaryItemDisposeProc itemDisposeProc,
+														CDictionaryItemEqualsProc itemEqualsProc);
+												~CStandardDictionaryInternals();
 
-													// Cleanup
-													::free(mItemInfos);
-												}
+												// CDictionaryInternals methods
+				CDictionaryInternals*			addReference();
+				void							removeReference();
 
-				CDictionaryInternals*		addReference() { mReferenceCount++; return this; }
-				void						removeReference()
-												{
-													// Decrement reference count and check if we are the last one
-													if (--mReferenceCount == 0) {
-														// We going away
-														CDictionaryInternals*	THIS = this;
-														DisposeOf(THIS);
-													}
-												}
+				CDictionaryKeyCount				getKeyCount();
+				SDictionaryValue*				getValue(const CString& key);
+				CDictionaryInternals*			set(const CString& key, const SDictionaryValue& value);
+				CDictionaryInternals*			remove(const CString& key);
+				CDictionaryInternals*			removeAll();
 
-				CDictionaryInternals*		prepareForWrite()
-												{
-													// Check reference count.  If there is more than 1 reference, we
-													//	implement a "copy on write".  So we will clone ourselves so we
-													//	have a personal buffer that can be changed while leaving the
-													//	exiting buffer as-is for the other references.
-													if (mReferenceCount > 1) {
-														// Multiple references, copy
-														CDictionaryInternals*	dictionaryInternals =
-																						new CDictionaryInternals(
-																								mItemCopyProc,
-																								mItemDisposeProc,
-																								mItemEqualsProc);
-														dictionaryInternals->mCount = mCount;
-														dictionaryInternals->mReference = mReference;
+				TIteratorS<SDictionaryItem>		getIterator() const;
 
-														for (UInt32 i = 0; i < mItemInfosCount; i++) {
-															// Setup for this linked list
-															SDictionaryItemInfo*	itemInfo = mItemInfos[i];
-															SDictionaryItemInfo*	dictionaryInternalsItemInfo = nil;
+				CDictionaryItemEqualsProc		getItemEqualsProc() const;
 
-															while (itemInfo != nil) {
-																// Check for first in the linked list
-																if (dictionaryInternalsItemInfo == nil) {
-																	// First in this linked list
-																	dictionaryInternals->mItemInfos[i] =
-																			new SDictionaryItemInfo(*itemInfo,
-																					mItemCopyProc);
-																	dictionaryInternalsItemInfo =
-																			dictionaryInternals->mItemInfos[i];
-																} else {
-																	// Next one in this linked list
-																	dictionaryInternalsItemInfo->mNextItemInfo =
-																			new SDictionaryItemInfo(*itemInfo,
-																					mItemCopyProc);
-																	dictionaryInternalsItemInfo =
-																			dictionaryInternalsItemInfo->mNextItemInfo;
-																}
+												// Private methods
+				CStandardDictionaryInternals*	prepareForWrite();
+				void							removeAllInternal();
+				void							remove(SDictionaryItemInfo* itemInfo, bool removeAll);
 
-																// Next
-																itemInfo = itemInfo->mNextItemInfo;
-															}
-														}
-
-														// One less reference here
-														mReferenceCount--;
-
-														return dictionaryInternals;
-													} else
-														// Only a single reference
-														return this;
-												}
-				SDictionaryValue*			getValue(const CString& key)
-												{
-													// Setup
-													UInt32	hashValue = CHasher::getValueForHashable(key);
-													UInt32	index = hashValue & (mItemInfosCount - 1);
-
-													// Find item info that matches
-													SDictionaryItemInfo*	itemInfo = mItemInfos[index];
-													while ((itemInfo != nil) && !itemInfo->doesMatch(hashValue, key))
-														// Advance to next item info
-														itemInfo = itemInfo->mNextItemInfo;
-
-													return (itemInfo != nil) ? &itemInfo->mItem.mValue : nil;
-												}
-				CDictionaryInternals*		set(const CString& key, const SDictionaryValue& value)
-												{
-													// Prepare for write
-													CDictionaryInternals*	dictionaryInternals = prepareForWrite();
-
-													// Setup
-													UInt32	hashValue = CHasher::getValueForHashable(key);
-													UInt32	index =
-																	hashValue &
-																			(dictionaryInternals->mItemInfosCount - 1);
-
-													// Find
-													SDictionaryItemInfo*	previousItemInfo = nil;
-													SDictionaryItemInfo*	currentItemInfo =
-																					dictionaryInternals->
-																							mItemInfos[index];
-													while ((currentItemInfo != nil) &&
-															!currentItemInfo->doesMatch(hashValue, key)) {
-														// Next in linked list
-														previousItemInfo = currentItemInfo;
-														currentItemInfo = currentItemInfo->mNextItemInfo;
-													}
-
-													// Check results
-													if (currentItemInfo == nil) {
-														// Did not find
-														if (previousItemInfo == nil)
-															// First one
-															dictionaryInternals->mItemInfos[index] =
-																	new SDictionaryItemInfo(hashValue, key, value);
-														else
-															// Add to the end
-															previousItemInfo->mNextItemInfo =
-																	new SDictionaryItemInfo(hashValue, key, value);
-
-														// Update info
-														dictionaryInternals->mCount++;
-														dictionaryInternals->mReference++;
-													} else {
-														// Did find a match
-														currentItemInfo->disposeValue(mItemDisposeProc);
-														currentItemInfo->mItem.mValue = value;
-													}
-
-													return dictionaryInternals;
-												}
-				CDictionaryInternals*		remove(const CString& key)
-												{
-													// Prepare for write
-													CDictionaryInternals*	dictionaryInternals = prepareForWrite();
-
-													// Setup
-													UInt32	hashValue = CHasher::getValueForHashable(key);
-													UInt32	index =
-																	hashValue &
-																			(dictionaryInternals->mItemInfosCount - 1);
-
-													// Find
-													SDictionaryItemInfo*	previousItemInfo = nil;
-													SDictionaryItemInfo*	currentItemInfo =
-																					dictionaryInternals->
-																							mItemInfos[index];
-													while ((currentItemInfo != nil) &&
-															!currentItemInfo->doesMatch(hashValue, key)) {
-														// Next in linked list
-														previousItemInfo = currentItemInfo;
-														currentItemInfo = currentItemInfo->mNextItemInfo;
-													}
-
-													// Check results
-													if (currentItemInfo != nil) {
-														// Did find a match
-														if (previousItemInfo == nil)
-															// First item info
-															dictionaryInternals->mItemInfos[index] =
-																	currentItemInfo->mNextItemInfo;
-														else
-															// Not the first item info
-															previousItemInfo->mNextItemInfo =
-																	currentItemInfo->mNextItemInfo;
-
-														// Cleanup
-														remove(currentItemInfo, false);
-
-														// Update info
-														dictionaryInternals->mCount--;
-														dictionaryInternals->mReference++;
-													}
-
-													return dictionaryInternals;
-												}
-				CDictionaryInternals*		removeAll()
-												{
-													// Check if empty
-													if (mCount == 0)
-														// Nothing to remove
-														return this;
-
-													// Prepare for write
-													CDictionaryInternals*	dictionaryInternals = prepareForWrite();
-
-													// Remove all
-													dictionaryInternals->removeAllInternal();
-
-													// Update info
-													dictionaryInternals->mCount = 0;
-													dictionaryInternals->mReference++;
-
-													return dictionaryInternals;
-												}
-				void						removeAllInternal()
-												{
-													// Iterate all item infos
-													for (UInt32 i = 0; i < mItemInfosCount; i++) {
-														// Check if have an item info
-														if (mItemInfos[i] != nil) {
-															// Remove this chain
-															remove(mItemInfos[i], true);
-
-															// Clear
-															mItemInfos[i] = nil;
-														}
-													}
-												}
-				void						remove(SDictionaryItemInfo* itemInfo, bool removeAll)
-												{
-													// Check for next item info
-													if (removeAll && (itemInfo->mNextItemInfo != nil))
-														// Remove the next item info
-														remove(itemInfo->mNextItemInfo, true);
-
-													// Dispose
-													itemInfo->disposeValue(mItemDisposeProc);
-
-													DisposeOf(itemInfo);
-												}
-
-				TIteratorS<SDictionaryItem>	getIterator() const
-												{
-													// Setup
-													CDictionaryIteratorInfo*	iteratorInfo =
-																						new CDictionaryIteratorInfo(
-																								*this, mReference);
-
-													// Find first item info
-													while ((mItemInfos[iteratorInfo->mCurrentIndex] == nil) &&
-															(++iteratorInfo->mCurrentIndex < mItemInfosCount)) ;
-
-													SDictionaryItem*	firstItem = nil;
-													if (iteratorInfo->mCurrentIndex < mItemInfosCount) {
-														// Have first item info
-														iteratorInfo->mCurrentItemInfo =
-																mItemInfos[iteratorInfo->mCurrentIndex];
-														firstItem = &mItemInfos[iteratorInfo->mCurrentIndex]->mItem;
-													}
-
-													return TIteratorS<SDictionaryItem>(firstItem, iteratorAdvance,
-															*iteratorInfo);
-												}
-
-		static	void*						iteratorAdvance(CIteratorInfo& iteratorInfo)
-												{
-													// Setup
-													CDictionaryIteratorInfo&	dictionaryIteratorInfo =
-																						(CDictionaryIteratorInfo&)
-																								iteratorInfo;
-
-													// Internals check
-													AssertFailIf(dictionaryIteratorInfo.mInitialReference !=
-															dictionaryIteratorInfo.mInternals.mReference);
-
-													// Check for additional item info in linked list
-													if (dictionaryIteratorInfo.mCurrentItemInfo->mNextItemInfo != nil) {
-														// Have next item info
-														dictionaryIteratorInfo.mCurrentItemInfo =
-																dictionaryIteratorInfo.mCurrentItemInfo->mNextItemInfo;
-													} else {
-														// End of item info linked list
-														while ((++dictionaryIteratorInfo.mCurrentIndex <
-																		dictionaryIteratorInfo.mInternals.
-																				mItemInfosCount)
-																&& (dictionaryIteratorInfo.mInternals.mItemInfos
-																		[dictionaryIteratorInfo.mCurrentIndex] ==
-																		nil)) ;
-
-														// Check if found another item info
-														if (dictionaryIteratorInfo.mCurrentIndex <
-																dictionaryIteratorInfo.mInternals.mItemInfosCount)
-															// Found another item info
-															dictionaryIteratorInfo.mCurrentItemInfo =
-																	dictionaryIteratorInfo.mInternals
-																			.mItemInfos[
-																					dictionaryIteratorInfo.
-																							mCurrentIndex];
-														else
-															// No more item infos
-															dictionaryIteratorInfo.mCurrentItemInfo = nil;
-													}
-
-													return (dictionaryIteratorInfo.mCurrentItemInfo != nil) ?
-															(void*) &dictionaryIteratorInfo.mCurrentItemInfo->mItem :
-															nil;
-												}
+												// Class methods
+		static	void*							iteratorAdvance(CIteratorInfo& iteratorInfo);
 
 		CDictionaryItemCopyProc		mItemCopyProc;
 		CDictionaryItemDisposeProc	mItemDisposeProc;
 		CDictionaryItemEqualsProc	mItemEqualsProc;
+
 		CDictionaryKeyCount			mCount;
 		SDictionaryItemInfo**		mItemInfos;
 		UInt32						mItemInfosCount;
 		UInt32						mReferenceCount;
 		UInt32						mReference;
+};
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CStandardDictionaryInternals::CStandardDictionaryInternals(CDictionaryItemCopyProc itemCopyProc,
+		CDictionaryItemDisposeProc itemDisposeProc, CDictionaryItemEqualsProc itemEqualsProc) : CDictionaryInternals(),
+		mItemCopyProc(itemCopyProc), mItemDisposeProc(itemDisposeProc), mItemEqualsProc(itemEqualsProc), mCount(0),
+		mItemInfosCount(16), mReferenceCount(1), mReference(0)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mItemInfos = (SDictionaryItemInfo**) ::calloc(mItemInfosCount, sizeof(SDictionaryItemInfo*));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CStandardDictionaryInternals::~CStandardDictionaryInternals()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Remove all
+	removeAllInternal();
+
+	// Cleanup
+	::free(mItemInfos);
+}
+
+// MARK: CDictionaryInternals methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionaryInternals* CStandardDictionaryInternals::addReference()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Bump reference count
+	mReferenceCount++;
+
+	return this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CStandardDictionaryInternals::removeReference()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Decrement reference count and check if we are the last one
+	if (--mReferenceCount == 0) {
+		// We going away
+		CStandardDictionaryInternals*	THIS = this;
+		DisposeOf(THIS);
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionaryKeyCount CStandardDictionaryInternals::getKeyCount()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SDictionaryValue* CStandardDictionaryInternals::getValue(const CString& key)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt32	hashValue = CHasher::getValueForHashable(key);
+	UInt32	index = hashValue & (mItemInfosCount - 1);
+
+	// Find item info that matches
+	SDictionaryItemInfo*	itemInfo = mItemInfos[index];
+	while ((itemInfo != nil) && !itemInfo->doesMatch(hashValue, key))
+		// Advance to next item info
+		itemInfo = itemInfo->mNextItemInfo;
+
+	return (itemInfo != nil) ? &itemInfo->mItem.mValue : nil;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionaryInternals* CStandardDictionaryInternals::set(const CString& key, const SDictionaryValue& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Prepare for write
+	CStandardDictionaryInternals*	dictionaryInternals = prepareForWrite();
+
+	// Setup
+	UInt32	hashValue = CHasher::getValueForHashable(key);
+	UInt32	index = hashValue & (dictionaryInternals->mItemInfosCount - 1);
+
+	// Find
+	SDictionaryItemInfo*	previousItemInfo = nil;
+	SDictionaryItemInfo*	currentItemInfo = dictionaryInternals->mItemInfos[index];
+	while ((currentItemInfo != nil) && !currentItemInfo->doesMatch(hashValue, key)) {
+		// Next in linked list
+		previousItemInfo = currentItemInfo;
+		currentItemInfo = currentItemInfo->mNextItemInfo;
+	}
+
+	// Check results
+	if (currentItemInfo == nil) {
+		// Did not find
+		if (previousItemInfo == nil)
+			// First one
+			dictionaryInternals->mItemInfos[index] = new SDictionaryItemInfo(hashValue, key, value);
+		else
+			// Add to the end
+			previousItemInfo->mNextItemInfo = new SDictionaryItemInfo(hashValue, key, value);
+
+		// Update info
+		dictionaryInternals->mCount++;
+		dictionaryInternals->mReference++;
+	} else {
+		// Did find a match
+		currentItemInfo->disposeValue(mItemDisposeProc);
+		currentItemInfo->mItem.mValue = value;
+	}
+
+	return dictionaryInternals;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionaryInternals* CStandardDictionaryInternals::remove(const CString& key)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Prepare for write
+	CStandardDictionaryInternals*	dictionaryInternals = prepareForWrite();
+
+	// Setup
+	UInt32	hashValue = CHasher::getValueForHashable(key);
+	UInt32	index = hashValue & (dictionaryInternals->mItemInfosCount - 1);
+
+	// Find
+	SDictionaryItemInfo*	previousItemInfo = nil;
+	SDictionaryItemInfo*	currentItemInfo = dictionaryInternals->mItemInfos[index];
+	while ((currentItemInfo != nil) && !currentItemInfo->doesMatch(hashValue, key)) {
+		// Next in linked list
+		previousItemInfo = currentItemInfo;
+		currentItemInfo = currentItemInfo->mNextItemInfo;
+	}
+
+	// Check results
+	if (currentItemInfo != nil) {
+		// Did find a match
+		if (previousItemInfo == nil)
+			// First item info
+			dictionaryInternals->mItemInfos[index] = currentItemInfo->mNextItemInfo;
+		else
+			// Not the first item info
+			previousItemInfo->mNextItemInfo = currentItemInfo->mNextItemInfo;
+
+		// Cleanup
+		remove(currentItemInfo, false);
+
+		// Update info
+		dictionaryInternals->mCount--;
+		dictionaryInternals->mReference++;
+	}
+
+	return dictionaryInternals;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionaryInternals* CStandardDictionaryInternals::removeAll()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if empty
+	if (mCount == 0)
+		// Nothing to remove
+		return this;
+
+	// Prepare for write
+	CStandardDictionaryInternals*	dictionaryInternals = prepareForWrite();
+
+	// Remove all
+	dictionaryInternals->removeAllInternal();
+
+	// Update info
+	dictionaryInternals->mCount = 0;
+	dictionaryInternals->mReference++;
+
+	return dictionaryInternals;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TIteratorS<SDictionaryItem> CStandardDictionaryInternals::getIterator() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CDictionaryIteratorInfo*	iteratorInfo = new CDictionaryIteratorInfo(*this, mReference);
+
+	// Find first item info
+	while ((mItemInfos[iteratorInfo->mCurrentIndex] == nil) && (++iteratorInfo->mCurrentIndex < mItemInfosCount)) ;
+
+	SDictionaryItem*	firstItem = nil;
+	if (iteratorInfo->mCurrentIndex < mItemInfosCount) {
+		// Have first item info
+		iteratorInfo->mCurrentItemInfo = mItemInfos[iteratorInfo->mCurrentIndex];
+		firstItem = &mItemInfos[iteratorInfo->mCurrentIndex]->mItem;
+	}
+
+	return TIteratorS<SDictionaryItem>(firstItem, iteratorAdvance, *iteratorInfo);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionaryItemEqualsProc CStandardDictionaryInternals::getItemEqualsProc() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mItemEqualsProc;
+}
+
+// MARK: Private methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CStandardDictionaryInternals* CStandardDictionaryInternals::prepareForWrite()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check reference count.  If there is more than 1 reference, we implement a "copy on write".  So we will clone
+	//	ourselves so we have a personal buffer that can be changed while leaving the exiting buffer as-is for the other
+	//	references.
+	if (mReferenceCount > 1) {
+		// Multiple references, copy
+		CStandardDictionaryInternals*	dictionaryInternals =
+												new CStandardDictionaryInternals(mItemCopyProc, mItemDisposeProc,
+														mItemEqualsProc);
+		dictionaryInternals->mCount = mCount;
+		dictionaryInternals->mReference = mReference;
+
+		for (UInt32 i = 0; i < mItemInfosCount; i++) {
+			// Setup for this linked list
+			SDictionaryItemInfo*	itemInfo = mItemInfos[i];
+			SDictionaryItemInfo*	dictionaryInternalsItemInfo = nil;
+
+			while (itemInfo != nil) {
+				// Check for first in the linked list
+				if (dictionaryInternalsItemInfo == nil) {
+					// First in this linked list
+					dictionaryInternals->mItemInfos[i] = new SDictionaryItemInfo(*itemInfo, mItemCopyProc);
+					dictionaryInternalsItemInfo = dictionaryInternals->mItemInfos[i];
+				} else {
+					// Next one in this linked list
+					dictionaryInternalsItemInfo->mNextItemInfo = new SDictionaryItemInfo(*itemInfo, mItemCopyProc);
+					dictionaryInternalsItemInfo = dictionaryInternalsItemInfo->mNextItemInfo;
+				}
+
+				// Next
+				itemInfo = itemInfo->mNextItemInfo;
+			}
+		}
+
+		// One less reference here
+		mReferenceCount--;
+
+		return dictionaryInternals;
+	} else
+		// Only a single reference
+		return this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CStandardDictionaryInternals::removeAllInternal()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all item infos
+	for (UInt32 i = 0; i < mItemInfosCount; i++) {
+		// Check if have an item info
+		if (mItemInfos[i] != nil) {
+			// Remove this chain
+			remove(mItemInfos[i], true);
+
+			// Clear
+			mItemInfos[i] = nil;
+		}
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CStandardDictionaryInternals::remove(SDictionaryItemInfo* itemInfo, bool removeAll)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for next item info
+	if (removeAll && (itemInfo->mNextItemInfo != nil))
+		// Remove the next item info
+		remove(itemInfo->mNextItemInfo, true);
+
+	// Dispose
+	itemInfo->disposeValue(mItemDisposeProc);
+
+	DisposeOf(itemInfo);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void* CStandardDictionaryInternals::iteratorAdvance(CIteratorInfo& iteratorInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CDictionaryIteratorInfo&	dictionaryIteratorInfo = (CDictionaryIteratorInfo&) iteratorInfo;
+
+	// Internals check
+	AssertFailIf(dictionaryIteratorInfo.mInitialReference != dictionaryIteratorInfo.mInternals.mReference);
+
+	// Check for additional item info in linked list
+	if (dictionaryIteratorInfo.mCurrentItemInfo->mNextItemInfo != nil) {
+		// Have next item info
+		dictionaryIteratorInfo.mCurrentItemInfo = dictionaryIteratorInfo.mCurrentItemInfo->mNextItemInfo;
+	} else {
+		// End of item info linked list
+		while ((++dictionaryIteratorInfo.mCurrentIndex < dictionaryIteratorInfo.mInternals.mItemInfosCount) &&
+				(dictionaryIteratorInfo.mInternals.mItemInfos [dictionaryIteratorInfo.mCurrentIndex] == nil)) ;
+
+		// Check if found another item info
+		if (dictionaryIteratorInfo.mCurrentIndex < dictionaryIteratorInfo.mInternals.mItemInfosCount)
+			// Found another item info
+			dictionaryIteratorInfo.mCurrentItemInfo =
+					dictionaryIteratorInfo.mInternals.mItemInfos[dictionaryIteratorInfo.mCurrentIndex];
+		else
+			// No more item infos
+			dictionaryIteratorInfo.mCurrentItemInfo = nil;
+	}
+
+	return (dictionaryIteratorInfo.mCurrentItemInfo != nil) ?
+			(void*) &dictionaryIteratorInfo.mCurrentItemInfo->mItem : nil;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CProcsDictionaryInternals
+
+class CProcsDictionaryInternals : public CDictionaryInternals {
+	public:
+												// Lifecycle methods
+												CProcsDictionaryInternals(const SDictionaryProcsInfo& procsInfo) :
+													mProcsInfo(procsInfo), mReferenceCount(1)
+													{}
+												~CProcsDictionaryInternals()
+													{
+														// Call dispose user data proc
+														mProcsInfo.mDisposeUserDataProc(mProcsInfo.mUserData);
+													}
+
+												// CDictionaryInternals methods
+				CDictionaryInternals*			addReference()
+													{ mReferenceCount++; return this; }
+				void							removeReference()
+													{
+														// Decrement reference count and check if we are the last one
+														if (--mReferenceCount == 0) {
+															// We going away
+															CProcsDictionaryInternals*	THIS = this;
+															DisposeOf(THIS);
+														}
+													}
+
+				CDictionaryKeyCount				getKeyCount()
+													{ return mProcsInfo.mGetKeyCountProc(mProcsInfo.mUserData); }
+				SDictionaryValue*				getValue(const CString& key)
+													{ return mProcsInfo.mGetValueProc(key, mProcsInfo.mUserData); }
+				CDictionaryInternals*			set(const CString& key, const SDictionaryValue& value)
+													{
+														// Convert to standard dictionary
+														CStandardDictionaryInternals*	dictionaryInternals =
+																								prepareForWrite();
+
+														// Do set
+														dictionaryInternals->set(key, value);
+
+														return dictionaryInternals;
+													}
+				CDictionaryInternals*			remove(const CString& key)
+													{
+														// Convert to standard dictionary
+														CStandardDictionaryInternals*	dictionaryInternals =
+																								prepareForWrite();
+
+														// Do remove
+														dictionaryInternals->remove(key);
+
+														return dictionaryInternals;
+													}
+				CDictionaryInternals*			removeAll()
+													{
+														// Convert to standard dictionary
+														CStandardDictionaryInternals*	dictionaryInternals =
+																								prepareForWrite();
+
+														// Do remove all
+														dictionaryInternals->removeAll();
+
+														return dictionaryInternals;
+													}
+
+				TIteratorS<SDictionaryItem>		getIterator() const
+													{
+// TODO
+CIteratorInfo*	iteratorInfo = nil;
+return TIteratorS<SDictionaryItem>(nil, nil, *iteratorInfo);
+													}
+
+				CDictionaryItemEqualsProc		getItemEqualsProc() const
+													{ return nil; }
+
+												// Private methods
+				CStandardDictionaryInternals*	prepareForWrite()
+													{
+// TODO
+return nil;
+													}
+
+		SDictionaryProcsInfo	mProcsInfo;
+		UInt32					mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -392,15 +552,23 @@ CDictionary	CDictionary::mEmpty;
 
 //----------------------------------------------------------------------------------------------------------------------
 CDictionary::CDictionary(CDictionaryItemCopyProc itemCopyProc, CDictionaryItemDisposeProc itemDisposeProc,
-		CDictionaryItemEqualsProc itemEqualsProc)
+		CDictionaryItemEqualsProc itemEqualsProc) : CEquatable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDictionaryInternals(itemCopyProc, itemDisposeProc, itemEqualsProc);
+	mInternals = new CStandardDictionaryInternals(itemCopyProc, itemDisposeProc, itemEqualsProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary::CDictionary(const CDictionary& other)
+CDictionary::CDictionary(const SDictionaryProcsInfo& procsInfo) : CEquatable()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mInternals = new CProcsDictionaryInternals(procsInfo);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionary::CDictionary(const CDictionary& other) : CEquatable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -421,7 +589,7 @@ CDictionary::~CDictionary()
 CDictionaryKeyCount CDictionary::getKeyCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mCount;
+	return mInternals->getKeyCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -764,7 +932,7 @@ bool CDictionary::equals(const CDictionary& other, void* itemCompareProcUserData
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check count
-	if (mInternals->mCount != other.mInternals->mCount)
+	if (mInternals->getKeyCount() != other.mInternals->getKeyCount())
 		// Counts differ
 		return false;
 
@@ -773,7 +941,7 @@ bool CDictionary::equals(const CDictionary& other, void* itemCompareProcUserData
 		// Get value
 		SDictionaryItem		item = iterator.getValue();
 		SDictionaryValue*	value = other.mInternals->getValue(item.mKey);
-		if ((value == nil) || !item.mValue.equals(*value, mInternals->mItemEqualsProc))
+		if ((value == nil) || !item.mValue.equals(*value, mInternals->getItemEqualsProc()))
 			// Value not found or value is not the same
 			return false;
 	}

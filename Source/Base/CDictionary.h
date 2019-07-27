@@ -14,6 +14,9 @@
 typedef			UInt32	CDictionaryKeyCount;
 typedef	const	void*	CDictionaryItemRef;
 
+struct SDictionaryValue;
+struct SDictionaryItem;
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Procs
 
@@ -21,11 +24,30 @@ typedef	CDictionaryItemRef	(*CDictionaryItemCopyProc)(CDictionaryItemRef itemRef
 typedef	void				(*CDictionaryItemDisposeProc)(CDictionaryItemRef itemRef);
 typedef	bool				(*CDictionaryItemEqualsProc)(CDictionaryItemRef itemRef1, CDictionaryItemRef itemRef2);
 
+typedef	CDictionaryKeyCount	(*CDictionaryGetKeyCountProc)(void* userData);
+typedef	SDictionaryValue*	(*CDictionaryGetValueProc)(const CString& key, void* userData);
+typedef	void				(*CDictionaryDisposeUserDataProc)(void* userData);
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SDictionaryProcsInfo
+
+struct SDictionaryProcsInfo {
+	// Lifecycle methods
+	SDictionaryProcsInfo(CDictionaryGetKeyCountProc getKeyCountProc, CDictionaryGetValueProc getValueProc,
+			CDictionaryDisposeUserDataProc disposeUserDataProc, void* userData) :
+		mGetKeyCountProc(getKeyCountProc), mGetValueProc(getValueProc), mDisposeUserDataProc(disposeUserDataProc),
+				mUserData(userData)
+		{}
+
+	// Properties
+	CDictionaryGetKeyCountProc		mGetKeyCountProc;
+	CDictionaryGetValueProc			mGetValueProc;
+	CDictionaryDisposeUserDataProc	mDisposeUserDataProc;
+	void*							mUserData;
+};
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDictionary
-
-struct SDictionaryValue;
-struct SDictionaryItem;
 
 class CDictionaryInternals;
 class CDictionary : public CEquatable {
@@ -35,6 +57,7 @@ class CDictionary : public CEquatable {
 													CDictionary(CDictionaryItemCopyProc itemCopyProc = nil,
 															CDictionaryItemDisposeProc itemDisposeProc = nil,
 															CDictionaryItemEqualsProc itemEqualsProc = nil);
+													CDictionary(const SDictionaryProcsInfo& procsInfo);
 													CDictionary(const CDictionary& other);
 		virtual										~CDictionary();
 
