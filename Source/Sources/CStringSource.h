@@ -24,6 +24,8 @@ class CStringSource {
 
 		CString	readStringToEOL(UError& outError) const;
 
+		void	reset() const;
+
 	// Properties
 	private:
 		CStringSourceInternals*	mInternals;

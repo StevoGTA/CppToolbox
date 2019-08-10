@@ -59,7 +59,6 @@ class CFile : CHashable {
 						bool				doesExist() const;
 
 						CFolder				getFolder() const;
-//						CImage				getImage() const;
 						bool				isHidden() const;
 
 						bool				getLocked() const;

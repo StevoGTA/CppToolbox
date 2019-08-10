@@ -14,7 +14,8 @@ extern	void	eAssertHandleProc(UError error, const char* file, const char* proc, 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define	AssertFailWith(error)	{ eAssertHandleProc(error, __FILE__, __func__, __LINE__); }
-#define	AssertFailIf(cond)		{ if (cond) AssertFailWith(kAssertFailedError); }
-#define	AssertNotNil(value)		{ if ((value) == nil) AssertFailWith(kNilValueError); }
-#define	AssertNil(value)		{ if ((value) != nil) AssertFailWith(kNonNilValueError); }
+#define AssertFailUnimplemented()	AssertFailWith(kUnimplementedError)
+#define	AssertFailWith(error)		{ eAssertHandleProc(error, __FILE__, __func__, __LINE__); }
+#define	AssertFailIf(cond)			{ if (cond) AssertFailWith(kAssertFailedError); }
+#define	AssertNotNil(value)			{ if ((value) == nil) AssertFailWith(kNilValueError); }
+#define	AssertNil(value)			{ if ((value) != nil) AssertFailWith(kNonNilValueError); }

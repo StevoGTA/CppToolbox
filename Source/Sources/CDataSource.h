@@ -24,6 +24,7 @@ class CDataSource {
 
 		UError	readData(void* buffer, UInt64 byteCount) const;
 		CData	readData(UInt64 byteCount, UError& outError) const;
+		CData	readData(UError& outError) const;
 		SInt8	readSInt8(UError& outError) const
 					{
 						// Read
@@ -99,6 +100,8 @@ class CDataSource {
 
 		SInt64	getPos() const;
 		UError	setPos(EDataProviderPosition position, SInt64 newPos) const;
+
+		void	reset() const;
 
 	// Properties
 	private:

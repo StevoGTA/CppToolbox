@@ -4,6 +4,8 @@
 
 #include "CBinaryPropertyList.h"
 
+#include "CppToolboxAssert.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
@@ -402,15 +404,18 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 			switch (marker) {
 				case kMarkerTypeArray:
 					// Array (unimplemented)
+AssertFailUnimplemented();
 					return nil;
 
 				case kMarkerTypeBooleanTrue:
 				case kMarkerTypeBooleanFalse:
 					// Boolean (unimplemented)
+AssertFailUnimplemented();
 					return nil;
 
 				case kMarkerTypeData:
 					// Data (unimplemented)
+AssertFailUnimplemented();
 					return nil;
 
 				case kMarkerTypeDictionary: {
@@ -426,6 +431,7 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 				case kMarkerTypeFloat32:
 				case kMarkerTypeFloat64:
 					// Float (unimplemented)
+AssertFailUnimplemented();
 					return nil;
 
 				case kMarkerTypeInteger1Byte:
@@ -433,6 +439,7 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 				case kMarkerTypeInteger4Bytes:
 				case kMarkerTypeInteger8Bytes:
 					// Integer (unimplemented)
+AssertFailUnimplemented();
 					return nil;
 
 				case kMarkerTypeStringASCII:
@@ -459,6 +466,7 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 		case kMarkerTypeData:
 			// Data
 // TODO
+AssertFailUnimplemented();
 			break;
 
 		case kMarkerTypeDictionary:
@@ -468,11 +476,13 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 		case kMarkerTypeFloat32:
 			// Float32
 // TODO
+AssertFailUnimplemented();
 			break;
 
 		case kMarkerTypeFloat64:
 			// Float64
 // TODO
+AssertFailUnimplemented();
 			break;
 
 		case kMarkerTypeInteger1Byte:

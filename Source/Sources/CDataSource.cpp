@@ -82,8 +82,24 @@ UError CDataSource::readData(void* buffer, UInt64 byteCount) const
 CData CDataSource::readData(UInt64 byteCount, UError& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Read
+	// Setup
 	CData	data((CDataSize) byteCount);
+
+	// Read
+	outError = readData(data.getMutableBytePtr(), byteCount);
+
+	return (outError == kNoError) ? data : CData::mEmpty;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CData CDataSource::readData(UError& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt64	byteCount = getSize() - getPos();
+	CData	data((CDataSize) byteCount);
+
+	// Read
 	outError = readData(data.getMutableBytePtr(), byteCount);
 
 	return (outError == kNoError) ? data : CData::mEmpty;
@@ -101,4 +117,11 @@ UError CDataSource::setPos(EDataProviderPosition position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mDataProvider->setPos(position, newPos);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDataSource::reset() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mDataProvider->reset();
 }

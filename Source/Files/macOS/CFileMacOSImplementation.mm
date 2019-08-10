@@ -30,17 +30,6 @@
 
 // MARK: Instance methods
 
-////----------------------------------------------------------------------------------------------------------------------
-//CImage CFile::getImage() const
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	CFStringRef	stringRef = eStringCopyCFStringRef(mInternals->mURL.getFilesystemPath());
-//	NSImage*	image = [[NSWorkspace sharedWorkspace] iconForFile:(__bridge NSString*) stringRef];
-//	::CFRelease(stringRef);
-//
-//	return CImage(image);
-//}
-
 //----------------------------------------------------------------------------------------------------------------------
 bool CFile::isHidden() const
 //----------------------------------------------------------------------------------------------------------------------

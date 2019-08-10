@@ -27,7 +27,6 @@ const	UError	kDataProviderSetPosAfterEndError	= MAKE_UError(kDataProviderErrorDo
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDataProvider
 
-//class CDataProviderInternals;
 class CDataProvider {
 	// Methods
 	public:
@@ -43,7 +42,5 @@ class CDataProvider {
 		virtual	SInt64	getPos() const = 0;
 		virtual	UError	setPos(EDataProviderPosition position, SInt64 newPos) const = 0;
 
-	// Properties
-	private:
-//		CDataProviderInternals*	mInternals;
+		virtual	void	reset() const = 0;
 };

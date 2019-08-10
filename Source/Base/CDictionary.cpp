@@ -524,6 +524,7 @@ class CProcsDictionaryInternals : public CDictionaryInternals {
 				TIteratorS<SDictionaryItem>		getIterator() const
 													{
 // TODO
+AssertFailUnimplemented();
 CIteratorInfo*	iteratorInfo = nil;
 return TIteratorS<SDictionaryItem>(nil, nil, *iteratorInfo);
 													}
@@ -535,6 +536,7 @@ return TIteratorS<SDictionaryItem>(nil, nil, *iteratorInfo);
 				CStandardDictionaryInternals*	prepareForWrite()
 													{
 // TODO
+AssertFailUnimplemented();
 return nil;
 													}
 

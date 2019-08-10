@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "PlatformDefinitions.h"
+#include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Size
@@ -23,7 +23,6 @@ typedef	UInt32	CDataByteIndex;
 // MARK: - CData
 
 class CDataInternals;
-
 class CData {
 	// Methods
 	public:
@@ -31,6 +30,7 @@ class CData {
 							CData(CDataSize initialSize = 0);
 							CData(const CData& other);
 							CData(const void* buffer, CDataSize bufferSize, bool copySourceData = true);
+							CData(const CString& base64String);
 							~CData();
 
 							// Instance methods
@@ -47,6 +47,8 @@ class CData {
 				void		appendBytes(const void* buffer, CDataSize bufferSize);
 				void		replaceBytes(CDataByteIndex startByte, CDataSize byteCount, const void* buffer,
 									CDataSize bufferSize);
+
+				CString		getBase64String(bool prettyPrint = false) const;
 
 				CData&		operator=(const CData& other);
 				bool		operator==(const CData& other) const;

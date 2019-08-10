@@ -304,3 +304,22 @@ ECompareResult CString::compare(CString* const string1, CString* const string2, 
 {
 	return string1->compareTo(*string2, *((EStringCompareFlags*) compareFlags));
 }
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CString::make(const char* format, ...)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	va_list	args;
+	va_start(args, format);
+
+	// Make
+	CString	string = make(format, args);
+
+	// Cleanup
+	va_end(args);
+
+	return string;
+}

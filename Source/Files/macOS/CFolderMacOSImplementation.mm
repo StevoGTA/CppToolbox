@@ -11,17 +11,6 @@
 
 // MARK: Instance methods
 
-////----------------------------------------------------------------------------------------------------------------------
-//CImage CFolder::getImage() const
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	CFStringRef	stringRef = eStringCopyCFStringRef(mInternals->mURL.getFilesystemPath());
-//	NSImage*	image = [[NSWorkspace sharedWorkspace] iconForFile:(__bridge NSString*) stringRef];
-//	::CFRelease(stringRef);
-//
-//	return CImage(image);
-//}
-
 //----------------------------------------------------------------------------------------------------------------------
 bool CFolder::isPackage() const
 //----------------------------------------------------------------------------------------------------------------------

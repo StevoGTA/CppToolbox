@@ -141,3 +141,10 @@ CString CStringSource::readStringToEOL(UError& outError) const
 
 	return outString;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+void CStringSource::reset() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mDataProvider->reset();
+}

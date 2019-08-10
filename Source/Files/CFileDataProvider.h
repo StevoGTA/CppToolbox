@@ -26,6 +26,8 @@ class CFileDataProvider : public CDataProvider {
 		SInt64	getPos() const;
 		UError	setPos(EDataProviderPosition position, SInt64 newPos) const;
 
+		void	reset() const;
+
 	// Properties
 	private:
 		CFileDataProviderInternals*	mInternals;
@@ -49,6 +51,8 @@ class CMappedFileDataProvider : public CDataProvider {
 
 		SInt64	getPos() const;
 		UError	setPos(EDataProviderPosition position, SInt64 newPos) const;
+
+		void	reset() const;
 
 	// Properties
 	private:

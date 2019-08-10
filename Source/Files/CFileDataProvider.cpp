@@ -12,14 +12,37 @@
 
 class CFileDataProviderInternals {
 	public:
-		CFileDataProviderInternals(const CFile& file) :
-			mFile(file), mFileReader(mFile), mError(mFileReader.open(true))
-			{}
-		~CFileDataProviderInternals() {}
+						CFileDataProviderInternals(const CFile& file) :
+							mFile(file), mFileReader(nil), mError(kNoError)
+							{}
+						~CFileDataProviderInternals()
+							{
+								reset();
+							}
 
-		CFile		mFile;
-		CFileReader	mFileReader;
-		UError		mError;
+		CFileReader&	getFileReader()
+							{
+								// Check if have file reader
+								if (mFileReader == nil) {
+									// Setup
+									mFileReader = new CFileReader(mFile);
+									mError = mFileReader->open();
+								}
+
+								return *mFileReader;
+							}
+		void			reset()
+							{
+								// Cleanup
+								DisposeOf(mFileReader);
+
+								// No longer any error
+								mError = kNoError;
+							}
+
+		CFile			mFile;
+		CFileReader*	mFileReader;
+		UError			mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -55,21 +78,28 @@ UInt64 CFileDataProvider::getSize() const
 UError CFileDataProvider::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mFileReader.readData(buffer, byteCount);
+	return mInternals->getFileReader().readData(buffer, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt64 CFileDataProvider::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mFileReader.getPos();
+	return mInternals->getFileReader().getPos();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UError CFileDataProvider::setPos(EDataProviderPosition position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mFileReader.setPos((EFileReaderPositionMode) position, newPos);
+	return mInternals->getFileReader().setPos((EFileReaderPositionMode) position, newPos);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CFileDataProvider::reset() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->reset();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -78,23 +108,41 @@ UError CFileDataProvider::setPos(EDataProviderPosition position, SInt64 newPos) 
 
 class CMappedFileDataProviderInternals {
 	public:
-		CMappedFileDataProviderInternals(const CFile& file) :
-			mFile(file), mFileReader(mFile), mFileMemoryMap(nil), mCurrentOffset(0)
-			{
-				// Open file reader
-				mError = mFileReader.open();
-				ReturnIfError(mError);
+						CMappedFileDataProviderInternals(const CFile& file) :
+							mFile(file), mFileReader(nil), mFileMemoryMap(nil), mCurrentOffset(0)
+							{}
+						~CMappedFileDataProviderInternals()
+							{
+								reset();
+							}
 
-				// Create file memory map
-				mFileMemoryMap = new CFileMemoryMap(mFileReader.getFileMemoryMap(0, mFile.getSize(), mError));
-			}
-		~CMappedFileDataProviderInternals()
-			{
-				DisposeOf(mFileMemoryMap);
-			}
+		CFileMemoryMap&	getFileMemoryMap()
+							{
+								// Check if have file memory map
+								if (mFileMemoryMap == nil) {
+									// Setup
+									mFileReader = new CFileReader(mFile);
+									mError = mFileReader->open();
+
+									mFileMemoryMap =
+											new CFileMemoryMap(
+													mFileReader->getFileMemoryMap(0, mFile.getSize(), mError));
+								}
+
+								return *mFileMemoryMap;
+							}
+		void			reset()
+							{
+								// Cleanup
+								DisposeOf(mFileMemoryMap);
+								DisposeOf(mFileReader);
+
+								// No longer any error
+								mError = kNoError;
+							}
 
 		CFile			mFile;
-		CFileReader		mFileReader;
+		CFileReader*	mFileReader;
 		CFileMemoryMap*	mFileMemoryMap;
 		UError			mError;
 
@@ -127,12 +175,7 @@ CMappedFileDataProvider::~CMappedFileDataProvider()
 UInt64 CMappedFileDataProvider::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Preflight
-	AssertFailIf(mInternals->mFileMemoryMap == nil);
-	if (mInternals->mFileMemoryMap == nil)
-		return 0;
-
-	return mInternals->mFileMemoryMap->getByteCount();
+	return mInternals->getFileMemoryMap().getByteCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -140,21 +183,21 @@ UError CMappedFileDataProvider::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf(mInternals->mFileMemoryMap == nil);
-	if (mInternals->mFileMemoryMap == nil)
+	AssertFailIf(mInternals->mError != kNoError);
+	if (mInternals->mError != kNoError)
 		return mInternals->mError;
 
 	// Setup
 	UError	error = kNoError;
 
 	// Parameter and internals check
-	AssertFailIf(byteCount > (mInternals->mFileMemoryMap->getByteCount() - mInternals->mCurrentOffset));
-	if (byteCount > (mInternals->mFileMemoryMap->getByteCount() - mInternals->mCurrentOffset))
+	AssertFailIf(byteCount > (mInternals->getFileMemoryMap().getByteCount() - mInternals->mCurrentOffset));
+	if (byteCount > (mInternals->getFileMemoryMap().getByteCount() - mInternals->mCurrentOffset))
 		// Attempting to ready beyond end of data
 		return kDataProviderReadBeyondEndError;
 
 	// Copy data
-	::memcpy(buffer, (UInt8*) mInternals->mFileMemoryMap->getBytePtr() + mInternals->mCurrentOffset, byteCount);
+	::memcpy(buffer, (UInt8*) mInternals->getFileMemoryMap().getBytePtr() + mInternals->mCurrentOffset, byteCount);
 	mInternals->mCurrentOffset += byteCount;
 
 	return error;
@@ -172,8 +215,8 @@ UError CMappedFileDataProvider::setPos(EDataProviderPosition position, SInt64 ne
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf(mInternals->mFileMemoryMap == nil);
-	if (mInternals->mFileMemoryMap == nil)
+	AssertFailIf(mInternals->mError != kNoError);
+	if (mInternals->mError != kNoError)
 		return mInternals->mError;
 
 	// Figure new offset
@@ -191,7 +234,7 @@ UError CMappedFileDataProvider::setPos(EDataProviderPosition position, SInt64 ne
 
 		case kDataProviderPositionFromEnd:
 			// From end
-			offset = mInternals->mFileMemoryMap->getByteCount() - newPos;
+			offset = mInternals->getFileMemoryMap().getByteCount() - newPos;
 			break;
 	}
 
@@ -200,12 +243,19 @@ UError CMappedFileDataProvider::setPos(EDataProviderPosition position, SInt64 ne
 	if (newPos < 0)
 		return kDataProviderSetPosBeforeStartError;
 
-	AssertFailIf(newPos >= mInternals->mFileMemoryMap->getByteCount());
-	if (newPos >= mInternals->mFileMemoryMap->getByteCount())
+	AssertFailIf(newPos >= mInternals->getFileMemoryMap().getByteCount());
+	if (newPos >= mInternals->getFileMemoryMap().getByteCount())
 		return kDataProviderSetPosAfterEndError;
 
 	// Set
 	mInternals->mCurrentOffset = offset;
 
 	return kNoError;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMappedFileDataProvider::reset() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->reset();
 }

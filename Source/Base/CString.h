@@ -289,7 +289,11 @@ class CString : public CHashable {
 												CStringLength charCount = kCStringDefaultMaxLength) const;
 						
 						CString&		makeLowercase();
+						CString			lowercased() const
+											{ CString string(*this); string.makeLowercase(); return string; }
 						CString&		makeUppercase();
+						CString			uppercased() const
+											{ CString string(*this); string.makeUppercase(); return string; }
 						CString&		removeLeadingAndTrailingWhitespace();
 						CString&		removeAllWhitespace();
 						CString&		removeLeadingAndTrailingQuotes();
@@ -318,7 +322,8 @@ class CString : public CHashable {
 												
 										// Class methods
 		static			ECompareResult	compare(CString* const string1, CString* const string2, void* compareFlags);
-		
+
+		static			CString			make(const char* format, ...);
 		static			CString			make(const char* format, va_list args);
 		static			bool			isCharacterInSet(UTF32Char utf32Char, EStringCharacterSet characterSet);
 

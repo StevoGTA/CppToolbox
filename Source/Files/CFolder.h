@@ -49,7 +49,6 @@ class CFolder : CHashable {
 						CFolder				getFolder() const;
 
 #if TARGET_OS_MACOS
-//						CImage				getImage() const;
 						bool				isPackage() const;
 #endif
 
