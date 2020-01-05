@@ -624,174 +624,164 @@ const SDictionaryValue& CDictionary::getValue(const CString& key) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CDictionary::getBool(const CString& key, bool notFoundValue) const
+bool CDictionary::getBool(const CString& key, bool defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getBool(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getBool(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 const TArray<CDictionary>& CDictionary::getArrayOfDictionaries(const CString& key,
-		const TArray<CDictionary>& notFoundValue) const
+		const TArray<CDictionary>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getArrayOfDictionaries(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getArrayOfDictionaries(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<CString>& CDictionary::getArrayOfStrings(const CString& key, const TArray<CString>& notFoundValue) const
+const TArray<CString>& CDictionary::getArrayOfStrings(const CString& key, const TArray<CString>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getArrayOfStrings(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getArrayOfStrings(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CData& CDictionary::getData(const CString& key, const CData& notFoundValue) const
+const CData& CDictionary::getData(const CString& key, const CData& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getData(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getData(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CDictionary& CDictionary::getDictionary(const CString& key, const CDictionary& notFoundValue) const
+const CDictionary& CDictionary::getDictionary(const CString& key, const CDictionary& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getDictionary(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getDictionary(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CString& CDictionary::getString(const CString& key, const CString& notFoundValue) const
+const CString& CDictionary::getString(const CString& key, const CString& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getString(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getString(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float32 CDictionary::getFloat32(const CString& key, Float32 notFoundValue) const
+Float32 CDictionary::getFloat32(const CString& key, Float32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getFloat32(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getFloat32(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float64 CDictionary::getFloat64(const CString& key, Float64 notFoundValue) const
+Float64 CDictionary::getFloat64(const CString& key, Float64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getFloat64(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getFloat64(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt8 CDictionary::getSInt8(const CString& key, SInt8 notFoundValue) const
+SInt8 CDictionary::getSInt8(const CString& key, SInt8 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getSInt8(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getSInt8(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt16 CDictionary::getSInt16(const CString& key, SInt16 notFoundValue) const
+SInt16 CDictionary::getSInt16(const CString& key, SInt16 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getSInt16(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getSInt16(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt32 CDictionary::getSInt32(const CString& key, SInt32 notFoundValue) const
+SInt32 CDictionary::getSInt32(const CString& key, SInt32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getSInt32(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getSInt32(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt64 CDictionary::getSInt64(const CString& key, SInt64 notFoundValue) const
+SInt64 CDictionary::getSInt64(const CString& key, SInt64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getSInt64(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getSInt64(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt8 CDictionary::getUInt8(const CString& key, UInt8 notFoundValue) const
+UInt8 CDictionary::getUInt8(const CString& key, UInt8 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getUInt8(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getUInt8(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt16 CDictionary::getUInt16(const CString& key, UInt16 notFoundValue) const
+UInt16 CDictionary::getUInt16(const CString& key, UInt16 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getUInt16(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getUInt16(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CDictionary::getUInt32(const CString& key, UInt32 notFoundValue) const
+UInt32 CDictionary::getUInt32(const CString& key, UInt32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getUInt32(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getUInt32(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CDictionary::getUInt64(const CString& key, UInt64 notFoundValue) const
+UInt64 CDictionary::getUInt64(const CString& key, UInt64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	SDictionaryValue*	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getUInt64(notFoundValue) : notFoundValue;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CDictionaryItemRef CDictionary::getItemRef(const CString& key, CDictionaryItemRef notFoundValue) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
-
-	return (value != nil) ? value->getItemRef(notFoundValue) : notFoundValue;
+	return (value != nil) ? value->getUInt64(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -972,6 +962,16 @@ CDictionary& CDictionary::operator=(const CDictionary& other)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<CDictionaryItemRef> CDictionary::getItemRef(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SDictionaryValue*	value = mInternals->getValue(key);
+
+	return (value != nil) ? OV<CDictionaryItemRef>(value->getItemRef()) : OV<CDictionaryItemRef>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SDictionaryValue
 
@@ -1115,7 +1115,7 @@ SDictionaryValue::SDictionaryValue(const SDictionaryValue& other, CDictionaryIte
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool SDictionaryValue::getBool(bool notFoundValue) const
+bool SDictionaryValue::getBool(bool defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1133,62 +1133,62 @@ bool SDictionaryValue::getBool(bool notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<CDictionary>& SDictionaryValue::getArrayOfDictionaries(const TArray<CDictionary>& notFoundValue) const
+const TArray<CDictionary>& SDictionaryValue::getArrayOfDictionaries(const TArray<CDictionary>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
 	AssertFailIf(mValueType != kDictionaryValueTypeArrayOfDictionaries);
 
-	return (mValueType == kDictionaryValueTypeArrayOfDictionaries) ? *mValue.mArrayOfDictionaries : notFoundValue;
+	return (mValueType == kDictionaryValueTypeArrayOfDictionaries) ? *mValue.mArrayOfDictionaries : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<CString>& SDictionaryValue::getArrayOfStrings(const TArray<CString>& notFoundValue) const
+const TArray<CString>& SDictionaryValue::getArrayOfStrings(const TArray<CString>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
 	AssertFailIf(mValueType != kDictionaryValueTypeArrayOfStrings);
 
-	return (mValueType == kDictionaryValueTypeArrayOfStrings) ? *mValue.mArrayOfStrings : notFoundValue;
+	return (mValueType == kDictionaryValueTypeArrayOfStrings) ? *mValue.mArrayOfStrings : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CData& SDictionaryValue::getData(const CData& notFoundValue) const
+const CData& SDictionaryValue::getData(const CData& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
 	AssertFailIf(mValueType != kDictionaryValueTypeData);
 
-	return (mValueType == kDictionaryValueTypeData) ? *mValue.mData : notFoundValue;
+	return (mValueType == kDictionaryValueTypeData) ? *mValue.mData : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CDictionary& SDictionaryValue::getDictionary(const CDictionary& notFoundValue) const
+const CDictionary& SDictionaryValue::getDictionary(const CDictionary& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
 	AssertFailIf(mValueType != kDictionaryValueTypeDictionary);
 
-	return (mValueType == kDictionaryValueTypeDictionary) ? *mValue.mDictionary : notFoundValue;
+	return (mValueType == kDictionaryValueTypeDictionary) ? *mValue.mDictionary : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CString& SDictionaryValue::getString(const CString& notFoundValue) const
+const CString& SDictionaryValue::getString(const CString& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
 	AssertFailIf(mValueType != kDictionaryValueTypeString);
 
-	return (mValueType == kDictionaryValueTypeString) ? *mValue.mString : notFoundValue;
+	return (mValueType == kDictionaryValueTypeString) ? *mValue.mString : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float32 SDictionaryValue::getFloat32(Float32 notFoundValue) const
+Float32 SDictionaryValue::getFloat32(Float32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1207,12 +1207,12 @@ Float32 SDictionaryValue::getFloat32(Float32 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float64 SDictionaryValue::getFloat64(Float64 notFoundValue) const
+Float64 SDictionaryValue::getFloat64(Float64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1231,12 +1231,12 @@ Float64 SDictionaryValue::getFloat64(Float64 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt8 SDictionaryValue::getSInt8(SInt8 notFoundValue) const
+SInt8 SDictionaryValue::getSInt8(SInt8 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1253,12 +1253,12 @@ SInt8 SDictionaryValue::getSInt8(SInt8 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt16 SDictionaryValue::getSInt16(SInt16 notFoundValue) const
+SInt16 SDictionaryValue::getSInt16(SInt16 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1275,12 +1275,12 @@ SInt16 SDictionaryValue::getSInt16(SInt16 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt32 SDictionaryValue::getSInt32(SInt32 notFoundValue) const
+SInt32 SDictionaryValue::getSInt32(SInt32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1297,12 +1297,12 @@ SInt32 SDictionaryValue::getSInt32(SInt32 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt64 SDictionaryValue::getSInt64(SInt64 notFoundValue) const
+SInt64 SDictionaryValue::getSInt64(SInt64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1319,12 +1319,12 @@ SInt64 SDictionaryValue::getSInt64(SInt64 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt8 SDictionaryValue::getUInt8(UInt8 notFoundValue) const
+UInt8 SDictionaryValue::getUInt8(UInt8 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1341,12 +1341,12 @@ UInt8 SDictionaryValue::getUInt8(UInt8 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt16 SDictionaryValue::getUInt16(UInt16 notFoundValue) const
+UInt16 SDictionaryValue::getUInt16(UInt16 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1363,12 +1363,12 @@ UInt16 SDictionaryValue::getUInt16(UInt16 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 SDictionaryValue::getUInt32(UInt32 notFoundValue) const
+UInt32 SDictionaryValue::getUInt32(UInt32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1385,12 +1385,12 @@ UInt32 SDictionaryValue::getUInt32(UInt32 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 SDictionaryValue::getUInt64(UInt64 notFoundValue) const
+UInt64 SDictionaryValue::getUInt64(UInt64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1407,18 +1407,18 @@ UInt64 SDictionaryValue::getUInt64(UInt64 notFoundValue) const
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
 
-			return notFoundValue;
+			return defaultValue;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryItemRef SDictionaryValue::getItemRef(CDictionaryItemRef notFoundValue) const
+CDictionaryItemRef SDictionaryValue::getItemRef() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
 	AssertFailIf(mValueType != kDictionaryValueTypeItemRef);
 
-	return (mValueType == kDictionaryValueTypeItemRef) ? mValue.mItemRef : notFoundValue;
+	return (mValueType == kDictionaryValueTypeItemRef) ? mValue.mItemRef : nil;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -168,45 +168,45 @@ class CColor : public CEquatable {
 									CColor(const CColor& other);
 									CColor(const CDictionary& info);
 									CColor(const CString& hexString);
-								
+
 									CColor(EColorType type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha);
 									CColor(EColorType type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha);
-								
+
 									~CColor();
 
 									// CEquatable methods
-						bool		operator==(const CEquatable& other) const
-											{ return equals((const CColor&) other); }
+				bool				operator==(const CEquatable& other) const
+										{ return equals((const CColor&) other); }
 
 									// Instance methods
-						Float32		getRed() const;
-						Float32		getGreen() const;
-						Float32		getBlue() const;
+				Float32				getRed() const;
+				Float32				getGreen() const;
+				Float32				getBlue() const;
 
-						Float32		getHue() const;
-						Float32		getSaturation() const;
-						Float32		getValue() const;
+				Float32				getHue() const;
+				Float32				getSaturation() const;
+				Float32				getValue() const;
 
-						Float32		getAlpha() const;
+				Float32				getAlpha() const;
 
-						CDictionary	getInfo() const;
-						CString		getInfoAsString() const;
+				CDictionary			getInfo() const;
+				CString				getInfoAsString() const;
 
-						bool		equals(const CColor& other) const;
+				bool				equals(const CColor& other) const;
 
-						CColor&		operator=(const CColor& other);
+				CColor&				operator=(const CColor& other);
 
-						CColor		operator+(const CColor& other) const;
+				CColor				operator+(const CColor& other) const;
 
-						CColor		operator*(const SRGBColorTransform& transform) const;
-						CColor		operator*(const SHSVColorTransform& transform) const;
-						CColor&		operator*=(const SRGBColorTransform& transform);
-						CColor&		operator*=(const SHSVColorTransform& transform);
+				CColor				operator*(const SRGBColorTransform& transform) const;
+				CColor				operator*(const SHSVColorTransform& transform) const;
+				CColor&				operator*=(const SRGBColorTransform& transform);
+				CColor&				operator*=(const SHSVColorTransform& transform);
 
 									// Class methods
-		static	const	CColor*		getColorWithName(const CString& colorName);
-		static			bool		areEqual(const CColor& color1, const CColor& color2)
-											{ return color1 == color2; }
+		static	OR<const CColor>	getColorWithName(const CString& colorName);
+		static	bool				areEqual(const CColor& color1, const CColor& color2)
+										{ return color1 == color2; }
 
 	// Properties
 	public:

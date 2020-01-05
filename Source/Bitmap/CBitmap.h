@@ -115,8 +115,8 @@ class CBitmap {
 										// Lifecycle methods
 										CBitmap(const SBitmapSize& size = SBitmapSize(1, 1),
 												EBitmapFormat format = kBitmapFormatRGBA8888, UInt16 bytesPerRow = 0);
-										CBitmap(const SBitmapSize& size, EBitmapFormat format, UInt8* pixelBuffer,
-												UInt16 bytesPerRow, bool takeOwnershipOfPixelBuffer = false);
+										CBitmap(const SBitmapSize& size, EBitmapFormat format, const CData& pixelData,
+												UInt16 bytesPerRow);
 										CBitmap(const CBitmap& other, EBitmapFormat format);
 										CBitmap(const CBitmap& other, UInt32 rotationOperation);
 										CBitmap(const CBitmap& other);
@@ -125,10 +125,10 @@ class CBitmap {
 										// Instance methods
 				const	SBitmapSize		getSize() const;
 
+						CData&			getPixelData() const;
 						EBitmapFormat	getFormat() const;
 						UInt16			getBytesPerRow() const;
 						UInt16			getBytesPerPixel() const;
-						UInt8*			getBytePtr() const;
 
 						void			clearPixels()
 											{ clearPixels(SBitmapRect(SBitmapPoint(), getSize())); }

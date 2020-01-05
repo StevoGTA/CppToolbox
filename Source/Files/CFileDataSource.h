@@ -1,60 +1,60 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFileDataProvider.h			©2019 Stevo Brock	All rights reserved.
+//	CFileDataSource.h			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-#include "CDataProvider.h"
+#include "CDataSource.h"
 #include "CFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFileDataProvider
+// MARK: CFileDataSource
 
-class CFileDataProviderInternals;
-class CFileDataProvider : public CDataProvider {
+class CFileDataSourceInternals;
+class CFileDataSource : public CDataSource {
 	// Methods
 	public:
 				// Lifecycle methods
-				CFileDataProvider(const CFile& file);
-				~CFileDataProvider();
+				CFileDataSource(const CFile& file);
+				~CFileDataSource();
 
-				// CDataProvider methods
+				// CDataSource methods
 		UInt64	getSize() const;
 
 		UError	readData(void* buffer, UInt64 byteCount) const;
 
 		SInt64	getPos() const;
-		UError	setPos(EDataProviderPosition position, SInt64 newPos) const;
+		UError	setPos(EDataSourcePosition position, SInt64 newPos) const;
 
 		void	reset() const;
 
 	// Properties
 	private:
-		CFileDataProviderInternals*	mInternals;
+		CFileDataSourceInternals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMappedFileDataProvider
+// MARK: - CMappedFileDataSource
 
-class CMappedFileDataProviderInternals;
-class CMappedFileDataProvider : public CDataProvider {
+class CMappedFileDataSourceInternals;
+class CMappedFileDataSource : public CDataSource {
 	// Methods
 	public:
 				// Lifecycle methods
-				CMappedFileDataProvider(const CFile& file);
-				~CMappedFileDataProvider();
+				CMappedFileDataSource(const CFile& file);
+				~CMappedFileDataSource();
 
-				// CDataProvider methods
+				// CDataSource methods
 		UInt64	getSize() const;
 
 		UError	readData(void* buffer, UInt64 byteCount) const;
 
 		SInt64	getPos() const;
-		UError	setPos(EDataProviderPosition position, SInt64 newPos) const;
+		UError	setPos(EDataSourcePosition position, SInt64 newPos) const;
 
 		void	reset() const;
 
 	// Properties
 	private:
-		CMappedFileDataProviderInternals*	mInternals;
+		CMappedFileDataSourceInternals*	mInternals;
 };

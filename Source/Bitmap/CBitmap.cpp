@@ -16,48 +16,48 @@ template<>	SBitmapPoint	SBitmapPoint::mZero = SBitmapPoint();
 // MARK: - Local proc declarations
 
 static	void	sConvertRGB565ToRGB888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGB565ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGB565ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 
 static	void	sConvertRGBA4444ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGBA4444ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 
 static	void	sConvertRGBA5551ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGBA5551ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 
 static	void	sConvertRGB888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGB888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGB888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGB888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGB888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 
 static	void	sConvertRGBA8888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGBA8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGBA8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertRGBA8888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 
 static	void	sConvertARGB8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertARGB8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 static	void	sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-						const CBitmapInternals& destinationBitmapInternals);
+						CBitmapInternals& destinationBitmapInternals);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -65,10 +65,9 @@ static	void	sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInter
 
 class CBitmapInternals {
 	public:
-							CBitmapInternals(const SBitmapSize& size, EBitmapFormat format, UInt8* pixelBuffer,
-									UInt16 bytesPerRow, bool takeOwnershipOfPixelBuffer) :
-								mSize(size), mFormat(format), mPixelBuffer(pixelBuffer), mBytesPerRow(bytesPerRow),
-										mOwnsPixelBuffer(takeOwnershipOfPixelBuffer), mReferenceCount(1)
+							CBitmapInternals(const SBitmapSize& size, EBitmapFormat format, const CData& pixelData,
+									UInt16 bytesPerRow) :
+								mSize(size), mFormat(format), mBytesPerRow(bytesPerRow), mReferenceCount(1)
 								{
 									// Finish setup
 									switch (mFormat) {
@@ -92,18 +91,9 @@ class CBitmapInternals {
 										// Set default bytes per row
 										mBytesPerRow = (mSize.mWidth * mBytesPerPixel) & 0xFFFFFFF0 + 0x0F;
 
-									if (pixelBuffer == nil) {
-										// Create pixel buffer
-										mPixelBuffer = new UInt8[mBytesPerRow * mSize.mHeight];
-										::memset(mPixelBuffer, 0, mBytesPerRow * mSize.mHeight);
-										mOwnsPixelBuffer = true;
-									}
+									mPixelData = !pixelData.isEmpty() ? pixelData : CData(mBytesPerRow * mSize.mHeight);
 								}
-							~CBitmapInternals()
-								{
-									if (mOwnsPixelBuffer)
-										DisposeOfArray(mPixelBuffer);
-								}
+							~CBitmapInternals() {}
 
 		CBitmapInternals*	addReference() { mReferenceCount++; return this; }
 		void				removeReference()
@@ -117,9 +107,8 @@ class CBitmapInternals {
 								}
 
 		EBitmapFormat		mFormat;
-		bool				mOwnsPixelBuffer;
 		SBitmapSize			mSize;
-		UInt8*				mPixelBuffer;
+		CData				mPixelData;
 		UInt32				mBytesPerPixel;
 		UInt32				mBytesPerRow;
 		UInt32				mReferenceCount;
@@ -141,13 +130,12 @@ CBitmap::CBitmap(const SBitmapSize& size, EBitmapFormat format, UInt16 bytesPerR
 
 	// Setup
 	mInternals =
-			new CBitmapInternals(SBitmapSize(std::max(1, size.mWidth), std::max(1, size.mHeight)), format, nil,
-					bytesPerRow, false);
+			new CBitmapInternals(SBitmapSize(std::max(1, size.mWidth), std::max(1, size.mHeight)), format,
+					CData::mEmpty, bytesPerRow);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const SBitmapSize& size, EBitmapFormat format, UInt8* pixelBuffer, UInt16 bytesPerRow,
-		bool takeOwnershipOfPixelBuffer)
+CBitmap::CBitmap(const SBitmapSize& size, EBitmapFormat format, const CData& pixelData, UInt16 bytesPerRow)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -156,8 +144,8 @@ CBitmap::CBitmap(const SBitmapSize& size, EBitmapFormat format, UInt8* pixelBuff
 
 	// Setup
 	mInternals =
-			new CBitmapInternals(SBitmapSize(std::max(1, size.mWidth), std::max(1, size.mHeight)), format, pixelBuffer,
-					bytesPerRow, takeOwnershipOfPixelBuffer);
+			new CBitmapInternals(SBitmapSize(std::max(1, size.mWidth), std::max(1, size.mHeight)), format, pixelData,
+					bytesPerRow);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -165,7 +153,7 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CBitmapInternals(other.mInternals->mSize, format, nil, 0, false);
+	mInternals = new CBitmapInternals(other.mInternals->mSize, format, CData::mEmpty, 0);
 
 	// Convert
 	switch (other.mInternals->mFormat) {
@@ -190,7 +178,6 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 				default:
 					// Would never do
 					AssertFailUnimplemented();
-					break;
 			}
 			break;
 
@@ -210,7 +197,6 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 				default:
 					// Would never do
 					AssertFailUnimplemented();
-					break;
 			}
 			break;
 
@@ -230,7 +216,6 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 				default:
 					// Would never do
 					AssertFailUnimplemented();
-					break;
 			}
 			break;
 
@@ -265,7 +250,6 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 				default:
 					// Would never do
 					AssertFailUnimplemented();
-					break;
 			}
 			break;
 
@@ -295,7 +279,6 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 				default:
 					// Would never do
 					AssertFailUnimplemented();
-					break;
 			}
 			break;
 
@@ -320,7 +303,6 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 				default:
 					// Would never do
 					AssertFailUnimplemented();
-					break;
 			}
 			break;
 	}
@@ -346,7 +328,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			break;
 	}
 
-	mInternals = new CBitmapInternals(newSize, other.mInternals->mFormat, nil, 0, false);
+	mInternals = new CBitmapInternals(newSize, other.mInternals->mFormat, CData::mEmpty, 0);
 
 	// Rotate
 	// bytePtr = A * y + B * x + C
@@ -429,9 +411,11 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 	}
 
 	// Loop on vertical
+	const	UInt8*	sourcePixelData = (const UInt8*) other.mInternals->mPixelData.getBytePtr();
+			UInt8*	destinationPixelData = (UInt8*) mInternals->mPixelData.getMutableBytePtr();
 	for (SInt32 y = 0; y < size.mHeight; y++) {
 		// Get source ptr
-		const	UInt8*	srcPtr = (const UInt8*) (other.mInternals->mPixelBuffer + other.mInternals->mBytesPerRow * y);
+		const	UInt8*	srcPtr = sourcePixelData + other.mInternals->mBytesPerRow * y;
 
 		// Loop on horizontal
 		for (SInt32 x = 0; x < size.mWidth; x++, srcPtr += bytesPerPixel) {
@@ -439,7 +423,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			SInt32	destinationOffset = A * y + B * x + C;
 
 			// Set pixel
-			::memcpy(mInternals->mPixelBuffer + destinationOffset, srcPtr, bytesPerPixel);
+			::memcpy(destinationPixelData + destinationOffset, srcPtr, bytesPerPixel);
 		}
 	}
 }
@@ -468,6 +452,13 @@ const SBitmapSize CBitmap::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CData& CBitmap::getPixelData() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mPixelData;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 EBitmapFormat CBitmap::getFormat() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -489,13 +480,6 @@ UInt16 CBitmap::getBytesPerPixel() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt8* CBitmap::getBytePtr() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mPixelBuffer;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CBitmap::setPixel(const SBitmapPoint& pt, const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -509,7 +493,8 @@ void CBitmap::setPixel(const SBitmapPoint& pt, const CColor& color)
 		return;
 
 	void*	pixelDataPtr =
-					mInternals->mPixelBuffer + pt.mX * mInternals->mBytesPerPixel + pt.mY * mInternals->mBytesPerRow;
+					(UInt8*) mInternals->mPixelData.getMutableBytePtr() + pt.mY * mInternals->mBytesPerRow +
+							pt.mX * mInternals->mBytesPerPixel;
 	switch (mInternals->mFormat) {
 		case kBitmapFormatRGBA4444: {
 			// RGBA4444
@@ -570,8 +555,7 @@ void CBitmap::setPixel(const SBitmapPoint& pt, const CColor& color)
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-void sConvertRGB565ToRGB888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+void sConvertRGB565ToRGB888(const CBitmapInternals& sourceBitmapInternals, CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -579,18 +563,20 @@ void sConvertRGB565ToRGB888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGB565ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-	UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
+	const	UInt8*	sourcePixelData = (const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+			UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
+			UInt8*	destinationPixelData = (UInt8*) destinationBitmapInternals.mPixelData.getMutableBytePtr();
+			UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 	// Loop on vertical
 	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
 		// Setup
-		const	UInt16*	srcPtr = (const UInt16*) (sourceBitmapInternals.mPixelBuffer + h * sourceBytesPerRow);
-				UInt32*	dstPtr = (UInt32*) (destinationBitmapInternals.mPixelBuffer + h * destinationBytesPerRow);
+		const	UInt16*	srcPtr = (const UInt16*) (sourcePixelData + h * sourceBytesPerRow);
+				UInt32*	dstPtr = (UInt32*) (destinationPixelData + h * destinationBytesPerRow);
 
 		// Loop on horizontal
 		for (SInt32 w = 0; w < sourceBitmapInternals.mSize.mWidth; w++, srcPtr++, dstPtr++) {
@@ -612,7 +598,7 @@ void sConvertRGB565ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGB565ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -620,18 +606,20 @@ void sConvertRGB565ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBA4444ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-	UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
+	const	UInt8*	sourcePixelData = (const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+			UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
+			UInt8*	destinationPixelData = (UInt8*) destinationBitmapInternals.mPixelData.getMutableBytePtr();
+			UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 	// Loop on vertical
 	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
 		// Setup
-		const	UInt16*	srcPtr = (const UInt16*) (sourceBitmapInternals.mPixelBuffer + h * sourceBytesPerRow);
-				UInt32*	dstPtr = (UInt32*) (destinationBitmapInternals.mPixelBuffer + h * destinationBytesPerRow);
+		const	UInt16*	srcPtr = (const UInt16*) (sourcePixelData + h * sourceBytesPerRow);
+				UInt32*	dstPtr = (UInt32*) (destinationPixelData + h * destinationBytesPerRow);
 
 		// Loop on horizontal
 		for (SInt32 w = 0; w < sourceBitmapInternals.mSize.mWidth; w++, srcPtr++, dstPtr++) {
@@ -654,7 +642,7 @@ void sConvertRGBA4444ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBA4444ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -662,18 +650,20 @@ void sConvertRGBA4444ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBA5551ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-	UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
+	const	UInt8*	sourcePixelData = (const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+			UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
+			UInt8*	destinationPixelData = (UInt8*) destinationBitmapInternals.mPixelData.getMutableBytePtr();
+			UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 	// Loop on vertical
 	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
 		// Setup
-		const	UInt16*	srcPtr = (const UInt16*) (sourceBitmapInternals.mPixelBuffer + h * sourceBytesPerRow);
-				UInt32*	dstPtr = (UInt32*) (destinationBitmapInternals.mPixelBuffer + h * destinationBytesPerRow);
+		const	UInt16*	srcPtr = (const UInt16*) (sourcePixelData + h * sourceBytesPerRow);
+				UInt32*	dstPtr = (UInt32*) (destinationPixelData + h * destinationBytesPerRow);
 
 		// Loop on horizontal
 		for (SInt32 w = 0; w < sourceBitmapInternals.mSize.mWidth; w++, srcPtr++, dstPtr++) {
@@ -696,7 +686,7 @@ void sConvertRGBA5551ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBA5551ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -704,7 +694,7 @@ void sConvertRGBA5551ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGB888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -712,7 +702,7 @@ void sConvertRGB888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGB888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -720,7 +710,7 @@ void sConvertRGB888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGB888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -728,18 +718,20 @@ void sConvertRGB888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGB888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-	UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
+	const	UInt8*	sourcePixelData = (const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+			UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
+			UInt8*	destinationPixelData = (UInt8*) destinationBitmapInternals.mPixelData.getMutableBytePtr();
+			UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 	// Loop on vertical
 	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
 		// Setup
-		const	UInt8*	srcPtr = (const UInt8*) (sourceBitmapInternals.mPixelBuffer + h * sourceBytesPerRow);
-				UInt32*	dstPtr = (UInt32*) (destinationBitmapInternals.mPixelBuffer + h * destinationBytesPerRow);
+		const	UInt8*	srcPtr = (const UInt8*) (sourcePixelData + h * sourceBytesPerRow);
+				UInt32*	dstPtr = (UInt32*) (destinationPixelData + h * destinationBytesPerRow);
 		for (UInt32 w = 0; w < sourceBitmapInternals.mSize.mWidth; w++, dstPtr++) {
 			// Convert color
 #if TARGET_RT_LITTLE_ENDIAN
@@ -759,7 +751,7 @@ void sConvertRGB888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGB888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -767,18 +759,20 @@ void sConvertRGB888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBA8888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-	UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
+	const	UInt8*	sourcePixelData = (const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+			UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
+			UInt8*	destinationPixelData = (UInt8*) destinationBitmapInternals.mPixelData.getMutableBytePtr();
+			UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 	// Loop on vertical
 	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
 		// Setup
-		const	UInt32*	srcPtr = (const UInt32*) (sourceBitmapInternals.mPixelBuffer + h * sourceBytesPerRow);
-				UInt16*	dstPtr = (UInt16*) (destinationBitmapInternals.mPixelBuffer + h * destinationBytesPerRow);
+		const	UInt32*	srcPtr = (const UInt32*) (sourcePixelData + h * sourceBytesPerRow);
+				UInt16*	dstPtr = (UInt16*) (destinationPixelData + h * destinationBytesPerRow);
 
 		// Loop on horizontal
 		for (SInt32 w = 0; w < sourceBitmapInternals.mSize.mWidth; w++, srcPtr++, dstPtr++) {
@@ -800,18 +794,20 @@ void sConvertRGBA8888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBA8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-	UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
+	const	UInt8*	sourcePixelData = (const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+			UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
+			UInt8*	destinationPixelData = (UInt8*) destinationBitmapInternals.mPixelData.getMutableBytePtr();
+			UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 	// Loop on vertical
 	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
 		// Setup
-		const	UInt32*	srcPtr = (const UInt32*) (sourceBitmapInternals.mPixelBuffer + h * sourceBytesPerRow);
-				UInt16*	dstPtr = (UInt16*) (destinationBitmapInternals.mPixelBuffer + h * destinationBytesPerRow);
+		const	UInt32*	srcPtr = (const UInt32*) (sourcePixelData + h * sourceBytesPerRow);
+				UInt16*	dstPtr = (UInt16*) (destinationPixelData + h * destinationBytesPerRow);
 
 		// Loop on horizontal
 		for (SInt32 w = 0; w < sourceBitmapInternals.mSize.mWidth; w++, srcPtr++, dstPtr++) {
@@ -834,18 +830,20 @@ void sConvertRGBA8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBA8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-	UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
+	const	UInt8*	sourcePixelData = (const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+			UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
+			UInt8*	destinationPixelData = (UInt8*) destinationBitmapInternals.mPixelData.getMutableBytePtr();
+			UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 	// Loop on vertical
 	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
 		// Setup
-		const	UInt32*	srcPtr = (const UInt32*) (sourceBitmapInternals.mPixelBuffer + h * sourceBytesPerRow);
-				UInt16*	dstPtr = (UInt16*) (destinationBitmapInternals.mPixelBuffer + h * destinationBytesPerRow);
+		const	UInt32*	srcPtr = (const UInt32*) (sourcePixelData + h * sourceBytesPerRow);
+				UInt16*	dstPtr = (UInt16*) (destinationPixelData + h * destinationBytesPerRow);
 
 		// Loop on horizontal
 		for (SInt32 w = 0; w < sourceBitmapInternals.mSize.mWidth; w++, srcPtr++, dstPtr++) {
@@ -868,7 +866,7 @@ void sConvertRGBA8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBA8888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -876,7 +874,7 @@ void sConvertRGBA8888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertARGB8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -884,7 +882,7 @@ void sConvertARGB8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertARGB8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);
@@ -892,7 +890,7 @@ void sConvertARGB8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
-		const CBitmapInternals& destinationBitmapInternals)
+		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailWith(kUnimplementedError);

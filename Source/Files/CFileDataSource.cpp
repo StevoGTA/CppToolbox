@@ -1,21 +1,19 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFileDataProvider.cpp			©2019 Stevo Brock	All rights reserved.
+//	CFileDataSource.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CFileDataProvider.h"
+#include "CFileDataSource.h"
 
 #include "CFileReader.h"
 #include "CppToolboxAssert.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFileDataProviderInternals
+// MARK: CFileDataSourceInternals
 
-class CFileDataProviderInternals {
+class CFileDataSourceInternals {
 	public:
-						CFileDataProviderInternals(const CFile& file) :
-							mFile(file), mFileReader(nil), mError(kNoError)
-							{}
-						~CFileDataProviderInternals()
+						CFileDataSourceInternals(const CFile& file) : mFile(file), mFileReader(nil), mError(kNoError) {}
+						~CFileDataSourceInternals()
 							{
 								reset();
 							}
@@ -47,56 +45,56 @@ class CFileDataProviderInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFileDataProvider
+// MARK: - CFileDataSource
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CFileDataProvider::CFileDataProvider(const CFile& file) : CDataProvider()
+CFileDataSource::CFileDataSource(const CFile& file) : CDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFileDataProviderInternals(file);
+	mInternals = new CFileDataSourceInternals(file);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFileDataProvider::~CFileDataProvider()
+CFileDataSource::~CFileDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	DisposeOf(mInternals);
 }
 
-// MARK: CDataProvider methods
+// MARK: CDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CFileDataProvider::getSize() const
+UInt64 CFileDataSource::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mFile.getSize();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileDataProvider::readData(void* buffer, UInt64 byteCount) const
+UError CFileDataSource::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getFileReader().readData(buffer, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt64 CFileDataProvider::getPos() const
+SInt64 CFileDataSource::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getFileReader().getPos();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileDataProvider::setPos(EDataProviderPosition position, SInt64 newPos) const
+UError CFileDataSource::setPos(EDataSourcePosition position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getFileReader().setPos((EFileReaderPositionMode) position, newPos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CFileDataProvider::reset() const
+void CFileDataSource::reset() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->reset();
@@ -104,14 +102,14 @@ void CFileDataProvider::reset() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMappedFileDataProviderInternals
+// MARK: - CMappedFileDataSourceInternals
 
-class CMappedFileDataProviderInternals {
+class CMappedFileDataSourceInternals {
 	public:
-						CMappedFileDataProviderInternals(const CFile& file) :
-							mFile(file), mFileReader(nil), mFileMemoryMap(nil), mCurrentOffset(0)
+						CMappedFileDataSourceInternals(const CFile& file) :
+							mFile(file), mFileReader(nil), mFileMemoryMap(nil), mError(kNoError), mCurrentOffset(0)
 							{}
-						~CMappedFileDataProviderInternals()
+						~CMappedFileDataSourceInternals()
 							{
 								reset();
 							}
@@ -151,35 +149,35 @@ class CMappedFileDataProviderInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMappedFileDataProvider
+// MARK: - CMappedFileDataSource
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMappedFileDataProvider::CMappedFileDataProvider(const CFile& file) : CDataProvider()
+CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMappedFileDataProviderInternals(file);
+	mInternals = new CMappedFileDataSourceInternals(file);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CMappedFileDataProvider::~CMappedFileDataProvider()
+CMappedFileDataSource::~CMappedFileDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	DisposeOf(mInternals);
 }
 
-// MARK: CDataProvider methods
+// MARK: CDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CMappedFileDataProvider::getSize() const
+UInt64 CMappedFileDataSource::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getFileMemoryMap().getByteCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CMappedFileDataProvider::readData(void* buffer, UInt64 byteCount) const
+UError CMappedFileDataSource::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -204,14 +202,14 @@ UError CMappedFileDataProvider::readData(void* buffer, UInt64 byteCount) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt64 CMappedFileDataProvider::getPos() const
+SInt64 CMappedFileDataSource::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mCurrentOffset;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CMappedFileDataProvider::setPos(EDataProviderPosition position, SInt64 newPos) const
+UError CMappedFileDataSource::setPos(EDataSourcePosition position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -222,17 +220,17 @@ UError CMappedFileDataProvider::setPos(EDataProviderPosition position, SInt64 ne
 	// Figure new offset
 	SInt64	offset;
 	switch (position) {
-		case kDataProviderPositionFromBeginning:
+		case kDataSourcePositionFromBeginning:
 			// From beginning
 			offset = newPos;
 			break;
 
-		case kDataProviderPositionFromCurrent:
+		case kDataSourcePositionFromCurrent:
 			// From current
 			offset = mInternals->mCurrentOffset + newPos;
 			break;
 
-		case kDataProviderPositionFromEnd:
+		case kDataSourcePositionFromEnd:
 			// From end
 			offset = mInternals->getFileMemoryMap().getByteCount() - newPos;
 			break;
@@ -254,7 +252,7 @@ UError CMappedFileDataProvider::setPos(EDataProviderPosition position, SInt64 ne
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMappedFileDataProvider::reset() const
+void CMappedFileDataSource::reset() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->reset();

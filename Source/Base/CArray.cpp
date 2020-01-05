@@ -82,7 +82,7 @@ class CArrayInternals {
 													}
 												}
 
-				CArrayItemIndex				getIndexOf(const CArrayItemRef itemRef) const
+				OV<CArrayItemIndex>			getIndexOf(const CArrayItemRef itemRef) const
 												{
 													// Scan
 													CArrayItemIndex	itemIndex = 0;
@@ -91,10 +91,10 @@ class CArrayInternals {
 														// Check test item ref
 														if (*testItemRef == itemRef)
 															// Found
-															return itemIndex;
+															return OV<CArrayItemIndex>(itemIndex);
 													}
 
-													return kCArrayItemIndexNotFound;
+													return OV<CArrayItemIndex>();
 												}
 				CArrayInternals*			prepareForWrite()
 												{
@@ -146,7 +146,11 @@ class CArrayInternals {
 															CArrayItemRef	itemRef = itemRefs[i];
 
 															// Check if found
-															if (arrayInternals->getIndexOf(itemRef) == kCArrayItemIndexNotFound)
+															OV<CArrayItemIndex>	index =
+																						arrayInternals->getIndexOf(
+																								itemRef);
+
+															if (!index.hasValue())
 																// Not found
 																arrayInternals->append(&itemRef, 1);
 														}
@@ -351,8 +355,6 @@ CArray& CArray::add(const CArrayItemRef itemRef, bool avoidDuplicates)
 {
 	// Parameter check
 	AssertNotNil(itemRef);
-	if (itemRef == nil)
-		return *this;
 
 	// Add item
 	mInternals = mInternals->append(&itemRef, 1, avoidDuplicates);
@@ -381,8 +383,6 @@ bool CArray::contains(const CArrayItemRef itemRef) const
 {
 	// Parameter check
 	AssertNotNil(itemRef);
-	if (itemRef == nil)
-		return false;
 
 	// Scan
 	CArrayItemIndex	itemIndex = 0;
@@ -398,13 +398,11 @@ bool CArray::contains(const CArrayItemRef itemRef) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArrayItemIndex CArray::getIndexOf(const CArrayItemRef itemRef) const
+OV<CArrayItemIndex> CArray::getIndexOf(const CArrayItemRef itemRef) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
 	AssertNotNil(itemRef);
-	if (itemRef == nil)
-		return false;
 
 	return mInternals->getIndexOf(itemRef);
 }
@@ -415,8 +413,6 @@ CArrayItemRef CArray::getItemAt(CArrayItemIndex itemIndex) const
 {
 	// Parameter check
 	AssertFailIf(itemIndex >= mInternals->mCount);
-	if (itemIndex >= mInternals->mCount)
-		return nil;
 
 	return mInternals->mItemRefs[itemIndex];
 }
@@ -425,7 +421,10 @@ CArrayItemRef CArray::getItemAt(CArrayItemIndex itemIndex) const
 CArrayItemRef CArray::getLast() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (mInternals->mCount > 0) ? mInternals->mItemRefs[mInternals->mCount - 1] : nil;
+	// Sanity check
+	AssertFailIf(mInternals->mCount == 0);
+
+	return mInternals->mItemRefs[mInternals->mCount - 1];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -441,12 +440,7 @@ CArray& CArray::insertAtIndex(const CArrayItemRef itemRef, CArrayItemIndex itemI
 {
 	// Parameter check
 	AssertNotNil(itemRef);
-	if (itemRef == nil)
-		return *this;
-
 	AssertFailIf(itemIndex > mInternals->mCount);
-	if (itemIndex > mInternals->mCount)
-		return *this;
 
 	// Insert at index
 	mInternals = mInternals->insertAtIndex(itemRef, itemIndex);
@@ -459,12 +453,12 @@ CArray& CArray::detach(const CArrayItemRef itemRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get index of itemRef
-	CArrayItemIndex	itemIndex = getIndexOf(itemRef);
+	OV<CArrayItemIndex>	itemIndex = getIndexOf(itemRef);
 
 	// Check if itemRef was found
-	if (itemIndex != kCArrayItemIndexNotFound)
+	if (itemIndex.hasValue())
 		// Remove
-		mInternals = mInternals->removeAtIndex(itemIndex, false);
+		mInternals = mInternals->removeAtIndex(*itemIndex, false);
 
 	return *this;
 }
@@ -475,8 +469,6 @@ CArray& CArray::detachAtIndex(CArrayItemIndex itemIndex)
 {
 	// Parameter check
 	AssertFailIf(itemIndex >= mInternals->mCount);
-	if (itemIndex >= mInternals->mCount)
-		return *this;
 
 	// Remove
 	mInternals = mInternals->removeAtIndex(itemIndex, false);
@@ -489,12 +481,12 @@ CArray& CArray::remove(const CArrayItemRef itemRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get index of itemRef
-	CArrayItemIndex	itemIndex = getIndexOf(itemRef);
+	OV<CArrayItemIndex>	itemIndex = getIndexOf(itemRef);
 
 	// Check if itemRef was found
-	if (itemIndex != kCArrayItemIndexNotFound)
+	if (itemIndex.hasValue())
 		// Remove
-		mInternals = mInternals->removeAtIndex(itemIndex, true);
+		mInternals = mInternals->removeAtIndex(*itemIndex, true);
 
 	return *this;
 }
@@ -505,8 +497,6 @@ CArray& CArray::removeAtIndex(CArrayItemIndex itemIndex)
 {
 	// Parameter check
 	AssertFailIf(itemIndex >= mInternals->mCount);
-	if (itemIndex >= mInternals->mCount)
-		return *this;
 
 	// Remove
 	mInternals = mInternals->removeAtIndex(itemIndex, true);
@@ -521,11 +511,11 @@ CArray& CArray::removeFrom(const CArray& other)
 	// Iterate all in the other
 	for (CArrayItemIndex otherItemIndex = 0; otherItemIndex < other.mInternals->mCount; otherItemIndex++) {
 		// Check if other item is in local storage
-		CArrayItemRef	otherItemRef = other.mInternals->mItemRefs[otherItemIndex];
-		CArrayItemIndex	itemIndex = getIndexOf(otherItemRef);
-		if (itemIndex != kCArrayItemIndexNotFound)
+		CArrayItemRef		otherItemRef = other.mInternals->mItemRefs[otherItemIndex];
+		OV<CArrayItemIndex>	itemIndex = getIndexOf(otherItemRef);
+		if (itemIndex.hasValue())
 			// Remove
-			mInternals = mInternals->removeAtIndex(itemIndex, true);
+			mInternals = mInternals->removeAtIndex(*itemIndex, true);
 	}
 
 	return *this;

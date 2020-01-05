@@ -74,67 +74,63 @@ class CDictionary : public CEquatable {
 						bool						contains(const CString& key) const;
 
 				const	SDictionaryValue&			getValue(const CString& key) const;
-						bool						getBool(const CString& key, bool notFoundValue = false) const;
+						bool						getBool(const CString& key, bool defaultValue = false) const;
 				const	TArray<CDictionary>&		getArrayOfDictionaries(const CString& key,
-															const TArray<CDictionary>& notFoundValue =
-																	TArray<CDictionary>())
-															const;
+															const TArray<CDictionary>& defaultValue =
+																	TArray<CDictionary>()) const;
 				const	TArray<CString>&			getArrayOfStrings(const CString& key,
-															const TArray<CString>& notFoundValue = TArray<CString>())
+															const TArray<CString>& defaultValue = TArray<CString>())
 															const;
 				const	CData&						getData(const CString& key,
-															const CData& notFoundValue = CData::mEmpty)
-															const;
+															const CData& defaultValue = CData::mEmpty) const;
 				const	CDictionary&				getDictionary(const CString& key,
-															const CDictionary& notFoundValue = CDictionary::mEmpty)
+															const CDictionary& defaultValue = CDictionary::mEmpty)
 															const;
 				const	CString&					getString(const CString& key,
-															const CString& notFoundValue = CString::mEmpty)
-															const;
-						Float32						getFloat32(const CString& key, Float32 notFoundValue = 0.0) const;
-						Float64						getFloat64(const CString& key, Float64 notFoundValue = 0.0) const;
-						SInt8						getSInt8(const CString& key, SInt8 notFoundValue = 0) const;
-						SInt16						getSInt16(const CString& key, SInt16 notFoundValue = 0) const;
-						SInt32						getSInt32(const CString& key, SInt32 notFoundValue = 0) const;
-						SInt64						getSInt64(const CString& key, SInt64 notFoundValue = 0) const;
-						UInt8						getUInt8(const CString& key, UInt8 notFoundValue = 0) const;
-						UInt16						getUInt16(const CString& key, UInt16 notFoundValue = 0) const;
-						UInt32						getUInt32(const CString& key, UInt32 notFoundValue = 0) const;
-						UInt64						getUInt64(const CString& key, UInt64 notFoundValue = 0) const;
-						OSType						getOSType(const CString& key, OSType notFoundValue = 0) const
-														{ return getUInt32(key, notFoundValue); }
-						CDictionaryItemRef			getItemRef(const CString& key,
-															CDictionaryItemRef notFoundValue = nil) const;
+															const CString& defaultValue = CString::mEmpty) const;
+						Float32						getFloat32(const CString& key, Float32 defaultValue = 0.0) const;
+						Float64						getFloat64(const CString& key, Float64 defaultValue = 0.0) const;
+						SInt8						getSInt8(const CString& key, SInt8 defaultValue = 0) const;
+						SInt16						getSInt16(const CString& key, SInt16 defaultValue = 0) const;
+						SInt32						getSInt32(const CString& key, SInt32 defaultValue = 0) const;
+						SInt64						getSInt64(const CString& key, SInt64 defaultValue = 0) const;
+						UInt8						getUInt8(const CString& key, UInt8 defaultValue = 0) const;
+						UInt16						getUInt16(const CString& key, UInt16 defaultValue = 0) const;
+						UInt32						getUInt32(const CString& key, UInt32 defaultValue = 0) const;
+						UInt64						getUInt64(const CString& key, UInt64 defaultValue = 0) const;
+						OV<CDictionaryItemRef>		getItemRef(const CString& key) const;
+						OSType						getOSType(const CString& key, OSType defaultValue = 0) const
+														{ return getUInt32(key, defaultValue); }
 						void						getValue(const CString& key, Float32& outValue,
-															Float32 notFoundValue = 0.0) const
-														{ outValue = getFloat32(key, notFoundValue); }
+															Float32 defaultValue = 0.0) const
+														{ outValue = getFloat32(key, defaultValue); }
 						void						getValue(const CString& key, Float64& outValue,
-															Float64 notFoundValue = 0.0) const
-														{ outValue = getFloat64(key, notFoundValue); }
+															Float64 defaultValue = 0.0) const
+														{ outValue = getFloat64(key, defaultValue); }
 						void						getValue(const CString& key, SInt8& outValue,
-															SInt8 notFoundValue = 0) const
-														{ outValue = getSInt8(key, notFoundValue); }
+															SInt8 defaultValue = 0) const
+														{ outValue = getSInt8(key, defaultValue); }
 						void						getValue(const CString& key, SInt16& outValue,
-															SInt16 notFoundValue = 0) const
-														{ outValue = getSInt16(key, notFoundValue); }
+															SInt16 defaultValue = 0) const
+														{ outValue = getSInt16(key, defaultValue); }
 						void						getValue(const CString& key, SInt32& outValue,
-															SInt32 notFoundValue = 0) const
-														{ outValue = getSInt32(key, notFoundValue); }
+															SInt32 defaultValue = 0) const
+														{ outValue = getSInt32(key, defaultValue); }
 						void						getValue(const CString& key, SInt64& outValue,
-															SInt64 notFoundValue = 0) const
-														{ outValue = getSInt64(key, notFoundValue); }
+															SInt64 defaultValue = 0) const
+														{ outValue = getSInt64(key, defaultValue); }
 						void						getValue(const CString& key, UInt8& outValue,
-															UInt8 notFoundValue = 0) const
-														{ outValue = getUInt8(key, notFoundValue); }
+															UInt8 defaultValue = 0) const
+														{ outValue = getUInt8(key, defaultValue); }
 						void						getValue(const CString& key, UInt16& outValue,
-															UInt16 notFoundValue = 0) const
-														{ outValue = getUInt16(key, notFoundValue); }
+															UInt16 defaultValue = 0) const
+														{ outValue = getUInt16(key, defaultValue); }
 						void						getValue(const CString& key, UInt32& outValue,
-															UInt32 notFoundValue = 0) const
-														{ outValue = getUInt32(key, notFoundValue); }
+															UInt32 defaultValue = 0) const
+														{ outValue = getUInt32(key, defaultValue); }
 						void						getValue(const CString& key, UInt64& outValue,
-															UInt64 notFoundValue = 0) const
-														{ outValue = getUInt64(key, notFoundValue); }
+															UInt64 defaultValue = 0) const
+														{ outValue = getUInt64(key, defaultValue); }
 
 						void						set(const CString& key, bool value);
 						void						set(const CString& key, const TArray<CDictionary>& value);
@@ -223,25 +219,25 @@ struct SDictionaryValue {
 										// Instance methods
 				EDictionaryValueType	getType() const { return mValueType; }
 
-				bool					getBool(bool notFoundValue = false) const;
+				bool					getBool(bool defaultValue = false) const;
 		const	TArray<CDictionary>&	getArrayOfDictionaries(
-												const TArray<CDictionary>& notFoundValue = TArray<CDictionary>()) const;
-		const	TArray<CString>&		getArrayOfStrings(const TArray<CString>& notFoundValue = TArray<CString>())
+												const TArray<CDictionary>& defaultValue = TArray<CDictionary>()) const;
+		const	TArray<CString>&		getArrayOfStrings(const TArray<CString>& defaultValue = TArray<CString>())
 												const;
-		const	CData&					getData(const CData& notFoundValue = CData::mEmpty) const;
-		const	CDictionary&			getDictionary(const CDictionary& notFoundValue = CDictionary::mEmpty) const;
-		const	CString&				getString(const CString& notFoundValue = CString::mEmpty) const;
-				Float32					getFloat32(Float32 notFoundValue = 0.0) const;
-				Float64					getFloat64(Float64 notFoundValue = 0.0) const;
-				SInt8					getSInt8(SInt8 notFoundValue = 0) const;
-				SInt16					getSInt16(SInt16 notFoundValue = 0) const;
-				SInt32					getSInt32(SInt32 notFoundValue = 0) const;
-				SInt64					getSInt64(SInt64 notFoundValue = 0) const;
-				UInt8					getUInt8(UInt8 notFoundValue = 0) const;
-				UInt16					getUInt16(UInt16 notFoundValue = 0) const;
-				UInt32					getUInt32(UInt32 notFoundValue = 0) const;
-				UInt64					getUInt64(UInt64 notFoundValue = 0) const;
-				CDictionaryItemRef		getItemRef(CDictionaryItemRef notFoundValue = nil) const;
+		const	CData&					getData(const CData& defaultValue = CData::mEmpty) const;
+		const	CDictionary&			getDictionary(const CDictionary& defaultValue = CDictionary::mEmpty) const;
+		const	CString&				getString(const CString& defaultValue = CString::mEmpty) const;
+				Float32					getFloat32(Float32 defaultValue = 0.0) const;
+				Float64					getFloat64(Float64 defaultValue = 0.0) const;
+				SInt8					getSInt8(SInt8 defaultValue = 0) const;
+				SInt16					getSInt16(SInt16 defaultValue = 0) const;
+				SInt32					getSInt32(SInt32 defaultValue = 0) const;
+				SInt64					getSInt64(SInt64 defaultValue = 0) const;
+				UInt8					getUInt8(UInt8 defaultValue = 0) const;
+				UInt16					getUInt16(UInt16 defaultValue = 0) const;
+				UInt32					getUInt32(UInt32 defaultValue = 0) const;
+				UInt64					getUInt64(UInt64 defaultValue = 0) const;
+				CDictionaryItemRef		getItemRef() const;
 
 				bool					equals(const SDictionaryValue& other,
 												CDictionaryItemEqualsProc itemEqualsProc) const;
@@ -321,8 +317,13 @@ template <typename T> class TDictionary : public CDictionary {
 								~TDictionary() {}
 
 								// Instance methods
-		const	T				get(const CString& key) const
-									{ return (T) CDictionary::getItemRef(key); }
+		const	OV<T>			get(const CString& key) const
+									{
+										// Get itemRef
+										OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
+
+										return itemRef.hasValue() ? OV<T>((T) itemRef.getValue()) : OV<T>();
+									}
 
 		const	TPtrArray<T>	getValues() const
 									{
@@ -340,8 +341,8 @@ template <typename T> class TDictionary : public CDictionary {
 									{ CDictionary::set(key, item); }
 
 
-		const	T				operator[](const CString& key) const
-									{ return (T) CDictionary::getItemRef(key); }
+		const	OV<T>			operator[](const CString& key) const
+									{ return get(key); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -447,7 +448,12 @@ template <typename K, typename T> class TOwningKeyConvertibleDictionary : public
 
 								// Instance methods
 				T*				get(K key) const
-									{ return (T*) CDictionary::getItemRef(CString(key)); }
+									{
+										// Get itemRef
+										OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(CString(key));
+
+										return itemRef.hasValue() ? (T*) *itemRef : nil;
+									}
 
 		const	TPtrArray<T*>	getValues() const
 									{
@@ -468,7 +474,7 @@ template <typename K, typename T> class TOwningKeyConvertibleDictionary : public
 									{ CDictionary::remove(CString(key)); }
 
 				T*				operator[](K key) const
-									{ return (T*) CDictionary::getItemRef(CString(key)); }
+									{ return get(key); }
 
 	private:
 								// Class methods

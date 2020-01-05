@@ -37,7 +37,7 @@ class CDataInternals {
 									}
 								} else if (mBufferSize > 0)
 									// mBufferSize >0, initialBuffer nil
-									mBuffer = ::malloc(mBufferSize);
+									mBuffer = ::calloc(1, mBufferSize);
 								else
 									// mBufferSize 0, initialBuffer nil
 									mBuffer = nil;
@@ -250,7 +250,7 @@ void CData::copyBytes(void* destinationBuffer, CDataByteIndex startByte, CDataSi
 		return;
 
 	// Setup
-	if (byteCount == kCDataBytesAll)
+	if (byteCount == kDataBytesAll)
 		byteCount = getSize() - startByte;
 
 	// Copy

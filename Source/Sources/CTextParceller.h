@@ -1,23 +1,23 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CStringSource.h			©2019 Stevo Brock	All rights reserved.
+//	CTextParceller.h			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-#include "CDataProvider.h"
+#include "CDataSource.h"
 #include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CStringSource
+// MARK: CTextParceller
 
-class CStringSourceInternals;
-class CStringSource {
+class CTextParcellerInternals;
+class CTextParceller {
 	// Methods
 	public:
 				// Lifecycle methods
-				CStringSource(const CDataProvider* dataProvider);	// Will take ownership of CDataProvider
-				CStringSource(const CStringSource& other);
-				~CStringSource();
+				CTextParceller(const CDataSource* dataSource);	// Will take ownership of CDataSource
+				CTextParceller(const CTextParceller& other);
+				~CTextParceller();
 
 				// Instance methods
 		UInt64	getSize() const;
@@ -28,5 +28,5 @@ class CStringSource {
 
 	// Properties
 	private:
-		CStringSourceInternals*	mInternals;
+		CTextParcellerInternals*	mInternals;
 };

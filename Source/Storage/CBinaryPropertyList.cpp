@@ -61,7 +61,7 @@ static	CBinaryPropertyListSetup	sBinaryPropertyListSetup;
 class CBPLDataSource {
 	public:
 							// Lifecycle methods
-							CBPLDataSource(const CDataSource& dataSource, UInt8 objectOffsetFieldSize,
+							CBPLDataSource(const CByteParceller& byteParceller, UInt8 objectOffsetFieldSize,
 									UInt8 objectIndexFieldSize, UInt64 totalObjectCount,
 									UInt64 objectOffsetTableOffset);
 							~CBPLDataSource();
@@ -81,14 +81,14 @@ class CBPLDataSource {
 
 		SDictionaryValue*	createDictionaryValue(UInt64 objectIndex);
 
-		CDataSource	mDataSource;
-		UInt32		mReferenceCount;
-		UError		mError;
+		CByteParceller	mByteParceller;
+		UInt32			mReferenceCount;
+		UError			mError;
 
-		UInt8		mObjectIndexFieldSize;
-		UInt64		mTotalObjectCount;
-		UInt64*		mObjectOffsets;
-		CString**	mStrings;
+		UInt8			mObjectIndexFieldSize;
+		UInt64			mTotalObjectCount;
+		UInt64*			mObjectOffsets;
+		CString**		mStrings;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -203,9 +203,9 @@ class CBPLDictionaryInfo {
 // MARK: - CBPLDataSource definition
 
 //----------------------------------------------------------------------------------------------------------------------
-CBPLDataSource::CBPLDataSource(const CDataSource& dataSource, UInt8 objectOffsetFieldSize, UInt8 objectIndexFieldSize,
-		UInt64 totalObjectCount, UInt64 objectOffsetTableOffset) :
-	mDataSource(dataSource), mReferenceCount(1), mError(kNoError), mObjectIndexFieldSize(objectIndexFieldSize),
+CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 objectOffsetFieldSize,
+		UInt8 objectIndexFieldSize, UInt64 totalObjectCount, UInt64 objectOffsetTableOffset) :
+	mByteParceller(byteParceller), mReferenceCount(1), mError(kNoError), mObjectIndexFieldSize(objectIndexFieldSize),
 			mTotalObjectCount(totalObjectCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -233,7 +233,7 @@ CBPLDataSource::CBPLDataSource(const CDataSource& dataSource, UInt8 objectOffset
 			continue;
 
 		// Get string content
-		CData	data = mDataSource.readData(count, mError);
+		CData	data = mByteParceller.readData(count, mError);
 		if (mError != kNoError)
 			// Error
 			continue;
@@ -283,11 +283,11 @@ void CBPLDataSource::readData(SInt64 offset, void* buffer, UInt64 byteCount, con
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set position
-	mError = mDataSource.setPos(kDataProviderPositionFromBeginning, offset);
+	mError = mByteParceller.setPos(kDataSourcePositionFromBeginning, offset);
 	LogIfErrorAndReturn(mError, errorWhen);
 
 	// Read data
-	mError = mDataSource.readData(buffer, byteCount);
+	mError = mByteParceller.readData(buffer, byteCount);
 	LogIfError(mError, errorWhen);
 }
 
@@ -299,16 +299,31 @@ UInt8 CBPLDataSource::readMarker(UInt64 objectIndex, UInt64* outCountOrNil)
 	UInt8	marker = 0;
 	readData(mObjectOffsets[objectIndex], &marker, 1, "reading marker");
 
-	// Check if requesting count
-	if (outCountOrNil != nil) {
-		// Read count
-		*outCountOrNil = marker & kMarkerCountMask;
-		if (*outCountOrNil == 15)
-			// Read count
-			*outCountOrNil = readCount("reading marker");
-	}
+	// Check marker
+	switch (marker) {
+		case kMarkerTypeBooleanTrue:
+		case kMarkerTypeBooleanFalse:
+		case kMarkerTypeFloat32:
+		case kMarkerTypeFloat64:
+		case kMarkerTypeInteger1Byte:
+		case kMarkerTypeInteger2Bytes:
+		case kMarkerTypeInteger4Bytes:
+		case kMarkerTypeInteger8Bytes:
+			// No count
+			return marker;
 
-	return marker & ~kMarkerCountMask;
+		default:
+			// May have count
+			if (outCountOrNil != nil) {
+				// Read count
+				*outCountOrNil = marker & kMarkerCountMask;
+				if (*outCountOrNil == 15)
+					// Read count
+					*outCountOrNil = readCount("reading marker");
+			}
+
+			return marker & ~kMarkerCountMask;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -324,7 +339,7 @@ UInt64 CBPLDataSource::readCount(const char* errorWhen)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get count marker
-	UInt8	countMarker = mDataSource.readUInt8(mError);
+	UInt8	countMarker = mByteParceller.readUInt8(mError);
 	LogIfErrorAndReturnValue(mError, errorWhen, 0);
 
 	UInt8	fieldSize;
@@ -357,7 +372,7 @@ UInt64 CBPLDataSource::readValue(UInt8 fieldSize, const char* errorWhen)
 {
 	// Read value
 	UInt64	storedValue = 0;
-	mError = mDataSource.readData((UInt8*) &storedValue + sizeof(UInt64) - fieldSize, fieldSize);
+	mError = mByteParceller.readData((UInt8*) &storedValue + sizeof(UInt64) - fieldSize, fieldSize);
 	LogIfErrorAndReturnValue(mError, errorWhen, 0);
 
 	return EndianU64_BtoN(storedValue);
@@ -405,18 +420,15 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 				case kMarkerTypeArray:
 					// Array (unimplemented)
 AssertFailUnimplemented();
-					return nil;
 
 				case kMarkerTypeBooleanTrue:
 				case kMarkerTypeBooleanFalse:
 					// Boolean (unimplemented)
 AssertFailUnimplemented();
-					return nil;
 
 				case kMarkerTypeData:
 					// Data (unimplemented)
 AssertFailUnimplemented();
-					return nil;
 
 				case kMarkerTypeDictionary: {
 					// Dictionary
@@ -432,7 +444,6 @@ AssertFailUnimplemented();
 				case kMarkerTypeFloat64:
 					// Float (unimplemented)
 AssertFailUnimplemented();
-					return nil;
 
 				case kMarkerTypeInteger1Byte:
 				case kMarkerTypeInteger2Bytes:
@@ -440,7 +451,6 @@ AssertFailUnimplemented();
 				case kMarkerTypeInteger8Bytes:
 					// Integer (unimplemented)
 AssertFailUnimplemented();
-					return nil;
 
 				case kMarkerTypeStringASCII:
 				case kMarkerTypeStringUnicode16: {
@@ -467,23 +477,26 @@ AssertFailUnimplemented();
 			// Data
 // TODO
 AssertFailUnimplemented();
-			break;
 
 		case kMarkerTypeDictionary:
 			// Dictionary
 			return new SDictionaryValue(readDictionary(objectIndex));
 
-		case kMarkerTypeFloat32:
+		case kMarkerTypeFloat32: {
 			// Float32
-// TODO
-AssertFailUnimplemented();
-			break;
+			SwappableFloat32	swappableFloat32;
+			swappableFloat32.mStoredValue = (UInt32) readValue(4, "reading float32");
 
-		case kMarkerTypeFloat64:
+			return new SDictionaryValue(swappableFloat32.mValue);
+			} break;
+
+		case kMarkerTypeFloat64: {
 			// Float64
-// TODO
-AssertFailUnimplemented();
-			break;
+			SwappableFloat64	swappableFloat64;
+			swappableFloat64.mStoredValue = readValue(8, "reading float64");
+
+			return new SDictionaryValue(swappableFloat64.mValue);
+			} break;
 
 		case kMarkerTypeInteger1Byte:
 			// Integer, 1 byte
@@ -500,6 +513,10 @@ AssertFailUnimplemented();
 		case kMarkerTypeInteger8Bytes:
 			// Integer, 8 bytes
 			return new SDictionaryValue((SInt64) readValue(8, "reading integer, 8 bytes"));
+
+		default:
+			// We should never get here
+			AssertFailWith(kAssertFailedError);
 	}
 
 	return nil;
@@ -512,11 +529,11 @@ AssertFailUnimplemented();
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CBinaryPropertyList::dictionaryFrom(const CDataSource& dataSource, UError& outError)
+CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParceller, UError& outError)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64	dataSize = dataSource.getSize();
+	UInt64	dataSize = byteParceller.getSize();
 
 	// Check size
 	if (dataSize < (sBinaryPListV10Header.getSize() + sizeof(SBinaryPListTrailer))) {
@@ -526,7 +543,7 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CDataSource& dataSource, U
 	}
 
 	// Validate header
-	CData	header = dataSource.readData(sBinaryPListV10Header.getSize(), outError);
+	CData	header = byteParceller.readData(sBinaryPListV10Header.getSize(), outError);
 	LogIfErrorAndReturnValue(outError, "reading header", CDictionary());
 	if (header != sBinaryPListV10Header) {
 		// Header does not match
@@ -535,11 +552,11 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CDataSource& dataSource, U
 	}
 
 	// Validate trailer
-	outError = dataSource.setPos(kDataProviderPositionFromEnd, sizeof(SBinaryPListTrailer));
+	outError = byteParceller.setPos(kDataSourcePositionFromEnd, sizeof(SBinaryPListTrailer));
 	LogIfErrorAndReturnValue(outError, "positiong data source to read trailer", CDictionary());
 
 	SBinaryPListTrailer	trailer;
-	outError = dataSource.readData(&trailer, sizeof(SBinaryPListTrailer));
+	outError = byteParceller.readData(&trailer, sizeof(SBinaryPListTrailer));
 	LogIfErrorAndReturnValue(outError, "reading trailer", CDictionary());
 
 	// Create CBPLDataSource
@@ -549,7 +566,7 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CDataSource& dataSource, U
 	UInt64			topObjectIndex = EndianU64_BtoN(trailer.mTopObjectIndex);
 	UInt64			objectOffsetTableOffset = EndianU64_BtoN(trailer.mObjectOffsetTableOffset);
 	CBPLDataSource*	bplDataSource =
-							new CBPLDataSource(dataSource, objectOffsetFieldSize, objectIndexFieldSize,
+							new CBPLDataSource(byteParceller, objectOffsetFieldSize, objectIndexFieldSize,
 									totalObjectCount, objectOffsetTableOffset);
 
 	// Get top level object

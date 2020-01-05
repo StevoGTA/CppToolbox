@@ -4,106 +4,43 @@
 
 #pragma once
 
-#include "CDataProvider.h"
-#include "CString.h"
+#include "CppToolboxError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDataSource
+// MARK: Position mode
 
-class CDataSourceInternals;
+enum EDataSourcePosition {
+	kDataSourcePositionFromBeginning,
+	kDataSourcePositionFromCurrent,
+	kDataSourcePositionFromEnd,
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Errors
+
+const	UErrorDomain	kDataProviderErrorDomain	= MAKE_OSTYPE('D', 'a', 'P', 'r');
+
+const	UError	kDataProviderReadBeyondEndError		= MAKE_UError(kDataProviderErrorDomain, 1);
+const	UError	kDataProviderSetPosBeforeStartError	= MAKE_UError(kDataProviderErrorDomain, 2);
+const	UError	kDataProviderSetPosAfterEndError	= MAKE_UError(kDataProviderErrorDomain, 3);
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDataSource
+
 class CDataSource {
 	// Methods
 	public:
-				// Lifecycle methods
-				CDataSource(const CDataProvider* dataProvider);	// Will take ownership of CDataProvider
-				CDataSource(const CDataSource& other);
-				~CDataSource();
+						// Lifecycle methods
+						CDataSource() {}
+		virtual			~CDataSource() {}
 
-				// Instance methods
-		UInt64	getSize() const;
+						// Instance methods
+		virtual	UInt64	getSize() const = 0;
 
-		UError	readData(void* buffer, UInt64 byteCount) const;
-		CData	readData(UInt64 byteCount, UError& outError) const;
-		CData	readData(UError& outError) const;
-		SInt8	readSInt8(UError& outError) const
-					{
-						// Read
-						SInt8	value = 0;
-						outError = readData(&value, sizeof(SInt8));
+		virtual	UError	readData(void* buffer, UInt64 byteCount) const = 0;
 
-						return value;
-					}
-		SInt16	readSInt16(UError& outError) const
-					{
-						// Read
-						SInt16	value = 0;
-						outError = readData(&value, sizeof(SInt16));
+		virtual	SInt64	getPos() const = 0;
+		virtual	UError	setPos(EDataSourcePosition position, SInt64 newPos) const = 0;
 
-						return value;
-					}
-		SInt32	readSInt32(UError& outError) const
-					{
-						// Read
-						SInt32	value = 0;
-						outError = readData(&value, sizeof(SInt32));
-
-						return value;
-					}
-		SInt64	readSInt64(UError& outError) const
-					{
-						// Read
-						SInt64	value = 0;
-						outError = readData(&value, sizeof(SInt64));
-
-						return value;
-					}
-		UInt8	readUInt8(UError& outError) const
-					{
-						// Read
-						UInt8	value = 0;
-						outError = readData(&value, sizeof(UInt8));
-
-						return value;
-					}
-		UInt16	readUInt16(UError& outError) const
-					{
-						// Read
-						UInt16	value = 0;
-						outError = readData(&value, sizeof(UInt16));
-
-						return value;
-					}
-		UInt32	readUInt32(UError& outError) const
-					{
-						// Read
-						UInt32	value = 0;
-						outError = readData(&value, sizeof(UInt32));
-
-						return value;
-					}
-		UInt64	readUInt64(UError& outError) const
-					{
-						// Read
-						UInt64	value = 0;
-						outError = readData(&value, sizeof(UInt64));
-
-						return value;
-					}
-		OSType	readOSType(UError& outError) const
-					{
-						// Read
-						OSType	value = 0;
-						outError = readData(&value, sizeof(OSType));
-
-						return value;
-					}
-
-		SInt64	getPos() const;
-		UError	setPos(EDataProviderPosition position, SInt64 newPos) const;
-
-		void	reset() const;
-
-	// Properties
-	private:
-		CDataSourceInternals*	mInternals;
+		virtual	void	reset() const = 0;
 };

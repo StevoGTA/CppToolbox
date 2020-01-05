@@ -1,62 +1,62 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CStringSource.cpp			©2019 Stevo Brock	All rights reserved.
+//	CTextParceller.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CStringSource.h"
+#include "CTextParceller.h"
 
-#include "CDataProvider.h"
+#include "CDataSource.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CStringSourceInternals
+// MARK: CTextParcellerInternals
 
-class CStringSourceInternals {
+class CTextParcellerInternals {
 	public:
-								CStringSourceInternals(const CDataProvider* dataProvider) :
-									mDataProvider(dataProvider), mReferenceCount(1)
-									{}
-								~CStringSourceInternals()
-									{
-										DisposeOf(mDataProvider);
-									}
-
-		CStringSourceInternals*	addReference()
-									{ mReferenceCount++; return this; }
-		void					removeReference()
-									{
-										// Decrement reference count and check if we are the last one
-										if (--mReferenceCount == 0) {
-											// We going away
-											CStringSourceInternals*	THIS = this;
-											DisposeOf(THIS);
+									CTextParcellerInternals(const CDataSource* dataSource) :
+										mDataSource(dataSource), mReferenceCount(1)
+										{}
+									~CTextParcellerInternals()
+										{
+											DisposeOf(mDataSource);
 										}
-									}
 
-		const	CDataProvider*	mDataProvider;
+		CTextParcellerInternals*	addReference()
+										{ mReferenceCount++; return this; }
+		void						removeReference()
+										{
+											// Decrement reference count and check if we are the last one
+											if (--mReferenceCount == 0) {
+												// We going away
+												CTextParcellerInternals*	THIS = this;
+												DisposeOf(THIS);
+											}
+										}
+
+		const	CDataSource*	mDataSource;
 				UInt32			mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CStringSource
+// MARK: - CTextParceller
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CStringSource::CStringSource(const CDataProvider* dataProvider)
+CTextParceller::CTextParceller(const CDataSource* dataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringSourceInternals(dataProvider);
+	mInternals = new CTextParcellerInternals(dataSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CStringSource::CStringSource(const CStringSource& other)
+CTextParceller::CTextParceller(const CTextParceller& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = other.mInternals->addReference();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CStringSource::~CStringSource()
+CTextParceller::~CTextParceller()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->removeReference();
@@ -65,14 +65,14 @@ CStringSource::~CStringSource()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CStringSource::getSize() const
+UInt64 CTextParceller::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mDataProvider->getSize();
+	return mInternals->mDataSource->getSize();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CStringSource::readStringToEOL(UError& outError) const
+CString CTextParceller::readStringToEOL(UError& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -81,16 +81,16 @@ CString CStringSource::readStringToEOL(UError& outError) const
 	bool	foundEnd = false;
 	while (!foundEnd) {
 		// First, read as much as we can
-		UInt64	bytesRead = std::min<UInt64>(1024, getSize() - mInternals->mDataProvider->getPos());
+		UInt64	bytesRead = std::min<UInt64>(1024, getSize() - mInternals->mDataSource->getPos());
 		if (bytesRead == 0) {
 			// EOF
-			outError = kDataProviderReadBeyondEndError;
+			outError = outString.isEmpty() ? kDataProviderReadBeyondEndError : kNoError;
 
 			return outString;
 		}
 
 		char	buffer[bytesRead + 1];
-		outError = mInternals->mDataProvider->readData(buffer, bytesRead);
+		outError = mInternals->mDataSource->readData(buffer, bytesRead);
 		if (outError != kNoError)
 			// Error
 			return CString::mEmpty;
@@ -130,7 +130,7 @@ CString CStringSource::readStringToEOL(UError& outError) const
 			}
 
 			// Reset the file's position to the beginning of the next line
-			outError = mInternals->mDataProvider->setPos(kDataProviderPositionFromCurrent, delta);
+			outError = mInternals->mDataSource->setPos(kDataSourcePositionFromCurrent, delta);
 			ReturnValueIfError(outError, outString);
 
 			// Append the chars we found to the return string
@@ -143,8 +143,8 @@ CString CStringSource::readStringToEOL(UError& outError) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CStringSource::reset() const
+void CTextParceller::reset() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mDataProvider->reset();
+	mInternals->mDataSource->reset();
 }

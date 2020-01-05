@@ -1,29 +1,23 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CThread.h			©2019 Stevo Brock	All rights reserved.
+//	C2DDrawables.h			©2014 Stevo Brock		All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-#include "CString.h"
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: E2DDrawableStrokeCapStyle
+
+enum E2DDrawableStrokeCapStyle {
+	kE2DDrawableStrokeCapStyleRound,
+	kE2DDrawableStrokeCapStyleNone,
+	kE2DDrawableStrokeCapStyleSquare,
+};
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Procs
+// MARK: - E2DDrawableStrokeJoinStyle
 
-class CThread;
-typedef	void	(*CThreadProc)(const CThread& thread, void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CThread
-
-class CThreadInternals;
-class CThread {
-	// Methods
-	public:
-		// Lifecycle methods
-		CThread(CThreadProc proc, void* userData = nil, const CString& name = CString::mEmpty);
-		~CThread();
-
-	// Properties
-	private:
-		CThreadInternals*	mInternals;
+enum E2DDrawableStrokeJoinStyle {
+	kE2DDrawableStrokeJoinStyleRound,
+	kE2DDrawableStrokeJoinStyleBevel,
+	kE2DDrawableStrokeJoinStyleMiter,
 };

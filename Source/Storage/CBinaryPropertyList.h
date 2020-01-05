@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CDataSource.h"
+#include "CByteParceller.h"
 #include "CDictionary.h"
 #include "CFile.h"
 
@@ -21,6 +21,6 @@ class CBinaryPropertyList : public CDictionary {
 	// Methods
 	public:
 						// Class methods
-	static	CDictionary	dictionaryFrom(const CDataSource& dataSource, UError& outError);
+	static	CDictionary	dictionaryFrom(const CByteParceller& byteParceller, UError& outError);
 	static	UError		writeTo(const CFile& file);
 };

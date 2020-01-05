@@ -408,313 +408,6 @@ Float32 CColor::getAlpha() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CColor* CColor::getColorWithName(const CString& colorName)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	CString	colorNameLocal = colorName;
-	colorNameLocal.makeLowercase();
-	
-	if (colorNameLocal == CString("clear"))
-		return &mClear;
-	if (colorNameLocal == CString("aliceblue"))
-		return &mAliceBlue;
-	if (colorNameLocal == CString("antiquewhite"))
-		return &mAntiqueWhite;
-	if (colorNameLocal == CString("aqua"))
-		return &mAqua;
-	if (colorNameLocal == CString("aquamarine"))
-		return &mAquamarine;
-	if (colorNameLocal == CString("azure"))
-		return &mAzure;
-	if (colorNameLocal == CString("beige"))
-		return &mBeige;
-	if (colorNameLocal == CString("bisque"))
-		return &mBisque;
-	if (colorNameLocal == CString("black"))
-		return &mBlack;
-	if (colorNameLocal == CString("blanchedalmond"))
-		return &mBlanchedAlmond;
-	if (colorNameLocal == CString("blue"))
-		return &mBlue;
-	if (colorNameLocal == CString("blueviolet"))
-		return &mBlueViolet;
-	if (colorNameLocal == CString("brown"))
-		return &mBrown;
-	if (colorNameLocal == CString("burlywood"))
-		return &mBurlywood;
-	if (colorNameLocal == CString("cadetblue"))
-		return &mCadetBlue;
-	if (colorNameLocal == CString("chartreuse"))
-		return &mChartreuse;
-	if (colorNameLocal == CString("chocolate"))
-		return &mChocolate;
-	if (colorNameLocal == CString("coral"))
-		return &mCoral;
-	if (colorNameLocal == CString("cornflowerblue"))
-		return &mCornflowerBlue;
-	if (colorNameLocal == CString("cornsilk"))
-		return &mCornSilk;
-	if (colorNameLocal == CString("crimson"))
-		return &mCrimson;
-	if (colorNameLocal == CString("cyan"))
-		return &mCyan;
-	if (colorNameLocal == CString("darkblue"))
-		return &mDarkBlue;
-	if (colorNameLocal == CString("darkcyan"))
-		return &mDarkCyan;
-	if (colorNameLocal == CString("darkgoldenrod"))
-		return &mDarkGoldenrod;
-	if (colorNameLocal == CString("darkgray"))
-		return &mDarkGray;
-	if (colorNameLocal == CString("darkgreen"))
-		return &mDarkGreen;
-	if (colorNameLocal == CString("darkgrey"))
-		return &mDarkGrey;
-	if (colorNameLocal == CString("darkkhaki"))
-		return &mDarkKhaki;
-	if (colorNameLocal == CString("darkmagenta"))
-		return &mDarkMagenta;
-	if (colorNameLocal == CString("darkolivegreen"))
-		return &mDarkOliveGreen;
-	if (colorNameLocal == CString("darkorange"))
-		return &mDarkOrange;
-	if (colorNameLocal == CString("darkorchid"))
-		return &mDarkOrchid;
-	if (colorNameLocal == CString("darkred"))
-		return &mDarkdRed;
-	if (colorNameLocal == CString("darksalmon"))
-		return &mDarkSalmon;
-	if (colorNameLocal == CString("darkseagreen"))
-		return &mDarkSeaGreen;
-	if (colorNameLocal == CString("darkslateblue"))
-		return &mDarkSlateBlue;
-	if (colorNameLocal == CString("darkslategray"))
-		return &mDarkSlateGray;
-	if (colorNameLocal == CString("darkslategrey"))
-		return &mDarkSlateGrey;
-	if (colorNameLocal == CString("darkturquoise"))
-		return &mDarkTurquoise;
-	if (colorNameLocal == CString("darkviolet"))
-		return &mDarkViolet;
-	if (colorNameLocal == CString("deeppink"))
-		return &mDeepPink;
-	if (colorNameLocal == CString("deepskyblue"))
-		return &mDeepSkyBlue;
-	if (colorNameLocal == CString("dimgray"))
-		return &mDimGray;
-	if (colorNameLocal == CString("dimgrey"))
-		return &mDimGrey;
-	if (colorNameLocal == CString("dodgerblue"))
-		return &mDodgerBlue;
-	if (colorNameLocal == CString("firebrick"))
-		return &mFireBrick;
-	if (colorNameLocal == CString("floralwhite"))
-		return &mFloralWhite;
-	if (colorNameLocal == CString("forestgreen"))
-		return &mForestGreen;
-	if (colorNameLocal == CString("fuchsia"))
-		return &mFuchsia;
-	if (colorNameLocal == CString("gainsboro"))
-		return &mGainsboro;
-	if (colorNameLocal == CString("ghostwhite"))
-		return &mGhostWhite;
-	if (colorNameLocal == CString("gold"))
-		return &mGold;
-	if (colorNameLocal == CString("goldenrod"))
-		return &mGoldenrod;
-	if (colorNameLocal == CString("gray"))
-		return &mGray;
-	if (colorNameLocal == CString("grey"))
-		return &mGrey;
-	if (colorNameLocal == CString("green"))
-		return &mGreen;
-	if (colorNameLocal == CString("greenyellow"))
-		return &mGreenYellow;
-	if (colorNameLocal == CString("honeydew"))
-		return &mHoneydew;
-	if (colorNameLocal == CString("hotpink"))
-		return &mHotPink;
-	if (colorNameLocal == CString("indianred"))
-		return &mIndianRed;
-	if (colorNameLocal == CString("indigo"))
-		return &mIndigo;
-	if (colorNameLocal == CString("ivory"))
-		return &mIvory;
-	if (colorNameLocal == CString("khaki"))
-		return &mKhaki;
-	if (colorNameLocal == CString("lavender"))
-		return &mLavender;
-	if (colorNameLocal == CString("lavenderblush"))
-		return &mLavenderBlush;
-	if (colorNameLocal == CString("lawngreen"))
-		return &mLawnGreen;
-	if (colorNameLocal == CString("lemonchiffon"))
-		return &mLemonChiffon;
-	if (colorNameLocal == CString("lightblue"))
-		return &mLightBlue;
-	if (colorNameLocal == CString("lightcoral"))
-		return &mLightCoral;
-	if (colorNameLocal == CString("lightcyan"))
-		return &mLightCyan;
-	if (colorNameLocal == CString("lightgoldenrodyellow"))
-		return &mLightGoldenrodYellow;
-	if (colorNameLocal == CString("lightgray"))
-		return &mLightGray;
-	if (colorNameLocal == CString("lightgreen"))
-		return &mLightGreen;
-	if (colorNameLocal == CString("lightgrey"))
-		return &mLightGrey;
-	if (colorNameLocal == CString("lightpink"))
-		return &mLightPink;
-	if (colorNameLocal == CString("lightsalmon"))
-		return &mLighSalmon;
-	if (colorNameLocal == CString("lightseagreen"))
-		return &mLightSeaGreen;
-	if (colorNameLocal == CString("lightskyblue"))
-		return &mLightSkyBlue;
-	if (colorNameLocal == CString("lightslategray"))
-		return &mLightSlateGray;
-	if (colorNameLocal == CString("lightslategrey"))
-		return &mLightSlateGrey;
-	if (colorNameLocal == CString("lightsteelblue"))
-		return &mLightSteelBlue;
-	if (colorNameLocal == CString("lightyellow"))
-		return &mLightYellow;
-	if (colorNameLocal == CString("lime"))
-		return &mLime;
-	if (colorNameLocal == CString("limegreen"))
-		return &mLimeGreen;
-	if (colorNameLocal == CString("linen"))
-		return &mLinen;
-	if (colorNameLocal == CString("magenta"))
-		return &mMagenta;
-	if (colorNameLocal == CString("maroon"))
-		return &mMaroon;
-	if (colorNameLocal == CString("mediumaquamarine"))
-		return &mMediumAquamarine;
-	if (colorNameLocal == CString("mediumblue"))
-		return &mMediumBlue;
-	if (colorNameLocal == CString("mediumorchid"))
-		return &mMediumOrchid;
-	if (colorNameLocal == CString("mediumpurple"))
-		return &mMediumPurple;
-	if (colorNameLocal == CString("mediumseagreen"))
-		return &mMediumSeaGreen;
-	if (colorNameLocal == CString("mediumslateblue"))
-		return &mMediumSlateBlue;
-	if (colorNameLocal == CString("mediumspringgreen"))
-		return &mMediumSpringGreen;
-	if (colorNameLocal == CString("mediumturquoise"))
-		return &mMediumTurquoise;
-	if (colorNameLocal == CString("mediumvioletred"))
-		return &mMediumVioletRed;
-	if (colorNameLocal == CString("midnightblue"))
-		return &mMidnightBlue;
-	if (colorNameLocal == CString("mintcream"))
-		return &mMintCream;
-	if (colorNameLocal == CString("mistyrose"))
-		return &mMistyRose;
-	if (colorNameLocal == CString("moccasin"))
-		return &mMoccasin;
-	if (colorNameLocal == CString("navajowhite"))
-		return &mNavajoWhite;
-	if (colorNameLocal == CString("navy"))
-		return &mNavy;
-	if (colorNameLocal == CString("oldlace"))
-		return &mOldLace;
-	if (colorNameLocal == CString("olive"))
-		return &mOlive;
-	if (colorNameLocal == CString("olivedrab"))
-		return &mOliveDrab;
-	if (colorNameLocal == CString("orange"))
-		return &mOrange;
-	if (colorNameLocal == CString("orangered"))
-		return &mOrangeRed;
-	if (colorNameLocal == CString("orchid"))
-		return &mOrchid;
-	if (colorNameLocal == CString("palegoldenrod"))
-		return &mPaleGoldenrod;
-	if (colorNameLocal == CString("palegreen"))
-		return &mPaleGreen;
-	if (colorNameLocal == CString("paleturquoise"))
-		return &mPaleTurquoise;
-	if (colorNameLocal == CString("palevioletred"))
-		return &mPaleVioletRed;
-	if (colorNameLocal == CString("papayawhip"))
-		return &mPapayaWhip;
-	if (colorNameLocal == CString("peachpuff"))
-		return &mPeachPuff;
-	if (colorNameLocal == CString("peru"))
-		return &mPeru;
-	if (colorNameLocal == CString("pink"))
-		return &mPink;
-	if (colorNameLocal == CString("plum"))
-		return &mPlum;
-	if (colorNameLocal == CString("powderblue"))
-		return &mPowderBlue;
-	if (colorNameLocal == CString("purple"))
-		return &mPurple;
-	if (colorNameLocal == CString("red"))
-		return &mRed;
-	if (colorNameLocal == CString("rosybrown"))
-		return &mRosyBrown;
-	if (colorNameLocal == CString("royalblue"))
-		return &mRoyalBlue;
-	if (colorNameLocal == CString("saddlebrown"))
-		return &mSadleBrown;
-	if (colorNameLocal == CString("salmon"))
-		return &mSalmon;
-	if (colorNameLocal == CString("sandybrown"))
-		return &mSandyBrown;
-	if (colorNameLocal == CString("seagreen"))
-		return &mSeaGreen;
-	if (colorNameLocal == CString("seashell"))
-		return &mSeashell;
-	if (colorNameLocal == CString("sienna"))
-		return &mSienna;
-	if (colorNameLocal == CString("silver"))
-		return &mSilver;
-	if (colorNameLocal == CString("skyblue"))
-		return &mSkyBlue;
-	if (colorNameLocal == CString("slateblue"))
-		return &mSlateBlue;
-	if (colorNameLocal == CString("slategray"))
-		return &mSlateGray;
-	if (colorNameLocal == CString("slategrey"))
-		return &mSlateGrey;
-	if (colorNameLocal == CString("snow"))
-		return &mSnow;
-	if (colorNameLocal == CString("springgreen"))
-		return &mSpringGreen;
-	if (colorNameLocal == CString("steelblue"))
-		return &mSteelBlue;
-	if (colorNameLocal == CString("tan"))
-		return &mTan;
-	if (colorNameLocal == CString("teal"))
-		return &mTeal;
-	if (colorNameLocal == CString("thistle"))
-		return &mThistle;
-	if (colorNameLocal == CString("tomato"))
-		return &mTomato;
-	if (colorNameLocal == CString("turquoise"))
-		return &mTurquoise;
-	if (colorNameLocal == CString("violet"))
-		return &mViolet;
-	if (colorNameLocal == CString("wheat"))
-		return &mWheat;
-	if (colorNameLocal == CString("white"))
-		return &mWhite;
-	if (colorNameLocal == CString("whitesmoke"))
-		return &mWhiteSmoke;
-	if (colorNameLocal == CString("yellow"))
-		return &mYellow;
-	if (colorNameLocal == CString("yellowgreen"))
-		return &mYellowGreen;
-
-	return nil;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CDictionary CColor::getInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -862,6 +555,313 @@ CColor& CColor::operator*=(const SHSVColorTransform& transform)
 	sConvertHSVToRGB(*mInternals);
 	
 	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OR<const CColor> CColor::getColorWithName(const CString& colorName)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	CString	colorNameLocal = colorName;
+	colorNameLocal.makeLowercase();
+
+	if (colorNameLocal == CString("clear"))
+		return OR<const CColor>(mClear);
+	if (colorNameLocal == CString("aliceblue"))
+		return OR<const CColor>(mAliceBlue);
+	if (colorNameLocal == CString("antiquewhite"))
+		return OR<const CColor>(mAntiqueWhite);
+	if (colorNameLocal == CString("aqua"))
+		return OR<const CColor>(mAqua);
+	if (colorNameLocal == CString("aquamarine"))
+		return OR<const CColor>(mAquamarine);
+	if (colorNameLocal == CString("azure"))
+		return OR<const CColor>(mAzure);
+	if (colorNameLocal == CString("beige"))
+		return OR<const CColor>(mBeige);
+	if (colorNameLocal == CString("bisque"))
+		return OR<const CColor>(mBisque);
+	if (colorNameLocal == CString("black"))
+		return OR<const CColor>(mBlack);
+	if (colorNameLocal == CString("blanchedalmond"))
+		return OR<const CColor>(mBlanchedAlmond);
+	if (colorNameLocal == CString("blue"))
+		return OR<const CColor>(mBlue);
+	if (colorNameLocal == CString("blueviolet"))
+		return OR<const CColor>(mBlueViolet);
+	if (colorNameLocal == CString("brown"))
+		return OR<const CColor>(mBrown);
+	if (colorNameLocal == CString("burlywood"))
+		return OR<const CColor>(mBurlywood);
+	if (colorNameLocal == CString("cadetblue"))
+		return OR<const CColor>(mCadetBlue);
+	if (colorNameLocal == CString("chartreuse"))
+		return OR<const CColor>(mChartreuse);
+	if (colorNameLocal == CString("chocolate"))
+		return OR<const CColor>(mChocolate);
+	if (colorNameLocal == CString("coral"))
+		return OR<const CColor>(mCoral);
+	if (colorNameLocal == CString("cornflowerblue"))
+		return OR<const CColor>(mCornflowerBlue);
+	if (colorNameLocal == CString("cornsilk"))
+		return OR<const CColor>(mCornSilk);
+	if (colorNameLocal == CString("crimson"))
+		return OR<const CColor>(mCrimson);
+	if (colorNameLocal == CString("cyan"))
+		return OR<const CColor>(mCyan);
+	if (colorNameLocal == CString("darkblue"))
+		return OR<const CColor>(mDarkBlue);
+	if (colorNameLocal == CString("darkcyan"))
+		return OR<const CColor>(mDarkCyan);
+	if (colorNameLocal == CString("darkgoldenrod"))
+		return OR<const CColor>(mDarkGoldenrod);
+	if (colorNameLocal == CString("darkgray"))
+		return OR<const CColor>(mDarkGray);
+	if (colorNameLocal == CString("darkgreen"))
+		return OR<const CColor>(mDarkGreen);
+	if (colorNameLocal == CString("darkgrey"))
+		return OR<const CColor>(mDarkGrey);
+	if (colorNameLocal == CString("darkkhaki"))
+		return OR<const CColor>(mDarkKhaki);
+	if (colorNameLocal == CString("darkmagenta"))
+		return OR<const CColor>(mDarkMagenta);
+	if (colorNameLocal == CString("darkolivegreen"))
+		return OR<const CColor>(mDarkOliveGreen);
+	if (colorNameLocal == CString("darkorange"))
+		return OR<const CColor>(mDarkOrange);
+	if (colorNameLocal == CString("darkorchid"))
+		return OR<const CColor>(mDarkOrchid);
+	if (colorNameLocal == CString("darkred"))
+		return OR<const CColor>(mDarkdRed);
+	if (colorNameLocal == CString("darksalmon"))
+		return OR<const CColor>(mDarkSalmon);
+	if (colorNameLocal == CString("darkseagreen"))
+		return OR<const CColor>(mDarkSeaGreen);
+	if (colorNameLocal == CString("darkslateblue"))
+		return OR<const CColor>(mDarkSlateBlue);
+	if (colorNameLocal == CString("darkslategray"))
+		return OR<const CColor>(mDarkSlateGray);
+	if (colorNameLocal == CString("darkslategrey"))
+		return OR<const CColor>(mDarkSlateGrey);
+	if (colorNameLocal == CString("darkturquoise"))
+		return OR<const CColor>(mDarkTurquoise);
+	if (colorNameLocal == CString("darkviolet"))
+		return OR<const CColor>(mDarkViolet);
+	if (colorNameLocal == CString("deeppink"))
+		return OR<const CColor>(mDeepPink);
+	if (colorNameLocal == CString("deepskyblue"))
+		return OR<const CColor>(mDeepSkyBlue);
+	if (colorNameLocal == CString("dimgray"))
+		return OR<const CColor>(mDimGray);
+	if (colorNameLocal == CString("dimgrey"))
+		return OR<const CColor>(mDimGrey);
+	if (colorNameLocal == CString("dodgerblue"))
+		return OR<const CColor>(mDodgerBlue);
+	if (colorNameLocal == CString("firebrick"))
+		return OR<const CColor>(mFireBrick);
+	if (colorNameLocal == CString("floralwhite"))
+		return OR<const CColor>(mFloralWhite);
+	if (colorNameLocal == CString("forestgreen"))
+		return OR<const CColor>(mForestGreen);
+	if (colorNameLocal == CString("fuchsia"))
+		return OR<const CColor>(mFuchsia);
+	if (colorNameLocal == CString("gainsboro"))
+		return OR<const CColor>(mGainsboro);
+	if (colorNameLocal == CString("ghostwhite"))
+		return OR<const CColor>(mGhostWhite);
+	if (colorNameLocal == CString("gold"))
+		return OR<const CColor>(mGold);
+	if (colorNameLocal == CString("goldenrod"))
+		return OR<const CColor>(mGoldenrod);
+	if (colorNameLocal == CString("gray"))
+		return OR<const CColor>(mGray);
+	if (colorNameLocal == CString("grey"))
+		return OR<const CColor>(mGrey);
+	if (colorNameLocal == CString("green"))
+		return OR<const CColor>(mGreen);
+	if (colorNameLocal == CString("greenyellow"))
+		return OR<const CColor>(mGreenYellow);
+	if (colorNameLocal == CString("honeydew"))
+		return OR<const CColor>(mHoneydew);
+	if (colorNameLocal == CString("hotpink"))
+		return OR<const CColor>(mHotPink);
+	if (colorNameLocal == CString("indianred"))
+		return OR<const CColor>(mIndianRed);
+	if (colorNameLocal == CString("indigo"))
+		return OR<const CColor>(mIndigo);
+	if (colorNameLocal == CString("ivory"))
+		return OR<const CColor>(mIvory);
+	if (colorNameLocal == CString("khaki"))
+		return OR<const CColor>(mKhaki);
+	if (colorNameLocal == CString("lavender"))
+		return OR<const CColor>(mLavender);
+	if (colorNameLocal == CString("lavenderblush"))
+		return OR<const CColor>(mLavenderBlush);
+	if (colorNameLocal == CString("lawngreen"))
+		return OR<const CColor>(mLawnGreen);
+	if (colorNameLocal == CString("lemonchiffon"))
+		return OR<const CColor>(mLemonChiffon);
+	if (colorNameLocal == CString("lightblue"))
+		return OR<const CColor>(mLightBlue);
+	if (colorNameLocal == CString("lightcoral"))
+		return OR<const CColor>(mLightCoral);
+	if (colorNameLocal == CString("lightcyan"))
+		return OR<const CColor>(mLightCyan);
+	if (colorNameLocal == CString("lightgoldenrodyellow"))
+		return OR<const CColor>(mLightGoldenrodYellow);
+	if (colorNameLocal == CString("lightgray"))
+		return OR<const CColor>(mLightGray);
+	if (colorNameLocal == CString("lightgreen"))
+		return OR<const CColor>(mLightGreen);
+	if (colorNameLocal == CString("lightgrey"))
+		return OR<const CColor>(mLightGrey);
+	if (colorNameLocal == CString("lightpink"))
+		return OR<const CColor>(mLightPink);
+	if (colorNameLocal == CString("lightsalmon"))
+		return OR<const CColor>(mLighSalmon);
+	if (colorNameLocal == CString("lightseagreen"))
+		return OR<const CColor>(mLightSeaGreen);
+	if (colorNameLocal == CString("lightskyblue"))
+		return OR<const CColor>(mLightSkyBlue);
+	if (colorNameLocal == CString("lightslategray"))
+		return OR<const CColor>(mLightSlateGray);
+	if (colorNameLocal == CString("lightslategrey"))
+		return OR<const CColor>(mLightSlateGrey);
+	if (colorNameLocal == CString("lightsteelblue"))
+		return OR<const CColor>(mLightSteelBlue);
+	if (colorNameLocal == CString("lightyellow"))
+		return OR<const CColor>(mLightYellow);
+	if (colorNameLocal == CString("lime"))
+		return OR<const CColor>(mLime);
+	if (colorNameLocal == CString("limegreen"))
+		return OR<const CColor>(mLimeGreen);
+	if (colorNameLocal == CString("linen"))
+		return OR<const CColor>(mLinen);
+	if (colorNameLocal == CString("magenta"))
+		return OR<const CColor>(mMagenta);
+	if (colorNameLocal == CString("maroon"))
+		return OR<const CColor>(mMaroon);
+	if (colorNameLocal == CString("mediumaquamarine"))
+		return OR<const CColor>(mMediumAquamarine);
+	if (colorNameLocal == CString("mediumblue"))
+		return OR<const CColor>(mMediumBlue);
+	if (colorNameLocal == CString("mediumorchid"))
+		return OR<const CColor>(mMediumOrchid);
+	if (colorNameLocal == CString("mediumpurple"))
+		return OR<const CColor>(mMediumPurple);
+	if (colorNameLocal == CString("mediumseagreen"))
+		return OR<const CColor>(mMediumSeaGreen);
+	if (colorNameLocal == CString("mediumslateblue"))
+		return OR<const CColor>(mMediumSlateBlue);
+	if (colorNameLocal == CString("mediumspringgreen"))
+		return OR<const CColor>(mMediumSpringGreen);
+	if (colorNameLocal == CString("mediumturquoise"))
+		return OR<const CColor>(mMediumTurquoise);
+	if (colorNameLocal == CString("mediumvioletred"))
+		return OR<const CColor>(mMediumVioletRed);
+	if (colorNameLocal == CString("midnightblue"))
+		return OR<const CColor>(mMidnightBlue);
+	if (colorNameLocal == CString("mintcream"))
+		return OR<const CColor>(mMintCream);
+	if (colorNameLocal == CString("mistyrose"))
+		return OR<const CColor>(mMistyRose);
+	if (colorNameLocal == CString("moccasin"))
+		return OR<const CColor>(mMoccasin);
+	if (colorNameLocal == CString("navajowhite"))
+		return OR<const CColor>(mNavajoWhite);
+	if (colorNameLocal == CString("navy"))
+		return OR<const CColor>(mNavy);
+	if (colorNameLocal == CString("oldlace"))
+		return OR<const CColor>(mOldLace);
+	if (colorNameLocal == CString("olive"))
+		return OR<const CColor>(mOlive);
+	if (colorNameLocal == CString("olivedrab"))
+		return OR<const CColor>(mOliveDrab);
+	if (colorNameLocal == CString("orange"))
+		return OR<const CColor>(mOrange);
+	if (colorNameLocal == CString("orangered"))
+		return OR<const CColor>(mOrangeRed);
+	if (colorNameLocal == CString("orchid"))
+		return OR<const CColor>(mOrchid);
+	if (colorNameLocal == CString("palegoldenrod"))
+		return OR<const CColor>(mPaleGoldenrod);
+	if (colorNameLocal == CString("palegreen"))
+		return OR<const CColor>(mPaleGreen);
+	if (colorNameLocal == CString("paleturquoise"))
+		return OR<const CColor>(mPaleTurquoise);
+	if (colorNameLocal == CString("palevioletred"))
+		return OR<const CColor>(mPaleVioletRed);
+	if (colorNameLocal == CString("papayawhip"))
+		return OR<const CColor>(mPapayaWhip);
+	if (colorNameLocal == CString("peachpuff"))
+		return OR<const CColor>(mPeachPuff);
+	if (colorNameLocal == CString("peru"))
+		return OR<const CColor>(mPeru);
+	if (colorNameLocal == CString("pink"))
+		return OR<const CColor>(mPink);
+	if (colorNameLocal == CString("plum"))
+		return OR<const CColor>(mPlum);
+	if (colorNameLocal == CString("powderblue"))
+		return OR<const CColor>(mPowderBlue);
+	if (colorNameLocal == CString("purple"))
+		return OR<const CColor>(mPurple);
+	if (colorNameLocal == CString("red"))
+		return OR<const CColor>(mRed);
+	if (colorNameLocal == CString("rosybrown"))
+		return OR<const CColor>(mRosyBrown);
+	if (colorNameLocal == CString("royalblue"))
+		return OR<const CColor>(mRoyalBlue);
+	if (colorNameLocal == CString("saddlebrown"))
+		return OR<const CColor>(mSadleBrown);
+	if (colorNameLocal == CString("salmon"))
+		return OR<const CColor>(mSalmon);
+	if (colorNameLocal == CString("sandybrown"))
+		return OR<const CColor>(mSandyBrown);
+	if (colorNameLocal == CString("seagreen"))
+		return OR<const CColor>(mSeaGreen);
+	if (colorNameLocal == CString("seashell"))
+		return OR<const CColor>(mSeashell);
+	if (colorNameLocal == CString("sienna"))
+		return OR<const CColor>(mSienna);
+	if (colorNameLocal == CString("silver"))
+		return OR<const CColor>(mSilver);
+	if (colorNameLocal == CString("skyblue"))
+		return OR<const CColor>(mSkyBlue);
+	if (colorNameLocal == CString("slateblue"))
+		return OR<const CColor>(mSlateBlue);
+	if (colorNameLocal == CString("slategray"))
+		return OR<const CColor>(mSlateGray);
+	if (colorNameLocal == CString("slategrey"))
+		return OR<const CColor>(mSlateGrey);
+	if (colorNameLocal == CString("snow"))
+		return OR<const CColor>(mSnow);
+	if (colorNameLocal == CString("springgreen"))
+		return OR<const CColor>(mSpringGreen);
+	if (colorNameLocal == CString("steelblue"))
+		return OR<const CColor>(mSteelBlue);
+	if (colorNameLocal == CString("tan"))
+		return OR<const CColor>(mTan);
+	if (colorNameLocal == CString("teal"))
+		return OR<const CColor>(mTeal);
+	if (colorNameLocal == CString("thistle"))
+		return OR<const CColor>(mThistle);
+	if (colorNameLocal == CString("tomato"))
+		return OR<const CColor>(mTomato);
+	if (colorNameLocal == CString("turquoise"))
+		return OR<const CColor>(mTurquoise);
+	if (colorNameLocal == CString("violet"))
+		return OR<const CColor>(mViolet);
+	if (colorNameLocal == CString("wheat"))
+		return OR<const CColor>(mWheat);
+	if (colorNameLocal == CString("white"))
+		return OR<const CColor>(mWhite);
+	if (colorNameLocal == CString("whitesmoke"))
+		return OR<const CColor>(mWhiteSmoke);
+	if (colorNameLocal == CString("yellow"))
+		return OR<const CColor>(mYellow);
+	if (colorNameLocal == CString("yellowgreen"))
+		return OR<const CColor>(mYellowGreen);
+
+	return OR<const CColor>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

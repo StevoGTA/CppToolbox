@@ -1,29 +1,22 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CThread.h			©2019 Stevo Brock	All rights reserved.
+//	SNumber.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#pragma once
-
-#include "CString.h"
+#include "SNumber.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Procs
-
-class CThread;
-typedef	void	(*CThreadProc)(const CThread& thread, void* userData);
+// MARK: - Global methods
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CThread
+UInt16 gNextPowerOf2(UInt16 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Use bit operations to round up to the next power of 2 value
+	value--;
+	value |= (value >> 8);
+	value |= (value >> 4);
+	value |= (value >> 2);
+	value |= (value >> 1);
 
-class CThreadInternals;
-class CThread {
-	// Methods
-	public:
-		// Lifecycle methods
-		CThread(CThreadProc proc, void* userData = nil, const CString& name = CString::mEmpty);
-		~CThread();
-
-	// Properties
-	private:
-		CThreadInternals*	mInternals;
-};
+	return ++value;
+}

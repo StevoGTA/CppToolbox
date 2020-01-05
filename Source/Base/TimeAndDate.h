@@ -27,7 +27,6 @@ const	UniversalTimeInterval	kUniversalTimeIntervalNever			= HUGE_VAL;
 //	On Angstrom 2.6.29,	the reference time is 09:13:00 January 27, 2009
 typedef Float64 UniversalTime;
 
-const	UniversalTime			kUniversalTimeInvalid				= -HUGE_VAL;
 const	UniversalTime			kUniversalTimeNone					= 0.0;
 const	UniversalTime			kUniversalTimeNever					= HUGE_VAL;
 const	UniversalTimeInterval	kUniversalTimeInterval1904To2001	= 3061152000.0;

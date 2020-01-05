@@ -9,151 +9,73 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Byte swapping
 
-typedef	struct {UInt32 mV;} StoredFloat32;
-typedef	struct {UInt64 mV;} StoredFloat64;
+typedef UInt32	StoredFloat32;
+typedef union {
+	Float32			mValue;
+	StoredFloat32	mStoredValue;
+} SwappableFloat32;
 
-static	inline	force_inline	StoredFloat32 EndianF32_NtoB(Float32 arg) {
-	union {
-		Float32			mValue;
-		StoredFloat32	mStoredValue;
-	} result;
+static	inline	force_inline	StoredFloat32 EndianF32_NtoB(Float32 value) {
+	SwappableFloat32	swappableFloat32;
+	swappableFloat32.mValue = value;
 
-	result.mValue = arg;
-	result.mStoredValue.mV = EndianU32_NtoB(result.mStoredValue.mV);
-
-	return result.mStoredValue;
+	return EndianU32_NtoB(swappableFloat32.mStoredValue);
 }
 
-static	inline	force_inline	StoredFloat32 EndianF32_NtoL(Float32 arg) {
-	union {
-		Float32			mValue;
-		StoredFloat32	mStoredValue;
-	} result;
+static	inline	force_inline	StoredFloat32 EndianF32_NtoL(Float32 value) {
+	SwappableFloat32	swappableFloat32;
+	swappableFloat32.mValue = value;
 
-	result.mValue = arg;
-	result.mStoredValue.mV = EndianU32_NtoL(result.mStoredValue.mV);
-
-	return result.mStoredValue;
+	return EndianU32_NtoL(swappableFloat32.mStoredValue);
 }
 
-static	inline	force_inline	Float32 EndianF32_BtoN(StoredFloat32 arg) {
-	union {
-		Float32			mValue;
-		StoredFloat32	mStoredValue;
-	} result;
+static	inline	force_inline	Float32 EndianF32_BtoN(StoredFloat32 value) {
+	SwappableFloat32	swappableFloat32;
+	swappableFloat32.mStoredValue = EndianU32_BtoN(value);
 
-    result.mStoredValue = arg;
-	result.mStoredValue.mV = EndianU32_BtoN(result.mStoredValue.mV);
-
-    return result.mValue;
+    return swappableFloat32.mValue;
 }
 
-static	inline	force_inline	Float32 EndianF32_LtoN(StoredFloat32 arg) {
-	union {
-		Float32			mValue;
-		StoredFloat32	mStoredValue;
-	} result;
+static	inline	force_inline	Float32 EndianF32_LtoN(StoredFloat32 value) {
+	SwappableFloat32	swappableFloat32;
+	swappableFloat32.mStoredValue = EndianU32_LtoN(value);
 
-    result.mStoredValue = arg;
-	result.mStoredValue.mV = EndianU32_LtoN(result.mStoredValue.mV);
-
-    return result.mValue;
+    return swappableFloat32.mValue;
 }
 
-static	inline	force_inline	StoredFloat32 EndianF32_NtoS(Float32 arg) {
-	union {
-		Float32			mValue;
-		StoredFloat32	mStoredValue;
-	} result;
 
-	result.mValue = arg;
-	result.mStoredValue.mV = EndianU32_NtoB(result.mStoredValue.mV);
+typedef	UInt64	StoredFloat64;
+typedef union {
+	Float64			mValue;
+	StoredFloat64	mStoredValue;
+} SwappableFloat64;
 
-	return result.mStoredValue;
+static	inline	force_inline	StoredFloat64 EndianF64_NtoB(Float64 value) {
+	SwappableFloat64	swappableFloat64;
+	swappableFloat64.mValue = value;
+
+	return EndianU64_NtoB(swappableFloat64.mStoredValue);
 }
 
-static	inline	force_inline	Float32 EndianF32_StoN(StoredFloat32 arg) {
-	union {
-		Float32			mValue;
-		StoredFloat32	mStoredValue;
-	} result;
+static	inline	force_inline	StoredFloat64 EndianF64_NtoL(Float64 value) {
+	SwappableFloat64	swappableFloat64;
+	swappableFloat64.mValue = value;
 
-    result.mStoredValue = arg;
-	result.mStoredValue.mV = EndianU32_NtoB(result.mStoredValue.mV);
-
-    return result.mValue;
+	return EndianU64_NtoL(swappableFloat64.mStoredValue);
 }
 
-static	inline	force_inline	StoredFloat64 EndianF64_NtoB(Float64 arg) {
-	union {
-		Float64			mValue;
-		StoredFloat64	mStoredValue;
-	} result;
+static	inline	force_inline	Float64 EndianF64_BtoN(StoredFloat64 value) {
+	SwappableFloat64	swappableFloat64;
+	swappableFloat64.mStoredValue = EndianU64_BtoN(value);
 
-	result.mValue = arg;
-	result.mStoredValue.mV = EndianU64_NtoB(result.mStoredValue.mV);
-
-	return result.mStoredValue;
+    return swappableFloat64.mValue;
 }
 
-static	inline	force_inline	StoredFloat64 EndianF64_NtoL(Float64 arg) {
-	union {
-		Float64			mValue;
-		StoredFloat64	mStoredValue;
-	} result;
+static	inline	force_inline	Float64 EndianF64_LtoN(StoredFloat64 value) {
+	SwappableFloat64	swappableFloat64;
+	swappableFloat64.mStoredValue = EndianU64_LtoN(value);
 
-	result.mValue = arg;
-	result.mStoredValue.mV = EndianU64_NtoL(result.mStoredValue.mV);
-
-	return result.mStoredValue;
-}
-
-static	inline	force_inline	Float64 EndianF64_BtoN(StoredFloat64 arg) {
-	union {
-		Float64			mValue;
-		StoredFloat64	mStoredValue;
-	} result;
-
-    result.mStoredValue = arg;
-	result.mStoredValue.mV = EndianU64_BtoN(result.mStoredValue.mV);
-
-    return result.mValue;
-}
-
-static	inline	force_inline	Float64 EndianF64_LtoN(StoredFloat64 arg) {
-	union {
-		Float64			mValue;
-		StoredFloat64	mStoredValue;
-	} result;
-
-    result.mStoredValue = arg;
-	result.mStoredValue.mV = EndianU64_LtoN(result.mStoredValue.mV);
-
-    return result.mValue;
-}
-
-static	inline	force_inline	StoredFloat64 EndianF64_NtoS(Float64 arg) {
-	union {
-		Float64			mValue;
-		StoredFloat64	mStoredValue;
-	} result;
-
-	result.mValue = arg;
-	result.mStoredValue.mV = EndianU64_NtoB(result.mStoredValue.mV);
-
-	return result.mStoredValue;
-}
-
-static	inline	force_inline	Float64 EndianF64_StoN(StoredFloat64 arg) {
-	union {
-		Float64			mValue;
-		StoredFloat64	mStoredValue;
-	} result;
-
-    result.mStoredValue = arg;
-	result.mStoredValue.mV = EndianU64_NtoB(result.mStoredValue.mV);
-
-    return result.mValue;
+    return swappableFloat64.mValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -167,3 +89,8 @@ template <typename T> struct SNumberWrapper {
 	// Properties
 	T	mValue;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Global methods
+
+extern	UInt16	gNextPowerOf2(UInt16 value);

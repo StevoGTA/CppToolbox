@@ -72,8 +72,8 @@ void CBitmap::clearPixels(const SBitmapRect& rect)
 	}
 
 	CGContextRef	bitmapContextRef =
-							::CGBitmapContextCreate(getBytePtr(), bitmapSize.mWidth, bitmapSize.mHeight, 8,
-									getBytesPerRow(), colorSpaceRef, bitmapInfo);
+							::CGBitmapContextCreate(getPixelData().getMutableBytePtr(), bitmapSize.mWidth,
+									bitmapSize.mHeight, 8, getBytesPerRow(), colorSpaceRef, bitmapInfo);
 	::CGColorSpaceRelease(colorSpaceRef);
 
 	// Clear pixels
@@ -130,7 +130,9 @@ void CBitmap::setPixels(const SBitmapRect& rect, const CColor& color)
 		buffer.width = rect.mSize.mWidth;
 		buffer.height = rect.mSize.mHeight;
 		buffer.rowBytes = getBytesPerRow();
-		buffer.data = getBytePtr() + rect.mOrigin.mX * getBytesPerPixel() + rect.mOrigin.mY * getBytesPerRow();
+		buffer.data =
+				(UInt8*) getPixelData().getMutableBytePtr() + rect.mOrigin.mY * getBytesPerRow() +
+						rect.mOrigin.mX * getBytesPerPixel();
 
 		UInt32		pixelData = sGetPixelData32ForColor(getFormat(), color);
 		Pixel_8888* pixel = (Pixel_8888*) &pixelData;
@@ -148,8 +150,8 @@ void CBitmap::setPixels(const SBitmapRect& rect, const CColor& color)
 		}
 
 		CGContextRef	bitmapContextRef =
-								::CGBitmapContextCreate(getBytePtr(), bitmapSize.mWidth, bitmapSize.mHeight, 8,
-										getBytesPerRow(), colorSpaceRef, bitmapInfo);
+								::CGBitmapContextCreate(getPixelData().getMutableBytePtr(), bitmapSize.mWidth,
+										bitmapSize.mHeight, 8, getBytesPerRow(), colorSpaceRef, bitmapInfo);
 		::CGColorSpaceRelease(colorSpaceRef);
 
 		// Set pixels
