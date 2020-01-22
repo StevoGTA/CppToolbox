@@ -69,13 +69,18 @@ class CWorkItem {
 // MARK: - CProcWorkItem
 
 class CProcWorkItem : public CWorkItem {
+	// Methods
 	public:
+				// Lifecycle methods
 				CProcWorkItem(CWorkItemProc proc, void* userData) : CWorkItem(true), mProc(proc), mUserData(userData) {}
 				~CProcWorkItem() {}
 
+				// CWorkItem methods
 		void	perform()
 					{ mProc(mUserData, *this); }
 
+	// Properties
+	private:
 		CWorkItemProc	mProc;
 		void*			mUserData;
 };

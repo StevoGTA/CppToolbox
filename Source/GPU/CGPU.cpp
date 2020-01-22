@@ -1,35 +1,41 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CGPURenderEngine.cpp			©2019 Stevo Brock	All rights reserved.
+//	CGPU.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CGPURenderEngine.h"
+#include "CGPU.h"
+
+#include "CThread.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPURenderEngineInternals
+// MARK: - CGPUInternals
 
-class CGPURenderEngineInternals {
+class CGPUInternals {
 	public:
-		CGPURenderEngineInternals(const CGPURenderEngineProcsInfo& procsInfo) : mProcsInfo(procsInfo) {}
-		~CGPURenderEngineInternals() {}
+		CGPUInternals(const CGPUProcsInfo& procsInfo) :
+			mProcsInfo(procsInfo), mContextThreadRef(nil), mContextLockCount(0)
+			{}
+		~CGPUInternals() {}
 
-		const	CGPURenderEngineProcsInfo	mProcsInfo;
+		const	CGPUProcsInfo	mProcsInfo;
+				CThreadRef		mContextThreadRef;
+				UInt32			mContextLockCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPURenderEngine
+// MARK: - CGPU
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderEngine::CGPURenderEngine(const CGPURenderEngineProcsInfo& procsInfo)
+CGPU::CGPU(const CGPUProcsInfo& procsInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPURenderEngineInternals(procsInfo);
+	mInternals = new CGPUInternals(procsInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderEngine::~CGPURenderEngine()
+CGPU::~CGPU()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	DisposeOf(mInternals);
@@ -38,15 +44,28 @@ CGPURenderEngine::~CGPURenderEngine()
 // MARK: Subclass methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderEngine::acquireContext() const
+void CGPU::acquireContext() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mProcsInfo.mAcquireContextProc(mInternals->mProcsInfo.mUserData);
+	// Check if already have the context locked on the current thread
+	if (mInternals->mContextThreadRef != CThread::getCurrentThreadRef()) {
+		// Do not
+		mInternals->mProcsInfo.mAcquireContextProc(mInternals->mProcsInfo.mUserData);
+		mInternals->mContextThreadRef = CThread::getCurrentThreadRef();
+	}
+
+	// One more
+	mInternals->mContextLockCount++;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderEngine::releaseContext() const
+void CGPU::releaseContext() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mProcsInfo.mReleaseContextProc(mInternals->mProcsInfo.mUserData);
+	// One less needing the lock
+	if (--mInternals->mContextLockCount == 0) {
+		// Release!
+		mInternals->mContextThreadRef = nil;
+		mInternals->mProcsInfo.mReleaseContextProc(mInternals->mProcsInfo.mUserData);
+	}
 }

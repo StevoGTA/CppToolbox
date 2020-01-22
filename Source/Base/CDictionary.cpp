@@ -21,7 +21,7 @@ class CDictionaryInternals {
 		virtual	void						removeReference() = 0;
 
 		virtual	CDictionaryKeyCount			getKeyCount() = 0;
-		virtual	SDictionaryValue*			getValue(const CString& key) = 0;
+		virtual	OR<SDictionaryValue>		getValue(const CString& key) = 0;
 		virtual	CDictionaryInternals*		set(const CString& key, const SDictionaryValue& value) = 0;
 		virtual	CDictionaryInternals*		remove(const CString& key) = 0;
 		virtual	CDictionaryInternals*		removeAll() = 0;
@@ -109,7 +109,7 @@ class CStandardDictionaryInternals : public CDictionaryInternals {
 				void							removeReference();
 
 				CDictionaryKeyCount				getKeyCount();
-				SDictionaryValue*				getValue(const CString& key);
+				OR<SDictionaryValue>			getValue(const CString& key);
 				CDictionaryInternals*			set(const CString& key, const SDictionaryValue& value);
 				CDictionaryInternals*			remove(const CString& key);
 				CDictionaryInternals*			removeAll();
@@ -193,7 +193,7 @@ CDictionaryKeyCount CStandardDictionaryInternals::getKeyCount()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue* CStandardDictionaryInternals::getValue(const CString& key)
+OR<SDictionaryValue> CStandardDictionaryInternals::getValue(const CString& key)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -206,7 +206,7 @@ SDictionaryValue* CStandardDictionaryInternals::getValue(const CString& key)
 		// Advance to next item info
 		itemInfo = itemInfo->mNextItemInfo;
 
-	return (itemInfo != nil) ? &itemInfo->mItem.mValue : nil;
+	return (itemInfo != nil) ? OR<SDictionaryValue>(itemInfo->mItem.mValue) : OR<SDictionaryValue>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -485,7 +485,7 @@ class CProcsDictionaryInternals : public CDictionaryInternals {
 
 				CDictionaryKeyCount				getKeyCount()
 													{ return mProcsInfo.mGetKeyCountProc(mProcsInfo.mUserData); }
-				SDictionaryValue*				getValue(const CString& key)
+				OR<SDictionaryValue>			getValue(const CString& key)
 													{ return mProcsInfo.mGetValueProc(key, mProcsInfo.mUserData); }
 				CDictionaryInternals*			set(const CString& key, const SDictionaryValue& value)
 													{
@@ -613,7 +613,7 @@ TSet<CString> CDictionary::getKeys() const
 bool CDictionary::contains(const CString& key) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->getValue(key) != nil;
+	return mInternals->getValue(key).hasReference();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -628,9 +628,9 @@ bool CDictionary::getBool(const CString& key, bool defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getBool(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getBool(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -639,9 +639,9 @@ const TArray<CDictionary>& CDictionary::getArrayOfDictionaries(const CString& ke
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getArrayOfDictionaries(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getArrayOfDictionaries(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -649,9 +649,9 @@ const TArray<CString>& CDictionary::getArrayOfStrings(const CString& key, const 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getArrayOfStrings(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getArrayOfStrings(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -659,9 +659,9 @@ const CData& CDictionary::getData(const CString& key, const CData& defaultValue)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getData(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getData(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -669,9 +669,9 @@ const CDictionary& CDictionary::getDictionary(const CString& key, const CDiction
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getDictionary(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getDictionary(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -679,9 +679,9 @@ const CString& CDictionary::getString(const CString& key, const CString& default
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getString(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getString(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -689,9 +689,9 @@ Float32 CDictionary::getFloat32(const CString& key, Float32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getFloat32(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getFloat32(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -699,9 +699,9 @@ Float64 CDictionary::getFloat64(const CString& key, Float64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getFloat64(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getFloat64(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -709,9 +709,9 @@ SInt8 CDictionary::getSInt8(const CString& key, SInt8 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getSInt8(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getSInt8(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -719,9 +719,9 @@ SInt16 CDictionary::getSInt16(const CString& key, SInt16 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getSInt16(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getSInt16(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -729,9 +729,9 @@ SInt32 CDictionary::getSInt32(const CString& key, SInt32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getSInt32(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getSInt32(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -739,9 +739,9 @@ SInt64 CDictionary::getSInt64(const CString& key, SInt64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getSInt64(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getSInt64(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -749,9 +749,9 @@ UInt8 CDictionary::getUInt8(const CString& key, UInt8 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getUInt8(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getUInt8(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -759,9 +759,9 @@ UInt16 CDictionary::getUInt16(const CString& key, UInt16 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getUInt16(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getUInt16(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -769,9 +769,9 @@ UInt32 CDictionary::getUInt32(const CString& key, UInt32 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getUInt32(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getUInt32(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -779,9 +779,9 @@ UInt64 CDictionary::getUInt64(const CString& key, UInt64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? value->getUInt64(defaultValue) : defaultValue;
+	return value.hasReference() ? value->getUInt64(defaultValue) : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -931,9 +931,9 @@ bool CDictionary::equals(const CDictionary& other, void* itemCompareProcUserData
 	// Iterate all items
 	for (TIteratorS<SDictionaryItem> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Get value
-		SDictionaryItem		item = iterator.getValue();
-		SDictionaryValue*	value = other.mInternals->getValue(item.mKey);
-		if ((value == nil) || !item.mValue.equals(*value, mInternals->getItemEqualsProc()))
+		SDictionaryItem			item = iterator.getValue();
+		OR<SDictionaryValue>	value = other.mInternals->getValue(item.mKey);
+		if (!value.hasReference() || !item.mValue.equals(*value, mInternals->getItemEqualsProc()))
 			// Value not found or value is not the same
 			return false;
 	}
@@ -966,9 +966,9 @@ OV<CDictionaryItemRef> CDictionary::getItemRef(const CString& key) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	SDictionaryValue*	value = mInternals->getValue(key);
+	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return (value != nil) ? OV<CDictionaryItemRef>(value->getItemRef()) : OV<CDictionaryItemRef>();
+	return value.hasReference() ? OV<CDictionaryItemRef>(value->getItemRef()) : OV<CDictionaryItemRef>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

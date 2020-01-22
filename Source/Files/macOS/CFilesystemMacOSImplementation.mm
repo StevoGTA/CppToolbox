@@ -1,10 +1,13 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFilesystemMacOSImplementation.cpp			©2019 Stevo Brock	All rights reserved.
+//	CFilesystemMacOSImplementation.mm			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFilesystem.h"
 
 #include "CFUtilities.h"
+
+#include <Foundation/Foundation.h>
+#include <AppKit/AppKit.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros

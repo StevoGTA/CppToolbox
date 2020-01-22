@@ -91,6 +91,9 @@ template <typename T> struct SNumberWrapper {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Global methods
+// MARK: - SNumber
 
-extern	UInt16	gNextPowerOf2(UInt16 value);
+struct SNumber {
+					// Class methods
+	static	UInt16	getNextPowerOf2(UInt16 value);
+};

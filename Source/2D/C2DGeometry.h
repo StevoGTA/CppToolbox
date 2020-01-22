@@ -81,10 +81,8 @@ template <typename T> struct T2DPoint {
 							}
 
 	// Properties
-			T			mX;
-			T			mY;
-
-	static	T2DPoint<T>	mZero;
+	T	mX;
+	T	mY;
 };
 
 typedef	T2DPoint<Float32>	S2DPoint32;
@@ -127,10 +125,8 @@ template <typename T> struct T2DSize {
 									CString("}");
 						}
 	// Properties
-			T			mWidth;
-			T			mHeight;
-
-	static	T2DSize<T>	mZero;
+	T	mWidth;
+	T	mHeight;
 };
 
 typedef	T2DSize<Float32>	S2DSize32;
@@ -257,10 +253,8 @@ template <typename T> struct T2DRect {
 						}
 
 	// Properties
-			T2DPoint<T>	mOrigin;
-			T2DSize<T>	mSize;
-
-	static	T2DRect<T>	mZero;
+	T2DPoint<T>	mOrigin;
+	T2DSize<T>	mSize;
 };
 
 typedef	T2DRect<Float32>	S2DRect32;
@@ -331,14 +325,12 @@ template <typename T> struct T2DAffineTransform {
 									}
 
 	// Properties
-			T						mA;
-			T						mB;
-			T						mC;
-			T						mD;
-			T						mTX;
-			T						mTY;
-
-	static	T2DAffineTransform<T>	mIdentity;
+	T	mA;
+	T	mB;
+	T	mC;
+	T	mD;
+	T	mTX;
+	T	mTY;
 };
 
 typedef	T2DAffineTransform<Float32>	S2DAffineTransform32;

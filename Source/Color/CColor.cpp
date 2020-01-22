@@ -15,14 +15,6 @@ static	CString*	sSaturationKey = nil;
 static	CString*	sValueKey = nil;
 static	CString*	sAlphaKey = nil;
 
-static	const	char*	sRedKeyValue = "r";
-static	const	char*	sGreenKeyValue = "g";
-static	const	char*	sBlueKeyValue = "b";
-static	const	char*	sHueKeyValue = "h";
-static	const	char*	sSaturationKeyValue = "s";
-static	const	char*	sValueKeyValue = "v";
-static	const	char*	sAlphaKeyValue = "a";
-
 const	CColor	CColor::mClear(kColorTypeHSV, (UInt8) 0, 0, 0, 0);
 const	CColor	CColor::mAliceBlue(kColorTypeRGB, (UInt8) 240, 248, 255, 255);
 const	CColor	CColor::mAntiqueWhite(kColorTypeRGB, (UInt8) 250, 235, 215, 255);
@@ -873,13 +865,13 @@ void sInitStorageKeys()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if (sRedKey == nil) {
-		sRedKey = new CString(sRedKeyValue);
-		sGreenKey = new CString(sGreenKeyValue);
-		sBlueKey = new CString(sBlueKeyValue);
-		sHueKey = new CString(sHueKeyValue);
-		sSaturationKey = new CString(sSaturationKeyValue);
-		sValueKey = new CString(sValueKeyValue);
-		sAlphaKey = new CString(sAlphaKeyValue);
+		sRedKey = new CString("r");
+		sGreenKey = new CString("g");
+		sBlueKey = new CString("b");
+		sHueKey = new CString("h");
+		sSaturationKey = new CString("s");
+		sValueKey = new CString("v");
+		sAlphaKey = new CString("a");
 	}
 }
 

@@ -43,7 +43,7 @@ class CGPURenderObject2D : public CGPURenderObject {
 		void					setScale(const S2DPoint32& scale);
 		void					setScale(Float32 scale);
 
-		void					render(CGPURenderEngine& gpuRenderEngine, const S2DPoint32& offset);
+		void					render(CGPU& gpu, const S2DPoint32& offset);
 
 	// Properties
 	private:

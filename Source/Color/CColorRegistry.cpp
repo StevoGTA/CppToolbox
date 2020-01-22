@@ -531,7 +531,7 @@ void CColorRegistry::updateColorSetFromCurrentColorSet(CColorSet& colorSet) cons
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CColorSet* CColorRegistry::getFirstColorSetMatchingColorsOfCurrentColorSet() const
+OR<CColorSet> CColorRegistry::getFirstColorSetMatchingColorsOfCurrentColorSet() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Examine preset color sets first
@@ -540,7 +540,7 @@ const CColorSet* CColorRegistry::getFirstColorSetMatchingColorsOfCurrentColorSet
 		// Check this color set
 		if (iterator.getValue()->matchesColorsOf(mInternals->getCurrentColorSet()))
 			// Match
-			return iterator.getValue();
+			return OR<CColorSet>(*iterator.getValue());
 	}
 
 	// Examine user defined color sets
@@ -549,8 +549,8 @@ const CColorSet* CColorRegistry::getFirstColorSetMatchingColorsOfCurrentColorSet
 		// Check this color set
 		if (iterator.getValue()->matchesColorsOf(mInternals->getCurrentColorSet()))
 			// Match
-			return iterator.getValue();
+			return OR<CColorSet>(*iterator.getValue());
 	}
 
-	return nil;
+	return OR<CColorSet>();
 }

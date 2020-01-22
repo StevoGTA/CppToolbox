@@ -8,6 +8,8 @@
 #include "CppToolboxAssert.h"
 #include "CppToolboxError.h"
 
+#include <pthread.h>
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CThreadInternals
 
@@ -66,27 +68,6 @@ CThread::CThread(CThreadProc proc, void* userData, const CString& name)
 	if (result != 0) {
 		LogIfError(MAKE_UError(kPOSIXErrorDomain, result), "creating pthread");
 	}
-
-//	// Set extended policy
-//	kern_return_t	kernResult;
-//	if (mInternals->mSetExtendedPolicy) {
-//		kernResult =
-//				::thread_policy_set(::pthread_mach_thread_np(pthread), THREAD_EXTENDED_POLICY,
-//						(thread_policy_t) &mInternals->mExtendedPolicy, THREAD_EXTENDED_POLICY_COUNT);
-//		if (kernResult != 0) {
-//			LogIfError(MAKE_UError(kPOSIXErrorDomain, kernResult), "setting extended policy");
-//		}
-//	}
-
-//	// Set precedence policy
-//	if (mInternals->mSetPrecedencePolicy) {
-//		kernResult =
-//				::thread_policy_set(::pthread_mach_thread_np(pthread), THREAD_PRECEDENCE_POLICY,
-//						(thread_policy_t) &mInternals->mPrecedencePolicy, THREAD_PRECEDENCE_POLICY_COUNT);
-//		if (kernResult != 0) {
-//			LogIfError(MAKE_UError(kPOSIXErrorDomain, kernResult), "setting precedence policy");
-//		}
-//	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,6 +75,24 @@ CThread::~CThread()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	DisposeOf(mInternals);
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+CThreadRef CThread::getThreadRef() const
+{
+	return mInternals->mPThread;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+CThreadRef CThread::getCurrentThreadRef()
+{
+	return pthread_self();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

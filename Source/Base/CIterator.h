@@ -43,7 +43,7 @@ template <typename T> class TIteratorS {
 							mIteratorInfo(*other->mIteratorInfo.copy())
 					{}
 				~TIteratorS()
-					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; DisposeOf(iteratorInfo); }
+					{ CIteratorInfo* iteratorInfo = &mIteratorInfo; DisposeOf(iteratorInfo); }
 
 				// Instance methods
 		bool	advance()

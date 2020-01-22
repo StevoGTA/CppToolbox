@@ -11,8 +11,6 @@
 
 typedef	UInt32	CDataSize;
 
-const	CDataSize	kDataBytesAll = 0;
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Byte Index
 
@@ -42,7 +40,7 @@ class CData {
 		const	void*		getBytePtr() const;
 				void*		getMutableBytePtr();
 				void		copyBytes(void* destinationBuffer, CDataByteIndex startByte = 0,
-									CDataSize byteCount = kDataBytesAll) const;
+									OV<CDataSize> count = OV<CDataSize>()) const;
 				void		appendBytes(const void* buffer, CDataSize bufferSize);
 				void		replaceBytes(CDataByteIndex startByte, CDataSize byteCount, const void* buffer,
 									CDataSize bufferSize);

@@ -71,7 +71,7 @@ class CBPLDataSource {
 		void				removeReference();
 
 		void				readData(SInt64 offset, void* buffer, UInt64 byteCount, const char* errorWhen);
-		UInt8				readMarker(UInt64 objectIndex, UInt64* outCountOrNil = nil);
+		UInt8				readMarker(UInt64 objectIndex, OR<UInt64> count = OR<UInt64>());
 		UInt64				readIndex();
 		UInt64				readCount(const char* errorWhen);
 
@@ -97,98 +97,102 @@ class CBPLDataSource {
 
 class CBPLDictionaryInfo {
 	public:
-									// Lifecycle methods
-									CBPLDictionaryInfo(CBPLDataSource& bplDataSource, CDictionaryKeyCount keyCount) :
-										mBPLDataSource(bplDataSource), mKeyCount(keyCount)
-										{
-											// Setup
-											mKeyHashes = new UInt32[mKeyCount];
-											mKeys = new CString*[mKeyCount];
-											mValueIndexes = new UInt64[mKeyCount];
+										// Lifecycle methods
+										CBPLDictionaryInfo(CBPLDataSource& bplDataSource,
+												CDictionaryKeyCount keyCount) :
+											mBPLDataSource(bplDataSource), mKeyCount(keyCount)
+											{
+												// Setup
+												mKeyHashes = new UInt32[mKeyCount];
+												mKeys = new CString*[mKeyCount];
+												mValueIndexes = new UInt64[mKeyCount];
 
-											mDictionaryValues = new SDictionaryValue*[mKeyCount];
-											::memset(mDictionaryValues, 0, sizeof(SDictionaryValue*) * mKeyCount);
+												mDictionaryValues = new SDictionaryValue*[mKeyCount];
+												::memset(mDictionaryValues, 0, sizeof(SDictionaryValue*) * mKeyCount);
 
-											// Setup keys
-											for (CDictionaryKeyCount i = 0; i < mKeyCount; i++) {
-												// Setup key
-												UInt64	objectIndex = mBPLDataSource.readIndex();
-												mKeys[i] = mBPLDataSource.mStrings[objectIndex];
-												mKeyHashes[i] = CHasher::getValueForHashable(*mKeys[i]);
-											}
-
-											// Setup values
-											for (CDictionaryKeyCount i = 0; i < mKeyCount; i++)
-												// Read value index
-												mValueIndexes[i] = mBPLDataSource.readIndex();
-
-											// Add reference
-											mBPLDataSource.addReference();
-										}
-									~CBPLDictionaryInfo()
-										{
-											// Cleanup
-											DisposeOfArray(mKeyHashes);
-											DisposeOfArray(mKeys);
-											DisposeOfArray(mValueIndexes);
-
-											for (CDictionaryKeyCount i = 0; i < mKeyCount; i++) {
-												// Check if have value
-												if (mDictionaryValues[i] != nil) {
-													// Dispose
-													mDictionaryValues[i]->dispose(nil);
-													DisposeOf(mDictionaryValues[i]);
+												// Setup keys
+												for (CDictionaryKeyCount i = 0; i < mKeyCount; i++) {
+													// Setup key
+													UInt64	objectIndex = mBPLDataSource.readIndex();
+													mKeys[i] = mBPLDataSource.mStrings[objectIndex];
+													mKeyHashes[i] = CHasher::getValueForHashable(*mKeys[i]);
 												}
+
+												// Setup values
+												for (CDictionaryKeyCount i = 0; i < mKeyCount; i++)
+													// Read value index
+													mValueIndexes[i] = mBPLDataSource.readIndex();
+
+												// Add reference
+												mBPLDataSource.addReference();
 											}
-											DisposeOfArray(mDictionaryValues);
+										~CBPLDictionaryInfo()
+											{
+												// Cleanup
+												DisposeOfArray(mKeyHashes);
+												DisposeOfArray(mKeys);
+												DisposeOfArray(mValueIndexes);
 
-											mBPLDataSource.removeReference();
-										}
-
-									// Class methods
-		static	CDictionary			dictionaryWith(CBPLDataSource& bplDataSource, CDictionaryKeyCount keyCount)
-										{
-											return CDictionary(
-													SDictionaryProcsInfo(getKeyCount, getValue, disposeUserData,
-															new CBPLDictionaryInfo(bplDataSource, keyCount)));
-										}
-		static	CDictionaryKeyCount	getKeyCount(void* userData)
-										{
-											// Get CBPLDictionaryInfo
-											CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
-
-											return bplDictionaryInfo->mKeyCount;
-										}
-		static	SDictionaryValue*	getValue(const CString& key, void* userData)
-										{
-											// Get CBPLDictionaryInfo
-											CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
-
-											// Iterate keys
-											UInt32	keyHash = CHasher::getValueForHashable(key);
-											for (CDictionaryKeyCount i = 0; i < bplDictionaryInfo->mKeyCount; i++) {
-												// Compare this key
-												if ((bplDictionaryInfo->mKeyHashes[i] == keyHash) &&
-														(*bplDictionaryInfo->mKeys[i] == key)) {
-													// Found
-													if (bplDictionaryInfo->mDictionaryValues[i] == nil)
-														// Construct value
-														bplDictionaryInfo->mDictionaryValues[i] =
-																bplDictionaryInfo->mBPLDataSource.createDictionaryValue(
-																		bplDictionaryInfo->mValueIndexes[i]);
-
-													return bplDictionaryInfo->mDictionaryValues[i];
+												for (CDictionaryKeyCount i = 0; i < mKeyCount; i++) {
+													// Check if have value
+													if (mDictionaryValues[i] != nil) {
+														// Dispose
+														mDictionaryValues[i]->dispose(nil);
+														DisposeOf(mDictionaryValues[i]);
+													}
 												}
+												DisposeOfArray(mDictionaryValues);
+
+												mBPLDataSource.removeReference();
 											}
 
-											return nil;
-										}
-		static	void				disposeUserData(void* userData)
-										{
-											// Get CBPLDictionaryInfo
-											CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
-											DisposeOf(bplDictionaryInfo);
-										}
+										// Class methods
+		static	CDictionary				dictionaryWith(CBPLDataSource& bplDataSource, CDictionaryKeyCount keyCount)
+											{
+												return CDictionary(
+														SDictionaryProcsInfo(getKeyCount, getValue, disposeUserData,
+																new CBPLDictionaryInfo(bplDataSource, keyCount)));
+											}
+		static	CDictionaryKeyCount		getKeyCount(void* userData)
+											{
+												// Get CBPLDictionaryInfo
+												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
+
+												return bplDictionaryInfo->mKeyCount;
+											}
+		static	OR<SDictionaryValue>	getValue(const CString& key, void* userData)
+											{
+												// Get CBPLDictionaryInfo
+												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
+
+												// Iterate keys
+												UInt32	keyHash = CHasher::getValueForHashable(key);
+												for (CDictionaryKeyCount i = 0; i < bplDictionaryInfo->mKeyCount; i++) {
+													// Compare this key
+													if ((bplDictionaryInfo->mKeyHashes[i] == keyHash) &&
+															(*bplDictionaryInfo->mKeys[i] == key)) {
+														// Found
+														if (bplDictionaryInfo->mDictionaryValues[i] == nil)
+															// Construct value
+															bplDictionaryInfo->mDictionaryValues[i] =
+																	bplDictionaryInfo->mBPLDataSource
+																			.createDictionaryValue(
+																					bplDictionaryInfo->
+																							mValueIndexes[i]);
+
+														return OR<SDictionaryValue>(
+																*bplDictionaryInfo->mDictionaryValues[i]);
+													}
+												}
+
+												return OR<SDictionaryValue>();
+											}
+		static	void					disposeUserData(void* userData)
+											{
+												// Get CBPLDictionaryInfo
+												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
+												DisposeOf(bplDictionaryInfo);
+											}
 
 		CBPLDataSource&		mBPLDataSource;
 		CDictionaryKeyCount	mKeyCount;
@@ -222,7 +226,7 @@ CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 object
 
 		// Read info
 		UInt64	count;
-		UInt8	marker = readMarker(i, &count);
+		UInt8	marker = readMarker(i, OR<UInt64>(count));
 		if (mError != kNoError)
 			// Error
 			continue;
@@ -292,7 +296,7 @@ void CBPLDataSource::readData(SInt64 offset, void* buffer, UInt64 byteCount, con
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt8 CBPLDataSource::readMarker(UInt64 objectIndex, UInt64* outCountOrNil)
+UInt8 CBPLDataSource::readMarker(UInt64 objectIndex, OR<UInt64> count)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read marker
@@ -314,12 +318,12 @@ UInt8 CBPLDataSource::readMarker(UInt64 objectIndex, UInt64* outCountOrNil)
 
 		default:
 			// May have count
-			if (outCountOrNil != nil) {
+			if (count.hasReference()) {
 				// Read count
-				*outCountOrNil = marker & kMarkerCountMask;
-				if (*outCountOrNil == 15)
+				*count = marker & kMarkerCountMask;
+				if (*count == 15)
 					// Read count
-					*outCountOrNil = readCount("reading marker");
+					*count = readCount("reading marker");
 			}
 
 			return marker & ~kMarkerCountMask;
@@ -384,7 +388,7 @@ CDictionary CBPLDataSource::readDictionary(UInt64 objectIndex)
 {
 	// Read marker
 	UInt64	count;
-	readMarker(objectIndex, &count);
+	readMarker(objectIndex, OR<UInt64>(count));
 
 	return CBPLDictionaryInfo::dictionaryWith(*this, (CDictionaryKeyCount) count);
 }
@@ -400,7 +404,7 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 
 	// Read marker and count
 	UInt64	count;
-	UInt8	marker = readMarker(objectIndex, &count);
+	UInt8	marker = readMarker(objectIndex, OR<UInt64>(count));
 
 	// What's our marker?
 	switch (marker) {
@@ -571,7 +575,7 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 
 	// Get top level object
 	UInt64	count;
-	UInt8	marker = bplDataSource->readMarker(topObjectIndex, &count);
+	UInt8	marker = bplDataSource->readMarker(topObjectIndex, OR<UInt64>(count));
 	if (marker != kMarkerTypeDictionary) {
 		// Top object is not a dictionary
 		DisposeOf(bplDataSource);
@@ -592,5 +596,6 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 UError CBinaryPropertyList::writeTo(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
+AssertFailUnimplemented();
 return kNoError;
 }

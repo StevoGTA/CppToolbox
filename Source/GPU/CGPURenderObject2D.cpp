@@ -135,28 +135,25 @@ void CGPURenderObject2D::setScale(Float32 scale)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::render(CGPURenderEngine& gpuRenderEngine, const S2DPoint32& offset)
+void CGPURenderObject2D::render(CGPU& gpu, const S2DPoint32& offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Ensure we are fully loaded
 	mInternals->mGPUTextureReference.finishLoading();
 
 	// Setup
-	Float32	a = -mInternals->mAngleRadians;
-	Float32	cosA = cosf(a);
-	Float32	sinA = sinf(a);
+			Float32				a = -mInternals->mAngleRadians;
+			Float32				cosA = cosf(a);
+			Float32				sinA = sinf(a);
 
-	const	SGPURenderEngineTextureInfo&	gpuRenderEngineTextureInfo =
-													mInternals->mGPUTextureReference.getGPURenderingEngineTextureInfo();
-			SGPUVertexBuffer				gpuVertexBuffer =
-													gpuRenderEngine.allocateVertexBuffer(
-															kGPUVertexBufferType2Vertex2Texture, 4);
+	const	SGPUTextureInfo&	gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
+			SGPUVertexBuffer	gpuVertexBuffer = gpu.allocateVertexBuffer(kGPUVertexBufferType2Vertex2Texture, 4);
 
-	Float32	textureWidth = gpuRenderEngineTextureInfo.mGPUTextureSize.mWidth;
-	Float32	textureHeight = gpuRenderEngineTextureInfo.mGPUTextureSize.mHeight;
+			Float32				textureWidth = gpuTextureInfo.mGPUTextureSize.mWidth;
+			Float32				textureHeight = gpuTextureInfo.mGPUTextureSize.mHeight;
 
-	Float32	maxU = gpuRenderEngineTextureInfo.mMaxU;
-	Float32	maxV = gpuRenderEngineTextureInfo.mMaxV;
+			Float32				maxU = gpuTextureInfo.mMaxU;
+			Float32				maxV = gpuTextureInfo.mMaxV;
 
 	// Points are UL, UR, LL, LR
 	Float32*	bufferPtr = (Float32*) gpuVertexBuffer.mData.getMutableBytePtr();
@@ -192,8 +189,8 @@ void CGPURenderObject2D::render(CGPURenderEngine& gpuRenderEngine, const S2DPoin
 	bufferPtr[15] = 0.0;
 
 	// Draw
-	gpuRenderEngine.renderTriangleStrip(gpuVertexBuffer, 4, gpuRenderEngineTextureInfo, &mInternals->mAlpha);
+	gpu.renderTriangleStrip(gpuVertexBuffer, 4, gpuTextureInfo, OV<Float32>(mInternals->mAlpha));
 
 	// Cleanup
-	gpuRenderEngine.disposeBuffer(gpuVertexBuffer);
+	gpu.disposeBuffer(gpuVertexBuffer);
 }

@@ -1,10 +1,12 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFolderMacOSImplementation.cpp			©2019 Stevo Brock	All rights reserved.
+//	CFolderMacOSImplementation.mm			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFolder.h"
 
 #include "CFUtilities.h"
+
+#include <Foundation/Foundation.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFolder

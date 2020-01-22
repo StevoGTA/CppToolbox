@@ -5,6 +5,7 @@
 #include "CGPUTextureManager.h"
 
 #include "CImage.h"
+#include "CLock.h"
 #include "CLogServices.h"
 #include "CWorkItemQueue.h"
 #include "TOptional.h"
@@ -16,10 +17,10 @@ class CGPUTextureReferenceInternals;
 
 struct SGPUTextureManagerInfo {
 	// Lifecycle methods
-	SGPUTextureManagerInfo(CGPURenderEngine& gpuRenderEngine) : mGPURenderEngine(gpuRenderEngine) {}
+	SGPUTextureManagerInfo(CGPU& gpu) : mGPU(gpu) {}
 
 	// Properties
-	CGPURenderEngine&							mGPURenderEngine;
+	CGPU&										mGPU;
 	CWorkItemQueue								mWorkItemQueue;
 	TPtrArray<CGPUTextureReferenceInternals*>	mGPUTextureReferenceInternals;
 };
@@ -37,8 +38,8 @@ class CGPUTextureReferenceInternals {
 													mReference(reference), mGPUTextureFormat(gpuTextureFormat),
 															mGPUTextureReferenceOptions(gpuTextureReferenceOptions),
 															mGPUTextureManagerInfo(gpuTextureManagerInfo),
-															mWorkItem(nil), mCompleteLoading(false), mGPUTexture(nil),
-															mReferenceCount(0)
+															mWorkItem(nil), mFinishLoadingTriggered(false),
+															mGPUTexture(nil), mReferenceCount(0)
 													{
 														// Note reference
 														mGPUTextureManagerInfo.mGPUTextureReferenceInternals += this;
@@ -78,7 +79,7 @@ class CGPUTextureReferenceInternals {
 													}
 				bool							isLoadingContinuing()
 													{
-														return mCompleteLoading ||
+														return mFinishLoadingTriggered ||
 																((mWorkItem != nil) && !mWorkItem->isCancelled());
 													}
 				void							finishLoading()
@@ -91,10 +92,14 @@ class CGPUTextureReferenceInternals {
 														}
 
 														// Go all the way
-														mCompleteLoading = true;
+														mFinishLoadingTriggered = true;
 
-														// Load
-														load();
+														// Setup to load
+														mLoadLock.lock();
+														if (!getIsLoaded())
+															// Load
+															load();
+														mLoadLock.unlock();
 													}
 
 												// Instance methods for subclasses to call
@@ -104,9 +109,9 @@ class CGPUTextureReferenceInternals {
 														mGPUTexture = gpuTexture;
 
 														// Register with GPU Render Engine
-														mGPURenderEngineTextureInfo =
+														mGPUTextureInfo =
 																mGPUTextureManagerInfo.
-																		mGPURenderEngine.registerTexture(*mGPUTexture);
+																		mGPU.registerTexture(*mGPUTexture);
 													}
 
 												// Instance methods for subclasses to implement or override
@@ -127,8 +132,8 @@ class CGPUTextureReferenceInternals {
 
 															// Unregiste with GPU Render Engine
 															mGPUTextureManagerInfo.
-																	mGPURenderEngine.unregisterTexture(
-																			mGPURenderEngineTextureInfo);
+																	mGPU.unregisterTexture(
+																			mGPUTextureInfo);
 														}
 													}
 
@@ -136,15 +141,22 @@ class CGPUTextureReferenceInternals {
 		static	void							load(void* userData, CWorkItem& workItem)
 													{
 														// Get info
-														CGPUTextureReferenceInternals* internals;
-														internals = (CGPUTextureReferenceInternals*) userData;
-														internals->mWorkItem = &workItem;
+														CGPUTextureReferenceInternals&	internals =
+																								*((CGPUTextureReferenceInternals*)
+																										userData);
 
-														// Load
-														internals->load();
+														// Store
+														internals.mWorkItem = &workItem;
+
+														// Setup to load
+														internals.mLoadLock.lock();
+														if (!internals.getIsLoaded())
+															// Load
+															internals.load();
+														internals.mLoadLock.unlock();
 
 														// Finished
-														internals->mWorkItem = nil;
+														internals.mWorkItem = nil;
 													}
 
 		OR<const CString>				mReference;
@@ -152,10 +164,11 @@ class CGPUTextureReferenceInternals {
 		EGPUTextureReferenceOptions		mGPUTextureReferenceOptions;
 		SGPUTextureManagerInfo&			mGPUTextureManagerInfo;
 
+		CLock							mLoadLock;
 		CWorkItem*						mWorkItem;
-		bool							mCompleteLoading;
+		bool							mFinishLoadingTriggered;
 		CGPUTexture*					mGPUTexture;
-		SGPURenderEngineTextureInfo		mGPURenderEngineTextureInfo;
+		SGPUTextureInfo					mGPUTextureInfo;
 
 		UInt32							mReferenceCount;
 };
@@ -408,10 +421,10 @@ void CGPUTextureReference::finishLoading() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const SGPURenderEngineTextureInfo& CGPUTextureReference::getGPURenderingEngineTextureInfo() const
+const SGPUTextureInfo& CGPUTextureReference::getGPUTextureInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mGPURenderEngineTextureInfo;
+	return mInternals->mGPUTextureInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -420,8 +433,8 @@ const SGPURenderEngineTextureInfo& CGPUTextureReference::getGPURenderingEngineTe
 
 class CGPUTextureManagerInternals {
 	public:
-										CGPUTextureManagerInternals(CGPURenderEngine& gpuRenderEngine) :
-											mReferenceCount(1), mGPUTextureManagerInfo(gpuRenderEngine) {}
+										CGPUTextureManagerInternals(CGPU& gpu) :
+											mReferenceCount(1), mGPUTextureManagerInfo(gpu) {}
 										~CGPUTextureManagerInternals() {}
 
 		CGPUTextureManagerInternals*	addReference()
@@ -447,10 +460,10 @@ class CGPUTextureManagerInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUTextureManager::CGPUTextureManager(CGPURenderEngine& gpuRenderEngine)
+CGPUTextureManager::CGPUTextureManager(CGPU& gpu)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUTextureManagerInternals(gpuRenderEngine);
+	mInternals = new CGPUTextureManagerInternals(gpu);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

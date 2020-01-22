@@ -13,6 +13,4 @@ class CGPURenderObject {
 				// Lifecycle methods
 				CGPURenderObject() {}
 		virtual	~CGPURenderObject() {}
-
-				// Instance methods
 };

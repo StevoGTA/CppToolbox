@@ -115,7 +115,7 @@ class CColorRegistry {
 												const CColor& color);
 				void					createNewColorSetFromCurrentColorSet(const CString& name);
 				void					updateColorSetFromCurrentColorSet(CColorSet& colorSet) const;
-		const	CColorSet*				getFirstColorSetMatchingColorsOfCurrentColorSet() const;
+				OR<CColorSet>			getFirstColorSetMatchingColorsOfCurrentColorSet() const;
 
 	// Properties
 	private:

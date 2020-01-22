@@ -237,9 +237,12 @@ void* CData::getMutableBytePtr()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::copyBytes(void* destinationBuffer, CDataByteIndex startByte, CDataSize byteCount) const
+void CData::copyBytes(void* destinationBuffer, CDataByteIndex startByte, OV<CDataSize> count) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	CDataSize	byteCount = count.hasValue() ? count.getValue() : getSize() - startByte;
+
 	// Parameter check
 	AssertNotNil(destinationBuffer);
 	if (destinationBuffer == nil)
@@ -248,10 +251,6 @@ void CData::copyBytes(void* destinationBuffer, CDataByteIndex startByte, CDataSi
 	AssertFailIf((startByte + byteCount) > (CDataByteIndex) getSize());
 	if ((startByte + byteCount) > (CDataByteIndex) getSize())
 		return;
-
-	// Setup
-	if (byteCount == kDataBytesAll)
-		byteCount = getSize() - startByte;
 
 	// Copy
 	::memcpy(destinationBuffer, (UInt8*) mInternals->mBuffer + startByte, byteCount);

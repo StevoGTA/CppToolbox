@@ -7,6 +7,10 @@
 #include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: Types
+typedef	void*	CThreadRef;
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: Procs
 
 class CThread;
@@ -19,9 +23,15 @@ class CThreadInternals;
 class CThread {
 	// Methods
 	public:
-		// Lifecycle methods
-		CThread(CThreadProc proc, void* userData = nil, const CString& name = CString::mEmpty);
-		~CThread();
+							// Lifecycle methods
+							CThread(CThreadProc proc, void* userData = nil, const CString& name = CString::mEmpty);
+							~CThread();
+
+							// Instance methods
+				CThreadRef	getThreadRef() const;
+
+							// Class methods
+		static	CThreadRef	getCurrentThreadRef();
 
 	// Properties
 	private:

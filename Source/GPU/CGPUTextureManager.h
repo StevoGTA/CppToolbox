@@ -6,7 +6,7 @@
 
 #include "CBitmap.h"
 #include "CByteParceller.h"
-#include "CGPURenderEngine.h"
+#include "CGPU.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: EGPUTextureReferenceOptions
@@ -16,26 +16,6 @@ enum EGPUTextureReferenceOptions {
 	kGPUTextureReferenceOptionsLoadImmediately	= 1 << 0,
 };
 
-////----------------------------------------------------------------------------------------------------------------------
-//// MARK: - SGPUTextureManagerProcs
-//
-//class CGPUTextureReference;
-//
-//typedef void*	(*CGPUTextureManagerRegisterTextureProc)(const CGPUTexture& gpuTexture);
-//typedef	void	(*CGPUTextureManagerUnregisterTextureProc)(void* reference);
-//
-//struct SGPUTextureManagerProcs {
-//	// Lifecycle methods
-//	SGPUTextureManagerProcs(CGPUTextureManagerRegisterTextureProc registerTextureProc,
-//			CGPUTextureManagerUnregisterTextureProc unregisterTextureProc) :
-//		mRegisterTextureProc(registerTextureProc), mUnregisterTextureProc(unregisterTextureProc)
-//		{}
-//
-//	// Properties
-//	CGPUTextureManagerRegisterTextureProc	mRegisterTextureProc;
-//	CGPUTextureManagerUnregisterTextureProc	mUnregisterTextureProc;
-//};
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureReference
 
@@ -43,17 +23,17 @@ class CGPUTextureReferenceInternals;
 class CGPUTextureReference {
 	// Methods
 	public:
-												// Lifecycle methods
-												CGPUTextureReference(CGPUTextureReferenceInternals* internals);
-												CGPUTextureReference(const CGPUTextureReference& other);
-												~CGPUTextureReference();
+									// Lifecycle methods
+									CGPUTextureReference(CGPUTextureReferenceInternals* internals);
+									CGPUTextureReference(const CGPUTextureReference& other);
+									~CGPUTextureReference();
 
-												// Instance methods
-				bool							getIsLoaded() const;
-				void							load() const;
-				void							finishLoading() const;
+									// Instance methods
+				bool				getIsLoaded() const;
+				void				load() const;
+				void				finishLoading() const;
 
-		const	SGPURenderEngineTextureInfo&	getGPURenderingEngineTextureInfo() const;
+		const	SGPUTextureInfo&	getGPUTextureInfo() const;
 
 	// Properties
 	private:
@@ -68,7 +48,7 @@ class CGPUTextureManager {
 	// Methods
 	public:
 								// Lifecycle methods
-								CGPUTextureManager(CGPURenderEngine& gpuRenderEngine);
+								CGPUTextureManager(CGPU& gpu);
 								CGPUTextureManager(const CGPUTextureManager& other);
 								~CGPUTextureManager();
 

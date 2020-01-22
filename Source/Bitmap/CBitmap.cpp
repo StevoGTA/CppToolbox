@@ -7,13 +7,7 @@
 #include "CppToolboxAssert.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
-
-template<>	SBitmapPoint	SBitmapPoint::mZero = SBitmapPoint();
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
+// MARK: Local proc declarations
 
 static	void	sConvertRGB565ToRGB888(const CBitmapInternals& sourceBitmapInternals,
 						CBitmapInternals& destinationBitmapInternals);
@@ -93,7 +87,6 @@ class CBitmapInternals {
 
 									mPixelData = !pixelData.isEmpty() ? pixelData : CData(mBytesPerRow * mSize.mHeight);
 								}
-							~CBitmapInternals() {}
 
 		CBitmapInternals*	addReference() { mReferenceCount++; return this; }
 		void				removeReference()

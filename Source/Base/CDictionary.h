@@ -20,13 +20,13 @@ struct SDictionaryItem;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Procs
 
-typedef	CDictionaryItemRef	(*CDictionaryItemCopyProc)(CDictionaryItemRef itemRef);
-typedef	void				(*CDictionaryItemDisposeProc)(CDictionaryItemRef itemRef);
-typedef	bool				(*CDictionaryItemEqualsProc)(CDictionaryItemRef itemRef1, CDictionaryItemRef itemRef2);
+typedef	CDictionaryItemRef		(*CDictionaryItemCopyProc)(CDictionaryItemRef itemRef);
+typedef	void					(*CDictionaryItemDisposeProc)(CDictionaryItemRef itemRef);
+typedef	bool					(*CDictionaryItemEqualsProc)(CDictionaryItemRef itemRef1, CDictionaryItemRef itemRef2);
 
-typedef	CDictionaryKeyCount	(*CDictionaryGetKeyCountProc)(void* userData);
-typedef	SDictionaryValue*	(*CDictionaryGetValueProc)(const CString& key, void* userData);
-typedef	void				(*CDictionaryDisposeUserDataProc)(void* userData);
+typedef	CDictionaryKeyCount		(*CDictionaryGetKeyCountProc)(void* userData);
+typedef	OR<SDictionaryValue>	(*CDictionaryGetValueProc)(const CString& key, void* userData);
+typedef	void					(*CDictionaryDisposeUserDataProc)(void* userData);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SDictionaryProcsInfo

@@ -9,145 +9,29 @@
 #include "CLock.h"
 #include "CThread.h"
 
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: CWorkItemInternals
-
-class CWorkItemInternals {
-	public:
-		CWorkItemInternals(bool disposeWhenFinishedOrCancelled) :
-			mDisposeWhenFinishedOrCancelled(disposeWhenFinishedOrCancelled), mState(kWorkItemStateWaiting)
-			{}
-		~CWorkItemInternals() {}
-
-		bool			mDisposeWhenFinishedOrCancelled;
-		EWorkItemState	mState;
-};
+/*
+	TODOs:
+		-Implement cancel(workItem)
+		-Remove cancelled work items immediately
+		-processWorkItems() will only start 1 item
+		-What if first action is to add a work item to the main work item queue?  Work item queue is not created yet
+*/
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CWorkItem
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CWorkItem::CWorkItem(bool disposeWhenFinishedOrCancelled)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CWorkItemInternals(disposeWhenFinishedOrCancelled);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CWorkItem::~CWorkItem()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	DisposeOf(mInternals);
-}
-
-// MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-EWorkItemState CWorkItem::getState() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mState;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::cancel()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Can only cancel if waiting
-	if (mInternals->mState == kWorkItemStateWaiting)
-		// Transition to cancelled
-		mInternals->mState = kWorkItemStateCancelled;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::finished() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if need dispose
-	if (mInternals->mDisposeWhenFinishedOrCancelled) {
-		// Dispose
-		CWorkItem*	THIS = (CWorkItem*) this;
-		DisposeOf(THIS);
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::cancelled() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if need dispose
-	if (mInternals->mDisposeWhenFinishedOrCancelled) {
-		// Dispose
-		CWorkItem*	THIS = (CWorkItem*) this;
-		DisposeOf(THIS);
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::transitionToActive()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Update state
-	mInternals->mState = kWorkItemStateActive;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::transitionToFinished()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Update state
-	mInternals->mState = kWorkItemStateFinished;
-
-	// Call method
-	finished();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::transitionToCancelled()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Update state
-	mInternals->mState = kWorkItemStateCancelled;
-
-	// Call method
-	cancelled();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CProcWorkItem
-
-class CProcWorkItem : public CWorkItem {
-	public:
-				CProcWorkItem(CWorkItemProc proc, void* userData) : CWorkItem(true), mProc(proc), mUserData(userData) {}
-				~CProcWorkItem() {}
-
-		void	perform()
-					{ mProc(mUserData, *this); }
-
-		CWorkItemProc	mProc;
-		void*			mUserData;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SWorkItemInfo
+// MARK: SWorkItemInfo
 
 struct SWorkItemInfo {
 	// Lifecycle methods
 	SWorkItemInfo(CWorkItemQueueInternals& owningWorkItemQueueInternals, CWorkItem& workItem,
 			EWorkItemPriority priority) :
 		mOwningWorkItemQueueInternals(owningWorkItemQueueInternals), mWorkItem(workItem), mPriority(priority),
-				mIsPaused(false), mIndex(SWorkItemInfo::mNextIndex++)
+				mIndex(SWorkItemInfo::mNextIndex++)
 		{}
 
 	// Properties
 			CWorkItemQueueInternals&	mOwningWorkItemQueueInternals;
 			CWorkItem&					mWorkItem;
 			EWorkItemPriority			mPriority;
-			bool						mIsPaused;
 			UInt32						mIndex;
 
 	static	UInt32						mNextIndex;
@@ -179,7 +63,7 @@ class CWorkItemQueueInternals {
 	public:
 								CWorkItemQueueInternals(CWorkItemQueueInternals* targetWorkItemQueueInternals,
 										UInt32 maximumConcurrentWorkItems) :
-									mTargetWorkItemQueueInternals(targetWorkItemQueueInternals),
+									mIsPaused(false), mTargetWorkItemQueueInternals(targetWorkItemQueueInternals),
 											mMaximumConcurrentWorkItems(maximumConcurrentWorkItems)
 									{
 										// Check if have target
@@ -207,23 +91,9 @@ class CWorkItemQueueInternals {
 									}
 
 				void			pause()
-									{
-										// Iterate all workItem infos
-										mWorkItemInfosLock.lock();
-										for (CArrayItemIndex i = 0; i < mIdleWorkItemInfos.getCount(); i++)
-											// Mark as paused
-											mIdleWorkItemInfos[i]->mIsPaused = true;
-										mWorkItemInfosLock.unlock();
-									}
+									{ mIsPaused = true; }
 				void			resume()
-									{
-										// Iterate all workItem infos
-										mWorkItemInfosLock.lock();
-										for (CArrayItemIndex i = 0; i < mIdleWorkItemInfos.getCount(); i++)
-											// Mark as not paused
-											mIdleWorkItemInfos[i]->mIsPaused = false;
-										mWorkItemInfosLock.unlock();
-									}
+									{ mIsPaused = false; }
 
 		static	void			processWorkItems()
 									{
@@ -238,7 +108,7 @@ class CWorkItemQueueInternals {
 											// Did we get a work item info
 											if (workItemInfo != nil) {
 												// Perform this workItem
-												workItemInfo->mWorkItem.transitionToActive();
+												workItemInfo->mWorkItem.transitionTo(kWorkItemStateActive);
 												workItemInfo->mOwningWorkItemQueueInternals
 														.noteTransitioningToActive(workItemInfo);
 
@@ -301,13 +171,18 @@ class CWorkItemQueueInternals {
 									}
 				SWorkItemInfo*	getNextWorkItemInfo()
 									{
+										// Check if paused
+										if (mIsPaused)
+											// Paused
+											return nil;
+
 										// Check if have headroom
 										if (getActiveWorkItemInfosCountDeep() >= mMaximumConcurrentWorkItems)
 											// No more headroom
 											return nil;
 
-										// Setup
-										SWorkItemInfo*	workItemInfo = nil;
+//										// Setup
+//										SWorkItemInfo*	workItemInfo = nil;
 
 										// Get our next work item info
 										mWorkItemInfosLock.lock();
@@ -315,23 +190,24 @@ class CWorkItemQueueInternals {
 										// Sort
 										mIdleWorkItemInfos.sort(workItemInfoCompareProc);
 
-										// Keep going until we find a work item that is ready
-										while ((workItemInfo == nil) && (mIdleWorkItemInfos.getCount() > 0)) {
-											// Get first work item
-											SWorkItemInfo*	testWorkItemInfo = mIdleWorkItemInfos.getFirst();
-											if (testWorkItemInfo->mWorkItem.isCancelled()) {
-												// Cancelled
-												testWorkItemInfo->mWorkItem.transitionToCancelled();
-
-												mIdleWorkItemThreadInfos.removeAtIndex(0);
-												DisposeOf(testWorkItemInfo);
-											} else if (!testWorkItemInfo->mIsPaused)
-												// Start with this work item info
-												workItemInfo = testWorkItemInfo;
-										}
+//										// Keep going until we find a work item that is ready
+//										while ((workItemInfo == nil) && !mIdleWorkItemInfos.isEmpty()) {
+//											// Get first work item info
+//											SWorkItemInfo*	testWorkItemInfo = mIdleWorkItemInfos.getFirst();
+//											if (testWorkItemInfo->mWorkItem.isCancelled()) {
+//												// Cancelled
+//												mIdleWorkItemInfos.removeAtIndex(0);
+//												DisposeOf(testWorkItemInfo);
+//											} else
+//												// Start with this work item info
+//												workItemInfo = testWorkItemInfo;
+//										}
+										SWorkItemInfo*	workItemInfo =
+																!mIdleWorkItemInfos.isEmpty() ?
+																		mIdleWorkItemInfos.getFirst() : nil;
 										mWorkItemInfosLock.unlock();
 
-										// Check any child work item queue
+										// Check any child work item queues
 										mChildWorkItemQueueInternalsLock.lock();
 										for (CArrayItemIndex i = 0; i < mChildWorkItemQueueInternals.getCount(); i++) {
 											// Get next work item info for this work item queue
@@ -358,7 +234,7 @@ class CWorkItemQueueInternals {
 										mActiveWorkItemInfos += workItemInfo;
 										mWorkItemInfosLock.unlock();
 									}
-				void			noteFinished(SWorkItemInfo* workItemInfo)
+				void			noteCompleted(SWorkItemInfo* workItemInfo)
 									{
 										// Remove from active
 										mWorkItemInfosLock.lock();
@@ -373,30 +249,9 @@ class CWorkItemQueueInternals {
 										SWorkItemInfo* const workItemInfo2, void* userData)
 									{
 										// Sort in this order:
-										//	Active
-										//	Cancelled
-										//  Not Paused
 										//	Priority
 										//	Index
-										if (workItemInfo1->mWorkItem.isActive())
-											// Work item 1 is acive
-											return kCompareResultBefore;
-										else if (workItemInfo2->mWorkItem.isActive())
-											// Work item 2 is active
-											return kCompareResultAfter;
-										else if (workItemInfo1->mWorkItem.isCancelled())
-											// Work item 1 is cancelled
-											return kCompareResultBefore;
-										else if (workItemInfo2->mWorkItem.isCancelled())
-											// Work item 2 is cancelled
-											return kCompareResultAfter;
-										else if (!workItemInfo1->mIsPaused)
-											// Work item 1 is not paused
-											return kCompareResultBefore;
-										else if (!workItemInfo2->mIsPaused)
-											// Wori item 2 is not paused
-											return kCompareResultAfter;
-										else if (workItemInfo1->mPriority < workItemInfo2->mPriority)
+										if (workItemInfo1->mPriority < workItemInfo2->mPriority)
 											// Work item 1 has a higher priority
 											return kCompareResultBefore;
 										else if (workItemInfo2->mPriority < workItemInfo1->mPriority)
@@ -420,11 +275,11 @@ class CWorkItemQueueInternals {
 											SWorkItemInfo*	workItemInfo = workItemThreadInfo->mWorkItemInfo;
 											workItemInfo->mWorkItem.perform();
 
-											// Note finished
-											workItemInfo->mWorkItem.transitionToFinished();
+											// Note completed
+											workItemInfo->mWorkItem.transitionTo(kWorkItemStateCompleted);
 
 											workItemThreadInfo->mWorkItemInfo = nil;
-											workItemInfo->mOwningWorkItemQueueInternals.noteFinished(workItemInfo);
+											workItemInfo->mOwningWorkItemQueueInternals.noteCompleted(workItemInfo);
 
 											// Move to idle
 											mWorkItemThreadInfosLock.lock();
@@ -446,6 +301,8 @@ class CWorkItemQueueInternals {
 		static	CWorkItemQueueInternals*			mMainWorkItemQueueInternals;
 
 	private:
+				bool								mIsPaused;
+
 				CWorkItemQueueInternals*			mTargetWorkItemQueueInternals;
 				UInt32								mMaximumConcurrentWorkItems;
 
@@ -471,7 +328,15 @@ CLock								CWorkItemQueueInternals::mWorkItemThreadInfosLock;
 // MARK: - CWorkItemQueue
 
 static	CWorkItemQueue*	sMainWorkItemQueue = nil;
-CWorkItemQueue&	CWorkItemQueue::mMain = *sMainWorkItemQueue;
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CWorkItemQueue& CWorkItemQueue::main()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return *sMainWorkItemQueue;
+}
 
 // MARK: Lifecycle methods
 
@@ -542,6 +407,13 @@ CWorkItem& CWorkItemQueue::add(CWorkItemProc proc, void* userData, EWorkItemPrio
 	add(*procWorkItem, priority);
 
 	return *procWorkItem;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CWorkItemQueue::cancel(CWorkItem& workItem)
+//----------------------------------------------------------------------------------------------------------------------
+{
+// TODO
 }
 
 //----------------------------------------------------------------------------------------------------------------------

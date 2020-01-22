@@ -4,8 +4,6 @@
 
 #include "CString.h"
 
-#include "CArrayX.h"
-#include "CArrayCFImplementation.h"
 #include "CppToolboxAssert.h"
 #include "CData.h"
 #include "CFUtilities.h"
@@ -110,15 +108,11 @@ CString::CString(const UTF16Char* initialString, CStringLength length, EStringEn
 		return;
 	}
 
-	bool	encodingIsValid = (encoding == kStringEncodingUnicode);
-#if TARGET_OS_MACOS || TARGET_OS_IOS
-	encodingIsValid =
-			encodingIsValid ||
+	bool	encodingIsValid =
+					(encoding == kStringEncodingUnicode) ||
 					(encoding == kStringEncodingUTF16) ||
 					(encoding == kStringEncodingUTF16BE) ||
 					(encoding == kStringEncodingUTF16LE);
-#endif
-
 	AssertFailIf(!encodingIsValid);
 	if (!encodingIsValid)
 		return;
@@ -146,11 +140,9 @@ CString::CString(const UTF32Char* initialString, CStringLength length, EStringEn
 		return;
 	}
 
-#if TARGET_OS_MACOS || TARGET_OS_IOS
 	AssertFailIf((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE));
 	if ((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE))
 		return;
-#endif
 
 	mInternals = new CStringInternals();
 
@@ -466,11 +458,9 @@ CStringLength CString::get(UTF16Char* buffer, CStringLength bufferLen, EStringEn
 	if (buffer == nil)
 		return 0;
 
-#if TARGET_OS_MACOS || TARGET_OS_IOS
 	AssertFailIf((encoding != kStringEncodingUTF16BE) && (encoding != kStringEncodingUTF16LE));
 	if ((encoding != kStringEncodingUTF16BE) && (encoding != kStringEncodingUTF16LE))
 		return 0;
-#endif
 
 	if (bufferLen > getLength())
 		bufferLen = getLength();
@@ -1148,7 +1138,6 @@ CFStringEncoding sGetCFStringEncodingForCStringEncoding(EStringEncoding encoding
 		case kStringEncodingUTF8:		return kCFStringEncodingUTF8;
 		case kStringEncodingISOLatin:	return kCFStringEncodingISOLatin1;
 		case kStringEncodingUnicode:	return kCFStringEncodingUnicode;
-#if TARGET_OS_MACOS || TARGET_OS_IOS
 		case kStringEncodingUTF16:		return kCFStringEncodingUTF16;
 		case kStringEncodingUTF16BE:	return kCFStringEncodingUTF16BE;
 		case kStringEncodingUTF16LE:	return kCFStringEncodingUTF16LE;
@@ -1156,7 +1145,6 @@ CFStringEncoding sGetCFStringEncodingForCStringEncoding(EStringEncoding encoding
 		case kStringEncodingUTF32BE:	return kCFStringEncodingUTF32BE;
 		case kStringEncodingUTF32LE:	return kCFStringEncodingUTF32LE;
 		case kStringEncodingMacRoman:	return kCFStringEncodingMacRoman;
-#endif
 		default:						return kCFStringEncodingUTF8;
 	}
 }

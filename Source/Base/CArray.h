@@ -149,11 +149,11 @@ template <typename T> class TArray : public CArray {
 						bool				contains(const T& item) const
 												{ return getIndexOf(item).hasValue(); }
 
-				const	T&					getAt(CArrayItemIndex index) const
+						T&					getAt(CArrayItemIndex index) const
 												{ return *((T*) getItemAt(index)); }
-				const	T&					getFirst() const
+						T&					getFirst() const
 												{ return *((T*) CArray::getFirst()); }
-				const	T&					getLast() const
+						T&					getLast() const
 												{ return *((T*) CArray::getLast()); }
 						OV<CArrayItemIndex>	getIndexOf(const T& item) const
 												{
@@ -227,7 +227,7 @@ template <typename T> class TArray : public CArray {
 													// Iterate all items
 													for (CArrayItemIndex i = 0; i < getCount(); i++) {
 														// Get item
-														const	T&	item = getAt(i);
+														T&	item = getAt(i);
 
 														// Call proc
 														if (proc(item, userData))
@@ -238,7 +238,37 @@ template <typename T> class TArray : public CArray {
 													return OR<T>();
 												}
 
-				const	T&					operator[] (CArrayItemIndex index) const
+						T					popFirst()
+												{
+													// Get first item
+													T	item = getFirst();
+
+													// Remove
+													removeAtIndex(0);
+
+													return item;
+												}
+						OV<T>				popFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
+												{
+													// Iterate all items
+													for (CArrayItemIndex i = 0; i < getCount(); i++) {
+														// Get item
+														T&	item = getAt(i);
+
+														// Call proc
+														if (proc(item, userData)) {
+															// Proc indicates to return this item
+															OV<T>	reference(item);
+															removeAtIndex(i);
+
+															return reference;
+														}
+													}
+
+													return OV<T>();
+												}
+
+						T&					operator[] (CArrayItemIndex index) const
 												{ return *((T*) getItemAt(index)); }
 						TArray<T>&			operator+=(const T& item)
 												{ return add(item); }

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CWorkItem.h"
 #include "PlatformDefinitions.h"
 
 /*!
@@ -21,10 +22,10 @@
 	Work Items are the fundamental object for performing work.
 	Work Items have state and are created in the waiting state.
 	When a Work Item is being performed, it transition to the active state.
-	When a Work Item has completed, it will transition to the finished state and the finished() method will be called.
+	When a Work Item has completed, it will transition to the completed state and the completed() method will be called.
 	When a Work Item has been cancelled, at some time in the future, it will transition to the cancelled state and the
 		cancelled() method will be called.
-	Subclass must override the perform() method and may also choose to override the finished() and cancelled() methods
+	Subclass must override the perform() method and may also choose to override the completed() and cancelled() methods
 		if it is desired to be informed of those state changes.
 	Work Items can be configured to perform their own cleanup if desired.
 
@@ -64,91 +65,32 @@
  */
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Procs
-
-class CWorkItem;
-typedef	void	(*CWorkItemProc)(void* userData, CWorkItem& workItem);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: Priority
-
-enum EWorkItemPriority {
-	kWorkItemPriorityHigh,
-	kWorkItemPriorityNormal,
-	kWorkItemPriorityBackground,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CWorkItem
-
-enum EWorkItemState {
-	kWorkItemStateWaiting,
-	kWorkItemStateActive,
-	kWorkItemStateFinished,
-	kWorkItemStateCancelled,
-};
-
-class CWorkItemInternals;
-class CWorkItem {
-	// Methods
-	public:
-								// Lifecycle methods
-								CWorkItem(bool disposeWhenFinishedOrCancelled = false);
-		virtual					~CWorkItem();
-		
-								// Instance methods
-				EWorkItemState	getState() const;
-				bool			isWaiting() const
-									{ return getState() == kWorkItemStateWaiting; }
-				bool			isActive() const
-									{ return getState() == kWorkItemStateActive; }
-				bool			isFinished() const
-									{ return getState() == kWorkItemStateFinished; }
-				bool			isCancelled() const
-									{ return getState() == kWorkItemStateCancelled; }
-
-				void			cancel();
-
-								// Subclass methods
-		virtual	void			perform() = 0;
-
-		virtual	void			finished() const;
-		virtual	void			cancelled() const;
-
-								// Internal-use only methods
-				void			transitionToActive();
-				void			transitionToFinished();
-				void			transitionToCancelled();
-
-	// Properties
-	private:
-		CWorkItemInternals*	mInternals;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CWorkItemQueue
+// MARK: CWorkItemQueue
 
 class CWorkItemQueueInternals;
 class CWorkItemQueue {
 	// Methods
 	public:
-							// Lifecycle methods
-							CWorkItemQueue(UInt32 maximumConcurrentWorkItems = ~0);
-							CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue, UInt32 maximumConcurrentWorkItems = ~0);
-		virtual				~CWorkItemQueue();
+								// Lifecycle methods
+								CWorkItemQueue(UInt32 maximumConcurrentWorkItems = ~0);
+								CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue,
+										UInt32 maximumConcurrentWorkItems = ~0);
+		virtual					~CWorkItemQueue();
 		
-							// Instance methods
-				void		add(CWorkItem& workItem, EWorkItemPriority priority = kWorkItemPriorityNormal);
-				CWorkItem&	add(CWorkItemProc proc, void* userData,
-									EWorkItemPriority priority = kWorkItemPriorityNormal);
+								// Instance methods
+				void			add(CWorkItem& workItem, EWorkItemPriority priority = kWorkItemPriorityNormal);
+				CWorkItem&		add(CWorkItemProc proc, void* userData,
+										EWorkItemPriority priority = kWorkItemPriorityNormal);
 
-				void		pause();
-				void		resume();
+				void			cancel(CWorkItem& workItem);
+
+				void			pause();
+				void			resume();
+
+								// Class methods
+				CWorkItemQueue&	main();
 
 	// Properties
-	public:
-		static	CWorkItemQueue&				mMain;
-
 	private:
-				CWorkItemQueueInternals*	mInternals;
+		CWorkItemQueueInternals*	mInternals;
 };

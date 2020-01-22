@@ -161,6 +161,17 @@ template <typename T> class TLockingArray : public CArray {
 													return *this;
 												}
 
+				const	T					popFirst()
+												{
+													// Perform under lock
+													mLock.lockForWriting();
+													T	item = *((T*) CArray::getFirst());
+													CArray::removeAtIndex(0);
+													mLock.unlockForWriting();
+
+													return item;
+												}
+
 											// Instance methods
 				const	T&					operator[] (CArrayItemIndex index) const
 												{ return *((T*) getItemAt(index)); }

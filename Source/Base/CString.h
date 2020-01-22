@@ -8,6 +8,13 @@
 #include "CHashing.h"
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: Native strings
+#if TARGET_OS_MACOS || TARGET_OS_IOS
+	#define	OSString	CFStringRef
+	#define	OSSTR(s)	CFSTR(s)
+#endif
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - Item count and Range
 
 typedef	UInt32	CStringCharIndex;
@@ -93,12 +100,6 @@ enum EStringCharacterSet {
 	kStringCharacterSetCapitalizedLetter,		// Titlecase character set (Unicode General Category Lt)
 	kStringCharacterSetSymbol,					// Symbol character set (Unicode General Category S*)
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Events
-
-const	OSType	kEventParamInfoString	= MAKE_OSTYPE('I', 'n', 'S', 't');	// CString*
-const	OSType	kEventParamStatusString	= MAKE_OSTYPE('S', 't', 'S', 't');	// CString*
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Display Stuff
