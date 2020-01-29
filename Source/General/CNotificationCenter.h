@@ -9,15 +9,15 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Types
 
-typedef	void	(*NotificationProc)(const CString& notificationName, const void* senderRef, const CDictionary& info,
-						void* userData);
+typedef	void	(*SNotificationObserverInfoProc)(const CString& notificationName, const void* senderRef,
+						const CDictionary& info, void* userData);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SNotificationObserverInfo
 
 struct SNotificationObserverInfo {
 			// Lifecycle methods
-			SNotificationObserverInfo(const void* observerRef, NotificationProc proc, void* userData) :
+			SNotificationObserverInfo(const void* observerRef, SNotificationObserverInfoProc proc, void* userData) :
 				mObserverRef(observerRef), mProc(proc), mUserData(userData)
 				{}
 //			SNotificationObserverInfo(NotificationProc proc, void* userData) :
@@ -32,9 +32,9 @@ struct SNotificationObserverInfo {
 				{ mProc(notificationName, senderRef, info, mUserData); }
 
 	// Properties
-	const	void*				mObserverRef;
-			NotificationProc	mProc;
-			void*				mUserData;
+	const	void*							mObserverRef;
+			SNotificationObserverInfoProc	mProc;
+			void*							mUserData;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

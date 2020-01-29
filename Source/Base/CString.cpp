@@ -18,6 +18,7 @@ const	UInt64	kDisplayAsGiBThreshHold = 1024 * 1024 * 1024;
 CString	CString::mEmpty;
 
 CString	CString::mCommaCharacter(",");
+CString	CString::mPeriodCharacter(".");
 CString	CString::mSpaceCharacter(" ");
 CString	CString::mSpaceX4("    ");
 CString	CString::mTabCharacter("\t");

@@ -10,38 +10,33 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPUProcsInfo
 
-typedef	void	(*GPUAcquireContextProc)(void* userData);
-typedef	void	(*GPUReleaseContextProc)(void* userData);
-
 struct CGPUProcsInfo {
 	// Lifecycle methods
-	CGPUProcsInfo(GPUAcquireContextProc acquireContextProc, GPUReleaseContextProc releaseContextProc, void* userData) :
-		mAcquireContextProc(acquireContextProc), mReleaseContextProc(releaseContextProc), mUserData(userData)
-		{}
-	CGPUProcsInfo(const CGPUProcsInfo& other) :
-		mAcquireContextProc(other.mAcquireContextProc), mReleaseContextProc(other.mReleaseContextProc),
-				mUserData(other.mUserData)
-		{}
+	CGPUProcsInfo() {}
+	CGPUProcsInfo(const CGPUProcsInfo& other) {}
 
 	// Properties
-	GPUAcquireContextProc	mAcquireContextProc;
-	GPUReleaseContextProc	mReleaseContextProc;
-	void*					mUserData;
+	void*	mUserData;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPUTextureInfo
+// MARK: - SGPUTextureInfo
 
 struct SGPUTextureInfo {
-	// Lifecycle methods
-	SGPUTextureInfo(const SGPUTextureSize& gpuTextureSize, Float32 maxU, Float32 maxV, void* internalReference) :
-		mGPUTextureSize(gpuTextureSize), mMaxU(maxU), mMaxV(maxV), mInternalReference(internalReference)
-		{}
-	SGPUTextureInfo(const SGPUTextureInfo& other) :
-		mGPUTextureSize(other.mGPUTextureSize), mMaxU(other.mMaxU), mMaxV(other.mMaxV),
-				mInternalReference(other.mInternalReference)
-		{}
-	SGPUTextureInfo() : mGPUTextureSize(), mMaxU(0.0), mMaxV(0.0), mInternalReference(nil) {}
+			// Lifecycle methods
+			SGPUTextureInfo(const SGPUTextureSize& gpuTextureSize, Float32 maxU, Float32 maxV,
+					void* internalReference) :
+				mGPUTextureSize(gpuTextureSize), mMaxU(maxU), mMaxV(maxV), mInternalReference(internalReference)
+				{}
+			SGPUTextureInfo(const SGPUTextureInfo& other) :
+				mGPUTextureSize(other.mGPUTextureSize), mMaxU(other.mMaxU), mMaxV(other.mMaxV),
+						mInternalReference(other.mInternalReference)
+				{}
+			SGPUTextureInfo() : mGPUTextureSize(), mMaxU(0.0), mMaxV(0.0), mInternalReference(nil) {}
+
+			// Instance methods
+	bool	isValid() const
+				{ return mMaxU != 0.0; }
 
 	// Properties
 	SGPUTextureSize	mGPUTextureSize;
@@ -64,9 +59,6 @@ class CGPU {
 									// Instance methods
 		virtual	void				setup(const S2DSize32& size) = 0;
 
-				void				acquireContext() const;
-				void				releaseContext() const;
-
 		virtual	SGPUTextureInfo		registerTexture(const CGPUTexture& gpuTexture) = 0;
 		virtual	void				unregisterTexture(const SGPUTextureInfo& gpuTextureInfo) = 0;
 
@@ -78,7 +70,6 @@ class CGPU {
 		virtual	void				renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 vertexCount,
 											const SGPUTextureInfo& gpuTextureInfo,
 											OV<Float32> alpha = OV<Float32>()) = 0;
-
 		virtual	void				renderEnd() const = 0;
 
 	// Properties

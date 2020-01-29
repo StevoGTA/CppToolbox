@@ -419,7 +419,7 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 				objectIndexes[i] = readIndex();
 
 			// Determine array type
-			UInt8	marker = readMarker(objectIndexes[0]);
+			marker = readMarker(objectIndexes[0]);
 			switch (marker) {
 				case kMarkerTypeArray:
 					// Array (unimplemented)

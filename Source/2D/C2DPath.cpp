@@ -129,7 +129,7 @@ void C2DPath::iterateSegments(bool constructing)
 	const	UInt8*	bytePtr = (const UInt8*) mInternals->mPathSegmentData.getBytePtr();
 			SInt32	bytesRemaining = mInternals->mPathSegmentData.getSize();
 	
-	while (bytesRemaining >= sizeof(E2DPathSegmentType)) {
+	while (bytesRemaining >= (SInt32) sizeof(E2DPathSegmentType)) {
 		// Get type
 		E2DPathSegmentType	pathSegmentType = *((E2DPathSegmentType*) bytePtr);
 		bytePtr += sizeof(E2DPathSegmentType);

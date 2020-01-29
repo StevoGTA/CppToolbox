@@ -100,7 +100,7 @@ const CFolder& CFolder::systemFrameworksFolder()
 		// Setup
 		CFURLRef	urlRef =
 							::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR("/System/Library/Frameworks"),
-									kCFURLPOSIXPathStyle, true);
+									kCFURLPOSIXPathStyle, false);
 		CFStringRef	stringRef = ::CFURLCopyPath(urlRef);
 		::CFRelease(urlRef);
 

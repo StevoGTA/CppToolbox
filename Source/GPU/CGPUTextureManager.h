@@ -17,6 +17,11 @@ enum EGPUTextureReferenceOptions {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - Procs
+
+typedef	CBitmap	(*CGPUTextureManagerBitmapProc)(const CByteParceller& byteParceller);
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureReference
 
 class CGPUTextureReferenceInternals;
@@ -29,7 +34,7 @@ class CGPUTextureReference {
 									~CGPUTextureReference();
 
 									// Instance methods
-				bool				getIsLoaded() const;
+//				bool				getIsLoaded() const;
 				void				load() const;
 				void				finishLoading() const;
 
@@ -61,11 +66,13 @@ class CGPUTextureManager {
 												OR<const CString> reference = OR<const CString>(),
 												EGPUTextureReferenceOptions
 														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CByteParceller& imageByteParceller,
+		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
+												CGPUTextureManagerBitmapProc bitmapProc,
 												OR<const CString> reference = OR<const CString>(),
 												EGPUTextureReferenceOptions
 														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CByteParceller& imageByteParceller,
+		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
+												CGPUTextureManagerBitmapProc bitmapProc,
 												EGPUTextureFormat gpuTextureFormat,
 												OR<const CString> reference = OR<const CString>(),
 												EGPUTextureReferenceOptions

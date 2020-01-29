@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CppToolboxAssert.h"
+#include "TReferenceTracking.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: OV (Optional Value)
@@ -82,6 +83,70 @@ template <typename T> struct OR {
 	private:
 		T*	mReference;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: OO (Optional Object)
+/*
+	Examples:
+
+	OO<CString>	optionalString1
+	optionalString1.hasObject();	// false
+	optionalString1.getObject();	// Assert fail
+
+	OO<CString>	optionalString2(new CString("Hello World!"));
+	optionalString2.hasObject();	// true
+	optionalString2.getObject();	// CString&
+	*optionalString2;				// CString&
+	optionalString2->isEmpty();		// false
+ */
+
+ template <typename T> struct OO {
+	 public:
+				// Lifecycle methods
+				OO() : mObjectReferenceTracker(nil) {}
+				OO(T* object) : mObjectReferenceTracker(new SObjectReferenceTracker<T>(object)) {}
+				OO(const OO& other) :
+					mObjectReferenceTracker(
+							(other.mObjectReferenceTracker != nil) ? other.mObjectReferenceTracker->addReference() : nil)
+					{}
+				~OO()
+					{
+						// Check if have reference
+						if (mObjectReferenceTracker != nil)
+							// Remove reference
+							mObjectReferenceTracker->removeReference();
+					}
+
+		OO<T>&	operator=(const OO<T>& other)
+					{
+						// Check for object reference tracker
+						if (mObjectReferenceTracker != nil)
+							// Remove reference
+							mObjectReferenceTracker->removeReference();
+
+						// Update to other object reference tracker
+						mObjectReferenceTracker =
+								(other.mObjectReferenceTracker != nil) ?
+										(SObjectReferenceTracker<T>*) other.mObjectReferenceTracker->addReference() :
+										nil;
+
+						return *this;
+					}
+
+				// Instamce methods
+		bool	hasObject() const { return mObjectReferenceTracker != nil; }
+		T&		getObject() const
+					{ AssertFailIf(mObjectReferenceTracker == nil); return *mObjectReferenceTracker->mObject; }
+
+		T&		operator *() const
+					{ AssertFailIf(mObjectReferenceTracker == nil); return *mObjectReferenceTracker->mObject; }
+		T*		operator ->() const
+					{ AssertFailIf(mObjectReferenceTracker == nil); return mObjectReferenceTracker->mObject; }
+
+	// Properties
+	private:
+		SObjectReferenceTracker<T>*	mObjectReferenceTracker;
+ };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: OP (Optional Proc)

@@ -337,6 +337,7 @@ class CString : public CHashable {
 		static			CString				mEmpty;
 
 		static			CString				mCommaCharacter;
+		static			CString				mPeriodCharacter;
 		static			CString				mSpaceCharacter;
 		static			CString				mSpaceX4;
 		static			CString				mTabCharacter;

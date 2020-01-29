@@ -1,18 +1,20 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CUUIDCFImplementation.cpp			©2019 Stevo Brock	All rights reserved.
+//  CppToolboxAssert.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CUUID.h"
+#include "CppToolboxAssert.h"
+
+#include "CCoreServices.h"
+#include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-SUUIDBytes eCreateUUIDBytes();
-SUUIDBytes eCreateUUIDBytes()
+void eAssertHandleProc(UError error, const char* file, const char* proc, UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create new UUID and get raw bytes
-	CFUUIDRef	uuidRef = ::CFUUIDCreate(kCFAllocatorDefault);
-	CFUUIDBytes	uuidBytes = ::CFUUIDGetUUIDBytes(uuidRef);
-	::CFRelease(uuidRef);
-
-	return *((SUUIDBytes*) &uuidBytes);
+	CLogServices::logError(error, CString::mEmpty, file, proc, line);
+#if defined(DEBUG)
+	CCoreServices::stopInDebugger();
+#else
+	exit(EXIT_FAILURE);
+#endif
 }

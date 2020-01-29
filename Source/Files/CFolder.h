@@ -87,6 +87,8 @@ class CFolder : CHashable {
 											// Instance methods
 						void				update(const CFilesystemPath& filesystemPath);
 
+	// Properties
+	public:
 #if TARGET_OS_MACOS
 		static	const	CFolder&			systemApplicationSupportFolder();
 		static	const	CFolder&			systemAudioPluginsFolder();
@@ -102,7 +104,6 @@ class CFolder : CHashable {
 		static	const	CFolder&			userMusicFolder();
 #endif
 
-	// Properties
 	private:
-		CFolderInternals*	mInternals;
+						CFolderInternals*	mInternals;
 };

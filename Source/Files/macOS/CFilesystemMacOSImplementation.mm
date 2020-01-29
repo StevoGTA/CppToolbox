@@ -44,7 +44,7 @@ UError CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolder
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
+	NSURL*				url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
 
 	NSError*			error;
 	NSFileManager*		fileManager = [NSFileManager defaultManager];
@@ -53,7 +53,7 @@ UError CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolder
 										error:&error];
 	if (URLs != nil) {
 		// Iterate URLs
-		for (NSURL* url in URLs) {
+		for (url in URLs) {
 			// Determine if file or folder
 			NSNumber*	number;
 			if ([url getResourceValue:&number forKey:NSURLIsDirectoryKey error:nil] && number.boolValue)
@@ -72,7 +72,7 @@ UError CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
+	NSURL*				url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
 
 	NSError*			error;
 	NSFileManager*		fileManager = [NSFileManager defaultManager];
@@ -81,7 +81,7 @@ UError CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
 										error:&error];
 	if (URLs != nil) {
 		// Iterate URLs
-		for (NSURL* url in URLs) {
+		for (url in URLs) {
 			// Determine if file or folder
 			NSNumber*	number;
 			if (![url getResourceValue:&number forKey:NSURLIsDirectoryKey error:nil] && number.boolValue)
@@ -100,7 +100,7 @@ UError CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outF
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
+	NSURL*				url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
 
 	NSError*			error;
 	NSFileManager*		fileManager = [NSFileManager defaultManager];
@@ -109,7 +109,7 @@ UError CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outF
 										error:&error];
 	if (URLs != nil) {
 		// Iterate URLs
-		for (NSURL* url in URLs) {
+		for (url in URLs) {
 			// Determine if file or folder
 			NSNumber*	number;
 			if ([url getResourceValue:&number forKey:NSURLIsDirectoryKey error:nil] && number.boolValue)

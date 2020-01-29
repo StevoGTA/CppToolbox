@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CString.h"
+#include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Types
@@ -31,6 +32,7 @@ class CThread {
 				CThreadRef	getThreadRef() const;
 
 							// Class methods
+//		static	void		sleepFor(UniversalTimeInterval timeInterval);
 		static	CThreadRef	getCurrentThreadRef();
 
 	// Properties

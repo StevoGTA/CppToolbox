@@ -241,8 +241,8 @@ UError CMappedFileDataSource::setPos(EDataSourcePosition position, SInt64 newPos
 	if (newPos < 0)
 		return kDataProviderSetPosBeforeStartError;
 
-	AssertFailIf(newPos >= mInternals->getFileMemoryMap().getByteCount());
-	if (newPos >= mInternals->getFileMemoryMap().getByteCount())
+	AssertFailIf(newPos >= (SInt64) mInternals->getFileMemoryMap().getByteCount());
+	if (newPos >= (SInt64) mInternals->getFileMemoryMap().getByteCount())
 		return kDataProviderSetPosAfterEndError;
 
 	// Set

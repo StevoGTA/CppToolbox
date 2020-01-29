@@ -135,12 +135,9 @@ void CGPURenderObject2D::setScale(Float32 scale)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::render(CGPU& gpu, const S2DPoint32& offset)
+void CGPURenderObject2D::render(CGPU& gpu, const S2DPoint32& offset) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Ensure we are fully loaded
-	mInternals->mGPUTextureReference.finishLoading();
-
 	// Setup
 			Float32				a = -mInternals->mAngleRadians;
 			Float32				cosA = cosf(a);

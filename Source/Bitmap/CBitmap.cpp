@@ -725,7 +725,7 @@ void sConvertRGB888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 		// Setup
 		const	UInt8*	srcPtr = (const UInt8*) (sourcePixelData + h * sourceBytesPerRow);
 				UInt32*	dstPtr = (UInt32*) (destinationPixelData + h * destinationBytesPerRow);
-		for (UInt32 w = 0; w < sourceBitmapInternals.mSize.mWidth; w++, dstPtr++) {
+		for (UInt32 w = 0; w < (UInt32) sourceBitmapInternals.mSize.mWidth; w++, dstPtr++) {
 			// Convert color
 #if TARGET_RT_LITTLE_ENDIAN
 			UInt32	red = *(srcPtr++);
