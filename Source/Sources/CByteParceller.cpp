@@ -9,30 +9,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CByteParcellerInternals
 
-class CByteParcellerInternals {
+class CByteParcellerInternals : public TReferenceCountable<CByteParcellerInternals> {
 	public:
-									CByteParcellerInternals(const CDataSource* dataSource) :
-										mDataSource(dataSource), mReferenceCount(1)
-										{}
-									~CByteParcellerInternals()
-										{
-											DisposeOf(mDataSource);
-										}
-
-		CByteParcellerInternals*	addReference()
-										{ mReferenceCount++; return this; }
-		void						removeReference()
-										{
-											// Decrement reference count and check if we are the last one
-											if (--mReferenceCount == 0) {
-												// We going away
-												CByteParcellerInternals*	THIS = this;
-												DisposeOf(THIS);
-											}
-										}
+		CByteParcellerInternals(const CDataSource* dataSource) : TReferenceCountable(), mDataSource(dataSource) {}
+		~CByteParcellerInternals()
+			{ DisposeOf(mDataSource); }
 
 		const	CDataSource*	mDataSource;
-				UInt32			mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

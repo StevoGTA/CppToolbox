@@ -847,7 +847,7 @@ TArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuo
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArray<CString>	array;
+	TNArray<CString>	array;
 
 	if (respectQuotes) {
 		// Quotes around a string with the delimiter is not a real delimiter

@@ -47,90 +47,61 @@ struct SFileMemoryMapSetupInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFileReaderInternals
 
-class CFileReaderInternals {
+class CFileReaderInternals : public TCopyOnWriteReferenceCountable<CFileReaderInternals> {
 	public:
-								CFileReaderInternals(const CFile& file) :
-									mFile(file), mReferenceCount(1), mFILE(nil), mFD(-1)
-									{}
-								~CFileReaderInternals()
-									{
-										close();
-									}
+				CFileReaderInternals(const CFile& file) :
+					TCopyOnWriteReferenceCountable(),
+							mFile(file), mFILE(nil), mFD(-1)
+					{}
+				CFileReaderInternals(const CFileReaderInternals& other) :
+					TCopyOnWriteReferenceCountable(),
+							mFile(other.mFile), mFILE(nil), mFD(-1)
+					{}
+				~CFileReaderInternals()
+					{ close(); }
 
-		CFileReaderInternals*	addReference()
-									{ mReferenceCount++; return this; }
-		void					removeReference()
-									{
-										// Remove reference and see if we are the last one
-										if (--mReferenceCount == 0) {
-											// Last one
-											CFileReaderInternals*	THIS = this;
-											DisposeOf(THIS);
-										}
-									}
-		CFileReaderInternals*	prepareForWrite()
-									{
-										// Check reference count.  If there is more than 1 reference, we
-										//	implement a "copy on write".  So we will clone ourselves so we
-										//	have a personal buffer that can be changed while leaving the
-										//	exiting buffer as-is for the other references.
-										if (mReferenceCount > 1) {
-											// Multiple references, copy
-											CFileReaderInternals*	fileReaderInternals =
-																			new CFileReaderInternals(mFile);
+		UError	read(void* buffer, UInt64 byteCount)
+					{
+						// Check open mode
+						if (mFILE != nil) {
+							// Read from FILE
+							ssize_t	bytesRead = ::fread(buffer, 1, (size_t) byteCount, mFILE);
+							if (bytesRead == (ssize_t) byteCount)
+								// Success
+								return kNoError;
+							else if (::feof(mFILE))
+								// EOF
+								return kFileEOFError;
+							else
+								// Unable to read
+								return kFileUnableToReadError;
+						} else if (mFD != -1) {
+							// Read from file
+							ssize_t bytesRead = ::read(mFD, buffer, (size_t) byteCount);
+							if (bytesRead != -1)
+								// Success
+								return kNoError;
+							else if (bytesRead == 0)
+								// EOF
+								return kFileEOFError;
+							else
+								// Unable to read
+								return MAKE_UError(kPOSIXErrorDomain, errno);
+						} else
+							// Not open
+							return kFileNotOpenError;
+					}
+		UError	close()
+					{
+						if (mFILE != nil)
+							::fclose(mFILE);
+						if (mFD != -1)
+							::close(mFD);
 
-											// One less reference
-											mReferenceCount--;
-
-											return fileReaderInternals;
-										} else
-											// Only a single reference
-											return this;
-									}
-
-		UError					read(void* buffer, UInt64 byteCount)
-									{
-										// Check open mode
-										if (mFILE != nil) {
-											// Read from FILE
-											ssize_t	bytesRead = ::fread(buffer, 1, (size_t) byteCount, mFILE);
-											if (bytesRead == (ssize_t) byteCount)
-												// Success
-												return kNoError;
-											else if (::feof(mFILE))
-												// EOF
-												return kFileEOFError;
-											else
-												// Unable to read
-												return kFileUnableToReadError;
-										} else if (mFD != -1) {
-											// Read from file
-											ssize_t bytesRead = ::read(mFD, buffer, (size_t) byteCount);
-											if (bytesRead != -1)
-												// Success
-												return kNoError;
-											else if (bytesRead == 0)
-												// EOF
-												return kFileEOFError;
-											else
-												// Unable to read
-												return MAKE_UError(kPOSIXErrorDomain, errno);
-										} else
-											// Not open
-											return kFileNotOpenError;
-									}
-		UError					close()
-									{
-										if (mFILE != nil)
-											::fclose(mFILE);
-										if (mFD != -1)
-											::close(mFD);
-
-										return kNoError;
-									}
+						return kNoError;
+					}
 
 		CFile	mFile;
-		UInt32	mReferenceCount;
 
 		FILE*	mFILE;
 		SInt32	mFD;

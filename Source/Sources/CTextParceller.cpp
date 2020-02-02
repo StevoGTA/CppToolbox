@@ -9,30 +9,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CTextParcellerInternals
 
-class CTextParcellerInternals {
+class CTextParcellerInternals : public TReferenceCountable<CTextParcellerInternals> {
 	public:
-									CTextParcellerInternals(const CDataSource* dataSource) :
-										mDataSource(dataSource), mReferenceCount(1)
-										{}
-									~CTextParcellerInternals()
-										{
-											DisposeOf(mDataSource);
-										}
-
-		CTextParcellerInternals*	addReference()
-										{ mReferenceCount++; return this; }
-		void						removeReference()
-										{
-											// Decrement reference count and check if we are the last one
-											if (--mReferenceCount == 0) {
-												// We going away
-												CTextParcellerInternals*	THIS = this;
-												DisposeOf(THIS);
-											}
-										}
+		CTextParcellerInternals(const CDataSource* dataSource) : TReferenceCountable(), mDataSource(dataSource) {}
+		~CTextParcellerInternals()
+			{ DisposeOf(mDataSource); }
 
 		const	CDataSource*	mDataSource;
-				UInt32			mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -57,54 +57,47 @@ static	void	sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInter
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CBitmapInternals
 
-class CBitmapInternals {
+class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>{
 	public:
-							CBitmapInternals(const SBitmapSize& size, EBitmapFormat format, const CData& pixelData,
-									UInt16 bytesPerRow) :
-								mSize(size), mFormat(format), mBytesPerRow(bytesPerRow), mReferenceCount(1)
-								{
-									// Finish setup
-									switch (mFormat) {
-										case kBitmapFormatRGBA4444:
-										case kBitmapFormatRGBA5551:
-										case kBitmapFormatRGB565:
-											mBytesPerPixel = 2;
-											break;
+		CBitmapInternals(const SBitmapSize& size, EBitmapFormat format, const CData& pixelData, UInt16 bytesPerRow) :
+			TCopyOnWriteReferenceCountable(),
+					mSize(size), mFormat(format), mBytesPerRow(bytesPerRow)
+			{
+				// Finish setup
+				switch (mFormat) {
+					case kBitmapFormatRGBA4444:
+					case kBitmapFormatRGBA5551:
+					case kBitmapFormatRGB565:
+						mBytesPerPixel = 2;
+						break;
 
-										case kBitmapFormatRGB888:
-											mBytesPerPixel = 3;
-											break;
+					case kBitmapFormatRGB888:
+						mBytesPerPixel = 3;
+						break;
 
-										case kBitmapFormatRGBA8888:
-										case kBitmapFormatARGB8888:
-											mBytesPerPixel = 4;
-											break;
-									}
+					case kBitmapFormatRGBA8888:
+					case kBitmapFormatARGB8888:
+						mBytesPerPixel = 4;
+						break;
+				}
 
-									if (mBytesPerRow == 0)
-										// Set default bytes per row
-										mBytesPerRow = (mSize.mWidth * mBytesPerPixel) & 0xFFFFFFF0 + 0x0F;
+				if (mBytesPerRow == 0)
+					// Set default bytes per row
+					mBytesPerRow = (mSize.mWidth * mBytesPerPixel) & 0xFFFFFFF0 + 0x0F;
 
-									mPixelData = !pixelData.isEmpty() ? pixelData : CData(mBytesPerRow * mSize.mHeight);
-								}
+				mPixelData = !pixelData.isEmpty() ? pixelData : CData(mBytesPerRow * mSize.mHeight);
+			}
+		CBitmapInternals(const CBitmapInternals& other) :
+			TCopyOnWriteReferenceCountable(),
+					mFormat(other.mFormat), mSize(other.mSize), mPixelData(other.mPixelData),
+					mBytesPerPixel(other.mBytesPerPixel), mBytesPerRow(other.mBytesPerRow)
+			{}
 
-		CBitmapInternals*	addReference() { mReferenceCount++; return this; }
-		void				removeReference()
-								{
-									// Decrement reference count and check if we are the last one
-									if (--mReferenceCount == 0) {
-										// We going away
-										CBitmapInternals*	THIS = this;
-										DisposeOf(THIS);
-									}
-								}
-
-		EBitmapFormat		mFormat;
-		SBitmapSize			mSize;
-		CData				mPixelData;
-		UInt32				mBytesPerPixel;
-		UInt32				mBytesPerRow;
-		UInt32				mReferenceCount;
+		EBitmapFormat	mFormat;
+		SBitmapSize		mSize;
+		CData			mPixelData;
+		UInt32			mBytesPerPixel;
+		UInt32			mBytesPerRow;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -485,6 +478,10 @@ void CBitmap::setPixel(const SBitmapPoint& pt, const CColor& color)
 	if ((pt.mY < 0) || (pt.mY >= mInternals->mSize.mHeight))
 		return;
 
+	// Prepare for write
+	mInternals = mInternals->prepareForWrite();
+
+	// Update pixel data
 	void*	pixelDataPtr =
 					(UInt8*) mInternals->mPixelData.getMutableBytePtr() + pt.mY * mInternals->mBytesPerRow +
 							pt.mX * mInternals->mBytesPerPixel;

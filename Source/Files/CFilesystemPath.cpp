@@ -23,28 +23,14 @@ static	const	CString&	sPathSeparator(EFilesystemPathStyle pathStyle);
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFilesystemPathInternals
 
-class CFilesystemPathInternals {
+class CFilesystemPathInternals : public TReferenceCountable<CFilesystemPathInternals> {
 	public:
-									CFilesystemPathInternals(const CString& string, EFilesystemPathStyle pathStyle) :
-										mString(string), mPathStyle(pathStyle), mReferenceCount(1)
-										{}
-									~CFilesystemPathInternals() {}
-
-		CFilesystemPathInternals*	addReference()
-										{ mReferenceCount++; return this; }
-		void						removeReference()
-										{
-											// Remove reference and see if we are the last one
-											if (--mReferenceCount == 0) {
-												// Last one
-												CFilesystemPathInternals*	THIS = this;
-												DisposeOf(THIS);
-											}
-										}
+		CFilesystemPathInternals(const CString& string, EFilesystemPathStyle pathStyle) :
+			TReferenceCountable(), mString(string), mPathStyle(pathStyle)
+			{}
 
 		CString					mString;
 		EFilesystemPathStyle	mPathStyle;
-		UInt32					mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,7 +97,7 @@ TArray<CString> CFilesystemPath::getComponents() const
 	// Check if empty
 	if (mInternals->mString.isEmpty())
 		// No components
-		return TArray<CString>();
+		return TNArray<CString>();
 
 	return mInternals->mString.breakUp(sPathSeparator(mInternals->mPathStyle));
 }

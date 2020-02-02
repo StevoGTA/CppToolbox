@@ -27,45 +27,18 @@ static	CFileSetup	sFileSetup;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFileInternals
 
-class CFileInternals {
+class CFileInternals : public TCopyOnWriteReferenceCountable<CFileInternals> {
 	public:
-						CFileInternals(const CFilesystemPath& filesystemPath) :
-							mFilesystemPath(filesystemPath), mReferenceCount(1)
-							{}
-						~CFileInternals() {}
-
-		CFileInternals*	addReference()
-							{ mReferenceCount++; return this; }
-		void			removeReference()
-							{
-								// Remove reference and see if we are the last one
-								if (--mReferenceCount == 0) {
-									// Last one
-									CFileInternals*	THIS = this;
-									DisposeOf(THIS);
-								}
-							}
-		CFileInternals*	prepareForWrite()
-							{
-								// Check reference count.  If there is more than 1 reference, we
-								//	implement a "copy on write".  So we will clone ourselves so we
-								//	have a personal buffer that can be changed while leaving the
-								//	exiting buffer as-is for the other references.
-								if (mReferenceCount > 1) {
-									// Multiple references, copy
-									CFileInternals*	fileInternals = new CFileInternals(mFilesystemPath);
-
-									// One less reference
-									mReferenceCount--;
-
-									return fileInternals;
-								} else
-									// Only a single reference
-									return this;
-							}
+		CFileInternals(const CFilesystemPath& filesystemPath) :
+			TCopyOnWriteReferenceCountable(),
+					mFilesystemPath(filesystemPath)
+			{}
+		CFileInternals(const CFileInternals& other) :
+			TCopyOnWriteReferenceCountable(),
+					mFilesystemPath(other.mFilesystemPath)
+			{}
 
 		CFilesystemPath	mFilesystemPath;
-		UInt32			mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

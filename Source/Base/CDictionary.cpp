@@ -7,19 +7,19 @@
 #include "CppToolboxAssert.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDictionaryInternals
+// MARK: TDictionaryInternals
 
-class CDictionaryInternals {
+template <typename T> class TDictionaryInternals : public TCopyOnWriteReferenceCountable<T> {
 	// Methods
 	public:
 											// Lifecycle methods
-											CDictionaryInternals() {}
-		virtual								~CDictionaryInternals() {}
+											TDictionaryInternals() : TCopyOnWriteReferenceCountable<T>() {}
+											TDictionaryInternals(const TDictionaryInternals& other) :
+												TCopyOnWriteReferenceCountable<T>()
+												{}
+		virtual								~TDictionaryInternals() {}
 
 											// Instance methods
-		virtual	CDictionaryInternals*		addReference() = 0;
-		virtual	void						removeReference() = 0;
-
 		virtual	CDictionaryKeyCount			getKeyCount() = 0;
 		virtual	OR<SDictionaryValue>		getValue(const CString& key) = 0;
 		virtual	CDictionaryInternals*		set(const CString& key, const SDictionaryValue& value) = 0;
@@ -30,6 +30,12 @@ class CDictionaryInternals {
 
 		virtual	CDictionaryItemEqualsProc	getItemEqualsProc() const = 0;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDictionaryInternals
+
+class CDictionaryInternals : public TDictionaryInternals<CDictionaryInternals> {};
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -96,18 +102,19 @@ struct CDictionaryIteratorInfo : public CIteratorInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CStandardDictionaryInternals
 
-class CStandardDictionaryInternals : public CDictionaryInternals {
+class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictionaryInternals> {
 	public:
 												// Lifecycle methods
 												CStandardDictionaryInternals(CDictionaryItemCopyProc itemCopyProc,
 														CDictionaryItemDisposeProc itemDisposeProc,
 														CDictionaryItemEqualsProc itemEqualsProc);
+												CStandardDictionaryInternals(const CStandardDictionaryInternals& other);
 												~CStandardDictionaryInternals();
 
-												// CDictionaryInternals methods
-				CDictionaryInternals*			addReference();
-				void							removeReference();
+												// TCopyOnWriteReferenceCountable methods
+				CStandardDictionaryInternals*	copy() const;
 
+												// TDictionaryInternals methods
 				CDictionaryKeyCount				getKeyCount();
 				OR<SDictionaryValue>			getValue(const CString& key);
 				CDictionaryInternals*			set(const CString& key, const SDictionaryValue& value);
@@ -119,7 +126,6 @@ class CStandardDictionaryInternals : public CDictionaryInternals {
 				CDictionaryItemEqualsProc		getItemEqualsProc() const;
 
 												// Private methods
-				CStandardDictionaryInternals*	prepareForWrite();
 				void							removeAllInternal();
 				void							remove(SDictionaryItemInfo* itemInfo, bool removeAll);
 
@@ -133,7 +139,6 @@ class CStandardDictionaryInternals : public CDictionaryInternals {
 		CDictionaryKeyCount			mCount;
 		SDictionaryItemInfo**		mItemInfos;
 		UInt32						mItemInfosCount;
-		UInt32						mReferenceCount;
 		UInt32						mReference;
 };
 
@@ -141,13 +146,49 @@ class CStandardDictionaryInternals : public CDictionaryInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 CStandardDictionaryInternals::CStandardDictionaryInternals(CDictionaryItemCopyProc itemCopyProc,
-		CDictionaryItemDisposeProc itemDisposeProc, CDictionaryItemEqualsProc itemEqualsProc) : CDictionaryInternals(),
-		mItemCopyProc(itemCopyProc), mItemDisposeProc(itemDisposeProc), mItemEqualsProc(itemEqualsProc), mCount(0),
-		mItemInfosCount(16), mReferenceCount(1), mReference(0)
+		CDictionaryItemDisposeProc itemDisposeProc, CDictionaryItemEqualsProc itemEqualsProc) :
+	TDictionaryInternals(),
+			mItemCopyProc(itemCopyProc), mItemDisposeProc(itemDisposeProc), mItemEqualsProc(itemEqualsProc), mCount(0),
+			mItemInfosCount(16), mReference(0)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	mItemInfos = (SDictionaryItemInfo**) ::calloc(mItemInfosCount, sizeof(SDictionaryItemInfo*));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CStandardDictionaryInternals::CStandardDictionaryInternals(const CStandardDictionaryInternals& other) :
+	TDictionaryInternals(other),
+			mItemCopyProc(other.mItemCopyProc), mItemDisposeProc(other.mItemDisposeProc),
+			mItemEqualsProc(other.mItemEqualsProc),
+			mCount(other.mCount), mItemInfosCount(other.mItemInfosCount), mReference(0)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mItemInfos = (SDictionaryItemInfo**) ::calloc(mItemInfosCount, sizeof(SDictionaryItemInfo*));
+
+	// Copy item infos
+	for (UInt32 i = 0; i < mItemInfosCount; i++) {
+		// Setup for this linked list
+		SDictionaryItemInfo*	itemInfo = other.mItemInfos[i];
+		SDictionaryItemInfo*	dictionaryInternalsItemInfo = nil;
+
+		while (itemInfo != nil) {
+			// Check for first in the linked list
+			if (dictionaryInternalsItemInfo == nil) {
+				// First in this linked list
+				mItemInfos[i] = new SDictionaryItemInfo(*itemInfo, mItemCopyProc);
+				dictionaryInternalsItemInfo = mItemInfos[i];
+			} else {
+				// Next one in this linked list
+				dictionaryInternalsItemInfo->mNextItemInfo = new SDictionaryItemInfo(*itemInfo, mItemCopyProc);
+				dictionaryInternalsItemInfo = dictionaryInternalsItemInfo->mNextItemInfo;
+			}
+
+			// Next
+			itemInfo = itemInfo->mNextItemInfo;
+		}
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -161,29 +202,7 @@ CStandardDictionaryInternals::~CStandardDictionaryInternals()
 	::free(mItemInfos);
 }
 
-// MARK: CDictionaryInternals methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CDictionaryInternals* CStandardDictionaryInternals::addReference()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Bump reference count
-	mReferenceCount++;
-
-	return this;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CStandardDictionaryInternals::removeReference()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Decrement reference count and check if we are the last one
-	if (--mReferenceCount == 0) {
-		// We going away
-		CStandardDictionaryInternals*	THIS = this;
-		DisposeOf(THIS);
-	}
-}
+// MARK: TDictionaryInternals methods
 
 //----------------------------------------------------------------------------------------------------------------------
 CDictionaryKeyCount CStandardDictionaryInternals::getKeyCount()
@@ -214,7 +233,7 @@ CDictionaryInternals* CStandardDictionaryInternals::set(const CString& key, cons
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Prepare for write
-	CStandardDictionaryInternals*	dictionaryInternals = prepareForWrite();
+	CStandardDictionaryInternals*	dictionaryInternals = (CStandardDictionaryInternals*) prepareForWrite();
 
 	// Setup
 	UInt32	hashValue = CHasher::getValueForHashable(key);
@@ -248,7 +267,7 @@ CDictionaryInternals* CStandardDictionaryInternals::set(const CString& key, cons
 		currentItemInfo->mItem.mValue = value;
 	}
 
-	return dictionaryInternals;
+	return (CDictionaryInternals*) dictionaryInternals;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -256,7 +275,7 @@ CDictionaryInternals* CStandardDictionaryInternals::remove(const CString& key)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Prepare for write
-	CStandardDictionaryInternals*	dictionaryInternals = prepareForWrite();
+	CStandardDictionaryInternals*	dictionaryInternals = (CStandardDictionaryInternals*) prepareForWrite();
 
 	// Setup
 	UInt32	hashValue = CHasher::getValueForHashable(key);
@@ -289,7 +308,7 @@ CDictionaryInternals* CStandardDictionaryInternals::remove(const CString& key)
 		dictionaryInternals->mReference++;
 	}
 
-	return dictionaryInternals;
+	return (CDictionaryInternals*) dictionaryInternals;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -299,10 +318,10 @@ CDictionaryInternals* CStandardDictionaryInternals::removeAll()
 	// Check if empty
 	if (mCount == 0)
 		// Nothing to remove
-		return this;
+		return (CDictionaryInternals*) this;
 
 	// Prepare for write
-	CStandardDictionaryInternals*	dictionaryInternals = prepareForWrite();
+	CStandardDictionaryInternals*	dictionaryInternals = (CStandardDictionaryInternals*) prepareForWrite();
 
 	// Remove all
 	dictionaryInternals->removeAllInternal();
@@ -311,7 +330,7 @@ CDictionaryInternals* CStandardDictionaryInternals::removeAll()
 	dictionaryInternals->mCount = 0;
 	dictionaryInternals->mReference++;
 
-	return dictionaryInternals;
+	return (CDictionaryInternals*) dictionaryInternals;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -342,52 +361,6 @@ CDictionaryItemEqualsProc CStandardDictionaryInternals::getItemEqualsProc() cons
 }
 
 // MARK: Private methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CStandardDictionaryInternals* CStandardDictionaryInternals::prepareForWrite()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check reference count.  If there is more than 1 reference, we implement a "copy on write".  So we will clone
-	//	ourselves so we have a personal buffer that can be changed while leaving the exiting buffer as-is for the other
-	//	references.
-	if (mReferenceCount > 1) {
-		// Multiple references, copy
-		CStandardDictionaryInternals*	dictionaryInternals =
-												new CStandardDictionaryInternals(mItemCopyProc, mItemDisposeProc,
-														mItemEqualsProc);
-		dictionaryInternals->mCount = mCount;
-		dictionaryInternals->mReference = mReference;
-
-		for (UInt32 i = 0; i < mItemInfosCount; i++) {
-			// Setup for this linked list
-			SDictionaryItemInfo*	itemInfo = mItemInfos[i];
-			SDictionaryItemInfo*	dictionaryInternalsItemInfo = nil;
-
-			while (itemInfo != nil) {
-				// Check for first in the linked list
-				if (dictionaryInternalsItemInfo == nil) {
-					// First in this linked list
-					dictionaryInternals->mItemInfos[i] = new SDictionaryItemInfo(*itemInfo, mItemCopyProc);
-					dictionaryInternalsItemInfo = dictionaryInternals->mItemInfos[i];
-				} else {
-					// Next one in this linked list
-					dictionaryInternalsItemInfo->mNextItemInfo = new SDictionaryItemInfo(*itemInfo, mItemCopyProc);
-					dictionaryInternalsItemInfo = dictionaryInternalsItemInfo->mNextItemInfo;
-				}
-
-				// Next
-				itemInfo = itemInfo->mNextItemInfo;
-			}
-		}
-
-		// One less reference here
-		mReferenceCount--;
-
-		return dictionaryInternals;
-	} else
-		// Only a single reference
-		return this;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CStandardDictionaryInternals::removeAllInternal()
@@ -458,90 +431,74 @@ void* CStandardDictionaryInternals::iteratorAdvance(CIteratorInfo& iteratorInfo)
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CProcsDictionaryInternals
 
-class CProcsDictionaryInternals : public CDictionaryInternals {
+class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryInternals> {
 	public:
-												// Lifecycle methods
-												CProcsDictionaryInternals(const SDictionaryProcsInfo& procsInfo) :
-													mProcsInfo(procsInfo), mReferenceCount(1)
-													{}
-												~CProcsDictionaryInternals()
-													{
-														// Call dispose user data proc
-														mProcsInfo.mDisposeUserDataProc(mProcsInfo.mUserData);
-													}
+											// Lifecycle methods
+											CProcsDictionaryInternals(const SDictionaryProcsInfo& procsInfo) :
+												TDictionaryInternals(),
+														mProcsInfo(procsInfo)
+												{}
+											CProcsDictionaryInternals(const CProcsDictionaryInternals& other) :
+												TDictionaryInternals(),
+														mProcsInfo(other.mProcsInfo)
+												{
+// TODO
+AssertFailUnimplemented();
+												}
+											~CProcsDictionaryInternals()
+												{ mProcsInfo.mDisposeUserDataProc(mProcsInfo.mUserData); }
 
-												// CDictionaryInternals methods
-				CDictionaryInternals*			addReference()
-													{ mReferenceCount++; return this; }
-				void							removeReference()
-													{
-														// Decrement reference count and check if we are the last one
-														if (--mReferenceCount == 0) {
-															// We going away
-															CProcsDictionaryInternals*	THIS = this;
-															DisposeOf(THIS);
-														}
-													}
+											// TDictionaryInternals methods
+				CDictionaryKeyCount			getKeyCount()
+												{ return mProcsInfo.mGetKeyCountProc(mProcsInfo.mUserData); }
+				OR<SDictionaryValue>		getValue(const CString& key)
+												{ return mProcsInfo.mGetValueProc(key, mProcsInfo.mUserData); }
+				CDictionaryInternals*		set(const CString& key, const SDictionaryValue& value)
+												{
+//													// Convert to standard dictionary
+//													CDictionaryInternals*	dictionaryInternals = prepareForWrite();
 
-				CDictionaryKeyCount				getKeyCount()
-													{ return mProcsInfo.mGetKeyCountProc(mProcsInfo.mUserData); }
-				OR<SDictionaryValue>			getValue(const CString& key)
-													{ return mProcsInfo.mGetValueProc(key, mProcsInfo.mUserData); }
-				CDictionaryInternals*			set(const CString& key, const SDictionaryValue& value)
-													{
-														// Convert to standard dictionary
-														CStandardDictionaryInternals*	dictionaryInternals =
-																								prepareForWrite();
+// TODO
+AssertFailUnimplemented();
 
-														// Do set
-														dictionaryInternals->set(key, value);
+//													return dictionaryInternals;
+return (CDictionaryInternals*) this;
+												}
+				CDictionaryInternals*		remove(const CString& key)
+												{
+//													// Convert to standard dictionary
+//													CDictionaryInternals*	dictionaryInternals = prepareForWrite();
 
-														return dictionaryInternals;
-													}
-				CDictionaryInternals*			remove(const CString& key)
-													{
-														// Convert to standard dictionary
-														CStandardDictionaryInternals*	dictionaryInternals =
-																								prepareForWrite();
+// TODO
+AssertFailUnimplemented();
 
-														// Do remove
-														dictionaryInternals->remove(key);
+//													return dictionaryInternals;
+return (CDictionaryInternals*) this;
+												}
+				CDictionaryInternals*		removeAll()
+												{
+//													// Convert to standard dictionary
+//													CDictionaryInternals*	dictionaryInternals = prepareForWrite();
 
-														return dictionaryInternals;
-													}
-				CDictionaryInternals*			removeAll()
-													{
-														// Convert to standard dictionary
-														CStandardDictionaryInternals*	dictionaryInternals =
-																								prepareForWrite();
+// TODO
+AssertFailUnimplemented();
 
-														// Do remove all
-														dictionaryInternals->removeAll();
+//													return dictionaryInternals;
+return (CDictionaryInternals*) this;
+												}
 
-														return dictionaryInternals;
-													}
-
-				TIteratorS<SDictionaryItem>		getIterator() const
-													{
+				TIteratorS<SDictionaryItem>	getIterator() const
+												{
 // TODO
 AssertFailUnimplemented();
 CIteratorInfo*	iteratorInfo = nil;
 return TIteratorS<SDictionaryItem>(nil, nil, *iteratorInfo);
-													}
+												}
 
-				CDictionaryItemEqualsProc		getItemEqualsProc() const
-													{ return nil; }
-
-												// Private methods
-				CStandardDictionaryInternals*	prepareForWrite()
-													{
-// TODO
-AssertFailUnimplemented();
-return nil;
-													}
+				CDictionaryItemEqualsProc	getItemEqualsProc() const
+												{ return nil; }
 
 		SDictionaryProcsInfo	mProcsInfo;
-		UInt32					mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -558,7 +515,8 @@ CDictionary::CDictionary(CDictionaryItemCopyProc itemCopyProc, CDictionaryItemDi
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CStandardDictionaryInternals(itemCopyProc, itemDisposeProc, itemEqualsProc);
+	mInternals =
+			(CDictionaryInternals*) new CStandardDictionaryInternals(itemCopyProc, itemDisposeProc, itemEqualsProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -566,7 +524,7 @@ CDictionary::CDictionary(const SDictionaryProcsInfo& procsInfo) : CEquatable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CProcsDictionaryInternals(procsInfo);
+	mInternals = (CDictionaryInternals*) new CProcsDictionaryInternals(procsInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -574,7 +532,7 @@ CDictionary::CDictionary(const CDictionary& other) : CEquatable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = other.mInternals->addReference();
+	mInternals = (CDictionaryInternals*) other.mInternals->addReference();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -788,119 +746,126 @@ UInt64 CDictionary::getUInt64(const CString& key, UInt64 defaultValue) const
 void CDictionary::set(const CString& key, bool value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const TArray<CDictionary>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const TArray<CString>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const CData& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const CDictionary& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const CString& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, Float32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, Float64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SInt8 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SInt16 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SInt64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, UInt8 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, UInt16 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, UInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, UInt64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, CDictionaryItemRef value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = mInternals->set(key, SDictionaryValue(value));
+	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDictionary::set(const CString& key, const SDictionaryValue& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = (CDictionaryInternals*) mInternals->set(key, value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -908,7 +873,7 @@ void CDictionary::remove(const CString& key)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove
-	mInternals = mInternals->remove(key);
+	mInternals = (CDictionaryInternals*) mInternals->remove(key);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -916,7 +881,7 @@ void CDictionary::removeAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove all
-	mInternals = mInternals->removeAll();
+	mInternals = (CDictionaryInternals*) mInternals->removeAll();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

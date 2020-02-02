@@ -57,7 +57,7 @@ TArray<CData> CPreferences::getDataArray(const SPref& pref, const CString& appli
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArray<CData>	array;
+	TNArray<CData>	array;
 	CFArrayRef		arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
 
 	// Check if have array

@@ -11,11 +11,11 @@
 // MARK: Array utilities
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CData> eArrayOfDatasFrom(CFArrayRef arrayRef)
+TNArray<CData> eArrayOfDatasFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArray<CData>	array;
+	TNArray<CData>	array;
 
 	// Get values
 	CFIndex		count = ::CFArrayGetCount(arrayRef);
@@ -29,11 +29,11 @@ TArray<CData> eArrayOfDatasFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CDictionary> eArrayOfDictionariesFrom(CFArrayRef arrayRef)
+TNArray<CDictionary> eArrayOfDictionariesFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArray<CDictionary>	array;
+	TNArray<CDictionary>	array;
 
 	// Get values
 	CFIndex			count = ::CFArrayGetCount(arrayRef);
@@ -47,11 +47,11 @@ TArray<CDictionary> eArrayOfDictionariesFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> eArrayOfStringsFrom(CFArrayRef arrayRef)
+TNArray<CString> eArrayOfStringsFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArray<CString>	array;
+	TNArray<CString>	array;
 
 	// Get values
 	CFIndex		count = ::CFArrayGetCount(arrayRef);

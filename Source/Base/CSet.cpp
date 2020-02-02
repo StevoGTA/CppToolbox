@@ -5,6 +5,7 @@
 #include "CSet.h"
 
 #include "CppToolboxAssert.h"
+#include "TReferenceTracking.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SSetItemInfo
@@ -64,15 +65,49 @@ struct CSetIteratorInfo : public CIteratorInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSetInternals
 
-class CSetInternals {
+class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 	public:
 										CSetInternals(bool ownsItems) :
-											mOwnsItems(ownsItems), mCount(0), mReferenceCount(1), mReference(0),
-													mItemInfosCount(16)
+											TCopyOnWriteReferenceCountable(),
+													mOwnsItems(ownsItems), mCount(0), mReference(0), mItemInfosCount(16)
 											{
 												mItemInfos =
 														(SSetItemInfo**)
 																::calloc(mItemInfosCount, sizeof(SSetItemInfo*));
+											}
+										CSetInternals(const CSetInternals& other) :
+											TCopyOnWriteReferenceCountable(),
+													mOwnsItems(other.mOwnsItems), mCount(other.mCount), mReference(0),
+													mItemInfosCount(other.mItemInfosCount)
+											{
+												// Ensure we do not own items
+												AssertFailIf(mOwnsItems && (mCount > 0));
+
+												// Finish setup
+												mItemInfos =
+														(SSetItemInfo**)
+																::calloc(mItemInfosCount, sizeof(SSetItemInfo*));
+
+												for (UInt32 i = 0; i < mItemInfosCount; i++) {
+													// Setup for this linked list
+													SSetItemInfo*	itemInfo = other.mItemInfos[i];
+													SSetItemInfo*	setInternalsItemInfo = nil;
+
+													while (itemInfo != nil) {
+														// Check for first in the linked list
+														if (setInternalsItemInfo == nil) {
+															// First in this linked list
+															mItemInfos[i] = new SSetItemInfo(*itemInfo);
+															setInternalsItemInfo = mItemInfos[i];
+														} else {
+															// Next one in this linked list
+															setInternalsItemInfo->mNextItemInfo =
+																	new SSetItemInfo(*itemInfo);
+															setInternalsItemInfo =
+																	setInternalsItemInfo->mNextItemInfo;
+														}
+													}
+												}
 											}
 										~CSetInternals()
 											{
@@ -87,62 +122,6 @@ class CSetInternals {
 												::free(mItemInfos);
 											}
 
-				CSetInternals*			addReference() { mReferenceCount++; return this; }
-				void					removeReference()
-											{
-												// Decrement reference count and check if we are the last one
-												if (--mReferenceCount == 0) {
-													// We going away
-													CSetInternals*	THIS = this;
-													DisposeOf(THIS);
-												}
-											}
-
-				CSetInternals*			prepareForWrite()
-											{
-												// Check reference count.  If there is more than 1 reference, we
-												//	implement a "copy on write".  So we will clone ourselves so we have
-												//	a personal buffer that can be changed while leaving the exiting
-												//	buffer as-is for the other references.
-												if (mReferenceCount > 1) {
-													// Ensure we do not own items
-													AssertFailIf(mOwnsItems && (mCount > 0));
-
-													// Multiple references, copy
-													CSetInternals*	setInternals = new CSetInternals(mOwnsItems);
-													setInternals->mCount = mCount;
-													setInternals->mReference = mReference;
-
-													for (UInt32 i = 0; i < mItemInfosCount; i++) {
-														// Setup for this linked list
-														SSetItemInfo*	itemInfo = mItemInfos[i];
-														SSetItemInfo*	setInternalsItemInfo = nil;
-
-														while (itemInfo != nil) {
-															// Check for first in the linked list
-															if (setInternalsItemInfo == nil) {
-																// First in this linked list
-																setInternals->mItemInfos[i] =
-																		new SSetItemInfo(*itemInfo);
-																setInternalsItemInfo = setInternals->mItemInfos[i];
-															} else {
-																// Next one in this linked list
-																setInternalsItemInfo->mNextItemInfo =
-																		new SSetItemInfo(*itemInfo);
-																setInternalsItemInfo =
-																		setInternalsItemInfo->mNextItemInfo;
-															}
-														}
-													}
-
-													// One less reference here
-													mReferenceCount--;
-
-													return setInternals;
-												} else
-													// Only a single reference
-													return this;
-											}
 				CSetInternals*			insert(const CHashable& hashable)
 											{
 												// Prepare for write
@@ -351,7 +330,6 @@ class CSetInternals {
 
 		bool			mOwnsItems;
 		CSetItemCount	mCount;
-		UInt32			mReferenceCount;
 		UInt32			mReference;
 
 		SSetItemInfo**	mItemInfos;

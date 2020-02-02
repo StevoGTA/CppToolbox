@@ -219,7 +219,7 @@ CDictionary CColorSet::getInfo() const
 
 	info.set(sNameKey, mInternals->mName);
 
-	TArray<CDictionary>	colorSetColorInfos;
+	TNArray<CDictionary>	colorSetColorInfos;
 	for (TIteratorS<SDictionaryItem> iterator = mInternals->mColorsMap.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Get info
@@ -281,7 +281,7 @@ class CColorRegistryInternals {
 								CDictionary	info;
 
 								// Collect info
-								TArray<CDictionary>	colorSetInfos;
+								TNArray<CDictionary>	colorSetInfos;
 								for (CArrayItemIndex i = 0; i < mColorSets.getCount(); i++)
 									// Add info
 									colorSetInfos += mColorSets[i]->getInfo();

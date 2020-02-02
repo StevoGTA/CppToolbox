@@ -58,7 +58,7 @@ static	CBinaryPropertyListSetup	sBinaryPropertyListSetup;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CBPLDataSource declaration
 
-class CBPLDataSource {
+class CBPLDataSource : public TReferenceCountable<CBPLDataSource> {
 	public:
 							// Lifecycle methods
 							CBPLDataSource(const CByteParceller& byteParceller, UInt8 objectOffsetFieldSize,
@@ -67,9 +67,6 @@ class CBPLDataSource {
 							~CBPLDataSource();
 
 							// Instance methods
-		CBPLDataSource*		addReference();
-		void				removeReference();
-
 		void				readData(SInt64 offset, void* buffer, UInt64 byteCount, const char* errorWhen);
 		UInt8				readMarker(UInt64 objectIndex, OR<UInt64> count = OR<UInt64>());
 		UInt64				readIndex();
@@ -82,7 +79,6 @@ class CBPLDataSource {
 		SDictionaryValue*	createDictionaryValue(UInt64 objectIndex);
 
 		CByteParceller	mByteParceller;
-		UInt32			mReferenceCount;
 		UError			mError;
 
 		UInt8			mObjectIndexFieldSize;
@@ -209,7 +205,7 @@ class CBPLDictionaryInfo {
 //----------------------------------------------------------------------------------------------------------------------
 CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 objectOffsetFieldSize,
 		UInt8 objectIndexFieldSize, UInt64 totalObjectCount, UInt64 objectOffsetTableOffset) :
-	mByteParceller(byteParceller), mReferenceCount(1), mError(kNoError), mObjectIndexFieldSize(objectIndexFieldSize),
+	TReferenceCountable(), mByteParceller(byteParceller), mError(kNoError), mObjectIndexFieldSize(objectIndexFieldSize),
 			mTotalObjectCount(totalObjectCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -258,28 +254,6 @@ CBPLDataSource::~CBPLDataSource()
 		DisposeOf(mStrings[i]);
 	}
 	DisposeOfArray(mStrings);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CBPLDataSource* CBPLDataSource::addReference()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Add reference count
-	mReferenceCount++;
-
-	return this;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CBPLDataSource::removeReference()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Decrement reference count and check if we are the last one
-	if (--mReferenceCount == 0) {
-		// We going away
-		CBPLDataSource*	THIS = this;
-		DisposeOf(THIS);
-	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -436,7 +410,7 @@ AssertFailUnimplemented();
 
 				case kMarkerTypeDictionary: {
 					// Dictionary
-					TArray<CDictionary>	array;
+					TNArray<CDictionary>	array;
 					for (UInt64 i = 0; i < count; i++)
 						// Add dictionary
 						array.add(readDictionary(objectIndexes[i]));
@@ -459,7 +433,7 @@ AssertFailUnimplemented();
 				case kMarkerTypeStringASCII:
 				case kMarkerTypeStringUnicode16: {
 					// String
-					TArray<CString>	array;
+					TNArray<CString>	array;
 					for (UInt64 i = 0; i < count; i++)
 						// Add string
 						array.add(*mStrings[objectIndexes[i]]);

@@ -26,71 +26,51 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFileWriterInternals
 
-class CFileWriterInternals {
+class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 	public:
-								CFileWriterInternals(const CFile& file) :
-									mFile(file), mReferenceCount(1), mRemoveIfNotClosed(false), mFILE(nil), mFD(-1)
-									{}
-								~CFileWriterInternals()
-									{
-										// Check if need to remove
-										bool	needToRemove = mRemoveIfNotClosed && ((mFILE != nil) || (mFD != -1));
+				CFileWriterInternals(const CFile& file) :
+					TReferenceCountable(), mFile(file), mRemoveIfNotClosed(false), mFILE(nil), mFD(-1)
+					{}
+				~CFileWriterInternals()
+					{
+						// Check if need to remove
+						bool	needToRemove = mRemoveIfNotClosed && ((mFILE != nil) || (mFD != -1));
 
-										// Close
-										close();
+						// Close
+						close();
 
-										// Check if need to remove
-										if (needToRemove)
-											// Remove
-											mFile.remove();
-									}
+						// Check if need to remove
+						if (needToRemove)
+							// Remove
+							mFile.remove();
+					}
 
-		CFileWriterInternals*	addReference()
-									{ mReferenceCount++; return this; }
-		void					removeReference()
-									{
-										// Remove reference and see if we are the last one
-										if (--mReferenceCount == 0) {
-											// Last one
-											CFileWriterInternals*	THIS = this;
-											DisposeOf(THIS);
-										}
-									}
+		UError	write(const void* buffer, UInt64 byteCount)
+					{
+						// Check open mode
+						if (mFILE != nil) {
+							// Write to FILE
+							size_t	bytesWritten = ::fwrite(buffer, 1, (size_t) byteCount, mFILE);
 
-		UError					write(const void* buffer, UInt64 byteCount)
-									{
-										// Check open mode
-										if (mFILE != nil) {
-											// Write to FILE
-											size_t	bytesWritten = ::fwrite(buffer, 1, (size_t) byteCount, mFILE);
-											if (bytesWritten == byteCount)
-												// Success
-												return kNoError;
-											else
-												// Unable to write
-												return kFileUnableToWriteError;
-										} else if (mFD != -1) {
-											// Write to file
-											ssize_t	bytes = ::write(mFD, buffer, (size_t) byteCount);
-											if (bytes != -1)
-												// Success
-												return kNoError;
-											else
-												// Unable to write
-												return MAKE_UError(kPOSIXErrorDomain, errno);
-										} else
-											// Not open
-											return kFileNotOpenError;
-									}
-		UError					close()
-									{
-										if (mFILE != nil)
-											::fclose(mFILE);
-										if (mFD != -1)
-											::close(mFD);
+							return (bytesWritten == byteCount) ? kNoError : kFileUnableToWriteError;
+						} else if (mFD != -1) {
+							// Write to file
+							ssize_t	bytes = ::write(mFD, buffer, (size_t) byteCount);
 
-										return kNoError;
-									}
+							return (bytes != -1) ? kNoError : MAKE_UError(kPOSIXErrorDomain, errno);
+						} else
+							// Not open
+							return kFileNotOpenError;
+					}
+		UError	close()
+					{
+						if (mFILE != nil)
+							::fclose(mFILE);
+						if (mFD != -1)
+							::close(mFD);
+
+						return kNoError;
+					}
 
 		CFile	mFile;
 		UInt32	mReferenceCount;

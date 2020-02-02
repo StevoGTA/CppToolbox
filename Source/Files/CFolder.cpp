@@ -22,45 +22,18 @@ static	CFolderSetup	sFolderSetup;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFolderInternals
 
-class CFolderInternals {
+class CFolderInternals : public TCopyOnWriteReferenceCountable<CFolderInternals> {
 	public:
-							CFolderInternals(const CFilesystemPath& filesystemPath) :
-								mFilesystemPath(filesystemPath), mReferenceCount(1)
-								{}
-							~CFolderInternals() {}
-
-		CFolderInternals*	addReference()
-								{ mReferenceCount++; return this; }
-		void				removeReference()
-								{
-									// Remove reference and see if we are the last one
-									if (--mReferenceCount == 0) {
-										// Last one
-										CFolderInternals*	THIS = this;
-										DisposeOf(THIS);
-									}
-								}
-		CFolderInternals*	prepareForWrite()
-								{
-									// Check reference count.  If there is more than 1 reference, we
-									//	implement a "copy on write".  So we will clone ourselves so we
-									//	have a personal buffer that can be changed while leaving the
-									//	exiting buffer as-is for the other references.
-									if (mReferenceCount > 1) {
-										// Multiple references, copy
-										CFolderInternals*	folderInternals = new CFolderInternals(mFilesystemPath);
-
-										// One less reference
-										mReferenceCount--;
-
-										return folderInternals;
-									} else
-										// Only a single reference
-										return this;
-								}
+		CFolderInternals(const CFilesystemPath& filesystemPath) :
+			TCopyOnWriteReferenceCountable(),
+					mFilesystemPath(filesystemPath)
+			{}
+		CFolderInternals(const CFolderInternals& other) :
+			TCopyOnWriteReferenceCountable(),
+					mFilesystemPath(other.mFilesystemPath)
+			{}
 
 		CFilesystemPath	mFilesystemPath;
-		UInt32			mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

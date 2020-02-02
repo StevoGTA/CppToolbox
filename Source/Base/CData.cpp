@@ -16,11 +16,11 @@ CData	CData::mZeroByte("", 1, false);
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDataInternals
 
-class CDataInternals {
+class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 	public:
 						CDataInternals(CDataSize initialSize, const void* initialBuffer = nil,
 								bool copySourceData = true) :
-							mFreeOnDelete(copySourceData), mBufferSize(initialSize), mReferenceCount(1)
+							TCopyOnWriteReferenceCountable(), mFreeOnDelete(copySourceData), mBufferSize(initialSize)
 							{
 								// Check for initial buffer
 								if (initialBuffer != nil) {
@@ -42,6 +42,16 @@ class CDataInternals {
 									// mBufferSize 0, initialBuffer nil
 									mBuffer = nil;
 							}
+						CDataInternals(const CDataInternals& other) :
+							TCopyOnWriteReferenceCountable(), mFreeOnDelete(true),
+									mBuffer((other.mBufferSize > 0) ? ::malloc(other.mBufferSize) : nil),
+									mBufferSize(other.mBufferSize)
+							{
+								// Do we have any data
+								if (mBufferSize > 0)
+									// Copy data
+									::memcpy(mBuffer, other.mBuffer, mBufferSize);
+							}
 						~CDataInternals()
 							{
 								// Cleanup
@@ -50,35 +60,6 @@ class CDataInternals {
 									::free(mBuffer);
 							}
 
-		CDataInternals*	addReference() { mReferenceCount++; return this; }
-		void			removeReference()
-							{
-								// Decrement reference count and check if we are the last one
-								if (--mReferenceCount == 0) {
-									// We going away
-									CDataInternals*	THIS = this;
-									DisposeOf(THIS);
-								}
-							}
-
-		CDataInternals*	prepareForWrite()
-							{
-								// Check reference count.  If there is more than 1 reference, we implement a
-								//	"copy on write".  So we will clone ourselves so we have a personal buffer that
-								//	can be changed while leaving the exiting buffer as-is for the other references.
-								if (mReferenceCount > 1) {
-									// Multiple references, copy
-									CDataInternals*	copy = new CDataInternals(mBufferSize);
-									::memcpy(copy->mBuffer, mBuffer, mBufferSize);
-
-									// One less reference here
-									mReferenceCount--;
-
-									return copy;
-								} else
-									// Only a single reference
-									return this;
-							}
 		CDataInternals*	setSize(CDataSize size)
 							{
 								// Prepare for write
@@ -94,7 +75,6 @@ class CDataInternals {
 		bool		mFreeOnDelete;
 		void*		mBuffer;
 		CDataSize	mBufferSize;
-		UInt32		mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

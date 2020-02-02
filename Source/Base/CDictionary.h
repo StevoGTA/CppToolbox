@@ -77,9 +77,9 @@ class CDictionary : public CEquatable {
 						bool						getBool(const CString& key, bool defaultValue = false) const;
 				const	TArray<CDictionary>&		getArrayOfDictionaries(const CString& key,
 															const TArray<CDictionary>& defaultValue =
-																	TArray<CDictionary>()) const;
+																	TNArray<CDictionary>()) const;
 				const	TArray<CString>&			getArrayOfStrings(const CString& key,
-															const TArray<CString>& defaultValue = TArray<CString>())
+															const TArray<CString>& defaultValue = TNArray<CString>())
 															const;
 				const	CData&						getData(const CString& key,
 															const CData& defaultValue = CData::mEmpty) const;
@@ -149,6 +149,7 @@ class CDictionary : public CEquatable {
 						void						set(const CString& key, UInt32 value);
 						void						set(const CString& key, UInt64 value);
 						void						set(const CString& key, CDictionaryItemRef value);
+						void						set(const CString& key, const SDictionaryValue& value);
 
 	virtual				void						remove(const CString& key);
 	virtual				void						removeAll();
@@ -221,8 +222,8 @@ struct SDictionaryValue {
 
 				bool					getBool(bool defaultValue = false) const;
 		const	TArray<CDictionary>&	getArrayOfDictionaries(
-												const TArray<CDictionary>& defaultValue = TArray<CDictionary>()) const;
-		const	TArray<CString>&		getArrayOfStrings(const TArray<CString>& defaultValue = TArray<CString>())
+												const TArray<CDictionary>& defaultValue = TNArray<CDictionary>()) const;
+		const	TArray<CString>&		getArrayOfStrings(const TArray<CString>& defaultValue = TNArray<CString>())
 												const;
 		const	CData&					getData(const CData& defaultValue = CData::mEmpty) const;
 		const	CDictionary&			getDictionary(const CDictionary& defaultValue = CDictionary::mEmpty) const;

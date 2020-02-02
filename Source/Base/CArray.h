@@ -68,6 +68,8 @@ class CArray : public CEquatable {
 											CArray(const CArray& other);
 
 											// Instance methods
+				CArrayItemRef				copy(const CArrayItemRef itemRef) const;
+
 				CArray&						add(const CArrayItemRef itemRef, bool avoidDuplicates = false);
 				CArray&						addFrom(const CArray& other, bool avoidDuplicates = false);
 
@@ -114,11 +116,12 @@ template <typename T> class TArray : public CArray {
 	// Methods
 	public:
 											// Lifecycle methods
-											TArray(CArrayItemCount initialCapacity = 0) :
-												CArray(initialCapacity, (CArrayItemCopyProc) copy, dispose)
+											TArray(CArrayItemCopyProc itemCopyProc) :
+												CArray(0, itemCopyProc, dispose)
 												{}
 //											TArray(bool ownsItems) : CArray(0, ownsItems ? dispose : nil) {}
-											TArray(const T& item) : CArray(0, (CArrayItemCopyProc) copy, dispose)
+											TArray(const T& item, CArrayItemCopyProc itemCopyProc) :
+												CArray(0, itemCopyProc, dispose)
 												{ CArray::add(new T(item), false); }
 //											TArray(const CArray& array, T (mappingProc)(CArrayItemRef item)) : CArray()
 //												{
@@ -135,7 +138,7 @@ template <typename T> class TArray : public CArray {
 
 											// CArray methods
 						TArray<T>&			add(const T& item)
-												{ CArray::add(new T(item)); return *this; }
+												{ CArray::add(CArray::copy(&item)); return *this; }
 						TArray<T>&			addFrom(const TArray<T>& array)
 												{
 													// Iterate all
@@ -281,10 +284,40 @@ template <typename T> class TArray : public CArray {
 
 	private:
 											// Class methods
-		static	T*							copy(CArrayItemRef itemRef)
-												{ return new T(*((T*) itemRef)); }
 		static	void						dispose(CArrayItemRef itemRef)
 												{ T* t = (T*) itemRef; DisposeOf(t); }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNArray (TArray where copy happens through new T())
+
+template <typename T> class TNArray : public TArray<T> {
+	// Methods
+	public:
+					// Lifecycle methods
+					TNArray() : TArray<T>((CArrayItemCopyProc) copy) {}
+					TNArray(const T& item) : TArray<T>(item, (CArrayItemCopyProc) copy) {}
+
+	private:
+					// Class methods
+		static	T*	copy(CArrayItemRef itemRef)
+						{ return new T(*((T*) itemRef)); }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TCArray (TArray where copy happens trhough itemRef->copy())
+
+template <typename T> class TCArray : public TArray<T> {
+	// Methods
+	public:
+					// Lifecycle methods
+					TCArray() : TArray<T>((CArrayItemCopyProc) copy) {}
+					TCArray(const T& item) : TArray<T>(item, (CArrayItemCopyProc) copy) {}
+
+	private:
+					// Class methods
+		static	T*	copy(CArrayItemRef itemRef)
+						{ return ((T*) itemRef)->copy(); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

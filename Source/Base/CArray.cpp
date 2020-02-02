@@ -45,22 +45,42 @@ class CArrayIteratorInfo : public CIteratorInfo {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CArray2Internals
+// MARK: - CArrayInternals
 
-class CArrayInternals {
+class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 	public:
 											CArrayInternals(CArrayItemCount initialCapacity,
 													CArrayItemCopyProc itemCopyProc,
 													CArrayItemDisposeProc itemDisposeProc) :
-												mIsSorted(true), mCount(0), mItemCopyProc(itemCopyProc),
-														mItemDisposeProc(itemDisposeProc), mReferenceCount(1),
-														mReference(0)
+												TCopyOnWriteReferenceCountable(),
+														mIsSorted(true),
+														mCapacity(std::max(initialCapacity, (UInt32) 10)), mCount(0),
+														mItemRefs(
+																(CArrayItemRef*)
+																		::calloc(mCapacity, sizeof(CArrayItemRef))),
+														mItemCopyProc(itemCopyProc),
+														mItemDisposeProc(itemDisposeProc), mReference(0)
+												{}
+											CArrayInternals(const CArrayInternals& other) :
+												TCopyOnWriteReferenceCountable(),
+														mIsSorted(other.mIsSorted), mCapacity(other.mCount),
+														mCount(other.mCount),
+														mItemRefs(
+																(CArrayItemRef*)
+																		::calloc(mCapacity, sizeof(CArrayItemRef))),
+														mItemCopyProc(other.mItemCopyProc),
+														mItemDisposeProc(other.mItemDisposeProc), mReference(0)
 												{
-													// Allocate at least some minimum
-													mCapacity = std::max(initialCapacity, (UInt32) 10);
-													mItemRefs =
-															(CArrayItemRef*)
-																	::malloc(mCapacity * sizeof(CArrayItemRef));
+													// Check if have item copy proc
+													if (mItemCopyProc != nil) {
+														// Copy each item
+														for (CArrayItemIndex i = 0; i < mCount; i++)
+															// Copy item
+															mItemRefs[i] = mItemCopyProc(other.mItemRefs[i]);
+													} else
+														// Copy item refs
+														::memcpy(mItemRefs, other.mItemRefs,
+																mCount * sizeof(CArrayItemRef));
 												}
 											~CArrayInternals()
 												{
@@ -69,17 +89,6 @@ class CArrayInternals {
 
 													// Cleanup
 													::free(mItemRefs);
-												}
-
-				CArrayInternals*			addReference() { mReferenceCount++; return this; }
-				void						removeReference()
-												{
-													// Decrement reference count and check if we are the last one
-													if (--mReferenceCount == 0) {
-														// We going away
-														CArrayInternals*	THIS = this;
-														DisposeOf(THIS);
-													}
 												}
 
 				OV<CArrayItemIndex>			getIndexOf(const CArrayItemRef itemRef) const
@@ -95,39 +104,6 @@ class CArrayInternals {
 													}
 
 													return OV<CArrayItemIndex>();
-												}
-				CArrayInternals*			prepareForWrite()
-												{
-													// Check reference count.  If there is more than 1 reference, we
-													//	implement a "copy on write".  So we will clone ourselves so we
-													//	have a personal buffer that can be changed while leaving the
-													//	exiting buffer as-is for the other references.
-													if (mReferenceCount > 1) {
-														// Multiple references, copy
-														CArrayInternals*	arrayInternals =
-																					new CArrayInternals(mCount,
-																							mItemCopyProc,
-																							mItemDisposeProc);
-														arrayInternals->mCount = mCount;
-														arrayInternals->mIsSorted = mIsSorted;
-														if (mItemCopyProc != nil) {
-															// Copy each item
-															for (CArrayItemIndex i = 0; i < mCount; i++)
-																// Copy item
-																arrayInternals->mItemRefs[i] =
-																		mItemCopyProc(mItemRefs[i]);
-														} else
-															// Copy item refs
-															::memcpy(arrayInternals->mItemRefs, mItemRefs,
-																	mCount * sizeof(CArrayItemRef));
-
-														// One less reference here
-														mReferenceCount--;
-
-														return arrayInternals;
-													} else
-														// Only a single reference
-														return this;
 												}
 
 				CArrayInternals*			append(const CArrayItemRef* itemRefs, CArrayItemCount count,
@@ -307,7 +283,6 @@ class CArrayInternals {
 		CArrayItemRef*			mItemRefs;
 		CArrayItemCopyProc		mItemCopyProc;
 		CArrayItemDisposeProc	mItemDisposeProc;
-		UInt32					mReferenceCount;
 		UInt32					mReference;
 };
 
@@ -348,6 +323,13 @@ CArray::~CArray()
 }
 
 // MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CArrayItemRef CArray::copy(const CArrayItemRef itemRef) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mItemCopyProc(itemRef);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 CArray& CArray::add(const CArrayItemRef itemRef, bool avoidDuplicates)

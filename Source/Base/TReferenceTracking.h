@@ -5,42 +5,58 @@
 #pragma once
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SReferenceTracker
-struct SReferenceTracker {
-	// Methods
+// MARK: TReferenceCountable
+
+template <typename T> class TReferenceCountable {
 	public:
-									// Lifecycle methods
-									SReferenceTracker() : mReferenceCount(1) {}
-		virtual						~SReferenceTracker() {}
+						// Lifecycle methods
+						TReferenceCountable() : mReferenceCount(1) {}
+		virtual			~TReferenceCountable() {}
 
-									// Instance methods
-				SReferenceTracker*	addReference()
-										{ mReferenceCount++; return this; }
-				void				removeReference()
-										{
-											// One less reference
-											if (--mReferenceCount == 0) {
-												// Dispose of us
-												SReferenceTracker*	THIS = this;
-												DisposeOf(THIS);
-											}
-										}
+						// Instance methods
+				T*		addReference()
+							{ mReferenceCount++; return (T*) this; }
+				void	removeReference()
+							{
+								// Decrement reference count and check if we are the last one
+								if (--mReferenceCount == 0) {
+									// We going away
+									T*	THIS = (T*) this;
+									DisposeOf(THIS);
+								}
+							}
+				UInt32	getReferenceCount() const
+							{ return mReferenceCount; }
 
-	// Properties
 	private:
 		UInt32	mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SObjectReferenceTracker
-template <typename T> struct SObjectReferenceTracker : public SReferenceTracker {
-	// Methods
-	public:
-		// Lifecycle methods
-		SObjectReferenceTracker(T* object) : SReferenceTracker(), mObject(object) {}
-		~SObjectReferenceTracker() { DisposeOf(mObject); }
+// MARK: TCopyOnWriteReferenceCountable
 
-	// Properties
+template <typename T> class TCopyOnWriteReferenceCountable : public TReferenceCountable<T> {
 	public:
-		T*	mObject;
+			// Lifecycle methods
+			TCopyOnWriteReferenceCountable() : TReferenceCountable<T>() {}
+			~TCopyOnWriteReferenceCountable() {}
+
+			// Instance methods
+		T*	prepareForWrite()
+				{
+					// Check reference count.  If there is more than 1 reference, we implement a
+					//	"copy on write".  So we will clone ourselves so we have a personal buffer that
+					//	can be changed while leaving the exiting buffer as-is for the other references.
+					if (TReferenceCountable<T>::getReferenceCount() > 1) {
+						// Multiple references
+						TReferenceCountable<T>::removeReference();
+
+						return new T((T&) *this);
+					} else
+						// Only a single reference
+						return (T*) this;
+				}
+
+	private:
+		UInt32	mReferenceCount;
 };

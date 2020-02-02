@@ -96,4 +96,14 @@ template <typename T> struct SNumberWrapper {
 struct SNumber {
 					// Class methods
 	static	UInt16	getNextPowerOf2(UInt16 value);
+
+	static	bool	randomBool();
+
+	static	Float32	randomFloat32(Float32 min, Float32 max);
+	static	Float32	randomFloat32(Float32 max)
+						{ return randomFloat32(0.0, max); }
+
+	static	UInt32	randomUInt32(UInt32 min, UInt32 max);
+	static	UInt32	randomUInt32(UInt32 max)
+						{ return randomUInt32(0.0, max); }
 };

@@ -38,9 +38,9 @@ UError CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destination
 				destinationFolder);
 
 	// Get contents of source folder
-	TArray<CFolder>	folders;
-	TArray<CFile>	files;
-	UError			error;
+	TNArray<CFolder>	folders;
+	TNArray<CFile>		files;
+	UError				error;
 	error = getFoldersFiles(sourceFolder, folders, files);
 	ReturnErrorIfError(error);
 

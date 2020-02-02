@@ -28,18 +28,20 @@ struct SGPUTextureManagerInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureReferenceInternals
 
-class CGPUTextureReferenceInternals {
+class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureReferenceInternals> {
 	public:
 												CGPUTextureReferenceInternals(const OR<const CString>& reference,
 														const OV<EGPUTextureFormat>& gpuTextureFormat,
 														EGPUTextureReferenceOptions gpuTextureReferenceOptions,
 														SGPUTextureManagerInfo& gpuTextureManagerInfo) :
-													mReference(reference.hasReference() ? *reference : CString::mEmpty),
+													TReferenceCountable(),
+															mReference(reference.hasReference() ?
+																	*reference : CString::mEmpty),
 															mGPUTextureFormat(gpuTextureFormat),
 															mGPUTextureReferenceOptions(gpuTextureReferenceOptions),
 															mGPUTextureManagerInfo(gpuTextureManagerInfo),
 															mWorkItem(nil), mFinishLoadingTriggered(false),
-															mGPUTexture(nil), mReferenceCount(0)
+															mGPUTexture(nil)
 													{
 														// Note reference
 														mGPUTextureManagerInfo.mGPUTextureReferenceInternals += this;
@@ -51,17 +53,6 @@ class CGPUTextureReferenceInternals {
 
 														// Cleanup
 														DisposeOf(mGPUTexture);
-													}
-
-				CGPUTextureReferenceInternals*	addReference() { mReferenceCount++; return this; }
-				void							removeReference()
-													{
-														// Decrement and see if we are the last one
-														if (--mReferenceCount == 0) {
-															// Dispose
-															CGPUTextureReferenceInternals*	THIS = this;
-															DisposeOf(THIS);
-														}
 													}
 
 				bool							getIsLoaded() const
@@ -173,8 +164,6 @@ class CGPUTextureReferenceInternals {
 		bool							mFinishLoadingTriggered;
 		CGPUTexture*					mGPUTexture;
 		SGPUTextureInfo					mGPUTextureInfo;
-
-		UInt32							mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -375,7 +364,7 @@ class CBitmapProcGPUTextureReferenceInternals : public CBitmapGPUTextureReferenc
 CGPUTextureReference::CGPUTextureReference(CGPUTextureReferenceInternals* internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = internals->addReference();
+	mInternals = internals;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -430,25 +419,10 @@ const SGPUTextureInfo& CGPUTextureReference::getGPUTextureInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureManagerInternals
 
-class CGPUTextureManagerInternals {
+class CGPUTextureManagerInternals : public TReferenceCountable<CGPUTextureManagerInternals> {
 	public:
-										CGPUTextureManagerInternals(CGPU& gpu) :
-											mReferenceCount(1), mGPUTextureManagerInfo(gpu) {}
-										~CGPUTextureManagerInternals() {}
+		CGPUTextureManagerInternals(CGPU& gpu) : TReferenceCountable(), mGPUTextureManagerInfo(gpu) {}
 
-		CGPUTextureManagerInternals*	addReference()
-											{ mReferenceCount++; return this; }
-		void							removeReference()
-											{
-												// Decrement reference count and check if we are the last one
-												if (--mReferenceCount == 0) {
-													// We going away
-													CGPUTextureManagerInternals*	THIS = this;
-													DisposeOf(THIS);
-												}
-											}
-
-		UInt32					mReferenceCount;
 		SGPUTextureManagerInfo	mGPUTextureManagerInfo;
 };
 
