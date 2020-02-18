@@ -7,13 +7,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderObject2DInternals
 
-class CGPURenderObject2DInternals {
+class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2DInternals> {
 	public:
 		CGPURenderObject2DInternals(const CGPUTextureReference& gpuTextureReference) :
-			mGPUTextureReference(gpuTextureReference), mAngleRadians(0.0), mAlpha(1.0),
-			mScale(1.0, 1.0)
+			TReferenceCountable(),
+					mGPUTextureReference(gpuTextureReference), mAngleRadians(0.0), mAlpha(1.0), mScale(1.0, 1.0)
 			{}
-		~CGPURenderObject2DInternals() {}
 
 		CGPUTextureReference	mGPUTextureReference;
 
@@ -31,19 +30,24 @@ class CGPURenderObject2DInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderObject2D::CGPURenderObject2D(const CGPUTextureReference& gpuTextureReference)
+CGPURenderObject2D::CGPURenderObject2D(const CGPUTextureReference& gpuTextureReference) : CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
 	mInternals = new CGPURenderObject2DInternals(gpuTextureReference);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPURenderObject2D::CGPURenderObject2D(const CGPURenderObject2D& other) : CGPURenderObject(other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CGPURenderObject2D::~CGPURenderObject2D()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Cleanup
-	DisposeOf(mInternals);
+	mInternals->removeReference();
 }
 
 // MARK: CGPURenderObject
@@ -139,10 +143,6 @@ void CGPURenderObject2D::render(CGPU& gpu, const S2DPoint32& offset) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-			Float32				a = -mInternals->mAngleRadians;
-			Float32				cosA = cosf(a);
-			Float32				sinA = sinf(a);
-
 	const	SGPUTextureInfo&	gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
 			SGPUVertexBuffer	gpuVertexBuffer = gpu.allocateVertexBuffer(kGPUVertexBufferType2Vertex2Texture, 4);
 
@@ -155,35 +155,176 @@ void CGPURenderObject2D::render(CGPU& gpu, const S2DPoint32& offset) const
 	// Points are UL, UR, LL, LR
 	Float32*	bufferPtr = (Float32*) gpuVertexBuffer.mData.getMutableBytePtr();
 
-	// Rotate around anchor point, then scale, then position on screen
+	// Check angle
 	Float32	dx, dy;
-	dx = 0.0f - mInternals->mAnchorPoint.mX;
-	dy = textureHeight - mInternals->mAnchorPoint.mY;
-	bufferPtr[0] = (cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
-	bufferPtr[1] = (sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
-	bufferPtr[2] = 0.0;
-	bufferPtr[3] = maxV;
+	if (mInternals->mAngleRadians == 0.0) {
+		// No rotation
+		dx = 0.0f - mInternals->mAnchorPoint.mX;
+		dy = textureHeight - mInternals->mAnchorPoint.mY;
+		bufferPtr[0] = dx * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[1] = dy * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[2] = 0.0;
+		bufferPtr[3] = maxV;
 
-	dx = textureWidth - mInternals->mAnchorPoint.mX;
-	dy = textureHeight - mInternals->mAnchorPoint.mY;
-	bufferPtr[4] = (cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
-	bufferPtr[5] = (sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
-	bufferPtr[6] = maxU;
-	bufferPtr[7] = maxV;
+		dx = textureWidth - mInternals->mAnchorPoint.mX;
+		dy = textureHeight - mInternals->mAnchorPoint.mY;
+		bufferPtr[4] = dx * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[5] = dy * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[6] = maxU;
+		bufferPtr[7] = maxV;
 
-	dx = 0.0f - mInternals->mAnchorPoint.mX;
-	dy = 0.0f - mInternals->mAnchorPoint.mY;
-	bufferPtr[8] = (cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
-	bufferPtr[9] = (sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
-	bufferPtr[10] = 0.0;
-	bufferPtr[11] = 0.0;
+		dx = 0.0f - mInternals->mAnchorPoint.mX;
+		dy = 0.0f - mInternals->mAnchorPoint.mY;
+		bufferPtr[8] = dx * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[9] = dy * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[10] = 0.0;
+		bufferPtr[11] = 0.0;
 
-	dx = textureWidth - mInternals->mAnchorPoint.mX;
-	dy = 0.0f - mInternals->mAnchorPoint.mY;
-	bufferPtr[12] = (cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
-	bufferPtr[13] = (sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
-	bufferPtr[14] = maxU;
-	bufferPtr[15] = 0.0;
+		dx = textureWidth - mInternals->mAnchorPoint.mX;
+		dy = 0.0f - mInternals->mAnchorPoint.mY;
+		bufferPtr[12] = dx * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[13] = dy * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[14] = maxU;
+		bufferPtr[15] = 0.0;
+	} else {
+		// Rotate around anchor point, then scale, then position on screen
+		Float32	cosA = cosf(-mInternals->mAngleRadians);
+		Float32	sinA = sinf(-mInternals->mAngleRadians);
+
+		dx = 0.0f - mInternals->mAnchorPoint.mX;
+		dy = textureHeight - mInternals->mAnchorPoint.mY;
+		bufferPtr[0] =
+				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[1] =
+				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[2] = 0.0;
+		bufferPtr[3] = maxV;
+
+		dx = textureWidth - mInternals->mAnchorPoint.mX;
+		dy = textureHeight - mInternals->mAnchorPoint.mY;
+		bufferPtr[4] =
+				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[5] =
+				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[6] = maxU;
+		bufferPtr[7] = maxV;
+
+		dx = 0.0f - mInternals->mAnchorPoint.mX;
+		dy = 0.0f - mInternals->mAnchorPoint.mY;
+		bufferPtr[8] =
+				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[9] =
+				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[10] = 0.0;
+		bufferPtr[11] = 0.0;
+
+		dx = textureWidth - mInternals->mAnchorPoint.mX;
+		dy = 0.0f - mInternals->mAnchorPoint.mY;
+		bufferPtr[12] =
+				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[13] =
+				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[14] = maxU;
+		bufferPtr[15] = 0.0;
+	}
+
+	// Draw
+	gpu.renderTriangleStrip(gpuVertexBuffer, 4, gpuTextureInfo, OV<Float32>(mInternals->mAlpha));
+
+	// Cleanup
+	gpu.disposeBuffer(gpuVertexBuffer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPURenderObject2D::render(CGPU& gpu, const S2DRect32& rect, const S2DPoint32& offset) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+// Does not support angle, scale, nor anchor point
+	// Setup
+	const	SGPUTextureInfo&	gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
+			SGPUVertexBuffer	gpuVertexBuffer = gpu.allocateVertexBuffer(kGPUVertexBufferType2Vertex2Texture, 4);
+
+			Float32				textureWidth = gpuTextureInfo.mGPUTextureSize.mWidth;
+			Float32				textureHeight = gpuTextureInfo.mGPUTextureSize.mHeight;
+
+			Float32				maxU = gpuTextureInfo.mMaxU;
+			Float32				maxV = gpuTextureInfo.mMaxV;
+
+	// Points are UL, UR, LL, LR
+	Float32*	bufferPtr = (Float32*) gpuVertexBuffer.mData.getMutableBytePtr();
+
+	// Check angle
+//	Float32	dx, dy;
+	if (mInternals->mAngleRadians == 0.0) {
+		// No rotation
+//		dx = 0.0f - mInternals->mAnchorPoint.mX;
+//		dy = textureHeight - mInternals->mAnchorPoint.mY;
+		bufferPtr[0] = mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[1] = mInternals->mScreenPositionPoint.mY + rect.mSize.mHeight + offset.mY;
+		bufferPtr[2] = rect.mOrigin.mX / textureWidth * maxU;
+		bufferPtr[3] = (rect.mOrigin.mY + rect.mSize.mHeight) / textureHeight * maxV;
+
+//		dx = textureWidth - mInternals->mAnchorPoint.mX;
+//		dy = textureHeight - mInternals->mAnchorPoint.mY;
+		bufferPtr[4] = mInternals->mScreenPositionPoint.mX + rect.mSize.mWidth + offset.mX;
+		bufferPtr[5] = mInternals->mScreenPositionPoint.mY + rect.mSize.mHeight + offset.mY;
+		bufferPtr[6] = (rect.mOrigin.mX + rect.mSize.mWidth) / textureWidth * maxU;
+		bufferPtr[7] = (rect.mOrigin.mY + rect.mSize.mHeight) / textureHeight * maxV;
+
+//		dx = 0.0f - mInternals->mAnchorPoint.mX;
+//		dy = 0.0f - mInternals->mAnchorPoint.mY;
+		bufferPtr[8] = mInternals->mScreenPositionPoint.mX + offset.mX;
+		bufferPtr[9] = mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[10] = rect.mOrigin.mX / textureWidth * maxU;
+		bufferPtr[11] = rect.mOrigin.mY / textureHeight * maxV;
+
+//		dx = textureWidth - mInternals->mAnchorPoint.mX;
+//		dy = 0.0f - mInternals->mAnchorPoint.mY;
+		bufferPtr[12] = mInternals->mScreenPositionPoint.mX + rect.mSize.mWidth + offset.mX;
+		bufferPtr[13] = mInternals->mScreenPositionPoint.mY + offset.mY;
+		bufferPtr[14] = (rect.mOrigin.mX + rect.mSize.mWidth) / textureWidth * maxU;
+		bufferPtr[15] = rect.mOrigin.mY / textureHeight * maxV;
+	} else {
+		// Rotate around anchor point, then scale, then position on screen
+//		Float32	cosA = cosf(-mInternals->mAngleRadians);
+//		Float32	sinA = sinf(-mInternals->mAngleRadians);
+//
+//		dx = 0.0f - mInternals->mAnchorPoint.mX;
+//		dy = textureHeight - mInternals->mAnchorPoint.mY;
+//		bufferPtr[0] =
+//				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+//		bufferPtr[1] =
+//				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+//		bufferPtr[2] = 0.0;
+//		bufferPtr[3] = maxV;
+//
+//		dx = textureWidth - mInternals->mAnchorPoint.mX;
+//		dy = textureHeight - mInternals->mAnchorPoint.mY;
+//		bufferPtr[4] =
+//				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+//		bufferPtr[5] =
+//				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+//		bufferPtr[6] = maxU;
+//		bufferPtr[7] = maxV;
+//
+//		dx = 0.0f - mInternals->mAnchorPoint.mX;
+//		dy = 0.0f - mInternals->mAnchorPoint.mY;
+//		bufferPtr[8] =
+//				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+//		bufferPtr[9] =
+//				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+//		bufferPtr[10] = 0.0;
+//		bufferPtr[11] = 0.0;
+//
+//		dx = textureWidth - mInternals->mAnchorPoint.mX;
+//		dy = 0.0f - mInternals->mAnchorPoint.mY;
+//		bufferPtr[12] =
+//				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
+//		bufferPtr[13] =
+//				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
+//		bufferPtr[14] = maxU;
+//		bufferPtr[15] = 0.0;
+	}
 
 	// Draw
 	gpu.renderTriangleStrip(gpuVertexBuffer, 4, gpuTextureInfo, OV<Float32>(mInternals->mAlpha));

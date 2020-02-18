@@ -16,9 +16,8 @@ class CGPURenderObject2D : public CGPURenderObject {
 	public:
 								// Lifecycle methods
 								CGPURenderObject2D(const CGPUTextureReference& gpuTextureReference);
+								CGPURenderObject2D(const CGPURenderObject2D& other);
 								~CGPURenderObject2D();
-
-								// CGPURenderObject methods
 
 								// Instance methods
 		CGPUTextureReference&	getGPUTextureReference() const;
@@ -43,7 +42,9 @@ class CGPURenderObject2D : public CGPURenderObject {
 		void					setScale(const S2DPoint32& scale);
 		void					setScale(Float32 scale);
 
-		void					render(CGPU& gpu, const S2DPoint32& offset) const;
+		void					render(CGPU& gpu, const S2DPoint32& offset = S2DPoint32()) const;
+		void					render(CGPU& gpu, const S2DRect32& subrect, const S2DPoint32& offset = S2DPoint32())
+										const;
 
 	// Properties
 	private:

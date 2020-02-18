@@ -34,7 +34,7 @@ class CFolder : CHashable {
 
 											// CHashable methods
 								void		hashInto(CHasher& hasher) const
-												{ hasher.add(getFilesystemPath().getString().getCString()); }
+												{ getFilesystemPath().hashInto(hasher); }
 
 											// Instance methods
 				const	CFilesystemPath&	getFilesystemPath() const;
@@ -58,21 +58,21 @@ class CFolder : CHashable {
 												{
 													// Log
 													CLogServices::logMessage(
-															prefix + CString("Folder: ") +
+															prefix + CString(OSSTR("Folder: ")) +
 																	getFilesystemPath().getString());
 												}
 						void				logAsWarning(const CString& prefix = CString::mEmpty) const
 												{
 													// Log
 													CLogServices::logWarning(
-															prefix + CString("Folder: ") +
+															prefix + CString(OSSTR("Folder: ")) +
 																	getFilesystemPath().getString());
 												}
 						void				logAsError(const CString& prefix = CString::mEmpty) const
 												{
 													// Log
 													CLogServices::logError(
-															prefix + CString("Folder: ") +
+															prefix + CString(OSSTR("Folder: ")) +
 																	getFilesystemPath().getString());
 												}
 

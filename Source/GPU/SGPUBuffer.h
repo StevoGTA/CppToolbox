@@ -11,12 +11,8 @@
 
 struct SGPUBuffer {
 	// Lifecycle methods
-	SGPUBuffer(CData data, void* internalReference = nil) :
-		mData(data), mInternalReference(internalReference)
-		{}
-	SGPUBuffer(const SGPUBuffer& other) :
-		mData(other.mData), mInternalReference(other.mInternalReference)
-		{}
+	SGPUBuffer(CData data, void* internalReference = nil) : mData(data), mInternalReference(internalReference) {}
+	SGPUBuffer(const SGPUBuffer& other) : mData(other.mData), mInternalReference(other.mInternalReference) {}
 
 	// Properties
 	CData	mData;

@@ -14,11 +14,11 @@ class CDataSourceSetup {
 		CDataSourceSetup()
 			{
 				CErrorRegistry::registerError(kDataProviderReadBeyondEndError,
-						CString("Read beyond end"));
+						CString(OSSTR("Read beyond end")));
 				CErrorRegistry::registerError(kDataProviderSetPosBeforeStartError,
-						CString("Set position before start"));
+						CString(OSSTR("Set position before start")));
 				CErrorRegistry::registerError(kDataProviderSetPosAfterEndError,
-						CString("Set position after end"));
+						CString(OSSTR("Set position after end")));
 			}
 };
 

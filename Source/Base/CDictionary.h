@@ -32,18 +32,28 @@ typedef	void					(*CDictionaryDisposeUserDataProc)(void* userData);
 // MARK: - SDictionaryProcsInfo
 
 struct SDictionaryProcsInfo {
-	// Lifecycle methods
-	SDictionaryProcsInfo(CDictionaryGetKeyCountProc getKeyCountProc, CDictionaryGetValueProc getValueProc,
-			CDictionaryDisposeUserDataProc disposeUserDataProc, void* userData) :
-		mGetKeyCountProc(getKeyCountProc), mGetValueProc(getValueProc), mDisposeUserDataProc(disposeUserDataProc),
-				mUserData(userData)
-		{}
+							// Lifecycle methods
+							SDictionaryProcsInfo(CDictionaryGetKeyCountProc getKeyCountProc,
+									CDictionaryGetValueProc getValueProc,
+									CDictionaryDisposeUserDataProc disposeUserDataProc, void* userData) :
+								mGetKeyCountProc(getKeyCountProc), mGetValueProc(getValueProc),
+										mDisposeUserDataProc(disposeUserDataProc), mUserData(userData)
+								{}
+
+							// Instance methods
+	CDictionaryKeyCount		getKeyCount() const
+								{ return mGetKeyCountProc(mUserData); }
+	OR<SDictionaryValue>	getValue(const CString& key) const
+								{ return mGetValueProc(key, mUserData); }
+	void					disposeUserData() const
+								{ return mDisposeUserDataProc(mUserData); }
 
 	// Properties
-	CDictionaryGetKeyCountProc		mGetKeyCountProc;
-	CDictionaryGetValueProc			mGetValueProc;
-	CDictionaryDisposeUserDataProc	mDisposeUserDataProc;
-	void*							mUserData;
+	private:
+		CDictionaryGetKeyCountProc		mGetKeyCountProc;
+		CDictionaryGetValueProc			mGetValueProc;
+		CDictionaryDisposeUserDataProc	mDisposeUserDataProc;
+		void*							mUserData;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -160,6 +170,7 @@ class CDictionary : public CEquatable {
 						TIteratorS<SDictionaryItem>	getIterator() const;
 
 						CDictionary&				operator=(const CDictionary& other);
+						CDictionary&				operator+=(const CDictionary& other);
 
 	// Properties
 	public:

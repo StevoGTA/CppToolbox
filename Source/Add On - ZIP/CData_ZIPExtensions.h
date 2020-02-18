@@ -1,17 +1,17 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CGPURenderObject.h			©2018 Stevo Brock		All rights reserved.
+//	CData_ZIPExtensions.h			©2013 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPURenderObject
+#include "CData.h"
 
-class CGPURenderObject {
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CData_ZIPExtensions
+
+class CData_ZIPExtensions {
 	// Methods
 	public:
-				// Lifecycle methods
-				CGPURenderObject() {}
-				CGPURenderObject(const CGPURenderObject& other) {}
-		virtual	~CGPURenderObject() {}
+						// Class methods
+		static	CData	uncompressDataAsZIP(const CData& data, OV<CDataSize> uncompressedDataSize = OV<CDataSize>());
 };

@@ -13,7 +13,7 @@ void CLogServices::logMessage(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 #if defined(DEBUG)
-	fprintf(stdout, "%s\n", string.getCString());
+	fprintf(stdout, "%s\n", *string.getCString());
 #endif
 }
 
@@ -21,11 +21,11 @@ void CLogServices::logMessage(const CString& string)
 void CLogServices::logError(const CString& error, const CString& when, const char* file, const char* proc, UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logError(CFilesystemPath(CString(file)).getLastComponent() + CString(" - error ") +
-			CString("\"") + error + CString("\"") +
-			(!when.isEmpty() ? CString(" when ") + when : CString::mEmpty) +
-			CString(", in ") + CString(proc) + CString("()") +
-			((line != 0) ? CString(", line: ") + CString(line) : CString::mEmpty));
+	logError(CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - error ")) +
+			CString(OSSTR("\"")) + error + CString(OSSTR("\"")) +
+			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
+			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +
+			((line != 0) ? CString(OSSTR(", line: ")) + CString(line) : CString::mEmpty));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ void CLogServices::logError(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 #if defined(DEBUG)
-	fprintf(stdout, "\n*** ERROR ***\n%s\n", string.getCString());
+	fprintf(stdout, "\n*** ERROR ***\n%s\n", *string.getCString());
 #endif
 }
 
@@ -41,7 +41,7 @@ void CLogServices::logError(const CString& string)
 
 #include "CCoreServices.h"
 #include "CFileX.h"
-#include "CURL.h"
+#include "CURLX.h"
 
 #include <pthread.h>
 
@@ -83,7 +83,7 @@ const CFileX& CLogServices::setup(const CString& filename, const CString& produc
 		folder = testFolder;
 
 		// Check for Library folder
-		testFolder = CFolderX(folder, CString("Library"));
+		testFolder = CFolderX(folder, CString(OSSTR("Library")));
 		if (!testFolder.doesExist())
 			// Not found, create
 			testFolder.create();
@@ -94,7 +94,7 @@ const CFileX& CLogServices::setup(const CString& filename, const CString& produc
 			folder = testFolder;
 
 			// Check for Logs folder
-			testFolder = CFolderX(folder, CString("Logs"));
+			testFolder = CFolderX(folder, CString(OSSTR("Logs")));
 			if (!testFolder.doesExist())
 				// Not found, create
 				testFolder.create();
@@ -107,7 +107,7 @@ const CFileX& CLogServices::setup(const CString& filename, const CString& produc
 	}
 
 	// Create file object
-	sLogFile = new CFileX(folder, filename + CString(".txt"));
+	sLogFile = new CFileX(folder, filename + CString(OSSTR(".txt")));
 
 	// Open
 	CString	string;
@@ -117,42 +117,45 @@ const CFileX& CLogServices::setup(const CString& filename, const CString& produc
 		sLogFile->close();
 	} else
 		// Append something to break up the file
-		string = CString("\n******************************************************************************\n");
+		string = CString(OSSTR("\n******************************************************************************\n"));
 
 	// Write our first message
 	string +=
-			CString("Logging started ") +
+			CString(OSSTR("Logging started ")) +
 					CTimeInfo::getStringForUniversalTime(CTimeInfo::getCurrentUniversalTime(),
 							kTimeInfoStringStyleLong, kTimeInfoStringStyleLong) +
-			CString("\n");
-	string += CString("Product: ") + productAndVersion + CString("\n");
+			CString(OSSTR("\n"));
+	string += CString(OSSTR("Product: ")) + productAndVersion + CString(OSSTR("\n"));
 
 	// Log system info
-	string += CString("System Info\n");
+	string += CString(OSSTR("System Info\n"));
 
 	// OS Version
-	string += CString("\tSystem Version: ") + CCoreServices::getSystemVersion().getString() + CString("\n");
+	string +=
+			CString(OSSTR("\tSystem Version: ")) + CCoreServices::getSystemVersion().getString() + CString(OSSTR("\n"));
 
 	// Processor Count
 	string +=
-			CString("\tRunning ") + CString(CCoreServices::getTotalProcessorCoresCount()) +
-					CString(" CPUs/Cores - ") + CCoreServices::getProcessorInfo() + CString("\n");
+			CString(OSSTR("\tRunning ")) + CString(CCoreServices::getTotalProcessorCoresCount()) +
+					CString(OSSTR(" CPUs/Cores - ")) + CCoreServices::getProcessorInfo() + CString(OSSTR("\n"));
 
 	// Physical RAM Size
 	string +=
-			CString("\tPhysical RAM: ") +
+			CString(OSSTR("\tPhysical RAM: ")) +
 					CString(CCoreServices::getPhysicalMemoryByteCount(),
 							(EStringSpecialFormattingOptions) (kStringSpecialFormattingOptionsBytesBinary |
 									kStringSpecialFormattingOptionsBytesBinaryDoEasyRead |
 									kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas|
 									kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactAddLabel)) +
-					CString("\n");
+					CString(OSSTR("\n"));
 
 	// Core Audio Version
-	string += CString("\tCore Audio Version: ") + CCoreServices::getCoreAudioVersion().getString() + CString("\n");
+	string +=
+			CString(OSSTR("\tCore Audio Version: ")) + CCoreServices::getCoreAudioVersion().getString() +
+					CString(OSSTR("\n"));
 
 	// Done
-	string += CString("\n\n");
+	string += CString(OSSTR("\n\n"));
 
 	// Write
 	CLogServices::logMessage(string);
@@ -176,7 +179,7 @@ void CLogServices::logMessage(const CString& string)
 
 	// Call proc
 	if (sLogMessageProc != nil)
-		sLogMessageProc(string + CString("\n"), sSilentWarningsAndErrors, sLogMessageProcUserData);
+		sLogMessageProc(string + CString(OSSTR("\n")), sSilentWarningsAndErrors, sLogMessageProcUserData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -185,11 +188,11 @@ void CLogServices::logWarning(const CString& warning, const CString& when, const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose and log
-	logWarning(CURL::getFilesystemLastPathComponent(CString(file)) + CString(" - warning ") +
-			CString("\"") + warning + CString("\"") +
-			(!when.isEmpty() ? CString(" when ") + when : CString::mEmpty) +
-			CString(", in ") + CString(proc) + CString("()") +
-			((line != 0) ? CString(", line: ") + CString(line) : CString::mEmpty));
+	logWarning(CURLX::getFilesystemLastPathComponent(CString(file)) + CString(OSSTR(" - warning ")) +
+			CString(OSSTR("\"")) + warning + CString(OSSTR("\"")) +
+			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
+			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +
+			((line != 0) ? CString(OSSTR(", line: ")) + CString(line) : CString::mEmpty));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -197,12 +200,12 @@ void CLogServices::logWarning(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Log to log file
-	sLog(CString("\n*** WARNING ***\n"));
+	sLog(CString(OSSTR("\n*** WARNING ***\n")));
 	sLog(string);
 
 	// Call proc
 	if (sLogWarningProc != nil)
-		sLogWarningProc(string + CString("\n"), sSilentWarningsAndErrors, sLogWarningProcUserData);
+		sLogWarningProc(string + CString(OSSTR("\n")), sSilentWarningsAndErrors, sLogWarningProcUserData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -211,11 +214,11 @@ void CLogServices::logError(const CString& error, const CString& when, const cha
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose and log
-	logError(CURL::getFilesystemLastPathComponent(CString(file)) + CString(" - error ") +
-			CString("\"") + error + CString("\"") +
-			(!when.isEmpty() ? CString(" when ") + when : CString::mEmpty) +
-			CString(", in ") + CString(proc) + CString("()") +
-			((line != 0) ? CString(", line: ") + CString(line) : CString::mEmpty));
+	logError(CURLX::getFilesystemLastPathComponent(CString(file)) + CString(OSSTR(" - error ")) +
+			CString(OSSTR("\"")) + error + CString(OSSTR("\"")) +
+			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
+			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +
+			((line != 0) ? CString(OSSTR(", line: ")) + CString(line) : CString::mEmpty));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -223,26 +226,26 @@ void CLogServices::logError(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Log to log file
-	sLog(CString("\n*** ERROR ***\n"));
+	sLog(CString(OSSTR("\n*** ERROR ***\n")));
 	sLog(string);
 
 	// Call proc
 	if (sLogErrorProc != nil)
-		sLogErrorProc(string + CString("\n"), sSilentWarningsAndErrors, sLogErrorProcUserData);
+		sLogErrorProc(string + CString(OSSTR("\n")), sSilentWarningsAndErrors, sLogErrorProcUserData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLogServices::log(const CFileX& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logMessage(CString("    File: ") + file.getDescription());
+	logMessage(CString(OSSTR("    File: ")) + file.getDescription());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLogServices::log(const CFolderX& folder)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logMessage(CString("    Folder: ") + folder.getDescription());
+	logMessage(CString(OSSTR("    Folder: ")) + folder.getDescription());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -297,7 +300,7 @@ void sLog(const CString& string)
 
 	// Send to other receivers
 #if defined(DEBUG)
-	fprintf(stdout, "%s", (string + CString("\n")).getCString());
+	fprintf(stdout, "%s", (string + CString(OSSTR("\n"))).getCString());
 #endif
 
 	// Ensure things are set up
@@ -326,7 +329,7 @@ void sLog(const CString& string)
 		// Go to end
 		if (sLogFile->setPos(kFilePositionModeFromEnd, 0) == kNoError) {
 			// Write message
-			sLogFile->write(string + CString("\n"));
+			sLogFile->write(string + CString(OSSTR("\n")));
 
 			// Close
 			sLogFile->close();

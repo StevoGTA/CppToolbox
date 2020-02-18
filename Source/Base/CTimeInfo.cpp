@@ -25,12 +25,12 @@ enum {
 	kCTimeInfoUsingTypeSeconds
 };
 
-static	CString					sUsingTypeKey("usingType");
-static	CString					sSecondCountKey("secondCount");
-static	CString					sSampleRateKey("sampleRate");
-static	CString					sSampleCountKey("sampleCount");
-static	CString					sFrameRateKey("frameRate");
-static	CString					sFrameCountKey("frameCount");
+static	CString					sUsingTypeKey(OSSTR("usingType"));
+static	CString					sSecondCountKey(OSSTR("secondCount"));
+static	CString					sSampleRateKey(OSSTR("sampleRate"));
+static	CString					sSampleCountKey(OSSTR("sampleCount"));
+static	CString					sFrameRateKey(OSSTR("frameRate"));
+static	CString					sFrameCountKey(OSSTR("frameCount"));
 static	UniversalTimeInterval	sOffsetInterval = 0.0;
 
 const	CTimeInfo	CTimeInfo::mOneSecond(1.0);
@@ -462,9 +462,9 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 				UInt32	days = (UInt32) totalSeconds / (24 * 60 * 60);
 				string += CString(days);
 				if (useValue != kTimeInfoTimeFlagsUseDays)
-					string += CString(":");
+					string += CString(OSSTR(":"));
 				if ((useValue == kTimeInfoTimeFlagsUseDays) && doAddLabel)
-					string += CString("d");
+					string += CString(OSSTR("d"));
 
 				// Update info
 				totalSeconds -= (Float32) (days * 24 * 60 * 60);
@@ -482,10 +482,10 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 				hours = (UInt32) totalSeconds / (60 * 60);
 				string += CString(hours, (UInt32) (started ? 2 : 0), true);
 				if ((useValue != kTimeInfoTimeFlagsUseDaysHours) && (useValue != kTimeInfoTimeFlagsUseHours))
-					string += CString(":");
+					string += CString(OSSTR(":"));
 				if (((useValue == kTimeInfoTimeFlagsUseDaysHours) || (useValue == kTimeInfoTimeFlagsUseHours)) &&
 						doAddLabel)
-					string += CString("h");
+					string += CString(OSSTR("h"));
 
 				// Update info
 				totalSeconds -= (Float32) (hours * 60 * 60);
@@ -505,11 +505,11 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 				if ((useValue != kTimeInfoTimeFlagsUseDaysHoursMinutes) &&
 						(useValue != kTimeInfoTimeFlagsUseHoursMinutes) &&
 						(useValue != kTimeInfoTimeFlagsUseMinutes))
-					string += CString(":");
+					string += CString(OSSTR(":"));
 				if (((useValue == kTimeInfoTimeFlagsUseDaysHoursMinutes) ||
 						(useValue == kTimeInfoTimeFlagsUseHoursMinutes) ||
 						(useValue == kTimeInfoTimeFlagsUseMinutes)) && doAddLabel)
-					string += CString("m");
+					string += CString(OSSTR("m"));
 
 				// Update info
 				totalSeconds -= (Float32) (minutes * 60);
@@ -526,7 +526,7 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 				else
 					string += CString(totalSeconds, 5, 2, true);
 				if (doAddLabel)
-					string += CString("s");
+					string += CString(OSSTR("s"));
 			}
 			} break;
 		
@@ -541,7 +541,7 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			bool	started = false;
 			UInt32	days = (UInt32) totalSeconds / (24 * 60 * 60);
 			if (days > 0) {
-				string += CString(days) + CString("d");
+				string += CString(days) + CString(OSSTR("d"));
 				totalSeconds -= (Float32) (days * 24 * 60 * 60);
 				started = true;
 			}
@@ -551,7 +551,8 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			if ((hours > 0) || (useValue == kTimeInfoTimeFlagsUseHoursMinutesSecondsHMS) || started) {
 				string +=
 						CString(hours, (UInt32) (started ? 2 : 0),
-								(useValue == kTimeInfoTimeFlagsUseHoursMinutesSecondsHMS) || started) + CString("h");
+								(useValue == kTimeInfoTimeFlagsUseHoursMinutesSecondsHMS) || started) +
+								CString(OSSTR("h"));
 				totalSeconds -= (Float32) (hours * 60 * 60);
 				started = true;
 			}
@@ -560,7 +561,7 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			minutes = (UInt32) totalSeconds / 60;
 			if ((minutes > 0) || (useValue == kTimeInfoTimeFlagsUseHoursMinutesSecondsHMS) ||
 					(useValue == kTimeInfoTimeFlagsUseMinutesSecondsHMS) || started) {
-				string += CString(minutes, (UInt32) (started ? 2 : 0), true) + CString("m");
+				string += CString(minutes, (UInt32) (started ? 2 : 0), true) + CString(OSSTR("m"));
 				totalSeconds -= (Float32) (minutes * 60);
 			}
 			
@@ -569,7 +570,7 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 				string += CString(totalSeconds, 2, 0, true);
 			else
 				string += CString(totalSeconds, 5, 2, true);
-			string += CString("s");
+			string += CString(OSSTR("s"));
 			} break;
 		
 		case kTimeInfoTimeFlagsUseSamples:
@@ -577,7 +578,7 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			string = CString(getSampleCount());
 
 			if (flags & kTimeInfoTimeFlagsAddLabel)
-				string += CString(" samples");
+				string += CString(OSSTR(" samples"));
 			break;
 		
 		case kTimeInfoTimeFlagsUseFrames:
@@ -585,7 +586,7 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			string = CString(getFrameCount());
 
 			if (flags & kTimeInfoTimeFlagsAddLabel)
-				string += CString(" frames");
+				string += CString(OSSTR(" frames"));
 			break;
 		
 		case kTimeInfoTimeFlagsUse24fpsTimecode:
@@ -610,8 +611,9 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			
 			// Prepare string
 			string =
-					CString(hours, (UInt32) 2, true) + CString(":") + CString(minutes, (UInt32) 2, true) + CString(":")
-							+ CString(seconds, (UInt32) 2, true) + CString(":") + CString(frames, (UInt32) 2, true);
+					CString(hours, (UInt32) 2, true) + CString(OSSTR(":")) + CString(minutes, (UInt32) 2, true) +
+							CString(OSSTR(":")) + CString(seconds, (UInt32) 2, true) + CString(OSSTR(":")) +
+							CString(frames, (UInt32) 2, true);
 			break;
 		
 		case kTimeInfoTimeFlagsUse25fpsTimecode:
@@ -636,8 +638,9 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			
 			// Prepare string
 			string =
-					CString(hours, (UInt32) 2, true) + CString(":") + CString(minutes, (UInt32) 2, true) + CString(":")
-							+ CString(seconds, (UInt32) 2, true) + CString(":") + CString(frames, (UInt32) 2, true);
+					CString(hours, (UInt32) 2, true) + CString(OSSTR(":")) + CString(minutes, (UInt32) 2, true) +
+							CString(OSSTR(":")) + CString(seconds, (UInt32) 2, true) + CString(OSSTR(":")) +
+							CString(frames, (UInt32) 2, true);
 			break;
 		
 		case kTimeInfoTimeFlagsUse30fpsDropFrameTimecode:
@@ -678,8 +681,9 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			
 			// Prepare string
 			string =
-					CString(hours, (UInt32) 2, true) + CString(";") + CString(minutes, (UInt32) 2, true) + CString(";")
-							+ CString(seconds, (UInt32) 2, true) + CString(";") + CString(frames, (UInt32) 2, true);
+					CString(hours, (UInt32) 2, true) + CString(OSSTR(";")) + CString(minutes, (UInt32) 2, true) +
+							CString(OSSTR(";")) + CString(seconds, (UInt32) 2, true) + CString(OSSTR(";")) +
+							CString(frames, (UInt32) 2, true);
 			break;
 		
 		case kTimeInfoTimeFlagsUse30fpsNonDropFrameTimecode:
@@ -704,8 +708,9 @@ CString CTimeInfo::getTimeAsString(UInt32 flags) const
 			
 			// Prepare string
 			string =
-					CString(hours, (UInt32) 2, true) + CString(":") + CString(minutes, (UInt32) 2, true) + CString(":")
-							+ CString(seconds, (UInt32) 2, true) + CString(":") + CString(frames, (UInt32) 2, true);
+					CString(hours, (UInt32) 2, true) + CString(OSSTR(":")) + CString(minutes, (UInt32) 2, true) +
+							CString(OSSTR(":")) + CString(seconds, (UInt32) 2, true) + CString(OSSTR(":")) +
+							CString(frames, (UInt32) 2, true);
 			break;
 	}
 	
@@ -726,11 +731,10 @@ void CTimeInfo::setTimeFromString(const CString& string, UInt32 flags)
 		case kTimeInfoTimeFlagsUseMinutesSecondsHMS:
 		case kTimeInfoTimeFlagsUseSecondsHMS: {
 			// Seconds
-			CString	stringCopy = string;
-			stringCopy.replaceSubStrings(CString("h"), CString(":"));
-			stringCopy.replaceSubStrings(CString("m"), CString(":"));
-
-			TArray<CString>	array = stringCopy.breakUp(CString(":"));
+			TArray<CString>	array =
+									string.replacingSubStrings(CString(OSSTR("h")), CString(OSSTR(":"))).
+											replacingSubStrings(CString(OSSTR("m")), CString(OSSTR(":"))).
+											breakUp(CString(OSSTR(":")));
 			switch (array.getCount()) {
 				case 4:
 					// Days:Hours:Minutes:Seconds
@@ -781,7 +785,7 @@ void CTimeInfo::setTimeFromString(const CString& string, UInt32 flags)
 		
 		case kTimeInfoTimeFlagsUse24fpsTimecode: {
 			// 24fps Timecode
-			TArray<CString>	array = string.breakUp(CString(":"));
+			TArray<CString>	array = string.breakUp(CString(OSSTR(":")));
 			switch (array.getCount()) {
 				case 4:
 					// Hours:Minutes:Seconds:Frames
@@ -822,7 +826,7 @@ void CTimeInfo::setTimeFromString(const CString& string, UInt32 flags)
 		
 		case kTimeInfoTimeFlagsUse25fpsTimecode: {
 			// 25fps Timecode
-			TArray<CString>	array = string.breakUp(CString(":"));
+			TArray<CString>	array = string.breakUp(CString(OSSTR(":")));
 			switch (array.getCount()) {
 				case 4:
 					// Hours:Minutes:Seconds:Frames
@@ -864,7 +868,7 @@ void CTimeInfo::setTimeFromString(const CString& string, UInt32 flags)
 		case kTimeInfoTimeFlagsUse30fpsDropFrameTimecode: {
 			// 30fps Drop-Frame Timecode
 			SInt64			hours, minutes, seconds, frames;
-			TArray<CString>	array = string.breakUp(CString(";"));
+			TArray<CString>	array = string.breakUp(CString(OSSTR(";")));
 			switch (array.getCount()) {
 				case 4:
 					hours = array[0].getSInt64();
@@ -924,7 +928,7 @@ void CTimeInfo::setTimeFromString(const CString& string, UInt32 flags)
 		
 		case kTimeInfoTimeFlagsUse30fpsNonDropFrameTimecode: {
 			// 30fps Non Drop-Frame Timecode
-			TArray<CString>	array = string.breakUp(CString(":"));
+			TArray<CString>	array = string.breakUp(CString(OSSTR(":")));
 			switch (array.getCount()) {
 				case 4:
 					// Hours:Minutes:Seconds:Frames
@@ -1314,175 +1318,179 @@ CString CTimeInfo::getStringForUniversalTime(UniversalTime time, ETimeInfoString
 		
 		return string;
 #else
-	static	CString			sJanString("Jan");
-	static	CString			sFebString("Feb");
-	static	CString			sMarString("Mar");
-	static	CString			sAprString("Apr");
-	static	CString			sMayString("May");
-	static	CString			sJunString("Jun");
-	static	CString			sJulString("Jul");
-	static	CString			sAugString("Aug");
-	static	CString			sSepString("Sep");
-	static	CString			sOctString("Oct");
-	static	CString			sNovString("Nov");
-	static	CString			sDecString("Dec");
+		static	CString			sJanString(OSSTR("Jan"));
+		static	CString			sFebString(OSSTR("Feb"));
+		static	CString			sMarString(OSSTR("Mar"));
+		static	CString			sAprString(OSSTR("Apr"));
+		static	CString			sMayString(OSSTR("May"));
+		static	CString			sJunString(OSSTR("Jun"));
+		static	CString			sJulString(OSSTR("Jul"));
+		static	CString			sAugString(OSSTR("Aug"));
+		static	CString			sSepString(OSSTR("Sep"));
+		static	CString			sOctString(OSSTR("Oct"));
+		static	CString			sNovString(OSSTR("Nov"));
+		static	CString			sDecString(OSSTR("Dec"));
 
-	static	CString			sJanuaryString("January");
-	static	CString			sFebruaryString("February");
-	static	CString			sMarchString("March");
-	static	CString			sAprilString("April");
-	static	CString			sJuneString("June");
-	static	CString			sJulyString("July");
-	static	CString			sAugustString("August");
-	static	CString			sSeptemberString("September");
-	static	CString			sOctoberString("October");
-	static	CString			sNovemberString("November");
-	static	CString			sDecemberString("December");
+		static	CString			sJanuaryString(OSSTR("January"));
+		static	CString			sFebruaryString(OSSTR("February"));
+		static	CString			sMarchString(OSSTR("March"));
+		static	CString			sAprilString(OSSTR("April"));
+		static	CString			sJuneString(OSSTR("June"));
+		static	CString			sJulyString(OSSTR("July"));
+		static	CString			sAugustString(OSSTR("August"));
+		static	CString			sSeptemberString(OSSTR("September"));
+		static	CString			sOctoberString(OSSTR("October"));
+		static	CString			sNovemberString(OSSTR("November"));
+		static	CString			sDecemberString(OSSTR("December"));
 
-	static	CString			sSunString("Sunday");
-	static	CString			sMonString("Monday");
-	static	CString			sTueString("Tuesday");
-	static	CString			sWedString("Wednesday");
-	static	CString			sThuString("Thursday");
-	static	CString			sFriString("Friday");
-	static	CString			sSatString("Saturday");
+		static	CString			sSunString(OSSTR("Sunday"));
+		static	CString			sMonString(OSSTR("Monday"));
+		static	CString			sTueString(OSSTR("Tuesday"));
+		static	CString			sWedString(OSSTR("Wednesday"));
+		static	CString			sThuString(OSSTR("Thursday"));
+		static	CString			sFriString(OSSTR("Friday"));
+		static	CString			sSatString(OSSTR("Saturday"));
 
-	static	CString			sAMString("am");
-	static	CString			sPMString("pm");
+		static	CString			sAMString(OSSTR("am"));
+		static	CString			sPMString(OSSTR("pm"));
 
-			CString*		day;
-			CString*		month;
-			CString			string;
-			SGregorianDate	date = CTimeInfo::getGregorianDateForUniversalTime(time);
-			UInt8			hour = (date.mHour == 0) ? 12 : ((date.mHour - 1) % 12 + 1);
+				CString*		day;
+				CString*		month;
+				CString			string;
+				SGregorianDate	date = CTimeInfo::getGregorianDateForUniversalTime(time);
+				UInt8			hour = (date.mHour == 0) ? 12 : ((date.mHour - 1) % 12 + 1);
 
-	switch (dateStyle) {
-		case kTimeInfoStringStyleNone:
-			// None
-			break;
+		switch (dateStyle) {
+			case kTimeInfoStringStyleNone:
+				// None
+				break;
 
-		case kTimeInfoStringStyleShort:
-			// Short - 1/1/1952
-			string = CString(date.mMonth) + CString("/") + CString(date.mDay) + CString("/") + CString(date.mYear);
-			break;
+			case kTimeInfoStringStyleShort:
+				// Short - 1/1/1952
+				string =
+						CString(date.mMonth) + CString(OSSTR("/")) + CString(date.mDay) + CString(OSSTR("/")) +
+								CString(date.mYear);
+				break;
 
-		case kTimeInfoStringStyleMedium:
-			// Medium - Jan 12, 1952
-			switch (date.mMonth) {
-				case 1:		month = &sJanString;			break;
-				case 2:		month = &sFebString;			break;
-				case 3:		month = &sMarString;			break;
-				case 4:		month = &sAprString;			break;
-				case 5:		month = &sMayString;			break;
-				case 6:		month = &sJunString;			break;
-				case 7:		month = &sJulString;			break;
-				case 8:		month = &sAugString;			break;
-				case 9:		month = &sSepString;			break;
-				case 10:	month = &sOctString;			break;
-				case 11:	month = &sNovString;			break;
-				case 12:	month = &sDecString;			break;
-				default:	month = &CString::mEmpty;	break;
-			}
+			case kTimeInfoStringStyleMedium:
+				// Medium - Jan 12, 1952
+				switch (date.mMonth) {
+					case 1:		month = &sJanString;			break;
+					case 2:		month = &sFebString;			break;
+					case 3:		month = &sMarString;			break;
+					case 4:		month = &sAprString;			break;
+					case 5:		month = &sMayString;			break;
+					case 6:		month = &sJunString;			break;
+					case 7:		month = &sJulString;			break;
+					case 8:		month = &sAugString;			break;
+					case 9:		month = &sSepString;			break;
+					case 10:	month = &sOctString;			break;
+					case 11:	month = &sNovString;			break;
+					case 12:	month = &sDecString;			break;
+					default:	month = &CString::mEmpty;	break;
+				}
 
-			string = *month + CString(" ") + CString(date.mDay) + CString(", ") + CString(date.mYear);
-			break;
+				string = *month + CString(OSSTR(" ")) + CString(date.mDay) + CString(OSSTR(", ")) + CString(date.mYear);
+				break;
 
-		case kTimeInfoStringStyleLong:
-			// Long - January 12, 1952
-			switch (date.mMonth) {
-				case 1:		month = &sJanuaryString;			break;
-				case 2:		month = &sFebruaryString;			break;
-				case 3:		month = &sMarchString;				break;
-				case 4:		month = &sAprilString;				break;
-				case 5:		month = &sMayString;				break;
-				case 6:		month = &sJuneString;				break;
-				case 7:		month = &sJulyString;				break;
-				case 8:		month = &sAugustString;				break;
-				case 9:		month = &sSeptemberString;			break;
-				case 10:	month = &sOctoberString;			break;
-				case 11:	month = &sNovemberString;			break;
-				case 12:	month = &sDecemberString;			break;
-				default:	month = &CString::mEmpty;	break;
-			}
+			case kTimeInfoStringStyleLong:
+				// Long - January 12, 1952
+				switch (date.mMonth) {
+					case 1:		month = &sJanuaryString;			break;
+					case 2:		month = &sFebruaryString;			break;
+					case 3:		month = &sMarchString;				break;
+					case 4:		month = &sAprilString;				break;
+					case 5:		month = &sMayString;				break;
+					case 6:		month = &sJuneString;				break;
+					case 7:		month = &sJulyString;				break;
+					case 8:		month = &sAugustString;				break;
+					case 9:		month = &sSeptemberString;			break;
+					case 10:	month = &sOctoberString;			break;
+					case 11:	month = &sNovemberString;			break;
+					case 12:	month = &sDecemberString;			break;
+					default:	month = &CString::mEmpty;	break;
+				}
 
-			string = *month + CString(" ") + CString(date.mDay) + CString(", ") + CString(date.mYear);
-			break;
+				string = *month + CString(OSSTR(" ")) + CString(date.mDay) + CString(OSSTR(", ")) + CString(date.mYear);
+				break;
 
-		case kTimeInfoStringStyleFull:
-			// Full - Tuesday, April 12, 1952 AD
-			switch (date.mDayOfWeek) {
-				case 0:		day = &sSunString;				break;
-				case 1:		day = &sMonString;				break;
-				case 2:		day = &sTueString;				break;
-				case 3:		day = &sWedString;				break;
-				case 4:		day = &sThuString;				break;
-				case 5:		day = &sFriString;				break;
-				case 6:		day = &sSatString;				break;
-				default:	day = &CString::mEmpty;	break;
-			}
+			case kTimeInfoStringStyleFull:
+				// Full - Tuesday, April 12, 1952 AD
+				switch (date.mDayOfWeek) {
+					case 0:		day = &sSunString;				break;
+					case 1:		day = &sMonString;				break;
+					case 2:		day = &sTueString;				break;
+					case 3:		day = &sWedString;				break;
+					case 4:		day = &sThuString;				break;
+					case 5:		day = &sFriString;				break;
+					case 6:		day = &sSatString;				break;
+					default:	day = &CString::mEmpty;	break;
+				}
 
-			switch (date.mMonth) {
-				case 1:		month = &sJanuaryString;		break;
-				case 2:		month = &sFebruaryString;		break;
-				case 3:		month = &sMarchString;			break;
-				case 4:		month = &sAprilString;			break;
-				case 5:		month = &sMayString;			break;
-				case 6:		month = &sJuneString;			break;
-				case 7:		month = &sJulyString;			break;
-				case 8:		month = &sAugustString;			break;
-				case 9:		month = &sSeptemberString;		break;
-				case 10:	month = &sOctoberString;		break;
-				case 11:	month = &sNovemberString;		break;
-				case 12:	month = &sDecemberString;		break;
-				default:	month = &CString::mEmpty;	break;
-			}
+				switch (date.mMonth) {
+					case 1:		month = &sJanuaryString;		break;
+					case 2:		month = &sFebruaryString;		break;
+					case 3:		month = &sMarchString;			break;
+					case 4:		month = &sAprilString;			break;
+					case 5:		month = &sMayString;			break;
+					case 6:		month = &sJuneString;			break;
+					case 7:		month = &sJulyString;			break;
+					case 8:		month = &sAugustString;			break;
+					case 9:		month = &sSeptemberString;		break;
+					case 10:	month = &sOctoberString;		break;
+					case 11:	month = &sNovemberString;		break;
+					case 12:	month = &sDecemberString;		break;
+					default:	month = &CString::mEmpty;	break;
+				}
 
-			string = *day + CString(", ") + *month + CString(" ") + CString(date.mDay) + CString(", ") + CString(date.mYear);
-			break;
-	}
+				string =
+						*day + CString(OSSTR(", ")) + *month + CString(OSSTR(" ")) + CString(date.mDay) +
+								CString(OSSTR(", ")) + CString(date.mYear);
+				break;
+		}
 
-	switch (timeStyle) {
-		case kTimeInfoStringStyleNone:
-			// None
-			break;
+		switch (timeStyle) {
+			case kTimeInfoStringStyleNone:
+				// None
+				break;
 
-		case kTimeInfoStringStyleShort:
-			// Short - 3:30pm
-			if (!string.isEmpty())
-				string += CString(" ");
-			string +=
-					CString(hour) + CString(":") + CString(date.mMinute, 2, true) +
-							((date.mHour >= 12) ? sPMString : sAMString);
-			break;
+			case kTimeInfoStringStyleShort:
+				// Short - 3:30pm
+				if (!string.isEmpty())
+					string += CString(OSSTR(" "));
+				string +=
+						CString(hour) + CString(OSSTR(":")) + CString(date.mMinute, 2, true) +
+								((date.mHour >= 12) ? sPMString : sAMString);
+				break;
 
-		case kTimeInfoStringStyleMedium:
-			// Medium - 3:30pm
-			if (!string.isEmpty())
-				string += CString(" ");
-			string +=
-					CString(hour) + CString(":") + CString(date.mMinute, 2, true) +
-							((date.mHour >= 12) ? sPMString : sAMString);
-			break;
+			case kTimeInfoStringStyleMedium:
+				// Medium - 3:30pm
+				if (!string.isEmpty())
+					string += CString(OSSTR(" "));
+				string +=
+						CString(hour) + CString(OSSTR(":")) + CString(date.mMinute, 2, true) +
+								((date.mHour >= 12) ? sPMString : sAMString);
+				break;
 
-		case kTimeInfoStringStyleLong:
-			// Long - 3:30:32pm
-			if (!string.isEmpty())
-				string += CString(" ");
-			string +=
-					CString(hour) + CString(":") + CString(date.mMinute, 2, true) + CString(":") +
-							CString((UInt16) date.mSecond, 2, true) + ((date.mHour >= 12) ? sPMString : sAMString);
-			break;
+			case kTimeInfoStringStyleLong:
+				// Long - 3:30:32pm
+				if (!string.isEmpty())
+					string += CString(OSSTR(" "));
+				string +=
+						CString(hour) + CString(OSSTR(":")) + CString(date.mMinute, 2, true) + CString(OSSTR(":")) +
+								CString((UInt16) date.mSecond, 2, true) + ((date.mHour >= 12) ? sPMString : sAMString);
+				break;
 
-		case kTimeInfoStringStyleFull:
-			// Full - 3:30:32pm PST
-			if (!string.isEmpty())
-				string += CString(" ");
-			string +=
-					CString(hour) + CString(":") + CString(date.mMinute, 2, true) + CString(":") +
-							CString((UInt16) date.mSecond, 2, true) + ((date.mHour >= 12) ? sPMString : sAMString) + CString(" GMT");
-			break;
-	}
-
+			case kTimeInfoStringStyleFull:
+				// Full - 3:30:32pm PST
+				if (!string.isEmpty())
+					string += CString(OSSTR(" "));
+				string +=
+						CString(hour) + CString(OSSTR(":")) + CString(date.mMinute, 2, true) + CString(OSSTR(":")) +
+								CString((UInt16) date.mSecond, 2, true) + ((date.mHour >= 12) ? sPMString : sAMString) +
+								CString(OSSTR(" GMT"));
+				break;
+		}
 
 		return string;
 #endif

@@ -60,3 +60,23 @@ template <typename T> class TCopyOnWriteReferenceCountable : public TReferenceCo
 	private:
 		UInt32	mReferenceCount;
 };
+
+
+struct SReferenceCountable {
+	// Methods
+	public:
+				// Lifecycle methods
+				SReferenceCountable() : mReferenceCount(new UInt32)
+					{ *mReferenceCount = 1; }
+				SReferenceCountable(const SReferenceCountable& other) : mReferenceCount(other.mReferenceCount)
+					{ (*mReferenceCount)++; }
+
+	protected:
+				// Subclass methods
+		UInt32	removeReference()
+					{ return --(*mReferenceCount); }
+
+	// Properties
+	private:
+		UInt32*	mReferenceCount;
+};

@@ -398,7 +398,7 @@ CFDictionaryRef eDictionaryCopyCFDictionaryRef(const CDictionary& dictionary)
 CFStringRef eStringCopyCFStringRef(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringCreateWithCString(kCFAllocatorDefault, string.getCString(kStringEncodingUTF8),
+	return ::CFStringCreateWithCString(kCFAllocatorDefault, *string.getCString(kStringEncodingUTF8),
 			kCFStringEncodingUTF8);
 }
 

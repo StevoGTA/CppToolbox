@@ -10,19 +10,19 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-CString eColorRegistryColorChangedNotificationName("colorRegistryColorChangedNotification");
+CString eColorRegistryColorChangedNotificationName(OSSTR("colorRegistryColorChangedNotification"));
 
-CString	eColorRegistryGroupIDKey("groupID");
-CString	eColorRegistryColorIDKey("colorID");
-CString	eColorRegistryColorKey("color");
+CString	eColorRegistryGroupIDKey(OSSTR("groupID"));
+CString	eColorRegistryColorIDKey(OSSTR("colorID"));
+CString	eColorRegistryColorKey(OSSTR("color"));
 
-static	CString	sColorGroupIDKey("groupID");
-static	CString	sColorIDKey("colorID");
-static	CString	sColorInfoKey = "color";
-static	CString	sColorSetColorInfosKey("colors");
-static	CString	sColorSetInfosKey("presets");
-static	CString	sCurrentColorSetKey = "currentColorSet";
-static	CString	sNameKey("name");
+static	CString	sColorGroupIDKey(OSSTR("groupID"));
+static	CString	sColorIDKey(OSSTR("colorID"));
+static	CString	sColorInfoKey(OSSTR("color"));
+static	CString	sColorSetColorInfosKey(OSSTR("colors"));
+static	CString	sColorSetInfosKey(OSSTR("presets"));
+static	CString	sCurrentColorSetKey(OSSTR("currentColorSet"));
+static	CString	sNameKey(OSSTR("name"));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorGroupInternals

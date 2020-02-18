@@ -7,13 +7,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	CString*	sRedKey = nil;
-static	CString*	sGreenKey = nil;
-static	CString*	sBlueKey = nil;
-static	CString*	sHueKey = nil;
-static	CString*	sSaturationKey = nil;
-static	CString*	sValueKey = nil;
-static	CString*	sAlphaKey = nil;
+static	CString	sRedKey(OSSTR("r"));
+static	CString	sGreenKey(OSSTR("g"));
+static	CString	sBlueKey(OSSTR("b"));
+static	CString	sHueKey(OSSTR("h"));
+static	CString	sSaturationKey(OSSTR("s"));
+static	CString	sValueKey(OSSTR("v"));
+static	CString	sAlphaKey(OSSTR("a"));
 
 const	CColor	CColor::mClear(kColorTypeHSV, (UInt8) 0, 0, 0, 0);
 const	CColor	CColor::mAliceBlue(kColorTypeRGB, (UInt8) 240, 248, 255, 255);
@@ -199,7 +199,6 @@ class CColorInternals {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	void	sInitStorageKeys();
 static	void	sConvertRGBToHSV(CColorInternals& internals);
 static	void	sConvertHSVToRGB(CColorInternals& internals);
 
@@ -231,16 +230,14 @@ CColor::CColor(const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CColorInternals();
-	
-	sInitStorageKeys();
 
-	mInternals->mR = info.getFloat32(*sRedKey);
-	mInternals->mG = info.getFloat32(*sGreenKey);
-	mInternals->mB = info.getFloat32(*sBlueKey);
-	mInternals->mH = info.getFloat32(*sHueKey);
-	mInternals->mS = info.getFloat32(*sSaturationKey);
-	mInternals->mV = info.getFloat32(*sValueKey);
-	mInternals->mA = info.getFloat32(*sAlphaKey);
+	mInternals->mR = info.getFloat32(sRedKey);
+	mInternals->mG = info.getFloat32(sGreenKey);
+	mInternals->mB = info.getFloat32(sBlueKey);
+	mInternals->mH = info.getFloat32(sHueKey);
+	mInternals->mS = info.getFloat32(sSaturationKey);
+	mInternals->mV = info.getFloat32(sValueKey);
+	mInternals->mA = info.getFloat32(sAlphaKey);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -256,7 +253,7 @@ CColor::CColor(const CString& hexString)
 	//	RGB
 	//	RRGGBB
 	//	RRGGBBAA
-	CStringCharIndex	startIndex = hexString.beginsWith(CString("#")) ? 1 : 0;
+	CStringCharIndex	startIndex = hexString.hasPrefix(CString(OSSTR("#"))) ? 1 : 0;
 
 	if ((hexString.getLength() - startIndex) == 3) {
 		// RGB
@@ -405,15 +402,13 @@ CDictionary CColor::getInfo() const
 {
 	CDictionary	info;
 
-	sInitStorageKeys();
-
-	info.set(*sRedKey, mInternals->mR);
-	info.set(*sGreenKey, mInternals->mG);
-	info.set(*sBlueKey, mInternals->mB);
-	info.set(*sHueKey, mInternals->mH);
-	info.set(*sSaturationKey, mInternals->mS);
-	info.set(*sValueKey, mInternals->mV);
-	info.set(*sAlphaKey, mInternals->mA);
+	info.set(sRedKey, mInternals->mR);
+	info.set(sGreenKey, mInternals->mG);
+	info.set(sBlueKey, mInternals->mB);
+	info.set(sHueKey, mInternals->mH);
+	info.set(sSaturationKey, mInternals->mS);
+	info.set(sValueKey, mInternals->mV);
+	info.set(sAlphaKey, mInternals->mA);
 
 	return info;
 }
@@ -422,11 +417,11 @@ CDictionary CColor::getInfo() const
 CString CColor::getInfoAsString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CString("r: ") + CString(mInternals->mR, 5, 3) + CString(", g: ") +
-			CString(mInternals->mG, 5, 3) + CString(", b: ") + CString(mInternals->mB, 5, 3) +
-			CString(", h: ") + CString(mInternals->mH, 5, 3) + CString(", s: ") +
-			CString(mInternals->mS, 5, 3) + CString(", v: ") + CString(mInternals->mV, 5, 3) +
-			CString(", a: ") + CString(mInternals->mA, 5, 3);
+	return CString(OSSTR("r: ")) + CString(mInternals->mR, 5, 3) + CString(OSSTR(", g: ")) +
+			CString(mInternals->mG, 5, 3) + CString(OSSTR(", b: ")) + CString(mInternals->mB, 5, 3) +
+			CString(OSSTR(", h: ")) + CString(mInternals->mH, 5, 3) + CString(OSSTR(", s: ")) +
+			CString(mInternals->mS, 5, 3) + CString(OSSTR(", v: ")) + CString(mInternals->mV, 5, 3) +
+			CString(OSSTR(", a: ")) + CString(mInternals->mA, 5, 3);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -553,304 +548,302 @@ CColor& CColor::operator*=(const SHSVColorTransform& transform)
 OR<const CColor> CColor::getColorWithName(const CString& colorName)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CString	colorNameLocal = colorName;
-	colorNameLocal.makeLowercase();
-
-	if (colorNameLocal == CString("clear"))
+	CString	colorNameUse = colorName.lowercased();
+	if (colorNameUse == CString(OSSTR("clear")))
 		return OR<const CColor>(mClear);
-	if (colorNameLocal == CString("aliceblue"))
+	if (colorNameUse == CString(OSSTR("aliceblue")))
 		return OR<const CColor>(mAliceBlue);
-	if (colorNameLocal == CString("antiquewhite"))
+	if (colorNameUse == CString(OSSTR("antiquewhite")))
 		return OR<const CColor>(mAntiqueWhite);
-	if (colorNameLocal == CString("aqua"))
+	if (colorNameUse == CString(OSSTR("aqua")))
 		return OR<const CColor>(mAqua);
-	if (colorNameLocal == CString("aquamarine"))
+	if (colorNameUse == CString(OSSTR("aquamarine")))
 		return OR<const CColor>(mAquamarine);
-	if (colorNameLocal == CString("azure"))
+	if (colorNameUse == CString(OSSTR("azure")))
 		return OR<const CColor>(mAzure);
-	if (colorNameLocal == CString("beige"))
+	if (colorNameUse == CString(OSSTR("beige")))
 		return OR<const CColor>(mBeige);
-	if (colorNameLocal == CString("bisque"))
+	if (colorNameUse == CString(OSSTR("bisque")))
 		return OR<const CColor>(mBisque);
-	if (colorNameLocal == CString("black"))
+	if (colorNameUse == CString(OSSTR("black")))
 		return OR<const CColor>(mBlack);
-	if (colorNameLocal == CString("blanchedalmond"))
+	if (colorNameUse == CString(OSSTR("blanchedalmond")))
 		return OR<const CColor>(mBlanchedAlmond);
-	if (colorNameLocal == CString("blue"))
+	if (colorNameUse == CString(OSSTR("blue")))
 		return OR<const CColor>(mBlue);
-	if (colorNameLocal == CString("blueviolet"))
+	if (colorNameUse == CString(OSSTR("blueviolet")))
 		return OR<const CColor>(mBlueViolet);
-	if (colorNameLocal == CString("brown"))
+	if (colorNameUse == CString(OSSTR("brown")))
 		return OR<const CColor>(mBrown);
-	if (colorNameLocal == CString("burlywood"))
+	if (colorNameUse == CString(OSSTR("burlywood")))
 		return OR<const CColor>(mBurlywood);
-	if (colorNameLocal == CString("cadetblue"))
+	if (colorNameUse == CString(OSSTR("cadetblue")))
 		return OR<const CColor>(mCadetBlue);
-	if (colorNameLocal == CString("chartreuse"))
+	if (colorNameUse == CString(OSSTR("chartreuse")))
 		return OR<const CColor>(mChartreuse);
-	if (colorNameLocal == CString("chocolate"))
+	if (colorNameUse == CString(OSSTR("chocolate")))
 		return OR<const CColor>(mChocolate);
-	if (colorNameLocal == CString("coral"))
+	if (colorNameUse == CString(OSSTR("coral")))
 		return OR<const CColor>(mCoral);
-	if (colorNameLocal == CString("cornflowerblue"))
+	if (colorNameUse == CString(OSSTR("cornflowerblue")))
 		return OR<const CColor>(mCornflowerBlue);
-	if (colorNameLocal == CString("cornsilk"))
+	if (colorNameUse == CString(OSSTR("cornsilk")))
 		return OR<const CColor>(mCornSilk);
-	if (colorNameLocal == CString("crimson"))
+	if (colorNameUse == CString(OSSTR("crimson")))
 		return OR<const CColor>(mCrimson);
-	if (colorNameLocal == CString("cyan"))
+	if (colorNameUse == CString(OSSTR("cyan")))
 		return OR<const CColor>(mCyan);
-	if (colorNameLocal == CString("darkblue"))
+	if (colorNameUse == CString(OSSTR("darkblue")))
 		return OR<const CColor>(mDarkBlue);
-	if (colorNameLocal == CString("darkcyan"))
+	if (colorNameUse == CString(OSSTR("darkcyan")))
 		return OR<const CColor>(mDarkCyan);
-	if (colorNameLocal == CString("darkgoldenrod"))
+	if (colorNameUse == CString(OSSTR("darkgoldenrod")))
 		return OR<const CColor>(mDarkGoldenrod);
-	if (colorNameLocal == CString("darkgray"))
+	if (colorNameUse == CString(OSSTR("darkgray")))
 		return OR<const CColor>(mDarkGray);
-	if (colorNameLocal == CString("darkgreen"))
+	if (colorNameUse == CString(OSSTR("darkgreen")))
 		return OR<const CColor>(mDarkGreen);
-	if (colorNameLocal == CString("darkgrey"))
+	if (colorNameUse == CString(OSSTR("darkgrey")))
 		return OR<const CColor>(mDarkGrey);
-	if (colorNameLocal == CString("darkkhaki"))
+	if (colorNameUse == CString(OSSTR("darkkhaki")))
 		return OR<const CColor>(mDarkKhaki);
-	if (colorNameLocal == CString("darkmagenta"))
+	if (colorNameUse == CString(OSSTR("darkmagenta")))
 		return OR<const CColor>(mDarkMagenta);
-	if (colorNameLocal == CString("darkolivegreen"))
+	if (colorNameUse == CString(OSSTR("darkolivegreen")))
 		return OR<const CColor>(mDarkOliveGreen);
-	if (colorNameLocal == CString("darkorange"))
+	if (colorNameUse == CString(OSSTR("darkorange")))
 		return OR<const CColor>(mDarkOrange);
-	if (colorNameLocal == CString("darkorchid"))
+	if (colorNameUse == CString(OSSTR("darkorchid")))
 		return OR<const CColor>(mDarkOrchid);
-	if (colorNameLocal == CString("darkred"))
+	if (colorNameUse == CString(OSSTR("darkred")))
 		return OR<const CColor>(mDarkdRed);
-	if (colorNameLocal == CString("darksalmon"))
+	if (colorNameUse == CString(OSSTR("darksalmon")))
 		return OR<const CColor>(mDarkSalmon);
-	if (colorNameLocal == CString("darkseagreen"))
+	if (colorNameUse == CString(OSSTR("darkseagreen")))
 		return OR<const CColor>(mDarkSeaGreen);
-	if (colorNameLocal == CString("darkslateblue"))
+	if (colorNameUse == CString(OSSTR("darkslateblue")))
 		return OR<const CColor>(mDarkSlateBlue);
-	if (colorNameLocal == CString("darkslategray"))
+	if (colorNameUse == CString(OSSTR("darkslategray")))
 		return OR<const CColor>(mDarkSlateGray);
-	if (colorNameLocal == CString("darkslategrey"))
+	if (colorNameUse == CString(OSSTR("darkslategrey")))
 		return OR<const CColor>(mDarkSlateGrey);
-	if (colorNameLocal == CString("darkturquoise"))
+	if (colorNameUse == CString(OSSTR("darkturquoise")))
 		return OR<const CColor>(mDarkTurquoise);
-	if (colorNameLocal == CString("darkviolet"))
+	if (colorNameUse == CString(OSSTR("darkviolet")))
 		return OR<const CColor>(mDarkViolet);
-	if (colorNameLocal == CString("deeppink"))
+	if (colorNameUse == CString(OSSTR("deeppink")))
 		return OR<const CColor>(mDeepPink);
-	if (colorNameLocal == CString("deepskyblue"))
+	if (colorNameUse == CString(OSSTR("deepskyblue")))
 		return OR<const CColor>(mDeepSkyBlue);
-	if (colorNameLocal == CString("dimgray"))
+	if (colorNameUse == CString(OSSTR("dimgray")))
 		return OR<const CColor>(mDimGray);
-	if (colorNameLocal == CString("dimgrey"))
+	if (colorNameUse == CString(OSSTR("dimgrey")))
 		return OR<const CColor>(mDimGrey);
-	if (colorNameLocal == CString("dodgerblue"))
+	if (colorNameUse == CString(OSSTR("dodgerblue")))
 		return OR<const CColor>(mDodgerBlue);
-	if (colorNameLocal == CString("firebrick"))
+	if (colorNameUse == CString(OSSTR("firebrick")))
 		return OR<const CColor>(mFireBrick);
-	if (colorNameLocal == CString("floralwhite"))
+	if (colorNameUse == CString(OSSTR("floralwhite")))
 		return OR<const CColor>(mFloralWhite);
-	if (colorNameLocal == CString("forestgreen"))
+	if (colorNameUse == CString(OSSTR("forestgreen")))
 		return OR<const CColor>(mForestGreen);
-	if (colorNameLocal == CString("fuchsia"))
+	if (colorNameUse == CString(OSSTR("fuchsia")))
 		return OR<const CColor>(mFuchsia);
-	if (colorNameLocal == CString("gainsboro"))
+	if (colorNameUse == CString(OSSTR("gainsboro")))
 		return OR<const CColor>(mGainsboro);
-	if (colorNameLocal == CString("ghostwhite"))
+	if (colorNameUse == CString(OSSTR("ghostwhite")))
 		return OR<const CColor>(mGhostWhite);
-	if (colorNameLocal == CString("gold"))
+	if (colorNameUse == CString(OSSTR("gold")))
 		return OR<const CColor>(mGold);
-	if (colorNameLocal == CString("goldenrod"))
+	if (colorNameUse == CString(OSSTR("goldenrod")))
 		return OR<const CColor>(mGoldenrod);
-	if (colorNameLocal == CString("gray"))
+	if (colorNameUse == CString(OSSTR("gray")))
 		return OR<const CColor>(mGray);
-	if (colorNameLocal == CString("grey"))
+	if (colorNameUse == CString(OSSTR("grey")))
 		return OR<const CColor>(mGrey);
-	if (colorNameLocal == CString("green"))
+	if (colorNameUse == CString(OSSTR("green")))
 		return OR<const CColor>(mGreen);
-	if (colorNameLocal == CString("greenyellow"))
+	if (colorNameUse == CString(OSSTR("greenyellow")))
 		return OR<const CColor>(mGreenYellow);
-	if (colorNameLocal == CString("honeydew"))
+	if (colorNameUse == CString(OSSTR("honeydew")))
 		return OR<const CColor>(mHoneydew);
-	if (colorNameLocal == CString("hotpink"))
+	if (colorNameUse == CString(OSSTR("hotpink")))
 		return OR<const CColor>(mHotPink);
-	if (colorNameLocal == CString("indianred"))
+	if (colorNameUse == CString(OSSTR("indianred")))
 		return OR<const CColor>(mIndianRed);
-	if (colorNameLocal == CString("indigo"))
+	if (colorNameUse == CString(OSSTR("indigo")))
 		return OR<const CColor>(mIndigo);
-	if (colorNameLocal == CString("ivory"))
+	if (colorNameUse == CString(OSSTR("ivory")))
 		return OR<const CColor>(mIvory);
-	if (colorNameLocal == CString("khaki"))
+	if (colorNameUse == CString(OSSTR("khaki")))
 		return OR<const CColor>(mKhaki);
-	if (colorNameLocal == CString("lavender"))
+	if (colorNameUse == CString(OSSTR("lavender")))
 		return OR<const CColor>(mLavender);
-	if (colorNameLocal == CString("lavenderblush"))
+	if (colorNameUse == CString(OSSTR("lavenderblush")))
 		return OR<const CColor>(mLavenderBlush);
-	if (colorNameLocal == CString("lawngreen"))
+	if (colorNameUse == CString(OSSTR("lawngreen")))
 		return OR<const CColor>(mLawnGreen);
-	if (colorNameLocal == CString("lemonchiffon"))
+	if (colorNameUse == CString(OSSTR("lemonchiffon")))
 		return OR<const CColor>(mLemonChiffon);
-	if (colorNameLocal == CString("lightblue"))
+	if (colorNameUse == CString(OSSTR("lightblue")))
 		return OR<const CColor>(mLightBlue);
-	if (colorNameLocal == CString("lightcoral"))
+	if (colorNameUse == CString(OSSTR("lightcoral")))
 		return OR<const CColor>(mLightCoral);
-	if (colorNameLocal == CString("lightcyan"))
+	if (colorNameUse == CString(OSSTR("lightcyan")))
 		return OR<const CColor>(mLightCyan);
-	if (colorNameLocal == CString("lightgoldenrodyellow"))
+	if (colorNameUse == CString(OSSTR("lightgoldenrodyellow")))
 		return OR<const CColor>(mLightGoldenrodYellow);
-	if (colorNameLocal == CString("lightgray"))
+	if (colorNameUse == CString(OSSTR("lightgray")))
 		return OR<const CColor>(mLightGray);
-	if (colorNameLocal == CString("lightgreen"))
+	if (colorNameUse == CString(OSSTR("lightgreen")))
 		return OR<const CColor>(mLightGreen);
-	if (colorNameLocal == CString("lightgrey"))
+	if (colorNameUse == CString(OSSTR("lightgrey")))
 		return OR<const CColor>(mLightGrey);
-	if (colorNameLocal == CString("lightpink"))
+	if (colorNameUse == CString(OSSTR("lightpink")))
 		return OR<const CColor>(mLightPink);
-	if (colorNameLocal == CString("lightsalmon"))
+	if (colorNameUse == CString(OSSTR("lightsalmon")))
 		return OR<const CColor>(mLighSalmon);
-	if (colorNameLocal == CString("lightseagreen"))
+	if (colorNameUse == CString(OSSTR("lightseagreen")))
 		return OR<const CColor>(mLightSeaGreen);
-	if (colorNameLocal == CString("lightskyblue"))
+	if (colorNameUse == CString(OSSTR("lightskyblue")))
 		return OR<const CColor>(mLightSkyBlue);
-	if (colorNameLocal == CString("lightslategray"))
+	if (colorNameUse == CString(OSSTR("lightslategray")))
 		return OR<const CColor>(mLightSlateGray);
-	if (colorNameLocal == CString("lightslategrey"))
+	if (colorNameUse == CString(OSSTR("lightslategrey")))
 		return OR<const CColor>(mLightSlateGrey);
-	if (colorNameLocal == CString("lightsteelblue"))
+	if (colorNameUse == CString(OSSTR("lightsteelblue")))
 		return OR<const CColor>(mLightSteelBlue);
-	if (colorNameLocal == CString("lightyellow"))
+	if (colorNameUse == CString(OSSTR("lightyellow")))
 		return OR<const CColor>(mLightYellow);
-	if (colorNameLocal == CString("lime"))
+	if (colorNameUse == CString(OSSTR("lime")))
 		return OR<const CColor>(mLime);
-	if (colorNameLocal == CString("limegreen"))
+	if (colorNameUse == CString(OSSTR("limegreen")))
 		return OR<const CColor>(mLimeGreen);
-	if (colorNameLocal == CString("linen"))
+	if (colorNameUse == CString(OSSTR("linen")))
 		return OR<const CColor>(mLinen);
-	if (colorNameLocal == CString("magenta"))
+	if (colorNameUse == CString(OSSTR("magenta")))
 		return OR<const CColor>(mMagenta);
-	if (colorNameLocal == CString("maroon"))
+	if (colorNameUse == CString(OSSTR("maroon")))
 		return OR<const CColor>(mMaroon);
-	if (colorNameLocal == CString("mediumaquamarine"))
+	if (colorNameUse == CString(OSSTR("mediumaquamarine")))
 		return OR<const CColor>(mMediumAquamarine);
-	if (colorNameLocal == CString("mediumblue"))
+	if (colorNameUse == CString(OSSTR("mediumblue")))
 		return OR<const CColor>(mMediumBlue);
-	if (colorNameLocal == CString("mediumorchid"))
+	if (colorNameUse == CString(OSSTR("mediumorchid")))
 		return OR<const CColor>(mMediumOrchid);
-	if (colorNameLocal == CString("mediumpurple"))
+	if (colorNameUse == CString(OSSTR("mediumpurple")))
 		return OR<const CColor>(mMediumPurple);
-	if (colorNameLocal == CString("mediumseagreen"))
+	if (colorNameUse == CString(OSSTR("mediumseagreen")))
 		return OR<const CColor>(mMediumSeaGreen);
-	if (colorNameLocal == CString("mediumslateblue"))
+	if (colorNameUse == CString(OSSTR("mediumslateblue")))
 		return OR<const CColor>(mMediumSlateBlue);
-	if (colorNameLocal == CString("mediumspringgreen"))
+	if (colorNameUse == CString(OSSTR("mediumspringgreen")))
 		return OR<const CColor>(mMediumSpringGreen);
-	if (colorNameLocal == CString("mediumturquoise"))
+	if (colorNameUse == CString(OSSTR("mediumturquoise")))
 		return OR<const CColor>(mMediumTurquoise);
-	if (colorNameLocal == CString("mediumvioletred"))
+	if (colorNameUse == CString(OSSTR("mediumvioletred")))
 		return OR<const CColor>(mMediumVioletRed);
-	if (colorNameLocal == CString("midnightblue"))
+	if (colorNameUse == CString(OSSTR("midnightblue")))
 		return OR<const CColor>(mMidnightBlue);
-	if (colorNameLocal == CString("mintcream"))
+	if (colorNameUse == CString(OSSTR("mintcream")))
 		return OR<const CColor>(mMintCream);
-	if (colorNameLocal == CString("mistyrose"))
+	if (colorNameUse == CString(OSSTR("mistyrose")))
 		return OR<const CColor>(mMistyRose);
-	if (colorNameLocal == CString("moccasin"))
+	if (colorNameUse == CString(OSSTR("moccasin")))
 		return OR<const CColor>(mMoccasin);
-	if (colorNameLocal == CString("navajowhite"))
+	if (colorNameUse == CString(OSSTR("navajowhite")))
 		return OR<const CColor>(mNavajoWhite);
-	if (colorNameLocal == CString("navy"))
+	if (colorNameUse == CString(OSSTR("navy")))
 		return OR<const CColor>(mNavy);
-	if (colorNameLocal == CString("oldlace"))
+	if (colorNameUse == CString(OSSTR("oldlace")))
 		return OR<const CColor>(mOldLace);
-	if (colorNameLocal == CString("olive"))
+	if (colorNameUse == CString(OSSTR("olive")))
 		return OR<const CColor>(mOlive);
-	if (colorNameLocal == CString("olivedrab"))
+	if (colorNameUse == CString(OSSTR("olivedrab")))
 		return OR<const CColor>(mOliveDrab);
-	if (colorNameLocal == CString("orange"))
+	if (colorNameUse == CString(OSSTR("orange")))
 		return OR<const CColor>(mOrange);
-	if (colorNameLocal == CString("orangered"))
+	if (colorNameUse == CString(OSSTR("orangered")))
 		return OR<const CColor>(mOrangeRed);
-	if (colorNameLocal == CString("orchid"))
+	if (colorNameUse == CString(OSSTR("orchid")))
 		return OR<const CColor>(mOrchid);
-	if (colorNameLocal == CString("palegoldenrod"))
+	if (colorNameUse == CString(OSSTR("palegoldenrod")))
 		return OR<const CColor>(mPaleGoldenrod);
-	if (colorNameLocal == CString("palegreen"))
+	if (colorNameUse == CString(OSSTR("palegreen")))
 		return OR<const CColor>(mPaleGreen);
-	if (colorNameLocal == CString("paleturquoise"))
+	if (colorNameUse == CString(OSSTR("paleturquoise")))
 		return OR<const CColor>(mPaleTurquoise);
-	if (colorNameLocal == CString("palevioletred"))
+	if (colorNameUse == CString(OSSTR("palevioletred")))
 		return OR<const CColor>(mPaleVioletRed);
-	if (colorNameLocal == CString("papayawhip"))
+	if (colorNameUse == CString(OSSTR("papayawhip")))
 		return OR<const CColor>(mPapayaWhip);
-	if (colorNameLocal == CString("peachpuff"))
+	if (colorNameUse == CString(OSSTR("peachpuff")))
 		return OR<const CColor>(mPeachPuff);
-	if (colorNameLocal == CString("peru"))
+	if (colorNameUse == CString(OSSTR("peru")))
 		return OR<const CColor>(mPeru);
-	if (colorNameLocal == CString("pink"))
+	if (colorNameUse == CString(OSSTR("pink")))
 		return OR<const CColor>(mPink);
-	if (colorNameLocal == CString("plum"))
+	if (colorNameUse == CString(OSSTR("plum")))
 		return OR<const CColor>(mPlum);
-	if (colorNameLocal == CString("powderblue"))
+	if (colorNameUse == CString(OSSTR("powderblue")))
 		return OR<const CColor>(mPowderBlue);
-	if (colorNameLocal == CString("purple"))
+	if (colorNameUse == CString(OSSTR("purple")))
 		return OR<const CColor>(mPurple);
-	if (colorNameLocal == CString("red"))
+	if (colorNameUse == CString(OSSTR("red")))
 		return OR<const CColor>(mRed);
-	if (colorNameLocal == CString("rosybrown"))
+	if (colorNameUse == CString(OSSTR("rosybrown")))
 		return OR<const CColor>(mRosyBrown);
-	if (colorNameLocal == CString("royalblue"))
+	if (colorNameUse == CString(OSSTR("royalblue")))
 		return OR<const CColor>(mRoyalBlue);
-	if (colorNameLocal == CString("saddlebrown"))
+	if (colorNameUse == CString(OSSTR("saddlebrown")))
 		return OR<const CColor>(mSadleBrown);
-	if (colorNameLocal == CString("salmon"))
+	if (colorNameUse == CString(OSSTR("salmon")))
 		return OR<const CColor>(mSalmon);
-	if (colorNameLocal == CString("sandybrown"))
+	if (colorNameUse == CString(OSSTR("sandybrown")))
 		return OR<const CColor>(mSandyBrown);
-	if (colorNameLocal == CString("seagreen"))
+	if (colorNameUse == CString(OSSTR("seagreen")))
 		return OR<const CColor>(mSeaGreen);
-	if (colorNameLocal == CString("seashell"))
+	if (colorNameUse == CString(OSSTR("seashell")))
 		return OR<const CColor>(mSeashell);
-	if (colorNameLocal == CString("sienna"))
+	if (colorNameUse == CString(OSSTR("sienna")))
 		return OR<const CColor>(mSienna);
-	if (colorNameLocal == CString("silver"))
+	if (colorNameUse == CString(OSSTR("silver")))
 		return OR<const CColor>(mSilver);
-	if (colorNameLocal == CString("skyblue"))
+	if (colorNameUse == CString(OSSTR("skyblue")))
 		return OR<const CColor>(mSkyBlue);
-	if (colorNameLocal == CString("slateblue"))
+	if (colorNameUse == CString(OSSTR("slateblue")))
 		return OR<const CColor>(mSlateBlue);
-	if (colorNameLocal == CString("slategray"))
+	if (colorNameUse == CString(OSSTR("slategray")))
 		return OR<const CColor>(mSlateGray);
-	if (colorNameLocal == CString("slategrey"))
+	if (colorNameUse == CString(OSSTR("slategrey")))
 		return OR<const CColor>(mSlateGrey);
-	if (colorNameLocal == CString("snow"))
+	if (colorNameUse == CString(OSSTR("snow")))
 		return OR<const CColor>(mSnow);
-	if (colorNameLocal == CString("springgreen"))
+	if (colorNameUse == CString(OSSTR("springgreen")))
 		return OR<const CColor>(mSpringGreen);
-	if (colorNameLocal == CString("steelblue"))
+	if (colorNameUse == CString(OSSTR("steelblue")))
 		return OR<const CColor>(mSteelBlue);
-	if (colorNameLocal == CString("tan"))
+	if (colorNameUse == CString(OSSTR("tan")))
 		return OR<const CColor>(mTan);
-	if (colorNameLocal == CString("teal"))
+	if (colorNameUse == CString(OSSTR("teal")))
 		return OR<const CColor>(mTeal);
-	if (colorNameLocal == CString("thistle"))
+	if (colorNameUse == CString(OSSTR("thistle")))
 		return OR<const CColor>(mThistle);
-	if (colorNameLocal == CString("tomato"))
+	if (colorNameUse == CString(OSSTR("tomato")))
 		return OR<const CColor>(mTomato);
-	if (colorNameLocal == CString("turquoise"))
+	if (colorNameUse == CString(OSSTR("turquoise")))
 		return OR<const CColor>(mTurquoise);
-	if (colorNameLocal == CString("violet"))
+	if (colorNameUse == CString(OSSTR("violet")))
 		return OR<const CColor>(mViolet);
-	if (colorNameLocal == CString("wheat"))
+	if (colorNameUse == CString(OSSTR("wheat")))
 		return OR<const CColor>(mWheat);
-	if (colorNameLocal == CString("white"))
+	if (colorNameUse == CString(OSSTR("white")))
 		return OR<const CColor>(mWhite);
-	if (colorNameLocal == CString("whitesmoke"))
+	if (colorNameUse == CString(OSSTR("whitesmoke")))
 		return OR<const CColor>(mWhiteSmoke);
-	if (colorNameLocal == CString("yellow"))
+	if (colorNameUse == CString(OSSTR("yellow")))
 		return OR<const CColor>(mYellow);
-	if (colorNameLocal == CString("yellowgreen"))
+	if (colorNameUse == CString(OSSTR("yellowgreen")))
 		return OR<const CColor>(mYellowGreen);
 
 	return OR<const CColor>();
@@ -859,21 +852,6 @@ OR<const CColor> CColor::getColorWithName(const CString& colorName)
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
-
-//----------------------------------------------------------------------------------------------------------------------
-void sInitStorageKeys()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	if (sRedKey == nil) {
-		sRedKey = new CString("r");
-		sGreenKey = new CString("g");
-		sBlueKey = new CString("b");
-		sHueKey = new CString("h");
-		sSaturationKey = new CString("s");
-		sValueKey = new CString("v");
-		sAlphaKey = new CString("a");
-	}
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 void sConvertRGBToHSV(CColorInternals& internals)

@@ -1,17 +1,27 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CGPURenderObject.h			©2018 Stevo Brock		All rights reserved.
+//	CURL.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPURenderObject
+#include "CString.h"
 
-class CGPURenderObject {
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CURL
+
+class CURLInternals;
+class CURL {
 	// Methods
 	public:
 				// Lifecycle methods
-				CGPURenderObject() {}
-				CGPURenderObject(const CGPURenderObject& other) {}
-		virtual	~CGPURenderObject() {}
+				CURL(const CString& string);
+				CURL(const CURL& other);
+				~CURL();
+
+				// Instance methods
+		CString	getString() const;
+
+	// Properties
+	private:
+		CURLInternals*	mInternals;
 };

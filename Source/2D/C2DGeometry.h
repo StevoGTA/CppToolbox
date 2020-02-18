@@ -26,10 +26,9 @@ template <typename T> struct T2DPoint {
 						T2DPoint(const CString& string)
 							{
 								// {0.0,0.0} => ,0.0,0.0}
-								CString			stringUse(string);
 								TArray<CString>	array =
-														stringUse.replaceSubStrings(CString("{"), CString(","))
-																.breakUp(CString(","));
+														string.replacingSubStrings(CString(OSSTR("{")),
+																CString(OSSTR(","))).breakUp(CString(OSSTR(",")));
 								if (array.getCount() >= 3) {
 									// Extract values
 									mX = array[1].getFloat32();
@@ -76,8 +75,8 @@ template <typename T> struct T2DPoint {
 
 	inline	CString		asString() const
 							{
-								return CString("{") + CString(mX, 5, 3) + CString(",") + CString(mY, 5, 3) +
-										CString("}");
+								return CString(OSSTR("{")) + CString(mX, 5, 3) + CString(OSSTR(",")) + CString(mY, 5, 3)
+										+ CString(OSSTR("}"));
 							}
 
 	// Properties
@@ -98,10 +97,9 @@ template <typename T> struct T2DSize {
 					T2DSize(const CString& string)
 						{
 							// {0.0,0.0} => ,0.0,0.0}
-							CString			stringUse(string);
 							TArray<CString>	array =
-													stringUse.replaceSubStrings(CString("{"), CString(","))
-															.breakUp(CString(","));
+													string.replacingSubStrings(CString(OSSTR("{")),
+															CString(OSSTR(","))).breakUp(CString(OSSTR(",")));
 							if (array.getCount() >= 3) {
 								// Extract values
 								mWidth = array[1].getFloat32();
@@ -121,8 +119,8 @@ template <typename T> struct T2DSize {
 
 	inline	CString	asString() const
 						{
-							return CString("{") + CString(mWidth, 5, 3) + CString(",") + CString(mHeight, 5, 3) +
-									CString("}");
+							return CString(OSSTR("{")) + CString(mWidth, 5, 3) + CString(OSSTR(",")) +
+									CString(mHeight, 5, 3) + CString(OSSTR("}"));
 						}
 	// Properties
 	T	mWidth;
@@ -193,10 +191,9 @@ template <typename T> struct T2DRect {
 					T2DRect(const CString& string)
 						{
 							// {{0.0,0.0},{0.0,0.0}} => ,,0.0,0.0},,0.0,0.0}}
-							CString			stringUse(string);
 							TArray<CString>	array =
-													stringUse.replaceSubStrings(CString("{"), CString(","))
-															.breakUp(CString(","));
+													string.replacingSubStrings(CString(OSSTR("{")),
+															CString(OSSTR(","))).breakUp(CString(OSSTR(",")));
 							if (array.getCount() >= 7) {
 								// Extract values
 								mOrigin.mX = array[2].getFloat32();
@@ -247,9 +244,9 @@ template <typename T> struct T2DRect {
 
 	inline	CString	asString() const
 						{
-							return CString("{{") + CString(mOrigin.mX, 5, 3) + CString(",") +
-									CString(mOrigin.mY, 5, 3) + CString("},{") + CString(mSize.mWidth, 5, 3) +
-									CString(",") + CString(mSize.mHeight, 5, 3) + CString("}}");
+							return CString(OSSTR("{{")) + CString(mOrigin.mX, 5, 3) + CString(OSSTR(",")) +
+									CString(mOrigin.mY, 5, 3) + CString(OSSTR("},{")) + CString(mSize.mWidth, 5, 3) +
+									CString(OSSTR(",")) + CString(mSize.mHeight, 5, 3) + CString(OSSTR("}}"));
 						}
 
 	// Properties

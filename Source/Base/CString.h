@@ -21,6 +21,10 @@ typedef	UInt32	CStringCharIndex;
 typedef	UInt32	CStringLength;
 
 struct SStringRange {
+	// Lifecycle methods
+	SStringRange(CStringCharIndex start, CStringLength length) : mStart(start), mLength(length) {}
+
+	// Properties
 	CStringCharIndex	mStart;
 	CStringLength		mLength;	// 0 if not found
 };
@@ -175,10 +179,34 @@ enum EStringMakeLegalFilenameOptions {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - SCString
+struct SCString : SReferenceCountable {
+					// Lifecycle methods
+					SCString(CStringLength length) : SReferenceCountable(), mBuffer(new char[length]) {}
+					SCString(const SCString& other) : SReferenceCountable(other), mBuffer(other.mBuffer) {}
+					~SCString()
+						{
+							// Check if last reference
+							if (removeReference() == 0)
+								// Last reference
+								DisposeOfArray(mBuffer);
+						}
+
+					// Instance methods
+	const	char*	operator*() const
+						{ return mBuffer; }
+
+			void	hashInto(CHasher& hasher) const
+						{ hasher.add(mBuffer); }
+
+	// Properties
+	char*	mBuffer;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CString
 
 class CData;
-class CStringInternals;
 
 class CString : public CHashable {
 	// Methods
@@ -225,12 +253,11 @@ class CString : public CHashable {
 
 										// CHashable methods
 						void			hashInto(CHasher& hasher) const
-											{ hasher.add(getCString()); }
-		
+											{ getCString().hashInto(hasher); }
+
 										// Instance methods
-				const	char*			getCString(EStringEncoding encoding = kStringEncodingTextDefault) const;
+				const	SCString		getCString(EStringEncoding encoding = kStringEncodingTextDefault) const;
 						CStringLength	getLength(EStringEncoding encoding = kStringEncodingCurrent) const;
-						CString&		setLength(CStringLength length);
 						bool			isEmpty() const
 											{ return getLength() == 0; }
 
@@ -278,43 +305,37 @@ class CString : public CHashable {
 						
 						CString			getSubString(CStringCharIndex startIndex,
 												CStringLength charCount = kCStringDefaultMaxLength) const;
-						CString&		replaceSubStrings(const CString& subStringToReplace,
-												const CString& replacementString = CString::mEmpty);
 						CString			replacingSubStrings(const CString& subStringToReplace,
 												const CString& replacementString = CString::mEmpty) const;
-						CString&		replaceCharacters(CStringCharIndex startIndex = 0,
+						CString			replacingCharacters(CStringCharIndex startIndex = 0,
 												CStringLength charCount = kCStringDefaultMaxLength,
-												const CString& replacementString = CString::mEmpty);
+												const CString& replacementString = CString::mEmpty) const;
 
 						SStringRange	findSubString(const CString& subString, CStringCharIndex startIndex = 0,
 												CStringLength charCount = kCStringDefaultMaxLength) const;
 						
-						CString&		makeLowercase();
-						CString			lowercased() const
-											{ CString string(*this); string.makeLowercase(); return string; }
-						CString&		makeUppercase();
-						CString			uppercased() const
-											{ CString string(*this); string.makeUppercase(); return string; }
-						CString&		removeLeadingAndTrailingWhitespace();
-						CString&		removeAllWhitespace();
-						CString&		removeLeadingAndTrailingQuotes();
+						CString			lowercased() const;
+						CString			uppercased() const;
+						CString			removingLeadingAndTrailingWhitespace() const;
+						CString			removingAllWhitespace() const;
+						CString			removingLeadingAndTrailingQuotes() const;
 
-						CString&		makeLegalFilename(UInt32 options = kStringMakeLegalFilenameOptionsNone);
+						CString			makingLegalFilename(UInt32 options = kStringMakeLegalFilenameOptionsNone) const;
 						bool			isValidEmailAddress() const;
-						CString			getCommonBeginning(const CString& other) const;
+						CString			getCommonPrefix(const CString& other) const;
 					
 						TArray<CString>	breakUp(const CString& delimiterString, bool respectQuotes = false) const;
 						
-						CString&		convertToPercentEscapes();
-						CString&		convertFromPercentEscapes();
+//						CString&		convertToPercentEscapes();
+//						CString&		convertFromPercentEscapes();
 						
-						ECompareResult	compareTo(const CString& string,
+						ECompareResult	compareTo(const CString& other,
 												EStringCompareFlags flags = kStringCompareFlagsDefault) const;
-						bool			equals(const CString& string,
+						bool			equals(const CString& other,
 												EStringCompareFlags flags = kStringCompareFlagsDefault) const;
-						bool			beginsWith(const CString& string) const;
-						bool			endsWith(const CString& string) const;
-						bool			contains(const CString& string,
+						bool			hasPrefix(const CString& other) const;
+						bool			hasSuffix(const CString& other) const;
+						bool			contains(const CString& other,
 												EStringCompareFlags flags = kStringCompareFlagsDefault) const;
 												
 						CString&		operator=(const CString& other);
@@ -334,18 +355,20 @@ class CString : public CHashable {
 
 	// Properties
 	public:
-		static			CString				mEmpty;
+		static			CString		mEmpty;
 
-		static			CString				mCommaCharacter;
-		static			CString				mPeriodCharacter;
-		static			CString				mSpaceCharacter;
-		static			CString				mSpaceX4;
-		static			CString				mTabCharacter;
+		static			CString		mCommaCharacter;
+		static			CString		mPeriodCharacter;
+		static			CString		mSpaceCharacter;
+		static			CString		mSpaceX4;
+		static			CString		mTabCharacter;
 
-		static			CString				sNewlineCharacter;
-		static			CString				sLinefeedCharacter;
-		static			CString				sNewlineCharacters;
+		static			CString		sNewlineCharacter;
+		static			CString		sLinefeedCharacter;
+		static			CString		sNewlineCharacters;
 		
 	private:
-						CStringInternals*	mInternals;
+#if TARGET_OS_MACOS || TARGET_OS_IOS
+						CFStringRef	mStringRef;
+#endif
 };

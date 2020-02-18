@@ -38,8 +38,8 @@ UError CFile::rename(const CString& string)
 	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(string);
 
 	// Rename
-	if (::rename(getFilesystemPath().getString().getCString(kStringEncodingUTF8),
-			filesystemPath.getString().getCString(kStringEncodingUTF8)) == 0) {
+	if (::rename(*getFilesystemPath().getString().getCString(kStringEncodingUTF8),
+			*filesystemPath.getString().getCString(kStringEncodingUTF8)) == 0) {
 		// Success
 		update(filesystemPath);
 
@@ -55,7 +55,7 @@ UInt64 CFile::getSize() const
 {
 	// Get size
 	struct	stat	statInfo;
-	if (::stat(getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) == 0)
+	if (::stat(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) == 0)
 		// Success
 		return statInfo.st_size;
 	else
@@ -68,7 +68,7 @@ UError CFile::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove
-	if (::unlink(getFilesystemPath().getString().getCString(kStringEncodingUTF8)) == 0)
+	if (::unlink(*getFilesystemPath().getString().getCString(kStringEncodingUTF8)) == 0)
 		// Success
 		return kNoError;
 	else
@@ -80,7 +80,7 @@ UError CFile::remove() const
 bool CFile::doesExist() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::access(getFilesystemPath().getString().getCString(kStringEncodingUTF8), F_OK) != -1;
+	return ::access(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), F_OK) != -1;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ bool CFile::getLocked() const
 {
 	struct	stat	statInfo;
 
-	return (::stat(getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) == 0) &&
+	return (::stat(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) == 0) &&
 			((statInfo.st_flags & UF_IMMUTABLE) != 0);
 }
 
@@ -99,13 +99,13 @@ UError CFile::setLocked(bool lockFile) const
 {
 	// Get flags
 	struct	stat	statInfo;
-	if (::stat(getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) != 0)
+	if (::stat(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) != 0)
 		// Error
 		CFileReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "getting flags when setting locked");
 
 	// Update flags
 	statInfo.st_flags = lockFile ? (statInfo.st_flags | UF_IMMUTABLE) : (statInfo.st_flags & ~UF_IMMUTABLE);
-	if (::chflags(getFilesystemPath().getString().getCString(kStringEncodingUTF8), statInfo.st_flags) != 0)
+	if (::chflags(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), statInfo.st_flags) != 0)
 		// Error
 		CFileReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting locked");
 
@@ -118,7 +118,7 @@ UInt16 CFile::getPermissions() const
 {
 	struct	stat	statInfo;
 
-	return (::stat(getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) == 0) ?
+	return (::stat(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) == 0) ?
 			statInfo.st_mode : 0;
 }
 
@@ -127,7 +127,7 @@ UError CFile::setPermissions(UInt16 permissions) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set permissions
-	if (::chmod(getFilesystemPath().getString().getCString(kStringEncodingUTF8), permissions) == 0)
+	if (::chmod(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), permissions) == 0)
 		// Succes
 		return kNoError;
 	else

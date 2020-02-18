@@ -11,13 +11,14 @@ class CFileSetup {
 	public:
 		CFileSetup()
 			{
-				CErrorRegistry::registerError(kFileDoesNotExistError, CString("File Does Not Exist"));
-				CErrorRegistry::registerError(kFileIsOpenError, CString("File Is Open"));
-				CErrorRegistry::registerError(kFileNotOpenError, CString("Is Not Open"));
-				CErrorRegistry::registerError(kFileNotFoundError, CString("Is Not Found"));
-				CErrorRegistry::registerError(kFileUnableToRevealInFinderError, CString("Unable to reveal in Finder"));
-				CErrorRegistry::registerError(kFileUnableToReadError, CString("Unable to read"));
-				CErrorRegistry::registerError(kFileUnableToWriteError, CString("Unable to write"));
+				CErrorRegistry::registerError(kFileDoesNotExistError, CString(OSSTR("File Does Not Exist")));
+				CErrorRegistry::registerError(kFileIsOpenError, CString(OSSTR("File Is Open")));
+				CErrorRegistry::registerError(kFileNotOpenError, CString(OSSTR("Is Not Open")));
+				CErrorRegistry::registerError(kFileNotFoundError, CString(OSSTR("Is Not Found")));
+				CErrorRegistry::registerError(kFileUnableToRevealInFinderError,
+						CString(OSSTR("Unable to reveal in Finder")));
+				CErrorRegistry::registerError(kFileUnableToReadError, CString(OSSTR("Unable to read")));
+				CErrorRegistry::registerError(kFileUnableToWriteError, CString(OSSTR("Unable to write")));
 			}
 };
 

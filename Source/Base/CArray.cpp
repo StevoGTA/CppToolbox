@@ -11,6 +11,7 @@
 // MARK: SArraySortInfo
 
 struct SArraySortInfo {
+	// Properties
 	CArrayCompareProc	mCompareProc;
 	void*				mUserData;
 };

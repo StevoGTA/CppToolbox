@@ -34,10 +34,12 @@
 // MARK: - SFileMemoryMapSetupInfo
 
 struct SFileMemoryMapSetupInfo {
+	// Lifecycle methods
 	SFileMemoryMapSetupInfo(CFileReaderInternals* fileReaderInternals) :
 		mFileReaderInternals(fileReaderInternals), mBytePtr(nil), mByteCount(0)
 		{}
 
+	// Properties
 	CFileReaderInternals*	mFileReaderInternals;
 	void*					mBytePtr;
 	UInt64					mByteCount;
@@ -162,7 +164,7 @@ UError CFileReader::open(bool buffered)
 		if (mInternals->mFILE == nil) {
 			// Open
 			mInternals->mFILE =
-					::fopen(mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8), "rb");
+					::fopen(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8), "rb");
 
 			if (mInternals->mFILE != nil)
 				// Success
@@ -184,7 +186,7 @@ UError CFileReader::open(bool buffered)
 		if (mInternals->mFD == -1) {
 			// Open
 			mInternals->mFD =
-					::open(mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8),
+					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8),
 							O_RDONLY | O_EXLOCK, 0);
 			if (mInternals->mFD != -1)
 				// Success

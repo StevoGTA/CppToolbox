@@ -49,7 +49,7 @@ class CFilesystemPath : public CHashable {
 
 						// CHashable methods
 		void			hashInto(CHasher& hasher) const
-							{ hasher.add(getString().getCString()); }
+							{ getString().hashInto(hasher); }
 
 						// Instance methods
 		CString			getString(EFilesystemPathStyle pathStyle = kFilesystemPathStylePlatformDefault) const;

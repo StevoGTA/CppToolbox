@@ -17,15 +17,15 @@ const	UInt64	kDisplayAsGiBThreshHold = 1024 * 1024 * 1024;
 
 CString	CString::mEmpty;
 
-CString	CString::mCommaCharacter(",");
-CString	CString::mPeriodCharacter(".");
-CString	CString::mSpaceCharacter(" ");
-CString	CString::mSpaceX4("    ");
-CString	CString::mTabCharacter("\t");
+CString	CString::mCommaCharacter(OSSTR(","));
+CString	CString::mPeriodCharacter(OSSTR("."));
+CString	CString::mSpaceCharacter(OSSTR(" "));
+CString	CString::mSpaceX4(OSSTR("    "));
+CString	CString::mTabCharacter(OSSTR("\t"));
 
-CString	CString::sNewlineCharacter("\n");
-CString	CString::sLinefeedCharacter("\r");
-CString	CString::sNewlineCharacters("\n\r");
+CString	CString::sNewlineCharacter(OSSTR("\n"));
+CString	CString::sLinefeedCharacter(OSSTR("\r"));
+CString	CString::sNewlineCharacters(OSSTR("\n\r"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -44,30 +44,30 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 		// Bytes - Decimal
 		if (options & kStringSpecialFormattingOptionsBytesDecimalDoEasyRead) {
 			if (value > kDisplayAsGBThreshHold)
-				*this = CString((Float64) value / (1000.0 * 1000.0 * 1000.0), 0, 2) + CString("GB");
+				*this = CString((Float64) value / (1000.0 * 1000.0 * 1000.0), 0, 2) + CString(OSSTR("GB"));
 			else if (value > kDisplayAsMBThreshHold)
-				*this = CString((Float64) value / (1000.0 * 1000.0), 0, 2) + CString("MB");
+				*this = CString((Float64) value / (1000.0 * 1000.0), 0, 2) + CString(OSSTR("MB"));
 			else if (value > kDisplayAsKBThreshhold)
-				*this = CString((Float64) value / 1000.0, 0, 2) + CString("KB");
+				*this = CString((Float64) value / 1000.0, 0, 2) + CString(OSSTR("KB"));
 			else {
 				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExact)
-					replaceCharacters();
+					*this = CString::mEmpty;
 				else
-					*this = CString(value) + CString(" bytes");
+					*this = CString(value) + CString(OSSTR(" bytes"));
 			}
 		}
 
 		if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExact) {
 			// Display exact byte count
 			if ((options & kStringSpecialFormattingOptionsBytesDecimalDoEasyRead) && (value > kDisplayAsKBThreshhold))
-				*this += CString(" (");
+				*this += CString(OSSTR(" ("));
 
 			UInt64	valueCopy = value;
 			bool	displayZeros = false;
 			if (valueCopy > 1000000000000LL) {
 				*this += CString(valueCopy / 1000000000000LL, 3);
 				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 				valueCopy %= 1000000000000LL;
 				displayZeros = true;
 			}
@@ -75,74 +75,74 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 			if (valueCopy > 1000000000) {
 				*this += CString(valueCopy / 1000000000, displayZeros ? 3 : 0, displayZeros);
 				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 				valueCopy %= 1000000000;
 				displayZeros = true;
 			} else if (displayZeros) {
-				*this += CString("000");
+				*this += CString(OSSTR("000"));
 				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 			}
 
 			if (valueCopy > 1000000) {
 				*this += CString(valueCopy / 1000000, displayZeros ? 3 : 0, displayZeros);
 				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 				valueCopy %= 1000000;
 				displayZeros = true;
 			} else if (displayZeros) {
-				*this += CString("000");
+				*this += CString(OSSTR("000"));
 				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 			}
 
 			if (valueCopy > 1000) {
 				*this += CString(valueCopy / 1000, displayZeros ? 3 : 0, displayZeros);
 				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 				valueCopy %= 1000;
 				displayZeros = true;
 			} else if (displayZeros) {
-				*this += CString("000");
+				*this += CString(OSSTR("000"));
 				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 			}
 
 			*this += CString(valueCopy, displayZeros ? 3 : 0, displayZeros);
 			if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactAddLabel)
-				*this += CString(" bytes");
+				*this += CString(OSSTR(" bytes"));
 
 			if ((options & kStringSpecialFormattingOptionsBytesDecimalDoEasyRead) && (value > kDisplayAsKBThreshhold))
-				*this += CString(")");
+				*this += CString(OSSTR(")"));
 		}
 	} else if (options & kStringSpecialFormattingOptionsBytesBinary) {
 		// Bytes - Binary
 		if (options & kStringSpecialFormattingOptionsBytesBinaryDoEasyRead) {
 			if (value > kDisplayAsGiBThreshHold)
-				*this = CString((Float64) value / (1024.0 * 1024.0 * 1024.0), 0, 2) + CString("GiB");
+				*this = CString((Float64) value / (1024.0 * 1024.0 * 1024.0), 0, 2) + CString(OSSTR("GiB"));
 			else if (value > kDisplayAsMiBThreshHold)
-				*this = CString((Float64) value / (1024.0 * 1024.0), 0, 2) + CString("MiB");
+				*this = CString((Float64) value / (1024.0 * 1024.0), 0, 2) + CString(OSSTR("MiB"));
 			else if (value > kDisplayAsKiBThreshhold)
-				*this = CString((Float64) value / 1024.0, 0, 2) + CString("KiB");
+				*this = CString((Float64) value / 1024.0, 0, 2) + CString(OSSTR("KiB"));
 			else {
 				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExact)
-					replaceCharacters();
+					*this = CString::mEmpty;
 				else
-					*this = CString(value) + CString(" bytes");
+					*this = CString(value) + CString(OSSTR(" bytes"));
 			}
 		}
 
 		if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExact) {
 			// Display exact byte count
 			if ((options & kStringSpecialFormattingOptionsBytesBinaryDoEasyRead) && (value > kDisplayAsKiBThreshhold))
-				*this += CString(" (");
+				*this += CString(OSSTR(" ("));
 
 			UInt64	valueCopy = value;
 			bool	displayZeros = false;
 			if (valueCopy > 1000000000000LL) {
 				*this += CString(valueCopy / 1000000000000LL, 3);
 				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 				valueCopy %= 1000000000000LL;
 				displayZeros = true;
 			}
@@ -150,50 +150,50 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 			if (valueCopy > 1000000000) {
 				*this += CString(valueCopy / 1000000000, displayZeros ? 3 : 0, displayZeros);
 				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 				valueCopy %= 1000000000;
 				displayZeros = true;
 			} else if (displayZeros) {
-				*this += CString("000");
+				*this += CString(OSSTR("000"));
 				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 			}
 
 			if (valueCopy > 1000000) {
 				*this += CString(valueCopy / 1000000, displayZeros ? 3 : 0, displayZeros);
 				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 				valueCopy %= 1000000;
 				displayZeros = true;
 			} else if (displayZeros) {
-				*this += CString("000");
+				*this += CString(OSSTR("000"));
 				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 			}
 
 			if (valueCopy > 1000) {
 				*this += CString(valueCopy / 1000, displayZeros ? 3 : 0, displayZeros);
 				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 				valueCopy %= 1000;
 				displayZeros = true;
 			} else if (displayZeros) {
-				*this += CString("000");
+				*this += CString(OSSTR("000"));
 				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 			}
 
 			*this += CString(valueCopy, displayZeros ? 3 : 0, displayZeros);
 			if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactAddLabel)
-				*this += CString(" bytes");
+				*this += CString(OSSTR(" bytes"));
 
 			if ((options & kStringSpecialFormattingOptionsBytesBinaryDoEasyRead) && (value > kDisplayAsKiBThreshhold))
-				*this += CString(")");
+				*this += CString(OSSTR(")"));
 		}
 	} else if (options & kStringSpecialFormattingOptionsCurrencyDollars) {
 		// Currency - Dollars
 		if (options & kStringSpecialFormattingOptionsCurrencyDollarsAddDollarsign)
-			*this += CString("$");
+			*this += CString(OSSTR("$"));
 
 		if (options & kStringSpecialFormattingOptionsCurrencyDollarsUseCommas) {
 			// Use commas
@@ -210,7 +210,7 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 
 				*this += CString(digit);
 				if ((digitsCount > 1) && (((digitsCount - 1) % 3) == 0))
-					*this += CString(",");
+					*this += CString(OSSTR(","));
 
 				digitsCount--;
 			} while (digitsCount > 0);
@@ -218,7 +218,7 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 			*this += CString(value / 100);
 
 		if (options & kStringSpecialFormattingOptionsCurrencyDollarsAddCents)
-			*this += CString(".") + CString(value % 100, 2, true);
+			*this += CString(OSSTR(".")) + CString(value % 100, 2, true);
 	}
 }
 
@@ -228,33 +228,22 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 UInt64 CString::getAsByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CString	string(*this);
-	string.makeUppercase();
+	CString	string = uppercased();
 
-	if (string.contains(CString("GIB"), kStringCompareFlagsCaseInsensitive))
+	if (string.contains(CString(OSSTR("GIB")), kStringCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0 * 1024.0 * 1024.0);
-	if (string.contains(CString("GB"), kStringCompareFlagsCaseInsensitive))
+	if (string.contains(CString(OSSTR("GB")), kStringCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0 * 1000.0 * 1000.0);
-	else if (string.contains(CString("MIB"), kStringCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("MIB")), kStringCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0 * 1024.0);
-	else if (string.contains(CString("MB"), kStringCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("MB")), kStringCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0 * 1000.0);
-	else if (string.contains(CString("KIB"), kStringCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("KIB")), kStringCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0);
-	else if (string.contains(CString("KB"), kStringCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("KB")), kStringCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0);
 	else
 		return getUInt64();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString CString::replacingSubStrings(const CString& subStringToReplace, const CString& replacementString) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	CString	string(*this);
-	string.replaceSubStrings(subStringToReplace, replacementString);
-
-	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -262,11 +251,11 @@ bool CString::isValidEmailAddress() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Must have at least one "@"
-	TArray<CString>	array1 = breakUp(CString("@"));
+	TArray<CString>	array1 = breakUp(CString(OSSTR("@")));
 	bool			isValid = array1.getCount() >= 2;
 	if (isValid) {
 		// Before the last "@", can be pretty much anything.
-		TArray<CString>	array2 = array1[array1.getCount() - 1].breakUp(CString("."));
+		TArray<CString>	array2 = array1[array1.getCount() - 1].breakUp(CString(OSSTR(".")));
 
 		// After the last "@", must have at least one "."
 		isValid = array2.getCount() >= 2;
@@ -279,19 +268,19 @@ bool CString::isValidEmailAddress() const
 			// The last segment must be an established domain or 2 letter country code
 			CString	string = array2.getLast();
 			isValid =
-					(string == CString("aero")) ||
-					(string == CString("biz")) ||
-					(string == CString("com")) ||
-					(string == CString("edu")) ||
-					(string == CString("gov")) ||
-					(string == CString("jobs")) ||
-					(string == CString("info")) ||
-					(string == CString("mil")) ||
-					(string == CString("mobi")) ||
-					(string == CString("museum")) ||
-					(string == CString("name")) ||
-					(string == CString("net")) ||
-					(string == CString("org")) ||
+					(string == CString(OSSTR("aero"))) ||
+					(string == CString(OSSTR("biz"))) ||
+					(string == CString(OSSTR("com"))) ||
+					(string == CString(OSSTR("edu"))) ||
+					(string == CString(OSSTR("gov"))) ||
+					(string == CString(OSSTR("jobs"))) ||
+					(string == CString(OSSTR("info"))) ||
+					(string == CString(OSSTR("mil"))) ||
+					(string == CString(OSSTR("mobi"))) ||
+					(string == CString(OSSTR("museum"))) ||
+					(string == CString(OSSTR("name"))) ||
+					(string == CString(OSSTR("net"))) ||
+					(string == CString(OSSTR("org"))) ||
 					(string.getLength() == 2);
 		}
 	}

@@ -133,7 +133,8 @@ CData::CData(const CString& base64String)
 		return;
 	}
 
-	const	char*			stringPtr = base64String.getCString();
+			SCString		cString = base64String.getCString();
+	const	char*			stringPtr = *cString;
 			bool			pad1 = ((stringLength % 4) != 0) || (stringPtr[stringLength - 1] == '=');
 			bool			pad2 = pad1 && (((stringLength % 4) > 2) || (stringPtr[stringLength - 2] != '='));
 			CStringLength	last = (stringLength - (pad1 ? 1 : 0)) / 4 << 2;

@@ -10,10 +10,12 @@
 // MARK: Local data
 
 struct SObjectOffset {
+	// Properties
 	UInt64	mOffset;
 };
 
 struct SBinaryPListTrailer {
+	// Properties
 	UInt8	mUnused[6];
 	UInt8	mObjectOffsetFieldSize;
 	UInt8	mObjectIndexFieldSize;
@@ -48,7 +50,7 @@ class CBinaryPropertyListSetup {
 		CBinaryPropertyListSetup()
 			{
 				CErrorRegistry::registerError(kBinaryPropertyListUnknownFormatError,
-						CString("binary property list has unknown format"));
+						CString(OSSTR("binary property list has unknown format")));
 			}
 };
 

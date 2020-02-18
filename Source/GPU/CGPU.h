@@ -67,6 +67,8 @@ class CGPU {
 		virtual	void				disposeBuffer(const SGPUBuffer& buffer) = 0;
 
 		virtual	void				renderStart() const = 0;
+		virtual	void				renderSetClipPlane(Float32 clipPlane[4]) = 0;
+		virtual	void				renderClearClipPlane() = 0;
 		virtual	void				renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 vertexCount,
 											const SGPUTextureInfo& gpuTextureInfo,
 											OV<Float32> alpha = OV<Float32>()) = 0;

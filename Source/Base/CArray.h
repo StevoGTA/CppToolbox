@@ -297,6 +297,14 @@ template <typename T> class TNArray : public TArray<T> {
 					// Lifecycle methods
 					TNArray() : TArray<T>((CArrayItemCopyProc) copy) {}
 					TNArray(const T& item) : TArray<T>(item, (CArrayItemCopyProc) copy) {}
+					TNArray(const CArray& array, T (mappingProc)(CArrayItemRef item)) :
+						TArray<T>((CArrayItemCopyProc) copy)
+						{
+							// Iterate all items
+							for (CArrayItemIndex i = 0; i < array.getCount(); i++)
+								// Add mapped item
+								this->add(mappingProc(array.getItemAt(i)));
+						}
 
 	private:
 					// Class methods

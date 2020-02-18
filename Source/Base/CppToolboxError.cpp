@@ -34,7 +34,7 @@ CString CErrorRegistry::getStringForError(UError error)
 {
 //	// Check for no error
 //	if (error == kNoError)
-//		return CString("No Error");
+//		return CString(OSSTR("No Error"));
 //
 	// Check for registered error
 	CString*	string = (sErrorMap != nil) ? (*sErrorMap)[error] : nil;
@@ -47,12 +47,12 @@ CString CErrorRegistry::getStringForError(UError error)
 //
 //	if (errorDomain == kCoreErrorDomain) {
 //		switch (error) {
-//			case kMemFullError:			return CString("Memory is full");
-//			case kParamError:			return CString("Parameter is invalid");
-//			case kAssertFailedError:	return CString("Assertion Failed");
-//			case kNilValueError:		return CString("nil value");
-//			case kNonNilValueError:		return CString("non nil value");
-//			case kUnimplementedError:	return CString("Unimplemented");
+//			case kMemFullError:			return CString(OSSTR("Memory is full"));
+//			case kParamError:			return CString(OSSTR("Parameter is invalid"));
+//			case kAssertFailedError:	return CString(OSSTR("Assertion Failed"));
+//			case kNilValueError:		return CString(OSSTR("nil value"));
+//			case kNonNilValueError:		return CString(OSSTR("non nil value"));
+//			case kUnimplementedError:	return CString(OSSTR("Unimplemented"));
 //		}
 //	}
 //
@@ -69,24 +69,24 @@ CString CErrorRegistry::getStringForError(UError error)
 //
 //		string = CString(::GetMacOSStatusErrorString(status), kCStringDefaultMaxLength, kStringEncodingMacRoman);
 //		if (!string.isEmpty())
-//			return CString("\"") + string + CString("\"");
+//			return CString(OSSTR("\"")) + string + CString(OSSTR("\""));
 //
 //		// Fallback
 //		switch (status) {
 //			// OS Errors
-//			case paramErr:			return CString("Parameter Error");
-//			case fnfErr:			return CString("File Not Found");
-//			case eofErr:			return CString("End of File");
-//			case fnOpnErr:			return CString("File Not Open");
-//			case ioErr:				return CString("I/O Error");
-//			case afpAccessDenied:	return CString("Insufficient Access Privileges");
-//			case dskFulErr:			return CString("Disk is Full");
+//			case paramErr:			return CString(OSSTR("Parameter Error"));
+//			case fnfErr:			return CString(OSSTR("File Not Found"));
+//			case eofErr:			return CString(OSSTR("End of File"));
+//			case fnOpnErr:			return CString(OSSTR("File Not Open"));
+//			case ioErr:				return CString(OSSTR("I/O Error"));
+//			case afpAccessDenied:	return CString(OSSTR("Insufficient Access Privileges"));
+//			case dskFulErr:			return CString(OSSTR("Disk is Full"));
 //
 //			// Quicktime Errors
-//			case invalidDuration:	return CString("Invalid Duration");
-//			case noMovieFound:		return CString("No Movie Found");
+//			case invalidDuration:	return CString(OSSTR("Invalid Duration"));
+//			case noMovieFound:		return CString(OSSTR("No Movie Found"));
 //
-//			default:				return CString("(OSStatus) ") + CString(status);
+//			default:				return CString(OSSTR("(OSStatus) ")) + CString(status);
 //		}
 //	}
 //#endif
@@ -98,7 +98,8 @@ CString CErrorRegistry::getStringForError(UError error)
 //
 //	// Return generic
 	return (errorError < 0) ?
-		CString("Domain: ") + CString(errorDomain, true, true) + CString(", Error: ") + CString(errorError) :
-		CString("Domain: ") + CString(errorDomain, true, true) + CString(", Error: ") +
+		CString(OSSTR("Domain: ")) + CString(errorDomain, true, true) + CString(OSSTR(", Error: ")) +
+				CString(errorError) :
+		CString(OSSTR("Domain: ")) + CString(errorDomain, true, true) + CString(OSSTR(", Error: ")) +
 				CString((OSType) errorError, true, true);
 }

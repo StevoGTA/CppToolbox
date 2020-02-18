@@ -11,7 +11,6 @@
 // MARK: SSetItemInfo
 
 struct SSetItemInfo {
-
 			// Lifecycle methods
 			SSetItemInfo(UInt32 hashValue, const CHashable& hashable) :
 				mHashValue(hashValue), mHashable(hashable), mNextItemInfo(nil)

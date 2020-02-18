@@ -18,6 +18,7 @@
 // MARK: - SUUIDBytes
 
 struct SUUIDBytes {
+	// Properties
 	UInt8	mBytes[16];
 };
 
@@ -42,13 +43,7 @@ class CUUID : public CHashable {
 
 							// CHashable methods
 				void		hashInto(CHasher& hasher) const
-								{
-									// Setup
-									CString	string = getBase64String();
-
-									// Hash
-									hasher.add(string.getCString());
-								}
+								{ getBase64String().hashInto(hasher); }
 
 							// Instance methods
 				CData		getData() const;

@@ -10,30 +10,7 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CStringInternals
-
-class CStringInternals {
-	public:
-		CStringInternals()
-			{
-				mBuffer = nil;
-				mStringRef = nil;
-			}
-		~CStringInternals()
-			{
-				if (mBuffer != nil)
-					DisposeOfArray(mBuffer);
-				if (mStringRef != nil)
-					::CFRelease(mStringRef);
-			}
-			
-		char*				mBuffer;
-		CFMutableStringRef	mStringRef;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
+// MARK: Local proc declarations
 
 static	CFOptionFlags		sGetCFOptionFlagsForCStringOptionFlags(UInt32 flags);
 static	CFStringEncoding	sGetCFStringEncodingForCStringEncoding(EStringEncoding encoding);
@@ -48,24 +25,21 @@ static	CFStringEncoding	sGetCFStringEncodingForCStringEncoding(EStringEncoding e
 CString::CString() : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+	mStringRef = CFSTR("");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(const CString& other) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, other.mInternals->mStringRef);
+	mStringRef = (CFStringRef) ::CFRetain(other.mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(const OSString& initialString) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, initialString);
+	mStringRef = (CFStringRef) ::CFRetain(initialString);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,24 +48,24 @@ CString::CString(const char* initialString, CStringLength bufferLen, EStringEnco
 {
 	// Parameter check
 	AssertNotNil(initialString);
-	if (initialString == nil) {
-		// Punt
-		init();
 
-		return;
-	}
-
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	if (bufferLen == kCStringDefaultMaxLength)
-		::CFStringAppendCString(mInternals->mStringRef, initialString,
-				sGetCFStringEncodingForCStringEncoding(encoding));
-	else if (initialString != nil) {
-		char*	buffer = new char[bufferLen + 1];
+	// Setup
+	if (initialString == nil)
+		// No initial string
+		mStringRef = CFSTR("");
+	else if (bufferLen == kCStringDefaultMaxLength)
+		// Use entire string
+		mStringRef =
+				::CFStringCreateWithCString(kCFAllocatorDefault, initialString,
+						sGetCFStringEncodingForCStringEncoding(encoding));
+	else {
+		// Use only the length specified
+		char	buffer[bufferLen + 1];
 		::memmove(buffer, initialString, bufferLen);
 		buffer[bufferLen] = 0;
-		::CFStringAppendCString(mInternals->mStringRef, buffer, sGetCFStringEncodingForCStringEncoding(encoding));
-		delete [] buffer;
+		mStringRef =
+				::CFStringCreateWithCString(kCFAllocatorDefault, buffer,
+						sGetCFStringEncodingForCStringEncoding(encoding));
 	}
 }
 
@@ -101,12 +75,6 @@ CString::CString(const UTF16Char* initialString, CStringLength length, EStringEn
 {
 	// Parameter check
 	AssertNotNil(initialString);
-	if (initialString == nil) {
-		// Punt
-		init();
-
-		return;
-	}
 
 	bool	encodingIsValid =
 					(encoding == kStringEncodingUnicode) ||
@@ -114,17 +82,16 @@ CString::CString(const UTF16Char* initialString, CStringLength length, EStringEn
 					(encoding == kStringEncodingUTF16BE) ||
 					(encoding == kStringEncodingUTF16LE);
 	AssertFailIf(!encodingIsValid);
-	if (!encodingIsValid)
-		return;
 
 	// Setup
-	mInternals = new CStringInternals();
-
-	CFStringRef	stringRef =
-						::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) initialString,
-								length * sizeof(UTF16Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
-	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
-	::CFRelease(stringRef);
+	if ((initialString == nil) || !encodingIsValid)
+		// Missing or invalid parameters
+		mStringRef = CFSTR("");
+	else
+		// Create string
+		mStringRef =
+				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) initialString,
+						length * sizeof(UTF16Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -133,200 +100,184 @@ CString::CString(const UTF32Char* initialString, CStringLength length, EStringEn
 {
 	// Parameter check
 	AssertNotNil(initialString);
-	if (initialString == nil) {
-		// Punt
-		init();
-
-		return;
-	}
-
 	AssertFailIf((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE));
-	if ((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE))
-		return;
 
-	mInternals = new CStringInternals();
-
-	CFStringRef	stringRef =
-						::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) initialString,
-								length * sizeof(UTF32Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
-	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
-	::CFRelease(stringRef);
+	// Setup
+	if ((initialString == nil) || ((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE)))
+		// Missing or invalid parameters
+		mStringRef = CFSTR("");
+	else
+		// Create string
+		mStringRef =
+				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) initialString,
+						length * sizeof(UTF32Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(Float32 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%*.*f"), (int) fieldSize,
-				(int) digitsAfterDecimalPoint, (double) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%*.*f"), (int) fieldSize,
+						(int) digitsAfterDecimalPoint, (double) value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%0*.*f") : CFSTR("%*.*f"),
-				(int) fieldSize, (int) digitsAfterDecimalPoint, (double) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%0*.*f") : CFSTR("%*.*f"),
+						(int) fieldSize, (int) digitsAfterDecimalPoint, (double) value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(Float64 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%*.*f"), (int) fieldSize,
-				(int) digitsAfterDecimalPoint, value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%*.*f"), (int) fieldSize,
+						(int) digitsAfterDecimalPoint, value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%0*.*f") : CFSTR("%*.*f"),
-				(int) fieldSize, (int) digitsAfterDecimalPoint, value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%0*.*f") : CFSTR("%*.*f"),
+						(int) fieldSize, (int) digitsAfterDecimalPoint, value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(SInt8 value, UInt32 fieldSize, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%hi"), (short) value);
+		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%hi"), (short) value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%.*hi") : CFSTR("%*hi"),
-				(int) fieldSize, (short) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*hi") : CFSTR("%*hi"),
+						(int) fieldSize, (short) value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(SInt16 value, UInt32 fieldSize, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%hi"), value);
+		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%hi"), value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%.*hi") : CFSTR("%*hi"),
-				(int) fieldSize, value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*hi") : CFSTR("%*hi"),
+						(int) fieldSize, value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(SInt32 value, UInt32 fieldSize, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%d"), (int) value);
+		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%d"), (int) value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%.*d") : CFSTR("%*d"),
-				(int) fieldSize, (int) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*d") : CFSTR("%*d"),
+						(int) fieldSize, (int) value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(SInt64 value, UInt32 fieldSize, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%qi"), value);
+		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%qi"), value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%.*qi") : CFSTR("%*qi"),
-				(int) fieldSize, value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*qi") : CFSTR("%*qi"),
+						(int) fieldSize, value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(UInt8 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%hu"), (unsigned short) value);
+		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%hu"), (unsigned short) value);
 	else if (makeHex)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
-				(int) fieldSize, (unsigned int) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
+						(int) fieldSize, (unsigned int) value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%.*hu") : CFSTR("%*hu"),
-				(int) fieldSize, (unsigned short) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*hu") : CFSTR("%*hu"),
+						(int) fieldSize, (unsigned short) value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(UInt16 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%hu"), value);
+		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%hu"), value);
 	else if (makeHex)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
-				(int) fieldSize, (unsigned int) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
+						(int) fieldSize, (unsigned int) value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%.*hu") : CFSTR("%*hu"),
-				(int) fieldSize, value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*hu") : CFSTR("%*hu"),
+						(int) fieldSize, value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(UInt32 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%u"), (unsigned int) value);
+		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%u"), (unsigned int) value);
 	else if (makeHex)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
-				(int) fieldSize, (unsigned int) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
+						(int) fieldSize, (unsigned int) value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%.*u") : CFSTR("%*u"),
-				(int) fieldSize, (unsigned int) value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*u") : CFSTR("%*u"),
+						(int) fieldSize, (unsigned int) value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(UInt64 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
+	// Check field size
 	if (fieldSize == 0)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%qu"), value);
+		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%qu"), value);
 	else if (makeHex)
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%#.*qx") : CFSTR("%#*qx"),
-				(int) fieldSize, value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%#.*qx") : CFSTR("%#*qx"),
+						(int) fieldSize, value);
 	else
-		::CFStringAppendFormat(mInternals->mStringRef, nil, padWithZeros ? CFSTR("%.*qu") : CFSTR("%*qu"),
-				(int) fieldSize, value);
+		mStringRef =
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*qu") : CFSTR("%*qu"),
+						(int) fieldSize, value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
 	osType = EndianU32_NtoB(osType);
-	::CFStringAppendFormat(mInternals->mStringRef, nil, includeQuotes ? CFSTR("\'%4.4s\'") : CFSTR("%4.4s"),
-			(char*) &osType);
+	mStringRef =
+			::CFStringCreateWithFormat(kCFAllocatorDefault, nil, includeQuotes ? CFSTR("\'%4.4s\'") : CFSTR("%4.4s"),
+					(char*) &osType);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(const void* pointer)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-
-	::CFStringAppendFormat(mInternals->mStringRef, nil, CFSTR("%p"), pointer);
+	mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%p"), pointer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -334,18 +285,14 @@ CString::CString(const CData& data, EStringEncoding encoding)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDataRef	dataRef = ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getSize());
-	CFStringRef	stringRef =
-						::CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, dataRef,
-								sGetCFStringEncodingForCStringEncoding(encoding));
+	mStringRef =
+			::CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, dataRef,
+					sGetCFStringEncodingForCStringEncoding(encoding));
 	::CFRelease(dataRef);
-	if (stringRef != nil) {
-		mInternals = new CStringInternals();
-		mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
-		::CFRelease(stringRef);
-	} else {
-		LogIfError(kParamError, "creating CFStringRef from external representation");
 
-		init();
+	if (mStringRef == nil) {
+		LogIfError(kParamError, "creating CFStringRef from external representation");
+		mStringRef = CFSTR("");
 	}
 }
 
@@ -353,25 +300,23 @@ CString::CString(const CData& data, EStringEncoding encoding)
 CString::~CString()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	::CFRelease(mStringRef);
 }
 
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const char* CString::getCString(EStringEncoding encoding) const
+const SCString CString::getCString(EStringEncoding encoding) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOfArray(mInternals->mBuffer);
+	CFStringEncoding	stringEncoding = sGetCFStringEncodingForCStringEncoding(encoding);
+	CStringLength		length =
+								(CStringLength) ::CFStringGetMaximumSizeForEncoding(
+										::CFStringGetLength(mStringRef), stringEncoding) + 1;
+	SCString	cString(length);
+	::CFStringGetCString(mStringRef, cString.mBuffer, length, stringEncoding);
 
-	CFIndex	len =
-					::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mInternals->mStringRef),
-							sGetCFStringEncodingForCStringEncoding(encoding)) + 1;
-	mInternals->mBuffer = new char[len];
-	::CFStringGetCString(mInternals->mStringRef, mInternals->mBuffer, len,
-			sGetCFStringEncodingForCStringEncoding(encoding));
- 	
-	return mInternals->mBuffer;
+	return cString;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -379,24 +324,14 @@ CStringLength CString::getLength(EStringEncoding encoding) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if (encoding == kStringEncodingCurrent)
-		return (CStringLength) ::CFStringGetLength(mInternals->mStringRef);
+		return (CStringLength) ::CFStringGetLength(mStringRef);
 	else {
 		CFIndex	byteCount;
-		::CFStringGetBytes(mInternals->mStringRef, CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)),
+		::CFStringGetBytes(mStringRef, CFRangeMake(0, ::CFStringGetLength(mStringRef)),
 				sGetCFStringEncodingForCStringEncoding(encoding), 0, false, nil, 0, &byteCount);
-		
+
 		return (CStringLength) byteCount;
 	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString& CString::setLength(CStringLength length)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	if (getLength() > length)
-		replaceCharacters(length, kCStringDefaultMaxLength);
-
-	return *this;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -422,7 +357,7 @@ CStringLength CString::get(char* buffer, CStringLength bufferLen, bool addNull, 
 			encoding = kStringEncodingTextDefault;
 		
 		// Calculate max characters to get
-		CFIndex	length = ::CFStringGetLength(mInternals->mStringRef);
+		CFIndex	length = ::CFStringGetLength(mStringRef);
 		if (length > (CFIndex) bufferLen)
 			// Each character takes at least one byte
 			length = (CFIndex) bufferLen;
@@ -430,15 +365,15 @@ CStringLength CString::get(char* buffer, CStringLength bufferLen, bool addNull, 
 		// Take off characters at the end until we can fit in our buffer
 		CFIndex	byteCount;
 		do {
-			::CFStringGetBytes(mInternals->mStringRef, CFRangeMake(0, length),
-					sGetCFStringEncodingForCStringEncoding(encoding), 0, false, nil, 0, &byteCount);
+			::CFStringGetBytes(mStringRef, CFRangeMake(0, length), sGetCFStringEncodingForCStringEncoding(encoding), 0,
+					false, nil, 0, &byteCount);
 			if ((CStringLength) byteCount > bufferLen)
 				length--;
 		} while ((CStringLength) byteCount > bufferLen);
 
 		// Get characters
-		::CFStringGetBytes(mInternals->mStringRef, CFRangeMake(0, length),
-				sGetCFStringEncodingForCStringEncoding(encoding), 0, false, (UInt8*) buffer, bufferLen, &byteCount);
+		::CFStringGetBytes(mStringRef, CFRangeMake(0, length), sGetCFStringEncodingForCStringEncoding(encoding), 0,
+				false, (UInt8*) buffer, bufferLen, &byteCount);
 
 		// Add null if needed
 		if (addNull)
@@ -465,7 +400,7 @@ CStringLength CString::get(UTF16Char* buffer, CStringLength bufferLen, EStringEn
 	if (bufferLen > getLength())
 		bufferLen = getLength();
 	
-	return (CStringLength) ::CFStringGetBytes(mInternals->mStringRef, CFRangeMake(0, bufferLen),
+	return (CStringLength) ::CFStringGetBytes(mStringRef, CFRangeMake(0, bufferLen),
 			sGetCFStringEncodingForCStringEncoding(encoding), 0, false, (UInt8*) buffer, bufferLen * sizeof(UTF16Char),
 			nil);
 }
@@ -479,10 +414,10 @@ UTF32Char CString::getCharacterAtIndex(CStringCharIndex index) const
 		return 0;
 	
 	UTF32Char	_char;
-	::CFStringGetBytes(mInternals->mStringRef, CFRangeMake(index, 1),
+	::CFStringGetBytes(mStringRef, CFRangeMake(index, 1),
 			sGetCFStringEncodingForCStringEncoding(kStringEncodingUTF32Native), 0, false, (UInt8*) &_char,
 			sizeof(UTF32Char), nil);
-	
+
 	return _char;
 }
 
@@ -490,35 +425,35 @@ UTF32Char CString::getCharacterAtIndex(CStringCharIndex index) const
 Float32 CString::getFloat32() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (Float32) ::CFStringGetDoubleValue(mInternals->mStringRef);
+	return (Float32) ::CFStringGetDoubleValue(mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 Float64 CString::getFloat64() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringGetDoubleValue(mInternals->mStringRef);
+	return ::CFStringGetDoubleValue(mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt8 CString::getSInt8(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (SInt8) ::CFStringGetIntValue(mInternals->mStringRef);
+	return (SInt8) ::CFStringGetIntValue(mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt16 CString::getSInt16(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (SInt16) ::CFStringGetIntValue(mInternals->mStringRef);
+	return (SInt16) ::CFStringGetIntValue(mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt32 CString::getSInt32(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringGetIntValue(mInternals->mStringRef);
+	return ::CFStringGetIntValue(mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -526,19 +461,13 @@ SInt64 CString::getSInt64(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert to char buffer
-	CFIndex	len =
-					::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mInternals->mStringRef),
-							kCFStringEncodingMacRoman) + 1;
+	CFIndex	len =::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef), kCFStringEncodingMacRoman) + 1;
 
-	char*	buffer = new char[len];
-	::CFStringGetCString(mInternals->mStringRef, buffer, len, kCFStringEncodingMacRoman);
+	char	buffer[len];
+	::CFStringGetCString(mStringRef, buffer, len, kCFStringEncodingMacRoman);
 	buffer[len - 1] = 0;
 
-	SInt64	sInt64 = ::strtoll(buffer, nil, base);
-
-	delete [] buffer;
-
-	return sInt64;
+	return ::strtoll(buffer, nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -546,19 +475,13 @@ UInt8 CString::getUInt8(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert to char* buffer
-	CFIndex	len =
-					::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mInternals->mStringRef),
-							kCFStringEncodingMacRoman) + 1;
-	
-	char*	buffer = new char[len];
-	::CFStringGetCString(mInternals->mStringRef, buffer, len, kCFStringEncodingMacRoman);
+	CFIndex	len =::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef), kCFStringEncodingMacRoman) + 1;
+
+	char	buffer[len];
+	::CFStringGetCString(mStringRef, buffer, len, kCFStringEncodingMacRoman);
 	buffer[len - 1] = 0;
 
-	UInt8	uInt8 = (UInt8) ::strtoul(buffer, nil, base);
-
-	delete[] buffer;
-
-	return uInt8;
+	return (UInt8) ::strtoul(buffer, nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -566,19 +489,13 @@ UInt16 CString::getUInt16(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert to char* buffer
-	CFIndex	len =
-					::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mInternals->mStringRef),
-							kCFStringEncodingMacRoman) + 1;
-	
-	char*	buffer = new char[len];
-	::CFStringGetCString(mInternals->mStringRef, buffer, len, kCFStringEncodingMacRoman);
+	CFIndex	len =::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef), kCFStringEncodingMacRoman) + 1;
+
+	char	buffer[len];
+	::CFStringGetCString(mStringRef, buffer, len, kCFStringEncodingMacRoman);
 	buffer[len - 1] = 0;
 
-	UInt16	uInt16 = (UInt16) ::strtoul(buffer, nil, base);
-
-	delete[] buffer;
-
-	return uInt16;
+	return (UInt16) ::strtoul(buffer, nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -586,19 +503,13 @@ UInt32 CString::getUInt32(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert to char* buffer
-	CFIndex	len =
-					::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mInternals->mStringRef),
-							kCFStringEncodingMacRoman) + 1;
-	
-	char*	buffer = new char[len];
-	::CFStringGetCString(mInternals->mStringRef, buffer, len, kCFStringEncodingMacRoman);
+	CFIndex	len =::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef), kCFStringEncodingMacRoman) + 1;
+
+	char	buffer[len];
+	::CFStringGetCString(mStringRef, buffer, len, kCFStringEncodingMacRoman);
 	buffer[len - 1] = 0;
 
-	UInt32	uInt32 = (UInt32) ::strtoul(buffer, nil, base);
-
-	delete[] buffer;
-
-	return uInt32;
+	return (UInt32) ::strtoul(buffer, nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -606,19 +517,13 @@ OSType CString::getOSType() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert to char* buffer
-	CFIndex	len =
-					::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mInternals->mStringRef),
-							kCFStringEncodingMacRoman) + 1;
-	
-	char*	buffer = new char[len];
-	::CFStringGetCString(mInternals->mStringRef, buffer, len, kCFStringEncodingMacRoman);
+	CFIndex	len =::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef), kCFStringEncodingMacRoman) + 1;
+
+	char	buffer[len];
+	::CFStringGetCString(mStringRef, buffer, len, kCFStringEncodingMacRoman);
 	buffer[len - 1] = 0;
 
-	OSType	osType = EndianU32_BtoN(*((UInt32*)buffer));
-
-	delete[] buffer;
-
-	return osType;
+	return EndianU32_BtoN(*((UInt32*)buffer));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -626,19 +531,13 @@ UInt64 CString::getUInt64(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert to char* buffer
-	CFIndex	len =
-					::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mInternals->mStringRef),
-							kCFStringEncodingMacRoman) + 1;
-	
-	char*	buffer = new char[len];
-	::CFStringGetCString(mInternals->mStringRef, buffer, len, kCFStringEncodingMacRoman);
+	CFIndex	len =::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef), kCFStringEncodingMacRoman) + 1;
+
+	char	buffer[len];
+	::CFStringGetCString(mStringRef, buffer, len, kCFStringEncodingMacRoman);
 	buffer[len - 1] = 0;
 
-	UInt64	uInt64 = ::strtoull(buffer, nil, base);
-
-	delete[] buffer;
-
-	return uInt64;
+	return ::strtoull(buffer, nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -646,7 +545,7 @@ CData CString::getData(EStringEncoding encoding) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDataRef	dataRef =
-						::CFStringCreateExternalRepresentation(kCFAllocatorDefault, mInternals->mStringRef,
+						::CFStringCreateExternalRepresentation(kCFAllocatorDefault, mStringRef,
 								sGetCFStringEncodingForCStringEncoding(encoding), 0);
 	if (dataRef != nil) {
 		// Create data
@@ -662,11 +561,11 @@ CData CString::getData(EStringEncoding encoding) const
 CString CString::getSubString(CStringCharIndex startIndex, CStringLength charCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mInternals->mStringRef))
-		charCount = (CStringLength) (::CFStringGetLength(mInternals->mStringRef) - startIndex);
-		
+	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mStringRef))
+		charCount = (CStringLength) (::CFStringGetLength(mStringRef) - startIndex);
+
 	CFStringRef	stringRef =
-						::CFStringCreateWithSubstring(kCFAllocatorDefault, mInternals->mStringRef,
+						::CFStringCreateWithSubstring(kCFAllocatorDefault, mStringRef,
 								CFRangeMake(startIndex, charCount));
 	CString	string(stringRef);
 	::CFRelease(stringRef);
@@ -675,27 +574,32 @@ CString CString::getSubString(CStringCharIndex startIndex, CStringLength charCou
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString& CString::replaceSubStrings(const CString& subStringToReplace, const CString& replacementString)
+CString CString::replacingSubStrings(const CString& subStringToReplace, const CString& replacementString) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::CFStringFindAndReplace(mInternals->mStringRef, subStringToReplace.mInternals->mStringRef,
-			replacementString.mInternals->mStringRef, ::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+	::CFStringFindAndReplace(stringRef, subStringToReplace.mStringRef, replacementString.mStringRef,
+			::CFRangeMake(0, ::CFStringGetLength(mStringRef)), 0);
+	CString	string(stringRef);
+	::CFRelease(stringRef);
 
-	return *this;
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString& CString::replaceCharacters(CStringCharIndex startIndex, CStringLength charCount,
-		const CString& replacementString)
+CString CString::replacingCharacters(CStringCharIndex startIndex, CStringLength charCount,
+		const CString& replacementString) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mInternals->mStringRef))
-		charCount = (CStringLength) (::CFStringGetLength(mInternals->mStringRef) - startIndex);
+	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mStringRef))
+		charCount = (CStringLength) (::CFStringGetLength(mStringRef) - startIndex);
 
-	::CFStringReplace(mInternals->mStringRef, ::CFRangeMake(startIndex, charCount),
-			replacementString.mInternals->mStringRef);
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+	::CFStringReplace(stringRef, ::CFRangeMake(startIndex, charCount), replacementString.mStringRef);
+	CString	string(stringRef);
+	::CFRelease(stringRef);
 
-	return *this;
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -704,93 +608,112 @@ SStringRange CString::findSubString(const CString& subString, CStringCharIndex s
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFRange	range = {0, 0};
-	::CFStringFindWithOptions(mInternals->mStringRef, subString.mInternals->mStringRef,
-			CFRangeMake(startIndex, charCount), 0, &range);
-	
-	return {(CStringCharIndex) range.location, (CStringLength) range.length};
+	::CFStringFindWithOptions(mStringRef, subString.mStringRef, CFRangeMake(startIndex, charCount), 0, &range);
+
+	return SStringRange((CStringCharIndex) range.location, (CStringLength) range.length);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString& CString::makeLowercase()
+CString CString::lowercased() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::CFStringLowercase(mInternals->mStringRef, nil);
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+	::CFStringLowercase(stringRef, nil);
+	CString	string(stringRef);
+	::CFRelease(stringRef);
 
-	return *this;
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString& CString::makeUppercase()
+CString CString::uppercased() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::CFStringUppercase(mInternals->mStringRef, nil);
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+	::CFStringUppercase(stringRef, nil);
+	CString	string(stringRef);
+	::CFRelease(stringRef);
 
-	return *this;
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString& CString::removeLeadingAndTrailingWhitespace()
+CString CString::removingLeadingAndTrailingWhitespace() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+
 	// Remove any leading spaces
-	while (::CFStringHasPrefix(mInternals->mStringRef, CFSTR(" ")) ||
-			::CFStringHasPrefix(mInternals->mStringRef, CFSTR("\t")) ||
-			::CFStringHasPrefix(mInternals->mStringRef, CFSTR("\n")) ||
-			::CFStringHasPrefix(mInternals->mStringRef, CFSTR("\r")))
-		::CFStringDelete(mInternals->mStringRef, CFRangeMake(0, 1));
-	
+	while (::CFStringHasPrefix(stringRef, CFSTR(" ")) ||
+			::CFStringHasPrefix(stringRef, CFSTR("\t")) ||
+			::CFStringHasPrefix(stringRef, CFSTR("\n")) ||
+			::CFStringHasPrefix(stringRef, CFSTR("\r")))
+		::CFStringDelete(stringRef, CFRangeMake(0, 1));
+
 	// Remove any trailing spaces
-	while (::CFStringHasSuffix(mInternals->mStringRef, CFSTR(" ")) ||
-			::CFStringHasSuffix(mInternals->mStringRef, CFSTR("\t")) ||
-			::CFStringHasSuffix(mInternals->mStringRef, CFSTR("\n")) ||
-			::CFStringHasSuffix(mInternals->mStringRef, CFSTR("\r")))
-		::CFStringDelete(mInternals->mStringRef, CFRangeMake(getLength() - 1, 1));
+	while (::CFStringHasSuffix(stringRef, CFSTR(" ")) ||
+			::CFStringHasSuffix(stringRef, CFSTR("\t")) ||
+			::CFStringHasSuffix(stringRef, CFSTR("\n")) ||
+			::CFStringHasSuffix(stringRef, CFSTR("\r")))
+		::CFStringDelete(stringRef, CFRangeMake(getLength() - 1, 1));
 
-	return *this;
+	CString	string(stringRef);
+	::CFRelease(stringRef);
+
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString& CString::removeAllWhitespace()
+CString CString::removingAllWhitespace() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR(" "), CFSTR(""),
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("\t"), CFSTR(""),
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("\n"), CFSTR(""),
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("\r"), CFSTR(""),
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
+	// Setup
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
 
-	return *this;
+	::CFStringFindAndReplace(stringRef, CFSTR(" "), CFSTR(""), ::CFRangeMake(0, ::CFStringGetLength(stringRef)), 0);
+	::CFStringFindAndReplace(stringRef, CFSTR("\t"), CFSTR(""), ::CFRangeMake(0, ::CFStringGetLength(stringRef)), 0);
+	::CFStringFindAndReplace(stringRef, CFSTR("\n"), CFSTR(""), ::CFRangeMake(0, ::CFStringGetLength(stringRef)), 0);
+	::CFStringFindAndReplace(stringRef, CFSTR("\r"), CFSTR(""), ::CFRangeMake(0, ::CFStringGetLength(stringRef)), 0);
+
+	CString	string(stringRef);
+	::CFRelease(stringRef);
+
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString& CString::removeLeadingAndTrailingQuotes()
+CString CString::removingLeadingAndTrailingQuotes() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+
 	// Remove any leading quotes
-	if (::CFStringHasPrefix(mInternals->mStringRef, CFSTR("\"")))
-		::CFStringDelete(mInternals->mStringRef, CFRangeMake(0, 1));
-	
-	// Remove any trailing quotes
-	if (::CFStringHasSuffix(mInternals->mStringRef, CFSTR("\"")))
-		::CFStringDelete(mInternals->mStringRef, CFRangeMake(getLength() - 1, 1));
+	if (::CFStringHasPrefix(stringRef, CFSTR("\"")))
+		::CFStringDelete(stringRef, CFRangeMake(0, 1));
 
-	return *this;
+	// Remove any trailing quotes
+	if (::CFStringHasSuffix(stringRef, CFSTR("\"")))
+		::CFStringDelete(stringRef, CFRangeMake(getLength() - 1, 1));
+
+	CString	string(stringRef);
+	::CFRelease(stringRef);
+
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString& CString::makeLegalFilename(UInt32 options)
+CString CString::makingLegalFilename(UInt32 options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get length of string
-	CStringLength	length = (CStringLength) ::CFStringGetLength(mInternals->mStringRef);
-	
+	CStringLength	length = (CStringLength) ::CFStringGetLength(mStringRef);
+
 	// Extract characters
-	UniChar*	buffer = new UniChar[length];
-	::CFStringGetCharacters(mInternals->mStringRef, ::CFRangeMake(0, length), buffer);
-	
+	UniChar	buffer[length];
+	::CFStringGetCharacters(mStringRef, ::CFRangeMake(0, length), buffer);
+
 	// Replace "illegal" ones with '_'
 	UniChar*	p = buffer;
 	for (CStringLength i = 0; i < length; i++, p++) {
@@ -801,45 +724,43 @@ CString& CString::makeLegalFilename(UInt32 options)
 			*p = '_';
 	}
 	
-	::CFStringDelete(mInternals->mStringRef, ::CFRangeMake(0, length));
-	::CFStringAppendCharacters(mInternals->mStringRef, buffer, length);
-	DisposeOfArray(buffer);
+	CFStringRef	stringRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, buffer, length);
 
-	return *this;
+	CString		string(stringRef);
+	::CFRelease(stringRef);
+
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::getCommonBeginning(const CString& other) const
+CString CString::getCommonPrefix(const CString& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get characters
-	CFStringRef	stringRef = mInternals->mStringRef;
-	CFIndex		length1 = ::CFStringGetLength(stringRef);
-	UniChar*	characters1 = new UniChar[length1];
-	::CFStringGetCharacters(stringRef, CFRangeMake(0, length1), characters1);
-	
-	stringRef = other.mInternals->mStringRef;
-	CFIndex		length2 = ::CFStringGetLength(stringRef);
-	UniChar*	characters2 = new UniChar[length2];
-	::CFStringGetCharacters(stringRef, CFRangeMake(0, length2), characters2);
-	
+	CFIndex	length1 = ::CFStringGetLength(mStringRef);
+	UniChar	characters1[length1];
+	::CFStringGetCharacters(mStringRef, CFRangeMake(0, length1), characters1);
+
+	CFIndex	length2 = ::CFStringGetLength(other.mStringRef);
+	UniChar	characters2[length2];
+	::CFStringGetCharacters(other.mStringRef, CFRangeMake(0, length2), characters2);
+
 	if (length2 > length1)
 		length1 = length2;
 	
-	CString				outString;
-	CFMutableStringRef	outStringRef = outString.mInternals->mStringRef;
+	CFMutableStringRef	stringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
 	
 	for (CFIndex i = 0; i < length1; i++) {
 		if (characters1[i] == characters2[i])
-			::CFStringAppendCharacters(outStringRef, &characters1[i], 1);
+			::CFStringAppendCharacters(stringRef, &characters1[i], 1);
 		else
 			break;
 	}
 
-	delete [] characters1;
-	delete [] characters2;
+	CString	string(stringRef);
+	::CFRelease(stringRef);
 
-	return outString;
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -858,7 +779,7 @@ TArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuo
 				// Found quote
 				inQuotes = !inQuotes;
 				i++;
-			} else if (!inQuotes && (getSubString(i).beginsWith(delimiterString))) {
+			} else if (!inQuotes && (getSubString(i).hasPrefix(delimiterString))) {
 				// Found delimiter
 				array += tempString;
 				tempString = mEmpty;
@@ -875,8 +796,8 @@ TArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuo
 	} else {
 		// Just do break up
 		CFArrayRef	arrayRef =
-							::CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, mInternals->mStringRef,
-									delimiterString.mInternals->mStringRef);
+							::CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, mStringRef,
+									delimiterString.mStringRef);
 
 		for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++)
 			array += CString((CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i));
@@ -888,97 +809,95 @@ TArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuo
 
 // MARK: Percent escapes methods
 
-//----------------------------------------------------------------------------------------------------------------------
-CString& CString::convertToPercentEscapes()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Perform system conversion
-	CFStringRef	stringRef =
-						::CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, mInternals->mStringRef, nil,
-								nil, kCFStringEncodingUTF8);
+////----------------------------------------------------------------------------------------------------------------------
+//CString& CString::convertToPercentEscapes()
+////----------------------------------------------------------------------------------------------------------------------
+//{
+//	// Perform system conversion
+//	CFStringRef	stringRef =
+//						::CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, mInternals->mStringRef, nil,
+//								nil, kCFStringEncodingUTF8);
+//
+//	if (stringRef != nil) {
+//		::CFRelease(mInternals->mStringRef);
+//		mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
+//		::CFRelease(stringRef);
+//	}
+//
+//	// Convert other characters
+//	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR(";"), CFSTR("%3B"),
+//			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
+//	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("@"), CFSTR("%40"),
+//			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
+//
+//	return *this;
+//}
 
-	if (stringRef != nil) {
-		::CFRelease(mInternals->mStringRef);
-		mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
-		::CFRelease(stringRef);
-	}
-	
-	// Convert other characters
-	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR(";"), CFSTR("%3B"),
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("@"), CFSTR("%40"),
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-
-	return *this;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString& CString::convertFromPercentEscapes()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Convert other characters
-	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("%3B"), CFSTR(";"),
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("%40"), CFSTR("@"),
-			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-	
-	// Perform system conversion
-	CFStringRef	stringRef =
-						::CFURLCreateStringByReplacingPercentEscapes(kCFAllocatorDefault, mInternals->mStringRef,
-								CFSTR(""));
-	AssertNotNil(stringRef);
-	if (stringRef == nil)
-		return *this;
-
-	::CFRelease(mInternals->mStringRef);
-	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
-	::CFRelease(stringRef);
-	
-	return *this;
-}
+////----------------------------------------------------------------------------------------------------------------------
+//CString& CString::convertFromPercentEscapes()
+////----------------------------------------------------------------------------------------------------------------------
+//{
+//	// Convert other characters
+//	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("%3B"), CFSTR(";"),
+//			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
+//	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("%40"), CFSTR("@"),
+//			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
+//
+//	// Perform system conversion
+//	CFStringRef	stringRef =
+//						::CFURLCreateStringByReplacingPercentEscapes(kCFAllocatorDefault, mInternals->mStringRef,
+//								CFSTR(""));
+//	AssertNotNil(stringRef);
+//	if (stringRef == nil)
+//		return *this;
+//
+//	::CFRelease(mInternals->mStringRef);
+//	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
+//	::CFRelease(stringRef);
+//
+//	return *this;
+//}
 
 // MARK: Comparison methods
 
 //----------------------------------------------------------------------------------------------------------------------
-ECompareResult CString::compareTo(const CString& string, EStringCompareFlags flags) const
+ECompareResult CString::compareTo(const CString& other, EStringCompareFlags flags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	ECompareResult	compareResult =
-							(ECompareResult) ::CFStringCompare(mInternals->mStringRef, string.mInternals->mStringRef,
+							(ECompareResult) ::CFStringCompare(mStringRef, other.mStringRef,
 									sGetCFOptionFlagsForCStringOptionFlags(flags));
 
 	return compareResult;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::equals(const CString& string, EStringCompareFlags flags) const
+bool CString::equals(const CString& other, EStringCompareFlags flags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringCompare(mInternals->mStringRef, string.mInternals->mStringRef,
-			sGetCFOptionFlagsForCStringOptionFlags(flags)) == kCFCompareEqualTo;
+	return ::CFStringCompare(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(flags)) ==
+			kCFCompareEqualTo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::beginsWith(const CString& string) const
+bool CString::hasPrefix(const CString& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringHasPrefix(mInternals->mStringRef, string.mInternals->mStringRef);
+	return ::CFStringHasPrefix(mStringRef, other.mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::endsWith(const CString& string) const
+bool CString::hasSuffix(const CString& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringHasSuffix(mInternals->mStringRef, string.mInternals->mStringRef);
+	return ::CFStringHasSuffix(mStringRef, other.mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::contains(const CString& string, EStringCompareFlags flags) const
+bool CString::contains(const CString& other, EStringCompareFlags flags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFRange	range =
-					::CFStringFind(mInternals->mStringRef, string.mInternals->mStringRef,
-							sGetCFOptionFlagsForCStringOptionFlags(flags));
+	CFRange	range = ::CFStringFind(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(flags));
 
 	return range.location != kCFNotFound;
 }
@@ -989,7 +908,8 @@ bool CString::contains(const CString& string, EStringCompareFlags flags) const
 CString& CString::operator=(const CString& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::CFStringReplaceAll(mInternals->mStringRef, other.mInternals->mStringRef);
+	::CFRelease(mStringRef);
+	mStringRef = (CFStringRef) ::CFRetain(other.mStringRef);
 
 	return *this;
 }
@@ -999,7 +919,11 @@ CString& CString::operator+=(const CString& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Append
-	::CFStringAppend(mInternals->mStringRef, other.mInternals->mStringRef);
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+	::CFStringAppend(stringRef, other.mStringRef);
+
+	::CFRelease(mStringRef);
+	mStringRef = stringRef;
 
 	return *this;
 }
@@ -1008,9 +932,12 @@ CString& CString::operator+=(const CString& other)
 CString CString::operator+(const CString& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CString	string(*this);
-	string += other;
-	
+	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+	::CFStringAppend(stringRef, other.mStringRef);
+
+	CString	string(stringRef);
+	::CFRelease(stringRef);
+
 	return string;
 }
 
@@ -1020,12 +947,12 @@ CString CString::operator+(const CString& other) const
 CString CString::make(const char* format, va_list args)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = ::CFStringCreateWithCString(kCFAllocatorDefault, format, kCFStringEncodingMacRoman);
+	CFStringRef	formatStringRef = ::CFStringCreateWithCString(kCFAllocatorDefault, format, kCFStringEncodingMacRoman);
 
-	CString	string;
-	::CFStringAppendFormatAndArguments(string.mInternals->mStringRef, nil, stringRef, args);
+	CFStringRef	stringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, formatStringRef, args);
+	CString		string(stringRef);
 	::CFRelease(stringRef);
-	
+
 	return string;
 }
 
@@ -1101,8 +1028,7 @@ bool CString::isCharacterInSet(UTF32Char utf32Char, EStringCharacterSet characte
 void CString::init()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CStringInternals();
-	mInternals->mStringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+	mStringRef = CFSTR("");
 }
 
 //----------------------------------------------------------------------------------------------------------------------

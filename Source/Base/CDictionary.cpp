@@ -446,13 +446,13 @@ class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryIn
 AssertFailUnimplemented();
 												}
 											~CProcsDictionaryInternals()
-												{ mProcsInfo.mDisposeUserDataProc(mProcsInfo.mUserData); }
+												{ mProcsInfo.disposeUserData(); }
 
 											// TDictionaryInternals methods
 				CDictionaryKeyCount			getKeyCount()
-												{ return mProcsInfo.mGetKeyCountProc(mProcsInfo.mUserData); }
+												{ return mProcsInfo.getKeyCount(); }
 				OR<SDictionaryValue>		getValue(const CString& key)
-												{ return mProcsInfo.mGetValueProc(key, mProcsInfo.mUserData); }
+												{ return mProcsInfo.getValue(key); }
 				CDictionaryInternals*		set(const CString& key, const SDictionaryValue& value)
 												{
 //													// Convert to standard dictionary
@@ -922,6 +922,18 @@ CDictionary& CDictionary::operator=(const CDictionary& other)
 
 	// Add reference to other
 	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionary& CDictionary::operator+=(const CDictionary& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all items
+	for (TIteratorS<SDictionaryItem> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance())
+		// Set this value
+		mInternals->set(iterator.getValue().mKey, iterator.getValue().mValue);
 
 	return *this;
 }

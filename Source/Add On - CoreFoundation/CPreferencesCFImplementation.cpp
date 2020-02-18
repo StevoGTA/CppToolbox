@@ -402,11 +402,11 @@ void CPreferences::setAlternateApplicationID(const CString& applicationID)
 //	CFolderX	folder = CFolderX::userLibraryFolder();
 //	if (folder.doesExist()) {
 //		// Go to Preferences subfolder
-//		folder = CFolderX(folder, CString("Preferences"));
+//		folder = CFolderX(folder, CString(OSSTR("Preferences")));
 //		if (folder.doesExist()) {
 //			CString	bundleID((CFStringRef) CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(),
 //							kCFBundleIdentifierKey));
-//			return CFileX(folder, bundleID + CString(".plist"));
+//			return CFileX(folder, bundleID + CString(OSSTR(".plist")));
 //		}
 //	}
 //

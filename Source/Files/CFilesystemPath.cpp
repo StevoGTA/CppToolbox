@@ -7,10 +7,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	CString	sPathSeparatorPOSIX("/");
-static	CString	sPathSeparatorWindows("\\");
+static	CString	sPathSeparatorPOSIX(OSSTR("/"));
+static	CString	sPathSeparatorWindows(OSSTR("\\"));
 #if TARGET_OS_MACOS
-static	CString	sPathSeparatorHFS(":");
+static	CString	sPathSeparatorHFS(OSSTR(":"));
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ CString CFilesystemPath::getExtension() const
 		return CString::mEmpty;
 
 	// Get last component and break into fields based on "."
-	TArray<CString>	parts = getLastComponent().breakUp(CString("."));
+	TArray<CString>	parts = getLastComponent().breakUp(CString(OSSTR(".")));
 
 	return (parts.getCount() > 1) ? parts.getLast() : CString::mEmpty;
 }
@@ -122,7 +122,7 @@ CString CFilesystemPath::getLastComponentDeletingExtension() const
 		return CString::mEmpty;
 
 	// Get fields
-	TArray<CString>	fields = component.breakUp(CString("."));
+	TArray<CString>	fields = component.breakUp(CString(OSSTR(".")));
 
 	return (fields.getCount() > 1) ?
 			component.getSubString(0, component.getLength() - fields.getLast().getLength() - 1) : component;
@@ -166,14 +166,14 @@ CFilesystemPath CFilesystemPath::getForResourceFork() const
 		return CFilesystemPath(CString::mEmpty);
 
 	// Check if already have resource fork info
-	if ((components.getCount() > 2) && (components[componentsCount - 2] == CString("..namedfork")) &&
-			(components[componentsCount - 1] == CString("rsrc")))
+	if ((components.getCount() > 2) && (components[componentsCount - 2] == CString(OSSTR("..namedfork"))) &&
+			(components[componentsCount - 1] == CString(OSSTR("rsrc"))))
 		// Already setup
 		return *this;
 	else
 		// Update
-		return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mPathStyle) + CString("..namedfork") +
-								sPathSeparator(mInternals->mPathStyle) + CString("rsrc"));
+		return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mPathStyle) +
+				CString(OSSTR("..namedfork")) + sPathSeparator(mInternals->mPathStyle) + CString(OSSTR("rsrc")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -15,7 +15,7 @@ extern	SUUIDBytes	eCreateUUIDBytes();
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CUUIDInternals
 
-class CUUIDInternals : public TReferenceCountable<CUUIDInternals>{
+class CUUIDInternals : public TReferenceCountable<CUUIDInternals> {
 	public:
 		CUUIDInternals() : TReferenceCountable(), mUUIDBytes(eCreateUUIDBytes()) {}
 		CUUIDInternals(const SUUIDBytes& uuidBytes) : TReferenceCountable(), mUUIDBytes(uuidBytes) {}
@@ -65,7 +65,7 @@ class CUUIDInternals : public TReferenceCountable<CUUIDInternals>{
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CUUID
 
-CUUID	CUUID::mZero(CString("00000000-0000-0000-0000-000000000000"));
+CUUID	CUUID::mZero(CString(OSSTR("00000000-0000-0000-0000-000000000000")));
 
 // MARK: Lifecycle methods
 

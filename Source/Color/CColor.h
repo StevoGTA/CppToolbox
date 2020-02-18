@@ -37,7 +37,8 @@ struct SRGBColorTransformMultiplier {
 											// Lifecycle methods
 											SRGBColorTransformMultiplier() : mR(1.0), mG(1.0), mB(1.0), mA(1.0) {}
 											SRGBColorTransformMultiplier(Float32 r, Float32 g, Float32 b, Float32 a) :
-												mR(r), mG(g), mB(b), mA(a) {}
+												mR(r), mG(g), mB(b), mA(a)
+												{}
 
 											// Instance methods
 	inline	SRGBColorTransformMultiplier	operator*(Float32 factor) const
@@ -65,7 +66,8 @@ struct SRGBColorTransformAdder {
 									// Lifecycle methods
 									SRGBColorTransformAdder() : mR(0.0), mG(0.0), mB(0.0), mA(0.0) {}
 									SRGBColorTransformAdder(Float32 r, Float32 g, Float32 b, Float32 a) :
-										mR(r), mG(g), mB(b), mA(a) {}
+										mR(r), mG(g), mB(b), mA(a)
+										{}
 
 									// Instance methods
 	inline	SRGBColorTransformAdder	operator*(Float32 factor) const
@@ -97,7 +99,8 @@ struct SRGBColorTransform {
 									{}
 								SRGBColorTransform(const SRGBColorTransformMultiplier& multiplier,
 										const SRGBColorTransformAdder& adder) :
-									mMultiplier(multiplier), mAdder(adder) {}
+									mMultiplier(multiplier), mAdder(adder)
+									{}
 
 								// Instance methods
 	inline	SRGBColorTransform	operator*(Float32 factor) const
@@ -149,7 +152,8 @@ struct SHSVColorTransformAdder {
 struct SHSVColorTransform {
 	// Lifecycle methods
 	SHSVColorTransform(const SHSVColorTransformMultiplier& multiplier, const SHSVColorTransformAdder& adder) :
-		mMultiplier(multiplier), mAdder(adder) {}
+		mMultiplier(multiplier), mAdder(adder)
+		{}
 
 	// Properties
 	SHSVColorTransformMultiplier	mMultiplier;

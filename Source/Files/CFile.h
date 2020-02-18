@@ -44,7 +44,7 @@ class CFile : CHashable {
 
 											// CHashable methods
 				void						hashInto(CHasher& hasher) const
-												{ hasher.add(getFilesystemPath().getString().getCString()); }
+												{ getFilesystemPath().hashInto(hasher); }
 
 											// Instance methods
 				const	CFilesystemPath&	getFilesystemPath() const;
@@ -73,21 +73,21 @@ class CFile : CHashable {
 												{
 													// Log
 													CLogServices::logMessage(
-															prefix + CString("File: ") +
+															prefix + CString(OSSTR("File: ")) +
 																	getFilesystemPath().getString());
 												}
 						void				logAsWarning(const CString& prefix = CString::mEmpty) const
 												{
 													// Log
 													CLogServices::logWarning(
-															prefix + CString("File: ") +
+															prefix + CString(OSSTR("File: ")) +
 																	getFilesystemPath().getString());
 												}
 						void				logAsError(const CString& prefix = CString::mEmpty) const
 												{
 													// Log
 													CLogServices::logError(
-															prefix + CString("File: ") +
+															prefix + CString(OSSTR("File: ")) +
 																	getFilesystemPath().getString());
 												}
 

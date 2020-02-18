@@ -27,21 +27,21 @@
  */
 
 template <typename T> struct OV {
-	public:
-				// Lifecycle methods
-				OV() : mHasValue(false) {}
-				OV(T value) : mHasValue(true), mValue(value) {}
-				OV(const OV& other) : mHasValue(other.mHasValue), mValue(other.mValue) {}
+			// Lifecycle methods
+			OV() : mHasValue(false) {}
+			OV(T value) : mHasValue(true), mValue(value) {}
+			OV(const OV& other) : mHasValue(other.mHasValue), mValue(other.mValue) {}
 
-				// Instamce methods
-		bool	hasValue() const { return mHasValue; }
-		T		getValue() const { AssertFailIf(!mHasValue); return mValue; }
-		void	setValue(T value) { mHasValue = true; mValue = value; }
-		void	removeValue() { mHasValue = false; }
+			// Instamce methods
+	bool	hasValue() const { return mHasValue; }
+	T		getValue() const { AssertFailIf(!mHasValue); return mValue; }
+	T		getValue(T defaultValue) const { return mHasValue ? mValue : defaultValue; }
+	void	setValue(T value) { mHasValue = true; mValue = value; }
+	void	removeValue() { mHasValue = false; }
 
-		T		operator*() const { AssertFailIf(!mHasValue); return mValue; }
+	T		operator*() const { AssertFailIf(!mHasValue); return mValue; }
 
-		OV<T>&	operator=(T value) { mHasValue = true; mValue = value; return *this; }
+	OV<T>&	operator=(T value) { mHasValue = true; mValue = value; return *this; }
 
 	// Properties
 	private:
@@ -58,7 +58,7 @@ template <typename T> struct OV {
 	optionalString1.hasReference();	// false
 	optionalString1.getReference();	// Assert fail
 
-	CString	string("Hello World!");
+	CString	string(OSSTR("Hello World!"));
 	OR<CString>	optionalString2(string);
 	optionalString2.getReference().isEmpty();	// false
 	*optionalString;							// CString&
@@ -66,18 +66,17 @@ template <typename T> struct OV {
  */
 
 template <typename T> struct OR {
-	public:
-				// Lifecycle methods
-				OR() : mReference(nil) {}
-				OR(T& reference) : mReference(&reference) {}
-				OR(const OR& other) : mReference(other.mReference) {}
+			// Lifecycle methods
+			OR() : mReference(nil) {}
+			OR(T& reference) : mReference(&reference) {}
+			OR(const OR& other) : mReference(other.mReference) {}
 
-				// Instamce methods
-		bool	hasReference() const { return mReference != nil; }
-		T&		getReference() const { AssertFailIf(mReference == nil); return *mReference; }
+			// Instamce methods
+	bool	hasReference() const { return mReference != nil; }
+	T&		getReference() const { AssertFailIf(mReference == nil); return *mReference; }
 
-		T&		operator*() const { AssertFailIf(mReference == nil); return *mReference; }
-		T*		operator->() const { AssertFailIf(mReference == nil); return mReference; }
+	T&		operator*() const { AssertFailIf(mReference == nil); return *mReference; }
+	T*		operator->() const { AssertFailIf(mReference == nil); return mReference; }
 
 	// Properties
 	private:
@@ -93,7 +92,7 @@ template <typename T> struct OR {
 	optionalString1.hasObject();	// false
 	optionalString1.getObject();	// Assert fail
 
-	OO<CString>	optionalString2(new CString("Hello World!"));
+	OO<CString>	optionalString2(new CString(OSSTR("Hello World!")));
 	optionalString2.hasObject();	// true
 	optionalString2.getObject();	// CString&
 	*optionalString2;				// CString&
@@ -101,8 +100,8 @@ template <typename T> struct OR {
 
 
 
-	OO<CString>	string1;					// No object
-	OO<CString>	string2(CString("abc"));	// Object
+	OO<CString>	string1;						// No object
+	OO<CString>	string2(CString(OSSTR("abc")));	// Object
 
 	OO<CString>	string3 = string1;
 
@@ -116,56 +115,58 @@ template <typename T> struct OR {
 
  */
 
+//
+// I wonder if we want this to be OON vs OOC based on whether object copies are via new or copy()
+//
  template <typename T> struct OO {
-	 public:
-				// Lifecycle methods
-				OO() : mObject(nil), mReferenceCount(nil) {}
-				OO(T* object) : mObject(object), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
-				OO(const T& object) : mObject(new T(object)), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
-				OO(const OO<T>& other) :
-					mObject(other.mObject), mReferenceCount(other.mReferenceCount)
-					{
-						// Check if have reference
-						if (mObject != nil)
-							// Additional reference
-							(*mReferenceCount)++;
-					}
-				~OO()
-					{
-						// Check for object
-						if ((mObject != nil) && (--(*mReferenceCount) == 0))
-							// All done
-							DisposeOf(mObject);
-					}
+			// Lifecycle methods
+			OO() : mObject(nil), mReferenceCount(nil) {}
+			OO(T* object) : mObject(object), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+			OO(const T& object) : mObject(new T(object)), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+			OO(const OO<T>& other) :
+				mObject(other.mObject), mReferenceCount(other.mReferenceCount)
+				{
+					// Check if have reference
+					if (mObject != nil)
+						// Additional reference
+						(*mReferenceCount)++;
+				}
+			~OO()
+				{
+					// Check for object
+					if ((mObject != nil) && (--(*mReferenceCount) == 0))
+						// All done
+						DisposeOf(mObject);
+				}
 
-		OO<T>&	operator=(const OO<T>& other)
-					{
-						// Check for object
-						if ((mObject != nil) && (--(*mReferenceCount) == 0))
-							// All done
-							DisposeOf(mObject);
+	OO<T>&	operator=(const OO<T>& other)
+				{
+					// Check for object
+					if ((mObject != nil) && (--(*mReferenceCount) == 0))
+						// All done
+						DisposeOf(mObject);
 
-						// Copy
-						mObject = other.mObject;
-						mReferenceCount = other.mReferenceCount;
+					// Copy
+					mObject = other.mObject;
+					mReferenceCount = other.mReferenceCount;
 
-						// Note additional reference if have reference
-						if (mObject != nil)
-							(*mReferenceCount)++;
+					// Note additional reference if have reference
+					if (mObject != nil)
+						(*mReferenceCount)++;
 
-						return *this;
-					}
+					return *this;
+				}
 
-				// Instamce methods
-		bool	hasObject() const
-					{ return mObject != nil; }
-		T&		getObject() const
-					{ AssertFailIf(mObject == nil); return *mObject; }
+			// Instamce methods
+	bool	hasObject() const
+				{ return mObject != nil; }
+	T&		getObject() const
+				{ AssertFailIf(mObject == nil); return *mObject; }
 
-		T&		operator*() const
-					{ AssertFailIf(mObject == nil); return *mObject; }
-		T*		operator->() const
-					{ AssertFailIf(mObject == nil); return mObject; }
+	T&		operator*() const
+				{ AssertFailIf(mObject == nil); return *mObject; }
+	T*		operator->() const
+				{ AssertFailIf(mObject == nil); return mObject; }
 
 	// Properties
 	private:
@@ -188,17 +189,16 @@ template <typename T> struct OR {
  */
 
 template <typename T> struct OP {
-	public:
-				// Lifecycle methods
-				OP() : mProc(nil) {}
-				OP(T proc) : mProc(proc) {}
-				OP(const OP& other) : mProc(other.mProc) {}
+			// Lifecycle methods
+			OP() : mProc(nil) {}
+			OP(T proc) : mProc(proc) {}
+			OP(const OP& other) : mProc(other.mProc) {}
 
-				// Instamce methods
-		bool	hasProc() const { return mProc != nil; }
-		T		getProc() const { AssertFailIf(mProc == nil); return mProc; }
+			// Instamce methods
+	bool	hasProc() const { return mProc != nil; }
+	T		getProc() const { AssertFailIf(mProc == nil); return mProc; }
 
-		T		operator*() const { AssertFailIf(mProc == nil); return mProc; }
+	T		operator*() const { AssertFailIf(mProc == nil); return mProc; }
 
 	// Properties
 	private:

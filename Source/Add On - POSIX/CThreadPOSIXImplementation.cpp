@@ -114,7 +114,7 @@ void* sThreadProc(void* userData)
 	CThreadInternals*	threadInternals = (CThreadInternals*) userData;
 
 	// Set name
-	::pthread_setname_np(threadInternals->mThreadName.getCString());
+	::pthread_setname_np(*threadInternals->mThreadName.getCString());
 
 	// Call proc
 	threadInternals->mThreadProc(threadInternals->mThread, threadInternals->mThreadProcUserData);

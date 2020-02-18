@@ -127,7 +127,7 @@ class CWorkItemQueueInternals {
 													// Create new active thread
 													mActiveWorkItemThreadInfos +=
 															new SWorkItemThreadInfo(workItemInfo, threadProc,
-																	CString("CWorkItemQueue Thread #") +
+																	CString(OSSTR("CWorkItemQueue Thread #")) +
 																			CString(mActiveWorkItemThreadInfos
 																					.getCount() + 1));
 											}
