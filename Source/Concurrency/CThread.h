@@ -12,7 +12,7 @@
 typedef	void*	CThreadRef;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Procs
+// MARK: - Procs
 
 class CThread;
 typedef	void	(*CThreadProc)(const CThread& thread, void* userData);

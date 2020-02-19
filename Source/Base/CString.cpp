@@ -15,6 +15,12 @@ const	UInt64	kDisplayAsKiBThreshhold = 4097;
 const	UInt64	kDisplayAsMiBThreshHold = 1000 * 1024;
 const	UInt64	kDisplayAsGiBThreshHold = 1024 * 1024 * 1024;
 
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CString
+
+// MARK: Properties
+
 CString	CString::mEmpty;
 
 CString	CString::mCommaCharacter(OSSTR(","));
@@ -26,10 +32,6 @@ CString	CString::mTabCharacter(OSSTR("\t"));
 CString	CString::sNewlineCharacter(OSSTR("\n"));
 CString	CString::sLinefeedCharacter(OSSTR("\r"));
 CString	CString::sNewlineCharacters(OSSTR("\n\r"));
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CString
 
 // MARK: Lifecycle methods
 

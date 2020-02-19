@@ -32,6 +32,9 @@ const	UniversalTime			kUniversalTimeNever					= HUGE_VAL;
 const	UniversalTimeInterval	kUniversalTimeInterval1904To2001	= 3061152000.0;
 const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
 
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SGregorianDate
+
 struct SGregorianDate {
 	// Lifecycle methods
 	SGregorianDate(UInt32 year, UInt8 month, UInt8 day, UInt8 hour, UInt8 minute, Float32 second, UInt8 dayOfWeek = 0) :
@@ -47,6 +50,9 @@ struct SGregorianDate {
     Float32	mSecond;	// 0 - 59.9
 	UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SGregorianUnits
 
 struct SGregorianUnits {
 	// Lifecycle methods

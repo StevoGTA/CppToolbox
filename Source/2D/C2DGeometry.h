@@ -16,7 +16,7 @@ template <typename T> struct T2DUtilities {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: T2DPoint
+// MARK: - T2DPoint
 
 template <typename T> struct T2DAffineTransform;
 template <typename T> struct T2DPoint {

@@ -50,7 +50,7 @@ template <typename T> struct OV {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: OR (Optional Reference)
+// MARK: - OR (Optional Reference)
 /*
 	Examples:
 
@@ -84,7 +84,7 @@ template <typename T> struct OR {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: OO (Optional Object)
+// MARK: - OO (Optional Object)
 /*
 	Examples:
 
@@ -115,10 +115,7 @@ template <typename T> struct OR {
 
  */
 
-//
-// I wonder if we want this to be OON vs OOC based on whether object copies are via new or copy()
-//
- template <typename T> struct OO {
+template <typename T> struct OO {
 			// Lifecycle methods
 			OO() : mObject(nil), mReferenceCount(nil) {}
 			OO(T* object) : mObject(object), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
@@ -175,7 +172,7 @@ template <typename T> struct OR {
  };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: OP (Optional Proc)
+// MARK: - OP (Optional Proc)
 /*
 	Examples:
 

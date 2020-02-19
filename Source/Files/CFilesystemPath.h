@@ -31,7 +31,7 @@ enum EFilesystemPathStyle {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFilesystemPath
+// MARK: - CFilesystemPath
 
 class CFilesystemPathInternals;
 class CFilesystemPath : public CHashable {

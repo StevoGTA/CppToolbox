@@ -28,7 +28,7 @@ class CLock {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CLock
+// MARK: - CReadPreferringLock
 
 class CReadPreferringLockInternals;
 class CReadPreferringLock {

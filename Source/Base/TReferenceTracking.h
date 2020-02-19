@@ -5,7 +5,29 @@
 #pragma once
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: TReferenceCountable
+// MARK: SReferenceCountable
+
+struct SReferenceCountable {
+	// Methods
+	public:
+				// Lifecycle methods
+				SReferenceCountable() : mReferenceCount(new UInt32)
+					{ *mReferenceCount = 1; }
+				SReferenceCountable(const SReferenceCountable& other) : mReferenceCount(other.mReferenceCount)
+					{ (*mReferenceCount)++; }
+
+	protected:
+				// Subclass methods
+		UInt32	removeReference()
+					{ return --(*mReferenceCount); }
+
+	// Properties
+	private:
+		UInt32*	mReferenceCount;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TReferenceCountable
 
 template <typename T> class TReferenceCountable {
 	public:
@@ -25,6 +47,9 @@ template <typename T> class TReferenceCountable {
 									DisposeOf(THIS);
 								}
 							}
+
+	protected:
+						// Subclass methods
 				UInt32	getReferenceCount() const
 							{ return mReferenceCount; }
 
@@ -33,7 +58,7 @@ template <typename T> class TReferenceCountable {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: TCopyOnWriteReferenceCountable
+// MARK: - TCopyOnWriteReferenceCountable
 
 template <typename T> class TCopyOnWriteReferenceCountable : public TReferenceCountable<T> {
 	public:
@@ -56,27 +81,4 @@ template <typename T> class TCopyOnWriteReferenceCountable : public TReferenceCo
 						// Only a single reference
 						return (T*) this;
 				}
-
-	private:
-		UInt32	mReferenceCount;
-};
-
-
-struct SReferenceCountable {
-	// Methods
-	public:
-				// Lifecycle methods
-				SReferenceCountable() : mReferenceCount(new UInt32)
-					{ *mReferenceCount = 1; }
-				SReferenceCountable(const SReferenceCountable& other) : mReferenceCount(other.mReferenceCount)
-					{ (*mReferenceCount)++; }
-
-	protected:
-				// Subclass methods
-		UInt32	removeReference()
-					{ return --(*mReferenceCount); }
-
-	// Properties
-	private:
-		UInt32*	mReferenceCount;
 };

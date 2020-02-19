@@ -20,7 +20,7 @@ struct SGPUBuffer {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: EGPUVertexBufferType
+// MARK: - EGPUVertexBufferType
 
 enum EGPUVertexBufferType {
 	kGPUVertexBufferType2Vertex2Texture,
@@ -28,7 +28,7 @@ enum EGPUVertexBufferType {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPUVertexBuffer
+// MARK: - SGPUVertexBuffer
 
 struct SGPUVertexBuffer : SGPUBuffer {
 	// Lifecycle methods

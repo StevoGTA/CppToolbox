@@ -21,34 +21,6 @@ class CLockInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CReadPreferringLockInternals
-
-class CReadPreferringLockInternals {
-	public:
-		CReadPreferringLockInternals()
-			{ ::pthread_rwlock_init(&mRWLock, nil); }
-		~CReadPreferringLockInternals()
-			{ pthread_rwlock_destroy(&mRWLock); }
-
-		pthread_rwlock_t	mRWLock;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSemaphoreInternals
-
-class CSemaphoreInternals {
-	public:
-		CSemaphoreInternals()
-			{ ::pthread_cond_init(&mCond, nil); }
-		~CSemaphoreInternals()
-			{ ::pthread_cond_destroy(&mCond); }
-
-		pthread_cond_t	mCond;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CLock
 
 // MARK: Lifecycle methods
@@ -89,6 +61,20 @@ void CLock::unlock() const
 {
 	::pthread_mutex_unlock(&mInternals->mMutex);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CReadPreferringLockInternals
+
+class CReadPreferringLockInternals {
+	public:
+		CReadPreferringLockInternals()
+			{ ::pthread_rwlock_init(&mRWLock, nil); }
+		~CReadPreferringLockInternals()
+			{ pthread_rwlock_destroy(&mRWLock); }
+
+		pthread_rwlock_t	mRWLock;
+};
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -139,6 +125,20 @@ void CReadPreferringLock::unlockForWriting() const
 {
 	::pthread_rwlock_unlock(&mInternals->mRWLock);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSemaphoreInternals
+
+class CSemaphoreInternals {
+	public:
+		CSemaphoreInternals()
+			{ ::pthread_cond_init(&mCond, nil); }
+		~CSemaphoreInternals()
+			{ ::pthread_cond_destroy(&mCond); }
+
+		pthread_cond_t	mCond;
+};
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

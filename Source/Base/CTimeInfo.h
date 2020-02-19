@@ -43,6 +43,9 @@ enum {
 	kTimeInfoTimeFlagsDefault						= kTimeInfoTimeFlagsUseHoursMinutesSeconds,
 };
 
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - String Style
+
 // The exact formatted result for these styles depends on the locale and OS, but generally:
 //		Short is completely numeric, such as "1/1/52" or "3:30pm"
 //		Medium is longer, such as "Jan 12, 1952"

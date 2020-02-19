@@ -46,7 +46,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 														// Note reference
 														mGPUTextureManagerInfo.mGPUTextureReferenceInternals += this;
 													}
-		virtual									~CGPUTextureReferenceInternals()
+												~CGPUTextureReferenceInternals()
 													{
 														// Remove from references
 														mGPUTextureManagerInfo.mGPUTextureReferenceInternals -= this;

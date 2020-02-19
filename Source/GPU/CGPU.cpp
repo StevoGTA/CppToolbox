@@ -5,12 +5,11 @@
 #include "CGPU.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUInternals
+// MARK: CGPUInternals
 
 class CGPUInternals {
 	public:
 		CGPUInternals(const CGPUProcsInfo& procsInfo) : mProcsInfo(procsInfo) {}
-		~CGPUInternals() {}
 
 		const	CGPUProcsInfo	mProcsInfo;
 };

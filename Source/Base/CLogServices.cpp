@@ -39,6 +39,8 @@ void CLogServices::logError(const CString& string)
 
 #else
 
+// MARK: -
+
 #include "CCoreServices.h"
 #include "CFileX.h"
 #include "CURLX.h"
@@ -46,7 +48,7 @@ void CLogServices::logError(const CString& string)
 #include <pthread.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
+// MARK: - Local data
 
 static	CFileX*		sLogFile = nil;
 static	CLogProc	sLogMessageProc = nil;

@@ -8,7 +8,7 @@
 #include "CByteParceller.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Image Type
+// MARK: Image Type
 
 enum ImageType {
 	kImageTypeJPEG	= MAKE_OSTYPE('J', 'P', 'E', 'G'),

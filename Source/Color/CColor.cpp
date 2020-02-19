@@ -15,6 +15,50 @@ static	CString	sSaturationKey(OSSTR("s"));
 static	CString	sValueKey(OSSTR("v"));
 static	CString	sAlphaKey(OSSTR("a"));
 
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CColorInternals
+
+class CColorInternals {
+	public:
+		CColorInternals()
+			{
+				mR = 0.0;
+				mG = 0.0;
+				mB = 0.0;
+
+				mH = 0.0;
+				mS = 1.0;
+				mV = 0.0;
+
+				mA = 1.0;
+			}
+		~CColorInternals() {}
+
+		Float32	mR;
+		Float32	mG;
+		Float32	mB;
+
+		Float32	mH;
+		Float32	mS;
+		Float32	mV;
+
+		Float32	mA;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc declarations
+
+static	void	sConvertRGBToHSV(CColorInternals& internals);
+static	void	sConvertHSVToRGB(CColorInternals& internals);
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CColor
+
+// MARK: Properties
+
 const	CColor	CColor::mClear(kColorTypeHSV, (UInt8) 0, 0, 0, 0);
 const	CColor	CColor::mAliceBlue(kColorTypeRGB, (UInt8) 240, 248, 255, 255);
 const	CColor	CColor::mAntiqueWhite(kColorTypeRGB, (UInt8) 250, 235, 215, 255);
@@ -163,48 +207,6 @@ const	CColor	CColor::mWhite(kColorTypeRGB, (UInt8) 255, 255, 255, 255);
 const	CColor	CColor::mWhiteSmoke(kColorTypeRGB, (UInt8) 245, 245, 245, 255);
 const	CColor	CColor::mYellow(kColorTypeRGB, (UInt8) 255, 255, 0, 255);
 const	CColor	CColor::mYellowGreen(kColorTypeRGB, (UInt8) 154, 205, 50, 255);
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CColorInternals
-
-class CColorInternals {
-	public:
-		CColorInternals()
-			{
-				mR = 0.0;
-				mG = 0.0;
-				mB = 0.0;
-
-				mH = 0.0;
-				mS = 1.0;
-				mV = 0.0;
-
-				mA = 1.0;
-			}
-		~CColorInternals() {}
-
-		Float32	mR;
-		Float32	mG;
-		Float32	mB;
-
-		Float32	mH;
-		Float32	mS;
-		Float32	mV;
-
-		Float32	mA;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	void	sConvertRGBToHSV(CColorInternals& internals);
-static	void	sConvertHSVToRGB(CColorInternals& internals);
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CColor
 
 // MARK: Lifecycle methods
 
