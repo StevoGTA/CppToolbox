@@ -124,8 +124,8 @@ const CFileX& CLogServices::setup(const CString& filename, const CString& produc
 	// Write our first message
 	string +=
 			CString(OSSTR("Logging started ")) +
-					CTimeInfo::getStringForUniversalTime(CTimeInfo::getCurrentUniversalTime(),
-							kTimeInfoStringStyleLong, kTimeInfoStringStyleLong) +
+					SGregorianDate(SUniversalTime::getCurrentUniversalTime()).
+							getString(kGregorianDateStringStyleLong, kGregorianDateStringStyleLong) +
 			CString(OSSTR("\n"));
 	string += CString(OSSTR("Product: ")) + productAndVersion + CString(OSSTR("\n"));
 
