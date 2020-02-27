@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CDictionary.h"
-//#include "CFileX.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Structures
@@ -23,7 +22,9 @@ struct SPref {
 struct SStringPref : public SPref {
 	// Lifecycle methods
 	SStringPref() : SPref(nil), mDefaultValue(OSSTR("")) {}
-	SStringPref(const char* keyString, OSString defaultValue) : SPref(keyString), mDefaultValue(defaultValue) {}
+	SStringPref(const char* keyString, OSString defaultValue = OSSTR("")) :
+		SPref(keyString), mDefaultValue(defaultValue)
+		{}
 
 	// Properties
 	OSString	mDefaultValue;	// OSSTR("value")
@@ -32,7 +33,7 @@ struct SStringPref : public SPref {
 struct SFloat32Pref : public SPref {
 	// Lifecycle methods
 	SFloat32Pref() : SPref(nil), mDefaultValue(0.0) {}
-	SFloat32Pref(const char* keyString, Float32 defaultValue) : SPref(keyString), mDefaultValue(defaultValue) {}
+	SFloat32Pref(const char* keyString, Float32 defaultValue = 0.0) : SPref(keyString), mDefaultValue(defaultValue) {}
 
 	// Properties
 	Float32	mDefaultValue;		// 32.0
@@ -41,7 +42,7 @@ struct SFloat32Pref : public SPref {
 struct SFloat64Pref : public SPref {
 	// Lifecycle methods
 	SFloat64Pref() : SPref(nil), mDefaultValue(0.0) {}
-	SFloat64Pref(const char* keyString, Float64 defaultValue) : SPref(keyString), mDefaultValue(defaultValue) {}
+	SFloat64Pref(const char* keyString, Float64 defaultValue = 0.0) : SPref(keyString), mDefaultValue(defaultValue) {}
 
 	// Properties
 	Float64	mDefaultValue;		// 64.0
@@ -50,7 +51,7 @@ struct SFloat64Pref : public SPref {
 struct SSInt32Pref : public SPref {
 	// Lifecycle methods
 	SSInt32Pref() : SPref(nil), mDefaultValue(0) {}
-	SSInt32Pref(const char* keyString, SInt32 defaultValue) : SPref(keyString), mDefaultValue(defaultValue) {}
+	SSInt32Pref(const char* keyString, SInt32 defaultValue = 0) : SPref(keyString), mDefaultValue(defaultValue) {}
 
 	// Properties
 	SInt32	mDefaultValue;		// 32
@@ -59,7 +60,7 @@ struct SSInt32Pref : public SPref {
 struct SUInt32Pref : public SPref {
 	// Lifecycle methods
 	SUInt32Pref() : SPref(nil), mDefaultValue(0) {}
-	SUInt32Pref(const char* keyString, UInt32 defaultValue) : SPref(keyString), mDefaultValue(defaultValue) {}
+	SUInt32Pref(const char* keyString, UInt32 defaultValue = 0) : SPref(keyString), mDefaultValue(defaultValue) {}
 
 	// Properties
 	UInt32	mDefaultValue;		// 32
@@ -68,7 +69,7 @@ struct SUInt32Pref : public SPref {
 struct SUInt64Pref : public SPref {
 	// Lifecycle methods
 	SUInt64Pref() : SPref(nil), mDefaultValue(0) {}
-	SUInt64Pref(const char* keyString, UInt32 defaultValue) : SPref(keyString), mDefaultValue(defaultValue) {}
+	SUInt64Pref(const char* keyString, UInt32 defaultValue = 0) : SPref(keyString), mDefaultValue(defaultValue) {}
 
 	// Properties
 	UInt64	mDefaultValue;		// 32
@@ -84,7 +85,9 @@ class CPreferences {
 		static	bool					hasValue(const SPref& pref,
 												const CString& applicationID = CString::mEmpty);
 
-		static	TArray<CData>			getDataArray(const SPref& pref,
+		static	TNArray<CData>			getDataArray(const SPref& pref,
+												const CString& applicationID = CString::mEmpty);
+		static	TNArray<CDictionary>	getDictionaryArray(const SPref& pref,
 												const CString& applicationID = CString::mEmpty);
 		static	TNumericArray<OSType>	getOSTypeArray(const SPref& pref,
 												const CString& applicationID = CString::mEmpty);
@@ -105,7 +108,8 @@ class CPreferences {
 		static	UInt64					getUInt64(const SUInt64Pref& pref,
 												const CString& applicationID = CString::mEmpty);
 
-		static	void					set(const SPref& pref, const TPtrArray<CData*>& array);
+		static	void					set(const SPref& pref, const TArray<CData>& array);
+		static	void					set(const SPref& pref, const TArray<CDictionary>& array);
 		static	void					set(const SPref& pref, const TNumericArray<OSType>& array);
 		static	void					set(const SPref& pref, const CData& data);
 		static	void					set(const SPref& pref, const CDictionary& dictionary);
@@ -122,17 +126,6 @@ class CPreferences {
 		static	void					endGroupSet();
 		
 		static	void					setAlternateApplicationID(const CString& applicationID = CString::mEmpty);
-#if TARGET_OS_MACOS
-//		static	CFileX					getPrimaryFile();
-#endif
-
-										// Deprecated
-//		static	CArrayX					getArray(const SPref& pref,
-//												const CString& applicationID = CString::mEmpty);
-//		static	CDictionaryX			getDictionaryX(const SPref& pref,
-//												const CString& applicationID = CString::mEmpty);
-//		static	void					set(const SPref& pref, const CArrayX& array);
-//		static	void					set(const SPref& pref, const CDictionaryX& dict);
 
 	// Properties
 	public:

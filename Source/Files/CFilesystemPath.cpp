@@ -176,6 +176,32 @@ CFilesystemPath CFilesystemPath::getForResourceFork() const
 				CString(OSSTR("..namedfork")) + sPathSeparator(mInternals->mPathStyle) + CString(OSSTR("rsrc")));
 }
 
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CFilesystemPath::makeLegalFilename(const CString& string, EFilesystemPathMakeLegalFilenameOptions options)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get length of string
+	CStringLength	length = string.getLength();
+
+	// Extract characters
+	UTF16Char	buffer[length];
+	string.get(buffer, length);
+
+	// Replace "illegal" ones with '_'
+	UniChar*	p = buffer;
+	for (CStringLength i = 0; i < length; i++, p++) {
+		if ((*p < 0x20) || (*p == ':') || (*p == 0x7F))
+			*p = '_';
+
+		if ((options & kFilesystemPathMakeLegalFilenameOptionsDisallowSpaces) && (*p == ' '))
+			*p = '_';
+	}
+
+	return CString(buffer, length);
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions

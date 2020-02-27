@@ -592,8 +592,8 @@ bool CDictionary::getBool(const CString& key, bool defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<CDictionary>& CDictionary::getArrayOfDictionaries(const CString& key,
-		const TArray<CDictionary>& defaultValue) const
+const TNArray<CDictionary>& CDictionary::getArrayOfDictionaries(const CString& key,
+		const TNArray<CDictionary>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
@@ -603,7 +603,7 @@ const TArray<CDictionary>& CDictionary::getArrayOfDictionaries(const CString& ke
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<CString>& CDictionary::getArrayOfStrings(const CString& key, const TArray<CString>& defaultValue) const
+const TNArray<CString>& CDictionary::getArrayOfStrings(const CString& key, const TNArray<CString>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
@@ -1071,10 +1071,10 @@ SDictionaryValue::SDictionaryValue(const SDictionaryValue& other, CDictionaryIte
 	// Check value type
 	if (mValueType == kDictionaryValueTypeArrayOfDictionaries)
 		// Array of dictionaries
-		mValue.mArrayOfDictionaries = new TArray<CDictionary>(*mValue.mArrayOfDictionaries);
+		mValue.mArrayOfDictionaries = new TNArray<CDictionary>(*mValue.mArrayOfDictionaries);
 	else if (mValueType == kDictionaryValueTypeArrayOfStrings)
 		// Array of strings
-		mValue.mArrayOfStrings = new TArray<CString>(*mValue.mArrayOfStrings);
+		mValue.mArrayOfStrings = new TNArray<CString>(*mValue.mArrayOfStrings);
 	else if (mValueType == kDictionaryValueTypeData)
 		// Data
 		mValue.mData = new CData(*mValue.mData);
@@ -1115,7 +1115,7 @@ bool SDictionaryValue::getBool(bool defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<CDictionary>& SDictionaryValue::getArrayOfDictionaries(const TArray<CDictionary>& defaultValue) const
+const TNArray<CDictionary>& SDictionaryValue::getArrayOfDictionaries(const TNArray<CDictionary>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
@@ -1125,7 +1125,7 @@ const TArray<CDictionary>& SDictionaryValue::getArrayOfDictionaries(const TArray
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<CString>& SDictionaryValue::getArrayOfStrings(const TArray<CString>& defaultValue) const
+const TNArray<CString>& SDictionaryValue::getArrayOfStrings(const TNArray<CString>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type

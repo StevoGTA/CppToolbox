@@ -198,7 +198,21 @@ SGregorianDate SGregorianDate::operator+(const SGregorianUnits& units) const
 {
 	// Adding or subtracting too much can cause the raw values to go out of range.  We transform to UniverstalTime and
 	//	back to normalize back to valid values.
-	return SGregorianDate(
-			SGregorianDate(mYear + units.mYears, mMonth + units.mMonths, mDay + units.mDays, mHour + units.mHours,
-					mMinute + units.mMinutes, mSecond + units.mSeconds).getUniversalTime());
+	SGregorianDate	newDate(mYear + units.mYears, mMonth + units.mMonths, mDay + units.mDays, mHour + units.mHours,
+							mMinute + units.mMinutes, mSecond + units.mSeconds);
+
+	return SGregorianDate(newDate.getUniversalTime());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SGregorianDate& SGregorianDate::operator+=(const SGregorianUnits& units)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Adding or subtracting too much can cause the raw values to go out of range.  We transform to UniverstalTime and
+	//	back to normalize back to valid values.
+	SGregorianDate	newDate(mYear + units.mYears, mMonth + units.mMonths, mDay + units.mDays, mHour + units.mHours,
+							mMinute + units.mMinutes, mSecond + units.mSeconds);
+	*this = SGregorianDate(newDate.getUniversalTime());
+
+	return *this;
 }

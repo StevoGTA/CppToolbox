@@ -4,12 +4,7 @@
 
 #include "CPreferences.h"
 
-//#include "CArrayX.h"
-//#include "CArrayCFImplementation.h"
-//#include "CFUtilities.h"
 #include "CData.h"
-//#include "CDictionaryX.h"
-//#include "CDictionaryCFImplementation.h"
 #include "CFUtilities.h"
 #include "CLogServices.h"
 
@@ -53,23 +48,45 @@ bool CPreferences::hasValue(const SPref& pref, const CString& applicationID)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CData> CPreferences::getDataArray(const SPref& pref, const CString& applicationID)
+TNArray<CData> CPreferences::getDataArray(const SPref& pref, const CString& applicationID)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNArray<CData>	array;
-	CFArrayRef		arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFArrayRef	arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
 
 	// Check if have array
 	if (arrayRef != nil) {
 		// Setup array
-		array = eArrayOfDatasFrom(arrayRef);
+		TNArray<CData>	array = eArrayOfDatasFrom(arrayRef);
 
 		// Cleanup
 		::CFRelease(arrayRef);
-	}
 
-	return array;
+		return array;
+	} else
+		// Not found
+		return TNArray<CData>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNArray<CDictionary> CPreferences::getDictionaryArray(const SPref& pref, const CString& applicationID)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFArrayRef	arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
+
+	// Check if have array
+	if (arrayRef != nil) {
+		// Setup array
+		TNArray<CDictionary>	array = eArrayOfDictionariesFrom(arrayRef);
+
+		// Cleanup
+		::CFRelease(arrayRef);
+
+		return array;
+	} else
+		// Not found
+		return TNArray<CDictionary>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,10 +94,10 @@ TNumericArray<OSType> CPreferences::getOSTypeArray(const SPref& pref, const CStr
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNumericArray<OSType>	array;
-	CFArrayRef				arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFArrayRef	arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
 
 	// Check if have array
+	TNumericArray<OSType>	array;
 	if (arrayRef != nil) {
 		// Iterate all items
 		for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++) {
@@ -219,7 +236,7 @@ UInt64 CPreferences::getUInt64(const SUInt64Pref& pref, const CString& applicati
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const TPtrArray<CData*>& array)
+void CPreferences::set(const SPref& pref, const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -228,10 +245,31 @@ void CPreferences::set(const SPref& pref, const TPtrArray<CData*>& array)
 	// Iterate items
 	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
 		// Add data
-		CData*		data = array[i];
-		CFDataRef	dataRef = eDataCopyCFDataRef(*data);
+		CFDataRef	dataRef = eDataCopyCFDataRef(array[i]);
 		::CFArrayAppendValue(arrayRef, dataRef);
 		::CFRelease(dataRef);
+	}
+
+	// Store
+	sSetTo(pref.mKeyString, arrayRef);
+
+	// Cleanup
+	::CFRelease(arrayRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SPref& pref, const TArray<CDictionary>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFMutableArrayRef	arrayRef = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+
+	// Iterate items
+	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
+		// Add dictionary
+		CFDictionaryRef	dictionaryRef = eDictionaryCopyCFDictionaryRef(array[i]);
+		::CFArrayAppendValue(arrayRef, dictionaryRef);
+		::CFRelease(dictionaryRef);
 	}
 
 	// Store
@@ -392,69 +430,6 @@ void CPreferences::setAlternateApplicationID(const CString& applicationID)
 {
 	sAlternateApplicationID = applicationID;
 }
-
-//#if TARGET_OS_MACOS
-////----------------------------------------------------------------------------------------------------------------------
-//CFileX CPreferences::getPrimaryFile()
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	// Start with user Library folder
-//	CFolderX	folder = CFolderX::userLibraryFolder();
-//	if (folder.doesExist()) {
-//		// Go to Preferences subfolder
-//		folder = CFolderX(folder, CString(OSSTR("Preferences")));
-//		if (folder.doesExist()) {
-//			CString	bundleID((CFStringRef) CFBundleGetValueForInfoDictionaryKey(CFBundleGetMainBundle(),
-//							kCFBundleIdentifierKey));
-//			return CFileX(folder, bundleID + CString(OSSTR(".plist")));
-//		}
-//	}
-//
-//	return CFileX::mInvalidFile;
-//}
-//#endif
-//
-////----------------------------------------------------------------------------------------------------------------------
-//CArrayX CPreferences::getArray(const SPref& pref, const CString& applicationID)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	CFArrayRef	arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
-//	if (arrayRef != nil) {
-//		CArrayX	array = CArrayWithCFArrayRef(arrayRef);
-//		::CFRelease(arrayRef);
-//
-//		return array;
-//	} else
-//		return CArrayX();
-//}
-//
-////----------------------------------------------------------------------------------------------------------------------
-//CDictionaryX CPreferences::getDictionaryX(const SPref& pref, const CString& applicationID)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) sCopyFrom(pref.mKeyString, applicationID);
-//	if (dictionaryRef != nil) {
-//		CDictionaryX	dictionary = CDictionaryWithCFDictionaryRef(dictionaryRef);
-//		::CFRelease(dictionaryRef);
-//
-//		return dictionary;
-//	} else
-//		return CDictionaryX();
-//}
-//
-////----------------------------------------------------------------------------------------------------------------------
-//void CPreferences::set(const SPref& pref, const CArrayX& array)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	sSetTo(pref.mKeyString, CArrayGetCFArrayRef(array));
-//}
-//
-////----------------------------------------------------------------------------------------------------------------------
-//void CPreferences::set(const SPref& pref, const CDictionaryX& dict)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	sSetTo(pref.mKeyString, CDictionaryGetCFDictionaryRef(dict));
-//}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

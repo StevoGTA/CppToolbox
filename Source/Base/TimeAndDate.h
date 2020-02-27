@@ -72,7 +72,7 @@ struct SGregorianDate {
 						mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute), mSecond(second),
 								mDayOfWeek(dayOfWeek)
 						{}
-					SGregorianDate(UniversalTime time);
+					SGregorianDate(UniversalTime time = SUniversalTime::getCurrentUniversalTime());
 					SGregorianDate(const CString& string,
 							EGregorianDateStringStyle dateStyle = kGregorianDateStringStyleMedium,
 							EGregorianDateStringStyle timeStyle = kGregorianDateStringStyleShort);
@@ -83,6 +83,7 @@ struct SGregorianDate {
 							EGregorianDateStringStyle timeStyle = kGregorianDateStringStyleShort) const;
 
 	SGregorianDate	operator+(const SGregorianUnits& units) const;
+	SGregorianDate&	operator+=(const SGregorianUnits& units);
 
 	// Properties
 	static	CString	mJanString;

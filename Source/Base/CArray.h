@@ -313,7 +313,7 @@ template <typename T> class TNArray : public TArray<T> {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TCArray (TArray where copy happens trhough itemRef->copy())
+// MARK: - TCArray (TArray where copy happens through itemRef->copy())
 
 template <typename T> class TCArray : public TArray<T> {
 	// Methods

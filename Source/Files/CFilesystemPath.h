@@ -31,41 +31,54 @@ enum EFilesystemPathStyle {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - Make Legal Filename options
+
+enum EFilesystemPathMakeLegalFilenameOptions {
+	kFilesystemPathMakeLegalFilenameOptionsNone				= 0,
+	kFilesystemPathMakeLegalFilenameOptionsDisallowSpaces	= 1 << 0,
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFilesystemPath
 
 class CFilesystemPathInternals;
 class CFilesystemPath : public CHashable {
 	// Methods
 	public:
-						// Lifecycle methods
-						CFilesystemPath(const CString& string,
-								EFilesystemPathStyle pathStyle = kFilesystemPathStylePlatformDefault);
-						CFilesystemPath(const CFilesystemPath& other);
-						~CFilesystemPath();
+								// Lifecycle methods
+								CFilesystemPath(const CString& string,
+										EFilesystemPathStyle pathStyle = kFilesystemPathStylePlatformDefault);
+								CFilesystemPath(const CFilesystemPath& other);
+								~CFilesystemPath();
 
-						// CEquatable methods
-		bool			operator==(const CEquatable& other) const
-							{ return equals((const CFilesystemPath&) other); }
+								// CEquatable methods
+				bool			operator==(const CEquatable& other) const
+									{ return equals((const CFilesystemPath&) other); }
 
-						// CHashable methods
-		void			hashInto(CHasher& hasher) const
-							{ getString().hashInto(hasher); }
+								// CHashable methods
+				void			hashInto(CHasher& hasher) const
+									{ getString().hashInto(hasher); }
 
-						// Instance methods
-		CString			getString(EFilesystemPathStyle pathStyle = kFilesystemPathStylePlatformDefault) const;
+								// Instance methods
+				CString			getString(EFilesystemPathStyle pathStyle = kFilesystemPathStylePlatformDefault) const;
 
-		CString			getExtension() const;
+				CString			getExtension() const;
 
-		TArray<CString>	getComponents() const;
-		CString			getLastComponent() const;
-		CString			getLastComponentDeletingExtension() const;
+				TArray<CString>	getComponents() const;
+				CString			getLastComponent() const;
+				CString			getLastComponentDeletingExtension() const;
 
-		CFilesystemPath	appendingComponent(const CString& component) const;
-		CFilesystemPath	deletingLastComponent() const;
-		CFilesystemPath	getForResourceFork() const;
+				CFilesystemPath	appendingComponent(const CString& component) const;
+				CFilesystemPath	deletingLastComponent() const;
+				CFilesystemPath	getForResourceFork() const;
 
-		bool			equals(const CFilesystemPath& other) const
-							{ return getString() == other.getString(); }
+				bool			equals(const CFilesystemPath& other) const
+									{ return getString() == other.getString(); }
+
+								// Class methods
+		static	CString			makeLegalFilename(const CString& string,
+										EFilesystemPathMakeLegalFilenameOptions options =
+												kFilesystemPathMakeLegalFilenameOptionsNone);
 
 	// Properties
 	private:

@@ -29,10 +29,15 @@ CString::CString() : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CString& other) : CHashable()
+CString::CString(const CString& other, OV<CStringLength> length) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mStringRef = (CFStringRef) ::CFRetain(other.mStringRef);
+	if (length.hasValue())
+		// Create limited copy
+		mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, *length, other.mStringRef);
+	else
+		// Make copy
+		mStringRef = (CFStringRef) ::CFRetain(other.mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -704,35 +709,6 @@ CString CString::removingLeadingAndTrailingQuotes() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::makingLegalFilename(UInt32 options) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get length of string
-	CStringLength	length = (CStringLength) ::CFStringGetLength(mStringRef);
-
-	// Extract characters
-	UniChar	buffer[length];
-	::CFStringGetCharacters(mStringRef, ::CFRangeMake(0, length), buffer);
-
-	// Replace "illegal" ones with '_'
-	UniChar*	p = buffer;
-	for (CStringLength i = 0; i < length; i++, p++) {
-		if ((*p < 0x20) || (*p == ':') || (*p == 0x7F))
-			*p = '_';
-		
-		if ((options & kStringMakeLegalFilenameOptionsDisallowSpaces) && (*p == ' '))
-			*p = '_';
-	}
-	
-	CFStringRef	stringRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, buffer, length);
-
-	CString		string(stringRef);
-	::CFRelease(stringRef);
-
-	return string;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CString CString::getCommonPrefix(const CString& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -764,7 +740,7 @@ CString CString::getCommonPrefix(const CString& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuotes) const
+TNArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuotes) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -806,57 +782,6 @@ TArray<CString> CString::breakUp(const CString& delimiterString, bool respectQuo
 	
 	return array;
 }
-
-// MARK: Percent escapes methods
-
-////----------------------------------------------------------------------------------------------------------------------
-//CString& CString::convertToPercentEscapes()
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	// Perform system conversion
-//	CFStringRef	stringRef =
-//						::CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, mInternals->mStringRef, nil,
-//								nil, kCFStringEncodingUTF8);
-//
-//	if (stringRef != nil) {
-//		::CFRelease(mInternals->mStringRef);
-//		mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
-//		::CFRelease(stringRef);
-//	}
-//
-//	// Convert other characters
-//	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR(";"), CFSTR("%3B"),
-//			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-//	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("@"), CFSTR("%40"),
-//			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-//
-//	return *this;
-//}
-
-////----------------------------------------------------------------------------------------------------------------------
-//CString& CString::convertFromPercentEscapes()
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	// Convert other characters
-//	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("%3B"), CFSTR(";"),
-//			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-//	::CFStringFindAndReplace(mInternals->mStringRef, CFSTR("%40"), CFSTR("@"),
-//			::CFRangeMake(0, ::CFStringGetLength(mInternals->mStringRef)), 0);
-//
-//	// Perform system conversion
-//	CFStringRef	stringRef =
-//						::CFURLCreateStringByReplacingPercentEscapes(kCFAllocatorDefault, mInternals->mStringRef,
-//								CFSTR(""));
-//	AssertNotNil(stringRef);
-//	if (stringRef == nil)
-//		return *this;
-//
-//	::CFRelease(mInternals->mStringRef);
-//	mInternals->mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, stringRef);
-//	::CFRelease(stringRef);
-//
-//	return *this;
-//}
 
 // MARK: Comparison methods
 

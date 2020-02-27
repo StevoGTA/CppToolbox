@@ -85,11 +85,11 @@ class CDictionary : public CEquatable {
 
 				const	SDictionaryValue&			getValue(const CString& key) const;
 						bool						getBool(const CString& key, bool defaultValue = false) const;
-				const	TArray<CDictionary>&		getArrayOfDictionaries(const CString& key,
-															const TArray<CDictionary>& defaultValue =
+				const	TNArray<CDictionary>&		getArrayOfDictionaries(const CString& key,
+															const TNArray<CDictionary>& defaultValue =
 																	TNArray<CDictionary>()) const;
-				const	TArray<CString>&			getArrayOfStrings(const CString& key,
-															const TArray<CString>& defaultValue = TNArray<CString>())
+				const	TNArray<CString>&			getArrayOfStrings(const CString& key,
+															const TNArray<CString>& defaultValue = TNArray<CString>())
 															const;
 				const	CData&						getData(const CString& key,
 															const CData& defaultValue = CData::mEmpty) const;
@@ -232,9 +232,10 @@ struct SDictionaryValue {
 				EDictionaryValueType	getType() const { return mValueType; }
 
 				bool					getBool(bool defaultValue = false) const;
-		const	TArray<CDictionary>&	getArrayOfDictionaries(
-												const TArray<CDictionary>& defaultValue = TNArray<CDictionary>()) const;
-		const	TArray<CString>&		getArrayOfStrings(const TArray<CString>& defaultValue = TNArray<CString>())
+		const	TNArray<CDictionary>&	getArrayOfDictionaries(
+												const TNArray<CDictionary>& defaultValue = TNArray<CDictionary>())
+												const;
+		const	TNArray<CString>&		getArrayOfStrings(const TNArray<CString>& defaultValue = TNArray<CString>())
 												const;
 		const	CData&					getData(const CData& defaultValue = CData::mEmpty) const;
 		const	CDictionary&			getDictionary(const CDictionary& defaultValue = CDictionary::mEmpty) const;
@@ -261,8 +262,8 @@ struct SDictionaryValue {
 		EDictionaryValueType	mValueType;
 		union SDictionaryValueValue {
 			SDictionaryValueValue(bool value) : mBool(value) {}
-			SDictionaryValueValue(TArray<CDictionary>* value) : mArrayOfDictionaries(value) {}
-			SDictionaryValueValue(TArray<CString>* value) : mArrayOfStrings(value) {}
+			SDictionaryValueValue(TNArray<CDictionary>* value) : mArrayOfDictionaries(value) {}
+			SDictionaryValueValue(TNArray<CString>* value) : mArrayOfStrings(value) {}
 			SDictionaryValueValue(CData* value) : mData(value) {}
 			SDictionaryValueValue(CDictionary* value) : mDictionary(value) {}
 			SDictionaryValueValue(CString* value) : mString(value) {}
@@ -279,8 +280,8 @@ struct SDictionaryValue {
 			SDictionaryValueValue(CDictionaryItemRef value) : mItemRef(value) {}
 
 			bool					mBool;
-			TArray<CDictionary>*	mArrayOfDictionaries;
-			TArray<CString>*		mArrayOfStrings;
+			TNArray<CDictionary>*	mArrayOfDictionaries;
+			TNArray<CString>*		mArrayOfStrings;
 			CData*					mData;
 			CDictionary*			mDictionary;
 			CString*				mString;
