@@ -1,0 +1,24 @@
+Building libraries for iOS
+
+libjpeg-turbo
+-------------
+-Create a workspace folder.
+-Download and unzip the latest libjpeg-turbo from https://sourceforge.net/projects/libjpeg-turbo/files/.
+-Create an iOS folder.
+-Copy buildlibjpeg-turbo.sh into the iOS folder.
+-Edit the script to update:
+	"ARCHS_TO_BUILD" to the latest required/recommended.
+	"IOS_SDK_MIN_VERSION" to the required value.
+	"SRC_PATH" to the correct location.
+-Run the script.
+-Update the project include and lib entries to the correct location.
+
+libpng
+------
+-Create a workspace folder.
+-Optionally create an iOS folder.
+-Copy buildlibpng.sh into the iOS folder.
+-Edit the script to update:
+	The lib version to use.
+-Run the script.
+-Update the project include and lib entries to the correct location.
