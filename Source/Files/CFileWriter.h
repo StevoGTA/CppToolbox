@@ -57,6 +57,8 @@ class CFileWriter {
 		UError	setPos(EFileWriterPositionMode mode, SInt64 newPos) const;
 		UError	setSize(UInt64 newSize) const;
 
+		UError	flush() const;
+
 		UError	close() const;
 
 	// Properties

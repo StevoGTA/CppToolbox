@@ -70,6 +70,7 @@ class CFilesystemPath : public CHashable {
 
 				CFilesystemPath	appendingComponent(const CString& component) const;
 				CFilesystemPath	deletingLastComponent() const;
+				CFilesystemPath	appendingExtension(const CString& extension) const;
 				CFilesystemPath	getForResourceFork() const;
 
 				bool			equals(const CFilesystemPath& other) const

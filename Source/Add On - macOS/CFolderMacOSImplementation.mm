@@ -221,6 +221,23 @@ const CFolder& CFolder::userLibraryFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+const CFolder& CFolder::userLogsFolder()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CFolder*	sFolder = nil;
+
+	if (sFolder == nil) {
+		// Setup
+		NSString*	path = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES)[0];
+		sFolder =
+				new CFolder(CFilesystemPath(CString((__bridge CFStringRef) path))
+						.appendingComponent(CString(OSSTR("Logs"))));
+	}
+
+	return *sFolder;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const CFolder& CFolder::userMusicFolder()
 //----------------------------------------------------------------------------------------------------------------------
 {

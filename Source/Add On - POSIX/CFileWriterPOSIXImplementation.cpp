@@ -271,6 +271,32 @@ UError CFileWriter::setSize(UInt64 newSize) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+UError CFileWriter::flush() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check open mode
+	if (mInternals->mFILE != nil) {
+		// FILE
+		if (::fflush(mInternals->mFILE) == 0)
+			// Success
+			return kNoError;
+		else
+			// Error
+			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "flushing");
+	} else if (mInternals->mFD != -1) {
+		// file
+		if (::fsync(mInternals->mFD) == 0)
+			// Success
+			return kNoError;
+		else
+			// Error
+			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "flushing");
+	} else
+		// File not open!
+		CFileWriterReportErrorAndReturnError(kFileNotOpenError, "flushing");
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 UError CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {

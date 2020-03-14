@@ -83,12 +83,6 @@ class CFolder : CHashable {
 
 		static			ECompareResult		compareName(CFolder* const folder1, CFolder* const folder2, void* context);
 
-	private:
-											// Instance methods
-						void				update(const CFilesystemPath& filesystemPath);
-
-	// Properties
-	public:
 #if TARGET_OS_MACOS
 		static	const	CFolder&			systemApplicationSupportFolder();
 		static	const	CFolder&			systemAudioPluginsFolder();
@@ -101,9 +95,15 @@ class CFolder : CHashable {
 		static	const	CFolder&			userDesktopFolder();
 		static	const	CFolder&			userHomeFolder();
 		static	const	CFolder&			userLibraryFolder();
+		static	const	CFolder&			userLogsFolder();
 		static	const	CFolder&			userMusicFolder();
 #endif
 
 	private:
-						CFolderInternals*	mInternals;
+											// Instance methods
+						void				update(const CFilesystemPath& filesystemPath);
+
+	// Properties
+	private:
+		CFolderInternals*	mInternals;
 };

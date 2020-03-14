@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Procs
 
-typedef	void	(*CLogProc)(const CString& string, bool silentWarningsAndErrors, void* userData);
+typedef	void	(*CLogProc)(const CString& string, void* userData);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
@@ -48,45 +48,61 @@ typedef	void	(*CLogProc)(const CString& string, bool silentWarningsAndErrors, vo
 			}																				\
 		}
 
-#if defined(__OBJC__)
-	#define	LogNSError(error, when)															\
-				CLogServices::logError(CString((CFStringRef) [error localizedDescription]),	\
-						when, __FILE__, __func__, __LINE__);
-#endif
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CLogFile
+
+class CFile;
+
+class CLogFileInternals;
+class CLogFile {
+	// Methods
+	public:
+						// Lifecycle methods
+						CLogFile(const CFile& file);
+						CLogFile(const CLogFile& other);
+						~CLogFile();
+
+						// Instance methods
+		const	CFile& getFile() const;
+
+				void	logMessage(const CString& string) const;
+				void	logWarning(const CString& warning, const CString& when, const char* file, const char* proc,
+								UInt32 line) const;
+				void	logWarning(const CString& string) const;
+				void	logError(const CString& error, const CString& when, const char* file, const char* proc,
+								UInt32 line) const;
+				void	logError(const CString& string) const;
+				void	logError(UError error, const CString& message, const char* file, const char* proc, UInt32 line)
+							{ logError(CErrorRegistry::getStringForError(error), message, file, proc, line); }
+
+	// Properties
+	private:
+		CLogFileInternals*	mInternals;
+};
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CLogServices
 
-//class CFolderX;
-//class CFileX;
-
 class CLogServices {
-
 	// Methods
 	public:
 								// Class methods
-//		static	const	CFileX&	setup(const CString& filename, const CString& productAndVersion,
-//										bool startNewFile = true);
-//		static	const	CFileX&	getLogFile();
-		
-		static			void	logMessage(const CString& string);
-		static			void	logWarning(const CString& warning, const CString& when, const char* file,
+		static	void			setPrimaryLogFile(const CLogFile& logFile);
+		static	OO<CLogFile>&	getPrimaryLogFile();
+
+		static	void			logMessage(const CString& string);
+		static	void			logDebugMessage(const CString& string);
+		static	void			logWarning(const CString& warning, const CString& when, const char* file,
 										const char* proc, UInt32 line);
-		static			void	logWarning(const CString& string);
-		static			void	logError(const CString& error, const CString& when, const char* file,
-										const char* proc, UInt32 line);
-		static			void	logError(const CString& string);
-		static			void	logError(UError error, const CString& message, const char* file, const char* proc,
+		static	void			logWarning(const CString& string);
+		static	void			logError(const CString& error, const CString& when, const char* file, const char* proc,
+										UInt32 line);
+		static	void			logError(const CString& string);
+		static	void			logError(UError error, const CString& message, const char* file, const char* proc,
 										UInt32 line)
 									{ logError(CErrorRegistry::getStringForError(error), message, file, proc, line); }
 
-//		static			void	log(const CFileX& file);
-//		static			void	log(const CFolderX& folder);
-
-		static			void	setLogMessageProc(CLogProc logProc, void* logProcUserData = nil);
-		static			void	setLogWarningProc(CLogProc logProc, void* logProcUserData = nil);
-		static			void	setLogErrorProc(CLogProc logProc, void* logProcUserData = nil);
-
-		static			bool	getSilentWarningsAndErrors();
-		static			void	setSilentWarningsAndErrors(bool silentWarningsAndErrors);
+		static	void			addLogMessageProc(CLogProc logProc, void* logProcUserData = nil);
+		static	void			addLogWarningProc(CLogProc logProc, void* logProcUserData = nil);
+		static	void			addLogErrorProc(CLogProc logProc, void* logProcUserData = nil);
 };
