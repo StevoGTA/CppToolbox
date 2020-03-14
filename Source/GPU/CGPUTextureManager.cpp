@@ -129,6 +129,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 															mGPUTextureManagerInfo.
 																	mGPU.unregisterTexture(
 																			mGPUTextureInfo);
+															mGPUTextureInfo = SGPUTextureInfo();
 														}
 													}
 

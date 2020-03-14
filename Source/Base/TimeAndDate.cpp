@@ -155,7 +155,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 				string += CString(OSSTR(" "));
 			string +=
 					CString(hour) + CString(OSSTR(":")) + CString(mMinute, 2, true) +
-							((mHour >= 12) ? &SGregorianDate::mPMString : &SGregorianDate::mAMString);
+							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
 		case kGregorianDateStringStyleMedium:
@@ -164,7 +164,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 				string += CString(OSSTR(" "));
 			string +=
 					CString(hour) + CString(OSSTR(":")) + CString(mMinute, 2, true) +
-							((mHour >= 12) ? &SGregorianDate::mPMString : &SGregorianDate::mAMString);
+							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
 		case kGregorianDateStringStyleLong:
@@ -174,7 +174,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 			string +=
 					CString(hour) + CString(OSSTR(":")) + CString(mMinute, 2, true) + CString(OSSTR(":")) +
 							CString((UInt16) mSecond, 2, true) +
-							((mHour >= 12) ? &SGregorianDate::mPMString : &SGregorianDate::mAMString);
+							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
 		case kGregorianDateStringStyleFull:
@@ -184,7 +184,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 			string +=
 					CString(hour) + CString(OSSTR(":")) + CString(mMinute, 2, true) + CString(OSSTR(":")) +
 							CString((UInt16) mSecond, 2, true) +
-							((mHour >= 12) ? &SGregorianDate::mPMString : &SGregorianDate::mAMString) +
+							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString) +
 							CString(OSSTR(" GMT"));
 			break;
 	}

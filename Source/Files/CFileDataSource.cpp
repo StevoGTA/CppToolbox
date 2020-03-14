@@ -137,6 +137,9 @@ class CMappedFileDataSourceInternals {
 
 								// No longer any error
 								mError = kNoError;
+
+								// Reset
+								mCurrentOffset = 0;
 							}
 
 		CFile			mFile;
