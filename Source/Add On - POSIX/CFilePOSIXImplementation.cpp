@@ -112,6 +112,7 @@ UError CFile::setLocked(bool lockFile) const
 	return kNoError;
 }
 
+#if TARGET_OS_MACOS || TARGET_OS_LINUX
 //----------------------------------------------------------------------------------------------------------------------
 UInt16 CFile::getPermissions() const
 //----------------------------------------------------------------------------------------------------------------------
@@ -134,3 +135,4 @@ UError CFile::setPermissions(UInt16 permissions) const
 		// Error
 		CFileReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting permissions");
 }
+#endif

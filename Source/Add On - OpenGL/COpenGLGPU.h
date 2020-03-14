@@ -55,7 +55,7 @@ class COpenGLGPU : public CGPU {
 							~COpenGLGPU();
 
 							// CGPU methods
-		void				setup(const S2DSize32& size);
+		void				setup(const S2DSize32& size, void* extraData = nil);
 
 		SGPUTextureInfo		registerTexture(const CGPUTexture& gpuTexture);
 		void				unregisterTexture(const SGPUTextureInfo& gpuTextureInfo);

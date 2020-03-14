@@ -57,7 +57,7 @@ class CGPU {
 		virtual						~CGPU();
 
 									// Instance methods
-		virtual	void				setup(const S2DSize32& size) = 0;
+		virtual	void				setup(const S2DSize32& size, void* extraData = nil) = 0;
 
 		virtual	SGPUTextureInfo		registerTexture(const CGPUTexture& gpuTexture) = 0;
 		virtual	void				unregisterTexture(const SGPUTextureInfo& gpuTextureInfo) = 0;
