@@ -185,7 +185,7 @@ void COpenGLGPU::renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UI
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, triangleCount);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, triangleCount + 2);
 
 	// Reset
 	glDisableClientState(GL_VERTEX_ARRAY);

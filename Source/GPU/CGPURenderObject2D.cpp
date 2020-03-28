@@ -229,7 +229,7 @@ void CGPURenderObject2D::render(CGPU& gpu, const S2DPoint32& offset) const
 	}
 
 	// Draw
-	gpu.renderTriangleStrip(gpuVertexBuffer, 4, gpuTextureInfo, OV<Float32>(mInternals->mAlpha));
+	gpu.renderTriangleStrip(gpuVertexBuffer, 2, gpuTextureInfo, OV<Float32>(mInternals->mAlpha));
 
 	// Cleanup
 	gpu.disposeBuffer(gpuVertexBuffer);
@@ -327,7 +327,7 @@ void CGPURenderObject2D::render(CGPU& gpu, const S2DRect32& rect, const S2DPoint
 	}
 
 	// Draw
-	gpu.renderTriangleStrip(gpuVertexBuffer, 4, gpuTextureInfo, OV<Float32>(mInternals->mAlpha));
+	gpu.renderTriangleStrip(gpuVertexBuffer, 2, gpuTextureInfo, OV<Float32>(mInternals->mAlpha));
 
 	// Cleanup
 	gpu.disposeBuffer(gpuVertexBuffer);

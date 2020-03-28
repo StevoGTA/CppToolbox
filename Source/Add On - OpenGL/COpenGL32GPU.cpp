@@ -220,7 +220,7 @@ void COpenGLGPU::renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UI
 	}
 
 	// Draw
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 2 + 2);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, triangleCount + 2);
 
 	// Reset
 	glDeleteBuffers(1, &modelDataBuffer);
