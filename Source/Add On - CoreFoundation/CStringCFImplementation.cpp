@@ -9,6 +9,11 @@
 #include "CFUtilities.h"
 #include "CLogServices.h"
 
+/*
+	CoreFoundation has issues doing >= 128 character to length/data when requesting ASCII or MacRoman results.
+		Specifically, it will not convert µ to the correct character and replaces with the lossy character
+ */
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
@@ -32,10 +37,14 @@ CString::CString() : CHashable()
 CString::CString(const CString& other, OV<CStringLength> length) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (length.hasValue())
+	if (length.hasValue()) {
 		// Create limited copy
-		mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, *length, other.mStringRef);
-	else
+		mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, other.mStringRef);
+		if (::CFStringGetLength(mStringRef) > *length)
+			// Truncate
+			::CFStringReplace((CFMutableStringRef) mStringRef,
+					CFRangeMake(*length, ::CFStringGetLength(mStringRef) - *length), CFSTR(""));
+	} else
 		// Make copy
 		mStringRef = (CFStringRef) ::CFRetain(other.mStringRef);
 }
@@ -325,18 +334,23 @@ const SCString CString::getCString(EStringEncoding encoding) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CStringLength CString::getLength(EStringEncoding encoding) const
+CStringLength CString::getLength() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (encoding == kStringEncodingCurrent)
-		return (CStringLength) ::CFStringGetLength(mStringRef);
-	else {
-		CFIndex	byteCount;
-		::CFStringGetBytes(mStringRef, CFRangeMake(0, ::CFStringGetLength(mStringRef)),
-				sGetCFStringEncodingForCStringEncoding(encoding), 0, false, nil, 0, &byteCount);
+	return (CStringLength) ::CFStringGetLength(mStringRef);
+}
 
-		return (CStringLength) byteCount;
-	}
+//----------------------------------------------------------------------------------------------------------------------
+CStringLength CString::getLength(EStringEncoding encoding, SInt8 lossCharacter, bool forExternalStorageOrTransmission)
+		const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	CFIndex	byteCount;
+	::CFStringGetBytes(mStringRef, CFRangeMake(0, ::CFStringGetLength(mStringRef)),
+			sGetCFStringEncodingForCStringEncoding(encoding), lossCharacter, forExternalStorageOrTransmission, nil, 0,
+			&byteCount);
+
+	return (CStringLength) byteCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -357,10 +371,6 @@ CStringLength CString::get(char* buffer, CStringLength bufferLen, bool addNull, 
 		if (addNull)
 			bufferLen--;
 
-		// Adjust encoding
-		if (encoding == kStringEncodingCurrent)
-			encoding = kStringEncodingTextDefault;
-		
 		// Calculate max characters to get
 		CFIndex	length = ::CFStringGetLength(mStringRef);
 		if (length > (CFIndex) bufferLen)
@@ -546,12 +556,12 @@ UInt64 CString::getUInt64(UInt8 base) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CString::getData(EStringEncoding encoding) const
+CData CString::getData(EStringEncoding encoding, SInt8 lossCharacter) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDataRef	dataRef =
 						::CFStringCreateExternalRepresentation(kCFAllocatorDefault, mStringRef,
-								sGetCFStringEncodingForCStringEncoding(encoding), 0);
+								sGetCFStringEncodingForCStringEncoding(encoding), lossCharacter);
 	if (dataRef != nil) {
 		// Create data
 		CData	data(::CFDataGetBytePtr(dataRef), (CDataSize) ::CFDataGetLength(dataRef));
@@ -559,7 +569,7 @@ CData CString::getData(EStringEncoding encoding) const
 		
 		return data;
 	} else
-		LogIfErrorAndReturnValue(kParamError, "creating external representation", CData());
+		LogIfErrorAndReturnValue(kParamError, "creating external representation", CData::mEmpty);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -985,17 +995,19 @@ CFStringEncoding sGetCFStringEncodingForCStringEncoding(EStringEncoding encoding
 //----------------------------------------------------------------------------------------------------------------------
 {
 	switch (encoding) {
-		case kStringEncodingInvalid:	return kCFStringEncodingInvalidId;
+		case kStringEncodingASCII:		return kCFStringEncodingASCII;
+		case kStringEncodingMacRoman:	return kCFStringEncodingMacRoman;
 		case kStringEncodingUTF8:		return kCFStringEncodingUTF8;
 		case kStringEncodingISOLatin:	return kCFStringEncodingISOLatin1;
 		case kStringEncodingUnicode:	return kCFStringEncodingUnicode;
+
 		case kStringEncodingUTF16:		return kCFStringEncodingUTF16;
 		case kStringEncodingUTF16BE:	return kCFStringEncodingUTF16BE;
 		case kStringEncodingUTF16LE:	return kCFStringEncodingUTF16LE;
 		case kStringEncodingUTF32:		return kCFStringEncodingUTF32;
 		case kStringEncodingUTF32BE:	return kCFStringEncodingUTF32BE;
 		case kStringEncodingUTF32LE:	return kCFStringEncodingUTF32LE;
-		case kStringEncodingMacRoman:	return kCFStringEncodingMacRoman;
+
 		default:						return kCFStringEncodingUTF8;
 	}
 }

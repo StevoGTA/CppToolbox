@@ -56,10 +56,8 @@ enum EStringCompareFlags {
 // MARK: - Encoding
 
 enum EStringEncoding {
-	kStringEncodingInvalid,
-	kStringEncodingCurrent,		// Don't perform encoding conversion
-
 	kStringEncodingASCII,		// 0..127 (values greater than 127 are treated as corresponding Unicode value)
+	kStringEncodingMacRoman,
 	kStringEncodingUTF8,
 	kStringEncodingISOLatin,	// ISO 8859-1
 	kStringEncodingUnicode,
@@ -70,9 +68,6 @@ enum EStringEncoding {
 	kStringEncodingUTF32,		// UTF 32 w/ BOM
 	kStringEncodingUTF32BE,		// UTF 32 w/o BOM and explicit BE order
 	kStringEncodingUTF32LE,		// UTF 32 w/o BOM and explicit LE order
-#if TARGET_OS_MACOS || TARGET_OS_IOS
-	kStringEncodingMacRoman,
-#endif
 
 	kStringEncodingTextDefault = kStringEncodingUTF8,
 
@@ -251,7 +246,9 @@ class CString : public CHashable {
 
 											// Instance methods
 				const	SCString			getCString(EStringEncoding encoding = kStringEncodingTextDefault) const;
-						CStringLength		getLength(EStringEncoding encoding = kStringEncodingCurrent) const;
+						CStringLength		getLength() const;
+						CStringLength		getLength(EStringEncoding encoding, SInt8 lossCharacter = '\0',
+													bool forExternalStorageOrTransmission = false) const;
 						bool				isEmpty() const
 												{ return getLength() == 0; }
 
@@ -295,7 +292,8 @@ class CString : public CHashable {
 												{ value = getUInt64(base); }
 						UInt64				getAsByteCount() const;
 						
-						CData				getData(EStringEncoding encoding = kStringEncodingTextDefault) const;
+						CData				getData(EStringEncoding encoding = kStringEncodingTextDefault,
+													SInt8 lossCharacter = '\0') const;
 						
 						CString				getSubString(CStringCharIndex startIndex,
 													CStringLength charCount = kCStringDefaultMaxLength) const;
