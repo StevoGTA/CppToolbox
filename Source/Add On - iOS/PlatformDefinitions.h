@@ -40,7 +40,7 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 // Byte swapping
-#if TARGET_OS_IOS && !defined(EndianS16_BtoN)
+#if !defined(EndianS16_BtoN)
 	#define EndianS16_BtoN(value)	((SInt16) CFSwapInt16(value))
 	#define EndianS16_NtoB(value)	((SInt16) CFSwapInt16(value))
 	#define EndianU16_BtoN(value)	((UInt16) CFSwapInt16(value))
