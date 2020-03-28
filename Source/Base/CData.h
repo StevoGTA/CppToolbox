@@ -28,6 +28,8 @@ class CData {
 							CData(const CData& other);
 							CData(const void* buffer, CDataSize bufferSize, bool copySourceData = true);
 							CData(const CString& base64String);
+							CData(SInt8 value);
+							CData(UInt8 value);
 							~CData();
 
 							// Instance methods

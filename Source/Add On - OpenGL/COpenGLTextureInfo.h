@@ -7,15 +7,15 @@
 #include "CGPUTexture.h"
 
 #if TARGET_OS_IOS
-#include <OpenGLES/ES1/gl.h>
+	#include <OpenGLES/ES2/gl.h>
 #endif
 
 //#if TARGET_OS_LINUX
-//#include <GLES/gl.h>
+//	#include <GLES/gl.h>
 //#endif
 
 #if TARGET_OS_MACOS
-#include <OpenGL/gl.h>
+	#include <OpenGL/gl.h>
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------

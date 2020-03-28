@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	COpenGL1GPU.cpp			©2019 Stevo Brock	All rights reserved.
+//	COpenGL11GPU.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "COpenGLGPU.h"
@@ -142,24 +142,27 @@ void COpenGLGPU::renderClearClipPlane()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 vertexCount,
+void COpenGLGPU::renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
 		const SGPUTextureInfo& gpuTextureInfo, OV<Float32> alpha)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	COpenGLTextureInfo*	openGLTextureInfo = (COpenGLTextureInfo*) gpuTextureInfo.mInternalReference;
 
+	GLint				vertexCount;
 	GLsizei				stride;
 	UInt32				textureBufferOffset;
 	switch (gpuVertexBuffer.mGPUVertexBufferType) {
 		case kGPUVertexBufferType2Vertex2Texture:
 			// 2 Vertex, 2 Texture
+			vertexCount = 2;
 			stride = 4 * sizeof(Float32);
 			textureBufferOffset = 2 * sizeof(Float32);
 			break;
 
 		case kGPUVertexBufferType3Vertex2Texture:
 			// 3 Vertex, 2 Texture
+			vertexCount = 3;
 			stride = 5 * sizeof(Float32);
 			textureBufferOffset = 2 * sizeof(Float32);
 			break;
@@ -167,7 +170,7 @@ void COpenGLGPU::renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UI
 
 	// Call OpenGL
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2, GL_FLOAT, stride, gpuVertexBuffer.mData.getBytePtr());
+	glVertexPointer(vertexCount, GL_FLOAT, stride, gpuVertexBuffer.mData.getBytePtr());
 
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glTexCoordPointer(2, GL_FLOAT, stride, (UInt8*) gpuVertexBuffer.mData.getBytePtr() + textureBufferOffset);
@@ -182,7 +185,7 @@ void COpenGLGPU::renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UI
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, triangleCount);
 
 	// Reset
 	glDisableClientState(GL_VERTEX_ARRAY);

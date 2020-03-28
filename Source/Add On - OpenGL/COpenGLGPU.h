@@ -43,6 +43,35 @@ struct COpenGLGPUProcsInfo : CGPUProcsInfo {
 		void*							mUserData;
 };
 
+#if TARGET_OS_IOS
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: SOpenGLESGPUSetupInfo
+
+struct SOpenGLESGPUSetupInfo {
+	// Lifecycle methods
+	SOpenGLESGPUSetupInfo(Float32 scale, void* renderBufferStorageContext) :
+		mScale(scale), mRenderBufferStorageContext(renderBufferStorageContext)
+		{}
+
+	// Properties
+	Float32	mScale;
+	void*	mRenderBufferStorageContext;
+};
+#endif
+
+#if TARGET_OS_MACOS
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: SOpenGLGPUSetupInfo
+
+struct SOpenGLGPUSetupInfo {
+	// Lifecycle methods
+	SOpenGLGPUSetupInfo(Float32 scale) : mScale(scale) {}
+
+	// Properties
+	Float32	mScale;
+};
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - COpenGLGPU
 
@@ -66,7 +95,7 @@ class COpenGLGPU : public CGPU {
 		void				renderStart() const;
 		void				renderSetClipPlane(Float32 clipPlane[4]);
 		void				renderClearClipPlane();
-		void				renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 vertexCount,
+		void				renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
 									const SGPUTextureInfo& gpuTextureInfo, OV<Float32> alpha = OV<Float32>());
 		void				renderEnd() const;
 

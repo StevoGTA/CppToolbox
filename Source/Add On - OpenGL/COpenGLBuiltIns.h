@@ -1,19 +1,20 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	COpenGLES11GPU.h			©2020 Stevo Brock	All rights reserved.
+//	COpenGLBuiltIns.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
+#include "COpenGLProgram.h"
+
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SOpenGLES11GPUSetupInfo
+// MARK: COpenGLBuiltIns
 
-struct SOpenGLES11GPUSetupInfo {
-	// Lifecycle methods
-	SOpenGLES11GPUSetupInfo(Float64 scale, void* renderBufferStorageContext) :
-		mScale(scale), mRenderBufferStorageContext(renderBufferStorageContext)
-		{}
+class COpenGLBuiltIns {
+	public:
+		// MARK: Class methods
+		static	const	COpenGLVertexShader&	getBasicVertexShader();
 
-	// Properties
-	Float64	mScale;
-	void*	mRenderBufferStorageContext;
+		static	const	COpenGLFragmentShader&	getOpacityFragmentShader();
+
+		static	const	COpenGLProgram&			getOpacityProgram();
 };
