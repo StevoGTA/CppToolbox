@@ -52,7 +52,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 														mGPUTextureManagerInfo.mGPUTextureReferenceInternals -= this;
 
 														// Cleanup
-														DisposeOf(mGPUTexture);
+														unload();
 													}
 
 				bool							getIsLoaded() const
@@ -85,9 +85,9 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 															if (mGPUTexture == nil)
 																// Do full load
 																load();
-
-															// Register texture
-															registerTexture();
+															else
+																// Register texture
+																registerTexture();
 														}
 														mLoadLock.unlock();
 													}
@@ -125,7 +125,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 															// Cleanup
 															DisposeOf(mGPUTexture);
 
-															// Unregiste with GPU Render Engine
+															// Unregister with GPU Render Engine
 															mGPUTextureManagerInfo.
 																	mGPU.unregisterTexture(
 																			mGPUTextureInfo);
@@ -470,7 +470,7 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 			// Check this one
 			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue());
+				return CGPUTextureReference(iterator.getValue()->addReference());
 		}
 
 	// Create new
@@ -500,7 +500,7 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 			// Check this one
 			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue());
+				return CGPUTextureReference(iterator.getValue()->addReference());
 		}
 
 	// Create new
@@ -531,7 +531,7 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 			// Check this one
 			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue());
+				return CGPUTextureReference(iterator.getValue()->addReference());
 		}
 
 	// Create new
@@ -562,7 +562,7 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 			// Check this one
 			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue());
+				return CGPUTextureReference(iterator.getValue()->addReference());
 		}
 
 	// Create new
@@ -593,7 +593,7 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 			// Check this one
 			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue());
+				return CGPUTextureReference(iterator.getValue()->addReference());
 		}
 
 	// Create new

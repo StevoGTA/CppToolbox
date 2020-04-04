@@ -19,6 +19,7 @@ template <typename T> struct T2DUtilities {
 // MARK: - T2DPoint
 
 template <typename T> struct T2DAffineTransform;
+template <typename t> struct T2DOffset;
 template <typename T> struct T2DPoint {
 						// Lifecycle methods
 						T2DPoint() : mX(0.0), mY(0.0) {}
@@ -41,8 +42,8 @@ template <typename T> struct T2DPoint {
 							}
 
 						// Instance methods
-	inline	T2DPoint	offset(T offsetX, T offsetY) const
-							{ return T2DPoint(mX + offsetX, mY + offsetY); }
+	inline	T2DPoint	offset(const T2DOffset<T>& offset) const
+							{ return T2DPoint(mX + offset.mDX, mY + offset.mDY); }
 	inline	T2DPoint	midpoint(const T2DPoint& point, T ratio) const
 							{ return T2DPoint(mX + (point.mX - mX) * ratio, mY + (point.mY - mY) * ratio); }
 	inline	T2DPoint	reflectedBy(const T2DPoint& anchorPoint) const
@@ -86,6 +87,34 @@ template <typename T> struct T2DPoint {
 
 typedef	T2DPoint<Float32>	S2DPoint32;
 typedef	T2DPoint<Float64>	S2DPoint64;
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - T2DOffset
+
+template <typename T> struct T2DOffset {
+						// Lifecycle methods
+						T2DOffset() : mDX(0.0), mDY(0.0) {}
+						T2DOffset(T dx, T dy) : mDX(dx), mDY(dy) {}
+						T2DOffset(T2DPoint<T> fromPoint, T2DPoint<T> toPoint) :
+								mDX(toPoint.mX - fromPoint.mX), mDY(toPoint.mY - fromPoint.mY)
+								{}
+
+						// Instance methods
+	inline	T2DOffset	inverted() const
+							{ return T2DOffset(-mDX, -mDY); }
+	inline	T2DOffset	bounded(T minDX, T maxDX, T minDY, T maxDY)
+							{
+								return T2DOffset(std::min<T>(minDX, std::max<T>(maxDX, mDX)),
+										std::min<T>(minDY, std::max<T>(maxDY, mDY)));
+							}
+
+	// Properties
+	T	mDX;
+	T	mDY;
+};
+
+typedef	T2DOffset<Float32>	S2DOffset32;
+typedef	T2DOffset<Float64>	S2DOffset64;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DSize

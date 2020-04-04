@@ -7,7 +7,7 @@
 #include "CGPUTexture.h"
 
 #if TARGET_OS_IOS
-	#include <OpenGLES/ES2/gl.h>
+	#include <OpenGLES/ES3/gl.h>
 #endif
 
 //#if TARGET_OS_LINUX

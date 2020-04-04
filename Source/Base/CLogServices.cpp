@@ -41,8 +41,12 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 		CLogFileInternals(const CFile& file) :
 			mFile(file), mFileWriter(mFile)
 			{
+				// Check if exists
+				if (mFile.doesExist())
+					// Remove
+					mFile.remove();
+
 				// Open
-				mFile.remove();
 				UError	error = mFileWriter.open();
 				if (error != kNoError)
 					// Error

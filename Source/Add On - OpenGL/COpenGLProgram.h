@@ -4,10 +4,11 @@
 
 #pragma once
 
+#include "CGPUProgram.h"
 #include "CString.h"
 
 #if TARGET_OS_IOS
-	#include <OpenGLES/ES2/gl.h>
+	#include <OpenGLES/ES3/glext.h>
 #endif
 
 //#if TARGET_OS_LINUX
@@ -15,25 +16,26 @@
 //#endif
 
 #if TARGET_OS_MACOS
-	#include <OpenGL/gl.h>
+	#include <OpenGL/gl3.h>
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: COpenGLShader
+// MARK: COpenGLShaderInternals
 
 class COpenGLShaderInternals;
-class COpenGLShader {
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - COpenGLVertexShader
+
+class COpenGLVertexShader : public CGPUVertexShader {
 	// Methods
 	public:
 				// Lifecycle methods
-				~COpenGLShader();
+				COpenGLVertexShader(const CString& string);
+				~COpenGLVertexShader();
 
 				// Instance methods
 		GLuint	getShader() const;
-
-	protected:
-				// Lifecycle methods
-				COpenGLShader(GLenum type, const CString& string);
 
 	// Properties
 	private:
@@ -41,44 +43,36 @@ class COpenGLShader {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLVertexShader
-
-class COpenGLVertexShader : public COpenGLShader {
-	// Methods
-	public:
-		// Lifecycle methods
-		COpenGLVertexShader(const CString& string) : COpenGLShader(GL_VERTEX_SHADER, string) {}
-};
-
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - COpenGLFragmentShader
 
-class COpenGLFragmentShader : public COpenGLShader {
-	// Methods
-	public:
-		// Lifecycle methods
-		COpenGLFragmentShader(const CString& string) : COpenGLShader(GL_FRAGMENT_SHADER, string) {}
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLProgram
-
-class COpenGLProgramInternals;
-class COpenGLProgram {
+class COpenGLFragmentShader : public CGPUFragmentShader {
 	// Methods
 	public:
 				// Lifecycle methods
-				COpenGLProgram(const COpenGLVertexShader& vertexShader,
-						const COpenGLFragmentShader& fragmentShader);
-				~COpenGLProgram();
+				COpenGLFragmentShader(const CString& string);
+				~COpenGLFragmentShader();
 
 				// Instance methods
-		void	use() const;
-
-		int		getAttributeLocation(const CString& attributeName) const;
-		int		getUniformLocation(const CString& uniformName) const;
+		GLuint	getShader() const;
 
 	// Properties
 	private:
-		COpenGLProgramInternals*	mInternals;
+		COpenGLShaderInternals*	mInternals;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CGPUProgramInternals
+
+class CGPUProgramInternals {
+	// Methods
+	public:
+		// Lifecycle methods
+		CGPUProgramInternals(const COpenGLVertexShader& vertexShader, const COpenGLFragmentShader& fragmentShader);
+		~CGPUProgramInternals();
+
+	// Properties
+	public:
+		GLuint			mProgram;
+
+		SMatrix4x4_32	mViewProjectionMatrix;
 };

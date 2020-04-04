@@ -30,11 +30,11 @@ class COpenGLTextureInfoInternals {
 				glGenTextures(1, &mTextureName);
 				glBindTexture(GL_TEXTURE_2D, mTextureName);
 
-				if (mTotalPixelsSize == mUsedPixelsSize) {
+				if (mTotalPixelsSize == mUsedPixelsSize)
 					// Width and height are powers of 2 so use all
 					glTexImage2D(GL_TEXTURE_2D, 0, format, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, 0,
 							format, mPixelFormat, gpuTexture.getPixelData().getBytePtr());
-				} else {
+				else {
 					// Width or height is not a power of 2 so expand texture space and use what we need
 					UInt8*	empty = (UInt8*) calloc(mTotalPixelsSize.mWidth * mTotalPixelsSize.mHeight, 4);
 					glTexImage2D(GL_TEXTURE_2D, 0, format, mTotalPixelsSize.mWidth, mTotalPixelsSize.mHeight, 0,

@@ -5,41 +5,39 @@
 #include "COpenGLGPU.h"
 
 #include "CMatrix.h"
-#include "COpenGLBuiltIns.h"
 #include "COpenGLTextureInfo.h"
 
 #include <OpenGL/gl3.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: COpenGLGPUInternals
+// MARK: CGPUInternals
 
-class COpenGLGPUInternals {
+class CGPUInternals {
 	public:
-		COpenGLGPUInternals(const COpenGLGPUProcsInfo& procsInfo) : mProcsInfo(procsInfo), mScale(1.0) {}
-		~COpenGLGPUInternals() {}
+		CGPUInternals(const CGPUProcsInfo& procsInfo) : mProcsInfo(procsInfo), mScale(1.0) {}
 
-	COpenGLGPUProcsInfo	mProcsInfo;
+	CGPUProcsInfo	mProcsInfo;
 
-	S2DSize32			mSize;
-	Float32				mScale;
-	SMatrix4x4_32		mProjectionMatrix;
+	S2DSize32		mSize;
+	Float32			mScale;
+	SMatrix4x4_32	mProjectionMatrix;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLGPU
+// MARK: - CGPU
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-COpenGLGPU::COpenGLGPU(const COpenGLGPUProcsInfo& procsInfo) : CGPU(procsInfo)
+CGPU::CGPU(const CGPUProcsInfo& procsInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLGPUInternals(procsInfo);
+	mInternals = new CGPUInternals(procsInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-COpenGLGPU::~COpenGLGPU()
+CGPU::~CGPU()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	DisposeOf(mInternals);
@@ -48,7 +46,7 @@ COpenGLGPU::~COpenGLGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::setup(const S2DSize32& size, void* extraData)
+void CGPU::setup(const S2DSize32& size, void* extraData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -62,7 +60,7 @@ void COpenGLGPU::setup(const S2DSize32& size, void* extraData)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureInfo COpenGLGPU::registerTexture(const CGPUTexture& gpuTexture)
+SGPUTextureInfo CGPU::registerTexture(const CGPUTexture& gpuTexture)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
@@ -79,7 +77,7 @@ SGPUTextureInfo COpenGLGPU::registerTexture(const CGPUTexture& gpuTexture)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::unregisterTexture(const SGPUTextureInfo& gpuTextureInfo)
+void CGPU::unregisterTexture(const SGPUTextureInfo& gpuTextureInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -92,7 +90,7 @@ void COpenGLGPU::unregisterTexture(const SGPUTextureInfo& gpuTextureInfo)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUVertexBuffer COpenGLGPU::allocateVertexBuffer(EGPUVertexBufferType gpuVertexBufferType, UInt32 vertexCount)
+SGPUVertexBuffer CGPU::allocateVertexBuffer(EGPUVertexBufferType gpuVertexBufferType, UInt32 vertexCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -106,16 +104,15 @@ SGPUVertexBuffer COpenGLGPU::allocateVertexBuffer(EGPUVertexBufferType gpuVertex
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::disposeBuffer(const SGPUBuffer& buffer)
+void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::renderStart() const
+void CGPU::renderStart() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-//	acquireContext();
 	mInternals->mProcsInfo.acquireContext();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -131,105 +128,21 @@ void COpenGLGPU::renderStart() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::renderSetClipPlane(Float32 clipPlane[4])
+void CGPU::renderTriangleStrip(CGPUProgram& program, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	GLdouble	values[4] = {clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]};
-	glClipPlane(GL_CLIP_PLANE0, values);
-	glEnable(GL_CLIP_PLANE0);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::renderClearClipPlane()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	glDisable(GL_CLIP_PLANE0);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
-		const SGPUTextureInfo& gpuTextureInfo, OV<Float32> alpha)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	COpenGLTextureInfo*	openGLTextureInfo = (COpenGLTextureInfo*) gpuTextureInfo.mInternalReference;
-
-	GLint				vertexCount;
-	GLsizei				stride;
-	GLvoid*				textureBufferOffset;
-	switch (gpuVertexBuffer.mGPUVertexBufferType) {
-		case kGPUVertexBufferType2Vertex2Texture:
-			// 2 Vertex, 2 Texture
-			vertexCount = 2;
-			stride = 4 * sizeof(Float32);
-			textureBufferOffset = (GLvoid*) (2 * sizeof(Float32));
-			break;
-
-		case kGPUVertexBufferType3Vertex2Texture:
-			// 3 Vertex, 2 Texture
-			vertexCount = 3;
-			stride = 5 * sizeof(Float32);
-			textureBufferOffset = (GLvoid*) (3 * sizeof(Float32));
-			break;
-	}
-
-	// Setup buffers
-	GLuint	vertexArray;
-	glGenVertexArrays(1, &vertexArray);
-	glBindVertexArray(vertexArray);
-
-	GLuint	modelDataBuffer;
-	glGenBuffers(1, &modelDataBuffer);
-
-	glBindBuffer(GL_ARRAY_BUFFER, modelDataBuffer);
-	glBufferData(GL_ARRAY_BUFFER, gpuVertexBuffer.mData.getSize(), gpuVertexBuffer.mData.getBytePtr(), GL_STATIC_DRAW);
-
-	// Setup texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, openGLTextureInfo->getTextureName());
-
-	// Get info
-	const	COpenGLProgram&	program = COpenGLBuiltIns::getOpacityProgram();
-	program.use();
-
-	int	attributeLocation = program.getAttributeLocation(CString(OSSTR("position")));
-	glEnableVertexAttribArray(attributeLocation);
-	glVertexAttribPointer(attributeLocation, vertexCount, GL_FLOAT, GL_FALSE, stride, 0);
-
-	attributeLocation = program.getAttributeLocation(CString(OSSTR("texCoord0")));
-	glEnableVertexAttribArray(attributeLocation);
-	glVertexAttribPointer(attributeLocation, 2, GL_FLOAT, GL_FALSE, stride, textureBufferOffset);
-
-	int	mvpMatrixLocation = program.getUniformLocation(CString(OSSTR("modelViewProjectionMatrix")));
-	int	textureLocation = program.getUniformLocation(CString(OSSTR("diffuseTexture")));
-	int	opacityLocation = program.getUniformLocation(CString(OSSTR("opacity")));
-
 	// Setup matrices
-	SMatrix4x4_32	modelMatrix;
-    SMatrix4x4_32	modelViewProjectionMatrix = mInternals->mProjectionMatrix * modelMatrix;
-    glUniformMatrix4fv(mvpMatrixLocation, 1, 0, (GLfloat*) &modelViewProjectionMatrix);
-
-    glUniform1i(textureLocation, 0);
-
-    // Setup opacity
-    glUniform1f(opacityLocation, alpha.hasValue() ? alpha.getValue() : 1.0);
-	if (openGLTextureInfo->hasTransparency() || (alpha.hasValue() && (alpha.getValue() != 1.0))) {
-		// Need to blend
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
+	program.setViewProjectionMatrix(mInternals->mProjectionMatrix);
+	program.setModelMatrix(modelMatrix);
 
 	// Draw
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, triangleCount + 2);
 
-	// Reset
-	glDeleteBuffers(1, &modelDataBuffer);
-	glDeleteVertexArrays(1, &vertexArray);
-	glDisable(GL_BLEND);
+	program.didFinish();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void COpenGLGPU::renderEnd() const
+void CGPU::renderEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mProcsInfo.releaseContext();

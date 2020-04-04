@@ -26,6 +26,32 @@ enum EGPUTextureFormat {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - SGPUTextureInfo
+
+struct SGPUTextureInfo {
+			// Lifecycle methods
+			SGPUTextureInfo(const SGPUTextureSize& gpuTextureSize, Float32 maxU, Float32 maxV,
+					void* internalReference) :
+				mGPUTextureSize(gpuTextureSize), mMaxU(maxU), mMaxV(maxV), mInternalReference(internalReference)
+				{}
+			SGPUTextureInfo(const SGPUTextureInfo& other) :
+				mGPUTextureSize(other.mGPUTextureSize), mMaxU(other.mMaxU), mMaxV(other.mMaxV),
+						mInternalReference(other.mInternalReference)
+				{}
+			SGPUTextureInfo() : mGPUTextureSize(), mMaxU(0.0), mMaxV(0.0), mInternalReference(nil) {}
+
+			// Instance methods
+	bool	isValid() const
+				{ return mMaxU != 0.0; }
+
+	// Properties
+	SGPUTextureSize	mGPUTextureSize;
+	Float32			mMaxU;
+	Float32			mMaxV;
+	void*			mInternalReference;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTexture
 
 class CGPUTextureInternals;

@@ -7,23 +7,22 @@
 #include "CGPU.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: COpenGLGPUProcsInfo
+// MARK: CGPUProcsInfo
 
 typedef	void	(*COpenGLGPUAcquireContextProc)(void* userData);
 typedef	bool	(*COpenGLGPUTryAcquireContextProc)(void* userData);
 typedef	void	(*COpenGLGPUReleaseContextProc)(void* userData);
 
-struct COpenGLGPUProcsInfo : CGPUProcsInfo {
+struct CGPUProcsInfo {
 			// Lifecycle methods
-			COpenGLGPUProcsInfo(COpenGLGPUAcquireContextProc acquireContextProc,
+			CGPUProcsInfo(COpenGLGPUAcquireContextProc acquireContextProc,
 					COpenGLGPUTryAcquireContextProc tryAcquireContextProc,
 					COpenGLGPUReleaseContextProc releaseContextProc, void* userData) :
-				CGPUProcsInfo(), mAcquireContextProc(acquireContextProc), mTryAcquireContextProc(tryAcquireContextProc),
+				mAcquireContextProc(acquireContextProc), mTryAcquireContextProc(tryAcquireContextProc),
 						mReleaseContextProc(releaseContextProc), mUserData(userData)
 				{}
-			COpenGLGPUProcsInfo(const COpenGLGPUProcsInfo& other) :
-				CGPUProcsInfo(other), mAcquireContextProc(other.mAcquireContextProc),
-						mTryAcquireContextProc(other.mTryAcquireContextProc),
+			CGPUProcsInfo(const CGPUProcsInfo& other) :
+				mAcquireContextProc(other.mAcquireContextProc), mTryAcquireContextProc(other.mTryAcquireContextProc),
 						mReleaseContextProc(other.mReleaseContextProc), mUserData(other.mUserData)
 				{}
 
@@ -71,35 +70,3 @@ struct SOpenGLGPUSetupInfo {
 	Float32	mScale;
 };
 #endif
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLGPU
-
-class COpenGLGPUInternals;
-class COpenGLGPU : public CGPU {
-	// Methods
-	public:
-							// Lifecycle methods
-							COpenGLGPU(const COpenGLGPUProcsInfo& procsInfo);
-							~COpenGLGPU();
-
-							// CGPU methods
-		void				setup(const S2DSize32& size, void* extraData = nil);
-
-		SGPUTextureInfo		registerTexture(const CGPUTexture& gpuTexture);
-		void				unregisterTexture(const SGPUTextureInfo& gpuTextureInfo);
-
-		SGPUVertexBuffer	allocateVertexBuffer(EGPUVertexBufferType gpuVertexBufferType, UInt32 vertexCount);
-		void				disposeBuffer(const SGPUBuffer& buffer);
-
-		void				renderStart() const;
-		void				renderSetClipPlane(Float32 clipPlane[4]);
-		void				renderClearClipPlane();
-		void				renderTriangleStrip(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
-									const SGPUTextureInfo& gpuTextureInfo, OV<Float32> alpha = OV<Float32>());
-		void				renderEnd() const;
-
-	// Properties
-	private:
-		COpenGLGPUInternals*	mInternals;
-};
