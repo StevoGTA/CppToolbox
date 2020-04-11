@@ -189,10 +189,26 @@ CGPUProgram::~CGPUProgram()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPUProgram::setViewProjectionMatrix(SMatrix4x4_32 viewProjectionMatrix)
+void CGPUProgram::setup(const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& projectionMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mGPUProgramInternals->mViewProjectionMatrix = viewProjectionMatrix;
+	// Store
+	mGPUProgramInternals->mViewMatrix = viewMatrix;
+	mGPUProgramInternals->mProjectionMatrix = projectionMatrix;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const SMatrix4x4_32& CGPUProgram::getViewMatrix() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mGPUProgramInternals->mViewMatrix;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const SMatrix4x4_32& CGPUProgram::getProjectionMatrix() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mGPUProgramInternals->mProjectionMatrix;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

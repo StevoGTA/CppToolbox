@@ -104,9 +104,12 @@ template <typename T> struct T2DOffset {
 							{ return T2DOffset(-mDX, -mDY); }
 	inline	T2DOffset	bounded(T minDX, T maxDX, T minDY, T maxDY)
 							{
-								return T2DOffset(std::min<T>(minDX, std::max<T>(maxDX, mDX)),
-										std::min<T>(minDY, std::max<T>(maxDY, mDY)));
+								return T2DOffset(std::max<T>(minDX, std::min<T>(maxDX, mDX)),
+										std::max<T>(minDY, std::min<T>(maxDY, mDY)));
 							}
+
+	inline	T2DOffset	operator+(const T2DOffset& other) const
+							{ return T2DOffset(mDX + other.mDX, mDY + other.mDY); }
 
 	// Properties
 	T	mDX;

@@ -49,7 +49,7 @@ static	CString	sClipVertexShaderString("																		\
 											varying     highp   vec2    v_texPosition0;							\
 																												\
 											void main() {														\
-												 gl_Position = modelMatrix * viewProjectionMatrix * position;	\
+												 gl_Position = viewProjectionMatrix * modelMatrix * position;	\
 												 gl_ClipDistance[0] = dot(modelMatrix * position, clipPlane);	\
 												 v_texPosition0 = texCoord0;									\
 											}																	\
@@ -115,7 +115,7 @@ static	CString	sClipVertexShaderString("																		\
 											out		vec2    v_texPosition0;										\
 																												\
 											void main() {														\
-												 gl_Position = modelMatrix * viewProjectionMatrix * position;	\
+												 gl_Position = viewProjectionMatrix * modelMatrix * position;	\
 												 gl_ClipDistance[0] = dot(modelMatrix * position, clipPlane);	\
 												 v_texPosition0 = texCoord0;									\
 											}																	\
@@ -291,15 +291,16 @@ CGPUOpaqueProgram::~CGPUOpaqueProgram()
 // MARK: CGPUProgram methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPUOpaqueProgram::setModelMatrix(const SMatrix4x4_32& modelViewMatrix)
+void CGPUOpaqueProgram::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SMatrix4x4_32	modelViewProjectionMatrix = modelViewMatrix * mGPUProgramInternals->mViewProjectionMatrix;
+	SMatrix4x4_32	modelViewProjectionMatrix =
+							mGPUProgramInternals->mProjectionMatrix * mGPUProgramInternals->mViewMatrix * modelMatrix;
 
 	// Set
     glUniformMatrix4fv(mInternals->mModelViewProjectionMatrixUniformLocation, 1, 0,
-    		(GLfloat*) &modelViewProjectionMatrix);;
+    		(GLfloat*) &modelViewProjectionMatrix);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -341,15 +342,16 @@ CGPUOpacityProgram::~CGPUOpacityProgram()
 // MARK: CGPUProgram methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPUOpacityProgram::setModelMatrix(const SMatrix4x4_32& modelViewMatrix)
+void CGPUOpacityProgram::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SMatrix4x4_32	modelViewProjectionMatrix = modelViewMatrix * mGPUProgramInternals->mViewProjectionMatrix;
+	SMatrix4x4_32	modelViewProjectionMatrix =
+							mGPUProgramInternals->mProjectionMatrix * mGPUProgramInternals->mViewMatrix * modelMatrix;
 
 	// Set
     glUniformMatrix4fv(mInternals->mModelViewProjectionMatrixUniformLocation, 1, 0,
-    		(GLfloat*) &modelViewProjectionMatrix);;
+    		(GLfloat*) &modelViewProjectionMatrix);
 }
 
 // MARK: Instance methods
@@ -378,14 +380,14 @@ class CGPUClipOpacityProgramInternals {
 	public:
 		CGPUClipOpacityProgramInternals(const CGPUProgramInternals& gpuProgramInternals) :
 			mModelMatrixUniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "modelMatrix")),
-			mViewProjectionMatrixUniformLocation(
+			mProjectionMatrixUniformLocation(
 					glGetUniformLocation(gpuProgramInternals.mProgram, "viewProjectionMatrix")),
 			mClipPlaneUniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "clipPlane")),
 			mOpacityUniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "opacity"))
 			{}
 
 		GLint	mModelMatrixUniformLocation;
-		GLint	mViewProjectionMatrixUniformLocation;
+		GLint	mProjectionMatrixUniformLocation;
 		GLint	mClipPlaneUniformLocation;
 		GLint	mOpacityUniformLocation;
 };
@@ -414,19 +416,16 @@ CGPUClipOpacityProgram::~CGPUClipOpacityProgram()
 // MARK: CGPUProgram methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPUClipOpacityProgram::setModelMatrix(const SMatrix4x4_32& modelViewMatrix)
+void CGPUClipOpacityProgram::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
-//	// Setup
-//	SMatrix4x4_32	modelViewProjectionMatrix = modelViewMatrix * mGPUProgramInternals->mViewProjectionMatrix;
-//
-//	// Set
-//    glUniformMatrix4fv(mInternals->mModelViewProjectionMatrixUniformLocation, 1, 0,
-//    		(GLfloat*) &modelViewProjectionMatrix);
+	// Setup
+	SMatrix4x4_32	viewProjectionMatrix = mGPUProgramInternals->mProjectionMatrix * mGPUProgramInternals->mViewMatrix;
+
 	// Set
-	glUniformMatrix4fv(mInternals->mModelMatrixUniformLocation, 1, 0, (GLfloat*) &modelViewMatrix);
-	glUniformMatrix4fv(mInternals->mViewProjectionMatrixUniformLocation, 1, 0,
-			(GLfloat*) &mGPUProgramInternals->mViewProjectionMatrix);
+	glUniformMatrix4fv(mInternals->mModelMatrixUniformLocation, 1, 0, (GLfloat*) &modelMatrix);
+	glUniformMatrix4fv(mInternals->mProjectionMatrixUniformLocation, 1, 0,
+			(GLfloat*) &viewProjectionMatrix);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

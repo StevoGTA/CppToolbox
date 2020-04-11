@@ -17,7 +17,7 @@ class CGPUOpaqueProgram : public CGPUTextureProgram {
 									~CGPUOpaqueProgram();
 
 									// CGPUProgram methods
-				void				setModelMatrix(const SMatrix4x4_32& modelViewMatrix);
+				void				setModelMatrix(const SMatrix4x4_32& modelMatrix);
 
 									// Class methods
 		static	CGPUOpaqueProgram&	getProgram();
@@ -42,7 +42,7 @@ class CGPUOpacityProgram : public CGPUTextureProgram {
 									~CGPUOpacityProgram();
 
 									// CGPUProgram methods
-				void				setModelMatrix(const SMatrix4x4_32& modelViewMatrix);
+				void				setModelMatrix(const SMatrix4x4_32& modelMatrix);
 
 									// Instance methods
 				void				setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
@@ -72,7 +72,7 @@ class CGPUClipOpacityProgram : public CGPUTextureProgram {
 										~CGPUClipOpacityProgram();
 
 										// CGPUProgram methods
-				void					setModelMatrix(const SMatrix4x4_32& modelViewMatrix);
+				void					setModelMatrix(const SMatrix4x4_32& modelMatrix);
 
 				void					willUse() const;
 				void					didFinish() const;

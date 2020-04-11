@@ -30,6 +30,7 @@ class CGPUInternals {
 	S2DSize32		mSize;
 	Float32			mScale;
 	SMatrix4x4_32	mProjectionMatrix;
+	SMatrix4x4_32	mViewMatrix;
 	GLuint			mRenderBufferName;
 	GLuint			mFrameBufferName;
 };
@@ -67,7 +68,7 @@ void CGPU::setup(const S2DSize32& size, void* setupInfo)
 	mInternals->mSize = size;
 	mInternals->mScale = openGLESGPUetupInfo.mScale;
 	mInternals->mProjectionMatrix =
-			SMatrix4x4_32(0.0, mInternals->mSize.mWidth / mInternals->mScale,
+			SMatrix4x4_32::makeOrthographicProjection(0.0, mInternals->mSize.mWidth / mInternals->mScale,
 					mInternals->mSize.mHeight / mInternals->mScale, 0.0, -1.0, 1.0);
 
 	// Setup
@@ -159,11 +160,18 @@ void CGPU::renderStart() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mViewMatrix = viewMatrix;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CGPU::renderTriangleStrip(CGPUProgram& program, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup matrices
-	program.setViewProjectionMatrix(mInternals->mProjectionMatrix);
+	program.setup(mInternals->mViewMatrix, mInternals->mProjectionMatrix);
 	program.setModelMatrix(modelMatrix);
 
 	// Draw

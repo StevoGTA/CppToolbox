@@ -74,5 +74,6 @@ class CGPUProgramInternals {
 	public:
 		GLuint			mProgram;
 
-		SMatrix4x4_32	mViewProjectionMatrix;
+		SMatrix4x4_32	mViewMatrix;
+		SMatrix4x4_32	mProjectionMatrix;
 };

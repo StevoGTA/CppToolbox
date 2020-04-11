@@ -37,18 +37,21 @@ class CGPUProgramInternals;
 class CGPUProgram {
 	// Methods
 	public:
-						// Lifecycle methods
-						CGPUProgram(const CGPUVertexShader& vertexShader, const CGPUFragmentShader& fragmentShader);
-		virtual			~CGPUProgram();
+										// Lifecycle methods
+										CGPUProgram(const CGPUVertexShader& vertexShader,
+												const CGPUFragmentShader& fragmentShader);
+		virtual							~CGPUProgram();
 
-						// Instance methods
-				void	setViewProjectionMatrix(SMatrix4x4_32 viewProjectionMatrix);
+										// Instance methods
+						void			setup(const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& projectionMatrix);
+				const	SMatrix4x4_32&	getViewMatrix() const;
+				const	SMatrix4x4_32&	getProjectionMatrix() const;
 
-						// Subclass methods
-		virtual	void	setModelMatrix(const SMatrix4x4_32& modelViewMatrix) = 0;
+										// Subclass methods
+		virtual			void			setModelMatrix(const SMatrix4x4_32& modelMatrix) = 0;
 
-		virtual	void	willUse() const;
-		virtual	void	didFinish() const;
+		virtual			void			willUse() const;
+		virtual			void			didFinish() const;
 
 	// Properties
 	protected:

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "PlatformDefinitions.h"
+#include "C3DGeometry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TMatrix2x1
@@ -81,36 +81,56 @@ template <typename T> struct TMatrix4x4 {
 								m1_3(m1_3), m2_3(m2_3), m3_3(m3_3), m4_3(m4_3), m1_4(m1_4), m2_4(m2_4), m3_4(m3_4),
 								m4_4(m4_4)
 						{}
-					TMatrix4x4(T left, T right, T bottom, T top, T nearZ, T farZ)	// Orthographic
-						{
-							// Setup
-							T	rlSum = right + left;
-							T	rlDifference = right - left;
-							T	tbSum = top + bottom;
-							T	tbDifference = top - bottom;
-							T	fnSum = farZ + nearZ;
-							T	fnDifference = farZ - nearZ;
-
-							// Store
-							m1_1 = 2.0 / rlDifference;
-							m2_1 = 0.0;
-							m3_1 = 0.0;
-							m4_1 = 0.0;
-							m1_2 = 0.0;
-							m2_2 = 2.0 / tbDifference;
-							m3_2 = 0.0;
-							m4_2 = 0.0;
-							m1_3 = 0.0;
-							m2_3 = 0.0;
-							m3_3 = -2.0 / fnDifference;
-							m4_3 = 0.0;
-							m1_4 = -rlSum / rlDifference;
-							m2_4 = -tbSum / tbDifference;
-							m3_4 = -fnSum / fnDifference;
-							m4_4 = 1.0;
-						}
 
 					// Instance methods
+	TMatrix4x4<T>	rotateOnX(T radians)
+						{
+							// Setup
+							T	cos = cos(radians);
+							T	sin = sin(radians);
+
+							return *this *
+									TMatrix4x4<T>(	1.0, 0.0, 0.0, 0.0,
+													0.0, cos, sin, 0.0,
+													0.0, -sin, cos, 0.0,
+													0.0, 0.0, 0.0, 1.0);
+						}
+	TMatrix4x4<T>	rotateOnY(T radians)
+						{
+							// Setup
+							T	cos = cos(radians);
+							T	sin = sin(radians);
+
+							return *this *
+									TMatrix4x4<T>(	cos, 0.0, -sin, 0.0,
+													0.0, 0.0, 0.0, 0.0,
+													sin, 0.0, cos, 0.0,
+													0.0, 0.0, 0.0, 1.0);
+						}
+	TMatrix4x4<T>	rotateOnZ(T radians)
+						{
+							// Setup
+							T	cosv = cos(radians);
+							T	sinv = sin(radians);
+
+							return *this *
+									TMatrix4x4<T>(	cosv, sinv, 0.0, 0.0,
+													-sinv, cosv, 0.0, 0.0,
+													0.0, 0.0, 0.0, 0.0,
+													0.0, 0.0, 0.0, 1.0);
+						}
+	TMatrix4x4<T>	scale(T sX, T sY, T sZ) const
+						{
+							return *this *
+									TMatrix4x4<T>(sX, 0.0, 0.0, 0.0, 0.0, sY, 0.0, 0.0, 0.0, 0.0, sZ, 0.0, 0.0, 0.0,
+											0.0, 1.0);
+						}
+	TMatrix4x4<T>	translate(const T3DOffset<T>& offset) const
+						{
+							return *this *
+									TMatrix4x4<T>(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+											offset.mDX, offset.mDY, offset.mDZ, 1.0);
+						}
 	TMatrix4x4<T>	operator*(const TMatrix4x4<T>& m) const
 						{
 							return TMatrix4x4<T>(
@@ -134,6 +154,25 @@ template <typename T> struct TMatrix4x4 {
 									m3_1 * m.m1_4 + m3_2 * m.m2_4 + m3_3 * m.m3_4 + m3_4 * m.m4_4,
 									m4_1 * m.m1_4 + m4_2 * m.m2_4 + m4_3 * m.m3_4 + m4_4 * m.m4_4);
 						}
+
+					// Class methods
+		static	TMatrix4x4<T>	makeOrthographicProjection(T left, T right, T bottom, T top, T nearZ, T farZ)
+									{
+										// Setup
+										T	rlSum = right + left;
+										T	rlDifference = right - left;
+										T	tbSum = top + bottom;
+										T	tbDifference = top - bottom;
+										T	fnSum = farZ + nearZ;
+										T	fnDifference = farZ - nearZ;
+
+										return TMatrix4x4<T>(
+												2.0 / rlDifference, 0.0, 0.0, 0.0,
+												0.0, 2.0 / tbDifference, 0.0, 0.0,
+												0.0, 0.0, -2.0 / fnDifference, 0.0,
+												-rlSum / rlDifference, -tbSum / tbDifference, -fnSum / fnDifference,
+														1.0);
+									}
 
 	// Properties
 	T	m1_1;	// 0

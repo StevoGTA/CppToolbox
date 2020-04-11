@@ -30,6 +30,7 @@ class CGPU {
 		void				disposeBuffer(const SGPUBuffer& buffer);
 
 		void				renderStart() const;
+		void				setViewMatrix(const SMatrix4x4_32& viewMatrix);
 		void				renderTriangleStrip(CGPUProgram& program, const SMatrix4x4_32& modelMatrix,
 									UInt32 triangleCount);
 		void				renderEnd() const;

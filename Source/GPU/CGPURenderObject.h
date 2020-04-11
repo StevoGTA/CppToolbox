@@ -10,13 +10,20 @@
 // MARK: SGPURenderObjectRenderInfo
 
 struct SGPURenderObjectRenderInfo {
-	// Lifecycle methods
-	SGPURenderObjectRenderInfo() {}
-	SGPURenderObjectRenderInfo(const S2DOffset32& offset) : mOffset(offset) {}
-	SGPURenderObjectRenderInfo(SMatrix4x1_32 clipPlane) : mClipPlane(clipPlane) {}
-	SGPURenderObjectRenderInfo(const SGPURenderObjectRenderInfo& other, const S2DOffset32& offset) :
-			mOffset(offset), mClipPlane(other.mClipPlane)
-			{}
+										// Lifecycle methods
+										SGPURenderObjectRenderInfo() {}
+										SGPURenderObjectRenderInfo(const S2DOffset32& offset) : mOffset(offset) {}
+										SGPURenderObjectRenderInfo(SMatrix4x1_32 clipPlane) : mClipPlane(clipPlane) {}
+
+										// Instance methods
+	inline	SGPURenderObjectRenderInfo	offset(const S2DOffset32& offset) const
+											{
+												// Copy and update offset
+												SGPURenderObjectRenderInfo	renderInfo(*this);
+												renderInfo.mOffset = renderInfo.mOffset + offset;
+
+												return renderInfo;
+											}
 
 	// Properties
 	S2DOffset32			mOffset;

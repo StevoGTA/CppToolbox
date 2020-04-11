@@ -58,93 +58,64 @@ CGPURenderObject2D::~CGPURenderObject2D()
 void CGPURenderObject2D::render(CGPU& gpu, const SGPURenderObjectRenderInfo& renderInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
+	// Setup buffer
 	const	SGPUTextureInfo&	gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
-			SGPUVertexBuffer	gpuVertexBuffer = gpu.allocateVertexBuffer(kGPUVertexBufferType2Vertex2Texture, 4);
-
-			Float32				textureWidth = gpuTextureInfo.mGPUTextureSize.mWidth;
-			Float32				textureHeight = gpuTextureInfo.mGPUTextureSize.mHeight;
-
 			Float32				maxU = gpuTextureInfo.mMaxU;
 			Float32				maxV = gpuTextureInfo.mMaxV;
 
-	const	S2DOffset32&		offset = renderInfo.mOffset;
+			SGPUVertexBuffer	gpuVertexBuffer = gpu.allocateVertexBuffer(kGPUVertexBufferType2Vertex2Texture, 4);
+			Float32*			bufferPtr = (Float32*) gpuVertexBuffer.mData.getMutableBytePtr();
+	bufferPtr[0] = 0.0;
+	bufferPtr[1] = 1.0;
+	bufferPtr[2] = 0.0;
+	bufferPtr[3] = maxV;
+	bufferPtr[4] = 1.0;
+	bufferPtr[5] = 1.0;
+	bufferPtr[6] = maxU;
+	bufferPtr[7] = maxV;
+	bufferPtr[8] = 0.0;
+	bufferPtr[9] = 0.0;
+	bufferPtr[10] = 0.0;
+	bufferPtr[11] = 0.0;
+	bufferPtr[12] = 1.0;
+	bufferPtr[13] = 0.0;
+	bufferPtr[14] = maxU;
+	bufferPtr[15] = 0.0;
 
-	// Points are UL, UR, LL, LR
-	Float32*	bufferPtr = (Float32*) gpuVertexBuffer.mData.getMutableBytePtr();
+	// Setup model matrix
+			Float32			textureWidth = gpuTextureInfo.mGPUTextureSize.mWidth;
+			Float32			textureHeight = gpuTextureInfo.mGPUTextureSize.mHeight;
+	const	S2DOffset32&	offset = renderInfo.mOffset;
 
-	// Check angle
-	Float32	dx, dy;
-	if (mInternals->mAngleRadians == 0.0) {
-		// No rotation
-		dx = 0.0f - mInternals->mAnchorPoint.mX;
-		dy = textureHeight - mInternals->mAnchorPoint.mY;
-		bufferPtr[0] = dx * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[1] = dy * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[2] = 0.0;
-		bufferPtr[3] = maxV;
+			SMatrix4x4_32	modelMatrix =
+									SMatrix4x4_32()
+											.translate(
+													S3DOffset32(
+															mInternals->mScreenPositionPoint.mX + offset.mDX,
+															mInternals->mScreenPositionPoint.mY + offset.mDY,
+															0.0))
+											.translate(
+													S3DOffset32(
+															-mInternals->mAnchorPoint.mX,
+															-mInternals->mAnchorPoint.mY,
+															0.0))
 
-		dx = textureWidth - mInternals->mAnchorPoint.mX;
-		dy = textureHeight - mInternals->mAnchorPoint.mY;
-		bufferPtr[4] = dx * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[5] = dy * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[6] = maxU;
-		bufferPtr[7] = maxV;
 
-		dx = 0.0f - mInternals->mAnchorPoint.mX;
-		dy = 0.0f - mInternals->mAnchorPoint.mY;
-		bufferPtr[8] = dx * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[9] = dy * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[10] = 0.0;
-		bufferPtr[11] = 0.0;
+											.translate(
+													S3DOffset32(
+															mInternals->mAnchorPoint.mX,
+															mInternals->mAnchorPoint.mY,
+															0.0))
+											.rotateOnZ(-mInternals->mAngleRadians)
+											.translate(
+													S3DOffset32(
+															-mInternals->mAnchorPoint.mX,
+															-mInternals->mAnchorPoint.mY,
+															0.0))
 
-		dx = textureWidth - mInternals->mAnchorPoint.mX;
-		dy = 0.0f - mInternals->mAnchorPoint.mY;
-		bufferPtr[12] = dx * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[13] = dy * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[14] = maxU;
-		bufferPtr[15] = 0.0;
-	} else {
-		// Rotate around anchor point, then scale, then position on screen
-		Float32	cosA = cosf(-mInternals->mAngleRadians);
-		Float32	sinA = sinf(-mInternals->mAngleRadians);
-
-		dx = 0.0f - mInternals->mAnchorPoint.mX;
-		dy = textureHeight - mInternals->mAnchorPoint.mY;
-		bufferPtr[0] =
-				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[1] =
-				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[2] = 0.0;
-		bufferPtr[3] = maxV;
-
-		dx = textureWidth - mInternals->mAnchorPoint.mX;
-		dy = textureHeight - mInternals->mAnchorPoint.mY;
-		bufferPtr[4] =
-				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[5] =
-				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[6] = maxU;
-		bufferPtr[7] = maxV;
-
-		dx = 0.0f - mInternals->mAnchorPoint.mX;
-		dy = 0.0f - mInternals->mAnchorPoint.mY;
-		bufferPtr[8] =
-				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[9] =
-				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[10] = 0.0;
-		bufferPtr[11] = 0.0;
-
-		dx = textureWidth - mInternals->mAnchorPoint.mX;
-		dy = 0.0f - mInternals->mAnchorPoint.mY;
-		bufferPtr[12] =
-				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[13] =
-				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[14] = maxU;
-		bufferPtr[15] = 0.0;
-	}
+											.scale(textureWidth * mInternals->mScale.mX, textureHeight * mInternals->mScale.mY,
+													1.0)
+		;
 
 	// Draw
 	if (renderInfo.mClipPlane.hasValue()) {
@@ -153,19 +124,19 @@ void CGPURenderObject2D::render(CGPU& gpu, const SGPURenderObjectRenderInfo& ren
 		program.willUse();
 		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo, mInternals->mAlpha);
 		program.setClipPlane(*renderInfo.mClipPlane);
-		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
+		gpu.renderTriangleStrip(program, modelMatrix, 2);
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
 		CGPUOpaqueProgram&	program = CGPUOpaqueProgram::getProgram();
 		program.willUse();
 		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo);
-		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
+		gpu.renderTriangleStrip(program, modelMatrix, 2);
 	} else {
 		// Have alpha
 		CGPUOpacityProgram&	program = CGPUOpacityProgram::getProgram();
 		program.willUse();
 		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo, mInternals->mAlpha);
-		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
+		gpu.renderTriangleStrip(program, modelMatrix, 2);
 	}
 
 	// Cleanup
