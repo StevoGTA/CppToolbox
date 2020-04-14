@@ -75,7 +75,7 @@ class CGPUTextureProgram : public CGPUProgram {
 
 				// Instance methods
 		void	setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
-						const SGPUTextureInfo& gpuTextureInfo);
+						const TArray<const SGPUTextureInfo>& gpuTextureInfos);
 
 	// Properties
 	private:

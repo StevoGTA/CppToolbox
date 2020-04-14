@@ -233,7 +233,22 @@ class CGPUTextureProgramInternals {
 		CGPUTextureProgramInternals(const CGPUProgramInternals& gpuProgramInternals) :
 			mPositionAttributeLocation(glGetAttribLocation(gpuProgramInternals.mProgram, "position")),
 			mTextureCoordinateAttributeLocation(glGetAttribLocation(gpuProgramInternals.mProgram, "texCoord0")),
-			mTextureSamplerUniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture"))
+			mTextureSampler0UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[0]")),
+			mTextureSampler1UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[1]")),
+			mTextureSampler2UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[2]")),
+			mTextureSampler3UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[3]")),
+			mTextureSampler4UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[4)")),
+			mTextureSampler5UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[5]")),
+			mTextureSampler6UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[6]")),
+			mTextureSampler7UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[7]")),
+			mTextureSampler8UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[8]")),
+			mTextureSampler9UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[9]")),
+			mTextureSampler10UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[10]")),
+			mTextureSampler11UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[11]")),
+			mTextureSampler12UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[12]")),
+			mTextureSampler13UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[13]")),
+			mTextureSampler14UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[14]")),
+			mTextureSampler15UniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "diffuseTexture[15]"))
 			{
 				// Finish setup
 				glGenVertexArrays(1, &mVertexArray);
@@ -248,7 +263,22 @@ class CGPUTextureProgramInternals {
 
 		GLint	mPositionAttributeLocation;
 		GLint	mTextureCoordinateAttributeLocation;
-		GLint	mTextureSamplerUniformLocation;
+		GLint	mTextureSampler0UniformLocation;
+		GLint	mTextureSampler1UniformLocation;
+		GLint	mTextureSampler2UniformLocation;
+		GLint	mTextureSampler3UniformLocation;
+		GLint	mTextureSampler4UniformLocation;
+		GLint	mTextureSampler5UniformLocation;
+		GLint	mTextureSampler6UniformLocation;
+		GLint	mTextureSampler7UniformLocation;
+		GLint	mTextureSampler8UniformLocation;
+		GLint	mTextureSampler9UniformLocation;
+		GLint	mTextureSampler10UniformLocation;
+		GLint	mTextureSampler11UniformLocation;
+		GLint	mTextureSampler12UniformLocation;
+		GLint	mTextureSampler13UniformLocation;
+		GLint	mTextureSampler14UniformLocation;
+		GLint	mTextureSampler15UniformLocation;
 
 		GLuint	mVertexArray;
 		GLuint	mModelDataBuffer;
@@ -266,6 +296,22 @@ CGPUTextureProgram::CGPUTextureProgram(const CGPUVertexShader& vertexShader, con
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CGPUTextureProgramInternals(*mGPUProgramInternals);
+    glUniform1i(mInternals->mTextureSampler0UniformLocation, 0);
+    glUniform1i(mInternals->mTextureSampler1UniformLocation, 1);
+    glUniform1i(mInternals->mTextureSampler2UniformLocation, 2);
+    glUniform1i(mInternals->mTextureSampler3UniformLocation, 3);
+    glUniform1i(mInternals->mTextureSampler4UniformLocation, 4);
+    glUniform1i(mInternals->mTextureSampler5UniformLocation, 5);
+    glUniform1i(mInternals->mTextureSampler6UniformLocation, 6);
+    glUniform1i(mInternals->mTextureSampler7UniformLocation, 7);
+    glUniform1i(mInternals->mTextureSampler8UniformLocation, 8);
+    glUniform1i(mInternals->mTextureSampler9UniformLocation, 9);
+    glUniform1i(mInternals->mTextureSampler10UniformLocation, 10);
+    glUniform1i(mInternals->mTextureSampler11UniformLocation, 11);
+    glUniform1i(mInternals->mTextureSampler12UniformLocation, 12);
+    glUniform1i(mInternals->mTextureSampler13UniformLocation, 13);
+    glUniform1i(mInternals->mTextureSampler14UniformLocation, 14);
+    glUniform1i(mInternals->mTextureSampler15UniformLocation, 15);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -302,53 +348,43 @@ void CGPUTextureProgram::didFinish() const
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPUTextureProgram::setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
-		const SGPUTextureInfo& gpuTextureInfo)
+		const TArray<const SGPUTextureInfo>& gpuTextureInfos)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	COpenGLTextureInfo*	openGLTextureInfo = (COpenGLTextureInfo*) gpuTextureInfo.mInternalReference;
-
-	GLint				vertexCount;
-	GLsizei				stride;
-	GLvoid*				textureBufferOffset;
-	switch (gpuVertexBuffer.mGPUVertexBufferType) {
-		case kGPUVertexBufferType2Vertex2Texture:
-			// 2 Vertex, 2 Texture
-			vertexCount = 2;
-			stride = 4 * sizeof(Float32);
-			textureBufferOffset = (GLvoid*) (2 * sizeof(Float32));
-			break;
-
-		case kGPUVertexBufferType3Vertex2Texture:
-			// 3 Vertex, 2 Texture
-			vertexCount = 3;
-			stride = 5 * sizeof(Float32);
-			textureBufferOffset = (GLvoid*) (3 * sizeof(Float32));
-			break;
-	}
-
 	// Setup buffers
 	glBindVertexArray(mInternals->mVertexArray);
 
 	glBindBuffer(GL_ARRAY_BUFFER, mInternals->mModelDataBuffer);
 	glBufferData(GL_ARRAY_BUFFER, gpuVertexBuffer.mData.getSize(), gpuVertexBuffer.mData.getBytePtr(), GL_STATIC_DRAW);
 
-	// Setup texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, openGLTextureInfo->getTextureName());
+	// Setup textures
+	bool	needBlend = false;
+	for (CArrayItemIndex i = 0; i < gpuTextureInfos.getCount(); i++) {
+		// Setup
+		COpenGLTextureInfo*	openGLTextureInfo = (COpenGLTextureInfo*) gpuTextureInfos[i].mInternalReference;
+
+		// Setup this texture
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, openGLTextureInfo->getTextureName());
+		needBlend |= openGLTextureInfo->hasTransparency();
+	}
 
 	// Setup program
 	glEnableVertexAttribArray(mInternals->mPositionAttributeLocation);
-	glVertexAttribPointer(mInternals->mPositionAttributeLocation, vertexCount, GL_FLOAT, GL_FALSE, stride, 0);
+	glVertexAttribPointer(mInternals->mPositionAttributeLocation,
+			(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexCount, GL_FLOAT, GL_FALSE,
+			(GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
+			(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexOffset);
 
 	glEnableVertexAttribArray(mInternals->mTextureCoordinateAttributeLocation);
-	glVertexAttribPointer(mInternals->mTextureCoordinateAttributeLocation, 2, GL_FLOAT, GL_FALSE, stride,
-			textureBufferOffset);
+	glVertexAttribPointer(mInternals->mTextureCoordinateAttributeLocation,
+			(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateCount, GL_FLOAT, GL_FALSE,
+			(GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
+			(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateOffset);
 
-    glUniform1i(mInternals->mTextureSamplerUniformLocation, 0);
 
     // Setup blend
-	if (openGLTextureInfo->hasTransparency()) {
+	if (needBlend) {
 		// Need to blend
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

@@ -92,17 +92,10 @@ void CGPU::unregisterTexture(const SGPUTextureInfo& gpuTextureInfo)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUVertexBuffer CGPU::allocateVertexBuffer(EGPUVertexBufferType gpuVertexBufferType, UInt32 vertexCount)
+SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, UInt32 vertexCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	UInt32	bytesPerVertex;
-	switch (gpuVertexBufferType) {
-		case kGPUVertexBufferType2Vertex2Texture:	bytesPerVertex = 4 * sizeof(Float32);	break;
-		case kGPUVertexBufferType3Vertex2Texture:	bytesPerVertex = 5 * sizeof(Float32);	break;
-	}
-
-	return SGPUVertexBuffer(gpuVertexBufferType, CData(bytesPerVertex * vertexCount), nil);
+	return SGPUVertexBuffer(gpuVertexBufferInfo, CData(gpuVertexBufferInfo.mTotalSize * vertexCount), nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

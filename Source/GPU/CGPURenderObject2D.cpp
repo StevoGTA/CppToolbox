@@ -59,28 +59,22 @@ void CGPURenderObject2D::render(CGPU& gpu, const SGPURenderObjectRenderInfo& ren
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup buffer
-	const	SGPUTextureInfo&	gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
-			Float32				maxU = gpuTextureInfo.mMaxU;
-			Float32				maxV = gpuTextureInfo.mMaxV;
+	const	SGPUTextureInfo&					gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
+			Float32								maxU = gpuTextureInfo.mMaxU;
+			Float32								maxV = gpuTextureInfo.mMaxV;
 
-			SGPUVertexBuffer	gpuVertexBuffer = gpu.allocateVertexBuffer(kGPUVertexBufferType2Vertex2Texture, 4);
-			Float32*			bufferPtr = (Float32*) gpuVertexBuffer.mData.getMutableBytePtr();
-	bufferPtr[0] = 0.0;
-	bufferPtr[1] = 1.0;
-	bufferPtr[2] = 0.0;
-	bufferPtr[3] = maxV;
-	bufferPtr[4] = 1.0;
-	bufferPtr[5] = 1.0;
-	bufferPtr[6] = maxU;
-	bufferPtr[7] = maxV;
-	bufferPtr[8] = 0.0;
-	bufferPtr[9] = 0.0;
-	bufferPtr[10] = 0.0;
-	bufferPtr[11] = 0.0;
-	bufferPtr[12] = 1.0;
-	bufferPtr[13] = 0.0;
-	bufferPtr[14] = maxU;
-	bufferPtr[15] = 0.0;
+			SGPUVertexBuffer					gpuVertexBuffer =
+														gpu.allocateVertexBuffer(
+																SGPUVertexType2Vertex2Texture32::
+																		getGPUVertexBufferInfo(),
+																4);
+			SGPUVertexType2Vertex2Texture32*	bufferPtr =
+														(SGPUVertexType2Vertex2Texture32*)
+																gpuVertexBuffer.mData.getMutableBytePtr();
+			bufferPtr[0] = SGPUVertexType2Vertex2Texture32(S2DPoint32(0.0, 1.0), S2DPoint32(0.0, maxV));
+			bufferPtr[1] = SGPUVertexType2Vertex2Texture32(S2DPoint32(1.0, 1.0), S2DPoint32(maxU, maxV));
+			bufferPtr[2] = SGPUVertexType2Vertex2Texture32(S2DPoint32(0.0, 0.0), S2DPoint32(0.0, 0.0));
+			bufferPtr[3] = SGPUVertexType2Vertex2Texture32(S2DPoint32(1.0, 0.0), S2DPoint32(maxU, 0.0));
 
 	// Setup model matrix
 			Float32			textureWidth = gpuTextureInfo.mGPUTextureSize.mWidth;
@@ -100,7 +94,6 @@ void CGPURenderObject2D::render(CGPU& gpu, const SGPURenderObjectRenderInfo& ren
 															-mInternals->mAnchorPoint.mY,
 															0.0))
 
-
 											.translate(
 													S3DOffset32(
 															mInternals->mAnchorPoint.mX,
@@ -113,29 +106,30 @@ void CGPURenderObject2D::render(CGPU& gpu, const SGPURenderObjectRenderInfo& ren
 															-mInternals->mAnchorPoint.mY,
 															0.0))
 
-											.scale(textureWidth * mInternals->mScale.mX, textureHeight * mInternals->mScale.mY,
-													1.0)
-		;
+											.scale(textureWidth * mInternals->mScale.mX,
+													textureHeight * mInternals->mScale.mY, 1.0);
 
 	// Draw
 	if (renderInfo.mClipPlane.hasValue()) {
 		// Clip plane
 		CGPUClipOpacityProgram&	program = CGPUClipOpacityProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo, mInternals->mAlpha);
+		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo),
+				mInternals->mAlpha);
 		program.setClipPlane(*renderInfo.mClipPlane);
 		gpu.renderTriangleStrip(program, modelMatrix, 2);
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
 		CGPUOpaqueProgram&	program = CGPUOpaqueProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo);
+		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo));
 		gpu.renderTriangleStrip(program, modelMatrix, 2);
 	} else {
 		// Have alpha
 		CGPUOpacityProgram&	program = CGPUOpacityProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo, mInternals->mAlpha);
+		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo),
+				mInternals->mAlpha);
 		gpu.renderTriangleStrip(program, modelMatrix, 2);
 	}
 
@@ -236,7 +230,9 @@ void CGPURenderObject2D::render(CGPU& gpu, const S2DRect32& rect, const SGPURend
 // Does not support angle, scale, nor anchor point
 	// Setup
 	const	SGPUTextureInfo&	gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
-			SGPUVertexBuffer	gpuVertexBuffer = gpu.allocateVertexBuffer(kGPUVertexBufferType2Vertex2Texture, 4);
+			SGPUVertexBuffer	gpuVertexBuffer =
+										gpu.allocateVertexBuffer(
+												SGPUVertexType2Vertex2Texture32::getGPUVertexBufferInfo(), 4);
 
 			Float32				textureWidth = gpuTextureInfo.mGPUTextureSize.mWidth;
 			Float32				textureHeight = gpuTextureInfo.mGPUTextureSize.mHeight;
@@ -327,20 +323,22 @@ void CGPURenderObject2D::render(CGPU& gpu, const S2DRect32& rect, const SGPURend
 		// Clip plane
 		CGPUClipOpacityProgram&	program = CGPUClipOpacityProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo, mInternals->mAlpha);
+		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo),
+				mInternals->mAlpha);
 		program.setClipPlane(*renderInfo.mClipPlane);
 		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
 		CGPUOpaqueProgram&	program = CGPUOpaqueProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo);
+		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo));
 		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
 	} else {
 		// Have alpha
 		CGPUOpacityProgram&	program = CGPUOpacityProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, gpuTextureInfo, mInternals->mAlpha);
+		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo),
+				mInternals->mAlpha);
 		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
 	}
 

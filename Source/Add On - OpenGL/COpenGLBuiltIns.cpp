@@ -23,145 +23,155 @@
 // MARK: Local data
 
 #if TARGET_OS_IOS
-static	CString	sBasicVertexShaderString("																\
-											uniform             mat4    modelViewProjectionMatrix;		\
-																										\
-											attribute           vec4    position;						\
-											attribute           vec2    texCoord0;						\
-																										\
-											varying     highp   vec2    v_texPosition0;					\
-																										\
-											void main() {												\
-												 gl_Position = modelViewProjectionMatrix * position;	\
-												 v_texPosition0 = texCoord0;							\
-											}															\
-										");
-static	CString	sClipVertexShaderString("																		\
-											#extension GL_APPLE_clip_distance : require\n						\
-											uniform             mat4    modelMatrix;							\
-											uniform             mat4    viewProjectionMatrix;					\
-											uniform				vec4	clipPlane;								\
+static	CString	sBasicVertexShaderString(
+		"																\
+			uniform             mat4    modelViewProjectionMatrix;		\
+																		\
+			attribute           vec4    position;						\
+			attribute           vec3    texCoord0;						\
+																		\
+			varying     highp   vec3    v_texPosition0;					\
+																		\
+			void main() {												\
+				 gl_Position = modelViewProjectionMatrix * position;	\
+				 v_texPosition0 = texCoord0;							\
+			}															\
+		");
+static	CString	sClipVertexShaderString(
+		"																		\
+			#extension GL_APPLE_clip_distance : require\n						\
+			uniform             mat4    modelMatrix;							\
+			uniform             mat4    viewProjectionMatrix;					\
+			uniform				vec4	clipPlane;								\
+																				\
+			attribute           vec4    position;								\
+			attribute           vec3    texCoord0;								\
+																				\
+			varying		highp	float	gl_ClipDistance[1];						\
+			varying     highp   vec3    v_texPosition0;							\
+																				\
+			void main() {														\
+				 gl_Position = viewProjectionMatrix * modelMatrix * position;	\
+				 gl_ClipDistance[0] = dot(modelMatrix * position, clipPlane);	\
+				 v_texPosition0 = texCoord0;									\
+			}																	\
+		");
+static	CString	sOpaqueFragmentShaderString(
+		"																							\
+			uniform         sampler2D   diffuseTexture[16];											\
+																									\
+			varying highp   vec3        v_texPosition0;												\
+																									\
+			void main() {																			\
+				gl_FragColor = texture2D(diffuseTexture[int(v_texPosition0.p)], v_texPosition0.st);	\
+			}																						\
+		");
+static	CString	sOpacityFragmentShaderString(
+		"																										\
+			uniform         sampler2D   diffuseTexture[16];														\
+			uniform lowp    float       opacity;																\
 																												\
-											attribute           vec4    position;								\
-											attribute           vec2    texCoord0;								\
+			varying highp   vec3        v_texPosition0;															\
 																												\
-											varying		highp	float	gl_ClipDistance[1];						\
-											varying     highp   vec2    v_texPosition0;							\
+			void main() {																						\
+				highp	vec4	color = texture2D(diffuseTexture[int(v_texPosition0.p)], v_texPosition0.st);	\
+				color.a *= opacity;																				\
+				gl_FragColor = color;																			\
+			}																									\
+		");
+static	CString	sClipOpacityFragmentShaderString(
+		"																										\
+			uniform         sampler2D   diffuseTexture[16];														\
+			uniform lowp    float       opacity;																\
 																												\
-											void main() {														\
-												 gl_Position = viewProjectionMatrix * modelMatrix * position;	\
-												 gl_ClipDistance[0] = dot(modelMatrix * position, clipPlane);	\
-												 v_texPosition0 = texCoord0;									\
-											}																	\
-										");
-static	CString	sOpaqueFragmentShaderString("																	\
-												uniform         sampler2D   diffuseTexture;						\
+			varying highp   vec3        v_texPosition0;															\
 																												\
-												varying highp   vec2        v_texPosition0;						\
-																												\
-												void main() {													\
-													gl_FragColor = texture2D(diffuseTexture, v_texPosition0);	\
-												}																\
-											 ");
-static	CString	sOpacityFragmentShaderString("																	\
-												uniform         sampler2D   diffuseTexture;						\
-												uniform lowp    float       opacity;							\
-																												\
-												varying highp   vec2        v_texPosition0;						\
-																												\
-												void main() {													\
-													highp	vec4	color = texture2D(diffuseTexture, v_texPosition0);	\
-													color.a *= opacity;											\
-													gl_FragColor = color;										\
-												}																\
-											 ");
-static	CString	sClipOpacityFragmentShaderString("																	\
-													uniform         sampler2D   diffuseTexture;						\
-													uniform lowp    float       opacity;							\
-																													\
-													varying highp   vec2        v_texPosition0;						\
-																													\
-													void main() {													\
-														highp	vec4	color = texture2D(diffuseTexture, v_texPosition0);	\
-														color.a *= opacity;											\
-														gl_FragColor = color;										\
-													}																\
-												 ");
+			void main() {																						\
+				highp	vec4	color = texture2D(diffuseTexture[int(v_texPosition0.p)], v_texPosition0.st);	\
+				color.a *= opacity;																				\
+				gl_FragColor = color;																			\
+			}																									\
+		");
 #elif TARGET_OS_MACOS
-static	CString	sBasicVertexShaderString("																\
-											#version 330 core											\
-											uniform	mat4    modelViewProjectionMatrix;					\
-																										\
-											in		vec4    position;									\
-											in		vec2    texCoord0;									\
-																										\
-											out		vec2    v_texPosition0;								\
-																										\
-											void main() {												\
-												 gl_Position = modelViewProjectionMatrix * position;	\
-												 v_texPosition0 = texCoord0;							\
-											}															\
-										");
-static	CString	sClipVertexShaderString("																		\
-											#version 330 core													\
-											uniform	mat4	modelMatrix;										\
-											uniform	mat4	viewProjectionMatrix;								\
-											uniform	vec4	clipPlane;											\
-																												\
-											in		vec4    position;											\
-											in		vec2    texCoord0;											\
-																												\
-											out		float	gl_ClipDistance[1];									\
-											out		vec2    v_texPosition0;										\
-																												\
-											void main() {														\
-												 gl_Position = viewProjectionMatrix * modelMatrix * position;	\
-												 gl_ClipDistance[0] = dot(modelMatrix * position, clipPlane);	\
-												 v_texPosition0 = texCoord0;									\
-											}																	\
-										");
-static	CString	sOpaqueFragmentShaderString("																		\
-												#version 330 core													\
-												uniform	sampler2D   diffuseTexture;									\
-																													\
-												in		vec2		v_texPosition0;									\
-																													\
-												out		vec4		fragColor;										\
-																													\
-												void main() {														\
-													fragColor = texture(diffuseTexture, v_texPosition0.st, 0.0);	\
-												}																	\
-											");
-static	CString	sOpacityFragmentShaderString("																	\
-												#version 330 core												\
-												uniform	sampler2D   diffuseTexture;								\
-												uniform	float       opacity;									\
-																												\
-												in		vec2		v_texPosition0;								\
-																												\
-												out		vec4		fragColor;									\
-																												\
-												void main() {													\
-													vec4	color = texture(diffuseTexture, v_texPosition0.st);	\
-													color.a *= opacity;											\
-													fragColor = color;											\
-												}																\
-											 ");
-static	CString	sClipOpacityFragmentShaderString("																	\
-													#version 330 core												\
-													uniform	sampler2D   diffuseTexture;								\
-													uniform	float       opacity;									\
-																													\
-													in		vec2		v_texPosition0;								\
-																													\
-													out		vec4		fragColor;									\
-																													\
-													void main() {													\
-														vec4	color = texture(diffuseTexture, v_texPosition0.st);	\
-														color.a *= opacity;											\
-														fragColor = color;											\
-													}																\
-												 ");
+static	CString	sBasicVertexShaderString(
+		"																\
+			#version 330 core											\
+			uniform	mat4    modelViewProjectionMatrix;					\
+																		\
+			in		vec4    position;									\
+			in		vec3    texCoord0;									\
+																		\
+			out		vec3    v_texPosition0;								\
+																		\
+			void main() {												\
+				 gl_Position = modelViewProjectionMatrix * position;	\
+				 v_texPosition0 = texCoord0;							\
+			}															\
+		");
+static	CString	sClipVertexShaderString(
+		"																		\
+			#version 330 core													\
+			uniform	mat4	modelMatrix;										\
+			uniform	mat4	viewProjectionMatrix;								\
+			uniform	vec4	clipPlane;											\
+																				\
+			in		vec4    position;											\
+			in		vec3    texCoord0;											\
+																				\
+			out		float	gl_ClipDistance[1];									\
+			out		vec3    v_texPosition0;										\
+																				\
+			void main() {														\
+				 gl_Position = viewProjectionMatrix * modelMatrix * position;	\
+				 gl_ClipDistance[0] = dot(modelMatrix * position, clipPlane);	\
+				 v_texPosition0 = texCoord0;									\
+			}																	\
+		");
+static	CString	sOpaqueFragmentShaderString(
+		"																							\
+			#version 330 core																		\
+			uniform	sampler2D   diffuseTexture[16];													\
+																									\
+			in		vec3		v_texPosition0;														\
+																									\
+			out		vec4		fragColor;															\
+																									\
+			void main() {																			\
+				fragColor = texture(diffuseTexture[int(v_texPosition0.p)], v_texPosition0.st, 0.0);	\
+			}																						\
+		");
+static	CString	sOpacityFragmentShaderString(
+		"																							\
+			#version 330 core																		\
+			uniform	sampler2D   diffuseTexture[16];													\
+			uniform	float       opacity;															\
+																									\
+			in		vec3		v_texPosition0;														\
+																									\
+			out		vec4		fragColor;															\
+																									\
+			void main() {																			\
+				vec4	color = texture(diffuseTexture[int(v_texPosition0.p)], v_texPosition0.st);	\
+				color.a *= opacity;																	\
+				fragColor = color;																	\
+			}																						\
+		");
+static	CString	sClipOpacityFragmentShaderString(
+		"																							\
+			#version 330 core																		\
+			uniform	sampler2D   diffuseTexture[16];													\
+			uniform	float       opacity;															\
+																									\
+			in		vec3		v_texPosition0;														\
+																									\
+			out		vec4		fragColor;															\
+																									\
+			void main() {																			\
+				vec4	color = texture(diffuseTexture[int(v_texPosition0.p)], v_texPosition0.st);	\
+				color.a *= opacity;																	\
+				fragColor = color;																	\
+			}																						\
+		");
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -358,11 +368,11 @@ void CGPUOpacityProgram::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPUOpacityProgram::setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
-		const SGPUTextureInfo& gpuTextureInfo, Float32 opacity)
+		const TArray<const SGPUTextureInfo>& gpuTextureInfos, Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Do super
-	CGPUTextureProgram::setupVertexTextureInfo(gpuVertexBuffer, triangleCount, gpuTextureInfo);
+	CGPUTextureProgram::setupVertexTextureInfo(gpuVertexBuffer, triangleCount, gpuTextureInfos);
 
     // Setup opacity
     glUniform1f(mInternals->mOpacityUniformLocation, opacity);
@@ -466,11 +476,11 @@ void CGPUClipOpacityProgram::didFinish() const
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPUClipOpacityProgram::setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
-		const SGPUTextureInfo& gpuTextureInfo, Float32 opacity)
+		const TArray<const SGPUTextureInfo>& gpuTextureInfos, Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Do super
-	CGPUTextureProgram::setupVertexTextureInfo(gpuVertexBuffer, triangleCount, gpuTextureInfo);
+	CGPUTextureProgram::setupVertexTextureInfo(gpuVertexBuffer, triangleCount, gpuTextureInfos);
 
     // Setup opacity
     glUniform1f(mInternals->mOpacityUniformLocation, opacity);

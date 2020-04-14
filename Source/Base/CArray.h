@@ -116,13 +116,14 @@ template <typename T> class TArray : public CArray {
 	// Methods
 	public:
 											// Lifecycle methods
+											TArray() : CArray(0, nil, nil) {}
 											TArray(CArrayItemCopyProc itemCopyProc) :
 												CArray(0, itemCopyProc, dispose)
 												{}
-//											TArray(bool ownsItems) : CArray(0, ownsItems ? dispose : nil) {}
+											TArray(const T& item) : CArray(0, nil, nil) { CArray::add(&item); }
 											TArray(const T& item, CArrayItemCopyProc itemCopyProc) :
 												CArray(0, itemCopyProc, dispose)
-												{ CArray::add(new T(item), false); }
+												{ CArray::add(new T(item)); }
 //											TArray(const CArray& array, T (mappingProc)(CArrayItemRef item)) : CArray()
 //												{
 //													// Iterate all items
@@ -400,7 +401,7 @@ template <typename T> class TPtrArray : public CArray {
 											TPtrArray(bool ownsItems) : CArray(0, nil, ownsItems ? dispose : nil) {}
 											TPtrArray(const T item, bool ownsItems = false) :
 												CArray(0, nil, ownsItems ? dispose : nil)
-												{ CArray::add(item, false); }
+												{ CArray::add(item); }
 											TPtrArray(const CArray& array, T (mappingProc)(CArrayItemRef item)) :
 												CArray()
 												{

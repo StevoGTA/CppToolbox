@@ -26,7 +26,7 @@ class CGPU {
 		SGPUTextureInfo		registerTexture(const CGPUTexture& gpuTexture);
 		void				unregisterTexture(const SGPUTextureInfo& gpuTextureInfo);
 
-		SGPUVertexBuffer	allocateVertexBuffer(EGPUVertexBufferType gpuVertexBufferType, UInt32 vertexCount);
+		SGPUVertexBuffer	allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, UInt32 vertexCount);
 		void				disposeBuffer(const SGPUBuffer& buffer);
 
 		void				renderStart() const;

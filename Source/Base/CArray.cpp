@@ -329,7 +329,7 @@ CArray::~CArray()
 CArrayItemRef CArray::copy(const CArrayItemRef itemRef) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mItemCopyProc(itemRef);
+	return (mInternals->mItemCopyProc != nil) ? mInternals->mItemCopyProc(itemRef) : nil;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
