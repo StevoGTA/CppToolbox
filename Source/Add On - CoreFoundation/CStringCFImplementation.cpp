@@ -671,7 +671,7 @@ CString CString::removingLeadingAndTrailingWhitespace() const
 			::CFStringHasSuffix(stringRef, CFSTR("\t")) ||
 			::CFStringHasSuffix(stringRef, CFSTR("\n")) ||
 			::CFStringHasSuffix(stringRef, CFSTR("\r")))
-		::CFStringDelete(stringRef, CFRangeMake(getLength() - 1, 1));
+		::CFStringDelete(stringRef, CFRangeMake(::CFStringGetLength(stringRef) - 1, 1));
 
 	CString	string(stringRef);
 	::CFRelease(stringRef);

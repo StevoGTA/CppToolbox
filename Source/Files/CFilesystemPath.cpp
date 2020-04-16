@@ -156,7 +156,7 @@ CFilesystemPath CFilesystemPath::deletingLastComponent() const
 CFilesystemPath CFilesystemPath::appendingExtension(const CString& extension) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CFilesystemPath(mInternals->mString + CString::mPeriodCharacter + extension);
+	return CFilesystemPath(mInternals->mString + CString::mPeriod + extension);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

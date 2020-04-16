@@ -23,15 +23,23 @@ const	UInt64	kDisplayAsGiBThreshHold = 1024 * 1024 * 1024;
 
 CString	CString::mEmpty;
 
-CString	CString::mCommaCharacter(OSSTR(","));
-CString	CString::mPeriodCharacter(OSSTR("."));
-CString	CString::mSpaceCharacter(OSSTR(" "));
+CString	CString::mComma(OSSTR(","));
+CString	CString::mPeriod(OSSTR("."));
+CString	CString::mSpace(OSSTR(" "));
 CString	CString::mSpaceX4(OSSTR("    "));
-CString	CString::mTabCharacter(OSSTR("\t"));
+CString	CString::mTab(OSSTR("\t"));
 
-CString	CString::sNewlineCharacter(OSSTR("\n"));
-CString	CString::sLinefeedCharacter(OSSTR("\r"));
-CString	CString::sNewlineCharacters(OSSTR("\n\r"));
+CString	CString::mNewline(OSSTR("\n"));
+CString	CString::mLinefeed(OSSTR("\r"));
+CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
+#elif defined(TARGET_OS_LINUX)
+	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
+#elif defined(TARGET_OS_WINDOWS)
+//	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
+#endif
 
 // MARK: Lifecycle methods
 

@@ -124,8 +124,8 @@ CString CFile::getComment() const
 			// Must not be a comment
 			return CString::mEmpty;
 	} else
-		// Error
-		CFileReportErrorAndReturnValue(kParamError, "getting comment", CString::mEmpty);
+		// Could not get MDItemRef
+		return CString::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

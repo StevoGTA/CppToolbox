@@ -345,15 +345,16 @@ class CString : public CHashable {
 	public:
 		static			CString		mEmpty;
 
-		static			CString		mCommaCharacter;
-		static			CString		mPeriodCharacter;
-		static			CString		mSpaceCharacter;
+		static			CString		mComma;
+		static			CString		mPeriod;
+		static			CString		mSpace;
 		static			CString		mSpaceX4;
-		static			CString		mTabCharacter;
+		static			CString		mTab;
 
-		static			CString		sNewlineCharacter;
-		static			CString		sLinefeedCharacter;
-		static			CString		sNewlineCharacters;
+		static			CString		mNewline;
+		static			CString		mLinefeed;
+		static			CString		mNewlineLinefeed;
+		static			CString		mPlatformDefaultNewline;
 		
 	private:
 #if TARGET_OS_MACOS || TARGET_OS_IOS

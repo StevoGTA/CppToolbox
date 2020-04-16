@@ -54,11 +54,10 @@ struct SSystemVersionInfo : SVersionInfo {
 		SVersionInfo(majorVersion, minorVersion, patchVersion), mName(name), mBuild(build)
 		{
 			mString =
-					(!mName.isEmpty() ? mName + CString::mSpaceCharacter : CString::mEmpty) +
+					(!mName.isEmpty() ? mName + CString::mSpace : CString::mEmpty) +
 					mString +
 					(!mBuild.isEmpty() ?
-							CString::mSpaceCharacter + CString(OSSTR("(")) + mBuild + CString(OSSTR(")")) :
-							CString::mEmpty);
+							CString::mSpace + CString(OSSTR("(")) + mBuild + CString(OSSTR(")")) : CString::mEmpty);
 		}
 	SSystemVersionInfo(const CString& string) : SVersionInfo(string) {}
 
