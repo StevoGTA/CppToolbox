@@ -28,9 +28,9 @@ struct SLogProcInfo {
 // MARK: Local data
 
 static	OO<CLogFile>			sPrimaryLogFile;
-static	TNArray<SLogProcInfo>	sLogMessageProcInfos;
-static	TNArray<SLogProcInfo>	sLogWarningProcInfos;
-static	TNArray<SLogProcInfo>	sLogErrorProcInfos;
+static	TNArray<SLogProcInfo>*	sLogMessageProcInfos = nil;
+static	TNArray<SLogProcInfo>*	sLogWarningProcInfos = nil;
+static	TNArray<SLogProcInfo>*	sLogErrorProcInfos = nil;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -189,17 +189,19 @@ void CLogServices::logMessage(const CString& string)
 	}
 #endif
 
-	// Call procs
-	for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos.getIterator(); iterator.hasValue();
-			iterator.advance()) {
-		// Check if need to finish setup
-		if (!stringWithDate.hasObject())
-			// Finish setup
-			stringWithDate = OO<CString>(SGregorianDate().getString() + CString::mSpace + string);
+	// Check if have procs
+	if (sLogMessageProcInfos != nil)
+		// Call procs
+		for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos->getIterator(); iterator.hasValue();
+				iterator.advance()) {
+			// Check if need to finish setup
+			if (!stringWithDate.hasObject())
+				// Finish setup
+				stringWithDate = OO<CString>(SGregorianDate().getString() + CString::mSpace + string);
 
-		// Call proc
-		iterator.getValue().callProc(*stringWithDate);
-	}
+			// Call proc
+			iterator.getValue().callProc(*stringWithDate);
+		}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -246,17 +248,19 @@ void CLogServices::logWarning(const CString& string)
 		fprintf(stdout, "%s: %s\n", *(*dateString).getCString(), *string.getCString());
 	}
 
-	// Call procs
-	for (TIteratorD<SLogProcInfo> iterator = sLogWarningProcInfos.getIterator(); iterator.hasValue();
-			iterator.advance()) {
-		// Check if need to finish setup
-		if (!dateString.hasObject())
-			// Finish setup
-			dateString = SGregorianDate().getString();
+	// Check if have procs
+	if (sLogWarningProcInfos != nil)
+		// Call procs
+		for (TIteratorD<SLogProcInfo> iterator = sLogWarningProcInfos->getIterator(); iterator.hasValue();
+				iterator.advance()) {
+			// Check if need to finish setup
+			if (!dateString.hasObject())
+				// Finish setup
+				dateString = SGregorianDate().getString();
 
-		// Call proc
-		iterator.getValue().callProc(*dateString + CString::mSpace + string);
-	}
+			// Call proc
+			iterator.getValue().callProc(*dateString + CString::mSpace + string);
+		}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -288,40 +292,57 @@ void CLogServices::logError(const CString& string)
 		fprintf(stderr, "%s: %s\n", *(*dateString).getCString(), *string.getCString());
 	}
 
-	// Call procs
-	for (TIteratorD<SLogProcInfo> iterator = sLogErrorProcInfos.getIterator(); iterator.hasValue();
-			iterator.advance()) {
-	   // Check if need to finish setup
-	   if (!dateString.hasObject())
-		   // Finish setup
-		   dateString = SGregorianDate().getString();
+	// Check if have procs
+	if (sLogErrorProcInfos != nil)
+		// Call procs
+		for (TIteratorD<SLogProcInfo> iterator = sLogErrorProcInfos->getIterator(); iterator.hasValue();
+				iterator.advance()) {
+		   // Check if need to finish setup
+		   if (!dateString.hasObject())
+			   // Finish setup
+			   dateString = SGregorianDate().getString();
 
 
-		// Call proc
-		iterator.getValue().callProc(string);
-	}
+			// Call proc
+			iterator.getValue().callProc(string);
+		}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLogServices::addLogMessageProc(CLogProc logProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// See if it has been created
+	if (sLogMessageProcInfos == nil)
+		// Create
+		sLogMessageProcInfos = new TNArray<SLogProcInfo>();
+
 	// Add
-	sLogMessageProcInfos += SLogProcInfo(logProc, userData);
+	(*sLogMessageProcInfos) += SLogProcInfo(logProc, userData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLogServices::addLogWarningProc(CLogProc logProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// See if it has been created
+	if (sLogWarningProcInfos == nil)
+		// Create
+		sLogWarningProcInfos = new TNArray<SLogProcInfo>();
+
 	// Add
-	sLogWarningProcInfos += SLogProcInfo(logProc, userData);
+	(*sLogWarningProcInfos) += SLogProcInfo(logProc, userData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLogServices::addLogErrorProc(CLogProc logProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// See if it has been created
+	if (sLogErrorProcInfos == nil)
+		// Create
+		sLogErrorProcInfos = new TNArray<SLogProcInfo>();
+
 	// Add
-	sLogErrorProcInfos += SLogProcInfo(logProc, userData);
+	(*sLogErrorProcInfos) += SLogProcInfo(logProc, userData);
 }
