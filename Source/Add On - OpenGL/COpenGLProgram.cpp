@@ -69,7 +69,7 @@ COpenGLVertexShader::COpenGLVertexShader(const CString& string) : CGPUVertexShad
 COpenGLVertexShader::~COpenGLVertexShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods
@@ -98,7 +98,7 @@ COpenGLFragmentShader::COpenGLFragmentShader(const CString& string) : CGPUFragme
 COpenGLFragmentShader::~COpenGLFragmentShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods
@@ -183,7 +183,7 @@ CGPUProgram::CGPUProgram(const CGPUVertexShader& vertexShader, const CGPUFragmen
 CGPUProgram::~CGPUProgram()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mGPUProgramInternals);
+	Delete(mGPUProgramInternals);
 }
 
 // MARK: Instance methods
@@ -318,7 +318,7 @@ CGPUTextureProgram::CGPUTextureProgram(const CGPUVertexShader& vertexShader, con
 CGPUTextureProgram::~CGPUTextureProgram()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: CGPUProgram methods

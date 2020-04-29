@@ -193,7 +193,7 @@ template <typename T> class TLockingArray : public CArray {
 		static	T*							copy(CArrayItemRef itemRef)
 												{ return new T(*((T*) itemRef)); }
 		static	void						dispose(CArrayItemRef itemRef)
-												{ T* t = (T*) itemRef; DisposeOf(t); }
+												{ T* t = (T*) itemRef; Delete(t); }
 
 	// Properties
 	private:

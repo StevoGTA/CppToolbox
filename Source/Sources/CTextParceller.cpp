@@ -13,7 +13,7 @@ class CTextParcellerInternals : public TReferenceCountable<CTextParcellerInterna
 	public:
 		CTextParcellerInternals(const CDataSource* dataSource) : TReferenceCountable(), mDataSource(dataSource) {}
 		~CTextParcellerInternals()
-			{ DisposeOf(mDataSource); }
+			{ Delete(mDataSource); }
 
 		const	CDataSource*	mDataSource;
 };

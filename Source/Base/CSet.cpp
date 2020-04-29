@@ -158,7 +158,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 												} else if (setInternals->mOwnsItems) {
 													// Did not add
 													const	CHashable*	tempHashable = &hashable;
-													DisposeOf(tempHashable);
+													Delete(tempHashable);
 												}
 
 												return setInternals;
@@ -212,11 +212,11 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 													if (setInternals->mOwnsItems) {
 														// Dispose
 														const	CHashable*	tempHashable = &currentItemInfo->mHashable;
-														DisposeOf(tempHashable);
+														Delete(tempHashable);
 													}
 
 													// Cleanup this one
-													DisposeOf(currentItemInfo);
+													Delete(currentItemInfo);
 
 													// Update info
 													setInternals->mCount--;
@@ -259,11 +259,11 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 												if (ownsItems) {
 													// Dispose
 													const	CHashable*	hashable = &itemInfo->mHashable;
-													DisposeOf(hashable);
+													Delete(hashable);
 												}
 
 												// Cleanup this one
-												DisposeOf(itemInfo);
+												Delete(itemInfo);
 											}
 
 				TIteratorS<CHashable>	getIterator() const

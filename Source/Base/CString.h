@@ -176,7 +176,7 @@ struct SCString : SReferenceCountable {
 							// Check if last reference
 							if (removeReference() == 0)
 								// Last reference
-								DisposeOfArray(mBuffer);
+								DeleteArray(mBuffer);
 						}
 
 					// Instance methods

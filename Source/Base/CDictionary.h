@@ -398,7 +398,7 @@ template <typename T> class TOwningDictionary : public CDictionary {
 		static	T*				copy(CDictionaryItemRef itemRef)
 									{ return new T(*((T*) itemRef)); }
 		static	void			dispose(CDictionaryItemRef itemRef)
-									{ T* t = (T*) itemRef; DisposeOf(t); }
+									{ T* t = (T*) itemRef; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -494,5 +494,5 @@ template <typename K, typename T> class TOwningKeyConvertibleDictionary : public
 		static	T*				copy(CDictionaryItemRef itemRef)
 									{ return new T(*((T*) itemRef)); }
 		static	void			dispose(CDictionaryItemRef itemRef)
-									{ T* t = (T*) itemRef; DisposeOf(t); }
+									{ T* t = (T*) itemRef; Delete(t); }
 };

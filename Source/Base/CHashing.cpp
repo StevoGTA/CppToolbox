@@ -48,7 +48,7 @@ CHasher::CHasher()
 CHasher::~CHasher()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

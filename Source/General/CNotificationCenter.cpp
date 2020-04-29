@@ -193,7 +193,7 @@ CNotificationCenter::~CNotificationCenter()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Cleanup
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

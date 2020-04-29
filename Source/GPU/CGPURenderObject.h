@@ -40,9 +40,4 @@ class CGPURenderObject {
 						CGPURenderObject() {}
 						CGPURenderObject(const CGPURenderObject& other) {}
 		virtual			~CGPURenderObject() {}
-
-						// Instance methods
-		virtual	void	render(CGPU& gpu,
-										const SGPURenderObjectRenderInfo& renderInfo = SGPURenderObjectRenderInfo())
-										const = 0;
 };

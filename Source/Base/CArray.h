@@ -286,7 +286,7 @@ template <typename T> class TArray : public CArray {
 	private:
 											// Class methods
 		static	void						dispose(CArrayItemRef itemRef)
-												{ T* t = (T*) itemRef; DisposeOf(t); }
+												{ T* t = (T*) itemRef; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -379,7 +379,7 @@ template <typename T> class TNumericArray : public CArray {
 														{
 															SNumberWrapper<T>*	numberWrapper =
 																						(SNumberWrapper<T>*) itemRef;
-															DisposeOf(numberWrapper);
+															Delete(numberWrapper);
 														}
 
 	private:
@@ -487,5 +487,5 @@ template <typename T> class TPtrArray : public CArray {
 	private:
 											// Class methods
 		static	void						dispose(CArrayItemRef itemRef)
-												{ T t = (T) itemRef; DisposeOf(t); }
+												{ T t = (T) itemRef; Delete(t); }
 };

@@ -133,7 +133,7 @@ template <typename T> struct OO {
 					// Check for object
 					if ((mObject != nil) && (--(*mReferenceCount) == 0))
 						// All done
-						DisposeOf(mObject);
+						Delete(mObject);
 				}
 
 	OO<T>&	operator=(const OO<T>& other)
@@ -141,7 +141,7 @@ template <typename T> struct OO {
 					// Check for object
 					if ((mObject != nil) && (--(*mReferenceCount) == 0))
 						// All done
-						DisposeOf(mObject);
+						Delete(mObject);
 
 					// Copy
 					mObject = other.mObject;

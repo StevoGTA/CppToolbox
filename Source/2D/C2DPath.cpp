@@ -61,7 +61,7 @@ C2DPath::C2DPath(const C2DPath& other)
 C2DPath::~C2DPath()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

@@ -41,7 +41,7 @@ CGPU::CGPU(const CGPUProcsInfo& procsInfo)
 CGPU::~CGPU()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: CGPU methods
@@ -87,7 +87,7 @@ void CGPU::unregisterTexture(const SGPUTextureInfo& gpuTextureInfo)
 
 	// Cleanup
 	mInternals->mProcsInfo.acquireContext();
-	DisposeOf(openGLTextureInfo);
+	Delete(openGLTextureInfo);
 	mInternals->mProcsInfo.releaseContext();
 }
 

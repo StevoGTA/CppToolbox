@@ -43,7 +43,7 @@ template <typename T> class TIteratorS {
 							mIteratorInfo(*other->mIteratorInfo.copy())
 					{}
 				~TIteratorS()
-					{ CIteratorInfo* iteratorInfo = &mIteratorInfo; DisposeOf(iteratorInfo); }
+					{ CIteratorInfo* iteratorInfo = &mIteratorInfo; Delete(iteratorInfo); }
 
 				// Instance methods
 		bool	advance()
@@ -77,7 +77,7 @@ template <typename T> class TIteratorD {
 							mIteratorInfo(*other->mIteratorInfo.copy())
 					{}
 				~TIteratorD()
-					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; DisposeOf(iteratorInfo); }
+					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; Delete(iteratorInfo); }
 
 				// Instance methods
 		bool	advance()
@@ -113,7 +113,7 @@ template <typename K, typename T> class TIteratorM {
 							mMapProc(mapProc), mIteratorInfo(*other->mIteratorInfo.copy())
 					{}
 				~TIteratorM()
-					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; DisposeOf(iteratorInfo); }
+					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; Delete(iteratorInfo); }
 
 				// Instance methods
 		bool	advance()

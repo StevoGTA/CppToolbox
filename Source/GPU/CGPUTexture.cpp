@@ -37,7 +37,7 @@ CGPUTexture::CGPUTexture(const CData& pixelData, EGPUTextureFormat gpuTextureFor
 CGPUTexture::~CGPUTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

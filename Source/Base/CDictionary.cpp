@@ -391,7 +391,7 @@ void CStandardDictionaryInternals::remove(SDictionaryItemInfo* itemInfo, bool re
 	// Dispose
 	itemInfo->disposeValue(mItemDisposeProc);
 
-	DisposeOf(itemInfo);
+	Delete(itemInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1486,19 +1486,19 @@ void SDictionaryValue::dispose(CDictionaryItemDisposeProc itemDisposeProc)
 	// Check value type
 	if (mValueType == kDictionaryValueTypeArrayOfDictionaries) {
 		// Array of dictionaries
-		DisposeOf(mValue.mArrayOfDictionaries);
+		Delete(mValue.mArrayOfDictionaries);
 	} else if (mValueType == kDictionaryValueTypeArrayOfStrings) {
 		// Array of strings
-		DisposeOf(mValue.mArrayOfStrings);
+		Delete(mValue.mArrayOfStrings);
 	} else if (mValueType == kDictionaryValueTypeData) {
 		// Data
-		DisposeOf(mValue.mData);
+		Delete(mValue.mData);
 	} else if (mValueType == kDictionaryValueTypeDictionary) {
 		// Dictionary
-		DisposeOf(mValue.mDictionary);
+		Delete(mValue.mDictionary);
 	} else if (mValueType == kDictionaryValueTypeString) {
 		// String
-		DisposeOf(mValue.mString);
+		Delete(mValue.mString);
 	} else if ((mValueType == kDictionaryValueTypeItemRef) && (itemDisposeProc != nil)) {
 		// Item Ref and have item dispose proc
 		itemDisposeProc(mValue.mItemRef);

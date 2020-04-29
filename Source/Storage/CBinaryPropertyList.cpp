@@ -127,19 +127,19 @@ class CBPLDictionaryInfo {
 										~CBPLDictionaryInfo()
 											{
 												// Cleanup
-												DisposeOfArray(mKeyHashes);
-												DisposeOfArray(mKeys);
-												DisposeOfArray(mValueIndexes);
+												DeleteArray(mKeyHashes);
+												DeleteArray(mKeys);
+												DeleteArray(mValueIndexes);
 
 												for (CDictionaryKeyCount i = 0; i < mKeyCount; i++) {
 													// Check if have value
 													if (mDictionaryValues[i] != nil) {
 														// Dispose
 														mDictionaryValues[i]->dispose(nil);
-														DisposeOf(mDictionaryValues[i]);
+														Delete(mDictionaryValues[i]);
 													}
 												}
-												DisposeOfArray(mDictionaryValues);
+												DeleteArray(mDictionaryValues);
 
 												mBPLDataSource.removeReference();
 											}
@@ -189,7 +189,7 @@ class CBPLDictionaryInfo {
 											{
 												// Get CBPLDictionaryInfo
 												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
-												DisposeOf(bplDictionaryInfo);
+												Delete(bplDictionaryInfo);
 											}
 
 		CBPLDataSource&		mBPLDataSource;
@@ -250,12 +250,12 @@ CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 object
 CBPLDataSource::~CBPLDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOfArray(mObjectOffsets);
+	DeleteArray(mObjectOffsets);
 
 	for (UInt64 i = 0; i < mTotalObjectCount; i++) {
-		DisposeOf(mStrings[i]);
+		Delete(mStrings[i]);
 	}
-	DisposeOfArray(mStrings);
+	DeleteArray(mStrings);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -554,7 +554,7 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 	UInt8	marker = bplDataSource->readMarker(topObjectIndex, OR<UInt64>(count));
 	if (marker != kMarkerTypeDictionary) {
 		// Top object is not a dictionary
-		DisposeOf(bplDataSource);
+		Delete(bplDataSource);
 		outError = kBinaryPropertyListUnknownFormatError;
 		LogIfErrorAndReturnValue(outError, "top object is not a dictionary", CDictionary());
 	}

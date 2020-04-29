@@ -36,7 +36,7 @@ CLock::CLock()
 CLock::~CLock()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods
@@ -93,7 +93,7 @@ CReadPreferringLock::CReadPreferringLock()
 CReadPreferringLock::~CReadPreferringLock()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods
@@ -157,7 +157,7 @@ CSemaphore::CSemaphore()
 CSemaphore::~CSemaphore()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

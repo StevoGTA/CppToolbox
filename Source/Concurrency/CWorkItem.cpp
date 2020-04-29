@@ -37,7 +37,7 @@ CWorkItem::CWorkItem(bool disposeWhenCompletedOrCancelled)
 CWorkItem::~CWorkItem()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods
@@ -57,7 +57,7 @@ void CWorkItem::completed() const
 	if (mInternals->mDisposeWhenCompletedOrCancelled) {
 		// Dispose
 		CWorkItem*	THIS = (CWorkItem*) this;
-		DisposeOf(THIS);
+		Delete(THIS);
 	}
 }
 
@@ -69,7 +69,7 @@ void CWorkItem::cancelled() const
 	if (mInternals->mDisposeWhenCompletedOrCancelled) {
 		// Dispose
 		CWorkItem*	THIS = (CWorkItem*) this;
-		DisposeOf(THIS);
+		Delete(THIS);
 	}
 }
 

@@ -197,7 +197,7 @@ class CWorkItemQueueInternals {
 //											if (testWorkItemInfo->mWorkItem.isCancelled()) {
 //												// Cancelled
 //												mIdleWorkItemInfos.removeAtIndex(0);
-//												DisposeOf(testWorkItemInfo);
+//												Delete(testWorkItemInfo);
 //											} else
 //												// Start with this work item info
 //												workItemInfo = testWorkItemInfo;
@@ -242,7 +242,7 @@ class CWorkItemQueueInternals {
 										mWorkItemInfosLock.unlock();
 
 										// Cleanup
-										DisposeOf(workItemInfo);
+										Delete(workItemInfo);
 									}
 
 		static	ECompareResult	workItemInfoCompareProc(SWorkItemInfo* const workItemInfo1,
@@ -380,7 +380,7 @@ CWorkItemQueue::CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue, UInt32 maxim
 CWorkItemQueue::~CWorkItemQueue()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

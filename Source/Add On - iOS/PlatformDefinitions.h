@@ -17,16 +17,6 @@
 #define	DEPRECATED	DEPRECATED_ATTRIBUTE
 #define force_inline __attribute__((always_inline))
 
-//#include <CoreFoundation/CoreFoundation.h>
-
-//#if defined(__OBJC__)
-//	#if __has_feature(modules)
-//		@import UIKit;
-//	#else
-//		#import <UIKit/UIKit.h>
-//	#endif
-//#endif
-
 //----------------------------------------------------------------------------------------------------------------------
 #include <MacTypes.h>
 
@@ -34,9 +24,9 @@
 #define	MAKE_OSTYPE(a,b,c,d)	((a << 24) | (b << 16) | (c << 8) | d)
 
 //----------------------------------------------------------------------------------------------------------------------
-// new/delete helpers
-#define DisposeOf(x)		{ delete x; x = nil; }
-#define DisposeOfArray(x)	{ delete [] x; x = nil; }
+// Lifecycle helpers
+#define Delete(x)		{ delete x; x = nil; }
+#define DeleteArray(x)	{ delete [] x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // Byte swapping

@@ -32,7 +32,7 @@ class CFileDataSourceInternals {
 		void			reset()
 							{
 								// Cleanup
-								DisposeOf(mFileReader);
+								Delete(mFileReader);
 
 								// No longer any error
 								mError = kNoError;
@@ -60,7 +60,7 @@ CFileDataSource::CFileDataSource(const CFile& file) : CDataSource()
 CFileDataSource::~CFileDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: CDataSource methods
@@ -132,8 +132,8 @@ class CMappedFileDataSourceInternals {
 		void			reset()
 							{
 								// Cleanup
-								DisposeOf(mFileMemoryMap);
-								DisposeOf(mFileReader);
+								Delete(mFileMemoryMap);
+								Delete(mFileReader);
 
 								// No longer any error
 								mError = kNoError;
@@ -167,7 +167,7 @@ CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CDataSource()
 CMappedFileDataSource::~CMappedFileDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: CDataSource methods

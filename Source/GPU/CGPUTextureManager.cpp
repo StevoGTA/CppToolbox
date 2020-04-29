@@ -123,7 +123,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 														// Check for render materia texture
 														if (mGPUTexture != nil) {
 															// Cleanup
-															DisposeOf(mGPUTexture);
+															Delete(mGPUTexture);
 
 															// Unregister with GPU Render Engine
 															mGPUTextureManagerInfo.
@@ -194,7 +194,7 @@ class CBitmapGPUTextureReferenceInternals : public CGPUTextureReferenceInternals
 									~CBitmapGPUTextureReferenceInternals()
 										{
 											// Cleanup
-											DisposeOf(mBitmap);
+											Delete(mBitmap);
 										}
 
 									// CGPUTextureReferenceInternals methods
@@ -229,7 +229,7 @@ class CBitmapGPUTextureReferenceInternals : public CGPUTextureReferenceInternals
 													bitmapUse = convertedBitmap;
 
 													// Cleanup
-													DisposeOf(mLoadingBitmap);
+													Delete(mLoadingBitmap);
 												}
 											}
 
@@ -242,8 +242,8 @@ class CBitmapGPUTextureReferenceInternals : public CGPUTextureReferenceInternals
 																bitmapSize.mHeight)));
 
 											// Cleanup
-											DisposeOf(mLoadingBitmap);
-											DisposeOf(convertedBitmap);
+											Delete(mLoadingBitmap);
+											Delete(convertedBitmap);
 										}
 
 									// Class methods

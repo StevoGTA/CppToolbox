@@ -295,7 +295,7 @@ CGPUOpaqueProgram::CGPUOpaqueProgram() : CGPUTextureProgram(sGetBasicVertexShade
 CGPUOpaqueProgram::~CGPUOpaqueProgram()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: CGPUProgram methods
@@ -346,7 +346,7 @@ CGPUOpacityProgram::CGPUOpacityProgram() : CGPUTextureProgram(sGetBasicVertexSha
 CGPUOpacityProgram::~CGPUOpacityProgram()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: CGPUProgram methods
@@ -420,7 +420,7 @@ CGPUClipOpacityProgram::CGPUClipOpacityProgram() :
 CGPUClipOpacityProgram::~CGPUClipOpacityProgram()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: CGPUProgram methods

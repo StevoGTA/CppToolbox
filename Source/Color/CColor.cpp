@@ -344,7 +344,7 @@ CColor::CColor(EColorType type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha)
 CColor::~CColor()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

@@ -81,7 +81,7 @@ COpenGLTextureInfo::COpenGLTextureInfo(const CGPUTexture& gpuTexture)
 COpenGLTextureInfo::~COpenGLTextureInfo()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

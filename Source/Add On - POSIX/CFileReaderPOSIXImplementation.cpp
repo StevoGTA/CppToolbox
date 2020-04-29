@@ -348,7 +348,7 @@ class CFileMemoryMapInternals {
 											if (--mReferenceCount == 0) {
 												// We going away
 												CFileMemoryMapInternals*	THIS = this;
-												DisposeOf(THIS);
+												Delete(THIS);
 											}
 										}
 

@@ -74,7 +74,7 @@ CThread::CThread(CThreadProc proc, void* userData, const CString& name)
 CThread::~CThread()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

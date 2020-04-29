@@ -44,7 +44,7 @@ template <typename T> class TReferenceCountable {
 								if (--mReferenceCount == 0) {
 									// We going away
 									T*	THIS = (T*) this;
-									DisposeOf(THIS);
+									Delete(THIS);
 								}
 							}
 

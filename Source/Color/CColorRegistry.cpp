@@ -54,7 +54,7 @@ CColorGroup::CColorGroup(OSType id, UInt32 displayIndex)
 CColorGroup::~CColorGroup()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods
@@ -162,7 +162,7 @@ CColorSet::CColorSet(const CDictionary& info)
 CColorSet::~CColorSet()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods
@@ -267,8 +267,8 @@ class CColorRegistryInternals {
 						{}
 					~CColorRegistryInternals()
 						{
-							DisposeOf(mCurrentColorSet);
-							DisposeOf(mPref);
+							Delete(mCurrentColorSet);
+							Delete(mPref);
 							mColorSets.removeAll();
 							mColorSetPresets.removeAll();
 						}
@@ -360,7 +360,7 @@ CColorRegistry::CColorRegistry(const SPref& pref)
 CColorRegistry::~CColorRegistry()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	DisposeOf(mInternals);
+	Delete(mInternals);
 }
 
 // MARK: Instance methods

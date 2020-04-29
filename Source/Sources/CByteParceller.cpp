@@ -13,7 +13,7 @@ class CByteParcellerInternals : public TReferenceCountable<CByteParcellerInterna
 	public:
 		CByteParcellerInternals(const CDataSource* dataSource) : TReferenceCountable(), mDataSource(dataSource) {}
 		~CByteParcellerInternals()
-			{ DisposeOf(mDataSource); }
+			{ Delete(mDataSource); }
 
 		const	CDataSource*	mDataSource;
 };
