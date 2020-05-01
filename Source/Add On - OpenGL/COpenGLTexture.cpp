@@ -1,48 +1,47 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	COpenGLTextureInfo.cpp			©2020 Stevo Brock	All rights reserved.
+//	COpenGLTexture.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "COpenGLTextureInfo.h"
+#include "COpenGLTexture.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: COpenGLTextureInfoInternals
+// MARK: COpenGLTextureInternals
 
-class COpenGLTextureInfoInternals {
+class COpenGLTextureInternals {
 	public:
-		COpenGLTextureInfoInternals(const CGPUTexture& gpuTexture) :
-			mUsedPixelsSize(gpuTexture.getGPUTextureSize())
+		COpenGLTextureInternals(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size) :
+			mUsedPixelsSize(size),
+					mTotalPixelsSize(
+							S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth), SNumber::getNextPowerOf2(size.mHeight)))
 			{
 				// Setup
-				mTotalPixelsSize.mWidth = SNumber::getNextPowerOf2(mUsedPixelsSize.mWidth);
-				mTotalPixelsSize.mHeight = SNumber::getNextPowerOf2(mUsedPixelsSize.mHeight);
+				GLint	format = (gpuTextureDataFormat == kGPUTextureDataFormatRGB565) ? GL_RGB : GL_RGBA;
 
-				GLint	format = (gpuTexture.getGPUTextureFormat() == kGPUTextureFormatRGB565) ? GL_RGB : GL_RGBA;
+				switch (gpuTextureDataFormat) {
+					case kGPUTextureDataFormatRGB565:	mPixelFormat = GL_UNSIGNED_SHORT_5_6_5;
+					case kGPUTextureDataFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;
+					case kGPUTextureDataFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;
 
-				switch (gpuTexture.getGPUTextureFormat()) {
-					case kGPUTextureFormatRGB565:	mPixelFormat = GL_UNSIGNED_SHORT_5_6_5;
-					case kGPUTextureFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;
-					case kGPUTextureFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;
-
-					case kGPUTextureFormatRGBA8888:	mPixelFormat = GL_UNSIGNED_BYTE;
+					case kGPUTextureDataFormatRGBA8888:	mPixelFormat = GL_UNSIGNED_BYTE;
 				}
 
 				// Setup GL texture
 				glGenTextures(1, &mTextureName);
 				glBindTexture(GL_TEXTURE_2D, mTextureName);
 
-				if (mTotalPixelsSize == mUsedPixelsSize)
+				if (mUsedPixelsSize == mTotalPixelsSize)
 					// Width and height are powers of 2 so use all
-					glTexImage2D(GL_TEXTURE_2D, 0, format, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, 0,
-							format, mPixelFormat, gpuTexture.getPixelData().getBytePtr());
+					glTexImage2D(GL_TEXTURE_2D, 0, format, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, 0, format,
+							mPixelFormat, data.getBytePtr());
 				else {
 					// Width or height is not a power of 2 so expand texture space and use what we need
 					UInt8*	empty = (UInt8*) calloc(mTotalPixelsSize.mWidth * mTotalPixelsSize.mHeight, 4);
-					glTexImage2D(GL_TEXTURE_2D, 0, format, mTotalPixelsSize.mWidth, mTotalPixelsSize.mHeight, 0,
-							format, mPixelFormat, empty);
+					glTexImage2D(GL_TEXTURE_2D, 0, format, mTotalPixelsSize.mWidth, mTotalPixelsSize.mHeight, 0, format,
+							mPixelFormat, empty);
 					free(empty);
 
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, format,
-							mPixelFormat, gpuTexture.getPixelData().getBytePtr());
+							mPixelFormat, data.getBytePtr());
 				}
 
 				// Finish up the rest of the GL setup
@@ -52,49 +51,67 @@ class COpenGLTextureInfoInternals {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
-		~COpenGLTextureInfoInternals()
+		~COpenGLTextureInternals()
 			{
 				// Cleanup
 				glDeleteTextures(1, &mTextureName);
 			}
 
-	GLuint				mTextureName;
-	GLenum				mPixelFormat;
-	SGPUTextureSize		mUsedPixelsSize;
-	SGPUTextureSize		mTotalPixelsSize;
+	GLuint		mTextureName;
+	GLenum		mPixelFormat;
+	S2DSizeU16	mUsedPixelsSize;
+	S2DSizeU16	mTotalPixelsSize;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLTextureInfo
+// MARK: - COpenGLTexture
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-COpenGLTextureInfo::COpenGLTextureInfo(const CGPUTexture& gpuTexture)
+COpenGLTexture::COpenGLTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLTextureInfoInternals(gpuTexture);
+	mInternals = new COpenGLTextureInternals(data, gpuTextureDataFormat, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-COpenGLTextureInfo::~COpenGLTextureInfo()
+COpenGLTexture::~COpenGLTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
 }
 
+// MARK: CGPUTexture methods
+
+//----------------------------------------------------------------------------------------------------------------------
+const S2DSizeU16& COpenGLTexture::getSize() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mTotalPixelsSize;
+}
+
+// MARK: Temporary methods - will be removed in the future
+
+//----------------------------------------------------------------------------------------------------------------------
+const S2DSizeU16& COpenGLTexture::getUsedSize() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mUsedPixelsSize;
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-GLuint COpenGLTextureInfo::getTextureName() const
+GLuint COpenGLTexture::getTextureName() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mTextureName;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool COpenGLTextureInfo::hasTransparency() const
+bool COpenGLTexture::hasTransparency() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	switch (mInternals->mPixelFormat) {
@@ -108,18 +125,4 @@ bool COpenGLTextureInfo::hasTransparency() const
 			// No transparency
 			return false;
 	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-SGPUTextureSize COpenGLTextureInfo::getUsedPixelsGPUTextureSize() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mUsedPixelsSize;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-SGPUTextureSize COpenGLTextureInfo::getTotalPixelsGPUTextureSize() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mTotalPixelsSize;
 }

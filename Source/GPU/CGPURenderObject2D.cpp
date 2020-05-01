@@ -11,18 +11,75 @@
 
 class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2DInternals> {
 	public:
-		CGPURenderObject2DInternals(const CGPUTextureReference& gpuTextureReference) :
+		CGPURenderObject2DInternals(CGPU& gpu, const TArray<SGPURenderObject2DItem>& items,
+				const TArray<CGPUTextureReference>& gpuTextureReferences) :
 			TReferenceCountable(),
-					mGPUTextureReference(gpuTextureReference), mAngleRadians(0.0), mAlpha(1.0), mScale(1.0, 1.0)
-			{}
+					mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
+							mGPUVertexBuffer(
+									gpu.allocateVertexBuffer(SGPUVertexType2Vertex2Texture32::getGPUVertexBufferInfo(),
+											6 * items.getCount())),
+							mAngleRadians(0.0), mAlpha(1.0), mScale(1.0, 1.0)
+			{
+				// Setup buffer
+				SGPUVertexType2Vertex2Texture32*	bufferPtr =
+															(SGPUVertexType2Vertex2Texture32*)
+																	mGPUVertexBuffer.mData.getMutableBytePtr();
+				for (TIteratorD<SGPURenderObject2DItem> iterator = items.getIterator(); iterator.hasValue();
+						iterator.advance()) {
+					// Setup
+					const	SGPURenderObject2DItem&	item = iterator.getValue();
+					const	S2DRectF32&				screenRect = item.mScreenRect;
+					const	S2DRectF32&				textureRect = item.mTextureRect;
 
-		CGPUTextureReference	mGPUTextureReference;
+							Float32					minX = screenRect.mOrigin.mX;
+							Float32					maxX = screenRect.mOrigin.mX + screenRect.getWidth();
+							Float32					minY = screenRect.mOrigin.mY;
+							Float32					maxY = screenRect.mOrigin.mY + screenRect.getHeight();
 
-		S2DPoint32				mAnchorPoint;
-		S2DPoint32				mScreenPositionPoint;
-		Float32					mAngleRadians;
-		Float32					mAlpha;
-		S2DPoint32				mScale;
+							Float32					minS = textureRect.getMinX();
+							Float32					maxS = textureRect.getMaxX();
+							Float32					minT = textureRect.getMinY();
+							Float32					maxT = textureRect.getMaxY();
+
+					// Store in buffer
+					*(bufferPtr++) =
+							SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
+									item.mTextureIndex);
+					*(bufferPtr++) =
+							SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
+									item.mTextureIndex);
+
+					*(bufferPtr++) =
+							SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, maxY), S2DPointF32(maxS, maxT),
+									item.mTextureIndex);
+
+					*(bufferPtr++) =
+							SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, minY), S2DPointF32(minS, minT),
+									item.mTextureIndex);
+
+					*(bufferPtr++) =
+							SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
+									item.mTextureIndex);
+					*(bufferPtr++) =
+							SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
+									item.mTextureIndex);
+				}
+			}
+		~CGPURenderObject2DInternals()
+			{
+				// Cleanup
+				mGPU.disposeBuffer(mGPUVertexBuffer);
+			}
+
+		CGPU&							mGPU;
+		TArray<CGPUTextureReference>	mGPUTextureReferences;
+		SGPUVertexBuffer				mGPUVertexBuffer;
+
+		S2DPointF32						mAnchorPoint;
+		S2DPointF32						mScreenPositionPoint;
+		Float32							mAngleRadians;
+		Float32							mAlpha;
+		S2DPointF32						mScale;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,10 +89,22 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderObject2D::CGPURenderObject2D(const CGPUTextureReference& gpuTextureReference) : CGPURenderObject()
+CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const S2DRectF32& screenRect, const S2DRectF32& textureRect,
+		const CGPUTextureReference& gpuTextureReference) : CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPURenderObject2DInternals(gpuTextureReference);
+	mInternals =
+			new CGPURenderObject2DInternals(gpu,
+					TNArray<SGPURenderObject2DItem>(SGPURenderObject2DItem(screenRect, 0, textureRect)),
+					TNArray<CGPUTextureReference>(gpuTextureReference));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const TArray<SGPURenderObject2DItem>& items,
+		const TArray<CGPUTextureReference>& gpuTextureReferences) : CGPURenderObject()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new CGPURenderObject2DInternals(gpu, items, gpuTextureReferences);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -52,123 +121,31 @@ CGPURenderObject2D::~CGPURenderObject2D()
 	mInternals->removeReference();
 }
 
-// MARK: CGPURenderObject methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::render(CGPU& gpu, const SGPURenderObjectRenderInfo& renderInfo) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup buffer
-	const	SGPUTextureInfo&					gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
-			Float32								maxU = gpuTextureInfo.mMaxU;
-			Float32								maxV = gpuTextureInfo.mMaxV;
-
-			SGPUVertexBuffer					gpuVertexBuffer =
-														gpu.allocateVertexBuffer(
-																SGPUVertexType2Vertex2Texture32::
-																		getGPUVertexBufferInfo(),
-																4);
-			SGPUVertexType2Vertex2Texture32*	bufferPtr =
-														(SGPUVertexType2Vertex2Texture32*)
-																gpuVertexBuffer.mData.getMutableBytePtr();
-			bufferPtr[0] = SGPUVertexType2Vertex2Texture32(S2DPoint32(0.0, 1.0), S2DPoint32(0.0, maxV));
-			bufferPtr[1] = SGPUVertexType2Vertex2Texture32(S2DPoint32(1.0, 1.0), S2DPoint32(maxU, maxV));
-			bufferPtr[2] = SGPUVertexType2Vertex2Texture32(S2DPoint32(0.0, 0.0), S2DPoint32(0.0, 0.0));
-			bufferPtr[3] = SGPUVertexType2Vertex2Texture32(S2DPoint32(1.0, 0.0), S2DPoint32(maxU, 0.0));
-
-	// Setup model matrix
-			Float32			textureWidth = gpuTextureInfo.mGPUTextureSize.mWidth;
-			Float32			textureHeight = gpuTextureInfo.mGPUTextureSize.mHeight;
-	const	S2DOffset32&	offset = renderInfo.mOffset;
-
-			SMatrix4x4_32	modelMatrix =
-									SMatrix4x4_32()
-											.translate(
-													S3DOffset32(
-															mInternals->mScreenPositionPoint.mX + offset.mDX,
-															mInternals->mScreenPositionPoint.mY + offset.mDY,
-															0.0))
-											.translate(
-													S3DOffset32(
-															-mInternals->mAnchorPoint.mX,
-															-mInternals->mAnchorPoint.mY,
-															0.0))
-
-											.translate(
-													S3DOffset32(
-															mInternals->mAnchorPoint.mX,
-															mInternals->mAnchorPoint.mY,
-															0.0))
-											.rotateOnZ(-mInternals->mAngleRadians)
-											.translate(
-													S3DOffset32(
-															-mInternals->mAnchorPoint.mX,
-															-mInternals->mAnchorPoint.mY,
-															0.0))
-
-											.scale(textureWidth * mInternals->mScale.mX,
-													textureHeight * mInternals->mScale.mY, 1.0);
-
-	// Draw
-	if (renderInfo.mClipPlane.hasValue()) {
-		// Clip plane
-		CGPUClipOpacityProgram&	program = CGPUClipOpacityProgram::getProgram();
-		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo),
-				mInternals->mAlpha);
-		program.setClipPlane(*renderInfo.mClipPlane);
-		gpu.renderTriangleStrip(program, modelMatrix, 2);
-	} else if (mInternals->mAlpha == 1.0) {
-		// Opaque
-		CGPUOpaqueProgram&	program = CGPUOpaqueProgram::getProgram();
-		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo));
-		gpu.renderTriangleStrip(program, modelMatrix, 2);
-	} else {
-		// Have alpha
-		CGPUOpacityProgram&	program = CGPUOpacityProgram::getProgram();
-		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo),
-				mInternals->mAlpha);
-		gpu.renderTriangleStrip(program, modelMatrix, 2);
-	}
-
-	// Cleanup
-	gpu.disposeBuffer(gpuVertexBuffer);
-}
-
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUTextureReference& CGPURenderObject2D::getGPUTextureReference() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mGPUTextureReference;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-S2DPoint32 CGPURenderObject2D::getAnchorPoint() const
+S2DPointF32 CGPURenderObject2D::getAnchorPoint() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAnchorPoint;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::setAnchorPoint(const S2DPoint32& anchorPoint)
+void CGPURenderObject2D::setAnchorPoint(const S2DPointF32& anchorPoint)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mAnchorPoint = anchorPoint;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-S2DPoint32 CGPURenderObject2D::getScreenPositionPoint() const
+S2DPointF32 CGPURenderObject2D::getScreenPositionPoint() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mScreenPositionPoint;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::setScreenPositionPoint(const S2DPoint32& screenPositionPoint)
+void CGPURenderObject2D::setScreenPositionPoint(const S2DPointF32& screenPositionPoint)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mScreenPositionPoint = screenPositionPoint;
@@ -203,14 +180,14 @@ void CGPURenderObject2D::setAlpha(Float32 alpha)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-S2DPoint32 CGPURenderObject2D::getScale() const
+S2DPointF32 CGPURenderObject2D::getScale() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mScale;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::setScale(const S2DPoint32& scale)
+void CGPURenderObject2D::setScale(const S2DPointF32& scale)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mScale = scale;
@@ -220,128 +197,112 @@ void CGPURenderObject2D::setScale(const S2DPoint32& scale)
 void CGPURenderObject2D::setScale(Float32 scale)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mScale = S2DPoint32(scale, scale);
+	mInternals->mScale = S2DPointF32(scale, scale);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::render(CGPU& gpu, const S2DRect32& rect, const SGPURenderObjectRenderInfo& renderInfo) const
+void CGPURenderObject2D::finishLoading() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-// Does not support angle, scale, nor anchor point
+	// Finish loading all textures
+	for (TIteratorD<CGPUTextureReference> iterator = mInternals->mGPUTextureReferences.getIterator();
+			iterator.hasValue(); iterator.advance())
+		// Finish loading
+		iterator.getValue().finishLoading();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const TArray<CGPUTextureReference>& CGPURenderObject2D::getGPUTextureReferences() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mGPUTextureReferences;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& indexes,
+		const SGPURenderObjectRenderInfo& renderInfo) const
+//----------------------------------------------------------------------------------------------------------------------
+{
 	// Setup
-	const	SGPUTextureInfo&	gpuTextureInfo = mInternals->mGPUTextureReference.getGPUTextureInfo();
-			SGPUVertexBuffer	gpuVertexBuffer =
-										gpu.allocateVertexBuffer(
-												SGPUVertexType2Vertex2Texture32::getGPUVertexBufferInfo(), 4);
+	const	S2DOffsetF32&	offset = renderInfo.mOffset;
+			SMatrix4x4_32	modelMatrix =
+									SMatrix4x4_32()
+											.translate(
+													S3DOffset32(
+															mInternals->mScreenPositionPoint.mX + offset.mDX,
+															mInternals->mScreenPositionPoint.mY + offset.mDY,
+															0.0))
+											.scale(mInternals->mScale.mX, mInternals->mScale.mY, 1.0)
+											.translate(
+													S3DOffset32(
+															-mInternals->mAnchorPoint.mX,
+															-mInternals->mAnchorPoint.mY,
+															0.0))
 
-			Float32				textureWidth = gpuTextureInfo.mGPUTextureSize.mWidth;
-			Float32				textureHeight = gpuTextureInfo.mGPUTextureSize.mHeight;
+											.translate(
+													S3DOffset32(
+															mInternals->mAnchorPoint.mX,
+															mInternals->mAnchorPoint.mY,
+															0.0))
+											.rotateOnZ(-mInternals->mAngleRadians)
+											.translate(
+													S3DOffset32(
+															-mInternals->mAnchorPoint.mX,
+															-mInternals->mAnchorPoint.mY,
+															0.0));
 
-			Float32				maxU = gpuTextureInfo.mMaxU;
-			Float32				maxV = gpuTextureInfo.mMaxV;
+	TArray<TIndexRange<UInt16> >		indexRanges = indexes.getRanges();
+	TIteratorD<TIndexRange<UInt16> >	iterator = indexRanges.getIterator();
 
-	const	S2DOffset32&		offset = renderInfo.mOffset;
-
-	// Points are UL, UR, LL, LR
-	Float32*	bufferPtr = (Float32*) gpuVertexBuffer.mData.getMutableBytePtr();
-
-	// Check angle
-//	Float32	dx, dy;
-	if (mInternals->mAngleRadians == 0.0) {
-		// No rotation
-//		dx = 0.0f - mInternals->mAnchorPoint.mX;
-//		dy = textureHeight - mInternals->mAnchorPoint.mY;
-		bufferPtr[0] = mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[1] = mInternals->mScreenPositionPoint.mY + rect.mSize.mHeight + offset.mDY;
-		bufferPtr[2] = rect.mOrigin.mX / textureWidth * maxU;
-		bufferPtr[3] = (rect.mOrigin.mY + rect.mSize.mHeight) / textureHeight * maxV;
-
-//		dx = textureWidth - mInternals->mAnchorPoint.mX;
-//		dy = textureHeight - mInternals->mAnchorPoint.mY;
-		bufferPtr[4] = mInternals->mScreenPositionPoint.mX + rect.mSize.mWidth + offset.mDX;
-		bufferPtr[5] = mInternals->mScreenPositionPoint.mY + rect.mSize.mHeight + offset.mDY;
-		bufferPtr[6] = (rect.mOrigin.mX + rect.mSize.mWidth) / textureWidth * maxU;
-		bufferPtr[7] = (rect.mOrigin.mY + rect.mSize.mHeight) / textureHeight * maxV;
-
-//		dx = 0.0f - mInternals->mAnchorPoint.mX;
-//		dy = 0.0f - mInternals->mAnchorPoint.mY;
-		bufferPtr[8] = mInternals->mScreenPositionPoint.mX + offset.mDX;
-		bufferPtr[9] = mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[10] = rect.mOrigin.mX / textureWidth * maxU;
-		bufferPtr[11] = rect.mOrigin.mY / textureHeight * maxV;
-
-//		dx = textureWidth - mInternals->mAnchorPoint.mX;
-//		dy = 0.0f - mInternals->mAnchorPoint.mY;
-		bufferPtr[12] = mInternals->mScreenPositionPoint.mX + rect.mSize.mWidth + offset.mDX;
-		bufferPtr[13] = mInternals->mScreenPositionPoint.mY + offset.mDY;
-		bufferPtr[14] = (rect.mOrigin.mX + rect.mSize.mWidth) / textureWidth * maxU;
-		bufferPtr[15] = rect.mOrigin.mY / textureHeight * maxV;
-	} else {
-		// Rotate around anchor point, then scale, then position on screen
-//		Float32	cosA = cosf(-mInternals->mAngleRadians);
-//		Float32	sinA = sinf(-mInternals->mAngleRadians);
-//
-//		dx = 0.0f - mInternals->mAnchorPoint.mX;
-//		dy = textureHeight - mInternals->mAnchorPoint.mY;
-//		bufferPtr[0] =
-//				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
-//		bufferPtr[1] =
-//				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
-//		bufferPtr[2] = 0.0;
-//		bufferPtr[3] = maxV;
-//
-//		dx = textureWidth - mInternals->mAnchorPoint.mX;
-//		dy = textureHeight - mInternals->mAnchorPoint.mY;
-//		bufferPtr[4] =
-//				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
-//		bufferPtr[5] =
-//				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
-//		bufferPtr[6] = maxU;
-//		bufferPtr[7] = maxV;
-//
-//		dx = 0.0f - mInternals->mAnchorPoint.mX;
-//		dy = 0.0f - mInternals->mAnchorPoint.mY;
-//		bufferPtr[8] =
-//				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
-//		bufferPtr[9] =
-//				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
-//		bufferPtr[10] = 0.0;
-//		bufferPtr[11] = 0.0;
-//
-//		dx = textureWidth - mInternals->mAnchorPoint.mX;
-//		dy = 0.0f - mInternals->mAnchorPoint.mY;
-//		bufferPtr[12] =
-//				(cosA * dx - sinA * dy) * mInternals->mScale.mX + mInternals->mScreenPositionPoint.mX + offset.mX;
-//		bufferPtr[13] =
-//				(sinA * dx + cosA * dy) * mInternals->mScale.mY + mInternals->mScreenPositionPoint.mY + offset.mY;
-//		bufferPtr[14] = maxU;
-//		bufferPtr[15] = 0.0;
-	}
+	TArray<const CGPUTexture>			gpuTextures;
+	for (CArrayItemIndex i = 0; i < mInternals->mGPUTextureReferences.getCount(); i++)
+		gpuTextures += mInternals->mGPUTextureReferences[i].getGPUTexture();
 
 	// Draw
 	if (renderInfo.mClipPlane.hasValue()) {
 		// Clip plane
 		CGPUClipOpacityProgram&	program = CGPUClipOpacityProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo),
-				mInternals->mAlpha);
 		program.setClipPlane(*renderInfo.mClipPlane);
-		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
+
+		// Iterate index ranges
+		for (; iterator.hasValue(); iterator.advance()) {
+			// Get index range
+			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
+
+			// Setup and render
+			program.setupVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures,
+					mInternals->mAlpha);
+			gpu.renderTriangleStrip(program, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+		}
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
 		CGPUOpaqueProgram&	program = CGPUOpaqueProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo));
-		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
+
+		// Iterate index ranges
+		for (; iterator.hasValue(); iterator.advance()) {
+			// Get index range
+			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
+
+			// Setup and render
+			program.setupVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
+			gpu.renderTriangleStrip(program, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+		}
 	} else {
 		// Have alpha
 		CGPUOpacityProgram&	program = CGPUOpacityProgram::getProgram();
 		program.willUse();
-		program.setupVertexTextureInfo(gpuVertexBuffer, 2, TArray<const SGPUTextureInfo>(gpuTextureInfo),
-				mInternals->mAlpha);
-		gpu.renderTriangleStrip(program, SMatrix4x4_32(), 2);
-	}
 
-	// Cleanup
-	gpu.disposeBuffer(gpuVertexBuffer);
+		// Iterate index ranges
+		for (; iterator.hasValue(); iterator.advance()) {
+			// Get index range
+			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
+
+			// Setup and render
+			program.setupVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures,
+					mInternals->mAlpha);
+			gpu.renderTriangleStrip(program, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+		}
+	}
 }

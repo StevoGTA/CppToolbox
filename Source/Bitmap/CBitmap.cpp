@@ -59,7 +59,7 @@ static	void	sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInter
 
 class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>{
 	public:
-		CBitmapInternals(const SBitmapSize& size, EBitmapFormat format, const CData& pixelData, UInt16 bytesPerRow) :
+		CBitmapInternals(const S2DSizeS32& size, EBitmapFormat format, const CData& pixelData, UInt16 bytesPerRow) :
 			TCopyOnWriteReferenceCountable(),
 					mSize(size), mFormat(format), mBytesPerRow(bytesPerRow)
 			{
@@ -94,7 +94,7 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 			{}
 
 		EBitmapFormat	mFormat;
-		SBitmapSize		mSize;
+		S2DSizeS32		mSize;
 		CData			mPixelData;
 		UInt32			mBytesPerPixel;
 		UInt32			mBytesPerRow;
@@ -107,7 +107,7 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const SBitmapSize& size, EBitmapFormat format, UInt16 bytesPerRow)
+CBitmap::CBitmap(const S2DSizeS32& size, EBitmapFormat format, UInt16 bytesPerRow)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -116,12 +116,12 @@ CBitmap::CBitmap(const SBitmapSize& size, EBitmapFormat format, UInt16 bytesPerR
 
 	// Setup
 	mInternals =
-			new CBitmapInternals(SBitmapSize(std::max(1, size.mWidth), std::max(1, size.mHeight)), format,
+			new CBitmapInternals(S2DSizeS32(std::max(1, size.mWidth), std::max(1, size.mHeight)), format,
 					CData::mEmpty, bytesPerRow);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const SBitmapSize& size, EBitmapFormat format, const CData& pixelData, UInt16 bytesPerRow)
+CBitmap::CBitmap(const S2DSizeS32& size, EBitmapFormat format, const CData& pixelData, UInt16 bytesPerRow)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -130,7 +130,7 @@ CBitmap::CBitmap(const SBitmapSize& size, EBitmapFormat format, const CData& pix
 
 	// Setup
 	mInternals =
-			new CBitmapInternals(SBitmapSize(std::max(1, size.mWidth), std::max(1, size.mHeight)), format, pixelData,
+			new CBitmapInternals(S2DSizeS32(std::max(1, size.mWidth), std::max(1, size.mHeight)), format, pixelData,
 					bytesPerRow);
 }
 
@@ -299,7 +299,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SBitmapSize	newSize;
+	S2DSizeS32	newSize;
 	switch (rotationOperation & 0x03) {
 		case kBitmapRotationOperationRotateNone:
 		case kBitmapRotationOperationRotate180:
@@ -310,7 +310,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 		case kBitmapRotationOperationRotate90:
 		case kBitmapRotationOperationRotate270:
 			// Rotating
-			newSize = SBitmapSize(other.mInternals->mSize.mHeight, other.mInternals->mSize.mWidth);
+			newSize = S2DSizeS32(other.mInternals->mSize.mHeight, other.mInternals->mSize.mWidth);
 			break;
 	}
 
@@ -323,7 +323,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 	SInt32		C = 0;
 	SInt32		bytesPerPixel = (SInt32) other.mInternals->mBytesPerPixel;
 	SInt32		bytesPerRow = other.mInternals->mBytesPerRow;
-	SBitmapSize	size = other.mInternals->mSize;
+	S2DSizeS32	size = other.mInternals->mSize;
 	switch ((UInt32) rotationOperation) {
 		case kBitmapRotationOperationRotateNone:
 			// bytePtr = y * bytesPerRow + x * bytesPerPixel
@@ -431,7 +431,7 @@ CBitmap::~CBitmap()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const SBitmapSize CBitmap::getSize() const
+const S2DSizeS32 CBitmap::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mSize;
@@ -466,16 +466,16 @@ UInt16 CBitmap::getBytesPerPixel() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CBitmap::setPixel(const SBitmapPoint& pt, const CColor& color)
+void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertFailIf((pt.mX < 0) || (pt.mX >= mInternals->mSize.mWidth));
-	if ((pt.mX < 0) || (pt.mX >= mInternals->mSize.mWidth))
+	AssertFailIf((point.mX < 0) || (point.mX >= mInternals->mSize.mWidth));
+	if ((point.mX < 0) || (point.mX >= mInternals->mSize.mWidth))
 		return;
 
-	AssertFailIf((pt.mY < 0) || (pt.mY >= mInternals->mSize.mHeight));
-	if ((pt.mY < 0) || (pt.mY >= mInternals->mSize.mHeight))
+	AssertFailIf((point.mY < 0) || (point.mY >= mInternals->mSize.mHeight));
+	if ((point.mY < 0) || (point.mY >= mInternals->mSize.mHeight))
 		return;
 
 	// Prepare for write
@@ -483,8 +483,8 @@ void CBitmap::setPixel(const SBitmapPoint& pt, const CColor& color)
 
 	// Update pixel data
 	void*	pixelDataPtr =
-					(UInt8*) mInternals->mPixelData.getMutableBytePtr() + pt.mY * mInternals->mBytesPerRow +
-							pt.mX * mInternals->mBytesPerPixel;
+					(UInt8*) mInternals->mPixelData.getMutableBytePtr() + point.mY * mInternals->mBytesPerRow +
+							point.mX * mInternals->mBytesPerPixel;
 	switch (mInternals->mFormat) {
 		case kBitmapFormatRGBA4444: {
 			// RGBA4444

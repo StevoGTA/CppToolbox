@@ -28,17 +28,16 @@ class CGPUTextureReferenceInternals;
 class CGPUTextureReference {
 	// Methods
 	public:
-									// Lifecycle methods
-									CGPUTextureReference(CGPUTextureReferenceInternals* internals);
-									CGPUTextureReference(const CGPUTextureReference& other);
-									~CGPUTextureReference();
+								// Lifecycle methods
+								CGPUTextureReference(CGPUTextureReferenceInternals* internals);
+								CGPUTextureReference(const CGPUTextureReference& other);
+								~CGPUTextureReference();
 
-									// Instance methods
-//				bool				getIsLoaded() const;
-				void				load() const;
-				void				finishLoading() const;
+								// Instance methods
+				void			load() const;
+				void			finishLoading() const;
 
-		const	SGPUTextureInfo&	getGPUTextureInfo() const;
+		const	CGPUTexture&	getGPUTexture() const;
 
 	// Properties
 	private:
@@ -59,27 +58,27 @@ class CGPUTextureManager {
 
 								// Instance methods
 		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap,
-												OR<const CString> reference = OR<const CString>(),
+												const OR<const CString>& reference = OR<const CString>(),
 												EGPUTextureReferenceOptions
 														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, EGPUTextureFormat gpuTextureFormat,
-												OR<const CString> reference = OR<const CString>(),
-												EGPUTextureReferenceOptions
-														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
-												CGPUTextureManagerBitmapProc bitmapProc,
-												OR<const CString> reference = OR<const CString>(),
+		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, EGPUTextureDataFormat gpuTextureDataFormat,
+												const OR<const CString>& reference = OR<const CString>(),
 												EGPUTextureReferenceOptions
 														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
 												CGPUTextureManagerBitmapProc bitmapProc,
-												EGPUTextureFormat gpuTextureFormat,
-												OR<const CString> reference = OR<const CString>(),
+												const OR<const CString>& reference = OR<const CString>(),
 												EGPUTextureReferenceOptions
 														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CByteParceller& textureByteParceller,
-												EGPUTextureFormat gpuTextureFormat, SGPUTextureSize gpuTextureSize,
-												OR<const CString> reference = OR<const CString>(),
+		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
+												CGPUTextureManagerBitmapProc bitmapProc,
+												EGPUTextureDataFormat gpuTextureDataFormat,
+												const OR<const CString>& reference = OR<const CString>(),
+												EGPUTextureReferenceOptions
+														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
+		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
+												EGPUTextureDataFormat gpuTextureDataFormat, S2DSizeU16 size,
+												const OR<const CString>& reference = OR<const CString>(),
 												EGPUTextureReferenceOptions
 														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
 

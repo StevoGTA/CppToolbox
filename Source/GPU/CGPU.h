@@ -16,24 +16,26 @@ class CGPUInternals;
 class CGPU {
 	// Methods
 	public:
-							// Lifecycle methods
-							CGPU(const CGPUProcsInfo& procsInfo);
-							~CGPU();
+								// Lifecycle methods
+								CGPU(const CGPUProcsInfo& procsInfo);
+								~CGPU();
 
-							// Instance methods
-		void				setup(const S2DSize32& size, void* extraData = nil);
+								// Instance methods
+		void					setup(const S2DSizeF32& size, void* extraData = nil);
 
-		SGPUTextureInfo		registerTexture(const CGPUTexture& gpuTexture);
-		void				unregisterTexture(const SGPUTextureInfo& gpuTextureInfo);
+		SGPUTextureReference	registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
+										const S2DSizeU16& size);
+		void					unregisterTexture(SGPUTextureReference& gpuTexture);
 
-		SGPUVertexBuffer	allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, UInt32 vertexCount);
-		void				disposeBuffer(const SGPUBuffer& buffer);
+		SGPUVertexBuffer		allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo,
+										UInt32 vertexCount);
+		void					disposeBuffer(const SGPUBuffer& buffer);
 
-		void				renderStart() const;
-		void				setViewMatrix(const SMatrix4x4_32& viewMatrix);
-		void				renderTriangleStrip(CGPUProgram& program, const SMatrix4x4_32& modelMatrix,
-									UInt32 triangleCount);
-		void				renderEnd() const;
+		void					renderStart() const;
+		void					setViewMatrix(const SMatrix4x4_32& viewMatrix);
+		void					renderTriangleStrip(CGPUProgram& program, const SMatrix4x4_32& modelMatrix,
+										UInt32 triangleCount);
+		void					renderEnd() const;
 
 	// Properties
 	private:

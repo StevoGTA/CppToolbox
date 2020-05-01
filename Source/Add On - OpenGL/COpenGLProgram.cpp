@@ -5,7 +5,7 @@
 #include "COpenGLProgram.h"
 
 #include "CLogServices.h"
-#include "COpenGLTextureInfo.h"
+#include "COpenGLTexture.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: COpenGLShaderInternals
@@ -347,26 +347,30 @@ void CGPUTextureProgram::didFinish() const
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPUTextureProgram::setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleCount,
-		const TArray<const SGPUTextureInfo>& gpuTextureInfos)
+void CGPUTextureProgram::setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleOffset,
+		const TArray<const CGPUTexture>& gpuTextures)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	UInt32	offset = gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize * triangleOffset;
+
 	// Setup buffers
 	glBindVertexArray(mInternals->mVertexArray);
 
 	glBindBuffer(GL_ARRAY_BUFFER, mInternals->mModelDataBuffer);
-	glBufferData(GL_ARRAY_BUFFER, gpuVertexBuffer.mData.getSize(), gpuVertexBuffer.mData.getBytePtr(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, gpuVertexBuffer.mData.getSize() - offset,
+			(UInt8*) gpuVertexBuffer.mData.getBytePtr() + offset, GL_STATIC_DRAW);
 
 	// Setup textures
 	bool	needBlend = false;
-	for (CArrayItemIndex i = 0; i < gpuTextureInfos.getCount(); i++) {
+	for (CArrayItemIndex i = 0; i < gpuTextures.getCount(); i++) {
 		// Setup
-		COpenGLTextureInfo*	openGLTextureInfo = (COpenGLTextureInfo*) gpuTextureInfos[i].mInternalReference;
+		const	COpenGLTexture&	openGLTexture = (const COpenGLTexture&) gpuTextures[i];
 
 		// Setup this texture
 		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, openGLTextureInfo->getTextureName());
-		needBlend |= openGLTextureInfo->hasTransparency();
+		glBindTexture(GL_TEXTURE_2D, openGLTexture.getTextureName());
+		needBlend |= openGLTexture.hasTransparency();
 	}
 
 	// Setup program

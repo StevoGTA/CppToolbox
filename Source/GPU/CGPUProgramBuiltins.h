@@ -46,8 +46,8 @@ class CGPUOpacityProgram : public CGPUTextureProgram {
 
 									// Instance methods
 				void				setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
-											UInt32 triangleCount,
-											const TArray<const SGPUTextureInfo>& gpuTextureInfos, Float32 opacity);
+											UInt32 triangleOffset, const TArray<const CGPUTexture>& gpuTextures,
+											Float32 opacity);
 
 									// Class methods
 		static	CGPUOpacityProgram&	getProgram();
@@ -79,8 +79,7 @@ class CGPUClipOpacityProgram : public CGPUTextureProgram {
 
 										// Instance methods
 				void					setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
-												UInt32 triangleCount,
-												const TArray<const SGPUTextureInfo>& gpuTextureInfos,
+												UInt32 triangleOffset, const TArray<const CGPUTexture>& gpuTextures,
 												Float32 opacity);
 				void					setClipPlane(const SMatrix4x1_32& clipPlane);
 

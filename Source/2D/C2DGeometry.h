@@ -85,8 +85,8 @@ template <typename T> struct T2DPoint {
 	T	mY;
 };
 
-typedef	T2DPoint<Float32>	S2DPoint32;
-typedef	T2DPoint<Float64>	S2DPoint64;
+typedef	T2DPoint<Float32>	S2DPointF32;
+typedef	T2DPoint<SInt32>	S2DPointS32;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DOffset
@@ -116,8 +116,7 @@ template <typename T> struct T2DOffset {
 	T	mDY;
 };
 
-typedef	T2DOffset<Float32>	S2DOffset32;
-typedef	T2DOffset<Float64>	S2DOffset64;
+typedef	T2DOffset<Float32>	S2DOffsetF32;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DSize
@@ -159,8 +158,9 @@ template <typename T> struct T2DSize {
 	T	mHeight;
 };
 
-typedef	T2DSize<Float32>	S2DSize32;
-typedef	T2DSize<Float64>	S2DSize64;
+typedef	T2DSize<Float32>	S2DSizeF32;
+typedef T2DSize<SInt32>		S2DSizeS32;
+typedef	T2DSize<UInt16>		S2DSizeU16;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DVector
@@ -209,8 +209,7 @@ template <typename T> struct T2DVector {
 	T	mDY;
 };
 
-typedef	T2DVector<Float32>	S2DVector32;
-typedef	T2DVector<Float64>	S2DVector64;
+typedef	T2DVector<SInt32>	S2DVectorS32;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DRect
@@ -254,6 +253,10 @@ template <typename T> struct T2DRect {
 						{ return mOrigin.mY + 0.5 * mSize.mHeight; }
 	inline	T		getMaxY() const
 						{ return mOrigin.mY + mSize.mHeight; }
+	inline	T		getWidth() const
+						{ return mSize.mWidth; }
+	inline	T		getHeight() const
+						{ return mSize.mHeight; }
 	inline	bool	isEmpty() const
 						{ return (mSize.mWidth == 0.0) && (mSize.mHeight == 0.0); }
 	inline	bool	contains(const T2DPoint<T>& point) const
@@ -286,8 +289,8 @@ template <typename T> struct T2DRect {
 	T2DSize<T>	mSize;
 };
 
-typedef	T2DRect<Float32>	S2DRect32;
-typedef	T2DRect<Float64>	S2DRect64;
+typedef	T2DRect<Float32>	S2DRectF32;
+typedef T2DRect<SInt32>		S2DRectS32;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DAffineTransform
@@ -361,6 +364,3 @@ template <typename T> struct T2DAffineTransform {
 	T	mTX;
 	T	mTY;
 };
-
-typedef	T2DAffineTransform<Float32>	S2DAffineTransform32;
-typedef	T2DAffineTransform<Float64>	S2DAffineTransform64;

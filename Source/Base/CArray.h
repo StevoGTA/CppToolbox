@@ -120,15 +120,15 @@ template <typename T> class TArray : public CArray {
 											TArray(CArrayItemCopyProc itemCopyProc) :
 												CArray(0, itemCopyProc, dispose)
 												{}
-											TArray(const T& item) : CArray(0, nil, nil) { CArray::add(&item); }
+											TArray(const T& item) : CArray(0, nil, nil) { add(item); }
 											TArray(const T& item, CArrayItemCopyProc itemCopyProc) :
 												CArray(0, itemCopyProc, dispose)
-												{ CArray::add(new T(item)); }
+												{ add(item); }
 //											TArray(const CArray& array, T (mappingProc)(CArrayItemRef item)) : CArray()
 //												{
 //													// Iterate all items
 //													for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
-//															// Map item
+//														// Map item
 //														T	t = mappingProc(array.getItemAt(i));
 //
 //														// Add result

@@ -4,8 +4,7 @@
 
 #include "COpenGLGPU.h"
 
-#include "CMatrix.h"
-#include "COpenGLTextureInfo.h"
+#include "COpenGLTexture.h"
 
 #include <OpenGL/gl3.h>
 
@@ -18,7 +17,7 @@ class CGPUInternals {
 
 	CGPUProcsInfo	mProcsInfo;
 
-	S2DSize32		mSize;
+	S2DSizeF32		mSize;
 	Float32			mScale;
 	SMatrix4x4_32	mProjectionMatrix;
 	SMatrix4x4_32	mViewMatrix;
@@ -47,7 +46,7 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::setup(const S2DSize32& size, void* extraData)
+void CGPU::setup(const S2DSizeF32& size, void* extraData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -62,32 +61,29 @@ void CGPU::setup(const S2DSize32& size, void* extraData)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureInfo CGPU::registerTexture(const CGPUTexture& gpuTexture)
+SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
+		const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
 	mInternals->mProcsInfo.acquireContext();
-	COpenGLTextureInfo*	openGLTextureInfo = new COpenGLTextureInfo(gpuTexture);
+	CGPUTexture*	gpuTexture = new COpenGLTexture(data, gpuTextureDataFormat, size);
 	mInternals->mProcsInfo.releaseContext();
 
-	return SGPUTextureInfo(gpuTexture.getGPUTextureSize(),
-			(Float32) openGLTextureInfo->getUsedPixelsGPUTextureSize().mWidth /
-					(Float32) openGLTextureInfo->getTotalPixelsGPUTextureSize().mWidth,
-			(Float32) openGLTextureInfo->getUsedPixelsGPUTextureSize().mHeight /
-					(Float32) openGLTextureInfo->getTotalPixelsGPUTextureSize().mHeight,
-			openGLTextureInfo);
+	return SGPUTextureReference(*gpuTexture);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::unregisterTexture(const SGPUTextureInfo& gpuTextureInfo)
+void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	COpenGLTextureInfo*	openGLTextureInfo = (COpenGLTextureInfo*) gpuTextureInfo.mInternalReference;
+	COpenGLTexture*	openGLTexture = (COpenGLTexture*) gpuTexture.mGPUTexture;
+	gpuTexture.reset();
 
 	// Cleanup
 	mInternals->mProcsInfo.acquireContext();
-	Delete(openGLTextureInfo);
+	Delete(openGLTexture);
 	mInternals->mProcsInfo.releaseContext();
 }
 

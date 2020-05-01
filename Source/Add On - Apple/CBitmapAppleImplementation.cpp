@@ -20,11 +20,11 @@ static	UInt32	sGetPixelData32ForColor(EBitmapFormat bitmapFormat, const CColor& 
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CBitmap::clearPixels(const SBitmapRect& rect)
+void CBitmap::clearPixels(const S2DRectS32& rect)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SBitmapSize	bitmapSize = getSize();
+	const	S2DSizeS32	bitmapSize = getSize();
 
 	// Parameter check
 	AssertFailIf((rect.mOrigin.mX < 0) || (rect.mOrigin.mX >= bitmapSize.mWidth));
@@ -35,28 +35,28 @@ void CBitmap::clearPixels(const SBitmapRect& rect)
 	if ((rect.mOrigin.mY < 0) || (rect.mOrigin.mY >= bitmapSize.mHeight))
 		return;
 
-	AssertFailIf(((rect.mOrigin.mX + rect.mSize.mWidth) < 0) ||
-			((rect.mOrigin.mX + rect.mSize.mWidth) > bitmapSize.mWidth));
-	if (((rect.mOrigin.mX + rect.mSize.mWidth) < 0) ||
-			((rect.mOrigin.mX + rect.mSize.mWidth) > bitmapSize.mWidth))
+	AssertFailIf(((rect.mOrigin.mX + rect.getWidth()) < 0) ||
+			((rect.mOrigin.mX + rect.getWidth()) > bitmapSize.mWidth));
+	if (((rect.mOrigin.mX + rect.getWidth()) < 0) ||
+			((rect.mOrigin.mX + rect.getWidth()) > bitmapSize.mWidth))
 		return;
 
-	AssertFailIf(((rect.mOrigin.mY + rect.mSize.mHeight) < 0) ||
-			((rect.mOrigin.mY + rect.mSize.mHeight) > bitmapSize.mHeight));
-	if (((rect.mOrigin.mY + rect.mSize.mHeight) < 0) ||
-			((rect.mOrigin.mY + rect.mSize.mHeight) > bitmapSize.mHeight))
+	AssertFailIf(((rect.mOrigin.mY + rect.getHeight()) < 0) ||
+			((rect.mOrigin.mY + rect.getHeight()) > bitmapSize.mHeight));
+	if (((rect.mOrigin.mY + rect.getHeight()) < 0) ||
+			((rect.mOrigin.mY + rect.getHeight()) > bitmapSize.mHeight))
 		return;
 
-	AssertFailIf(rect.mSize.mWidth < 0);
-	if (rect.mSize.mWidth < 0)
+	AssertFailIf(rect.getWidth() < 0);
+	if (rect.getWidth() < 0)
 		return;
 
-	AssertFailIf(rect.mSize.mHeight < 0);
-	if (rect.mSize.mHeight < 0)
+	AssertFailIf(rect.getHeight() < 0);
+	if (rect.getHeight() < 0)
 		return;
 
 	// Are we really clearing any pixesl?
-	if ((rect.mSize.mWidth == 0) || (rect.mSize.mHeight == 0))
+	if ((rect.getWidth() == 0) || (rect.getHeight() == 0))
 		// No
 		return;
 
@@ -78,16 +78,16 @@ void CBitmap::clearPixels(const SBitmapRect& rect)
 
 	// Clear pixels
 	::CGContextClearRect(bitmapContextRef,
-			::CGRectMake(rect.mOrigin.mX, rect.mOrigin.mY, rect.mSize.mWidth, rect.mSize.mHeight));
+			::CGRectMake(rect.mOrigin.mX, rect.mOrigin.mY, rect.getWidth(), rect.getHeight()));
 	::CGContextRelease(bitmapContextRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CBitmap::setPixels(const SBitmapRect& rect, const CColor& color)
+void CBitmap::setPixels(const S2DRectS32& rect, const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SBitmapSize	bitmapSize = getSize();
+	const	S2DSizeS32	bitmapSize = getSize();
 
 	// Parameter check
 	AssertFailIf((rect.mOrigin.mX < 0) || (rect.mOrigin.mX >= bitmapSize.mWidth));
@@ -98,28 +98,28 @@ void CBitmap::setPixels(const SBitmapRect& rect, const CColor& color)
 	if ((rect.mOrigin.mY < 0) || (rect.mOrigin.mY >= bitmapSize.mHeight))
 		return;
 
-	AssertFailIf(((rect.mOrigin.mX + rect.mSize.mWidth) < 0) ||
-			((rect.mOrigin.mX + rect.mSize.mWidth) > bitmapSize.mWidth));
-	if (((rect.mOrigin.mX + rect.mSize.mWidth) < 0) ||
-			((rect.mOrigin.mX + rect.mSize.mWidth) > bitmapSize.mWidth))
+	AssertFailIf(((rect.mOrigin.mX + rect.getWidth()) < 0) ||
+			((rect.mOrigin.mX + rect.getWidth()) > bitmapSize.mWidth));
+	if (((rect.mOrigin.mX + rect.getWidth()) < 0) ||
+			((rect.mOrigin.mX + rect.getWidth()) > bitmapSize.mWidth))
 		return;
 
-	AssertFailIf(((rect.mOrigin.mY + rect.mSize.mHeight) < 0) ||
-			((rect.mOrigin.mY + rect.mSize.mHeight) > bitmapSize.mHeight));
-	if (((rect.mOrigin.mY + rect.mSize.mHeight) < 0) ||
-			((rect.mOrigin.mY + rect.mSize.mHeight) > bitmapSize.mHeight))
+	AssertFailIf(((rect.mOrigin.mY + rect.getHeight()) < 0) ||
+			((rect.mOrigin.mY + rect.getHeight()) > bitmapSize.mHeight));
+	if (((rect.mOrigin.mY + rect.getHeight()) < 0) ||
+			((rect.mOrigin.mY + rect.getHeight()) > bitmapSize.mHeight))
 		return;
 
-	AssertFailIf(rect.mSize.mWidth < 0);
-	if (rect.mSize.mWidth < 0)
+	AssertFailIf(rect.getWidth() < 0);
+	if (rect.getWidth() < 0)
 		return;
 
-	AssertFailIf(rect.mSize.mHeight < 0);
-	if (rect.mSize.mHeight < 0)
+	AssertFailIf(rect.getHeight() < 0);
+	if (rect.getHeight() < 0)
 		return;
 
 	// Are we really setting any pixesl?
-	if ((rect.mSize.mWidth == 0) || (rect.mSize.mHeight == 0))
+	if ((rect.getWidth() == 0) || (rect.getHeight() == 0))
 		// No
 		return;
 
@@ -127,8 +127,8 @@ void CBitmap::setPixels(const SBitmapRect& rect, const CColor& color)
 	if (getBytesPerPixel() == 4) {
 		// Use Accelerate Framework
 		vImage_Buffer	buffer;
-		buffer.width = rect.mSize.mWidth;
-		buffer.height = rect.mSize.mHeight;
+		buffer.width = rect.getWidth();
+		buffer.height = rect.getHeight();
 		buffer.rowBytes = getBytesPerRow();
 		buffer.data =
 				(UInt8*) getPixelData().getMutableBytePtr() + rect.mOrigin.mY * getBytesPerRow() +
@@ -158,8 +158,8 @@ void CBitmap::setPixels(const SBitmapRect& rect, const CColor& color)
 		::CGContextSetRGBFillColor(bitmapContextRef, color.getRed(), color.getGreen(), color.getBlue(),
 				color.getAlpha());
 		::CGContextFillRect(bitmapContextRef,
-				::CGRectMake(rect.mOrigin.mX, bitmapSize.mHeight - rect.mOrigin.mY, rect.mSize.mWidth,
-						-rect.mSize.mHeight));
+				::CGRectMake(rect.mOrigin.mX, bitmapSize.mHeight - rect.mOrigin.mY, rect.getWidth(),
+						-rect.getHeight()));
 		::CGContextRelease(bitmapContextRef);
 	}
 }

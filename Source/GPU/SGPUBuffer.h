@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "C2DGeometry.h"
 #include "CData.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -46,7 +47,7 @@ template <typename T> struct TGPUVertexType2Vertex2Texture {
 
 											// Lifecycle methods
 											TGPUVertexType2Vertex2Texture(T2DPoint<T> vertex, T2DPoint<T> texture,
-													UInt8 textureIndex = 0) :
+													UInt8 textureIndex) :
 												mVertex(vertex), mTexture(texture), mTextureIndex(textureIndex)
 												{}
 
@@ -81,7 +82,7 @@ template <typename T> class TGPUVertexType3Vertex2Texture {
 
 											// Lifecycle methods
 											TGPUVertexType3Vertex2Texture(T3DPoint<T> vertex, T2DPoint<T> texture,
-													UInt8 textureIndex = 0) :
+													UInt8 textureIndex) :
 												mVertex(vertex), mTexture(texture), mTextureIndex(textureIndex)
 												{}
 

@@ -8,15 +8,7 @@
 #include "CColor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Types
-
-typedef	T2DPoint<SInt32>	SBitmapPoint;
-typedef	T2DVector<SInt32>	SBitmapOffset;
-typedef	T2DSize<SInt32>		SBitmapSize;
-typedef	T2DRect<SInt32>		SBitmapRect;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - BitmapFormat
+// MARK: BitmapFormat
 
 enum EBitmapFormat {
 	// 16 bit formats
@@ -113,9 +105,9 @@ class CBitmap {
 	// Methods
 	public:
 										// Lifecycle methods
-										CBitmap(const SBitmapSize& size = SBitmapSize(1, 1),
+										CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1),
 												EBitmapFormat format = kBitmapFormatRGBA8888, UInt16 bytesPerRow = 0);
-										CBitmap(const SBitmapSize& size, EBitmapFormat format, const CData& pixelData,
+										CBitmap(const S2DSizeS32& size, EBitmapFormat format, const CData& pixelData,
 												UInt16 bytesPerRow);
 										CBitmap(const CBitmap& other, EBitmapFormat format);
 										CBitmap(const CBitmap& other, UInt32 rotationOperation);
@@ -123,7 +115,7 @@ class CBitmap {
 		virtual							~CBitmap();
 
 										// Instance methods
-				const	SBitmapSize		getSize() const;
+				const	S2DSizeS32		getSize() const;
 
 						CData&			getPixelData() const;
 						EBitmapFormat	getFormat() const;
@@ -131,11 +123,11 @@ class CBitmap {
 						UInt16			getBytesPerPixel() const;
 
 						void			clearPixels()
-											{ clearPixels(SBitmapRect(SBitmapPoint(), getSize())); }
-						void			clearPixels(const SBitmapRect& rect);
+											{ clearPixels(S2DRectS32(S2DPointS32(), getSize())); }
+						void			clearPixels(const S2DRectS32& rect);
 
-						void			setPixel(const SBitmapPoint& pt, const CColor& color);	// Set one pixel to the one pixel's worth of given data
-						void			setPixels(const SBitmapRect& rect, const CColor& color);	// Set all pixels to the one pixel's worth of given data
+						void			setPixel(const S2DPointS32& point, const CColor& color);	// Set one pixel to the one pixel's worth of given data
+						void			setPixels(const S2DRectS32& rect, const CColor& color);		// Set all pixels to the one pixel's worth of given data
 
 	// Properties
 	private:

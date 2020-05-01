@@ -8,67 +8,48 @@
 #include "CData.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Types
+// MARK: EGPUTextureDataFormat
 
-typedef	T2DSize<UInt16>		SGPUTextureSize;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - EGPUTextureFormat
-
-enum EGPUTextureFormat {
+enum EGPUTextureDataFormat {
 	// 16 bpp raw formats
-	kGPUTextureFormatRGB565		= 0x0001,
-	kGPUTextureFormatRGBA4444	= 0x0002,
-	kGPUTextureFormatRGBA5551	= 0x0003,
+	kGPUTextureDataFormatRGB565		= 0x0001,
+	kGPUTextureDataFormatRGBA4444	= 0x0002,
+	kGPUTextureDataFormatRGBA5551	= 0x0003,
 
 	// 32 bpp raw formats
-	kGPUTextureFormatRGBA8888	= 0x0010,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SGPUTextureInfo
-
-struct SGPUTextureInfo {
-			// Lifecycle methods
-			SGPUTextureInfo(const SGPUTextureSize& gpuTextureSize, Float32 maxU, Float32 maxV,
-					void* internalReference) :
-				mGPUTextureSize(gpuTextureSize), mMaxU(maxU), mMaxV(maxV), mInternalReference(internalReference)
-				{}
-			SGPUTextureInfo(const SGPUTextureInfo& other) :
-				mGPUTextureSize(other.mGPUTextureSize), mMaxU(other.mMaxU), mMaxV(other.mMaxV),
-						mInternalReference(other.mInternalReference)
-				{}
-			SGPUTextureInfo() : mGPUTextureSize(), mMaxU(0.0), mMaxV(0.0), mInternalReference(nil) {}
-
-			// Instance methods
-	bool	isValid() const
-				{ return mMaxU != 0.0; }
-
-	// Properties
-	SGPUTextureSize	mGPUTextureSize;
-	Float32			mMaxU;
-	Float32			mMaxV;
-	void*			mInternalReference;
+	kGPUTextureDataFormatRGBA8888	= 0x0010,
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTexture
 
-class CGPUTextureInternals;
 class CGPUTexture {
 	// Methods
 	public:
 									// Lifecycle methods
-									CGPUTexture(const CData& pixelData, EGPUTextureFormat gpuTextureFormat,
-											SGPUTextureSize gpuTextureSize);
-									~CGPUTexture();
+		virtual						~CGPUTexture() {}
 
 									// Instance methods
-		const	CData&				getPixelData() const;
-				EGPUTextureFormat	getGPUTextureFormat() const;
-				SGPUTextureSize		getGPUTextureSize() const;
+		virtual	const	S2DSizeU16&	getSize() const = 0;
+
+									// Temporary methods - will be removed in the future
+		virtual	const	S2DSizeU16&	getUsedSize() const = 0;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SGPUTextureReference
+
+struct SGPUTextureReference {
+			// Lifecycle methods
+			SGPUTextureReference() : mGPUTexture(nil) {}
+			SGPUTextureReference(const CGPUTexture& gpuTexture) : mGPUTexture(&gpuTexture) {}
+
+			// Instance methods
+	bool	hasGPUTexture() const
+				{ return mGPUTexture != nil; }
+	void	reset()
+				{ mGPUTexture = nil; }
 
 	// Properties
-	private:
-		CGPUTextureInternals*	mInternals;
+	const	CGPUTexture*	mGPUTexture;
 };
