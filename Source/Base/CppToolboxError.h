@@ -68,3 +68,34 @@ class CErrorRegistry {
 		static	void	registerError(UError error, const CString& string);
 		static	CString	getStringForError(UError error);
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// Futures
+/*
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SError
+
+struct SError {
+
+			// Lifecycle methods
+			SError(const CString& domain, UInt32 code, const CString& defaultLocalizedDescription) :
+				mDomain(domain), mCode(code), mDefaultLocalizedDescription(defaultLocalizedDescription)
+				{}
+			SError(const SError& other) :
+				mDomain(other.mDomain), mCode(other.mCode),
+						mDefaultLocalizedDescription(other.mDefaultLocalizedDescription)
+				{}
+
+			// Instance methods
+	CString	getLocalizationKey()
+				{ return mDomain + CString(OSSTR("/")) + CString(mCode); }
+
+	// Properties
+	CString	mDomain;
+	UInt32	mCode;
+
+	CString	mDefaultLocalizedDescription;
+};
+
+	UError becomes OV<SError>
+*/
