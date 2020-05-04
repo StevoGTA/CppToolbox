@@ -1,34 +1,32 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CCoreGraphicsContext.h			©2020 Stevo Brock	All rights reserved.
+//	CCoreGraphicsRenderer.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
 #include "CCoreGraphics.h"
-
-#include <CoreGraphics/CoreGraphics.h>
+#include "T2DRenderer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CCoreGraphicsContext
+// MARK: CCoreGraphicsRenderer
 
-class CCoreGraphicsContextInternals;
-class CCoreGraphicsContext {
+class CCoreGraphicsRendererInternals;
+class CCoreGraphicsRenderer : public T2DRenderer<CGFloat> {
 	// Methods
 	public:
 				// Lifecycle methods
-				CCoreGraphicsContext(CBitmap& bitmap);
-				~CCoreGraphicsContext();
+				CCoreGraphicsRenderer(CBitmap& bitmap);
+				~CCoreGraphicsRenderer();
 
-				// Instance methods
+				// T2DRenderer methods
 		void	setFillColor(const CColor& color);
 		void	setStrokeColor(const CColor& color);
 
 		void	strokeLine(const S2DPointCGF& startPoint, const S2DPointCGF& endPoint, bool antiAlias = true,
 						CGFloat lineWidth = 1.0);
-		void	strokeLines(const S2DPointCGF* points, UInt32 count, bool antiAlias = true,
-						CGFloat lineWidth = 1.0);
+		void	strokeLines(const S2DPointCGF* points, UInt32 count, bool antiAlias = true, CGFloat lineWidth = 1.0);
 
 	// Properties
 	private:
-		CCoreGraphicsContextInternals*	mInternals;
+		CCoreGraphicsRendererInternals*	mInternals;
 };

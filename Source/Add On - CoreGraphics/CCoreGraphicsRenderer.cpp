@@ -1,15 +1,15 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CCoreGraphicsContext.cpp			©2020 Stevo Brock	All rights reserved.
+//	CCoreGraphicsRenderer.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CCoreGraphicsContext.h"
+#include "CCoreGraphicsRenderer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CCoreGraphicsContextInternals
+// MARK: CCoreGraphicsRendererInternals
 
-class CCoreGraphicsContextInternals {
+class CCoreGraphicsRendererInternals {
 	public:
-		CCoreGraphicsContextInternals(CBitmap& bitmap)
+		CCoreGraphicsRendererInternals(CBitmap& bitmap)
 			{
 				// Setup
 				CGBitmapInfo	bitmapInfo;
@@ -29,7 +29,7 @@ class CCoreGraphicsContextInternals {
 								bitmap.getBytesPerRow(), colorSpaceRef, bitmapInfo);
 				::CGColorSpaceRelease(colorSpaceRef);
 			}
-		~CCoreGraphicsContextInternals()
+		~CCoreGraphicsRendererInternals()
 			{
 				::CGContextRelease(mContextRef);
 			}
@@ -39,19 +39,19 @@ class CCoreGraphicsContextInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CCoreGraphicsContext
+// MARK: - CCoreGraphicsRenderer
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CCoreGraphicsContext::CCoreGraphicsContext(CBitmap& bitmap)
+CCoreGraphicsRenderer::CCoreGraphicsRenderer(CBitmap& bitmap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CCoreGraphicsContextInternals(bitmap);
+	mInternals = new CCoreGraphicsRendererInternals(bitmap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CCoreGraphicsContext::~CCoreGraphicsContext()
+CCoreGraphicsRenderer::~CCoreGraphicsRenderer()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
@@ -60,7 +60,7 @@ CCoreGraphicsContext::~CCoreGraphicsContext()
 // Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsContext::setFillColor(const CColor& color)
+void CCoreGraphicsRenderer::setFillColor(const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	::CGContextSetRGBFillColor(mInternals->mContextRef, color.getRed(), color.getGreen(), color.getBlue(),
@@ -68,7 +68,7 @@ void CCoreGraphicsContext::setFillColor(const CColor& color)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsContext::setStrokeColor(const CColor& color)
+void CCoreGraphicsRenderer::setStrokeColor(const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	::CGContextSetRGBStrokeColor(mInternals->mContextRef, color.getRed(), color.getGreen(), color.getBlue(),
@@ -76,8 +76,8 @@ void CCoreGraphicsContext::setStrokeColor(const CColor& color)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsContext::strokeLine(const S2DPointCGF& startPoint, const S2DPointCGF& endPoint, bool antiAlias,
-CGFloat lineWidth)
+void CCoreGraphicsRenderer::strokeLine(const T2DPoint<CGFloat>& startPoint, const T2DPoint<CGFloat>& endPoint,
+		bool antiAlias, CGFloat lineWidth)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	::CGContextMoveToPoint(mInternals->mContextRef, startPoint.mX, startPoint.mY);
@@ -88,8 +88,8 @@ CGFloat lineWidth)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsContext::strokeLines(const S2DPointCGF* points, UInt32 count, bool antiAlias,
-CGFloat lineWidth)
+void CCoreGraphicsRenderer::strokeLines(const T2DPoint<CGFloat>* points, UInt32 count, bool antiAlias,
+		CGFloat lineWidth)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertNotNil(points);
