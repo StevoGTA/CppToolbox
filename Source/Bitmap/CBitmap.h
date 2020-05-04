@@ -115,7 +115,7 @@ class CBitmap {
 		virtual							~CBitmap();
 
 										// Instance methods
-				const	S2DSizeS32		getSize() const;
+				const	S2DSizeS32&		getSize() const;
 
 						CData&			getPixelData() const;
 						EBitmapFormat	getFormat() const;
