@@ -4,7 +4,7 @@
 
 #include "CFilesystem.h"
 
-#include "CFUtilities.h"
+#include "CCoreFoundation.h"
 
 #include <Foundation/Foundation.h>
 #include <AppKit/AppKit.h>
@@ -44,7 +44,9 @@ UError CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolder
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*				url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
+	NSURL*				url =
+								(NSURL*) CFBridgingRelease(
+										CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(), false));
 
 	NSError*			error;
 	NSFileManager*		fileManager = [NSFileManager defaultManager];
@@ -72,7 +74,9 @@ UError CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*				url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
+	NSURL*				url =
+								(NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
+										false));
 
 	NSError*			error;
 	NSFileManager*		fileManager = [NSFileManager defaultManager];
@@ -100,7 +104,9 @@ UError CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outF
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*				url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
+	NSURL*				url =
+								(NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
+										false));
 
 	NSError*			error;
 	NSFileManager*		fileManager = [NSFileManager defaultManager];
@@ -145,9 +151,10 @@ UError CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 	}
 
 	// Setup
-	NSURL*	sourceURL = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(file.getFilesystemPath(), false));
+	NSURL*	sourceURL = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(file.getFilesystemPath(), false));
 	NSURL*	destinationURL =
-					(NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(destinationFile.getFilesystemPath(), false));
+					(NSURL*) CFBridgingRelease(
+							CCoreFoundation::createURLRefFrom(destinationFile.getFilesystemPath(), false));
 
 	// Do the copy
 	NSError*	error;
@@ -170,9 +177,12 @@ UError CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFil
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	NSURL*	sourceURL = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(sourceFile.getFilesystemPath(), false));
+	NSURL*	sourceURL =
+					(NSURL*) CFBridgingRelease(
+							CCoreFoundation::createURLRefFrom(sourceFile.getFilesystemPath(), false));
 	NSURL*	destinationURL =
-					(NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(destinationFile.getFilesystemPath(), false));
+					(NSURL*) CFBridgingRelease(
+							CCoreFoundation::createURLRefFrom(destinationFile.getFilesystemPath(), false));
 
 	// Replace contents
 	NSError*	error;
@@ -193,10 +203,14 @@ UError CFilesystem::open(const TArray<CFile> files, const CApplicationObject& ap
 	// Setup
 	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
 	for (CArrayItemIndex i = 0; i < files.getCount(); i++)
-		[urls addObject:(NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(files[i].getFilesystemPath(), false))];
+		[urls
+				addObject:
+						(NSURL*) CFBridgingRelease(
+								CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false))];
 
 	NSURL*	applicationURL =
-					(NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(applicationObject.getFilesystemPath(), true));
+					(NSURL*) CFBridgingRelease(
+							CCoreFoundation::createURLRefFrom(applicationObject.getFilesystemPath(), true));
 	// Open
 	NSError*	error;
 	if ([[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:applicationURL options:0 configuration:@{}
@@ -216,7 +230,9 @@ void CFilesystem::moveToTrash(const TArray<CFile> files, TArray<CFile>& outUntra
 	// Iterate files
 	for (CArrayItemIndex i = 0; i < files.getCount(); i++) {
 		// Move this file to the trash
-		NSURL*		url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(files[i].getFilesystemPath(), false));
+		NSURL*		url =
+							(NSURL*) CFBridgingRelease(
+									CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false));
 		NSError*	error;
 		if (![[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error]) {
 			// Failed
@@ -238,7 +254,9 @@ UError CFilesystem::moveToTrash(const TArray<CFile> files)
 	// Iterate files
 	for (CArrayItemIndex i = 0; i < files.getCount(); i++) {
 		// Move this file to the trash
-		NSURL*		url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(files[i].getFilesystemPath(), false));
+		NSURL*		url =
+							(NSURL*) CFBridgingRelease(
+									CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false));
 		NSError*	error;
 		if (![[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error]) {
 			// Failed
@@ -255,7 +273,7 @@ UError CFilesystem::revealInFinder(const CFolder& folder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(folder.getFilesystemPath(), false));
+	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(), false));
 
 	// Reveal in Finder
 	if ([[NSWorkspace sharedWorkspace] openURL:url])
@@ -272,7 +290,10 @@ UError CFilesystem::revealInFinder(const TArray<CFile> files)
 	// Setup
 	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
 	for (CArrayItemIndex i = 0; i < files.getCount(); i++)
-		[urls addObject:(NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(files[i].getFilesystemPath(), false))];
+		[urls
+				addObject:
+						(NSURL*) CFBridgingRelease(
+								CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false))];
 
 	// Reveal in Finder
 	[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:urls];

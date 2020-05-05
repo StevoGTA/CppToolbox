@@ -4,7 +4,7 @@
 
 #include "CFolder.h"
 
-#include "CFUtilities.h"
+#include "CCoreFoundation.h"
 
 #include <Foundation/Foundation.h>
 
@@ -18,7 +18,7 @@ bool CFolder::isPackage() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(getFilesystemPath(), false));
+	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
 
 	// Get info
 	NSNumber*	number;

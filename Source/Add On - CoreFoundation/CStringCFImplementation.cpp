@@ -6,7 +6,7 @@
 
 #include "CppToolboxAssert.h"
 #include "CData.h"
-#include "CFUtilities.h"
+#include "CCoreFoundation.h"
 #include "CLogServices.h"
 
 /*

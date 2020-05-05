@@ -4,7 +4,7 @@
 
 #include "CFile.h"
 
-#include "CFUtilities.h"
+#include "CCoreFoundation.h"
 
 #include <Foundation/Foundation.h>
 
@@ -37,7 +37,7 @@ bool CFile::isHidden() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(getFilesystemPath(), false));
+	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
 
 	// Get info
 	NSNumber*	number;
@@ -50,7 +50,7 @@ UniversalTime CFile::getCreationDate() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(getFilesystemPath(), false));
+	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
 
 	// Get info
 	NSDate*		date;
@@ -68,7 +68,7 @@ UniversalTime CFile::getModificationDate() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(getFilesystemPath(), false));
+	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
 
 	// Get info
 	NSDate*		date;
@@ -86,7 +86,7 @@ bool CFile::isAlias() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(getFilesystemPath(), false));
+	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
 
 	// Get info
 	CFBooleanRef	booleanRef;
@@ -105,7 +105,7 @@ CString CFile::getComment() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(eFilesystemPathCopyURLRef(getFilesystemPath(), false));
+	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
 
 	// Get info
 	MDItemRef	itemRef = ::MDItemCreateWithURL(kCFAllocatorDefault, (__bridge CFURLRef) url);
@@ -133,7 +133,7 @@ UError CFile::setComment(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFStringRef	stringRef = eFilesystemPathCopyStringRef(getFilesystemPath());
+	CFStringRef	stringRef = CCoreFoundation::createStringRefFrom(getFilesystemPath());
 
 	// Compose AppleScript
 	NSMutableString*	appleScriptString = [NSMutableString string];

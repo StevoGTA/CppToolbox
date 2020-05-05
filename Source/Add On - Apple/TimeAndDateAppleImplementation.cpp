@@ -4,7 +4,7 @@
 
 #include "TimeAndDate.h"
 
-#include "CFUtilities.h"
+#include "CCoreFoundation.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
@@ -85,7 +85,7 @@ SGregorianDate::SGregorianDate(const CString& string, EGregorianDateStringStyle 
 
 	// Get time
 	CFAbsoluteTime	time = ::CFAbsoluteTimeGetCurrent();
-	CFStringRef		stringRef = eStringCopyCFStringRef(string);
+	CFStringRef		stringRef = CCoreFoundation::createStringRefFrom(string);
 	::CFDateFormatterGetAbsoluteTimeFromString(dateFormatterRef, stringRef, nil, &time);
 	::CFRelease(stringRef);
 	::CFRelease(dateFormatterRef);

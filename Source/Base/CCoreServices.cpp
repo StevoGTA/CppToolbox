@@ -6,7 +6,7 @@
 
 #if TARGET_OS_MACOS
 	#include "CFolder.h"
-	#include "CFUtilities.h"
+	#include "CCoreFoundation.h"
 
 	#include <sys/sysctl.h>
 #endif
@@ -60,7 +60,7 @@ const SVersionInfo& CCoreServices::getCoreAudioVersion()
 	if (sVersionInfo == nil) {
 		// Get info
 		CFURLRef	urlRef =
-							eFilesystemPathCopyURLRef(
+							CCoreFoundation::createURLRefFrom(
 									CFolder::systemFrameworksFolder().getFilesystemPath()
 											.appendingComponent(CString(CFSTR("CoreAudio.framework"))), true);
 		CFBundleRef	bundleRef = ::CFBundleCreate(kCFAllocatorDefault, urlRef);

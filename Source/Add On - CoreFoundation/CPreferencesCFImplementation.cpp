@@ -5,7 +5,7 @@
 #include "CPreferences.h"
 
 #include "CData.h"
-#include "CFUtilities.h"
+#include "CCoreFoundation.h"
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ TNArray<CData> CPreferences::getDataArray(const SPref& pref, const CString& appl
 	// Check if have array
 	if (arrayRef != nil) {
 		// Setup array
-		TNArray<CData>	array = eArrayOfDatasFrom(arrayRef);
+		TNArray<CData>	array = CCoreFoundation::arrayOfDatasFrom(arrayRef);
 
 		// Cleanup
 		::CFRelease(arrayRef);
@@ -78,7 +78,7 @@ TNArray<CDictionary> CPreferences::getDictionaryArray(const SPref& pref, const C
 	// Check if have array
 	if (arrayRef != nil) {
 		// Setup array
-		TNArray<CDictionary>	array = eArrayOfDictionariesFrom(arrayRef);
+		TNArray<CDictionary>	array = CCoreFoundation::arrayOfDictionariesFrom(arrayRef);
 
 		// Cleanup
 		::CFRelease(arrayRef);
@@ -124,7 +124,7 @@ CData CPreferences::getData(const SPref& pref, const CString& applicationID)
 {
 	CFDataRef	dataRef = (CFDataRef) sCopyFrom(pref.mKeyString, applicationID);
 	if (dataRef != nil) {
-		CData	data = eDataFrom(dataRef);
+		CData	data = CCoreFoundation::dataFrom(dataRef);
 		::CFRelease(dataRef);
 
 		return data;
@@ -138,7 +138,7 @@ CDictionary CPreferences::getDictionary(const SPref& pref, const CString& applic
 {
 	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) sCopyFrom(pref.mKeyString, applicationID);
 	if (dictionaryRef != nil) {
-		CDictionary	dictionary = eDictionaryFrom(dictionaryRef);
+		CDictionary	dictionary = CCoreFoundation::dictionaryFrom(dictionaryRef);
 		::CFRelease(dictionaryRef);
 
 		return dictionary;
@@ -245,7 +245,7 @@ void CPreferences::set(const SPref& pref, const TArray<CData>& array)
 	// Iterate items
 	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
 		// Add data
-		CFDataRef	dataRef = eDataCopyCFDataRef(array[i]);
+		CFDataRef	dataRef = CCoreFoundation::createDataRefFrom(array[i]);
 		::CFArrayAppendValue(arrayRef, dataRef);
 		::CFRelease(dataRef);
 	}
@@ -267,7 +267,7 @@ void CPreferences::set(const SPref& pref, const TArray<CDictionary>& array)
 	// Iterate items
 	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
 		// Add dictionary
-		CFDictionaryRef	dictionaryRef = eDictionaryCopyCFDictionaryRef(array[i]);
+		CFDictionaryRef	dictionaryRef = CCoreFoundation::createDictionaryRefFrom(array[i]);
 		::CFArrayAppendValue(arrayRef, dictionaryRef);
 		::CFRelease(dictionaryRef);
 	}
@@ -306,7 +306,7 @@ void CPreferences::set(const SPref& pref, const TNumericArray<OSType>& array)
 void CPreferences::set(const SPref& pref, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFDataRef	dataRef = eDataCopyCFDataRef(data);
+	CFDataRef	dataRef = CCoreFoundation::createDataRefFrom(data);
 	sSetTo(pref.mKeyString, dataRef);
 	::CFRelease(dataRef);
 }
@@ -315,7 +315,7 @@ void CPreferences::set(const SPref& pref, const CData& data)
 void CPreferences::set(const SPref& pref, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFDictionaryRef	dictionaryRef = eDictionaryCopyCFDictionaryRef(dictionary);
+	CFDictionaryRef	dictionaryRef = CCoreFoundation::createDictionaryRefFrom(dictionary);
 	sSetTo(pref.mKeyString, dictionaryRef);
 	::CFRelease(dictionaryRef);
 }
@@ -324,7 +324,7 @@ void CPreferences::set(const SPref& pref, const CDictionary& dictionary)
 void CPreferences::set(const SStringPref& pref, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = eStringCopyCFStringRef(string);
+	CFStringRef	stringRef = CCoreFoundation::createStringRefFrom(string);
 	sSetTo(pref.mKeyString, stringRef);
 	::CFRelease(stringRef);
 }
@@ -443,12 +443,12 @@ CFTypeRef sCopyFrom(const char* keyString, const CString& applicationID)
 		return nil;
 	else {
 		CFTypeRef	typeRef;
-		CFStringRef	keyStringRef = eStringCopyCFStringRef(keyString);
+		CFStringRef	keyStringRef = CCoreFoundation::createStringRefFrom(keyString);
 
 		// Do we have a prefs file specified?
 		if (!applicationID.isEmpty()) {
 			// Yes, read from it
-			CFStringRef	applicationIDStringRef = eStringCopyCFStringRef(applicationID);
+			CFStringRef	applicationIDStringRef = CCoreFoundation::createStringRefFrom(applicationID);
 			::CFPreferencesAppSynchronize(applicationIDStringRef);
 			typeRef = ::CFPreferencesCopyAppValue(keyStringRef, applicationIDStringRef);
 			::CFRelease(applicationIDStringRef);
@@ -460,7 +460,7 @@ CFTypeRef sCopyFrom(const char* keyString, const CString& applicationID)
 		// Did we get it?
 		if ((typeRef == nil) && !sAlternateApplicationID.isEmpty()) {
 			// Try to get from old prefs file
-			CFStringRef	alternateApplicationIDStringRef = eStringCopyCFStringRef(sAlternateApplicationID);
+			CFStringRef	alternateApplicationIDStringRef = CCoreFoundation::createStringRefFrom(sAlternateApplicationID);
 			typeRef = ::CFPreferencesCopyAppValue(keyStringRef, alternateApplicationIDStringRef);
 			::CFRelease(alternateApplicationIDStringRef);
 		}
@@ -477,7 +477,7 @@ void sSetTo(const char* keyString, CFTypeRef valueTypeRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if (keyString != nil) {
-		CFStringRef	keyStringRef = eStringCopyCFStringRef(keyString);
+		CFStringRef	keyStringRef = CCoreFoundation::createStringRefFrom(keyString);
 		::CFPreferencesSetAppValue(keyStringRef, valueTypeRef, kCFPreferencesCurrentApplication);
 		::CFRelease(keyStringRef);
 
