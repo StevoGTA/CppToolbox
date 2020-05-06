@@ -419,6 +419,17 @@ const CGPUTexture& CGPUTextureReference::getGPUTexture() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CGPUTextureReference& CGPUTextureReference::operator=(const CGPUTextureReference& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Update internas
+	mInternals->removeReference();
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureManagerInternals
 

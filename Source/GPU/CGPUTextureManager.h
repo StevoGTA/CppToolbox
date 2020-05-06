@@ -28,16 +28,18 @@ class CGPUTextureReferenceInternals;
 class CGPUTextureReference {
 	// Methods
 	public:
-								// Lifecycle methods
-								CGPUTextureReference(CGPUTextureReferenceInternals* internals);
-								CGPUTextureReference(const CGPUTextureReference& other);
-								~CGPUTextureReference();
+										// Lifecycle methods
+										CGPUTextureReference(CGPUTextureReferenceInternals* internals);
+										CGPUTextureReference(const CGPUTextureReference& other);
+										~CGPUTextureReference();
 
-								// Instance methods
-				void			load() const;
-				void			finishLoading() const;
+										// Instance methods
+				void					load() const;
+				void					finishLoading() const;
 
-		const	CGPUTexture&	getGPUTexture() const;
+		const	CGPUTexture&			getGPUTexture() const;
+
+				CGPUTextureReference&	operator=(const CGPUTextureReference& other);
 
 	// Properties
 	private:
