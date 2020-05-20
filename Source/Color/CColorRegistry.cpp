@@ -182,14 +182,16 @@ OSType CColorSet::getID() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CColor& CColorSet::getColor(OSType colorGroupID, OSType colorID) const
+const CColor CColorSet::getColor(OSType colorGroupID, OSType colorID) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	UInt64	key = ((UInt64) colorGroupID << 32) | colorID;
-	CColor*	color = mInternals->mColorsMap[key];
+//	CColor*	color = mInternals->mColorsMap[key];
+	OV<CColor>	color = mInternals->mColorsMap[key];
 
-	return (color != nil) ? *color : CColor::mClear;
+//	return (color != nil) ? *color : CColor::mClear;
+	return color.hasValue() ? *color : CColor::mClear;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -383,7 +385,12 @@ const TPtrArray<CColorGroup*> CColorRegistry::getColorGroups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get color groups
-	TPtrArray<CColorGroup*>	colorGroups = mInternals->mColorGroupMap.getValues();
+//	TPtrArray<CColorGroup*>	colorGroups = mInternals->mColorGroupMap.getValues();
+	TPtrArray<CColorGroup*>	colorGroups;
+	for (TIteratorS<SDictionaryItem> iterator = mInternals->mColorGroupMap.getIterator();
+			iterator.hasValue(); iterator.advance())
+		// Insert value
+		colorGroups.add((CColorGroup*) iterator.getValue().mValue.getItemRef());
 
 	// Sort by display index
 	colorGroups.sort(CColorGroup::compareDisplayIndexes);

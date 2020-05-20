@@ -322,40 +322,26 @@ struct SDictionaryItem {
 template <typename T> class TDictionary : public CDictionary {
 	// Methods
 	public:
-								// Lifecycle methods
-								TDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-									CDictionary(nil, nil, itemEqualsProc)
-									{}
-								TDictionary(const TDictionary& dictionary) : CDictionary(dictionary) {}
-								~TDictionary() {}
+						// Lifecycle methods
+						TDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
+							CDictionary(nil, nil, itemEqualsProc)
+							{}
+						TDictionary(const TDictionary& dictionary) : CDictionary(dictionary) {}
+						~TDictionary() {}
 
-								// Instance methods
-		const	OV<T>			get(const CString& key) const
-									{
-										// Get itemRef
-										OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
+						// Instance methods
+		const	OV<T>	get(const CString& key) const
+							{
+								// Get itemRef
+								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
 
-										return itemRef.hasValue() ? OV<T>((T) itemRef.getValue()) : OV<T>();
-									}
+								return itemRef.hasValue() ? OV<T>((T) itemRef.getValue()) : OV<T>();
+							}
+				void	set(const CString& key, const T item)
+							{ CDictionary::set(key, item); }
 
-		const	TPtrArray<T>	getValues() const
-									{
-										// Get values
-										TPtrArray<T>	values;
-										for (TIteratorS<SDictionaryItem> iterator = getIterator();
-												iterator.hasValue(); iterator.advance())
-											// Insert value
-											values.add((T) iterator.getValue().mValue.getItemRef());
-
-										return values;
-									}
-
-				void			set(const CString& key, const T item)
-									{ CDictionary::set(key, item); }
-
-
-		const	OV<T>			operator[](const CString& key) const
-									{ return get(key); }
+		const	OV<T>	operator[](const CString& key) const
+							{ return get(key); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -364,41 +350,33 @@ template <typename T> class TDictionary : public CDictionary {
 template <typename T> class TOwningDictionary : public CDictionary {
 	// Methods
 	public:
-								// Lifecycle methods
-								TOwningDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-									CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
-									{}
-								TOwningDictionary(const TOwningDictionary& dictionary) : CDictionary(dictionary) {}
-								~TOwningDictionary() {}
+						// Lifecycle methods
+						TOwningDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
+							CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
+							{}
+						TOwningDictionary(const TOwningDictionary& dictionary) : CDictionary(dictionary) {}
+						~TOwningDictionary() {}
 
-								// Instance methods
-				T*				get(const CString& key) const
-									{ return (T*) CDictionary::getItemRef(key); }
+						// Instance methods
+		const	OR<T>	get(const CString& key) const
+							{
+								// Get itemRef
+								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
 
-		const	TPtrArray<T*>	getValues() const
-									{
-										// Get values
-										TPtrArray<T*>	values;
-										for (TIteratorS<SDictionaryItem> iterator = getIterator();
-												iterator.hasValue(); iterator.advance())
-											// Insert value
-											values.add((T*) iterator.getValue().mValue.getItemRef());
+								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
+							}
+				void	set(const CString& key, const T& item)
+							{ CDictionary::set(key, new T(item)); }
 
-										return values;
-									}
-
-				void			set(const CString& key, const T& item)
-									{ CDictionary::set(key, new T(item)); }
-
-				T*				operator[](const CString& key) const
-									{ return (T*) CDictionary::getItemRef(key); }
+		const	OR<T>	operator[](const CString& key) const
+							{ return get(key); }
 
 	private:
-								// Class methods
-		static	T*				copy(CDictionaryItemRef itemRef)
-									{ return new T(*((T*) itemRef)); }
-		static	void			dispose(CDictionaryItemRef itemRef)
-									{ T* t = (T*) itemRef; Delete(t); }
+						// Class methods
+		static	T*		copy(CDictionaryItemRef itemRef)
+							{ return new T(*((T*) itemRef)); }
+		static	void	dispose(CDictionaryItemRef itemRef)
+							{ T* t = (T*) itemRef; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -407,41 +385,26 @@ template <typename T> class TOwningDictionary : public CDictionary {
 template <typename K, typename T> class TKeyConvertibleDictionary : public CDictionary {
 	// Methods
 	public:
-								// Lifecycle methods
-								TKeyConvertibleDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-									CDictionary(nil, nil, itemEqualsProc)
-									{}
-								TKeyConvertibleDictionary(const TKeyConvertibleDictionary& dictionary) :
-									CDictionary(dictionary)
-									{}
-								~TKeyConvertibleDictionary() {}
+						// Lifecycle methods
+						TKeyConvertibleDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
+							CDictionary(nil, nil, itemEqualsProc)
+							{}
+						TKeyConvertibleDictionary(const TKeyConvertibleDictionary& dictionary) :
+							CDictionary(dictionary)
+							{}
+						~TKeyConvertibleDictionary() {}
 
-								// Instance methods
-		const	T				get(K key) const
-									{ return (T) CDictionary::getItemRef(CString(key)); }
+						// Instance methods
+		const	T		get(K key) const
+								{ return (T) CDictionary::getItemRef(CString(key)); }
+				void	set(K key, const T item)
+							{ CDictionary::set(CString(key), item); }
 
-		const	TPtrArray<T>	getValues() const
-									{
-										// Get values
-										TPtrArray<T>	values;
-										for (TIteratorS<SDictionaryItem> iterator = getIterator();
-												iterator.hasValue(); iterator.advance())
-											// Insert value
-											values.add((T) iterator.getValue().mValue.getItemRef());
+				void	remove(K key)
+							{ CDictionary::remove(CString(key)); }
 
-										return values;
-									}
-
-				void			set(K key, const T item)
-									{ CDictionary::set(CString(key), item); }
-
-				void			remove(K key)
-									{ CDictionary::remove(CString(key)); }
-				void			removeAll()
-									{ CDictionary::removeAll(); }
-
-		const	T				operator[](K key) const
-									{ return (T) CDictionary::getItemRef(CString(key)); }
+		const	T		operator[](K key) const
+							{ return (T) CDictionary::getItemRef(CString(key)); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -450,49 +413,36 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 template <typename K, typename T> class TOwningKeyConvertibleDictionary : public CDictionary {
 	// Methods
 	public:
-								// Lifecycle methods
-								TOwningKeyConvertibleDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-									CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
-									{}
-								TOwningKeyConvertibleDictionary(const TOwningKeyConvertibleDictionary& dictionary) :
-									CDictionary(dictionary)
-									{}
-								~TOwningKeyConvertibleDictionary() {}
+						// Lifecycle methods
+						TOwningKeyConvertibleDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
+							CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
+							{}
+						TOwningKeyConvertibleDictionary(const TOwningKeyConvertibleDictionary& dictionary) :
+							CDictionary(dictionary)
+							{}
+						~TOwningKeyConvertibleDictionary() {}
 
-								// Instance methods
-				T*				get(K key) const
-									{
-										// Get itemRef
-										OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(CString(key));
+						// Instance methods
+		const	OV<T>	get(const CString& key) const
+							{
+								// Get itemRef
+								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
 
-										return itemRef.hasValue() ? (T*) *itemRef : nil;
-									}
+								return itemRef.hasValue() ? OV<T>((T) itemRef.getValue()) : OV<T>();
+							}
+				void	set(K key, const T& item)
+							{ CDictionary::set(CString(key), new T(item)); }
 
-		const	TPtrArray<T*>	getValues() const
-									{
-										// Get values
-										TPtrArray<T*>	values;
-										for (TIteratorS<SDictionaryItem> iterator = getIterator();
-												iterator.hasValue(); iterator.advance())
-											// Insert value
-											values.add((T*) iterator.getValue().mValue.getItemRef());
+				void	remove(K key)
+							{ CDictionary::remove(CString(key)); }
 
-										return values;
-									}
-
-				void			set(K key, const T& item)
-									{ CDictionary::set(CString(key), new T(item)); }
-
-				void			remove(K key)
-									{ CDictionary::remove(CString(key)); }
-
-				T*				operator[](K key) const
-									{ return get(key); }
+		const	OV<T>	operator[](const CString& key) const
+							{ return get(key); }
 
 	private:
-								// Class methods
-		static	T*				copy(CDictionaryItemRef itemRef)
-									{ return new T(*((T*) itemRef)); }
-		static	void			dispose(CDictionaryItemRef itemRef)
-									{ T* t = (T*) itemRef; Delete(t); }
+						// Class methods
+		static	T*		copy(CDictionaryItemRef itemRef)
+							{ return new T(*((T*) itemRef)); }
+		static	void	dispose(CDictionaryItemRef itemRef)
+							{ T* t = (T*) itemRef; Delete(t); }
 };
