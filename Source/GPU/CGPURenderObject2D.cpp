@@ -4,7 +4,7 @@
 
 #include "CGPURenderObject2D.h"
 
-#include "CGPUProgramBuiltins.h"
+#include "CGPURenderState.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderObject2DInternals
@@ -251,19 +251,17 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 															-mInternals->mAnchorPoint.mY,
 															0.0));
 
-	TArray<TIndexRange<UInt16> >		indexRanges = indexes.getRanges();
-	TIteratorD<TIndexRange<UInt16> >	iterator = indexRanges.getIterator();
-
-	TArray<const CGPUTexture>			gpuTextures;
+	TArray<const CGPUTexture>	gpuTextures;
 	for (CArrayItemIndex i = 0; i < mInternals->mGPUTextureReferences.getCount(); i++)
 		gpuTextures += mInternals->mGPUTextureReferences[i].getGPUTexture();
 
 	// Draw
+	TArray<TIndexRange<UInt16> >		indexRanges = indexes.getRanges();
+	TIteratorD<TIndexRange<UInt16> >	iterator = indexRanges.getIterator();
 	if (renderInfo.mClipPlane.hasValue()) {
 		// Clip plane
-		CGPUClipOpacityProgram&	program = CGPUClipOpacityProgram::getProgram();
-		program.willUse();
-		program.setClipPlane(*renderInfo.mClipPlane);
+		CGPURenderState	renderState(CGPUVertexShader::getClip(*renderInfo.mClipPlane),
+								CGPUFragmentShader::getOpacity(mInternals->mAlpha));
 
 		// Iterate index ranges
 		for (; iterator.hasValue(); iterator.advance()) {
@@ -271,14 +269,12 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			program.setupVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures,
-					mInternals->mAlpha);
-			gpu.renderTriangleStrip(program, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
+			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
 		}
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
-		CGPUOpaqueProgram&	program = CGPUOpaqueProgram::getProgram();
-		program.willUse();
+		CGPURenderState	renderState(CGPUVertexShader::getBasic(), CGPUFragmentShader::getBasic());
 
 		// Iterate index ranges
 		for (; iterator.hasValue(); iterator.advance()) {
@@ -286,13 +282,12 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			program.setupVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
-			gpu.renderTriangleStrip(program, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
+			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
 		}
 	} else {
 		// Have alpha
-		CGPUOpacityProgram&	program = CGPUOpacityProgram::getProgram();
-		program.willUse();
+		CGPURenderState	renderState(CGPUVertexShader::getBasic(), CGPUFragmentShader::getOpacity(mInternals->mAlpha));
 
 		// Iterate index ranges
 		for (; iterator.hasValue(); iterator.advance()) {
@@ -300,9 +295,8 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			program.setupVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures,
-					mInternals->mAlpha);
-			gpu.renderTriangleStrip(program, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
+			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
 		}
 	}
 }

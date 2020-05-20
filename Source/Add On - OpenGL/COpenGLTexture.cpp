@@ -10,19 +10,19 @@
 class COpenGLTextureInternals {
 	public:
 		COpenGLTextureInternals(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size) :
-			mUsedPixelsSize(size),
-					mTotalPixelsSize(
-							S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth), SNumber::getNextPowerOf2(size.mHeight)))
+mUsedPixelsSize(size),
+			mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth), SNumber::getNextPowerOf2(size.mHeight)))
 			{
 				// Setup
-				GLint	format = (gpuTextureDataFormat == kGPUTextureDataFormatRGB565) ? GL_RGB : GL_RGBA;
+//				GLint	format = (gpuTextureDataFormat == kGPUTextureDataFormatRGB565) ? GL_RGB : GL_RGBA;
+				GLint	format = GL_RGBA;
 
 				switch (gpuTextureDataFormat) {
-					case kGPUTextureDataFormatRGB565:	mPixelFormat = GL_UNSIGNED_SHORT_5_6_5;
-					case kGPUTextureDataFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;
-					case kGPUTextureDataFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;
+//					case kGPUTextureDataFormatRGB565:	mPixelFormat = GL_UNSIGNED_SHORT_5_6_5;		break;
+//					case kGPUTextureDataFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;	break;
+//					case kGPUTextureDataFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;	break;
 
-					case kGPUTextureDataFormatRGBA8888:	mPixelFormat = GL_UNSIGNED_BYTE;
+					case kGPUTextureDataFormatRGBA8888:	mPixelFormat = GL_UNSIGNED_BYTE;			break;
 				}
 
 				// Setup GL texture

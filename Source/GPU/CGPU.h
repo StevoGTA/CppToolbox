@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CGPUProgram.h"
+#include "CGPURenderState.h"
 #include "CGPUTexture.h"
 #include "SGPUBuffer.h"
 
@@ -21,8 +21,6 @@ class CGPU {
 								~CGPU();
 
 								// Instance methods
-		void					setup(const S2DSizeF32& size, void* extraData = nil);
-
 		SGPUTextureReference	registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
 										const S2DSizeU16& size);
 		void					unregisterTexture(SGPUTextureReference& gpuTexture);
@@ -33,7 +31,7 @@ class CGPU {
 
 		void					renderStart() const;
 		void					setViewMatrix(const SMatrix4x4_32& viewMatrix);
-		void					renderTriangleStrip(CGPUProgram& program, const SMatrix4x4_32& modelMatrix,
+		void					renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32& modelMatrix,
 										UInt32 triangleCount);
 		void					renderEnd() const;
 

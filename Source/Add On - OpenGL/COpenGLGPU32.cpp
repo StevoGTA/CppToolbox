@@ -1,38 +1,24 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	COpenGLES30GPU.mm			©2020 Stevo Brock	All rights reserved.
+//	COpenGLGPU32.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#import "COpenGLGPU.h"
+#include "COpenGLGPU.h"
 
-#import "COpenGLTexture.h"
+#include "COpenGLTexture.h"
 
-#import <OpenGLES/ES3/glext.h>
-#import <QuartzCore/QuartzCore.h>
+#include <OpenGL/gl3.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUInternals
+// MARK: CGPUInternals
 
 class CGPUInternals {
 	public:
-				CGPUInternals(const CGPUProcsInfo& procsInfo) :
-					mProcsInfo(procsInfo), mScale(1.0), mRenderBufferName(0), mFrameBufferName(0)
-					{}
-				~CGPUInternals()
-					{
-						// Cleanup
-						glDeleteFramebuffers(1, &mFrameBufferName);
-						glDeleteRenderbuffers(1, &mRenderBufferName);
-					}
+		CGPUInternals(const CGPUProcsInfo& procsInfo) : mProcsInfo(procsInfo) {}
 
 	CGPUProcsInfo	mProcsInfo;
 
-	S2DSizeF32		mSize;
-	Float32			mScale;
 	SMatrix4x4_32	mProjectionMatrix;
 	SMatrix4x4_32	mViewMatrix;
-	GLuint			mRenderBufferName;
-	GLuint			mFrameBufferName;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -56,47 +42,6 @@ CGPU::~CGPU()
 }
 
 // MARK: CGPU methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPU::setup(const S2DSizeF32& size, void* setupInfo)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	SOpenGLESGPUSetupInfo&	openGLESGPUetupInfo = *((SOpenGLESGPUSetupInfo*) setupInfo);
-
-	// Store
-	mInternals->mSize = size;
-	mInternals->mScale = openGLESGPUetupInfo.mScale;
-	mInternals->mProjectionMatrix =
-			SMatrix4x4_32::makeOrthographicProjection(0.0, mInternals->mSize.mWidth / mInternals->mScale,
-					mInternals->mSize.mHeight / mInternals->mScale, 0.0, -1.0, 1.0);
-
-	// Setup
-	if (mInternals->mFrameBufferName != 0) {
-		glDeleteFramebuffers(1, &mInternals->mFrameBufferName);
-		mInternals->mFrameBufferName = 0;
-	}
-	if (mInternals->mRenderBufferName != 0) {
-		glDeleteRenderbuffers(1, &mInternals->mRenderBufferName);
-		mInternals->mRenderBufferName = 0;
-	}
-
-	// Setup buffers
-	glGenFramebuffers(1, &mInternals->mFrameBufferName);
-	glBindFramebuffer(GL_FRAMEBUFFER, mInternals->mFrameBufferName);
-
-	glGenRenderbuffers(1, &mInternals->mRenderBufferName);
-	glBindRenderbuffer(GL_RENDERBUFFER, mInternals->mRenderBufferName);
-	[EAGLContext.currentContext renderbufferStorage:GL_RENDERBUFFER
-			fromDrawable:(__bridge id<EAGLDrawable>) openGLESGPUetupInfo.mRenderBufferStorageContext];
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, mInternals->mRenderBufferName);
-
-#if DEBUG
-	glClearColor(0.5, 0.0, 0.25, 1.0);
-#else
-	glClearColor(0.0, 0.0, 0.0, 1.0);
-#endif
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
@@ -142,10 +87,25 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 void CGPU::renderStart() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Get info
+	S2DSizeU16	size = mInternals->mProcsInfo.getSize();
+	Float32		scale = mInternals->mProcsInfo.getScale();
+
+	// Update
+	mInternals->mProjectionMatrix =
+			SMatrix4x4_32::makeOrthographicProjection(0.0, size.mWidth, size.mHeight, 0.0, -1.0, 1.0);
+
+	// Prepare to render
 	mInternals->mProcsInfo.acquireContext();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, mInternals->mFrameBufferName);
-	glViewport(0, 0, mInternals->mSize.mWidth, mInternals->mSize.mHeight);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glViewport(0, 0, size.mWidth * (GLsizei) scale, size.mHeight * (GLsizei) scale);
+#if defined(DEBUG)
+	glClearColor(0.5, 0.0, 0.25, 1.0);
+#else
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+#endif
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -157,25 +117,24 @@ void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderTriangleStrip(CGPUProgram& program, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
+void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup matrices
-	program.setup(mInternals->mViewMatrix, mInternals->mProjectionMatrix);
-	program.setModelMatrix(modelMatrix);
+	// Setup render state
+	renderState.setProjectionMatrix(mInternals->mProjectionMatrix);
+	renderState.setViewMatrix(mInternals->mViewMatrix);
+	renderState.setModelMatrix(modelMatrix);
+
+	// Commit
+	renderState.commit();
 
 	// Draw
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, triangleCount + 2);
-
-	program.didFinish();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPU::renderEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// All done
-	glBindRenderbuffer(GL_RENDERBUFFER, mInternals->mRenderBufferName);
-
 	mInternals->mProcsInfo.releaseContext();
 }

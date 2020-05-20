@@ -258,9 +258,9 @@ class CBitmapGPUTextureReferenceInternals : public CGPUTextureReferenceInternals
 											{
 												switch (bitmapFormat) {
 													// 16 bit formats
-													case kBitmapFormatRGB565:	return kGPUTextureDataFormatRGB565;
-													case kBitmapFormatRGBA4444:	return kGPUTextureDataFormatRGBA4444;
-													case kBitmapFormatRGBA5551:	return kGPUTextureDataFormatRGBA5551;
+//													case kBitmapFormatRGB565:	return kGPUTextureDataFormatRGB565;
+//													case kBitmapFormatRGBA4444:	return kGPUTextureDataFormatRGBA4444;
+//													case kBitmapFormatRGBA5551:	return kGPUTextureDataFormatRGBA5551;
 
 													// 24 bit formats
 													case kBitmapFormatRGB888:	return kGPUTextureDataFormatRGBA8888;
@@ -268,6 +268,9 @@ class CBitmapGPUTextureReferenceInternals : public CGPUTextureReferenceInternals
 													// 32 bit formats
 													case kBitmapFormatRGBA8888:	return kGPUTextureDataFormatRGBA8888;
 													case kBitmapFormatARGB8888:	return kGPUTextureDataFormatRGBA8888;
+
+													default:
+														return kGPUTextureDataFormatRGBA8888;
 												}
 											}
 		static	EBitmapFormat			resolvedBitmapFormat(EGPUTextureDataFormat gpuTextureDataFormat,
@@ -276,9 +279,9 @@ class CBitmapGPUTextureReferenceInternals : public CGPUTextureReferenceInternals
 												// What is the render material texture format
 												switch (gpuTextureDataFormat) {
 													// Convertable formats
-													case kGPUTextureDataFormatRGB565:	return kBitmapFormatRGB565;
-													case kGPUTextureDataFormatRGBA4444:	return kBitmapFormatRGBA4444;
-													case kGPUTextureDataFormatRGBA5551:	return kBitmapFormatRGBA5551;
+//													case kGPUTextureDataFormatRGB565:	return kBitmapFormatRGB565;
+//													case kGPUTextureDataFormatRGBA4444:	return kBitmapFormatRGBA4444;
+//													case kGPUTextureDataFormatRGBA5551:	return kBitmapFormatRGBA5551;
 
 													case kGPUTextureDataFormatRGBA8888:	return kBitmapFormatRGBA8888;
 

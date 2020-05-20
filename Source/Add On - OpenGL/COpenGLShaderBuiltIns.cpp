@@ -1,23 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	COpenGLBuiltIns.cpp			©2020 Stevo Brock	All rights reserved.
+//	COpenGLShaderBuiltIns.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CGPUProgramBuiltins.h"
-
-#include "COpenGLProgram.h"
-#include "CString.h"
-
-#if TARGET_OS_IOS
-	#include <OpenGLES/ES3/glext.h>
-#endif
-
-//#if TARGET_OS_LINUX
-//	#include <GLES/gl.h>
-//#endif
-
-#if TARGET_OS_MACOS
-	#include <OpenGL/gl3ext.h>
-#endif
+#include "COpenGLShader.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
@@ -54,12 +39,12 @@ static	CString	sClipVertexShaderString("#version 300 es						\
 				v_texPosition0 = texCoord0;										\
 			}																	\
 		");
-static	CString	sOpaqueFragmentShaderString("#version 300 es									\
+static	CString	sBasicFragmentShaderString("#version 300 es										\
 			uniform			sampler2D   diffuseTexture[16];										\
 																								\
-			in		highp	vec3	v_texPosition0;												\
+			in		highp	vec3		v_texPosition0;											\
 																								\
-			out		highp	vec4	fragColor;													\
+			out		highp	vec4		fragColor;												\
 																								\
 			void main() {																		\
 				highp	vec2	size;															\
@@ -170,9 +155,9 @@ static	CString	sOpacityFragmentShaderString("#version 300 es									\
 			uniform			sampler2D   diffuseTexture[16];										\
 			uniform lowp	float       opacity;												\
 																								\
-			in		highp	vec3	v_texPosition0;												\
+			in		highp	vec3		v_texPosition0;											\
 																								\
-			out		highp	vec4	fragColor;													\
+			out		highp	vec4		fragColor;												\
 																								\
 			void main() {																		\
 				highp	vec2	size;															\
@@ -312,7 +297,7 @@ static	CString	sClipVertexShaderString("#version 330 core						\
 				v_texPosition0 = texCoord0;										\
 			}																	\
 		");
-static	CString	sOpaqueFragmentShaderString("#version 330 core									\
+static	CString	sBasicFragmentShaderString("#version 330 core									\
 			uniform	sampler2D   diffuseTexture[16];												\
 																								\
 			in		vec3		v_texPosition0;													\
@@ -351,307 +336,320 @@ static	CString	sOpacityFragmentShaderString("#version 330 core									\
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
+// MARK: - COpenGLVertexShaderBasic
 
-static	const	COpenGLVertexShader&	sGetBasicVertexShader();
-static	const	COpenGLVertexShader&	sGetClipVertexShader();
-
-static	const	COpenGLFragmentShader&	sGetOpaqueFragmentShader();
-static	const	COpenGLFragmentShader&	sGetOpacityFragmentShader();
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-
-//----------------------------------------------------------------------------------------------------------------------
-const COpenGLVertexShader& sGetBasicVertexShader()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	static	COpenGLVertexShader*	sShader = nil;
-
-	// Check if have shader
-	if (sShader == nil)
-		// Create shader
-		sShader = new COpenGLVertexShader(sBasicVertexShaderString);
-
-	return *sShader;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const COpenGLVertexShader& sGetClipVertexShader()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	static	COpenGLVertexShader*	sShader = nil;
-
-	// Check if have shader
-	if (sShader == nil)
-		// Create shader
-		sShader = new COpenGLVertexShader(sClipVertexShaderString);
-
-	return *sShader;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const COpenGLFragmentShader& sGetOpaqueFragmentShader()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	static	COpenGLFragmentShader*	sShader = nil;
-
-	// Check if have shader
-	if (sShader == nil)
-		// Create shader
-		sShader = new COpenGLFragmentShader(sOpaqueFragmentShaderString);
-
-	return *sShader;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const COpenGLFragmentShader& sGetOpacityFragmentShader()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	static	COpenGLFragmentShader*	sShader = nil;
-
-	// Check if have shader
-	if (sShader == nil)
-		// Create shader
-		sShader = new COpenGLFragmentShader(sOpacityFragmentShaderString);
-
-	return *sShader;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUOpaqueProgramInternals
-
-class CGPUOpaqueProgramInternals {
+class COpenGLVertexShaderBasic : public COpenGLVertexShader {
 	public:
-		CGPUOpaqueProgramInternals(const CGPUProgramInternals& gpuProgramInternals) :
-			mModelViewProjectionMatrixUniformLocation(
-					glGetUniformLocation(gpuProgramInternals.mProgram, "modelViewProjectionMatrix"))
-			{}
+				COpenGLVertexShaderBasic(const TArray<CString>& attributeNames, const TArray<CString>& uniformNames) :
+					COpenGLVertexShader(sBasicVertexShaderString, attributeNames, uniformNames)
+					{}
 
-		GLint	mModelViewProjectionMatrixUniformLocation;
+		void	setAttibutes(const CDictionary& attributeInfo, const SGPUVertexBuffer& gpuVertexBuffer)
+					{
+						// Setup attributes
+						GLint	positionAttributeLocation = attributeInfo.getSInt32(mPositionAttributeName);
+						glEnableVertexAttribArray(positionAttributeLocation);
+						glVertexAttribPointer(positionAttributeLocation,
+								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexCount, GL_FLOAT, GL_FALSE,
+								(GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
+								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexOffset);
+
+						GLint	textureCoordinateAttributeLocation =
+										attributeInfo.getSInt32(mTextureCoordinateAttributeName);
+						glEnableVertexAttribArray(textureCoordinateAttributeLocation);
+						glVertexAttribPointer(textureCoordinateAttributeLocation,
+								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateCount, GL_FLOAT,
+								GL_FALSE, (GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
+								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateOffset);
+					}
+
+		void	setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
+						const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
+					{
+						// Setup uniforms
+						SMatrix4x4_32	modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
+						GLint			modelViewProjectionMatrixUniformLocation =
+												uniformInfo.getSInt32(mModelViewProjectionMatrixUniformName);
+						glUniformMatrix4fv(modelViewProjectionMatrixUniformLocation, 1, 0,
+								(GLfloat*) &modelViewProjectionMatrix);
+					}
+
+		static	CString	mPositionAttributeName;
+		static	CString	mTextureCoordinateAttributeName;
+
+		static	CString	mModelViewProjectionMatrixUniformName;
 };
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUOpaqueProgram
+CString	COpenGLVertexShaderBasic::mPositionAttributeName(OSSTR("position"));
+CString	COpenGLVertexShaderBasic::mTextureCoordinateAttributeName(OSSTR("texCoord0"));
 
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CGPUOpaqueProgram::CGPUOpaqueProgram() : CGPUTextureProgram(sGetBasicVertexShader(), sGetOpaqueFragmentShader())
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CGPUOpaqueProgramInternals(*mGPUProgramInternals);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CGPUOpaqueProgram::~CGPUOpaqueProgram()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
-
-// MARK: CGPUProgram methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPUOpaqueProgram::setModelMatrix(const SMatrix4x4_32& modelMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	SMatrix4x4_32	modelViewProjectionMatrix =
-							mGPUProgramInternals->mProjectionMatrix * mGPUProgramInternals->mViewMatrix * modelMatrix;
-
-	// Set
-    glUniformMatrix4fv(mInternals->mModelViewProjectionMatrixUniformLocation, 1, 0,
-    		(GLfloat*) &modelViewProjectionMatrix);
-}
+CString	COpenGLVertexShaderBasic::mModelViewProjectionMatrixUniformName(OSSTR("modelViewProjectionMatrix"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUOpacityProgramInternals
+// MARK: - COpenGLVertexShaderClip
 
-class CGPUOpacityProgramInternals {
+class COpenGLVertexShaderClip : public COpenGLVertexShader {
 	public:
-		CGPUOpacityProgramInternals(const CGPUProgramInternals& gpuProgramInternals) :
-			mModelViewProjectionMatrixUniformLocation(
-					glGetUniformLocation(gpuProgramInternals.mProgram, "modelViewProjectionMatrix")),
-			mOpacityUniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "opacity"))
-			{}
+				COpenGLVertexShaderClip(const TArray<CString>& attributeNames, const TArray<CString>& uniformNames) :
+					COpenGLVertexShader(sClipVertexShaderString, attributeNames, uniformNames)
+					{}
 
-		GLint	mModelViewProjectionMatrixUniformLocation;
-		GLint	mOpacityUniformLocation;
-};
+		void	setAttibutes(const CDictionary& attributeInfo, const SGPUVertexBuffer& gpuVertexBuffer)
+					{
+						// Setup attributes
+						GLint	positionAttributeLocation = attributeInfo.getSInt32(mPositionAttributeName);
+						glEnableVertexAttribArray(positionAttributeLocation);
+						glVertexAttribPointer(positionAttributeLocation,
+								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexCount, GL_FLOAT, GL_FALSE,
+								(GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
+								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexOffset);
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUOpacityProgram
+						GLint	textureCoordinateAttributeLocation =
+										attributeInfo.getSInt32(mTextureCoordinateAttributeName);
+						glEnableVertexAttribArray(textureCoordinateAttributeLocation);
+						glVertexAttribPointer(textureCoordinateAttributeLocation,
+								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateCount, GL_FLOAT,
+								GL_FALSE, (GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
+								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateOffset);
+					}
 
-// MARK: Lifecycle methods
+		void	setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
+						const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
+					{
+						// Setup uniforms
+						SMatrix4x4_32	viewProjectionMatrix = projectionMatrix * viewMatrix;
+						GLint			viewProjectionMatrixUniformLocation =
+												uniformInfo.getSInt32(mViewProjectionMatrixUniformName);
+						GLint			modelMatrixUniformLocation = uniformInfo.getSInt32(mModelMatrixUniformName);
+						GLint			clipPlaneUniformLocation = uniformInfo.getSInt32(mClipPlaneUniformName);
 
-//----------------------------------------------------------------------------------------------------------------------
-CGPUOpacityProgram::CGPUOpacityProgram() : CGPUTextureProgram(sGetBasicVertexShader(), sGetOpacityFragmentShader())
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CGPUOpacityProgramInternals(*mGPUProgramInternals);
-}
+						glUniformMatrix4fv(viewProjectionMatrixUniformLocation, 1, 0, (GLfloat*) &viewProjectionMatrix);
+						glUniformMatrix4fv(modelMatrixUniformLocation, 1, 0, (GLfloat*) &modelMatrix);
+						glUniform4fv(clipPlaneUniformLocation, 1, (GLfloat*) &mClipPlane);
+					}
 
-//----------------------------------------------------------------------------------------------------------------------
-CGPUOpacityProgram::~CGPUOpacityProgram()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
-
-// MARK: CGPUProgram methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPUOpacityProgram::setModelMatrix(const SMatrix4x4_32& modelMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	SMatrix4x4_32	modelViewProjectionMatrix =
-							mGPUProgramInternals->mProjectionMatrix * mGPUProgramInternals->mViewMatrix * modelMatrix;
-
-	// Set
-    glUniformMatrix4fv(mInternals->mModelViewProjectionMatrixUniformLocation, 1, 0,
-    		(GLfloat*) &modelViewProjectionMatrix);
-}
-
-// MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPUOpacityProgram::setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleOffset,
-		const TArray<const CGPUTexture>& gpuTextures, Float32 opacity)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Do super
-	CGPUTextureProgram::setupVertexTextureInfo(gpuVertexBuffer, triangleOffset, gpuTextures);
-
-    // Setup opacity
-    glUniform1f(mInternals->mOpacityUniformLocation, opacity);
-
-	// Need to blend
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUClipOpacityProgramInternals
-
-class CGPUClipOpacityProgramInternals {
-	public:
-		CGPUClipOpacityProgramInternals(const CGPUProgramInternals& gpuProgramInternals) :
-			mModelMatrixUniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "modelMatrix")),
-			mProjectionMatrixUniformLocation(
-					glGetUniformLocation(gpuProgramInternals.mProgram, "viewProjectionMatrix")),
-			mClipPlaneUniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "clipPlane")),
-			mOpacityUniformLocation(glGetUniformLocation(gpuProgramInternals.mProgram, "opacity"))
-			{}
-
-		GLint	mModelMatrixUniformLocation;
-		GLint	mProjectionMatrixUniformLocation;
-		GLint	mClipPlaneUniformLocation;
-		GLint	mOpacityUniformLocation;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUClipOpacityProgram
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CGPUClipOpacityProgram::CGPUClipOpacityProgram() :
-	CGPUTextureProgram(sGetClipVertexShader(), sGetOpacityFragmentShader())
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CGPUClipOpacityProgramInternals(*mGPUProgramInternals);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CGPUClipOpacityProgram::~CGPUClipOpacityProgram()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
-
-// MARK: CGPUProgram methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPUClipOpacityProgram::setModelMatrix(const SMatrix4x4_32& modelMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	SMatrix4x4_32	viewProjectionMatrix = mGPUProgramInternals->mProjectionMatrix * mGPUProgramInternals->mViewMatrix;
-
-	// Set
-	glUniformMatrix4fv(mInternals->mModelMatrixUniformLocation, 1, 0, (GLfloat*) &modelMatrix);
-	glUniformMatrix4fv(mInternals->mProjectionMatrixUniformLocation, 1, 0,
-			(GLfloat*) &viewProjectionMatrix);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPUClipOpacityProgram::willUse() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Do super
-	CGPUTextureProgram::willUse();
-
-	// Setup GL
+		void	configureGL()
+					{
+						// Setup GL
 #if TARGET_OS_IOS
-	glEnable(GL_CLIP_DISTANCE0_APPLE);
+						glEnable(GL_CLIP_DISTANCE0_APPLE);
 #endif
 
 #if TARGET_OS_MACOS
-	glEnable(GL_CLIP_DISTANCE0);
+						glEnable(GL_CLIP_DISTANCE0);
 #endif
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPUClipOpacityProgram::didFinish() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Do super
-	CGPUTextureProgram::didFinish();
-
-	// Reset GL
+					}
+		void	resetGL()
+					{
 #if TARGET_OS_IOS
-	glDisable(GL_CLIP_DISTANCE0_APPLE);
+						glDisable(GL_CLIP_DISTANCE0_APPLE);
 #endif
 
 #if TARGET_OS_MACOS
-	glDisable(GL_CLIP_DISTANCE0);
+						glDisable(GL_CLIP_DISTANCE0);
 #endif
-}
+					}
 
-// MARK: Instance methods
+		void	setClipPlane(const SMatrix4x1_32& clipPlane)
+					{
+						mClipPlane = clipPlane;
+					}
+
+				SMatrix4x1_32	mClipPlane;
+
+		static	CString			mPositionAttributeName;
+		static	CString			mTextureCoordinateAttributeName;
+
+		static	CString			mViewProjectionMatrixUniformName;
+		static	CString			mModelMatrixUniformName;
+		static	CString			mClipPlaneUniformName;
+};
+
+CString	COpenGLVertexShaderClip::mPositionAttributeName(OSSTR("position"));
+CString	COpenGLVertexShaderClip::mTextureCoordinateAttributeName(OSSTR("texCoord0"));
+
+CString	COpenGLVertexShaderClip::mViewProjectionMatrixUniformName(OSSTR("viewProjectionMatrix"));
+CString	COpenGLVertexShaderClip::mModelMatrixUniformName(OSSTR("modelMatrix"));
+CString	COpenGLVertexShaderClip::mClipPlaneUniformName(OSSTR("clipPlane"));
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPUClipOpacityProgram::setupVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleOffset,
-		const TArray<const CGPUTexture>& gpuTextures, Float32 opacity)
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CGPUVertexShader
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPUVertexShader& CGPUVertexShader::getBasic()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Do super
-	CGPUTextureProgram::setupVertexTextureInfo(gpuVertexBuffer, triangleOffset, gpuTextures);
+	// Setup
+	static	COpenGLVertexShaderBasic*	sVertexShader = nil;
 
-    // Setup opacity
-    glUniform1f(mInternals->mOpacityUniformLocation, opacity);
+	// Check if have shader
+	if (sVertexShader == nil) {
+		// Create shader
+		TNArray<CString>	attributeNames;
+		attributeNames += COpenGLVertexShaderBasic::mPositionAttributeName;
+		attributeNames += COpenGLVertexShaderBasic::mTextureCoordinateAttributeName;
 
-	// Need to blend
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		TNArray<CString>	uniformNames;
+		uniformNames += COpenGLVertexShaderBasic::mModelViewProjectionMatrixUniformName;
+
+		sVertexShader = new COpenGLVertexShaderBasic(attributeNames, uniformNames);
+	}
+
+	return *sVertexShader;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPUClipOpacityProgram::setClipPlane(const SMatrix4x1_32& clipPlane)
+CGPUVertexShader& CGPUVertexShader::getClip(const SMatrix4x1_32& clipPlane)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	glUniform4fv(mInternals->mClipPlaneUniformLocation, 1, (GLfloat*) &clipPlane);
+	// Setup
+	static	COpenGLVertexShaderClip*	sVertexShader = nil;
+
+	// Check if have shader
+	if (sVertexShader == nil) {
+		// Create shader
+		TNArray<CString>	attributeNames;
+		attributeNames += COpenGLVertexShaderBasic::mPositionAttributeName;
+		attributeNames += COpenGLVertexShaderBasic::mTextureCoordinateAttributeName;
+
+		TNArray<CString>	uniformNames;
+		uniformNames += COpenGLVertexShaderClip::mViewProjectionMatrixUniformName;
+		uniformNames += COpenGLVertexShaderClip::mModelMatrixUniformName;
+		uniformNames += COpenGLVertexShaderClip::mClipPlaneUniformName;
+
+		sVertexShader = new COpenGLVertexShaderClip(attributeNames, uniformNames);
+	}
+
+	// Setup
+	sVertexShader->setClipPlane(clipPlane);
+
+	return *sVertexShader;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - COpenGLFragmentShaderBasic
+
+class COpenGLFragmentShaderBasic : public COpenGLFragmentShader {
+	public:
+				COpenGLFragmentShaderBasic(const TArray<CString>& uniformNames) :
+					COpenGLFragmentShader(sBasicFragmentShaderString, uniformNames),
+							mDidSetupDiffuseTextureUniforms(false)
+					{}
+
+		void	setUniforms(const CDictionary& uniformInfo)
+					{
+						// Setup uniforms
+						if (!mDidSetupDiffuseTextureUniforms) {
+							// Setup diffuse texture uniforms
+							for (UInt32 i = 0; i < 16; i++) {
+								// Setup
+								CString	uniform = CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
+								glUniform1i(uniformInfo.getSInt32(uniform), i);
+							}
+
+							mDidSetupDiffuseTextureUniforms = true;
+						}
+					}
+
+		bool	mDidSetupDiffuseTextureUniforms;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - COpenGLFragmentShaderOpacity
+
+class COpenGLFragmentShaderOpacity : public COpenGLFragmentShader {
+	public:
+				COpenGLFragmentShaderOpacity(const TArray<CString>& uniformNames) :
+					COpenGLFragmentShader(sOpacityFragmentShaderString, uniformNames),
+							mOpacity(1.0), mDidSetupDiffuseTextureUniforms(false)
+					{}
+
+		void	setUniforms(const CDictionary& uniformInfo)
+					{
+						// Setup uniforms
+						if (!mDidSetupDiffuseTextureUniforms) {
+							// Setup diffuse texture uniforms
+							for (UInt32 i = 0; i < 16; i++) {
+								// Setup
+								CString	uniform = CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
+								glUniform1i(uniformInfo.getSInt32(uniform), i);
+							}
+
+							mDidSetupDiffuseTextureUniforms = true;
+						}
+
+						GLint	opacityUniformLocation = uniformInfo.getSInt32(mOpacityUniformName);
+						glUniform1f(opacityUniformLocation, mOpacity);
+					}
+
+		void	setOpacity(Float32 opacity)
+					{
+						mOpacity = opacity;
+					}
+
+				Float32	mOpacity;
+
+				bool	mDidSetupDiffuseTextureUniforms;
+
+		static	CString	mOpacityUniformName;
+};
+
+CString	COpenGLFragmentShaderOpacity::mOpacityUniformName(OSSTR("opacity"));
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CGPUFragmentShader
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPUFragmentShader& CGPUFragmentShader::getBasic()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static	COpenGLFragmentShaderBasic*	sFragmentShader = nil;
+
+	// Check if have shader
+	if (sFragmentShader == nil) {
+		// Create shader
+		TNArray<CString>	uniformNames;
+		for (UInt32 i = 0; i < 16; i++)
+			// Setup
+			uniformNames += CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
+
+		sFragmentShader = new COpenGLFragmentShaderBasic(uniformNames);
+	}
+
+	return *sFragmentShader;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPUFragmentShader& CGPUFragmentShader::getOpacity(Float32 opacity)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static	COpenGLFragmentShaderOpacity*	sFragmentShader = nil;
+
+	// Check if have shader
+	if (sFragmentShader == nil) {
+		// Create shader
+		TNArray<CString>	uniformNames;
+		for (UInt32 i = 0; i < 16; i++)
+			// Setup
+			uniformNames += CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
+		uniformNames += COpenGLFragmentShaderOpacity::mOpacityUniformName;
+
+		sFragmentShader = new COpenGLFragmentShaderOpacity(uniformNames);
+	}
+
+	// Setup
+	sFragmentShader->setOpacity(opacity);
+
+	return *sFragmentShader;
 }
