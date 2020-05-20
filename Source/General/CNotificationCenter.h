@@ -20,15 +20,12 @@ struct SNotificationObserverInfo {
 			SNotificationObserverInfo(const void* observerRef, SNotificationObserverInfoProc proc, void* userData) :
 				mObserverRef(observerRef), mProc(proc), mUserData(userData)
 				{}
-//			SNotificationObserverInfo(NotificationProc proc, void* userData) :
-//				mObserverRef(nil), mProc(proc), mUserData(userData)
-//				{}
 			SNotificationObserverInfo(const SNotificationObserverInfo& other) :
 				mObserverRef(other.mObserverRef), mProc(other.mProc), mUserData(other.mUserData)
 				{}
 
 			// Instance methods
-	void	callProc(const CString& notificationName, const void* senderRef, const CDictionary& info)
+	void	callProc(const CString& notificationName, const void* senderRef, const CDictionary& info) const
 				{ mProc(notificationName, senderRef, info, mUserData); }
 
 	// Properties
@@ -55,7 +52,6 @@ class CNotificationCenter {
 								const SNotificationObserverInfo& notificationObserverInfo);
 				void	unregisterObserver(const CString& notificationName, const void* observerRef);
 				void	unregisterObserver(const void* observerRef);
-//				void	unregisterObserver(UInt32 observerReference);
 
 				void	send(const CString& notificationName, const void* senderRef = nil,
 								const CDictionary& info = CDictionary::mEmpty) const;

@@ -161,8 +161,8 @@ class CDictionary : public CEquatable {
 						void						set(const CString& key, CDictionaryItemRef value);
 						void						set(const CString& key, const SDictionaryValue& value);
 
-	virtual				void						remove(const CString& key);
-	virtual				void						removeAll();
+						void						remove(const CString& key);
+						void						removeAll();
 
 						bool						equals(const CDictionary& other,
 															void* itemCompareProcUserData = nil) const;
@@ -330,17 +330,17 @@ template <typename T> class TDictionary : public CDictionary {
 						~TDictionary() {}
 
 						// Instance methods
-		const	OV<T>	get(const CString& key) const
+		const	OR<T>	get(const CString& key) const
 							{
 								// Get itemRef
 								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
 
-								return itemRef.hasValue() ? OV<T>((T) itemRef.getValue()) : OV<T>();
+								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
 							}
 				void	set(const CString& key, const T item)
 							{ CDictionary::set(key, item); }
 
-		const	OV<T>	operator[](const CString& key) const
+		const	OR<T>	operator[](const CString& key) const
 							{ return get(key); }
 };
 
@@ -423,12 +423,12 @@ template <typename K, typename T> class TOwningKeyConvertibleDictionary : public
 						~TOwningKeyConvertibleDictionary() {}
 
 						// Instance methods
-		const	OV<T>	get(const CString& key) const
+		const	OR<T>	get(const CString& key) const
 							{
 								// Get itemRef
 								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
 
-								return itemRef.hasValue() ? OV<T>((T) itemRef.getValue()) : OV<T>();
+								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
 							}
 				void	set(K key, const T& item)
 							{ CDictionary::set(CString(key), new T(item)); }
@@ -436,7 +436,7 @@ template <typename K, typename T> class TOwningKeyConvertibleDictionary : public
 				void	remove(K key)
 							{ CDictionary::remove(CString(key)); }
 
-		const	OV<T>	operator[](const CString& key) const
+		const	OR<T>	operator[](const CString& key) const
 							{ return get(key); }
 
 	private:

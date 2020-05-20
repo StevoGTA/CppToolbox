@@ -37,9 +37,9 @@ CString CErrorRegistry::getStringForError(UError error)
 //		return CString(OSSTR("No Error"));
 //
 	// Check for registered error
-	if ((sErrorMap != nil) && (*sErrorMap)[error].hasValue())
+	if ((sErrorMap != nil) && (*sErrorMap)[error].hasReference())
 		// Have string
-		return (*sErrorMap)[error].getValue();
+		return *(*sErrorMap)[error];
 
 	// Get system error info
 	UErrorDomain	errorDomain = GET_UErrorDomain(error);

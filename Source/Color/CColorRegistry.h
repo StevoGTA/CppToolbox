@@ -74,7 +74,8 @@ class CColorSet {
 						bool		getCanModify() const
 										{ return getID() == kColorSetNonPresetID; }
 
-				const	CColor		getColor(OSType colorGroupID, OSType colorID) const;
+				const	CColor&		getColor(OSType colorGroupID, OSType colorID,
+											const CColor& defaultColor = CColor::mClear) const;
 						void		setColor(OSType colorGroupID, OSType colorID, const CColor& color);
 						void		setColorsFrom(const CColorSet& other);
 
