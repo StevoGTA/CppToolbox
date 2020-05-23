@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	TOwningKeyConvertibleDictionary<UError, CString>*	sErrorMap = nil;
+static	TKeyConvertibleDictionary<UError, CString>*	sErrorMap = nil;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ void CErrorRegistry::registerError(UError error, const CString& string)
 	// Setup
 	if (sErrorMap == nil)
 		// Create map
-		sErrorMap = new TOwningKeyConvertibleDictionary<UError, CString>();
+		sErrorMap = new TKeyConvertibleDictionary<UError, CString>();
 
 	// Add
 	sErrorMap->set(error, string);

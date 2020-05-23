@@ -103,7 +103,7 @@ class CNotificationCenterInternals {
 					}
 
 	public:
-		TOwningDictionary<TNArray<SNotificationObserverFullInfo> >	mInfo;
+		TDictionary<TNArray<SNotificationObserverFullInfo> >	mInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

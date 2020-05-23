@@ -221,9 +221,9 @@ template <typename T> class TArray : public CArray {
 //						TArray<T>&			apply(void (proc)(T& item, void* userData), void* userData = nil)
 //												{ CArray::apply((CArrayApplyProc) proc, userData); return *this; }
 
-//						TArray<T>&			sort(ECompareResult (proc)(const T& item1, const T& item2, void* userData),
-//													void* userData = nil)
-//												{ CArray::sort((CArrayCompareProc) proc, userData); return *this; }
+						TArray<T>&			sort(ECompareResult (proc)(const T& item1, const T& item2, void* userData),
+													void* userData = nil)
+												{ CArray::sort((CArrayCompareProc) proc, userData); return *this; }
 
 											// Instance methods
 						OR<T>				getFirst(bool (proc)(const T& item, void* userData), void* userData = nil)

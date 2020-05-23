@@ -324,38 +324,10 @@ template <typename T> class TDictionary : public CDictionary {
 	public:
 						// Lifecycle methods
 						TDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-							CDictionary(nil, nil, itemEqualsProc)
+							CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
 							{}
 						TDictionary(const TDictionary& dictionary) : CDictionary(dictionary) {}
 						~TDictionary() {}
-
-						// Instance methods
-		const	OR<T>	get(const CString& key) const
-							{
-								// Get itemRef
-								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
-
-								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
-							}
-				void	set(const CString& key, const T item)
-							{ CDictionary::set(key, item); }
-
-		const	OR<T>	operator[](const CString& key) const
-							{ return get(key); }
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TOwningDictionary
-
-template <typename T> class TOwningDictionary : public CDictionary {
-	// Methods
-	public:
-						// Lifecycle methods
-						TOwningDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-							CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
-							{}
-						TOwningDictionary(const TOwningDictionary& dictionary) : CDictionary(dictionary) {}
-						~TOwningDictionary() {}
 
 						// Instance methods
 		const	OR<T>	get(const CString& key) const
@@ -380,47 +352,15 @@ template <typename T> class TOwningDictionary : public CDictionary {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TKeyConvertibleDictionary
+// MARK: - TReferenceDictionary
 
-template <typename K, typename T> class TKeyConvertibleDictionary : public CDictionary {
+template <typename T> class TReferenceDictionary : public CDictionary {
 	// Methods
 	public:
 						// Lifecycle methods
-						TKeyConvertibleDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-							CDictionary(nil, nil, itemEqualsProc)
-							{}
-						TKeyConvertibleDictionary(const TKeyConvertibleDictionary& dictionary) :
-							CDictionary(dictionary)
-							{}
-						~TKeyConvertibleDictionary() {}
-
-						// Instance methods
-		const	T		get(K key) const
-								{ return (T) CDictionary::getItemRef(CString(key)); }
-				void	set(K key, const T item)
-							{ CDictionary::set(CString(key), item); }
-
-				void	remove(K key)
-							{ CDictionary::remove(CString(key)); }
-
-		const	T		operator[](K key) const
-							{ return (T) CDictionary::getItemRef(CString(key)); }
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TOwningKeyConvertibleDictionary
-
-template <typename K, typename T> class TOwningKeyConvertibleDictionary : public CDictionary {
-	// Methods
-	public:
-						// Lifecycle methods
-						TOwningKeyConvertibleDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-							CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
-							{}
-						TOwningKeyConvertibleDictionary(const TOwningKeyConvertibleDictionary& dictionary) :
-							CDictionary(dictionary)
-							{}
-						~TOwningKeyConvertibleDictionary() {}
+						TReferenceDictionary() : CDictionary() {}
+						TReferenceDictionary(const TReferenceDictionary& dictionary) : CDictionary(dictionary) {}
+						~TReferenceDictionary() {}
 
 						// Instance methods
 		const	OR<T>	get(const CString& key) const
@@ -430,13 +370,43 @@ template <typename K, typename T> class TOwningKeyConvertibleDictionary : public
 
 								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
 							}
+				void	set(const CString& key, const T& item)
+							{ CDictionary::set(key, &item); }
+
+		const	OR<T>	operator[](const CString& key) const
+							{ return get(key); }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TKeyConvertibleDictionary
+
+template <typename K, typename T> class TKeyConvertibleDictionary : public CDictionary {
+	// Methods
+	public:
+						// Lifecycle methods
+						TKeyConvertibleDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
+							CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
+							{}
+						TKeyConvertibleDictionary(const TKeyConvertibleDictionary& dictionary) :
+							CDictionary(dictionary)
+							{}
+						~TKeyConvertibleDictionary() {}
+
+						// Instance methods
+		const	OR<T>	get(K key) const
+							{
+								// Get itemRef
+								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(CString(key));
+
+								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
+							}
 				void	set(K key, const T& item)
 							{ CDictionary::set(CString(key), new T(item)); }
 
 				void	remove(K key)
 							{ CDictionary::remove(CString(key)); }
 
-		const	OR<T>	operator[](const CString& key) const
+		const	OR<T>	operator[](K key) const
 							{ return get(key); }
 
 	private:

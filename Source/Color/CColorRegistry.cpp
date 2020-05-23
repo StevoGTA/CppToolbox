@@ -27,10 +27,9 @@ static	CString	sNameKey(OSSTR("name"));
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorGroupInternals
 
-class CColorGroupInternals {
+class CColorGroupInternals : public TReferenceCountable<CColorGroupInternals> {
 	public:
 		CColorGroupInternals(OSType id, UInt32 displayIndex) : mID(id), mDisplayIndex(displayIndex) {}
-		~CColorGroupInternals() {}
 
 		OSType					mID;
 		UInt32					mDisplayIndex;
@@ -51,10 +50,17 @@ CColorGroup::CColorGroup(OSType id, UInt32 displayIndex)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CColorGroup::CColorGroup(const CColorGroup& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CColorGroup::~CColorGroup()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	Delete(mInternals);
+	mInternals->removeReference();
 }
 
 // MARK: Instance methods
@@ -90,27 +96,26 @@ const TNumericArray<OSType>& CColorGroup::getColorIDs() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-ECompareResult CColorGroup::compareDisplayIndexes(CColorGroup* const colorGroup1, CColorGroup* const colorGroup2,
+ECompareResult CColorGroup::compareDisplayIndexes(const CColorGroup& colorGroup1, const CColorGroup& colorGroup2,
 		void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return eCompare(colorGroup1->getDisplayIndex(), colorGroup2->getDisplayIndex());
+	return eCompare(colorGroup1.getDisplayIndex(), colorGroup2.getDisplayIndex());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorSetInternals
 
-class CColorSetInternals {
+class CColorSetInternals : public TReferenceCountable<CColorSetInternals> {
 	public:
 		CColorSetInternals(const CString& name, OSType id) :
 			mName(name), mID(id), mColorsMap((CDictionaryItemEqualsProc) CColor::areEqual)
 			{}
-		~CColorSetInternals() {}
 
-	CString											mName;
-	OSType											mID;
-	TOwningKeyConvertibleDictionary<UInt64, CColor>	mColorsMap;
+	CString										mName;
+	OSType										mID;
+	TKeyConvertibleDictionary<UInt64, CColor>	mColorsMap;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -159,10 +164,17 @@ CColorSet::CColorSet(const CDictionary& info)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CColorSet::CColorSet(const CColorSet& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CColorSet::~CColorSet()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	Delete(mInternals);
+	mInternals->removeReference();
 }
 
 // MARK: Instance methods
@@ -262,21 +274,12 @@ bool CColorSet::operator==(const CColorSet& other) const
 
 class CColorRegistryInternals {
 	public:
-					CColorRegistryInternals(SPref* pref) :
-						mCurrentColorSet(nil), mPref(pref), mColorGroupMap(), mColorSets(true), mColorSetPresets(true)
-						{}
-					~CColorRegistryInternals()
-						{
-							Delete(mCurrentColorSet);
-							Delete(mPref);
-							mColorSets.removeAll();
-							mColorSetPresets.removeAll();
-						}
+					CColorRegistryInternals(OO<SPref> pref = OO<SPref>()) : mPref(pref) {}
 
 			void	writeToPrefs()
 						{
 							// Check if have pref
-							if (mPref != nil) {
+							if (mPref.hasObject()) {
 								// Setup
 								CDictionary	info;
 
@@ -284,10 +287,12 @@ class CColorRegistryInternals {
 								TNArray<CDictionary>	colorSetInfos;
 								for (CArrayItemIndex i = 0; i < mColorSets.getCount(); i++)
 									// Add info
-									colorSetInfos += mColorSets[i]->getInfo();
+									colorSetInfos += mColorSets[i].getInfo();
 								info.set(sColorSetInfosKey, colorSetInfos);
 
-								info.set(sCurrentColorSetKey, mCurrentColorSet->getInfo());
+								if (mCurrentColorSet.hasObject())
+									// Add current color set
+									info.set(sCurrentColorSetKey, mCurrentColorSet->getInfo());
 
 								// Write
 								CPreferences::set(*mPref, info);
@@ -297,27 +302,27 @@ class CColorRegistryInternals {
 		CColorSet&	getCurrentColorSet()
 						{
 							// Check if we have current color set
-							if (mCurrentColorSet == nil) {
+							if (!mCurrentColorSet.hasObject()) {
 								// Create current color set
-								mCurrentColorSet = new CColorSet(CString::mEmpty);
+								mCurrentColorSet = OO<CColorSet>(CColorSet(CString::mEmpty));
 
 								// Check what to initialize it to
 								if (!mColorSetPresets.isEmpty())
 									// Use first preset
-									mCurrentColorSet->setColorsFrom(*mColorSetPresets[0]);
+									mCurrentColorSet->setColorsFrom(mColorSetPresets[0]);
 								else if (!mColorSets.isEmpty())
 									// Use first color set
-									mCurrentColorSet->setColorsFrom(*mColorSets[0]);
+									mCurrentColorSet->setColorsFrom(mColorSets[0]);
 							}
 
 							return *mCurrentColorSet;
 						}
 
-		CColorSet*										mCurrentColorSet;
-		SPref*											mPref;
-		TKeyConvertibleDictionary<OSType, CColorGroup*>	mColorGroupMap;
-		TPtrArray<CColorSet*>							mColorSets;
-		TPtrArray<CColorSet*>							mColorSetPresets;
+		OO<CColorSet>									mCurrentColorSet;
+		OO<SPref>										mPref;
+		TKeyConvertibleDictionary<OSType, CColorGroup>	mColorGroupMap;
+		TNArray<CColorSet>								mColorSets;
+		TNArray<CColorSet>								mColorSetPresets;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -330,7 +335,7 @@ class CColorRegistryInternals {
 CColorRegistry::CColorRegistry()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorRegistryInternals(nil);
+	mInternals = new CColorRegistryInternals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -338,7 +343,7 @@ CColorRegistry::CColorRegistry(const SPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CColorRegistryInternals(new SPref(pref));
+	mInternals = new CColorRegistryInternals(OO<SPref>(pref));
 
 	// Load from prefs
 	CDictionary	info = CPreferences::getDictionary(pref);
@@ -347,13 +352,13 @@ CColorRegistry::CColorRegistry(const SPref& pref)
 	TArray<CDictionary>	colorSetInfos = info.getArrayOfDictionaries(sColorSetInfosKey);
 	for (CArrayItemIndex i = 0; i < colorSetInfos.getCount(); i++)
 		// Add to color sets
-		mInternals->mColorSets += new CColorSet(colorSetInfos[i]);
+		mInternals->mColorSets += CColorSet(colorSetInfos[i]);
 
 	// Current color set
 	CDictionary	currentColorSetInfo = info.getDictionary(sCurrentColorSetKey);
 	if (!currentColorSetInfo.isEmpty())
 		// Setup current color set
-		mInternals->mCurrentColorSet = new CColorSet(currentColorSetInfo);
+		mInternals->mCurrentColorSet = OO<CColorSet>(CColorSet(currentColorSetInfo));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -369,25 +374,22 @@ CColorRegistry::~CColorRegistry()
 CColorGroup& CColorRegistry::registerColorGroup(OSType id, UInt32 displayIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CColorGroup*	colorGroup = new CColorGroup(id, displayIndex);
-
 	// Add
-	mInternals->mColorGroupMap.set(id, colorGroup);
+	mInternals->mColorGroupMap.set(id, CColorGroup(id, displayIndex));
 
-	return *colorGroup;
+	return *mInternals->mColorGroupMap[id];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TPtrArray<CColorGroup*> CColorRegistry::getColorGroups() const
+TArray<CColorGroup> CColorRegistry::getColorGroups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get color groups
-	TPtrArray<CColorGroup*>	colorGroups;
+	TNArray<CColorGroup>	colorGroups;
 	for (TIteratorS<SDictionaryItem> iterator = mInternals->mColorGroupMap.getIterator();
 			iterator.hasValue(); iterator.advance())
 		// Insert value
-		colorGroups.add((CColorGroup*) iterator.getValue().mValue.getItemRef());
+		colorGroups += *((CColorGroup*) iterator.getValue().mValue.getItemRef());
 
 	// Sort by display index
 	colorGroups.sort(CColorGroup::compareDisplayIndexes);
@@ -399,21 +401,18 @@ const TPtrArray<CColorGroup*> CColorRegistry::getColorGroups() const
 CColorSet& CColorRegistry::registerColorSetPreset(OSType id)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CColorSet*	colorSet = new CColorSet(id);
-
 	// Add
-	mInternals->mColorSetPresets += colorSet;
+	mInternals->mColorSetPresets += CColorSet(id);
 
-	return *colorSet;
+	return mInternals->mColorSetPresets.getLast();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TPtrArray<CColorSet*> CColorRegistry::getColorSets(bool includeColorSetPresets) const
+TArray<CColorSet> CColorRegistry::getColorSets(bool includeColorSetPresets) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TPtrArray<CColorSet*>	colorSets;
+	TNArray<CColorSet>	colorSets;
 	if (includeColorSetPresets)
 		colorSets += mInternals->mColorSetPresets;
 	colorSets += mInternals->mColorSets;
@@ -427,11 +426,8 @@ void CColorRegistry::removeColorSet(const CColorSet& colorSet)
 {
 	// Iterate all color sets
 	for (CArrayItemIndex i = 0; i < mInternals->mColorSets.getCount(); i++) {
-		// Get info
-		CColorSet*	testColorSet = mInternals->mColorSets[i];
-
-		// Check if
-		if (*testColorSet == colorSet) {
+		// Check if this one matches
+		if (mInternals->mColorSets[i] == colorSet) {
 			// Remove from array
 			mInternals->mColorSets.removeAtIndex(i);
 
@@ -452,7 +448,7 @@ const CColorSet& CColorRegistry::getCurrentColorSet() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CColorRegistry::setColorSetAsCurrent(const CColorSet& colorSet)
+void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
@@ -462,13 +458,13 @@ void CColorRegistry::setColorSetAsCurrent(const CColorSet& colorSet)
 	mInternals->writeToPrefs();
 
 	// Iterate color groups
-			CDictionary				info;
-	const	TPtrArray<CColorGroup*>	colorGroups = getColorGroups();
+	CDictionary			info;
+	TArray<CColorGroup>	colorGroups = getColorGroups();
 	for (CArrayItemIndex i = 0; i < colorGroups.getCount(); i++) {
 		// Get info
-		const	CColorGroup*			colorGroup = colorGroups[i];
-				OSType					colorGroupID = colorGroup->getID();
-				TNumericArray<OSType>	colorIDs = colorGroup->getColorIDs();
+		CColorGroup&			colorGroup = colorGroups[i];
+		OSType					colorGroupID = colorGroup.getID();
+		TNumericArray<OSType>	colorIDs = colorGroup.getColorIDs();
 
 		// Setup
 		info.set(eColorRegistryGroupIDKey, colorGroupID);
@@ -484,7 +480,7 @@ void CColorRegistry::setColorSetAsCurrent(const CColorSet& colorSet)
 			info.set(eColorRegistryColorKey, &color);
 
 			// Send notification
-		CNotificationCenter::mStandard.send(eColorRegistryColorChangedNotificationName, this, info);
+			CNotificationCenter::mStandard.send(eColorRegistryColorChangedNotificationName, this, info);
 		}
 	}
 }
@@ -509,22 +505,24 @@ void CColorRegistry::setCurrentColorSetColor(OSType colorGroupID, OSType colorID
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CColorRegistry::createNewColorSetFromCurrentColorSet(const CString& name)
+const CColorSet& CColorRegistry::createNewFromCurrentColorSet(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CColorSet*	colorSet = new CColorSet(name);
-	colorSet->setColorsFrom(mInternals->getCurrentColorSet());
+	CColorSet	colorSet(name);
+	colorSet.setColorsFrom(mInternals->getCurrentColorSet());
 
 	// Add
 	mInternals->mColorSets += colorSet;
 
 	// Save to prefs
 	mInternals->writeToPrefs();
+
+	return mInternals->mColorSets.getLast();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CColorRegistry::updateColorSetFromCurrentColorSet(CColorSet& colorSet) const
+void CColorRegistry::updateFromCurrentColorSet(CColorSet& colorSet) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
@@ -535,25 +533,25 @@ void CColorRegistry::updateColorSetFromCurrentColorSet(CColorSet& colorSet) cons
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OR<CColorSet> CColorRegistry::getFirstColorSetMatchingColorsOfCurrentColorSet() const
+OR<CColorSet> CColorRegistry::getFirstMatchingColorsOfCurrentColorSet() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Examine preset color sets first
-	for (TIteratorS<CColorSet*> iterator = mInternals->mColorSetPresets.getIterator(); iterator.hasValue();
+	for (TIteratorD<CColorSet> iterator = mInternals->mColorSetPresets.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Check this color set
-		if (iterator.getValue()->matchesColorsOf(mInternals->getCurrentColorSet()))
+		if (iterator.getValue().matchesColorsOf(mInternals->getCurrentColorSet()))
 			// Match
-			return OR<CColorSet>(*iterator.getValue());
+			return OR<CColorSet>(iterator.getValue());
 	}
 
 	// Examine user defined color sets
-	for (TIteratorS<CColorSet*> iterator = mInternals->mColorSets.getIterator(); iterator.hasValue();
+	for (TIteratorD<CColorSet> iterator = mInternals->mColorSets.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Check this color set
-		if (iterator.getValue()->matchesColorsOf(mInternals->getCurrentColorSet()))
+		if (iterator.getValue().matchesColorsOf(mInternals->getCurrentColorSet()))
 			// Match
-			return OR<CColorSet>(*iterator.getValue());
+			return OR<CColorSet>(iterator.getValue());
 	}
 
 	return OR<CColorSet>();
