@@ -128,12 +128,12 @@ void CGPURenderState::commit()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static			TOwningDictionary<COpenGLProgram>	sPrograms;
+	static			TDictionary<COpenGLProgram>	sPrograms;
 
-			const	SGPUVertexBuffer&					gpuVertexBuffer = mInternals->mVertexBuffer.getReference();
-					UInt32								offset =
-																gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize *
-																		mInternals->mTriangleOffset;
+			const	SGPUVertexBuffer&			gpuVertexBuffer = mInternals->mVertexBuffer.getReference();
+					UInt32						offset =
+														gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize *
+																mInternals->mTriangleOffset;
 
 	// Setup buffers
 	glBindVertexArray(mInternals->mVertexArray);
