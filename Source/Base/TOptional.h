@@ -43,6 +43,9 @@ template <typename T> struct OV {
 
 	OV<T>&	operator=(T value) { mHasValue = true; mValue = value; return *this; }
 
+	bool	operator==(const OV<T>& other) const
+				{ return (mHasValue == other.mHasValue) && (!mHasValue || (mValue == other.mValue)); }
+
 	// Properties
 	private:
 		bool	mHasValue;

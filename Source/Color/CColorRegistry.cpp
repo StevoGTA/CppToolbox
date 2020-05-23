@@ -109,12 +109,12 @@ ECompareResult CColorGroup::compareDisplayIndexes(const CColorGroup& colorGroup1
 
 class CColorSetInternals : public TReferenceCountable<CColorSetInternals> {
 	public:
-		CColorSetInternals(const CString& name, OSType id) :
+		CColorSetInternals(const CString& name, OV<OSType> id = OV<OSType>()) :
 			mName(name), mID(id), mColorsMap((CDictionaryItemEqualsProc) CColor::areEqual)
 			{}
 
 	CString										mName;
-	OSType										mID;
+	OV<OSType>									mID;
 	TKeyConvertibleDictionary<UInt64, CColor>	mColorsMap;
 };
 
@@ -128,14 +128,14 @@ class CColorSetInternals : public TReferenceCountable<CColorSetInternals> {
 CColorSet::CColorSet(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorSetInternals(name, 0);
+	mInternals = new CColorSetInternals(name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CColorSet::CColorSet(OSType id)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorSetInternals(CString::mEmpty, id);
+	mInternals = new CColorSetInternals(CString::mEmpty, OV<OSType>(id));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ CColorSet::CColorSet(const CDictionary& info)
 	CString		name = info.getString(sNameKey);
 
 	// Setup
-	mInternals = new CColorSetInternals(name, 0);
+	mInternals = new CColorSetInternals(name);
 
 	// Setup colors
 	TArray<CDictionary>	colorSetColorInfos = info.getArrayOfDictionaries(sColorSetColorInfosKey);
@@ -187,7 +187,7 @@ const CString& CColorSet::getName() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OSType CColorSet::getID() const
+OV<OSType> CColorSet::getID() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mID;

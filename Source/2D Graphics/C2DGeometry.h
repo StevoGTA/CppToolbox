@@ -61,11 +61,6 @@ template <typename T> struct T2DPoint {
 								return dx * dx + dy * dy;
 							}
 
-	inline	bool		operator==(const T2DPoint& other) const
-							{ return (mX == other.mX) && (mY == other.mY); }
-	inline	bool		operator!=(const T2DPoint& other) const
-							{ return (mX != other.mX) || (mY != other.mY); }
-
 	inline	T2DPoint&	applyTransform(const T2DAffineTransform<T>& affineTransform)
 							{
 								mX = mX * affineTransform.mA + mY * affineTransform.mC + affineTransform.mTX;
@@ -79,6 +74,11 @@ template <typename T> struct T2DPoint {
 								return CString(OSSTR("{")) + CString(mX, 5, 3) + CString(OSSTR(",")) + CString(mY, 5, 3)
 										+ CString(OSSTR("}"));
 							}
+
+	inline	bool		operator==(const T2DPoint& other) const
+							{ return (mX == other.mX) && (mY == other.mY); }
+	inline	bool		operator!=(const T2DPoint& other) const
+							{ return (mX != other.mX) || (mY != other.mY); }
 
 	// Properties
 	T	mX;
@@ -143,16 +143,16 @@ template <typename T> struct T2DSize {
 						}
 
 					// Instance methods
-	inline	bool	operator==(const T2DSize& other) const
-						{ return (mWidth == other.mWidth) && (mHeight == other.mHeight); }
-	inline	bool	operator!=(const T2DSize& other) const
-						{ return (mWidth != other.mWidth) || (mHeight != other.mHeight); }
-
 	inline	CString	asString() const
 						{
 							return CString(OSSTR("{")) + CString(mWidth, 5, 3) + CString(OSSTR(",")) +
 									CString(mHeight, 5, 3) + CString(OSSTR("}"));
 						}
+	inline	bool	operator==(const T2DSize& other) const
+						{ return (mWidth == other.mWidth) && (mHeight == other.mHeight); }
+	inline	bool	operator!=(const T2DSize& other) const
+						{ return (mWidth != other.mWidth) || (mHeight != other.mHeight); }
+
 	// Properties
 	T	mWidth;
 	T	mHeight;
@@ -272,17 +272,17 @@ template <typename T> struct T2DRect {
 									 (getMinY() > rect.getMaxY()));
 						}
 
-	inline	bool	operator==(const T2DRect& other) const
-						{ return (mOrigin == other.mOrigin) && (mSize == other.mSize); }
-	inline	bool	operator!=(const T2DRect& other) const
-						{ return (mOrigin != other.mOrigin) || (mSize != other.mSize); }
-
 	inline	CString	asString() const
 						{
 							return CString(OSSTR("{{")) + CString(mOrigin.mX, 5, 3) + CString(OSSTR(",")) +
 									CString(mOrigin.mY, 5, 3) + CString(OSSTR("},{")) + CString(mSize.mWidth, 5, 3) +
 									CString(OSSTR(",")) + CString(mSize.mHeight, 5, 3) + CString(OSSTR("}}"));
 						}
+
+	inline	bool	operator==(const T2DRect& other) const
+						{ return (mOrigin == other.mOrigin) && (mSize == other.mSize); }
+	inline	bool	operator!=(const T2DRect& other) const
+						{ return (mOrigin != other.mOrigin) || (mSize != other.mSize); }
 
 	// Properties
 	T2DPoint<T>	mOrigin;

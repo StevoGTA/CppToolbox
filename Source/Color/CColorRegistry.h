@@ -57,35 +57,33 @@ class CColorGroup {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorSet
 
-const	OSType	kColorSetNonPresetID = 0;
-
 class CColorSetInternals;
 class CColorSet {
 	// Methods
 	public:
-									// Lifecycle methods
-									CColorSet(const CString& name);	// Can modify
-									CColorSet(OSType id);			// Cannot modify
-									CColorSet(const CDictionary& info);
-									CColorSet(const CColorSet& other);
-		virtual						~CColorSet();
+							// Lifecycle methods
+							CColorSet(const CString& name);	// Can modify
+							CColorSet(OSType id);			// Cannot modify
+							CColorSet(const CDictionary& info);
+							CColorSet(const CColorSet& other);
+							~CColorSet();
 
-									// Instance methods
-				const	CString&	getName() const;
-						OSType		getID() const;
-						bool		getCanModify() const
-										{ return getID() == kColorSetNonPresetID; }
+							// Instance methods
+		const	CString&	getName() const;
+				OV<OSType>	getID() const;
+				bool		getCanModify() const
+								{ return !getID().hasValue(); }
 
-				const	CColor&		getColor(OSType colorGroupID, OSType colorID,
-											const CColor& defaultColor = CColor::mClear) const;
-						void		setColor(OSType colorGroupID, OSType colorID, const CColor& color);
-						void		setColorsFrom(const CColorSet& other);
+		const	CColor&		getColor(OSType colorGroupID, OSType colorID,
+									const CColor& defaultColor = CColor::mClear) const;
+				void		setColor(OSType colorGroupID, OSType colorID, const CColor& color);
+				void		setColorsFrom(const CColorSet& other);
 
-						CDictionary	getInfo() const;
+				CDictionary	getInfo() const;
 
-						bool		matchesColorsOf(const CColorSet& other) const;
+				bool		matchesColorsOf(const CColorSet& other) const;
 
-						bool		operator==(const CColorSet& other) const;
+				bool		operator==(const CColorSet& other) const;
 
 	// Properties
 	private:
