@@ -262,18 +262,15 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													// Check storage
 													if (neededCount > mCapacity) {
 														// Expand storage
-														mCapacity =
-																std::max(neededCount, mCapacity * 2);
+														mCapacity = std::max(neededCount, mCapacity * 2);
 														mItemRefs =
 																(CArrayItemRef*)
 																		::realloc(mItemRefs,
-																				mCapacity *
-																						sizeof(CArrayItemRef));
+																				mCapacity * sizeof(CArrayItemRef));
 													}
 
 													// Append itemRefs into place
-													::memcpy(mItemRefs + mCount,
-															itemRefs, count * sizeof(CFArrayRef));
+													::memcpy(mItemRefs + mCount, itemRefs, count * sizeof(CFArrayRef));
 													mCount = neededCount;
 												}
 
@@ -442,6 +439,25 @@ CArray& CArray::detach(const CArrayItemRef itemRef)
 	if (itemIndex.hasValue())
 		// Remove
 		mInternals = mInternals->removeAtIndex(*itemIndex, false);
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CArray& CArray::move(const CArrayItemRef itemRef, CArray& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get index of itemRef
+	OV<CArrayItemIndex>	itemIndex = getIndexOf(itemRef);
+
+	// Check if itemRef was found
+	if (itemIndex.hasValue()) {
+		// Remove
+		mInternals = mInternals->removeAtIndex(*itemIndex, false);
+
+		// Append
+		other.add(itemRef);
+	}
 
 	return *this;
 }

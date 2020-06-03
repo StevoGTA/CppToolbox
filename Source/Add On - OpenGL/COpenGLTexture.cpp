@@ -7,7 +7,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: COpenGLTextureInternals
 
-class COpenGLTextureInternals {
+class COpenGLTextureInternals : public TReferenceCountable<COpenGLTextureInternals> {
 	public:
 		COpenGLTextureInternals(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size) :
 mUsedPixelsSize(size),
@@ -77,10 +77,17 @@ COpenGLTexture::COpenGLTexture(const CData& data, EGPUTextureDataFormat gpuTextu
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+COpenGLTexture::COpenGLTexture(const COpenGLTexture& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 COpenGLTexture::~COpenGLTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	Delete(mInternals);
+	mInternals->removeReference();
 }
 
 // MARK: CGPUTexture methods

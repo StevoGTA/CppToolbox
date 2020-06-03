@@ -34,9 +34,9 @@ struct SGPUTextureManagerInfo {
 	SGPUTextureManagerInfo(CGPU& gpu) : mGPU(gpu) {}
 
 	// Properties
-	CGPU&										mGPU;
-	CWorkItemQueue								mWorkItemQueue;
-	TPtrArray<CGPUTextureReferenceInternals*>	mGPUTextureReferenceInternals;
+	CGPU&							mGPU;
+	CWorkItemQueue					mWorkItemQueue;
+	TNArray<CGPUTextureReference>	mGPUTextureReferences;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -56,20 +56,17 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 									mGPUTextureReferenceOptions(gpuTextureReferenceOptions),
 									mGPUTextureManagerInfo(gpuTextureManagerInfo), mWorkItem(nil),
 									mFinishLoadingTriggered(false), mGPUTextureDataInfo(nil)
-							{
-								// Note reference
-								mGPUTextureManagerInfo.mGPUTextureReferenceInternals += this;
-							}
+							{}
 						~CGPUTextureReferenceInternals()
 							{
-								// Remove from references
-								mGPUTextureManagerInfo.mGPUTextureReferenceInternals -= this;
-
 								// Cleanup
 								unload();
 							}
 
 						// Instance methods
+				bool	hasTwoLastReferences() const
+							{ return getReferenceCount() == 2; }
+
 				bool	getIsLoaded() const
 							{ return mGPUTextureReference.hasGPUTexture(); }
 				void	loadOrQueueForLoading()
@@ -373,11 +370,16 @@ class CBitmapProcGPUTextureReferenceInternals : public CBitmapGPUTextureReferenc
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureReference
 
+// MARK: Lifecyclde methods
+
 //----------------------------------------------------------------------------------------------------------------------
-CGPUTextureReference::CGPUTextureReference(CGPUTextureReferenceInternals* internals)
+CGPUTextureReference::CGPUTextureReference(CGPUTextureReferenceInternals& internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = internals;
+	// A reference is specified to disallow anyone else creating an instance of this class.  This constructor is only
+	//	ever called from internal to this file so we know that we are simply passing the required pointer as a
+	//	reference.
+	mInternals = &internals;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -391,7 +393,23 @@ CGPUTextureReference::CGPUTextureReference(const CGPUTextureReference& other)
 CGPUTextureReference::~CGPUTextureReference()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->removeReference();
+	// Check which path we are following
+	if (mInternals->hasTwoLastReferences()) {
+		// Two references
+		mInternals->removeReference();
+		mInternals->mGPUTextureManagerInfo.mGPUTextureReferences -= *this;
+	} else
+		// Otherwise
+		mInternals->removeReference();
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+const CString& CGPUTextureReference::getReference() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mReference;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -412,6 +430,13 @@ void CGPUTextureReference::finishLoading() const
 	if (!mInternals->getIsLoaded())
 		// Setup for load
 		mInternals->finishLoading();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPUTextureReference::unload() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->unload();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -480,13 +505,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 	// Check if we have a reference
 	if (reference.hasReference())
 		// Look for file in already loaded render material images
-		for (TIteratorS<CGPUTextureReferenceInternals*> iterator =
-					mInternals->mGPUTextureManagerInfo.mGPUTextureReferenceInternals.getIterator();
+		for (TIteratorD<CGPUTextureReference> iterator =
+						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
 				iterator.hasValue(); iterator.advance()) {
 			// Check this one
-			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
+			if (!iterator.getValue().getReference().isEmpty() && (iterator.getValue().getReference() == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue()->addReference());
+				return iterator.getValue();
 		}
 
 	// Create new
@@ -494,12 +519,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 											new CBitmapGPUTextureReferenceInternals(bitmap, reference,
 													OV<EGPUTextureDataFormat>(), gpuTextureReferenceOptions,
 													mInternals->mGPUTextureManagerInfo);
-	CGPUTextureReference			gpuTextureReference(renderMaterialImageReferenceInternals);
+	CGPUTextureReference			textureReference(*renderMaterialImageReferenceInternals);
+	mInternals->mGPUTextureManagerInfo.mGPUTextureReferences += textureReference;
 
 	// Load
 	renderMaterialImageReferenceInternals->loadOrQueueForLoading();
 
-	return gpuTextureReference;
+	return textureReference;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -511,13 +537,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 	// Check if we have a reference
 	if (reference.hasReference())
 		// Look for file in already loaded render material images
-		for (TIteratorS<CGPUTextureReferenceInternals*> iterator =
-					mInternals->mGPUTextureManagerInfo.mGPUTextureReferenceInternals.getIterator();
+		for (TIteratorD<CGPUTextureReference> iterator =
+						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
 				iterator.hasValue(); iterator.advance()) {
 			// Check this one
-			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
+			if (!iterator.getValue().getReference().isEmpty() && (iterator.getValue().getReference() == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue()->addReference());
+				return iterator.getValue();
 		}
 
 	// Create new
@@ -525,12 +551,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 											new CBitmapGPUTextureReferenceInternals(bitmap, reference,
 													OV<EGPUTextureDataFormat>(gpuTextureDataFormat),
 													gpuTextureReferenceOptions, mInternals->mGPUTextureManagerInfo);
-	CGPUTextureReference			gpuTextureReference(renderMaterialImageReferenceInternals);
+	CGPUTextureReference			textureReference(*renderMaterialImageReferenceInternals);
+	mInternals->mGPUTextureManagerInfo.mGPUTextureReferences += textureReference;
 
 	// Load
 	renderMaterialImageReferenceInternals->loadOrQueueForLoading();
 
-	return gpuTextureReference;
+	return textureReference;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -542,13 +569,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 	// Check if we have a reference
 	if (reference.hasReference())
 		// Look for file in already loaded render material images
-		for (TIteratorS<CGPUTextureReferenceInternals*> iterator =
-					mInternals->mGPUTextureManagerInfo.mGPUTextureReferenceInternals.getIterator();
+		for (TIteratorD<CGPUTextureReference> iterator =
+						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
 				iterator.hasValue(); iterator.advance()) {
 			// Check this one
-			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
+			if (!iterator.getValue().getReference().isEmpty() && (iterator.getValue().getReference() == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue()->addReference());
+				return iterator.getValue();
 		}
 
 	// Create new
@@ -556,12 +583,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 											new CBitmapProcGPUTextureReferenceInternals(byteParceller, bitmapProc,
 													reference, OV<EGPUTextureDataFormat>(), gpuTextureReferenceOptions,
 													mInternals->mGPUTextureManagerInfo);
-	CGPUTextureReference			gpuTextureReference(renderMaterialImageReferenceInternals);
+	CGPUTextureReference			textureReference(*renderMaterialImageReferenceInternals);
+	mInternals->mGPUTextureManagerInfo.mGPUTextureReferences += textureReference;
 
 	// Load
 	renderMaterialImageReferenceInternals->loadOrQueueForLoading();
 
-	return gpuTextureReference;
+	return textureReference;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -573,13 +601,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 	// Check if we have a reference
 	if (reference.hasReference())
 		// Look for file in already loaded render material images
-		for (TIteratorS<CGPUTextureReferenceInternals*> iterator =
-					mInternals->mGPUTextureManagerInfo.mGPUTextureReferenceInternals.getIterator();
+		for (TIteratorD<CGPUTextureReference> iterator =
+						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
 				iterator.hasValue(); iterator.advance()) {
 			// Check this one
-			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
+			if (!iterator.getValue().getReference().isEmpty() && (iterator.getValue().getReference() == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue()->addReference());
+				return iterator.getValue();
 		}
 
 	// Create new
@@ -587,12 +615,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 											new CBitmapProcGPUTextureReferenceInternals(byteParceller, bitmapProc,
 													reference, OV<EGPUTextureDataFormat>(gpuTextureDataFormat),
 													gpuTextureReferenceOptions, mInternals->mGPUTextureManagerInfo);
-	CGPUTextureReference			gpuTextureReference(renderMaterialImageReferenceInternals);
+	CGPUTextureReference			textureReference(*renderMaterialImageReferenceInternals);
+	mInternals->mGPUTextureManagerInfo.mGPUTextureReferences += textureReference;
 
 	// Load
 	renderMaterialImageReferenceInternals->loadOrQueueForLoading();
 
-	return gpuTextureReference;
+	return textureReference;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -604,13 +633,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 	// Check if we have a reference
 	if (reference.hasReference())
 		// Look for file in already loaded render material images
-		for (TIteratorS<CGPUTextureReferenceInternals*> iterator =
-					mInternals->mGPUTextureManagerInfo.mGPUTextureReferenceInternals.getIterator();
+		for (TIteratorD<CGPUTextureReference> iterator =
+						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
 				iterator.hasValue(); iterator.advance()) {
 			// Check this one
-			if (!iterator.getValue()->mReference.isEmpty() && (iterator.getValue()->mReference == *reference))
+			if (!iterator.getValue().getReference().isEmpty() && (iterator.getValue().getReference() == *reference))
 				// Found existing
-				return CGPUTextureReference(iterator.getValue()->addReference());
+				return iterator.getValue();
 		}
 
 	// Create new
@@ -618,12 +647,13 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CByteParcelle
 											new CDataGPUTextureReferenceInternals(byteParceller, gpuTextureDataFormat,
 													size, reference, gpuTextureReferenceOptions,
 													mInternals->mGPUTextureManagerInfo);
-	CGPUTextureReference			gpuTextureReference(renderMaterialImageReferenceInternals);
+	CGPUTextureReference			textureReference(*renderMaterialImageReferenceInternals);
+	mInternals->mGPUTextureManagerInfo.mGPUTextureReferences += textureReference;
 
 	// Load
 	renderMaterialImageReferenceInternals->loadOrQueueForLoading();
 
-	return gpuTextureReference;
+	return textureReference;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -631,11 +661,11 @@ void CGPUTextureManager::loadAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all
-	for (TIteratorS<CGPUTextureReferenceInternals*> iterator =
-				mInternals->mGPUTextureManagerInfo.mGPUTextureReferenceInternals.getIterator();
+	for (TIteratorD<CGPUTextureReference> iterator =
+					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
 			iterator.hasValue(); iterator.advance())
 		// Start loading
-		iterator.getValue()->loadOrQueueForLoading();
+		iterator.getValue().load();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -659,9 +689,9 @@ void CGPUTextureManager::unloadAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all
-	for (TIteratorS<CGPUTextureReferenceInternals*> iterator =
-				mInternals->mGPUTextureManagerInfo.mGPUTextureReferenceInternals.getIterator();
+	for (TIteratorD<CGPUTextureReference> iterator =
+					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
 			iterator.hasValue(); iterator.advance())
 		// Unload
-		iterator.getValue()->unload();
+		iterator.getValue().unload();
 }

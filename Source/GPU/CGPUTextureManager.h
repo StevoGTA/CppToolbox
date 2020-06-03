@@ -25,17 +25,24 @@ typedef	CBitmap	(*CGPUTextureManagerBitmapProc)(const CByteParceller& byteParcel
 // MARK: - CGPUTextureReference
 
 class CGPUTextureReferenceInternals;
-class CGPUTextureReference {
+class CGPUTextureReference : public CEquatable {
 	// Methods
 	public:
 										// Lifecycle methods
-										CGPUTextureReference(CGPUTextureReferenceInternals* internals);
+										CGPUTextureReference(CGPUTextureReferenceInternals& internals);
 										CGPUTextureReference(const CGPUTextureReference& other);
 										~CGPUTextureReference();
 
+										// CEquatable methods
+				bool					operator==(const CEquatable& other) const
+											{ return mInternals == ((const CGPUTextureReference&) other).mInternals; }
+
 										// Instance methods
+		const	CString&				getReference() const;
+
 				void					load() const;
 				void					finishLoading() const;
+				void					unload() const;
 
 		const	CGPUTexture&			getGPUTexture() const;
 

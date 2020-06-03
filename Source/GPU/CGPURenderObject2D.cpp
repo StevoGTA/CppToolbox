@@ -251,7 +251,7 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 															-mInternals->mAnchorPoint.mY,
 															0.0));
 
-	TArray<const CGPUTexture>	gpuTextures;
+	TCArray<const CGPUTexture>	gpuTextures;
 	for (CArrayItemIndex i = 0; i < mInternals->mGPUTextureReferences.getCount(); i++)
 		gpuTextures += mInternals->mGPUTextureReferences[i].getGPUTexture();
 

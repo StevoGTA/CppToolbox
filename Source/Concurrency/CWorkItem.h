@@ -37,7 +37,7 @@ class CWorkItem {
 	// Methods
 	public:
 								// Lifecycle methods
-								CWorkItem(bool disposeWhenCompletedOrCancelled = false);
+								CWorkItem();
 		virtual					~CWorkItem();
 
 								// Instance methods
@@ -54,8 +54,8 @@ class CWorkItem {
 								// Subclass methods
 		virtual	void			perform() = 0;
 
-		virtual	void			completed() const;
-		virtual	void			cancelled() const;
+		virtual	void			completed() const {}
+		virtual	void			cancelled() const {}
 
 								// Internal-use only methods
 				void			transitionTo(EWorkItemState state);
@@ -72,8 +72,9 @@ class CProcWorkItem : public CWorkItem {
 	// Methods
 	public:
 				// Lifecycle methods
-				CProcWorkItem(CWorkItemProc proc, void* userData) : CWorkItem(true), mProc(proc), mUserData(userData) {}
-				~CProcWorkItem() {}
+				CProcWorkItem(CWorkItemProc proc, void* userData) :
+					CWorkItem(/*true*/), mProc(proc), mUserData(userData)
+					{}
 
 				// CWorkItem methods
 		void	perform()

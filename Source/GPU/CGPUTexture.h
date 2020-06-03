@@ -26,14 +26,16 @@ enum EGPUTextureDataFormat {
 class CGPUTexture {
 	// Methods
 	public:
-									// Lifecycle methods
-		virtual						~CGPUTexture() {}
+										// Lifecycle methods
+		virtual							~CGPUTexture() {}
 
-									// Instance methods
-		virtual	const	S2DSizeU16&	getSize() const = 0;
+										// Instance methods
+		virtual			CGPUTexture*	copy() const = 0;
 
-									// Temporary methods - will be removed in the future
-		virtual	const	S2DSizeU16&	getUsedSize() const = 0;
+		virtual	const	S2DSizeU16&		getSize() const = 0;
+
+										// Temporary methods - will be removed in the future
+		virtual	const	S2DSizeU16&		getUsedSize() const = 0;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

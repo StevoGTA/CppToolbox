@@ -88,7 +88,7 @@ class CWorkItemQueue {
 				void			resume();
 
 								// Class methods
-				CWorkItemQueue&	main();
+		static	CWorkItemQueue&	main();
 
 	// Properties
 	private:

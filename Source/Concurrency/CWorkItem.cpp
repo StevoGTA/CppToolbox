@@ -11,12 +11,8 @@
 
 class CWorkItemInternals {
 	public:
-		CWorkItemInternals(bool disposeWhenCompletedOrCancelled) :
-			mDisposeWhenCompletedOrCancelled(disposeWhenCompletedOrCancelled), mState(kWorkItemStateWaiting)
-			{}
-		~CWorkItemInternals() {}
-
-		bool			mDisposeWhenCompletedOrCancelled;
+		CWorkItemInternals() : mState(kWorkItemStateWaiting) {}
+ 
 		EWorkItemState	mState;
 };
 
@@ -27,10 +23,10 @@ class CWorkItemInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CWorkItem::CWorkItem(bool disposeWhenCompletedOrCancelled)
+CWorkItem::CWorkItem()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CWorkItemInternals(disposeWhenCompletedOrCancelled);
+	mInternals = new CWorkItemInternals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -47,30 +43,6 @@ EWorkItemState CWorkItem::getState() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mState;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::completed() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if need dispose
-	if (mInternals->mDisposeWhenCompletedOrCancelled) {
-		// Dispose
-		CWorkItem*	THIS = (CWorkItem*) this;
-		Delete(THIS);
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::cancelled() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if need dispose
-	if (mInternals->mDisposeWhenCompletedOrCancelled) {
-		// Dispose
-		CWorkItem*	THIS = (CWorkItem*) this;
-		Delete(THIS);
-	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
