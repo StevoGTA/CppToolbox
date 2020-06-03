@@ -8,18 +8,19 @@
 #include "CLock.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: TLockingArray
+// MARK: TNLockingArray
 
-template <typename T> class TLockingArray : public CArray {
+template <typename T> class TNLockingArray : public CArray {
 	// Methods
 	public:
 											// Lifecycle methods
-											TLockingArray(CArrayItemCount initialCapacity = 0) :
+											TNLockingArray(CArrayItemCount initialCapacity = 0) :
 												CArray(initialCapacity, (CArrayItemCopyProc) copy, dispose)
 												{}
-											TLockingArray(const T& item) : CArray(0, (CArrayItemCopyProc) copy, dispose)
+											TNLockingArray(const T& item) :
+												CArray(0, (CArrayItemCopyProc) copy, dispose)
 												{ CArray::add(new T(item), false); }
-											TLockingArray(const TArray<T>& array) : CArray(array) {}
+											TNLockingArray(const TArray<T>& array) : CArray(array) {}
 
 											// CArray methods
 						CArrayItemCount		getCount() const
@@ -32,7 +33,7 @@ template <typename T> class TLockingArray : public CArray {
 													return count;
 												}
 
-						TLockingArray<T>&	add(const T& item)
+						TNLockingArray<T>&	add(const T& item)
 												{
 													// Add under lock
 													mLock.lockForWriting();
@@ -41,7 +42,7 @@ template <typename T> class TLockingArray : public CArray {
 
 													return *this;
 												}
-						TLockingArray<T>&	addFrom(const TArray<T>& array)
+						TNLockingArray<T>&	addFrom(const TArray<T>& array)
 												{
 													// Add all under lock
 													mLock.lockForWriting();
@@ -72,7 +73,6 @@ template <typename T> class TLockingArray : public CArray {
 													mLock.unlockForReading();
 
 													return item;
-
 												}
 				const	T&					getFirst() const
 												{
@@ -109,7 +109,7 @@ template <typename T> class TLockingArray : public CArray {
 													return index;
 												}
 
-						TLockingArray<T>&	insertAtIndex(const T& item, CArrayItemIndex itemIndex)
+						TNLockingArray<T>&	insertAtIndex(const T& item, CArrayItemIndex itemIndex)
 												{
 													// Insert under lock
 													mLock.lockForWriting();
@@ -119,7 +119,7 @@ template <typename T> class TLockingArray : public CArray {
 													return *this;
 												}
 
-						TLockingArray<T>&	remove(const T& item)
+						TNLockingArray<T>&	remove(const T& item)
 												{
 													// Remove under lock
 													mLock.lockForWriting();
@@ -131,7 +131,7 @@ template <typename T> class TLockingArray : public CArray {
 
 													return *this;
 												}
-						TLockingArray<T>&	removeFrom(const TArray<T>& array)
+						TNLockingArray<T>&	removeFrom(const TArray<T>& array)
 												{
 													// Remove under lock
 													mLock.lockForWriting();
@@ -142,7 +142,7 @@ template <typename T> class TLockingArray : public CArray {
 
 													return *this;
 												}
-						TLockingArray<T>&	removeAtIndex(CArrayItemIndex itemIndex)
+						TNLockingArray<T>&	removeAtIndex(CArrayItemIndex itemIndex)
 												{
 													// Remove under lock
 													mLock.lockForWriting();
@@ -151,7 +151,7 @@ template <typename T> class TLockingArray : public CArray {
 
 													return *this;
 												}
-						TLockingArray<T>&	removeAll()
+						TNLockingArray<T>&	removeAll()
 												{
 													// Remove under lock
 													mLock.lockForWriting();
@@ -175,17 +175,17 @@ template <typename T> class TLockingArray : public CArray {
 											// Instance methods
 				const	T&					operator[] (CArrayItemIndex index) const
 												{ return *((T*) getItemAt(index)); }
-						TLockingArray<T>&	operator+=(const T& item)
+						TNLockingArray<T>&	operator+=(const T& item)
 												{ return add(item); }
-						TLockingArray<T>&	operator+=(const TArray<T>& other)
+						TNLockingArray<T>&	operator+=(const TArray<T>& other)
 												{ return addFrom(other); }
-						TLockingArray<T>&	operator+=(const TLockingArray<T>& other)
+						TNLockingArray<T>&	operator+=(const TNLockingArray<T>& other)
 												{ return addFrom(other); }
-						TLockingArray<T>&	operator-=(const T& item)
+						TNLockingArray<T>&	operator-=(const T& item)
 												{ return remove(item); }
-						TLockingArray<T>&	operator-=(const TArray<T>& other)
+						TNLockingArray<T>&	operator-=(const TArray<T>& other)
 												{ return removeFrom(other); }
-						TLockingArray<T>&	operator-=(const TLockingArray<T>& other)
+						TNLockingArray<T>&	operator-=(const TNLockingArray<T>& other)
 												{ return removeFrom(other); }
 
 	private:
@@ -194,6 +194,94 @@ template <typename T> class TLockingArray : public CArray {
 												{ return new T(*((T*) itemRef)); }
 		static	void						dispose(CArrayItemRef itemRef)
 												{ T* t = (T*) itemRef; Delete(t); }
+
+	// Properties
+	private:
+		CReadPreferringLock	mLock;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TILockingArray
+
+template <typename T> class TILockingArray : public CArray {
+	// Methods
+	public:
+									// Lifecycle methods
+									TILockingArray(CArrayItemCount initialCapacity = 0) :
+										CArray(initialCapacity, nil, dispose)
+										{}
+
+									// CArray methods
+				TILockingArray<T>&	add(T* item)	// Pointer to mirror that this is an instance array
+										{
+											// Add under lock
+											mLock.lockForWriting();
+											CArray::add(item);
+											mLock.unlockForWriting();
+
+											return *this;
+										}
+
+				T&					getAt(CArrayItemIndex index) const
+										{
+											// Get under lock
+											mLock.lockForReading();
+											T&	item = *((T*) getItemAt(index));
+											mLock.unlockForReading();
+
+											return item;
+										}
+				OV<CArrayItemIndex>	getIndexOf(T& item) const
+										{
+											// Query under lock
+											mLock.lockForReading();
+											OV<CArrayItemIndex>	index;
+											for (CArrayItemIndex i = 0; i < getCount(); i++) {
+												// Check if same
+												T&	testItem = getAt(i);
+												if (&item == &testItem)
+													// Match
+													index = i;
+													break;
+											}
+											mLock.unlockForReading();
+
+											return index;
+										}
+
+				TILockingArray<T>&	remove(T& item)
+										{
+											// Remove under lock
+											mLock.lockForWriting();
+											OV<CArrayItemIndex>	index = getIndexOf(item);
+											if (index.hasValue())
+												// Remove
+												removeAtIndex(*index);
+											mLock.unlockForWriting();
+
+											return *this;
+										}
+
+				TILockingArray<T>&	apply(void (proc)(T& item, void* userData), void* userData = nil)
+										{
+											// Perform under lock
+											mLock.lockForReading();
+											CArray::apply((CArrayApplyProc) proc, userData);
+											mLock.unlockForReading();
+
+											return *this;
+										}
+
+									// Instance methods
+				TILockingArray<T>&	operator+=(T* item)	// Pointer to mirror that this is an instance array
+										{ return add(item); }
+				TILockingArray<T>&	operator-=(T& item)
+										{ return remove(item); }
+
+	private:
+									// Class methods
+		static	void				dispose(CArrayItemRef itemRef)
+										{ T* t = (T*) itemRef; Delete(t); }
 
 	// Properties
 	private:
