@@ -1,13 +1,15 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	COpenGLRenderState.cpp			©2020 Stevo Brock	All rights reserved.
+//	CMetalRenderState.mm			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CGPURenderState.h"
+#import "CGPURenderState.h"
 
-#include "CDictionary.h"
-#include "COpenGLProgram.h"
-#include "COpenGLRenderState.h"
-#include "COpenGLTexture.h"
+#import "CMetalRenderState.h"
+#import "CMetalShader.h"
+#import "CMetalTexture.h"
+#import "MetalShaderTypes.h"
+
+#import <simd/simd.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderStateInternals
@@ -16,31 +18,16 @@ class CGPURenderStateInternals {
 	public:
 		CGPURenderStateInternals(CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
 			mVertexShader(vertexShader), mFragmentShader(fragmentShader), mTriangleOffset(0)
-			{
-				// Finish setup
-				glGenVertexArrays(1, &mVertexArray);
-				glGenBuffers(1, &mModelDataBuffer);
-			}
-		~CGPURenderStateInternals()
-			{
-				// Cleanup
-				glDeleteBuffers(1, &mModelDataBuffer);
-				glDeleteVertexArrays(1, &mVertexArray);
-			}
+			{}
 
 		CGPUVertexShader&						mVertexShader;
 		CGPUFragmentShader&						mFragmentShader;
 
-		SMatrix4x4_32							mProjectionMatrix;
-		SMatrix4x4_32							mViewMatrix;
 		SMatrix4x4_32							mModelMatrix;
 
 		OR<const SGPUVertexBuffer>				mVertexBuffer;
 		UInt32									mTriangleOffset;
 		OR<const TArray<const CGPUTexture> >	mTextures;
-
-		GLuint									mVertexArray;
-		GLuint									mModelDataBuffer;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -55,23 +42,12 @@ CGPURenderState::CGPURenderState(CGPUVertexShader& vertexShader, CGPUFragmentSha
 {
 	// Setup
 	mInternals = new CGPURenderStateInternals(vertexShader, fragmentShader);
-
-	// Configure GL
-	((COpenGLVertexShader&) mInternals->mVertexShader).configureGL();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CGPURenderState::~CGPURenderState()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Reset
-	if (glIsEnabled(GL_BLEND))
-		// Disable
-		glDisable(GL_BLEND);
-
-	// Reset GL
-	((COpenGLVertexShader&) mInternals->mVertexShader).resetGL();
-
 	// Cleanup
 	Delete(mInternals);
 }
@@ -82,14 +58,12 @@ CGPURenderState::~CGPURenderState()
 void CGPURenderState::setProjectionMatrix(const SMatrix4x4_32& projectionMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mProjectionMatrix = projectionMatrix;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPURenderState::setViewMatrix(const SMatrix4x4_32& viewMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mViewMatrix = viewMatrix;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,57 +85,83 @@ void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuff
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+UInt32 CGPURenderState::getTriangleOffset() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mTriangleOffset;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	static			TDictionary<COpenGLProgram>	sPrograms;
-
-			const	SGPUVertexBuffer&			gpuVertexBuffer = mInternals->mVertexBuffer.getReference();
-					UInt32						offset =
-														gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize *
-																mInternals->mTriangleOffset;
-
-	// Setup buffers
-	glBindVertexArray(mInternals->mVertexArray);
-
-	glBindBuffer(GL_ARRAY_BUFFER, mInternals->mModelDataBuffer);
-	glBufferData(GL_ARRAY_BUFFER, gpuVertexBuffer.mData.getSize() - offset,
-			(UInt8*) gpuVertexBuffer.mData.getBytePtr() + offset, GL_STATIC_DRAW);
-
 	// Setup textures
 			bool						needBlend = false;
 	const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();
 	for (CArrayItemIndex i = 0; i < gpuTextures.getCount(); i++) {
 		// Setup
-		const	COpenGLTexture&	openGLTexture = (const COpenGLTexture&) gpuTextures[i];
+		const	CMetalTexture&	metalTexture = (const CMetalTexture&) gpuTextures[i];
 
 		// Setup this texture
-		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, openGLTexture.getTextureName());
-		needBlend |= openGLTexture.hasTransparency();
+		[renderStateCommitInfo.mRenderCommandEncoder setFragmentTexture:metalTexture.getMetalTexture() atIndex:i];
+		needBlend |= metalTexture.hasTransparency();
 	}
 
-    // Setup blend
-	if (needBlend) {
-		// Need to blend
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Setup functions
+	NSString*		vertexShaderName =
+							(__bridge NSString*)
+									((CMetalVertexShader&) mInternals->mVertexShader).getName().getOSString();
+	id<MTLFunction>	vertexFunction = renderStateCommitInfo.mMetalShadersMap[vertexShaderName];
+	if (vertexFunction == nil) {
+		// Create and store
+		vertexFunction = [renderStateCommitInfo.mShaderLibrary newFunctionWithName:vertexShaderName];
+		renderStateCommitInfo.mMetalShadersMap[vertexShaderName] = vertexFunction;
 	}
 
-	// Setup program
-	CString	programKey =
-					mInternals->mVertexShader.getUUID().getBase64String() + CString(OSSTR("/")) +
-							mInternals->mFragmentShader.getUUID().getBase64String();
+	NSString*		fragmentShaderName =
+							(__bridge NSString*)
+									((CMetalFragmentShader&) mInternals->mFragmentShader).getName().getOSString();
+	id<MTLFunction>	fragmentFunction = renderStateCommitInfo.mMetalShadersMap[fragmentShaderName];
+	if (fragmentFunction == nil) {
+		// Create and store
+		fragmentFunction = [renderStateCommitInfo.mShaderLibrary newFunctionWithName:fragmentShaderName];
+		renderStateCommitInfo.mMetalShadersMap[fragmentShaderName] = fragmentFunction;
+	}
 
-	// Ensure we have this program
-	if (!sPrograms[programKey].hasReference())
-		// Create and cache
-		sPrograms.set(programKey,
-				COpenGLProgram((COpenGLVertexShader&) mInternals->mVertexShader,
-						(COpenGLFragmentShader&) mInternals->mFragmentShader));
+	// Setup render pipeline descriptor
+	renderStateCommitInfo.mRenderPipelineDescriptor.label = @"Pipeline";
+	renderStateCommitInfo.mRenderPipelineDescriptor.vertexFunction = vertexFunction;
+	renderStateCommitInfo.mRenderPipelineDescriptor.fragmentFunction = fragmentFunction;
+	renderStateCommitInfo.mRenderPipelineDescriptor.vertexDescriptor =
+			(__bridge MTLVertexDescriptor*) mInternals->mVertexBuffer->mInternalReference;
 
-	// Create internals
-	sPrograms[programKey]->prepare(mInternals->mProjectionMatrix, mInternals->mViewMatrix, mInternals->mModelMatrix,
-			gpuVertexBuffer);
+	renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].blendingEnabled = needBlend;
+	renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor =
+			MTLBlendFactorSourceAlpha;
+	renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor =
+			MTLBlendFactorOneMinusSourceAlpha;
+
+	// Create render pipeline state
+	NSError*	error;
+	id<MTLRenderPipelineState>	renderPipelineState =
+										[renderStateCommitInfo.mDevice
+												newRenderPipelineStateWithDescriptor:
+														renderStateCommitInfo.mRenderPipelineDescriptor
+												error:&error];
+	if (renderPipelineState == nil)
+		// Error
+		NSLog(@"Failed to create pipeline state with error %@", error);
+
+	// Setup render command encoder
+	[renderStateCommitInfo.mRenderCommandEncoder setRenderPipelineState:renderPipelineState];
+	[renderStateCommitInfo.mRenderCommandEncoder setVertexBytes:mInternals->mVertexBuffer->mData.getBytePtr()
+			length:mInternals->mVertexBuffer->mData.getSize() atIndex:kBufferIndexVertexPosition];
+	[renderStateCommitInfo.mRenderCommandEncoder setVertexBytes:mInternals->mVertexBuffer->mData.getBytePtr()
+			length:mInternals->mVertexBuffer->mData.getSize() atIndex:kBufferIndexVertexTextureCoordinate];
+	[renderStateCommitInfo.mRenderCommandEncoder setVertexBytes:mInternals->mVertexBuffer->mData.getBytePtr()
+			length:mInternals->mVertexBuffer->mData.getSize() atIndex:kBufferIndexVertexTextureIndex];
+
+	((CMetalVertexShader&) mInternals->mVertexShader).setModelMatrix(mInternals->mModelMatrix);
+	((CMetalVertexShader&) mInternals->mVertexShader).setup(renderStateCommitInfo.mRenderCommandEncoder,
+			renderStateCommitInfo.mDevice);
 }

@@ -155,25 +155,6 @@ template <typename T> struct TMatrix4x4 {
 									m4_1 * m.m1_4 + m4_2 * m.m2_4 + m4_3 * m.m3_4 + m4_4 * m.m4_4);
 						}
 
-					// Class methods
-		static	TMatrix4x4<T>	makeOrthographicProjection(T left, T right, T bottom, T top, T nearZ, T farZ)
-									{
-										// Setup
-										T	rlSum = right + left;
-										T	rlDifference = right - left;
-										T	tbSum = top + bottom;
-										T	tbDifference = top - bottom;
-										T	fnSum = farZ + nearZ;
-										T	fnDifference = farZ - nearZ;
-
-										return TMatrix4x4<T>(
-												2.0 / rlDifference, 0.0, 0.0, 0.0,
-												0.0, 2.0 / tbDifference, 0.0, 0.0,
-												0.0, 0.0, -2.0 / fnDifference, 0.0,
-												-rlSum / rlDifference, -tbSum / tbDifference, -fnSum / fnDifference,
-														1.0);
-									}
-
 	// Properties
 	T	m1_1;	// 0
 	T	m2_1;	// 1

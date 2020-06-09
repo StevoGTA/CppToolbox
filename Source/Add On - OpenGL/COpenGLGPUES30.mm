@@ -4,6 +4,7 @@
 
 #import "COpenGLGPU.h"
 
+#import "COpenGLRenderState.h"
 #import "COpenGLTexture.h"
 
 #import <OpenGLES/ES3/glext.h>
@@ -108,7 +109,11 @@ void CGPU::renderStart() const
 	if (!mInternals->mPerformedSetup) {
 		// Update
 		mInternals->mProjectionMatrix =
-				SMatrix4x4_32::makeOrthographicProjection(0.0, size.mWidth, size.mHeight, 0.0, -1.0, 1.0);
+				SMatrix4x4_32(
+						2.0 / size.mWidth, 0.0, 0.0, 0.0,
+						0.0, 2.0 / -size.mHeight, 0.0, 0.0,
+						0.0, 0.0, -1.0, 0.0,
+						-1.0, 1.0, 0.0, 1.0);
 
 		// Setup
 		if (mInternals->mFrameBufferName != 0) {
@@ -164,7 +169,7 @@ void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32
 	renderState.setModelMatrix(modelMatrix);
 
 	// Commit
-	renderState.commit();
+	renderState.commit(SGPURenderStateCommitInfo());
 
 	// Draw
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, triangleCount + 2);

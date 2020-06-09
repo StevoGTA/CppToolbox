@@ -245,6 +245,7 @@ class CString : public CHashable {
 												{ getCString().hashInto(hasher); }
 
 											// Instance methods
+				const	OSString			getOSString() const;
 				const	SCString			getCString(EStringEncoding encoding = kStringEncodingTextDefault) const;
 						CStringLength		getLength() const;
 						CStringLength		getLength(EStringEncoding encoding, SInt8 lossCharacter = '\0',

@@ -27,9 +27,10 @@ struct SGPUVertexBufferInfo {
 
 	// Lifecycle methods
 	SGPUVertexBufferInfo(UInt8 vertexCount, UInt8 vertexOffset, UInt8 textureCoordinateCount,
-			UInt8 textureCoordinateOffset, UInt8 totalSize) :
+			UInt8 textureCoordinateOffset, UInt8 textureIndexOffset, UInt8 totalSize) :
 		mVertexCount(vertexCount), mVertexOffset(vertexOffset), mTextureCoordinateCount(textureCoordinateCount),
-				mTextureCoordinateOffset(textureCoordinateOffset), mTotalSize(totalSize)
+				mTextureCoordinateOffset(textureCoordinateOffset), mTextureIndexOffset(textureIndexOffset),
+				mTotalSize(totalSize)
 		{}
 
 	// Properties
@@ -37,6 +38,7 @@ struct SGPUVertexBufferInfo {
 	UInt8	mVertexOffset;
 	UInt8	mTextureCoordinateCount;
 	UInt8	mTextureCoordinateOffset;
+	UInt8	mTextureIndexOffset;
 	UInt8	mTotalSize;
 };
 
@@ -62,7 +64,7 @@ template <typename T> struct TGPUVertexType2Vertex2Texture {
 														// Initialize
 														sSGPUVertexBufferInfo =
 																new SGPUVertexBufferInfo(2, 0, 2, 2 * sizeof(T),
-																		5 * sizeof(T));
+																		4 * sizeof(T), 5 * sizeof(T));
 
 													return *sSGPUVertexBufferInfo;
 												}
@@ -97,7 +99,7 @@ template <typename T> class TGPUVertexType3Vertex2Texture {
 														// Initialize
 														sSGPUVertexBufferInfo =
 																new SGPUVertexBufferInfo(3, 0, 2, 3 * sizeof(T),
-																		6 * sizeof(T));
+																		5 * sizeof(T), 6 * sizeof(T));
 
 													return *sSGPUVertexBufferInfo;
 												}

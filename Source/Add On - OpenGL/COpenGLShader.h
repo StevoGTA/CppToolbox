@@ -34,17 +34,18 @@ class COpenGLVertexShader : public CGPUVertexShader {
 						GLuint				getShader() const;
 
 				const	TArray<CString>&	getAttributeNames() const;
+				const	TArray<CString>&	getUniformNames() const;
+
+											// Subclass methods
 		virtual			void				setAttibutes(const CDictionary& attributeInfo,
 													const SGPUVertexBuffer& gpuVertexBuffer) = 0;
-
-				const	TArray<CString>&	getUniformNames() const;
 		virtual			void				setUniforms(const CDictionary& uniformInfo,
 													const SMatrix4x4_32& projectionMatrix,
 													const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
 													= 0;
 
-		virtual	void						configureGL() {}
-		virtual	void						resetGL() {}
+		virtual			void				configureGL() {}
+		virtual			void				resetGL() {}
 
 	protected:
 											// Lifecycle methods
@@ -71,6 +72,8 @@ class COpenGLFragmentShader : public CGPUFragmentShader {
 						GLuint				getShader() const;
 
 				const	TArray<CString>&	getUniformNames() const;
+
+											// Subclass methods
 		virtual			void				setUniforms(const CDictionary& uniformInfo) = 0;
 
 	protected:
