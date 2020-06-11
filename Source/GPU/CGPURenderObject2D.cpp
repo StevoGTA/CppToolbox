@@ -11,65 +11,79 @@
 
 class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2DInternals> {
 	public:
-		CGPURenderObject2DInternals(CGPU& gpu, const TArray<SGPURenderObject2DItem>& items,
-				const TArray<CGPUTextureReference>& gpuTextureReferences) :
-			TReferenceCountable(),
-					mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
+				CGPURenderObject2DInternals(CGPU& gpu, const TArray<SGPURenderObject2DItem>& items,
+						const TArray<CGPUTextureReference>& gpuTextureReferences) :
+					TReferenceCountable(),
+							mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
 							mGPUVertexBuffer(
-									gpu.allocateVertexBuffer(SGPUVertexType2Vertex2Texture32::getGPUVertexBufferInfo(),
-											6 * items.getCount())),
-							mAngleRadians(0.0), mAlpha(1.0), mScale(1.0, 1.0)
-			{
-				// Setup buffer
-				SGPUVertexType2Vertex2Texture32*	bufferPtr =
-															(SGPUVertexType2Vertex2Texture32*)
-																	mGPUVertexBuffer.mData.getMutableBytePtr();
-				for (TIteratorD<SGPURenderObject2DItem> iterator = items.getIterator(); iterator.hasValue();
-						iterator.advance()) {
-					// Setup
-					const	SGPURenderObject2DItem&	item = iterator.getValue();
-					const	S2DRectF32&				screenRect = item.mScreenRect;
-					const	S2DRectF32&				textureRect = item.mTextureRect;
+									mGPU.allocateVertexBuffer(SGPUVertexType2Vertex2Texture32::getGPUVertexBufferInfo(),
+											vertexData(items))),
+							mAngleRadians(0.0), mAlpha(1.0),
+							mScale(1.0, 1.0)
+					{}
+				~CGPURenderObject2DInternals()
+					{
+						// Cleanup
+						mGPU.disposeBuffer(mGPUVertexBuffer);
+					}
 
-							Float32					minX = screenRect.mOrigin.mX;
-							Float32					maxX = screenRect.mOrigin.mX + screenRect.getWidth();
-							Float32					minY = screenRect.mOrigin.mY;
-							Float32					maxY = screenRect.mOrigin.mY + screenRect.getHeight();
+		CData	vertexData(const TArray<SGPURenderObject2DItem>& items)
+					{
+						// Setup
+						const	SGPUVertexBufferInfo&	gpuVertexBufferInfo =
+																SGPUVertexType2Vertex2Texture32::
+																		getGPUVertexBufferInfo();
 
-							Float32					minS = textureRect.getMinX();
-							Float32					maxS = textureRect.getMaxX();
-							Float32					minT = textureRect.getMinY();
-							Float32					maxT = textureRect.getMaxY();
 
-					// Store in buffer
-					*(bufferPtr++) =
-							SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
-									item.mTextureIndex);
-					*(bufferPtr++) =
-							SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
-									item.mTextureIndex);
+						// Setup buffer
+						CData								vertexData(gpuVertexBufferInfo.mTotalSize *
+																	items.getCount() * 6);
+						SGPUVertexType2Vertex2Texture32*	vertexInfoPtr =
+																	(SGPUVertexType2Vertex2Texture32*)
+																			vertexData.getMutableBytePtr();
+						for (TIteratorD<SGPURenderObject2DItem> iterator = items.getIterator(); iterator.hasValue();
+								iterator.advance()) {
+							// Setup
+							const	SGPURenderObject2DItem&	item = iterator.getValue();
+							const	S2DRectF32&				screenRect = item.mScreenRect;
+							const	S2DRectF32&				textureRect = item.mTextureRect;
 
-					*(bufferPtr++) =
-							SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, maxY), S2DPointF32(maxS, maxT),
-									item.mTextureIndex);
+									Float32					minX = screenRect.mOrigin.mX;
+									Float32					maxX = screenRect.mOrigin.mX + screenRect.getWidth();
+									Float32					minY = screenRect.mOrigin.mY;
+									Float32					maxY = screenRect.mOrigin.mY + screenRect.getHeight();
 
-					*(bufferPtr++) =
-							SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, minY), S2DPointF32(minS, minT),
-									item.mTextureIndex);
+									Float32					minS = textureRect.getMinX();
+									Float32					maxS = textureRect.getMaxX();
+									Float32					minT = textureRect.getMinY();
+									Float32					maxT = textureRect.getMaxY();
 
-					*(bufferPtr++) =
-							SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
-									item.mTextureIndex);
-					*(bufferPtr++) =
-							SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
-									item.mTextureIndex);
-				}
-			}
-		~CGPURenderObject2DInternals()
-			{
-				// Cleanup
-				mGPU.disposeBuffer(mGPUVertexBuffer);
-			}
+							// Store in buffer
+							*(vertexInfoPtr++) =
+									SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
+											item.mTextureIndex);
+							*(vertexInfoPtr++) =
+									SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
+											item.mTextureIndex);
+
+							*(vertexInfoPtr++) =
+									SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, maxY), S2DPointF32(maxS, maxT),
+											item.mTextureIndex);
+
+							*(vertexInfoPtr++) =
+									SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, minY), S2DPointF32(minS, minT),
+											item.mTextureIndex);
+
+							*(vertexInfoPtr++) =
+									SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
+											item.mTextureIndex);
+							*(vertexInfoPtr++) =
+									SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
+											item.mTextureIndex);
+						}
+
+						return vertexData;
+					}
 
 		CGPU&							mGPU;
 		TArray<CGPUTextureReference>	mGPUTextureReferences;

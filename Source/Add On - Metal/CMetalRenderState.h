@@ -7,7 +7,21 @@
 #import <Metal/Metal.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPURenderStateCommitInfo
+// MARK: SMetalVertexBufferInfo
+
+struct SMetalVertexBufferInfo {
+	// Lifecycle methods
+	SMetalVertexBufferInfo(MTLVertexDescriptor* vertexDescriptor, id<MTLBuffer> vertexBuffer) :
+		mVertexDescriptor(vertexDescriptor), mVertexBuffer(vertexBuffer)
+		{}
+
+	// Properties
+	MTLVertexDescriptor*	mVertexDescriptor;
+	id<MTLBuffer>			mVertexBuffer;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SGPURenderStateCommitInfo
 
 struct SGPURenderStateCommitInfo {
 	// Lifecycle methods

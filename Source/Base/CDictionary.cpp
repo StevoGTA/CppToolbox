@@ -917,6 +917,10 @@ TIteratorS<SDictionaryItem> CDictionary::getIterator() const
 CDictionary& CDictionary::operator=(const CDictionary& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
 	// Remove reference to ourselves
 	mInternals->removeReference();
 

@@ -387,6 +387,10 @@ CString CData::getBase64String(bool prettyPrint) const
 CData& CData::operator=(const CData& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
 	// Remove reference to ourselves
 	mInternals->removeReference();
 

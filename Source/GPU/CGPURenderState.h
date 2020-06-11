@@ -7,7 +7,7 @@
 #include "CGPUShader.h"
 #include "CGPUTexture.h"
 #include "CMatrix.h"
-#include "SGPUBuffer.h"
+#include "SGPUVertexBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SGPURenderStateCommitInfo

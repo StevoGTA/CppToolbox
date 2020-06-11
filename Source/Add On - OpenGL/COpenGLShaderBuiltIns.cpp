@@ -452,9 +452,7 @@ class COpenGLVertexShaderClip : public COpenGLVertexShader {
 					}
 
 		void	setClipPlane(const SMatrix4x1_32& clipPlane)
-					{
-						mClipPlane = clipPlane;
-					}
+					{ mClipPlane = clipPlane; }
 
 				SMatrix4x1_32	mClipPlane;
 
@@ -589,9 +587,7 @@ class COpenGLFragmentShaderOpacity : public COpenGLFragmentShader {
 					}
 
 		void	setOpacity(Float32 opacity)
-					{
-						mOpacity = opacity;
-					}
+					{ mOpacity = opacity; }
 
 				Float32	mOpacity;
 

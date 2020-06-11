@@ -129,11 +129,13 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	}
 
 	// Setup render pipeline descriptor
+	SMetalVertexBufferInfo*	metalVertexBufferInfo =
+									(SMetalVertexBufferInfo*) mInternals->mVertexBuffer->mInternalReference;
+
 	renderStateCommitInfo.mRenderPipelineDescriptor.label = @"Pipeline";
 	renderStateCommitInfo.mRenderPipelineDescriptor.vertexFunction = vertexFunction;
 	renderStateCommitInfo.mRenderPipelineDescriptor.fragmentFunction = fragmentFunction;
-	renderStateCommitInfo.mRenderPipelineDescriptor.vertexDescriptor =
-			(__bridge MTLVertexDescriptor*) mInternals->mVertexBuffer->mInternalReference;
+	renderStateCommitInfo.mRenderPipelineDescriptor.vertexDescriptor = metalVertexBufferInfo->mVertexDescriptor;
 
 	renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].blendingEnabled = needBlend;
 	renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor =
@@ -142,7 +144,7 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 			MTLBlendFactorOneMinusSourceAlpha;
 
 	// Create render pipeline state
-	NSError*	error;
+	NSError*					error;
 	id<MTLRenderPipelineState>	renderPipelineState =
 										[renderStateCommitInfo.mDevice
 												newRenderPipelineStateWithDescriptor:
@@ -154,14 +156,17 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 
 	// Setup render command encoder
 	[renderStateCommitInfo.mRenderCommandEncoder setRenderPipelineState:renderPipelineState];
-	[renderStateCommitInfo.mRenderCommandEncoder setVertexBytes:mInternals->mVertexBuffer->mData.getBytePtr()
-			length:mInternals->mVertexBuffer->mData.getSize() atIndex:kBufferIndexVertexPosition];
-	[renderStateCommitInfo.mRenderCommandEncoder setVertexBytes:mInternals->mVertexBuffer->mData.getBytePtr()
-			length:mInternals->mVertexBuffer->mData.getSize() atIndex:kBufferIndexVertexTextureCoordinate];
-	[renderStateCommitInfo.mRenderCommandEncoder setVertexBytes:mInternals->mVertexBuffer->mData.getBytePtr()
-			length:mInternals->mVertexBuffer->mData.getSize() atIndex:kBufferIndexVertexTextureIndex];
+	[renderStateCommitInfo.mRenderCommandEncoder setVertexBuffer:metalVertexBufferInfo->mVertexBuffer offset:0
+			atIndex:kBufferIndexVertexPosition];
+	[renderStateCommitInfo.mRenderCommandEncoder setVertexBuffer:metalVertexBufferInfo->mVertexBuffer offset:0
+			atIndex:kBufferIndexVertexTextureCoordinate];
+	[renderStateCommitInfo.mRenderCommandEncoder setVertexBuffer:metalVertexBufferInfo->mVertexBuffer offset:0
+			atIndex:kBufferIndexVertexTextureIndex];
 
 	((CMetalVertexShader&) mInternals->mVertexShader).setModelMatrix(mInternals->mModelMatrix);
 	((CMetalVertexShader&) mInternals->mVertexShader).setup(renderStateCommitInfo.mRenderCommandEncoder,
+			renderStateCommitInfo.mDevice);
+
+	((CMetalFragmentShader&) mInternals->mFragmentShader).setup(renderStateCommitInfo.mRenderCommandEncoder,
 			renderStateCommitInfo.mDevice);
 }

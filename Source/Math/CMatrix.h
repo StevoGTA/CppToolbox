@@ -14,8 +14,8 @@ template <typename T> struct TMatrix2x1 {
 					TMatrix2x1(T m1_1, T m2_1) : m1_1(m1_1), m2_1(m2_1) {}
 
 					// Instance methods
-	TMatrix2x1<T>	operator+(const TMatrix2x1<T>& m) const
-						{ return TMatrix2x1<T>(m1_1 + m.m1_1, m2_1 + m.m2_1); }
+//	TMatrix2x1<T>	operator+(const TMatrix2x1<T>& m) const
+//						{ return TMatrix2x1<T>(m1_1 + m.m1_1, m2_1 + m.m2_1); }
 
 	// Properties
 	T	m1_1;
@@ -23,7 +23,6 @@ template <typename T> struct TMatrix2x1 {
 };
 
 typedef TMatrix2x1<Float32>	SMatrix2x1_32;
-typedef TMatrix2x1<Float64>	SMatrix2x1_64;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TMatrix2x2
@@ -33,8 +32,8 @@ template <typename T> struct TMatrix2x2 {
 					TMatrix2x2(T m1_1, T m2_1, T m1_2, T m2_2) : m1_1(m1_1), m2_1(m2_1), m1_2(m1_2), m2_2(m2_2) {}
 
 					// Instance methods
-	TMatrix2x1<T>	operator*(const TMatrix2x1<T>& m) const
-						{ return TMatrix2x1<T>(m1_1 * m.m1_1 + m1_2 * m.m2_1, m2_1 * m.m1_1 + m2_2 * m.m2_1); }
+//	TMatrix2x1<T>	operator*(const TMatrix2x1<T>& m) const
+//						{ return TMatrix2x1<T>(m1_1 * m.m1_1 + m1_2 * m.m2_1, m2_1 * m.m1_1 + m2_2 * m.m2_1); }
 
 	// Properties
 	T	m1_1;
@@ -44,7 +43,6 @@ template <typename T> struct TMatrix2x2 {
 };
 
 typedef TMatrix2x2<Float32>	SMatrix2x2_32;
-typedef TMatrix2x2<Float64>	SMatrix2x2_64;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TMatrix4x1
@@ -62,7 +60,6 @@ template <typename T> struct TMatrix4x1 {
 };
 
 typedef TMatrix4x1<Float32>	SMatrix4x1_32;
-typedef TMatrix4x1<Float64>	SMatrix4x1_64;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TMatrix4x4
@@ -175,4 +172,3 @@ template <typename T> struct TMatrix4x4 {
 };
 
 typedef TMatrix4x4<Float32>	SMatrix4x4_32;
-typedef TMatrix4x4<Float64>	SMatrix4x4_64;

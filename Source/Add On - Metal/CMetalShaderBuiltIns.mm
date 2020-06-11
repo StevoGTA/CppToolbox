@@ -16,12 +16,10 @@
 
 class CMetalVertexShaderBasic : public CMetalVertexShader {
 	public:
-				CMetalVertexShaderBasic() :
-					CMetalVertexShader()
-					{}
+				CMetalVertexShaderBasic() : CMetalVertexShader() {}
 
 		CString	getName() const
-					{ return CString(OSSTR("basicVertexShader")); }
+					{ return CString(OSSTR("vertexShaderBasic")); }
 
 		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const
 					{
@@ -38,47 +36,7 @@ class CMetalVertexShaderBasic : public CMetalVertexShader {
 						[renderCommandEncoder setVertexBuffer:basicVertexUniformsBuffer offset:0
 								atIndex:kBufferIndexVertexUniforms];
 					}
-
-//		void	setAttibutes(const CDictionary& attributeInfo, const SGPUVertexBuffer& gpuVertexBuffer)
-//					{
-//						// Setup attributes
-//						GLint	positionAttributeLocation = attributeInfo.getSInt32(mPositionAttributeName);
-//						glEnableVertexAttribArray(positionAttributeLocation);
-//						glVertexAttribPointer(positionAttributeLocation,
-//								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexCount, GL_FLOAT, GL_FALSE,
-//								(GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
-//								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexOffset);
-//
-//						GLint	textureCoordinateAttributeLocation =
-//										attributeInfo.getSInt32(mTextureCoordinateAttributeName);
-//						glEnableVertexAttribArray(textureCoordinateAttributeLocation);
-//						glVertexAttribPointer(textureCoordinateAttributeLocation,
-//								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateCount, GL_FLOAT,
-//								GL_FALSE, (GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
-//								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateOffset);
-//					}
-//
-//		void	setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
-//						const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
-//					{
-//						// Setup uniforms
-//						SMatrix4x4_32	modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
-//						GLint			modelViewProjectionMatrixUniformLocation =
-//												uniformInfo.getSInt32(mModelViewProjectionMatrixUniformName);
-//						glUniformMatrix4fv(modelViewProjectionMatrixUniformLocation, 1, 0,
-//								(GLfloat*) &modelViewProjectionMatrix);
-//					}
-
-//		static	CString	mPositionAttributeName;
-//		static	CString	mTextureCoordinateAttributeName;
-//
-//		static	CString	mModelViewProjectionMatrixUniformName;
 };
-
-//CString	CMetalVertexShaderBasic::mPositionAttributeName(OSSTR("position"));
-//CString	CMetalVertexShaderBasic::mTextureCoordinateAttributeName(OSSTR("texCoord0"));
-//
-//CString	CMetalVertexShaderBasic::mModelViewProjectionMatrixUniformName(OSSTR("modelViewProjectionMatrix"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -86,105 +44,33 @@ class CMetalVertexShaderBasic : public CMetalVertexShader {
 
 class CMetalVertexShaderClip : public CMetalVertexShader {
 	public:
-				CMetalVertexShaderClip() :
-					CMetalVertexShader()
-					{}
+				CMetalVertexShaderClip() : CMetalVertexShader() {}
 
 		CString	getName() const
-					{ return CString(OSSTR("clipVertexShader")); }
+					{ return CString(OSSTR("vertexShaderClip")); }
 
 		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const
 					{
-//						// Setup instance uniforms
-//						id<MTLBuffer>	basicVertexUniformsBuffer =
-//												[device newBufferWithLength:sizeof(BasicVertexUniforms)
-//														options:MTLResourceStorageModeShared];
-//						basicVertexUniformsBuffer.label = @"Basic Vertex Uniforms";
-//
-//						BasicVertexUniforms*	basicVertexUniforms =
-//														(BasicVertexUniforms*) basicVertexUniformsBuffer.contents;
-//						basicVertexUniforms->mModelMatrix = *((matrix_float4x4*) &getModelMatrix());
-//
-//						[renderCommandEncoder setVertexBuffer:basicVertexUniformsBuffer offset:0
-//								atIndex:kBufferIndexVertexUniforms];
-					}
-//		void	setAttibutes(const CDictionary& attributeInfo, const SGPUVertexBuffer& gpuVertexBuffer)
-//					{
-//						// Setup attributes
-//						GLint	positionAttributeLocation = attributeInfo.getSInt32(mPositionAttributeName);
-//						glEnableVertexAttribArray(positionAttributeLocation);
-//						glVertexAttribPointer(positionAttributeLocation,
-//								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexCount, GL_FLOAT, GL_FALSE,
-//								(GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
-//								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexOffset);
-//
-//						GLint	textureCoordinateAttributeLocation =
-//										attributeInfo.getSInt32(mTextureCoordinateAttributeName);
-//						glEnableVertexAttribArray(textureCoordinateAttributeLocation);
-//						glVertexAttribPointer(textureCoordinateAttributeLocation,
-//								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateCount, GL_FLOAT,
-//								GL_FALSE, (GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
-//								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateOffset);
-//					}
-//
-//		void	setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
-//						const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
-//					{
-//						// Setup uniforms
-//						SMatrix4x4_32	viewProjectionMatrix = projectionMatrix * viewMatrix;
-//						GLint			viewProjectionMatrixUniformLocation =
-//												uniformInfo.getSInt32(mViewProjectionMatrixUniformName);
-//						GLint			modelMatrixUniformLocation = uniformInfo.getSInt32(mModelMatrixUniformName);
-//						GLint			clipPlaneUniformLocation = uniformInfo.getSInt32(mClipPlaneUniformName);
-//
-//						glUniformMatrix4fv(viewProjectionMatrixUniformLocation, 1, 0, (GLfloat*) &viewProjectionMatrix);
-//						glUniformMatrix4fv(modelMatrixUniformLocation, 1, 0, (GLfloat*) &modelMatrix);
-//						glUniform4fv(clipPlaneUniformLocation, 1, (GLfloat*) &mClipPlane);
-//					}
+						// Setup instance uniforms
+						id<MTLBuffer>	clipVertexUniformsBuffer =
+												[device newBufferWithLength:sizeof(ClipVertexUniforms)
+														options:MTLResourceStorageModeShared];
+						clipVertexUniformsBuffer.label = @"Clip Vertex Uniforms";
 
-//		void	configureGL()
-//					{
-//						// Setup GL
-//#if TARGET_OS_IOS
-////						glEnable(GL_CLIP_DISTANCE0_APPLE);
-//#endif
-//
-//#if TARGET_OS_MACOS
-////						glEnable(GL_CLIP_DISTANCE0);
-//#endif
-//					}
-//		void	resetGL()
-//					{
-//#if TARGET_OS_IOS
-////						glDisable(GL_CLIP_DISTANCE0_APPLE);
-//#endif
-//
-//#if TARGET_OS_MACOS
-////						glDisable(GL_CLIP_DISTANCE0);
-//#endif
-//					}
+						ClipVertexUniforms*	clipVertexUniforms =
+														(ClipVertexUniforms*) clipVertexUniformsBuffer.contents;
+						clipVertexUniforms->mModelMatrix = *((matrix_float4x4*) &getModelMatrix());
+						clipVertexUniforms->mClipPlane = *((vector_float4*) &mClipPlane);
+
+						[renderCommandEncoder setVertexBuffer:clipVertexUniformsBuffer offset:0
+								atIndex:kBufferIndexVertexUniforms];
+					}
 
 		void	setClipPlane(const SMatrix4x1_32& clipPlane)
-					{
-						mClipPlane = clipPlane;
-					}
+					{ mClipPlane = clipPlane; }
 
-				SMatrix4x1_32	mClipPlane;
-
-//		static	CString			mPositionAttributeName;
-//		static	CString			mTextureCoordinateAttributeName;
-
-//		static	CString			mViewProjectionMatrixUniformName;
-//		static	CString			mModelMatrixUniformName;
-//		static	CString			mClipPlaneUniformName;
+		SMatrix4x1_32	mClipPlane;
 };
-
-//CString	CMetalVertexShaderClip::mPositionAttributeName(OSSTR("position"));
-//CString	CMetalVertexShaderClip::mTextureCoordinateAttributeName(OSSTR("texCoord0"));
-
-//CString	CMetalVertexShaderClip::mViewProjectionMatrixUniformName(OSSTR("viewProjectionMatrix"));
-//CString	CMetalVertexShaderClip::mModelMatrixUniformName(OSSTR("modelMatrix"));
-//CString	CMetalVertexShaderClip::mClipPlaneUniformName(OSSTR("clipPlane"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -200,17 +86,9 @@ CGPUVertexShader& CGPUVertexShader::getBasic()
 	static	CMetalVertexShaderBasic*	sVertexShader = nil;
 
 	// Check if have shader
-	if (sVertexShader == nil) {
-//		// Create shader
-//		TNArray<CString>	attributeNames;
-//		attributeNames += CMetalVertexShaderBasic::mPositionAttributeName;
-//		attributeNames += CMetalVertexShaderBasic::mTextureCoordinateAttributeName;
-//
-//		TNArray<CString>	uniformNames;
-//		uniformNames += CMetalVertexShaderBasic::mModelViewProjectionMatrixUniformName;
-
+	if (sVertexShader == nil)
+		// Create shader
 		sVertexShader = new CMetalVertexShaderBasic();
-	}
 
 	return *sVertexShader;
 }
@@ -223,19 +101,9 @@ CGPUVertexShader& CGPUVertexShader::getClip(const SMatrix4x1_32& clipPlane)
 	static	CMetalVertexShaderClip*	sVertexShader = nil;
 
 	// Check if have shader
-	if (sVertexShader == nil) {
+	if (sVertexShader == nil)
 		// Create shader
-//		TNArray<CString>	attributeNames;
-//		attributeNames += CMetalVertexShaderBasic::mPositionAttributeName;
-//		attributeNames += CMetalVertexShaderBasic::mTextureCoordinateAttributeName;
-//
-//		TNArray<CString>	uniformNames;
-//		uniformNames += CMetalVertexShaderClip::mViewProjectionMatrixUniformName;
-//		uniformNames += CMetalVertexShaderClip::mModelMatrixUniformName;
-//		uniformNames += CMetalVertexShaderClip::mClipPlaneUniformName;
-
 		sVertexShader = new CMetalVertexShaderClip();
-	}
 
 	// Setup
 	sVertexShader->setClipPlane(clipPlane);
@@ -249,30 +117,13 @@ CGPUVertexShader& CGPUVertexShader::getClip(const SMatrix4x1_32& clipPlane)
 
 class CMetalFragmentShaderBasic : public CMetalFragmentShader {
 	public:
-				CMetalFragmentShaderBasic() :
-					CMetalFragmentShader()	//,
-//							mDidSetupDiffuseTextureUniforms(false)
-					{}
+				CMetalFragmentShaderBasic() : CMetalFragmentShader() {}
 
 		CString	getName() const
-					{ return CString(OSSTR("basicFragmentShader")); }
+					{ return CString(OSSTR("fragmentShaderBasic")); }
 
-//		void	setUniforms(const CDictionary& uniformInfo)
-//					{
-//						// Setup uniforms
-//						if (!mDidSetupDiffuseTextureUniforms) {
-//							// Setup diffuse texture uniforms
-//							for (UInt32 i = 0; i < 16; i++) {
-//								// Setup
-//								CString	uniform = CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
-//								glUniform1i(uniformInfo.getSInt32(uniform), i);
-//							}
-//
-//							mDidSetupDiffuseTextureUniforms = true;
-//						}
-//					}
-
-//		bool	mDidSetupDiffuseTextureUniforms;
+		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const
+					{}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -281,45 +132,33 @@ class CMetalFragmentShaderBasic : public CMetalFragmentShader {
 
 class CMetalFragmentShaderOpacity : public CMetalFragmentShader {
 	public:
-				CMetalFragmentShaderOpacity() :
-					CMetalFragmentShader(),
-							mOpacity(1.0)//, mDidSetupDiffuseTextureUniforms(false)
-					{}
+				CMetalFragmentShaderOpacity() : CMetalFragmentShader(), mOpacity(1.0) {}
 
 		CString	getName() const
-					{ return CString(OSSTR("opacityFragmentShader")); }
+					{ return CString(OSSTR("fragmentShaderOpacity")); }
 
-//		void	setUniforms(const CDictionary& uniformInfo)
-//					{
-//						// Setup uniforms
-//						if (!mDidSetupDiffuseTextureUniforms) {
-//							// Setup diffuse texture uniforms
-//							for (UInt32 i = 0; i < 16; i++) {
-//								// Setup
-//								CString	uniform = CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
-//								glUniform1i(uniformInfo.getSInt32(uniform), i);
-//							}
-//
-//							mDidSetupDiffuseTextureUniforms = true;
-//						}
-//
-//						GLint	opacityUniformLocation = uniformInfo.getSInt32(mOpacityUniformName);
-//						glUniform1f(opacityUniformLocation, mOpacity);
-//					}
-
-		void	setOpacity(Float32 opacity)
+		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const
 					{
-						mOpacity = opacity;
+						// Setup instance uniforms
+						id<MTLBuffer>	opacityFragmentUniformsBuffer =
+												[device newBufferWithLength:sizeof(OpacityFragmentUniforms)
+														options:MTLResourceStorageModeShared];
+						opacityFragmentUniformsBuffer.label = @"Opacity Fragment Shader";
+
+						OpacityFragmentUniforms*	opacityFragmentUniforms =
+														(OpacityFragmentUniforms*)
+																opacityFragmentUniformsBuffer.contents;
+						opacityFragmentUniforms->mOpacity = mOpacity;
+
+						[renderCommandEncoder setFragmentBuffer:opacityFragmentUniformsBuffer offset:0
+								atIndex:kBufferIndexFragmentUniforms];
 					}
 
-				Float32	mOpacity;
+		void	setOpacity(Float32 opacity)
+					{ mOpacity = opacity; }
 
-//				bool	mDidSetupDiffuseTextureUniforms;
-
-//		static	CString	mOpacityUniformName;
+		Float32	mOpacity;
 };
-
-//CString	CMetalFragmentShaderOpacity::mOpacityUniformName(OSSTR("opacity"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -335,15 +174,9 @@ CGPUFragmentShader& CGPUFragmentShader::getBasic()
 	static	CMetalFragmentShaderBasic*	sFragmentShader = nil;
 
 	// Check if have shader
-	if (sFragmentShader == nil) {
+	if (sFragmentShader == nil)
 		// Create shader
-//		TNArray<CString>	uniformNames;
-//		for (UInt32 i = 0; i < 16; i++)
-//			// Setup
-//			uniformNames += CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
-
 		sFragmentShader = new CMetalFragmentShaderBasic();
-	}
 
 	return *sFragmentShader;
 }
@@ -356,16 +189,9 @@ CGPUFragmentShader& CGPUFragmentShader::getOpacity(Float32 opacity)
 	static	CMetalFragmentShaderOpacity*	sFragmentShader = nil;
 
 	// Check if have shader
-	if (sFragmentShader == nil) {
+	if (sFragmentShader == nil)
 		// Create shader
-//		TNArray<CString>	uniformNames;
-//		for (UInt32 i = 0; i < 16; i++)
-//			// Setup
-//			uniformNames += CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
-//		uniformNames += CMetalFragmentShaderOpacity::mOpacityUniformName;
-
 		sFragmentShader = new CMetalFragmentShaderOpacity();
-	}
 
 	// Setup
 	sFragmentShader->setOpacity(opacity);

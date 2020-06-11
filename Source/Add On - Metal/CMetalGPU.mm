@@ -11,10 +11,7 @@
 
 /*
 	TODOs:
-		Frame delta time in views
-		Clip Vertex Shader
-		Opacity Fragment Shader
-		Auto-scale matrix to aspect fit
+		Multiple textures for a single draw call
  */
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,6 +82,20 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
+void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	((GlobalUniforms*) mInternals->mGlobalUniformsBuffer.contents)->mViewMatrix = *((matrix_float4x4*) &viewMatrix);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const SMatrix4x4_32& CGPU::getViewMatrix() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (const SMatrix4x4_32&) ((GlobalUniforms*) mInternals->mGlobalUniformsBuffer.contents)->mViewMatrix;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
 		const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
@@ -108,7 +119,7 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, UInt32 vertexCount)
+SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup Metal Vertex Descriptor
@@ -138,8 +149,11 @@ SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVerte
 	vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepRate = 1;
 	vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepFunction = MTLVertexStepFunctionPerVertex;
 
-	return SGPUVertexBuffer(gpuVertexBufferInfo, CData(gpuVertexBufferInfo.mTotalSize * vertexCount),
-			(void*) CFBridgingRetain(vertexDescriptor));
+	id<MTLBuffer>	vertexBuffer =
+							[mInternals->mProcsInfo.getDevice() newBufferWithBytes:data.getBytePtr()
+									length:data.getSize() options:MTLResourceStorageModeShared];
+
+	return SGPUVertexBuffer(gpuVertexBufferInfo, new SMetalVertexBufferInfo(vertexDescriptor, vertexBuffer));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -147,7 +161,8 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Cleanup
-	CFBridgingRelease(buffer.mInternalReference);
+	SMetalVertexBufferInfo*	metalVertexBufferInfo = (SMetalVertexBufferInfo*) buffer.mInternalReference;
+	Delete(metalVertexBufferInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -177,13 +192,6 @@ void CGPU::renderStart() const
 	mInternals->mCurrentRenderCommandEncoder.label = @"Render Command Encoder";
 	[mInternals->mCurrentRenderCommandEncoder setVertexBuffer:mInternals->mGlobalUniformsBuffer offset:0
 			atIndex:kBufferIndexGlobalUniforms];
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	((GlobalUniforms*) mInternals->mGlobalUniformsBuffer.contents)->mViewMatrix = *((matrix_float4x4*) &viewMatrix);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

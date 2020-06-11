@@ -892,6 +892,8 @@ CString CString::make(const char* format, va_list args)
 	CFStringRef	formatStringRef = ::CFStringCreateWithCString(kCFAllocatorDefault, format, kCFStringEncodingMacRoman);
 
 	CFStringRef	stringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, formatStringRef, args);
+	::CFRelease(formatStringRef);
+
 	CString		string(stringRef);
 	::CFRelease(stringRef);
 

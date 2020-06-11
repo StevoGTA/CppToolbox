@@ -74,7 +74,7 @@ template <typename T> struct T3DPoint {
 };
 
 typedef	T3DPoint<Float32>	S3DPoint32;
-typedef	T3DPoint<Float64>	S3DPoint64;
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T3DOffset
 
@@ -98,7 +98,6 @@ template <typename T> struct T3DOffset {
 };
 
 typedef	T3DOffset<Float32>	S3DOffset32;
-typedef	T3DOffset<Float64>	S3DOffset64;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T3DVector
@@ -147,4 +146,3 @@ template <typename T> struct T3DVector {
 };
 
 typedef	T3DVector<Float32>	S3DVector32;
-typedef	T3DVector<Float64>	S3DVector64;

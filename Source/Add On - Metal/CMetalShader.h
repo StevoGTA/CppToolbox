@@ -44,15 +44,17 @@ class CMetalFragmentShaderInternals;
 class CMetalFragmentShader : public CGPUFragmentShader {
 	// Methods
 	public:
-											// Lifecycle methods
-											~CMetalFragmentShader();
+						// Lifecycle methods
+						~CMetalFragmentShader();
 
-											// Instance methods
-		virtual			CString				getName() const = 0;
+						// Instance methods
+		virtual	CString	getName() const = 0;
+
+		virtual	void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const = 0;
 
 	protected:
-											// Lifecycle methods
-											CMetalFragmentShader();
+						// Lifecycle methods
+						CMetalFragmentShader();
 
 	// Properties
 	private:

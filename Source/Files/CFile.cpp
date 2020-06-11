@@ -110,6 +110,10 @@ bool CFile::equals(const CFile& other) const
 CFile& CFile::operator=(const CFile& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
 	// Remove reference to ourselves
 	mInternals->removeReference();
 

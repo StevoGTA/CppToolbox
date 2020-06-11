@@ -45,6 +45,20 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
+void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mViewMatrix = viewMatrix;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const SMatrix4x4_32& CGPU::getViewMatrix() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mViewMatrix;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
 		const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,16 +86,25 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, UInt32 vertexCount)
+SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return SGPUVertexBuffer(gpuVertexBufferInfo, CData(gpuVertexBufferInfo.mTotalSize * vertexCount), nil);
+	mInternals->mProcsInfo.acquireContext();
+	SGPUVertexBuffer gpuVertexBuffer(gpuVertexBufferInfo, new SOpenGLVertexBufferInfo(data));
+	mInternals->mProcsInfo.releaseContext();
+
+	return gpuVertexBuffer;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	mInternals->mProcsInfo.acquireContext();
+	SOpenGLVertexBufferInfo*	openGLVertexBufferInfo = (SOpenGLVertexBufferInfo*) buffer.mInternalReference;
+	Delete(openGLVertexBufferInfo);
+	mInternals->mProcsInfo.releaseContext();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -115,13 +138,6 @@ void CGPU::renderStart() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mViewMatrix = viewMatrix;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -134,7 +150,7 @@ void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32
 	renderState.commit(SGPURenderStateCommitInfo());
 
 	// Draw
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, triangleCount + 2);
+	glDrawArrays(GL_TRIANGLE_STRIP, renderState.getTriangleOffset(), triangleCount + 2);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

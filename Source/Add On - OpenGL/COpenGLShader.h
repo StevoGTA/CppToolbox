@@ -6,7 +6,7 @@
 
 #include "CDictionary.h"
 #include "CGPUShader.h"
-#include "SGPUBuffer.h"
+#include "SGPUVertexBuffer.h"
 
 #if TARGET_OS_IOS
 	#include <OpenGLES/ES3/glext.h>

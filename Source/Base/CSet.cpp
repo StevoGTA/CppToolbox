@@ -434,6 +434,10 @@ CSet& CSet::apply(CSetApplyProc applyProc, void* userData)
 CSet& CSet::operator=(const CSet& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
 	// Remove reference to ourselves
 	mInternals->removeReference();
 

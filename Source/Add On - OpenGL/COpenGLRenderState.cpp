@@ -16,17 +16,7 @@ class CGPURenderStateInternals {
 	public:
 		CGPURenderStateInternals(CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
 			mVertexShader(vertexShader), mFragmentShader(fragmentShader), mTriangleOffset(0)
-			{
-				// Finish setup
-				glGenVertexArrays(1, &mVertexArray);
-				glGenBuffers(1, &mModelDataBuffer);
-			}
-		~CGPURenderStateInternals()
-			{
-				// Cleanup
-				glDeleteBuffers(1, &mModelDataBuffer);
-				glDeleteVertexArrays(1, &mVertexArray);
-			}
+			{}
 
 		CGPUVertexShader&						mVertexShader;
 		CGPUFragmentShader&						mFragmentShader;
@@ -38,9 +28,6 @@ class CGPURenderStateInternals {
 		OR<const SGPUVertexBuffer>				mVertexBuffer;
 		UInt32									mTriangleOffset;
 		OR<const TArray<const CGPUTexture> >	mTextures;
-
-		GLuint									mVertexArray;
-		GLuint									mModelDataBuffer;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,6 +98,13 @@ void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuff
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+UInt32 CGPURenderState::getTriangleOffset() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mTriangleOffset;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -118,16 +112,13 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	static			TDictionary<COpenGLProgram>	sPrograms;
 
 			const	SGPUVertexBuffer&			gpuVertexBuffer = mInternals->mVertexBuffer.getReference();
-					UInt32						offset =
-														gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize *
-																mInternals->mTriangleOffset;
 
 	// Setup buffers
-	glBindVertexArray(mInternals->mVertexArray);
+	SOpenGLVertexBufferInfo*	openGLVertexBufferInfo =
+										(SOpenGLVertexBufferInfo*) mInternals->mVertexBuffer->mInternalReference;
 
-	glBindBuffer(GL_ARRAY_BUFFER, mInternals->mModelDataBuffer);
-	glBufferData(GL_ARRAY_BUFFER, gpuVertexBuffer.mData.getSize() - offset,
-			(UInt8*) gpuVertexBuffer.mData.getBytePtr() + offset, GL_STATIC_DRAW);
+	glBindVertexArray(openGLVertexBufferInfo->mVertexArray);
+	glBindBuffer(GL_ARRAY_BUFFER, openGLVertexBufferInfo->mVertexDataBuffer);
 
 	// Setup textures
 			bool						needBlend = false;

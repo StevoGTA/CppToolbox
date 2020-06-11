@@ -97,6 +97,10 @@ bool CFolder::equals(const CFolder& other) const
 CFolder& CFolder::operator=(const CFolder& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
 	// Remove reference to ourselves
 	mInternals->removeReference();
 

@@ -635,6 +635,10 @@ CArray CArray::filtered(CArrayItemIsIncludedProc isIncludedProc, void* userData)
 CArray& CArray::operator=(const CArray& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+		
 	// Remove reference to ourselves
 	mInternals->removeReference();
 
