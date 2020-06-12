@@ -4,7 +4,7 @@
 
 #include "CGPUTextureManager.h"
 
-#include "CLock.h"
+#include "ConcurrencyPrimitives.h"
 #include "CLogServices.h"
 #include "CWorkItemQueue.h"
 #include "TOptional.h"

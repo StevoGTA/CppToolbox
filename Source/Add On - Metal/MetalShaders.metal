@@ -35,8 +35,7 @@ vertex VertexToFragmentInfo vertexShaderBasic(VertexInfo vertexInfo [[stage_in]]
 	// Setup
     VertexToFragmentInfo vertexToFragmentInfo;
     vertexToFragmentInfo.mPosition =
-    		globalUniforms.mProjectionMatrix * globalUniforms.mViewMatrix * basicVertexUniforms.mModelMatrix *
-    				vertexInfo.mPosition;
+			globalUniforms.mProjectionViewMatrix * basicVertexUniforms.mModelMatrix * vertexInfo.mPosition;
     vertexToFragmentInfo.mTextureCoordinate = vertexInfo.mTextureCoordinate;
     vertexToFragmentInfo.mTextureIndex = vertexInfo.mTextureIndex;
     vertexToFragmentInfo.mClipDistance = 0.0;
@@ -51,8 +50,7 @@ vertex VertexToFragmentInfo vertexShaderClip(VertexInfo vertexInfo [[stage_in]],
 	// Setup
     VertexToFragmentInfo vertexToFragmentInfo;
     vertexToFragmentInfo.mPosition =
-    		globalUniforms.mProjectionMatrix * globalUniforms.mViewMatrix * clipVertexUniforms.mModelMatrix *
-    				vertexInfo.mPosition;
+			globalUniforms.mProjectionViewMatrix * clipVertexUniforms.mModelMatrix * vertexInfo.mPosition;
     vertexToFragmentInfo.mTextureCoordinate = vertexInfo.mTextureCoordinate;
     vertexToFragmentInfo.mTextureIndex = vertexInfo.mTextureIndex;
     vertexToFragmentInfo.mClipDistance =
@@ -66,30 +64,24 @@ vertex VertexToFragmentInfo vertexShaderClip(VertexInfo vertexInfo [[stage_in]],
 // MARK: Fragment Shaders
 
 fragment float4 fragmentShaderBasic(VertexToFragmentInfo vertexToFragmentInfo [[stage_in]],
-		texture2d<half> colorMap [[ texture(kTextureIndexColor) ]])
+		texture2d<half> colorMap [[ texture(0) ]], sampler sampler2d [[sampler(0)]])
 {
-	// Setup
-    constexpr	sampler	colorSampler(mip_filter::linear, mag_filter::linear, min_filter::linear);
-
     // Compose color
 	float2	normalizedTextureCoordinate(vertexToFragmentInfo.mTextureCoordinate.x / colorMap.get_width(),
 					vertexToFragmentInfo.mTextureCoordinate.y / colorMap.get_height());
-	float4	color = float4(colorMap.sample(colorSampler, normalizedTextureCoordinate.xy));
+	float4	color = float4(colorMap.sample(sampler2d, normalizedTextureCoordinate.xy));
 
 	return color;
 }
 
 fragment float4 fragmentShaderOpacity(VertexToFragmentInfo vertexToFragmentInfo [[stage_in]],
 		constant OpacityFragmentUniforms& opacityFragmentUniforms [[ buffer(kBufferIndexFragmentUniforms) ]],
-		texture2d<half> colorMap [[ texture(kTextureIndexColor) ]])
+		texture2d<half> colorMap [[ texture(0) ]], sampler sampler2d [[sampler(0)]])
 {
-	// Setup
-    constexpr	sampler	colorSampler(mip_filter::linear, mag_filter::linear, min_filter::linear);
-
     // Compose color
 	float2	normalizedTextureCoordinate(vertexToFragmentInfo.mTextureCoordinate.x / colorMap.get_width(),
 					vertexToFragmentInfo.mTextureCoordinate.y / colorMap.get_height());
-	float4	color = float4(colorMap.sample(colorSampler, normalizedTextureCoordinate.xy));
+	float4	color = float4(colorMap.sample(sampler2d, normalizedTextureCoordinate.xy));
 	color.a *= opacityFragmentUniforms.mOpacity;
 
 	return color;

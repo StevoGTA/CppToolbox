@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CLock.cpp			©2018 Stevo Brock	All rights reserved.
+//	ConcurrencyPrimitivesPOSIXImplementation.cpp			©2018 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CLock.h"
+#include "ConcurrencyPrimitives.h"
 
 #include <pthread.h>
 

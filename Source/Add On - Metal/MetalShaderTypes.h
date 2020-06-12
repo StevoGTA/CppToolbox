@@ -10,8 +10,7 @@
 // MARK: Structures
 
 struct GlobalUniforms {
-	matrix_float4x4 mProjectionMatrix;
-	matrix_float4x4	mViewMatrix;
+	matrix_float4x4	mProjectionViewMatrix;
 };
 
 struct BasicVertexUniforms {
@@ -43,8 +42,4 @@ enum BufferIndex {
 	kBufferIndexGlobalUniforms,
 	kBufferIndexVertexUniforms,
 	kBufferIndexFragmentUniforms,
-};
-
-enum TextureIndex {
-	kTextureIndexColor,
 };

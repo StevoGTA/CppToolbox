@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CLock.h			©2018 Stevo Brock	All rights reserved.
+//	ConcurrencyPrimitives.h			©2018 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -68,4 +68,24 @@ class CSemaphore {
 	// Properties
 	public:
 		CSemaphoreInternals*	mInternals;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSharedResource
+
+class CSharedResourceInternals;
+class CSharedResource {
+	// Methods
+	public:
+				// Lifecycle methods
+				CSharedResource(UInt32 count);
+				~CSharedResource();
+
+				// Instance methods
+		void	consume() const;
+		void	release() const;
+
+	// Properties
+	public:
+		CSharedResourceInternals*	mInternals;
 };

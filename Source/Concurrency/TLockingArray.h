@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CArray.h"
-#include "CLock.h"
+#include "ConcurrencyPrimitives.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TNLockingArray

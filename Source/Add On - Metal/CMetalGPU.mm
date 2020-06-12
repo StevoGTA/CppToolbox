@@ -23,40 +23,34 @@ class CGPUInternals {
 			mProcsInfo(procsInfo),
 					mCommandQueue([procsInfo.getDevice() newCommandQueue]),
 					mShaderLibrary([procsInfo.getDevice() newDefaultLibrary]),
-					mGlobalUniformsBuffer(
-							[procsInfo.getDevice() newBufferWithLength:sizeof(GlobalUniforms)
-									options:MTLResourceStorageModeShared]),
 					mRenderPipelineDescriptor([[MTLRenderPipelineDescriptor alloc] init]),
-					mMetalShadersMap([[NSMutableDictionary alloc] init]),
+					mFunctionsCache([[NSMutableDictionary alloc] init]),
+					mVertexDescriptorCache([[NSMutableDictionary alloc] init]),
+					mRenderPipelineStateCache([[NSMutableDictionary alloc] init]),
 					mCurrentCommandBuffer(nil), mCurrentRenderCommandEncoder(nil)
 			{
 				// Finish setup
-				mGlobalUniformsBuffer.label = @"Global Uniforms";
+				MTLSamplerDescriptor*	samplerDescriptor = [[MTLSamplerDescriptor alloc] init];
+				mSamplerState = [procsInfo.getDevice() newSamplerStateWithDescriptor:samplerDescriptor];
 
-				GlobalUniforms*	globalUniforms = (GlobalUniforms*) mGlobalUniformsBuffer.contents;
-				globalUniforms->mViewMatrix =
-						(matrix_float4x4)
-								{{
-									{1.0, 0.0, 0.0, 0.0},
-									{0.0, 1.0, 0.0, 0.0},
-									{0.0, 0.0, 1.0, 0.0},
-									{0.0, 0.0, 0.0, 1.0},
-								}};
-
-				mRenderPipelineDescriptor.sampleCount = procsInfo.getSampleCount();
+ 				mRenderPipelineDescriptor.sampleCount = procsInfo.getSampleCount();
 				mRenderPipelineDescriptor.colorAttachments[0].pixelFormat = procsInfo.getPixelFormat();
 			}
 
-	CGPUProcsInfo										mProcsInfo;
+	CGPUProcsInfo												mProcsInfo;
 
-	id<MTLCommandQueue>									mCommandQueue;
-	id<MTLLibrary>										mShaderLibrary;
-	id<MTLBuffer>										mGlobalUniformsBuffer;
-	MTLRenderPipelineDescriptor*						mRenderPipelineDescriptor;
-	NSMutableDictionary<NSString*, id<MTLFunction>>*	mMetalShadersMap;
+	id<MTLCommandQueue>											mCommandQueue;
+	id<MTLLibrary>												mShaderLibrary;
+	id<MTLSamplerState>											mSamplerState;
+	MTLRenderPipelineDescriptor*								mRenderPipelineDescriptor;
+	NSMutableDictionary<NSString*, id<MTLFunction>>*			mFunctionsCache;
+	NSMutableDictionary<NSString*, MTLVertexDescriptor*>*		mVertexDescriptorCache;
+	NSMutableDictionary<NSString*, id<MTLRenderPipelineState>>*	mRenderPipelineStateCache;
 
-	id<MTLCommandBuffer>								mCurrentCommandBuffer;
-	id<MTLRenderCommandEncoder>							mCurrentRenderCommandEncoder;
+	SMatrix4x4_32												mViewMatrix;
+
+	id<MTLCommandBuffer>										mCurrentCommandBuffer;
+	id<MTLRenderCommandEncoder>									mCurrentRenderCommandEncoder;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,14 +79,14 @@ CGPU::~CGPU()
 void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	((GlobalUniforms*) mInternals->mGlobalUniformsBuffer.contents)->mViewMatrix = *((matrix_float4x4*) &viewMatrix);
+	mInternals->mViewMatrix = viewMatrix;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 const SMatrix4x4_32& CGPU::getViewMatrix() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (const SMatrix4x4_32&) ((GlobalUniforms*) mInternals->mGlobalUniformsBuffer.contents)->mViewMatrix;
+	return mInternals->mViewMatrix;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -122,38 +116,50 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup Metal Vertex Descriptor
-	MTLVertexDescriptor*	vertexDescriptor = [[MTLVertexDescriptor alloc] init];
+	// Retrieve metal vertex descriptor
+	NSString*				vertexDescriptorUUID =
+									(__bridge NSString*) gpuVertexBufferInfo.mUUID.getBase64String().getOSString();
+	MTLVertexDescriptor*	vertexDescriptor = mInternals->mVertexDescriptorCache[vertexDescriptorUUID];
+	if (vertexDescriptor == nil) {
+		// Setup metal vertex descriptor
+		vertexDescriptor = [[MTLVertexDescriptor alloc] init];
 
-	vertexDescriptor.attributes[kVertexAttributePosition].format =
-			MTLVertexFormatFloat + (gpuVertexBufferInfo.mVertexCount - 1);
-	vertexDescriptor.attributes[kVertexAttributePosition].offset = gpuVertexBufferInfo.mVertexOffset;
-	vertexDescriptor.attributes[kVertexAttributePosition].bufferIndex = kBufferIndexVertexPosition;
-	vertexDescriptor.layouts[kBufferIndexVertexPosition].stride = gpuVertexBufferInfo.mTotalSize;
-	vertexDescriptor.layouts[kBufferIndexVertexPosition].stepRate = 1;
-	vertexDescriptor.layouts[kBufferIndexVertexPosition].stepFunction = MTLVertexStepFunctionPerVertex;
+		vertexDescriptor.attributes[kVertexAttributePosition].format =
+				MTLVertexFormatFloat + (gpuVertexBufferInfo.mVertexCount - 1);
+		vertexDescriptor.attributes[kVertexAttributePosition].offset = gpuVertexBufferInfo.mVertexOffset;
+		vertexDescriptor.attributes[kVertexAttributePosition].bufferIndex = kBufferIndexVertexPosition;
+		vertexDescriptor.layouts[kBufferIndexVertexPosition].stride = gpuVertexBufferInfo.mTotalSize;
+		vertexDescriptor.layouts[kBufferIndexVertexPosition].stepRate = 1;
+		vertexDescriptor.layouts[kBufferIndexVertexPosition].stepFunction = MTLVertexStepFunctionPerVertex;
 
-	vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].format =
-			MTLVertexFormatFloat + (gpuVertexBufferInfo.mTextureCoordinateCount - 1);
-	vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].offset =
-			gpuVertexBufferInfo.mTextureCoordinateOffset;
-	vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].bufferIndex = kBufferIndexVertexTextureCoordinate;
-	vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stride = gpuVertexBufferInfo.mTotalSize;
-	vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepRate = 1;
-	vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepFunction = MTLVertexStepFunctionPerVertex;
+		vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].format =
+				MTLVertexFormatFloat + (gpuVertexBufferInfo.mTextureCoordinateCount - 1);
+		vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].offset =
+				gpuVertexBufferInfo.mTextureCoordinateOffset;
+		vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].bufferIndex =
+				kBufferIndexVertexTextureCoordinate;
+		vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stride = gpuVertexBufferInfo.mTotalSize;
+		vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepRate = 1;
+		vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepFunction = MTLVertexStepFunctionPerVertex;
 
-	vertexDescriptor.attributes[kVertexAttributeTextureIndex].format = MTLVertexFormatFloat;
-	vertexDescriptor.attributes[kVertexAttributeTextureIndex].offset = gpuVertexBufferInfo.mTextureIndexOffset;
-	vertexDescriptor.attributes[kVertexAttributeTextureIndex].bufferIndex = kBufferIndexVertexTextureIndex;
-	vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stride = gpuVertexBufferInfo.mTotalSize;
-	vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepRate = 1;
-	vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepFunction = MTLVertexStepFunctionPerVertex;
+		vertexDescriptor.attributes[kVertexAttributeTextureIndex].format = MTLVertexFormatFloat;
+		vertexDescriptor.attributes[kVertexAttributeTextureIndex].offset = gpuVertexBufferInfo.mTextureIndexOffset;
+		vertexDescriptor.attributes[kVertexAttributeTextureIndex].bufferIndex = kBufferIndexVertexTextureIndex;
+		vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stride = gpuVertexBufferInfo.mTotalSize;
+		vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepRate = 1;
+		vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepFunction = MTLVertexStepFunctionPerVertex;
 
+		// Store
+		mInternals->mVertexDescriptorCache[vertexDescriptorUUID] = vertexDescriptor;
+	}
+
+	// Setup vertex buffer
 	id<MTLBuffer>	vertexBuffer =
 							[mInternals->mProcsInfo.getDevice() newBufferWithBytes:data.getBytePtr()
 									length:data.getSize() options:MTLResourceStorageModeShared];
 
-	return SGPUVertexBuffer(gpuVertexBufferInfo, new SMetalVertexBufferInfo(vertexDescriptor, vertexBuffer));
+	return SGPUVertexBuffer(gpuVertexBufferInfo,
+			new SMetalVertexBufferInfo(vertexDescriptorUUID, vertexDescriptor, vertexBuffer));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -169,18 +175,6 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 void CGPU::renderStart() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup uniforms
-	CGSize			size = mInternals->mProcsInfo.getCurrentDrawable().layer.bounds.size;
-	GlobalUniforms*	globalUniforms = (GlobalUniforms*) mInternals->mGlobalUniformsBuffer.contents;
-	globalUniforms->mProjectionMatrix =
-			(matrix_float4x4)
-					{{
-						{2.0 / size.width, 0.0, 0.0, 0.0},
-						{0.0, 2.0 / -size.height, 0.0, 0.0},
-						{0.0, 0.0, -0.5, 0.0},
-						{-1.0, 1.0, 0.5, 1.0},
-					}};
-
 	// Setup current command buffer
 	mInternals->mCurrentCommandBuffer = [mInternals->mCommandQueue commandBuffer];
 	mInternals->mCurrentCommandBuffer.label = @"Current Command Buffer";
@@ -190,7 +184,22 @@ void CGPU::renderStart() const
 			[mInternals->mCurrentCommandBuffer
 					renderCommandEncoderWithDescriptor:mInternals->mProcsInfo.getCurrentRenderPassDescriptor()];
 	mInternals->mCurrentRenderCommandEncoder.label = @"Render Command Encoder";
-	[mInternals->mCurrentRenderCommandEncoder setVertexBuffer:mInternals->mGlobalUniformsBuffer offset:0
+
+	[mInternals->mCurrentRenderCommandEncoder setFragmentSamplerState:mInternals->mSamplerState atIndex:0];
+
+	// Setup uniforms
+	CGSize			size = mInternals->mProcsInfo.getCurrentDrawable().layer.bounds.size;
+	SMatrix4x4_32	projectionViewMatrix =
+							SMatrix4x4_32(
+											2.0 / size.width, 0.0, 0.0, 0.0,
+											0.0, 2.0 / -size.height, 0.0, 0.0,
+											0.0, 0.0, -0.5, 0.0,
+											-1.0, 1.0, 0.5, 1.0) *
+									mInternals->mViewMatrix;
+
+	GlobalUniforms	globalUniforms;
+	globalUniforms.mProjectionViewMatrix = *((matrix_float4x4*) &projectionViewMatrix);
+	[mInternals->mCurrentRenderCommandEncoder setVertexBytes:&globalUniforms length:sizeof(GlobalUniforms)
 			atIndex:kBufferIndexGlobalUniforms];
 }
 
@@ -206,7 +215,7 @@ void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32
 	renderState.commit(
 			SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
 					mInternals->mCurrentRenderCommandEncoder, mInternals->mRenderPipelineDescriptor,
-					mInternals->mMetalShadersMap));
+					mInternals->mFunctionsCache, mInternals->mRenderPipelineStateCache));
 
 	// Draw
 	[mInternals->mCurrentRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip

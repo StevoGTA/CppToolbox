@@ -4,8 +4,8 @@
 
 #include "CLogServices.h"
 
-#import "CFileWriter.h"
-#import "CLock.h"
+#include "CFileWriter.h"
+#include "ConcurrencyPrimitives.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SLogProcInfo

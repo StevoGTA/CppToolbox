@@ -111,48 +111,57 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	NSString*		vertexShaderName =
 							(__bridge NSString*)
 									((CMetalVertexShader&) mInternals->mVertexShader).getName().getOSString();
-	id<MTLFunction>	vertexFunction = renderStateCommitInfo.mMetalShadersMap[vertexShaderName];
+	id<MTLFunction>	vertexFunction = renderStateCommitInfo.mFunctionsCache[vertexShaderName];
 	if (vertexFunction == nil) {
 		// Create and store
 		vertexFunction = [renderStateCommitInfo.mShaderLibrary newFunctionWithName:vertexShaderName];
-		renderStateCommitInfo.mMetalShadersMap[vertexShaderName] = vertexFunction;
+		renderStateCommitInfo.mFunctionsCache[vertexShaderName] = vertexFunction;
 	}
 
 	NSString*		fragmentShaderName =
 							(__bridge NSString*)
 									((CMetalFragmentShader&) mInternals->mFragmentShader).getName().getOSString();
-	id<MTLFunction>	fragmentFunction = renderStateCommitInfo.mMetalShadersMap[fragmentShaderName];
+	id<MTLFunction>	fragmentFunction = renderStateCommitInfo.mFunctionsCache[fragmentShaderName];
 	if (fragmentFunction == nil) {
 		// Create and store
 		fragmentFunction = [renderStateCommitInfo.mShaderLibrary newFunctionWithName:fragmentShaderName];
-		renderStateCommitInfo.mMetalShadersMap[fragmentShaderName] = fragmentFunction;
+		renderStateCommitInfo.mFunctionsCache[fragmentShaderName] = fragmentFunction;
 	}
 
 	// Setup render pipeline descriptor
 	SMetalVertexBufferInfo*	metalVertexBufferInfo =
 									(SMetalVertexBufferInfo*) mInternals->mVertexBuffer->mInternalReference;
 
-	renderStateCommitInfo.mRenderPipelineDescriptor.label = @"Pipeline";
-	renderStateCommitInfo.mRenderPipelineDescriptor.vertexFunction = vertexFunction;
-	renderStateCommitInfo.mRenderPipelineDescriptor.fragmentFunction = fragmentFunction;
-	renderStateCommitInfo.mRenderPipelineDescriptor.vertexDescriptor = metalVertexBufferInfo->mVertexDescriptor;
+	NSString*	key =
+						[NSString stringWithFormat:@"%@/%@/%@/%u",
+								vertexFunction.name, fragmentFunction.name,
+								metalVertexBufferInfo->mVertexDescriptorUUID, needBlend];
+	id<MTLRenderPipelineState>	renderPipelineState = renderStateCommitInfo.mRenderPipelineStateCache[key];
+	if (renderPipelineState == nil) {
+		// Create render pipeline state
+		renderStateCommitInfo.mRenderPipelineDescriptor.label = @"Pipeline";
+		renderStateCommitInfo.mRenderPipelineDescriptor.vertexFunction = vertexFunction;
+		renderStateCommitInfo.mRenderPipelineDescriptor.fragmentFunction = fragmentFunction;
+		renderStateCommitInfo.mRenderPipelineDescriptor.vertexDescriptor = metalVertexBufferInfo->mVertexDescriptor;
 
-	renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].blendingEnabled = needBlend;
-	renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor =
-			MTLBlendFactorSourceAlpha;
-	renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor =
-			MTLBlendFactorOneMinusSourceAlpha;
+		renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].blendingEnabled = needBlend;
+		renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor =
+				MTLBlendFactorSourceAlpha;
+		renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor =
+				MTLBlendFactorOneMinusSourceAlpha;
 
-	// Create render pipeline state
-	NSError*					error;
-	id<MTLRenderPipelineState>	renderPipelineState =
-										[renderStateCommitInfo.mDevice
-												newRenderPipelineStateWithDescriptor:
-														renderStateCommitInfo.mRenderPipelineDescriptor
-												error:&error];
-	if (renderPipelineState == nil)
-		// Error
-		NSLog(@"Failed to create pipeline state with error %@", error);
+		NSError*	error;
+		renderPipelineState =
+				[renderStateCommitInfo.mDevice
+						newRenderPipelineStateWithDescriptor:renderStateCommitInfo.mRenderPipelineDescriptor
+						error:&error];
+		if (renderPipelineState == nil)
+			// Error
+			NSLog(@"Failed to create pipeline state with error %@", error);
+
+		// Store
+		renderStateCommitInfo.mRenderPipelineStateCache[key] = renderPipelineState;
+	}
 
 	// Setup render command encoder
 	[renderStateCommitInfo.mRenderCommandEncoder setRenderPipelineState:renderPipelineState];

@@ -6,7 +6,7 @@
 
 #include "CArray.h"
 #include "CCoreServices.h"
-#include "CLock.h"
+#include "ConcurrencyPrimitives.h"
 #include "CThread.h"
 #include "TLockingArray.h"
 
