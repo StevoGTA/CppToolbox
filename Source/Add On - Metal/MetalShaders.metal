@@ -64,24 +64,28 @@ vertex VertexToFragmentInfo vertexShaderClip(VertexInfo vertexInfo [[stage_in]],
 // MARK: Fragment Shaders
 
 fragment float4 fragmentShaderBasic(VertexToFragmentInfo vertexToFragmentInfo [[stage_in]],
-		texture2d<half> colorMap [[ texture(0) ]], sampler sampler2d [[sampler(0)]])
+		const array<texture2d<half, access::sample>, 16> textures [[ texture(0) ]], sampler sampler2d [[sampler(0)]])
 {
     // Compose color
-	float2	normalizedTextureCoordinate(vertexToFragmentInfo.mTextureCoordinate.x / colorMap.get_width(),
-					vertexToFragmentInfo.mTextureCoordinate.y / colorMap.get_height());
-	float4	color = float4(colorMap.sample(sampler2d, normalizedTextureCoordinate.xy));
+    texture2d<half>	texture = textures[vertexToFragmentInfo.mTextureIndex];
+
+	float2	normalizedTextureCoordinate(vertexToFragmentInfo.mTextureCoordinate.x / texture.get_width(),
+					vertexToFragmentInfo.mTextureCoordinate.y / texture.get_height());
+	float4	color = float4(texture.sample(sampler2d, normalizedTextureCoordinate.xy));
 
 	return color;
 }
 
 fragment float4 fragmentShaderOpacity(VertexToFragmentInfo vertexToFragmentInfo [[stage_in]],
 		constant OpacityFragmentUniforms& opacityFragmentUniforms [[ buffer(kBufferIndexFragmentUniforms) ]],
-		texture2d<half> colorMap [[ texture(0) ]], sampler sampler2d [[sampler(0)]])
+		const array<texture2d<half, access::sample>, 16> textures [[ texture(0) ]], sampler sampler2d [[sampler(0)]])
 {
     // Compose color
-	float2	normalizedTextureCoordinate(vertexToFragmentInfo.mTextureCoordinate.x / colorMap.get_width(),
-					vertexToFragmentInfo.mTextureCoordinate.y / colorMap.get_height());
-	float4	color = float4(colorMap.sample(sampler2d, normalizedTextureCoordinate.xy));
+    texture2d<half>	texture = textures[vertexToFragmentInfo.mTextureIndex];
+
+	float2	normalizedTextureCoordinate(vertexToFragmentInfo.mTextureCoordinate.x / texture.get_width(),
+					vertexToFragmentInfo.mTextureCoordinate.y / texture.get_height());
+	float4	color = float4(texture.sample(sampler2d, normalizedTextureCoordinate.xy));
 	color.a *= opacityFragmentUniforms.mOpacity;
 
 	return color;

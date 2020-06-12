@@ -11,7 +11,7 @@
 
 /*
 	TODOs:
-		Multiple textures for a single draw call
+		Move buffer creation out of shader setup into somewhere else so happens less often.
  */
 
 //----------------------------------------------------------------------------------------------------------------------
