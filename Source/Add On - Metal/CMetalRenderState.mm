@@ -174,8 +174,8 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 
 	((CMetalVertexShader&) mInternals->mVertexShader).setModelMatrix(mInternals->mModelMatrix);
 	((CMetalVertexShader&) mInternals->mVertexShader).setup(renderStateCommitInfo.mRenderCommandEncoder,
-			renderStateCommitInfo.mDevice);
+			renderStateCommitInfo.mMetalBufferCache);
 
 	((CMetalFragmentShader&) mInternals->mFragmentShader).setup(renderStateCommitInfo.mRenderCommandEncoder,
-			renderStateCommitInfo.mDevice);
+			renderStateCommitInfo.mMetalBufferCache);
 }

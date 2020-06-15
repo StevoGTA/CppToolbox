@@ -21,11 +21,11 @@ class CMetalVertexShaderBasic : public CMetalVertexShader {
 		CString	getName() const
 					{ return CString(OSSTR("vertexShaderBasic")); }
 
-		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const
+		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{
 						// Setup instance uniforms
 						id<MTLBuffer>	basicVertexUniformsBuffer =
-												[device newBufferWithLength:sizeof(BasicVertexUniforms)
+												[metalBufferCache bufferWithLength:sizeof(BasicVertexUniforms)
 														options:MTLResourceStorageModeShared];
 						basicVertexUniformsBuffer.label = @"Basic Vertex Uniforms";
 
@@ -49,11 +49,11 @@ class CMetalVertexShaderClip : public CMetalVertexShader {
 		CString	getName() const
 					{ return CString(OSSTR("vertexShaderClip")); }
 
-		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const
+		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{
 						// Setup instance uniforms
 						id<MTLBuffer>	clipVertexUniformsBuffer =
-												[device newBufferWithLength:sizeof(ClipVertexUniforms)
+												[metalBufferCache bufferWithLength:sizeof(ClipVertexUniforms)
 														options:MTLResourceStorageModeShared];
 						clipVertexUniformsBuffer.label = @"Clip Vertex Uniforms";
 
@@ -122,7 +122,7 @@ class CMetalFragmentShaderBasic : public CMetalFragmentShader {
 		CString	getName() const
 					{ return CString(OSSTR("fragmentShaderBasic")); }
 
-		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const
+		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{}
 };
 
@@ -137,11 +137,11 @@ class CMetalFragmentShaderOpacity : public CMetalFragmentShader {
 		CString	getName() const
 					{ return CString(OSSTR("fragmentShaderOpacity")); }
 
-		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const
+		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{
 						// Setup instance uniforms
 						id<MTLBuffer>	opacityFragmentUniformsBuffer =
-												[device newBufferWithLength:sizeof(OpacityFragmentUniforms)
+												[metalBufferCache bufferWithLength:sizeof(OpacityFragmentUniforms)
 														options:MTLResourceStorageModeShared];
 						opacityFragmentUniformsBuffer.label = @"Opacity Fragment Shader";
 

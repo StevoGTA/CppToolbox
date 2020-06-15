@@ -6,16 +6,18 @@
 
 #import "CMetalRenderState.h"
 #import "CMetalTexture.h"
+#import "ConcurrencyPrimitives.h"
 
 #import "MetalShaderTypes.h"
 
-/*
-	TODOs:
-		Move buffer creation out of shader setup into somewhere else so happens less often.
- */
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: Local data
+
+static	const	UInt32	kBufferCount = 3;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPUInternals
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CGPUInternals
 
 class CGPUInternals {
 	public:
@@ -23,15 +25,20 @@ class CGPUInternals {
 			mProcsInfo(procsInfo),
 					mCommandQueue([procsInfo.getDevice() newCommandQueue]),
 					mShaderLibrary([procsInfo.getDevice() newDefaultLibrary]),
-					mRenderPipelineDescriptor([[MTLRenderPipelineDescriptor alloc] init]),
 					mFunctionsCache([[NSMutableDictionary alloc] init]),
 					mVertexDescriptorCache([[NSMutableDictionary alloc] init]),
+					mRenderPipelineDescriptor([[MTLRenderPipelineDescriptor alloc] init]),
 					mRenderPipelineStateCache([[NSMutableDictionary alloc] init]),
+					mSharedResourceBuffers(kBufferCount), mMetalBufferCacheIndex(0),
 					mCurrentCommandBuffer(nil), mCurrentRenderCommandEncoder(nil)
 			{
 				// Finish setup
 				MTLSamplerDescriptor*	samplerDescriptor = [[MTLSamplerDescriptor alloc] init];
 				mSamplerState = [procsInfo.getDevice() newSamplerStateWithDescriptor:samplerDescriptor];
+
+				mMetalBufferCaches = [NSMutableArray arrayWithCapacity:kBufferCount];
+				for (NSUInteger i = 0; i < kBufferCount; i++)
+					[mMetalBufferCaches addObject:[[MetalBufferCache alloc] initWithDevice:mProcsInfo.getDevice()]];
 
  				mRenderPipelineDescriptor.sampleCount = procsInfo.getSampleCount();
 				mRenderPipelineDescriptor.colorAttachments[0].pixelFormat = procsInfo.getPixelFormat();
@@ -42,10 +49,14 @@ class CGPUInternals {
 	id<MTLCommandQueue>											mCommandQueue;
 	id<MTLLibrary>												mShaderLibrary;
 	id<MTLSamplerState>											mSamplerState;
-	MTLRenderPipelineDescriptor*								mRenderPipelineDescriptor;
 	NSMutableDictionary<NSString*, id<MTLFunction>>*			mFunctionsCache;
 	NSMutableDictionary<NSString*, MTLVertexDescriptor*>*		mVertexDescriptorCache;
+	MTLRenderPipelineDescriptor*								mRenderPipelineDescriptor;
 	NSMutableDictionary<NSString*, id<MTLRenderPipelineState>>*	mRenderPipelineStateCache;
+
+	CSharedResource												mSharedResourceBuffers;
+	NSMutableArray<MetalBufferCache*>*							mMetalBufferCaches;
+	UInt32														mMetalBufferCacheIndex;
 
 	SMatrix4x4_32												mViewMatrix;
 
@@ -198,9 +209,13 @@ void CGPU::renderStart() const
 									mInternals->mViewMatrix;
 
 	GlobalUniforms	globalUniforms;
-	globalUniforms.mProjectionViewMatrix = *((matrix_float4x4*) &projectionViewMatrix);
+	::memcpy(&globalUniforms.mProjectionViewMatrix, &projectionViewMatrix, sizeof(matrix_float4x4));
 	[mInternals->mCurrentRenderCommandEncoder setVertexBytes:&globalUniforms length:sizeof(GlobalUniforms)
 			atIndex:kBufferIndexGlobalUniforms];
+
+	// Setup Metal Buffer Cache
+	mInternals->mSharedResourceBuffers.consume();
+	[mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex] reset];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -214,8 +229,9 @@ void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32
 	renderState.setModelMatrix(modelMatrix);
 	renderState.commit(
 			SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
-					mInternals->mCurrentRenderCommandEncoder, mInternals->mRenderPipelineDescriptor,
-					mInternals->mFunctionsCache, mInternals->mRenderPipelineStateCache));
+					mInternals->mCurrentRenderCommandEncoder,
+					mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex], mInternals->mFunctionsCache,
+					mInternals->mRenderPipelineDescriptor, mInternals->mRenderPipelineStateCache));
 
 	// Draw
 	[mInternals->mCurrentRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
@@ -229,6 +245,15 @@ void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32
 void CGPU::renderEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Next Metal Buffer Cache
+	mInternals->mMetalBufferCacheIndex = (mInternals->mMetalBufferCacheIndex + 1) % kBufferCount;
+
+	// Setup for command completion
+	[mInternals->mCurrentCommandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
+		// We're done
+		mInternals->mSharedResourceBuffers.release();
+	}];
+
 	// Cleanup
 	[mInternals->mCurrentRenderCommandEncoder endEncoding];
 	mInternals->mCurrentRenderCommandEncoder = nil;

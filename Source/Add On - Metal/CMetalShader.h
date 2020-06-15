@@ -5,8 +5,7 @@
 #pragma once
 
 #include "CGPUShader.h"
-
-#include <Metal/Metal.h>
+#include "MetalBufferCache.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMetalVertexShader
@@ -25,8 +24,8 @@ class CMetalVertexShader : public CGPUVertexShader {
 										// Subclass methods
 		virtual			CString			getName() const = 0;
 
-		virtual			void			setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device)
-												const = 0;
+		virtual			void			setup(id<MTLRenderCommandEncoder> renderCommandEncoder,
+												MetalBufferCache* metalBufferCache) const = 0;
 
 	protected:
 						// Lifecycle methods
@@ -50,7 +49,8 @@ class CMetalFragmentShader : public CGPUFragmentShader {
 						// Instance methods
 		virtual	CString	getName() const = 0;
 
-		virtual	void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLDevice> device) const = 0;
+		virtual	void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache)
+								const = 0;
 
 	protected:
 						// Lifecycle methods

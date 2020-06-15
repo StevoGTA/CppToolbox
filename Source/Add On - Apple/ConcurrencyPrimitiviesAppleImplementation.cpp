@@ -42,12 +42,12 @@ CSharedResource::~CSharedResource()
 void CSharedResource::consume() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::dispatch_semaphore_signal(mInternals->mSemaphore);
+	::dispatch_semaphore_wait(mInternals->mSemaphore, DISPATCH_TIME_FOREVER);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CSharedResource::release() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::dispatch_semaphore_wait(mInternals->mSemaphore, DISPATCH_TIME_FOREVER);
+	::dispatch_semaphore_signal(mInternals->mSemaphore);
 }

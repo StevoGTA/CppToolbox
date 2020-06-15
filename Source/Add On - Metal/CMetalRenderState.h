@@ -4,7 +4,7 @@
 
 #pragma once
 
-#import <Metal/Metal.h>
+#import "MetalBufferCache.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SMetalVertexBufferInfo
@@ -28,19 +28,21 @@ struct SMetalVertexBufferInfo {
 struct SGPURenderStateCommitInfo {
 	// Lifecycle methods
 	SGPURenderStateCommitInfo(id<MTLDevice> device, id<MTLLibrary> shaderLibrary,
-			id<MTLRenderCommandEncoder> renderCommandEncoder, MTLRenderPipelineDescriptor* renderPipelineDescriptor,
+			id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache,
 			NSMutableDictionary<NSString*, id<MTLFunction>>* functionsCache,
+			MTLRenderPipelineDescriptor* renderPipelineDescriptor,
 			NSMutableDictionary<NSString*, id<MTLRenderPipelineState>>* renderPipelineStateCache) :
 		mDevice(device), mShaderLibrary(shaderLibrary), mRenderCommandEncoder(renderCommandEncoder),
-				mRenderPipelineDescriptor(renderPipelineDescriptor), mFunctionsCache(functionsCache),
-				mRenderPipelineStateCache(renderPipelineStateCache)
+				mMetalBufferCache(metalBufferCache), mFunctionsCache(functionsCache),
+				mRenderPipelineDescriptor(renderPipelineDescriptor), mRenderPipelineStateCache(renderPipelineStateCache)
 		{}
 
 	// Properties
 	id<MTLDevice>												mDevice;
 	id<MTLLibrary>												mShaderLibrary;
 	id<MTLRenderCommandEncoder>									mRenderCommandEncoder;
-	MTLRenderPipelineDescriptor*								mRenderPipelineDescriptor;
+	MetalBufferCache*											mMetalBufferCache;
 	NSMutableDictionary<NSString*, id<MTLFunction>>*			mFunctionsCache;
+	MTLRenderPipelineDescriptor*								mRenderPipelineDescriptor;
 	NSMutableDictionary<NSString*, id<MTLRenderPipelineState>>*	mRenderPipelineStateCache;
 };
