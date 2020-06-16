@@ -30,11 +30,11 @@ function make_lib_for_arch() {
   if [ $ARCH == "armv7" ] || [ $ARCH == "armv7s" ]
   then
     # 32-bit build (armv7 and armv7s)
-    CFLAGS="-mfloat-abi=softfp -arch $ARCH"
+    CFLAGS="-mfloat-abi=softfp -arch $ARCH -fembed-bitcode"
     ASMFLAGS="-no-integrated-as"
   else
     # 64-bit build (arm64 and x86_64)
-    CFLAGS="-Wall -arch $ARCH -miphoneos-version-min=7.0 -funwind-tables"
+    CFLAGS="-Wall -arch $ARCH -miphoneos-version-min=7.0 -funwind-tables -fembed-bitcode"
     ASMFLAGS=""
   fi
 

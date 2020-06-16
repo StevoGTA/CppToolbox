@@ -16,7 +16,7 @@ set -x
 : ${IPHONE_SDKVERSION:=`xcodebuild -showsdks | grep iphoneos | egrep "[[:digit:]]+\.[[:digit:]]+" -o | tail -1`}
 : ${XCODE_ROOT:=`xcode-select -print-path`}
 
-: ${ORIGDIR}:=`pwd`}
+: ${ORIGDIR:=`pwd`}
 : ${TARBALLDIR:=`pwd`}
 : ${SRCDIR:=`pwd`/src}
 : ${IOSBUILDDIR:=`pwd`/ios/build}
@@ -119,108 +119,12 @@ buildLibpngForIPhoneOS()
     doneSection
 
     echo Building Libpng for iPhone
-    export CFLAGS="-O3 -arch armv7 -arch armv7s -arch arm64 -isysroot $XCODE_ROOT/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${IPHONE_SDKVERSION}.sdk -mios-version-min=9.0"
+    export CFLAGS="-O3 -arch armv7 -arch armv7s -arch arm64 -isysroot $XCODE_ROOT/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${IPHONE_SDKVERSION}.sdk -mios-version-min=9.0 -fembed-bitcode"
     export CPPFLAGS="-arch arm64 -I$XCODE_ROOT/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${IPHONE_SDKVERSION}.sdk/usr/include"
     make distclean
     ./configure --host=arm-apple-darwin --prefix="$PREFIXDIR/iphone-build" --disable-dependency-tracking --enable-static=yes --enable-shared=no
     make
     make install
-    doneSection
-}
-
-#===============================================================================
-
-scrunchAllLibsTogetherInOneLibPerPlatform()
-{
-    cd "$PREFIXDIR"
-
-    # iOS Device
-    mkdir -p "$IOSBUILDDIR/armv7"
-    mkdir -p "$IOSBUILDDIR/armv7s"
-    mkdir -p "$IOSBUILDDIR/arm64"
-
-    # iOS Simulator
-    mkdir -p "$IOSBUILDDIR/x86_64"
-
-    ALL_LIBS=""
-
-    echo Splitting all existing fat binaries...
-
-    $ARM_DEV_CMD lipo "iphone-build/lib/libpng.a" -thin armv7 -o "$IOSBUILDDIR/armv7/libpng.a"
-    $ARM_DEV_CMD lipo "iphone-build/lib/libpng.a" -thin armv7s -o "$IOSBUILDDIR/armv7s/libpng.a"
-    $ARM_DEV_CMD lipo "iphone-build/lib/libpng.a" -thin arm64 -o "$IOSBUILDDIR/arm64/libpng.a"
-
-    $SIM_DEV_CMD lipo "iphonesim-build/lib/libpng.a" -thin x86_64 -o "$IOSBUILDDIR/x86_64/libpng.a"
-
-    echo Build an universal library
-}
-
-#===============================================================================
-buildFramework()
-{
-    : ${1:?}
-    FRAMEWORKDIR=$1
-    BUILDDIR=$2
-
-    VERSION_TYPE=Alpha
-    FRAMEWORK_NAME=libpng
-    FRAMEWORK_VERSION=A
-
-    FRAMEWORK_CURRENT_VERSION=$LIB_VERSION
-    FRAMEWORK_COMPATIBILITY_VERSION=$LIB_VERSION
-
-    FRAMEWORK_BUNDLE="$FRAMEWORKDIR/$FRAMEWORK_NAME.framework"
-    echo "Framework: Building $FRAMEWORK_BUNDLE from $BUILDDIR..."
-
-    rm -rf "$FRAMEWORK_BUNDLE"
-
-    echo "Framework: Setting up directories..."
-    mkdir -p "$FRAMEWORK_BUNDLE"
-    mkdir -p "$FRAMEWORK_BUNDLE/Versions"
-    mkdir -p "$FRAMEWORK_BUNDLE/Versions/$FRAMEWORK_VERSION"
-    mkdir -p "$FRAMEWORK_BUNDLE/Versions/$FRAMEWORK_VERSION/Resources"
-    mkdir -p "$FRAMEWORK_BUNDLE/Versions/$FRAMEWORK_VERSION/Headers"
-    mkdir -p "$FRAMEWORK_BUNDLE/Versions/$FRAMEWORK_VERSION/Documentation"
-
-    echo "Framework: Creating symlinks..."
-    ln -s $FRAMEWORK_VERSION               "$FRAMEWORK_BUNDLE/Versions/Current"
-    ln -s Versions/Current/Headers         "$FRAMEWORK_BUNDLE/Headers"
-    ln -s Versions/Current/Resources       "$FRAMEWORK_BUNDLE/Resources"
-    ln -s Versions/Current/Documentation   "$FRAMEWORK_BUNDLE/Documentation"
-    ln -s Versions/Current/$FRAMEWORK_NAME "$FRAMEWORK_BUNDLE/$FRAMEWORK_NAME"
-
-    FRAMEWORK_INSTALL_NAME="$FRAMEWORK_BUNDLE/Versions/$FRAMEWORK_VERSION/$FRAMEWORK_NAME"
-
-    echo "Lipoing library into $FRAMEWORK_INSTALL_NAME..."
-    $ARM_DEV_CMD lipo -create "$BUILDDIR/*/libpng.a" -o "$FRAMEWORK_INSTALL_NAME" || abort "Lipo $1 failed"
-
-    echo "Framework: Copying includes..."
-    cp -r "$PREFIXDIR/iphone-build/include/*" "$FRAMEWORK_BUNDLE/Headers/"
-
-    echo "Framework: Creating plist..."
-    cat > "$FRAMEWORK_BUNDLE/Resources/Info.plist" <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-<key>CFBundleDevelopmentRegion</key>
-<string>English</string>
-<key>CFBundleExecutable</key>
-<string>${FRAMEWORK_NAME}</string>
-<key>CFBundleIdentifier</key>
-<string>org.libpng</string>
-<key>CFBundleInfoDictionaryVersion</key>
-<string>6.0</string>
-<key>CFBundlePackageType</key>
-<string>FMWK</string>
-<key>CFBundleSignature</key>
-<string>????</string>
-<key>CFBundleVersion</key>
-<string>${FRAMEWORK_CURRENT_VERSION}</string>
-</dict>
-</plist>
-EOF
-
     doneSection
 }
 
@@ -244,18 +148,20 @@ echo
 downloadLibpng
 unpackLibpng
 buildLibpngForIPhoneOS
-#scrunchAllLibsTogetherInOneLibPerPlatform
-#buildFramework "$IOSFRAMEWORKDIR" "$IOSBUILDDIR"
 
-echo "Lipoing library..."
+echo "Copying includes"
 cd "$ORIGDIR"
 cp -r "$PREFIXDIR/iphone-build/include" .
+
+echo "Lipo-ing library..."
+rm -rf "lib"
 mkdir "lib"
 $ARM_DEV_CMD lipo -create $PREFIXDIR/*/lib/libpng16.a -o "lib/libpng16.a" || abort "Lipo $1 failed"
+
 cd lib
 ln -s libpng16.a libpng.a
-cd ..
 
 echo "Completed successfully"
+cd "$ORIGDIR"
 
 #===============================================================================
