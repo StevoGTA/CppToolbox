@@ -5,6 +5,7 @@
 #include "CBinaryPropertyList.h"
 
 #include "CppToolboxAssert.h"
+#include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
@@ -390,9 +391,9 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 				return nil;
 
 			// Read object indexes
-			UInt64	objectIndexes[count];
+			TBuffer<UInt64>	objectIndexes(count);
 			for (UInt64 i = 0; i < count; i++)
-				objectIndexes[i] = readIndex();
+				(*objectIndexes)[i] = readIndex();
 
 			// Determine array type
 			marker = readMarker(objectIndexes[0]);

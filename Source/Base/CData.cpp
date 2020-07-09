@@ -5,6 +5,7 @@
 #include "CData.h"
 
 #include "CppToolboxAssert.h"
+#include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
@@ -335,8 +336,8 @@ CString CData::getBase64String(bool prettyPrint) const
 	const	UInt8*			bytePtr = (UInt8*) mInternals->mBuffer;
 	const	UInt8*			endBytePtr = bytePtr + mInternals->mBufferSize;
 
-			char*			stringBuffer[stringLength];
-			char*			stringPtr = (char*) stringBuffer;
+			TBuffer<char>	stringBuffer(stringLength);
+			char*			stringPtr = *stringBuffer;
 
 			CStringLength	currentLineLength = 0;
 	while ((endBytePtr - bytePtr) >= 3) {
@@ -380,7 +381,7 @@ CString CData::getBase64String(bool prettyPrint) const
 		// Add newline
 		*stringPtr++ = '\n';
 
-	return CString((char*) stringBuffer, stringLength, kStringEncodingUTF8);
+	return CString(*stringBuffer, stringLength, kStringEncodingUTF8);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

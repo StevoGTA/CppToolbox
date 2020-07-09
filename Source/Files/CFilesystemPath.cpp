@@ -4,6 +4,8 @@
 
 #include "CFilesystemPath.h"
 
+#include "TBuffer.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
@@ -193,11 +195,11 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, EFilesystemPat
 	CStringLength	length = string.getLength();
 
 	// Extract characters
-	UTF16Char	buffer[length];
-	string.get(buffer, length);
+	TBuffer<UTF16Char>	buffer(length);
+	string.get(*buffer, length);
 
 	// Replace "illegal" ones with '_'
-	UTF16Char*	p = buffer;
+	UTF16Char*	p = *buffer;
 	for (CStringLength i = 0; i < length; i++, p++) {
 		if ((*p < 0x20) || (*p == ':') || (*p == 0x7F))
 			*p = '_';
@@ -206,7 +208,7 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, EFilesystemPat
 			*p = '_';
 	}
 
-	return CString(buffer, length);
+	return CString(*buffer, length);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

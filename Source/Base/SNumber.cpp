@@ -5,7 +5,12 @@
 #include "SNumber.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SNumber
+// MARK: Local data
+
+static	bool	sRandHasBeenSeeded = false;
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SNumber
 
 // MARK: Class methods
 
@@ -27,25 +32,46 @@ UInt16 SNumber::getNextPowerOf2(UInt16 value)
 bool SNumber::randomBool()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (::random() % 2) == 0;
+	// Check if seeded
+	if (!sRandHasBeenSeeded) {
+		// Seed
+		::srand((unsigned) ::time(nil));
+		sRandHasBeenSeeded = true;
+	}
+
+	return (::rand() % 2) == 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 Float32 SNumber::randomFloat32(Float32 min, Float32 max)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if seeded
+	if (!sRandHasBeenSeeded) {
+		// Seed
+		::srand((unsigned) ::time(nil));
+		sRandHasBeenSeeded = true;
+	}
+
 	// Setup
 	Float32	delta = max - min;
 
-	return (delta == 0.0) ? min : (::random() % (UInt32) delta) + min;
+	return (delta == 0.0) ? min : (::rand() % (UInt32) delta) + min;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 SNumber::randomUInt32(UInt32 min, UInt32 max)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if seeded
+	if (!sRandHasBeenSeeded) {
+		// Seed
+		::srand((unsigned) ::time(nil));
+		sRandHasBeenSeeded = true;
+	}
+
 	// Setup
 	UInt32	delta = max - min;
 
-	return (delta == 0) ? min : (::random() % delta) + min;
+	return (delta == 0) ? min : (::rand() % delta) + min;
 }

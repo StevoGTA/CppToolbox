@@ -5,6 +5,7 @@
 #include "CTextParceller.h"
 
 #include "CDataSource.h"
+#include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CTextParcellerInternals
@@ -72,14 +73,11 @@ CString CTextParceller::readStringToEOL(UError& outError) const
 			return outString;
 		}
 
-		char	buffer[bytesRead + 1];
-		outError = mInternals->mDataSource->readData(buffer, bytesRead);
+		TBuffer<char>	buffer(bytesRead + 1);
+		outError = mInternals->mDataSource->readData(*buffer, bytesRead);
 		if (outError != kNoError)
 			// Error
 			return CString::mEmpty;
-
-		// Add NULL to end of end
-		buffer[bytesRead] = 0;
 
 		// Did we actually read anything?
 		if (bytesRead > 0) {
@@ -87,7 +85,7 @@ CString CTextParceller::readStringToEOL(UError& outError) const
 			SInt32	delta = -((SInt32) bytesRead);
 
 			// Go through destBuffer, searching for \r and \n
-			char*	p = buffer;
+			char*	p = *buffer;
 			while ((bytesRead > 0) && (*p != '\r') && (*p != '\n')) {
 				p++;
 				bytesRead--;
@@ -117,7 +115,7 @@ CString CTextParceller::readStringToEOL(UError& outError) const
 			ReturnValueIfError(outError, outString);
 
 			// Append the chars we found to the return string
-			outString += CString(buffer);
+			outString += CString(*buffer);
 		} else
 			foundEnd = true;
 	}
