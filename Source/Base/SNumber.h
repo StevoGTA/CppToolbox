@@ -105,5 +105,5 @@ struct SNumber {
 
 	static	UInt32	randomUInt32(UInt32 min, UInt32 max);
 	static	UInt32	randomUInt32(UInt32 max)
-						{ return randomUInt32(0.0, max); }
+						{ return randomUInt32(0, max); }
 };

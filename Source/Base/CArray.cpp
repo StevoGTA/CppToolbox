@@ -270,7 +270,7 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													}
 
 													// Append itemRefs into place
-													::memcpy(mItemRefs + mCount, itemRefs, count * sizeof(CFArrayRef));
+													::memcpy(mItemRefs + mCount, itemRefs, count * sizeof(CArrayItemRef));
 													mCount = neededCount;
 												}
 
@@ -578,14 +578,14 @@ CArray& CArray::sort(CArrayCompareProc compareProc, void* userData)
 	mInternals = mInternals->prepareForWrite();
 
 	// Sort
-#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 	// BSD platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
 	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), &sortInfo, sSortProc);
-#elif defined(TARGET_OS_LINUX)
+#elif TARGET_OS_LINUX
 	// GLibc platforms
 	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), sSortProc, userData);
-#elif defined(TARGET_OS_WINDOWS)
+#elif TARGET_OS_WINDOWS
 	// Windows platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
 	qsort_s(*mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), sSortProc, &sortInfo);

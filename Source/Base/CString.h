@@ -12,6 +12,9 @@
 #if TARGET_OS_MACOS || TARGET_OS_IOS
 	#define	OSString	CFStringRef
 	#define	OSSTR(s)	CFSTR(s)
+#elif TARGET_OS_WINDOWS
+	#define OSString	TCHAR*
+	#define OSSTR(s)	_TEXT(s)
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------

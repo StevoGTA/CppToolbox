@@ -27,7 +27,7 @@ UInt16 SNumber::getNextPowerOf2(UInt16 value)
 bool SNumber::randomBool()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (random() % 2) == 0;
+	return (::random() % 2) == 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -37,16 +37,7 @@ Float32 SNumber::randomFloat32(Float32 min, Float32 max)
 	// Setup
 	Float32	delta = max - min;
 
-	// Check delta
-	if (delta == 0.0)
-		// No delta
-		return min;
-	else if (delta > 0.0)
-		// Delta is positive
-		return (random() % (UInt32) delta) + min;
-	else
-		// Delta is negative (why?)
-		return min - (random() % (UInt32) -delta);
+	return (delta == 0.0) ? min : (::random() % (UInt32) delta) + min;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -56,14 +47,5 @@ UInt32 SNumber::randomUInt32(UInt32 min, UInt32 max)
 	// Setup
 	UInt32	delta = max - min;
 
-	// Check delta
-	if (delta == 0)
-		// No delta
-		return min;
-	else if (delta > 0)
-		// Delta is positive
-		return (random() % delta) + min;
-	else
-		// Delta is negative (why?)
-		return min - (random() % -delta);
+	return (delta == 0) ? min : (::random() % delta) + min;
 }

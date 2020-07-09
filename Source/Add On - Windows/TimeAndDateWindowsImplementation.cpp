@@ -4,6 +4,9 @@
 
 #include "TimeAndDate.h"
 
+#include <time.h>
+#include <sys/timeb.h>
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
@@ -60,7 +63,7 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 	mDay = theTM.tm_mday;
 	mHour = theTM.tm_hour;
 	mMinute = theTM.tm_min;
-	mSecond = (Float32) theTM.tm_sec + (Float32) fmod(time, 1);
+	mSecond = (Float32) theTM.tm_sec + (Float32) ::fmod(time, 1);
 	mDayOfWeek = theTM.tm_wday;
 }
 
@@ -70,17 +73,16 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 UniversalTime SGregorianDate::getUniversalTime() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	{
 	// Setup
 	struct	tm	theTM;
-	theTM.tm_year = date.mYear - 1900;
-	theTM.tm_mon = date.mMonth - 1;
-	theTM.tm_mday = date.mDay;
-	theTM.tm_hour = date.mHour;
-	theTM.tm_min = date.mMinute;
-	theTM.tm_sec = (int) date.mSecond;
+	theTM.tm_year = mYear - 1900;
+	theTM.tm_mon = mMonth - 1;
+	theTM.tm_mday = mDay;
+	theTM.tm_hour = mHour;
+	theTM.tm_min = mMinute;
+	theTM.tm_sec = (int) mSecond;
 
 	__time64_t	time64 = _mktime64(&theTM);
 
-	return (UniversalTime) time64 + fmod(date.mSecond, 1) + kUniversalTimeInterval1970To2001;
+	return (UniversalTime) time64 + ::fmod(mSecond, 1) + kUniversalTimeInterval1970To2001;
 }

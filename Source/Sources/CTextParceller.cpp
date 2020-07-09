@@ -84,7 +84,7 @@ CString CTextParceller::readStringToEOL(UError& outError) const
 		// Did we actually read anything?
 		if (bytesRead > 0) {
 			// Prepare for resetting file position
-			SInt32	delta = (SInt32) -bytesRead;
+			SInt32	delta = -((SInt32) bytesRead);
 
 			// Go through destBuffer, searching for \r and \n
 			char*	p = buffer;
