@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	ConcurrencyPrimitivesPOSIXImplementation.cpp			©2018 Stevo Brock	All rights reserved.
+//	ConcurrencyPrimitives-POSIX.cpp			©2018 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "ConcurrencyPrimitives.h"

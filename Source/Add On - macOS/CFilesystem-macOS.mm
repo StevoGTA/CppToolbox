@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFilesystemMacOSImplementation.mm			©2019 Stevo Brock	All rights reserved.
+//	CFilesystem-macOS.mm			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFilesystem.h"

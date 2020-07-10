@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFileWriterPOSIXImplementation.cpp			©2019 Stevo Brock	All rights reserved.
+//	CFileWriter-POSIX.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFileWriter.h"

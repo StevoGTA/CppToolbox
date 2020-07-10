@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//  CppToolboxAssert.cpp			©2020 Stevo Brock	All rights reserved.
+//  CppToolboxAssert-Apple.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CppToolboxAssert.h"

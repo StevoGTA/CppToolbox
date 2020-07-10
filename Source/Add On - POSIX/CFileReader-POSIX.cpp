@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFileReaderPOSIXImplementation.cpp			©2019 Stevo Brock	All rights reserved.
+//	CFileReader-POSIX.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFileReader.h"

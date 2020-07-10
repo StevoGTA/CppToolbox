@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	TimeAndDateAppleImplementation.cpp			©2020 Stevo Brock	All rights reserved.
+//	TimeAndDate-Apple.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "TimeAndDate.h"

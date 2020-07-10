@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	TimeAndDateLinuxImplementation.cpp			©2020 Stevo Brock	All rights reserved.
+//	TimeAndDate-Linux.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "TimeAndDate.h"

@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CData_ZIPExtensions.cpp			©2013 Stevo Brock	All rights reserved.
+//	CData-ZIPExtensions.cpp			©2013 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CData_ZIPExtensions.h"
+#include "CData-ZIPExtensions.h"
 
 #include <zlib.h>
 
