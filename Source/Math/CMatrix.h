@@ -107,8 +107,8 @@ template <typename T> struct TMatrix4x4 {
 	TMatrix4x4<T>	rotateOnZ(T radians)
 						{
 							// Setup
-							T	cosv = cos(radians);
-							T	sinv = sin(radians);
+							T	cosv = (T) cos(radians);
+							T	sinv = (T) sin(radians);
 
 							return *this *
 									TMatrix4x4<T>(	cosv, sinv, 0.0, 0.0,

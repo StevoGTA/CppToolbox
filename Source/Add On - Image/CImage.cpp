@@ -457,7 +457,7 @@ CBitmap sDecodePNGData(const CData& data)
 //			png_get_rowbytes(pngPtr, pngInfoPtr));
 	CBitmap	bitmap(S2DSizeS32(width, height),
 					(colorType == PNG_COLOR_TYPE_RGB) ? kBitmapFormatRGB888 : kBitmapFormatRGBA8888,
-					png_get_rowbytes(pngPtr, pngInfoPtr));
+					(UInt16) png_get_rowbytes(pngPtr, pngInfoPtr));
 
 	// Read the image
 	png_bytepp	rowPointers = (png_bytepp) ::malloc(height * sizeof(png_bytep));

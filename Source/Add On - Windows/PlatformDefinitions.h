@@ -4,16 +4,16 @@
 
 #pragma once
 
+#define _USE_MATH_DEFINES
+
 #include <algorithm>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include <math.h>
 #include <memory.h>
-//#include <random>
-//#include <string.h>
 #include <tchar.h>
+#include <time.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // Defines

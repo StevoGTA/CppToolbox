@@ -11,8 +11,8 @@
 
 template <typename T> struct T2DUtilities {
 	// Methods
-	inline	static	T	toDegrees(T angleInRadians) { return angleInRadians * 180.0 / M_PI; }
-	inline	static	T	toRadians(T angleInDegrees) { return angleInDegrees * M_PI / 180.0; }
+	inline	static	T	toDegrees(T angleInRadians) { return (T) (angleInRadians * 180.0 / M_PI); }
+	inline	static	T	toRadians(T angleInDegrees) { return (T) (angleInDegrees * M_PI / 180.0); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ template <typename T> struct T2DAffineTransform;
 template <typename t> struct T2DOffset;
 template <typename T> struct T2DPoint {
 						// Lifecycle methods
-						T2DPoint() : mX(0.0), mY(0.0) {}
+						T2DPoint() : mX(0), mY(0) {}
 						T2DPoint(T x, T y) : mX(x), mY(y) {}
 						T2DPoint(const CString& string)
 							{
@@ -123,7 +123,7 @@ typedef	T2DOffset<Float32>	S2DOffsetF32;
 
 template <typename T> struct T2DSize {
 					// Lifecycle methods
-					T2DSize() : mWidth(0.0), mHeight(0.0) {}
+					T2DSize() : mWidth(0), mHeight(0) {}
 					T2DSize(T width, T height) : mWidth(width), mHeight(height) {}
 					T2DSize(const CString& string)
 						{
