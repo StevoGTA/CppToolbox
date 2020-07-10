@@ -1,0 +1,9 @@
+Building libraries for Windows
+
+libjpeg-turbo
+-------------
+Install-Package libjpeg-msvc-x64
+
+libpng
+------
+Install-Package libpng-msvc-x64

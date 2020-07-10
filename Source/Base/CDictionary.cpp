@@ -1175,15 +1175,15 @@ Float32 SDictionaryValue::getFloat32(Float32 defaultValue) const
 	// Check value type
 	switch (mValueType) {
 		case kDictionaryValueTypeFloat32:	return mValue.mFloat32;
-		case kDictionaryValueTypeFloat64:	return mValue.mFloat64;
+		case kDictionaryValueTypeFloat64:	return (Float32) mValue.mFloat64;
 		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
 		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64;
+		case kDictionaryValueTypeSInt32:	return (Float32) mValue.mSInt32;
+		case kDictionaryValueTypeSInt64:	return (Float32) mValue.mSInt64;
 		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
 		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
+		case kDictionaryValueTypeUInt32:	return (Float32) mValue.mUInt32;
+		case kDictionaryValueTypeUInt64:	return (Float32) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
@@ -1203,11 +1203,11 @@ Float64 SDictionaryValue::getFloat64(Float64 defaultValue) const
 		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
 		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
 		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64;
+		case kDictionaryValueTypeSInt64:	return (Float64) mValue.mSInt64;
 		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
 		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
 		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
+		case kDictionaryValueTypeUInt64:	return (Float64) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
@@ -1223,13 +1223,13 @@ SInt8 SDictionaryValue::getSInt8(SInt8 defaultValue) const
 	// Check value type
 	switch (mValueType) {
 		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64;
+		case kDictionaryValueTypeSInt16:	return (SInt8) mValue.mSInt16;
+		case kDictionaryValueTypeSInt32:	return (SInt8)mValue.mSInt32;
+		case kDictionaryValueTypeSInt64:	return (SInt8)mValue.mSInt64;
 		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
+		case kDictionaryValueTypeUInt16:	return (SInt8)mValue.mUInt16;
+		case kDictionaryValueTypeUInt32:	return (SInt8)mValue.mUInt32;
+		case kDictionaryValueTypeUInt64:	return (SInt8)mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
@@ -1247,11 +1247,11 @@ SInt16 SDictionaryValue::getSInt16(SInt16 defaultValue) const
 		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
 		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
 		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64;
+		case kDictionaryValueTypeSInt64:	return (SInt16) mValue.mSInt64;
 		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
 		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
 		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
+		case kDictionaryValueTypeUInt64:	return (SInt16) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
@@ -1311,13 +1311,13 @@ UInt8 SDictionaryValue::getUInt8(UInt8 defaultValue) const
 	// Check value type
 	switch (mValueType) {
 		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64;
+		case kDictionaryValueTypeSInt16:	return (UInt8) mValue.mSInt16;
+		case kDictionaryValueTypeSInt32:	return (UInt8) mValue.mSInt32;
+		case kDictionaryValueTypeSInt64:	return (UInt8) mValue.mSInt64;
 		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
+		case kDictionaryValueTypeUInt16:	return (UInt8) mValue.mUInt16;
+		case kDictionaryValueTypeUInt32:	return (UInt8) mValue.mUInt32;
+		case kDictionaryValueTypeUInt64:	return (UInt8) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
@@ -1335,11 +1335,11 @@ UInt16 SDictionaryValue::getUInt16(UInt16 defaultValue) const
 		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
 		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
 		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64;
+		case kDictionaryValueTypeSInt64:	return (UInt16) mValue.mSInt64;
 		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
 		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
 		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
+		case kDictionaryValueTypeUInt64:	return (UInt16) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFailWith(kAssertFailedError);
