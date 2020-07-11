@@ -11,13 +11,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPU
 
-struct CGPUProcsInfo;
+struct SGPUProcsInfo;
 class CGPUInternals;
 class CGPU {
 	// Methods
 	public:
 										// Lifecycle methods
-										CGPU(const CGPUProcsInfo& procsInfo);
+										CGPU(const SGPUProcsInfo& procsInfo);
 										~CGPU();
 
 										// Instance methods

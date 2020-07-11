@@ -6,7 +6,7 @@
 
 #include "CGPUTexture.h"
 
-#import <Metal/Metal.h>
+#include <Metal/Metal.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMetalTexture

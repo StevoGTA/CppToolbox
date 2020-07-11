@@ -7,7 +7,7 @@
 #include "CGPU.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPUProcsInfo
+// MARK: SGPUProcsInfo
 
 typedef	void		(*COpenGLGPUAcquireContextProc)(void* userData);
 typedef	bool		(*COpenGLGPUTryAcquireContextProc)(void* userData);
@@ -18,9 +18,9 @@ typedef	Float32		(*COpenGLGPUGetScaleProc)(void* userData);
 typedef	void*		(*COpenGLGPUGetRenderBufferStorageContextProc)(void* userData);
 #endif
 
-struct CGPUProcsInfo {
+struct SGPUProcsInfo {
 			// Lifecycle methods
-			CGPUProcsInfo(COpenGLGPUAcquireContextProc acquireContextProc,
+			SGPUProcsInfo(COpenGLGPUAcquireContextProc acquireContextProc,
 					COpenGLGPUTryAcquireContextProc tryAcquireContextProc,
 					COpenGLGPUReleaseContextProc releaseContextProc, COpenGLGPUGetSizeProc getSizeProc,
 					COpenGLGPUGetScaleProc getScaleProc,
@@ -35,7 +35,7 @@ struct CGPUProcsInfo {
 #endif
 						mUserData(userData)
 				{}
-			CGPUProcsInfo(const CGPUProcsInfo& other) :
+			SGPUProcsInfo(const SGPUProcsInfo& other) :
 				mAcquireContextProc(other.mAcquireContextProc), mTryAcquireContextProc(other.mTryAcquireContextProc),
 						mReleaseContextProc(other.mReleaseContextProc), mGetSizeProc(other.mGetSizeProc),
 						mGetScaleProc(other.mGetScaleProc),

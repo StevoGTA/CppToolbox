@@ -21,7 +21,7 @@ static	const	UInt32	kBufferCount = 3;
 
 class CGPUInternals {
 	public:
-		CGPUInternals(const CGPUProcsInfo& procsInfo) :
+		CGPUInternals(const SGPUProcsInfo& procsInfo) :
 			mProcsInfo(procsInfo),
 					mCommandQueue([procsInfo.getDevice() newCommandQueue]),
 					mShaderLibrary([procsInfo.getDevice() newDefaultLibrary]),
@@ -44,7 +44,7 @@ class CGPUInternals {
 				mRenderPipelineDescriptor.colorAttachments[0].pixelFormat = procsInfo.getPixelFormat();
 			}
 
-	CGPUProcsInfo												mProcsInfo;
+	SGPUProcsInfo												mProcsInfo;
 
 	id<MTLCommandQueue>											mCommandQueue;
 	id<MTLLibrary>												mShaderLibrary;
@@ -71,7 +71,7 @@ class CGPUInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPU::CGPU(const CGPUProcsInfo& procsInfo)
+CGPU::CGPU(const SGPUProcsInfo& procsInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CGPUInternals(procsInfo);

@@ -16,7 +16,7 @@
 
 class CGPUInternals {
 	public:
-				CGPUInternals(const CGPUProcsInfo& procsInfo) :
+				CGPUInternals(const SGPUProcsInfo& procsInfo) :
 					mProcsInfo(procsInfo), mPerformedSetup(false), mRenderBufferName(0), mFrameBufferName(0)
 					{}
 				~CGPUInternals()
@@ -26,7 +26,7 @@ class CGPUInternals {
 						glDeleteRenderbuffers(1, &mRenderBufferName);
 					}
 
-	CGPUProcsInfo	mProcsInfo;
+	SGPUProcsInfo	mProcsInfo;
 
 	bool			mPerformedSetup;
 	SMatrix4x4_32	mProjectionMatrix;
@@ -42,7 +42,7 @@ class CGPUInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPU::CGPU(const CGPUProcsInfo& procsInfo)
+CGPU::CGPU(const SGPUProcsInfo& procsInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CGPUInternals(procsInfo);

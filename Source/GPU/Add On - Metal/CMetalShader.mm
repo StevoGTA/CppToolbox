@@ -4,8 +4,6 @@
 
 #import "CMetalShader.h"
 
-#import "CLogServices.h"
-
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMetalVertexShaderInternals
@@ -69,8 +67,7 @@ class CMetalFragmentShaderInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMetalFragmentShader::CMetalFragmentShader() :
-		CGPUFragmentShader()
+CMetalFragmentShader::CMetalFragmentShader() : CGPUFragmentShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CMetalFragmentShaderInternals();

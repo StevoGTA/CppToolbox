@@ -14,9 +14,9 @@
 
 class CGPUInternals {
 	public:
-		CGPUInternals(const CGPUProcsInfo& procsInfo) : mProcsInfo(procsInfo) {}
+		CGPUInternals(const SGPUProcsInfo& procsInfo) : mProcsInfo(procsInfo) {}
 
-	CGPUProcsInfo	mProcsInfo;
+	SGPUProcsInfo	mProcsInfo;
 
 	SMatrix4x4_32	mProjectionMatrix;
 	SMatrix4x4_32	mViewMatrix;
@@ -29,7 +29,7 @@ class CGPUInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPU::CGPU(const CGPUProcsInfo& procsInfo)
+CGPU::CGPU(const SGPUProcsInfo& procsInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CGPUInternals(procsInfo);
