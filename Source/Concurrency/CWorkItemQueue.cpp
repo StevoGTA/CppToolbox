@@ -78,12 +78,19 @@ UInt32	SWorkItemInfo::mNextIndex = 0;
 struct SWorkItemThreadInfo {
 	// Lifecycle methods
 	SWorkItemThreadInfo(SWorkItemInfo& initialWorkItemInfo, CThreadProc threadProc, const CString& name) :
-		mWorkItemInfo(&initialWorkItemInfo), mThread(threadProc, this, name)
-		{}
+		mWorkItemInfo(&initialWorkItemInfo)
+		{
+			// Ensure SWorkItemInfo is set up before starting thread
+			mThread = new CThread(threadProc, this, name);
+		}
+	~SWorkItemThreadInfo()
+		{
+			Delete(mThread);
+		}
 
 	// Properties
 	CSemaphore		mSemaphore;
-	CThread			mThread;
+	CThread*		mThread;
 	SWorkItemInfo*	mWorkItemInfo;
 };
 

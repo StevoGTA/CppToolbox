@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CLogServicesMacOS.cpp			©2020 Stevo Brock	All rights reserved.
+//	CLogServices-macOS.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CLogServicesMacOS.h"
+#include "CLogServices-macOS.h"
 
 #include "CCoreServices.h"
 #include "CLogServices.h"
