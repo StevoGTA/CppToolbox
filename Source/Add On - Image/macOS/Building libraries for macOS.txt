@@ -5,29 +5,20 @@ libjpeg-turbo
 -Create a workspace folder.
 -Download and unzip the latest libjpeg-turbo from https://sourceforge.net/projects/libjpeg-turbo/files/.
 -Create a macOS folder.
--Run the CMake application:
-	Select the source folder.
-	Select the build folder (macOS folder).
-	Click Configure.
-		Select "Unix Makefiles" and use default native compilers.
-	Click Generate.
-	Close CMake
--Switch to Terminal and navigate to the macOS folder.
--Run "make"
+-Copy buildlibjpeg-turbo.sh into the macOS folder.
+-Edit the script to update:
+	"ARCHS_TO_BUILD" to the latest required/recommended.
+	"SRC_PATH" to the correct location.
+-Run the script.
 -Update the project include and lib entries to the correct location.
 
 libpng
 ------
 -Create a workspace folder.
--Download and unzip the latest libpng from https://sourceforge.net/projects/libpng/files/.
--Create a macOS folder.
--Run the CMake application:
-	Select the source folder.
-	Select the build folder (macOS folder).
-	Click Configure.
-		Select "Unix Makefiles" and use default native compilers.
-	Click Generate.
-	Close CMake
--Switch to Terminal and navigate to the macOS folder.
--Run "make"
+-Optionally create an macOS folder.
+-Copy buildlibpng.sh into the macOS folder.
+-Edit the script to update:
+	The lib version to use.
+-Run the script.
 -Update the project include and lib entries to the correct location.
+
