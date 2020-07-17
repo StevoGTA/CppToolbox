@@ -133,15 +133,3 @@ CFDateFormatterStyle sGetCFDateFormatterStyleForGregorianDateStringStyle(EGregor
 		default:								return kCFDateFormatterNoStyle;
 	}
 }
-
-
-
-
-#if defined(__OBJC__)
-//		static	NSCalendarDate*	calendarDateForGregorianDate(const SGregorianDate& date,
-//										NSTimeZone* timeZone)
-//									{ return [NSCalendarDate dateWithYear:date.mYear
-//											month:date.mMonth day:date.mDay hour:date.mHour
-//											minute:date.mMinute second:(NSUInteger) date.mSecond
-//											timeZone:timeZone]; }
-#endif
