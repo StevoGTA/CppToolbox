@@ -97,6 +97,8 @@ class CFolder : CHashable {
 		static	const	CFolder&			userLibraryFolder();
 		static	const	CFolder&			userLogsFolder();
 		static	const	CFolder&			userMusicFolder();
+#elif TARGET_OS_WINDOWS
+		static	const	CFolder&			currentFolder();
 #endif
 
 	private:

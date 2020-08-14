@@ -38,7 +38,7 @@ CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 #elif defined(TARGET_OS_LINUX)
 	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
 #elif defined(TARGET_OS_WINDOWS)
-//	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
+	CString	CString::mPlatformDefaultNewline(OSSTR("\r\n"));
 #endif
 
 // MARK: Lifecycle methods
@@ -235,6 +235,69 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
+SInt8 CString::getSInt8(UInt8 base) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (SInt8) ::strtol(*getCString(), nil, base);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt16 CString::getSInt16(UInt8 base) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (SInt16) ::strtol(*getCString(), nil, base);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt32 CString::getSInt32(UInt8 base) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (SInt32) ::strtol(*getCString(), nil, base);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt64 CString::getSInt64(UInt8 base) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return ::strtoll(*getCString(), nil, base);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt8 CString::getUInt8(UInt8 base) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (UInt8) ::strtoul(*getCString(), nil, base);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt16 CString::getUInt16(UInt8 base) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (UInt16) ::strtoul(*getCString(), nil, base);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CString::getUInt32(UInt8 base) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (UInt32) ::strtoul(*getCString(), nil, base);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OSType CString::getOSType() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return EndianU32_BtoN(*((UInt32*) *getCString()));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CString::getUInt64(UInt8 base) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return ::strtoull(*getCString(), nil, base);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 UInt64 CString::getAsByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -297,6 +360,41 @@ bool CString::isValidEmailAddress() const
 
 	return isValid;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<CString> CString::breakUpRespectingQuotes(const CString& delimiterString) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNArray<CString>	array;
+
+	// Quotes around a string with the delimiter is not a real delimiter
+	bool	inQuotes = false;
+	CString	tempString;
+	for (CStringCharIndex i = 0; i < getLength();) {
+		if (getCharacterAtIndex(i) == '\"') {
+			// Found quote
+			inQuotes = !inQuotes;
+			i++;
+		} else if (!inQuotes && (getSubString(i).hasPrefix(delimiterString))) {
+			// Found delimiter
+			array += tempString;
+			tempString = mEmpty;
+			i += delimiterString.getLength();
+		} else {
+			// Found another character
+			tempString += getSubString(i, 1);
+			i++;
+		}
+	}
+		
+	if (!tempString.isEmpty())
+		array += tempString;
+	
+	return array;
+}
+
+// MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
 ECompareResult CString::compare(CString* const string1, CString* const string2, void* compareFlags)

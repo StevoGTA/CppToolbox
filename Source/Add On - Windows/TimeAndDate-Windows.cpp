@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	TimeAndDateWindowsImplementation.cpp			©2020 Stevo Brock	All rights reserved.
+//	TimeAndDate-Windows.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "TimeAndDate.h"
@@ -26,7 +26,7 @@ UniversalTime SUniversalTime::getCurrentUniversalTime()
 	struct	_timeb timebuffer;
 	::_ftime64_s(&timebuffer);
 
-	return timebuffer.time + (UniversalTime) timebuffer.millitm / 1000.0 + kUniversalTimeInterval1970To2001 +
+	return timebuffer.time + (UniversalTime) timebuffer.millitm / 1000.0 - kUniversalTimeInterval1970To2001 +
 			sOffsetInterval;
 }
 
@@ -39,7 +39,7 @@ void SUniversalTime::setCurrentUniversalTime(UniversalTime time)
 	::_ftime64_s(&timebuffer);
 
 	sOffsetInterval =
-			time - (timebuffer.time + (UniversalTime)timebuffer.millitm / 1000.0 + kUniversalTimeInterval1970To2001);
+			time - (timebuffer.time + (UniversalTime)timebuffer.millitm / 1000.0 - kUniversalTimeInterval1970To2001);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-			__time64_t	time64 = (__time64_t) time;
+			__time64_t	time64 = (__time64_t) time + kUniversalTimeInterval1970To2001;
 	struct	tm			theTM;
 	_localtime64_s(&theTM, &time64);
 

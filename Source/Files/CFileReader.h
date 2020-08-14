@@ -19,7 +19,7 @@ enum EFileReaderPositionMode {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFileMemoryMap
 
-class SFileMemoryMapSetupInfo;
+struct SFileMemoryMapSetupInfo;
 
 class CFileMemoryMapInternals;
 class CFileMemoryMap {

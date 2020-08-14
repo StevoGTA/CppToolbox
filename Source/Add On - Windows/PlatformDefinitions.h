@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #include <memory.h>
 #include <tchar.h>
 #include <time.h>
@@ -27,6 +28,8 @@
 #define __attribute__(x)
 #define _Nullable
 #define __nonnull(x)
+
+#define WARNING(message)	
 
 #define EndianS16_BtoN(value)	((SInt16) _byteswap_ushort(value))
 #define EndianS16_NtoB(value)	((SInt16) _byteswap_ushort(value))

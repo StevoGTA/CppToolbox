@@ -244,13 +244,13 @@ template <typename T> struct T2DRect {
 	inline	T			getMinX() const
 							{ return mOrigin.mX; }
 	inline	T			getMidX() const
-							{ return mOrigin.mX + 0.5 * mSize.mWidth; }
+							{ return mOrigin.mX + (T) 0.5 * mSize.mWidth; }
 	inline	T			getMaxX() const
 							{ return mOrigin.mX + mSize.mWidth; }
 	inline	T			getMinY() const
 							{ return mOrigin.mY; }
 	inline	T			getMidY() const
-							{ return mOrigin.mY + 0.5 * mSize.mHeight; }
+							{ return mOrigin.mY + (T) 0.5 * mSize.mHeight; }
 	inline	T			getMaxY() const
 							{ return mOrigin.mY + mSize.mHeight; }
 	inline	T			getWidth() const
