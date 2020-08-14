@@ -17,8 +17,6 @@
 #define	DEPRECATED	DEPRECATED_ATTRIBUTE
 #define force_inline __attribute__((always_inline))
 
-#define WARNING(message)	#warning message
-
 //----------------------------------------------------------------------------------------------------------------------
 #include <MacTypes.h>
 

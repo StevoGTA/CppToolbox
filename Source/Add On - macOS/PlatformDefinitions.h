@@ -17,8 +17,6 @@
 #define	DEPRECATED	DEPRECATED_ATTRIBUTE
 #define force_inline __attribute__((always_inline))
 
-#define WARNING(message)	#warning message
-
 //----------------------------------------------------------------------------------------------------------------------
 #define	MAKE_OSTYPE(a,b,c,d)	((a << 24) | (b << 16) | (c << 8) | d)
 

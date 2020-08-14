@@ -147,7 +147,7 @@ UInt32 CCoreServices::getPhysicalMemoryPageSize()
 // MARK: Debugger methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreServices::stopInDebugger()
+void CCoreServices::stopInDebugger(SInt32 code, OSStringVar(message))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	kill(getpid(), SIGINT);

@@ -50,7 +50,7 @@ CString::CString(const CString& other, OV<CStringLength> length) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const OSString& initialString) : CHashable()
+CString::CString(const OSStringVar(initialString), OV<CStringLength> length) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mStringRef = (CFStringRef) ::CFRetain(initialString);
@@ -320,7 +320,7 @@ CString::~CString()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const OSString CString::getOSString() const
+const OSStringType CString::getOSString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mStringRef;
