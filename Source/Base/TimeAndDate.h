@@ -20,15 +20,10 @@ const	UniversalTimeInterval	kUniversalTimeIntervalMillisecond	= kUniversalTimeIn
 const	UniversalTimeInterval	kUniversalTimeIntervalMinute		= kUniversalTimeIntervalSecond * 60.0;
 const	UniversalTimeInterval	kUniversalTimeIntervalHour			= kUniversalTimeIntervalMinute * 60.0;
 const	UniversalTimeInterval	kUniversalTimeIntervalDay			= kUniversalTimeIntervalHour * 24.0;
-//const	UniversalTimeInterval	kUniversalTimeIntervalNever			= HUGE_VAL;
 
-// UniversalTime is the number of seconds relative to a reference time.
-//	On macOS,			the reference time is 00:00:00 January 1, 2001
-//	On Angstrom 2.6.29,	the reference time is 09:13:00 January 27, 2009
+// UniversalTime is the number of seconds relative to 00:00:00 January 1, 2001
 typedef Float64 UniversalTime;
 
-//const	UniversalTime			kUniversalTimeNone					= 0.0;
-//const	UniversalTime			kUniversalTimeNever					= HUGE_VAL;
 const	UniversalTimeInterval	kUniversalTimeInterval1904To2001	= 3061152000.0;
 const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
 

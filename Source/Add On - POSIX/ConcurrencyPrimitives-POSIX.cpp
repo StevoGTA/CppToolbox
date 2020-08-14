@@ -133,11 +133,18 @@ void CReadPreferringLock::unlockForWriting() const
 class CSemaphoreInternals {
 	public:
 		CSemaphoreInternals()
-			{ ::pthread_cond_init(&mCond, nil); }
+			{
+				::pthread_cond_init(&mCond, nil);
+				::pthread_mutex_init(&mMutex, nil);
+			}
 		~CSemaphoreInternals()
-			{ ::pthread_cond_destroy(&mCond); }
+			{
+				::pthread_cond_destroy(&mCond);
+				::pthread_mutex_destroy(&mMutex);
+			}
 
 		pthread_cond_t	mCond;
+		pthread_mutex_t	mMutex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -173,8 +180,5 @@ void CSemaphore::signal() const
 void CSemaphore::waitFor() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	pthread_mutex_t	mutex;
-	::pthread_mutex_init(&mutex, nil);
-	::pthread_cond_wait(&mInternals->mCond, &mutex);
-	::pthread_mutex_destroy(&mutex);
+	::pthread_cond_wait(&mInternals->mCond, &mInternals->mMutex);
 }

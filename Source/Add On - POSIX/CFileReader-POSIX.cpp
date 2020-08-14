@@ -62,37 +62,6 @@ class CFileReaderInternals : public TCopyOnWriteReferenceCountable<CFileReaderIn
 				~CFileReaderInternals()
 					{ close(); }
 
-		UError	read(void* buffer, UInt64 byteCount)
-					{
-						// Check open mode
-						if (mFILE != nil) {
-							// Read from FILE
-							ssize_t	bytesRead = ::fread(buffer, 1, (size_t) byteCount, mFILE);
-							if (bytesRead == (ssize_t) byteCount)
-								// Success
-								return kNoError;
-							else if (::feof(mFILE))
-								// EOF
-								return kFileEOFError;
-							else
-								// Unable to read
-								return kFileUnableToReadError;
-						} else if (mFD != -1) {
-							// Read from file
-							ssize_t bytesRead = ::read(mFD, buffer, (size_t) byteCount);
-							if (bytesRead != -1)
-								// Success
-								return kNoError;
-							else if (bytesRead == 0)
-								// EOF
-								return kFileEOFError;
-							else
-								// Unable to read
-								return MAKE_UError(kPOSIXErrorDomain, errno);
-						} else
-							// Not open
-							return kFileNotOpenError;
-					}
 		UError	close()
 					{
 						if (mFILE != nil)
@@ -205,11 +174,34 @@ UError CFileReader::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
-	UError	error = mInternals->read(buffer, byteCount);
-	if ((error != kNoError) && (error != kFileEOFError))
-		CFileReaderReportError(error, "reading data");
-
-	return error;
+	// Check open mode
+	if (mInternals->mFILE != nil) {
+		// Read from FILE
+		ssize_t	bytesRead = ::fread(buffer, 1, (size_t) byteCount, mInternals->mFILE);
+		if (bytesRead == (ssize_t) byteCount)
+			// Success
+			return kNoError;
+		else if (::feof(mInternals->mFILE))
+			// EOF
+			return kFileEOFError;
+		else
+			// Unable to read
+			CFileReaderReportErrorAndReturnError(kFileUnableToReadError, "reading data");
+	} else if (mInternals->mFD != -1) {
+		// Read from file
+		ssize_t bytesRead = ::read(mInternals->mFD, buffer, (size_t) byteCount);
+		if (bytesRead != -1)
+			// Success
+			return kNoError;
+		else if (bytesRead == 0)
+			// EOF
+			return kFileEOFError;
+		else
+			// Unable to read
+			CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "reading data");
+	} else
+		// Not open
+		CFileReaderReportErrorAndReturnError(kFileNotOpenError, "reading data");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
