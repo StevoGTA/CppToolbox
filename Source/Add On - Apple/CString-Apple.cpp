@@ -57,26 +57,26 @@ CString::CString(const OSStringVar(initialString), OV<CStringLength> length) : C
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char* initialString, CStringLength bufferLen, EStringEncoding encoding) : CHashable()
+CString::CString(const char* chars, CStringLength charsCount, EStringEncoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertNotNil(initialString);
+	AssertNotNil(chars);
 
 	// Setup
-	if (initialString == nil)
+	if (chars == nil)
 		// No initial string
 		mStringRef = CFSTR("");
-	else if (bufferLen == kCStringDefaultMaxLength)
+	else if (charsCount == kCStringDefaultMaxLength)
 		// Use entire string
 		mStringRef =
-				::CFStringCreateWithCString(kCFAllocatorDefault, initialString,
+				::CFStringCreateWithCString(kCFAllocatorDefault, chars,
 						sGetCFStringEncodingForCStringEncoding(encoding));
 	else {
 		// Use only the length specified
-		char	buffer[bufferLen + 1];
-		::memmove(buffer, initialString, bufferLen);
-		buffer[bufferLen] = 0;
+		char	buffer[charsCount + 1];
+		::memmove(buffer, chars, charsCount);
+		buffer[charsCount] = 0;
 		mStringRef =
 				::CFStringCreateWithCString(kCFAllocatorDefault, buffer,
 						sGetCFStringEncodingForCStringEncoding(encoding));
@@ -84,11 +84,11 @@ CString::CString(const char* initialString, CStringLength bufferLen, EStringEnco
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF16Char* initialString, CStringLength length, EStringEncoding encoding) : CHashable()
+CString::CString(const UTF16Char* chars, CStringLength charsCount, EStringEncoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertNotNil(initialString);
+	AssertNotNil(chars);
 
 	bool	encodingIsValid =
 					(encoding == kStringEncodingUnicode) ||
@@ -98,22 +98,22 @@ CString::CString(const UTF16Char* initialString, CStringLength length, EStringEn
 	AssertFailIf(!encodingIsValid);
 
 	// Setup
-	if ((initialString == nil) || !encodingIsValid)
+	if ((chars == nil) || !encodingIsValid)
 		// Missing or invalid parameters
 		mStringRef = CFSTR("");
 	else
 		// Create string
 		mStringRef =
-				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) initialString,
-						length * sizeof(UTF16Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
+				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars,
+						charsCount * sizeof(UTF16Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF32Char* initialString, CStringLength length, EStringEncoding encoding) : CHashable()
+CString::CString(const UTF32Char* chars, CStringLength charsCount, EStringEncoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertNotNil(initialString);
+	AssertNotNil(chars);
 	AssertFailIf((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE));
 
 	// Setup
@@ -123,8 +123,8 @@ CString::CString(const UTF32Char* initialString, CStringLength length, EStringEn
 	else
 		// Create string
 		mStringRef =
-				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) initialString,
-						length * sizeof(UTF32Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
+				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars,
+						charsCount * sizeof(UTF32Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

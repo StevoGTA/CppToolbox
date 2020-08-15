@@ -212,11 +212,11 @@ class CString : public CHashable {
 										CString(const CString& other, OV<CStringLength> length = OV<CStringLength>());
 										CString(const OSStringVar(initialString),
 												OV<CStringLength> length = OV<CStringLength>());
-										CString(const char* buffer, CStringLength bufferLen = kCStringDefaultMaxLength,
+										CString(const char* chars, CStringLength charsCount = kCStringDefaultMaxLength,
 												EStringEncoding encoding = kStringEncodingTextDefault);
-										CString(const UTF16Char* initialString, CStringLength length,
+										CString(const UTF16Char* chars, CStringLength charsCount,
 												EStringEncoding encoding = kStringEncodingUTF16Native);
-										CString(const UTF32Char* initialString, CStringLength length,
+										CString(const UTF32Char* chars, CStringLength charsCount,
 												EStringEncoding encoding = kStringEncodingUTF32Native);
 
 										CString(Float32 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint,
