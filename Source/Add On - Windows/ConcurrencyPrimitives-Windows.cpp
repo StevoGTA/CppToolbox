@@ -78,9 +78,6 @@ public:
 		{
 			InitializeSRWLock(&mSRWLock);
 		}
-	~CReadPreferringLockInternals()
-		{
-		}
 
 	SRWLOCK	mSRWLock;
 };
