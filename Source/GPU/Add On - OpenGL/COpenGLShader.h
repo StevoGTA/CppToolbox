@@ -32,6 +32,7 @@ class COpenGLVertexShader : public CGPUVertexShader {
 
 											// Instance methods
 						GLuint				getShader() const;
+				const	CUUID&				getUUID() const;
 
 				const	TArray<CString>&	getAttributeNames() const;
 				const	TArray<CString>&	getUniformNames() const;
@@ -70,6 +71,7 @@ class COpenGLFragmentShader : public CGPUFragmentShader {
 
 											// Instance methods
 						GLuint				getShader() const;
+				const	CUUID&				getUUID() const;
 
 				const	TArray<CString>&	getUniformNames() const;
 

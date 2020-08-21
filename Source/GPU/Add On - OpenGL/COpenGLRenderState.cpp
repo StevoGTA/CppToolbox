@@ -14,12 +14,12 @@
 
 class CGPURenderStateInternals {
 	public:
-		CGPURenderStateInternals(CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
+		CGPURenderStateInternals(COpenGLVertexShader& vertexShader, COpenGLFragmentShader& fragmentShader) :
 			mVertexShader(vertexShader), mFragmentShader(fragmentShader), mTriangleOffset(0)
 			{}
 
-		CGPUVertexShader&						mVertexShader;
-		CGPUFragmentShader&						mFragmentShader;
+		COpenGLVertexShader&					mVertexShader;
+		COpenGLFragmentShader&					mFragmentShader;
 
 		SMatrix4x4_32							mProjectionMatrix;
 		SMatrix4x4_32							mViewMatrix;
@@ -41,10 +41,11 @@ CGPURenderState::CGPURenderState(CGPUVertexShader& vertexShader, CGPUFragmentSha
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CGPURenderStateInternals(vertexShader, fragmentShader);
+	mInternals =
+			new CGPURenderStateInternals((COpenGLVertexShader&) vertexShader, (COpenGLFragmentShader&) fragmentShader);
 
 	// Configure GL
-	((COpenGLVertexShader&) mInternals->mVertexShader).configureGL();
+	mInternals->mVertexShader.configureGL();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -57,7 +58,7 @@ CGPURenderState::~CGPURenderState()
 		glDisable(GL_BLEND);
 
 	// Reset GL
-	((COpenGLVertexShader&) mInternals->mVertexShader).resetGL();
+	mInternals->mVertexShader.resetGL();
 
 	// Cleanup
 	Delete(mInternals);
@@ -142,15 +143,14 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 
 	// Setup program
 	CString	programKey =
-					mInternals->mVertexShader.getUUID().getBase64String() + CString(OSSTR("/")) +
+					mInternals->mVertexShader.getUUID().getBase64String() +
+							CString(OSSTR("/")) +
 							mInternals->mFragmentShader.getUUID().getBase64String();
 
 	// Ensure we have this program
 	if (!sPrograms[programKey].hasReference())
 		// Create and cache
-		sPrograms.set(programKey,
-				COpenGLProgram((COpenGLVertexShader&) mInternals->mVertexShader,
-						(COpenGLFragmentShader&) mInternals->mFragmentShader));
+		sPrograms.set(programKey, COpenGLProgram(mInternals->mVertexShader, mInternals->mFragmentShader));
 
 	// Create internals
 	sPrograms[programKey]->prepare(mInternals->mProjectionMatrix, mInternals->mViewMatrix, mInternals->mModelMatrix,
