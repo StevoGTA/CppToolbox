@@ -29,8 +29,6 @@
 #define _Nullable
 #define __nonnull(x)
 
-#define WARNING(message)	
-
 #define EndianS16_BtoN(value)	((SInt16) _byteswap_ushort(value))
 #define EndianS16_NtoB(value)	((SInt16) _byteswap_ushort(value))
 #define EndianU16_BtoN(value)	((UInt16) _byteswap_ushort(value))

@@ -12,8 +12,8 @@
 #undef Delete
 #include <Windows.h>
 
- //----------------------------------------------------------------------------------------------------------------------
- // MARK: Local proc declarations
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: Local proc declarations
 
  static	UINT	sGetCodePageForCStringEncoding(EStringEncoding encoding);
 
@@ -56,31 +56,43 @@ CString::CString(const OSStringVar(initialString), OV<CStringLength> length) : C
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char* initialString, CStringLength bufferLen, EStringEncoding encoding) : CHashable()
+CString::CString(const char* chars, CStringLength charsCount, EStringEncoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertNotNil(initialString);
+	AssertNotNil(chars);
+
+	// Check if have size
+	if (charsCount == kCStringDefaultMaxLength)
+		// Count chars
+		charsCount = ::strlen(chars);
+
+	// Create string
+	mString.resize(charsCount);
+
+	// Convert
+	int	count =
+				MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, charsCount, &mString[0],
+						charsCount);
+	AssertFailIf(count == 0);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const UTF16Char* chars, CStringLength charsCount, EStringEncoding encoding) : CHashable()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertNotNil(chars);
 
 	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF16Char* initialString, CStringLength length, EStringEncoding encoding) : CHashable()
+CString::CString(const UTF32Char* chars, CStringLength charsCount, EStringEncoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertNotNil(initialString);
-
-	AssertFailUnimplemented();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF32Char* initialString, CStringLength length, EStringEncoding encoding) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertNotNil(initialString);
+	AssertNotNil(chars);
 	AssertFailIf((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE));
 
 	AssertFailUnimplemented();
@@ -215,7 +227,11 @@ CString::CString(UInt64 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Setup
+	osType = EndianU32_NtoB(osType);
+
+	mString.resize(4);
+	MultiByteToWideChar(sGetCodePageForCStringEncoding(kStringEncodingASCII), 0, (char*) &osType, 4, &mString[0], 4);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

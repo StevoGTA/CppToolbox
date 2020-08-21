@@ -7,6 +7,11 @@
 #include "CFileWriter.h"
 #include "ConcurrencyPrimitives.h"
 
+#if TARGET_OS_WINDOWS
+	#undef Delete
+	#include <Windows.h>
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SLogProcInfo
 
@@ -25,12 +30,19 @@ struct SLogProcInfo {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
 static	OO<CLogFile>			sPrimaryLogFile;
 static	TNArray<SLogProcInfo>*	sLogMessageProcInfos = nil;
 static	TNArray<SLogProcInfo>*	sLogWarningProcInfos = nil;
 static	TNArray<SLogProcInfo>*	sLogErrorProcInfos = nil;
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc declarations
+
+static	void	sLogToConsoleOutput(const CString& string);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -180,13 +192,11 @@ void CLogServices::logMessage(const CString& string)
 		(*sPrimaryLogFile).logMessage(string);
 #if defined(DEBUG)
 	// Pass to output/console
-	fprintf(stdout, "%s: %s\n", *SGregorianDate().getString().getCString(), *string.getCString());
+	sLogToConsoleOutput(SGregorianDate().getString() + CString(OSSTR(": ")) + string);
 #else
-	else {
+	else
 		// Pass to output/console
-		stringWithDate = OO<CString>(SGregorianDate().getString() + CString::mSpace + string);
-		fprintf(stdout, "%s\n", *(*stringWithDate).getCString());
-	}
+		sLogToConsoleOutput(SGregorianDate().getString() + CString(OSSTR(": ")) + string);
 #endif
 
 	// Check if have procs
@@ -214,7 +224,7 @@ void CLogServices::logDebugMessage(const CString& string)
 
 #if defined(DEBUG)
 	// Pass to output/console
-	fprintf(stdout, "%s: %s\n", *SGregorianDate().getString().getCString(), *string.getCString());
+	sLogToConsoleOutput(SGregorianDate().getString() + CString(OSSTR(": ")) + string);
 #endif
 }
 
@@ -244,8 +254,10 @@ void CLogServices::logWarning(const CString& string)
 	else {
 		// Pass to output/console
 		dateString = SGregorianDate().getString();
-		fprintf(stdout, "%s: \n*** WARNING ***\n", *(*dateString).getCString());
-		fprintf(stdout, "%s: %s\n", *(*dateString).getCString(), *string.getCString());
+		sLogToConsoleOutput(CString::mEmpty);
+		sLogToConsoleOutput(*dateString + CString(OSSTR(": *** WARNING ***")));
+		sLogToConsoleOutput(*dateString + CString(OSSTR(": ")) + string);
+		sLogToConsoleOutput(CString::mEmpty);
 	}
 
 	// Check if have procs
@@ -288,8 +300,10 @@ void CLogServices::logError(const CString& string)
 	else {
 		// Pass to output/console
 		dateString = SGregorianDate().getString();
-		fprintf(stderr, "%s: \n*** ERROR ***\n", *(*dateString).getCString());
-		fprintf(stderr, "%s: %s\n", *(*dateString).getCString(), *string.getCString());
+		sLogToConsoleOutput(CString::mEmpty);
+		sLogToConsoleOutput(*dateString + CString(OSSTR(": *** ERROR ***")));
+		sLogToConsoleOutput(*dateString + CString(OSSTR(": ")) + string);
+		sLogToConsoleOutput(CString::mEmpty);
 	}
 
 	// Check if have procs
@@ -345,4 +359,19 @@ void CLogServices::addLogErrorProc(CLogProc logProc, void* userData)
 
 	// Add
 	(*sLogErrorProcInfos) += SLogProcInfo(logProc, userData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc definitions
+
+//----------------------------------------------------------------------------------------------------------------------
+void sLogToConsoleOutput(const CString& string)
+//----------------------------------------------------------------------------------------------------------------------
+{
+#if TARGET_OS_WINDOWS
+	OutputDebugString((string + CString::mNewline).getOSString());
+#else
+	fprintf(stdout, "%s\n", *string.getCString());
+#endif
 }
