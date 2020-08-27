@@ -117,7 +117,7 @@ CString::CString(const UTF32Char* chars, CStringLength charsCount, EStringEncodi
 	AssertFailIf((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE));
 
 	// Setup
-	if ((initialString == nil) || ((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE)))
+	if ((chars == nil) || ((encoding != kStringEncodingUTF32BE) && (encoding != kStringEncodingUTF32LE)))
 		// Missing or invalid parameters
 		mStringRef = CFSTR("");
 	else

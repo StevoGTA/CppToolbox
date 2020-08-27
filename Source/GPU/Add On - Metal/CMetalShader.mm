@@ -10,8 +10,9 @@
 
 class CMetalVertexShaderInternals {
 	public:
-		CMetalVertexShaderInternals() {}
+		CMetalVertexShaderInternals(const CString& name) : mName(name) {}
 
+		CString			mName;
 		SMatrix4x4_32	mModelMatrix;
 };
 
@@ -22,10 +23,10 @@ class CMetalVertexShaderInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMetalVertexShader::CMetalVertexShader() : CGPUVertexShader()
+CMetalVertexShader::CMetalVertexShader(const CString& name) : CGPUVertexShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMetalVertexShaderInternals();
+	mInternals = new CMetalVertexShaderInternals(name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -36,6 +37,13 @@ CMetalVertexShader::~CMetalVertexShader()
 }
 
 // MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+const CString& CMetalVertexShader::getName() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mName;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CMetalVertexShader::setModelMatrix(const SMatrix4x4_32& modelMatrix)
@@ -57,7 +65,9 @@ const SMatrix4x4_32& CMetalVertexShader::getModelMatrix() const
 
 class CMetalFragmentShaderInternals {
 	public:
-		CMetalFragmentShaderInternals() {}
+		CMetalFragmentShaderInternals(const CString& name) : mName(name) {}
+
+		CString	mName;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -67,10 +77,10 @@ class CMetalFragmentShaderInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMetalFragmentShader::CMetalFragmentShader() : CGPUFragmentShader()
+CMetalFragmentShader::CMetalFragmentShader(const CString& name) : CGPUFragmentShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMetalFragmentShaderInternals();
+	mInternals = new CMetalFragmentShaderInternals(name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -78,4 +88,13 @@ CMetalFragmentShader::~CMetalFragmentShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+const CString& CMetalFragmentShader::getName() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mName;
 }

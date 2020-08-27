@@ -47,6 +47,7 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 	return *sVersionInfo;
 }
 
+#if TARGET_OS_MACOS
 //----------------------------------------------------------------------------------------------------------------------
 const SVersionInfo& CCoreServices::getCoreAudioVersion()
 //----------------------------------------------------------------------------------------------------------------------
@@ -78,6 +79,7 @@ const SVersionInfo& CCoreServices::getCoreAudioVersion()
 
 	return *sVersionInfo;
 }
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 CCoreServices::getTotalProcessorCoresCount()

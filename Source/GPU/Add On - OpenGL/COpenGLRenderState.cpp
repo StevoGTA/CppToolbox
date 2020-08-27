@@ -21,8 +21,6 @@ class CGPURenderStateInternals {
 		COpenGLVertexShader&					mVertexShader;
 		COpenGLFragmentShader&					mFragmentShader;
 
-		SMatrix4x4_32							mProjectionMatrix;
-		SMatrix4x4_32							mViewMatrix;
 		SMatrix4x4_32							mModelMatrix;
 
 		OR<const SGPUVertexBuffer>				mVertexBuffer;
@@ -65,20 +63,6 @@ CGPURenderState::~CGPURenderState()
 }
 
 // MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setProjectionMatrix(const SMatrix4x4_32& projectionMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mProjectionMatrix = projectionMatrix;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setViewMatrix(const SMatrix4x4_32& viewMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mViewMatrix = viewMatrix;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPURenderState::setModelMatrix(const SMatrix4x4_32& modelMatrix)
@@ -153,6 +137,6 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 		sPrograms.set(programKey, COpenGLProgram(mInternals->mVertexShader, mInternals->mFragmentShader));
 
 	// Create internals
-	sPrograms[programKey]->prepare(mInternals->mProjectionMatrix, mInternals->mViewMatrix, mInternals->mModelMatrix,
-			gpuVertexBuffer);
+	sPrograms[programKey]->prepare(renderStateCommitInfo.mProjectionMatrix, renderStateCommitInfo.mViewMatrix,
+			mInternals->mModelMatrix, gpuVertexBuffer);
 }

@@ -26,8 +26,6 @@ class CGPURenderState {
 				~CGPURenderState();
 
 				// Instance methods
-		void	setProjectionMatrix(const SMatrix4x4_32& projectionMatrix);
-		void	setViewMatrix(const SMatrix4x4_32& viewMatrix);
 		void	setModelMatrix(const SMatrix4x4_32& modelMatrix);
 
 		void	setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleOffset,

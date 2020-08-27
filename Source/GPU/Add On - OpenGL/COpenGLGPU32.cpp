@@ -7,8 +7,6 @@
 #include "COpenGLRenderState.h"
 #include "COpenGLTexture.h"
 
-#include <OpenGL/gl3.h>
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPUInternals
 
@@ -142,12 +140,10 @@ void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup render state
-	renderState.setProjectionMatrix(mInternals->mProjectionMatrix);
-	renderState.setViewMatrix(mInternals->mViewMatrix);
 	renderState.setModelMatrix(modelMatrix);
 
 	// Commit
-	renderState.commit(SGPURenderStateCommitInfo());
+	renderState.commit(SGPURenderStateCommitInfo(mInternals->mProjectionMatrix, mInternals->mViewMatrix));
 
 	// Draw
 	glDrawArrays(GL_TRIANGLE_STRIP, renderState.getTriangleOffset(), triangleCount + 2);

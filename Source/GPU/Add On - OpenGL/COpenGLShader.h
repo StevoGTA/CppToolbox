@@ -28,6 +28,9 @@ class COpenGLVertexShader : public CGPUVertexShader {
 	// Methods
 	public:
 											// Lifecycle methods
+											COpenGLVertexShader(const CString& string,
+													const TArray<CString>& attributeNames,
+													const TArray<CString>& uniformNames);
 											~COpenGLVertexShader();
 
 											// Instance methods
@@ -48,12 +51,6 @@ class COpenGLVertexShader : public CGPUVertexShader {
 		virtual			void				configureGL() {}
 		virtual			void				resetGL() {}
 
-	protected:
-											// Lifecycle methods
-											COpenGLVertexShader(const CString& string,
-													const TArray<CString>& attributeNames,
-													const TArray<CString>& uniformNames);
-
 	// Properties
 	private:
 		COpenGLVertexShaderInternals*	mInternals;
@@ -67,6 +64,8 @@ class COpenGLFragmentShader : public CGPUFragmentShader {
 	// Methods
 	public:
 											// Lifecycle methods
+											COpenGLFragmentShader(const CString& string,
+													const TArray<CString>& uniformNames);
 											~COpenGLFragmentShader();
 
 											// Instance methods
@@ -77,11 +76,6 @@ class COpenGLFragmentShader : public CGPUFragmentShader {
 
 											// Subclass methods
 		virtual			void				setUniforms(const CDictionary& uniformInfo) = 0;
-
-	protected:
-											// Lifecycle methods
-											COpenGLFragmentShader(const CString& string,
-													const TArray<CString>& uniformNames);
 
 	// Properties
 	private:
