@@ -284,7 +284,8 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 
 			// Setup and render
 			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
-			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setModelMatrix(modelMatrix);
+			gpu.renderTriangleStrip(renderState, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
 		}
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
@@ -297,7 +298,8 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 
 			// Setup and render
 			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
-			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setModelMatrix(modelMatrix);
+			gpu.renderTriangleStrip(renderState, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
 		}
 	} else {
 		// Have alpha
@@ -310,7 +312,8 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 
 			// Setup and render
 			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
-			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setModelMatrix(modelMatrix);
+			gpu.renderTriangleStrip(renderState, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
 		}
 	}
 }

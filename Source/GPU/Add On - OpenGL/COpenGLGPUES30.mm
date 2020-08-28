@@ -176,12 +176,9 @@ void CGPU::renderStart() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
+void CGPU::renderTriangleStrip(CGPURenderState& renderState, UInt32 triangleCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup render state
-	renderState.setModelMatrix(modelMatrix);
-
 	// Commit
 	renderState.commit(SGPURenderStateCommitInfo(mInternals->mProjectionMatrix, mInternals->mViewMatrix));
 

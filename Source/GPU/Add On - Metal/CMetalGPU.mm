@@ -219,14 +219,13 @@ void CGPU::renderStart() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
+void CGPU::renderTriangleStrip(CGPURenderState& renderState, UInt32 triangleCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Push debug group
 	[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
 
 	// Finalize render state
-	renderState.setModelMatrix(modelMatrix);
 	renderState.commit(
 			SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
 					mInternals->mCurrentRenderCommandEncoder,
