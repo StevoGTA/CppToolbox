@@ -11,7 +11,7 @@ class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInter
 	public:
 		CDirectXTextureInternals(ID3D11Device& device, ID3D11DeviceContext& deviceContext, const CData& data,
 				EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size) :
-			mGPUTextureDataFormat(gpuTextureDataFormat), mSize(size)
+			mGPUTextureDataFormat(gpuTextureDataFormat), mSize(size), mTexture2D(NULL), mShaderResourceView(NULL)
 			{
 				// Setup
 				D3D11_TEXTURE2D_DESC	texture2DDesc;
@@ -39,19 +39,29 @@ class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInter
 				HRESULT	result = device.CreateTexture2D(&texture2DDesc, NULL, &mTexture2D);
 				AssertFailIf(result != S_OK);
 
-				// Upload data
+				// Update subresource
 				D3D11_BOX	rect = {0, 0, 0, size.mWidth, size.mHeight, 1};
 				deviceContext.UpdateSubresource(mTexture2D, 0, &rect, data.getBytePtr(), bytesPerRow, data.getSize());
+
+				// Create resource view
+				CD3D11_SHADER_RESOURCE_VIEW_DESC	shaderResourceViewDesc(mTexture2D, D3D_SRV_DIMENSION_TEXTURE2D,
+															texture2DDesc.Format);
+				AssertFailIf(FAILED(
+						device.CreateShaderResourceView(mTexture2D, &shaderResourceViewDesc, &mShaderResourceView)));
 			}
 		~CDirectXTextureInternals()
 			{
-				mTexture2D->Release();
+				if (mTexture2D != NULL)
+					mTexture2D->Release();
+				if (mShaderResourceView != NULL)
+					mShaderResourceView->Release();
 			}
 
-		EGPUTextureDataFormat	mGPUTextureDataFormat;
-		S2DSizeU16				mSize;
+		EGPUTextureDataFormat		mGPUTextureDataFormat;
+		S2DSizeU16					mSize;
 
-		ID3D11Texture2D*		mTexture2D;
+		ID3D11Texture2D*			mTexture2D;
+		ID3D11ShaderResourceView*	mShaderResourceView;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -101,11 +111,19 @@ const S2DSizeU16& CDirectXTexture::getUsedSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+ID3D11ShaderResourceView* CDirectXTexture::getShaderResourceView() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mShaderResourceView;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 bool CDirectXTexture::hasTransparency() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check format
 	switch (mInternals->mGPUTextureDataFormat) {
 		case kGPUTextureDataFormatRGBA8888:	return true;
+		default:							return false;
 	}
 }
