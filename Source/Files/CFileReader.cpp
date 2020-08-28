@@ -19,3 +19,27 @@ CData CFileReader::readData(UInt64 byteCount, UError& outError) const
 
 	return (outError == kNoError) ? data : CData::mEmpty;
 }
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CData CFileReader::readData(const CFile& file, UError& outError)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFileReader	fileReader(file);
+
+	// Open
+	outError = fileReader.open();
+	ReturnValueIfError(outError, CData::mEmpty);
+
+	// Read
+	CData	data = fileReader.readData(file.getSize(), outError);
+	ReturnValueIfError(outError, CData::mEmpty);
+
+	// Close
+	outError = fileReader.close();
+	ReturnValueIfError(outError, CData::mEmpty);
+
+	return data;
+}

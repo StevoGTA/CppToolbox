@@ -20,7 +20,7 @@
 // Defines
 #define TARGET_OS_WINDOWS 1
 
-#define	nil	nullptr
+#define	nil	NULL
 
 #define	MAKE_OSTYPE(a,b,c,d)	((a << 24) | (b << 16) | (c << 8) | d)
 

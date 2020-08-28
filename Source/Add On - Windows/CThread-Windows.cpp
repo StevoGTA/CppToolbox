@@ -19,7 +19,7 @@ class CThreadInternals {
 public:
 	CThreadInternals(const CThread& thread, CThreadProc proc, void* userData, const CString& name) :
 		mThreadProc(proc), mThreadProcUserData(userData), mThreadName(name), mThread(thread),
-				mWindowsThreadHandle(nullptr)
+				mWindowsThreadHandle(NULL)
 		{}
 	~CThreadInternals() {}
 
@@ -51,7 +51,7 @@ CThread::CThread(CThreadProc proc, void* userData, const CString& name)
 	mInternals = new CThreadInternals(*this, proc, userData, name);
 
 	// Create thread
-	mInternals->mWindowsThreadHandle = CreateThread(nullptr, 0, sThreadProc, mInternals, 0, nullptr);
+	mInternals->mWindowsThreadHandle = CreateThread(NULL, 0, sThreadProc, mInternals, 0, NULL);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

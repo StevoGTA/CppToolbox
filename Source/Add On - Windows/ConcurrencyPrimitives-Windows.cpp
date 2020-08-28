@@ -138,7 +138,7 @@ void CReadPreferringLock::unlockForWriting() const
 
 class CSemaphoreInternals {
 public:
-	CSemaphoreInternals() : mHandle(CreateEvent(nullptr, false, false, TEXT(""))) {}
+	CSemaphoreInternals() : mHandle(CreateEvent(NULL, false, false, TEXT(""))) {}
 	~CSemaphoreInternals()
 		{
 			CloseHandle(mHandle);

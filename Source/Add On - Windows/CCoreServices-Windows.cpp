@@ -41,7 +41,7 @@ UInt32 CCoreServices::getTotalProcessorCoresCount()
 
 	if (sTotalProcessorCoresCount == 0) {
 		// Create buffer
-		SYSTEM_LOGICAL_PROCESSOR_INFORMATION*	buffer = nullptr;
+		SYSTEM_LOGICAL_PROCESSOR_INFORMATION*	buffer = NULL;
 		DWORD									size = 0;
 		GetLogicalProcessorInformation(buffer, &size);
 		buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION*) malloc(size);

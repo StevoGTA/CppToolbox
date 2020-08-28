@@ -53,7 +53,7 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-			__time64_t	time64 = (__time64_t) time + kUniversalTimeInterval1970To2001;
+			__time64_t	time64 = (__time64_t) (time + kUniversalTimeInterval1970To2001);
 	struct	tm			theTM;
 	_localtime64_s(&theTM, &time64);
 

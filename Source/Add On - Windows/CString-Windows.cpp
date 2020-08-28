@@ -65,7 +65,7 @@ CString::CString(const char* chars, CStringLength charsCount, EStringEncoding en
 	// Check if have size
 	if (charsCount == kCStringDefaultMaxLength)
 		// Count chars
-		charsCount = ::strlen(chars);
+		charsCount = (CStringLength) ::strlen(chars);
 
 	// Create string
 	mString.resize(charsCount);

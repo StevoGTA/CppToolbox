@@ -70,10 +70,10 @@ class CFileReaderInternals : public TCopyOnWriteReferenceCountable<CFileReaderIn
 		UError	close()
 					{
 						CloseHandle(mFileMappingHandle);
-						mFileMappingHandle = nullptr;
+						mFileMappingHandle = NULL;
 
 						CloseHandle(mFileHandle);
-						mFileHandle = nullptr;
+						mFileHandle = NULL;
 
 						return kNoError;
 					}
@@ -136,7 +136,7 @@ UError CFileReader::open(bool buffered)
 					OPEN_EXISTING, &extendedParameters);
 
 	// Handle results
-	if (mInternals->mFileHandle != nullptr)
+	if (mInternals->mFileHandle != NULL)
 		// Success
 		return kNoError;
 	else
@@ -149,7 +149,7 @@ UError CFileReader::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
-	BOOL	result = ReadFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, nullptr, nullptr);
+	BOOL	result = ReadFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, NULL, NULL);
 	if (!result)
 		CFileReaderReportErrorAndReturnError(MAKE_UError(kWindowsErrorDomain, GetLastError()), "reading data");
 
@@ -202,18 +202,18 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 	SFileMemoryMapSetupInfo	fileMemoryMapSetupInfo(mInternals->addReference());
 
 	// Is the file open?
-	if (mInternals->mFileHandle == nullptr) {
+	if (mInternals->mFileHandle == NULL) {
 		// File not open!
 		outError = kFileNotOpenError;
 		CFileReaderReportErrorAndReturnValue(outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
 	}
 
 	// Check for file mapping handle
-	if (mInternals->mFileMappingHandle == nullptr) {
+	if (mInternals->mFileMappingHandle == NULL) {
 		// Create file mapping handle
 		mInternals->mFileMappingHandle =
-				CreateFileMapping(mInternals->mFileHandle, nullptr, PAGE_READONLY, 0, 0, nullptr);
-		if (mInternals->mFileMappingHandle == nullptr) {
+				CreateFileMapping(mInternals->mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
+		if (mInternals->mFileMappingHandle == NULL) {
 			// Error
 			outError = MAKE_UError(kWindowsErrorDomain, GetLastError());
 			CFileReaderReportErrorAndReturnValue(outError, "creating file mapping",
@@ -233,7 +233,7 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 							fileOffset.LowPart, byteCount);
 
 	// Check for failure
-	if (bytePtr == nullptr) {
+	if (bytePtr == NULL) {
 		// Failed
 		outError = MAKE_UError(kWindowsErrorDomain, GetLastError());
 		CFileReaderReportErrorAndReturnValue(outError, "creating file view", CFileMemoryMap(fileMemoryMapSetupInfo));
