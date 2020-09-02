@@ -9,7 +9,15 @@
 #include "SGPUBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPU
+// MARK:
+
+enum EGPURenderType {
+	eGPURenderTypeTriangleList,
+	eGPURenderTypeTriangleStrip
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CGPU
 
 struct SGPUProcsInfo;
 class CGPUInternals;
@@ -33,7 +41,10 @@ class CGPU {
 				void					disposeBuffer(const SGPUBuffer& buffer);
 
 				void					renderStart() const;
-				void					renderTriangleStrip(CGPURenderState& renderState, UInt32 triangleCount);
+				void					render(CGPURenderState& renderState, EGPURenderType type, UInt32 count,
+												UInt32 offset);
+				void					renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count,
+												UInt32 offset);
 				void					renderEnd() const;
 
 	// Properties

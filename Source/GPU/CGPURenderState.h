@@ -10,6 +10,14 @@
 #include "SGPUVertexBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: Render Mode
+
+enum EGPURenderStateMode {
+	kGPURenderStateMode2D,
+	kGPURenderStateMode3D,
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: SGPURenderStateCommitInfo
 
 struct SGPURenderStateCommitInfo;
@@ -21,18 +29,18 @@ class CGPURenderStateInternals;
 class CGPURenderState {
 	// Methods
 	public:
-				// Lifecycle methods
-				CGPURenderState(CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader);
-				~CGPURenderState();
+							// Lifecycle methods
+							CGPURenderState(EGPURenderStateMode mode, CGPUVertexShader& vertexShader,
+									CGPUFragmentShader& fragmentShader);
+							~CGPURenderState();
 
-				// Instance methods
-		void	setModelMatrix(const SMatrix4x4_32& modelMatrix);
+							// Instance methods
+		EGPURenderStateMode	getMode() const;
 
-		void	setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleOffset,
-						const TArray<const CGPUTexture>& gpuTextures);
-		UInt32	getTriangleOffset() const;
-
-		void	commit(const SGPURenderStateCommitInfo& renderStateCommitInfo);
+		void				setModelMatrix(const SMatrix4x4_32& modelMatrix);
+		void				setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
+									const TArray<const CGPUTexture>& gpuTextures);
+		void				commit(const SGPURenderStateCommitInfo& renderStateCommitInfo);
 
 	// Properties
 	protected:
