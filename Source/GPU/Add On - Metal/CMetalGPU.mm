@@ -58,10 +58,10 @@ class CGPUInternals {
 	NSMutableArray<MetalBufferCache*>*							mMetalBufferCaches;
 	UInt32														mMetalBufferCacheIndex;
 
-	SMatrix4x4_32												mViewMatrix;
-
 	id<MTLCommandBuffer>										mCurrentCommandBuffer;
 	id<MTLRenderCommandEncoder>									mCurrentRenderCommandEncoder;
+	SMatrix4x4_32												mProjectionMatrix2D;
+	SMatrix4x4_32												mProjectionMatrix3D;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,20 +85,6 @@ CGPU::~CGPU()
 }
 
 // MARK: CGPU methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mViewMatrix = viewMatrix;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const SMatrix4x4_32& CGPU::getViewMatrix() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mViewMatrix;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
@@ -183,7 +169,7 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderStart() const
+void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S3DPoint32& target) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup current command buffer
@@ -199,19 +185,12 @@ void CGPU::renderStart() const
 	[mInternals->mCurrentRenderCommandEncoder setFragmentSamplerState:mInternals->mSamplerState atIndex:0];
 
 	// Setup uniforms
-	CGSize			size = mInternals->mProcsInfo.getCurrentDrawable().layer.bounds.size;
-	SMatrix4x4_32	projectionViewMatrix =
-							SMatrix4x4_32(
-											2.0 / size.width, 0.0, 0.0, 0.0,
-											0.0, 2.0 / -size.height, 0.0, 0.0,
-											0.0, 0.0, -0.5, 0.0,
-											-1.0, 1.0, 0.5, 1.0) *
-									mInternals->mViewMatrix;
-
-	GlobalUniforms	globalUniforms;
-	::memcpy(&globalUniforms.mProjectionViewMatrix, &projectionViewMatrix, sizeof(matrix_float4x4));
-	[mInternals->mCurrentRenderCommandEncoder setVertexBytes:&globalUniforms length:sizeof(GlobalUniforms)
-			atIndex:kBufferIndexGlobalUniforms];
+	mInternals->mProjectionMatrix2D =
+			SMatrix4x4_32(
+							2.0 / size.mWidth, 0.0, 0.0, 0.0,
+							0.0, 2.0 / -size.mHeight, 0.0, 0.0,
+							0.0, 0.0, -0.5, 0.0,
+							-1.0, 1.0, 0.5, 1.0);
 
 	// Setup Metal Buffer Cache
 	mInternals->mSharedResourceBuffers.consume();
@@ -219,9 +198,12 @@ void CGPU::renderStart() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderTriangleStrip(CGPURenderState& renderState, UInt32 triangleCount)
+void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Preflight
+	AssertFailIf(type == kGPURenderTypeTriangleList);
+	
 	// Push debug group
 	[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
 
@@ -230,14 +212,22 @@ void CGPU::renderTriangleStrip(CGPURenderState& renderState, UInt32 triangleCoun
 			SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
 					mInternals->mCurrentRenderCommandEncoder,
 					mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex], mInternals->mFunctionsCache,
-					mInternals->mRenderPipelineDescriptor, mInternals->mRenderPipelineStateCache));
+					mInternals->mRenderPipelineDescriptor, mInternals->mRenderPipelineStateCache,
+					mInternals->mProjectionMatrix2D));
 
 	// Draw
 	[mInternals->mCurrentRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
-			vertexStart:renderState.getTriangleOffset() vertexCount:triangleCount + 2];
+			vertexStart:offset vertexCount:count];
 
 	// Pop debug group
 	[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented()
 }
 
 //----------------------------------------------------------------------------------------------------------------------

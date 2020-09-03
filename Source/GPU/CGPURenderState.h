@@ -10,37 +10,35 @@
 #include "SGPUVertexBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Render Mode
+// MARK: EGPURenderMode
 
-enum EGPURenderStateMode {
-	kGPURenderStateMode2D,
-	kGPURenderStateMode3D,
+enum EGPURenderMode {
+	kGPURenderMode2D,
+	kGPURenderMode3D,
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPURenderStateCommitInfo
-
-struct SGPURenderStateCommitInfo;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPURenderState
 
 class CGPURenderStateInternals;
+struct SGPURenderStateCommitInfo;
+
 class CGPURenderState {
 	// Methods
 	public:
-							// Lifecycle methods
-							CGPURenderState(EGPURenderStateMode mode, CGPUVertexShader& vertexShader,
-									CGPUFragmentShader& fragmentShader);
-							~CGPURenderState();
+						// Lifecycle methods
+						CGPURenderState(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+								CGPUFragmentShader& fragmentShader);
+						~CGPURenderState();
 
-							// Instance methods
-		EGPURenderStateMode	getMode() const;
+						// Instance methods
+		void			setViewMatrix(const SMatrix4x4_32& viewMatrix);
+		void			setModelMatrix(const SMatrix4x4_32& modelMatrix);
+		void			setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
+								const TArray<const CGPUTexture>& gpuTextures);
 
-		void				setModelMatrix(const SMatrix4x4_32& modelMatrix);
-		void				setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
-									const TArray<const CGPUTexture>& gpuTextures);
-		void				commit(const SGPURenderStateCommitInfo& renderStateCommitInfo);
+		EGPURenderMode	getRenderMode() const;
+		void			commit(const SGPURenderStateCommitInfo& renderStateCommitInfo);
 
 	// Properties
 	protected:

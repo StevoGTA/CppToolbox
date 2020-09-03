@@ -10,15 +10,15 @@
 // MARK: Structures
 
 struct GlobalUniforms {
-	matrix_float4x4	mProjectionViewMatrix;
+	matrix_float4x4	mModelMatrix;
+	matrix_float4x4	mViewMatrix;
+	matrix_float4x4	mProjectionMatrix;
 };
 
 struct BasicVertexUniforms {
-	matrix_float4x4 mModelMatrix;
 };
 
 struct ClipVertexUniforms {
-	matrix_float4x4 mModelMatrix;
 	vector_float4	mClipPlane;
 };
 

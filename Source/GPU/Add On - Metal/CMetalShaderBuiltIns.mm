@@ -21,9 +21,8 @@ class CMetalVertexShaderBasic : public CMetalVertexShader {
 														options:MTLResourceStorageModeShared];
 						basicVertexUniformsBuffer.label = @"Basic Vertex Uniforms";
 
-						BasicVertexUniforms*	basicVertexUniforms =
-														(BasicVertexUniforms*) basicVertexUniformsBuffer.contents;
-						basicVertexUniforms->mModelMatrix = *((matrix_float4x4*) &getModelMatrix());
+//						BasicVertexUniforms*	basicVertexUniforms =
+//														(BasicVertexUniforms*) basicVertexUniformsBuffer.contents;
 
 						[renderCommandEncoder setVertexBuffer:basicVertexUniformsBuffer offset:0
 								atIndex:kBufferIndexVertexUniforms];
@@ -48,7 +47,6 @@ class CMetalVertexShaderClip : public CMetalVertexShader {
 
 						ClipVertexUniforms*	clipVertexUniforms =
 														(ClipVertexUniforms*) clipVertexUniformsBuffer.contents;
-						clipVertexUniforms->mModelMatrix = *((matrix_float4x4*) &getModelMatrix());
 						clipVertexUniforms->mClipPlane = *((vector_float4*) &mClipPlane);
 
 						[renderCommandEncoder setVertexBuffer:clipVertexUniformsBuffer offset:0
