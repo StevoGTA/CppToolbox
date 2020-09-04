@@ -58,7 +58,8 @@ vertex VertexToFragmentInfo vertexShaderClip(VertexInfo vertexInfo [[stage_in]],
     vertexToFragmentInfo.mTextureCoordinate = vertexInfo.mTextureCoordinate;
     vertexToFragmentInfo.mTextureIndex = vertexInfo.mTextureIndex;
     vertexToFragmentInfo.mClipDistance =
-    		dot(globalUniforms.mModelMatrix * vertexInfo.mPosition, clipVertexUniforms.mClipPlane);
+    		dot(globalUniforms.mViewMatrix * globalUniforms.mModelMatrix * vertexInfo.mPosition,
+    				clipVertexUniforms.mClipPlane);
 
     return vertexToFragmentInfo;
 }
