@@ -238,7 +238,14 @@ CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 CString::CString(const void* pointer)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Setup
+	mString.resize(100);
+
+	// Check field size
+	int	count = _stprintf_s(&mString[0], 100, _TEXT("%p"), pointer);
+
+	// Update
+	mString.resize(count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
