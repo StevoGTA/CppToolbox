@@ -525,7 +525,7 @@ UInt32 CString::getUInt32(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert to char* buffer
-	CFIndex	len =::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef), kCFStringEncodingMacRoman) + 1;
+	CFIndex	len = ::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef), kCFStringEncodingMacRoman) + 1;
 
 	char	buffer[len];
 	::CFStringGetCString(mStringRef, buffer, len, kCFStringEncodingMacRoman);
