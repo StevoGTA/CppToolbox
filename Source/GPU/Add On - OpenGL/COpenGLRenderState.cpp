@@ -14,19 +14,19 @@
 
 class CGPURenderStateInternals {
 	public:
-		CGPURenderStateInternals(CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
-			mVertexShader(vertexShader), mFragmentShader(fragmentShader), mTriangleOffset(0)
+		CGPURenderStateInternals(EGPURenderMode renderMode, COpenGLVertexShader& vertexShader,
+				COpenGLFragmentShader& fragmentShader) :
+			mRenderMode(renderMode), mVertexShader(vertexShader), mFragmentShader(fragmentShader)
 			{}
 
-		CGPUVertexShader&						mVertexShader;
-		CGPUFragmentShader&						mFragmentShader;
+		EGPURenderMode							mRenderMode;
+		COpenGLVertexShader&					mVertexShader;
+		COpenGLFragmentShader&					mFragmentShader;
 
-		SMatrix4x4_32							mProjectionMatrix;
 		SMatrix4x4_32							mViewMatrix;
 		SMatrix4x4_32							mModelMatrix;
 
 		OR<const SGPUVertexBuffer>				mVertexBuffer;
-		UInt32									mTriangleOffset;
 		OR<const TArray<const CGPUTexture> >	mTextures;
 };
 
@@ -37,14 +37,17 @@ class CGPURenderStateInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderState::CGPURenderState(CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader)
+CGPURenderState::CGPURenderState(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+		CGPUFragmentShader& fragmentShader)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CGPURenderStateInternals(vertexShader, fragmentShader);
+	mInternals =
+			new CGPURenderStateInternals(renderMode, (COpenGLVertexShader&) vertexShader,
+					(COpenGLFragmentShader&) fragmentShader);
 
 	// Configure GL
-	((COpenGLVertexShader&) mInternals->mVertexShader).configureGL();
+	mInternals->mVertexShader.configureGL();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -57,20 +60,13 @@ CGPURenderState::~CGPURenderState()
 		glDisable(GL_BLEND);
 
 	// Reset GL
-	((COpenGLVertexShader&) mInternals->mVertexShader).resetGL();
+	mInternals->mVertexShader.resetGL();
 
 	// Cleanup
 	Delete(mInternals);
 }
 
 // MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setProjectionMatrix(const SMatrix4x4_32& projectionMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mProjectionMatrix = projectionMatrix;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPURenderState::setViewMatrix(const SMatrix4x4_32& viewMatrix)
@@ -87,21 +83,13 @@ void CGPURenderState::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleOffset,
+void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
 		const TArray<const CGPUTexture>& gpuTextures)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mVertexBuffer = OR<const SGPUVertexBuffer>(gpuVertexBuffer);
-	mInternals->mTriangleOffset = triangleOffset;
 	mInternals->mTextures = OR<const TArray<const CGPUTexture> >(gpuTextures);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UInt32 CGPURenderState::getTriangleOffset() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mTriangleOffset;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -142,17 +130,16 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 
 	// Setup program
 	CString	programKey =
-					mInternals->mVertexShader.getUUID().getBase64String() + CString(OSSTR("/")) +
+					mInternals->mVertexShader.getUUID().getBase64String() +
+							CString(OSSTR("/")) +
 							mInternals->mFragmentShader.getUUID().getBase64String();
 
 	// Ensure we have this program
 	if (!sPrograms[programKey].hasReference())
 		// Create and cache
-		sPrograms.set(programKey,
-				COpenGLProgram((COpenGLVertexShader&) mInternals->mVertexShader,
-						(COpenGLFragmentShader&) mInternals->mFragmentShader));
+		sPrograms.set(programKey, COpenGLProgram(mInternals->mVertexShader, mInternals->mFragmentShader));
 
 	// Create internals
-	sPrograms[programKey]->prepare(mInternals->mProjectionMatrix, mInternals->mViewMatrix, mInternals->mModelMatrix,
-			gpuVertexBuffer);
+	sPrograms[programKey]->prepare(renderStateCommitInfo.mProjectionMatrix, mInternals->mViewMatrix,
+			mInternals->mModelMatrix, gpuVertexBuffer);
 }

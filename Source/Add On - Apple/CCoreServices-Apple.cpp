@@ -1,19 +1,18 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CCoreServices.cpp			©2017 Stevo Brock	All rights reserved.
+//	CCoreServices-Apple.cpp			©2017 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CCoreServices.h"
 
-#if TARGET_OS_MACOS
-	#include "CFolder.h"
-	#include "CCoreFoundation.h"
+#include "CFolder.h"
+#include "CCoreFoundation.h"
 
-	#include <sys/sysctl.h>
-#endif
+#include <sys/sysctl.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: CCoreServices methods
+// MARK: CCoreServices
+
+// MARK: Info methods
 
 //----------------------------------------------------------------------------------------------------------------------
 const SSystemVersionInfo& CCoreServices::getSystemVersion()
@@ -23,7 +22,6 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 
 	if (sVersionInfo == nil) {
 		// Get info
-#if TARGET_OS_MACOS
 		// Setup
 		FILE*	file = ::popen("sw_vers", "r");
 		char	line[256];
@@ -44,7 +42,6 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 
 		// Cleanup
 		pclose(file);
-#endif
 	}
 
 	return *sVersionInfo;
@@ -92,13 +89,11 @@ UInt32 CCoreServices::getTotalProcessorCoresCount()
 
 	if (sTotalProcessorCoresCount == 0) {
 		// Get info
-#if TARGET_OS_MACOS
 		int		request[2] = {CTL_HW, HW_NCPU};
 		size_t	size = sizeof(int);
 		int		status = ::sysctl(request, 2, &sTotalProcessorCoresCount, &size, nil, 0);
 		if (status != 0)
 			sTotalProcessorCoresCount = 1;
-#endif
 	}
 
 	return sTotalProcessorCoresCount;
@@ -112,13 +107,11 @@ const CString& CCoreServices::getProcessorInfo()
 
 	if (sProcessorInfoString == nil) {
 		// Get info
-#if TARGET_OS_MACOS
 		char	buffer[1024];
 		size_t	size = sizeof(buffer);
 		int		status = ::sysctlbyname("machdep.cpu.brand_string", &buffer, &size, nil, 0);
 		if (status == 0)
 			sProcessorInfoString = new CString(buffer);
-#endif
 	}
 
     return (sProcessorInfoString != nil) ? *sProcessorInfoString : CString::mEmpty;
@@ -132,11 +125,9 @@ UInt64 CCoreServices::getPhysicalMemoryByteCount()
 
 	if (sPhysicalMemoryByteCount == 0) {
 		// Get info
-#if TARGET_OS_MACOS
 		int		request[2] = {CTL_HW, HW_MEMSIZE};
 		size_t	size = sizeof(int64_t);
 		::sysctl(request, 2, &sPhysicalMemoryByteCount, &size, nil, 0);
-#endif
 	}
 
 	return sPhysicalMemoryByteCount;
@@ -148,20 +139,18 @@ UInt32 CCoreServices::getPhysicalMemoryPageSize()
 {
 	static	UInt32	sPhysicalMemoryPageSize = 0;
 
-#if TARGET_OS_MACOS
 	if (sPhysicalMemoryPageSize == 0)
 		// Get info
 		sPhysicalMemoryPageSize = (UInt32) ::sysconf(_SC_PAGE_SIZE);
-#endif
 
 	return sPhysicalMemoryPageSize;
 }
 
+// MARK: Debugger methods
+
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreServices::stopInDebugger()
+void CCoreServices::stopInDebugger(SInt32 code, OSStringVar(message))
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_MACOS
 	kill(getpid(), SIGINT);
-#endif
 }

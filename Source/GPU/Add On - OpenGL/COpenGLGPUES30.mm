@@ -29,8 +29,8 @@ class CGPUInternals {
 	SGPUProcsInfo	mProcsInfo;
 
 	bool			mPerformedSetup;
-	SMatrix4x4_32	mProjectionMatrix;
-	SMatrix4x4_32	mViewMatrix;
+	SMatrix4x4_32	mProjectionMatrix2D;
+	SMatrix4x4_32	mProjectionMatrix3D;
 	GLuint			mRenderBufferName;
 	GLuint			mFrameBufferName;
 };
@@ -56,20 +56,6 @@ CGPU::~CGPU()
 }
 
 // MARK: CGPU methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mViewMatrix = viewMatrix;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const SMatrix4x4_32& CGPU::getViewMatrix() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mViewMatrix;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
@@ -121,17 +107,17 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderStart() const
+void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S3DPoint32& target) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get info
-	S2DSizeU16	size = mInternals->mProcsInfo.getSize();
+	S2DSizeU16	viewSize = mInternals->mProcsInfo.getSize();
 	Float32		scale = mInternals->mProcsInfo.getScale();
 
 	// Check if performed setup
 	if (!mInternals->mPerformedSetup) {
 		// Update
-		mInternals->mProjectionMatrix =
+		mInternals->mProjectionMatrix2D =
 				SMatrix4x4_32(
 						2.0 / size.mWidth, 0.0, 0.0, 0.0,
 						0.0, 2.0 / -size.mHeight, 0.0, 0.0,
@@ -171,24 +157,26 @@ void CGPU::renderStart() const
 	mInternals->mProcsInfo.acquireContext();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, mInternals->mFrameBufferName);
-	glViewport(0, 0, size.mWidth * scale, size.mHeight * scale);
+	glViewport(0, 0, viewSize.mWidth * scale, viewSize.mHeight * scale);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
+void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup render state
-	renderState.setProjectionMatrix(mInternals->mProjectionMatrix);
-	renderState.setViewMatrix(mInternals->mViewMatrix);
-	renderState.setModelMatrix(modelMatrix);
-
 	// Commit
-	renderState.commit(SGPURenderStateCommitInfo());
+	renderState.commit(SGPURenderStateCommitInfo(mInternals->mProjectionMatrix2D));
 
 	// Draw
-	glDrawArrays(GL_TRIANGLE_STRIP, renderState.getTriangleOffset(), triangleCount + 2);
+	glDrawArrays(GL_TRIANGLE_STRIP, offset, count);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented()
 }
 
 //----------------------------------------------------------------------------------------------------------------------

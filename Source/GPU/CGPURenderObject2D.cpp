@@ -274,7 +274,7 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 	TIteratorD<TIndexRange<UInt16> >	iterator = indexRanges.getIterator();
 	if (renderInfo.mClipPlane.hasValue()) {
 		// Clip plane
-		CGPURenderState	renderState(CGPUVertexShader::getClip(*renderInfo.mClipPlane),
+		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getClip(*renderInfo.mClipPlane),
 								CGPUFragmentShader::getOpacity(mInternals->mAlpha));
 
 		// Iterate index ranges
@@ -283,12 +283,14 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
-			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
+			renderState.setModelMatrix(modelMatrix);
+			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
+				indexRange.mStart * 6 + 1);
 		}
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
-		CGPURenderState	renderState(CGPUVertexShader::getBasic(), CGPUFragmentShader::getBasic());
+		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getBasic(), CGPUFragmentShader::getBasic());
 
 		// Iterate index ranges
 		for (; iterator.hasValue(); iterator.advance()) {
@@ -296,12 +298,15 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
-			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
+			renderState.setModelMatrix(modelMatrix);
+			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
+					indexRange.mStart * 6 + 1);
 		}
 	} else {
 		// Have alpha
-		CGPURenderState	renderState(CGPUVertexShader::getBasic(), CGPUFragmentShader::getOpacity(mInternals->mAlpha));
+		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getBasic(),
+								CGPUFragmentShader::getOpacity(mInternals->mAlpha));
 
 		// Iterate index ranges
 		for (; iterator.hasValue(); iterator.advance()) {
@@ -309,8 +314,10 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, indexRange.mStart * 6 + 1, gpuTextures);
-			gpu.renderTriangleStrip(renderState, modelMatrix, (indexRange.mEnd - indexRange.mStart) * 6 + 2);
+			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
+			renderState.setModelMatrix(modelMatrix);
+			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
+					indexRange.mStart * 6 + 1);
 		}
 	}
 }

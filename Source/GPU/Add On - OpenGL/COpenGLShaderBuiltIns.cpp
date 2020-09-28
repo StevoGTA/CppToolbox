@@ -21,23 +21,24 @@ static	CString	sBasicVertexShaderString("#version 300 es			\
 				v_texPosition0 = texCoord0;							\
 			}														\
 		");
-static	CString	sClipVertexShaderString("#version 300 es						\
-			#extension GL_APPLE_clip_distance : require\n						\
-			uniform			mat4    modelMatrix;								\
-			uniform			mat4    viewProjectionMatrix;						\
-			uniform			vec4	clipPlane;									\
-																				\
-			in				vec4    position;									\
-			in				vec3    texCoord0;									\
-																				\
-			out		highp	float	gl_ClipDistance[1];							\
-			out		highp	vec3	v_texPosition0;								\
-																				\
-			void main() {														\
-				gl_Position = viewProjectionMatrix * modelMatrix * position;	\
-				gl_ClipDistance[0] = dot(modelMatrix * position, clipPlane);	\
-				v_texPosition0 = texCoord0;										\
-			}																	\
+static	CString	sClipVertexShaderString("#version 300 es									\
+			#extension GL_APPLE_clip_distance : require\n									\
+			uniform			mat4    projectionMatrix;										\
+			uniform			mat4    viewMatrix;												\
+			uniform			mat4    modelMatrix;											\
+			uniform			vec4	clipPlane;												\
+																							\
+			in				vec4    position;												\
+			in				vec3    texCoord0;												\
+																							\
+			out		highp	float	gl_ClipDistance[1];										\
+			out		highp	vec3	v_texPosition0;											\
+																							\
+			void main() {																	\
+				gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;		\
+				gl_ClipDistance[0] = dot(viewMatrix * modelMatrix * position, clipPlane);	\
+				v_texPosition0 = texCoord0;													\
+			}																				\
 		");
 static	CString	sBasicFragmentShaderString("#version 300 es										\
 			uniform			sampler2D   diffuseTexture[16];										\
@@ -280,22 +281,23 @@ static	CString	sBasicVertexShaderString("#version 330 core			\
 				v_texPosition0 = texCoord0;							\
 			}														\
 		");
-static	CString	sClipVertexShaderString("#version 330 core						\
-			uniform	mat4	modelMatrix;										\
-			uniform	mat4	viewProjectionMatrix;								\
-			uniform	vec4	clipPlane;											\
-																				\
-			in		vec4    position;											\
-			in		vec3    texCoord0;											\
-																				\
-			out		float	gl_ClipDistance[1];									\
-			out		vec3    v_texPosition0;										\
-																				\
-			void main() {														\
-				gl_Position = viewProjectionMatrix * modelMatrix * position;	\
-				gl_ClipDistance[0] = dot(modelMatrix * position, clipPlane);	\
-				v_texPosition0 = texCoord0;										\
-			}																	\
+static	CString	sClipVertexShaderString("#version 330 core									\
+			uniform	mat4	projectionMatrix;												\
+			uniform	mat4	viewMatrix;														\
+			uniform	mat4	modelMatrix;													\
+			uniform	vec4	clipPlane;														\
+																							\
+			in		vec4    position;														\
+			in		vec3    texCoord0;														\
+																							\
+			out		float	gl_ClipDistance[1];												\
+			out		vec3    v_texPosition0;													\
+																							\
+			void main() {																	\
+				gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;		\
+				gl_ClipDistance[0] = dot(viewMatrix * modelMatrix * position, clipPlane);	\
+				v_texPosition0 = texCoord0;													\
+			}																				\
 		");
 static	CString	sBasicFragmentShaderString("#version 330 core									\
 			uniform	sampler2D   diffuseTexture[16];												\
@@ -418,13 +420,13 @@ class COpenGLVertexShaderClip : public COpenGLVertexShader {
 						const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
 					{
 						// Setup uniforms
-						SMatrix4x4_32	viewProjectionMatrix = projectionMatrix * viewMatrix;
-						GLint			viewProjectionMatrixUniformLocation =
-												uniformInfo.getSInt32(mViewProjectionMatrixUniformName);
-						GLint			modelMatrixUniformLocation = uniformInfo.getSInt32(mModelMatrixUniformName);
-						GLint			clipPlaneUniformLocation = uniformInfo.getSInt32(mClipPlaneUniformName);
+						GLint	projectionMatrixUniformLocation = uniformInfo.getSInt32(mProjectionMatrixUniformName);
+						GLint	viewMatrixUniformLocation = uniformInfo.getSInt32(mViewMatrixUniformName);
+						GLint	modelMatrixUniformLocation = uniformInfo.getSInt32(mModelMatrixUniformName);
+						GLint	clipPlaneUniformLocation = uniformInfo.getSInt32(mClipPlaneUniformName);
 
-						glUniformMatrix4fv(viewProjectionMatrixUniformLocation, 1, 0, (GLfloat*) &viewProjectionMatrix);
+						glUniformMatrix4fv(projectionMatrixUniformLocation, 1, 0, (GLfloat*) &projectionMatrix);
+						glUniformMatrix4fv(viewMatrixUniformLocation, 1, 0, (GLfloat*) &viewMatrix);
 						glUniformMatrix4fv(modelMatrixUniformLocation, 1, 0, (GLfloat*) &modelMatrix);
 						glUniform4fv(clipPlaneUniformLocation, 1, (GLfloat*) &mClipPlane);
 					}
@@ -459,7 +461,8 @@ class COpenGLVertexShaderClip : public COpenGLVertexShader {
 		static	CString			mPositionAttributeName;
 		static	CString			mTextureCoordinateAttributeName;
 
-		static	CString			mViewProjectionMatrixUniformName;
+		static	CString			mProjectionMatrixUniformName;
+		static	CString			mViewMatrixUniformName;
 		static	CString			mModelMatrixUniformName;
 		static	CString			mClipPlaneUniformName;
 };
@@ -467,7 +470,8 @@ class COpenGLVertexShaderClip : public COpenGLVertexShader {
 CString	COpenGLVertexShaderClip::mPositionAttributeName(OSSTR("position"));
 CString	COpenGLVertexShaderClip::mTextureCoordinateAttributeName(OSSTR("texCoord0"));
 
-CString	COpenGLVertexShaderClip::mViewProjectionMatrixUniformName(OSSTR("viewProjectionMatrix"));
+CString	COpenGLVertexShaderClip::mProjectionMatrixUniformName(OSSTR("projectionMatrix"));
+CString	COpenGLVertexShaderClip::mViewMatrixUniformName(OSSTR("viewMatrix"));
 CString	COpenGLVertexShaderClip::mModelMatrixUniformName(OSSTR("modelMatrix"));
 CString	COpenGLVertexShaderClip::mClipPlaneUniformName(OSSTR("clipPlane"));
 
@@ -515,7 +519,8 @@ CGPUVertexShader& CGPUVertexShader::getClip(const SMatrix4x1_32& clipPlane)
 		attributeNames += COpenGLVertexShaderBasic::mTextureCoordinateAttributeName;
 
 		TNArray<CString>	uniformNames;
-		uniformNames += COpenGLVertexShaderClip::mViewProjectionMatrixUniformName;
+		uniformNames += COpenGLVertexShaderClip::mProjectionMatrixUniformName;
+		uniformNames += COpenGLVertexShaderClip::mViewMatrixUniformName;
 		uniformNames += COpenGLVertexShaderClip::mModelMatrixUniformName;
 		uniformNames += COpenGLVertexShaderClip::mClipPlaneUniformName;
 

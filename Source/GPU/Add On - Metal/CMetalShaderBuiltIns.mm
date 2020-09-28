@@ -11,10 +11,7 @@
 
 class CMetalVertexShaderBasic : public CMetalVertexShader {
 	public:
-				CMetalVertexShaderBasic() : CMetalVertexShader() {}
-
-		CString	getName() const
-					{ return CString(OSSTR("vertexShaderBasic")); }
+				CMetalVertexShaderBasic() : CMetalVertexShader(CString(OSSTR("vertexShaderBasic"))) {}
 
 		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{
@@ -24,9 +21,8 @@ class CMetalVertexShaderBasic : public CMetalVertexShader {
 														options:MTLResourceStorageModeShared];
 						basicVertexUniformsBuffer.label = @"Basic Vertex Uniforms";
 
-						BasicVertexUniforms*	basicVertexUniforms =
-														(BasicVertexUniforms*) basicVertexUniformsBuffer.contents;
-						basicVertexUniforms->mModelMatrix = *((matrix_float4x4*) &getModelMatrix());
+//						BasicVertexUniforms*	basicVertexUniforms =
+//														(BasicVertexUniforms*) basicVertexUniformsBuffer.contents;
 
 						[renderCommandEncoder setVertexBuffer:basicVertexUniformsBuffer offset:0
 								atIndex:kBufferIndexVertexUniforms];
@@ -39,10 +35,7 @@ class CMetalVertexShaderBasic : public CMetalVertexShader {
 
 class CMetalVertexShaderClip : public CMetalVertexShader {
 	public:
-				CMetalVertexShaderClip() : CMetalVertexShader() {}
-
-		CString	getName() const
-					{ return CString(OSSTR("vertexShaderClip")); }
+				CMetalVertexShaderClip() : CMetalVertexShader(CString(OSSTR("vertexShaderClip"))) {}
 
 		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{
@@ -54,7 +47,6 @@ class CMetalVertexShaderClip : public CMetalVertexShader {
 
 						ClipVertexUniforms*	clipVertexUniforms =
 														(ClipVertexUniforms*) clipVertexUniformsBuffer.contents;
-						clipVertexUniforms->mModelMatrix = *((matrix_float4x4*) &getModelMatrix());
 						clipVertexUniforms->mClipPlane = *((vector_float4*) &mClipPlane);
 
 						[renderCommandEncoder setVertexBuffer:clipVertexUniformsBuffer offset:0
@@ -112,10 +104,7 @@ CGPUVertexShader& CGPUVertexShader::getClip(const SMatrix4x1_32& clipPlane)
 
 class CMetalFragmentShaderBasic : public CMetalFragmentShader {
 	public:
-				CMetalFragmentShaderBasic() : CMetalFragmentShader() {}
-
-		CString	getName() const
-					{ return CString(OSSTR("fragmentShaderBasic")); }
+				CMetalFragmentShaderBasic() : CMetalFragmentShader(CString(OSSTR("fragmentShaderBasic"))) {}
 
 		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{}
@@ -127,10 +116,9 @@ class CMetalFragmentShaderBasic : public CMetalFragmentShader {
 
 class CMetalFragmentShaderOpacity : public CMetalFragmentShader {
 	public:
-				CMetalFragmentShaderOpacity() : CMetalFragmentShader(), mOpacity(1.0) {}
-
-		CString	getName() const
-					{ return CString(OSSTR("fragmentShaderOpacity")); }
+				CMetalFragmentShaderOpacity() :
+					CMetalFragmentShader(CString(OSSTR("fragmentShaderOpacity"))), mOpacity(1.0)
+					{}
 
 		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{

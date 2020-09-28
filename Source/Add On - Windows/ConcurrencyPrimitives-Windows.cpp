@@ -1,22 +1,28 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	ConcurrencyPrimitives-POSIX.cpp			©2018 Stevo Brock	All rights reserved.
+//	ConcurrencyPrimitives-Windows.cpp			©2018 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "ConcurrencyPrimitives.h"
 
-#include <pthread.h>
+#undef Delete
+#include <Windows.h>
+#define Delete(x)		{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CLockInternals
 
 class CLockInternals {
-	public:
-		CLockInternals()
-			{ ::pthread_mutex_init(&mMutex, nil); }
-		~CLockInternals()
-			{ ::pthread_mutex_destroy(&mMutex); }
+public:
+	CLockInternals()
+		{
+			InitializeCriticalSection(&mCriticalSection);
+		}
+	~CLockInternals()
+		{
+			DeleteCriticalSection(&mCriticalSection);
+		}
 
-		pthread_mutex_t	mMutex;
+	CRITICAL_SECTION	mCriticalSection;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -45,21 +51,21 @@ CLock::~CLock()
 bool CLock::tryLock() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::pthread_mutex_trylock(&mInternals->mMutex) == 0;
+	return TryEnterCriticalSection(&mInternals->mCriticalSection);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLock::lock() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::pthread_mutex_lock(&mInternals->mMutex);
+	EnterCriticalSection(&mInternals->mCriticalSection);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLock::unlock() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::pthread_mutex_unlock(&mInternals->mMutex);
+	LeaveCriticalSection(&mInternals->mCriticalSection);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -67,13 +73,13 @@ void CLock::unlock() const
 // MARK: - CReadPreferringLockInternals
 
 class CReadPreferringLockInternals {
-	public:
-		CReadPreferringLockInternals()
-			{ ::pthread_rwlock_init(&mRWLock, nil); }
-		~CReadPreferringLockInternals()
-			{ pthread_rwlock_destroy(&mRWLock); }
+public:
+	CReadPreferringLockInternals()
+		{
+			InitializeSRWLock(&mSRWLock);
+		}
 
-		pthread_rwlock_t	mRWLock;
+	SRWLOCK	mSRWLock;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -102,28 +108,28 @@ CReadPreferringLock::~CReadPreferringLock()
 void CReadPreferringLock::lockForReading() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::pthread_rwlock_rdlock(&mInternals->mRWLock);
+	AcquireSRWLockShared(&mInternals->mSRWLock);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CReadPreferringLock::unlockForReading() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::pthread_rwlock_unlock(&mInternals->mRWLock);
+	ReleaseSRWLockShared(&mInternals->mSRWLock);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CReadPreferringLock::lockForWriting() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::pthread_rwlock_wrlock(&mInternals->mRWLock);
+	AcquireSRWLockExclusive(&mInternals->mSRWLock);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CReadPreferringLock::unlockForWriting() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::pthread_rwlock_unlock(&mInternals->mRWLock);
+	ReleaseSRWLockExclusive(&mInternals->mSRWLock);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -131,20 +137,14 @@ void CReadPreferringLock::unlockForWriting() const
 // MARK: - CSemaphoreInternals
 
 class CSemaphoreInternals {
-	public:
-		CSemaphoreInternals()
-			{
-				::pthread_cond_init(&mCond, nil);
-				::pthread_mutex_init(&mMutex, nil);
-			}
-		~CSemaphoreInternals()
-			{
-				::pthread_cond_destroy(&mCond);
-				::pthread_mutex_destroy(&mMutex);
-			}
+public:
+	CSemaphoreInternals() : mHandle(CreateEvent(NULL, false, false, TEXT(""))) {}
+	~CSemaphoreInternals()
+		{
+			CloseHandle(mHandle);
+		}
 
-		pthread_cond_t	mCond;
-		pthread_mutex_t	mMutex;
+	HANDLE	mHandle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -173,12 +173,12 @@ CSemaphore::~CSemaphore()
 void CSemaphore::signal() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::pthread_cond_signal(&mInternals->mCond);
+	SetEvent(mInternals->mHandle);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CSemaphore::waitFor() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::pthread_cond_wait(&mInternals->mCond, &mInternals->mMutex);
+	WaitForSingleObject(mInternals->mHandle, INFINITE);
 }

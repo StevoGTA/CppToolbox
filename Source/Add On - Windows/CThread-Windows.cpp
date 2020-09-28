@@ -1,34 +1,61 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CGPUShader.h			©2020 Stevo Brock	All rights reserved.
+//	CThread-Windows.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CGPUShader.h"
+#include "CThread.h"
+
+#include "CLogServices.h"
+#include "CppToolboxAssert.h"
+#include "CppToolboxError.h"
+
+#undef Delete
+#include <Windows.h>
+#define Delete(x)		{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPUVertexShaderInternals
+// MARK: CThreadInternals
 
-class CGPUVertexShaderInternals {
-	public:
-		CGPUVertexShaderInternals() {}
+class CThreadInternals {
+public:
+	CThreadInternals(const CThread& thread, CThreadProc proc, void* userData, const CString& name) :
+		mThreadProc(proc), mThreadProcUserData(userData), mThreadName(name), mThread(thread),
+				mWindowsThreadHandle(NULL)
+		{}
+	~CThreadInternals() {}
 
-		CUUID	mUUID;
+			CThreadProc	mThreadProc;
+			void*		mThreadProcUserData;
+			CString		mThreadName;
+	const	CThread&	mThread;
+
+			HANDLE		mWindowsThreadHandle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUVertexShader
+// MARK: - Local proc declarations
+
+static	DWORD sThreadProc(void* userData);
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CThreadInternals
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUVertexShader::CGPUVertexShader()
+CThread::CThread(CThreadProc proc, void* userData, const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUVertexShaderInternals();
+	// Setup internals
+	mInternals = new CThreadInternals(*this, proc, userData, name);
+
+	// Create thread
+	mInternals->mWindowsThreadHandle = CreateThread(NULL, 0, sThreadProc, mInternals, 0, NULL);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUVertexShader::~CGPUVertexShader()
+CThread::~CThread()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
@@ -37,48 +64,41 @@ CGPUVertexShader::~CGPUVertexShader()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const CUUID& CGPUVertexShader::getUUID() const
+//----------------------------------------------------------------------------------------------------------------------
+CThreadRef CThread::getThreadRef() const
+{
+	return mInternals->mWindowsThreadHandle;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+////----------------------------------------------------------------------------------------------------------------------
+//void CThread::sleepFor(UniversalTimeInterval timeInterval)
+////----------------------------------------------------------------------------------------------------------------------
+//{
+//	::usleep((UInt32) (timeInterval * 1000000.0));
+//}
+
+//----------------------------------------------------------------------------------------------------------------------
+CThreadRef CThread::getCurrentThreadRef()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mUUID;
+	return GetCurrentThread();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUFragmentShaderInternals
-
-class CGPUFragmentShaderInternals {
-	public:
-		CGPUFragmentShaderInternals() {}
-
-		CUUID	mUUID;
-};
-
+// MARK: - Local proc definitions
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUFragmentShader
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader::CGPUFragmentShader()
+DWORD sThreadProc(void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUFragmentShaderInternals();
-}
+	// Setup
+	CThreadInternals* threadInternals = (CThreadInternals*)userData;
 
-//----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader::~CGPUFragmentShader()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
+	// Call proc
+	threadInternals->mThreadProc(threadInternals->mThread, threadInternals->mThreadProcUserData);
 
-// MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-const CUUID& CGPUFragmentShader::getUUID() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mUUID;
+	return 0;
 }

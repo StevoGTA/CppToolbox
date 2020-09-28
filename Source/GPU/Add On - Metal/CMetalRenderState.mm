@@ -16,17 +16,19 @@
 
 class CGPURenderStateInternals {
 	public:
-		CGPURenderStateInternals(CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
-			mVertexShader(vertexShader), mFragmentShader(fragmentShader), mTriangleOffset(0)
+		CGPURenderStateInternals(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+				CGPUFragmentShader& fragmentShader) :
+			mRenderMode(renderMode), mVertexShader(vertexShader), mFragmentShader(fragmentShader)
 			{}
 
+		EGPURenderMode							mRenderMode;
 		CGPUVertexShader&						mVertexShader;
 		CGPUFragmentShader&						mFragmentShader;
 
+		SMatrix4x4_32							mViewMatrix;
 		SMatrix4x4_32							mModelMatrix;
 
 		OR<const SGPUVertexBuffer>				mVertexBuffer;
-		UInt32									mTriangleOffset;
 		OR<const TArray<const CGPUTexture> >	mTextures;
 };
 
@@ -37,11 +39,12 @@ class CGPURenderStateInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderState::CGPURenderState(CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader)
+CGPURenderState::CGPURenderState(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+		CGPUFragmentShader& fragmentShader)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CGPURenderStateInternals(vertexShader, fragmentShader);
+	mInternals = new CGPURenderStateInternals(renderMode, vertexShader, fragmentShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -55,15 +58,10 @@ CGPURenderState::~CGPURenderState()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setProjectionMatrix(const SMatrix4x4_32& projectionMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CGPURenderState::setViewMatrix(const SMatrix4x4_32& viewMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	mInternals->mViewMatrix = viewMatrix;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,27 +72,27 @@ void CGPURenderState::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleOffset,
+void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
 		const TArray<const CGPUTexture>& gpuTextures)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mVertexBuffer = OR<const SGPUVertexBuffer>(gpuVertexBuffer);
-	mInternals->mTriangleOffset = triangleOffset;
 	mInternals->mTextures = OR<const TArray<const CGPUTexture> >(gpuTextures);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UInt32 CGPURenderState::getTriangleOffset() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mTriangleOffset;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup globals
+	GlobalUniforms	globalUniforms;
+	::memcpy(&globalUniforms.mModelMatrix, &mInternals->mModelMatrix, sizeof(matrix_float4x4));
+	::memcpy(&globalUniforms.mViewMatrix, &mInternals->mViewMatrix, sizeof(matrix_float4x4));
+	::memcpy(&globalUniforms.mProjectionMatrix, &renderStateCommitInfo.mProjectionMatrix, sizeof(matrix_float4x4));
+	[renderStateCommitInfo.mRenderCommandEncoder setVertexBytes:&globalUniforms length:sizeof(GlobalUniforms)
+			atIndex:kBufferIndexGlobalUniforms];
+
 	// Setup textures
 			bool						needBlend = false;
 	const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();

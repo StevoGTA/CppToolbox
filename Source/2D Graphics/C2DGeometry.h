@@ -244,13 +244,13 @@ template <typename T> struct T2DRect {
 	inline	T			getMinX() const
 							{ return mOrigin.mX; }
 	inline	T			getMidX() const
-							{ return mOrigin.mX + 0.5 * mSize.mWidth; }
+							{ return mOrigin.mX + (T) 0.5 * mSize.mWidth; }
 	inline	T			getMaxX() const
 							{ return mOrigin.mX + mSize.mWidth; }
 	inline	T			getMinY() const
 							{ return mOrigin.mY; }
 	inline	T			getMidY() const
-							{ return mOrigin.mY + 0.5 * mSize.mHeight; }
+							{ return mOrigin.mY + (T) 0.5 * mSize.mHeight; }
 	inline	T			getMaxY() const
 							{ return mOrigin.mY + mSize.mHeight; }
 	inline	T			getWidth() const
@@ -283,13 +283,13 @@ template <typename T> struct T2DRect {
 									// Width constrained
 									T	scaledHeight = widthFactor * (Float32) mSize.mHeight;
 
-									return T2DRect<T>(0, (scaledHeight - mSize.mHeight) / 2, rect.mSize.mWidth,
+									return T2DRect<T>(0, (rect.getHeight() - scaledHeight) / 2, rect.mSize.mWidth,
 											scaledHeight);
 								} else {
 									// Height constrained
 									T	scaledWidth = heightFactor * (Float32) mSize.mWidth;
 
-									return T2DRect<T>((scaledWidth - mSize.mWidth) / 2, 0, scaledWidth,
+									return T2DRect<T>((rect.getWidth() - scaledWidth) / 2, 0, scaledWidth,
 											rect.mSize.mHeight);
 								}
 							}

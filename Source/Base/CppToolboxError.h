@@ -50,6 +50,10 @@ const	UError			kUnimplementedError	= MAKE_UError(kCoreErrorDomain, MAKE_OSTYPE('
 					((nsError.code != 0) ? MAKE_UError(kNSErrorErrorDomain, nsError.code) : kNoError)
 #endif
 
+#if TARGET_OS_WINDOWS
+	const	UErrorDomain	kWindowsErrorDomain	= MAKE_OSTYPE('W', 'i', 'n', 'd');
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 

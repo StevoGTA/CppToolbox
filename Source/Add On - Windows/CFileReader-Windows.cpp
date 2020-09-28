@@ -1,10 +1,13 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFileReader-POSIX.cpp			©2019 Stevo Brock	All rights reserved.
+//	CFileReader-Windows.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFileReader.h"
 
-#include <sys/mman.h>
+#undef Delete
+#include <Windows.h>
+#define Delete(x)		{ delete x; x = nil; }
+#undef THIS
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -53,29 +56,31 @@ class CFileReaderInternals : public TCopyOnWriteReferenceCountable<CFileReaderIn
 	public:
 				CFileReaderInternals(const CFile& file) :
 					TCopyOnWriteReferenceCountable(),
-							mFile(file), mFILE(nil), mFD(-1)
+							mFile(file)
 					{}
 				CFileReaderInternals(const CFileReaderInternals& other) :
 					TCopyOnWriteReferenceCountable(),
-							mFile(other.mFile), mFILE(nil), mFD(-1)
+							mFile(other.mFile)
 					{}
 				~CFileReaderInternals()
-					{ close(); }
+					{
+						close();
+					}
 
 		UError	close()
 					{
-						if (mFILE != nil)
-							::fclose(mFILE);
-						if (mFD != -1)
-							::close(mFD);
+						CloseHandle(mFileMappingHandle);
+						mFileMappingHandle = NULL;
+
+						CloseHandle(mFileHandle);
+						mFileHandle = NULL;
 
 						return kNoError;
 					}
 
 		CFile	mFile;
-
-		FILE*	mFILE;
-		SInt32	mFD;
+		HANDLE	mFileHandle;
+		HANDLE	mFileMappingHandle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -118,55 +123,25 @@ const CFile& CFileReader::getFile() const
 UError CFileReader::open(bool buffered)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for write
+	// Copy on change
 	mInternals = mInternals->prepareForWrite();
 
-	// Check buffered
-	if (buffered) {
-		// Buffered, check if open
-		if (mInternals->mFD != -1) {
-			// Close
-			::close(mInternals->mFD);
-			mInternals->mFD = -1;
-		}
+	// Open
+	CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
+	extendedParameters.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+	extendedParameters.dwFileAttributes = FILE_ATTRIBUTE_READONLY;
+	extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS;
+	mInternals->mFileHandle =
+			CreateFile2(mInternals->mFile.getFilesystemPath().getString().getOSString(), GENERIC_READ, FILE_SHARE_READ,
+					OPEN_EXISTING, &extendedParameters);
 
-		if (mInternals->mFILE == nil) {
-			// Open
-			mInternals->mFILE =
-					::fopen(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8), "rb");
-
-			if (mInternals->mFILE != nil)
-				// Success
-				return kNoError;
-			else
-				// Unable to open
-				CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "opening buffered");
-		} else
-			// Already open, reset to beginning of file
-			return setPos(kFileReaderPositionModeFromBeginning, 0);
-	} else {
-		// Not buffered, check if open
-		if (mInternals->mFILE != nil) {
-			// Close
-			::fclose(mInternals->mFILE);
-			mInternals->mFILE = nil;
-		}
-
-		if (mInternals->mFD == -1) {
-			// Open
-			mInternals->mFD =
-					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8),
-							O_RDONLY | O_EXLOCK, 0);
-			if (mInternals->mFD != -1)
-				// Success
-				return kNoError;
-			else
-				// Unable to open
-				CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "opening buffered");
-		} else
-			// Already open, reset to beginning of file
-			return setPos(kFileReaderPositionModeFromBeginning, 0);
-	}
+	// Handle results
+	if (mInternals->mFileHandle != NULL)
+		// Success
+		return kNoError;
+	else
+		// Unable to open
+		CFileReaderReportErrorAndReturnError(MAKE_UError(kWindowsErrorDomain, GetLastError()), "opening buffered");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -174,100 +149,49 @@ UError CFileReader::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
-	// Check open mode
-	if (mInternals->mFILE != nil) {
-		// Read from FILE
-		ssize_t	bytesRead = ::fread(buffer, 1, (size_t) byteCount, mInternals->mFILE);
-		if (bytesRead == (ssize_t) byteCount)
-			// Success
-			return kNoError;
-		else if (::feof(mInternals->mFILE))
-			// EOF
-			return kFileEOFError;
-		else
-			// Unable to read
-			CFileReaderReportErrorAndReturnError(kFileUnableToReadError, "reading data");
-	} else if (mInternals->mFD != -1) {
-		// Read from file
-		ssize_t bytesRead = ::read(mInternals->mFD, buffer, (size_t) byteCount);
-		if (bytesRead != -1)
-			// Success
-			return kNoError;
-		else if (bytesRead == 0)
-			// EOF
-			return kFileEOFError;
-		else
-			// Unable to read
-			CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "reading data");
-	} else
-		// Not open
-		CFileReaderReportErrorAndReturnError(kFileNotOpenError, "reading data");
+	BOOL	result = ReadFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, NULL, NULL);
+	if (!result)
+		CFileReaderReportErrorAndReturnError(MAKE_UError(kWindowsErrorDomain, GetLastError()), "reading data");
+
+	return kNoError;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt64 CFileReader::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check open mode
-	if (mInternals->mFILE != nil)
-		// FILE
-		return ::ftello(mInternals->mFILE);
-	else if (mInternals->mFD != -1) {
-		// file
-		SInt64	filePos = ::lseek(mInternals->mFD, 0, SEEK_CUR);
-		if (filePos != -1)
-			// Success
-			return filePos;
-		else
-			// Error
-			CFileReaderReportErrorAndReturnValue(MAKE_UError(kPOSIXErrorDomain, errno), "getting position", 0);
-	} else
-		// File not open!
-		CFileReaderReportErrorAndReturnValue(kFileNotOpenError, "getting position", 0);
+	// Setup
+	LARGE_INTEGER	position = {0};
+
+	// "Set position" to current to query the current position
+	position.LowPart = SetFilePointer(mInternals->mFileHandle, position.LowPart, &position.HighPart, FILE_CURRENT);
+	if (position.LowPart == INVALID_SET_FILE_POINTER)
+		CFileReaderReportErrorAndReturnValue(MAKE_UError(kWindowsErrorDomain, GetLastError()), "getting position", 0);
+
+	return position.QuadPart;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UError CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check open mode
-	if (mInternals->mFILE != nil) {
-		// FILE
-		int	posMode;
-		switch (mode) {
-			case kFileReaderPositionModeFromBeginning:	posMode = SEEK_SET;	break;
-			case kFileReaderPositionModeFromCurrent:	posMode = SEEK_CUR;	break;
-			case kFileReaderPositionModeFromEnd:		posMode = SEEK_END;	break;
-		}
+	// Setup
+	LARGE_INTEGER	position;
+	position.QuadPart = newPos;
 
-		// Set position
-		off_t	offset = ::fseeko(mInternals->mFILE, newPos, posMode);
-		if (offset != -1)
-			// Success
-			return kNoError;
-		else
-			// Error
-			CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting position");
-	} else if (mInternals->mFD != -1) {
-		// file
-		SInt32	posMode;
-		switch (mode) {
-			case kFileReaderPositionModeFromBeginning:	posMode = SEEK_SET;	break;
-			case kFileReaderPositionModeFromCurrent:	posMode = SEEK_CUR;	break;
-			case kFileReaderPositionModeFromEnd:		posMode = SEEK_END;	break;
-		}
+	DWORD	moveMethod;
+	switch (mode) {
+		case kFileReaderPositionModeFromBeginning:	moveMethod = FILE_BEGIN;	break;
+		case kFileReaderPositionModeFromCurrent:	moveMethod = FILE_CURRENT;	break;
+		case kFileReaderPositionModeFromEnd:		moveMethod = FILE_END;		break;
+	}
 
-		// Set position
-		off_t	offset = ::lseek(mInternals->mFD, newPos, posMode);
-		if (offset != -1)
-			// Success
-			return kNoError;
-		else
-			// Error
-			CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting position");
-	} else
-		// File not open!
-		CFileReaderReportErrorAndReturnError(kFileNotOpenError, "setting position");
+	// Set position
+	DWORD	newPositionLow = SetFilePointer(mInternals->mFileHandle, position.LowPart, &position.HighPart, moveMethod);
+	if (newPositionLow == INVALID_SET_FILE_POINTER)
+		CFileReaderReportError(MAKE_UError(kWindowsErrorDomain, GetLastError()), "setting position");
+
+	return kNoError;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -278,23 +202,41 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 	SFileMemoryMapSetupInfo	fileMemoryMapSetupInfo(mInternals->addReference());
 
 	// Is the file open?
-	if (mInternals->mFD == -1) {
+	if (mInternals->mFileHandle == NULL) {
 		// File not open!
 		outError = kFileNotOpenError;
 		CFileReaderReportErrorAndReturnValue(outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
+	}
+
+	// Check for file mapping handle
+	if (mInternals->mFileMappingHandle == NULL) {
+		// Create file mapping handle
+		mInternals->mFileMappingHandle =
+				CreateFileMapping(mInternals->mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
+		if (mInternals->mFileMappingHandle == NULL) {
+			// Error
+			outError = MAKE_UError(kWindowsErrorDomain, GetLastError());
+			CFileReaderReportErrorAndReturnValue(outError, "creating file mapping",
+					CFileMemoryMap(fileMemoryMapSetupInfo));
+		}
 	}
 
 	// Limit to bytes remaining
 	byteCount = std::min<UInt64>(byteCount, mInternals->mFile.getSize() - byteOffset);
 
 	// Create map
-	void*	bytePtr = ::mmap(nil, (size_t) byteCount, PROT_READ, MAP_FILE | MAP_PRIVATE, mInternals->mFD, byteOffset);
+	ULARGE_INTEGER	fileOffset;
+	fileOffset.QuadPart = byteOffset;
+
+	void*	bytePtr =
+					MapViewOfFile(mInternals->mFileMappingHandle, FILE_MAP_READ, fileOffset.HighPart,
+							fileOffset.LowPart, byteCount);
 
 	// Check for failure
-	if (bytePtr == (void*) -1) {
+	if (bytePtr == NULL) {
 		// Failed
-		outError = MAKE_UError(kPOSIXErrorDomain, errno);
-		CFileReaderReportErrorAndReturnValue(outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
+		outError = MAKE_UError(kWindowsErrorDomain, GetLastError());
+		CFileReaderReportErrorAndReturnValue(outError, "creating file view", CFileMemoryMap(fileMemoryMapSetupInfo));
 	}
 
 	// All good
@@ -317,39 +259,41 @@ UError CFileReader::close() const
 // MARK: - CFileMemoryMapInternals
 
 class CFileMemoryMapInternals {
-	public:
-									CFileMemoryMapInternals(SFileMemoryMapSetupInfo& fileMemoryMapSetupInfo) :
-										mFileReaderInternals(fileMemoryMapSetupInfo.mFileReaderInternals),
-												mReferenceCount(1), mBytePtr(fileMemoryMapSetupInfo.mBytePtr),
-												mByteCount(fileMemoryMapSetupInfo.mByteCount)
-										{}
-									~CFileMemoryMapInternals()
-										{
-											// Check if need to cleanup
-											if (mBytePtr != nil)
-												// Clean up
-												::munmap(mBytePtr, (size_t) mByteCount);
+public:
+								CFileMemoryMapInternals(SFileMemoryMapSetupInfo& fileMemoryMapSetupInfo) :
+									mFileReaderInternals(fileMemoryMapSetupInfo.mFileReaderInternals),
+											mReferenceCount(1), mBytePtr(fileMemoryMapSetupInfo.mBytePtr),
+											mByteCount(fileMemoryMapSetupInfo.mByteCount)
+									{}
+								~CFileMemoryMapInternals()
+									{
+										// Check if need to cleanup
+										if (mBytePtr != nil)
+											// Clean up
+											UnmapViewOfFile(mBytePtr);
 
-											// Remove reference from file reader
-											mFileReaderInternals->removeReference();
+										// Remove reference from file reader
+										mFileReaderInternals->removeReference();
+									}
+
+	CFileMemoryMapInternals*	addReference()
+									{
+										mReferenceCount++; return this;
+									}
+	void						removeReference()
+									{
+										// Decrement reference count and check if we are the last one
+										if (--mReferenceCount == 0) {
+											// We going away
+											CFileMemoryMapInternals* THIS = this;
+											Delete(THIS);
 										}
+									}
 
-		CFileMemoryMapInternals*	addReference()
-										{ mReferenceCount++; return this; }
-		void						removeReference()
-										{
-											// Decrement reference count and check if we are the last one
-											if (--mReferenceCount == 0) {
-												// We going away
-												CFileMemoryMapInternals*	THIS = this;
-												Delete(THIS);
-											}
-										}
-
-		CFileReaderInternals*	mFileReaderInternals;
-		UInt32					mReferenceCount;
-		void*					mBytePtr;
-		UInt64					mByteCount;
+	CFileReaderInternals*	mFileReaderInternals;
+	UInt32					mReferenceCount;
+	void*					mBytePtr;
+	UInt64					mByteCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

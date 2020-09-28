@@ -7,8 +7,6 @@
 #include "COpenGLRenderState.h"
 #include "COpenGLTexture.h"
 
-#include <OpenGL/gl3.h>
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPUInternals
 
@@ -18,8 +16,8 @@ class CGPUInternals {
 
 	SGPUProcsInfo	mProcsInfo;
 
-	SMatrix4x4_32	mProjectionMatrix;
-	SMatrix4x4_32	mViewMatrix;
+	SMatrix4x4_32	mProjectionMatrix2D;
+	SMatrix4x4_32	mProjectionMatrix3D;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -43,20 +41,6 @@ CGPU::~CGPU()
 }
 
 // MARK: CGPU methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CGPU::setViewMatrix(const SMatrix4x4_32& viewMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mViewMatrix = viewMatrix;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const SMatrix4x4_32& CGPU::getViewMatrix() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mViewMatrix;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
@@ -108,15 +92,15 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderStart() const
+void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S3DPoint32& target) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get info
-	S2DSizeU16	size = mInternals->mProcsInfo.getSize();
+	S2DSizeU16	viewSize = mInternals->mProcsInfo.getSize();
 	Float32		scale = mInternals->mProcsInfo.getScale();
 
 	// Update
-	mInternals->mProjectionMatrix =
+	mInternals->mProjectionMatrix2D =
 			SMatrix4x4_32(
 					2.0 / size.mWidth, 0.0, 0.0, 0.0,
 					0.0, 2.0 / -size.mHeight, 0.0, 0.0,
@@ -128,7 +112,7 @@ void CGPU::renderStart() const
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glViewport(0, 0, size.mWidth * (GLsizei) scale, size.mHeight * (GLsizei) scale);
+	glViewport(0, 0, viewSize.mWidth * (GLsizei) scale, viewSize.mHeight * (GLsizei) scale);
 #if defined(DEBUG)
 	glClearColor(0.5, 0.0, 0.25, 1.0);
 #else
@@ -138,19 +122,21 @@ void CGPU::renderStart() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderTriangleStrip(CGPURenderState& renderState, const SMatrix4x4_32& modelMatrix, UInt32 triangleCount)
+void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup render state
-	renderState.setProjectionMatrix(mInternals->mProjectionMatrix);
-	renderState.setViewMatrix(mInternals->mViewMatrix);
-	renderState.setModelMatrix(modelMatrix);
-
 	// Commit
-	renderState.commit(SGPURenderStateCommitInfo());
+	renderState.commit(SGPURenderStateCommitInfo(mInternals->mProjectionMatrix2D));
 
 	// Draw
-	glDrawArrays(GL_TRIANGLE_STRIP, renderState.getTriangleOffset(), triangleCount + 2);
+	glDrawArrays(GL_TRIANGLE_STRIP, offset, count);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented()
 }
 
 //----------------------------------------------------------------------------------------------------------------------

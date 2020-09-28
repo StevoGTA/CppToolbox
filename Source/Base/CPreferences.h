@@ -22,12 +22,12 @@ struct SPref {
 struct SStringPref : public SPref {
 	// Lifecycle methods
 	SStringPref() : SPref(nil), mDefaultValue(OSSTR("")) {}
-	SStringPref(const char* keyString, OSString defaultValue = OSSTR("")) :
+	SStringPref(const char* keyString, OSStringVar(defaultValue) = OSSTR("")) :
 		SPref(keyString), mDefaultValue(defaultValue)
 		{}
 
 	// Properties
-	OSString	mDefaultValue;	// OSSTR("value")
+	CString	mDefaultValue;
 };
 
 struct SFloat32Pref : public SPref {

@@ -48,5 +48,8 @@ struct SOpenGLVertexBufferInfo {
 
 struct SGPURenderStateCommitInfo {
 	// Lifecycle methods
-	SGPURenderStateCommitInfo() {}
+	SGPURenderStateCommitInfo(const SMatrix4x4_32& projectionMatrix) : mProjectionMatrix(projectionMatrix) {}
+
+	// Properties
+	const	SMatrix4x4_32&	mProjectionMatrix;
 };

@@ -9,7 +9,15 @@
 #include "SGPUBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPU
+// MARK: - EGPURenderType
+
+enum EGPURenderType {
+	kGPURenderTypeTriangleList,
+	kGPURenderTypeTriangleStrip
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CGPU
 
 struct SGPUProcsInfo;
 class CGPUInternals;
@@ -21,9 +29,6 @@ class CGPU {
 										~CGPU();
 
 										// Instance methods
-				void					setViewMatrix(const SMatrix4x4_32& viewMatrix);
-		const	SMatrix4x4_32&			getViewMatrix() const;
-
 				SGPUTextureReference	registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
 												const S2DSizeU16& size);
 				void					unregisterTexture(SGPUTextureReference& gpuTexture);
@@ -32,9 +37,12 @@ class CGPU {
 												const CData& data);
 				void					disposeBuffer(const SGPUBuffer& buffer);
 
-				void					renderStart() const;
-				void					renderTriangleStrip(CGPURenderState& renderState,
-												const SMatrix4x4_32& modelMatrix, UInt32 triangleCount);
+				void					renderStart(const S2DSizeF32& size, const S3DPoint32& camera = S3DPoint32(),
+												const S3DPoint32& target = S3DPoint32()) const;
+				void					render(CGPURenderState& renderState, EGPURenderType type, UInt32 count,
+												UInt32 offset);
+				void					renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count,
+												UInt32 offset);
 				void					renderEnd() const;
 
 	// Properties

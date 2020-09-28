@@ -24,5 +24,5 @@ class CCoreServices {
 #endif
 
 											// Debugger methods
-		static			void				stopInDebugger();
+		static			void				stopInDebugger(SInt32 code = 0, OSStringVar(message) = OSSTR(""));
 };
