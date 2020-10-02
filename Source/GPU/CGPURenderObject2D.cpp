@@ -239,7 +239,7 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 {
 	// Setup
 	const	S2DOffsetF32&	offset = renderInfo.mOffset;
-			SMatrix4x4_32	viewMatrix =
+			SMatrix4x4_32	modelMatrix =
 									SMatrix4x4_32()
 											.translate(
 													S3DOffset32(
@@ -284,8 +284,7 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 
 			// Setup and render
 			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
-			renderState.setModelMatrix(SMatrix4x4_32());
-			renderState.setViewMatrix(viewMatrix);
+			renderState.setModelMatrix(modelMatrix);
 			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
 				indexRange.mStart * 6 + 1);
 		}
@@ -300,8 +299,7 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 
 			// Setup and render
 			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
-			renderState.setModelMatrix(SMatrix4x4_32());
-			renderState.setViewMatrix(viewMatrix);
+			renderState.setModelMatrix(modelMatrix);
 			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
 					indexRange.mStart * 6 + 1);
 		}
@@ -317,8 +315,7 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 
 			// Setup and render
 			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
-			renderState.setModelMatrix(SMatrix4x4_32());
-			renderState.setViewMatrix(viewMatrix);
+			renderState.setModelMatrix(modelMatrix);
 			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
 					indexRange.mStart * 6 + 1);
 		}

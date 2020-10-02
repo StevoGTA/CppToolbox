@@ -15,17 +15,18 @@
 
 class CGPURenderStateInternals {
 	public:
-		CGPURenderStateInternals(CGPUVertexShader& vertexShader, CGPUFragmentShader& pixelShader) :
-			mVertexShader(vertexShader), mPixelShader(pixelShader), mTriangleOffset(0)
+		CGPURenderStateInternals(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+				CGPUFragmentShader& pixelShader) :
+			mRenderMode(renderMode), mVertexShader(vertexShader), mPixelShader(pixelShader)
 			{}
 
+		EGPURenderMode						mRenderMode;
 		CGPUVertexShader&					mVertexShader;
 		CGPUFragmentShader&					mPixelShader;
 
 		SMatrix4x4_32						mModelMatrix;
 
 		OR<const SGPUVertexBuffer>			mVertexBuffer;
-		UInt32								mTriangleOffset;
 		OR<const TArray<const CGPUTexture>>	mTextures;
 };
 
@@ -36,11 +37,12 @@ class CGPURenderStateInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderState::CGPURenderState(CGPUVertexShader& vertexShader, CGPUFragmentShader& pixelShader)
+CGPURenderState::CGPURenderState(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+		CGPUFragmentShader& pixelShader)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CGPURenderStateInternals(vertexShader, pixelShader);
+	mInternals = new CGPURenderStateInternals(renderMode, vertexShader, pixelShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,21 +63,20 @@ void CGPURenderState::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer, UInt32 triangleOffset,
+void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
 		const TArray<const CGPUTexture>& gpuTextures)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mVertexBuffer = OR<const SGPUVertexBuffer>(gpuVertexBuffer);
-	mInternals->mTriangleOffset = triangleOffset;
 	mInternals->mTextures = OR<const TArray<const CGPUTexture>>(gpuTextures);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CGPURenderState::getTriangleOffset() const
+EGPURenderMode CGPURenderState::getRenderMode() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mTriangleOffset;
+	return mInternals->mRenderMode;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -100,6 +101,16 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 		renderStateCommitInfo.mD3DDeviceContext.PSSetShaderResources(0, 1, &shaderResourceView);
 		needBlend |= texture.hasTransparency();
 	}
+
+	// Check if need blend
+	float	blendFactor[] = {0.0, 0.0, 0.0, 0.0};
+	if (needBlend)
+		// Setup blend state
+		renderStateCommitInfo.mD3DDeviceContext.OMSetBlendState(&renderStateCommitInfo.mD3DBlendState, blendFactor,
+				0xFFFFFFFF);
+	else
+		// No blend
+		renderStateCommitInfo.mD3DDeviceContext.OMSetBlendState(NULL, blendFactor, 0xFFFFFFFF);
 
 	// Setup shaders
 	((CDirectXVertexShader&) mInternals->mVertexShader).setModelMatrix(mInternals->mModelMatrix);
