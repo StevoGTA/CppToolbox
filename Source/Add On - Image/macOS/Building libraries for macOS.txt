@@ -2,6 +2,14 @@ Building libraries for macOS
 
 libjpeg-turbo
 -------------
+Must have brew installed:
+	https://brew.sh
+	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
+Must have cmake installed:
+	A) brew install cmake
+	B) Install CMake application and setup $PATH to point to internal tools (See CMake UI).
+
 -Create a workspace folder.
 -Download and unzip the latest libjpeg-turbo from https://sourceforge.net/projects/libjpeg-turbo/files/.
 -Create a macOS folder.
