@@ -27,6 +27,7 @@ class CGPURenderStateInternals {
 		SMatrix4x4_32						mModelMatrix;
 
 		OR<const SGPUVertexBuffer>			mVertexBuffer;
+		OR<const SGPUBuffer>				mIndexBuffer;
 		OR<const TArray<const CGPUTexture>>	mTextures;
 };
 
@@ -63,12 +64,23 @@ void CGPURenderState::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
-		const TArray<const CGPUTexture>& gpuTextures)
+void CGPURenderState::setVertexBuffer(const SGPUVertexBuffer& gpuVertexBuffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Store
 	mInternals->mVertexBuffer = OR<const SGPUVertexBuffer>(gpuVertexBuffer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPURenderState::setIndexBuffer(const SGPUBuffer& gpuIndexBuffer)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mIndexBuffer = OR<const SGPUBuffer>(gpuIndexBuffer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPURenderState::setTextures(const TArray<const CGPUTexture>& gpuTextures)
+//----------------------------------------------------------------------------------------------------------------------
+{
 	mInternals->mTextures = OR<const TArray<const CGPUTexture>>(gpuTextures);
 }
 
@@ -84,33 +96,45 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup buffers
-	ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mVertexBuffer->mInternalReference;
-	UINT			stride = mInternals->mVertexBuffer->mGPUVertexBufferInfo.mTotalSize;
-	UINT			offset = 0;
-	renderStateCommitInfo.mD3DDeviceContext.IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
-
-	// Setup textures
-			bool						needBlend = false;
-	const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();
-	for (CArrayItemIndex i = 0; i < gpuTextures.getCount(); i++) {
-		// Setup
-		const	CDirectXTexture&	texture = (const CDirectXTexture&) gpuTextures[i];
-
-		// Setup this texture
-		ID3D11ShaderResourceView*	shaderResourceView = texture.getShaderResourceView();
-		renderStateCommitInfo.mD3DDeviceContext.PSSetShaderResources(0, 1, &shaderResourceView);
-		needBlend |= texture.hasTransparency();
+	if (mInternals->mVertexBuffer.hasReference()) {
+		// Setup vertex buffer
+		ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mVertexBuffer->mInternalReference;
+		UINT			stride = mInternals->mVertexBuffer->mGPUVertexBufferInfo.mTotalSize;
+		UINT			offset = 0;
+		renderStateCommitInfo.mD3DDeviceContext.IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
 	}
 
-	// Check if need blend
-	float	blendFactor[] = {0.0, 0.0, 0.0, 0.0};
-	if (needBlend)
-		// Setup blend state
-		renderStateCommitInfo.mD3DDeviceContext.OMSetBlendState(&renderStateCommitInfo.mD3DBlendState, blendFactor,
-				0xFFFFFFFF);
-	else
-		// No blend
-		renderStateCommitInfo.mD3DDeviceContext.OMSetBlendState(NULL, blendFactor, 0xFFFFFFFF);
+	if (mInternals->mIndexBuffer.hasReference()) {
+		// Setup index buffer
+		ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mIndexBuffer->mInternalReference;
+		renderStateCommitInfo.mD3DDeviceContext.IASetIndexBuffer(buffer, DXGI_FORMAT_R16_UINT, 0);
+	}
+
+	// Check for textures
+	if (mInternals->mTextures.hasReference()) {
+		// Setup textures
+				bool						needBlend = false;
+		const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();
+		for (CArrayItemIndex i = 0; i < gpuTextures.getCount(); i++) {
+			// Setup
+			const	CDirectXTexture&	texture = (const CDirectXTexture&) gpuTextures[i];
+
+			// Setup this texture
+			ID3D11ShaderResourceView*	shaderResourceView = texture.getShaderResourceView();
+			renderStateCommitInfo.mD3DDeviceContext.PSSetShaderResources(0, 1, &shaderResourceView);
+			needBlend |= texture.hasTransparency();
+		}
+
+		// Check if need blend
+		float	blendFactor[] = {0.0, 0.0, 0.0, 0.0};
+		if (needBlend)
+			// Setup blend state
+			renderStateCommitInfo.mD3DDeviceContext.OMSetBlendState(&renderStateCommitInfo.mD3DBlendState, blendFactor,
+					0xFFFFFFFF);
+		else
+			// No blend
+			renderStateCommitInfo.mD3DDeviceContext.OMSetBlendState(NULL, blendFactor, 0xFFFFFFFF);
+	}
 
 	// Setup shaders
 	((CDirectXVertexShader&) mInternals->mVertexShader).setModelMatrix(mInternals->mModelMatrix);

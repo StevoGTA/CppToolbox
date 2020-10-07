@@ -44,12 +44,12 @@ struct SGPUVertexBuffer : SGPUBuffer {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TGPUVertexType2Vertex2Texture
+// MARK: - TGPUBufferTypeVertex2DTexture2D
 
-template <typename T> struct TGPUVertexType2Vertex2Texture {
+template <typename T> struct TGPUBufferTypeVertex2DTexture2D {
 
 											// Lifecycle methods
-											TGPUVertexType2Vertex2Texture(T2DPoint<T> vertex, T2DPoint<T> texture,
+											TGPUBufferTypeVertex2DTexture2D(T2DPoint<T> vertex, T2DPoint<T> texture,
 													UInt8 textureIndex) :
 												mVertex(vertex), mTexture(texture), mTextureIndex(textureIndex)
 												{}
@@ -78,17 +78,17 @@ template <typename T> struct TGPUVertexType2Vertex2Texture {
 			T			mTextureIndex;
 };
 
-template<typename T>	CUUID	TGPUVertexType2Vertex2Texture<T>::mUUID;
+template<typename T>	CUUID	TGPUBufferTypeVertex2DTexture2D<T>::mUUID;
 
-typedef	TGPUVertexType2Vertex2Texture<Float32>	SGPUVertexType2Vertex2Texture32;
+typedef	TGPUBufferTypeVertex2DTexture2D<Float32>	SGPUBufferTypeVertex2DTexture2D;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TGPUVertexType3Vertex2Texture
+// MARK: - TGPUBufferTypeVertex3DTexture2D
 
-template <typename T> class TGPUVertexType3Vertex2Texture {
+template <typename T> class TGPUBufferTypeVertex3DTexture2D {
 
 											// Lifecycle methods
-											TGPUVertexType3Vertex2Texture(T3DPoint<T> vertex, T2DPoint<T> texture,
+											TGPUBufferTypeVertex3DTexture2D(T3DPoint<T> vertex, T2DPoint<T> texture,
 													UInt8 textureIndex) :
 												mVertex(vertex), mTexture(texture), mTextureIndex(textureIndex)
 												{}
@@ -117,6 +117,6 @@ template <typename T> class TGPUVertexType3Vertex2Texture {
 			T			mTextureIndex;
 };
 
-template<typename T>	CUUID	TGPUVertexType3Vertex2Texture<T>::mUUID;
+template<typename T>	CUUID	TGPUBufferTypeVertex3DTexture2D<T>::mUUID;
 
-typedef	TGPUVertexType3Vertex2Texture<Float32>	SGPUVertexType3Vertex2Texture32;
+typedef	TGPUBufferTypeVertex3DTexture2D<Float32>	SGPUBufferTypeVertex3DTexture2D;

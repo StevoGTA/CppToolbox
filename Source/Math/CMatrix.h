@@ -80,53 +80,56 @@ template <typename T> struct TMatrix4x4 {
 						{}
 
 					// Instance methods
-	TMatrix4x4<T>	rotateOnX(T radians)
+	TMatrix4x4<T>	rotatedOnX(T radians)
 						{
 							// Setup
-							T	cos = cos(radians);
-							T	sin = sin(radians);
+							T	c = (T) cos(radians);
+							T	s = (T) sin(radians);
 
 							return *this *
-									TMatrix4x4<T>(	1.0, 0.0, 0.0, 0.0,
-													0.0, cos, sin, 0.0,
-													0.0, -sin, cos, 0.0,
-													0.0, 0.0, 0.0, 1.0);
+									TMatrix4x4<T>(	1, 0, 0, 0,
+													0, c, s, 0,
+													0, -s, c, 0,
+													0, 0, 0, 1);
 						}
-	TMatrix4x4<T>	rotateOnY(T radians)
+	TMatrix4x4<T>	rotatedOnY(T radians)
 						{
 							// Setup
-							T	cos = cos(radians);
-							T	sin = sin(radians);
+							T	c = (T) cos(radians);
+							T	s = (T) sin(radians);
 
 							return *this *
-									TMatrix4x4<T>(	cos, 0.0, -sin, 0.0,
-													0.0, 0.0, 0.0, 0.0,
-													sin, 0.0, cos, 0.0,
-													0.0, 0.0, 0.0, 1.0);
+									TMatrix4x4<T>(	c, 0, -s, 0,
+													0, 1, 0, 0,
+													s, 0, c, 0,
+													0, 0, 0, 1);
 						}
-	TMatrix4x4<T>	rotateOnZ(T radians)
+	TMatrix4x4<T>	rotatedOnZ(T radians)
 						{
 							// Setup
-							T	cosv = (T) cos(radians);
-							T	sinv = (T) sin(radians);
+							T	c = (T) cos(radians);
+							T	s = (T) sin(radians);
 
 							return *this *
-									TMatrix4x4<T>(	cosv, sinv, 0.0, 0.0,
-													-sinv, cosv, 0.0, 0.0,
-													0.0, 0.0, 0.0, 0.0,
-													0.0, 0.0, 0.0, 1.0);
+									TMatrix4x4<T>(	c, s, 0, 0,
+													-s, c, 0, 0,
+													0, 0, 1, 0,
+													0, 0, 0, 1);
 						}
-	TMatrix4x4<T>	scale(T sX, T sY, T sZ) const
+	TMatrix4x4<T>	scaled(T sX, T sY, T sZ) const
+						{
+							return *this * TMatrix4x4<T>(sX, 0, 0, 0, 0, sY, 0, 0, 0, 0, sZ, 0, 0, 0, 0, 1);
+						}
+	TMatrix4x4<T>	translated(const T3DOffset<T>& offset) const
 						{
 							return *this *
-									TMatrix4x4<T>(sX, 0.0, 0.0, 0.0, 0.0, sY, 0.0, 0.0, 0.0, 0.0, sZ, 0.0, 0.0, 0.0,
-											0.0, 1.0);
+									TMatrix4x4<T>(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, offset.mDX, offset.mDY,
+											offset.mDZ, 1);
 						}
-	TMatrix4x4<T>	translate(const T3DOffset<T>& offset) const
+	TMatrix4x4<T>	transposed() const
 						{
-							return *this *
-									TMatrix4x4<T>(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-											offset.mDX, offset.mDY, offset.mDZ, 1.0);
+							return TMatrix4x4<T>(m1_1, m1_2, m1_3, m1_4, m2_1, m2_2, m2_3, m2_4, m3_1, m3_2, m3_3, m3_4,
+									m4_1, m4_2, m4_3, m4_4);
 						}
 	TMatrix4x4<T>	operator*(const TMatrix4x4<T>& m) const
 						{

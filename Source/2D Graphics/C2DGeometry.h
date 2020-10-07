@@ -137,12 +137,14 @@ template <typename T> struct T2DSize {
 								mHeight = array[2].getFloat32();
 							} else {
 								// Use default values
-								mWidth = 0.0;
-								mHeight = 0.0;
+								mWidth = 0;
+								mHeight = 0;
 							}
 						}
 
 					// Instance methods
+	inline	T		aspectRatio() const
+						{ return (mHeight != 0) ? mWidth / mHeight : 0; }
 	inline	CString	asString() const
 						{
 							return CString(OSSTR("{")) + CString(mWidth, 5, 3) + CString(OSSTR(",")) +

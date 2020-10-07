@@ -16,7 +16,7 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 					TReferenceCountable(),
 							mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
 							mGPUVertexBuffer(
-									mGPU.allocateVertexBuffer(SGPUVertexType2Vertex2Texture32::getGPUVertexBufferInfo(),
+									mGPU.allocateVertexBuffer(SGPUBufferTypeVertex2DTexture2D::getGPUVertexBufferInfo(),
 											vertexData(items))),
 							mAngleRadians(0.0), mAlpha(1.0),
 							mScale(1.0, 1.0)
@@ -31,15 +31,15 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 					{
 						// Setup
 						const	SGPUVertexBufferInfo&	gpuVertexBufferInfo =
-																SGPUVertexType2Vertex2Texture32::
+																SGPUBufferTypeVertex2DTexture2D::
 																		getGPUVertexBufferInfo();
 
 
 						// Setup buffer
 						CData								vertexData(gpuVertexBufferInfo.mTotalSize *
 																	items.getCount() * 6);
-						SGPUVertexType2Vertex2Texture32*	vertexInfoPtr =
-																	(SGPUVertexType2Vertex2Texture32*)
+						SGPUBufferTypeVertex2DTexture2D*	vertexInfoPtr =
+																	(SGPUBufferTypeVertex2DTexture2D*)
 																			vertexData.getMutableBytePtr();
 						for (TIteratorD<SGPURenderObject2DItem> iterator = items.getIterator(); iterator.hasValue();
 								iterator.advance()) {
@@ -60,25 +60,25 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 
 							// Store in buffer
 							*(vertexInfoPtr++) =
-									SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
+									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
 											item.mTextureIndex);
 							*(vertexInfoPtr++) =
-									SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
-											item.mTextureIndex);
-
-							*(vertexInfoPtr++) =
-									SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, maxY), S2DPointF32(maxS, maxT),
+									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
 											item.mTextureIndex);
 
 							*(vertexInfoPtr++) =
-									SGPUVertexType2Vertex2Texture32(S2DPointF32(minX, minY), S2DPointF32(minS, minT),
+									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(maxX, maxY), S2DPointF32(maxS, maxT),
 											item.mTextureIndex);
 
 							*(vertexInfoPtr++) =
-									SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
+									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(minX, minY), S2DPointF32(minS, minT),
+											item.mTextureIndex);
+
+							*(vertexInfoPtr++) =
+									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
 											item.mTextureIndex);
 							*(vertexInfoPtr++) =
-									SGPUVertexType2Vertex2Texture32(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
+									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
 											item.mTextureIndex);
 						}
 
@@ -233,7 +233,7 @@ const TArray<CGPUTextureReference>& CGPURenderObject2D::getGPUTextureReferences(
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& indexes,
+void CGPURenderObject2D::render(const CGPURenderObject2DIndexes& indexes,
 		const SGPURenderObjectRenderInfo& renderInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -241,26 +241,26 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 	const	S2DOffsetF32&	offset = renderInfo.mOffset;
 			SMatrix4x4_32	modelMatrix =
 									SMatrix4x4_32()
-											.translate(
-													S3DOffset32(
+											.translated(
+													S3DOffsetF32(
 															mInternals->mScreenPositionPoint.mX + offset.mDX,
 															mInternals->mScreenPositionPoint.mY + offset.mDY,
 															0.0))
-											.scale(mInternals->mScale.mX, mInternals->mScale.mY, 1.0)
-											.translate(
-													S3DOffset32(
+											.scaled(mInternals->mScale.mX, mInternals->mScale.mY, 1.0)
+											.translated(
+													S3DOffsetF32(
 															-mInternals->mAnchorPoint.mX,
 															-mInternals->mAnchorPoint.mY,
 															0.0))
 
-											.translate(
-													S3DOffset32(
+											.translated(
+													S3DOffsetF32(
 															mInternals->mAnchorPoint.mX,
 															mInternals->mAnchorPoint.mY,
 															0.0))
-											.rotateOnZ(-mInternals->mAngleRadians)
-											.translate(
-													S3DOffset32(
+											.rotatedOnZ(-mInternals->mAngleRadians)
+											.translated(
+													S3DOffsetF32(
 															-mInternals->mAnchorPoint.mX,
 															-mInternals->mAnchorPoint.mY,
 															0.0));
@@ -283,10 +283,11 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
 			renderState.setModelMatrix(modelMatrix);
-			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
-				indexRange.mStart * 6 + 1);
+			renderState.setVertexBuffer(mInternals->mGPUVertexBuffer);
+			renderState.setTextures(gpuTextures);
+			mInternals->mGPU.render(renderState, kGPURenderTypeTriangleStrip,
+					(indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2, indexRange.mStart * 6 + 1);
 		}
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
@@ -298,10 +299,11 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
 			renderState.setModelMatrix(modelMatrix);
-			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
-					indexRange.mStart * 6 + 1);
+			renderState.setVertexBuffer(mInternals->mGPUVertexBuffer);
+			renderState.setTextures(gpuTextures);
+			mInternals->mGPU.render(renderState, kGPURenderTypeTriangleStrip,
+					(indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2, indexRange.mStart * 6 + 1);
 		}
 	} else {
 		// Have alpha
@@ -314,10 +316,11 @@ void CGPURenderObject2D::render(CGPU& gpu, const CGPURenderObject2DIndexes& inde
 			const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
 
 			// Setup and render
-			renderState.setVertexTextureInfo(mInternals->mGPUVertexBuffer, gpuTextures);
 			renderState.setModelMatrix(modelMatrix);
-			gpu.render(renderState, kGPURenderTypeTriangleStrip, (indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2,
-					indexRange.mStart * 6 + 1);
+			renderState.setVertexBuffer(mInternals->mGPUVertexBuffer);
+			renderState.setTextures(gpuTextures);
+			mInternals->mGPU.render(renderState, kGPURenderTypeTriangleStrip,
+					(indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2, indexRange.mStart * 6 + 1);
 		}
 	}
 }

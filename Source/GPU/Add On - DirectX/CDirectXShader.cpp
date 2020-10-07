@@ -87,22 +87,8 @@ void CDirectXVertexShader::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert and store
-	mInternals->mModelMatrix._11 = modelMatrix.m1_1;
-	mInternals->mModelMatrix._12 = modelMatrix.m1_2;
-	mInternals->mModelMatrix._13 = modelMatrix.m1_3;
-	mInternals->mModelMatrix._14 = modelMatrix.m1_4;
-	mInternals->mModelMatrix._21 = modelMatrix.m2_1;
-	mInternals->mModelMatrix._22 = modelMatrix.m2_2;
-	mInternals->mModelMatrix._23 = modelMatrix.m2_3;
-	mInternals->mModelMatrix._24 = modelMatrix.m2_4;
-	mInternals->mModelMatrix._31 = modelMatrix.m3_1;
-	mInternals->mModelMatrix._32 = modelMatrix.m3_2;
-	mInternals->mModelMatrix._33 = modelMatrix.m3_3;
-	mInternals->mModelMatrix._34 = modelMatrix.m3_4;
-	mInternals->mModelMatrix._41 = modelMatrix.m4_1;
-	mInternals->mModelMatrix._42 = modelMatrix.m4_2;
-	mInternals->mModelMatrix._43 = modelMatrix.m4_3;
-	mInternals->mModelMatrix._44 = modelMatrix.m4_4;
+	SMatrix4x4_32	transposedModelMatrix = modelMatrix.transposed();
+	::memcpy(&mInternals->mModelMatrix, &transposedModelMatrix, sizeof(SMatrix4x4_32));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

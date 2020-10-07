@@ -33,8 +33,9 @@ class CGPURenderState {
 
 						// Instance methods
 		void			setModelMatrix(const SMatrix4x4_32& modelMatrix);
-		void			setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
-								const TArray<const CGPUTexture>& gpuTextures);
+		void			setVertexBuffer(const SGPUVertexBuffer& gpuVertexBuffer);
+		void			setIndexBuffer(const SGPUBuffer& gpuIndexBuffer);
+		void			setTextures(const TArray<const CGPUTexture>& gpuTextures);
 
 		EGPURenderMode	getRenderMode() const;
 		void			commit(const SGPURenderStateCommitInfo& renderStateCommitInfo);

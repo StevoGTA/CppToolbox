@@ -14,16 +14,16 @@
 struct SGPURenderObject2DItem {
 	// Methods
 	SGPURenderObject2DItem(const S2DRectF32& screenRect, UInt8 textureIndex, const S2DRectF32& textureRect) :
-		mScreenRect(screenRect), mTextureIndex(textureIndex), mTextureRect(textureRect)
+		mScreenRect(screenRect), mTextureRect(textureRect), mTextureIndex(textureIndex)
 		{}
 	SGPURenderObject2DItem(const SGPURenderObject2DItem& other) :
-		mScreenRect(other.mScreenRect), mTextureIndex(other.mTextureIndex), mTextureRect(other.mTextureRect)
+		mScreenRect(other.mScreenRect), mTextureRect(other.mTextureRect), mTextureIndex(other.mTextureIndex)
 		{}
 
 	// Properties
 	S2DRectF32	mScreenRect;
-	UInt8		mTextureIndex;
 	S2DRectF32	mTextureRect;
+	UInt8		mTextureIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -66,8 +66,9 @@ class CGPURenderObject2D : public CGPURenderObject {
 
 				void		finishLoading() const;
 
-				void		render(CGPU& gpu, const CGPURenderObject2DIndexes& indexes,
-									const SGPURenderObjectRenderInfo& renderInfo = SGPURenderObjectRenderInfo()) const;
+				void		render(const CGPURenderObject2DIndexes& indexes,
+									const SGPURenderObjectRenderInfo& renderInfo = SGPURenderObjectRenderInfo())
+									const;
 
 							// Deprecated methods
 		const	TArray<CGPUTextureReference>&	getGPUTextureReferences() const;

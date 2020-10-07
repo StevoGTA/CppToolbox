@@ -73,7 +73,7 @@ template <typename T> struct T3DPoint {
 	static	T3DPoint<T>	mZero;
 };
 
-typedef	T3DPoint<Float32>	S3DPoint32;
+typedef	T3DPoint<Float32>	S3DPointF32;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T3DOffset
@@ -97,7 +97,7 @@ template <typename T> struct T3DOffset {
 	T	mDZ;
 };
 
-typedef	T3DOffset<Float32>	S3DOffset32;
+typedef	T3DOffset<Float32>	S3DOffsetF32;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T3DVector
@@ -145,4 +145,4 @@ template <typename T> struct T3DVector {
 	T	mDZ;
 };
 
-typedef	T3DVector<Float32>	S3DVector32;
+typedef	T3DVector<Float32>	S3DVectorF32;
