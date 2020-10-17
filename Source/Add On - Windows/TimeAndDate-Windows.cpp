@@ -81,8 +81,11 @@ UniversalTime SGregorianDate::getUniversalTime() const
 	theTM.tm_hour = mHour;
 	theTM.tm_min = mMinute;
 	theTM.tm_sec = (int) mSecond;
+	theTM.tm_yday = 0;
+	theTM.tm_wday = 0;
+	theTM.tm_isdst = -1;
 
 	__time64_t	time64 = _mktime64(&theTM);
 
-	return (UniversalTime) time64 + ::fmod(mSecond, 1) + kUniversalTimeInterval1970To2001;
+	return (UniversalTime) time64 + ::fmod(mSecond, 1) - kUniversalTimeInterval1970To2001;
 }
