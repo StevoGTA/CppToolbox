@@ -320,7 +320,7 @@ CString::~CString()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const OSStringType CString::getOSString() const
+OSStringType CString::getOSString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mStringRef;

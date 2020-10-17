@@ -295,7 +295,7 @@ class CColorRegistryInternals {
 									info.set(sCurrentColorSetKey, mCurrentColorSet->getInfo());
 
 								// Write
-								CPreferences::set(*mPref, info);
+								CPreferences::mDefault.set(*mPref, info);
 							}
 						}
 
@@ -346,7 +346,7 @@ CColorRegistry::CColorRegistry(const SPref& pref)
 	mInternals = new CColorRegistryInternals(OO<SPref>(pref));
 
 	// Load from prefs
-	CDictionary	info = CPreferences::getDictionary(pref);
+	CDictionary	info = CPreferences::mDefault.getDictionary(pref);
 
 	// Color sets
 	TArray<CDictionary>	colorSetInfos = info.getArrayOfDictionaries(sColorSetInfosKey);

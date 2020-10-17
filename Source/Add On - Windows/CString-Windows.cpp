@@ -144,6 +144,7 @@ CString::CString(SInt64 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 CString::CString(UInt8 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	mString.resize(100);
 
 	// Check field size
@@ -169,13 +170,33 @@ CString::CString(UInt8 value, UInt32 fieldSize, bool padWithZeros, bool makeHex)
 CString::CString(UInt16 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Setup
+	mString.resize(100);
+
+	// Check field size
+	int	count;
+	if (fieldSize == 0)
+		count = _stprintf_s(&mString[0], 100, _TEXT("%u"), value);
+	else {
+		// Setup
+		TCHAR*	format;
+		if (makeHex)
+			format = padWithZeros ? _TEXT("%#.*x") : _TEXT("%#*x");
+		else
+			format = padWithZeros ? _TEXT("%.*u") : _TEXT("%*u");
+
+		count = _stprintf_s(&mString[0], 100, format, fieldSize, value);
+	}
+
+	// Update
+	mString.resize(count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(UInt32 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	mString.resize(100);
 
 	// Check field size
@@ -268,13 +289,12 @@ CString::CString(const CData& data, EStringEncoding encoding)
 //----------------------------------------------------------------------------------------------------------------------
 CString::~CString()
 //----------------------------------------------------------------------------------------------------------------------
-{
-}
+{}
 
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const OSStringType CString::getOSString() const
+OSStringType CString::getOSString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mString.c_str();

@@ -74,8 +74,8 @@ void CDirectXVertexShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& 
 		result = d3dDevice.CreateVertexShader(data.getBytePtr(), data.getSize(), NULL, &mInternals->mShader);
 		AssertFailIf(FAILED(result));
 
-		// Setup input layout
-		setupInputLayout(d3dDevice, data);
+		// Create resources
+		createResources(d3dDevice, data);
 	}
 
 	// Make current
@@ -143,7 +143,7 @@ CDirectXPixelShader::~CDirectXPixelShader()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDirectXPixelShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext& d3dDeviceContext)
+void CDirectXPixelShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d3dDeviceContext)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Finish setup if needed
@@ -156,6 +156,9 @@ void CDirectXPixelShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext& d3
 		// Create Pixel Shader
 		HRESULT	result = d3dDevice.CreatePixelShader(data.getBytePtr(), data.getSize(), NULL, &mInternals->mShader);
 		AssertFailIf(FAILED(result));
+
+		// Create resources
+		createResources(d3dDevice, data);
 
 		// Setup Sampler State
 		D3D11_SAMPLER_DESC	samplerDesc;

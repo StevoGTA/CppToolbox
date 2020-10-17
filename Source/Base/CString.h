@@ -14,7 +14,7 @@
 	#define OSStringVar(s)	CFStringRef s
 	#define	OSSTR(s)		CFSTR(s)
 #elif TARGET_OS_WINDOWS
-	#define OSStringType	TCHAR*
+	#define OSStringType	const TCHAR*
 	#define OSStringVar(s)	TCHAR s[]
 	#define OSSTR(s)		_TEXT(s)
 #endif
@@ -253,7 +253,7 @@ class CString : public CHashable {
 											{ getCString().hashInto(hasher); }
 
 										// Instance methods
-				const	OSStringType	getOSString() const;
+						OSStringType	getOSString() const;
 				const	SCString		getCString(EStringEncoding encoding = kStringEncodingTextDefault) const;
 						CStringLength	getLength() const;
 						CStringLength	getLength(EStringEncoding encoding, SInt8 lossCharacter = '\0',
@@ -368,7 +368,7 @@ class CString : public CHashable {
 		
 	private:
 #if TARGET_OS_MACOS || TARGET_OS_IOS
-						CFStringRef	mStringRef;
+						CFStringRef					mStringRef;
 #elif TARGET_OS_WINDOWS
 						std::basic_string<TCHAR>	mString;
 #endif

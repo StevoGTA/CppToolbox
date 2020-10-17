@@ -33,7 +33,7 @@ class CDirectXVertexShader : public CGPUVertexShader {
 				const	XMFLOAT4X4&	getModelMatrix() const;
 
 									// Subclass methods
-		virtual			void		setupInputLayout(ID3D11Device& d3dDevice, const CData& shaderData) = 0;
+		virtual			void		createResources(ID3D11Device& d3dDevice, const CData& shaderData) = 0;
 
 	// Properties
 	private:
@@ -52,7 +52,11 @@ class CDirectXPixelShader : public CGPUFragmentShader {
 						~CDirectXPixelShader();
 
 						// Instance methods
-		virtual	void	setup(ID3D11Device& d3dDevice, ID3D11DeviceContext& d3dDeviceContext);
+		virtual	void	setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d3dDeviceContext);
+
+						// Subclass methods
+		virtual	void	createResources(ID3D11Device& d3dDevice, const CData& shaderData)
+							{}
 
 	// Properties
 	private:

@@ -19,6 +19,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // Defines
 #define TARGET_OS_WINDOWS 1
+#define TARGET_RT_LITTLE_ENDIAN 1
 
 #define	nil	NULL
 

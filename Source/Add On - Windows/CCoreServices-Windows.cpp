@@ -4,11 +4,14 @@
 
 #include "CCoreServices.h"
 
+#include "CPlatform.h"
+
 #undef Delete
 #include <Windows.h>
 #define Delete(x)		{ delete x; x = nil; }
 
 using namespace Platform;
+using namespace Windows::ApplicationModel;
 
  //----------------------------------------------------------------------------------------------------------------------
  // MARK: Local proc declarations
@@ -27,7 +30,14 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 
 	if (sVersionInfo == nil) {
 		// Get info
-		AssertFailUnimplemented();
+		Package^		package = Package::Current;
+		PackageId^		packageId = package->Id;
+		String^			displayName = package->DisplayName;
+		PackageVersion	packageVersion = packageId->Version;
+
+		sVersionInfo =
+				new SSystemVersionInfo(CPlatform::stringFrom(displayName), packageVersion.Major, packageVersion.Minor,
+						packageVersion.Revision, packageVersion.Build);
 	}
 
 	return *sVersionInfo;
