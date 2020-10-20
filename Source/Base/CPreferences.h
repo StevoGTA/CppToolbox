@@ -82,7 +82,7 @@ struct SPreferencesReference {
 	SPreferencesReference(const SPreferencesReference& other) : mApplicationID(other.mApplicationID) {}
 
 	// Properties
-	const	CString&	mApplicationID;
+	CString	mApplicationID;
 };
 #else
 struct SPreferencesReference {
@@ -100,6 +100,7 @@ class CPreferences {
 	// Methods
 	public:
 								// Lifecycle methods
+								CPreferences();
 								CPreferences(const SPreferencesReference& preferencesReference);
 								~CPreferences();
 
