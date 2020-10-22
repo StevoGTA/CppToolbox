@@ -64,10 +64,10 @@ class CGPUInternals {
 									// Initialize Direct2D resources.
 									D2D1_FACTORY_OPTIONS options;
 									::memset(&options, 0, sizeof(D2D1_FACTORY_OPTIONS));
-	#if defined(_DEBUG)
+#if defined(DEBUG)
 									// If the project is in a debug build, enable Direct2D debugging via SDK Layers.
 									options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
-	#endif
+#endif
 
 									// Initialize the Direct2D Factory.
 									result =
@@ -111,7 +111,7 @@ class CGPUInternals {
 									// than the API default. It is required for compatibility with Direct2D.
 									UINT	creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 
-	#if defined(_DEBUG)
+#if defined(DEBUG)
 									result =
 											D3D11CreateDevice(NULL, D3D_DRIVER_TYPE_NULL, 0, D3D11_CREATE_DEVICE_DEBUG,
 													NULL, 0, D3D11_SDK_VERSION, NULL, NULL, NULL);
@@ -119,7 +119,7 @@ class CGPUInternals {
 										// If the project is in a debug build, enable debugging via SDK Layers with this
 										//	flag.
 										creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
-	#endif
+#endif
 
 									// This array defines the set of DirectX hardware feature levels this app will
 									//	support.
@@ -619,10 +619,10 @@ class CGPUInternals {
 		Float32											mRenderDPI;
 
 		// Matrices
-		XMFLOAT4X4										mProjectionMatrix2D;
 		XMFLOAT4X4										mViewMatrix2D;
-		XMFLOAT4X4										mProjectionMatrix3D;
+		XMFLOAT4X4										mProjectionMatrix2D;
 		XMFLOAT4X4										mViewMatrix3D;
+		XMFLOAT4X4										mProjectionMatrix3D;
 
 		// Blend state
 		ID3D11BlendState*								mD3DBlendState;
@@ -801,6 +801,12 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 					0.0, 0.0, 0.0, 1.0);
 	XMStoreFloat4x4(&mInternals->mViewMatrix2D, DirectX::XMMatrixIdentity());
 
+	XMVECTORF32	cameraVector = {camera3D.mX, camera3D.mY, camera3D.mZ, 0.0f};
+	XMVECTORF32	targetVector = {target3D.mX, target3D.mY, target3D.mZ, 0.0f};
+	XMVECTORF32	upVector = {up3D.mX, up3D.mY, up3D.mZ, 0.0f};
+	XMStoreFloat4x4(&mInternals->mViewMatrix3D,
+			XMMatrixTranspose(XMMatrixLookAtRH(cameraVector, targetVector, upVector)));
+
 	// Note that the OrientationTransform3D matrix is post-multiplied here
 	// in order to correctly orient the scene to match the display orientation.
 	// This post-multiplication step is required for any draw calls that are
@@ -809,12 +815,6 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 	XMMATRIX	perspectiveMatrix = XMMatrixPerspectiveFovRH(fieldOfViewAngle3D, aspectRatio3D, nearZ3D, farZ3D);
 	XMMATRIX	orientationMatrix = XMLoadFloat4x4(&mInternals->mOrientationTransform3D);
 	XMStoreFloat4x4(&mInternals->mProjectionMatrix3D, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
-
-	XMVECTORF32	cameraVector = {camera3D.mX, camera3D.mY, camera3D.mZ, 0.0f};
-	XMVECTORF32	targetVector = {target3D.mX, target3D.mY, target3D.mZ, 0.0f};
-	XMVECTORF32	upVector = {up3D.mX, up3D.mY, up3D.mZ, 0.0f};
-	XMStoreFloat4x4(&mInternals->mViewMatrix3D,
-			XMMatrixTranspose(XMMatrixLookAtRH(cameraVector, targetVector, upVector)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
