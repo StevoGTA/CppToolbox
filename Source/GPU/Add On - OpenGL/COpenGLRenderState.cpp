@@ -23,7 +23,6 @@ class CGPURenderStateInternals {
 		COpenGLVertexShader&					mVertexShader;
 		COpenGLFragmentShader&					mFragmentShader;
 
-		SMatrix4x4_32							mViewMatrix;
 		SMatrix4x4_32							mModelMatrix;
 
 		OR<const SGPUVertexBuffer>				mVertexBuffer;
@@ -69,27 +68,41 @@ CGPURenderState::~CGPURenderState()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setViewMatrix(const SMatrix4x4_32& viewMatrix)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mViewMatrix = viewMatrix;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CGPURenderState::setModelMatrix(const SMatrix4x4_32& modelMatrix)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Store
 	mInternals->mModelMatrix = modelMatrix;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setVertexTextureInfo(const SGPUVertexBuffer& gpuVertexBuffer,
-		const TArray<const CGPUTexture>& gpuTextures)
+void CGPURenderState::setVertexBuffer(const SGPUVertexBuffer& gpuVertexBuffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mVertexBuffer = OR<const SGPUVertexBuffer>(gpuVertexBuffer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPURenderState::setIndexBuffer(const SGPUBuffer& gpuIndexBuffer)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPURenderState::setTextures(const TArray<const CGPUTexture>& gpuTextures)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
 	mInternals->mTextures = OR<const TArray<const CGPUTexture> >(gpuTextures);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+EGPURenderMode CGPURenderState::getRenderMode() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mRenderMode;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -140,6 +153,6 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 		sPrograms.set(programKey, COpenGLProgram(mInternals->mVertexShader, mInternals->mFragmentShader));
 
 	// Create internals
-	sPrograms[programKey]->prepare(renderStateCommitInfo.mProjectionMatrix, mInternals->mViewMatrix,
+	sPrograms[programKey]->prepare(renderStateCommitInfo.mProjectionMatrix, renderStateCommitInfo.mViewMatrix,
 			mInternals->mModelMatrix, gpuVertexBuffer);
 }

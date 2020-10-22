@@ -16,7 +16,10 @@ class CGPUInternals {
 
 	SGPUProcsInfo	mProcsInfo;
 
+	SMatrix4x4_32	mViewMatrix2D;
 	SMatrix4x4_32	mProjectionMatrix2D;
+
+	SMatrix4x4_32	mViewMatrix3D;
 	SMatrix4x4_32	mProjectionMatrix3D;
 };
 
@@ -70,6 +73,13 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -92,7 +102,8 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S3DPoint32& target) const
+void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Float32 aspectRatio3D, Float32 nearZ3D,
+		Float32 farZ3D, const S3DPointF32& camera3D, const S3DPointF32& target3D, const S3DPointF32& up3D) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get info
@@ -102,8 +113,8 @@ void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S
 	// Update
 	mInternals->mProjectionMatrix2D =
 			SMatrix4x4_32(
-					2.0 / size.mWidth, 0.0, 0.0, 0.0,
-					0.0, 2.0 / -size.mHeight, 0.0, 0.0,
+					2.0 / size2D.mWidth, 0.0, 0.0, 0.0,
+					0.0, 2.0 / -size2D.mHeight, 0.0, 0.0,
 					0.0, 0.0, -1.0, 0.0,
 					-1.0, 1.0, 0.0, 1.0);
 
@@ -125,18 +136,62 @@ void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S
 void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Commit
-	renderState.commit(SGPURenderStateCommitInfo(mInternals->mProjectionMatrix2D));
+	// Finalize render state
+	switch (renderState.getRenderMode()) {
+		case kGPURenderMode2D:
+			// 2D
+			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
+			break;
 
-	// Draw
-	glDrawArrays(GL_TRIANGLE_STRIP, offset, count);
+		case kGPURenderMode3D:
+			// 3D
+			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
+			break;
+	}
+
+	// Check type
+	switch (type) {
+		case kGPURenderTypeTriangleList:
+			// Triangle list
+			AssertFailUnimplemented();
+			break;
+
+		case kGPURenderTypeTriangleStrip:
+			// Triangle strip
+			glDrawArrays(GL_TRIANGLE_STRIP, offset, count);
+			break;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented()
+	// Finalize render state
+	switch (renderState.getRenderMode()) {
+		case kGPURenderMode2D:
+			// 2D
+			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
+			break;
+
+		case kGPURenderMode3D:
+			// 3D
+			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
+			break;
+	}
+
+	// Check type
+	switch (type) {
+		case kGPURenderTypeTriangleList:
+			// Triangle list
+			AssertFailUnimplemented();
+			break;
+
+		case kGPURenderTypeTriangleStrip:
+			// Triangle strip
+			AssertFailUnimplemented();
+			break;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

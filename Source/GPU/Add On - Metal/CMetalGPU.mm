@@ -60,7 +60,11 @@ class CGPUInternals {
 
 	id<MTLCommandBuffer>										mCurrentCommandBuffer;
 	id<MTLRenderCommandEncoder>									mCurrentRenderCommandEncoder;
+
+	SMatrix4x4_32												mViewMatrix2D;
 	SMatrix4x4_32												mProjectionMatrix2D;
+	
+	SMatrix4x4_32												mViewMatrix3D;
 	SMatrix4x4_32												mProjectionMatrix3D;
 };
 
@@ -107,6 +111,13 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 
 	// Cleanup
 	Delete(metalTexture);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -169,7 +180,8 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S3DPoint32& target) const
+void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Float32 aspectRatio3D, Float32 nearZ3D,
+		Float32 farZ3D, const S3DPointF32& camera3D, const S3DPointF32& target3D, const S3DPointF32& up3D) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup current command buffer
@@ -187,8 +199,8 @@ void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S
 	// Setup uniforms
 	mInternals->mProjectionMatrix2D =
 			SMatrix4x4_32(
-							2.0 / size.mWidth, 0.0, 0.0, 0.0,
-							0.0, 2.0 / -size.mHeight, 0.0, 0.0,
+							2.0 / size2D.mWidth, 0.0, 0.0, 0.0,
+							0.0, 2.0 / -size2D.mHeight, 0.0, 0.0,
 							0.0, 0.0, -0.5, 0.0,
 							-1.0, 1.0, 0.5, 1.0);
 
@@ -201,33 +213,92 @@ void CGPU::renderStart(const S2DSizeF32& size, const S3DPoint32& camera, const S
 void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Preflight
-	AssertFailIf(type == kGPURenderTypeTriangleList);
-	
-	// Push debug group
-	[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
-
 	// Finalize render state
-	renderState.commit(
-			SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
-					mInternals->mCurrentRenderCommandEncoder,
-					mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex], mInternals->mFunctionsCache,
-					mInternals->mRenderPipelineDescriptor, mInternals->mRenderPipelineStateCache,
-					mInternals->mProjectionMatrix2D));
+	switch (renderState.getRenderMode()) {
+		case kGPURenderMode2D:
+			// 2D
+			renderState.commit(
+					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
+							mInternals->mCurrentRenderCommandEncoder,
+							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
+							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
+							mInternals->mRenderPipelineStateCache, mInternals->mViewMatrix2D,
+							mInternals->mProjectionMatrix2D));
+			break;
 
-	// Draw
-	[mInternals->mCurrentRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
-			vertexStart:offset vertexCount:count];
+		case kGPURenderMode3D:
+			// 3D
+			renderState.commit(
+					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
+							mInternals->mCurrentRenderCommandEncoder,
+							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
+							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
+							mInternals->mRenderPipelineStateCache, mInternals->mViewMatrix3D,
+							mInternals->mProjectionMatrix3D));
+			break;
+	}
 
-	// Pop debug group
-	[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
+	// Check type
+	switch (type) {
+		case kGPURenderTypeTriangleList:
+			// Triangle list
+			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
+			AssertFailUnimplemented();
+			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
+			break;
+
+		case kGPURenderTypeTriangleStrip:
+			// Triangle strip
+			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
+			[mInternals->mCurrentRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+					vertexStart:offset vertexCount:count];
+			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
+			break;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented()
+	// Finalize render state
+	switch (renderState.getRenderMode()) {
+		case kGPURenderMode2D:
+			// 2D
+			renderState.commit(
+					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
+							mInternals->mCurrentRenderCommandEncoder,
+							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
+							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
+							mInternals->mRenderPipelineStateCache, mInternals->mViewMatrix2D,
+							mInternals->mProjectionMatrix2D));
+
+		case kGPURenderMode3D:
+			// 3D
+			renderState.commit(
+					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
+							mInternals->mCurrentRenderCommandEncoder,
+							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
+							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
+							mInternals->mRenderPipelineStateCache, mInternals->mViewMatrix3D,
+							mInternals->mProjectionMatrix3D));
+	}
+
+	// Check type
+	switch (type) {
+		case kGPURenderTypeTriangleList:
+			// Triangle list
+			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip Indexed"];
+			AssertFailUnimplemented();
+			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
+
+		case kGPURenderTypeTriangleStrip:
+			// Triangle strip
+			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip Indexed"];
+			AssertFailUnimplemented();
+			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
+			break;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

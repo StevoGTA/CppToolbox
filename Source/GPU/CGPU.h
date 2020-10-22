@@ -40,7 +40,7 @@ class CGPU {
 
 				void					renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D = 0.0f,
 												Float32 aspectRatio3D = 1.0f, Float32 nearZ3D = 0.01f,
-												Float32 farZ3D = 100.0f, S3DPointF32& camera3D = S3DPointF32(),
+												Float32 farZ3D = 100.0f, const S3DPointF32& camera3D = S3DPointF32(),
 												const S3DPointF32& target3D = S3DPointF32(),
 												const S3DPointF32& up3D = S3DPointF32()) const;
 				void					render(CGPURenderState& renderState, EGPURenderType type, UInt32 count,

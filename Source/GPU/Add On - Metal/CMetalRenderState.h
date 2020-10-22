@@ -32,11 +32,12 @@ struct SGPURenderStateCommitInfo {
 			NSMutableDictionary<NSString*, id<MTLFunction>>* functionsCache,
 			MTLRenderPipelineDescriptor* renderPipelineDescriptor,
 			NSMutableDictionary<NSString*, id<MTLRenderPipelineState>>* renderPipelineStateCache,
-			const SMatrix4x4_32& projectionMatrix) :
+			const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& projectionMatrix) :
 		mDevice(device), mShaderLibrary(shaderLibrary), mRenderCommandEncoder(renderCommandEncoder),
 				mMetalBufferCache(metalBufferCache), mFunctionsCache(functionsCache),
 				mRenderPipelineDescriptor(renderPipelineDescriptor),
-				mRenderPipelineStateCache(renderPipelineStateCache), mProjectionMatrix(projectionMatrix)
+				mRenderPipelineStateCache(renderPipelineStateCache), mViewMatrix(viewMatrix),
+				mProjectionMatrix(projectionMatrix)
 		{}
 
 	// Properties
@@ -47,5 +48,6 @@ struct SGPURenderStateCommitInfo {
 			NSMutableDictionary<NSString*, id<MTLFunction>>*			mFunctionsCache;
 			MTLRenderPipelineDescriptor*								mRenderPipelineDescriptor;
 			NSMutableDictionary<NSString*, id<MTLRenderPipelineState>>*	mRenderPipelineStateCache;
+	const	SMatrix4x4_32&												mViewMatrix;
 	const	SMatrix4x4_32&												mProjectionMatrix;
 };

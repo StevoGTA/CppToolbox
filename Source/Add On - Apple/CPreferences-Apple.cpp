@@ -9,30 +9,110 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
+// MARK: CPreferencesInternals
 
-static	CString		sAlternateApplicationID;
+class CPreferencesInternals {
+	public:
+					CPreferencesInternals() :
+						mApplicationID((CFStringRef) ::CFRetain(kCFPreferencesCurrentApplication)), mDelayWriteCount(0)
+						{}
+					CPreferencesInternals(const SPreferencesReference& preferencesReference) :
+						mApplicationID(CCoreFoundation::createStringRefFrom(preferencesReference.mApplicationID)),
+								mDelayWriteCount(0)
+						{}
+					~CPreferencesInternals()
+						{
+							::CFRelease(mApplicationID);
+						}
 
-static	UInt32		sDelayWriteCount = 0;
+		CFTypeRef	copyFrom(const SPref& pref)
+						{
+							// Check for no key
+							if (pref.mKeyString == nil)
+								return nil;
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
+							// Setup
+							CFTypeRef	typeRef;
 
-static	CFTypeRef	sCopyFrom(const char* keyString, const CString& applicationID);
-static	void		sSetTo(const char* keyString, CFTypeRef valueTypeRef);
+							::CFPreferencesAppSynchronize(mApplicationID);
+							typeRef = ::CFPreferencesCopyAppValue(pref.mKeyString, mApplicationID);
+
+							// Did we get it?
+							if ((typeRef == nil) && mAlternatePreferencesReference.hasObject()) {
+								// Try to get from old prefs file
+								CFStringRef	alternateApplicationIDStringRef =
+													CCoreFoundation::createStringRefFrom(
+															mAlternatePreferencesReference->mApplicationID);
+								typeRef =
+										::CFPreferencesCopyAppValue(pref.mKeyString, alternateApplicationIDStringRef);
+								::CFRelease(alternateApplicationIDStringRef);
+							}
+
+							return typeRef;
+						}
+		void		setTo(const SPref& pref, CFTypeRef valueTypeRef)
+						{
+							// Check for no key
+							if (pref.mKeyString == nil)
+								return;
+
+							// Store
+							::CFPreferencesSetAppValue(pref.mKeyString, valueTypeRef, mApplicationID);
+
+							if (mDelayWriteCount == 0)
+								::CFPreferencesAppSynchronize(mApplicationID);
+						}
+		void		beginGroupSet()
+						{ mDelayWriteCount++; }
+		void		endGroupSet()
+						{
+							if (--mDelayWriteCount == 0)
+								::CFPreferencesAppSynchronize(mApplicationID);
+						}
+
+		CFStringRef					mApplicationID;
+		OO<SPreferencesReference>	mAlternatePreferencesReference;
+		UInt32						mDelayWriteCount;
+};
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CPreferences
 
-// MARK: Class methods
+// MARK: Properties
+
+CPreferences	CPreferences::mDefault;
+
+// MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CPreferences::hasValue(const SPref& pref, const CString& applicationID)
+CPreferences::CPreferences()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFTypeRef	typeRef = sCopyFrom(pref.mKeyString, applicationID);
+	mInternals = new CPreferencesInternals();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CPreferences::CPreferences(const SPreferencesReference& preferencesReference)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new CPreferencesInternals(preferencesReference);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CPreferences::~CPreferences()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	Delete(mInternals);
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CPreferences::hasValue(const SPref& pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	CFTypeRef	typeRef = mInternals->copyFrom(pref);
 	bool		flag = typeRef != nil;
 	
 	if (typeRef != nil)
@@ -42,11 +122,11 @@ bool CPreferences::hasValue(const SPref& pref, const CString& applicationID)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CData> CPreferences::getDataArray(const SPref& pref, const CString& applicationID)
+TNArray<CData> CPreferences::getDataArray(const SPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref);
 
 	// Check if have array
 	if (arrayRef != nil) {
@@ -63,11 +143,11 @@ TNArray<CData> CPreferences::getDataArray(const SPref& pref, const CString& appl
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CDictionary> CPreferences::getDictionaryArray(const SPref& pref, const CString& applicationID)
+TNArray<CDictionary> CPreferences::getDictionaryArray(const SPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref);
 
 	// Check if have array
 	if (arrayRef != nil) {
@@ -84,11 +164,11 @@ TNArray<CDictionary> CPreferences::getDictionaryArray(const SPref& pref, const C
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<OSType> CPreferences::getOSTypeArray(const SPref& pref, const CString& applicationID)
+TNumericArray<OSType> CPreferences::getOSTypeArray(const SPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref);
 
 	// Check if have array
 	TNumericArray<OSType>	array;
@@ -113,10 +193,10 @@ TNumericArray<OSType> CPreferences::getOSTypeArray(const SPref& pref, const CStr
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CPreferences::getData(const SPref& pref, const CString& applicationID)
+CData CPreferences::getData(const SPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFDataRef	dataRef = (CFDataRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFDataRef	dataRef = (CFDataRef) mInternals->copyFrom(pref);
 	if (dataRef != nil) {
 		CData	data = CCoreFoundation::dataFrom(dataRef);
 		::CFRelease(dataRef);
@@ -127,10 +207,10 @@ CData CPreferences::getData(const SPref& pref, const CString& applicationID)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CPreferences::getDictionary(const SPref& pref, const CString& applicationID)
+CDictionary CPreferences::getDictionary(const SPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) mInternals->copyFrom(pref);
 	if (dictionaryRef != nil) {
 		CDictionary	dictionary = CCoreFoundation::dictionaryFrom(dictionaryRef);
 		::CFRelease(dictionaryRef);
@@ -141,10 +221,10 @@ CDictionary CPreferences::getDictionary(const SPref& pref, const CString& applic
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CPreferences::getString(const SStringPref& pref, const CString& applicationID)
+CString CPreferences::getString(const SStringPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = (CFStringRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFStringRef	stringRef = (CFStringRef) mInternals->copyFrom(pref);
 	if (stringRef != nil) {
 		CString	string(stringRef);
 		::CFRelease(stringRef);
@@ -155,10 +235,10 @@ CString CPreferences::getString(const SStringPref& pref, const CString& applicat
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float32 CPreferences::getFloat32(const SFloat32Pref& pref, const CString& applicationID)
+Float32 CPreferences::getFloat32(const SFloat32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFNumberRef	numberRef = (CFNumberRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
 	if (numberRef != nil) {
 		Float32	value;
 		::CFNumberGetValue(numberRef, kCFNumberFloat32Type, &value);
@@ -170,10 +250,10 @@ Float32 CPreferences::getFloat32(const SFloat32Pref& pref, const CString& applic
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float64 CPreferences::getFloat64(const SFloat64Pref& pref, const CString& applicationID)
+Float64 CPreferences::getFloat64(const SFloat64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFNumberRef	numberRef = (CFNumberRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
 	if (numberRef != nil) {
 		Float64	value;
 		::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);
@@ -185,10 +265,10 @@ Float64 CPreferences::getFloat64(const SFloat64Pref& pref, const CString& applic
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt32 CPreferences::getSInt32(const SSInt32Pref& pref, const CString& applicationID)
+SInt32 CPreferences::getSInt32(const SSInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFNumberRef	numberRef = (CFNumberRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
 	if (numberRef != nil) {
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
@@ -200,10 +280,10 @@ SInt32 CPreferences::getSInt32(const SSInt32Pref& pref, const CString& applicati
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CPreferences::getUInt32(const SUInt32Pref& pref, const CString& applicationID)
+UInt32 CPreferences::getUInt32(const SUInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFNumberRef	numberRef = (CFNumberRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
 	if (numberRef != nil) {
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
@@ -215,10 +295,10 @@ UInt32 CPreferences::getUInt32(const SUInt32Pref& pref, const CString& applicati
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CPreferences::getUInt64(const SUInt64Pref& pref, const CString& applicationID)
+UInt64 CPreferences::getUInt64(const SUInt64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFNumberRef	numberRef = (CFNumberRef) sCopyFrom(pref.mKeyString, applicationID);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
 	if (numberRef != nil) {
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
@@ -245,7 +325,7 @@ void CPreferences::set(const SPref& pref, const TArray<CData>& array)
 	}
 
 	// Store
-	sSetTo(pref.mKeyString, arrayRef);
+	mInternals->setTo(pref, arrayRef);
 
 	// Cleanup
 	::CFRelease(arrayRef);
@@ -267,7 +347,7 @@ void CPreferences::set(const SPref& pref, const TArray<CDictionary>& array)
 	}
 
 	// Store
-	sSetTo(pref.mKeyString, arrayRef);
+	mInternals->setTo(pref, arrayRef);
 
 	// Cleanup
 	::CFRelease(arrayRef);
@@ -290,7 +370,7 @@ void CPreferences::set(const SPref& pref, const TNumericArray<OSType>& array)
 	}
 
 	// Store
-	sSetTo(pref.mKeyString, arrayRef);
+	mInternals->setTo(pref, arrayRef);
 
 	// Cleanup
 	::CFRelease(arrayRef);
@@ -301,7 +381,7 @@ void CPreferences::set(const SPref& pref, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDataRef	dataRef = CCoreFoundation::createDataRefFrom(data);
-	sSetTo(pref.mKeyString, dataRef);
+	mInternals->setTo(pref, dataRef);
 	::CFRelease(dataRef);
 }
 
@@ -310,7 +390,7 @@ void CPreferences::set(const SPref& pref, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDictionaryRef	dictionaryRef = CCoreFoundation::createDictionaryRefFrom(dictionary);
-	sSetTo(pref.mKeyString, dictionaryRef);
+	mInternals->setTo(pref, dictionaryRef);
 	::CFRelease(dictionaryRef);
 }
 
@@ -319,7 +399,7 @@ void CPreferences::set(const SStringPref& pref, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFStringRef	stringRef = CCoreFoundation::createStringRefFrom(string);
-	sSetTo(pref.mKeyString, stringRef);
+	mInternals->setTo(pref, stringRef);
 	::CFRelease(stringRef);
 }
 
@@ -333,7 +413,7 @@ void CPreferences::set(const SFloat32Pref& pref, Float32 value)
 		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
-	sSetTo(pref.mKeyString, numberRef);
+	mInternals->setTo(pref, numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -347,7 +427,7 @@ void CPreferences::set(const SFloat64Pref& pref, Float64 value)
 		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
-	sSetTo(pref.mKeyString, numberRef);
+	mInternals->setTo(pref, numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -362,7 +442,7 @@ void CPreferences::set(const SSInt32Pref& pref, SInt32 value)
 		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
-	sSetTo(pref.mKeyString, numberRef);
+	mInternals->setTo(pref, numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -377,7 +457,7 @@ void CPreferences::set(const SUInt32Pref& pref, UInt32 value)
 		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
-	sSetTo(pref.mKeyString, numberRef);
+	mInternals->setTo(pref, numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -392,7 +472,7 @@ void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
 		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
-	sSetTo(pref.mKeyString, numberRef);
+	mInternals->setTo(pref, numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -400,82 +480,26 @@ void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
 void CPreferences::remove(const SPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	sSetTo(pref.mKeyString, nil);
+	mInternals->setTo(pref, nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::beginGroupSet()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	sDelayWriteCount++;
+	mInternals->beginGroupSet();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::endGroupSet()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (--sDelayWriteCount == 0)
-		::CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
+	mInternals->endGroupSet();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::setAlternateApplicationID(const CString& applicationID)
+void CPreferences::setAlternate(const SPreferencesReference& preferencesReference)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	sAlternateApplicationID = applicationID;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-
-//----------------------------------------------------------------------------------------------------------------------
-CFTypeRef sCopyFrom(const char* keyString, const CString& applicationID)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	if (keyString == nil)
-		return nil;
-	else {
-		CFTypeRef	typeRef;
-		CFStringRef	keyStringRef = CCoreFoundation::createStringRefFrom(keyString);
-
-		// Do we have a prefs file specified?
-		if (!applicationID.isEmpty()) {
-			// Yes, read from it
-			CFStringRef	applicationIDStringRef = CCoreFoundation::createStringRefFrom(applicationID);
-			::CFPreferencesAppSynchronize(applicationIDStringRef);
-			typeRef = ::CFPreferencesCopyAppValue(keyStringRef, applicationIDStringRef);
-			::CFRelease(applicationIDStringRef);
-		} else {
-			// No, read from current
-			typeRef = ::CFPreferencesCopyAppValue(keyStringRef, kCFPreferencesCurrentApplication);
-		}
-		
-		// Did we get it?
-		if ((typeRef == nil) && !sAlternateApplicationID.isEmpty()) {
-			// Try to get from old prefs file
-			CFStringRef	alternateApplicationIDStringRef = CCoreFoundation::createStringRefFrom(sAlternateApplicationID);
-			typeRef = ::CFPreferencesCopyAppValue(keyStringRef, alternateApplicationIDStringRef);
-			::CFRelease(alternateApplicationIDStringRef);
-		}
-
-		// Cleanup
-		::CFRelease(keyStringRef);
-
-		return typeRef;
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void sSetTo(const char* keyString, CFTypeRef valueTypeRef)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	if (keyString != nil) {
-		CFStringRef	keyStringRef = CCoreFoundation::createStringRefFrom(keyString);
-		::CFPreferencesSetAppValue(keyStringRef, valueTypeRef, kCFPreferencesCurrentApplication);
-		::CFRelease(keyStringRef);
-
-		if (sDelayWriteCount == 0)
-			::CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
-	}
+	mInternals->mAlternatePreferencesReference = OO<SPreferencesReference>(preferencesReference);
 }
