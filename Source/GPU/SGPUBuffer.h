@@ -8,13 +8,27 @@
 #include "CData.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - SGPUBuffer
+// MARK: SGPUBuffer
 
 struct SGPUBuffer {
 	// Lifecycle methods
-	SGPUBuffer(void* internalReference = nil) : mInternalReference(internalReference) {}
-	SGPUBuffer(const SGPUBuffer& other) : mInternalReference(other.mInternalReference) {}
+	SGPUBuffer(void* platformReference) : mPlatformReference(platformReference) {}
+	SGPUBuffer(const SGPUBuffer& other) : mPlatformReference(other.mPlatformReference) {}
 
 	// Properties
-	void*	mInternalReference;
+	void*	mPlatformReference;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SGPUVertexBuffer
+
+struct SGPUVertexBuffer : SGPUBuffer {
+	// Lifecycle methods
+	SGPUVertexBuffer(UInt32 perVertexByteCount, void* platformReference) :
+		SGPUBuffer(platformReference), mPerVertexByteCount(perVertexByteCount)
+		{}
+	SGPUVertexBuffer(const SGPUVertexBuffer& other) : SGPUBuffer(other) {}
+
+	// Properties
+	UInt32	mPerVertexByteCount;
 };

@@ -33,6 +33,9 @@ class CGPUVertexShader {
 									// Lifecycle methods
 		virtual						~CGPUVertexShader() {}
 
+									// Instance methods
+		virtual	UInt32				getPerVertexByteCount() const = 0;
+
 									// Class methods
 		static	CGPUVertexShader&	getBasic2DMultiTexture();
 		static	CGPUVertexShader&	getClip2DMultiTexture(const SMatrix4x1_32& clipPlane);

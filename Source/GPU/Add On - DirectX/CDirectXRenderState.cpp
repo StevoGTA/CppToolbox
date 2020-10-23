@@ -98,15 +98,15 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	// Setup buffers
 	if (mInternals->mVertexBuffer.hasReference()) {
 		// Setup vertex buffer
-		ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mVertexBuffer->mInternalReference;
-		UINT			stride = mInternals->mVertexBuffer->mGPUVertexBufferInfo.mTotalSize;
+		ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mVertexBuffer->mPlatformReference;
+		UINT			stride = mInternals->mVertexBuffer->mPerVertexByteCount;
 		UINT			offset = 0;
 		renderStateCommitInfo.mD3DDeviceContext.IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
 	}
 
 	if (mInternals->mIndexBuffer.hasReference()) {
 		// Setup index buffer
-		ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mIndexBuffer->mInternalReference;
+		ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mIndexBuffer->mPlatformReference;
 		renderStateCommitInfo.mD3DDeviceContext.IASetIndexBuffer(buffer, DXGI_FORMAT_R16_UINT, 0);
 	}
 

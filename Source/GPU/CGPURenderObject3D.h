@@ -14,7 +14,7 @@ class CGPURenderObject3D : public CGPURenderObject {
 	// Methods
 	public:
 					// Lifecycle methods
-					CGPURenderObject3D(CGPU& gpu, const CData& vertexData, const CData& indexData, UInt32 indexCount,
+					CGPURenderObject3D(CGPU& gpu, const CData& vertexData, UInt32 indexCount, const CData& indexData,
 							CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader);
 					CGPURenderObject3D(const CGPURenderObject3D& other);
 					~CGPURenderObject3D();

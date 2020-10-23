@@ -33,8 +33,8 @@ class CGPU {
 												const S2DSizeU16& size);
 				void					unregisterTexture(SGPUTextureReference& gpuTexture);
 
+				SGPUVertexBuffer		allocateVertexBuffer(UInt32 perVertexByteCount, const CData& data);
 				SGPUBuffer				allocateIndexBuffer(const CData& data);
-				SGPUBuffer				allocateVertexBuffer(const CData& data);
 				void					disposeBuffer(const SGPUBuffer& buffer);
 
 				void					renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D = 0.0f,

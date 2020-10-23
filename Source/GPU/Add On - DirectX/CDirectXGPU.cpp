@@ -687,6 +687,22 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+SGPUVertexBuffer CGPU::allocateVertexBuffer(UInt32 perVertexByteCount, const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CD3D11_BUFFER_DESC		bufferDesc(data.getSize(), D3D11_BIND_VERTEX_BUFFER);
+	D3D11_SUBRESOURCE_DATA	subresourceData = {data.getBytePtr(), 0, 0};
+	ID3D11Buffer*			d3dBuffer = NULL;
+	HRESULT					result =
+									mInternals->mD3DDeviceComPtr->CreateBuffer(&bufferDesc, &subresourceData,
+											&d3dBuffer);
+	AssertFailIf(result != S_OK);
+
+	return SGPUVertexBuffer(perVertexByteCount, d3dBuffer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -694,24 +710,12 @@ SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
 	CD3D11_BUFFER_DESC		bufferDesc(data.getSize(), D3D11_BIND_INDEX_BUFFER);
 	D3D11_SUBRESOURCE_DATA	subresourceData = {data.getBytePtr(), 0, 0};
 	ID3D11Buffer*			d3dBuffer = NULL;
-	HRESULT					result = mInternals->mD3DDeviceComPtr->CreateBuffer(&bufferDesc, &subresourceData, &d3dBuffer);
+	HRESULT					result =
+									mInternals->mD3DDeviceComPtr->CreateBuffer(&bufferDesc, &subresourceData,
+											&d3dBuffer);
 	AssertFailIf(result != S_OK);
 
 	return SGPUBuffer(d3dBuffer);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& data)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	CD3D11_BUFFER_DESC		bufferDesc(data.getSize(), D3D11_BIND_VERTEX_BUFFER);
-	D3D11_SUBRESOURCE_DATA	subresourceData = {data.getBytePtr(), 0, 0};
-	ID3D11Buffer*			d3dBuffer = NULL;
-	HRESULT					result = mInternals->mD3DDeviceComPtr->CreateBuffer(&bufferDesc, &subresourceData, &d3dBuffer);
-	AssertFailIf(result != S_OK);
-
-	return SGPUVertexBuffer(gpuVertexBufferInfo, d3dBuffer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -719,7 +723,7 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	ID3D11Buffer*	d3dBuffer = (ID3D11Buffer*) buffer.mInternalReference;
+	ID3D11Buffer*	d3dBuffer = (ID3D11Buffer*) buffer.mPlatformReference;
 
 	// Cleanup
 	d3dBuffer->Release();
@@ -727,7 +731,7 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Float32 aspectRatio3D, Float32 nearZ3D,
-		Float32 farZ3D, S3DPointF32& camera3D, const S3DPointF32& target3D, const S3DPointF32& up3D) const
+		Float32 farZ3D, const S3DPointF32& camera3D, const S3DPointF32& target3D, const S3DVectorF32& up3D) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -793,17 +797,17 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 			D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	// Setup matrices
+	XMStoreFloat4x4(&mInternals->mViewMatrix2D, DirectX::XMMatrixIdentity());
 	mInternals->mProjectionMatrix2D =
 			XMFLOAT4X4(
 					2.0F / size2D.mWidth, 0.0, 0.0, -1.0,
 					0.0, -2.0F / size2D.mHeight, 0.0, 1.0,
 					0.0, 0.0, 0.5, 0.0,
 					0.0, 0.0, 0.0, 1.0);
-	XMStoreFloat4x4(&mInternals->mViewMatrix2D, DirectX::XMMatrixIdentity());
 
 	XMVECTORF32	cameraVector = {camera3D.mX, camera3D.mY, camera3D.mZ, 0.0f};
 	XMVECTORF32	targetVector = {target3D.mX, target3D.mY, target3D.mZ, 0.0f};
-	XMVECTORF32	upVector = {up3D.mX, up3D.mY, up3D.mZ, 0.0f};
+	XMVECTORF32	upVector = {up3D.mDX, up3D.mDY, up3D.mDZ, 0.0f};
 	XMStoreFloat4x4(&mInternals->mViewMatrix3D,
 			XMMatrixTranspose(XMMatrixLookAtRH(cameraVector, targetVector, upVector)));
 

@@ -9,11 +9,12 @@
 
 class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3DInternals> {
 	public:
-				CGPURenderObject3DInternals(CGPU& gpu, const CData& vertexData,
-						const CData& indexData, UInt32 indexCount,
-						CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
-					mGPU(gpu), mGPUVertexBuffer(mGPU.allocateVertexBuffer(vertexData)),
-							mGPUIndexBuffer(mGPU.allocateIndexBuffer(indexData)), mIndexCount(indexCount),
+				CGPURenderObject3DInternals(CGPU& gpu, const CData& vertexData, UInt32 indexCount,
+						const CData& indexData, CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
+					mGPU(gpu),
+							mGPUVertexBuffer(
+									mGPU.allocateVertexBuffer(vertexShader.getPerVertexByteCount(), vertexData)),
+							mIndexCount(indexCount), mGPUIndexBuffer(mGPU.allocateIndexBuffer(indexData)),
 							mVertexShader(vertexShader), mFragmentShader(fragmentShader)
 					{}
 				~CGPURenderObject3DInternals()
@@ -24,9 +25,9 @@ class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3
 					}
 
 		CGPU&				mGPU;
-		SGPUBuffer			mGPUVertexBuffer;
-		SGPUBuffer			mGPUIndexBuffer;
+		SGPUVertexBuffer	mGPUVertexBuffer;
 		UInt32				mIndexCount;
+		SGPUBuffer			mGPUIndexBuffer;
 		CGPUVertexShader&	mVertexShader;
 		CGPUFragmentShader& mFragmentShader;
 
@@ -40,11 +41,11 @@ class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderObject3D::CGPURenderObject3D(CGPU& gpu, const CData& vertexData, const CData& indexData, UInt32 indexCount,
+CGPURenderObject3D::CGPURenderObject3D(CGPU& gpu, const CData& vertexData, UInt32 indexCount, const CData& indexData,
 		CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) : CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPURenderObject3DInternals(gpu, vertexData, indexData, indexCount, vertexShader, fragmentShader);
+	mInternals = new CGPURenderObject3DInternals(gpu, vertexData, indexCount, indexData, vertexShader, fragmentShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

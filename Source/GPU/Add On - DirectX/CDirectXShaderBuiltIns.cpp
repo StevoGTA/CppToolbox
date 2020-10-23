@@ -31,6 +31,9 @@ class CDirectXVertexShaderBasic : public CDirectXVertexShader {
 							mConstantBuffer->Release();
 					}
 
+		UInt32	getPerVertexByteCount() const
+					{ return sizeof(SVertex2DMultitexture); }
+
 		void	setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d3dDeviceContext,
 						const XMFLOAT4X4& projectionMatrix, const XMFLOAT4X4& viewMatrix)
 					{
@@ -101,6 +104,9 @@ class CDirectXVertexShaderClip : public CDirectXVertexShader {
 							mConstantBuffer->Release();
 					}
 
+		UInt32	getPerVertexByteCount() const
+					{ return sizeof(SVertex2DMultitexture); }
+
 		void	setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d3dDeviceContext,
 						const XMFLOAT4X4& projectionMatrix, const XMFLOAT4X4& viewMatrix)
 					{
@@ -155,7 +161,7 @@ class CDirectXVertexShaderClip : public CDirectXVertexShader {
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUVertexShader& CGPUVertexShader::getBasic()
+CGPUVertexShader& CGPUVertexShader::getBasic2DMultiTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -170,7 +176,7 @@ CGPUVertexShader& CGPUVertexShader::getBasic()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUVertexShader& CGPUVertexShader::getClip(const SMatrix4x1_32& clipPlane)
+CGPUVertexShader& CGPUVertexShader::getClip2DMultiTexture(const SMatrix4x1_32& clipPlane)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -262,7 +268,7 @@ class CDirectXPixelShaderOpacity : public CDirectXPixelShader {
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getBasic()
+CGPUFragmentShader& CGPUFragmentShader::getBasicMultiTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -277,7 +283,7 @@ CGPUFragmentShader& CGPUFragmentShader::getBasic()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getOpacity(Float32 opacity)
+CGPUFragmentShader& CGPUFragmentShader::getOpacityMultiTexture(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

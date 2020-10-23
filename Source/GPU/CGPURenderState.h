@@ -33,7 +33,7 @@ class CGPURenderState {
 
 						// Instance methods
 		void			setModelMatrix(const SMatrix4x4_32& modelMatrix);
-		void			setVertexBuffer(const SGPUBuffer& gpuVertexBuffer);
+		void			setVertexBuffer(const SGPUVertexBuffer& gpuVertexBuffer);
 		void			setIndexBuffer(const SGPUBuffer& gpuIndexBuffer);
 		void			setTextures(const TArray<const CGPUTexture>& gpuTextures);
 
