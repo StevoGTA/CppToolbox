@@ -15,11 +15,8 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 						const TArray<CGPUTextureReference>& gpuTextureReferences) :
 					TReferenceCountable(),
 							mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
-							mGPUVertexBuffer(
-									mGPU.allocateVertexBuffer(SGPUBufferTypeVertex2DTexture2D::getGPUVertexBufferInfo(),
-											vertexData(items))),
-							mAngleRadians(0.0), mAlpha(1.0),
-							mScale(1.0, 1.0)
+							mGPUVertexBuffer(mGPU.allocateVertexBuffer(vertexData(items))), mAngleRadians(0.0),
+							mAlpha(1.0), mScale(1.0, 1.0)
 					{}
 				~CGPURenderObject2DInternals()
 					{
@@ -29,18 +26,11 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 
 		CData	vertexData(const TArray<SGPURenderObject2DItem>& items)
 					{
-						// Setup
-						const	SGPUVertexBufferInfo&	gpuVertexBufferInfo =
-																SGPUBufferTypeVertex2DTexture2D::
-																		getGPUVertexBufferInfo();
-
-
 						// Setup buffer
-						CData								vertexData(gpuVertexBufferInfo.mTotalSize *
-																	items.getCount() * 6);
-						SGPUBufferTypeVertex2DTexture2D*	vertexInfoPtr =
-																	(SGPUBufferTypeVertex2DTexture2D*)
-																			vertexData.getMutableBytePtr();
+						CData					vertexData(
+														(CDataSize) sizeof(SVertex2DMultitexture) * items.getCount() *
+																6);
+						SVertex2DMultitexture*	vertexInfoPtr = (SVertex2DMultitexture*) vertexData.getMutableBytePtr();
 						for (TIteratorD<SGPURenderObject2DItem> iterator = items.getIterator(); iterator.hasValue();
 								iterator.advance()) {
 							// Setup
@@ -60,25 +50,25 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 
 							// Store in buffer
 							*(vertexInfoPtr++) =
-									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
+									SVertex2DMultitexture(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
 											item.mTextureIndex);
 							*(vertexInfoPtr++) =
-									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
-											item.mTextureIndex);
-
-							*(vertexInfoPtr++) =
-									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(maxX, maxY), S2DPointF32(maxS, maxT),
+									SVertex2DMultitexture(S2DPointF32(minX, maxY), S2DPointF32(minS, maxT),
 											item.mTextureIndex);
 
 							*(vertexInfoPtr++) =
-									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(minX, minY), S2DPointF32(minS, minT),
+									SVertex2DMultitexture(S2DPointF32(maxX, maxY), S2DPointF32(maxS, maxT),
 											item.mTextureIndex);
 
 							*(vertexInfoPtr++) =
-									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
+									SVertex2DMultitexture(S2DPointF32(minX, minY), S2DPointF32(minS, minT),
+											item.mTextureIndex);
+
+							*(vertexInfoPtr++) =
+									SVertex2DMultitexture(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
 											item.mTextureIndex);
 							*(vertexInfoPtr++) =
-									SGPUBufferTypeVertex2DTexture2D(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
+									SVertex2DMultitexture(S2DPointF32(maxX, minY), S2DPointF32(maxS, minT),
 											item.mTextureIndex);
 						}
 
@@ -87,7 +77,7 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 
 		CGPU&							mGPU;
 		TArray<CGPUTextureReference>	mGPUTextureReferences;
-		SGPUVertexBuffer				mGPUVertexBuffer;
+		SGPUBuffer						mGPUVertexBuffer;
 
 		S2DPointF32						mAnchorPoint;
 		S2DPointF32						mScreenPositionPoint;
@@ -274,8 +264,8 @@ void CGPURenderObject2D::render(const CGPURenderObject2DIndexes& indexes,
 	TIteratorD<TIndexRange<UInt16> >	iterator = indexRanges.getIterator();
 	if (renderInfo.mClipPlane.hasValue()) {
 		// Clip plane
-		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getClip(*renderInfo.mClipPlane),
-								CGPUFragmentShader::getOpacity(mInternals->mAlpha));
+		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getClip2DMultiTexture(*renderInfo.mClipPlane),
+								CGPUFragmentShader::getOpacityMultiTexture(mInternals->mAlpha));
 
 		// Iterate index ranges
 		for (; iterator.hasValue(); iterator.advance()) {
@@ -291,7 +281,8 @@ void CGPURenderObject2D::render(const CGPURenderObject2DIndexes& indexes,
 		}
 	} else if (mInternals->mAlpha == 1.0) {
 		// Opaque
-		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getBasic(), CGPUFragmentShader::getBasic());
+		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getBasic2DMultiTexture(),
+								CGPUFragmentShader::getBasicMultiTexture());
 
 		// Iterate index ranges
 		for (; iterator.hasValue(); iterator.advance()) {
@@ -307,8 +298,8 @@ void CGPURenderObject2D::render(const CGPURenderObject2DIndexes& indexes,
 		}
 	} else {
 		// Have alpha
-		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getBasic(),
-								CGPUFragmentShader::getOpacity(mInternals->mAlpha));
+		CGPURenderState	renderState(kGPURenderMode2D, CGPUVertexShader::getBasic2DMultiTexture(),
+								CGPUFragmentShader::getOpacityMultiTexture(mInternals->mAlpha));
 
 		// Iterate index ranges
 		for (; iterator.hasValue(); iterator.advance()) {

@@ -10,10 +10,9 @@
 class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3DInternals> {
 	public:
 				CGPURenderObject3DInternals(CGPU& gpu, const CData& vertexData,
-						const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& indexData, UInt32 indexCount,
+						const CData& indexData, UInt32 indexCount,
 						CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
-					mGPU(gpu),
-							mGPUVertexBuffer(mGPU.allocateVertexBuffer(gpuVertexBufferInfo, vertexData)),
+					mGPU(gpu), mGPUVertexBuffer(mGPU.allocateVertexBuffer(vertexData)),
 							mGPUIndexBuffer(mGPU.allocateIndexBuffer(indexData)), mIndexCount(indexCount),
 							mVertexShader(vertexShader), mFragmentShader(fragmentShader)
 					{}
@@ -25,7 +24,7 @@ class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3
 					}
 
 		CGPU&				mGPU;
-		SGPUVertexBuffer	mGPUVertexBuffer;
+		SGPUBuffer			mGPUVertexBuffer;
 		SGPUBuffer			mGPUIndexBuffer;
 		UInt32				mIndexCount;
 		CGPUVertexShader&	mVertexShader;
@@ -41,14 +40,11 @@ class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderObject3D::CGPURenderObject3D(CGPU& gpu, const CData& vertexData,
-		const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& indexData, UInt32 indexCount,
+CGPURenderObject3D::CGPURenderObject3D(CGPU& gpu, const CData& vertexData, const CData& indexData, UInt32 indexCount,
 		CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) : CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals =
-		new CGPURenderObject3DInternals(gpu, vertexData, gpuVertexBufferInfo, indexData, indexCount, vertexShader,
-				fragmentShader);
+	mInternals = new CGPURenderObject3DInternals(gpu, vertexData, indexData, indexCount, vertexShader, fragmentShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

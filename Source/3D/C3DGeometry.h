@@ -118,7 +118,7 @@ template <typename T> struct T3DVector {
 	inline	T3DVector<T>	normalized() const { return *this / magnitude(); }
 	inline	T				dot(const T3DVector& vector) const
 								{ return mDX * vector.mDX + mDY * vector.mDY + mDZ * vector.mDZ; }
-	inline	T3DVector<T>	cross(const T3DVector& vector) const
+	inline	T3DVector<T>	crossed(const T3DVector& vector) const
 								{
 									return T3DVector<T>(
 														mDY * vector.mDZ - mDZ * vector.mDY,

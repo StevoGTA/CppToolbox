@@ -7,7 +7,7 @@
 #include "CGPUShader.h"
 #include "CGPUTexture.h"
 #include "CMatrix.h"
-#include "SGPUVertexBuffer.h"
+#include "SGPUBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: EGPURenderMode
@@ -33,7 +33,7 @@ class CGPURenderState {
 
 						// Instance methods
 		void			setModelMatrix(const SMatrix4x4_32& modelMatrix);
-		void			setVertexBuffer(const SGPUVertexBuffer& gpuVertexBuffer);
+		void			setVertexBuffer(const SGPUBuffer& gpuVertexBuffer);
 		void			setIndexBuffer(const SGPUBuffer& gpuIndexBuffer);
 		void			setTextures(const TArray<const CGPUTexture>& gpuTextures);
 
