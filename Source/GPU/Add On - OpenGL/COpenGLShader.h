@@ -6,7 +6,7 @@
 
 #include "CDictionary.h"
 #include "CGPUShader.h"
-#include "SGPUVertexBuffer.h"
+#include "CUUID.h"
 
 #if TARGET_OS_IOS
 	#include <OpenGLES/ES3/glext.h>
@@ -41,8 +41,7 @@ class COpenGLVertexShader : public CGPUVertexShader {
 				const	TArray<CString>&	getUniformNames() const;
 
 											// Subclass methods
-		virtual			void				setAttibutes(const CDictionary& attributeInfo,
-													const SGPUVertexBuffer& gpuVertexBuffer) = 0;
+		virtual			void				setAttibutes(const CDictionary& attributeInfo) = 0;
 		virtual			void				setUniforms(const CDictionary& uniformInfo,
 													const SMatrix4x4_32& projectionMatrix,
 													const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)

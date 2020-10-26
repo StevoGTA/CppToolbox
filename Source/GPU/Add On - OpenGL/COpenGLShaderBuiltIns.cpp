@@ -12,327 +12,327 @@ static	CString	sBasicVertexShaderString("#version 300 es			\
 			uniform			mat4    modelViewProjectionMatrix;		\
 																	\
 			in				vec4    position;						\
-			in				vec3    texCoord0;						\
+			in				vec3    textureCoordinate;				\
 																	\
-			out		highp	vec3	v_texPosition0;					\
+			out		highp	vec3	fTextureCoordinate;				\
 																	\
 			void main() {											\
 				gl_Position = modelViewProjectionMatrix * position;	\
-				v_texPosition0 = texCoord0;							\
+				fTextureCoordinate = textureCoordinate;				\
 			}														\
 		");
 static	CString	sClipVertexShaderString("#version 300 es									\
 			#extension GL_APPLE_clip_distance : require\n									\
-			uniform			mat4    projectionMatrix;										\
-			uniform			mat4    viewMatrix;												\
 			uniform			mat4    modelMatrix;											\
+			uniform			mat4    viewMatrix;												\
+			uniform			mat4    projectionMatrix;										\
 			uniform			vec4	clipPlane;												\
 																							\
 			in				vec4    position;												\
-			in				vec3    texCoord0;												\
+			in				vec3    textureCoordinate;										\
 																							\
 			out		highp	float	gl_ClipDistance[1];										\
-			out		highp	vec3	v_texPosition0;											\
+			out		highp	vec3	fTextureCoordinate;										\
 																							\
 			void main() {																	\
 				gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;		\
 				gl_ClipDistance[0] = dot(viewMatrix * modelMatrix * position, clipPlane);	\
-				v_texPosition0 = texCoord0;													\
+				fTextureCoordinate = textureCoordinate;										\
 			}																				\
 		");
-static	CString	sBasicFragmentShaderString("#version 300 es										\
-			uniform			sampler2D   diffuseTexture[16];										\
-																								\
-			in		highp	vec3		v_texPosition0;											\
-																								\
-			out		highp	vec4		fragColor;												\
-																								\
-			void main() {																		\
-				highp	vec2	size;															\
-				highp	vec2	position;														\
-				highp	vec4	color;															\
-				switch (int(v_texPosition0.p)) {												\
-					case 0:																		\
-						size = vec2(textureSize(diffuseTexture[0], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[0], position, 0.0);						\
-						break;																	\
-																								\
-					case 1:																		\
-						size = vec2(textureSize(diffuseTexture[1], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[1], position, 0.0);						\
-						break;																	\
-																								\
-					case 2:																		\
-						size = vec2(textureSize(diffuseTexture[2], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[2], position, 0.0);						\
-						break;																	\
-																								\
-					case 3:																		\
-						size = vec2(textureSize(diffuseTexture[3], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[3], position, 0.0);						\
-						break;																	\
-																								\
-					case 4:																		\
-						size = vec2(textureSize(diffuseTexture[4], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[4], position, 0.0);						\
-						break;																	\
-																								\
-					case 5:																		\
-						size = vec2(textureSize(diffuseTexture[5], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[5], position, 0.0);						\
-						break;																	\
-																								\
-					case 6:																		\
-						size = vec2(textureSize(diffuseTexture[6], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[6], position, 0.0);						\
-						break;																	\
-																								\
-					case 7:																		\
-						size = vec2(textureSize(diffuseTexture[7], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[7], position, 0.0);						\
-						break;																	\
-																								\
-					case 8:																		\
-						size = vec2(textureSize(diffuseTexture[8], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[8], position, 0.0);						\
-						break;																	\
-																								\
-					case 9:																		\
-						size = vec2(textureSize(diffuseTexture[9], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[9], position, 0.0);						\
-						break;																	\
-																								\
-					case 10:																	\
-						size = vec2(textureSize(diffuseTexture[10], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[10], position, 0.0);						\
-						break;																	\
-																								\
-					case 11:																	\
-						size = vec2(textureSize(diffuseTexture[11], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[11], position, 0.0);						\
-						break;																	\
-																								\
-					case 12:																	\
-						size = vec2(textureSize(diffuseTexture[12], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[12], position, 0.0);						\
-						break;																	\
-																								\
-					case 13:																	\
-						size = vec2(textureSize(diffuseTexture[13], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[13], position, 0.0);						\
-						break;																	\
-																								\
-					case 14:																	\
-						size = vec2(textureSize(diffuseTexture[14], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[14], position, 0.0);						\
-						break;																	\
-																								\
-					case 15:																	\
-						size = vec2(textureSize(diffuseTexture[15], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[15], position, 0.0);						\
-						break;																	\
-				}																				\
-																								\
-				fragColor = color;																\
-			}																					\
+static	CString	sBasicFragmentShaderString("#version 300 es												\
+			uniform			sampler2D   diffuseTexture[16];												\
+																										\
+			in		highp	vec3		fTextureCoordinate;												\
+																										\
+			out		highp	vec4		fragColor;														\
+																										\
+			void main() {																				\
+				highp	vec2	size;																	\
+				highp	vec2	position;																\
+				highp	vec4	color;																	\
+				switch (int(fTextureCoordinate.p)) {													\
+					case 0:																				\
+						size = vec2(textureSize(diffuseTexture[0], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[0], position, 0.0);								\
+						break;																			\
+																										\
+					case 1:																				\
+						size = vec2(textureSize(diffuseTexture[1], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[1], position, 0.0);								\
+						break;																			\
+																										\
+					case 2:																				\
+						size = vec2(textureSize(diffuseTexture[2], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[2], position, 0.0);								\
+						break;																			\
+																										\
+					case 3:																				\
+						size = vec2(textureSize(diffuseTexture[3], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[3], position, 0.0);								\
+						break;																			\
+																										\
+					case 4:																				\
+						size = vec2(textureSize(diffuseTexture[4], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[4], position, 0.0);								\
+						break;																			\
+																										\
+					case 5:																				\
+						size = vec2(textureSize(diffuseTexture[5], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[5], position, 0.0);								\
+						break;																			\
+																										\
+					case 6:																				\
+						size = vec2(textureSize(diffuseTexture[6], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[6], position, 0.0);								\
+						break;																			\
+																										\
+					case 7:																				\
+						size = vec2(textureSize(diffuseTexture[7], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[7], position, 0.0);								\
+						break;																			\
+																										\
+					case 8:																				\
+						size = vec2(textureSize(diffuseTexture[8], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[8], position, 0.0);								\
+						break;																			\
+																										\
+					case 9:																				\
+						size = vec2(textureSize(diffuseTexture[9], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[9], position, 0.0);								\
+						break;																			\
+																										\
+					case 10:																			\
+						size = vec2(textureSize(diffuseTexture[10], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[10], position, 0.0);								\
+						break;																			\
+																										\
+					case 11:																			\
+						size = vec2(textureSize(diffuseTexture[11], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[11], position, 0.0);								\
+						break;																			\
+																										\
+					case 12:																			\
+						size = vec2(textureSize(diffuseTexture[12], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[12], position, 0.0);								\
+						break;																			\
+																										\
+					case 13:																			\
+						size = vec2(textureSize(diffuseTexture[13], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[13], position, 0.0);								\
+						break;																			\
+																										\
+					case 14:																			\
+						size = vec2(textureSize(diffuseTexture[14], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[14], position, 0.0);								\
+						break;																			\
+																										\
+					case 15:																			\
+						size = vec2(textureSize(diffuseTexture[15], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[15], position, 0.0);								\
+						break;																			\
+				}																						\
+																										\
+				fragColor = color;																		\
+			}																							\
 		");
-static	CString	sOpacityFragmentShaderString("#version 300 es									\
-			uniform			sampler2D   diffuseTexture[16];										\
-			uniform lowp	float       opacity;												\
-																								\
-			in		highp	vec3		v_texPosition0;											\
-																								\
-			out		highp	vec4		fragColor;												\
-																								\
-			void main() {																		\
-				highp	vec2	size;															\
-				highp	vec2	position;														\
-				highp	vec4	color;															\
-				switch (int(v_texPosition0.p)) {												\
-					case 0:																		\
-						size = vec2(textureSize(diffuseTexture[0], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[0], position, 0.0);						\
-						break;																	\
-																								\
-					case 1:																		\
-						size = vec2(textureSize(diffuseTexture[1], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[1], position, 0.0);						\
-						break;																	\
-																								\
-					case 2:																		\
-						size = vec2(textureSize(diffuseTexture[2], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[2], position, 0.0);						\
-						break;																	\
-																								\
-					case 3:																		\
-						size = vec2(textureSize(diffuseTexture[3], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[3], position, 0.0);						\
-						break;																	\
-																								\
-					case 4:																		\
-						size = vec2(textureSize(diffuseTexture[4], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[4], position, 0.0);						\
-						break;																	\
-																								\
-					case 5:																		\
-						size = vec2(textureSize(diffuseTexture[5], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[5], position, 0.0);						\
-						break;																	\
-																								\
-					case 6:																		\
-						size = vec2(textureSize(diffuseTexture[6], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[6], position, 0.0);						\
-						break;																	\
-																								\
-					case 7:																		\
-						size = vec2(textureSize(diffuseTexture[7], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[7], position, 0.0);						\
-						break;																	\
-																								\
-					case 8:																		\
-						size = vec2(textureSize(diffuseTexture[8], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[8], position, 0.0);						\
-						break;																	\
-																								\
-					case 9:																		\
-						size = vec2(textureSize(diffuseTexture[9], 0));							\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[9], position, 0.0);						\
-						break;																	\
-																								\
-					case 10:																	\
-						size = vec2(textureSize(diffuseTexture[10], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[10], position, 0.0);						\
-						break;																	\
-																								\
-					case 11:																	\
-						size = vec2(textureSize(diffuseTexture[11], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[11], position, 0.0);						\
-						break;																	\
-																								\
-					case 12:																	\
-						size = vec2(textureSize(diffuseTexture[12], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[12], position, 0.0);						\
-						break;																	\
-																								\
-					case 13:																	\
-						size = vec2(textureSize(diffuseTexture[13], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[13], position, 0.0);						\
-						break;																	\
-																								\
-					case 14:																	\
-						size = vec2(textureSize(diffuseTexture[14], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[14], position, 0.0);						\
-						break;																	\
-																								\
-					case 15:																	\
-						size = vec2(textureSize(diffuseTexture[15], 0));						\
-						position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-						color = texture(diffuseTexture[15], position, 0.0);						\
-						break;																	\
-				}																				\
-																								\
-				color.a *= opacity;																\
-																								\
-				fragColor = color;																\
-			}																					\
+static	CString	sOpacityFragmentShaderString("#version 300 es											\
+			uniform			sampler2D   diffuseTexture[16];												\
+			uniform lowp	float       opacity;														\
+																										\
+			in		highp	vec3		fTextureCoordinate;												\
+																										\
+			out		highp	vec4		fragColor;														\
+																										\
+			void main() {																				\
+				highp	vec2	size;																	\
+				highp	vec2	position;																\
+				highp	vec4	color;																	\
+				switch (int(fTextureCoordinate.p)) {													\
+					case 0:																				\
+						size = vec2(textureSize(diffuseTexture[0], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[0], position, 0.0);								\
+						break;																			\
+																										\
+					case 1:																				\
+						size = vec2(textureSize(diffuseTexture[1], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[1], position, 0.0);								\
+						break;																			\
+																										\
+					case 2:																				\
+						size = vec2(textureSize(diffuseTexture[2], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[2], position, 0.0);								\
+						break;																			\
+																										\
+					case 3:																				\
+						size = vec2(textureSize(diffuseTexture[3], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[3], position, 0.0);								\
+						break;																			\
+																										\
+					case 4:																				\
+						size = vec2(textureSize(diffuseTexture[4], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[4], position, 0.0);								\
+						break;																			\
+																										\
+					case 5:																				\
+						size = vec2(textureSize(diffuseTexture[5], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[5], position, 0.0);								\
+						break;																			\
+																										\
+					case 6:																				\
+						size = vec2(textureSize(diffuseTexture[6], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[6], position, 0.0);								\
+						break;																			\
+																										\
+					case 7:																				\
+						size = vec2(textureSize(diffuseTexture[7], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[7], position, 0.0);								\
+						break;																			\
+																										\
+					case 8:																				\
+						size = vec2(textureSize(diffuseTexture[8], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[8], position, 0.0);								\
+						break;																			\
+																										\
+					case 9:																				\
+						size = vec2(textureSize(diffuseTexture[9], 0));									\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[9], position, 0.0);								\
+						break;																			\
+																										\
+					case 10:																			\
+						size = vec2(textureSize(diffuseTexture[10], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[10], position, 0.0);								\
+						break;																			\
+																										\
+					case 11:																			\
+						size = vec2(textureSize(diffuseTexture[11], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[11], position, 0.0);								\
+						break;																			\
+																										\
+					case 12:																			\
+						size = vec2(textureSize(diffuseTexture[12], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[12], position, 0.0);								\
+						break;																			\
+																										\
+					case 13:																			\
+						size = vec2(textureSize(diffuseTexture[13], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[13], position, 0.0);								\
+						break;																			\
+																										\
+					case 14:																			\
+						size = vec2(textureSize(diffuseTexture[14], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[14], position, 0.0);								\
+						break;																			\
+																										\
+					case 15:																			\
+						size = vec2(textureSize(diffuseTexture[15], 0));								\
+						position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+						color = texture(diffuseTexture[15], position, 0.0);								\
+						break;																			\
+				}																						\
+																										\
+				color.a *= opacity;																		\
+																										\
+				fragColor = color;																		\
+			}																							\
 		");
 #elif TARGET_OS_MACOS
 static	CString	sBasicVertexShaderString("#version 330 core			\
 			uniform	mat4    modelViewProjectionMatrix;				\
 																	\
 			in		vec4    position;								\
-			in		vec3    texCoord0;								\
+			in		vec3    textureCoordinate;						\
 																	\
-			out		vec3    v_texPosition0;							\
+			out		vec3    fTextureCoordinate;						\
 																	\
 			void main() {											\
 				gl_Position = modelViewProjectionMatrix * position;	\
-				v_texPosition0 = texCoord0;							\
+				fTextureCoordinate = textureCoordinate;				\
 			}														\
 		");
 static	CString	sClipVertexShaderString("#version 330 core									\
-			uniform	mat4	projectionMatrix;												\
-			uniform	mat4	viewMatrix;														\
 			uniform	mat4	modelMatrix;													\
+			uniform	mat4	viewMatrix;														\
+			uniform	mat4	projectionMatrix;												\
 			uniform	vec4	clipPlane;														\
 																							\
 			in		vec4    position;														\
-			in		vec3    texCoord0;														\
+			in		vec3    textureCoordinate;												\
 																							\
 			out		float	gl_ClipDistance[1];												\
-			out		vec3    v_texPosition0;													\
+			out		vec3    fTextureCoordinate;												\
 																							\
 			void main() {																	\
 				gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;		\
 				gl_ClipDistance[0] = dot(viewMatrix * modelMatrix * position, clipPlane);	\
-				v_texPosition0 = texCoord0;													\
+				fTextureCoordinate = textureCoordinate;										\
 			}																				\
 		");
-static	CString	sBasicFragmentShaderString("#version 330 core									\
-			uniform	sampler2D   diffuseTexture[16];												\
-																								\
-			in		vec3		v_texPosition0;													\
-																								\
-			out		vec4		fragColor;														\
-																								\
-			void main() {																		\
-				int		samplerIndex = int(v_texPosition0.p);									\
-				ivec2	size = textureSize(diffuseTexture[samplerIndex], 0);					\
-				vec2	position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-				vec4	color = texture(diffuseTexture[samplerIndex], position, 0.0);			\
-																								\
-				fragColor = color;																\
-			}																					\
+static	CString	sBasicFragmentShaderString("#version 330 core											\
+			uniform	sampler2D   diffuseTexture[16];														\
+																										\
+			in		vec3		fTextureCoordinate;														\
+																										\
+			out		vec4		fragColor;																\
+																										\
+			void main() {																				\
+				int		samplerIndex = int(fTextureCoordinate.p);										\
+				ivec2	size = textureSize(diffuseTexture[samplerIndex], 0);							\
+				vec2	position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+				vec4	color = texture(diffuseTexture[samplerIndex], position, 0.0);					\
+																										\
+				fragColor = color;																		\
+			}																							\
 		");
-static	CString	sOpacityFragmentShaderString("#version 330 core									\
-			uniform	sampler2D   diffuseTexture[16];												\
-			uniform	float       opacity;														\
-																								\
-			in		vec3		v_texPosition0;													\
-																								\
-			out		vec4		fragColor;														\
-																								\
-			void main() {																		\
-				int		samplerIndex = int(v_texPosition0.p);									\
-				ivec2	size = textureSize(diffuseTexture[samplerIndex], 0);					\
-				vec2	position = vec2(v_texPosition0.s / size.x, v_texPosition0.t / size.y);	\
-				vec4	color = texture(diffuseTexture[samplerIndex], position, 0.0);			\
-																								\
-				color.a *= opacity;																\
-																								\
-				fragColor = color;																\
-			}																					\
+static	CString	sOpacityFragmentShaderString("#version 330 core											\
+			uniform	sampler2D   diffuseTexture[16];														\
+			uniform	float       opacity;																\
+																										\
+			in		vec3		fTextureCoordinate;														\
+																										\
+			out		vec4		fragColor;																\
+																										\
+			void main() {																				\
+				int		samplerIndex = int(fTextureCoordinate.p);										\
+				ivec2	size = textureSize(diffuseTexture[samplerIndex], 0);							\
+				vec2	position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+				vec4	color = texture(diffuseTexture[samplerIndex], position, 0.0);					\
+																										\
+				color.a *= opacity;																		\
+																										\
+				fragColor = color;																		\
+			}																							\
 		");
 #endif
 
@@ -342,39 +342,58 @@ static	CString	sOpacityFragmentShaderString("#version 330 core									\
 
 class COpenGLVertexShaderBasic : public COpenGLVertexShader {
 	public:
-				COpenGLVertexShaderBasic(const TArray<CString>& attributeNames, const TArray<CString>& uniformNames) :
-					COpenGLVertexShader(sBasicVertexShaderString, attributeNames, uniformNames)
-					{}
+								COpenGLVertexShaderBasic() :
+									COpenGLVertexShader(sBasicVertexShaderString, attributeNames(), uniformNames())
+									{}
 
-		void	setAttibutes(const CDictionary& attributeInfo, const SGPUVertexBuffer& gpuVertexBuffer)
-					{
-						// Setup attributes
-						GLint	positionAttributeLocation = attributeInfo.getSInt32(mPositionAttributeName);
-						glEnableVertexAttribArray(positionAttributeLocation);
-						glVertexAttribPointer(positionAttributeLocation,
-								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexCount, GL_FLOAT, GL_FALSE,
-								(GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
-								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexOffset);
+		UInt32					getPerVertexByteCount() const
+									{ return sizeof(SVertex2DMultitexture); }
 
-						GLint	textureCoordinateAttributeLocation =
-										attributeInfo.getSInt32(mTextureCoordinateAttributeName);
-						glEnableVertexAttribArray(textureCoordinateAttributeLocation);
-						glVertexAttribPointer(textureCoordinateAttributeLocation,
-								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateCount, GL_FLOAT,
-								GL_FALSE, (GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
-								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateOffset);
-					}
+		void					setAttibutes(const CDictionary& attributeInfo)
+									{
+										// Setup attributes
+										GLint	positionAttributeLocation =
+														attributeInfo.getSInt32(mPositionAttributeName);
+										glEnableVertexAttribArray(positionAttributeLocation);
+										glVertexAttribPointer(positionAttributeLocation, 2, GL_FLOAT, GL_FALSE, 20, 0);
 
-		void	setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
-						const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
-					{
-						// Setup uniforms
-						SMatrix4x4_32	modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
-						GLint			modelViewProjectionMatrixUniformLocation =
-												uniformInfo.getSInt32(mModelViewProjectionMatrixUniformName);
-						glUniformMatrix4fv(modelViewProjectionMatrixUniformLocation, 1, 0,
-								(GLfloat*) &modelViewProjectionMatrix);
-					}
+										GLint	textureCoordinateAttributeLocation =
+														attributeInfo.getSInt32(mTextureCoordinateAttributeName);
+										glEnableVertexAttribArray(textureCoordinateAttributeLocation);
+										glVertexAttribPointer(textureCoordinateAttributeLocation, 2, GL_FLOAT, GL_FALSE,
+												20, (GLvoid*) 8);
+									}
+
+		void					setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
+										const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
+									{
+										// Setup uniforms
+										SMatrix4x4_32	modelViewProjectionMatrix =
+																projectionMatrix * viewMatrix * modelMatrix;
+										GLint			modelViewProjectionMatrixUniformLocation =
+																uniformInfo.getSInt32(
+																		mModelViewProjectionMatrixUniformName);
+										glUniformMatrix4fv(modelViewProjectionMatrixUniformLocation, 1, 0,
+												(GLfloat*) &modelViewProjectionMatrix);
+									}
+
+		static	TArray<CString>	attributeNames()
+									{
+										// Setup
+										TNArray<CString>	attributeNames;
+										attributeNames += mPositionAttributeName;
+										attributeNames += mTextureCoordinateAttributeName;
+
+										return attributeNames;
+									}
+		static	TArray<CString>	uniformNames()
+									{
+										// Setup
+										TNArray<CString>	uniformNames;
+										uniformNames += mModelViewProjectionMatrixUniformName;
+
+										return uniformNames;
+									}
 
 		static	CString	mPositionAttributeName;
 		static	CString	mTextureCoordinateAttributeName;
@@ -383,7 +402,7 @@ class COpenGLVertexShaderBasic : public COpenGLVertexShader {
 };
 
 CString	COpenGLVertexShaderBasic::mPositionAttributeName(OSSTR("position"));
-CString	COpenGLVertexShaderBasic::mTextureCoordinateAttributeName(OSSTR("texCoord0"));
+CString	COpenGLVertexShaderBasic::mTextureCoordinateAttributeName(OSSTR("textureCoordinate"));
 
 CString	COpenGLVertexShaderBasic::mModelViewProjectionMatrixUniformName(OSSTR("modelViewProjectionMatrix"));
 
@@ -393,41 +412,39 @@ CString	COpenGLVertexShaderBasic::mModelViewProjectionMatrixUniformName(OSSTR("m
 
 class COpenGLVertexShaderClip : public COpenGLVertexShader {
 	public:
-				COpenGLVertexShaderClip(const TArray<CString>& attributeNames, const TArray<CString>& uniformNames) :
-					COpenGLVertexShader(sClipVertexShaderString, attributeNames, uniformNames)
+				COpenGLVertexShaderClip() :
+					COpenGLVertexShader(sClipVertexShaderString, attributeNames(), uniformNames())
 					{}
 
-		void	setAttibutes(const CDictionary& attributeInfo, const SGPUVertexBuffer& gpuVertexBuffer)
+		UInt32	getPerVertexByteCount() const
+					{ return sizeof(SVertex2DMultitexture); }
+
+		void	setAttibutes(const CDictionary& attributeInfo)
 					{
 						// Setup attributes
 						GLint	positionAttributeLocation = attributeInfo.getSInt32(mPositionAttributeName);
 						glEnableVertexAttribArray(positionAttributeLocation);
-						glVertexAttribPointer(positionAttributeLocation,
-								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexCount, GL_FLOAT, GL_FALSE,
-								(GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
-								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mVertexOffset);
+						glVertexAttribPointer(positionAttributeLocation, 2, GL_FLOAT, GL_FALSE, 20, 0);
 
 						GLint	textureCoordinateAttributeLocation =
 										attributeInfo.getSInt32(mTextureCoordinateAttributeName);
 						glEnableVertexAttribArray(textureCoordinateAttributeLocation);
-						glVertexAttribPointer(textureCoordinateAttributeLocation,
-								(GLint) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateCount, GL_FLOAT,
-								GL_FALSE, (GLsizei) gpuVertexBuffer.mGPUVertexBufferInfo.mTotalSize,
-								(GLvoid*) (intptr_t) gpuVertexBuffer.mGPUVertexBufferInfo.mTextureCoordinateOffset);
+						glVertexAttribPointer(textureCoordinateAttributeLocation, 2, GL_FLOAT, GL_FALSE, 20,
+								(GLvoid*) 8);
 					}
 
 		void	setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
 						const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
 					{
 						// Setup uniforms
-						GLint	projectionMatrixUniformLocation = uniformInfo.getSInt32(mProjectionMatrixUniformName);
-						GLint	viewMatrixUniformLocation = uniformInfo.getSInt32(mViewMatrixUniformName);
 						GLint	modelMatrixUniformLocation = uniformInfo.getSInt32(mModelMatrixUniformName);
+						GLint	viewMatrixUniformLocation = uniformInfo.getSInt32(mViewMatrixUniformName);
+						GLint	projectionMatrixUniformLocation = uniformInfo.getSInt32(mProjectionMatrixUniformName);
 						GLint	clipPlaneUniformLocation = uniformInfo.getSInt32(mClipPlaneUniformName);
 
-						glUniformMatrix4fv(projectionMatrixUniformLocation, 1, 0, (GLfloat*) &projectionMatrix);
-						glUniformMatrix4fv(viewMatrixUniformLocation, 1, 0, (GLfloat*) &viewMatrix);
 						glUniformMatrix4fv(modelMatrixUniformLocation, 1, 0, (GLfloat*) &modelMatrix);
+						glUniformMatrix4fv(viewMatrixUniformLocation, 1, 0, (GLfloat*) &viewMatrix);
+						glUniformMatrix4fv(projectionMatrixUniformLocation, 1, 0, (GLfloat*) &projectionMatrix);
 						glUniform4fv(clipPlaneUniformLocation, 1, (GLfloat*) &mClipPlane);
 					}
 
@@ -456,19 +473,40 @@ class COpenGLVertexShaderClip : public COpenGLVertexShader {
 		void	setClipPlane(const SMatrix4x1_32& clipPlane)
 					{ mClipPlane = clipPlane; }
 
+		static	TArray<CString>	attributeNames()
+									{
+										// Setup
+										TNArray<CString>	attributeNames;
+										attributeNames += mPositionAttributeName;
+										attributeNames += mTextureCoordinateAttributeName;
+
+										return attributeNames;
+									}
+		static	TArray<CString>	uniformNames()
+									{
+										// Setup
+										TNArray<CString>	uniformNames;
+										uniformNames += mModelMatrixUniformName;
+										uniformNames += mViewMatrixUniformName;
+										uniformNames += mProjectionMatrixUniformName;
+										uniformNames += mClipPlaneUniformName;
+
+										return uniformNames;
+									}
+
 				SMatrix4x1_32	mClipPlane;
 
 		static	CString			mPositionAttributeName;
 		static	CString			mTextureCoordinateAttributeName;
 
-		static	CString			mProjectionMatrixUniformName;
-		static	CString			mViewMatrixUniformName;
 		static	CString			mModelMatrixUniformName;
+		static	CString			mViewMatrixUniformName;
+		static	CString			mProjectionMatrixUniformName;
 		static	CString			mClipPlaneUniformName;
 };
 
 CString	COpenGLVertexShaderClip::mPositionAttributeName(OSSTR("position"));
-CString	COpenGLVertexShaderClip::mTextureCoordinateAttributeName(OSSTR("texCoord0"));
+CString	COpenGLVertexShaderClip::mTextureCoordinateAttributeName(OSSTR("textureCoordinate"));
 
 CString	COpenGLVertexShaderClip::mProjectionMatrixUniformName(OSSTR("projectionMatrix"));
 CString	COpenGLVertexShaderClip::mViewMatrixUniformName(OSSTR("viewMatrix"));
@@ -482,50 +520,31 @@ CString	COpenGLVertexShaderClip::mClipPlaneUniformName(OSSTR("clipPlane"));
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUVertexShader& CGPUVertexShader::getBasic()
+CGPUVertexShader& CGPUVertexShader::getBasic2DMultiTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	static	COpenGLVertexShaderBasic*	sVertexShader = nil;
 
 	// Check if have shader
-	if (sVertexShader == nil) {
+	if (sVertexShader == nil)
 		// Create shader
-		TNArray<CString>	attributeNames;
-		attributeNames += COpenGLVertexShaderBasic::mPositionAttributeName;
-		attributeNames += COpenGLVertexShaderBasic::mTextureCoordinateAttributeName;
-
-		TNArray<CString>	uniformNames;
-		uniformNames += COpenGLVertexShaderBasic::mModelViewProjectionMatrixUniformName;
-
-		sVertexShader = new COpenGLVertexShaderBasic(attributeNames, uniformNames);
-	}
+		sVertexShader = new COpenGLVertexShaderBasic();
 
 	return *sVertexShader;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUVertexShader& CGPUVertexShader::getClip(const SMatrix4x1_32& clipPlane)
+CGPUVertexShader& CGPUVertexShader::getClip2DMultiTexture(const SMatrix4x1_32& clipPlane)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	static	COpenGLVertexShaderClip*	sVertexShader = nil;
 
 	// Check if have shader
-	if (sVertexShader == nil) {
+	if (sVertexShader == nil)
 		// Create shader
-		TNArray<CString>	attributeNames;
-		attributeNames += COpenGLVertexShaderBasic::mPositionAttributeName;
-		attributeNames += COpenGLVertexShaderBasic::mTextureCoordinateAttributeName;
-
-		TNArray<CString>	uniformNames;
-		uniformNames += COpenGLVertexShaderClip::mProjectionMatrixUniformName;
-		uniformNames += COpenGLVertexShaderClip::mViewMatrixUniformName;
-		uniformNames += COpenGLVertexShaderClip::mModelMatrixUniformName;
-		uniformNames += COpenGLVertexShaderClip::mClipPlaneUniformName;
-
-		sVertexShader = new COpenGLVertexShaderClip(attributeNames, uniformNames);
-	}
+		sVertexShader = new COpenGLVertexShaderClip();
 
 	// Setup
 	sVertexShader->setClipPlane(clipPlane);
@@ -610,7 +629,7 @@ CString	COpenGLFragmentShaderOpacity::mOpacityUniformName(OSSTR("opacity"));
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getBasic()
+CGPUFragmentShader& CGPUFragmentShader::getBasicMultiTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -631,7 +650,7 @@ CGPUFragmentShader& CGPUFragmentShader::getBasic()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getOpacity(Float32 opacity)
+CGPUFragmentShader& CGPUFragmentShader::getOpacityMultiTexture(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

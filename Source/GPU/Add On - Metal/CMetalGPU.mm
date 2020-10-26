@@ -26,7 +26,6 @@ class CGPUInternals {
 					mCommandQueue([procsInfo.getDevice() newCommandQueue]),
 					mShaderLibrary([procsInfo.getDevice() newDefaultLibrary]),
 					mFunctionsCache([[NSMutableDictionary alloc] init]),
-					mVertexDescriptorCache([[NSMutableDictionary alloc] init]),
 					mRenderPipelineDescriptor([[MTLRenderPipelineDescriptor alloc] init]),
 					mRenderPipelineStateCache([[NSMutableDictionary alloc] init]),
 					mSharedResourceBuffers(kBufferCount), mMetalBufferCacheIndex(0),
@@ -35,6 +34,16 @@ class CGPUInternals {
 				// Finish setup
 				MTLSamplerDescriptor*	samplerDescriptor = [[MTLSamplerDescriptor alloc] init];
 				mSamplerState = [procsInfo.getDevice() newSamplerStateWithDescriptor:samplerDescriptor];
+
+				MTLDepthStencilDescriptor*	depthStencilDescriptor = [[MTLDepthStencilDescriptor alloc] init];
+				depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionLessEqual;
+				depthStencilDescriptor.depthWriteEnabled = NO;
+				mDepthStencilState2D =
+						[procsInfo.getDevice() newDepthStencilStateWithDescriptor:depthStencilDescriptor];
+
+				depthStencilDescriptor.depthWriteEnabled = YES;
+				mDepthStencilState3D =
+						[procsInfo.getDevice() newDepthStencilStateWithDescriptor:depthStencilDescriptor];
 
 				mMetalBufferCaches = [NSMutableArray arrayWithCapacity:kBufferCount];
 				for (NSUInteger i = 0; i < kBufferCount; i++)
@@ -49,8 +58,9 @@ class CGPUInternals {
 	id<MTLCommandQueue>											mCommandQueue;
 	id<MTLLibrary>												mShaderLibrary;
 	id<MTLSamplerState>											mSamplerState;
+	id<MTLDepthStencilState>									mDepthStencilState2D;
+	id<MTLDepthStencilState>									mDepthStencilState3D;
 	NSMutableDictionary<NSString*, id<MTLFunction>>*			mFunctionsCache;
-	NSMutableDictionary<NSString*, MTLVertexDescriptor*>*		mVertexDescriptorCache;
 	MTLRenderPipelineDescriptor*								mRenderPipelineDescriptor;
 	NSMutableDictionary<NSString*, id<MTLRenderPipelineState>>*	mRenderPipelineStateCache;
 
@@ -117,57 +127,24 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& data)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Retrieve metal vertex descriptor
-	NSString*				vertexDescriptorUUID =
-									(__bridge NSString*) gpuVertexBufferInfo.mUUID.getBase64String().getOSString();
-	MTLVertexDescriptor*	vertexDescriptor = mInternals->mVertexDescriptorCache[vertexDescriptorUUID];
-	if (vertexDescriptor == nil) {
-		// Setup metal vertex descriptor
-		vertexDescriptor = [[MTLVertexDescriptor alloc] init];
-
-		vertexDescriptor.attributes[kVertexAttributePosition].format =
-				MTLVertexFormatFloat + (gpuVertexBufferInfo.mVertexCount - 1);
-		vertexDescriptor.attributes[kVertexAttributePosition].offset = gpuVertexBufferInfo.mVertexOffset;
-		vertexDescriptor.attributes[kVertexAttributePosition].bufferIndex = kBufferIndexVertexPosition;
-		vertexDescriptor.layouts[kBufferIndexVertexPosition].stride = gpuVertexBufferInfo.mTotalSize;
-		vertexDescriptor.layouts[kBufferIndexVertexPosition].stepRate = 1;
-		vertexDescriptor.layouts[kBufferIndexVertexPosition].stepFunction = MTLVertexStepFunctionPerVertex;
-
-		vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].format =
-				MTLVertexFormatFloat + (gpuVertexBufferInfo.mTextureCoordinateCount - 1);
-		vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].offset =
-				gpuVertexBufferInfo.mTextureCoordinateOffset;
-		vertexDescriptor.attributes[kVertexAttributeTextureCoordinate].bufferIndex =
-				kBufferIndexVertexTextureCoordinate;
-		vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stride = gpuVertexBufferInfo.mTotalSize;
-		vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepRate = 1;
-		vertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepFunction = MTLVertexStepFunctionPerVertex;
-
-		vertexDescriptor.attributes[kVertexAttributeTextureIndex].format = MTLVertexFormatFloat;
-		vertexDescriptor.attributes[kVertexAttributeTextureIndex].offset = gpuVertexBufferInfo.mTextureIndexOffset;
-		vertexDescriptor.attributes[kVertexAttributeTextureIndex].bufferIndex = kBufferIndexVertexTextureIndex;
-		vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stride = gpuVertexBufferInfo.mTotalSize;
-		vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepRate = 1;
-		vertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepFunction = MTLVertexStepFunctionPerVertex;
-
-		// Store
-		mInternals->mVertexDescriptorCache[vertexDescriptorUUID] = vertexDescriptor;
-	}
-
-	// Setup vertex buffer
-	id<MTLBuffer>	vertexBuffer =
+	// Create buffer
+	id<MTLBuffer>	mtlBuffer =
 							[mInternals->mProcsInfo.getDevice() newBufferWithBytes:data.getBytePtr()
 									length:data.getSize() options:MTLResourceStorageModeShared];
 
-	return SGPUVertexBuffer(gpuVertexBufferInfo,
-			new SMetalVertexBufferInfo(vertexDescriptorUUID, vertexDescriptor, vertexBuffer));
+	return SGPUBuffer((void*) ::CFBridgingRetain(mtlBuffer));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SGPUVertexBuffer CGPU::allocateVertexBuffer(UInt32 perVertexByteCount, const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create buffer
+	id<MTLBuffer>	mtlBuffer =
+							[mInternals->mProcsInfo.getDevice() newBufferWithBytes:data.getBytePtr()
+									length:data.getSize() options:MTLResourceStorageModeShared];
+
+	return SGPUVertexBuffer(perVertexByteCount, (void*) ::CFBridgingRetain(mtlBuffer));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -175,13 +152,12 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Cleanup
-	SMetalVertexBufferInfo*	metalVertexBufferInfo = (SMetalVertexBufferInfo*) buffer.mInternalReference;
-	Delete(metalVertexBufferInfo);
+	::CFBridgingRelease(buffer.mPlatformReference);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Float32 aspectRatio3D, Float32 nearZ3D,
-		Float32 farZ3D, const S3DPointF32& camera3D, const S3DPointF32& target3D, const S3DPointF32& up3D) const
+		Float32 farZ3D, const S3DPointF32& camera3D, const S3DPointF32& target3D, const S3DVectorF32& up3D) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup current command buffer
@@ -193,16 +169,40 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 			[mInternals->mCurrentCommandBuffer
 					renderCommandEncoderWithDescriptor:mInternals->mProcsInfo.getCurrentRenderPassDescriptor()];
 	mInternals->mCurrentRenderCommandEncoder.label = @"Render Command Encoder";
-
 	[mInternals->mCurrentRenderCommandEncoder setFragmentSamplerState:mInternals->mSamplerState atIndex:0];
 
-	// Setup uniforms
+	// Projection 2D
 	mInternals->mProjectionMatrix2D =
 			SMatrix4x4_32(
 							2.0 / size2D.mWidth, 0.0, 0.0, 0.0,
 							0.0, 2.0 / -size2D.mHeight, 0.0, 0.0,
 							0.0, 0.0, -0.5, 0.0,
 							-1.0, 1.0, 0.5, 1.0);
+
+	// View 3D
+	S3DVectorF32	camera3DVector = S3DVectorF32(camera3D.mX, camera3D.mY, camera3D.mZ);
+	S3DVectorF32	target3DVector = S3DVectorF32(target3D.mX, target3D.mY, target3D.mZ);
+	S3DVectorF32	f = (target3DVector - camera3DVector).normalized();
+	S3DVectorF32	s = f.crossed(up3D).normalized();
+	S3DVectorF32	t = s.crossed(f);
+	mInternals->mViewMatrix3D =
+			SMatrix4x4_32(
+					s.mDX, t.mDX, -f.mDX, 0.0,
+					s.mDY, t.mDY, -f.mDY, 0.0,
+					s.mDZ, t.mDZ, -f.mDZ, 0.0,
+					0.0, 0.0, 0.0, 1.0)
+			.translated(S3DOffsetF32(-camera3D.mX, -camera3D.mY, -camera3D.mZ));
+
+	// Projection 3D
+	Float32	ys = 1.0 / tanf(fieldOfViewAngle3D * 0.5);
+	Float32	xs = ys / aspectRatio3D;
+	Float32	zs = farZ3D / (nearZ3D - farZ3D);
+	mInternals->mProjectionMatrix3D =
+			SMatrix4x4_32(
+					xs,		0.0,	0.0,			0.0,
+					0.0,	ys,		0.0,			0.0,
+					0.0,	0.0,	zs,				-1.0,
+					0.0,	0.0,	nearZ3D * zs,	0.0);
 
 	// Setup Metal Buffer Cache
 	mInternals->mSharedResourceBuffers.consume();
@@ -217,6 +217,7 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 	switch (renderState.getRenderMode()) {
 		case kGPURenderMode2D:
 			// 2D
+			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
 					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
@@ -228,6 +229,7 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 
 		case kGPURenderMode3D:
 			// 3D
+			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
 					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
@@ -261,10 +263,15 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	const	OR<const SGPUBuffer>&	indexBuffer = renderState.getIndexBuffer();
+			id<MTLBuffer>			mtlBuffer = (__bridge id<MTLBuffer>) indexBuffer->mPlatformReference;
+
 	// Finalize render state
 	switch (renderState.getRenderMode()) {
 		case kGPURenderMode2D:
 			// 2D
+			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
 					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
@@ -272,9 +279,11 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
 							mInternals->mRenderPipelineStateCache, mInternals->mViewMatrix2D,
 							mInternals->mProjectionMatrix2D));
+			break;
 
 		case kGPURenderMode3D:
 			// 3D
+			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
 					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
@@ -282,15 +291,18 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
 							mInternals->mRenderPipelineStateCache, mInternals->mViewMatrix3D,
 							mInternals->mProjectionMatrix3D));
+			break;
 	}
 
 	// Check type
 	switch (type) {
 		case kGPURenderTypeTriangleList:
 			// Triangle list
-			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip Indexed"];
-			AssertFailUnimplemented();
+			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle List Indexed"];
+			[mInternals->mCurrentRenderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:count
+					indexType:MTLIndexTypeUInt16 indexBuffer:mtlBuffer indexBufferOffset:0];
 			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
+			break;
 
 		case kGPURenderTypeTriangleStrip:
 			// Triangle strip

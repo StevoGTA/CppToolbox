@@ -11,22 +11,76 @@
 
 class CMetalVertexShaderBasic : public CMetalVertexShader {
 	public:
-				CMetalVertexShaderBasic() : CMetalVertexShader(CString(OSSTR("vertexShaderBasic"))) {}
+								CMetalVertexShaderBasic() :
+									CMetalVertexShader(CString(OSSTR("vertexShaderBasic")))
+									{
+										mVertexDescriptor = [[MTLVertexDescriptor alloc] init];
 
-		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
-					{
-						// Setup instance uniforms
-						id<MTLBuffer>	basicVertexUniformsBuffer =
-												[metalBufferCache bufferWithLength:sizeof(BasicVertexUniforms)
-														options:MTLResourceStorageModeShared];
-						basicVertexUniformsBuffer.label = @"Basic Vertex Uniforms";
+										mVertexDescriptor.attributes[kVertexAttributePosition].format =
+												MTLVertexFormatFloat2;
+										mVertexDescriptor.attributes[kVertexAttributePosition].offset = 0;
+										mVertexDescriptor.attributes[kVertexAttributePosition].bufferIndex =
+												kBufferIndexVertexPosition;
+										mVertexDescriptor.layouts[kBufferIndexVertexPosition].stride = 20;
+										mVertexDescriptor.layouts[kBufferIndexVertexPosition].stepRate = 1;
+										mVertexDescriptor.layouts[kBufferIndexVertexPosition].stepFunction =
+												MTLVertexStepFunctionPerVertex;
 
-//						BasicVertexUniforms*	basicVertexUniforms =
-//														(BasicVertexUniforms*) basicVertexUniformsBuffer.contents;
+										mVertexDescriptor.attributes[kVertexAttributeTextureCoordinate].format =
+												MTLVertexFormatFloat2;
+										mVertexDescriptor.attributes[kVertexAttributeTextureCoordinate].offset = 8;
+										mVertexDescriptor.attributes[kVertexAttributeTextureCoordinate].bufferIndex =
+												kBufferIndexVertexTextureCoordinate;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stride = 20;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepRate = 1;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepFunction =
+												MTLVertexStepFunctionPerVertex;
 
-						[renderCommandEncoder setVertexBuffer:basicVertexUniformsBuffer offset:0
-								atIndex:kBufferIndexVertexUniforms];
-					}
+										mVertexDescriptor.attributes[kVertexAttributeTextureIndex].format =
+												MTLVertexFormatFloat;
+										mVertexDescriptor.attributes[kVertexAttributeTextureIndex].offset = 16;
+										mVertexDescriptor.attributes[kVertexAttributeTextureIndex].bufferIndex =
+												kBufferIndexVertexTextureIndex;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stride = 20;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepRate = 1;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepFunction =
+												MTLVertexStepFunctionPerVertex;
+									}
+
+		UInt32					getPerVertexByteCount() const
+									{ return sizeof(SVertex2DMultitexture); }
+
+		bool					requiresDepthTest() const
+									{ return false; }
+		MTLVertexDescriptor*	getVertexDescriptor() const
+									{ return mVertexDescriptor; }
+		void					setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLBuffer> vertexBuffer,
+										MetalBufferCache* metalBufferCache) const
+									{
+										// Setup render command encoder
+										[renderCommandEncoder setVertexBuffer:vertexBuffer offset:0
+												atIndex:kBufferIndexVertexPosition];
+										[renderCommandEncoder setVertexBuffer:vertexBuffer offset:0
+												atIndex:kBufferIndexVertexTextureCoordinate];
+										[renderCommandEncoder setVertexBuffer:vertexBuffer offset:0
+												atIndex:kBufferIndexVertexTextureIndex];
+
+										// Setup instance uniforms
+										id<MTLBuffer>	basicVertexUniformsBuffer =
+																[metalBufferCache
+																		bufferWithLength:sizeof(BasicVertexUniforms)
+																		options:MTLResourceStorageModeShared];
+										basicVertexUniformsBuffer.label = @"Basic Vertex Uniforms";
+
+//										BasicVertexUniforms*	basicVertexUniforms =
+//																		(BasicVertexUniforms*)
+//																				basicVertexUniformsBuffer.contents;
+
+										[renderCommandEncoder setVertexBuffer:basicVertexUniformsBuffer offset:0
+												atIndex:kBufferIndexVertexUniforms];
+									}
+
+		MTLVertexDescriptor*	mVertexDescriptor;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -35,28 +89,82 @@ class CMetalVertexShaderBasic : public CMetalVertexShader {
 
 class CMetalVertexShaderClip : public CMetalVertexShader {
 	public:
-				CMetalVertexShaderClip() : CMetalVertexShader(CString(OSSTR("vertexShaderClip"))) {}
+								CMetalVertexShaderClip() :
+									CMetalVertexShader(CString(OSSTR("vertexShaderClip")))
+									{
+										// Setup metal vertex descriptor
+										mVertexDescriptor = [[MTLVertexDescriptor alloc] init];
 
-		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
-					{
-						// Setup instance uniforms
-						id<MTLBuffer>	clipVertexUniformsBuffer =
-												[metalBufferCache bufferWithLength:sizeof(ClipVertexUniforms)
-														options:MTLResourceStorageModeShared];
-						clipVertexUniformsBuffer.label = @"Clip Vertex Uniforms";
+										mVertexDescriptor.attributes[kVertexAttributePosition].format =
+												MTLVertexFormatFloat2;
+										mVertexDescriptor.attributes[kVertexAttributePosition].offset = 0;
+										mVertexDescriptor.attributes[kVertexAttributePosition].bufferIndex =
+												kBufferIndexVertexPosition;
+										mVertexDescriptor.layouts[kBufferIndexVertexPosition].stride = 20;
+										mVertexDescriptor.layouts[kBufferIndexVertexPosition].stepRate = 1;
+										mVertexDescriptor.layouts[kBufferIndexVertexPosition].stepFunction =
+												MTLVertexStepFunctionPerVertex;
 
-						ClipVertexUniforms*	clipVertexUniforms =
-														(ClipVertexUniforms*) clipVertexUniformsBuffer.contents;
-						clipVertexUniforms->mClipPlane = *((vector_float4*) &mClipPlane);
+										mVertexDescriptor.attributes[kVertexAttributeTextureCoordinate].format =
+												MTLVertexFormatFloat2;
+										mVertexDescriptor.attributes[kVertexAttributeTextureCoordinate].offset = 8;
+										mVertexDescriptor.attributes[kVertexAttributeTextureCoordinate].bufferIndex =
+												kBufferIndexVertexTextureCoordinate;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stride = 20;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepRate = 1;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureCoordinate].stepFunction =
+												MTLVertexStepFunctionPerVertex;
 
-						[renderCommandEncoder setVertexBuffer:clipVertexUniformsBuffer offset:0
-								atIndex:kBufferIndexVertexUniforms];
-					}
+										mVertexDescriptor.attributes[kVertexAttributeTextureIndex].format =
+												MTLVertexFormatFloat;
+										mVertexDescriptor.attributes[kVertexAttributeTextureIndex].offset = 16;
+										mVertexDescriptor.attributes[kVertexAttributeTextureIndex].bufferIndex =
+												kBufferIndexVertexTextureIndex;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stride = 20;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepRate = 1;
+										mVertexDescriptor.layouts[kBufferIndexVertexTextureIndex].stepFunction =
+												MTLVertexStepFunctionPerVertex;
+									}
 
-		void	setClipPlane(const SMatrix4x1_32& clipPlane)
-					{ mClipPlane = clipPlane; }
+		UInt32					getPerVertexByteCount() const
+									{ return sizeof(SVertex2DMultitexture); }
 
-		SMatrix4x1_32	mClipPlane;
+		bool					requiresDepthTest() const
+									{ return false; }
+		MTLVertexDescriptor*	getVertexDescriptor() const
+									{ return mVertexDescriptor; }
+		void					setup(id<MTLRenderCommandEncoder> renderCommandEncoder, id<MTLBuffer> vertexBuffer,
+										MetalBufferCache* metalBufferCache) const
+									{
+										// Setup render command encoder
+										[renderCommandEncoder setVertexBuffer:vertexBuffer offset:0
+												atIndex:kBufferIndexVertexPosition];
+										[renderCommandEncoder setVertexBuffer:vertexBuffer offset:0
+												atIndex:kBufferIndexVertexTextureCoordinate];
+										[renderCommandEncoder setVertexBuffer:vertexBuffer offset:0
+												atIndex:kBufferIndexVertexTextureIndex];
+
+										// Setup instance uniforms
+										id<MTLBuffer>	clipVertexUniformsBuffer =
+																[metalBufferCache
+																		bufferWithLength:sizeof(ClipVertexUniforms)
+																		options:MTLResourceStorageModeShared];
+										clipVertexUniformsBuffer.label = @"Clip Vertex Uniforms";
+
+										ClipVertexUniforms*	clipVertexUniforms =
+																		(ClipVertexUniforms*)
+																				clipVertexUniformsBuffer.contents;
+										clipVertexUniforms->mClipPlane = *((vector_float4*) &mClipPlane);
+
+										[renderCommandEncoder setVertexBuffer:clipVertexUniformsBuffer offset:0
+												atIndex:kBufferIndexVertexUniforms];
+									}
+
+		void					setClipPlane(const SMatrix4x1_32& clipPlane)
+									{ mClipPlane = clipPlane; }
+
+		MTLVertexDescriptor*	mVertexDescriptor;
+		SMatrix4x1_32			mClipPlane;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -66,7 +174,7 @@ class CMetalVertexShaderClip : public CMetalVertexShader {
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUVertexShader& CGPUVertexShader::getBasic()
+CGPUVertexShader& CGPUVertexShader::getBasic2DMultiTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -81,7 +189,7 @@ CGPUVertexShader& CGPUVertexShader::getBasic()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUVertexShader& CGPUVertexShader::getClip(const SMatrix4x1_32& clipPlane)
+CGPUVertexShader& CGPUVertexShader::getClip2DMultiTexture(const SMatrix4x1_32& clipPlane)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -150,7 +258,7 @@ class CMetalFragmentShaderOpacity : public CMetalFragmentShader {
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getBasic()
+CGPUFragmentShader& CGPUFragmentShader::getBasicMultiTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -165,7 +273,7 @@ CGPUFragmentShader& CGPUFragmentShader::getBasic()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getOpacity(Float32 opacity)
+CGPUFragmentShader& CGPUFragmentShader::getOpacityMultiTexture(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

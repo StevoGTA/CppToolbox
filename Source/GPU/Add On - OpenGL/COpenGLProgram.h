@@ -20,7 +20,7 @@ class COpenGLProgram {
 
 				// Instance methods
 		void	prepare(const SMatrix4x4_32& projectionMatrix, const SMatrix4x4_32& viewMatrix,
-						const SMatrix4x4_32& modelMatrix, const SGPUVertexBuffer& gpuVertexBuffer) const;
+						const SMatrix4x4_32& modelMatrix) const;
 
 	// Properties
 	private:

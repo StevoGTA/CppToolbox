@@ -17,8 +17,25 @@
 class CGPUInternals {
 	public:
 				CGPUInternals(const SGPUProcsInfo& procsInfo) :
-					mProcsInfo(procsInfo), mPerformedSetup(false), mRenderBufferName(0), mFrameBufferName(0)
-					{}
+					mProcsInfo(procsInfo)
+					{
+						// Setup buffers
+						glGenFramebuffers(1, &mFrameBufferName);
+						glBindFramebuffer(GL_FRAMEBUFFER, mFrameBufferName);
+
+						glGenRenderbuffers(1, &mRenderBufferName);
+						glBindRenderbuffer(GL_RENDERBUFFER, mRenderBufferName);
+						[EAGLContext.currentContext renderbufferStorage:GL_RENDERBUFFER
+								fromDrawable:(__bridge id<EAGLDrawable>) mProcsInfo.getRenderBufferStorageContext()];
+						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
+								mRenderBufferName);
+
+#if DEBUG
+						glClearColor(0.5, 0.0, 0.25, 1.0);
+			#else
+						glClearColor(0.0, 0.0, 0.0, 1.0);
+#endif
+					}
 				~CGPUInternals()
 					{
 						// Cleanup
@@ -28,9 +45,8 @@ class CGPUInternals {
 
 	SGPUProcsInfo	mProcsInfo;
 
-	bool			mPerformedSetup;
-	GLuint			mRenderBufferName;
 	GLuint			mFrameBufferName;
+	GLuint			mRenderBufferName;
 
 	SMatrix4x4_32	mViewMatrix2D;
 	SMatrix4x4_32	mProjectionMatrix2D;
@@ -89,21 +105,25 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailUnimplemented();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-SGPUVertexBuffer CGPU::allocateVertexBuffer(const SGPUVertexBufferInfo& gpuVertexBufferInfo, const CData& data)
+SGPUVertexBuffer CGPU::allocateVertexBuffer(UInt32 perVertexByteCount, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mProcsInfo.acquireContext();
-	SGPUVertexBuffer gpuVertexBuffer(gpuVertexBufferInfo, new SOpenGLVertexBufferInfo(data));
+	SGPUVertexBuffer	gpuVertexBuffer(perVertexByteCount, new COpenGLVertexBufferInfo(data));
 	mInternals->mProcsInfo.releaseContext();
 
 	return gpuVertexBuffer;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mProcsInfo.acquireContext();
+	SGPUBuffer	gpuBuffer(new COpenGLIndexBufferInfo(data));
+	mInternals->mProcsInfo.releaseContext();
+
+	return gpuBuffer;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -112,65 +132,59 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 {
 	// Setup
 	mInternals->mProcsInfo.acquireContext();
-	SOpenGLVertexBufferInfo*	openGLVertexBufferInfo = (SOpenGLVertexBufferInfo*) buffer.mInternalReference;
-	Delete(openGLVertexBufferInfo);
+	COpenGLBufferInfo*	openGLBufferInfo = (COpenGLBufferInfo*) buffer.mPlatformReference;
+	Delete(openGLBufferInfo);
 	mInternals->mProcsInfo.releaseContext();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Float32 aspectRatio3D, Float32 nearZ3D,
-		Float32 farZ3D, const S3DPointF32& camera3D, const S3DPointF32& target3D, const S3DPointF32& up3D) const
+		Float32 farZ3D, const S3DPointF32& camera3D, const S3DPointF32& target3D, const S3DVectorF32& up3D) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get info
 	S2DSizeU16	viewSize = mInternals->mProcsInfo.getSize();
 	Float32		scale = mInternals->mProcsInfo.getScale();
 
-	// Check if performed setup
-	if (!mInternals->mPerformedSetup) {
-		// Update
-		mInternals->mProjectionMatrix2D =
-				SMatrix4x4_32(
-						2.0 / size2D.mWidth, 0.0, 0.0, 0.0,
-						0.0, 2.0 / -size2D.mHeight, 0.0, 0.0,
-						0.0, 0.0, -1.0, 0.0,
-						-1.0, 1.0, 0.0, 1.0);
+	// Projection 2D
+	mInternals->mProjectionMatrix2D =
+			SMatrix4x4_32(
+					2.0 / size2D.mWidth, 0.0, 0.0, 0.0,
+					0.0, -2.0 / size2D.mHeight, 0.0, 0.0,
+					0.0, 0.0, -1.0, 0.0,
+					-1.0, 1.0, 0.0, 1.0);
 
-		// Setup
-		if (mInternals->mFrameBufferName != 0) {
-			glDeleteFramebuffers(1, &mInternals->mFrameBufferName);
-			mInternals->mFrameBufferName = 0;
-		}
-		if (mInternals->mRenderBufferName != 0) {
-			glDeleteRenderbuffers(1, &mInternals->mRenderBufferName);
-			mInternals->mRenderBufferName = 0;
-		}
+	// View 3D
+	S3DVectorF32	camera3DVector = S3DVectorF32(camera3D.mX, camera3D.mY, camera3D.mZ);
+	S3DVectorF32	target3DVector = S3DVectorF32(target3D.mX, target3D.mY, target3D.mZ);
+	S3DVectorF32	f = (target3DVector - camera3DVector).normalized();
+	S3DVectorF32	s = f.crossed(up3D).normalized();
+	S3DVectorF32	t = s.crossed(f);
+	mInternals->mViewMatrix3D =
+			SMatrix4x4_32(
+					s.mDX, t.mDX, -f.mDX, 0.0,
+					s.mDY, t.mDY, -f.mDY, 0.0,
+					s.mDZ, t.mDZ, -f.mDZ, 0.0,
+					0.0, 0.0, 0.0, 1.0)
+			.translated(S3DOffsetF32(-camera3D.mX, -camera3D.mY, -camera3D.mZ));
 
-		// Setup buffers
-		glGenFramebuffers(1, &mInternals->mFrameBufferName);
-		glBindFramebuffer(GL_FRAMEBUFFER, mInternals->mFrameBufferName);
-
-		glGenRenderbuffers(1, &mInternals->mRenderBufferName);
-		glBindRenderbuffer(GL_RENDERBUFFER, mInternals->mRenderBufferName);
-		[EAGLContext.currentContext renderbufferStorage:GL_RENDERBUFFER
-				fromDrawable:(__bridge id<EAGLDrawable>) mInternals->mProcsInfo.getRenderBufferStorageContext()];
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, mInternals->mRenderBufferName);
-
-#if DEBUG
-		glClearColor(0.5, 0.0, 0.25, 1.0);
-#else
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-#endif
-
-		mInternals->mPerformedSetup = true;
-	}
+	// Projection 3D
+	Float32	ys = 1.0 / tanf(fieldOfViewAngle3D * 0.5);
+	Float32	xs = ys / aspectRatio3D;
+	Float32	zs = farZ3D / (nearZ3D - farZ3D);
+	mInternals->mProjectionMatrix3D =
+			SMatrix4x4_32(
+					xs,		0.0,	0.0,			0.0,
+					0.0,	ys,		0.0,			0.0,
+					0.0,	0.0,	zs,				-1.0,
+					0.0,	0.0,	nearZ3D * zs,	0.0);
 
 	// Prepare to render
 	mInternals->mProcsInfo.acquireContext();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, mInternals->mFrameBufferName);
 	glViewport(0, 0, viewSize.mWidth * scale, viewSize.mHeight * scale);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -182,11 +196,17 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 		case kGPURenderMode2D:
 			// 2D
 			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
 			break;
 
 		case kGPURenderMode3D:
 			// 3D
 			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			glFrontFace(GL_CW);
 			break;
 	}
 
@@ -194,7 +214,7 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 	switch (type) {
 		case kGPURenderTypeTriangleList:
 			// Triangle list
-			AssertFailUnimplemented();
+			glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, (GLvoid*) (GLintptr) offset);
 			break;
 
 		case kGPURenderTypeTriangleStrip:
@@ -213,11 +233,18 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 		case kGPURenderMode2D:
 			// 2D
 			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
 			break;
 
 		case kGPURenderMode3D:
 			// 3D
 			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			glFrontFace(GL_CW);
+
 			break;
 	}
 
@@ -225,12 +252,12 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 	switch (type) {
 		case kGPURenderTypeTriangleList:
 			// Triangle list
-			AssertFailUnimplemented();
+			glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, (GLvoid*) (GLintptr) offset);
 			break;
 
 		case kGPURenderTypeTriangleStrip:
 			// Triangle strip
-			AssertFailUnimplemented();
+			glDrawArrays(GL_TRIANGLE_STRIP, offset, count);
 			break;
 	}
 }

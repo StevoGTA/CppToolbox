@@ -31,12 +31,14 @@ struct OpacityFragmentUniforms {
 
 enum VertexAttribute {
 	kVertexAttributePosition,
+	kVertexAttributeColor,
 	kVertexAttributeTextureCoordinate,
 	kVertexAttributeTextureIndex,
 };
 
 enum BufferIndex {
 	kBufferIndexVertexPosition,
+	kBufferIndexVertexColor,
 	kBufferIndexVertexTextureCoordinate,
 	kBufferIndexVertexTextureIndex,
 	kBufferIndexGlobalUniforms,

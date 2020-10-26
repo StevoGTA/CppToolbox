@@ -26,19 +26,20 @@ struct SGPURenderStateCommitInfo;
 class CGPURenderState {
 	// Methods
 	public:
-						// Lifecycle methods
-						CGPURenderState(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
-								CGPUFragmentShader& fragmentShader);
-						~CGPURenderState();
+										// Lifecycle methods
+										CGPURenderState(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+												CGPUFragmentShader& fragmentShader);
+										~CGPURenderState();
 
-						// Instance methods
-		void			setModelMatrix(const SMatrix4x4_32& modelMatrix);
-		void			setVertexBuffer(const SGPUVertexBuffer& gpuVertexBuffer);
-		void			setIndexBuffer(const SGPUBuffer& gpuIndexBuffer);
-		void			setTextures(const TArray<const CGPUTexture>& gpuTextures);
+										// Instance methods
+				void					setModelMatrix(const SMatrix4x4_32& modelMatrix);
+				void					setVertexBuffer(const SGPUVertexBuffer& gpuVertexBuffer);
+		const	OR<const SGPUBuffer>&	getIndexBuffer() const;
+				void					setIndexBuffer(const SGPUBuffer& gpuIndexBuffer);
+				void					setTextures(const TArray<const CGPUTexture>& gpuTextures);
 
-		EGPURenderMode	getRenderMode() const;
-		void			commit(const SGPURenderStateCommitInfo& renderStateCommitInfo);
+				EGPURenderMode			getRenderMode() const;
+				void					commit(const SGPURenderStateCommitInfo& renderStateCommitInfo);
 
 	// Properties
 	protected:

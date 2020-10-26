@@ -26,6 +26,7 @@ class CGPURenderStateInternals {
 		SMatrix4x4_32							mModelMatrix;
 
 		OR<const SGPUVertexBuffer>				mVertexBuffer;
+		OR<const SGPUBuffer>					mIndexBuffer;
 		OR<const TArray<const CGPUTexture> >	mTextures;
 };
 
@@ -87,7 +88,8 @@ void CGPURenderState::setVertexBuffer(const SGPUVertexBuffer& gpuVertexBuffer)
 void CGPURenderState::setIndexBuffer(const SGPUBuffer& gpuIndexBuffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Store
+	mInternals->mIndexBuffer = OR<const SGPUBuffer>(gpuIndexBuffer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -110,41 +112,40 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static			TDictionary<COpenGLProgram>	sPrograms;
-
-			const	SGPUVertexBuffer&			gpuVertexBuffer = mInternals->mVertexBuffer.getReference();
+	static	TDictionary<COpenGLProgram>	sPrograms;
 
 	// Setup buffers
-	SOpenGLVertexBufferInfo*	openGLVertexBufferInfo =
-										(SOpenGLVertexBufferInfo*) mInternals->mVertexBuffer->mInternalReference;
+	((COpenGLVertexBufferInfo*) mInternals->mVertexBuffer->mPlatformReference)->makeCurrent();
+	if (mInternals->mIndexBuffer.hasReference())
+		// Setup index buffer
+		((COpenGLIndexBufferInfo*) mInternals->mIndexBuffer->mPlatformReference)->makeCurrent();
 
-	glBindVertexArray(openGLVertexBufferInfo->mVertexArray);
-	glBindBuffer(GL_ARRAY_BUFFER, openGLVertexBufferInfo->mVertexDataBuffer);
+	// Check for textures
+	if (mInternals->mTextures.hasReference()) {
+		// Setup textures
+				bool						needBlend = false;
+		const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();
+		for (CArrayItemIndex i = 0; i < gpuTextures.getCount(); i++) {
+			// Setup
+			const	COpenGLTexture&	openGLTexture = (const COpenGLTexture&) gpuTextures[i];
 
-	// Setup textures
-			bool						needBlend = false;
-	const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();
-	for (CArrayItemIndex i = 0; i < gpuTextures.getCount(); i++) {
-		// Setup
-		const	COpenGLTexture&	openGLTexture = (const COpenGLTexture&) gpuTextures[i];
+			// Setup this texture
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_2D, openGLTexture.getTextureName());
+			needBlend |= openGLTexture.hasTransparency();
+		}
 
-		// Setup this texture
-		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, openGLTexture.getTextureName());
-		needBlend |= openGLTexture.hasTransparency();
-	}
-
-    // Setup blend
-	if (needBlend) {
-		// Need to blend
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		// Setup blend
+		if (needBlend) {
+			// Need to blend
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
 	}
 
 	// Setup program
 	CString	programKey =
-					mInternals->mVertexShader.getUUID().getBase64String() +
-							CString(OSSTR("/")) +
+					mInternals->mVertexShader.getUUID().getBase64String() + CString(OSSTR("/")) +
 							mInternals->mFragmentShader.getUUID().getBase64String();
 
 	// Ensure we have this program
@@ -152,7 +153,7 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 		// Create and cache
 		sPrograms.set(programKey, COpenGLProgram(mInternals->mVertexShader, mInternals->mFragmentShader));
 
-	// Create internals
+	// Prepare program
 	sPrograms[programKey]->prepare(renderStateCommitInfo.mProjectionMatrix, renderStateCommitInfo.mViewMatrix,
-			mInternals->mModelMatrix, gpuVertexBuffer);
+			mInternals->mModelMatrix);
 }

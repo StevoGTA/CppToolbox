@@ -7,23 +7,7 @@
 #import "MetalBufferCache.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SMetalVertexBufferInfo
-
-struct SMetalVertexBufferInfo {
-	// Lifecycle methods
-	SMetalVertexBufferInfo(NSString* vertexDescriptorUUID, MTLVertexDescriptor* vertexDescriptor,
-			id<MTLBuffer> vertexBuffer) :
-		mVertexDescriptorUUID(vertexDescriptorUUID), mVertexDescriptor(vertexDescriptor), mVertexBuffer(vertexBuffer)
-		{}
-
-	// Properties
-	NSString*				mVertexDescriptorUUID;
-	MTLVertexDescriptor*	mVertexDescriptor;
-	id<MTLBuffer>			mVertexBuffer;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SGPURenderStateCommitInfo
+// MARK: SGPURenderStateCommitInfo
 
 struct SGPURenderStateCommitInfo {
 	// Lifecycle methods

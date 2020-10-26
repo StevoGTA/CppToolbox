@@ -114,14 +114,14 @@ COpenGLProgram::~COpenGLProgram()
 
 //----------------------------------------------------------------------------------------------------------------------
 void COpenGLProgram::prepare(const SMatrix4x4_32& projectionMatrix, const SMatrix4x4_32& viewMatrix,
-		const SMatrix4x4_32& modelMatrix, const SGPUVertexBuffer& gpuVertexBuffer) const
+		const SMatrix4x4_32& modelMatrix) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup program
 	glUseProgram(mInternals->mProgram);
 
 	// Setup shaders
-	mInternals->mVertexShader.setAttibutes(mInternals->mAttributeInfo, gpuVertexBuffer);
+	mInternals->mVertexShader.setAttibutes(mInternals->mAttributeInfo);
 	mInternals->mVertexShader.setUniforms(mInternals->mUniformInfo, projectionMatrix, viewMatrix, modelMatrix);
 	mInternals->mFragmentShader.setUniforms(mInternals->mUniformInfo);
 }
