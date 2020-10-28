@@ -16,9 +16,7 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 					TReferenceCountable(),
 							mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
 							mGPUVertexBuffer(
-									mGPU.allocateVertexBuffer(
-											CGPUVertexShader::getBasic2DMultiTexture().getPerVertexByteCount(),
-											vertexData(items))),
+									mGPU.allocateVertexBuffer(sizeof(SVertex2DMultitexture), vertexData(items))),
 							mAngleRadians(0.0), mAlpha(1.0), mScale(1.0, 1.0)
 					{}
 				~CGPURenderObject2DInternals()

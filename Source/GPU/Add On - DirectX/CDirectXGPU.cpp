@@ -6,6 +6,7 @@
 
 #include "CDirectXRenderState.h"
 #include "CDirectXTexture.h"
+#include "ConcurrencyPrimitives.h"
 
 #undef Delete
 
@@ -583,6 +584,7 @@ class CGPUInternals {
 		// Direct3D objects.
 		ComPtr<ID3D11Device3>							mD3DDeviceComPtr;
 		ComPtr<ID3D11DeviceContext3>					mD3DDeviceContextComPtr;
+		CLock											mD3DDeviceContextLock;
 		ComPtr<IDXGISwapChain3>							mDXGISwapChainComPtr;
 
 		// Direct3D rendering objects. Required for 3D.
@@ -668,9 +670,11 @@ SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFor
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
+	mInternals->mD3DDeviceContextLock.lock();
 	CGPUTexture*	gpuTexture =
 							new CDirectXTexture(*mInternals->mD3DDeviceComPtr.Get(),
 									*mInternals->mD3DDeviceContextComPtr.Get(), data, gpuTextureDataFormat, size);
+	mInternals->mD3DDeviceContextLock.unlock();
 
 	return SGPUTextureReference(*gpuTexture);
 }
@@ -735,6 +739,7 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
+	mInternals->mD3DDeviceContextLock.lock();
 	if (mInternals->mProcsInfo.requiresDeviceValidation()) {
 		// Requires device validation
 		mInternals->validateDevice();
@@ -795,6 +800,7 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 			DirectX::Colors::CornflowerBlue);
 	mInternals->mD3DDeviceContextComPtr->ClearDepthStencilView(mInternals->mD3DDeptStencilViewComPtr.Get(),
 			D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	mInternals->mD3DDeviceContextLock.unlock();
 
 	// Setup matrices
 	XMStoreFloat4x4(&mInternals->mViewMatrix2D, DirectX::XMMatrixIdentity());
