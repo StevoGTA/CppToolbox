@@ -128,7 +128,7 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 
 			// Setup this texture
 			ID3D11ShaderResourceView*	shaderResourceView = texture.getShaderResourceView();
-			renderStateCommitInfo.mD3DDeviceContext.PSSetShaderResources(0, 1, &shaderResourceView);
+			renderStateCommitInfo.mD3DDeviceContext.PSSetShaderResources(i, 1, &shaderResourceView);
 			needBlend |= texture.hasTransparency();
 		}
 

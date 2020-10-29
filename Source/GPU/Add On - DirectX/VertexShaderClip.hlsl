@@ -9,13 +9,13 @@ cbuffer ConstantBuffer : register(b0) {
 // VertexShaderInput
 struct VertexShaderInput {
 	float3	mPosition : POSITION;
-	float2	mTextureCoordinate : TEXCOORD0;
+	float3	mTextureCoordinate : TEXCOORD0;
 };
 
 // PixelShaderInput
 struct PixelShaderInput {
 	float4	mPosition : SV_POSITION;
-	float2	mTextureCoordinate : TEXCOORD0;
+	float3	mTextureCoordinate : TEXCOORD0;
 	float	mClipDistance : SV_ClipDistance0;
 };
 
