@@ -59,8 +59,8 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 					mFile.remove();
 
 				// Open
-				UError	error = mFileWriter.open();
-				if (error != kNoError)
+				mOpenError = mFileWriter.open();
+				if (mOpenError != kNoError)
 					// Error
 					fprintf(stderr, "Unable to open log file at %s\n",
 							*mFile.getFilesystemPath().getString().getCString());
@@ -69,6 +69,7 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 		CFile		mFile;
 		CFileWriter	mFileWriter;
 		CLock		mLock;
+		UError		mOpenError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,12 +112,15 @@ const CFile& CLogFile::getFile() const
 void CLogFile::logMessage(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// One at a time please
-	mInternals->mLock.lock();
-	mInternals->mFileWriter.write(
-			SGregorianDate().getString() + CString::mSpace + string + CString::mPlatformDefaultNewline);
-	mInternals->mFileWriter.flush();
-	mInternals->mLock.unlock();
+	// Check if have error
+	if (mInternals->mOpenError == kNoError) {
+		// One at a time please
+		mInternals->mLock.lock();
+		mInternals->mFileWriter.write(
+				SGregorianDate().getString() + CString::mSpace + string + CString::mPlatformDefaultNewline);
+		mInternals->mFileWriter.flush();
+		mInternals->mLock.unlock();
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
