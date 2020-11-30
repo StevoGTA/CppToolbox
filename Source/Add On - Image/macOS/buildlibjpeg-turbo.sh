@@ -8,7 +8,7 @@ CLANG=`xcrun --sdk macosx --find clang`
 LIPO="xcrun -sdk macosx lipo"
 
 ORIG_PATH=`pwd`
-SRC_PATH=`pwd`/../libjpeg-turbo-2.0.5
+SRC_PATH=`pwd`/../libjpeg-turbo-2.0.6
 
 ################################################################################
 ARCH=
@@ -18,12 +18,8 @@ ASMFLAGS=
 function make_lib_for_arch() {
   # reset flags
   ARCH="$1"
-  CFLAGS=
-  ASMFLAGS=
-  
-  # 64-bit build (arm64 and x86_64)
   CFLAGS="-Wall -arch $ARCH -funwind-tables -fembed-bitcode"
-  ASMFLAGS=""
+  ASMFLAGS="-arch $ARCH"
 
   export CFLAGS="$CFLAGS $MIN_VER_FLAG"
   export ASMFLAGS="$ASMFLAGS"

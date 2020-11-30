@@ -1,7 +1,5 @@
 Building libraries for macOS
 
-libjpeg-turbo
--------------
 Must have brew installed:
 	https://brew.sh
 	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
@@ -10,6 +8,8 @@ Must have cmake installed:
 	A) brew install cmake
 	B) Install CMake application and setup $PATH to point to internal tools (See CMake UI).
 
+libjpeg-turbo
+-------------
 -Create a workspace folder.
 -Download and unzip the latest libjpeg-turbo from https://sourceforge.net/projects/libjpeg-turbo/files/.
 -Create a macOS folder.
@@ -23,10 +23,11 @@ Must have cmake installed:
 libpng
 ------
 -Create a workspace folder.
--Optionally create an macOS folder.
+-Download and unzip the latest libpng from http://sourceforge.net/project/showfiles.php?group_id=5624.
+-Create a macOS folder.
 -Copy buildlibpng.sh into the macOS folder.
 -Edit the script to update:
-	The lib version to use.
+	"ARCHS_TO_BUILD" to the latest required/recommended.
+	"SRC_PATH" to the correct location.
 -Run the script.
 -Update the project include and lib entries to the correct location.
-
