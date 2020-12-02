@@ -208,7 +208,7 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 		const	UInt8*	packetBufferPtr = *packetBuffer;
 
 		// Setup state infos by decoding packet headers
-		SStateInfo	stateInfos[channels];
+		TBuffer<SStateInfo>	stateInfos(channels);
 		for (UInt16 channel = 0; channel < channels; channel++, packetBufferPtr += sizeof(SDVIIntelPacketHeader)) {
 			// Get info
 			SDVIIntelPacketHeader*	packetHeader = (SDVIIntelPacketHeader*) packetBufferPtr;

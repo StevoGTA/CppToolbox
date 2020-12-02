@@ -36,8 +36,8 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 		PackageVersion	packageVersion = packageId->Version;
 
 		sVersionInfo =
-				new SSystemVersionInfo(CPlatform::stringFrom(displayName), packageVersion.Major, packageVersion.Minor,
-						packageVersion.Revision, packageVersion.Build);
+				new SSystemVersionInfo(CPlatform::stringFrom(displayName), (UInt8) packageVersion.Major,
+						(UInt8) packageVersion.Minor, (UInt8) packageVersion.Revision, packageVersion.Build);
 	}
 
 	return *sVersionInfo;
@@ -111,7 +111,10 @@ UInt32 CCoreServices::getPhysicalMemoryPageSize()
 {
 	static	UInt32	sPhysicalMemoryPageSize = 0;
 
+	if (sPhysicalMemoryPageSize == 0) {
+		// Get info
 		AssertFailUnimplemented();
+	}
 
 	return sPhysicalMemoryPageSize;
 }

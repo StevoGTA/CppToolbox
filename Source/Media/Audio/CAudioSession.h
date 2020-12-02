@@ -44,13 +44,13 @@ class CAudioSession {
 //		void					removePropertyChangedListener(CEventHandler& eventHandler);
 
 	private:
-				// Lifecycle methods
-				CAudioSession();
-				~CAudioSession();
+								// Lifecycle methods
+								CAudioSession();
+								~CAudioSession();
 
 	// Properties
 	public:
-		static	CAudioSession	shared;
+		static	CAudioSession	mShared;
 
 		/*
 			Sent when the the audio session is interrupted

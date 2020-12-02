@@ -16,7 +16,7 @@ typedef	void*	CThreadRef;
 // MARK: - Procs
 
 class CThread;
-typedef	void	(*CThreadProc)(CThread& thread, void* userData);
+typedef	void	(*CThreadProc)(const CThread& thread, void* userData);
 typedef void	(*CThreadRunOnMainThreadProc)(void* userData);
 
 //----------------------------------------------------------------------------------------------------------------------

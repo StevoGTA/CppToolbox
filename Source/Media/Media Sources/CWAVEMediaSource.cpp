@@ -84,7 +84,7 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 		switch (chunkHeader32.getNativeChunkID()) {
 			case kWAVEFormatChunkID: {
 				// Format chunk
-				error = byteParceller.setPos(kDataSourcePositionFromCurrent, -sizeof(SWAVEChunkHeader32));
+				error = byteParceller.setPos(kDataSourcePositionFromCurrent, -((SInt64) sizeof(SWAVEChunkHeader32)));
 				if (error != kNoError)
 					return OI<SError>(sUnableToLoadTracks);
 

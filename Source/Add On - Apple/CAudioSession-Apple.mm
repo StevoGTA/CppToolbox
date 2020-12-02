@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioSession-iOS.mm			©2020 Stevo Brock	All rights reserved.
+//	CAudioSession-Apple.mm			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CAudioSession.h"
@@ -73,7 +73,7 @@ static	NotificationObserver*	sNotificationObserver = [[NotificationObserver allo
 
 // MARK: Properties
 
-CAudioSession CAudioSession::shared;
+CAudioSession CAudioSession::mShared;
 
 CString CAudioSession::mInterruptionDidBeginNotificationName(OSSTR("CAudioSession - Interruption Did Begin"));
 CString CAudioSession::mInterruptionDidEndNotificationName(OSSTR("CAudioSession - Interruption Did End"));
@@ -91,7 +91,6 @@ CAudioSession::CAudioSession()
 	[notificationCenter addObserver:sNotificationObserver selector:@selector(handleInterruptionNotification:)
 			name:AVAudioSessionInterruptionNotification object:nil];
 #endif
-
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -298,7 +298,7 @@ class CWorkItemQueueInternals {
 												// Work item 1 has a later index
 												return kCompareResultAfter;
 										}
-		static	void				threadProc(CThread& thread, void* userData)
+		static	void				threadProc(const CThread& thread, void* userData)
 										{
 											// Setup
 											SWorkItemThreadInfo&	workItemThreadInfo =

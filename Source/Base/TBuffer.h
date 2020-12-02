@@ -20,7 +20,7 @@ template <typename T> struct TBuffer {
 			// Instamce methods
 	T*		operator*() const
 				{ return mStorage; }
-	T		operator[](UInt32 index) const
+	T&		operator[](UInt32 index) const
 				{ return mStorage[index]; }
 	UInt32	getSize() const
 				{ return mSize; }

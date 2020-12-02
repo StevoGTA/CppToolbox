@@ -71,7 +71,7 @@ CString CTextParceller::readStringToEOL(UError& outError)
 			return outString;
 		}
 
-		TBuffer<char>	buffer(bytesRead + 1);
+		TBuffer<char>	buffer((UInt32) bytesRead + 1);
 		outError = mInternals->mDataSource->readData(*buffer, bytesRead);
 		if (outError != kNoError)
 			// Error

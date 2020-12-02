@@ -391,7 +391,7 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 				return nil;
 
 			// Read object indexes
-			TBuffer<UInt64>	objectIndexes(count);
+			TBuffer<UInt64>	objectIndexes((UInt32) count);
 			for (UInt64 i = 0; i < count; i++)
 				(*objectIndexes)[i] = readIndex();
 
@@ -416,7 +416,7 @@ AssertFailUnimplemented();
 					TNArray<CDictionary>	array;
 					for (UInt64 i = 0; i < count; i++)
 						// Add dictionary
-						array.add(readDictionary(objectIndexes[i]));
+						array.add(readDictionary(objectIndexes[(UInt32) i]));
 
 					return new SDictionaryValue(array);
 				}
@@ -439,7 +439,7 @@ AssertFailUnimplemented();
 					TNArray<CString>	array;
 					for (UInt64 i = 0; i < count; i++)
 						// Add string
-						array.add(*mStrings[objectIndexes[i]]);
+						array.add(*mStrings[objectIndexes[(UInt32) i]]);
 
 					return new SDictionaryValue(array);
 				}

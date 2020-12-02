@@ -138,6 +138,14 @@ UInt64 CPreferences::getUInt64(const SUInt64Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+UniversalTimeInterval CPreferences::getUniversalTimeInterval(const SUniversalTimeIntervalPref& pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return safe_cast<UniversalTimeInterval>(
+			ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const SPref& pref, const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -224,6 +232,15 @@ void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
 	// Set
 	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateUInt64(value)));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SUniversalTimeIntervalPref& pref, UniversalTimeInterval value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Set
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+			dynamic_cast<PropertyValue^>(PropertyValue::CreateDouble(value)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
