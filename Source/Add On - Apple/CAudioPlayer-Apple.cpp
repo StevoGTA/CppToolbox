@@ -422,7 +422,7 @@ class CAudioPlayerInternals {
 							CAudioPlayerInternals(const CString& identifier,
 									const CAudioPlayer::SAudioPlayerProcs& audioPlayerProcs) :
 								mIdentifier(identifier), mAudioPlayerProcs(audioPlayerProcs),
-										mIsPlaying(false), mStartTimeInterval(0.0),
+										mIsPlaying(false), mStartTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
 										mRenderProcShouldStopSendingFramesAtEndOfData(false),
 										mRenderProcIsSendingFrames(false), mRenderProcPreviousReadSize(0),
@@ -592,6 +592,7 @@ class CAudioPlayerInternals {
 				bool							mIsPlaying;
 				UniversalTimeInterval			mStartTimeInterval;
 				OV<UniversalTimeInterval>		mDurationTimeInterval;
+				Float32							mGain;
 
 				bool							mRenderProcShouldSendFrames;
 				bool							mRenderProcShouldStopSendingFramesAtEndOfData;
@@ -675,12 +676,6 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Add player
-	mInternals->mAudioEngineIndex = CAudioEngine::mShared.addAudioPlayer(CAudioPlayerInternals::renderProc, mInternals);
-	if (!mInternals->mAudioEngineIndex.hasValue())
-		// No available slots
-		return OI<SError>(sUnableToLoadTracks);
-
 	// Setup
 	UInt32	segmentCount;
 	mInternals->mSampleRate = OV<Float32>(audioProcessingFormat.getSampleRate());
@@ -717,6 +712,13 @@ OI<SError> CAudioPlayer::reset()
 	while (mInternals->mRenderProcIsSendingFrames)
 		// Sleep
 		CThread::sleepFor(0.001);
+
+	// Remove from engine
+	if (mInternals->mAudioEngineIndex.hasValue()) {
+		// Remove
+		CAudioEngine::mShared.removeAudioPlayer(mInternals->mAudioEngineIndex.getValue());
+		mInternals->mAudioEngineIndex = OV<UInt32>();
+	}
 
 	// No longer playing
 	mInternals->mIsPlaying = false;
@@ -767,6 +769,9 @@ const CString& CAudioPlayer::getIdentifier() const
 void CAudioPlayer::setGain(Float32 gain)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Store
+	mInternals->mGain = gain;
+
 	// Check if attached
 	if (mInternals->mAudioEngineIndex.hasValue())
 		// Set gain
@@ -777,6 +782,17 @@ void CAudioPlayer::setGain(Float32 gain)
 void CAudioPlayer::play()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if have audio engine index
+	if (!mInternals->mAudioEngineIndex.hasValue()) {
+		// Add player
+		mInternals->mAudioEngineIndex =
+				CAudioEngine::mShared.addAudioPlayer(CAudioPlayerInternals::renderProc, mInternals);
+		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), mInternals->mGain);
+	}
+	if (!mInternals->mAudioEngineIndex.hasValue())
+		// No available slots
+		return;
+
 	// We are now playing
 	mInternals->mIsPlaying = true;
 
