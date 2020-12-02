@@ -62,7 +62,7 @@ struct SWorkItemInfo : public CEquatable {
 	// Properties
 			CWorkItemQueueInternals&	mOwningWorkItemQueueInternals;
 			OR<CWorkItem>				mWorkItem;
-			OO<CProcWorkItem>			mProcWorkItem;
+			OI<CProcWorkItem>			mProcWorkItem;
 			EWorkItemPriority			mPriority;
 			UInt32						mIndex;
 
@@ -78,19 +78,12 @@ UInt32	SWorkItemInfo::mNextIndex = 0;
 struct SWorkItemThreadInfo {
 	// Lifecycle methods
 	SWorkItemThreadInfo(SWorkItemInfo& initialWorkItemInfo, CThreadProc threadProc, const CString& name) :
-		mWorkItemInfo(&initialWorkItemInfo)
-		{
-			// Ensure SWorkItemInfo is set up before starting thread
-			mThread = new CThread(threadProc, this, name);
-		}
-	~SWorkItemThreadInfo()
-		{
-			Delete(mThread);
-		}
+		mThread(threadProc, this, name), mWorkItemInfo(&initialWorkItemInfo)
+		{}
 
 	// Properties
 	CSemaphore		mSemaphore;
-	CThread*		mThread;
+	CThread			mThread;
 	SWorkItemInfo*	mWorkItemInfo;
 };
 
@@ -305,7 +298,7 @@ class CWorkItemQueueInternals {
 												// Work item 1 has a later index
 												return kCompareResultAfter;
 										}
-		static	void				threadProc(const CThread& thread, void* userData)
+		static	void				threadProc(CThread& thread, void* userData)
 										{
 											// Setup
 											SWorkItemThreadInfo&	workItemThreadInfo =

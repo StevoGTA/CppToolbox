@@ -11,11 +11,19 @@
 
 class CByteParcellerInternals : public TReferenceCountable<CByteParcellerInternals> {
 	public:
-		CByteParcellerInternals(const CDataSource* dataSource) : TReferenceCountable(), mDataSource(dataSource) {}
-		~CByteParcellerInternals()
-			{ Delete(mDataSource); }
+		CByteParcellerInternals(const I<CDataSource>& dataSource) :
+			TReferenceCountable(), mNeedToSetPos(false), mDataSource(dataSource), mDataSourceOffset(0),
+					mSize(dataSource->getSize())
+			{}
+		CByteParcellerInternals(const I<CDataSource>& dataSource, UInt64 dataSourceOffset, UInt64 size) :
+			TReferenceCountable(), mNeedToSetPos(true), mDataSource(dataSource), mDataSourceOffset(dataSourceOffset),
+					mSize(size)
+			{}
 
-		const	CDataSource*	mDataSource;
+		bool			mNeedToSetPos;
+		I<CDataSource>	mDataSource;
+		UInt64			mDataSourceOffset;
+		UInt64			mSize;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -25,10 +33,21 @@ class CByteParcellerInternals : public TReferenceCountable<CByteParcellerInterna
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CByteParceller::CByteParceller(const CDataSource* dataSource)
+CByteParceller::CByteParceller(const I<CDataSource>& dataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CByteParcellerInternals(dataSource);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CByteParceller::CByteParceller(const CByteParceller& other, UInt64 offset, UInt64 size)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Preflight
+	AssertFailIf((offset + size) > other.mInternals->mDataSource->getSize());
+
+	// Setup
+	mInternals = new CByteParcellerInternals(I<CDataSource>(other.mInternals->mDataSource->clone()), offset, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,13 +70,25 @@ CByteParceller::~CByteParceller()
 UInt64 CByteParceller::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mDataSource->getSize();
+	return mInternals->mSize;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UError CByteParceller::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if can read
+	if ((mInternals->mSize - getPos()) < byteCount)
+		// Can't read that many bytes
+		return kDataProviderReadBeyondEndError;
+
+	// Check if need to finish setup
+	if (mInternals->mNeedToSetPos) {
+		// Yes
+		UError	error = setPos(kDataSourcePositionFromBeginning, 0);
+		ReturnErrorIfUError(error);
+	}
+
 	return mInternals->mDataSource->readData(buffer, byteCount);
 }
 
@@ -92,19 +123,68 @@ CData CByteParceller::readData(UError& outError) const
 SInt64 CByteParceller::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mDataSource->getPos();
+	return mInternals->mNeedToSetPos ?
+			mInternals->mDataSourceOffset : mInternals->mDataSource->getPos() - mInternals->mDataSourceOffset;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UError CByteParceller::setPos(EDataSourcePosition position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mDataSource->setPos(position, newPos);
+	// Setup
+	SInt64	newPosUse;
+	if (mInternals->mNeedToSetPos) {
+		// Yes
+		switch (position) {
+			case kDataSourcePositionFromBeginning:
+			case kDataSourcePositionFromCurrent:
+				// From beginning or "current" (which is "beginning" since hasn't actually been set yet)
+				newPosUse = mInternals->mDataSourceOffset + newPos;
+				break;
+
+			case kDataSourcePositionFromEnd:
+				// From end
+				newPosUse = mInternals->mDataSourceOffset + mInternals->mSize - newPos;
+				break;
+		}
+	} else {
+		// Setup complete
+		switch (position) {
+			case kDataSourcePositionFromBeginning:
+				// From beginning
+				newPosUse = mInternals->mDataSourceOffset + newPos;
+				break;
+
+			case kDataSourcePositionFromCurrent:
+				// From current
+				newPosUse = getPos() + newPos;
+				break;
+
+			case kDataSourcePositionFromEnd:
+				newPosUse = mInternals->mDataSourceOffset + mInternals->mSize - newPos;
+				break;
+		}
+	}
+
+	// Check
+	AssertFailIf(newPosUse < 0);
+	AssertFailIf((UInt64) newPosUse > (mInternals->mDataSourceOffset + mInternals->mSize));
+
+	// Do it
+	UError	error = mInternals->mDataSource->setPos(kDataSourcePositionFromBeginning, newPosUse);
+	ReturnErrorIfUError(error);
+
+	// Setup complete
+	mInternals->mNeedToSetPos = false;
+
+	return kNoError;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CByteParceller::reset() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Reset
 	mInternals->mDataSource->reset();
+	mInternals->mNeedToSetPos = true;
 }

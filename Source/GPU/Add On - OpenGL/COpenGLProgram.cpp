@@ -12,7 +12,8 @@
 class COpenGLProgramInternals : public TReferenceCountable<COpenGLProgramInternals> {
 	public:
 		COpenGLProgramInternals(COpenGLVertexShader& vertexShader, COpenGLFragmentShader& fragmentShader) :
-			mVertexShader(vertexShader), mFragmentShader(fragmentShader), mProgram(glCreateProgram())
+			TReferenceCountable(), mVertexShader(vertexShader), mFragmentShader(fragmentShader),
+					mProgram(glCreateProgram())
 			{
 				// Setup
 				if (mProgram > 0) {

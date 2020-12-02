@@ -342,7 +342,7 @@ UInt64 CBPLDataSource::readValue(SInt64 offset, UInt8 fieldSize, const char* err
 	// Read value
 	UInt64	storedValue = 0;
 	readData(offset, (UInt8*) &storedValue + sizeof(UInt64) - fieldSize, fieldSize, errorWhen);
-	ReturnValueIfError(mError, 0);
+	ReturnValueIfUError(mError, 0);
 
 	return EndianU64_BtoN(storedValue);
 }

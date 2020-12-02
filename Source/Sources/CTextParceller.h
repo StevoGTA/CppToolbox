@@ -6,6 +6,7 @@
 
 #include "CDataSource.h"
 #include "CString.h"
+#include "TInstance.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CTextParceller
@@ -15,14 +16,14 @@ class CTextParceller {
 	// Methods
 	public:
 				// Lifecycle methods
-				CTextParceller(const CDataSource* dataSource);	// Will take ownership of CDataSource
+				CTextParceller(const I<CDataSource>& dataSource);
 				CTextParceller(const CTextParceller& other);
 				~CTextParceller();
 
 				// Instance methods
 		UInt64	getSize() const;
 
-		CString	readStringToEOL(UError& outError) const;
+		CString	readStringToEOL(UError& outError);
 
 		void	reset() const;
 

@@ -42,19 +42,19 @@ UError CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destination
 	TNArray<CFile>		files;
 	UError				error;
 	error = getFoldersFiles(sourceFolder, folders, files);
-	ReturnErrorIfError(error);
+	ReturnErrorIfUError(error);
 
 	// Create folders in destination folder
 	for (CArrayItemIndex i = 0; i < folders.getCount(); i++) {
 		// Create folder
 		CFolder	folder(destinationFolder.getFilesystemPath().appendingComponent(folders[i].getName()));
 		error = folder.create();
-		ReturnErrorIfError(error);
+		ReturnErrorIfUError(error);
 	}
 
 	// Copy files
 	error = copy(files, destinationFolder);
-	ReturnErrorIfError(error);
+	ReturnErrorIfUError(error);
 
 	return kNoError;
 }
@@ -67,7 +67,7 @@ UError CFilesystem::copy(const TArray<CFile> files, const CFolder& destinationFo
 	for (CArrayItemIndex i = 0; i < files.getCount(); i++) {
 		// Copy this file
 		UError	error = copy(files[i], destinationFolder);
-		ReturnErrorIfError(error);
+		ReturnErrorIfUError(error);
 	}
 
 	return kNoError;

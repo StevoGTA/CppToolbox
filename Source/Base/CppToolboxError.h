@@ -27,12 +27,12 @@ const	UError			kNilValueError		= MAKE_UError(kCoreErrorDomain, MAKE_OSTYPE('n', 
 const	UError			kNonNilValueError	= MAKE_UError(kCoreErrorDomain, MAKE_OSTYPE('!', 'n', 'i', 'l'));
 const	UError			kUnimplementedError	= MAKE_UError(kCoreErrorDomain, MAKE_OSTYPE('!', 'i', 'm', 'p'));
 
-#if TARGET_OS_MACOS || TARGET_OS_IOS || TARGET_OS_LINUX
+#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS || TARGET_OS_LINUX
 	const	UErrorDomain	kPOSIXErrorDomain	= MAKE_OSTYPE('P', 'o', 's', 'x');
 	#define MAKE_UErrorFromPOSIXError()	MAKE_UError(kPOSIXErrorDomain, errno)
 #endif
 
-#if TARGET_OS_MACOS || TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 	const	UErrorDomain	kCoreFoundationErrorDomain = 'CoFo';
 	#define MAKE_UErrorFromCFErrorRef(errorRef)														\
 					((errorRef != nil) ?															\
@@ -57,9 +57,9 @@ const	UError			kUnimplementedError	= MAKE_UError(kCoreErrorDomain, MAKE_OSTYPE('
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define ReturnIfError(error)				{ if (error != kNoError) return; }
-#define ReturnErrorIfError(error)			{ if (error != kNoError) return error; }
-#define	ReturnValueIfError(error, value)	{ if (error != kNoError) return value; }
+#define ReturnIfUError(error)				{ if (error != kNoError) return; }
+#define ReturnErrorIfUError(error)			{ if (error != kNoError) return error; }
+#define	ReturnValueIfUError(error, value)	{ if (error != kNoError) return value; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CErrorRegistry
@@ -72,34 +72,3 @@ class CErrorRegistry {
 		static	void	registerError(UError error, const CString& string);
 		static	CString	getStringForError(UError error);
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-// Futures
-/*
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SError
-
-struct SError {
-
-			// Lifecycle methods
-			SError(const CString& domain, UInt32 code, const CString& defaultLocalizedDescription) :
-				mDomain(domain), mCode(code), mDefaultLocalizedDescription(defaultLocalizedDescription)
-				{}
-			SError(const SError& other) :
-				mDomain(other.mDomain), mCode(other.mCode),
-						mDefaultLocalizedDescription(other.mDefaultLocalizedDescription)
-				{}
-
-			// Instance methods
-	CString	getLocalizationKey()
-				{ return mDomain + CString(OSSTR("/")) + CString(mCode); }
-
-	// Properties
-	CString	mDomain;
-	UInt32	mCode;
-
-	CString	mDefaultLocalizedDescription;
-};
-
-	UError becomes OV<SError>
-*/

@@ -155,8 +155,8 @@ UError CFileReader::open(bool buffered)
 		if (mInternals->mFD == -1) {
 			// Open
 			mInternals->mFD =
-					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8),
-							O_RDONLY | O_EXLOCK, 0);
+					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8), O_RDONLY,
+							0);
 			if (mInternals->mFD != -1)
 				// Success
 				return kNoError;

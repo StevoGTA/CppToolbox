@@ -21,7 +21,7 @@ enum EFilesystemPathStyle {
 	kFilesystemPathStyleHFS,
 #endif
 
-#if TARGET_OS_MACOS || TARGET_OS_LINUX || TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS || TARGET_OS_LINUX
 	kFilesystemPathStylePlatformDefault = kFilesystemPathStylePOSIX,
 #endif
 

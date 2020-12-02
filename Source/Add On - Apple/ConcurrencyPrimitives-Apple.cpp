@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	ConcurrencyPrimitivies-Apple.cpp			©2018 Stevo Brock	All rights reserved.
+//	ConcurrencyPrimitives-Apple.cpp			©2018 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "ConcurrencyPrimitives.h"

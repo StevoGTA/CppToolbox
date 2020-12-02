@@ -64,7 +64,6 @@ template <typename T> class TCopyOnWriteReferenceCountable : public TReferenceCo
 	public:
 			// Lifecycle methods
 			TCopyOnWriteReferenceCountable() : TReferenceCountable<T>() {}
-			~TCopyOnWriteReferenceCountable() {}
 
 			// Instance methods
 		T*	prepareForWrite()

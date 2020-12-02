@@ -4,8 +4,9 @@
 
 #pragma once
 
+#include "CData.h"
 #include "CDataSource.h"
-#include "CString.h"
+#include "TInstance.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CByteParceller
@@ -15,7 +16,8 @@ class CByteParceller {
 	// Methods
 	public:
 				// Lifecycle methods
-				CByteParceller(const CDataSource* dataSource);	// Will take ownership of CDataSource
+				CByteParceller(const I<CDataSource>& dataSource);
+				CByteParceller(const CByteParceller& other, UInt64 offset, UInt64 size);	// "Sub" CByteParceller
 				CByteParceller(const CByteParceller& other);
 				~CByteParceller();
 

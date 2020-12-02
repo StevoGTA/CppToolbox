@@ -98,7 +98,7 @@ CBitmap CImage::getBitmap() const
 	UError	error;
 	CData	data = mInternals->mByteParceller.readData(error);
 	mInternals->mByteParceller.reset();
-	ReturnValueIfError(error, CBitmap());
+	ReturnValueIfUError(error, CBitmap());
 
 	// Setup/Validate image type
 	if (!mInternals->mImageType.hasValue())
