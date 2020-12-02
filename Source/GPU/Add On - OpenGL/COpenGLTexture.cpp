@@ -11,7 +11,8 @@ class COpenGLTextureInternals : public TReferenceCountable<COpenGLTextureInterna
 	public:
 		COpenGLTextureInternals(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size) :
 mUsedPixelsSize(size),
-			mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth), SNumber::getNextPowerOf2(size.mHeight)))
+			TReferenceCountable(), mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
+					SNumber::getNextPowerOf2(size.mHeight)))
 			{
 				// Setup
 //				GLint	format = (gpuTextureDataFormat == kGPUTextureDataFormatRGB565) ? GL_RGB : GL_RGBA;

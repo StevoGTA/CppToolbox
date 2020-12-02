@@ -30,17 +30,19 @@ const	UError	kDataProviderSetPosAfterEndError	= MAKE_UError(kDataProviderErrorDo
 class CDataSource {
 	// Methods
 	public:
-						// Lifecycle methods
-						CDataSource() {}
-		virtual			~CDataSource() {}
+								// Lifecycle methods
+								CDataSource() {}
+		virtual					~CDataSource() {}
 
-						// Instance methods
-		virtual	UInt64	getSize() const = 0;
+								// Instance methods
+		virtual	UInt64			getSize() const = 0;
 
-		virtual	UError	readData(void* buffer, UInt64 byteCount) const = 0;
+		virtual	UError			readData(void* buffer, UInt64 byteCount) = 0;
 
-		virtual	SInt64	getPos() const = 0;
-		virtual	UError	setPos(EDataSourcePosition position, SInt64 newPos) const = 0;
+		virtual	SInt64			getPos() const = 0;
+		virtual	UError			setPos(EDataSourcePosition position, SInt64 newPos) = 0;
 
-		virtual	void	reset() const = 0;
+		virtual	CDataSource*	clone() const = 0;
+
+		virtual	void			reset() = 0;
 };

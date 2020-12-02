@@ -38,7 +38,7 @@ class CPreferencesInternals {
 							typeRef = ::CFPreferencesCopyAppValue(pref.mKeyString, mApplicationID);
 
 							// Did we get it?
-							if ((typeRef == nil) && mAlternatePreferencesReference.hasObject()) {
+							if ((typeRef == nil) && mAlternatePreferencesReference.hasInstance()) {
 								// Try to get from old prefs file
 								CFStringRef	alternateApplicationIDStringRef =
 													CCoreFoundation::createStringRefFrom(
@@ -71,7 +71,7 @@ class CPreferencesInternals {
 						}
 
 		CFStringRef					mApplicationID;
-		OO<SPreferencesReference>	mAlternatePreferencesReference;
+		OI<SPreferencesReference>	mAlternatePreferencesReference;
 		UInt32						mDelayWriteCount;
 };
 
@@ -310,6 +310,21 @@ UInt64 CPreferences::getUInt64(const SUInt64Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+UniversalTimeInterval CPreferences::getUniversalTimeInterval(const SUniversalTimeIntervalPref& pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+	if (numberRef != nil) {
+		Float64	value;
+		::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);
+		::CFRelease(numberRef);
+
+		return value;
+	} else
+		return pref.mDefaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const SPref& pref, const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -477,6 +492,20 @@ void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SUniversalTimeIntervalPref& pref, UniversalTimeInterval value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create storage
+	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value);
+	if (numberRef == nil)
+		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
+
+	// Write
+	mInternals->setTo(pref, numberRef);
+	::CFRelease(numberRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CPreferences::remove(const SPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -501,5 +530,5 @@ void CPreferences::endGroupSet()
 void CPreferences::setAlternate(const SPreferencesReference& preferencesReference)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mAlternatePreferencesReference = OO<SPreferencesReference>(preferencesReference);
+	mInternals->mAlternatePreferencesReference = OI<SPreferencesReference>(preferencesReference);
 }

@@ -54,6 +54,11 @@ template <typename T> class TIteratorS {
 		T&		getValue() const
 					{ return *mCurrentValue; }
 
+		T&		operator*() const
+					{ return *mCurrentValue; }
+		T*		operator->() const
+					{ return mCurrentValue; }
+
 	// Properties
 	private:
 		CIteratorAdvanceProc	mAdvanceProc;
@@ -77,7 +82,7 @@ template <typename T> class TIteratorD {
 							mIteratorInfo(*other->mIteratorInfo.copy())
 					{}
 				~TIteratorD()
-					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; Delete(iteratorInfo); }
+					{ CIteratorInfo* iteratorInfo = &mIteratorInfo; Delete(iteratorInfo); }
 
 				// Instance methods
 		bool	advance()
@@ -87,6 +92,11 @@ template <typename T> class TIteratorD {
 
 		T&		getValue() const
 					{ return **mCurrentValue; }
+
+		T&		operator*() const
+					{ return **mCurrentValue; }
+		T*		operator->() const
+					{ return *mCurrentValue; }
 
 	// Properties
 	private:

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CDictionary.h"
+#include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Structures
@@ -75,7 +76,18 @@ struct SUInt64Pref : public SPref {
 	UInt64	mDefaultValue;		// 32
 };
 
-#if TARGET_OS_MACOS || TARGET_OS_IOS
+struct SUniversalTimeIntervalPref : public SPref {
+	// Lifecycle methods
+	SUniversalTimeIntervalPref() : SPref(nil), mDefaultValue(0.0) {}
+	SUniversalTimeIntervalPref(OSStringType keyString, Float64 defaultValue = 0.0) :
+		SPref(keyString), mDefaultValue(defaultValue)
+		{}
+
+	// Properties
+	UniversalTimeInterval	mDefaultValue;		// 64.0
+};
+
+#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 struct SPreferencesReference {
 	// Lifecycle methods
 	SPreferencesReference(const CString& applicationID) : mApplicationID(applicationID) {}
@@ -118,6 +130,7 @@ class CPreferences {
 		SInt32					getSInt32(const SSInt32Pref& pref);
 		UInt32					getUInt32(const SUInt32Pref& pref);
 		UInt64					getUInt64(const SUInt64Pref& pref);
+		UniversalTimeInterval	getUniversalTimeInterval(const SUniversalTimeIntervalPref& pref);
 
 		void					set(const SPref& pref, const TArray<CData>& array);
 		void					set(const SPref& pref, const TArray<CDictionary>& array);
@@ -130,6 +143,7 @@ class CPreferences {
 		void					set(const SSInt32Pref& pref, SInt32 value);
 		void					set(const SUInt32Pref& pref, UInt32 value);
 		void					set(const SUInt64Pref& pref, UInt64 value);
+		void					set(const SUniversalTimeIntervalPref& pref, UniversalTimeInterval value);
 
 		void					remove(const SPref& pref);
 		

@@ -11,7 +11,7 @@ class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3
 	public:
 				CGPURenderObject3DInternals(CGPU& gpu, const CData& vertexData, UInt32 indexCount,
 						const CData& indexData, CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
-					mGPU(gpu),
+					TReferenceCountable(), mGPU(gpu),
 							mGPUVertexBuffer(
 									mGPU.allocateVertexBuffer(vertexShader.getPerVertexByteCount(), vertexData)),
 							mIndexCount(indexCount), mGPUIndexBuffer(mGPU.allocateIndexBuffer(indexData)),

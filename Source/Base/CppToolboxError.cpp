@@ -90,7 +90,7 @@ CString CErrorRegistry::getStringForError(UError error)
 //		}
 //	}
 //#endif
-//#if TARGET_OS_MACOS || TARGET_OS_IOS || TARGET_OS_LINUX
+//#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS || TARGET_OS_LINUX
 //	if (errorDomain == kPOSIXErrorDomain)
 //		// POSIX
 //		return CString(strerror(errorError));

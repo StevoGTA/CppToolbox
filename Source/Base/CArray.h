@@ -402,13 +402,16 @@ template <typename T> class TIArray : public CArray {
 				TIArray<T>&			add(T* item)	// Pointer to mirror that this is an instance array
 										{ CArray::add(item); return *this; }
 
+				bool				contains(const T& item) const
+										{ return getIndexOf(item).hasValue(); }
+
 				T&					getAt(CArrayItemIndex index) const
 										{ return *((T*) getItemAt(index)); }
 				T&					getFirst() const
 										{ return *((T*) CArray::getFirst()); }
 				T&					getLast() const
 										{ return *((T*) CArray::getLast()); }
-				OV<CArrayItemIndex>	getIndexOf(T& item) const
+				OV<CArrayItemIndex>	getIndexOf(const T& item) const
 										{
 											// Iterate all
 											for (CArrayItemIndex i = 0; i < getCount(); i++) {

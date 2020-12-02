@@ -31,15 +31,15 @@ CData CFileReader::readData(const CFile& file, UError& outError)
 
 	// Open
 	outError = fileReader.open();
-	ReturnValueIfError(outError, CData::mEmpty);
+	ReturnValueIfUError(outError, CData::mEmpty);
 
 	// Read
 	CData	data = fileReader.readData(file.getSize(), outError);
-	ReturnValueIfError(outError, CData::mEmpty);
+	ReturnValueIfUError(outError, CData::mEmpty);
 
 	// Close
 	outError = fileReader.close();
-	ReturnValueIfError(outError, CData::mEmpty);
+	ReturnValueIfUError(outError, CData::mEmpty);
 
 	return data;
 }

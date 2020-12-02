@@ -88,7 +88,7 @@ class CLogServices {
 	public:
 								// Class methods
 		static	void			setPrimaryLogFile(const CLogFile& logFile);
-		static	OO<CLogFile>&	getPrimaryLogFile();
+		static	OI<CLogFile>&	getPrimaryLogFile();
 
 		static	void			logMessage(const CString& string);
 		static	void			logDebugMessage(const CString& string);

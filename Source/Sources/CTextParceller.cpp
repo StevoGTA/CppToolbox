@@ -12,11 +12,9 @@
 
 class CTextParcellerInternals : public TReferenceCountable<CTextParcellerInternals> {
 	public:
-		CTextParcellerInternals(const CDataSource* dataSource) : TReferenceCountable(), mDataSource(dataSource) {}
-		~CTextParcellerInternals()
-			{ Delete(mDataSource); }
+		CTextParcellerInternals(const I<CDataSource>& dataSource) : TReferenceCountable(), mDataSource(dataSource) {}
 
-		const	CDataSource*	mDataSource;
+		I<CDataSource>	mDataSource;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -26,7 +24,7 @@ class CTextParcellerInternals : public TReferenceCountable<CTextParcellerInterna
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CTextParceller::CTextParceller(const CDataSource* dataSource)
+CTextParceller::CTextParceller(const I<CDataSource>& dataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CTextParcellerInternals(dataSource);
@@ -56,7 +54,7 @@ UInt64 CTextParceller::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CTextParceller::readStringToEOL(UError& outError) const
+CString CTextParceller::readStringToEOL(UError& outError)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -112,7 +110,7 @@ CString CTextParceller::readStringToEOL(UError& outError) const
 
 			// Reset the file's position to the beginning of the next line
 			outError = mInternals->mDataSource->setPos(kDataSourcePositionFromCurrent, delta);
-			ReturnValueIfError(outError, outString);
+			ReturnValueIfUError(outError, outString);
 
 			// Append the chars we found to the return string
 			outString += CString(*buffer);

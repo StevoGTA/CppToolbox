@@ -12,7 +12,8 @@ class CMetalTextureInternals : public TReferenceCountable<CMetalTextureInternals
 		CMetalTextureInternals(id<MTLDevice> device, const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
 				const S2DSizeU16& size) :
 mUsedPixelsSize(size),
-			mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth), SNumber::getNextPowerOf2(size.mHeight)))
+			TReferenceCountable(), mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
+					SNumber::getNextPowerOf2(size.mHeight)))
 			{
 				// Setup
 				NSUInteger		bytesPerRow;

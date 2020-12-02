@@ -15,24 +15,63 @@
 
 class CThreadInternals {
 	public:
-		CThreadInternals(const CThread& thread, CThreadProc proc, void* userData, const CString& name) :
-			mThread(thread), mThreadProc(proc), mThreadProcUserData(userData), mThreadName(name)
-			{}
-		~CThreadInternals() {}
+						CThreadInternals(CThread& thread, CThreadProc threadProc, void* threadProcUserData,
+								const CString& name) :
+							mIsRunning(true), mThread(thread), mThreadProc(threadProc),
+									mThreadProcUserData(threadProcUserData), mThreadName(name)
+							{
+								// Create thread attributes
+								int				result;
+								pthread_attr_t	attr;
+								result = ::pthread_attr_init(&attr);
+								if (result != 0) {
+									LogIfError(MAKE_UError(kPOSIXErrorDomain, result), "initing pthread attrs");
+								}
+								AssertFailIf(result != 0);
 
-				CThreadProc	mThreadProc;
-				void*		mThreadProcUserData;
-				CString		mThreadName;
-		const	CThread&	mThread;
+								result = ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+								if (result != 0) {
+									LogIfError(MAKE_UError(kPOSIXErrorDomain, result),
+											"setting pthread detached state");
+									::pthread_attr_destroy(&attr);
+								}
 
-				pthread_t	mPThread;
+								// Create thread
+								result = ::pthread_create(&mPThread, &attr, CThreadInternals::threadProc, this);
+								::pthread_attr_destroy(&attr);
+								if (result != 0) {
+									LogIfError(MAKE_UError(kPOSIXErrorDomain, result), "creating pthread");
+								}
+							}
+
+		static	void*	threadProc(void* userData)
+							{
+								// Setup
+								CThreadInternals&	threadInternals = *((CThreadInternals*) userData);
+
+								// Check if have name
+								if (!threadInternals.mThreadName.isEmpty())
+									// Set name
+									::pthread_setname_np(*threadInternals.mThreadName.getCString());
+
+								// Call proc
+								threadInternals.mThreadProc(threadInternals.mThread,
+										threadInternals.mThreadProcUserData);
+
+								// Not running
+								threadInternals.mIsRunning = false;
+
+								return nil;
+							}
+
+		bool		mIsRunning;
+		CThreadProc	mThreadProc;
+		void*		mThreadProcUserData;
+		CString		mThreadName;
+		CThread&	mThread;
+
+		pthread_t	mPThread;
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	void*	sThreadProc(void* userData);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -41,33 +80,19 @@ static	void*	sThreadProc(void* userData);
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CThread::CThread(CThreadProc proc, void* userData, const CString& name)
+CThread::CThread(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
-	mInternals = new CThreadInternals(*this, proc, userData, name);
+	mInternals = new CThreadInternals(*this, CThread::runThreadProc, nil, name);
+}
 
-	// Create thread attributes
-	int				result;
-	pthread_attr_t	attr;
-	result = ::pthread_attr_init(&attr);
-	if (result != 0) {
-		LogIfError(MAKE_UError(kPOSIXErrorDomain, result), "initing pthread attrs");
-	}
-	AssertFailIf(result != 0);
-
-	result = ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	if (result != 0) {
-		LogIfError(MAKE_UError(kPOSIXErrorDomain, result), "setting pthread detached state");
-		::pthread_attr_destroy(&attr);
-	}
-
-	// Create thread
-	result = ::pthread_create(&mInternals->mPThread, &attr, sThreadProc, mInternals);
-	::pthread_attr_destroy(&attr);
-	if (result != 0) {
-		LogIfError(MAKE_UError(kPOSIXErrorDomain, result), "creating pthread");
-	}
+//----------------------------------------------------------------------------------------------------------------------
+CThread::CThread(CThreadProc threadProc, void* threadProcUserData, const CString& name)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup internals
+	mInternals = new CThreadInternals(*this, threadProc, threadProcUserData, name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -80,21 +105,20 @@ CThread::~CThread()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 CThreadRef CThread::getThreadRef() const
+//----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mPThread;
 }
 
-// MARK: Class methods
-
 //----------------------------------------------------------------------------------------------------------------------
-////----------------------------------------------------------------------------------------------------------------------
-//void CThread::sleepFor(UniversalTimeInterval timeInterval)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	::usleep((UInt32) (timeInterval * 1000000.0));
-//}
+bool CThread::getIsRunning() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mIsRunning;
+}
+
+// MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
 CThreadRef CThread::getCurrentThreadRef()
@@ -104,20 +128,8 @@ CThreadRef CThread::getCurrentThreadRef()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-//----------------------------------------------------------------------------------------------------------------------
-void* sThreadProc(void* userData)
+void CThread::sleepFor(UniversalTimeInterval universalTimeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CThreadInternals*	threadInternals = (CThreadInternals*) userData;
-
-	// Set name
-	::pthread_setname_np(*threadInternals->mThreadName.getCString());
-
-	// Call proc
-	threadInternals->mThreadProc(threadInternals->mThread, threadInternals->mThreadProcUserData);
-
-	return nil;
+	::usleep((useconds_t) (universalTimeInterval * 1000000.0));
 }

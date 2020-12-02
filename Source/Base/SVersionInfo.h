@@ -24,6 +24,20 @@ struct SVersionInfo {
 											CString(mMajorVersion) + CString(OSSTR(".")) + CString(mMinorVersion) +
 													CString(OSSTR(".")) + CString(mPatchVersion);
 							}
+						SVersionInfo(UInt32 combinedVersion) :
+							mMajorVersion((combinedVersion >> 16) & 0xFF), mMinorVersion((combinedVersion >> 8) & 0xFF),
+									mPatchVersion((combinedVersion >> 0) & 0xFF)
+							{
+								// Check patch version
+								if (mPatchVersion == 0)
+									// No patch version
+									mString = CString(mMajorVersion) + CString(OSSTR(".")) + CString(mMinorVersion);
+								else
+									// Have patch version
+									mString =
+											CString(mMajorVersion) + CString(OSSTR(".")) + CString(mMinorVersion) +
+													CString(OSSTR(".")) + CString(mPatchVersion);
+							}
 						SVersionInfo(const CString& string) :
 							mString(string), mMajorVersion(0), mMinorVersion(0), mPatchVersion(0)
 							{}

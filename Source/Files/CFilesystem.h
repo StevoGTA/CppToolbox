@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Application Object (representing an Application on the target system)
 
-#if TARGET_OS_MACOS || TARGET_OS_IOS
+#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 typedef	CFolder	CApplicationObject;
 #endif
 
