@@ -5,6 +5,7 @@
 #include "CFilesystem.h"
 
 #include "CCoreFoundation.h"
+#include "SError-Apple.h"
 
 #include <Foundation/Foundation.h>
 #include <AppKit/AppKit.h>
@@ -22,7 +23,7 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 																									\
-					return error;																	\
+					return OI<SError>(error);														\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
@@ -30,7 +31,7 @@
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
-					return error;																	\
+					return OI<SError>(error);														\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -40,20 +41,20 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
+OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
 	if (!file.doesExist())
-		CFilesystemReportErrorFileFolderX1AndReturnError(kFileDoesNotExistError, "checking source file", file);
+		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mDoesNotExistError, "checking source file", file);
 
 	// Setup
 	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
 	if (destinationFile.doesExist()) {
 		// Destination file already exists
-		UError	error = destinationFile.remove();
-		if (error != kNoError)
-			CFilesystemReportErrorFileFolderX1AndReturnError(error, "removing destination file", destinationFile);
+		OI<SError>	error = destinationFile.remove();
+		if (error.hasInstance())
+			CFilesystemReportErrorFileFolderX1AndReturnError(*error, "removing destination file", destinationFile);
 	}
 
 	// Setup
@@ -71,15 +72,15 @@ UError CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 			// Read comment, write to dest
 			destinationFile.setComment(string);
 
-		return kNoError;
+		return OI<SError>();
 	} else
 		// Error
-		CFilesystemReportErrorFileFolderX2AndReturnError(MAKE_UErrorFromNSError(error), "copying file", file,
+		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), "copying file", file,
 				destinationFolder);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::open(const TArray<CFile> files, const CApplicationObject& applicationObject)
+OI<SError> CFilesystem::open(const TArray<CFile> files, const CApplicationObject& applicationObject)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -98,10 +99,10 @@ UError CFilesystem::open(const TArray<CFile> files, const CApplicationObject& ap
 	if ([[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:applicationURL options:0 configuration:@{}
 			error:&error])
 		// Success
-		return kNoError;
+		return OI<SError>();
 	else
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(MAKE_UErrorFromNSError(error), "opening files with",
+		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "opening files with",
 				applicationObject);
 }
 
@@ -118,7 +119,7 @@ void CFilesystem::moveToTrash(const TArray<CFile> files, TArray<CFile>& outUntra
 		NSError*	error;
 		if (![[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error]) {
 			// Failed
-			CFilesystemReportErrorFileFolderX1(MAKE_UErrorFromNSError(error), "moving file to trash", files[i]);
+			CFilesystemReportErrorFileFolderX1(SErrorFromNSError(error), "moving file to trash", files[i]);
 
 			// Add to out array
 			outUntrashedFiles += files[i];
@@ -127,11 +128,11 @@ void CFilesystem::moveToTrash(const TArray<CFile> files, TArray<CFile>& outUntra
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::moveToTrash(const TArray<CFile> files)
+OI<SError> CFilesystem::moveToTrash(const TArray<CFile> files)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UError	uError = kNoError;
+	OI<SError>	sError;
 
 	// Iterate files
 	for (CArrayItemIndex i = 0; i < files.getCount(); i++) {
@@ -142,16 +143,16 @@ UError CFilesystem::moveToTrash(const TArray<CFile> files)
 		NSError*	error;
 		if (![[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error]) {
 			// Failed
-			uError = MAKE_UErrorFromNSError(error);
-			CFilesystemReportErrorFileFolderX1(uError, "moving file to trash", files[i]);
+			sError = SErrorFromNSError(error);
+			CFilesystemReportErrorFileFolderX1(*sError, "moving file to trash", files[i]);
 		}
 	}
 
-	return uError;
+	return sError;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::revealInFinder(const CFolder& folder)
+OI<SError> CFilesystem::revealInFinder(const CFolder& folder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
@@ -159,14 +160,14 @@ UError CFilesystem::revealInFinder(const CFolder& folder)
 
 	// Reveal in Finder
 	if ([[NSWorkspace sharedWorkspace] openURL:url])
-		return kNoError;
+		return OI<SError>();
 	else
-		CFilesystemReportErrorFileFolderX1AndReturnError(kFileUnableToRevealInFinderError, "revealing in Finder",
+		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mUnableToRevealInFinderError, "revealing in Finder",
 				folder);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::revealInFinder(const TArray<CFile> files)
+OI<SError> CFilesystem::revealInFinder(const TArray<CFile> files)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -180,5 +181,5 @@ UError CFilesystem::revealInFinder(const TArray<CFile> files)
 	// Reveal in Finder
 	[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:urls];
 
-	return kNoError;
+	return OI<SError>();
 }

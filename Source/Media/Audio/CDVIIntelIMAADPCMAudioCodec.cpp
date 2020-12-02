@@ -176,10 +176,10 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 
 		if (packetIndex != mInternals->mDecodeCurrentPacketIndex) {
 			// Need to seek
-			SInt64	byteIndex = packetIndex * bytesPerPacket;
-			UError	error = mInternals->mByteParceller->setPos(kDataSourcePositionFromBeginning, byteIndex);
-			if (error != kNoError)
-				return SAudioReadStatus(error);
+			SInt64		byteIndex = packetIndex * bytesPerPacket;
+			OI<SError>	error = mInternals->mByteParceller->setPos(kDataSourcePositionFromBeginning, byteIndex);
+			if (error.hasInstance())
+				return SAudioReadStatus(*error);
 
 			mInternals->mDecodeCurrentPacketIndex = kPacketIndexNotSet;
 			nextPacketIndex = packetIndex;
@@ -193,15 +193,15 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 	while (availableFrameCount >= kDVIIntelFramesPerPacket) {
 		// Read next packet
 		TBuffer<UInt8>	packetBuffer(bytesPerPacket);
-		UError			error = mInternals->mByteParceller->readData(*packetBuffer, bytesPerPacket);
-		if (error != kNoError) {
+		OI<SError>		error = mInternals->mByteParceller->readData(*packetBuffer, bytesPerPacket);
+		if (error.hasInstance()) {
 			// Check situation
 			if (decodedFrameCount > 0)
 				// EOF, but have decoded frames
 				break;
 			else
 				// EOF, no decoded frames
-				return SAudioReadStatus(SError(CString("Domain"), error & 0xFFFFFFFF, CString::mEmpty));
+				return SAudioReadStatus(*error);
 		}
 
 		// Decode packet

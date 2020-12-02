@@ -5,6 +5,7 @@
 #include "CFile.h"
 
 #include "CCoreFoundation.h"
+#include "SError-Apple.h"
 
 #include <Foundation/Foundation.h>
 
@@ -60,7 +61,7 @@ UniversalTime CFile::getCreationDate() const
 		return date.timeIntervalSinceReferenceDate;
 	else
 		// Didn't succeed
-		CFileReportErrorAndReturnError(MAKE_UErrorFromNSError(error), "getting creation date");
+		CFileReportErrorAndReturnValue(SErrorFromNSError(error), "getting creation date", 0.0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -78,7 +79,7 @@ UniversalTime CFile::getModificationDate() const
 		return date.timeIntervalSinceReferenceDate;
 	else
 		// Didn't succeed
-		CFileReportErrorAndReturnError(MAKE_UErrorFromNSError(error), "getting modification date");
+		CFileReportErrorAndReturnValue(SErrorFromNSError(error), "getting modification date", 0.0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -129,7 +130,7 @@ CString CFile::getComment() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFile::setComment(const CString& string) const
+OI<SError> CFile::setComment(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -150,11 +151,14 @@ UError CFile::setComment(const CString& string) const
 	NSDictionary*	errorInfo;
 	if ([appleScript executeAndReturnError:&errorInfo] != nil)
 		// Success
-		return kNoError;
+		return OI<SError>();
 	else {
 		// Error
 		NSLog(@"Error when setting file comment: %@", errorInfo);
 
-		return kParamError;
+		return OI<SError>(
+				SError(CString(OSSTR("NSAppleScript")),
+						((NSNumber*) errorInfo[NSAppleScriptErrorNumber]).intValue,
+						CString((__bridge CFStringRef) errorInfo[NSAppleScriptErrorMessage])));
 	}
 }

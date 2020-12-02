@@ -424,8 +424,6 @@ void CPreferences::set(const SFloat32Pref& pref, Float32 value)
 {
 	// Create storage
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &value);
-	if (numberRef == nil)
-		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
 	mInternals->setTo(pref, numberRef);
@@ -438,8 +436,6 @@ void CPreferences::set(const SFloat64Pref& pref, Float64 value)
 {
 	// Create storage
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value);
-	if (numberRef == nil)
-		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
 	mInternals->setTo(pref, numberRef);
@@ -453,8 +449,6 @@ void CPreferences::set(const SSInt32Pref& pref, SInt32 value)
 	// Create storage
 	SInt64		sInt64Value = value;
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
-	if (numberRef == nil)
-		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
 	mInternals->setTo(pref, numberRef);
@@ -468,8 +462,6 @@ void CPreferences::set(const SUInt32Pref& pref, UInt32 value)
 	// Create storage
 	SInt64		sInt64Value = value;
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
-	if (numberRef == nil)
-		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
 	mInternals->setTo(pref, numberRef);
@@ -483,8 +475,6 @@ void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
 	// Create storage
 	SInt64		sInt64Value = value;
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
-	if (numberRef == nil)
-		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
 	mInternals->setTo(pref, numberRef);
@@ -497,8 +487,6 @@ void CPreferences::set(const SUniversalTimeIntervalPref& pref, UniversalTimeInte
 {
 	// Create storage
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value);
-	if (numberRef == nil)
-		LogIfErrorAndReturn(kMemFullError, "creating CFNumberRef");
 
 	// Write
 	mInternals->setTo(pref, numberRef);

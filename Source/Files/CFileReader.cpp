@@ -10,20 +10,21 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CFileReader::readData(UInt64 byteCount, UError& outError) const
+CData CFileReader::readData(UInt64 byteCount, OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
 	CData	data((CDataSize) byteCount);
 	outError = readData(data.getMutableBytePtr(), byteCount);
+	ReturnValueIfError(outError, CData::mEmpty);
 
-	return (outError == kNoError) ? data : CData::mEmpty;
+	return data;
 }
 
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CFileReader::readData(const CFile& file, UError& outError)
+CData CFileReader::readData(const CFile& file, OI<SError>& outError)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -31,15 +32,15 @@ CData CFileReader::readData(const CFile& file, UError& outError)
 
 	// Open
 	outError = fileReader.open();
-	ReturnValueIfUError(outError, CData::mEmpty);
+	ReturnValueIfError(outError, CData::mEmpty);
 
 	// Read
 	CData	data = fileReader.readData(file.getSize(), outError);
-	ReturnValueIfUError(outError, CData::mEmpty);
+	ReturnValueIfError(outError, CData::mEmpty);
 
 	// Close
 	outError = fileReader.close();
-	ReturnValueIfUError(outError, CData::mEmpty);
+	ReturnValueIfError(outError, CData::mEmpty);
 
 	return data;
 }

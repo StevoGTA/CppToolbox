@@ -5,18 +5,9 @@
 #include "CFolder.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFolderSetup
+// MARK: Local data
 
-class CFolderSetup {
-	public:
-		CFolderSetup()
-			{
-				CErrorRegistry::registerError(kFolderDoesNotExistError, CString(OSSTR("Folder Does Not Exist")));
-				CErrorRegistry::registerError(kFolderAlreadyExistsError, CString(OSSTR("Folder Already Exists")));
-			}
-};
-
-static	CFolderSetup	sFolderSetup;
+static	CString	sErrorDomain(OSSTR("CFolder"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,6 +30,11 @@ class CFolderInternals : public TCopyOnWriteReferenceCountable<CFolderInternals>
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFolder
+
+// MARK: Properties
+
+SError CFolder::mDoesNotExistError(sErrorDomain, 1, CString(OSSTR("Folder Does Not Exist")));
+SError CFolder::mAlreadyExistsError(sErrorDomain, 2, CString(OSSTR("Folder Already Exists")));
 
 // MARK: Lifecycle methods
 

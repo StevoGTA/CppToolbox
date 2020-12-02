@@ -10,7 +10,7 @@
 #include <execinfo.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-void eAssertHandleProc(UError error, const char* file, const char* proc, UInt32 line)
+void eAssertHandleProc(const SError& error, const char* file, const char* proc, UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Log error

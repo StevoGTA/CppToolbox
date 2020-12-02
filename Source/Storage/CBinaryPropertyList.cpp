@@ -42,20 +42,8 @@ const	UInt8	kMarkerCountMask			= 0x0F;
 
 static	CData	sBinaryPListV10Header((UInt8*) "bplist00", 8, false);
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CBinaryPropertyListSetup
-
-class CBinaryPropertyListSetup {
-	public:
-		CBinaryPropertyListSetup()
-			{
-				CErrorRegistry::registerError(kBinaryPropertyListUnknownFormatError,
-						CString(OSSTR("binary property list has unknown format")));
-			}
-};
-
-static	CBinaryPropertyListSetup	sBinaryPropertyListSetup;
+static	CString	sErrorDomain(OSSTR("CBinaryPropertyList"));
+static	SError	sUnknownFormatError(sErrorDomain, 1, CString(OSSTR("Unknown format")));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -82,7 +70,7 @@ class CBPLDataSource : public TReferenceCountable<CBPLDataSource> {
 		SDictionaryValue*	createDictionaryValue(UInt64 objectIndex);
 
 		CByteParceller	mByteParceller;
-		UError			mError;
+		OI<SError>		mError;
 
 		UInt8			mObjectIndexFieldSize;
 		UInt64			mTotalObjectCount;
@@ -208,7 +196,7 @@ class CBPLDictionaryInfo {
 //----------------------------------------------------------------------------------------------------------------------
 CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 objectOffsetFieldSize,
 		UInt8 objectIndexFieldSize, UInt64 totalObjectCount, UInt64 objectOffsetTableOffset) :
-	TReferenceCountable(), mByteParceller(byteParceller), mError(kNoError), mObjectIndexFieldSize(objectIndexFieldSize),
+	TReferenceCountable(), mByteParceller(byteParceller), mObjectIndexFieldSize(objectIndexFieldSize),
 			mTotalObjectCount(totalObjectCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -226,7 +214,7 @@ CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 object
 		// Read info
 		UInt64	count;
 		UInt8	marker = readMarker(i, OR<UInt64>(count));
-		if (mError != kNoError)
+		if (mError.hasInstance())
 			// Error
 			continue;
 
@@ -237,7 +225,7 @@ CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 object
 
 		// Get string content
 		CData	data = mByteParceller.readData(count, mError);
-		if (mError != kNoError)
+		if (mError.hasInstance())
 			// Error
 			continue;
 
@@ -342,7 +330,7 @@ UInt64 CBPLDataSource::readValue(SInt64 offset, UInt8 fieldSize, const char* err
 	// Read value
 	UInt64	storedValue = 0;
 	readData(offset, (UInt8*) &storedValue + sizeof(UInt64) - fieldSize, fieldSize, errorWhen);
-	ReturnValueIfUError(mError, 0);
+	ReturnValueIfError(mError, 0);
 
 	return EndianU64_BtoN(storedValue);
 }
@@ -391,7 +379,7 @@ SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 				return nil;
 
 			// Read object indexes
-			TBuffer<UInt64>	objectIndexes(count);
+			TBuffer<UInt64>	objectIndexes((UInt32) count);
 			for (UInt64 i = 0; i < count; i++)
 				(*objectIndexes)[i] = readIndex();
 
@@ -416,7 +404,7 @@ AssertFailUnimplemented();
 					TNArray<CDictionary>	array;
 					for (UInt64 i = 0; i < count; i++)
 						// Add dictionary
-						array.add(readDictionary(objectIndexes[i]));
+						array.add(readDictionary(objectIndexes[(UInt32) i]));
 
 					return new SDictionaryValue(array);
 				}
@@ -439,7 +427,7 @@ AssertFailUnimplemented();
 					TNArray<CString>	array;
 					for (UInt64 i = 0; i < count; i++)
 						// Add string
-						array.add(*mStrings[objectIndexes[i]]);
+						array.add(*mStrings[objectIndexes[(UInt32) i]]);
 
 					return new SDictionaryValue(array);
 				}
@@ -497,7 +485,7 @@ AssertFailUnimplemented();
 
 		default:
 			// We should never get here
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 	}
 
 	return nil;
@@ -510,7 +498,7 @@ AssertFailUnimplemented();
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParceller, UError& outError)
+CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParceller, OI<SError>& outError)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -519,7 +507,7 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 	// Check size
 	if (dataSize < (sBinaryPListV10Header.getSize() + sizeof(SBinaryPListTrailer))) {
 		// Too small to be a binary property list
-		outError = kBinaryPropertyListUnknownFormatError;
+		outError = OI<SError>(sUnknownFormatError);
 		LogIfErrorAndReturnValue(outError, "checking data source size", CDictionary());
 	}
 
@@ -528,7 +516,7 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 	LogIfErrorAndReturnValue(outError, "reading header", CDictionary());
 	if (header != sBinaryPListV10Header) {
 		// Header does not match
-		outError = kBinaryPropertyListUnknownFormatError;
+		outError = OI<SError>(sUnknownFormatError);
 		LogIfErrorAndReturnValue(outError, "validating header", CDictionary());
 	}
 
@@ -556,7 +544,7 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 	if (marker != kMarkerTypeDictionary) {
 		// Top object is not a dictionary
 		Delete(bplDataSource);
-		outError = kBinaryPropertyListUnknownFormatError;
+		outError = OI<SError>(sUnknownFormatError);
 		LogIfErrorAndReturnValue(outError, "top object is not a dictionary", CDictionary());
 	}
 
@@ -570,9 +558,9 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CBinaryPropertyList::writeTo(const CFile& file)
+OI<SError> CBinaryPropertyList::writeTo(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
 AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }

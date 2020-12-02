@@ -33,6 +33,7 @@ class CAudioConverterInternals {
 		AudioBufferList*			mOutputAudioBufferList;
 		AudioConverterRef			mAudioConverterRef;
 		OI<CAudioData>				mInputAudioData;
+		OI<SError>					mPerformError;
 		bool						mSourceHasMoreToRead;
 		SMediaPosition				mSourceMediaPosition;
 		Float32						mSourceSourceProcessed;
@@ -172,7 +173,7 @@ SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, C
 	OSStatus	status =
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, sFillBufferDataProc,
 								mInternals, &packetCount, mInternals->mOutputAudioBufferList, nil);
-	if (status != noErr) return SAudioReadStatus(SError::fromOSStatus(status));
+	if (status != noErr) return SAudioReadStatus(*mInternals->mPerformError);
 	if (packetCount == 0) return SAudioReadStatus(SError::mEndOfData);
 
 	// Update
@@ -219,26 +220,18 @@ OSStatus sFillBufferDataProc(AudioConverterRef inAudioConverter, UInt32* ioNumbe
 			// Success
 			internals.mSourceSourceProcessed = *audioReadStatus.getSourceProcessed();
 			status = noErr;
+		} else if (*audioReadStatus.getError() == SError::mEndOfData) {
+			// End of data
+			internals.mSourceHasMoreToRead = false;
+			status = noErr;
 		} else {
-			// Check result
-// For now we assume any error is just EOF.  When we switch over to SError globally, we can update this.
-
-//			if (audioReadStatus.getError()->get
-			// EOF error or other, reset return info
-//			internals->mAudioDataArray->reset();
-
-			// EOF is no error
-//			if (error == kFileEOFError) {
-				// No more source data
-				internals.mSourceHasMoreToRead = false;
-
-				status = noErr;
-//			}
+			// Error
+			internals.mPerformError = audioReadStatus.getError();
+			status = -1;
 		}
-	} else {
+	} else
 		// No more source data, reset everything
 		status = noErr;
-	}
 
 	// Prepare return info
 	internals.mInputAudioData->getAsRead(*ioBufferList);

@@ -21,7 +21,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	CString	sErrorDomain(OSSTR("CAudioPlayer"));
+static	CString	sErrorDomain(OSSTR("CAudioPlayer-Apple"));
 static	SError	sUnableToLoadTracks(sErrorDomain, 1, CString(OSSTR("No available tracks")));
 
 #define LOG_ERROR(method, status)																					\

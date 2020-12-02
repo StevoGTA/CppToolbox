@@ -6,7 +6,7 @@
 
 #include "CLogServices.h"
 #include "CppToolboxAssert.h"
-#include "CppToolboxError.h"
+#include "SError-POSIX.h"
 
 #include <pthread.h>
 
@@ -24,24 +24,21 @@ class CThreadInternals {
 								int				result;
 								pthread_attr_t	attr;
 								result = ::pthread_attr_init(&attr);
-								if (result != 0) {
-									LogIfError(MAKE_UError(kPOSIXErrorDomain, result), "initing pthread attrs");
-								}
+								if (result != 0)
+									LogError(SErrorFromPOSIXerror(result), "initing pthread attrs");
 								AssertFailIf(result != 0);
 
 								result = ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 								if (result != 0) {
-									LogIfError(MAKE_UError(kPOSIXErrorDomain, result),
-											"setting pthread detached state");
+									LogError(SErrorFromPOSIXerror(result), "setting pthread detached state");
 									::pthread_attr_destroy(&attr);
 								}
 
 								// Create thread
 								result = ::pthread_create(&mPThread, &attr, CThreadInternals::threadProc, this);
 								::pthread_attr_destroy(&attr);
-								if (result != 0) {
-									LogIfError(MAKE_UError(kPOSIXErrorDomain, result), "creating pthread");
-								}
+								if (result != 0)
+									LogError(SErrorFromPOSIXerror(result), "creating pthread");
 							}
 
 		static	void*	threadProc(void* userData)

@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include "CppToolboxError.h"
-#include "CString.h"
+#include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Procs
@@ -20,30 +19,30 @@ typedef	void	(*CLogProc)(const CString& string, void* userData);
 
 #define LogIfError(error, when)																\
 		{																					\
-			if (error != kNoError)															\
-				CLogServices::logError(error, when, __FILE__, __func__, __LINE__);			\
+			if (error.hasInstance())														\
+				CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);			\
 		}
 
 #define	LogIfErrorAndReturn(error, when)													\
 		{																					\
-			if (error != kNoError) {														\
-				CLogServices::logError(error, when, __FILE__, __func__, __LINE__);			\
+			if (error.hasInstance()) {														\
+				CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);			\
 				return;																		\
 			}																				\
 		}
 
 #define LogIfErrorAndReturnError(error, when)												\
 		{																					\
-			if (error != kNoError) {														\
-				CLogServices::logError(error, when, __FILE__, __func__, __LINE__);			\
+			if (error.hasInstance()) {														\
+				CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);			\
 				return error;																\
 			}																				\
 		}
 
 #define	LogIfErrorAndReturnValue(error, when, value)										\
 		{																					\
-			if (error != kNoError) {														\
-				CLogServices::logError(error, when, __FILE__, __func__, __LINE__);			\
+			if (error.hasInstance()) {														\
+				CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);			\
 				return value;																\
 			}																				\
 		}
@@ -72,8 +71,9 @@ class CLogFile {
 				void	logError(const CString& error, const CString& when, const char* file, const char* proc,
 								UInt32 line) const;
 				void	logError(const CString& string) const;
-				void	logError(UError error, const CString& message, const char* file, const char* proc, UInt32 line)
-							{ logError(CErrorRegistry::getStringForError(error), message, file, proc, line); }
+				void	logError(const SError& error, const CString& message, const char* file, const char* proc,
+								UInt32 line)
+							{ logError(error.getDescription(), message, file, proc, line); }
 
 	// Properties
 	private:
@@ -98,9 +98,9 @@ class CLogServices {
 		static	void			logError(const CString& error, const CString& when, const char* file, const char* proc,
 										UInt32 line);
 		static	void			logError(const CString& string);
-		static	void			logError(UError error, const CString& message, const char* file, const char* proc,
-										UInt32 line)
-									{ logError(CErrorRegistry::getStringForError(error), message, file, proc, line); }
+		static	void			logError(const SError& error, const CString& message, const char* file,
+										const char* proc, UInt32 line)
+									{ logError(error.getDescription(), message, file, proc, line); }
 
 		static	void			addLogMessageProc(CLogProc logProc, void* logProcUserData = nil);
 		static	void			addLogWarningProc(CLogProc logProc, void* logProcUserData = nil);

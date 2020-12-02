@@ -9,18 +9,12 @@
 #include "CFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Errors
-
-const	UErrorDomain	kBinaryPropertyListErrorDomain			= MAKE_OSTYPE('B', 'i', 'P', 'L');
-const	UError			kBinaryPropertyListUnknownFormatError	= MAKE_UError(kBinaryPropertyListErrorDomain, 1);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CBinaryPropertyList
+// MARK: CBinaryPropertyList
 
 class CBinaryPropertyList : public CDictionary {
 	// Methods
 	public:
 						// Class methods
-	static	CDictionary	dictionaryFrom(const CByteParceller& byteParceller, UError& outError);
-	static	UError		writeTo(const CFile& file);
+	static	CDictionary	dictionaryFrom(const CByteParceller& byteParceller, OI<SError>& outError);
+	static	OI<SError>	writeTo(const CFile& file);
 };

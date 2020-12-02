@@ -7,19 +7,16 @@
 #include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDataSourceSetup
+// MARK: Local data
 
-class CDataSourceSetup {
-	public:
-		CDataSourceSetup()
-			{
-				CErrorRegistry::registerError(kDataProviderReadBeyondEndError,
-						CString(OSSTR("Read beyond end")));
-				CErrorRegistry::registerError(kDataProviderSetPosBeforeStartError,
-						CString(OSSTR("Set position before start")));
-				CErrorRegistry::registerError(kDataProviderSetPosAfterEndError,
-						CString(OSSTR("Set position after end")));
-			}
-};
+static	CString	sErrorDomain(OSSTR("CDataSource"));
 
-static	CDataSourceSetup	sDataSourceSetup;
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDataSource
+
+// MARK: Properties
+
+SError	CDataSource::mSetPosBeforeStartError(sErrorDomain, 1, CString(OSSTR("Data source set position before start")));
+SError	CDataSource::mSetPosAfterEndError(sErrorDomain, 2, CString(OSSTR("Data source set position after end")));
+

@@ -20,8 +20,11 @@ struct SError {
 						{}
 
 					// Instance methods
-			CString	getLocalizationKey()
-						{ return mDomain + CString(OSSTR("/")) + CString(mCode); }
+			CString	getDescription() const
+						{ return mDomain + CString(OSSTR("/")) + CString(mCode) + CString(OSSTR(" (")) +
+								mDefaultLocalizedDescription + CString(OSSTR(")")); }
+//			CString	getLocalizationKey() const
+//						{ return mDomain + CString(OSSTR("/")) + CString(mCode); }
 
 			bool	operator==(const SError& other) const
 						{ return (mDomain == other.mDomain) && (mCode == other.mCode); }
@@ -59,6 +62,6 @@ struct SError {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define ReturnIfError(error)				{ if (error.hasInstance()) return error; }
+#define ReturnIfError(error)				{ if (error.hasInstance()) return; }
 #define ReturnErrorIfError(error)			{ if (error.hasInstance()) return error; }
 #define	ReturnValueIfError(error, value)	{ if (error.hasInstance()) return value; }

@@ -5,6 +5,7 @@
 #include "CBitmap.h"
 
 #include "CppToolboxAssert.h"
+#include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
@@ -548,7 +549,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 void sConvertRGB565ToRGB888(const CBitmapInternals& sourceBitmapInternals, CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -580,7 +581,7 @@ void sConvertRGB565ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 #if defined(__clang__)
 	#warning TODO - convertRGB565ToRGBA8888 for Big Endian
 #endif
-			AssertFailWith(kUnimplementedError);
+			AssertFailUnimplemented();
 #endif
 		}
 	}
@@ -591,7 +592,7 @@ void sConvertRGB565ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -624,7 +625,7 @@ void sConvertRGBA4444ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 #if defined(__clang__)
 	#warning TODO - convertRGBA4444ToRGBA8888 for Big Endian
 #endif
-			AssertFailWith(kUnimplementedError);
+			AssertFailUnimplemented();
 #endif
 		}
 	}
@@ -635,7 +636,7 @@ void sConvertRGBA4444ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -668,7 +669,7 @@ void sConvertRGBA5551ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 #if defined(__clang__)
 	#warning TODO - convertRGBA5551ToRGBA8888 for Big Endian
 #endif
-			AssertFailWith(kUnimplementedError);
+			AssertFailUnimplemented();
 #endif
 		}
 	}
@@ -679,7 +680,7 @@ void sConvertRGBA5551ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -687,7 +688,7 @@ void sConvertRGB888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -695,7 +696,7 @@ void sConvertRGB888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -703,7 +704,7 @@ void sConvertRGB888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -733,7 +734,7 @@ void sConvertRGB888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 #if defined(__clang__)
 	#warning TODO - convertRGB888ToRGBA8888 for Big Endian
 #endif
-			AssertFailWith(kUnimplementedError);
+			AssertFailUnimplemented();
 #endif
 		}
 	}
@@ -744,7 +745,7 @@ void sConvertRGB888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -776,7 +777,7 @@ void sConvertRGBA8888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
 #if defined(__clang__)
 	#warning TODO - convertRGBA8888ToRGB565 for Big Endian
 #endif
-			AssertFailWith(kUnimplementedError);
+			AssertFailUnimplemented();
 #endif
 		}
 	}
@@ -812,7 +813,7 @@ void sConvertRGBA8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
 #if defined(__clang__)
 	#warning TODO - convertRGBA8888ToRGBA4444 for Big Endian
 #endif
-			AssertFailWith(kUnimplementedError);
+			AssertFailUnimplemented();
 #endif
 		}
 	}
@@ -848,7 +849,7 @@ void sConvertRGBA8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
 #if defined(__clang__)
 	#warning TODO - convertRGBA8888ToRGBA5551 for Big Endian
 #endif
-			AssertFailWith(kUnimplementedError);
+			AssertFailUnimplemented();
 #endif
 		}
 	}
@@ -859,7 +860,7 @@ void sConvertRGBA8888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -867,7 +868,7 @@ void sConvertARGB8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -875,7 +876,7 @@ void sConvertARGB8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -883,5 +884,5 @@ void sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 }

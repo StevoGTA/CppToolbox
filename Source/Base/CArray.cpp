@@ -591,7 +591,7 @@ CArray& CArray::sort(CArrayCompareProc compareProc, void* userData)
 	qsort_s((void*) *mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), sSortProc, &sortInfo);
 #else
 	// Unknown platform
-	AssertFailWith(kUnimplementedError);
+	AssertFailUnimplemented();
 #endif
 
 	// Update

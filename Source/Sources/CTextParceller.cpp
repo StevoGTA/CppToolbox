@@ -54,7 +54,7 @@ UInt64 CTextParceller::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CTextParceller::readStringToEOL(UError& outError)
+CString CTextParceller::readStringToEOL(OI<SError>& outError)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -66,14 +66,14 @@ CString CTextParceller::readStringToEOL(UError& outError)
 		UInt64	bytesRead = std::min<UInt64>(1024, getSize() - mInternals->mDataSource->getPos());
 		if (bytesRead == 0) {
 			// EOF
-			outError = outString.isEmpty() ? kDataProviderReadBeyondEndError : kNoError;
+			outError = outString.isEmpty() ? OI<SError>(SError::mEndOfData) : OI<SError>();
 
 			return outString;
 		}
 
-		TBuffer<char>	buffer(bytesRead + 1);
+		TBuffer<char>	buffer(UInt32(bytesRead + 1));
 		outError = mInternals->mDataSource->readData(*buffer, bytesRead);
-		if (outError != kNoError)
+		if (outError.hasInstance())
 			// Error
 			return CString::mEmpty;
 
@@ -110,7 +110,7 @@ CString CTextParceller::readStringToEOL(UError& outError)
 
 			// Reset the file's position to the beginning of the next line
 			outError = mInternals->mDataSource->setPos(kDataSourcePositionFromCurrent, delta);
-			ReturnValueIfUError(outError, outString);
+			ReturnValueIfError(outError, outString);
 
 			// Append the chars we found to the return string
 			outString += CString(*buffer);

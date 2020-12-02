@@ -22,10 +22,10 @@ class CFileDataSource : public CDataSource {
 						// CDataSource methods
 		UInt64			getSize() const;
 
-		UError			readData(void* buffer, UInt64 byteCount);
+		OI<SError>		readData(void* buffer, UInt64 byteCount);
 
 		SInt64			getPos() const;
-		UError			setPos(EDataSourcePosition position, SInt64 newPos);
+		OI<SError>		setPos(EDataSourcePosition position, SInt64 newPos);
 
 		CDataSource*	clone() const
 							{ return new CFileDataSource(*this); }
@@ -52,10 +52,10 @@ class CMappedFileDataSource : public CDataSource {
 						// CDataSource methods
 		UInt64			getSize() const;
 
-		UError			readData(void* buffer, UInt64 byteCount);
+		OI<SError>		readData(void* buffer, UInt64 byteCount);
 
 		SInt64			getPos() const;
-		UError			setPos(EDataSourcePosition position, SInt64 newPos);
+		OI<SError>		setPos(EDataSourcePosition position, SInt64 newPos);
 
 		CDataSource*	clone() const
 							{ return new CMappedFileDataSource(*this); }

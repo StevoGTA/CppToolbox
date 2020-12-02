@@ -8,26 +8,7 @@
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Errors
-
-const	UErrorDomain	kFileErrorDomain	= MAKE_OSTYPE('F', 'I', 'L', 'E');
-
-const	UError	kFileDoesNotExistError				= MAKE_UError(kFileErrorDomain, 1);
-const	UError	kFileIsOpenError					= MAKE_UError(kFileErrorDomain, 2);
-const	UError	kFileNotOpenError					= MAKE_UError(kFileErrorDomain, 3);
-const	UError	kFileNotFoundError					= MAKE_UError(kFileErrorDomain, 4);
-const	UError	kFileUnableToRevealInFinderError	= MAKE_UError(kFileErrorDomain, 5);
-const	UError	kFileUnableToReadError				= MAKE_UError(kFileErrorDomain, 6);
-const	UError	kFileUnableToWriteError				= MAKE_UError(kFileErrorDomain, 7);
-
-#if TARGET_OS_MACOS
-const	UError	kFileEOFError						= MAKE_UErrorFromOSStatus(eofErr);
-#else
-const	UError	kFileEOFError						= MAKE_UError(kFileErrorDomain, 8);
-#endif
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFile
+// MARK: CFile
 
 class CFileInternals;
 class CFile : CHashable {
@@ -51,18 +32,18 @@ class CFile : CHashable {
 
 						CString				getName() const;
 						CString				getNameDeletingExtension() const;
-						UError				rename(const CString& string);
+						OI<SError>			rename(const CString& string);
 
 						UInt64				getSize() const;
 
-						UError				remove() const;
+						OI<SError>			remove() const;
 						bool				doesExist() const;
 
 						CFolder				getFolder() const;
 						bool				isHidden() const;
 
 						bool				getLocked() const;
-						UError				setLocked(bool lockFile) const;
+						OI<SError>			setLocked(bool lockFile) const;
 
 						UniversalTime		getCreationDate() const;
 						UniversalTime		getModificationDate() const;
@@ -95,14 +76,14 @@ class CFile : CHashable {
 
 #if TARGET_OS_MACOS || TARGET_OS_LINUX
 						UInt16				getPermissions() const;
-						UError				setPermissions(UInt16 permissions) const;
+						OI<SError>			setPermissions(UInt16 permissions) const;
 #endif
 
 #if TARGET_OS_MACOS
 						bool				isAlias() const;
 
 						CString				getComment() const;
-						UError				setComment(const CString& string) const;
+						OI<SError>			setComment(const CString& string) const;
 #endif
 											// Class methods
 		static			ECompareResult		compareName(CFile* const file1, CFile* const file2, void* context);
@@ -112,6 +93,15 @@ class CFile : CHashable {
 						void				update(const CFilesystemPath& filesystemPath);
 
 	// Properties
+	public:
+		static	SError			mDoesNotExistError;
+		static	SError			mIsOpenError;
+		static	SError			mNotOpenError;
+		static	SError			mNotFoundError;
+		static	SError			mUnableToRevealInFinderError;
+		static	SError			mUnableToReadError;
+		static	SError			mUnableToWriteError;
+
 	private:
-		CFileInternals*	mInternals;
+				CFileInternals*	mInternals;
 };

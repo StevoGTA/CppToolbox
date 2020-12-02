@@ -23,7 +23,7 @@ class CTextParceller {
 				// Instance methods
 		UInt64	getSize() const;
 
-		CString	readStringToEOL(UError& outError);
+		CString	readStringToEOL(OI<SError>& outError);
 
 		void	reset() const;
 

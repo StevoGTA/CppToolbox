@@ -7,6 +7,7 @@
 #import "CMetalRenderState.h"
 #import "CMetalTexture.h"
 #import "ConcurrencyPrimitives.h"
+#import "SError.h"
 
 #import "MetalShaderTypes.h"
 

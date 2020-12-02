@@ -11,8 +11,8 @@
 // MARK: Local data
 
 static	CString	sErrorDomain(OSSTR("CWAVEMediaSource"));
-static	SError	sUnableToLoadTracks(sErrorDomain, 1, CString(OSSTR("Unable to load tracks")));
-static	SError	sUnsupportedFormat(sErrorDomain, 2, CString(OSSTR("Unsupported format")));
+static	SError	sNotAWAVEFile(sErrorDomain, 1, CString(OSSTR("Not a WAVE file")));
+static	SError	sUnsupportedCodec(sErrorDomain, 2, CString(OSSTR("Unsupported codec")));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CWAVEMediaSourceInternals
@@ -51,20 +51,18 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UError	error;
+	OI<SError>	error;
 
 	// Reset to beginning
 	error = byteParceller.setPos(kDataSourcePositionFromBeginning, 0);
-	if (error != kNoError)
-		return OI<SError>(sUnableToLoadTracks);
+	ReturnErrorIfError(error);
 
 	// Verify it's a WAVE Media Source
 	SWAVEFORMChunk32	formChunk32;
 	error = byteParceller.readData(&formChunk32, sizeof(SWAVEFORMChunk32));
-	if (error != kNoError)
-		return OI<SError>(sUnableToLoadTracks);
+	ReturnErrorIfError(error);
 	if ((formChunk32.getNativeChunkID() != kWAVEFORMChunkID) || (formChunk32.getNativeFormType() != kWAVEFORMType))
-		return OI<SError>(sUnableToLoadTracks);
+		return OI<SError>(sNotAWAVEFile);
 
 	// Process chunks
 	OI<SAudioStorageFormat>	audioStorageFormat;
@@ -74,8 +72,7 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 		// Read next chunk header
 		SWAVEChunkHeader32	chunkHeader32;
 		error = byteParceller.readData(&chunkHeader32, sizeof(SWAVEChunkHeader32));
-		if (error != kNoError)
-			return OI<SError>(sUnableToLoadTracks);
+		ReturnErrorIfError(error);
 
 		UInt32	chunkDataSize = chunkHeader32.getNativeChunkSize();
 		SInt64	nextChunkPos = byteParceller.getPos() + chunkDataSize + (chunkDataSize % 1);
@@ -85,17 +82,15 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 			case kWAVEFormatChunkID: {
 				// Format chunk
 				error = byteParceller.setPos(kDataSourcePositionFromCurrent, -sizeof(SWAVEChunkHeader32));
-				if (error != kNoError)
-					return OI<SError>(sUnableToLoadTracks);
+				ReturnErrorIfError(error);
 
 				SWAVEFORMAT	waveFormat;
 				error = byteParceller.readData(&waveFormat, sizeof(SWAVEFORMAT));
-				if (error != kNoError)
-					return OI<SError>(sUnableToLoadTracks);
+				ReturnErrorIfError(error);
 
 				switch (waveFormat.getNativeFormatTag()) {
 					case 0x0011:
-						//
+						// DVI/Intel ADPCM
 						audioStorageFormat =
 								OI<SAudioStorageFormat>(
 										SAudioStorageFormat(CDVIIntelIMAADPCMAudioCodec::mID, 16,
@@ -105,7 +100,7 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 
 					default:
 						// Not supported
-						return OI<SError>(sUnsupportedFormat);
+						return OI<SError>(sUnsupportedCodec);
 				}
 			} break;
 
@@ -122,8 +117,7 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 
 		// Seek to next chunk
 		error = byteParceller.setPos(kDataSourcePositionFromBeginning, nextChunkPos);
-		if (error != kNoError)
-			return OI<SError>(sUnableToLoadTracks);
+		ReturnErrorIfError(error);
 	}
 
 	// Store

@@ -4,6 +4,8 @@
 
 #include "CFolder.h"
 
+#include "SError-POSIX.h"
+
 #include <sys/stat.h>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -24,7 +26,7 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFolder::rename(const CString& string)
+OI<SError> CFolder::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose new filesystem path
@@ -36,34 +38,34 @@ UError CFolder::rename(const CString& string)
 		// Success
 		update(filesystemPath);
 
-		return kNoError;
+		return OI<SError>();
 	} else
 		// Error
-		CFolderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "renaming");
+		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "renaming");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFolder::create() const
+OI<SError> CFolder::create() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if (::mkdir(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), 0777) == 0)
 		// Success
-		return kNoError;
+		return OI<SError>();
 	else
 		// Error
-		CFolderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "creating");
+		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "creating");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFolder::remove() const
+OI<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if (::unlink(*getFilesystemPath().getString().getCString(kStringEncodingUTF8)) == 0)
 		// Success
-		return kNoError;
+		return OI<SError>();
 	else
 		// Error
-		CFolderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "removing");
+		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "removing");
 }
 
 //----------------------------------------------------------------------------------------------------------------------

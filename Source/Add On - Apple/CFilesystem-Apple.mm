@@ -5,6 +5,7 @@
 #include "CFilesystem.h"
 
 #include "CCoreFoundation.h"
+#include "SError-Apple.h"
 
 #include <Foundation/Foundation.h>
 
@@ -21,7 +22,7 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 																									\
-					return error;																	\
+					return OI<SError>(error);														\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
@@ -29,7 +30,7 @@
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
-					return error;																	\
+					return OI<SError>(error);														\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,7 +40,7 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolders)
+OI<SError> CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolders)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
@@ -62,14 +63,14 @@ UError CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolder
 				outFolders += CFolder(CFilesystemPath(CString((__bridge CFStringRef) url.path)));
 		}
 
-		return kNoError;
+		return OI<SError>();
 	} else
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(MAKE_UErrorFromNSError(error), "getting folders", folder);
+		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "getting folders", folder);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
+OI<SError> CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
@@ -92,14 +93,14 @@ UError CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
 				outFiles += CFile(CFilesystemPath(CString((__bridge CFStringRef) url.path)));
 		}
 
-		return kNoError;
+		return OI<SError>();
 	} else
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(MAKE_UErrorFromNSError(error), "getting files", folder);
+		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "getting files", folder);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outFolders, TArray<CFile>& outFiles)
+OI<SError> CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outFolders, TArray<CFile>& outFiles)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
@@ -125,15 +126,15 @@ UError CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outF
 				outFiles += CFile(CFilesystemPath(CString((__bridge CFStringRef) url.path)));
 		}
 
-		return kNoError;
+		return OI<SError>();
 	} else
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(MAKE_UErrorFromNSError(error), "getting folders and files",
+		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "getting folders and files",
 				folder);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
+OI<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -149,9 +150,9 @@ UError CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFil
 	if ([[NSFileManager defaultManager] replaceItemAtURL:destinationURL withItemAtURL:sourceURL backupItemName:nil
 			options:0 resultingItemURL:nil error:&error])
 		// Success
-		return kNoError;
+		return OI<SError>();
 	else
 		// Error
-		CFilesystemReportErrorFileFolderX2AndReturnError(MAKE_UErrorFromNSError(error), "replacing file", sourceFile,
+		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), "replacing file", sourceFile,
 				destinationFile);
 }

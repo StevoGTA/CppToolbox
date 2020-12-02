@@ -4,6 +4,8 @@
 
 #include "CFile.h"
 
+#include "SError-POSIX.h"
+
 #include <sys/stat.h>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -31,7 +33,7 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFile::rename(const CString& string)
+OI<SError> CFile::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose new filesystem path
@@ -43,10 +45,10 @@ UError CFile::rename(const CString& string)
 		// Success
 		update(filesystemPath);
 
-		return kNoError;
+		return OI<SError>();
 	} else
 		// Error
-		CFileReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "renaming file");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "renaming file");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -60,20 +62,20 @@ UInt64 CFile::getSize() const
 		return statInfo.st_size;
 	else
 		// Error
-		CFileReportErrorAndReturnValue(MAKE_UError(kPOSIXErrorDomain, errno), "getting size", 0);
+		CFileReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), "getting size", 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFile::remove() const
+OI<SError> CFile::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove
 	if (::unlink(*getFilesystemPath().getString().getCString(kStringEncodingUTF8)) == 0)
 		// Success
-		return kNoError;
+		return OI<SError>();
 	else
 		// Error
-		CFileReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "removing file");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "removing file");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,22 +96,22 @@ bool CFile::getLocked() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFile::setLocked(bool lockFile) const
+OI<SError> CFile::setLocked(bool lockFile) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get flags
 	struct	stat	statInfo;
 	if (::stat(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) != 0)
 		// Error
-		CFileReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "getting flags when setting locked");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "getting flags when setting locked");
 
 	// Update flags
 	statInfo.st_flags = lockFile ? (statInfo.st_flags | UF_IMMUTABLE) : (statInfo.st_flags & ~UF_IMMUTABLE);
 	if (::chflags(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), statInfo.st_flags) != 0)
 		// Error
-		CFileReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting locked");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting locked");
 
-	return kNoError;
+	return OI<SError>();
 }
 
 #if TARGET_OS_MACOS || TARGET_OS_LINUX
@@ -124,15 +126,15 @@ UInt16 CFile::getPermissions() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFile::setPermissions(UInt16 permissions) const
+OI<SError> CFile::setPermissions(UInt16 permissions) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set permissions
 	if (::chmod(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), permissions) == 0)
 		// Succes
-		return kNoError;
+		return OI<SError>();
 	else
 		// Error
-		CFileReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting permissions");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting permissions");
 }
 #endif

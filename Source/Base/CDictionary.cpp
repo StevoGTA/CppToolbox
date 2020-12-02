@@ -5,6 +5,7 @@
 #include "CDictionary.h"
 
 #include "CppToolboxAssert.h"
+#include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TDictionaryInternals
@@ -1112,7 +1113,7 @@ bool SDictionaryValue::getBool(bool defaultValue) const
 		case kDictionaryValueTypeUInt64:	return mValue.mUInt64 == 1;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1186,7 +1187,7 @@ Float32 SDictionaryValue::getFloat32(Float32 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return (Float32) mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1210,7 +1211,7 @@ Float64 SDictionaryValue::getFloat64(Float64 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return (Float64) mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1232,7 +1233,7 @@ SInt8 SDictionaryValue::getSInt8(SInt8 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return (SInt8)mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1254,7 +1255,7 @@ SInt16 SDictionaryValue::getSInt16(SInt16 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return (SInt16) mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1276,7 +1277,7 @@ SInt32 SDictionaryValue::getSInt32(SInt32 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return (SInt32) mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1298,7 +1299,7 @@ SInt64 SDictionaryValue::getSInt64(SInt64 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1320,7 +1321,7 @@ UInt8 SDictionaryValue::getUInt8(UInt8 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return (UInt8) mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1342,7 +1343,7 @@ UInt16 SDictionaryValue::getUInt16(UInt16 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return (UInt16) mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1364,7 +1365,7 @@ UInt32 SDictionaryValue::getUInt32(UInt32 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return (UInt32) mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}
@@ -1386,7 +1387,7 @@ UInt64 SDictionaryValue::getUInt64(UInt64 defaultValue) const
 		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
 		default:
 			// Cannot coerce value
-			AssertFailWith(kAssertFailedError);
+			AssertFail();
 
 			return defaultValue;
 	}

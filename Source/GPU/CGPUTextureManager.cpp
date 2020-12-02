@@ -317,7 +317,7 @@ class CDataGPUTextureReferenceInternals : public CGPUTextureReferenceInternals {
 						// Is loading continuing
 						if (isLoadingContinuing()) {
 							// Read data
-							UError	error;
+							OI<SError>	error;
 							data = mByteParceller.readData(error);
 							mByteParceller.reset();
 							LogIfErrorAndReturn(error, "reading data from data provider");

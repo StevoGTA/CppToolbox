@@ -59,8 +59,8 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 					mFile.remove();
 
 				// Open
-				UError	error = mFileWriter.open();
-				if (error != kNoError)
+				OI<SError>	error = mFileWriter.open();
+				if (error.hasInstance())
 					// Error
 					fprintf(stderr, "Unable to open log file at %s\n",
 							*mFile.getFilesystemPath().getString().getCString());

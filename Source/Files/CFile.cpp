@@ -5,24 +5,9 @@
 #include "CFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFileSetup
+// MARK: Local data
 
-class CFileSetup {
-	public:
-		CFileSetup()
-			{
-				CErrorRegistry::registerError(kFileDoesNotExistError, CString(OSSTR("File Does Not Exist")));
-				CErrorRegistry::registerError(kFileIsOpenError, CString(OSSTR("File Is Open")));
-				CErrorRegistry::registerError(kFileNotOpenError, CString(OSSTR("Is Not Open")));
-				CErrorRegistry::registerError(kFileNotFoundError, CString(OSSTR("Is Not Found")));
-				CErrorRegistry::registerError(kFileUnableToRevealInFinderError,
-						CString(OSSTR("Unable to reveal in Finder")));
-				CErrorRegistry::registerError(kFileUnableToReadError, CString(OSSTR("Unable to read")));
-				CErrorRegistry::registerError(kFileUnableToWriteError, CString(OSSTR("Unable to write")));
-			}
-};
-
-static	CFileSetup	sFileSetup;
+static	CString	sErrorDomain(OSSTR("CFile"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -45,6 +30,16 @@ class CFileInternals : public TCopyOnWriteReferenceCountable<CFileInternals> {
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFile
+
+// MARK: Properties
+
+SError	CFile::mDoesNotExistError(sErrorDomain, 1, CString(OSSTR("Does Not Exist")));
+SError	CFile::mIsOpenError(sErrorDomain, 2, CString(OSSTR("Is Open")));
+SError	CFile::mNotOpenError(sErrorDomain, 3, CString(OSSTR("Is Not Open")));
+SError	CFile::mNotFoundError(sErrorDomain, 4, CString(OSSTR("Is Not Found")));
+SError	CFile::mUnableToRevealInFinderError(sErrorDomain, 5, CString(OSSTR("Unable to reveal in Finder")));
+SError	CFile::mUnableToReadError(sErrorDomain, 6, CString(OSSTR("Unable to read")));
+SError	CFile::mUnableToWriteError(sErrorDomain, 7, CString(OSSTR("Unable to write")));
 
 // MARK: Lifecycle methods
 

@@ -4,18 +4,28 @@
 
 #pragma once
 
-#include "CppToolboxError.h"
+#include "PlatformDefinitions.h"
+
+struct SError;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Procs
 
-extern	void	eAssertHandleProc(UError error, const char* file, const char* proc, UInt32 line);
+extern	void	eAssertHandleProc(const SError& error, const char* file, const char* proc, UInt32 line);
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Errors
+
+extern	SError	AssertFailedError;
+extern	SError	AssertNilValueError;
+extern	SError	AsserNonNilValueError;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define AssertFailUnimplemented()	AssertFailWith(kUnimplementedError)
+#define AssertFail()				AssertFailWith(AssertFailedError);
+#define AssertFailUnimplemented()	AssertFailWith(SError::mUnimplemented)
 #define	AssertFailWith(error)		{ eAssertHandleProc(error, __FILE__, __func__, __LINE__); }
-#define	AssertFailIf(cond)			{ if (cond) AssertFailWith(kAssertFailedError); }
-#define	AssertNotNil(value)			{ if ((value) == nil) AssertFailWith(kNilValueError); }
-#define	AssertNil(value)			{ if ((value) != nil) AssertFailWith(kNonNilValueError); }
+#define	AssertFailIf(cond)			{ if (cond) AssertFailWith(AssertFailedError); }
+#define	AssertNotNil(value)			{ if ((value) == nil) AssertFailWith(AssertNilValueError); }
+#define	AssertNil(value)			{ if ((value) != nil) AssertFailWith(AsserNonNilValueError); }

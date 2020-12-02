@@ -6,18 +6,9 @@
 
 #include "CFilesystemPath.h"
 #include "CLogServices.h"
-#include "CppToolboxError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Errors
-
-const	UErrorDomain	kFolderErrorDomain	= MAKE_OSTYPE('F', 'o', 'l', 'd');
-
-const	UError	kFolderDoesNotExistError	= MAKE_UError(kFolderErrorDomain, 1);
-const	UError	kFolderAlreadyExistsError	= MAKE_UError(kFolderErrorDomain, 2);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFolder
+// MARK: CFolder
 
 class CFolderInternals;
 class CFolder : CHashable {
@@ -40,10 +31,10 @@ class CFolder : CHashable {
 				const	CFilesystemPath&	getFilesystemPath() const;
 
 						CString				getName() const;
-						UError				rename(const CString& string);
+						OI<SError>			rename(const CString& string);
 
-						UError				create() const;
-						UError				remove() const;
+						OI<SError>			create() const;
+						OI<SError>			remove() const;
 						bool				doesExist() const;
 
 						CFolder				getFolder() const;
@@ -106,6 +97,10 @@ class CFolder : CHashable {
 						void				update(const CFilesystemPath& filesystemPath);
 
 	// Properties
+	public:
+		static	SError				mDoesNotExistError;
+		static	SError				mAlreadyExistsError;
+
 	private:
-		CFolderInternals*	mInternals;
+				CFolderInternals*	mInternals;
 };

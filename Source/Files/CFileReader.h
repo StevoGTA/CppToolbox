@@ -57,11 +57,11 @@ class CFileReader {
 										// Instance methods
 				const	CFile&			getFile() const;
 
-						UError			open(bool buffered = false);
+						OI<SError>		open(bool buffered = false);
 
-						UError			readData(void* buffer, UInt64 byteCount) const;
-						CData			readData(UInt64 byteCount, UError& outError) const;
-						SInt8			readSInt8(UError& outError) const
+						OI<SError>		readData(void* buffer, UInt64 byteCount) const;
+						CData			readData(UInt64 byteCount, OI<SError>& outError) const;
+						SInt8			readSInt8(OI<SError>& outError) const
 											{
 												// Read
 												SInt8	value = 0;
@@ -69,7 +69,7 @@ class CFileReader {
 
 												return value;
 											}
-						SInt16			readSInt16(UError& outError) const
+						SInt16			readSInt16(OI<SError>& outError) const
 											{
 												// Read
 												SInt16	value = 0;
@@ -77,7 +77,7 @@ class CFileReader {
 
 												return value;
 											}
-						SInt32			readSInt32(UError& outError) const
+						SInt32			readSInt32(OI<SError>& outError) const
 											{
 												// Read
 												SInt32	value = 0;
@@ -85,7 +85,7 @@ class CFileReader {
 
 												return value;
 											}
-						SInt64			readSInt64(UError& outError) const
+						SInt64			readSInt64(OI<SError>& outError) const
 											{
 												// Read
 												SInt64	value = 0;
@@ -93,7 +93,7 @@ class CFileReader {
 
 												return value;
 											}
-						UInt8			readUInt8(UError& outError) const
+						UInt8			readUInt8(OI<SError>& outError) const
 											{
 												// Read
 												UInt8	value = 0;
@@ -101,7 +101,7 @@ class CFileReader {
 
 												return value;
 											}
-						UInt16			readUInt16(UError& outError) const
+						UInt16			readUInt16(OI<SError>& outError) const
 											{
 												// Read
 												UInt16	value = 0;
@@ -109,7 +109,7 @@ class CFileReader {
 
 												return value;
 											}
-						UInt32			readUInt32(UError& outError) const
+						UInt32			readUInt32(OI<SError>& outError) const
 											{
 												// Read
 												UInt32	value = 0;
@@ -117,7 +117,7 @@ class CFileReader {
 
 												return value;
 											}
-						UInt64			readUInt64(UError& outError) const
+						UInt64			readUInt64(OI<SError>& outError) const
 											{
 												// Read
 												UInt64	value = 0;
@@ -125,7 +125,7 @@ class CFileReader {
 
 												return value;
 											}
-						OSType			readOSType(UError& outError) const
+						OSType			readOSType(OI<SError>& outError) const
 											{
 												// Read
 												OSType	value = 0;
@@ -135,14 +135,15 @@ class CFileReader {
 											}
 
 						SInt64			getPos() const;
-						UError			setPos(EFileReaderPositionMode mode, SInt64 newPos) const;
+						OI<SError>		setPos(EFileReaderPositionMode mode, SInt64 newPos) const;
 
-						CFileMemoryMap	getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount, UError& outError) const;
+						CFileMemoryMap	getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount,
+												OI<SError>& outError) const;
 
-						UError			close() const;
+						OI<SError>		close() const;
 
 										// Class methods
-		static	CData					readData(const CFile& file, UError& outError);
+		static	CData					readData(const CFile& file, OI<SError>& outError);
 
 	// Properties
 	private:

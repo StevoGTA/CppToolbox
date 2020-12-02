@@ -74,26 +74,26 @@ UInt64 CByteParceller::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CByteParceller::readData(void* buffer, UInt64 byteCount) const
+OI<SError> CByteParceller::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can read
 	if ((mInternals->mSize - getPos()) < byteCount)
 		// Can't read that many bytes
-		return kDataProviderReadBeyondEndError;
+		return OI<SError>(SError::mEndOfData);
 
 	// Check if need to finish setup
 	if (mInternals->mNeedToSetPos) {
 		// Yes
-		UError	error = setPos(kDataSourcePositionFromBeginning, 0);
-		ReturnErrorIfUError(error);
+		OI<SError>	error = setPos(kDataSourcePositionFromBeginning, 0);
+		ReturnErrorIfError(error);
 	}
 
 	return mInternals->mDataSource->readData(buffer, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CByteParceller::readData(UInt64 byteCount, UError& outError) const
+CData CByteParceller::readData(UInt64 byteCount, OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -101,12 +101,13 @@ CData CByteParceller::readData(UInt64 byteCount, UError& outError) const
 
 	// Read
 	outError = readData(data.getMutableBytePtr(), byteCount);
+	ReturnValueIfError(outError, CData::mEmpty);
 
-	return (outError == kNoError) ? data : CData::mEmpty;
+	return data;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CByteParceller::readData(UError& outError) const
+CData CByteParceller::readData(OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -115,8 +116,9 @@ CData CByteParceller::readData(UError& outError) const
 
 	// Read
 	outError = readData(data.getMutableBytePtr(), byteCount);
+	ReturnValueIfError(outError, CData::mEmpty);
 
-	return (outError == kNoError) ? data : CData::mEmpty;
+	return data;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -128,7 +130,7 @@ SInt64 CByteParceller::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CByteParceller::setPos(EDataSourcePosition position, SInt64 newPos) const
+OI<SError> CByteParceller::setPos(EDataSourcePosition position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -171,13 +173,13 @@ UError CByteParceller::setPos(EDataSourcePosition position, SInt64 newPos) const
 	AssertFailIf((UInt64) newPosUse > (mInternals->mDataSourceOffset + mInternals->mSize));
 
 	// Do it
-	UError	error = mInternals->mDataSource->setPos(kDataSourcePositionFromBeginning, newPosUse);
-	ReturnErrorIfUError(error);
+	OI<SError>	error = mInternals->mDataSource->setPos(kDataSourcePositionFromBeginning, newPosUse);
+	ReturnErrorIfError(error);
 
 	// Setup complete
 	mInternals->mNeedToSetPos = false;
 
-	return kNoError;
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

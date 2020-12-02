@@ -4,6 +4,8 @@
 
 #include "CFileReader.h"
 
+#include "SError-POSIX.h"
+
 #include <sys/mman.h>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,26 +53,26 @@ struct SFileMemoryMapSetupInfo {
 
 class CFileReaderInternals : public TCopyOnWriteReferenceCountable<CFileReaderInternals> {
 	public:
-				CFileReaderInternals(const CFile& file) :
-					TCopyOnWriteReferenceCountable(),
-							mFile(file), mFILE(nil), mFD(-1)
-					{}
-				CFileReaderInternals(const CFileReaderInternals& other) :
-					TCopyOnWriteReferenceCountable(),
-							mFile(other.mFile), mFILE(nil), mFD(-1)
-					{}
-				~CFileReaderInternals()
-					{ close(); }
+					CFileReaderInternals(const CFile& file) :
+						TCopyOnWriteReferenceCountable(),
+								mFile(file), mFILE(nil), mFD(-1)
+						{}
+					CFileReaderInternals(const CFileReaderInternals& other) :
+						TCopyOnWriteReferenceCountable(),
+								mFile(other.mFile), mFILE(nil), mFD(-1)
+						{}
+					~CFileReaderInternals()
+						{ close(); }
 
-		UError	close()
-					{
-						if (mFILE != nil)
-							::fclose(mFILE);
-						if (mFD != -1)
-							::close(mFD);
+		OI<SError>	close()
+						{
+							if (mFILE != nil)
+								::fclose(mFILE);
+							if (mFD != -1)
+								::close(mFD);
 
-						return kNoError;
-					}
+							return OI<SError>();
+						}
 
 		CFile	mFile;
 
@@ -115,7 +117,7 @@ const CFile& CFileReader::getFile() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileReader::open(bool buffered)
+OI<SError> CFileReader::open(bool buffered)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Prepare for write
@@ -137,10 +139,10 @@ UError CFileReader::open(bool buffered)
 
 			if (mInternals->mFILE != nil)
 				// Success
-				return kNoError;
+				return OI<SError>();
 			else
 				// Unable to open
-				CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "opening buffered");
+				CFileReaderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
 			return setPos(kFileReaderPositionModeFromBeginning, 0);
@@ -159,10 +161,10 @@ UError CFileReader::open(bool buffered)
 							0);
 			if (mInternals->mFD != -1)
 				// Success
-				return kNoError;
+				return OI<SError>();
 			else
 				// Unable to open
-				CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "opening buffered");
+				CFileReaderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
 			return setPos(kFileReaderPositionModeFromBeginning, 0);
@@ -170,7 +172,7 @@ UError CFileReader::open(bool buffered)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileReader::readData(void* buffer, UInt64 byteCount) const
+OI<SError> CFileReader::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
@@ -180,28 +182,28 @@ UError CFileReader::readData(void* buffer, UInt64 byteCount) const
 		ssize_t	bytesRead = ::fread(buffer, 1, (size_t) byteCount, mInternals->mFILE);
 		if (bytesRead == (ssize_t) byteCount)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else if (::feof(mInternals->mFILE))
 			// EOF
-			return kFileEOFError;
+			return OI<SError>(SError::mEndOfData);
 		else
 			// Unable to read
-			CFileReaderReportErrorAndReturnError(kFileUnableToReadError, "reading data");
+			CFileReaderReportErrorAndReturnError(CFile::mUnableToReadError, "reading data");
 	} else if (mInternals->mFD != -1) {
 		// Read from file
 		ssize_t bytesRead = ::read(mInternals->mFD, buffer, (size_t) byteCount);
 		if (bytesRead != -1)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else if (bytesRead == 0)
 			// EOF
-			return kFileEOFError;
+			return OI<SError>(SError::mEndOfData);
 		else
 			// Unable to read
-			CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "reading data");
+			CFileReaderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "reading data");
 	} else
 		// Not open
-		CFileReaderReportErrorAndReturnError(kFileNotOpenError, "reading data");
+		CFileReaderReportErrorAndReturnError(CFile::mNotOpenError, "reading data");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -220,14 +222,14 @@ SInt64 CFileReader::getPos() const
 			return filePos;
 		else
 			// Error
-			CFileReaderReportErrorAndReturnValue(MAKE_UError(kPOSIXErrorDomain, errno), "getting position", 0);
+			CFileReaderReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), "getting position", 0);
 	} else
 		// File not open!
-		CFileReaderReportErrorAndReturnValue(kFileNotOpenError, "getting position", 0);
+		CFileReaderReportErrorAndReturnValue(CFile::mNotOpenError, "getting position", 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
+OI<SError> CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
@@ -244,10 +246,10 @@ UError CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
 		off_t	offset = ::fseeko(mInternals->mFILE, newPos, posMode);
 		if (offset != -1)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else
 			// Error
-			CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting position");
+			CFileReaderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting position");
 	} else if (mInternals->mFD != -1) {
 		// file
 		SInt32	posMode;
@@ -261,17 +263,17 @@ UError CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
 		off_t	offset = ::lseek(mInternals->mFD, newPos, posMode);
 		if (offset != -1)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else
 			// Error
-			CFileReaderReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting position");
+			CFileReaderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting position");
 	} else
 		// File not open!
-		CFileReaderReportErrorAndReturnError(kFileNotOpenError, "setting position");
+		CFileReaderReportErrorAndReturnError(CFile::mNotOpenError, "setting position");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount, UError& outError) const
+CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount, OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -280,8 +282,8 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 	// Is the file open?
 	if (mInternals->mFD == -1) {
 		// File not open!
-		outError = kFileNotOpenError;
-		CFileReaderReportErrorAndReturnValue(outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
+		outError = OI<SError>(CFile::mNotOpenError);
+		CFileReaderReportErrorAndReturnValue(*outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
 	}
 
 	// Limit to bytes remaining
@@ -293,20 +295,19 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 	// Check for failure
 	if (bytePtr == (void*) -1) {
 		// Failed
-		outError = MAKE_UError(kPOSIXErrorDomain, errno);
-		CFileReaderReportErrorAndReturnValue(outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
+		outError = SErrorFromPOSIXerror(errno);
+		CFileReaderReportErrorAndReturnValue(*outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
 	}
 
 	// All good
 	fileMemoryMapSetupInfo.mBytePtr = bytePtr;
 	fileMemoryMapSetupInfo.mByteCount = byteCount;
-	outError = kNoError;
 
 	return CFileMemoryMap(fileMemoryMapSetupInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileReader::close() const
+OI<SError> CFileReader::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->close();

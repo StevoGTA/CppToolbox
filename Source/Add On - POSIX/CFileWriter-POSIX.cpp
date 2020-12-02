@@ -4,6 +4,8 @@
 
 #include "CFileWriter.h"
 
+#include "SError-POSIX.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
@@ -28,49 +30,50 @@
 
 class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 	public:
-				CFileWriterInternals(const CFile& file) :
-					TReferenceCountable(), mFile(file), mRemoveIfNotClosed(false), mFILE(nil), mFD(-1)
-					{}
-				~CFileWriterInternals()
-					{
-						// Check if need to remove
-						bool	needToRemove = mRemoveIfNotClosed && ((mFILE != nil) || (mFD != -1));
+					CFileWriterInternals(const CFile& file) :
+						TReferenceCountable(), mFile(file), mRemoveIfNotClosed(false), mFILE(nil), mFD(-1)
+						{}
+					~CFileWriterInternals()
+						{
+							// Check if need to remove
+							bool	needToRemove = mRemoveIfNotClosed && ((mFILE != nil) || (mFD != -1));
 
-						// Close
-						close();
+							// Close
+							close();
 
-						// Check if need to remove
-						if (needToRemove)
-							// Remove
-							mFile.remove();
-					}
+							// Check if need to remove
+							if (needToRemove)
+								// Remove
+								mFile.remove();
+						}
 
-		UError	write(const void* buffer, UInt64 byteCount)
-					{
-						// Check open mode
-						if (mFILE != nil) {
-							// Write to FILE
-							size_t	bytesWritten = ::fwrite(buffer, 1, (size_t) byteCount, mFILE);
+		OI<SError>	write(const void* buffer, UInt64 byteCount)
+						{
+							// Check open mode
+							if (mFILE != nil) {
+								// Write to FILE
+								size_t	bytesWritten = ::fwrite(buffer, 1, (size_t) byteCount, mFILE);
 
-							return (bytesWritten == byteCount) ? kNoError : kFileUnableToWriteError;
-						} else if (mFD != -1) {
-							// Write to file
-							ssize_t	bytes = ::write(mFD, buffer, (size_t) byteCount);
+								return (bytesWritten == byteCount) ?
+										OI<SError>() : OI<SError>(CFile::mUnableToWriteError);
+							} else if (mFD != -1) {
+								// Write to file
+								ssize_t	bytes = ::write(mFD, buffer, (size_t) byteCount);
 
-							return (bytes != -1) ? kNoError : MAKE_UError(kPOSIXErrorDomain, errno);
-						} else
-							// Not open
-							return kFileNotOpenError;
-					}
-		UError	close()
-					{
-						if (mFILE != nil)
-							::fclose(mFILE);
-						if (mFD != -1)
-							::close(mFD);
+								return (bytes != -1) ? OI<SError>() : SErrorFromPOSIXerror(errno);
+							} else
+								// Not open
+								return OI<SError>(CFile::mNotOpenError);
+						}
+		OI<SError>	close()
+						{
+							if (mFILE != nil)
+								::fclose(mFILE);
+							if (mFD != -1)
+								::close(mFD);
 
-						return kNoError;
-					}
+							return OI<SError>();
+						}
 
 		CFile	mFile;
 		UInt32	mReferenceCount;
@@ -110,7 +113,7 @@ CFileWriter::~CFileWriter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
+OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -133,10 +136,10 @@ UError CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) con
 
 			if (mInternals->mFILE != nil)
 				// Success
-				return kNoError;
+				return OI<SError>();
 			else
 				// Unable to open
-				CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "opening buffered");
+				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
 			return setPos(kFileWriterPositionModeFromBeginning, 0);
@@ -155,10 +158,10 @@ UError CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) con
 							!append ? (O_RDWR | O_CREAT | O_EXCL) : (O_RDWR | O_APPEND | O_EXLOCK), 0);
 			if (mInternals->mFD != -1)
 				// Success
-				return kNoError;
+				return OI<SError>();
 			else
 				// Unable to open
-				CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "opening buffered");
+				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
 			return setPos(kFileWriterPositionModeFromBeginning, 0);
@@ -166,16 +169,16 @@ UError CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) con
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::write(const void* buffer, UInt64 byteCount) const
+OI<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	UError	error = mInternals->write(buffer, byteCount);
-	if (error == kNoError)
+	OI<SError>	error = mInternals->write(buffer, byteCount);
+	if (!error.hasInstance())
 		// Success
-		return kNoError;
+		return OI<SError>();
 	else
 		// Error
-		CFileWriterReportErrorAndReturnError(error, "writing");
+		CFileWriterReportErrorAndReturnError(*error, "writing");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -194,14 +197,14 @@ SInt64 CFileWriter::getPos() const
 			return filePos;
 		else
 			// Unable to get position
-			CFileWriterReportErrorAndReturnValue(MAKE_UError(kPOSIXErrorDomain, errno), "getting position", 0);
+			CFileWriterReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), "getting position", 0);
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnValue(kFileNotOpenError, "getting position", 0);
+		CFileWriterReportErrorAndReturnValue(CFile::mNotOpenError, "getting position", 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::setPos(EFileWriterPositionMode mode, SInt64 newPos) const
+OI<SError> CFileWriter::setPos(EFileWriterPositionMode mode, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
@@ -218,10 +221,10 @@ UError CFileWriter::setPos(EFileWriterPositionMode mode, SInt64 newPos) const
 		off_t	offset = ::fseeko(mInternals->mFILE, newPos, posMode);
 		if (offset != -1)
 			// Success
-			return offset;
+			return OI<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting position");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting position");
 	} else if (mInternals->mFD != -1) {
 		// file
 		SInt32	posMode;
@@ -235,17 +238,17 @@ UError CFileWriter::setPos(EFileWriterPositionMode mode, SInt64 newPos) const
 		off_t	offset = ::lseek(mInternals->mFD, newPos, posMode);
 		if (offset != -1)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting position");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting position");
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnError(kFileNotOpenError, "setting position");
+		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, "setting position");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::setSize(UInt64 newSize) const
+OI<SError> CFileWriter::setSize(UInt64 newSize) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
@@ -253,25 +256,25 @@ UError CFileWriter::setSize(UInt64 newSize) const
 		// FILE
 		if (::ftruncate(::fileno(mInternals->mFILE), newSize) == 0)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting size");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting size");
 	} else if (mInternals->mFD != -1) {
 		// file
 		if (::ftruncate(mInternals->mFD, newSize) == 0)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "setting size");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting size");
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnError(kFileNotOpenError, "setting size");
+		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, "setting size");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::flush() const
+OI<SError> CFileWriter::flush() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
@@ -279,25 +282,25 @@ UError CFileWriter::flush() const
 		// FILE
 		if (::fflush(mInternals->mFILE) == 0)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "flushing");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "flushing");
 	} else if (mInternals->mFD != -1) {
 		// file
 		if (::fsync(mInternals->mFD) == 0)
 			// Success
-			return kNoError;
+			return OI<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(MAKE_UError(kPOSIXErrorDomain, errno), "flushing");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "flushing");
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnError(kFileNotOpenError, "flushing");
+		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, "flushing");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::close() const
+OI<SError> CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->close();
