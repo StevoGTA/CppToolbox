@@ -57,7 +57,7 @@ CCoreGraphicsRenderer::~CCoreGraphicsRenderer()
 	Delete(mInternals);
 }
 
-// Instance methods
+// MARK: C2DRenderer methods
 
 //----------------------------------------------------------------------------------------------------------------------
 void CCoreGraphicsRenderer::setFillColor(const CColor& color)
@@ -74,6 +74,8 @@ void CCoreGraphicsRenderer::setStrokeColor(const CColor& color)
 	::CGContextSetRGBStrokeColor(mInternals->mContextRef, color.getRed(), color.getGreen(), color.getBlue(),
 			color.getAlpha());
 }
+
+// MARK: T2DRenderer methods
 
 //----------------------------------------------------------------------------------------------------------------------
 void CCoreGraphicsRenderer::strokeLine(const T2DPoint<CGFloat>& startPoint, const T2DPoint<CGFloat>& endPoint,
