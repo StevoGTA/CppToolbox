@@ -73,7 +73,7 @@ CFArrayRef CCoreFoundation::createArrayRefFrom(const TArray<CDictionary>& array)
 	// Setup
 	CFMutableArrayRef	arrayRef =
 								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
-	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
 		// Add dictionary
 		CFDictionaryRef	dictionaryRef = createDictionaryRefFrom(array[i]);
 		::CFArrayAppendValue(arrayRef, dictionaryRef);
@@ -90,7 +90,7 @@ CFArrayRef CCoreFoundation::createArrayRefFrom(const TArray<CString>& array)
 	// Setup
 	CFMutableArrayRef	arrayRef =
 								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
-	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
 		// Add dictionary
 		CFStringRef	stringRef = createStringRefFrom(array[i]);
 		::CFArrayAppendValue(arrayRef, stringRef);

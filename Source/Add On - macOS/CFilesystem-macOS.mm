@@ -85,7 +85,7 @@ OI<SError> CFilesystem::open(const TArray<CFile> files, const CApplicationObject
 {
 	// Setup
 	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
-	for (CArrayItemIndex i = 0; i < files.getCount(); i++)
+	for (CArray::ItemIndex i = 0; i < files.getCount(); i++)
 		[urls
 				addObject:
 						(NSURL*) CFBridgingRelease(
@@ -111,7 +111,7 @@ void CFilesystem::moveToTrash(const TArray<CFile> files, TArray<CFile>& outUntra
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate files
-	for (CArrayItemIndex i = 0; i < files.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < files.getCount(); i++) {
 		// Move this file to the trash
 		NSURL*		url =
 							(NSURL*) CFBridgingRelease(
@@ -135,7 +135,7 @@ OI<SError> CFilesystem::moveToTrash(const TArray<CFile> files)
 	OI<SError>	sError;
 
 	// Iterate files
-	for (CArrayItemIndex i = 0; i < files.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < files.getCount(); i++) {
 		// Move this file to the trash
 		NSURL*		url =
 							(NSURL*) CFBridgingRelease(
@@ -172,7 +172,7 @@ OI<SError> CFilesystem::revealInFinder(const TArray<CFile> files)
 {
 	// Setup
 	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
-	for (CArrayItemIndex i = 0; i < files.getCount(); i++)
+	for (CArray::ItemIndex i = 0; i < files.getCount(); i++)
 		[urls
 				addObject:
 						(NSURL*) CFBridgingRelease(

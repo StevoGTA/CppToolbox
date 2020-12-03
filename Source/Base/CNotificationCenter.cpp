@@ -93,7 +93,7 @@ class CNotificationCenterInternals {
 						TNArray<SNotificationObserverFullInfo>& notificationObserverFullInfos)
 					{
 						// Iterate array
-						for (CArrayItemIndex i = notificationObserverFullInfos.getCount(); i > 0; i--) {
+						for (CArray::ItemIndex i = notificationObserverFullInfos.getCount(); i > 0; i--) {
 							// Check for match
 							if (notificationObserverFullInfos[i - 1].mNotificationObserverInfo.mObserverRef ==
 									observerRef)

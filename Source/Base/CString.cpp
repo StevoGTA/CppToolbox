@@ -334,7 +334,7 @@ bool CString::isValidEmailAddress() const
 		isValid = array2.getCount() >= 2;
 
 		// Each segment separated by "." must have at least one character
-		for (CArrayItemIndex i = 0; isValid && (i < array2.getCount()); i++)
+		for (CArray::ItemIndex i = 0; isValid && (i < array2.getCount()); i++)
 			isValid = !array2[i].isEmpty();
 
 		if (isValid) {

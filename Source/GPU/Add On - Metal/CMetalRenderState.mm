@@ -123,7 +123,7 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	if (mInternals->mTextures.hasReference()) {
 		// Setup textures
 		const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();
-		for (CArrayItemIndex i = 0; i < gpuTextures.getCount(); i++) {
+		for (CArray::ItemIndex i = 0; i < gpuTextures.getCount(); i++) {
 			// Setup
 			const	CMetalTexture&	metalTexture = (const CMetalTexture&) gpuTextures[i];
 

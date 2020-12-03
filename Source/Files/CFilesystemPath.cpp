@@ -166,8 +166,8 @@ CFilesystemPath CFilesystemPath::getForResourceFork() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get components
-	TArray<CString>	components = getComponents();
-	CArrayItemCount	componentsCount = components.getCount();
+	TArray<CString>		components = getComponents();
+	CArray::ItemCount	componentsCount = components.getCount();
 
 	// Check components count
 	if (componentsCount == 0)

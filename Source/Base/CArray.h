@@ -11,100 +11,92 @@
 #include "TOptional.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Types
-
-typedef	const	void*	CArrayItemRef;
-
-typedef			UInt32	CArrayItemIndex;
-
-typedef			UInt32	CArrayItemCount;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Procs
-
-typedef	void			(*CArrayApplyProc)(CArrayItemRef itemRef, void* userData);
-typedef	CArrayItemRef	(*CArrayItemCopyProc)(CArrayItemRef itemRef);
-typedef	void			(*CArrayItemDisposeProc)(CArrayItemRef itemRef);
-typedef bool			(*CArrayItemIsIncludedProc)(CArrayItemRef itemRef, void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Sorting
-
-enum EArraySortOptions {
-	kArraySortOptionsDefault	= 0,
-};
-
-typedef	ECompareResult	(*CArrayCompareProc)(CArrayItemRef itemRef1, CArrayItemRef itemRef2, void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CArray
+// MARK: CArray
 
 class CArrayInternals;
 class CArray : public CEquatable {
+	// Types:
+	public:
+		typedef	const	void*	ItemRef;
+
+		typedef			UInt32	ItemIndex;
+
+		typedef			UInt32	ItemCount;
+
+//		enum SortOptions {
+//			kSortOptionsDefault	= 0,
+//		};
+
+	// Procs:
+	public:
+		typedef	void			(*ApplyProc)(ItemRef itemRef, void* userData);
+		typedef	ECompareResult	(*CompareProc)(ItemRef itemRef1, ItemRef itemRef2, void* userData);
+		typedef	ItemRef			(*CopyProc)(ItemRef itemRef);
+		typedef	void			(*DisposeProc)(ItemRef itemRef);
+		typedef bool			(*IsIncludedProc)(ItemRef itemRef, void* userData);
+
 	// Methods
 	public:
-											// Lifecycle methods
-		virtual								~CArray();
+									// Lifecycle methods
+		virtual						~CArray();
 
-											// CEquatable methods
-				bool						operator==(const CEquatable& other) const
-												{ return equals((const CArray&) other); }
+									// CEquatable methods
+				bool				operator==(const CEquatable& other) const
+										{ return equals((const CArray&) other); }
 
-											// Instance methods
-		virtual	CArrayItemCount				getCount() const;
-				bool						isEmpty() const
-												{ return getCount() == 0; }
+									// Instance methods
+		virtual	ItemCount			getCount() const;
+				bool				isEmpty() const
+										{ return getCount() == 0; }
 
-				CArrayItemRef				getItemAt(CArrayItemIndex itemIndex) const;
+				ItemRef				getItemAt(ItemIndex itemIndex) const;
 
-				bool						isSorted() const;
+				bool				isSorted() const;
 
 	protected:
-											// Lifecycle methods
-											CArray(CArrayItemCount initialCapacity = 0,
-													CArrayItemCopyProc itemCopyProc = nil,
-													CArrayItemDisposeProc itemDisposeProc = nil);
-											CArray(const CArray& other);
+									// Lifecycle methods
+									CArray(ItemCount initialCapacity = 0, CopyProc copyProc = nil,
+											DisposeProc disposeProc = nil);
+									CArray(const CArray& other);
 
-											// Instance methods
-				CArrayItemRef				copy(const CArrayItemRef itemRef) const;
+									// Instance methods
+				ItemRef				copy(const ItemRef itemRef) const;
 
-				CArray&						add(const CArrayItemRef itemRef, bool avoidDuplicates = false);
-				CArray&						addFrom(const CArray& other, bool avoidDuplicates = false);
+				CArray&				add(const ItemRef itemRef, bool avoidDuplicates = false);
+				CArray&				addFrom(const CArray& other, bool avoidDuplicates = false);
 
-				bool						contains(const CArrayItemRef itemRef) const;
+				bool				contains(const ItemRef itemRef) const;
 
-				CArrayItemRef				getFirst() const
-												{ return getItemAt(0); }
-				CArrayItemRef				getLast() const;
-				OV<CArrayItemIndex>			getIndexOf(const CArrayItemRef itemRef) const;
+				ItemRef				getFirst() const
+										{ return getItemAt(0); }
+				ItemRef				getLast() const;
+				OV<ItemIndex>		getIndexOf(const ItemRef itemRef) const;
 
-				CArray&						insertAtIndex(const CArrayItemRef itemRef, CArrayItemIndex itemIndex);
+				CArray&				insertAtIndex(const ItemRef itemRef, ItemIndex itemIndex);
 
-				CArray&						detach(const CArrayItemRef itemRef);		// Removes itemRef without calling itemDisposeProc
-				CArray&						detachAtIndex(CArrayItemIndex itemIndex);	// Removes at itemIndex without calling itemDisposeProc
+				CArray&				detach(const ItemRef itemRef);		// Removes itemRef without calling itemDisposeProc
+				CArray&				detachAtIndex(ItemIndex itemIndex);	// Removes at itemIndex without calling itemDisposeProc
 
-				CArray&						move(const CArrayItemRef itemRef, CArray& other);
+				CArray&				move(const ItemRef itemRef, CArray& other);
 
-				CArray&						remove(const CArrayItemRef itemRef);
-				CArray&						removeFrom(const CArray& other);
-				CArray&						removeAtIndex(CArrayItemIndex itemIndex);
-				CArray&						removeAll();
+				CArray&				remove(const ItemRef itemRef);
+				CArray&				removeFrom(const CArray& other);
+				CArray&				removeAtIndex(ItemIndex itemIndex);
+				CArray&				removeAll();
 
-				bool						equals(const CArray& other) const;
+				bool				equals(const CArray& other) const;
 
-				TIteratorS<CArrayItemRef>	getIterator() const;
-				CArray&						apply(CArrayApplyProc applyProc, void* userData = nil);
+				TIteratorS<ItemRef>	getIterator() const;
+				CArray&				apply(ApplyProc applyProc, void* userData = nil);
 
-				CArray&						sort(CArrayCompareProc compareProc, void* userData = nil);
-				CArray						sorted(CArrayCompareProc compareProc, void* userData = nil) const;
+				CArray&				sort(CompareProc compareProc, void* userData = nil);
+				CArray				sorted(CompareProc compareProc, void* userData = nil) const;
 
-				CArray						filtered(CArrayItemIsIncludedProc isIncludedProc, void* userData = nil);
+				CArray				filtered(IsIncludedProc isIncludedProc, void* userData = nil);
 
-				CArray&						operator=(const CArray& other);
-				CArray&						operator+=(const CArray& other)
-												{ return addFrom(other); }
+				CArray&				operator=(const CArray& other);
+				CArray&				operator+=(const CArray& other)
+										{ return addFrom(other); }
 
 	// Properties
 	private:
@@ -121,168 +113,161 @@ class CArray : public CEquatable {
 template <typename T> class TArray : public CArray {
 	// Methods
 	public:
-									// Lifecycle methods
-									TArray(const TArray<T>& array) : CArray(array) {}
+								// Lifecycle methods
+								TArray(const TArray<T>& array) : CArray(array) {}
 
-									// CArray methods
-				TArray<T>&			add(const T& item)
-										{ CArray::add(CArray::copy(&item)); return *this; }
-				TArray<T>&			addFrom(const TArray<T>& array)
-										{
-											// Iterate all
-											for (CArrayItemIndex i = 0; i < array.getCount(); i++)
-												// Add
-												CArray::add(new T(array[i]));
+								// CArray methods
+				TArray<T>&		add(const T& item)
+									{ CArray::add(CArray::copy(&item)); return *this; }
+				TArray<T>&		addFrom(const TArray<T>& array)
+									{
+										// Iterate all
+										for (ItemIndex i = 0; i < array.getCount(); i++)
+											// Add
+											CArray::add(new T(array[i]));
 
-											return *this;
+										return *this;
+									}
+
+				bool			contains(const T& item) const
+									{ return getIndexOf(item).hasValue(); }
+
+				T&				getAt(ItemIndex index) const
+									{ return *((T*) getItemAt(index)); }
+				T&				getFirst() const
+									{ return *((T*) CArray::getFirst()); }
+				T&				getLast() const
+									{ return *((T*) CArray::getLast()); }
+				OV<ItemIndex>	getIndexOf(const T& item) const
+									{
+										// Iterate all
+										for (ItemIndex i = 0; i < getCount(); i++) {
+											// Check if same
+											if (item == getAt(i))
+												// Match
+												return OV<ItemIndex>(i);
 										}
 
-				bool				contains(const T& item) const
-										{ return getIndexOf(item).hasValue(); }
+										return OV<ItemIndex>();
+									}
+				OV<ItemIndex>	getIndexWhere(bool (proc)(const T& item, void* userData), void* userData = nil)
+									{
+										// Iterate all items
+										for (ItemIndex i = 0; i < getCount(); i++) {
+											// Get item
+											const	T&	item = getAt(i);
 
-				T&					getAt(CArrayItemIndex index) const
-										{ return *((T*) getItemAt(index)); }
-				T&					getFirst() const
-										{ return *((T*) CArray::getFirst()); }
-				T&					getLast() const
-										{ return *((T*) CArray::getLast()); }
-				OV<CArrayItemIndex>	getIndexOf(const T& item) const
-										{
-											// Iterate all
-											for (CArrayItemIndex i = 0; i < getCount(); i++) {
-												// Check if same
-												if (item == getAt(i))
-													// Match
-													return OV<CArrayItemIndex>(i);
-											}
-
-											return OV<CArrayItemIndex>();
-										}
-				OV<CArrayItemIndex>	getIndexWhere(bool (proc)(const T& item, void* userData),
-											void* userData = nil)
-										{
-											// Iterate all items
-											for (CArrayItemIndex i = 0; i < getCount(); i++) {
-												// Get item
-												const	T&	item = getAt(i);
-
-												// Call proc
-												if (proc(item, userData))
-													// Proc indicates to return this item
-													return OV<CArrayItemIndex>(i);
-											}
-
-											return OV<CArrayItemIndex>();
+											// Call proc
+											if (proc(item, userData))
+												// Proc indicates to return this item
+												return OV<ItemIndex>(i);
 										}
 
-				TArray<T>&			insertAtIndex(const T& item, CArrayItemIndex itemIndex)
-										{ CArray::insertAtIndex(new T(item), itemIndex); return *this; }
+										return OV<ItemIndex>();
+									}
 
-				TArray<T>&			remove(const T& item)
-										{
-											// Check if found
-											OV<CArrayItemIndex>	index = getIndexOf(item);
-											if (index.hasValue())
-												// Remove
-												removeAtIndex(*index);
+				TArray<T>&		insertAtIndex(const T& item, ItemIndex itemIndex)
+									{ CArray::insertAtIndex(new T(item), itemIndex); return *this; }
 
-											return *this;
-										}
-				TArray<T>&			removeFrom(const TArray<T>& array)
-										{
-											// Iterate all
-											for (CArrayItemIndex i = 0; i < array.getCount(); i++)
-												// Remove
-												remove(array[i]);
-
-											return *this;
-										}
-				TArray<T>&			removeAtIndex(CArrayItemIndex itemIndex)
-										{ CArray::removeAtIndex(itemIndex); return *this; }
-				TArray<T>&			removeAll()
-										{ CArray::removeAll(); return *this; }
-
-				TIteratorD<T>		getIterator() const
-										{ TIteratorS<CArrayItemRef> iterator = CArray::getIterator();
-											return TIteratorD<T>((TIteratorD<T>*) &iterator); }
-//				TArray<T>&			apply(void (proc)(T& item, void* userData), void* userData = nil)
-//										{ CArray::apply((CArrayApplyProc) proc, userData); return *this; }
-
-				TArray<T>&			sort(ECompareResult (proc)(const T& item1, const T& item2, void* userData),
-											void* userData = nil)
-										{ CArray::sort((CArrayCompareProc) proc, userData); return *this; }
-
-									// Instance methods
-				OR<T>				getFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
-										{
-											// Iterate all items
-											for (CArrayItemIndex i = 0; i < getCount(); i++) {
-												// Get item
-												T&	item = getAt(i);
-
-												// Call proc
-												if (proc(item, userData))
-													// Proc indicates to return this item
-													return OR<T>(item);
-											}
-
-											return OR<T>();
-										}
-
-				T					popFirst()
-										{
-											// Get first item
-											T	item = getFirst();
-
+				TArray<T>&		remove(const T& item)
+									{
+										// Check if found
+										OV<ItemIndex>	index = getIndexOf(item);
+										if (index.hasValue())
 											// Remove
-											removeAtIndex(0);
+											removeAtIndex(*index);
 
-											return item;
+										return *this;
+									}
+				TArray<T>&		removeFrom(const TArray<T>& array)
+									{
+										// Iterate all
+										for (ItemIndex i = 0; i < array.getCount(); i++)
+											// Remove
+											remove(array[i]);
+
+										return *this;
+									}
+				TArray<T>&		removeAtIndex(ItemIndex itemIndex)
+									{ CArray::removeAtIndex(itemIndex); return *this; }
+				TArray<T>&		removeAll()
+									{ CArray::removeAll(); return *this; }
+
+				TIteratorD<T>	getIterator() const
+									{ TIteratorS<ItemRef> iterator = CArray::getIterator();
+										return TIteratorD<T>((TIteratorD<T>*) &iterator); }
+
+				TArray<T>&		sort(ECompareResult (compareProc)(const T& item1, const T& item2, void* userData),
+										void* userData = nil)
+									{ CArray::sort((CompareProc) compareProc, userData); return *this; }
+
+								// Instance methods
+				OR<T>			getFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
+									{
+										// Iterate all items
+										for (ItemIndex i = 0; i < getCount(); i++) {
+											// Get item
+											T&	item = getAt(i);
+
+											// Call proc
+											if (proc(item, userData))
+												// Proc indicates to return this item
+												return OR<T>(item);
 										}
-				OV<T>				popFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
-										{
-											// Iterate all items
-											for (CArrayItemIndex i = 0; i < getCount(); i++) {
-												// Get item
-												T&	item = getAt(i);
 
-												// Call proc
-												if (proc(item, userData)) {
-													// Proc indicates to return this item
-													OV<T>	reference(item);
-													removeAtIndex(i);
+										return OR<T>();
+									}
 
-													return reference;
-												}
+				T				popFirst()
+									{
+										// Get first item
+										T	item = getFirst();
+
+										// Remove
+										removeAtIndex(0);
+
+										return item;
+									}
+				OV<T>			popFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
+									{
+										// Iterate all items
+										for (ItemIndex i = 0; i < getCount(); i++) {
+											// Get item
+											T&	item = getAt(i);
+
+											// Call proc
+											if (proc(item, userData)) {
+												// Proc indicates to return this item
+												OV<T>	reference(item);
+												removeAtIndex(i);
+
+												return reference;
 											}
-
-											return OV<T>();
 										}
 
-				T&					operator[] (CArrayItemIndex index) const
-										{ return *((T*) getItemAt(index)); }
-				TArray<T>&			operator+=(const T& item)
-										{ return add(item); }
-				TArray<T>&			operator+=(const TArray<T>& other)
-										{ return addFrom(other); }
-				TArray<T>&			operator-=(const T& item)
-										{ return remove(item); }
-				TArray<T>&			operator-=(const TArray<T>& other)
-										{ return removeFrom(other); }
+										return OV<T>();
+									}
+
+				T&				operator[] (ItemIndex index) const
+									{ return *((T*) getItemAt(index)); }
+				TArray<T>&		operator+=(const T& item)
+									{ return add(item); }
+				TArray<T>&		operator+=(const TArray<T>& other)
+									{ return addFrom(other); }
+				TArray<T>&		operator-=(const T& item)
+									{ return remove(item); }
+				TArray<T>&		operator-=(const TArray<T>& other)
+									{ return removeFrom(other); }
 
 	protected:
-									// Lifecycle methods
-									TArray(CArrayItemCopyProc itemCopyProc) :
-										CArray(0, itemCopyProc, dispose)
-										{}
-									TArray(const T& item, CArrayItemCopyProc itemCopyProc) :
-										CArray(0, itemCopyProc, dispose)
-										{ add(item); }
+								// Lifecycle methods
+								TArray(CopyProc copyProc) : CArray(0, copyProc, dispose) {}
+								TArray(const T& item, CopyProc copyProc) : CArray(0, copyProc, dispose) { add(item); }
 
 	private:
-									// Class methods
-		static	void				dispose(CArrayItemRef itemRef)
-										{ T* t = (T*) itemRef; Delete(t); }
+								// Class methods
+		static	void			dispose(ItemRef itemRef)
+									{ T* t = (T*) itemRef; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -292,20 +277,20 @@ template <typename T> class TNArray : public TArray<T> {
 	// Methods
 	public:
 					// Lifecycle methods
-					TNArray() : TArray<T>((CArrayItemCopyProc) copy) {}
-					TNArray(const T& item) : TArray<T>(item, (CArrayItemCopyProc) copy) {}
-					TNArray(const CArray& array, T (mappingProc)(CArrayItemRef item)) :
-						TArray<T>((CArrayItemCopyProc) copy)
+					TNArray() : TArray<T>((CArray::CopyProc) copy) {}
+					TNArray(const T& item) : TArray<T>(item, (CArray::CopyProc) copy) {}
+					TNArray(const CArray& array, T (mappingProc)(CArray::ItemRef item)) :
+						TArray<T>((CArray::CopyProc) copy)
 						{
 							// Iterate all items
-							for (CArrayItemIndex i = 0; i < array.getCount(); i++)
+							for (CArray::ItemIndex i = 0; i < array.getCount(); i++)
 								// Add mapped item
 								this->add(mappingProc(array.getItemAt(i)));
 						}
 
 	private:
 					// Class methods
-		static	T*	copy(CArrayItemRef itemRef)
+		static	T*	copy(CArray::ItemRef itemRef)
 						{ return new T(*((T*) itemRef)); }
 };
 
@@ -316,12 +301,12 @@ template <typename T> class TCArray : public TArray<T> {
 	// Methods
 	public:
 					// Lifecycle methods
-					TCArray() : TArray<T>((CArrayItemCopyProc) copy) {}
-					TCArray(const T& item) : TArray<T>(item, (CArrayItemCopyProc) copy) {}
+					TCArray() : TArray<T>((CArray::CopyProc) copy) {}
+					TCArray(const T& item) : TArray<T>(item, (CArray::CopyProc) copy) {}
 
 	private:
 					// Class methods
-		static	T*	copy(CArrayItemRef itemRef)
+		static	T*	copy(CArray::ItemRef itemRef)
 						{ return ((T*) itemRef)->copy(); }
 };
 
@@ -333,14 +318,14 @@ template <typename T> class TNumericArray : public CArray {
 	// Methods
 	public:
 													// Lifecycle methods
-													TNumericArray(CArrayItemCount initialCapacity = 0) :
-														CArray(initialCapacity, (CArrayItemCopyProc) copy, dispose)
+													TNumericArray(CArray::ItemCount initialCapacity = 0) :
+														CArray(initialCapacity, (CArray::CopyProc) copy, dispose)
 														{}
 													TNumericArray(const CArray& array,
-															T (mappingProc)(CArrayItemRef item)) :
-														CArray(0, (CArrayItemCopyProc) copy, dispose)
+															T (mappingProc)(ItemRef item)) :
+														CArray(0, (CArray::CopyProc) copy, dispose)
 														{
-															for (CArrayItemIndex i = 0; i < array.getCount(); i++)
+															for (ItemIndex i = 0; i < array.getCount(); i++)
 																CArray::add(mappingProc(array.getItemAt(i)));
 														}
 													TNumericArray(const TNumericArray<T>& array) : CArray(array) {}
@@ -349,12 +334,12 @@ template <typename T> class TNumericArray : public CArray {
 				TNumericArray<T>&					add(T value)
 														{ CArray::add(new SNumberWrapper<T>(value)); return *this; }
 
-				T									getAt(CArrayItemIndex index) const
+				T									getAt(ItemIndex index) const
 														{ return ((SNumberWrapper<T>*) getItemAt(index))->mValue; }
 
 				TIteratorM<SNumberWrapper<T>, T>	getIterator() const
 														{
-															TIteratorS<CArrayItemRef> iterator = CArray::getIterator();
+															TIteratorS<ItemRef> iterator = CArray::getIterator();
 
 															return TIteratorM<SNumberWrapper<T>, T>(
 																	(TIteratorM<SNumberWrapper<T>, T>*) &iterator,
@@ -362,16 +347,16 @@ template <typename T> class TNumericArray : public CArray {
 														}
 
 													// Instance methods
-				T									operator[] (CArrayItemIndex index) const
+				T									operator[] (ItemIndex index) const
 														{ return ((SNumberWrapper<T>*) getItemAt(index))->mValue; }
 				TNumericArray<T>&					operator+=(T value)
 														{ CArray::add(new SNumberWrapper<T>(value)); return *this; }
 
 													// Class methods
-		static	SNumberWrapper<T>*					copy(CArrayItemRef itemRef)
+		static	SNumberWrapper<T>*					copy(ItemRef itemRef)
 														{ return new SNumberWrapper<T>(
 																*((SNumberWrapper<T>*) itemRef)); }
-		static	void								dispose(CArrayItemRef itemRef)
+		static	void								dispose(ItemRef itemRef)
 														{
 															SNumberWrapper<T>*	numberWrapper =
 																						(SNumberWrapper<T>*) itemRef;
@@ -393,76 +378,76 @@ template <typename T> class TNumericArray : public CArray {
 template <typename T> class TIArray : public CArray {
 	// Methods
 	public:
-									// Lifecycle methods
-									TIArray(CArrayItemCount initialCapacity = 0) :
-										CArray(initialCapacity, nil, dispose)
-										{}
+								// Lifecycle methods
+								TIArray(CArray::ItemCount initialCapacity = 0) :
+									CArray(initialCapacity, nil, dispose)
+									{}
 
-									// CArray methods
-				TIArray<T>&			add(T* item)	// Pointer to mirror that this is an instance array
-										{ CArray::add(item); return *this; }
+								// CArray methods
+				TIArray<T>&		add(T* item)	// Pointer to mirror that this is an instance array
+									{ CArray::add(item); return *this; }
 
-				bool				contains(const T& item) const
-										{ return getIndexOf(item).hasValue(); }
+				bool			contains(const T& item) const
+									{ return getIndexOf(item).hasValue(); }
 
-				T&					getAt(CArrayItemIndex index) const
-										{ return *((T*) getItemAt(index)); }
-				T&					getFirst() const
-										{ return *((T*) CArray::getFirst()); }
-				T&					getLast() const
-										{ return *((T*) CArray::getLast()); }
-				OV<CArrayItemIndex>	getIndexOf(const T& item) const
-										{
-											// Iterate all
-											for (CArrayItemIndex i = 0; i < getCount(); i++) {
-												// Check if same
-												T&	testItem = getAt(i);
-												if (&item == &testItem)
-													// Match
-													return OV<CArrayItemIndex>(i);
-											}
-
-											return OV<CArrayItemIndex>();
+				T&				getAt(ItemIndex index) const
+									{ return *((T*) getItemAt(index)); }
+				T&				getFirst() const
+									{ return *((T*) CArray::getFirst()); }
+				T&				getLast() const
+									{ return *((T*) CArray::getLast()); }
+				OV<ItemIndex>	getIndexOf(const T& item) const
+									{
+										// Iterate all
+										for (ItemIndex i = 0; i < getCount(); i++) {
+											// Check if same
+											T&	testItem = getAt(i);
+											if (&item == &testItem)
+												// Match
+												return OV<ItemIndex>(i);
 										}
 
-				TIArray<T>&			move(T& item, TIArray<T>& other)
-										{ CArray::move(&item, other); return *this; }
+										return OV<ItemIndex>();
+									}
 
-				TIArray<T>&			remove(T& item)
-										{
-											// Check if found
-											OV<CArrayItemIndex>	index = getIndexOf(item);
-											if (index.hasValue())
-												// Remove
-												removeAtIndex(*index);
+				TIArray<T>&		move(T& item, TIArray<T>& other)
+									{ CArray::move(&item, other); return *this; }
 
-											return *this;
-										}
-				TIArray<T>&			removeAll()
-										{ CArray::removeAll(); return *this; }
+				TIArray<T>&		remove(T& item)
+									{
+										// Check if found
+										OV<ItemIndex>	index = getIndexOf(item);
+										if (index.hasValue())
+											// Remove
+											removeAtIndex(*index);
 
-				TIteratorD<T>		getIterator() const
-										{
-											// Setip
-											TIteratorS<CArrayItemRef> iterator = CArray::getIterator();
+										return *this;
+									}
+				TIArray<T>&		removeAll()
+									{ CArray::removeAll(); return *this; }
 
-											return TIteratorD<T>((TIteratorD<T>*) &iterator);
-										}
+				TIteratorD<T>	getIterator() const
+									{
+										// Setip
+										TIteratorS<ItemRef> iterator = CArray::getIterator();
 
-				TIArray<T>&			sort(ECompareResult (proc)(const T& item1, const T& item2, void* userData),
-											void* userData = nil)
-										{ CArray::sort((CArrayCompareProc) proc, userData); return *this; }
+										return TIteratorD<T>((TIteratorD<T>*) &iterator);
+									}
 
-									// Instance methods
-				T&					operator[] (CArrayItemIndex index) const
-										{ return *((T*) getItemAt(index)); }
-				TIArray<T>&			operator+=(T* item)	// Pointer to mirror that this is an instance array
-										{ return add(item); }
-				TIArray<T>&			operator-=(T& item)
-										{ return remove(item); }
+				TIArray<T>&		sort(ECompareResult (proc)(const T& item1, const T& item2, void* userData),
+										void* userData = nil)
+									{ CArray::sort((CompareProc) proc, userData); return *this; }
+
+								// Instance methods
+				T&				operator[] (ItemIndex index) const
+									{ return *((T*) getItemAt(index)); }
+				TIArray<T>&		operator+=(T* item)	// Pointer to mirror that this is an instance array
+									{ return add(item); }
+				TIArray<T>&		operator-=(T& item)
+									{ return remove(item); }
 
 	private:
-									// Class methods
-		static	void				dispose(CArrayItemRef itemRef)
-										{ T* t = (T*) itemRef; Delete(t); }
+								// Class methods
+		static	void			dispose(ItemRef itemRef)
+									{ T* t = (T*) itemRef; Delete(t); }
 };

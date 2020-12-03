@@ -43,7 +43,7 @@ OI<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destina
 	ReturnErrorIfError(error);
 
 	// Create folders in destination folder
-	for (CArrayItemIndex i = 0; i < folders.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < folders.getCount(); i++) {
 		// Create folder
 		CFolder	folder(destinationFolder.getFilesystemPath().appendingComponent(folders[i].getName()));
 		error = folder.create();
@@ -62,7 +62,7 @@ OI<SError> CFilesystem::copy(const TArray<CFile> files, const CFolder& destinati
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate files
-	for (CArrayItemIndex i = 0; i < files.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < files.getCount(); i++) {
 		// Copy this file
 		OI<SError>	error = copy(files[i], destinationFolder);
 		ReturnErrorIfError(error);

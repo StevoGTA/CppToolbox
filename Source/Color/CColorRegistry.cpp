@@ -152,7 +152,7 @@ CColorSet::CColorSet(const CDictionary& info)
 
 	// Setup colors
 	TArray<CDictionary>	colorSetColorInfos = info.getArrayOfDictionaries(sColorSetColorInfosKey);
-	for (CArrayItemIndex j = 0; j < colorSetColorInfos.getCount(); j++) {
+	for (CArray::ItemIndex j = 0; j < colorSetColorInfos.getCount(); j++) {
 		// Get color set color info
 		const	CDictionary&	colorSetColorInfo = colorSetColorInfos[j];
 				OSType			colorGroupID = colorSetColorInfo.getOSType(sColorGroupIDKey);
@@ -287,7 +287,7 @@ class CColorRegistryInternals {
 
 								// Collect info
 								TNArray<CDictionary>	colorSetInfos;
-								for (CArrayItemIndex i = 0; i < mColorSets.getCount(); i++)
+								for (CArray::ItemIndex i = 0; i < mColorSets.getCount(); i++)
 									// Add info
 									colorSetInfos += mColorSets[i].getInfo();
 								info.set(sColorSetInfosKey, colorSetInfos);
@@ -352,7 +352,7 @@ CColorRegistry::CColorRegistry(const SPref& pref)
 
 	// Color sets
 	TArray<CDictionary>	colorSetInfos = info.getArrayOfDictionaries(sColorSetInfosKey);
-	for (CArrayItemIndex i = 0; i < colorSetInfos.getCount(); i++)
+	for (CArray::ItemIndex i = 0; i < colorSetInfos.getCount(); i++)
 		// Add to color sets
 		mInternals->mColorSets += CColorSet(colorSetInfos[i]);
 
@@ -427,7 +427,7 @@ void CColorRegistry::removeColorSet(const CColorSet& colorSet)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all color sets
-	for (CArrayItemIndex i = 0; i < mInternals->mColorSets.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < mInternals->mColorSets.getCount(); i++) {
 		// Check if this one matches
 		if (mInternals->mColorSets[i] == colorSet) {
 			// Remove from array
@@ -462,7 +462,7 @@ void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 	// Iterate color groups
 	CDictionary			info;
 	TArray<CColorGroup>	colorGroups = getColorGroups();
-	for (CArrayItemIndex i = 0; i < colorGroups.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < colorGroups.getCount(); i++) {
 		// Get info
 		CColorGroup&			colorGroup = colorGroups[i];
 		OSType					colorGroupID = colorGroup.getID();
@@ -472,7 +472,7 @@ void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 		info.set(eColorRegistryGroupIDKey, colorGroupID);
 
 		// Iterate color IDs
-		for (CArrayItemIndex j = 0; j < colorIDs.getCount(); j++) {
+		for (CArray::ItemIndex j = 0; j < colorIDs.getCount(); j++) {
 			// Get info
 					OSType	colorID = colorIDs[j];
 			const	CColor&	color = mInternals->getCurrentColorSet().getColor(colorGroupID, colorID);

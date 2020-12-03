@@ -332,7 +332,7 @@ void CPreferences::set(const SPref& pref, const TArray<CData>& array)
 	CFMutableArrayRef	arrayRef = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	// Iterate items
-	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
 		// Add data
 		CFDataRef	dataRef = CCoreFoundation::createDataRefFrom(array[i]);
 		::CFArrayAppendValue(arrayRef, dataRef);
@@ -354,7 +354,7 @@ void CPreferences::set(const SPref& pref, const TArray<CDictionary>& array)
 	CFMutableArrayRef	arrayRef = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	// Iterate items
-	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
 		// Add dictionary
 		CFDictionaryRef	dictionaryRef = CCoreFoundation::createDictionaryRefFrom(array[i]);
 		::CFArrayAppendValue(arrayRef, dictionaryRef);
@@ -376,7 +376,7 @@ void CPreferences::set(const SPref& pref, const TNumericArray<OSType>& array)
 	CFMutableArrayRef	arrayRef = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	// Iterate items
-	for (CArrayItemIndex i = 0; i < array.getCount(); i++) {
+	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
 		// Add data
 		SInt64		sInt64Value = array[i];
 		CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);

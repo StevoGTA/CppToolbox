@@ -7,12 +7,11 @@
 #include "CppToolboxAssert.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: SArraySortInfo
 
 struct SArraySortInfo {
 	// Properties
-	CArrayCompareProc	mCompareProc;
+	CArray::CompareProc	mCompareProc;
 	void*				mUserData;
 };
 
@@ -50,38 +49,37 @@ class CArrayIteratorInfo : public CIteratorInfo {
 
 class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 	public:
-											CArrayInternals(CArrayItemCount initialCapacity,
-													CArrayItemCopyProc itemCopyProc,
-													CArrayItemDisposeProc itemDisposeProc) :
+											CArrayInternals(CArray::ItemCount initialCapacity,
+													CArray::CopyProc copyProc, CArray::DisposeProc disposeProc) :
 												TCopyOnWriteReferenceCountable(),
 														mIsSorted(true),
 														mCapacity(std::max(initialCapacity, (UInt32) 10)), mCount(0),
 														mItemRefs(
-																(CArrayItemRef*)
-																		::calloc(mCapacity, sizeof(CArrayItemRef))),
-														mItemCopyProc(itemCopyProc),
-														mItemDisposeProc(itemDisposeProc), mReference(0)
+																(CArray::ItemRef*)
+																		::calloc(mCapacity, sizeof(CArray::ItemRef))),
+														mCopyProc(copyProc),
+														mDisposeProc(disposeProc), mReference(0)
 												{}
 											CArrayInternals(const CArrayInternals& other) :
 												TCopyOnWriteReferenceCountable(),
 														mIsSorted(other.mIsSorted), mCapacity(other.mCount),
 														mCount(other.mCount),
 														mItemRefs(
-																(CArrayItemRef*)
-																		::calloc(mCapacity, sizeof(CArrayItemRef))),
-														mItemCopyProc(other.mItemCopyProc),
-														mItemDisposeProc(other.mItemDisposeProc), mReference(0)
+																(CArray::ItemRef*)
+																		::calloc(mCapacity, sizeof(CArray::ItemRef))),
+														mCopyProc(other.mCopyProc), mDisposeProc(other.mDisposeProc),
+														mReference(0)
 												{
-													// Check if have item copy proc
-													if (mItemCopyProc != nil) {
+													// Check if have copy proc
+													if (mCopyProc != nil) {
 														// Copy each item
-														for (CArrayItemIndex i = 0; i < mCount; i++)
+														for (CArray::ItemIndex i = 0; i < mCount; i++)
 															// Copy item
-															mItemRefs[i] = mItemCopyProc(other.mItemRefs[i]);
+															mItemRefs[i] = mCopyProc(other.mItemRefs[i]);
 													} else
 														// Copy item refs
 														::memcpy(mItemRefs, other.mItemRefs,
-																mCount * sizeof(CArrayItemRef));
+																mCount * sizeof(CArray::ItemRef));
 												}
 											~CArrayInternals()
 												{
@@ -92,22 +90,22 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													::free(mItemRefs);
 												}
 
-				OV<CArrayItemIndex>			getIndexOf(const CArrayItemRef itemRef) const
+				OV<CArray::ItemIndex>		getIndexOf(const CArray::ItemRef itemRef) const
 												{
 													// Scan
-													CArrayItemIndex	itemIndex = 0;
-													for (CArrayItemRef* testItemRef = mItemRefs; itemIndex < mCount;
+													CArray::ItemIndex	itemIndex = 0;
+													for (CArray::ItemRef* testItemRef = mItemRefs; itemIndex < mCount;
 															itemIndex++, testItemRef++) {
 														// Check test item ref
 														if (*testItemRef == itemRef)
 															// Found
-															return OV<CArrayItemIndex>(itemIndex);
+															return OV<CArray::ItemIndex>(itemIndex);
 													}
 
-													return OV<CArrayItemIndex>();
+													return OV<CArray::ItemIndex>();
 												}
 
-				CArrayInternals*			append(const CArrayItemRef* itemRefs, CArrayItemCount count,
+				CArrayInternals*			append(const CArray::ItemRef* itemRefs, CArray::ItemCount count,
 													bool avoidDuplicates)
 												{
 													// Prepare for write
@@ -118,14 +116,14 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 														arrayInternals->append(itemRefs, count);
 													else {
 														// Must ensure we are not adding an itemRef we already have
-														for (CArrayItemCount i = 0; i < count; i++) {
+														for (CArray::ItemCount i = 0; i < count; i++) {
 															// Get itemRef
-															CArrayItemRef	itemRef = itemRefs[i];
+															CArray::ItemRef	itemRef = itemRefs[i];
 
 															// Check if found
-															OV<CArrayItemIndex>	index =
-																						arrayInternals->getIndexOf(
-																								itemRef);
+															OV<CArray::ItemIndex>	index =
+																							arrayInternals->getIndexOf(
+																									itemRef);
 
 															if (!index.hasValue())
 																// Not found
@@ -139,13 +137,13 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 
 													return arrayInternals;
 												}
-				CArrayInternals*			insertAtIndex(const CArrayItemRef itemRef, CArrayItemIndex itemIndex)
+				CArrayInternals*			insertAtIndex(const CArray::ItemRef itemRef, CArray::ItemIndex itemIndex)
 												{
 													// Prepare for write
 													CArrayInternals*	arrayInternals = prepareForWrite();
 
 													// Setup
-													CArrayItemCount	neededCount = arrayInternals->mCount + 1;
+													CArray::ItemCount	neededCount = arrayInternals->mCount + 1;
 
 													// Check storage
 													if (neededCount > arrayInternals->mCapacity) {
@@ -153,17 +151,17 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 														arrayInternals->mCapacity =
 																std::max(neededCount, arrayInternals->mCapacity * 2);
 														arrayInternals->mItemRefs =
-																(CArrayItemRef*)
+																(CArray::ItemRef*)
 																		::realloc(mItemRefs,
 																				arrayInternals->mCapacity *
-																						sizeof(CArrayItemRef));
+																						sizeof(CArray::ItemRef));
 													}
 
 													// Move following itemRefs back
 													::memmove(arrayInternals->mItemRefs + itemIndex + 1,
 															arrayInternals->mItemRefs + itemIndex,
 															(arrayInternals->mCount - itemIndex) *
-																	sizeof(CArrayItemRef));
+																	sizeof(CArray::ItemRef));
 
 													// Store new itemRef
 													arrayInternals->mItemRefs[itemIndex] = itemRef;
@@ -175,21 +173,21 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 
 													return arrayInternals;
 												}
-				CArrayInternals*			removeAtIndex(CArrayItemIndex itemIndex, bool performDispose)
+				CArrayInternals*			removeAtIndex(CArray::ItemIndex itemIndex, bool performDispose)
 												{
 													// Prepare for write
 													CArrayInternals*	arrayInternals = prepareForWrite();
 
 													// Check if owns items
-													if (performDispose && (mItemDisposeProc != nil))
+													if (performDispose && (mDisposeProc != nil))
 														// Dispose
-														mItemDisposeProc(arrayInternals->mItemRefs[itemIndex]);
+														mDisposeProc(arrayInternals->mItemRefs[itemIndex]);
 
 													// Move following itemRefs forward
 													::memmove(arrayInternals->mItemRefs + itemIndex,
 															arrayInternals->mItemRefs + itemIndex + 1,
 															(arrayInternals->mCount - itemIndex - 1) *
-																	sizeof(CArrayItemRef));
+																	sizeof(CArray::ItemRef));
 
 													// Update info
 													arrayInternals->mCount--;
@@ -219,23 +217,23 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 				void						removeAllInternal()
 												{
 													// Check if have item dispose proc
-													if (mItemDisposeProc != nil) {
+													if (mDisposeProc != nil) {
 														// Dispose each item
-														for (CArrayItemIndex i = 0; i < mCount; i++) {
+														for (CArray::ItemIndex i = 0; i < mCount; i++) {
 															// Dispose
-															mItemDisposeProc(mItemRefs[i]);
+															mDisposeProc(mItemRefs[i]);
 														}
 													}
 												}
 
-				TIteratorS<CArrayItemRef>	getIterator() const
+				TIteratorS<CArray::ItemRef>	getIterator() const
 												{
 													// Setup
 													CArrayIteratorInfo*	iteratorInfo =
 																				new CArrayIteratorInfo(*this,
 																						mReference);
 
-													return TIteratorS<CArrayItemRef>((mCount > 0) ? mItemRefs : nil,
+													return TIteratorS<CArray::ItemRef>((mCount > 0) ? mItemRefs : nil,
 															iteratorAdvance, *iteratorInfo);
 												}
 
@@ -254,34 +252,35 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 												}
 
 	private:
-				void						append(const CArrayItemRef itemRefs, CArrayItemCount count)
+				void						append(const CArray::ItemRef itemRefs, CArray::ItemCount count)
 												{
 													// Setup
-													CArrayItemCount	neededCount = mCount + count;
+													CArray::ItemCount	neededCount = mCount + count;
 
 													// Check storage
 													if (neededCount > mCapacity) {
 														// Expand storage
 														mCapacity = std::max(neededCount, mCapacity * 2);
 														mItemRefs =
-																(CArrayItemRef*)
+																(CArray::ItemRef*)
 																		::realloc(mItemRefs,
-																				mCapacity * sizeof(CArrayItemRef));
+																				mCapacity * sizeof(CArray::ItemRef));
 													}
 
 													// Append itemRefs into place
-													::memcpy(mItemRefs + mCount, itemRefs, count * sizeof(CArrayItemRef));
+													::memcpy(mItemRefs + mCount, itemRefs,
+															count * sizeof(CArray::ItemRef));
 													mCount = neededCount;
 												}
 
 	public:
-		bool					mIsSorted;
-		CArrayItemCount			mCapacity;
-		CArrayItemCount			mCount;
-		CArrayItemRef*			mItemRefs;
-		CArrayItemCopyProc		mItemCopyProc;
-		CArrayItemDisposeProc	mItemDisposeProc;
-		UInt32					mReference;
+		bool				mIsSorted;
+		CArray::ItemCount	mCapacity;
+		CArray::ItemCount	mCount;
+		CArray::ItemRef*	mItemRefs;
+		CArray::CopyProc	mCopyProc;
+		CArray::DisposeProc	mDisposeProc;
+		UInt32				mReference;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -297,11 +296,11 @@ static	int sSortProc(void* info, const void* itemRef1, const void* itemRef2);
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray::CArray(CArrayItemCount initialCapacity, CArrayItemCopyProc itemCopyProc, CArrayItemDisposeProc itemDisposeProc)
+CArray::CArray(ItemCount initialCapacity, CopyProc copyProc, DisposeProc disposeProc)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CArrayInternals(initialCapacity, itemCopyProc, itemDisposeProc);
+	mInternals = new CArrayInternals(initialCapacity, copyProc, disposeProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -323,14 +322,14 @@ CArray::~CArray()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CArrayItemRef CArray::copy(const CArrayItemRef itemRef) const
+CArray::ItemRef CArray::copy(const ItemRef itemRef) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (mInternals->mItemCopyProc != nil) ? mInternals->mItemCopyProc(itemRef) : itemRef;
+	return (mInternals->mCopyProc != nil) ? mInternals->mCopyProc(itemRef) : itemRef;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::add(const CArrayItemRef itemRef, bool avoidDuplicates)
+CArray& CArray::add(const ItemRef itemRef, bool avoidDuplicates)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -358,16 +357,15 @@ CArray& CArray::addFrom(const CArray& other, bool avoidDuplicates)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CArray::contains(const CArrayItemRef itemRef) const
+bool CArray::contains(const ItemRef itemRef) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
 	AssertNotNil(itemRef);
 
 	// Scan
-	CArrayItemIndex	itemIndex = 0;
-	for (CArrayItemRef* testItemRef = mInternals->mItemRefs; itemIndex < mInternals->mCount;
-			itemIndex++, testItemRef++) {
+	ItemIndex	itemIndex = 0;
+	for (ItemRef* testItemRef = mInternals->mItemRefs; itemIndex < mInternals->mCount; itemIndex++, testItemRef++) {
 		// Check test item ref
 		if (*testItemRef == itemRef)
 			// Found
@@ -378,7 +376,7 @@ bool CArray::contains(const CArrayItemRef itemRef) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CArrayItemIndex> CArray::getIndexOf(const CArrayItemRef itemRef) const
+OV<CArray::ItemIndex> CArray::getIndexOf(const ItemRef itemRef) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -388,7 +386,7 @@ OV<CArrayItemIndex> CArray::getIndexOf(const CArrayItemRef itemRef) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArrayItemRef CArray::getItemAt(CArrayItemIndex itemIndex) const
+CArray::ItemRef CArray::getItemAt(ItemIndex itemIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -398,7 +396,7 @@ CArrayItemRef CArray::getItemAt(CArrayItemIndex itemIndex) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArrayItemRef CArray::getLast() const
+CArray::ItemRef CArray::getLast() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Sanity check
@@ -408,14 +406,14 @@ CArrayItemRef CArray::getLast() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArrayItemCount CArray::getCount() const
+CArray::ItemCount CArray::getCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::insertAtIndex(const CArrayItemRef itemRef, CArrayItemIndex itemIndex)
+CArray& CArray::insertAtIndex(const ItemRef itemRef, ItemIndex itemIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -429,11 +427,11 @@ CArray& CArray::insertAtIndex(const CArrayItemRef itemRef, CArrayItemIndex itemI
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::detach(const CArrayItemRef itemRef)
+CArray& CArray::detach(const ItemRef itemRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get index of itemRef
-	OV<CArrayItemIndex>	itemIndex = getIndexOf(itemRef);
+	OV<ItemIndex>	itemIndex = getIndexOf(itemRef);
 
 	// Check if itemRef was found
 	if (itemIndex.hasValue())
@@ -444,11 +442,11 @@ CArray& CArray::detach(const CArrayItemRef itemRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::move(const CArrayItemRef itemRef, CArray& other)
+CArray& CArray::move(const ItemRef itemRef, CArray& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get index of itemRef
-	OV<CArrayItemIndex>	itemIndex = getIndexOf(itemRef);
+	OV<ItemIndex>	itemIndex = getIndexOf(itemRef);
 
 	// Check if itemRef was found
 	if (itemIndex.hasValue()) {
@@ -463,7 +461,7 @@ CArray& CArray::move(const CArrayItemRef itemRef, CArray& other)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::detachAtIndex(CArrayItemIndex itemIndex)
+CArray& CArray::detachAtIndex(ItemIndex itemIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -476,11 +474,11 @@ CArray& CArray::detachAtIndex(CArrayItemIndex itemIndex)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::remove(const CArrayItemRef itemRef)
+CArray& CArray::remove(const ItemRef itemRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get index of itemRef
-	OV<CArrayItemIndex>	itemIndex = getIndexOf(itemRef);
+	OV<ItemIndex>	itemIndex = getIndexOf(itemRef);
 
 	// Check if itemRef was found
 	if (itemIndex.hasValue())
@@ -491,7 +489,7 @@ CArray& CArray::remove(const CArrayItemRef itemRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::removeAtIndex(CArrayItemIndex itemIndex)
+CArray& CArray::removeAtIndex(ItemIndex itemIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -508,10 +506,10 @@ CArray& CArray::removeFrom(const CArray& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all in the other
-	for (CArrayItemIndex otherItemIndex = 0; otherItemIndex < other.mInternals->mCount; otherItemIndex++) {
+	for (ItemIndex otherItemIndex = 0; otherItemIndex < other.mInternals->mCount; otherItemIndex++) {
 		// Check if other item is in local storage
-		CArrayItemRef		otherItemRef = other.mInternals->mItemRefs[otherItemIndex];
-		OV<CArrayItemIndex>	itemIndex = getIndexOf(otherItemRef);
+		ItemRef			otherItemRef = other.mInternals->mItemRefs[otherItemIndex];
+		OV<ItemIndex>	itemIndex = getIndexOf(otherItemRef);
 		if (itemIndex.hasValue())
 			// Remove
 			mInternals = mInternals->removeAtIndex(*itemIndex, true);
@@ -536,23 +534,22 @@ bool CArray::equals(const CArray& other) const
 {
 	// Compare
 	return (mInternals->mCount == other.mInternals->mCount) &&
-			(::memcmp(mInternals->mItemRefs, other.mInternals->mItemRefs,
-					mInternals->mCount * sizeof(CArrayItemRef)) == 0);
+			(::memcmp(mInternals->mItemRefs, other.mInternals->mItemRefs, mInternals->mCount * sizeof(ItemRef)) == 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIteratorS<CArrayItemRef> CArray::getIterator() const
+TIteratorS<CArray::ItemRef> CArray::getIterator() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getIterator();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::apply(CArrayApplyProc applyProc, void* userData)
+CArray& CArray::apply(ApplyProc applyProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all item refs
-	for (CArrayItemIndex i = 0; i < mInternals->mCount; i++)
+	for (ItemIndex i = 0; i < mInternals->mCount; i++)
 		// Call proc
 		applyProc(mInternals->mItemRefs[i], userData);
 
@@ -567,7 +564,7 @@ bool CArray::isSorted() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::sort(CArrayCompareProc compareProc, void* userData)
+CArray& CArray::sort(CompareProc compareProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if sorted
@@ -581,14 +578,14 @@ CArray& CArray::sort(CArrayCompareProc compareProc, void* userData)
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 	// BSD platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
-	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), &sortInfo, sSortProc);
+	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), &sortInfo, sSortProc);
 #elif TARGET_OS_LINUX
 	// GLibc platforms
-	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), sSortProc, userData);
+	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), sSortProc, userData);
 #elif TARGET_OS_WINDOWS
 	// Windows platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
-	qsort_s((void*) *mInternals->mItemRefs, mInternals->mCount, sizeof(CArrayItemRef), sSortProc, &sortInfo);
+	qsort_s((void*) *mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), sSortProc, &sortInfo);
 #else
 	// Unknown platform
 	AssertFailUnimplemented();
@@ -601,7 +598,7 @@ CArray& CArray::sort(CArrayCompareProc compareProc, void* userData)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray CArray::sorted(CArrayCompareProc compareProc, void* userData) const
+CArray CArray::sorted(CompareProc compareProc, void* userData) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -614,14 +611,14 @@ CArray CArray::sorted(CArrayCompareProc compareProc, void* userData) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray CArray::filtered(CArrayItemIsIncludedProc isIncludedProc, void* userData)
+CArray CArray::filtered(IsIncludedProc isIncludedProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CArray	array;
 
 	// Iterate all item refs
-	for (CArrayItemIndex i = 0; i < mInternals->mCount; i++) {
+	for (ItemIndex i = 0; i < mInternals->mCount; i++) {
 		// Call proc
 		if (isIncludedProc(mInternals->mItemRefs[i], userData))
 			// Included
@@ -658,6 +655,6 @@ int sSortProc(void* info, const void* itemRef1, const void* itemRef2)
 {
 	SArraySortInfo*	sortInfo = (SArraySortInfo*) info;
 
-	return (int) sortInfo->mCompareProc(*((CArrayItemRef*) itemRef1), *((CArrayItemRef*) itemRef2),
+	return (int) sortInfo->mCompareProc(*((CArray::ItemRef*) itemRef1), *((CArray::ItemRef*) itemRef2),
 			sortInfo->mUserData);
 }
