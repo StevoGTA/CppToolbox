@@ -20,6 +20,8 @@ struct SError {
 						{}
 
 					// Instance methods
+			SInt32	getCode() const
+						{ return mCode; }
 			CString	getDescription() const
 						{ return mDomain + CString(OSSTR("/")) + CString(mCode) + CString(OSSTR(" (")) +
 								mDefaultLocalizedDescription + CString(OSSTR(")")); }

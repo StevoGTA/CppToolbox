@@ -4,9 +4,11 @@
 
 #include "CFileReader.h"
 
-#undef Delete
-#include <Windows.h>
-#define Delete(x)		{ delete x; x = nil; }
+#include "SError-Windows.h"
+
+//#undef Delete
+//#include <Windows.h>
+//#define Delete(x)		{ delete x; x = nil; }
 #undef THIS
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -54,29 +56,29 @@ struct SFileMemoryMapSetupInfo {
 
 class CFileReaderInternals : public TCopyOnWriteReferenceCountable<CFileReaderInternals> {
 	public:
-				CFileReaderInternals(const CFile& file) :
-					TCopyOnWriteReferenceCountable(),
-							mFile(file)
-					{}
-				CFileReaderInternals(const CFileReaderInternals& other) :
-					TCopyOnWriteReferenceCountable(),
-							mFile(other.mFile)
-					{}
-				~CFileReaderInternals()
-					{
-						close();
-					}
+					CFileReaderInternals(const CFile& file) :
+						TCopyOnWriteReferenceCountable(),
+								mFile(file)
+						{}
+					CFileReaderInternals(const CFileReaderInternals& other) :
+						TCopyOnWriteReferenceCountable(),
+								mFile(other.mFile)
+						{}
+					~CFileReaderInternals()
+						{
+							close();
+						}
 
-		UError	close()
-					{
-						CloseHandle(mFileMappingHandle);
-						mFileMappingHandle = NULL;
+		OI<SError>	close()
+						{
+							CloseHandle(mFileMappingHandle);
+							mFileMappingHandle = NULL;
 
-						CloseHandle(mFileHandle);
-						mFileHandle = NULL;
+							CloseHandle(mFileHandle);
+							mFileHandle = NULL;
 
-						return kNoError;
-					}
+							return OI<SError>();
+						}
 
 		CFile	mFile;
 		HANDLE	mFileHandle;
@@ -120,7 +122,7 @@ const CFile& CFileReader::getFile() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileReader::open(bool buffered)
+OI<SError> CFileReader::open(bool buffered)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Copy on change
@@ -138,22 +140,22 @@ UError CFileReader::open(bool buffered)
 	// Handle results
 	if (mInternals->mFileHandle != NULL)
 		// Success
-		return kNoError;
+		return OI<SError>();
 	else
 		// Unable to open
-		CFileReaderReportErrorAndReturnError(MAKE_UError(kWindowsErrorDomain, GetLastError()), "opening buffered");
+		CFileReaderReportErrorAndReturnError(SErrorFromWindowsError(GetLastError()), "opening buffered");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileReader::readData(void* buffer, UInt64 byteCount) const
+OI<SError> CFileReader::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
 	BOOL	result = ReadFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, NULL, NULL);
 	if (!result)
-		CFileReaderReportErrorAndReturnError(MAKE_UError(kWindowsErrorDomain, GetLastError()), "reading data");
+		CFileReaderReportErrorAndReturnError(SErrorFromWindowsError(GetLastError()), "reading data");
 
-	return kNoError;
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -166,13 +168,13 @@ SInt64 CFileReader::getPos() const
 	// "Set position" to current to query the current position
 	position.LowPart = SetFilePointer(mInternals->mFileHandle, position.LowPart, &position.HighPart, FILE_CURRENT);
 	if (position.LowPart == INVALID_SET_FILE_POINTER)
-		CFileReaderReportErrorAndReturnValue(MAKE_UError(kWindowsErrorDomain, GetLastError()), "getting position", 0);
+		CFileReaderReportErrorAndReturnValue(SErrorFromWindowsError(GetLastError()), "getting position", 0);
 
 	return position.QuadPart;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
+OI<SError> CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -189,13 +191,13 @@ UError CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
 	// Set position
 	DWORD	newPositionLow = SetFilePointer(mInternals->mFileHandle, position.LowPart, &position.HighPart, moveMethod);
 	if (newPositionLow == INVALID_SET_FILE_POINTER)
-		CFileReaderReportError(MAKE_UError(kWindowsErrorDomain, GetLastError()), "setting position");
+		CFileReaderReportErrorAndReturnError(SErrorFromWindowsError(GetLastError()), "setting position");
 
-	return kNoError;
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount, UError& outError) const
+CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount, OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -204,8 +206,8 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 	// Is the file open?
 	if (mInternals->mFileHandle == NULL) {
 		// File not open!
-		outError = kFileNotOpenError;
-		CFileReaderReportErrorAndReturnValue(outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
+		outError = OI<SError>(CFile::mNotOpenError);
+		CFileReaderReportErrorAndReturnValue(*outError, "mapping data", CFileMemoryMap(fileMemoryMapSetupInfo));
 	}
 
 	// Check for file mapping handle
@@ -215,8 +217,8 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 				CreateFileMapping(mInternals->mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
 		if (mInternals->mFileMappingHandle == NULL) {
 			// Error
-			outError = MAKE_UError(kWindowsErrorDomain, GetLastError());
-			CFileReaderReportErrorAndReturnValue(outError, "creating file mapping",
+			outError = OI<SError>(SErrorFromWindowsError(GetLastError()));
+			CFileReaderReportErrorAndReturnValue(*outError, "creating file mapping",
 					CFileMemoryMap(fileMemoryMapSetupInfo));
 		}
 	}
@@ -235,20 +237,20 @@ CFileMemoryMap CFileReader::getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount
 	// Check for failure
 	if (bytePtr == NULL) {
 		// Failed
-		outError = MAKE_UError(kWindowsErrorDomain, GetLastError());
-		CFileReaderReportErrorAndReturnValue(outError, "creating file view", CFileMemoryMap(fileMemoryMapSetupInfo));
+		outError = OI<SError>(SErrorFromWindowsError(GetLastError()));
+		CFileReaderReportErrorAndReturnValue(*outError, "creating file view", CFileMemoryMap(fileMemoryMapSetupInfo));
 	}
 
 	// All good
 	fileMemoryMapSetupInfo.mBytePtr = bytePtr;
 	fileMemoryMapSetupInfo.mByteCount = byteCount;
-	outError = kNoError;
+	outError = OI<SError>();
 
 	return CFileMemoryMap(fileMemoryMapSetupInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileReader::close() const
+OI<SError> CFileReader::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->close();

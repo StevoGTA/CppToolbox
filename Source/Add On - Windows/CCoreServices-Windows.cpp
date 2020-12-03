@@ -5,6 +5,7 @@
 #include "CCoreServices.h"
 
 #include "CPlatform.h"
+#include "SError.h"
 
 #undef Delete
 #include <Windows.h>

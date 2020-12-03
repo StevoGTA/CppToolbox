@@ -12,7 +12,7 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 					mInternals->mFile.logAsError(CString::mSpaceX4);						\
 																							\
-					return error;															\
+					return OI<SError>(error);												\
 				}
 #define	CFileWriterReportErrorAndReturnValue(error, message, value)							\
 				{																			\
@@ -28,23 +28,22 @@
 
 class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 public:
-	CFileWriterInternals(const CFile& file) :
-		TReferenceCountable(), mFile(file), mRemoveIfNotClosed(false)
-	{}
-	~CFileWriterInternals()
-	{
-	}
+				CFileWriterInternals(const CFile& file) :
+					TReferenceCountable(), mFile(file), mRemoveIfNotClosed(false)
+					{}
+				~CFileWriterInternals()
+					{}
 
-	UError	write(const void* buffer, UInt64 byteCount)
-	{
-		AssertFailUnimplemented();
-		return kNoError;
-	}
-	UError	close()
-	{
-		AssertFailUnimplemented();
-		return kNoError;
-	}
+	OI<SError>	write(const void* buffer, UInt64 byteCount)
+					{
+						AssertFailUnimplemented();
+						return OI<SError>();
+					}
+	OI<SError>	close()
+					{
+						AssertFailUnimplemented();
+						return OI<SError>();
+					}
 
 	CFile	mFile;
 	UInt32	mReferenceCount;
@@ -82,27 +81,26 @@ CFileWriter::~CFileWriter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
+OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mRemoveIfNotClosed = removeIfNotClosed;
 
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::write(const void* buffer, UInt64 byteCount) const
+OI<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	UError	error = mInternals->write(buffer, byteCount);
-	if (error == kNoError)
-		// Success
-		return kNoError;
-	else
+	OI<SError>	error = mInternals->write(buffer, byteCount);
+	if (!error.hasInstance())
 		// Error
-		CFileWriterReportErrorAndReturnError(error, "writing");
+		CFileWriterReportErrorAndReturnError(*error, "writing");
+
+	return error;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,31 +112,31 @@ return 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::setPos(EFileWriterPositionMode mode, SInt64 newPos) const
+OI<SError> CFileWriter::setPos(EFileWriterPositionMode mode, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::setSize(UInt64 newSize) const
+OI<SError> CFileWriter::setSize(UInt64 newSize) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::flush() const
+OI<SError> CFileWriter::flush() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFileWriter::close() const
+OI<SError> CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->close();

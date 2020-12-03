@@ -115,6 +115,12 @@ CBitmap CImage::getBitmap() const
 		case kImageTypePNG:
 			// PNG
 			return sDecodePNGData(data);
+
+#if TARGET_OS_WINDOWS
+		default:
+			// Just to make compiler happy.  Will never get here.
+			return CBitmap();
+#endif
 	}
 }
 

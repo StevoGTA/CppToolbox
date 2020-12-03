@@ -94,7 +94,7 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 						audioStorageFormat =
 								OI<SAudioStorageFormat>(
 										SAudioStorageFormat(CDVIIntelIMAADPCMAudioCodec::mID, 16,
-												waveFormat.getNativeSamplesPerSec(),
+												(Float32) waveFormat.getNativeSamplesPerSec(),
 												AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getNativeChannels())));
 						break;
 

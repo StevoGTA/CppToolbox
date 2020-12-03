@@ -16,14 +16,14 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 					logAsError(CString::mSpaceX4);											\
 																							\
-					return error;															\
+					return OI<SError>(error);												\
 				}
 #define	CFileReportErrorAndReturnValue(error, message, value)								\
 				{																			\
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 					logAsError(CString::mSpaceX4);											\
 																							\
-					return value;															\
+					return OI<SError>(value);												\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -33,11 +33,11 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFile::rename(const CString& string)
+OI<SError> CFile::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -60,11 +60,11 @@ UInt64 CFile::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFile::remove() const
+OI<SError> CFile::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -84,9 +84,9 @@ return false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFile::setLocked(bool lockFile) const
+OI<SError> CFile::setLocked(bool lockFile) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }

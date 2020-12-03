@@ -5,6 +5,7 @@
 #include "CPreferences.h"
 
 #include "CPlatform.h"
+#include "SError.h"
 
 using namespace Windows::Foundation;
 using namespace Windows::Storage;

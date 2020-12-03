@@ -16,7 +16,7 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 					logAsError(CString::mSpaceX4);											\
 																							\
-					return error;															\
+					return OI<SError>(error);												\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFolder::rename(const CString& string)
+OI<SError> CFolder::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose new filesystem path
@@ -34,23 +34,23 @@ UError CFolder::rename(const CString& string)
 
 	// Rename
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFolder::create() const
+OI<SError> CFolder::create() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFolder::remove() const
+OI<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

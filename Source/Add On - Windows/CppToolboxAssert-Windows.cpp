@@ -8,7 +8,7 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-void eAssertHandleProc(UError error, const char* file, const char* proc, UInt32 line)
+void eAssertHandleProc(const SError& error, const char* file, const char* proc, UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Log error
@@ -19,7 +19,8 @@ void eAssertHandleProc(UError error, const char* file, const char* proc, UInt32 
 
 #if defined(DEBUG)
 	// Stop in debugger so we can analyze stuffs
-	CCoreServices::stopInDebugger(GET_UErrorError(error));
+	CString	description = error.getDescription();
+	CCoreServices::stopInDebugger(error.getCode(), description.getOSString());
 #else
 	// Trigger the crash reporting system so we can collect info
 	::abort();

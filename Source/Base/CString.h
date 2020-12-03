@@ -15,7 +15,7 @@
 	#define	OSSTR(s)		CFSTR(s)
 #elif TARGET_OS_WINDOWS
 	#define OSStringType	const TCHAR*
-	#define OSStringVar(s)	TCHAR s[]
+	#define OSStringVar(s)	const TCHAR s[]
 	#define OSSTR(s)		_TEXT(s)
 #endif
 
@@ -210,7 +210,7 @@ class CString : public CHashable {
 										// Lifecycle methods
 										CString();
 										CString(const CString& other, OV<CStringLength> length = OV<CStringLength>());
-										CString(const OSStringVar(initialString),
+										CString(OSStringVar(initialString),
 												OV<CStringLength> length = OV<CStringLength>());
 										CString(const char* chars, CStringLength charsCount = kCStringDefaultMaxLength,
 												EStringEncoding encoding = kStringEncodingTextDefault);

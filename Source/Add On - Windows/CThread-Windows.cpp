@@ -6,7 +6,6 @@
 
 #include "CLogServices.h"
 #include "CppToolboxAssert.h"
-#include "CppToolboxError.h"
 
 #undef Delete
 #include <Windows.h>
@@ -16,19 +15,19 @@
 // MARK: CThreadInternals
 
 class CThreadInternals {
-public:
-	CThreadInternals(const CThread& thread, CThreadProc proc, void* userData, const CString& name) :
-		mThreadProc(proc), mThreadProcUserData(userData), mThreadName(name), mThread(thread),
-				mWindowsThreadHandle(NULL)
-		{}
-	~CThreadInternals() {}
+	public:
+		CThreadInternals(CThread& thread, CThreadProc proc, void* userData, const CString& name) :
+			mThreadProc(proc), mThreadProcUserData(userData), mThreadName(name), mThread(thread),
+					mWindowsThreadHandle(NULL)
+			{}
+		~CThreadInternals() {}
 
-			CThreadProc	mThreadProc;
-			void*		mThreadProcUserData;
-			CString		mThreadName;
-	const	CThread&	mThread;
+		CThreadProc	mThreadProc;
+		void*		mThreadProcUserData;
+		CString		mThreadName;
+		CThread&	mThread;
 
-			HANDLE		mWindowsThreadHandle;
+		HANDLE		mWindowsThreadHandle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

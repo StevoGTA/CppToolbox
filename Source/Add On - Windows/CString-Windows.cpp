@@ -7,6 +7,7 @@
 //#include "CppToolboxAssert.h"
 #include "CData.h"
 //#include "CLogServices.h"
+#include "SError.h"
 #include "TBuffer.h"
 
 #undef Delete
@@ -43,7 +44,7 @@ CString::CString(const CString& other, OV<CStringLength> length) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const OSStringVar(initialString), OV<CStringLength> length) : CHashable()
+CString::CString(OSStringVar(initialString), OV<CStringLength> length) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for length
@@ -361,6 +362,8 @@ CStringLength CString::get(UTF16Char* buffer, CStringLength bufferLen, EStringEn
 		bufferLen = getLength();
 
 	AssertFailUnimplemented();
+
+	return 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -372,6 +375,8 @@ UTF32Char CString::getCharacterAtIndex(CStringCharIndex index) const
 		return 0;
 
 	AssertFailUnimplemented();
+
+	return 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -647,5 +652,7 @@ UINT sGetCodePageForCStringEncoding(EStringEncoding encoding)
 
 		default:
 			AssertFailUnimplemented();
+
+			return 0;
 	}
 }

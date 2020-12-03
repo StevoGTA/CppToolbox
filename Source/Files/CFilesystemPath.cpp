@@ -226,5 +226,11 @@ const CString& sPathSeparator(EFilesystemPathStyle pathStyle)
 #if TARGET_OS_MACOS
 		case kFilesystemPathStyleHFS:		return sPathSeparatorHFS;
 #endif
+
+#if TARGET_OS_WINDOWS
+		default:
+			// Just to make compiler happy.  Will never get here.
+			return sPathSeparatorWindows;
+#endif
 	}
 }

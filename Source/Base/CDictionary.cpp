@@ -1481,6 +1481,12 @@ bool SDictionaryValue::equals(const SDictionaryValue& other, CDictionaryItemEqua
 			// ItemRef
 			return (itemEqualsProc != nil) ?
 					itemEqualsProc(mValue.mItemRef, other.mValue.mItemRef) : mValue.mItemRef == other.mValue.mItemRef;
+
+#if TARGET_OS_WINDOWS
+		default:
+			// Just to make compiler happy.  Will never get here.
+			return false;
+#endif
 	}
 }
 

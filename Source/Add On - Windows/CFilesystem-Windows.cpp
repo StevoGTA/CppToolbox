@@ -21,7 +21,7 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 																									\
-					return error;																	\
+					return OI<SError>(error);														\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
@@ -29,7 +29,7 @@
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
-					return error;																	\
+					return OI<SError>(error);														\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,15 +39,15 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolders)
+OI<SError> CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolders)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
+OI<SError> CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -79,29 +79,29 @@ UError CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
 	}
 	FindClose(findHandle);
 
-	return kNoError;
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outFolders, TArray<CFile>& outFiles)
+OI<SError> CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outFolders, TArray<CFile>& outFiles)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
+OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UError CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
+OI<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kNoError;
+return OI<SError>();
 }
