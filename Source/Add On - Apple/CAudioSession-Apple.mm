@@ -34,7 +34,7 @@
 			// Began
 			// Post notification
 			CNotificationCenter::mStandard.send(CAudioSession::mInterruptionDidBeginNotificationName,
-					&CAudioSession::shared);
+					&CAudioSession::mShared);
 			break;
 
 		case AVAudioSessionInterruptionTypeEnded:
@@ -50,7 +50,7 @@
 					(interruptionOptions & AVAudioSessionInterruptionOptionShouldResume) != 0);
 
 			CNotificationCenter::mStandard.send(CAudioSession::mInterruptionDidEndNotificationName,
-					&CAudioSession::shared, info);
+					&CAudioSession::mShared, info);
 			break;
 	}
 }

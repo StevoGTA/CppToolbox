@@ -215,14 +215,14 @@ class CBitmapGPUTextureReferenceInternals : public CGPUTextureReferenceInternals
 												if (isLoadingContinuing()) {
 													// Setup
 													bitmapUse = (mBitmap != nil) ? mBitmap : mLoadingBitmap;
-													EBitmapFormat	bitmapUseFormat = bitmapUse->getFormat();
+													CBitmap::Format	bitmapUseFormat = bitmapUse->getFormat();
 
 													if (!mGPUTextureDataFormat.hasValue())
 														// Set value
 														mGPUTextureDataFormat =
 																resolvedGPUTextureDataFormat(bitmapUse->getFormat());
 
-													EBitmapFormat	bitmapUseResolvedBitmapFormat =
+													CBitmap::Format	bitmapUseResolvedBitmapFormat =
 																			resolvedBitmapFormat(*mGPUTextureDataFormat,
 																					bitmapUseFormat);
 													bitmapSize = bitmapUse->getSize();
@@ -251,36 +251,42 @@ class CBitmapGPUTextureReferenceInternals : public CGPUTextureReferenceInternals
 											}
 
 										// Class methods
-		static	EGPUTextureDataFormat	resolvedGPUTextureDataFormat(EBitmapFormat bitmapFormat)
+		static	EGPUTextureDataFormat	resolvedGPUTextureDataFormat(CBitmap::Format bitmapFormat)
 											{
 												switch (bitmapFormat) {
 													// 16 bit formats
-//													case kBitmapFormatRGB565:	return kGPUTextureDataFormatRGB565;
-//													case kBitmapFormatRGBA4444:	return kGPUTextureDataFormatRGBA4444;
-//													case kBitmapFormatRGBA5551:	return kGPUTextureDataFormatRGBA5551;
+//													case CBitmap::kFormatRGB565:
+//														return kGPUTextureDataFormatRGB565;
+//													case CBitmap::kFormatRGBA4444:
+//														return kGPUTextureDataFormatRGBA4444;
+//													case CBitmap::kFormatRGBA5551:
+//														return kGPUTextureDataFormatRGBA5551;
 
 													// 24 bit formats
-													case kBitmapFormatRGB888:	return kGPUTextureDataFormatRGBA8888;
+													case CBitmap::kFormatRGB888:
+															return kGPUTextureDataFormatRGBA8888;
 
 													// 32 bit formats
-													case kBitmapFormatRGBA8888:	return kGPUTextureDataFormatRGBA8888;
-													case kBitmapFormatARGB8888:	return kGPUTextureDataFormatRGBA8888;
+													case CBitmap::kFormatRGBA8888:
+														return kGPUTextureDataFormatRGBA8888;
+													case CBitmap::kFormatARGB8888:
+														return kGPUTextureDataFormatRGBA8888;
 
 													default:
 														return kGPUTextureDataFormatRGBA8888;
 												}
 											}
-		static	EBitmapFormat			resolvedBitmapFormat(EGPUTextureDataFormat gpuTextureDataFormat,
-												EBitmapFormat fallbackBitmapFormat)
+		static	CBitmap::Format			resolvedBitmapFormat(EGPUTextureDataFormat gpuTextureDataFormat,
+												CBitmap::Format fallbackBitmapFormat)
 											{
 												// What is the render material texture format
 												switch (gpuTextureDataFormat) {
 													// Convertable formats
-//													case kGPUTextureDataFormatRGB565:	return kBitmapFormatRGB565;
-//													case kGPUTextureDataFormatRGBA4444:	return kBitmapFormatRGBA4444;
-//													case kGPUTextureDataFormatRGBA5551:	return kBitmapFormatRGBA5551;
+//													case kGPUTextureDataFormatRGB565:	return CBitmap::kFormatRGB565;
+//													case kGPUTextureDataFormatRGBA4444:	return CBitmap::kFormatRGBA4444;
+//													case kGPUTextureDataFormatRGBA5551:	return CBitmap::kFormatRGBA5551;
 
-													case kGPUTextureDataFormatRGBA8888:	return kBitmapFormatRGBA8888;
+													case kGPUTextureDataFormatRGBA8888:	return CBitmap::kFormatRGBA8888;
 
 													// Everything else does not correspond to a bitmap format
 													default:							return fallbackBitmapFormat;

@@ -8,24 +8,7 @@
 #include "CColor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: BitmapFormat
-
-enum EBitmapFormat {
-	// 16 bit formats
-	kBitmapFormatRGB565,
-	kBitmapFormatRGBA4444,
-	kBitmapFormatRGBA5551,
-
-	// 24 bit formats
-	kBitmapFormatRGB888,
-
-	// 32 bit formats
-	kBitmapFormatRGBA8888,
-	kBitmapFormatARGB8888,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Raw pixel data
+// MARK: Raw pixel data
 
 union SPixelDataRGBA4444 {
 	UInt16	mRawData;
@@ -86,48 +69,61 @@ union SPixelDataARGB8888 {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Rotation operation
-
-enum EBitmapRotationOperation {
-	kBitmapRotationOperationRotateNone	= 0x00,
-	kBitmapRotationOperationRotate90	= 0x01,
-	kBitmapRotationOperationRotate180	= 0x02,
-	kBitmapRotationOperationRotate270	= 0x03,
-
-	kBitmapRotationOperationFlipLR		= 0x04,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CBitmap
 
 class CBitmapInternals;
 class CBitmap {
+	// Types
+	public:
+		enum Format {
+			// 16 bit formats
+			kFormatRGB565,
+			kFormatRGBA4444,
+			kFormatRGBA5551,
+
+			// 24 bit formats
+			kFormatRGB888,
+
+			// 32 bit formats
+			kFormatRGBA8888,
+			kFormatARGB8888,
+		};
+
+		enum RotationOperation {
+			kRotationOperationRotateNone	= 0x00,
+			kRotationOperationRotate90		= 0x01,
+			kRotationOperationRotate180		= 0x02,
+			kRotationOperationRotate270		= 0x03,
+
+			kRotationOperationFlipLR		= 0x04,
+		};
+
 	// Methods
 	public:
-										// Lifecycle methods
-										CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1),
-												EBitmapFormat format = kBitmapFormatRGBA8888, UInt16 bytesPerRow = 0);
-										CBitmap(const S2DSizeS32& size, EBitmapFormat format, const CData& pixelData,
-												UInt16 bytesPerRow);
-										CBitmap(const CBitmap& other, EBitmapFormat format);
-										CBitmap(const CBitmap& other, UInt32 rotationOperation);
-										CBitmap(const CBitmap& other);
-		virtual							~CBitmap();
+									// Lifecycle methods
+									CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1), Format format = kFormatRGBA8888,
+											UInt16 bytesPerRow = 0);
+									CBitmap(const S2DSizeS32& size, Format format, const CData& pixelData,
+											UInt16 bytesPerRow);
+									CBitmap(const CBitmap& other, Format format);
+									CBitmap(const CBitmap& other, RotationOperation rotationOperation);
+									CBitmap(const CBitmap& other);
+		virtual						~CBitmap();
 
-										// Instance methods
-				const	S2DSizeS32&		getSize() const;
+									// Instance methods
+				const	S2DSizeS32&	getSize() const;
 
-						CData&			getPixelData() const;
-						EBitmapFormat	getFormat() const;
-						UInt16			getBytesPerRow() const;
-						UInt16			getBytesPerPixel() const;
+						CData&		getPixelData() const;
+						Format		getFormat() const;
+						UInt16		getBytesPerRow() const;
+						UInt16		getBytesPerPixel() const;
 
-						void			clearPixels()
-											{ clearPixels(S2DRectS32(S2DPointS32(), getSize())); }
-						void			clearPixels(const S2DRectS32& rect);
+						void		clearPixels()
+										{ clearPixels(S2DRectS32(S2DPointS32(), getSize())); }
+						void		clearPixels(const S2DRectS32& rect);
 
-						void			setPixel(const S2DPointS32& point, const CColor& color);	// Set one pixel to the one pixel's worth of given data
-						void			setPixels(const S2DRectS32& rect, const CColor& color);		// Set all pixels to the one pixel's worth of given data
+						void		setPixel(const S2DPointS32& point, const CColor& color);	// Set one pixel to the one pixel's worth of given data
+						void		setPixels(const S2DRectS32& rect, const CColor& color);		// Set all pixels to the one pixel's worth of given data
 
 	// Properties
 	private:

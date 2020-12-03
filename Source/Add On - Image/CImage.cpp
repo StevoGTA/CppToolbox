@@ -265,7 +265,7 @@ CBitmap sDecodeJPEGData(const CData& data)
 	jpeg_start_decompress(&jpegInfo);
 
 	// Setup bitmap
-	CBitmap	bitmap(S2DSizeS32(jpegInfo.output_width, jpegInfo.output_height), kBitmapFormatRGB888,
+	CBitmap	bitmap(S2DSizeS32(jpegInfo.output_width, jpegInfo.output_height), CBitmap::kFormatRGB888,
 					jpegInfo.output_width * jpegInfo.output_components);
 
 	// Step 6: Decompress the image
@@ -462,7 +462,7 @@ CBitmap sDecodePNGData(const CData& data)
 //			(colorType == PNG_COLOR_TYPE_RGB) ? kCBitmapFormatRGB888 : kCBitmapFormatRGBA8888,
 //			png_get_rowbytes(pngPtr, pngInfoPtr));
 	CBitmap	bitmap(S2DSizeS32(width, height),
-					(colorType == PNG_COLOR_TYPE_RGB) ? kBitmapFormatRGB888 : kBitmapFormatRGBA8888,
+					(colorType == PNG_COLOR_TYPE_RGB) ? CBitmap::kFormatRGB888 : CBitmap::kFormatRGBA8888,
 					(UInt16) png_get_rowbytes(pngPtr, pngInfoPtr));
 
 	// Read the image

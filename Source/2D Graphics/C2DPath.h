@@ -10,9 +10,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: C2DPath
 
-//	A 2DPath is made up of multiple subpaths.  Each subpath is a continuous path.  Subpaths are separated by move
-//		segments.  A 2DPath begins with a startPoint.  Each additional segment moves to a new point which can be queried
-//		as the currentPoint.
+//	A 2D Path is made up of multiple subpaths.  Each subpath is a continuous path.  Subpaths are separated by move
+//		segments.  A 2D Path begins with a startPoint.  Each additional segment moves to a new point which can be
+//		queried as the currentPoint.
 
 class C2DPathInternals;
 class C2DPath {

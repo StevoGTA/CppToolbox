@@ -14,10 +14,10 @@ class CCoreGraphicsRendererInternals {
 				// Setup
 				CGBitmapInfo	bitmapInfo;
 				switch (bitmap.getFormat()) {
-					case kBitmapFormatRGB888:	bitmapInfo = kCGImageAlphaNone;					break;
-					case kBitmapFormatRGBA8888:	bitmapInfo = kCGImageAlphaPremultipliedLast;	break;
-					case kBitmapFormatARGB8888:	bitmapInfo = kCGImageAlphaPremultipliedFirst;	break;
-					default:					bitmapInfo = 0;									break;
+					case CBitmap::kFormatRGB888:	bitmapInfo = kCGImageAlphaNone;					break;
+					case CBitmap::kFormatRGBA8888:	bitmapInfo = kCGImageAlphaPremultipliedLast;	break;
+					case CBitmap::kFormatARGB8888:	bitmapInfo = kCGImageAlphaPremultipliedFirst;	break;
+					default:						bitmapInfo = 0;									break;
 				}
 
 				// Create contextRef

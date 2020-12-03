@@ -11,7 +11,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
-static	UInt32	sGetPixelData32ForColor(EBitmapFormat bitmapFormat, const CColor& color);
+static	UInt32	sGetPixelData32ForColor(CBitmap::Format bitmapFormat, const CColor& color);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -65,10 +65,10 @@ void CBitmap::clearPixels(const S2DRectS32& rect)
 
 	CGBitmapInfo	bitmapInfo;
 	switch (getFormat()) {
-		case kBitmapFormatRGB888:	bitmapInfo = kCGImageAlphaNone;					break;
-		case kBitmapFormatRGBA8888:	bitmapInfo = kCGImageAlphaPremultipliedLast;	break;
-		case kBitmapFormatARGB8888:	bitmapInfo = kCGImageAlphaPremultipliedFirst;	break;
-		default:					bitmapInfo = 0;									break;
+		case CBitmap::kFormatRGB888:	bitmapInfo = kCGImageAlphaNone;					break;
+		case CBitmap::kFormatRGBA8888:	bitmapInfo = kCGImageAlphaPremultipliedLast;	break;
+		case CBitmap::kFormatARGB8888:	bitmapInfo = kCGImageAlphaPremultipliedFirst;	break;
+		default:						bitmapInfo = 0;									break;
 	}
 
 	CGContextRef	bitmapContextRef =
@@ -143,10 +143,10 @@ void CBitmap::setPixels(const S2DRectS32& rect, const CColor& color)
 
 		CGBitmapInfo	bitmapInfo;
 		switch (getFormat()) {
-			case kBitmapFormatRGB888:	bitmapInfo = kCGImageAlphaNone;					break;
-			case kBitmapFormatRGBA8888:	bitmapInfo = kCGImageAlphaPremultipliedLast;	break;
-			case kBitmapFormatARGB8888:	bitmapInfo = kCGImageAlphaPremultipliedFirst;	break;
-			default:					bitmapInfo = 0;									break;
+			case CBitmap::kFormatRGB888:	bitmapInfo = kCGImageAlphaNone;					break;
+			case CBitmap::kFormatRGBA8888:	bitmapInfo = kCGImageAlphaPremultipliedLast;	break;
+			case CBitmap::kFormatARGB8888:	bitmapInfo = kCGImageAlphaPremultipliedFirst;	break;
+			default:						bitmapInfo = 0;									break;
 		}
 
 		CGContextRef	bitmapContextRef =
@@ -169,12 +169,12 @@ void CBitmap::setPixels(const S2DRectS32& rect, const CColor& color)
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 sGetPixelData32ForColor(EBitmapFormat bitmapFormat, const CColor& color)
+UInt32 sGetPixelData32ForColor(CBitmap::Format bitmapFormat, const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check format
 	switch (bitmapFormat) {
-		case kBitmapFormatRGBA8888:
+		case CBitmap::kFormatRGBA8888:
 			// RGBA 8888
 			return EndianU32_BtoN(
 					((UInt32) (color.getRed() * 255.0) << 24) |
@@ -182,7 +182,7 @@ UInt32 sGetPixelData32ForColor(EBitmapFormat bitmapFormat, const CColor& color)
 					((UInt32) (color.getBlue() * 255.0) << 8) |
 					(UInt32) (color.getAlpha() * 255.0));
 
-		case kBitmapFormatARGB8888:
+		case CBitmap::kFormatARGB8888:
 			// ARGB 8888
 			return EndianU32_BtoN(
 					((UInt32) (color.getAlpha() * 255.0) << 24) |

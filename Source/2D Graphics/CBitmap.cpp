@@ -60,24 +60,24 @@ static	void	sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInter
 
 class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>{
 	public:
-		CBitmapInternals(const S2DSizeS32& size, EBitmapFormat format, const CData& pixelData, UInt16 bytesPerRow) :
+		CBitmapInternals(const S2DSizeS32& size, CBitmap::Format format, const CData& pixelData, UInt16 bytesPerRow) :
 			TCopyOnWriteReferenceCountable(),
 					mSize(size), mFormat(format), mBytesPerRow(bytesPerRow)
 			{
 				// Finish setup
 				switch (mFormat) {
-					case kBitmapFormatRGBA4444:
-					case kBitmapFormatRGBA5551:
-					case kBitmapFormatRGB565:
+					case CBitmap::kFormatRGBA4444:
+					case CBitmap::kFormatRGBA5551:
+					case CBitmap::kFormatRGB565:
 						mBytesPerPixel = 2;
 						break;
 
-					case kBitmapFormatRGB888:
+					case CBitmap::kFormatRGB888:
 						mBytesPerPixel = 3;
 						break;
 
-					case kBitmapFormatRGBA8888:
-					case kBitmapFormatARGB8888:
+					case CBitmap::kFormatRGBA8888:
+					case CBitmap::kFormatARGB8888:
 						mBytesPerPixel = 4;
 						break;
 				}
@@ -94,7 +94,7 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 					mBytesPerPixel(other.mBytesPerPixel), mBytesPerRow(other.mBytesPerRow)
 			{}
 
-		EBitmapFormat	mFormat;
+		CBitmap::Format	mFormat;
 		S2DSizeS32		mSize;
 		CData			mPixelData;
 		UInt32			mBytesPerPixel;
@@ -108,7 +108,7 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const S2DSizeS32& size, EBitmapFormat format, UInt16 bytesPerRow)
+CBitmap::CBitmap(const S2DSizeS32& size, Format format, UInt16 bytesPerRow)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -122,7 +122,7 @@ CBitmap::CBitmap(const S2DSizeS32& size, EBitmapFormat format, UInt16 bytesPerRo
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const S2DSizeS32& size, EBitmapFormat format, const CData& pixelData, UInt16 bytesPerRow)
+CBitmap::CBitmap(const S2DSizeS32& size, Format format, const CData& pixelData, UInt16 bytesPerRow)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -136,7 +136,7 @@ CBitmap::CBitmap(const S2DSizeS32& size, EBitmapFormat format, const CData& pixe
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
+CBitmap::CBitmap(const CBitmap& other, Format format)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -144,20 +144,20 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 
 	// Convert
 	switch (other.mInternals->mFormat) {
-		case kBitmapFormatRGB565:
+		case kFormatRGB565:
 			// RGB565 =>
 			switch (format) {
-				case kBitmapFormatRGB888:
+				case kFormatRGB888:
 					// => RGB888
 					sConvertRGB565ToRGB888(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatRGBA8888:
+				case kFormatRGBA8888:
 					// => RGBA8888
 					sConvertRGB565ToRGBA8888(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatARGB8888:
+				case kFormatARGB8888:
 					// => ARGB8888
 					sConvertRGB565ToARGB8888(*other.mInternals, *mInternals);
 					break;
@@ -168,15 +168,15 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 			}
 			break;
 
-		case kBitmapFormatRGBA4444:
+		case kFormatRGBA4444:
 			// RGBA4444 =>
 			switch (format) {
-				case kBitmapFormatRGBA8888:
+				case kFormatRGBA8888:
 					// => RGBA8888
 					sConvertRGBA4444ToRGBA8888(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatARGB8888:
+				case kFormatARGB8888:
 					// => ARGB8888
 					sConvertRGBA4444ToARGB8888(*other.mInternals, *mInternals);
 					break;
@@ -187,15 +187,15 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 			}
 			break;
 
-		case kBitmapFormatRGBA5551:
+		case kFormatRGBA5551:
 			// RGBA5551 =>
 			switch (format) {
-				case kBitmapFormatRGBA8888:
+				case kFormatRGBA8888:
 					// => RGBA8888
 					sConvertRGBA5551ToRGBA8888(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatARGB8888:
+				case kFormatARGB8888:
 					// => ARGB8888
 					sConvertRGBA5551ToARGB8888(*other.mInternals, *mInternals);
 					break;
@@ -206,30 +206,30 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 			}
 			break;
 
-		case kBitmapFormatRGB888:
+		case kFormatRGB888:
 			// RGB888 =>
 			switch (format) {
-				case kBitmapFormatRGB565:
+				case kFormatRGB565:
 					// => RGB565
 					sConvertRGB888ToRGB565(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatRGBA4444:
+				case kFormatRGBA4444:
 					// => RGBA4444
 					sConvertRGB888ToRGBA4444(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatRGBA5551:
+				case kFormatRGBA5551:
 					// => RGBA5551
 					sConvertRGB888ToRGBA5551(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatRGBA8888:
+				case kFormatRGBA8888:
 					// => RGBA8888
 					sConvertRGB888ToRGBA8888(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatARGB8888:
+				case kFormatARGB8888:
 					// => ARGB8888
 					sConvertRGB888ToARGB8888(*other.mInternals, *mInternals);
 					break;
@@ -240,25 +240,25 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 			}
 			break;
 
-		case kBitmapFormatRGBA8888:
+		case kFormatRGBA8888:
 			// RGBA8888 =>
 			switch (format) {
-				case kBitmapFormatRGB565:
+				case kFormatRGB565:
 					// => RGB565
 					sConvertRGBA8888ToRGB565(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatRGBA4444:
+				case kFormatRGBA4444:
 					// => RGBA4444
 					sConvertRGBA8888ToRGBA4444(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatRGBA5551:
+				case kFormatRGBA5551:
 					// => RGBA5551
 					sConvertRGBA8888ToRGBA5551(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatARGB8888:
+				case kFormatARGB8888:
 					// => ARGB8888
 					sConvertRGBA8888ToARGB8888(*other.mInternals, *mInternals);
 					break;
@@ -269,20 +269,20 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 			}
 			break;
 
-		case kBitmapFormatARGB8888:
+		case kFormatARGB8888:
 			// ARGB8888 =>
 			switch (format) {
-				case kBitmapFormatRGBA4444:
+				case kFormatRGBA4444:
 					// => RGBA4444
 					sConvertARGB8888ToRGBA4444(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatRGBA5551:
+				case kFormatRGBA5551:
 					// => RGBA5551
 					sConvertARGB8888ToRGBA5551(*other.mInternals, *mInternals);
 					break;
 
-				case kBitmapFormatRGBA8888:
+				case kFormatRGBA8888:
 					// => RGBA8888
 					sConvertARGB8888ToRGBA8888(*other.mInternals, *mInternals);
 					break;
@@ -296,20 +296,20 @@ CBitmap::CBitmap(const CBitmap& other, EBitmapFormat format)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
+CBitmap::CBitmap(const CBitmap& other, RotationOperation rotationOperation)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	S2DSizeS32	newSize;
 	switch (rotationOperation & 0x03) {
-		case kBitmapRotationOperationRotateNone:
-		case kBitmapRotationOperationRotate180:
+		case kRotationOperationRotateNone:
+		case kRotationOperationRotate180:
 			// Flipping
 			newSize = other.mInternals->mSize;
 			break;
 
-		case kBitmapRotationOperationRotate90:
-		case kBitmapRotationOperationRotate270:
+		case kRotationOperationRotate90:
+		case kRotationOperationRotate270:
 			// Rotating
 			newSize = S2DSizeS32(other.mInternals->mSize.mHeight, other.mInternals->mSize.mWidth);
 			break;
@@ -326,7 +326,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 	SInt32		bytesPerRow = other.mInternals->mBytesPerRow;
 	S2DSizeS32	size = other.mInternals->mSize;
 	switch ((UInt32) rotationOperation) {
-		case kBitmapRotationOperationRotateNone:
+		case kRotationOperationRotateNone:
 			// bytePtr = y * bytesPerRow + x * bytesPerPixel
 			// bytePtr = bytesPerRow * y + bytesPerPixel * x + 0
 			A = bytesPerRow;
@@ -334,7 +334,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			C = 0;
 			break;
 
-		case kBitmapRotationOperationRotateNone | kBitmapRotationOperationFlipLR:
+		case kRotationOperationRotateNone | kRotationOperationFlipLR:
 			// bytePtr = y * bytesPerRow + ((width - 1) - x) * bytesPerPixel
 			// bytePtr = y * bytesPerRow + (width - 1) * bytesPerPixel - x * bytesPerPixel
 			// bytePtr = bytesPerRow * y - bytesPerPixel * x + (width - 1) * bytesPerPixel
@@ -343,7 +343,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			C = (size.mWidth - 1) * bytesPerPixel;
 			break;
 
-		case kBitmapRotationOperationRotate90:
+		case kRotationOperationRotate90:
 			// bytePtr = x * bytesPerRow + ((height - 1) - y) * bytesPerPixel
 			// bytePtr = x * bytesPerRow + (height - 1) * bytesPerPixel - y * bytesPerPixel
 			// bytePtr = -bytesPerPixel * y + bytesPerRow * x + (height - 1) * bytesPerPixel
@@ -352,7 +352,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			C = (size.mHeight - 1) * bytesPerPixel;
 			break;
 
-		case kBitmapRotationOperationRotate90 | kBitmapRotationOperationFlipLR:
+		case kRotationOperationRotate90 | kRotationOperationFlipLR:
 			// bytePtr = x * bytesPerRow + y * bytesPerPixel
 			// bytePtr = bytesPerPixel * y + bytesPerRow * x + 0
 			A = bytesPerPixel;
@@ -360,7 +360,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			C = 0;
 			break;
 
-		case kBitmapRotationOperationRotate180:
+		case kRotationOperationRotate180:
 			// bytePtr = ((height - 1) - y) * bytesPerRow + ((width - 1) - x) * bytesPerPixel
 			// bytePtr = (height - 1) * bytesPerRow - y * bytesPerRow + (width - 1) * bytesPerPixel - x * bytesPerPixel
 			// bytePtr = -bytesPerRow * y -bytesPerPixel * x + (height - 1) * bytesPerRow + (width - 1) * bytesPerPixel
@@ -369,7 +369,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			C = (size.mHeight - 1) * bytesPerRow + (size.mWidth - 1) * bytesPerPixel;
 			break;
 
-		case kBitmapRotationOperationRotate180 | kBitmapRotationOperationFlipLR:
+		case kRotationOperationRotate180 | kRotationOperationFlipLR:
 			// bytePtr = ((height - 1) - y) * bytesPerRow + x * bytesPerPixel
 			// bytePtr = (height - 1) * bytesPerRow - y * bytesPerRow + x * bytesPerPixel
 			// bytePtr = -bytesPerRow * y + bytesPerPixel * x + (height - 1) * bytesPerRow;
@@ -378,7 +378,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			C = (size.mHeight - 1) * bytesPerRow;
 			break;
 
-		case kBitmapRotationOperationRotate270:
+		case kRotationOperationRotate270:
 			// bytePtr = ((width - 1) - x) * bytesPerRow + y * bytesPerPixel
 			// bytePtr = (width - 1) * bytesPerRow - x * bytesPerRow + y * bytesPerPixel
 			// bytePtr = bytesPerPixel * y - bytesPerRow * x + (width - 1) * bytesPerRow;
@@ -387,7 +387,7 @@ CBitmap::CBitmap(const CBitmap& other, UInt32 rotationOperation)
 			C = (size.mWidth - 1) * bytesPerRow;
 			break;
 
-		case kBitmapRotationOperationRotate270 | kBitmapRotationOperationFlipLR:
+		case kRotationOperationRotate270 | kRotationOperationFlipLR:
 			// bytePtr = ((width - 1) - x) * bytesPerRow + ((height - 1) - y) * bytesPerPixel
 			// bytePtr = (width - 1) * bytesPerRow - x * bytesPerRow + (height - 1) *  bytesPerPixel - y * bytesPerPixel
 			// bytePtr = -bytesPerPixel * y - bytesPerRow * x + (width - 1) * bytesPerRow + (height - 1) * bytesPerPixel
@@ -446,7 +446,7 @@ CData& CBitmap::getPixelData() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-EBitmapFormat CBitmap::getFormat() const
+CBitmap::Format CBitmap::getFormat() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mFormat;
@@ -487,7 +487,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 					(UInt8*) mInternals->mPixelData.getMutableBytePtr() + point.mY * mInternals->mBytesPerRow +
 							point.mX * mInternals->mBytesPerPixel;
 	switch (mInternals->mFormat) {
-		case kBitmapFormatRGBA4444: {
+		case kFormatRGBA4444: {
 			// RGBA4444
 			SPixelDataRGBA4444*	pixelData = (SPixelDataRGBA4444*) pixelDataPtr;
 			pixelData->mColor.mR = (UInt16) (color.getRed() * 15.0);
@@ -496,7 +496,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 			pixelData->mColor.mA = (UInt16) (color.getAlpha() * 15.0);
 			} break;
 
-		case kBitmapFormatRGBA5551: {
+		case kFormatRGBA5551: {
 			// RGBA5551
 			SPixelDataRGBA5551*	pixelData = (SPixelDataRGBA5551*) pixelDataPtr;
 			pixelData->mColor.mR = (UInt16) (color.getRed() * 31.0);
@@ -505,7 +505,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 			pixelData->mColor.mA = (UInt16) (color.getAlpha() * 1.0);
 			} break;
 
-		case kBitmapFormatRGB565: {
+		case kFormatRGB565: {
 			// RGB565
 			SPixelDataRGB565*	pixelData = (SPixelDataRGB565*) pixelDataPtr;
 			pixelData->mColor.mR = (UInt16) (color.getRed() * 31.0);
@@ -513,7 +513,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 			pixelData->mColor.mB = (UInt16) (color.getBlue() * 31.0);
 			} break;
 
-		case kBitmapFormatRGB888: {
+		case kFormatRGB888: {
 			// RGB888
 			SPixelDataRGB888*	pixelData = (SPixelDataRGB888*) pixelDataPtr;
 			pixelData->mColor.mR = (UInt16) (color.getRed() * 255.0);
@@ -521,7 +521,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 			pixelData->mColor.mB = (UInt16) (color.getBlue() * 255.0);
 			} break;
 
-		case kBitmapFormatRGBA8888: {
+		case kFormatRGBA8888: {
 			// RGBA8888
 			SPixelDataRGBA8888*	pixelData = (SPixelDataRGBA8888*) pixelDataPtr;
 			pixelData->mColor.mR = (UInt16) (color.getRed() * 255.0);
@@ -530,7 +530,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 			pixelData->mColor.mA = (UInt16) (color.getAlpha() * 255.0);
 			} break;
 
-		case kBitmapFormatARGB8888: {
+		case kFormatARGB8888: {
 			// ARGB8888
 			SPixelDataARGB8888*	pixelData = (SPixelDataARGB8888*) pixelDataPtr;
 			pixelData->mColor.mA = (UInt16) (color.getAlpha() * 255.0);
