@@ -16,8 +16,8 @@ class CPreferencesInternals {
 					CPreferencesInternals() :
 						mApplicationID((CFStringRef) ::CFRetain(kCFPreferencesCurrentApplication)), mDelayWriteCount(0)
 						{}
-					CPreferencesInternals(const SPreferencesReference& preferencesReference) :
-						mApplicationID(CCoreFoundation::createStringRefFrom(preferencesReference.mApplicationID)),
+					CPreferencesInternals(const CPreferences::Reference& reference) :
+						mApplicationID(CCoreFoundation::createStringRefFrom(reference.mApplicationID)),
 								mDelayWriteCount(0)
 						{}
 					~CPreferencesInternals()
@@ -25,7 +25,7 @@ class CPreferencesInternals {
 							::CFRelease(mApplicationID);
 						}
 
-		CFTypeRef	copyFrom(const SPref& pref)
+		CFTypeRef	copyFrom(const CPreferences::Pref& pref)
 						{
 							// Check for no key
 							if (pref.mKeyString == nil)
@@ -50,7 +50,7 @@ class CPreferencesInternals {
 
 							return typeRef;
 						}
-		void		setTo(const SPref& pref, CFTypeRef valueTypeRef)
+		void		setTo(const CPreferences::Pref& pref, CFTypeRef valueTypeRef)
 						{
 							// Check for no key
 							if (pref.mKeyString == nil)
@@ -71,7 +71,7 @@ class CPreferencesInternals {
 						}
 
 		CFStringRef					mApplicationID;
-		OI<SPreferencesReference>	mAlternatePreferencesReference;
+		OI<CPreferences::Reference>	mAlternatePreferencesReference;
 		UInt32						mDelayWriteCount;
 };
 
@@ -93,10 +93,10 @@ CPreferences::CPreferences()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CPreferences::CPreferences(const SPreferencesReference& preferencesReference)
+CPreferences::CPreferences(const Reference& reference)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CPreferencesInternals(preferencesReference);
+	mInternals = new CPreferencesInternals(reference);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ CPreferences::~CPreferences()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CPreferences::hasValue(const SPref& pref)
+bool CPreferences::hasValue(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFTypeRef	typeRef = mInternals->copyFrom(pref);
@@ -122,7 +122,7 @@ bool CPreferences::hasValue(const SPref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CData> CPreferences::getDataArray(const SPref& pref)
+TNArray<CData> CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -143,7 +143,7 @@ TNArray<CData> CPreferences::getDataArray(const SPref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CDictionary> CPreferences::getDictionaryArray(const SPref& pref)
+TNArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -164,7 +164,7 @@ TNArray<CDictionary> CPreferences::getDictionaryArray(const SPref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<OSType> CPreferences::getOSTypeArray(const SPref& pref)
+TNumericArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -193,7 +193,7 @@ TNumericArray<OSType> CPreferences::getOSTypeArray(const SPref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CPreferences::getData(const SPref& pref)
+CData CPreferences::getData(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDataRef	dataRef = (CFDataRef) mInternals->copyFrom(pref);
@@ -207,7 +207,7 @@ CData CPreferences::getData(const SPref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CPreferences::getDictionary(const SPref& pref)
+CDictionary CPreferences::getDictionary(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) mInternals->copyFrom(pref);
@@ -221,7 +221,7 @@ CDictionary CPreferences::getDictionary(const SPref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CPreferences::getString(const SStringPref& pref)
+CString CPreferences::getString(const StringPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFStringRef	stringRef = (CFStringRef) mInternals->copyFrom(pref);
@@ -235,7 +235,7 @@ CString CPreferences::getString(const SStringPref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float32 CPreferences::getFloat32(const SFloat32Pref& pref)
+Float32 CPreferences::getFloat32(const Float32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
@@ -250,7 +250,7 @@ Float32 CPreferences::getFloat32(const SFloat32Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float64 CPreferences::getFloat64(const SFloat64Pref& pref)
+Float64 CPreferences::getFloat64(const Float64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
@@ -265,7 +265,7 @@ Float64 CPreferences::getFloat64(const SFloat64Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt32 CPreferences::getSInt32(const SSInt32Pref& pref)
+SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
@@ -280,7 +280,7 @@ SInt32 CPreferences::getSInt32(const SSInt32Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CPreferences::getUInt32(const SUInt32Pref& pref)
+UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
@@ -295,7 +295,7 @@ UInt32 CPreferences::getUInt32(const SUInt32Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CPreferences::getUInt64(const SUInt64Pref& pref)
+UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
@@ -310,7 +310,7 @@ UInt64 CPreferences::getUInt64(const SUInt64Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UniversalTimeInterval CPreferences::getUniversalTimeInterval(const SUniversalTimeIntervalPref& pref)
+UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTimeIntervalPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
@@ -325,7 +325,7 @@ UniversalTimeInterval CPreferences::getUniversalTimeInterval(const SUniversalTim
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const TArray<CData>& array)
+void CPreferences::set(const Pref& pref, const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -347,7 +347,7 @@ void CPreferences::set(const SPref& pref, const TArray<CData>& array)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const TArray<CDictionary>& array)
+void CPreferences::set(const Pref& pref, const TArray<CDictionary>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -369,7 +369,7 @@ void CPreferences::set(const SPref& pref, const TArray<CDictionary>& array)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const TNumericArray<OSType>& array)
+void CPreferences::set(const Pref& pref, const TNumericArray<OSType>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -392,7 +392,7 @@ void CPreferences::set(const SPref& pref, const TNumericArray<OSType>& array)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const CData& data)
+void CPreferences::set(const Pref& pref, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDataRef	dataRef = CCoreFoundation::createDataRefFrom(data);
@@ -401,7 +401,7 @@ void CPreferences::set(const SPref& pref, const CData& data)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const CDictionary& dictionary)
+void CPreferences::set(const Pref& pref, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDictionaryRef	dictionaryRef = CCoreFoundation::createDictionaryRefFrom(dictionary);
@@ -410,7 +410,7 @@ void CPreferences::set(const SPref& pref, const CDictionary& dictionary)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SStringPref& pref, const CString& string)
+void CPreferences::set(const StringPref& pref, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFStringRef	stringRef = CCoreFoundation::createStringRefFrom(string);
@@ -419,7 +419,7 @@ void CPreferences::set(const SStringPref& pref, const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SFloat32Pref& pref, Float32 value)
+void CPreferences::set(const Float32Pref& pref, Float32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create storage
@@ -431,7 +431,7 @@ void CPreferences::set(const SFloat32Pref& pref, Float32 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SFloat64Pref& pref, Float64 value)
+void CPreferences::set(const Float64Pref& pref, Float64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create storage
@@ -443,7 +443,7 @@ void CPreferences::set(const SFloat64Pref& pref, Float64 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SSInt32Pref& pref, SInt32 value)
+void CPreferences::set(const SInt32Pref& pref, SInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create storage
@@ -456,7 +456,7 @@ void CPreferences::set(const SSInt32Pref& pref, SInt32 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SUInt32Pref& pref, UInt32 value)
+void CPreferences::set(const UInt32Pref& pref, UInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create storage
@@ -469,7 +469,7 @@ void CPreferences::set(const SUInt32Pref& pref, UInt32 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
+void CPreferences::set(const UInt64Pref& pref, UInt64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create storage
@@ -482,7 +482,7 @@ void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SUniversalTimeIntervalPref& pref, UniversalTimeInterval value)
+void CPreferences::set(const UniversalTimeIntervalPref& pref, UniversalTimeInterval value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create storage
@@ -494,7 +494,7 @@ void CPreferences::set(const SUniversalTimeIntervalPref& pref, UniversalTimeInte
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::remove(const SPref& pref)
+void CPreferences::remove(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->setTo(pref, nil);
@@ -515,8 +515,8 @@ void CPreferences::endGroupSet()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::setAlternate(const SPreferencesReference& preferencesReference)
+void CPreferences::setAlternate(const Reference& reference)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mAlternatePreferencesReference = OI<SPreferencesReference>(preferencesReference);
+	mInternals->mAlternatePreferencesReference = OI<Reference>(reference);
 }

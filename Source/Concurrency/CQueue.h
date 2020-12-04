@@ -12,7 +12,7 @@
 
 class CSRSWBIPQueueInternals;
 class CSRSWBIPQueue {
-	// Types
+	// Structs
 	public:
 		struct SReadBufferInfo {
 					// Lifecycle methods
@@ -125,7 +125,7 @@ template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 
 class CSRSWBIPSegmentedQueueInternals;
 class CSRSWBIPSegmentedQueue {
-	// Types
+	// Structs
 	public:
 		struct SReadBufferInfo {
 					// Lifecycle methods

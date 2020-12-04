@@ -25,8 +25,6 @@ struct SError {
 			CString	getDescription() const
 						{ return mDomain + CString(OSSTR("/")) + CString(mCode) + CString(OSSTR(" (")) +
 								mDefaultLocalizedDescription + CString(OSSTR(")")); }
-//			CString	getLocalizationKey() const
-//						{ return mDomain + CString(OSSTR("/")) + CString(mCode); }
 
 			bool	operator==(const SError& other) const
 						{ return (mDomain == other.mDomain) && (mCode == other.mCode); }

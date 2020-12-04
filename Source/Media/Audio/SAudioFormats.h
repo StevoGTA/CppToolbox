@@ -153,7 +153,7 @@ struct SAudioStorageFormat {
 // MARK: - SAudioProcessingFormat
 
 struct SAudioProcessingFormat {
-	// Types
+	// Enums
 	enum SampleType {
 		kSampleTypeFloat,
 		kSampleTypeSignedInteger,
@@ -222,9 +222,9 @@ struct SAudioProcessingFormat {
 // MARK: - SAudioProcessingSetup
 
 struct SAudioProcessingSetup {
-	// Types
+	// Structs
 	struct SBitsInfo {
-		// Types
+		// Enums
 		enum Option {
 			kSpecified,
 			kUnspecified,
@@ -259,7 +259,7 @@ struct SAudioProcessingSetup {
 	};
 
 	struct SSampleRateInfo {
-		// Types
+		// Enums
 		enum Option {
 			kSpecified,
 			kUnspecified,
@@ -294,7 +294,7 @@ struct SAudioProcessingSetup {
 	};
 
 	struct SChannelMapInfo {
-		// Types
+		// Enums
 		enum Option {
 			kSpecified,
 			kUnspecified,

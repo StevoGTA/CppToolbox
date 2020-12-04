@@ -12,7 +12,7 @@
 // MARK:  CMediaEngine
 
 class CMediaEngine {
-	// Types
+	// Structs
 	public:
 		struct SConnectResult {
 

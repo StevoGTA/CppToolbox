@@ -86,7 +86,7 @@ class CBPLDictionaryInfo {
 	public:
 										// Lifecycle methods
 										CBPLDictionaryInfo(CBPLDataSource& bplDataSource,
-												CDictionaryKeyCount keyCount) :
+												CDictionary::KeyCount keyCount) :
 											mBPLDataSource(bplDataSource), mKeyCount(keyCount)
 											{
 												// Setup
@@ -98,7 +98,7 @@ class CBPLDictionaryInfo {
 												::memset(mDictionaryValues, 0, sizeof(SDictionaryValue*) * mKeyCount);
 
 												// Setup keys
-												for (CDictionaryKeyCount i = 0; i < mKeyCount; i++) {
+												for (CDictionary::KeyCount i = 0; i < mKeyCount; i++) {
 													// Setup key
 													UInt64	objectIndex = mBPLDataSource.readIndex();
 													mKeys[i] = mBPLDataSource.mStrings[objectIndex];
@@ -106,7 +106,7 @@ class CBPLDictionaryInfo {
 												}
 
 												// Setup values
-												for (CDictionaryKeyCount i = 0; i < mKeyCount; i++)
+												for (CDictionary::KeyCount i = 0; i < mKeyCount; i++)
 													// Read value index
 													mValueIndexes[i] = mBPLDataSource.readIndex();
 
@@ -120,7 +120,7 @@ class CBPLDictionaryInfo {
 												DeleteArray(mKeys);
 												DeleteArray(mValueIndexes);
 
-												for (CDictionaryKeyCount i = 0; i < mKeyCount; i++) {
+												for (CDictionary::KeyCount i = 0; i < mKeyCount; i++) {
 													// Check if have value
 													if (mDictionaryValues[i] != nil) {
 														// Dispose
@@ -134,13 +134,13 @@ class CBPLDictionaryInfo {
 											}
 
 										// Class methods
-		static	CDictionary				dictionaryWith(CBPLDataSource& bplDataSource, CDictionaryKeyCount keyCount)
+		static	CDictionary				dictionaryWith(CBPLDataSource& bplDataSource, CDictionary::KeyCount keyCount)
 											{
 												return CDictionary(
-														SDictionaryProcsInfo(getKeyCount, getValue, disposeUserData,
+														CDictionary::ProcsInfo(getKeyCount, getValue, disposeUserData,
 																new CBPLDictionaryInfo(bplDataSource, keyCount)));
 											}
-		static	CDictionaryKeyCount		getKeyCount(void* userData)
+		static	CDictionary::KeyCount	getKeyCount(void* userData)
 											{
 												// Get CBPLDictionaryInfo
 												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
@@ -154,7 +154,8 @@ class CBPLDictionaryInfo {
 
 												// Iterate keys
 												UInt32	keyHash = CHasher::getValueForHashable(key);
-												for (CDictionaryKeyCount i = 0; i < bplDictionaryInfo->mKeyCount; i++) {
+												for (CDictionary::KeyCount i = 0;
+														i < bplDictionaryInfo->mKeyCount; i++) {
 													// Compare this key
 													if ((bplDictionaryInfo->mKeyHashes[i] == keyHash) &&
 															(*bplDictionaryInfo->mKeys[i] == key)) {
@@ -181,12 +182,12 @@ class CBPLDictionaryInfo {
 												Delete(bplDictionaryInfo);
 											}
 
-		CBPLDataSource&		mBPLDataSource;
-		CDictionaryKeyCount	mKeyCount;
-		UInt32*				mKeyHashes;
-		CString**			mKeys;
-		UInt64*				mValueIndexes;
-		SDictionaryValue**	mDictionaryValues;
+		CBPLDataSource&			mBPLDataSource;
+		CDictionary::KeyCount	mKeyCount;
+		UInt32*					mKeyHashes;
+		CString**				mKeys;
+		UInt64*					mValueIndexes;
+		SDictionaryValue**		mDictionaryValues;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -231,7 +232,8 @@ CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 object
 
 		// Create string
 		mStrings[i] =
-				new CString(data, (marker == kMarkerTypeStringASCII) ? kStringEncodingASCII : kStringEncodingUTF16BE);
+				new CString(data,
+						(marker == kMarkerTypeStringASCII) ? CString::kEncodingASCII : CString::kEncodingUTF16BE);
 	}
 }
 
@@ -355,7 +357,7 @@ CDictionary CBPLDataSource::readDictionary(UInt64 objectIndex)
 	UInt64	count;
 	readMarker(objectIndex, OR<UInt64>(count));
 
-	return CBPLDictionaryInfo::dictionaryWith(*this, (CDictionaryKeyCount) count);
+	return CBPLDictionaryInfo::dictionaryWith(*this, (CDictionary::KeyCount) count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

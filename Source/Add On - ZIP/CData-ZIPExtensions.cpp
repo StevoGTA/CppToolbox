@@ -10,7 +10,7 @@
 // MARK: CData_ZIPExtensions
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CDataSize> uncompressedDataSize)
+CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::Size> uncompressedDataSize)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	UInt32	sourceSize = data.getSize();
@@ -47,7 +47,7 @@ CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CDataSize> 
 	if (zLibStatus != Z_OK)
 		return CData::mEmpty;
 
-	decompressedData.setSize((CDataSize) strm.total_out);
+	decompressedData.setSize((CData::Size) strm.total_out);
 	
 	return decompressedData;
 }

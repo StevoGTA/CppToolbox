@@ -11,7 +11,7 @@
 // MARK: C2DRenderer
 
 class C2DRenderer {
-	// Types
+	// Enums
 	public:
 		enum StrokeCapStyle {
 			kStrokeCapStyleRound,

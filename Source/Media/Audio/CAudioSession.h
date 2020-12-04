@@ -10,7 +10,7 @@
 // MARK:  CAudioSession
 
 class CAudioSession {
-	// Types
+	// Enums
 	public:
 		enum Category {
 			kPlaybackMixWithOthers,

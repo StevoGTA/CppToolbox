@@ -33,25 +33,26 @@ struct SSetItemInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSetIteratorInfo
 
-struct CSetIteratorInfo : public CIteratorInfo {
+struct CSetIteratorInfo : public CIterator::Info {
 	// Methods
 	public:
-					// Lifecycle methods
-					CSetIteratorInfo(const CSetInternals& internals, UInt32 initialReference) :
-						CIteratorInfo(), mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0),
-								mCurrentItemInfo(nil)
-						{}
+						// Lifecycle methods
+						CSetIteratorInfo(const CSetInternals& internals, UInt32 initialReference) :
+							CIterator::Info(),
+									mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0),
+									mCurrentItemInfo(nil)
+							{}
 
-					// CIteratorInfo methods
-	CIteratorInfo*	copy()
-						{
-							// Make copy
-							CSetIteratorInfo*	iteratorInfo = new CSetIteratorInfo(mInternals, mInitialReference);
-							iteratorInfo->mCurrentIndex = mCurrentIndex;
-							iteratorInfo->mCurrentItemInfo = mCurrentItemInfo;
+						// CIterator::Info methods
+	CIterator::Info*	copy()
+							{
+								// Make copy
+								CSetIteratorInfo*	iteratorInfo = new CSetIteratorInfo(mInternals, mInitialReference);
+								iteratorInfo->mCurrentIndex = mCurrentIndex;
+								iteratorInfo->mCurrentItemInfo = mCurrentItemInfo;
 
-							return iteratorInfo;
-						}
+								return iteratorInfo;
+							}
 
 	// Properties
 	const	CSetInternals&	mInternals;
@@ -289,7 +290,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 												return TIteratorS<CHashable>(firstValue, iteratorAdvance, *iteratorInfo);
 											}
 
-		static	void*					iteratorAdvance(CIteratorInfo& iteratorInfo)
+		static	void*					iteratorAdvance(CIterator::Info& iteratorInfo)
 											{
 												// Setup
 												CSetIteratorInfo&	setIteratorInfo = (CSetIteratorInfo&) iteratorInfo;
@@ -328,7 +329,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 											}
 
 		bool			mOwnsItems;
-		CSetItemCount	mCount;
+		CSet::ItemCount	mCount;
 		UInt32			mReference;
 
 		SSetItemInfo**	mItemInfos;
@@ -385,7 +386,7 @@ bool CSet::contains(const CHashable& hashable) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSetItemCount CSet::getCount() const
+CSet::ItemCount CSet::getCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mCount;
@@ -419,7 +420,7 @@ TIteratorS<CHashable> CSet::getIterator() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSet& CSet::apply(CSetApplyProc applyProc, void* userData)
+CSet& CSet::apply(ApplyProc applyProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all hashables

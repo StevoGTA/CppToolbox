@@ -7,12 +7,7 @@
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Procs
-
-typedef	void	(*CLogProc)(const CString& string, void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Macros
+// MARK: Macros
 
 #define	LogWarning(warning, when)	CLogServices::logWarning(warning, when, __FILE__, __func__, __LINE__)
 #define	LogError(error, when)	CLogServices::logError(error, when, __FILE__, __func__, __LINE__)
@@ -84,6 +79,10 @@ class CLogFile {
 // MARK: - CLogServices
 
 class CLogServices {
+	// Procs
+	public:
+		typedef	void	(*LogProc)(const CString& string, void* userData);
+
 	// Methods
 	public:
 								// Class methods
@@ -102,7 +101,7 @@ class CLogServices {
 										const char* proc, UInt32 line)
 									{ logError(error.getDescription(), message, file, proc, line); }
 
-		static	void			addLogMessageProc(CLogProc logProc, void* logProcUserData = nil);
-		static	void			addLogWarningProc(CLogProc logProc, void* logProcUserData = nil);
-		static	void			addLogErrorProc(CLogProc logProc, void* logProcUserData = nil);
+		static	void			addLogMessageProc(LogProc logProc, void* userData = nil);
+		static	void			addLogWarningProc(LogProc logProc, void* userData = nil);
+		static	void			addLogErrorProc(LogProc logProc, void* userData = nil);
 };

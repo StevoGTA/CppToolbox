@@ -10,16 +10,16 @@
 struct SNotificationObserverFullInfo {
 			// Lifecycle methods
 			SNotificationObserverFullInfo(const void* senderRef,
-					const SNotificationObserverInfo& notificationObserverInfo) :
-				mSenderRef(senderRef), mNotificationObserverInfo(notificationObserverInfo)
+					const CNotificationCenter::ObserverInfo& observerInfo) :
+				mSenderRef(senderRef), mObserverInfo(observerInfo)
 				{}
 			SNotificationObserverFullInfo(const SNotificationObserverFullInfo& other) :
-				mSenderRef(other.mSenderRef), mNotificationObserverInfo(other.mNotificationObserverInfo)
+				mSenderRef(other.mSenderRef), mObserverInfo(other.mObserverInfo)
 				{}
 
 	// Properties
-	const	void*						mSenderRef;
-			SNotificationObserverInfo	mNotificationObserverInfo;
+	const	void*								mSenderRef;
+			CNotificationCenter::ObserverInfo	mObserverInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -31,11 +31,10 @@ class CNotificationCenterInternals {
 				CNotificationCenterInternals() {}
 
 		void	registerObserver(const CString& notificationName, const void* senderRef,
-						const SNotificationObserverInfo& notificationObserverInfo)
+						const CNotificationCenter::ObserverInfo& observerInfo)
 					{
 						// Setup
-						SNotificationObserverFullInfo	notificationObserverFullInfo(senderRef,
-																notificationObserverInfo);
+						SNotificationObserverFullInfo	notificationObserverFullInfo(senderRef, observerInfo);
 
 						// Get existing observer infos
 						OR<TNArray<SNotificationObserverFullInfo> >	notificationObserverFullInfos =
@@ -95,8 +94,7 @@ class CNotificationCenterInternals {
 						// Iterate array
 						for (CArray::ItemIndex i = notificationObserverFullInfos.getCount(); i > 0; i--) {
 							// Check for match
-							if (notificationObserverFullInfos[i - 1].mNotificationObserverInfo.mObserverRef ==
-									observerRef)
+							if (notificationObserverFullInfos[i - 1].mObserverInfo.mObserverRef == observerRef)
 								// Match
 								notificationObserverFullInfos.removeAtIndex(i - 1);
 						}
@@ -134,20 +132,19 @@ CNotificationCenter::~CNotificationCenter()
 
 //----------------------------------------------------------------------------------------------------------------------
 void CNotificationCenter::registerObserver(const CString& notificationName, const void* senderRef,
-		const SNotificationObserverInfo& notificationObserverInfo)
+		const ObserverInfo& observerInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add observer
-	mInternals->registerObserver(notificationName, senderRef, notificationObserverInfo);
+	mInternals->registerObserver(notificationName, senderRef, observerInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::registerObserver(const CString& notificationName,
-		const SNotificationObserverInfo& notificationObserverInfo)
+void CNotificationCenter::registerObserver(const CString& notificationName, const ObserverInfo& observerInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add observer
-	mInternals->registerObserver(notificationName, nil, notificationObserverInfo);
+	mInternals->registerObserver(notificationName, nil, observerInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -188,7 +185,7 @@ void CNotificationCenter::send(const CString& notificationName, const void* send
 			return;
 
 		// Call proc
-		notificationObserverFullInfo.mNotificationObserverInfo.callProc(notificationName, senderRef, info);
+		notificationObserverFullInfo.mObserverInfo.callProc(notificationName, senderRef, info);
 	}
 }
 

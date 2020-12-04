@@ -5,8 +5,8 @@
 #include "CUUID.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-SUUIDBytes eCreateUUIDBytes();
-SUUIDBytes eCreateUUIDBytes()
+CUUID::Bytes eCreateUUIDBytes();
+CUUID::Bytes eCreateUUIDBytes()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create new UUID and get raw bytes
@@ -14,5 +14,5 @@ SUUIDBytes eCreateUUIDBytes()
 	CFUUIDBytes	uuidBytes = ::CFUUIDGetUUIDBytes(uuidRef);
 	::CFRelease(uuidRef);
 
-	return *((SUUIDBytes*) &uuidBytes);
+	return *((CUUID::Bytes*) &uuidBytes);
 }

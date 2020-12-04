@@ -19,7 +19,7 @@ CData	CData::mZeroByte("", 1, false);
 
 class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 	public:
-						CDataInternals(CDataSize initialSize, const void* initialBuffer = nil,
+						CDataInternals(CData::Size initialSize, const void* initialBuffer = nil,
 								bool copySourceData = true) :
 							TCopyOnWriteReferenceCountable(), mFreeOnDelete(copySourceData), mBufferSize(initialSize)
 							{
@@ -61,7 +61,7 @@ class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 									::free(mBuffer);
 							}
 
-		CDataInternals*	setSize(CDataSize size)
+		CDataInternals*	setSize(CData::Size size)
 							{
 								// Prepare for write
 								CDataInternals*	dataInternals = prepareForWrite();
@@ -75,7 +75,7 @@ class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 
 		bool		mFreeOnDelete;
 		void*		mBuffer;
-		CDataSize	mBufferSize;
+		CData::Size	mBufferSize;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CData::CData(CDataSize initialSize)
+CData::CData(Size initialSize)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -101,7 +101,7 @@ CData::CData(const CData& other)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData::CData(const void* buffer, CDataSize bufferSize, bool copySourceData)
+CData::CData(const void* buffer, Size bufferSize, bool copySourceData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -126,7 +126,7 @@ CData::CData(const CString& base64String)
 									};
 
 	// Setup
-	CStringLength	stringLength = base64String.getLength();
+	CString::Length	stringLength = base64String.getLength();
 	if (stringLength == 0) {
 		// No string
 		mInternals = CData::mEmpty.mInternals->addReference();
@@ -134,14 +134,14 @@ CData::CData(const CString& base64String)
 		return;
 	}
 
-			SCString		cString = base64String.getCString();
+			CString::C		cString = base64String.getCString();
 	const	char*			stringPtr = *cString;
 			bool			pad1 = ((stringLength % 4) != 0) || (stringPtr[stringLength - 1] == '=');
 			bool			pad2 = pad1 && (((stringLength % 4) > 2) || (stringPtr[stringLength - 2] != '='));
-			CStringLength	last = (stringLength - (pad1 ? 1 : 0)) / 4 << 2;
+			CString::Length	last = (stringLength - (pad1 ? 1 : 0)) / 4 << 2;
 
 	// Setup internals
-	CDataSize	dataSize = last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
+	Size	dataSize = last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
 	mInternals = new CDataInternals(dataSize);
 
 	// Convert
@@ -195,14 +195,14 @@ CData::~CData()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDataSize CData::getSize() const
+CData::Size CData::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mBufferSize;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::setSize(CDataSize size)
+void CData::setSize(Size size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set size
@@ -210,7 +210,7 @@ void CData::setSize(CDataSize size)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::increaseSizeBy(CDataSize size)
+void CData::increaseSizeBy(Size size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update size
@@ -235,19 +235,19 @@ void* CData::getMutableBytePtr()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::copyBytes(void* destinationBuffer, CDataByteIndex startByte, OV<CDataSize> count) const
+void CData::copyBytes(void* destinationBuffer, ByteIndex startByte, OV<Size> count) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CDataSize	byteCount = count.hasValue() ? count.getValue() : getSize() - startByte;
+	Size	byteCount = count.hasValue() ? count.getValue() : getSize() - startByte;
 
 	// Parameter check
 	AssertNotNil(destinationBuffer);
 	if (destinationBuffer == nil)
 		return;
 
-	AssertFailIf((startByte + byteCount) > (CDataByteIndex) getSize());
-	if ((startByte + byteCount) > (CDataByteIndex) getSize())
+	AssertFailIf((startByte + byteCount) > (ByteIndex) getSize());
+	if ((startByte + byteCount) > (ByteIndex) getSize())
 		return;
 
 	// Copy
@@ -255,7 +255,7 @@ void CData::copyBytes(void* destinationBuffer, CDataByteIndex startByte, OV<CDat
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::appendBytes(const void* buffer, CDataSize bufferSize)
+void CData::appendBytes(const void* buffer, Size bufferSize)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Punt if no actual data to append
@@ -268,7 +268,7 @@ void CData::appendBytes(const void* buffer, CDataSize bufferSize)
 		return;
 
 	// Setup
-	CDataSize	originalSize = mInternals->mBufferSize;
+	Size	originalSize = mInternals->mBufferSize;
 	mInternals = mInternals->setSize(mInternals->mBufferSize + bufferSize);
 
 	// Copy
@@ -276,7 +276,7 @@ void CData::appendBytes(const void* buffer, CDataSize bufferSize)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::replaceBytes(CDataByteIndex startByte, CDataSize byteCount, const void* buffer, CDataSize bufferSize)
+void CData::replaceBytes(ByteIndex startByte, Size byteCount, const void* buffer, Size bufferSize)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -289,7 +289,7 @@ void CData::replaceBytes(CDataByteIndex startByte, CDataSize byteCount, const vo
 		return;
 
 	// Check what is happening
-	CDataSize	resultSize = mInternals->mBufferSize - byteCount + bufferSize;
+	Size	resultSize = mInternals->mBufferSize - byteCount + bufferSize;
 	if (resultSize == mInternals->mBufferSize) {
 		// Overall size is staying the same
 		mInternals = mInternals->prepareForWrite();
@@ -323,8 +323,8 @@ CString CData::getBase64String(bool prettyPrint) const
 	static	const	char*	sTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 	// Setup
-	CDataSize		dataLength = mInternals->mBufferSize;
-	CStringLength	stringLength = (dataLength + 2) / 3 * 4;	// 3 byte blocks to 4 characters
+	Size			dataLength = mInternals->mBufferSize;
+	CString::Length	stringLength = (dataLength + 2) / 3 * 4;	// 3 byte blocks to 4 characters
 	if (prettyPrint)
 		// Add for newlines
 		stringLength += (stringLength + 71) / 72; // line feeds
@@ -339,7 +339,7 @@ CString CData::getBase64String(bool prettyPrint) const
 			TBuffer<char>	stringBuffer(stringLength);
 			char*			stringPtr = *stringBuffer;
 
-			CStringLength	currentLineLength = 0;
+			CString::Length	currentLineLength = 0;
 	while ((endBytePtr - bytePtr) >= 3) {
 		// Convert the next 3 bytes to 4 characters
 		*stringPtr++ = sTable[bytePtr[0] >> 2];
@@ -381,7 +381,7 @@ CString CData::getBase64String(bool prettyPrint) const
 		// Add newline
 		*stringPtr++ = '\n';
 
-	return CString(*stringBuffer, stringLength, kStringEncodingUTF8);
+	return CString(*stringBuffer, stringLength, CString::kEncodingUTF8);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

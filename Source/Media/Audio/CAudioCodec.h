@@ -13,7 +13,7 @@
 // MARK:  CAudioCodec
 
 class CAudioCodec {
-	// Types
+	// Classes
 	public:
 		class CDecodeInfo {
 			// Methods
@@ -55,8 +55,10 @@ class CAudioCodec {
 				bool	mDummy;
 		};
 
+	// Structs
+	public:
 		struct SInfo {
-			// Types
+			// Procs
 			typedef	TArray<SAudioProcessingSetup>	(*GetAudioProcessingSetupsProc)(OSType id,
 															const SAudioStorageFormat& audioStorageFormat);
 			typedef	I<CAudioCodec>					(*InstantiateProc)(OSType id);

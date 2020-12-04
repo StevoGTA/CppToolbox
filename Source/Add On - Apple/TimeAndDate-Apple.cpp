@@ -15,7 +15,7 @@ static	UniversalTimeInterval	sOffsetInterval = 0.0;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-CFDateFormatterStyle	sGetCFDateFormatterStyleForGregorianDateStringStyle(EGregorianDateStringStyle format);
+CFDateFormatterStyle	sGetCFDateFormatterStyleForGregorianDateStringStyle(SGregorianDate::StringStyle stringStyle);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -71,16 +71,15 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGregorianDate::SGregorianDate(const CString& string, EGregorianDateStringStyle dateStyle,
-		EGregorianDateStringStyle timeStyle)
+SGregorianDate::SGregorianDate(const CString& string, StringStyle dateStringStyle, StringStyle timeStringStyle)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create date formatter
 	CFLocaleRef			localeRef = CFLocaleCopyCurrent();
 	CFDateFormatterRef	dateFormatterRef =
 								::CFDateFormatterCreate(kCFAllocatorDefault, localeRef,
-										sGetCFDateFormatterStyleForGregorianDateStringStyle(dateStyle),
-										sGetCFDateFormatterStyleForGregorianDateStringStyle(timeStyle));
+										sGetCFDateFormatterStyleForGregorianDateStringStyle(dateStringStyle),
+										sGetCFDateFormatterStyleForGregorianDateStringStyle(timeStringStyle));
 	::CFRelease(localeRef);
 
 	// Get time
@@ -122,14 +121,14 @@ UniversalTime SGregorianDate::getUniversalTime() const
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-CFDateFormatterStyle sGetCFDateFormatterStyleForGregorianDateStringStyle(EGregorianDateStringStyle format)
+CFDateFormatterStyle sGetCFDateFormatterStyleForGregorianDateStringStyle(SGregorianDate::StringStyle stringStyle)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	switch (format) {
-		case kGregorianDateStringStyleShort:	return kCFDateFormatterShortStyle;
-		case kGregorianDateStringStyleMedium:	return kCFDateFormatterMediumStyle;
-		case kGregorianDateStringStyleLong:		return kCFDateFormatterLongStyle;
-		case kGregorianDateStringStyleFull:		return kCFDateFormatterFullStyle;
-		default:								return kCFDateFormatterNoStyle;
+	switch (stringStyle) {
+		case SGregorianDate::kStringStyleShort:		return kCFDateFormatterShortStyle;
+		case SGregorianDate::kStringStyleMedium:	return kCFDateFormatterMediumStyle;
+		case SGregorianDate::kStringStyleLong:		return kCFDateFormatterLongStyle;
+		case SGregorianDate::kStringStyleFull:		return kCFDateFormatterFullStyle;
+		default:									return kCFDateFormatterNoStyle;
 	}
 }

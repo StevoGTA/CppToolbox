@@ -21,7 +21,7 @@ template <typename T> class TDictionaryInternals : public TCopyOnWriteReferenceC
 		virtual								~TDictionaryInternals() {}
 
 											// Instance methods
-		virtual	CDictionaryKeyCount			getKeyCount() = 0;
+		virtual	CDictionary::KeyCount		getKeyCount() = 0;
 		virtual	OR<SDictionaryValue>		getValue(const CString& key) = 0;
 		virtual	CDictionaryInternals*		set(const CString& key, const SDictionaryValue& value) = 0;
 		virtual	CDictionaryInternals*		remove(const CString& key) = 0;
@@ -29,7 +29,7 @@ template <typename T> class TDictionaryInternals : public TCopyOnWriteReferenceC
 
 		virtual	TIteratorS<SDictionaryItem>	getIterator() const = 0;
 
-		virtual	CDictionaryItemEqualsProc	getItemEqualsProc() const = 0;
+		virtual	CDictionary::ItemEqualsProc	getItemEqualsProc() const = 0;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -47,14 +47,14 @@ struct SDictionaryItemInfo {
 			SDictionaryItemInfo(UInt32 keyHashValue, const CString& key, const SDictionaryValue& value) :
 				mKeyHashValue(keyHashValue), mItem(key, value), mNextItemInfo(nil)
 				{}
-			SDictionaryItemInfo(const SDictionaryItemInfo& itemInfo, CDictionaryItemCopyProc itemCopyProc) :
+			SDictionaryItemInfo(const SDictionaryItemInfo& itemInfo, CDictionary::ItemCopyProc itemCopyProc) :
 				mKeyHashValue(itemInfo.mKeyHashValue), mItem(itemInfo.mItem, itemCopyProc), mNextItemInfo(nil)
 				{}
 
 			// Instance methods
 	bool	doesMatch(UInt32 hashValue, const CString& key)
 				{ return (hashValue == mKeyHashValue) && (key == mItem.mKey); }
-	void	disposeValue(CDictionaryItemDisposeProc itemDisposeProc)
+	void	disposeValue(CDictionary::ItemDisposeProc itemDisposeProc)
 				{ mItem.mValue.dispose(itemDisposeProc); }
 
 	// Properties
@@ -69,28 +69,29 @@ struct SDictionaryItemInfo {
 
 class CStandardDictionaryInternals;
 
-struct CDictionaryIteratorInfo : public CIteratorInfo {
+struct CDictionaryIteratorInfo : public CIterator::Info {
 	// Methods
 	public:
-						// Lifecycle methods
-						CDictionaryIteratorInfo(const CStandardDictionaryInternals& internals,
-								UInt32 initialReference) :
-							CIteratorInfo(), mInternals(internals), mInitialReference(initialReference),
-									mCurrentIndex(0), mCurrentItemInfo(nil)
-							{}
+							// Lifecycle methods
+							CDictionaryIteratorInfo(const CStandardDictionaryInternals& internals,
+									UInt32 initialReference) :
+								CIterator::Info(),
+										mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0),
+										mCurrentItemInfo(nil)
+								{}
 
-						// CIteratorInfo methods
-		CIteratorInfo*	copy()
-							{
-								// Make copy
-								CDictionaryIteratorInfo*	iteratorInfo =
-																	new CDictionaryIteratorInfo(mInternals,
-																			mInitialReference);
-								iteratorInfo->mCurrentIndex = mCurrentIndex;
-								iteratorInfo->mCurrentItemInfo = mCurrentItemInfo;
+							// CIterator::Info methods
+		CIterator::Info*	copy()
+								{
+									// Make copy
+									CDictionaryIteratorInfo*	iteratorInfo =
+																		new CDictionaryIteratorInfo(mInternals,
+																				mInitialReference);
+									iteratorInfo->mCurrentIndex = mCurrentIndex;
+									iteratorInfo->mCurrentItemInfo = mCurrentItemInfo;
 
-								return iteratorInfo;
-							}
+									return iteratorInfo;
+								}
 
 	// Properties
 	const	CStandardDictionaryInternals&	mInternals;
@@ -106,9 +107,9 @@ struct CDictionaryIteratorInfo : public CIteratorInfo {
 class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictionaryInternals> {
 	public:
 												// Lifecycle methods
-												CStandardDictionaryInternals(CDictionaryItemCopyProc itemCopyProc,
-														CDictionaryItemDisposeProc itemDisposeProc,
-														CDictionaryItemEqualsProc itemEqualsProc);
+												CStandardDictionaryInternals(CDictionary::ItemCopyProc itemCopyProc,
+														CDictionary::ItemDisposeProc itemDisposeProc,
+														CDictionary::ItemEqualsProc itemEqualsProc);
 												CStandardDictionaryInternals(const CStandardDictionaryInternals& other);
 												~CStandardDictionaryInternals();
 
@@ -116,7 +117,7 @@ class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictio
 				CStandardDictionaryInternals*	copy() const;
 
 												// TDictionaryInternals methods
-				CDictionaryKeyCount				getKeyCount();
+				CDictionary::KeyCount			getKeyCount();
 				OR<SDictionaryValue>			getValue(const CString& key);
 				CDictionaryInternals*			set(const CString& key, const SDictionaryValue& value);
 				CDictionaryInternals*			remove(const CString& key);
@@ -124,30 +125,30 @@ class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictio
 
 				TIteratorS<SDictionaryItem>		getIterator() const;
 
-				CDictionaryItemEqualsProc		getItemEqualsProc() const;
+				CDictionary::ItemEqualsProc		getItemEqualsProc() const;
 
 												// Private methods
 				void							removeAllInternal();
 				void							remove(SDictionaryItemInfo* itemInfo, bool removeAll);
 
 												// Class methods
-		static	void*							iteratorAdvance(CIteratorInfo& iteratorInfo);
+		static	void*							iteratorAdvance(CIterator::Info& iteratorInfo);
 
-		CDictionaryItemCopyProc		mItemCopyProc;
-		CDictionaryItemDisposeProc	mItemDisposeProc;
-		CDictionaryItemEqualsProc	mItemEqualsProc;
+		CDictionary::ItemCopyProc		mItemCopyProc;
+		CDictionary::ItemDisposeProc	mItemDisposeProc;
+		CDictionary::ItemEqualsProc		mItemEqualsProc;
 
-		CDictionaryKeyCount			mCount;
-		SDictionaryItemInfo**		mItemInfos;
-		UInt32						mItemInfosCount;
-		UInt32						mReference;
+		CDictionary::KeyCount			mCount;
+		SDictionaryItemInfo**			mItemInfos;
+		UInt32							mItemInfosCount;
+		UInt32							mReference;
 };
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CStandardDictionaryInternals::CStandardDictionaryInternals(CDictionaryItemCopyProc itemCopyProc,
-		CDictionaryItemDisposeProc itemDisposeProc, CDictionaryItemEqualsProc itemEqualsProc) :
+CStandardDictionaryInternals::CStandardDictionaryInternals(CDictionary::ItemCopyProc itemCopyProc,
+		CDictionary::ItemDisposeProc itemDisposeProc, CDictionary::ItemEqualsProc itemEqualsProc) :
 	TDictionaryInternals(),
 			mItemCopyProc(itemCopyProc), mItemDisposeProc(itemDisposeProc), mItemEqualsProc(itemEqualsProc), mCount(0),
 			mItemInfosCount(16), mReference(0)
@@ -206,7 +207,7 @@ CStandardDictionaryInternals::~CStandardDictionaryInternals()
 // MARK: TDictionaryInternals methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryKeyCount CStandardDictionaryInternals::getKeyCount()
+CDictionary::KeyCount CStandardDictionaryInternals::getKeyCount()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mCount;
@@ -355,7 +356,7 @@ TIteratorS<SDictionaryItem> CStandardDictionaryInternals::getIterator() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryItemEqualsProc CStandardDictionaryInternals::getItemEqualsProc() const
+CDictionary::ItemEqualsProc CStandardDictionaryInternals::getItemEqualsProc() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mItemEqualsProc;
@@ -396,7 +397,7 @@ void CStandardDictionaryInternals::remove(SDictionaryItemInfo* itemInfo, bool re
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void* CStandardDictionaryInternals::iteratorAdvance(CIteratorInfo& iteratorInfo)
+void* CStandardDictionaryInternals::iteratorAdvance(CIterator::Info& iteratorInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -435,7 +436,7 @@ void* CStandardDictionaryInternals::iteratorAdvance(CIteratorInfo& iteratorInfo)
 class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryInternals> {
 	public:
 											// Lifecycle methods
-											CProcsDictionaryInternals(const SDictionaryProcsInfo& procsInfo) :
+											CProcsDictionaryInternals(const CDictionary::ProcsInfo& procsInfo) :
 												TDictionaryInternals(),
 														mProcsInfo(procsInfo)
 												{}
@@ -450,7 +451,7 @@ AssertFailUnimplemented();
 												{ mProcsInfo.disposeUserData(); }
 
 											// TDictionaryInternals methods
-				CDictionaryKeyCount			getKeyCount()
+				CDictionary::KeyCount		getKeyCount()
 												{ return mProcsInfo.getKeyCount(); }
 				OR<SDictionaryValue>		getValue(const CString& key)
 												{ return mProcsInfo.getValue(key); }
@@ -492,27 +493,29 @@ return (CDictionaryInternals*) this;
 												{
 // TODO
 AssertFailUnimplemented();
-CIteratorInfo*	iteratorInfo = nil;
+CIterator::Info*	iteratorInfo = nil;
 return TIteratorS<SDictionaryItem>(nil, nil, *iteratorInfo);
 												}
 
-				CDictionaryItemEqualsProc	getItemEqualsProc() const
+				CDictionary::ItemEqualsProc	getItemEqualsProc() const
 												{ return nil; }
 
-		SDictionaryProcsInfo	mProcsInfo;
+		CDictionary::ProcsInfo	mProcsInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDictionary
 
+// MARK: Properties
+
 CDictionary	CDictionary::mEmpty;
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary::CDictionary(CDictionaryItemCopyProc itemCopyProc, CDictionaryItemDisposeProc itemDisposeProc,
-		CDictionaryItemEqualsProc itemEqualsProc) : CEquatable()
+CDictionary::CDictionary(ItemCopyProc itemCopyProc, ItemDisposeProc itemDisposeProc, ItemEqualsProc itemEqualsProc) :
+	CEquatable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -521,7 +524,7 @@ CDictionary::CDictionary(CDictionaryItemCopyProc itemCopyProc, CDictionaryItemDi
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary::CDictionary(const SDictionaryProcsInfo& procsInfo) : CEquatable()
+CDictionary::CDictionary(const ProcsInfo& procsInfo) : CEquatable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -547,7 +550,7 @@ CDictionary::~CDictionary()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryKeyCount CDictionary::getKeyCount() const
+CDictionary::KeyCount CDictionary::getKeyCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getKeyCount();
@@ -856,7 +859,7 @@ void CDictionary::set(const CString& key, UInt64 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDictionary::set(const CString& key, CDictionaryItemRef value)
+void CDictionary::set(const CString& key, ItemRef value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = (CDictionaryInternals*) mInternals->set(key, SDictionaryValue(value));
@@ -944,13 +947,13 @@ CDictionary& CDictionary::operator+=(const CDictionary& other)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CDictionaryItemRef> CDictionary::getItemRef(const CString& key) const
+OV<CDictionary::ItemRef> CDictionary::getItemRef(const CString& key) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
 	OR<SDictionaryValue>	value = mInternals->getValue(key);
 
-	return value.hasReference() ? OV<CDictionaryItemRef>(value->getItemRef()) : OV<CDictionaryItemRef>();
+	return value.hasReference() ? OV<ItemRef>(value->getItemRef()) : OV<ItemRef>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -960,105 +963,90 @@ OV<CDictionaryItemRef> CDictionary::getItemRef(const CString& key) const
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(bool value) :
-	mValueType(kDictionaryValueTypeBool), mValue(value)
+SDictionaryValue::SDictionaryValue(bool value) : mValueType(kValueTypeBool), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
 SDictionaryValue::SDictionaryValue(const TArray<CDictionary>& value) :
-	mValueType(kDictionaryValueTypeArrayOfDictionaries),
-	mValue(new TArray<CDictionary>(value))
+	mValueType(kValueTypeArrayOfDictionaries), mValue(new TArray<CDictionary>(value))
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
 SDictionaryValue::SDictionaryValue(const TArray<CString>& value) :
-	mValueType(kDictionaryValueTypeArrayOfStrings), mValue(new TArray<CString>(value))
+	mValueType(kValueTypeArrayOfStrings), mValue(new TArray<CString>(value))
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(const CData& value) :
-	mValueType(kDictionaryValueTypeData), mValue(new CData(value))
+SDictionaryValue::SDictionaryValue(const CData& value) : mValueType(kValueTypeData), mValue(new CData(value))
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
 SDictionaryValue::SDictionaryValue(const CDictionary& value) :
-	mValueType(kDictionaryValueTypeDictionary), mValue(new CDictionary(value))
+	mValueType(kValueTypeDictionary), mValue(new CDictionary(value))
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(const CString& value) :
-	mValueType(kDictionaryValueTypeString), mValue(new CString(value))
+SDictionaryValue::SDictionaryValue(const CString& value) : mValueType(kValueTypeString), mValue(new CString(value))
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(Float32 value) :
-	mValueType(kDictionaryValueTypeFloat32), mValue(value)
+SDictionaryValue::SDictionaryValue(Float32 value) : mValueType(kValueTypeFloat32), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(Float64 value) :
-	mValueType(kDictionaryValueTypeFloat64), mValue(value)
+SDictionaryValue::SDictionaryValue(Float64 value) : mValueType(kValueTypeFloat64), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(SInt8 value) :
-	mValueType(kDictionaryValueTypeSInt8), mValue(value)
+SDictionaryValue::SDictionaryValue(SInt8 value) : mValueType(kValueTypeSInt8), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(SInt16 value) :
-	mValueType(kDictionaryValueTypeSInt16), mValue(value)
+SDictionaryValue::SDictionaryValue(SInt16 value) : mValueType(kValueTypeSInt16), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(SInt32 value) :
-	mValueType(kDictionaryValueTypeSInt32), mValue(value)
+SDictionaryValue::SDictionaryValue(SInt32 value) : mValueType(kValueTypeSInt32), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(SInt64 value) :
-	mValueType(kDictionaryValueTypeSInt64), mValue(value)
+SDictionaryValue::SDictionaryValue(SInt64 value) : mValueType(kValueTypeSInt64), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(UInt8 value) :
-	mValueType(kDictionaryValueTypeUInt8), mValue(value)
+SDictionaryValue::SDictionaryValue(UInt8 value) : mValueType(kValueTypeUInt8), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(UInt16 value) :
-	mValueType(kDictionaryValueTypeUInt16), mValue(value)
+SDictionaryValue::SDictionaryValue(UInt16 value) : mValueType(kValueTypeUInt16), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(UInt32 value) :
-	mValueType(kDictionaryValueTypeUInt32), mValue(value)
+SDictionaryValue::SDictionaryValue(UInt32 value) : mValueType(kValueTypeUInt32), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(UInt64 value) :
-	mValueType(kDictionaryValueTypeUInt64), mValue(value)
+SDictionaryValue::SDictionaryValue(UInt64 value) : mValueType(kValueTypeUInt64), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(CDictionaryItemRef value) :
-	mValueType(kDictionaryValueTypeItemRef), mValue(value)
+SDictionaryValue::SDictionaryValue(CDictionary::ItemRef value) : mValueType(kValueTypeItemRef), mValue(value)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
@@ -1069,27 +1057,27 @@ SDictionaryValue::SDictionaryValue(const SDictionaryValue& other) :
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue::SDictionaryValue(const SDictionaryValue& other, CDictionaryItemCopyProc itemCopyProc) :
+SDictionaryValue::SDictionaryValue(const SDictionaryValue& other, CDictionary::ItemCopyProc itemCopyProc) :
 	mValueType(other.mValueType), mValue(other.mValue)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
-	if (mValueType == kDictionaryValueTypeArrayOfDictionaries)
+	if (mValueType == kValueTypeArrayOfDictionaries)
 		// Array of dictionaries
 		mValue.mArrayOfDictionaries = new TNArray<CDictionary>(*mValue.mArrayOfDictionaries);
-	else if (mValueType == kDictionaryValueTypeArrayOfStrings)
+	else if (mValueType == kValueTypeArrayOfStrings)
 		// Array of strings
 		mValue.mArrayOfStrings = new TNArray<CString>(*mValue.mArrayOfStrings);
-	else if (mValueType == kDictionaryValueTypeData)
+	else if (mValueType == kValueTypeData)
 		// Data
 		mValue.mData = new CData(*mValue.mData);
-	else if (mValueType == kDictionaryValueTypeDictionary)
+	else if (mValueType == kValueTypeDictionary)
 		// Dictionary
 		mValue.mDictionary = new CDictionary(*mValue.mDictionary);
-	else if (mValueType == kDictionaryValueTypeString)
+	else if (mValueType == kValueTypeString)
 		// String
 		mValue.mString = new CString(*mValue.mString);
-	else if ((mValueType == kDictionaryValueTypeItemRef) && (itemCopyProc != nil))
+	else if ((mValueType == kValueTypeItemRef) && (itemCopyProc != nil))
 		// Item Ref and have item copy proc
 		mValue.mItemRef = itemCopyProc(mValue.mItemRef);
 }
@@ -1102,15 +1090,15 @@ bool SDictionaryValue::getBool(bool defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeBool:		return mValue.mBool;
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8 == 1;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16 == 1;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32 == 1;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64 == 1;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8 == 1;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16 == 1;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32 == 1;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64 == 1;
+		case kValueTypeBool:	return mValue.mBool;
+		case kValueTypeSInt8:	return mValue.mSInt8 == 1;
+		case kValueTypeSInt16:	return mValue.mSInt16 == 1;
+		case kValueTypeSInt32:	return mValue.mSInt32 == 1;
+		case kValueTypeSInt64:	return mValue.mSInt64 == 1;
+		case kValueTypeUInt8:	return mValue.mUInt8 == 1;
+		case kValueTypeUInt16:	return mValue.mUInt16 == 1;
+		case kValueTypeUInt32:	return mValue.mUInt32 == 1;
+		case kValueTypeUInt64:	return mValue.mUInt64 == 1;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1124,9 +1112,9 @@ const TNArray<CDictionary>& SDictionaryValue::getArrayOfDictionaries(const TNArr
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
-	AssertFailIf(mValueType != kDictionaryValueTypeArrayOfDictionaries);
+	AssertFailIf(mValueType != kValueTypeArrayOfDictionaries);
 
-	return (mValueType == kDictionaryValueTypeArrayOfDictionaries) ? *mValue.mArrayOfDictionaries : defaultValue;
+	return (mValueType == kValueTypeArrayOfDictionaries) ? *mValue.mArrayOfDictionaries : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1134,9 +1122,9 @@ const TNArray<CString>& SDictionaryValue::getArrayOfStrings(const TNArray<CStrin
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
-	AssertFailIf(mValueType != kDictionaryValueTypeArrayOfStrings);
+	AssertFailIf(mValueType != kValueTypeArrayOfStrings);
 
-	return (mValueType == kDictionaryValueTypeArrayOfStrings) ? *mValue.mArrayOfStrings : defaultValue;
+	return (mValueType == kValueTypeArrayOfStrings) ? *mValue.mArrayOfStrings : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1144,9 +1132,9 @@ const CData& SDictionaryValue::getData(const CData& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
-	AssertFailIf(mValueType != kDictionaryValueTypeData);
+	AssertFailIf(mValueType != kValueTypeData);
 
-	return (mValueType == kDictionaryValueTypeData) ? *mValue.mData : defaultValue;
+	return (mValueType == kValueTypeData) ? *mValue.mData : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1154,9 +1142,9 @@ const CDictionary& SDictionaryValue::getDictionary(const CDictionary& defaultVal
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
-	AssertFailIf(mValueType != kDictionaryValueTypeDictionary);
+	AssertFailIf(mValueType != kValueTypeDictionary);
 
-	return (mValueType == kDictionaryValueTypeDictionary) ? *mValue.mDictionary : defaultValue;
+	return (mValueType == kValueTypeDictionary) ? *mValue.mDictionary : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1164,9 +1152,9 @@ const CString& SDictionaryValue::getString(const CString& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
-	AssertFailIf(mValueType != kDictionaryValueTypeString);
+	AssertFailIf(mValueType != kValueTypeString);
 
-	return (mValueType == kDictionaryValueTypeString) ? *mValue.mString : defaultValue;
+	return (mValueType == kValueTypeString) ? *mValue.mString : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1175,16 +1163,16 @@ Float32 SDictionaryValue::getFloat32(Float32 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeFloat32:	return mValue.mFloat32;
-		case kDictionaryValueTypeFloat64:	return (Float32) mValue.mFloat64;
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return (Float32) mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return (Float32) mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return (Float32) mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return (Float32) mValue.mUInt64;
+		case kValueTypeFloat32:	return mValue.mFloat32;
+		case kValueTypeFloat64:	return (Float32) mValue.mFloat64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return mValue.mSInt16;
+		case kValueTypeSInt32:	return (Float32) mValue.mSInt32;
+		case kValueTypeSInt64:	return (Float32) mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return mValue.mUInt16;
+		case kValueTypeUInt32:	return (Float32) mValue.mUInt32;
+		case kValueTypeUInt64:	return (Float32) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1199,16 +1187,16 @@ Float64 SDictionaryValue::getFloat64(Float64 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeFloat32:	return mValue.mFloat32;
-		case kDictionaryValueTypeFloat64:	return mValue.mFloat64;
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return (Float64) mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return (Float64) mValue.mUInt64;
+		case kValueTypeFloat32:	return mValue.mFloat32;
+		case kValueTypeFloat64:	return mValue.mFloat64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return mValue.mSInt16;
+		case kValueTypeSInt32:	return mValue.mSInt32;
+		case kValueTypeSInt64:	return (Float64) mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return mValue.mUInt16;
+		case kValueTypeUInt32:	return mValue.mUInt32;
+		case kValueTypeUInt64:	return (Float64) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1223,14 +1211,14 @@ SInt8 SDictionaryValue::getSInt8(SInt8 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return (SInt8) mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return (SInt8)mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return (SInt8)mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return (SInt8)mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return (SInt8)mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return (SInt8)mValue.mUInt64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return (SInt8) mValue.mSInt16;
+		case kValueTypeSInt32:	return (SInt8)mValue.mSInt32;
+		case kValueTypeSInt64:	return (SInt8)mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return (SInt8)mValue.mUInt16;
+		case kValueTypeUInt32:	return (SInt8)mValue.mUInt32;
+		case kValueTypeUInt64:	return (SInt8)mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1245,14 +1233,14 @@ SInt16 SDictionaryValue::getSInt16(SInt16 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return (SInt16) mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return (SInt16) mValue.mUInt64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return mValue.mSInt16;
+		case kValueTypeSInt32:	return mValue.mSInt32;
+		case kValueTypeSInt64:	return (SInt16) mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return mValue.mUInt16;
+		case kValueTypeUInt32:	return mValue.mUInt32;
+		case kValueTypeUInt64:	return (SInt16) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1267,14 +1255,14 @@ SInt32 SDictionaryValue::getSInt32(SInt32 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return (SInt32) mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return (SInt32) mValue.mUInt64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return mValue.mSInt16;
+		case kValueTypeSInt32:	return mValue.mSInt32;
+		case kValueTypeSInt64:	return (SInt32) mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return mValue.mUInt16;
+		case kValueTypeUInt32:	return mValue.mUInt32;
+		case kValueTypeUInt64:	return (SInt32) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1289,14 +1277,14 @@ SInt64 SDictionaryValue::getSInt64(SInt64 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return mValue.mSInt16;
+		case kValueTypeSInt32:	return mValue.mSInt32;
+		case kValueTypeSInt64:	return mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return mValue.mUInt16;
+		case kValueTypeUInt32:	return mValue.mUInt32;
+		case kValueTypeUInt64:	return mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1311,14 +1299,14 @@ UInt8 SDictionaryValue::getUInt8(UInt8 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return (UInt8) mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return (UInt8) mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return (UInt8) mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return (UInt8) mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return (UInt8) mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return (UInt8) mValue.mUInt64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return (UInt8) mValue.mSInt16;
+		case kValueTypeSInt32:	return (UInt8) mValue.mSInt32;
+		case kValueTypeSInt64:	return (UInt8) mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return (UInt8) mValue.mUInt16;
+		case kValueTypeUInt32:	return (UInt8) mValue.mUInt32;
+		case kValueTypeUInt64:	return (UInt8) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1333,14 +1321,14 @@ UInt16 SDictionaryValue::getUInt16(UInt16 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return (UInt16) mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return (UInt16) mValue.mUInt64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return mValue.mSInt16;
+		case kValueTypeSInt32:	return mValue.mSInt32;
+		case kValueTypeSInt64:	return (UInt16) mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return mValue.mUInt16;
+		case kValueTypeUInt32:	return mValue.mUInt32;
+		case kValueTypeUInt64:	return (UInt16) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1355,14 +1343,14 @@ UInt32 SDictionaryValue::getUInt32(UInt32 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return (UInt32) mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return (UInt32) mValue.mUInt64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return mValue.mSInt16;
+		case kValueTypeSInt32:	return mValue.mSInt32;
+		case kValueTypeSInt64:	return (UInt32) mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return mValue.mUInt16;
+		case kValueTypeUInt32:	return mValue.mUInt32;
+		case kValueTypeUInt64:	return (UInt32) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1377,14 +1365,14 @@ UInt64 SDictionaryValue::getUInt64(UInt64 defaultValue) const
 {
 	// Check value type
 	switch (mValueType) {
-		case kDictionaryValueTypeSInt8:		return mValue.mSInt8;
-		case kDictionaryValueTypeSInt16:	return mValue.mSInt16;
-		case kDictionaryValueTypeSInt32:	return mValue.mSInt32;
-		case kDictionaryValueTypeSInt64:	return mValue.mSInt64;
-		case kDictionaryValueTypeUInt8:		return mValue.mUInt8;
-		case kDictionaryValueTypeUInt16:	return mValue.mUInt16;
-		case kDictionaryValueTypeUInt32:	return mValue.mUInt32;
-		case kDictionaryValueTypeUInt64:	return mValue.mUInt64;
+		case kValueTypeSInt8:	return mValue.mSInt8;
+		case kValueTypeSInt16:	return mValue.mSInt16;
+		case kValueTypeSInt32:	return mValue.mSInt32;
+		case kValueTypeSInt64:	return mValue.mSInt64;
+		case kValueTypeUInt8:	return mValue.mUInt8;
+		case kValueTypeUInt16:	return mValue.mUInt16;
+		case kValueTypeUInt32:	return mValue.mUInt32;
+		case kValueTypeUInt64:	return mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -1394,17 +1382,17 @@ UInt64 SDictionaryValue::getUInt64(UInt64 defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryItemRef SDictionaryValue::getItemRef() const
+CDictionary::ItemRef SDictionaryValue::getItemRef() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify value type
-	AssertFailIf(mValueType != kDictionaryValueTypeItemRef);
+	AssertFailIf(mValueType != kValueTypeItemRef);
 
-	return (mValueType == kDictionaryValueTypeItemRef) ? mValue.mItemRef : nil;
+	return (mValueType == kValueTypeItemRef) ? mValue.mItemRef : nil;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool SDictionaryValue::equals(const SDictionaryValue& other, CDictionaryItemEqualsProc itemEqualsProc) const
+bool SDictionaryValue::equals(const SDictionaryValue& other, CDictionary::ItemEqualsProc itemEqualsProc) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
@@ -1413,71 +1401,71 @@ bool SDictionaryValue::equals(const SDictionaryValue& other, CDictionaryItemEqua
 		return false;
 
 	switch (mValueType) {
-		case kDictionaryValueTypeBool:
+		case kValueTypeBool:
 			// Bool
 			return mValue.mBool == other.mValue.mBool;
 
-		case kDictionaryValueTypeArrayOfDictionaries:
+		case kValueTypeArrayOfDictionaries:
 			// Array of Dictionaries
 			return *mValue.mArrayOfDictionaries == *other.mValue.mArrayOfDictionaries;
 
-		case kDictionaryValueTypeArrayOfStrings:
+		case kValueTypeArrayOfStrings:
 			// Array of Strings
 			return *mValue.mArrayOfStrings == *other.mValue.mArrayOfStrings;
 
-		case kDictionaryValueTypeData:
+		case kValueTypeData:
 			// Data
 			return *mValue.mData == *other.mValue.mData;
 
-		case kDictionaryValueTypeDictionary:
+		case kValueTypeDictionary:
 			// Dictionary
 			return *mValue.mDictionary == *other.mValue.mDictionary;
 
-		case kDictionaryValueTypeString:
+		case kValueTypeString:
 			// String
 			return *mValue.mString == *other.mValue.mString;
 
-		case kDictionaryValueTypeFloat32:
+		case kValueTypeFloat32:
 			// Float32
 			return mValue.mFloat32 == other.mValue.mFloat32;
 
-		case kDictionaryValueTypeFloat64:
+		case kValueTypeFloat64:
 			// Float64
 			return mValue.mFloat64 == other.mValue.mFloat64;
 
-		case kDictionaryValueTypeSInt8:
+		case kValueTypeSInt8:
 			// SInt8
 			return mValue.mSInt8 == other.mValue.mSInt8;
 
-		case kDictionaryValueTypeSInt16:
+		case kValueTypeSInt16:
 			// SInt16
 			return mValue.mSInt16 == other.mValue.mSInt16;
 
-		case kDictionaryValueTypeSInt32:
+		case kValueTypeSInt32:
 			// SInt32
 			return mValue.mSInt32 == other.mValue.mSInt32;
 
-		case kDictionaryValueTypeSInt64:
+		case kValueTypeSInt64:
 			// SInt64
 			return mValue.mSInt64 == other.mValue.mSInt64;
 
-		case kDictionaryValueTypeUInt8:
+		case kValueTypeUInt8:
 			// UInt8
 			return mValue.mUInt8 == other.mValue.mUInt8;
 
-		case kDictionaryValueTypeUInt16:
+		case kValueTypeUInt16:
 			// UInt16
 			return mValue.mUInt16 == other.mValue.mUInt16;
 
-		case kDictionaryValueTypeUInt32:
+		case kValueTypeUInt32:
 			// UInt32
 			return mValue.mUInt32 == other.mValue.mUInt32;
 
-		case kDictionaryValueTypeUInt64:
+		case kValueTypeUInt64:
 			// UInt64
 			return mValue.mUInt64 == other.mValue.mUInt64;
 
-		case kDictionaryValueTypeItemRef:
+		case kValueTypeItemRef:
 			// ItemRef
 			return (itemEqualsProc != nil) ?
 					itemEqualsProc(mValue.mItemRef, other.mValue.mItemRef) : mValue.mItemRef == other.mValue.mItemRef;
@@ -1491,26 +1479,26 @@ bool SDictionaryValue::equals(const SDictionaryValue& other, CDictionaryItemEqua
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SDictionaryValue::dispose(CDictionaryItemDisposeProc itemDisposeProc)
+void SDictionaryValue::dispose(CDictionary::ItemDisposeProc itemDisposeProc)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
-	if (mValueType == kDictionaryValueTypeArrayOfDictionaries) {
+	if (mValueType == kValueTypeArrayOfDictionaries) {
 		// Array of dictionaries
 		Delete(mValue.mArrayOfDictionaries);
-	} else if (mValueType == kDictionaryValueTypeArrayOfStrings) {
+	} else if (mValueType == kValueTypeArrayOfStrings) {
 		// Array of strings
 		Delete(mValue.mArrayOfStrings);
-	} else if (mValueType == kDictionaryValueTypeData) {
+	} else if (mValueType == kValueTypeData) {
 		// Data
 		Delete(mValue.mData);
-	} else if (mValueType == kDictionaryValueTypeDictionary) {
+	} else if (mValueType == kValueTypeDictionary) {
 		// Dictionary
 		Delete(mValue.mDictionary);
-	} else if (mValueType == kDictionaryValueTypeString) {
+	} else if (mValueType == kValueTypeString) {
 		// String
 		Delete(mValue.mString);
-	} else if ((mValueType == kDictionaryValueTypeItemRef) && (itemDisposeProc != nil)) {
+	} else if ((mValueType == kValueTypeItemRef) && (itemDisposeProc != nil)) {
 		// Item Ref and have item dispose proc
 		itemDisposeProc(mValue.mItemRef);
 	}

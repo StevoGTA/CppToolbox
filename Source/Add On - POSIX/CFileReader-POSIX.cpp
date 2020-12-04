@@ -135,7 +135,8 @@ OI<SError> CFileReader::open(bool buffered)
 		if (mInternals->mFILE == nil) {
 			// Open
 			mInternals->mFILE =
-					::fopen(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8), "rb");
+					::fopen(*mInternals->mFile.getFilesystemPath().getString().getCString(CString::kEncodingUTF8),
+							"rb");
 
 			if (mInternals->mFILE != nil)
 				// Success
@@ -157,8 +158,8 @@ OI<SError> CFileReader::open(bool buffered)
 		if (mInternals->mFD == -1) {
 			// Open
 			mInternals->mFD =
-					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8), O_RDONLY,
-							0);
+					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(CString::kEncodingUTF8),
+							O_RDONLY, 0);
 			if (mInternals->mFD != -1)
 				// Success
 				return OI<SError>();

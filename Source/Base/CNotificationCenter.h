@@ -7,38 +7,35 @@
 #include "CDictionary.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Types
-
-typedef	void	(*SNotificationObserverInfoProc)(const CString& notificationName, const void* senderRef,
-						const CDictionary& info, void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SNotificationObserverInfo
-
-struct SNotificationObserverInfo {
-			// Lifecycle methods
-			SNotificationObserverInfo(const void* observerRef, SNotificationObserverInfoProc proc, void* userData) :
-				mObserverRef(observerRef), mProc(proc), mUserData(userData)
-				{}
-			SNotificationObserverInfo(const SNotificationObserverInfo& other) :
-				mObserverRef(other.mObserverRef), mProc(other.mProc), mUserData(other.mUserData)
-				{}
-
-			// Instance methods
-	void	callProc(const CString& notificationName, const void* senderRef, const CDictionary& info) const
-				{ mProc(notificationName, senderRef, info, mUserData); }
-
-	// Properties
-	const	void*							mObserverRef;
-			SNotificationObserverInfoProc	mProc;
-			void*							mUserData;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CNotificationCenter
+// MARK: CNotificationCenter
 
 class CNotificationCenterInternals;
 class CNotificationCenter {
+	// Structures
+	public:
+		struct ObserverInfo {
+			// Procs
+			typedef	void	(*Proc)(const CString& notificationName, const void* senderRef, const CDictionary& info,
+									void* userData);
+
+					// Lifecycle methods
+					ObserverInfo(const void* observerRef, Proc proc, void* userData) :
+						mObserverRef(observerRef), mProc(proc), mUserData(userData)
+						{}
+					ObserverInfo(const ObserverInfo& other) :
+						mObserverRef(other.mObserverRef), mProc(other.mProc), mUserData(other.mUserData)
+						{}
+
+					// Instance methods
+			void	callProc(const CString& notificationName, const void* senderRef, const CDictionary& info) const
+						{ mProc(notificationName, senderRef, info, mUserData); }
+
+			// Properties
+			const	void*	mObserverRef;
+					Proc	mProc;
+					void*	mUserData;
+		};
+
 	// Methods
 	public:
 						// Lifcycle methods
@@ -47,9 +44,8 @@ class CNotificationCenter {
 
 						// Instance methods
 				void	registerObserver(const CString& notificationName, const void* senderRef,
-								const SNotificationObserverInfo& notificationObserverInfo);
-				void	registerObserver(const CString& notificationName,
-								const SNotificationObserverInfo& notificationObserverInfo);
+								const ObserverInfo& observerInfo);
+				void	registerObserver(const CString& notificationName, const ObserverInfo& observerInfo);
 				void	unregisterObserver(const CString& notificationName, const void* observerRef);
 				void	unregisterObserver(const void* observerRef);
 

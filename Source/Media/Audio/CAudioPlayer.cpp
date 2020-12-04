@@ -9,8 +9,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	SUniversalTimeIntervalPref	sPlaybackBufferDurationPref(
-											OSSTR("coreAudioPlayerOutputUnitReadAheadBufferTimeSecs"), 0.25);
+static	CPreferences::UniversalTimeIntervalPref	sPlaybackBufferDurationPref(
+														OSSTR("coreAudioPlayerOutputUnitReadAheadBufferTimeSecs"),
+														0.25);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

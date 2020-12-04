@@ -192,7 +192,7 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, EFilesystemPat
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get length of string
-	CStringLength	length = string.getLength();
+	CString::Length	length = string.getLength();
 
 	// Extract characters
 	TBuffer<UTF16Char>	buffer(length);
@@ -200,7 +200,7 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, EFilesystemPat
 
 	// Replace "illegal" ones with '_'
 	UTF16Char*	p = *buffer;
-	for (CStringLength i = 0; i < length; i++, p++) {
+	for (CString::Length i = 0; i < length; i++, p++) {
 		if ((*p < 0x20) || (*p == ':') || (*p == 0x7F))
 			*p = '_';
 

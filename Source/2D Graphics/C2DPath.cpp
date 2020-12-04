@@ -210,7 +210,7 @@ CData C2DPath::getInitialSegmentData() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get info
-	CDataSize	byteCount = mInternals->mPathSegmentData.getSize();
+	CData::Size	byteCount = mInternals->mPathSegmentData.getSize();
 	if (byteCount >= sizeof(E2DPathSegmentType)) {
 		// Return the rest of the data
 		return CData((const UInt8*) mInternals->mPathSegmentData.getBytePtr() + sizeof(E2DPathSegmentType),

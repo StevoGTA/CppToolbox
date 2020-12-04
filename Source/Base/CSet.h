@@ -8,27 +8,25 @@
 #include "CIterator.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Types
-
-typedef	UInt32	CSetItemCount;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Procs
-
-typedef	void	(*CSetApplyProc)(CHashable& hashable, void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSet
+// MARK: CSet
 
 class CSetInternals;
 class CSet {
+	// Types
+	public:
+		typedef	UInt32	ItemCount;
+
+	// Procs
+	public:
+		typedef	void	(*ApplyProc)(CHashable& hashable, void* userData);
+
 	// Methods
 	public:
 										// Lifecycle methods
 		virtual							~CSet();
 
 										// Instance methods
-				CSetItemCount			getCount() const;
+				ItemCount				getCount() const;
 				bool					isEmpty() const
 											{ return getCount() == 0; }
 
@@ -46,7 +44,7 @@ class CSet {
 				CSet&					removeAll();
 
 				TIteratorS<CHashable>	getIterator() const;
-				CSet&					apply(CSetApplyProc applyProc, void* userData = nil);
+				CSet&					apply(ApplyProc applyProc, void* userData = nil);
 
 				CSet&					operator=(const CSet& other);
 
@@ -97,7 +95,7 @@ template <typename T> class TSet : public CSet {
 							{ CSet::removeAll(); return *this; }
 
 		TSet<T>&		apply(void (proc)(const T item, void* userData), void* userData = nil)
-							{ CSet::apply((CSetApplyProc) proc, userData); return *this; }
+							{ CSet::apply((ApplyProc) proc, userData); return *this; }
 
 		TIteratorS<T>	getIterator() const
 							{ TIteratorS<CHashable> iterator = CSet::getIterator();

@@ -112,7 +112,7 @@ ECompareResult CColorGroup::compareDisplayIndexes(const CColorGroup& colorGroup1
 class CColorSetInternals : public TReferenceCountable<CColorSetInternals> {
 	public:
 		CColorSetInternals(const CString& name, OV<OSType> id = OV<OSType>()) :
-			TReferenceCountable(), mName(name), mID(id), mColorsMap((CDictionaryItemEqualsProc) CColor::areEqual)
+			TReferenceCountable(), mName(name), mID(id), mColorsMap((CDictionary::ItemEqualsProc) CColor::areEqual)
 			{}
 
 	CString										mName;
@@ -276,7 +276,7 @@ bool CColorSet::operator==(const CColorSet& other) const
 
 class CColorRegistryInternals {
 	public:
-					CColorRegistryInternals(OI<SPref> pref = OI<SPref>()) : mPref(pref) {}
+					CColorRegistryInternals(OI<CPreferences::Pref> pref = OI<CPreferences::Pref>()) : mPref(pref) {}
 
 			void	writeToPrefs()
 						{
@@ -321,7 +321,7 @@ class CColorRegistryInternals {
 						}
 
 		OI<CColorSet>									mCurrentColorSet;
-		OI<SPref>										mPref;
+		OI<CPreferences::Pref>							mPref;
 		TKeyConvertibleDictionary<OSType, CColorGroup>	mColorGroupMap;
 		TNArray<CColorSet>								mColorSets;
 		TNArray<CColorSet>								mColorSetPresets;
@@ -341,11 +341,11 @@ CColorRegistry::CColorRegistry()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColorRegistry::CColorRegistry(const SPref& pref)
+CColorRegistry::CColorRegistry(const CPreferences::Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CColorRegistryInternals(OI<SPref>(pref));
+	mInternals = new CColorRegistryInternals(OI<CPreferences::Pref>(pref));
 
 	// Load from prefs
 	CDictionary	info = CPreferences::mDefault.getDictionary(pref);

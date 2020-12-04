@@ -73,7 +73,7 @@ union SPixelDataARGB8888 {
 
 class CBitmapInternals;
 class CBitmap {
-	// Types
+	// Enums
 	public:
 		enum Format {
 			// 16 bit formats

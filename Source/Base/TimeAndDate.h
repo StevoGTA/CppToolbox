@@ -28,22 +28,6 @@ const	UniversalTimeInterval	kUniversalTimeInterval1904To2001	= 3061152000.0;
 const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - String Style
-
-// The exact formatted result for these styles depends on the locale and OS, but generally:
-//		Short is completely numeric, such as "1/1/52" or "3:30pm"
-//		Medium is longer, such as "Jan 12, 1952"
-//		Long is longer, such as "January 12, 1952" or "3:30:32pm"
-//		Full is pretty complete; e.g. "Tuesday, April 12, 1952 AD" or "3:30:42pm PST"
-enum EGregorianDateStringStyle {
-	kGregorianDateStringStyleNone,
-	kGregorianDateStringStyleShort,
-	kGregorianDateStringStyleMedium,
-	kGregorianDateStringStyleLong,
-	kGregorianDateStringStyleFull,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - SUniversalTime
 
 struct SUniversalTime {
@@ -59,8 +43,39 @@ struct SUniversalTime {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SGregorianDate
 
-struct SGregorianUnits;
 struct SGregorianDate {
+	// Enums
+	public:
+		// The exact formatted result for these styles depends on the locale and OS, but generally:
+		//		Short is completely numeric, such as "1/1/52" or "3:30pm"
+		//		Medium is longer, such as "Jan 12, 1952"
+		//		Long is longer, such as "January 12, 1952" or "3:30:32pm"
+		//		Full is pretty complete; e.g. "Tuesday, April 12, 1952 AD" or "3:30:42pm PST"
+		enum StringStyle {
+			kStringStyleNone,
+			kStringStyleShort,
+			kStringStyleMedium,
+			kStringStyleLong,
+			kStringStyleFull,
+		};
+
+	// Structs
+	public:
+		struct Units {
+			// Lifecycle methods
+			Units(SInt32 years, SInt32 months, SInt32 days, SInt32 hours, SInt32 minutes, Float32 seconds) :
+				mYears(years), mMonths(months), mDays(days), mHours(hours), mMinutes(minutes), mSeconds(seconds)
+				{}
+
+			// Properties
+			SInt32	mYears;
+			SInt32	mMonths;
+			SInt32	mDays;
+			SInt32	mHours;
+			SInt32	mMinutes;
+			Float32	mSeconds;
+		};
+
 					// Lifecycle methods
 					SGregorianDate(UInt32 year, UInt8 month, UInt8 day, UInt8 hour, UInt8 minute, Float32 second,
 							UInt8 dayOfWeek = 0) :
@@ -68,17 +83,16 @@ struct SGregorianDate {
 								mDayOfWeek(dayOfWeek)
 						{}
 					SGregorianDate(UniversalTime time = SUniversalTime::getCurrentUniversalTime());
-					SGregorianDate(const CString& string,
-							EGregorianDateStringStyle dateStyle = kGregorianDateStringStyleMedium,
-							EGregorianDateStringStyle timeStyle = kGregorianDateStringStyleShort);
+					SGregorianDate(const CString& string, StringStyle dateStringStyle = kStringStyleMedium,
+							StringStyle timeStringStyle = kStringStyleShort);
 
 					// Instance methods
 	UniversalTime	getUniversalTime() const;
-	CString			getString(EGregorianDateStringStyle dateStyle = kGregorianDateStringStyleMedium,
-							EGregorianDateStringStyle timeStyle = kGregorianDateStringStyleShort) const;
+	CString			getString(StringStyle dateStringStyle = kStringStyleMedium,
+							StringStyle timeStringStyle = kStringStyleShort) const;
 
-	SGregorianDate	operator+(const SGregorianUnits& units) const;
-	SGregorianDate&	operator+=(const SGregorianUnits& units);
+	SGregorianDate	operator+(const Units& units) const;
+	SGregorianDate&	operator+=(const Units& units);
 
 	// Properties
 	static	CString	mJanString;
@@ -124,22 +138,4 @@ struct SGregorianDate {
 			UInt8	mMinute;	// 0 - 59
 			Float32	mSecond;	// 0 - 59.9
 			UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SGregorianUnits
-
-struct SGregorianUnits {
-	// Lifecycle methods
-	SGregorianUnits(SInt32 years, SInt32 months, SInt32 days, SInt32 hours, SInt32 minutes, Float32 seconds) :
-		mYears(years), mMonths(months), mDays(days), mHours(hours), mMinutes(minutes), mSeconds(seconds)
-		{}
-
-	// Properties
-    SInt32	mYears;
-    SInt32	mMonths;
-    SInt32	mDays;
-    SInt32	mHours;
-    SInt32	mMinutes;
-    Float32	mSeconds;
 };

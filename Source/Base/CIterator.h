@@ -7,47 +7,47 @@
 #include "PlatformDefinitions.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: CIteratorInfo
-//	Will be deleted when the Iterator is deleted
+// MARK: CIterator
 
-class CIteratorInfo {
-	// Methods
+class CIterator {
+	// Classes
 	public:
+		// Will be deleted when the Iterator is deleted
+		class Info {
+			// Methods
+			public:
 								// Lifecycle methods
-								CIteratorInfo() {}
-		virtual					~CIteratorInfo() {}
+								Info() {}
+				virtual			~Info() {}
 
 								// Instance methods
-		virtual	CIteratorInfo*	copy() = 0;
+				virtual	Info*	copy() = 0;
+		};
+
+	// Procs
+	public:
+		typedef	void*	(*AdvanceProc)(Info& info);	// Return next value
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Procs
-
-typedef	void*	(*CIteratorAdvanceProc)(CIteratorInfo& iteratorInfo);	// Return next value
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TIteratorS (for single dereference!)
 
-template <typename T> class TIteratorS {
+template <typename T> class TIteratorS : public CIterator {
 	// Methods
 	public:
 				// Lifecycle methods
-				TIteratorS(T* firstValue, CIteratorAdvanceProc advanceProc, CIteratorInfo& iteratorInfo) :
-					mCurrentValue(firstValue), mAdvanceProc(advanceProc), mIteratorInfo(iteratorInfo)
+				TIteratorS(T* firstValue, AdvanceProc advanceProc, Info& info) :
+					mCurrentValue(firstValue), mAdvanceProc(advanceProc), mInfo(info)
 					{}
 				TIteratorS(const TIteratorS* other) :
-					mCurrentValue(other->mCurrentValue), mAdvanceProc(other->mAdvanceProc),
-							mIteratorInfo(*other->mIteratorInfo.copy())
+					mCurrentValue(other->mCurrentValue), mAdvanceProc(other->mAdvanceProc), mInfo(*other->mInfo.copy())
 					{}
 				~TIteratorS()
-					{ CIteratorInfo* iteratorInfo = &mIteratorInfo; Delete(iteratorInfo); }
+					{ Info* info = &mInfo; Delete(info); }
 
 				// Instance methods
 		bool	advance()
-					{ mCurrentValue = (T*) mAdvanceProc(mIteratorInfo); return mCurrentValue != nil; }
+					{ mCurrentValue = (T*) mAdvanceProc(mInfo); return mCurrentValue != nil; }
 		bool	hasValue() const
 					{ return mCurrentValue != nil; }
 
@@ -61,32 +61,30 @@ template <typename T> class TIteratorS {
 
 	// Properties
 	private:
-		CIteratorAdvanceProc	mAdvanceProc;
-		CIteratorInfo&			mIteratorInfo;
-		T*						mCurrentValue;
+		AdvanceProc	mAdvanceProc;
+		Info&		mInfo;
+		T*			mCurrentValue;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TIteratorD (for double dereference!)
 
-template <typename T> class TIteratorD {
+template <typename T> class TIteratorD : public CIterator {
 	// Methods
 	public:
 				// Lifecycle methods
-				TIteratorD(T** firstValue, CIteratorAdvanceProc advanceProc, CIteratorInfo& iteratorInfo) :
-					mCurrentValue(firstValue), mAdvanceProc(advanceProc), mIteratorInfo(iteratorInfo)
+				TIteratorD(T** firstValue, AdvanceProc advanceProc, Info& info) :
+					mCurrentValue(firstValue), mAdvanceProc(advanceProc), mInfo(info)
 					{}
 				TIteratorD(const TIteratorD* other) :
-					mCurrentValue(other->mCurrentValue), mAdvanceProc(other->mAdvanceProc),
-							mIteratorInfo(*other->mIteratorInfo.copy())
+					mCurrentValue(other->mCurrentValue), mAdvanceProc(other->mAdvanceProc), mInfo(*other->mInfo.copy())
 					{}
 				~TIteratorD()
-					{ CIteratorInfo* iteratorInfo = &mIteratorInfo; Delete(iteratorInfo); }
+					{ Info* info = &mInfo; Delete(info); }
 
 				// Instance methods
 		bool	advance()
-					{ mCurrentValue = (T**) mAdvanceProc(mIteratorInfo); return mCurrentValue != nil; }
+					{ mCurrentValue = (T**) mAdvanceProc(mInfo); return mCurrentValue != nil; }
 		bool	hasValue() const
 					{ return mCurrentValue != nil; }
 
@@ -100,34 +98,31 @@ template <typename T> class TIteratorD {
 
 	// Properties
 	private:
-		CIteratorAdvanceProc	mAdvanceProc;
-		CIteratorInfo&			mIteratorInfo;
-		T**						mCurrentValue;
+		AdvanceProc	mAdvanceProc;
+		Info&		mInfo;
+		T**			mCurrentValue;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TIteratorM (for mapping dereference!)
 
-template <typename K, typename T> class TIteratorM {
+template <typename K, typename T> class TIteratorM : public CIterator {
 	// Methods
 	public:
 				// Lifecycle methods
-				TIteratorM(K** firstRawValue, T (mapProc)(K** rawValue), CIteratorAdvanceProc advanceProc,
-						CIteratorInfo& iteratorInfo) :
-					mCurrentRawValue(firstRawValue), mMapProc(mapProc), mAdvanceProc(advanceProc),
-							mIteratorInfo(iteratorInfo)
+				TIteratorM(K** firstRawValue, T (mapProc)(K** rawValue), AdvanceProc advanceProc, Info& info) :
+					mCurrentRawValue(firstRawValue), mMapProc(mapProc), mAdvanceProc(advanceProc), mInfo(info)
 					{}
 				TIteratorM(const TIteratorM* other, T (mapProc)(K** rawValue)) :
-					mCurrentRawValue(other->mCurrentRawValue), mAdvanceProc(other->mAdvanceProc),
-							mMapProc(mapProc), mIteratorInfo(*other->mIteratorInfo.copy())
+					mCurrentRawValue(other->mCurrentRawValue), mAdvanceProc(other->mAdvanceProc), mMapProc(mapProc),
+							mInfo(*other->mInfo.copy())
 					{}
 				~TIteratorM()
-					{ CIteratorInfo*	iteratorInfo = &mIteratorInfo; Delete(iteratorInfo); }
+					{ Info*	info = &mInfo; Delete(info); }
 
 				// Instance methods
 		bool	advance()
-					{ mCurrentRawValue = (K**) mAdvanceProc(mIteratorInfo); return mCurrentRawValue != nil; }
+					{ mCurrentRawValue = (K**) mAdvanceProc(mInfo); return mCurrentRawValue != nil; }
 		bool	hasValue() const
 					{ return mCurrentRawValue != nil; }
 
@@ -136,8 +131,8 @@ template <typename K, typename T> class TIteratorM {
 
 	// Properties
 	private:
-		CIteratorAdvanceProc	mAdvanceProc;
-		CIteratorInfo&			mIteratorInfo;
-		K**						mCurrentRawValue;
-		T 						(*mMapProc)(K** rawValue);
+		AdvanceProc	mAdvanceProc;
+		Info&		mInfo;
+		K**			mCurrentRawValue;
+		T 			(*mMapProc)(K** rawValue);
 };

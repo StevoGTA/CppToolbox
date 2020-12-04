@@ -10,7 +10,7 @@
 // MARK:  SMediaPosition
 
 struct SMediaPosition {
-	// Types
+	// Enums
 	enum Mode {
 		kFromStart,		// Uses mTimeInterval
 		kFromCurrent,	// Ignores mTimeInterval

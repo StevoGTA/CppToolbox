@@ -17,7 +17,7 @@
 
 struct SLogProcInfo {
 			// Lifecycle methods
-			SLogProcInfo(CLogProc logProc, void* userData) : mLogProc(logProc), mUserData(userData) {}
+			SLogProcInfo(CLogServices::LogProc logProc, void* userData) : mLogProc(logProc), mUserData(userData) {}
 			SLogProcInfo(const SLogProcInfo& other) : mLogProc(other.mLogProc), mUserData(other.mUserData) {}
 
 			// Instance methods
@@ -25,8 +25,8 @@ struct SLogProcInfo {
 				{ mLogProc(string, mUserData); }
 
 	// Properties
-	CLogProc	mLogProc;
-	void*		mUserData;
+	CLogServices::LogProc	mLogProc;
+	void*					mUserData;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -323,7 +323,7 @@ void CLogServices::logError(const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CLogServices::addLogMessageProc(CLogProc logProc, void* userData)
+void CLogServices::addLogMessageProc(LogProc logProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// See if it has been created
@@ -336,7 +336,7 @@ void CLogServices::addLogMessageProc(CLogProc logProc, void* userData)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CLogServices::addLogWarningProc(CLogProc logProc, void* userData)
+void CLogServices::addLogWarningProc(LogProc logProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// See if it has been created
@@ -349,7 +349,7 @@ void CLogServices::addLogWarningProc(CLogProc logProc, void* userData)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CLogServices::addLogErrorProc(CLogProc logProc, void* userData)
+void CLogServices::addLogErrorProc(LogProc logProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// See if it has been created

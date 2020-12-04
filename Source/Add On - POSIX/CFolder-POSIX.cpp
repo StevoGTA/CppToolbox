@@ -33,8 +33,8 @@ OI<SError> CFolder::rename(const CString& string)
 	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(string);
 
 	// Rename
-	if (::rename(*getFilesystemPath().getString().getCString(kStringEncodingUTF8),
-			*filesystemPath.getString().getCString(kStringEncodingUTF8)) == 0) {
+	if (::rename(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8),
+			*filesystemPath.getString().getCString(CString::kEncodingUTF8)) == 0) {
 		// Success
 		update(filesystemPath);
 
@@ -48,7 +48,7 @@ OI<SError> CFolder::rename(const CString& string)
 OI<SError> CFolder::create() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (::mkdir(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), 0777) == 0)
+	if (::mkdir(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8), 0777) == 0)
 		// Success
 		return OI<SError>();
 	else
@@ -60,7 +60,7 @@ OI<SError> CFolder::create() const
 OI<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (::unlink(*getFilesystemPath().getString().getCString(kStringEncodingUTF8)) == 0)
+	if (::unlink(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8)) == 0)
 		// Success
 		return OI<SError>();
 	else
@@ -74,6 +74,6 @@ bool CFolder::doesExist() const
 {
 	struct	stat	statInfo;
 
-	return (::stat(*getFilesystemPath().getString().getCString(kStringEncodingUTF8), &statInfo) == 0) &&
+	return (::stat(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8), &statInfo) == 0) &&
 			S_ISDIR(statInfo.st_mode);
 }

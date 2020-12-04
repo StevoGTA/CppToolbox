@@ -19,23 +19,25 @@ struct SArraySortInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CArrayIteratorInfo
 
-class CArrayIteratorInfo : public CIteratorInfo {
+class CArrayIteratorInfo : public CIterator::Info {
 	// Methods
 	public:
-					// Lifecycle methods
-					CArrayIteratorInfo(const CArrayInternals& internals, UInt32 initialReference) :
-						CIteratorInfo(), mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0)
-						{}
+						// Lifecycle methods
+						CArrayIteratorInfo(const CArrayInternals& internals, UInt32 initialReference) :
+							CIterator::Info(),
+									mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0)
+							{}
 
-					// CIteratorInfo methods
-	CIteratorInfo*	copy()
-						{
-							// Make copy
-							CArrayIteratorInfo*	iteratorInfo = new CArrayIteratorInfo(mInternals, mInitialReference);
-							iteratorInfo->mCurrentIndex = mCurrentIndex;
+						// CIterator::Info methods
+	CIterator::Info*	copy()
+							{
+								// Make copy
+								CArrayIteratorInfo*	iteratorInfo =
+															new CArrayIteratorInfo(mInternals, mInitialReference);
+								iteratorInfo->mCurrentIndex = mCurrentIndex;
 
-							return iteratorInfo;
-						}
+								return iteratorInfo;
+							}
 
 	// Properties
 	const	CArrayInternals&	mInternals;
@@ -237,7 +239,7 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 															iteratorAdvance, *iteratorInfo);
 												}
 
-		static	void*						iteratorAdvance(CIteratorInfo& iteratorInfo)
+		static	void*						iteratorAdvance(CIterator::Info& iteratorInfo)
 												{
 													// Setup
 													CArrayIteratorInfo&	arrayIteratorInfo =

@@ -34,7 +34,7 @@ class CFileWriter {
 		OI<SError>	write(const void* buffer, UInt64 byteCount) const;
 		OI<SError>	write(const CData& data) const
 						{ return write(data.getBytePtr(), data.getSize()); }
-		OI<SError>	write(const CString& string, EStringEncoding stringEncoding = kStringEncodingTextDefault) const
+		OI<SError>	write(const CString& string, CString::Encoding stringEncoding = CString::kEncodingTextDefault) const
 						{  return write(string.getData(stringEncoding)); }
 		OI<SError>	write(SInt8 value) const
 						{ return write(&value, sizeof(SInt8)); }

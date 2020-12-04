@@ -99,7 +99,7 @@ class CColorRegistry {
 	public:
 									// Lifecycle methods
 									CColorRegistry();
-									CColorRegistry(const SPref& pref);
+									CColorRegistry(const CPreferences::Pref& pref);
 									~CColorRegistry();
 
 									// Instance methods

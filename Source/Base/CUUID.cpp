@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: External functions
 
-extern	SUUIDBytes	eCreateUUIDBytes();
+extern	CUUID::Bytes	eCreateUUIDBytes();
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ extern	SUUIDBytes	eCreateUUIDBytes();
 class CUUIDInternals : public TReferenceCountable<CUUIDInternals> {
 	public:
 		CUUIDInternals() : TReferenceCountable(), mUUIDBytes(eCreateUUIDBytes()) {}
-		CUUIDInternals(const SUUIDBytes& uuidBytes) : TReferenceCountable(), mUUIDBytes(uuidBytes) {}
+		CUUIDInternals(const CUUID::Bytes& uuidBytes) : TReferenceCountable(), mUUIDBytes(uuidBytes) {}
 		CUUIDInternals(const CData& data) : TReferenceCountable()
 			{
 				// Check if data is correct size
@@ -58,7 +58,7 @@ class CUUIDInternals : public TReferenceCountable<CUUIDInternals> {
 					mUUIDBytes = eCreateUUIDBytes();
 			}
 
-		SUUIDBytes	mUUIDBytes;
+		CUUID::Bytes	mUUIDBytes;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,10 +77,10 @@ CUUID::CUUID()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CUUID::CUUID(const SUUIDBytes& uuidBytes)
+CUUID::CUUID(const Bytes& bytes)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CUUIDInternals(uuidBytes);
+	mInternals = new CUUIDInternals(bytes);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -130,11 +130,11 @@ CString CUUID::getHexString() const
 CData CUUID::getData() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CData(&mInternals->mUUIDBytes, sizeof(SUUIDBytes));
+	return CData(&mInternals->mUUIDBytes, sizeof(Bytes));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SUUIDBytes CUUID::getBytes()
+CUUID::Bytes CUUID::getBytes()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mUUIDBytes;
@@ -144,5 +144,5 @@ SUUIDBytes CUUID::getBytes()
 bool CUUID::equals(const CUUID& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::memcmp(&mInternals->mUUIDBytes, &other.mInternals->mUUIDBytes, sizeof(SUUIDBytes)) == 0;
+	return ::memcmp(&mInternals->mUUIDBytes, &other.mInternals->mUUIDBytes, sizeof(Bytes)) == 0;
 }

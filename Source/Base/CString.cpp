@@ -44,15 +44,15 @@ CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHashable()
+CString::CString(UInt64 value, SpecialFormattingOptions options) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Init
 	init();
 
-	if (options & kStringSpecialFormattingOptionsBytesDecimal) {
+	if (options & kSpecialFormattingOptionsBytesDecimal) {
 		// Bytes - Decimal
-		if (options & kStringSpecialFormattingOptionsBytesDecimalDoEasyRead) {
+		if (options & kSpecialFormattingOptionsBytesDecimalDoEasyRead) {
 			if (value > kDisplayAsGBThreshHold)
 				*this = CString((Float64) value / (1000.0 * 1000.0 * 1000.0), 0, 2) + CString(OSSTR("GB"));
 			else if (value > kDisplayAsMBThreshHold)
@@ -60,23 +60,23 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 			else if (value > kDisplayAsKBThreshhold)
 				*this = CString((Float64) value / 1000.0, 0, 2) + CString(OSSTR("KB"));
 			else {
-				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExact)
+				if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExact)
 					*this = CString::mEmpty;
 				else
 					*this = CString(value) + CString(OSSTR(" bytes"));
 			}
 		}
 
-		if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExact) {
+		if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExact) {
 			// Display exact byte count
-			if ((options & kStringSpecialFormattingOptionsBytesDecimalDoEasyRead) && (value > kDisplayAsKBThreshhold))
+			if ((options & kSpecialFormattingOptionsBytesDecimalDoEasyRead) && (value > kDisplayAsKBThreshhold))
 				*this += CString(OSSTR(" ("));
 
 			UInt64	valueCopy = value;
 			bool	displayZeros = false;
 			if (valueCopy > 1000000000000LL) {
 				*this += CString(valueCopy / 1000000000000LL, 3);
-				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 				valueCopy %= 1000000000000LL;
 				displayZeros = true;
@@ -84,50 +84,50 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 
 			if (valueCopy > 1000000000) {
 				*this += CString(valueCopy / 1000000000, displayZeros ? 3 : 0, displayZeros);
-				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 				valueCopy %= 1000000000;
 				displayZeros = true;
 			} else if (displayZeros) {
 				*this += CString(OSSTR("000"));
-				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 			}
 
 			if (valueCopy > 1000000) {
 				*this += CString(valueCopy / 1000000, displayZeros ? 3 : 0, displayZeros);
-				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 				valueCopy %= 1000000;
 				displayZeros = true;
 			} else if (displayZeros) {
 				*this += CString(OSSTR("000"));
-				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 			}
 
 			if (valueCopy > 1000) {
 				*this += CString(valueCopy / 1000, displayZeros ? 3 : 0, displayZeros);
-				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 				valueCopy %= 1000;
 				displayZeros = true;
 			} else if (displayZeros) {
 				*this += CString(OSSTR("000"));
-				if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 			}
 
 			*this += CString(valueCopy, displayZeros ? 3 : 0, displayZeros);
-			if (options & kStringSpecialFormattingOptionsBytesDecimalDoOrAddExactAddLabel)
+			if (options & kSpecialFormattingOptionsBytesDecimalDoOrAddExactAddLabel)
 				*this += CString(OSSTR(" bytes"));
 
-			if ((options & kStringSpecialFormattingOptionsBytesDecimalDoEasyRead) && (value > kDisplayAsKBThreshhold))
+			if ((options & kSpecialFormattingOptionsBytesDecimalDoEasyRead) && (value > kDisplayAsKBThreshhold))
 				*this += CString(OSSTR(")"));
 		}
-	} else if (options & kStringSpecialFormattingOptionsBytesBinary) {
+	} else if (options & kSpecialFormattingOptionsBytesBinary) {
 		// Bytes - Binary
-		if (options & kStringSpecialFormattingOptionsBytesBinaryDoEasyRead) {
+		if (options & kSpecialFormattingOptionsBytesBinaryDoEasyRead) {
 			if (value > kDisplayAsGiBThreshHold)
 				*this = CString((Float64) value / (1024.0 * 1024.0 * 1024.0), 0, 2) + CString(OSSTR("GiB"));
 			else if (value > kDisplayAsMiBThreshHold)
@@ -135,23 +135,23 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 			else if (value > kDisplayAsKiBThreshhold)
 				*this = CString((Float64) value / 1024.0, 0, 2) + CString(OSSTR("KiB"));
 			else {
-				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExact)
+				if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExact)
 					*this = CString::mEmpty;
 				else
 					*this = CString(value) + CString(OSSTR(" bytes"));
 			}
 		}
 
-		if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExact) {
+		if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExact) {
 			// Display exact byte count
-			if ((options & kStringSpecialFormattingOptionsBytesBinaryDoEasyRead) && (value > kDisplayAsKiBThreshhold))
+			if ((options & kSpecialFormattingOptionsBytesBinaryDoEasyRead) && (value > kDisplayAsKiBThreshhold))
 				*this += CString(OSSTR(" ("));
 
 			UInt64	valueCopy = value;
 			bool	displayZeros = false;
 			if (valueCopy > 1000000000000LL) {
 				*this += CString(valueCopy / 1000000000000LL, 3);
-				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 				valueCopy %= 1000000000000LL;
 				displayZeros = true;
@@ -159,53 +159,53 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 
 			if (valueCopy > 1000000000) {
 				*this += CString(valueCopy / 1000000000, displayZeros ? 3 : 0, displayZeros);
-				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 				valueCopy %= 1000000000;
 				displayZeros = true;
 			} else if (displayZeros) {
 				*this += CString(OSSTR("000"));
-				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 			}
 
 			if (valueCopy > 1000000) {
 				*this += CString(valueCopy / 1000000, displayZeros ? 3 : 0, displayZeros);
-				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 				valueCopy %= 1000000;
 				displayZeros = true;
 			} else if (displayZeros) {
 				*this += CString(OSSTR("000"));
-				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 			}
 
 			if (valueCopy > 1000) {
 				*this += CString(valueCopy / 1000, displayZeros ? 3 : 0, displayZeros);
-				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 				valueCopy %= 1000;
 				displayZeros = true;
 			} else if (displayZeros) {
 				*this += CString(OSSTR("000"));
-				if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
+				if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas)
 					*this += CString(OSSTR(","));
 			}
 
 			*this += CString(valueCopy, displayZeros ? 3 : 0, displayZeros);
-			if (options & kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactAddLabel)
+			if (options & kSpecialFormattingOptionsBytesBinaryDoOrAddExactAddLabel)
 				*this += CString(OSSTR(" bytes"));
 
-			if ((options & kStringSpecialFormattingOptionsBytesBinaryDoEasyRead) && (value > kDisplayAsKiBThreshhold))
+			if ((options & kSpecialFormattingOptionsBytesBinaryDoEasyRead) && (value > kDisplayAsKiBThreshhold))
 				*this += CString(OSSTR(")"));
 		}
-	} else if (options & kStringSpecialFormattingOptionsCurrencyDollars) {
+	} else if (options & kSpecialFormattingOptionsCurrencyDollars) {
 		// Currency - Dollars
-		if (options & kStringSpecialFormattingOptionsCurrencyDollarsAddDollarsign)
+		if (options & kSpecialFormattingOptionsCurrencyDollarsAddDollarsign)
 			*this += CString(OSSTR("$"));
 
-		if (options & kStringSpecialFormattingOptionsCurrencyDollarsUseCommas) {
+		if (options & kSpecialFormattingOptionsCurrencyDollarsUseCommas) {
 			// Use commas
 			UInt64	dollars = value / 100, temp = 10;
 			UInt32	digitsCount = 1;
@@ -227,7 +227,7 @@ CString::CString(UInt64 value, EStringSpecialFormattingOptions options) : CHasha
 		} else
 			*this += CString(value / 100);
 
-		if (options & kStringSpecialFormattingOptionsCurrencyDollarsAddCents)
+		if (options & kSpecialFormattingOptionsCurrencyDollarsAddCents)
 			*this += CString(OSSTR(".")) + CString(value % 100, 2, true);
 	}
 }
@@ -303,17 +303,17 @@ UInt64 CString::getAsByteCount() const
 {
 	CString	string = uppercased();
 
-	if (string.contains(CString(OSSTR("GIB")), kStringCompareFlagsCaseInsensitive))
+	if (string.contains(CString(OSSTR("GIB")), kCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0 * 1024.0 * 1024.0);
-	if (string.contains(CString(OSSTR("GB")), kStringCompareFlagsCaseInsensitive))
+	if (string.contains(CString(OSSTR("GB")), kCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0 * 1000.0 * 1000.0);
-	else if (string.contains(CString(OSSTR("MIB")), kStringCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("MIB")), kCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0 * 1024.0);
-	else if (string.contains(CString(OSSTR("MB")), kStringCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("MB")), kCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0 * 1000.0);
-	else if (string.contains(CString(OSSTR("KIB")), kStringCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("KIB")), kCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0);
-	else if (string.contains(CString(OSSTR("KB")), kStringCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("KB")), kCompareFlagsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0);
 	else
 		return getUInt64();
@@ -371,7 +371,7 @@ TArray<CString> CString::breakUpRespectingQuotes(const CString& delimiterString)
 	// Quotes around a string with the delimiter is not a real delimiter
 	bool	inQuotes = false;
 	CString	tempString;
-	for (CStringCharIndex i = 0; i < getLength();) {
+	for (CharIndex i = 0; i < getLength();) {
 		if (getCharacterAtIndex(i) == '\"') {
 			// Found quote
 			inQuotes = !inQuotes;
@@ -400,7 +400,7 @@ TArray<CString> CString::breakUpRespectingQuotes(const CString& delimiterString)
 ECompareResult CString::compare(CString* const string1, CString* const string2, void* compareFlags)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return string1->compareTo(*string2, *((EStringCompareFlags*) compareFlags));
+	return string1->compareTo(*string2, *((CompareFlags*) compareFlags));
 }
 
 // MARK: Class methods

@@ -8,159 +8,168 @@
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Structures
-
-struct SPref {
-	// Lifecycle methods
-	SPref() : mKeyString(nil) {}
-	SPref(OSStringType keyString) : mKeyString(keyString) {}
-	SPref(const SPref& other) : mKeyString(other.mKeyString) {}
-
-	// Properties
-	OSStringType	mKeyString;	// "key"
-};
-
-struct SStringPref : public SPref {
-	// Lifecycle methods
-	SStringPref() : SPref(nil), mDefaultValue(OSSTR("")) {}
-	SStringPref(OSStringType keyString, OSStringVar(defaultValue) = OSSTR("")) :
-		SPref(keyString), mDefaultValue(defaultValue)
-		{}
-
-	// Properties
-	CString	mDefaultValue;
-};
-
-struct SFloat32Pref : public SPref {
-	// Lifecycle methods
-	SFloat32Pref() : SPref(nil), mDefaultValue(0.0) {}
-	SFloat32Pref(OSStringType keyString, Float32 defaultValue = 0.0) : SPref(keyString), mDefaultValue(defaultValue) {}
-
-	// Properties
-	Float32	mDefaultValue;		// 32.0
-};
-
-struct SFloat64Pref : public SPref {
-	// Lifecycle methods
-	SFloat64Pref() : SPref(nil), mDefaultValue(0.0) {}
-	SFloat64Pref(OSStringType keyString, Float64 defaultValue = 0.0) : SPref(keyString), mDefaultValue(defaultValue) {}
-
-	// Properties
-	Float64	mDefaultValue;		// 64.0
-};
-
-struct SSInt32Pref : public SPref {
-	// Lifecycle methods
-	SSInt32Pref() : SPref(nil), mDefaultValue(0) {}
-	SSInt32Pref(OSStringType keyString, SInt32 defaultValue = 0) : SPref(keyString), mDefaultValue(defaultValue) {}
-
-	// Properties
-	SInt32	mDefaultValue;		// 32
-};
-
-struct SUInt32Pref : public SPref {
-	// Lifecycle methods
-	SUInt32Pref() : SPref(nil), mDefaultValue(0) {}
-	SUInt32Pref(OSStringType keyString, UInt32 defaultValue = 0) : SPref(keyString), mDefaultValue(defaultValue) {}
-
-	// Properties
-	UInt32	mDefaultValue;		// 32
-};
-
-struct SUInt64Pref : public SPref {
-	// Lifecycle methods
-	SUInt64Pref() : SPref(nil), mDefaultValue(0) {}
-	SUInt64Pref(OSStringType keyString, UInt32 defaultValue = 0) : SPref(keyString), mDefaultValue(defaultValue) {}
-
-	// Properties
-	UInt64	mDefaultValue;		// 32
-};
-
-struct SUniversalTimeIntervalPref : public SPref {
-	// Lifecycle methods
-	SUniversalTimeIntervalPref() : SPref(nil), mDefaultValue(0.0) {}
-	SUniversalTimeIntervalPref(OSStringType keyString, Float64 defaultValue = 0.0) :
-		SPref(keyString), mDefaultValue(defaultValue)
-		{}
-
-	// Properties
-	UniversalTimeInterval	mDefaultValue;		// 64.0
-};
-
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-struct SPreferencesReference {
-	// Lifecycle methods
-	SPreferencesReference(const CString& applicationID) : mApplicationID(applicationID) {}
-	SPreferencesReference(const SPreferencesReference& other) : mApplicationID(other.mApplicationID) {}
-
-	// Properties
-	CString	mApplicationID;
-};
-#else
-struct SPreferencesReference {
-	// Lifecycle methods
-	SPreferencesReference(UInt32 dummy) {}
-	SPreferencesReference(const SPreferencesReference& other) {}
-};
-#endif
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CPreferences
+// MARK: CPreferences
 
 class CPreferencesInternals;
 class CPreferences {
+	// Structs
+	public:
+		struct Pref {
+			// Lifecycle methods
+			Pref() : mKeyString(nil) {}
+			Pref(OSStringType keyString) : mKeyString(keyString) {}
+			Pref(const Pref& other) : mKeyString(other.mKeyString) {}
+
+			// Properties
+			OSStringType	mKeyString;	// "key"
+		};
+
+		struct StringPref : public Pref {
+			// Lifecycle methods
+			StringPref() : Pref(nil), mDefaultValue(OSSTR("")) {}
+			StringPref(OSStringType keyString, OSStringVar(defaultValue) = OSSTR("")) :
+				Pref(keyString), mDefaultValue(defaultValue)
+				{}
+
+			// Properties
+			CString	mDefaultValue;
+		};
+
+		struct Float32Pref : public Pref {
+			// Lifecycle methods
+			Float32Pref() : Pref(nil), mDefaultValue(0.0) {}
+			Float32Pref(OSStringType keyString, Float32 defaultValue = 0.0) :
+				Pref(keyString), mDefaultValue(defaultValue)
+				{}
+
+			// Properties
+			Float32	mDefaultValue;		// 32.0
+		};
+
+		struct Float64Pref : public Pref {
+			// Lifecycle methods
+			Float64Pref() : Pref(nil), mDefaultValue(0.0) {}
+			Float64Pref(OSStringType keyString, Float64 defaultValue = 0.0) :
+				Pref(keyString), mDefaultValue(defaultValue)
+				{}
+
+			// Properties
+			Float64	mDefaultValue;		// 64.0
+		};
+
+		struct SInt32Pref : public Pref {
+			// Lifecycle methods
+			SInt32Pref() : Pref(nil), mDefaultValue(0) {}
+			SInt32Pref(OSStringType keyString, SInt32 defaultValue = 0) :
+				Pref(keyString), mDefaultValue(defaultValue)
+				{}
+
+			// Properties
+			SInt32	mDefaultValue;		// 32
+		};
+
+		struct UInt32Pref : public Pref {
+			// Lifecycle methods
+			UInt32Pref() : Pref(nil), mDefaultValue(0) {}
+			UInt32Pref(OSStringType keyString, UInt32 defaultValue = 0) :
+				Pref(keyString), mDefaultValue(defaultValue)
+				{}
+
+			// Properties
+			UInt32	mDefaultValue;		// 32
+		};
+
+		struct UInt64Pref : public Pref {
+			// Lifecycle methods
+			UInt64Pref() : Pref(nil), mDefaultValue(0) {}
+			UInt64Pref(OSStringType keyString, UInt32 defaultValue = 0) :
+				Pref(keyString), mDefaultValue(defaultValue)
+				{}
+
+			// Properties
+			UInt64	mDefaultValue;		// 32
+		};
+
+		struct UniversalTimeIntervalPref : public Pref {
+			// Lifecycle methods
+			UniversalTimeIntervalPref() : Pref(nil), mDefaultValue(0.0) {}
+			UniversalTimeIntervalPref(OSStringType keyString, Float64 defaultValue = 0.0) :
+				Pref(keyString), mDefaultValue(defaultValue)
+				{}
+
+			// Properties
+			UniversalTimeInterval	mDefaultValue;		// 64.0
+		};
+
+#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+		struct Reference {
+			// Lifecycle methods
+			Reference(const CString& applicationID) : mApplicationID(applicationID) {}
+			Reference(const Reference& other) : mApplicationID(other.mApplicationID) {}
+
+			// Properties
+			CString	mApplicationID;
+		};
+#else
+		struct Reference {
+			// Lifecycle methods
+			Reference(UInt32 dummy) {}
+			Reference(const Reference& other) {}
+		};
+#endif
+
 	// Methods
 	public:
 								// Lifecycle methods
 								CPreferences();
-								CPreferences(const SPreferencesReference& preferencesReference);
+								CPreferences(const Reference& reference);
 								~CPreferences();
 
 								// Instance methods
-		bool					hasValue(const SPref& pref);
+		bool					hasValue(const Pref& pref);
 
-		TNArray<CData>			getDataArray(const SPref& pref);
-		TNArray<CDictionary>	getDictionaryArray(const SPref& pref);
-		TNumericArray<OSType>	getOSTypeArray(const SPref& pref);
-		CData					getData(const SPref& pref);
-		CDictionary				getDictionary(const SPref& pref);
-		CString					getString(const SStringPref& pref);
-		Float32					getFloat32(const SFloat32Pref& pref);
-		Float64					getFloat64(const SFloat64Pref& pref);
-		SInt32					getSInt32(const SSInt32Pref& pref);
-		UInt32					getUInt32(const SUInt32Pref& pref);
-		UInt64					getUInt64(const SUInt64Pref& pref);
-		UniversalTimeInterval	getUniversalTimeInterval(const SUniversalTimeIntervalPref& pref);
+		TNArray<CData>			getDataArray(const Pref& pref);
+		TNArray<CDictionary>	getDictionaryArray(const Pref& pref);
+		TNumericArray<OSType>	getOSTypeArray(const Pref& pref);
+		CData					getData(const Pref& pref);
+		CDictionary				getDictionary(const Pref& pref);
+		CString					getString(const StringPref& pref);
+		Float32					getFloat32(const Float32Pref& pref);
+		Float64					getFloat64(const Float64Pref& pref);
+		SInt32					getSInt32(const SInt32Pref& pref);
+		UInt32					getUInt32(const UInt32Pref& pref);
+		UInt64					getUInt64(const UInt64Pref& pref);
+		UniversalTimeInterval	getUniversalTimeInterval(const UniversalTimeIntervalPref& pref);
 
-		void					set(const SPref& pref, const TArray<CData>& array);
-		void					set(const SPref& pref, const TArray<CDictionary>& array);
-		void					set(const SPref& pref, const TNumericArray<OSType>& array);
-		void					set(const SPref& pref, const CData& data);
-		void					set(const SPref& pref, const CDictionary& dictionary);
-		void					set(const SStringPref& pref, const CString& string);
-		void					set(const SFloat32Pref& pref, Float32 value);
-		void					set(const SFloat64Pref& pref, Float64 value);
-		void					set(const SSInt32Pref& pref, SInt32 value);
-		void					set(const SUInt32Pref& pref, UInt32 value);
-		void					set(const SUInt64Pref& pref, UInt64 value);
-		void					set(const SUniversalTimeIntervalPref& pref, UniversalTimeInterval value);
+		void					set(const Pref& pref, const TArray<CData>& array);
+		void					set(const Pref& pref, const TArray<CDictionary>& array);
+		void					set(const Pref& pref, const TNumericArray<OSType>& array);
+		void					set(const Pref& pref, const CData& data);
+		void					set(const Pref& pref, const CDictionary& dictionary);
+		void					set(const StringPref& pref, const CString& string);
+		void					set(const Float32Pref& pref, Float32 value);
+		void					set(const Float64Pref& pref, Float64 value);
+		void					set(const SInt32Pref& pref, SInt32 value);
+		void					set(const UInt32Pref& pref, UInt32 value);
+		void					set(const UInt64Pref& pref, UInt64 value);
+		void					set(const UniversalTimeIntervalPref& pref, UniversalTimeInterval value);
 
-		void					remove(const SPref& pref);
+		void					remove(const Pref& pref);
 		
 		void					beginGroupSet();
 		void					endGroupSet();
 
-		void					setAlternate(const SPreferencesReference& preferencesReference);
+		void					setAlternate(const Reference& reference);
 
 	// Properties
 	public:
 		static	CPreferences			mDefault;
 
-		static	SPref					mNoPref;
-		static	SStringPref				mNoStringPref;
-		static	SFloat32Pref			mNoFloat32Pref;
-		static	SFloat64Pref			mNoFloat64Pref;
-		static	SUInt32Pref				mNoUInt32Pref;
+		static	Pref					mNoPref;
+		static	StringPref				mNoStringPref;
+		static	Float32Pref				mNoFloat32Pref;
+		static	Float64Pref				mNoFloat64Pref;
+		static	UInt32Pref				mNoUInt32Pref;
 
 	private:
 				CPreferencesInternals*	mInternals;

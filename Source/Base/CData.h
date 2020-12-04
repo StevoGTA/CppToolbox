@@ -7,55 +7,48 @@
 #include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Size
-
-typedef	UInt32	CDataSize;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Byte Index
-
-typedef	UInt32	CDataByteIndex;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CData
+// MARK: CData
 
 class CDataInternals;
 class CData {
+	// Types
+	public:
+		typedef	UInt32	Size;
+		typedef	UInt32	ByteIndex;
+
 	// Methods
 	public:
-							// Lifecycle methods
-							CData(CDataSize initialSize = 0);
-							CData(const CData& other);
-							CData(const void* buffer, CDataSize bufferSize, bool copySourceData = true);
-							CData(const CString& base64String);
-							CData(SInt8 value);
-							CData(UInt8 value);
-							~CData();
+						// Lifecycle methods
+						CData(Size initialSize = 0);
+						CData(const CData& other);
+						CData(const void* buffer, Size bufferSize, bool copySourceData = true);
+						CData(const CString& base64String);
+						CData(SInt8 value);
+						CData(UInt8 value);
+						~CData();
 
-							// Instance methods
-				CDataSize	getSize() const;
-				void		setSize(CDataSize size);
-				void		increaseSizeBy(CDataSize size);
-				bool		isEmpty() const
-								{ return getSize() == 0; }
+						// Instance methods
+				Size	getSize() const;
+				void	setSize(Size size);
+				void	increaseSizeBy(Size size);
+				bool	isEmpty() const
+							{ return getSize() == 0; }
 
-		const	void*		getBytePtr() const;
-				void*		getMutableBytePtr();
-				void		copyBytes(void* destinationBuffer, CDataByteIndex startByte = 0,
-									OV<CDataSize> count = OV<CDataSize>()) const;
-				void		appendBytes(const void* buffer, CDataSize bufferSize);
-				void		replaceBytes(CDataByteIndex startByte, CDataSize byteCount, const void* buffer,
-									CDataSize bufferSize);
+		const	void*	getBytePtr() const;
+				void*	getMutableBytePtr();
+				void	copyBytes(void* destinationBuffer, ByteIndex startByte = 0, OV<Size> count = OV<Size>()) const;
+				void	appendBytes(const void* buffer, Size bufferSize);
+				void	replaceBytes(ByteIndex startByte, Size byteCount, const void* buffer, Size bufferSize);
 
-				CString		getBase64String(bool prettyPrint = false) const;
+				CString	getBase64String(bool prettyPrint = false) const;
 
-				CData&		operator=(const CData& other);
-				bool		operator==(const CData& other) const;
-				bool		operator!=(const CData& other) const
-								{ return !operator==(other); }
-				CData		operator+(const CData& other) const;
-				CData&		operator+=(const CData& other)
-								{ appendBytes(other.getBytePtr(), other.getSize()); return *this; }
+				CData&	operator=(const CData& other);
+				bool	operator==(const CData& other) const;
+				bool	operator!=(const CData& other) const
+							{ return !operator==(other); }
+				CData	operator+(const CData& other) const;
+				CData&	operator+=(const CData& other)
+							{ appendBytes(other.getBytePtr(), other.getSize()); return *this; }
 
 	// Properties
 	public:

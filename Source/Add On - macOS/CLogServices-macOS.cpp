@@ -8,7 +8,7 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CLogServicesMacOS
+// MARK: CLogServices
 
 // MARK: Class methods
 
@@ -34,10 +34,11 @@ void CLogServicesMacOS::logSystemInfo(const CString& productAndVersion)
 	CLogServices::logMessage(
 			CString(OSSTR("\tPhysical RAM: ")) +
 					CString(CCoreServices::getPhysicalMemoryByteCount(),
-							(EStringSpecialFormattingOptions) (kStringSpecialFormattingOptionsBytesBinary |
-									kStringSpecialFormattingOptionsBytesBinaryDoEasyRead |
-									kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas|
-									kStringSpecialFormattingOptionsBytesBinaryDoOrAddExactAddLabel)));
+							(CString::SpecialFormattingOptions)
+									(CString::kSpecialFormattingOptionsBytesBinary |
+									CString::kSpecialFormattingOptionsBytesBinaryDoEasyRead |
+									CString::kSpecialFormattingOptionsBytesBinaryDoOrAddExactUseCommas|
+									CString::kSpecialFormattingOptionsBytesBinaryDoOrAddExactAddLabel)));
 
 	// Core Audio Version
 	CLogServices::logMessage(

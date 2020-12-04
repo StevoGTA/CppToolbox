@@ -17,15 +17,9 @@ class CArrayInternals;
 class CArray : public CEquatable {
 	// Types:
 	public:
-		typedef	const	void*	ItemRef;
-
 		typedef			UInt32	ItemIndex;
-
 		typedef			UInt32	ItemCount;
-
-//		enum SortOptions {
-//			kSortOptionsDefault	= 0,
-//		};
+		typedef	const	void*	ItemRef;
 
 	// Procs:
 	public:

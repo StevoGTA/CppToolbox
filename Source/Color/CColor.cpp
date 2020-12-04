@@ -255,7 +255,7 @@ CColor::CColor(const CString& hexString)
 	//	RGB
 	//	RRGGBB
 	//	RRGGBBAA
-	CStringCharIndex	startIndex = hexString.hasPrefix(CString(OSSTR("#"))) ? 1 : 0;
+	CString::CharIndex	startIndex = hexString.hasPrefix(CString(OSSTR("#"))) ? 1 : 0;
 
 	if ((hexString.getLength() - startIndex) == 3) {
 		// RGB

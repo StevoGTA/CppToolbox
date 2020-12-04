@@ -15,44 +15,43 @@
 //	Example UUID as base 64 string:
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - SUUIDBytes
-
-struct SUUIDBytes {
-	// Properties
-	UInt8	mBytes[16];
-};
-
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CUUID
 
 class CUUIDInternals;
 class CUUID : public CHashable {
+	// Structs
+	public:
+		struct Bytes {
+			// Properties
+			UInt8	mBytes[16];
+		};
+
 	// Methods
 	public:
-							// Lifecycle methods
-							CUUID();
-							CUUID(const SUUIDBytes& uuidBytes);
-							CUUID(const CData& data);
-							CUUID(const CString& string);
-							CUUID(const CUUID& other);
-							~CUUID();
+						// Lifecycle methods
+						CUUID();
+						CUUID(const Bytes& bytes);
+						CUUID(const CData& data);
+						CUUID(const CString& string);
+						CUUID(const CUUID& other);
+						~CUUID();
 
-							// CEquatable methods
-				bool		operator==(const CEquatable& other) const
-								{ return equals((const CUUID&) other); }
+						// CEquatable methods
+				bool	operator==(const CEquatable& other) const
+							{ return equals((const CUUID&) other); }
 
-							// CHashable methods
-				void		hashInto(CHasher& hasher) const
-								{ getBase64String().hashInto(hasher); }
+						// CHashable methods
+				void	hashInto(CHasher& hasher) const
+							{ getBase64String().hashInto(hasher); }
 
-							// Instance methods
-				CData		getData() const;
-				CString		getHexString() const;
-				CString		getBase64String() const
-								{ return getData().getBase64String(); }
-				SUUIDBytes	getBytes();
+						// Instance methods
+				CData	getData() const;
+				CString	getHexString() const;
+				CString	getBase64String() const
+							{ return getData().getBase64String(); }
+				Bytes	getBytes();
 
-				bool		equals(const CUUID& other) const;
+				bool	equals(const CUUID& other) const;
 
 	// Properties
 	public:

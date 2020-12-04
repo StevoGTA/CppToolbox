@@ -11,63 +11,63 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Types
 
-typedef			UInt32	CDictionaryKeyCount;
-typedef	const	void*	CDictionaryItemRef;
-
 struct SDictionaryValue;
 struct SDictionaryItem;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Procs
-
-typedef	CDictionaryItemRef		(*CDictionaryItemCopyProc)(CDictionaryItemRef itemRef);
-typedef	void					(*CDictionaryItemDisposeProc)(CDictionaryItemRef itemRef);
-typedef	bool					(*CDictionaryItemEqualsProc)(CDictionaryItemRef itemRef1, CDictionaryItemRef itemRef2);
-
-typedef	CDictionaryKeyCount		(*CDictionaryGetKeyCountProc)(void* userData);
-typedef	OR<SDictionaryValue>	(*CDictionaryGetValueProc)(const CString& key, void* userData);
-typedef	void					(*CDictionaryDisposeUserDataProc)(void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SDictionaryProcsInfo
-
-struct SDictionaryProcsInfo {
-							// Lifecycle methods
-							SDictionaryProcsInfo(CDictionaryGetKeyCountProc getKeyCountProc,
-									CDictionaryGetValueProc getValueProc,
-									CDictionaryDisposeUserDataProc disposeUserDataProc, void* userData) :
-								mGetKeyCountProc(getKeyCountProc), mGetValueProc(getValueProc),
-										mDisposeUserDataProc(disposeUserDataProc), mUserData(userData)
-								{}
-
-							// Instance methods
-	CDictionaryKeyCount		getKeyCount() const
-								{ return mGetKeyCountProc(mUserData); }
-	OR<SDictionaryValue>	getValue(const CString& key) const
-								{ return mGetValueProc(key, mUserData); }
-	void					disposeUserData() const
-								{ return mDisposeUserDataProc(mUserData); }
-
-	// Properties
-	private:
-		CDictionaryGetKeyCountProc		mGetKeyCountProc;
-		CDictionaryGetValueProc			mGetValueProc;
-		CDictionaryDisposeUserDataProc	mDisposeUserDataProc;
-		void*							mUserData;
-};
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDictionary
 
 class CDictionaryInternals;
 class CDictionary : public CEquatable {
+	// Types
+	public:
+		typedef			UInt32	KeyCount;
+		typedef	const	void*	ItemRef;
+
+	// Procs
+	public:
+		typedef	ItemRef		(*ItemCopyProc)(ItemRef itemRef);
+		typedef	void		(*ItemDisposeProc)(ItemRef itemRef);
+		typedef	bool		(*ItemEqualsProc)(ItemRef itemRef1, ItemRef itemRef2);
+
+	// Structs
+	public:
+		struct ProcsInfo {
+			// Procs
+			typedef	KeyCount				(*GetKeyCountProc)(void* userData);
+			typedef	OR<SDictionaryValue>	(*GetValueProc)(const CString& key, void* userData);
+			typedef	void					(*DisposeUserDataProc)(void* userData);
+
+									// Lifecycle methods
+									ProcsInfo(GetKeyCountProc getKeyCountProc, GetValueProc getValueProc,
+											DisposeUserDataProc disposeUserDataProc, void* userData) :
+										mGetKeyCountProc(getKeyCountProc), mGetValueProc(getValueProc),
+												mDisposeUserDataProc(disposeUserDataProc), mUserData(userData)
+										{}
+
+									// Instance methods
+			KeyCount				getKeyCount() const
+										{ return mGetKeyCountProc(mUserData); }
+			OR<SDictionaryValue>	getValue(const CString& key) const
+										{ return mGetValueProc(key, mUserData); }
+			void					disposeUserData() const
+										{ return mDisposeUserDataProc(mUserData); }
+
+			// Properties
+			private:
+				GetKeyCountProc		mGetKeyCountProc;
+				GetValueProc		mGetValueProc;
+				DisposeUserDataProc	mDisposeUserDataProc;
+				void*				mUserData;
+		};
+
 	// Methods
 	public:
 													// Lifecycle methods
-													CDictionary(CDictionaryItemCopyProc itemCopyProc = nil,
-															CDictionaryItemDisposeProc itemDisposeProc = nil,
-															CDictionaryItemEqualsProc itemEqualsProc = nil);
-													CDictionary(const SDictionaryProcsInfo& procsInfo);
+													CDictionary(ItemCopyProc itemCopyProc = nil,
+															ItemDisposeProc itemDisposeProc = nil,
+															ItemEqualsProc itemEqualsProc = nil);
+													CDictionary(const ProcsInfo& procsInfo);
 													CDictionary(const CDictionary& other);
 		virtual										~CDictionary();
 
@@ -76,7 +76,7 @@ class CDictionary : public CEquatable {
 														{ return equals((const CDictionary&) other); }
 
 													// Instance methods
-						CDictionaryKeyCount			getKeyCount() const;
+						KeyCount					getKeyCount() const;
 						TSet<CString>				getKeys() const;
 						bool						isEmpty() const
 														{ return getKeyCount() == 0; }
@@ -108,7 +108,7 @@ class CDictionary : public CEquatable {
 						UInt16						getUInt16(const CString& key, UInt16 defaultValue = 0) const;
 						UInt32						getUInt32(const CString& key, UInt32 defaultValue = 0) const;
 						UInt64						getUInt64(const CString& key, UInt64 defaultValue = 0) const;
-						OV<CDictionaryItemRef>		getItemRef(const CString& key) const;
+						OV<ItemRef>					getItemRef(const CString& key) const;
 						OSType						getOSType(const CString& key, OSType defaultValue = 0) const
 														{ return getUInt32(key, defaultValue); }
 						void						getValue(const CString& key, Float32& outValue,
@@ -158,7 +158,7 @@ class CDictionary : public CEquatable {
 						void						set(const CString& key, UInt16 value);
 						void						set(const CString& key, UInt32 value);
 						void						set(const CString& key, UInt64 value);
-						void						set(const CString& key, CDictionaryItemRef value);
+						void						set(const CString& key, ItemRef value);
 						void						set(const CString& key, const SDictionaryValue& value);
 
 						void						remove(const CString& key);
@@ -183,27 +183,29 @@ class CDictionary : public CEquatable {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Values
 
-enum EDictionaryValueType {
-	kDictionaryValueTypeBool,
-	kDictionaryValueTypeArrayOfDictionaries,
-	kDictionaryValueTypeArrayOfStrings,
-	kDictionaryValueTypeData,
-	kDictionaryValueTypeDictionary,
-	kDictionaryValueTypeString,
-	kDictionaryValueTypeFloat32,
-	kDictionaryValueTypeFloat64,
-	kDictionaryValueTypeSInt8,
-	kDictionaryValueTypeSInt16,
-	kDictionaryValueTypeSInt32,
-	kDictionaryValueTypeSInt64,
-	kDictionaryValueTypeUInt8,
-	kDictionaryValueTypeUInt16,
-	kDictionaryValueTypeUInt32,
-	kDictionaryValueTypeUInt64,
-	kDictionaryValueTypeItemRef,
-};
-
 struct SDictionaryValue {
+	// Enums
+	public:
+		enum ValueType {
+			kValueTypeBool,
+			kValueTypeArrayOfDictionaries,
+			kValueTypeArrayOfStrings,
+			kValueTypeData,
+			kValueTypeDictionary,
+			kValueTypeString,
+			kValueTypeFloat32,
+			kValueTypeFloat64,
+			kValueTypeSInt8,
+			kValueTypeSInt16,
+			kValueTypeSInt32,
+			kValueTypeSInt64,
+			kValueTypeUInt8,
+			kValueTypeUInt16,
+			kValueTypeUInt32,
+			kValueTypeUInt64,
+			kValueTypeItemRef,
+		};
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -223,13 +225,13 @@ struct SDictionaryValue {
 										SDictionaryValue(UInt16 value);
 										SDictionaryValue(UInt32 value);
 										SDictionaryValue(UInt64 value);
-										SDictionaryValue(CDictionaryItemRef value);
+										SDictionaryValue(CDictionary::ItemRef value);
 										SDictionaryValue(const SDictionaryValue& other);	// No copy
 										SDictionaryValue(const SDictionaryValue& other,
-												CDictionaryItemCopyProc itemCopyProc);	// Copy
+												CDictionary::ItemCopyProc itemCopyProc);	// Copy
 
 										// Instance methods
-				EDictionaryValueType	getType() const { return mValueType; }
+				ValueType				getType() const { return mValueType; }
 
 				bool					getBool(bool defaultValue = false) const;
 		const	TNArray<CDictionary>&	getArrayOfDictionaries(
@@ -250,16 +252,16 @@ struct SDictionaryValue {
 				UInt16					getUInt16(UInt16 defaultValue = 0) const;
 				UInt32					getUInt32(UInt32 defaultValue = 0) const;
 				UInt64					getUInt64(UInt64 defaultValue = 0) const;
-				CDictionaryItemRef		getItemRef() const;
+				CDictionary::ItemRef	getItemRef() const;
 
 				bool					equals(const SDictionaryValue& other,
-												CDictionaryItemEqualsProc itemEqualsProc) const;
+												CDictionary::ItemEqualsProc itemEqualsProc) const;
 
-				void					dispose(CDictionaryItemDisposeProc itemDisposeProc);
+				void					dispose(CDictionary::ItemDisposeProc itemDisposeProc);
 
 	// Properties
 	private:
-		EDictionaryValueType	mValueType;
+		ValueType	mValueType;
 		union SDictionaryValueValue {
 			SDictionaryValueValue(bool value) : mBool(value) {}
 			SDictionaryValueValue(TNArray<CDictionary>* value) : mArrayOfDictionaries(value) {}
@@ -277,7 +279,7 @@ struct SDictionaryValue {
 			SDictionaryValueValue(UInt16 value) : mUInt16(value) {}
 			SDictionaryValueValue(UInt32 value) : mUInt32(value) {}
 			SDictionaryValueValue(UInt64 value) : mUInt64(value) {}
-			SDictionaryValueValue(CDictionaryItemRef value) : mItemRef(value) {}
+			SDictionaryValueValue(CDictionary::ItemRef value) : mItemRef(value) {}
 
 			bool					mBool;
 			TNArray<CDictionary>*	mArrayOfDictionaries;
@@ -295,8 +297,8 @@ struct SDictionaryValue {
 			UInt16					mUInt16;
 			UInt32					mUInt32;
 			UInt64					mUInt64;
-			CDictionaryItemRef		mItemRef;
-		} 						mValue;
+			CDictionary::ItemRef	mItemRef;
+		} 			mValue;
 };
 
 struct SDictionaryItem {
@@ -304,10 +306,10 @@ struct SDictionaryItem {
 	SDictionaryItem(const CString& key, const SDictionaryValue& value) :
 		mKey(key), mValue(value)
 		{}
-	SDictionaryItem(const CString& key, const SDictionaryValue& value, CDictionaryItemCopyProc itemCopyProc) :
+	SDictionaryItem(const CString& key, const SDictionaryValue& value, CDictionary::ItemCopyProc itemCopyProc) :
 		mKey(key), mValue(value, itemCopyProc)
 		{}
-	SDictionaryItem(const SDictionaryItem& other, CDictionaryItemCopyProc itemCopyProc) :
+	SDictionaryItem(const SDictionaryItem& other, CDictionary::ItemCopyProc itemCopyProc) :
 		mKey(other.mKey), mValue(other.mValue, itemCopyProc)
 		{}
 
@@ -323,8 +325,8 @@ template <typename T> class TDictionary : public CDictionary {
 	// Methods
 	public:
 						// Lifecycle methods
-						TDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-							CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
+						TDictionary(CDictionary::ItemEqualsProc itemEqualsProc = nil) :
+							CDictionary((CDictionary::ItemCopyProc) copy, dispose, itemEqualsProc)
 							{}
 						TDictionary(const TDictionary& dictionary) : CDictionary(dictionary) {}
 						~TDictionary() {}
@@ -333,7 +335,7 @@ template <typename T> class TDictionary : public CDictionary {
 		const	OR<T>	get(const CString& key) const
 							{
 								// Get itemRef
-								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
+								OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(key);
 
 								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
 							}
@@ -345,9 +347,9 @@ template <typename T> class TDictionary : public CDictionary {
 
 	private:
 						// Class methods
-		static	T*		copy(CDictionaryItemRef itemRef)
+		static	T*		copy(CDictionary::ItemRef itemRef)
 							{ return new T(*((T*) itemRef)); }
-		static	void	dispose(CDictionaryItemRef itemRef)
+		static	void	dispose(CDictionary::ItemRef itemRef)
 							{ T* t = (T*) itemRef; Delete(t); }
 };
 
@@ -366,7 +368,7 @@ template <typename T> class TReferenceDictionary : public CDictionary {
 		const	OR<T>	get(const CString& key) const
 							{
 								// Get itemRef
-								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(key);
+								OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(key);
 
 								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
 							}
@@ -384,8 +386,8 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 	// Methods
 	public:
 						// Lifecycle methods
-						TKeyConvertibleDictionary(CDictionaryItemEqualsProc itemEqualsProc = nil) :
-							CDictionary((CDictionaryItemCopyProc) copy, dispose, itemEqualsProc)
+						TKeyConvertibleDictionary(CDictionary::ItemEqualsProc itemEqualsProc = nil) :
+							CDictionary((CDictionary::ItemCopyProc) copy, dispose, itemEqualsProc)
 							{}
 						TKeyConvertibleDictionary(const TKeyConvertibleDictionary& dictionary) :
 							CDictionary(dictionary)
@@ -396,7 +398,7 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 		const	OR<T>	get(K key) const
 							{
 								// Get itemRef
-								OV<CDictionaryItemRef>	itemRef = CDictionary::getItemRef(CString(key));
+								OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(CString(key));
 
 								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
 							}
@@ -411,8 +413,8 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 
 	private:
 						// Class methods
-		static	T*		copy(CDictionaryItemRef itemRef)
+		static	T*		copy(CDictionary::ItemRef itemRef)
 							{ return new T(*((T*) itemRef)); }
-		static	void	dispose(CDictionaryItemRef itemRef)
+		static	void	dispose(CDictionary::ItemRef itemRef)
 							{ T* t = (T*) itemRef; Delete(t); }
 };

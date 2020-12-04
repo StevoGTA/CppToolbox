@@ -11,10 +11,10 @@
 
 class CAudioPlayerInternals;
 class CAudioPlayer : public CAudioDestination {
-	// Types
+	// Structs
 	public:
 		struct SAudioPlayerProcs {
-			// Types
+			// Procs
 			public:
 				typedef	void	(*PositionUpdatedProc)(UniversalTimeInterval timeInterval, void* userData);
 				typedef	void	(*EndOfDataProc)(void* userData);

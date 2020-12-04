@@ -13,5 +13,6 @@ class CData_ZIPExtensions {
 	// Methods
 	public:
 						// Class methods
-		static	CData	uncompressDataAsZIP(const CData& data, OV<CDataSize> uncompressedDataSize = OV<CDataSize>());
+		static	CData	uncompressDataAsZIP(const CData& data,
+								OV<CData::Size> uncompressedDataSize = OV<CData::Size>());
 };

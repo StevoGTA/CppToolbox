@@ -97,7 +97,7 @@ CData CByteParceller::readData(UInt64 byteCount, OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CData	data((CDataSize) byteCount);
+	CData	data((CData::Size) byteCount);
 
 	// Read
 	outError = readData(data.getMutableBytePtr(), byteCount);
@@ -112,7 +112,7 @@ CData CByteParceller::readData(OI<SError>& outError) const
 {
 	// Setup
 	UInt64	byteCount = getSize() - getPos();
-	CData	data((CDataSize) byteCount);
+	CData	data((CData::Size) byteCount);
 
 	// Read
 	outError = readData(data.getMutableBytePtr(), byteCount);

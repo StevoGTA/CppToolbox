@@ -17,7 +17,7 @@ class COpenGLShaderInternals {
 				mShader = glCreateShader(type);
 				if (mShader > 0) {
 					// Compile shader
-					const	SCString	cString = string.getCString();
+					const	CString::C	cString = string.getCString();
 					glShaderSource(mShader, 1, &cString.mBuffer, nil);
 					glCompileShader(mShader);
 

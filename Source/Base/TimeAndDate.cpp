@@ -48,7 +48,7 @@ CString		SGregorianDate::mPMString(OSSTR("pm"));
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregorianDateStringStyle timeStyle) const
+CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeStringStyle) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose string
@@ -57,17 +57,17 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 	CString		string;
 	UInt8		hour = (mHour == 0) ? 12 : ((mHour - 1) % 12 + 1);
 
-	switch (dateStyle) {
-		case kGregorianDateStringStyleNone:
+	switch (dateStringStyle) {
+		case kStringStyleNone:
 			// None
 			break;
 
-		case kGregorianDateStringStyleShort:
+		case kStringStyleShort:
 			// Short - 1/1/1952
 			string = CString(mMonth) + CString(OSSTR("/")) + CString(mDay) + CString(OSSTR("/")) + CString(mYear);
 			break;
 
-		case kGregorianDateStringStyleMedium:
+		case kStringStyleMedium:
 			// Medium - Jan 12, 1952
 			switch (mMonth) {
 				case 1:		month = &SGregorianDate::mJanString;	break;
@@ -88,7 +88,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 			string = *month + CString(OSSTR(" ")) + CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
 			break;
 
-		case kGregorianDateStringStyleLong:
+		case kStringStyleLong:
 			// Long - January 12, 1952
 			switch (mMonth) {
 				case 1:		month = &SGregorianDate::mJanuaryString;		break;
@@ -109,7 +109,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 			string = *month + CString(OSSTR(" ")) + CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
 			break;
 
-		case kGregorianDateStringStyleFull:
+		case kStringStyleFull:
 			// Full - Tuesday, April 12, 1952 AD
 			switch (mDayOfWeek) {
 				case 0:		day = &SGregorianDate::mSunString;	break;
@@ -144,12 +144,12 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 			break;
 	}
 
-	switch (timeStyle) {
-		case kGregorianDateStringStyleNone:
+	switch (timeStringStyle) {
+		case kStringStyleNone:
 			// None
 			break;
 
-		case kGregorianDateStringStyleShort:
+		case kStringStyleShort:
 			// Short - 3:30pm
 			if (!string.isEmpty())
 				string += CString(OSSTR(" "));
@@ -158,7 +158,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
-		case kGregorianDateStringStyleMedium:
+		case kStringStyleMedium:
 			// Medium - 3:30pm
 			if (!string.isEmpty())
 				string += CString(OSSTR(" "));
@@ -167,7 +167,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
-		case kGregorianDateStringStyleLong:
+		case kStringStyleLong:
 			// Long - 3:30:32pm
 			if (!string.isEmpty())
 				string += CString(OSSTR(" "));
@@ -177,7 +177,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
-		case kGregorianDateStringStyleFull:
+		case kStringStyleFull:
 			// Full - 3:30:32pm PST
 			if (!string.isEmpty())
 				string += CString(OSSTR(" "));
@@ -193,7 +193,7 @@ CString SGregorianDate::getString(EGregorianDateStringStyle dateStyle, EGregoria
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGregorianDate SGregorianDate::operator+(const SGregorianUnits& units) const
+SGregorianDate SGregorianDate::operator+(const Units& units) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Adding or subtracting too much can cause the raw values to go out of range.  We transform to UniverstalTime and
@@ -205,7 +205,7 @@ SGregorianDate SGregorianDate::operator+(const SGregorianUnits& units) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SGregorianDate& SGregorianDate::operator+=(const SGregorianUnits& units)
+SGregorianDate& SGregorianDate::operator+=(const Units& units)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Adding or subtracting too much can cause the raw values to go out of range.  We transform to UniverstalTime and

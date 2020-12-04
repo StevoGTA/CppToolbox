@@ -131,7 +131,7 @@ OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 		if (mInternals->mFILE == nil) {
 			// Open
 			mInternals->mFILE =
-					::fopen(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8),
+					::fopen(*mInternals->mFile.getFilesystemPath().getString().getCString(CString::kEncodingUTF8),
 							!append ? "wb" : "ab+");
 
 			if (mInternals->mFILE != nil)
@@ -154,7 +154,7 @@ OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 		if (mInternals->mFD == -1) {
 			// Open
 			mInternals->mFD =
-					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8),
+					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(CString::kEncodingUTF8),
 							!append ? (O_RDWR | O_CREAT | O_EXCL) : (O_RDWR | O_APPEND | O_EXLOCK), 0);
 			if (mInternals->mFD != -1)
 				// Success

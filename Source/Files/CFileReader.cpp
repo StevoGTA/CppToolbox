@@ -14,7 +14,7 @@ CData CFileReader::readData(UInt64 byteCount, OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
-	CData	data((CDataSize) byteCount);
+	CData	data((CData::Size) byteCount);
 	outError = readData(data.getMutableBytePtr(), byteCount);
 	ReturnValueIfError(outError, CData::mEmpty);
 
