@@ -8,12 +8,12 @@
 #include "Rpc.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-SUUIDBytes eCreateUUIDBytes();
-SUUIDBytes eCreateUUIDBytes()
+CUUID::Bytes eCreateUUIDBytes();
+CUUID::Bytes eCreateUUIDBytes()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	SUUIDBytes	uuidBytes;
-	UuidCreate((UUID*) &uuidBytes);
+	CUUID::Bytes	bytes;
+	UuidCreate((UUID*) &bytes);
 
-	return uuidBytes;
+	return bytes;
 }

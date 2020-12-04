@@ -15,7 +15,7 @@ using namespace Windows::Storage;
 
 class CPreferencesInternals {
 	public:
-		CPreferencesInternals(const SPreferencesReference& preferencesReference) {}
+		CPreferencesInternals(const CPreferences::Reference& reference) {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -24,15 +24,15 @@ class CPreferencesInternals {
 
 // MARK: Properties
 
-CPreferences	CPreferences::mDefault(SPreferencesReference(0));
+CPreferences	CPreferences::mDefault(Reference(0));
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CPreferences::CPreferences(const SPreferencesReference& preferencesReference)
+CPreferences::CPreferences(const Reference& reference)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CPreferencesInternals(preferencesReference);
+	mInternals = new CPreferencesInternals(reference);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -45,14 +45,14 @@ CPreferences::~CPreferences()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CPreferences::hasValue(const SPref& pref)
+bool CPreferences::hasValue(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return ApplicationData::Current->LocalSettings->Values->HasKey(ref new String(pref.mKeyString));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CData> CPreferences::getDataArray(const SPref& pref)
+TNArray<CData> CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
@@ -60,7 +60,7 @@ return TNArray<CData>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CDictionary> CPreferences::getDictionaryArray(const SPref& pref)
+TNArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
@@ -68,7 +68,7 @@ return TNArray<CDictionary>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<OSType> CPreferences::getOSTypeArray(const SPref& pref)
+TNumericArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
@@ -76,7 +76,7 @@ return TNumericArray<OSType>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CPreferences::getData(const SPref& pref)
+CData CPreferences::getData(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
@@ -84,7 +84,7 @@ return CData::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CPreferences::getDictionary(const SPref& pref)
+CDictionary CPreferences::getDictionary(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
@@ -92,7 +92,7 @@ return CDictionary::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CPreferences::getString(const SStringPref& pref)
+CString CPreferences::getString(const StringPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
@@ -104,42 +104,42 @@ CString CPreferences::getString(const SStringPref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float32 CPreferences::getFloat32(const SFloat32Pref& pref)
+Float32 CPreferences::getFloat32(const Float32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return safe_cast<Float32>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float64 CPreferences::getFloat64(const SFloat64Pref& pref)
+Float64 CPreferences::getFloat64(const Float64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return safe_cast<Float64>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt32 CPreferences::getSInt32(const SSInt32Pref& pref)
+SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return safe_cast<SInt32>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CPreferences::getUInt32(const SUInt32Pref& pref)
+UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return safe_cast<UInt32>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CPreferences::getUInt64(const SUInt64Pref& pref)
+UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return safe_cast<UInt64>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UniversalTimeInterval CPreferences::getUniversalTimeInterval(const SUniversalTimeIntervalPref& pref)
+UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTimeIntervalPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return safe_cast<UniversalTimeInterval>(
@@ -147,42 +147,42 @@ UniversalTimeInterval CPreferences::getUniversalTimeInterval(const SUniversalTim
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const TArray<CData>& array)
+void CPreferences::set(const Pref& pref, const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const TArray<CDictionary>& array)
+void CPreferences::set(const Pref& pref, const TArray<CDictionary>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const TNumericArray<OSType>& array)
+void CPreferences::set(const Pref& pref, const TNumericArray<OSType>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const CData& data)
+void CPreferences::set(const Pref& pref, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SPref& pref, const CDictionary& dictionary)
+void CPreferences::set(const Pref& pref, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SStringPref& pref, const CString& string)
+void CPreferences::set(const StringPref& pref, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
@@ -191,7 +191,7 @@ void CPreferences::set(const SStringPref& pref, const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SFloat32Pref& pref, Float32 value)
+void CPreferences::set(const Float32Pref& pref, Float32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
@@ -200,7 +200,7 @@ void CPreferences::set(const SFloat32Pref& pref, Float32 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SFloat64Pref& pref, Float64 value)
+void CPreferences::set(const Float64Pref& pref, Float64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
@@ -209,7 +209,7 @@ void CPreferences::set(const SFloat64Pref& pref, Float64 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SSInt32Pref& pref, SInt32 value)
+void CPreferences::set(const SInt32Pref& pref, SInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
@@ -218,7 +218,7 @@ void CPreferences::set(const SSInt32Pref& pref, SInt32 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SUInt32Pref& pref, UInt32 value)
+void CPreferences::set(const UInt32Pref& pref, UInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
@@ -227,7 +227,7 @@ void CPreferences::set(const SUInt32Pref& pref, UInt32 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
+void CPreferences::set(const UInt64Pref& pref, UInt64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
@@ -236,7 +236,7 @@ void CPreferences::set(const SUInt64Pref& pref, UInt64 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SUniversalTimeIntervalPref& pref, UniversalTimeInterval value)
+void CPreferences::set(const UniversalTimeIntervalPref& pref, UniversalTimeInterval value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
@@ -245,7 +245,7 @@ void CPreferences::set(const SUniversalTimeIntervalPref& pref, UniversalTimeInte
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::remove(const SPref& pref)
+void CPreferences::remove(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove
@@ -267,7 +267,7 @@ void CPreferences::endGroupSet()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::setAlternate(const SPreferencesReference& preferencesReference)
+void CPreferences::setAlternate(const Reference& reference)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
