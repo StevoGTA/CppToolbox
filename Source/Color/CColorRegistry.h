@@ -10,24 +10,7 @@
 #include "CUUID.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Notifications
-
-/*
-	Sent when a color has been changed
-		senderRef is CColorRegistry
-		info contains the following keys:
-			eColorRegistryGroupIDKey
-			eColorRegistryColorIDKey
-			eColorRegistryColorKey
-*/
-extern	CString eColorRegistryColorChangedNotificationName;
-
-extern	CString	eColorRegistryGroupIDKey;	// OSType
-extern	CString	eColorRegistryColorIDKey;	// OSType
-extern	CString	eColorRegistryColorKey;		// CColor*
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CColorGroup
+// MARK: CColorGroup
 
 class CColorGroupInternals;
 class CColorGroup {
@@ -95,6 +78,22 @@ class CColorSet {
 
 class CColorRegistryInternals;
 class CColorRegistry {
+	// Notifications
+	public:
+		/*
+			Sent when a color has been changed
+				senderRef is CColorRegistry
+				info contains the following keys:
+					mGroupIDKey
+					mColorIDKey
+					mColorKey
+		*/
+		static	CString mColorChangedNotificationName;
+
+		static	CString	mGroupIDKey;	// OSType
+		static	CString	mColorIDKey;	// OSType
+		static	CString	mColorKey;		// CColor*
+
 	// Methods
 	public:
 									// Lifecycle methods

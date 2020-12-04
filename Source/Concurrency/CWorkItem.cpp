@@ -11,9 +11,9 @@
 
 class CWorkItemInternals {
 	public:
-		CWorkItemInternals() : mState(kWorkItemStateWaiting) {}
+		CWorkItemInternals() : mState(CWorkItem::kStateWaiting) {}
  
-		EWorkItemState	mState;
+		CWorkItem::State	mState;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,14 +39,14 @@ CWorkItem::~CWorkItem()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-EWorkItemState CWorkItem::getState() const
+CWorkItem::State CWorkItem::getState() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mState;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CWorkItem::transitionTo(EWorkItemState state)
+void CWorkItem::transitionTo(State state)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update state
@@ -54,8 +54,8 @@ void CWorkItem::transitionTo(EWorkItemState state)
 
 	// Check state
 	switch (mInternals->mState) {
-		case kWorkItemStateCompleted:	completed();	break;
-		case kWorkItemStateCancelled:	cancelled();	break;
-		default:										break;
+		case kStateCompleted:	completed();	break;
+		case kStateCancelled:	cancelled();	break;
+		default:								break;
 	}
 }

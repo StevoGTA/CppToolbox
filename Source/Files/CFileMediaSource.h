@@ -8,14 +8,14 @@
 #include "CMediaSource.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CFileMediaSource
+// MARK: CFileMediaSource
 
 class CFileMediaSource : public CMediaSource {
 	// Methods
 	public:
-						// Lifecycle methods
-						CFileMediaSource(const CFile& file) {}
-						~CFileMediaSource() {}
+		// Lifecycle methods
+		CFileMediaSource(const CFile& file) {}
+		~CFileMediaSource() {}
 
-						// Instance methods
+		// Instance methods
 };

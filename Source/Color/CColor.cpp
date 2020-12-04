@@ -5,35 +5,111 @@
 #include "CColor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
-
-static	CString	sRedKey(OSSTR("r"));
-static	CString	sGreenKey(OSSTR("g"));
-static	CString	sBlueKey(OSSTR("b"));
-static	CString	sHueKey(OSSTR("h"));
-static	CString	sSaturationKey(OSSTR("s"));
-static	CString	sValueKey(OSSTR("v"));
-static	CString	sAlphaKey(OSSTR("a"));
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CColorInternals
+// MARK: CColorInternals
 
 class CColorInternals {
 	public:
-		CColorInternals()
+		CColorInternals(Float32 r = 0.0, Float32 g = 0.0, Float32 b = 0.0, Float32 h = 0.0, Float32 s = 0.0,
+				Float32 v = 0.0, Float32 a = 0.0) :
+			mR(4), mG(g), mB(b), mH(h), mS(s), mV(v), mA(a)
+			{}
+		CColorInternals(const CColorInternals& other) :
+			mR(other.mR), mG(other.mG), mB(other.mB), mH(other.mH), mS(other.mS), mV(other.mV), mA(other.mA)
+			{}
+		CColorInternals(CColor::Type type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha)
 			{
-				mR = 0.0;
-				mG = 0.0;
-				mB = 0.0;
+				// Check type
+				if (type == CColor::kTypeRGB) {
+					// RGB Color
+					mR = val1;
+					mG = val2;
+					mB = val3;
+					mA = alpha;
 
-				mH = 0.0;
-				mS = 1.0;
-				mV = 0.0;
+					// Fill-in HSV values - based on http://www.cs.rit.edu/~ncs/color/t_convert.html
+					Float32	min = (mR < mG) ? ((mR < mB) ? mR : mB) : ((mG < mB) ? mG : mB);
+					Float32	max = (mR > mG) ? ((mR > mB) ? mR : mB) : ((mG > mB) ? mG : mB);
 
-				mA = 1.0;
+					// Value
+					mV = max;
+
+					// Any hue?
+					if (min == max) {
+						// No
+						mH = 0.0;
+						mS = 0.0;
+					} else {
+						// Yes
+						Float32	delta = max - min;
+
+						// Saturation
+						mS = delta / max;
+
+						if (mR == max)
+							// between yellow and magenta
+							mH = (mG - mB) / delta;
+						else if (mG == max)
+							// between cyan and yellow
+							mH = 2 + (mB - mR) / delta;
+						else
+							// between magenta & cyan
+							mH = 4 + (mR - mG) / delta;
+
+						// degrees
+						mH *= 60.0;
+						if (mH < 0.0)
+							mH += 360.0;
+					}
+				} else {
+					// HSV Color
+					mH = val1;
+					mS = val2;
+					mV = val3;
+					mA = alpha;
+
+					// Fill-in RGB values - from http://www.easyrgb.com/math.php?MATH=M21#text21
+					if (mS == 0.0)
+						// Achromatic (gray)
+						mR = mG = mB = mV;
+					else {
+						// Have chroma
+						Float32	h = mH / (Float32) 60.0;
+						if (h == 6.0)
+							h = 0.0;
+
+						Float32	i = floorf(h);
+						Float32	v1 = mV * ((Float32) 1.0 - mS);
+						Float32	v2 = mV * ((Float32) 1.0 - mS * (h - i));
+						Float32	v3 = mV * ((Float32) 1.0 - mS * ((Float32) 1.0 - (h - i)));
+
+						if (i == 0.0) {
+							mR = mV;
+							mG = v3;
+							mB = v1;
+						} else if (i == 1.0) {
+							mR = v2;
+							mG = mV;
+							mB = v1;
+						} else if (i == 2.0) {
+							mR = v1;
+							mG = mV;
+							mB = v3;
+						} else if (i == 3.0) {
+							mR = v1;
+							mG = v2;
+							mB = mV;
+						} else if (i == 4.0) {
+							mR = v3;
+							mG = v1;
+							mB = mV;
+						} else {
+							mR = mV;
+							mG = v1;
+							mB = v2;
+						}
+					}
+				}
 			}
-		~CColorInternals() {}
 
 		Float32	mR;
 		Float32	mG;
@@ -48,165 +124,158 @@ class CColorInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	void	sConvertRGBToHSV(CColorInternals& internals);
-static	void	sConvertHSVToRGB(CColorInternals& internals);
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColor
 
 // MARK: Properties
 
-const	CColor	CColor::mClear(kColorTypeHSV, (UInt8) 0, 0, 0, 0);
-const	CColor	CColor::mAliceBlue(kColorTypeRGB, (UInt8) 240, 248, 255, 255);
-const	CColor	CColor::mAntiqueWhite(kColorTypeRGB, (UInt8) 250, 235, 215, 255);
-const	CColor	CColor::mAqua(kColorTypeRGB, (UInt8) 0, 255, 255, 255);
-const	CColor	CColor::mAquamarine(kColorTypeRGB, (UInt8) 127, 255, 212, 255);
-const	CColor	CColor::mAzure(kColorTypeRGB, (UInt8) 240, 255, 255, 255);
-const	CColor	CColor::mBeige(kColorTypeRGB, (UInt8) 245, 245, 220, 255);
-const	CColor	CColor::mBisque(kColorTypeRGB, (UInt8) 255, 228, 196, 255);
-const	CColor	CColor::mBlack(kColorTypeRGB, (UInt8) 0, 0, 0, 255);
-const	CColor	CColor::mBlanchedAlmond(kColorTypeRGB, (UInt8) 255, 235, 205, 255);
-const	CColor	CColor::mBlue(kColorTypeRGB, (UInt8) 0, 0, 255, 255);
-const	CColor	CColor::mBlueViolet(kColorTypeRGB, (UInt8) 138, 43, 226, 255);
-const	CColor	CColor::mBrown(kColorTypeRGB, (UInt8) 165, 42, 42, 255);
-const	CColor	CColor::mBurlywood(kColorTypeRGB, (UInt8) 222, 184, 135, 255);
-const	CColor	CColor::mCadetBlue(kColorTypeRGB, (UInt8) 95, 158, 160, 255);
-const	CColor	CColor::mChartreuse(kColorTypeRGB, (UInt8) 127, 255, 0, 255);
-const	CColor	CColor::mChocolate(kColorTypeRGB, (UInt8) 210, 105, 30, 255);
-const	CColor	CColor::mCoral(kColorTypeRGB, (UInt8) 255, 127, 80, 255);
-const	CColor	CColor::mCornflowerBlue(kColorTypeRGB, (UInt8) 100, 149, 237, 255);
-const	CColor	CColor::mCornSilk(kColorTypeRGB, (UInt8) 255, 248, 220, 255);
-const	CColor	CColor::mCrimson(kColorTypeRGB, (UInt8) 220, 20, 60, 255);
-const	CColor	CColor::mCyan(kColorTypeRGB, (UInt8) 0, 255, 255, 255);
-const	CColor	CColor::mDarkBlue(kColorTypeRGB, (UInt8) 0, 0, 139, 255);
-const	CColor	CColor::mDarkCyan(kColorTypeRGB, (UInt8) 0, 139, 139, 255);
-const	CColor	CColor::mDarkGoldenrod(kColorTypeRGB, (UInt8) 184, 134, 11, 255);
-const	CColor	CColor::mDarkGray(kColorTypeRGB, (UInt8) 169, 169, 169, 255);
-const	CColor	CColor::mDarkGreen(kColorTypeRGB, (UInt8) 0, 100, 0, 255);
-const	CColor	CColor::mDarkGrey(kColorTypeRGB, (UInt8) 169, 169, 169, 255);
-const	CColor	CColor::mDarkKhaki(kColorTypeRGB, (UInt8) 189, 183, 107, 255);
-const	CColor	CColor::mDarkMagenta(kColorTypeRGB, (UInt8) 139, 0, 139, 255);
-const	CColor	CColor::mDarkOliveGreen(kColorTypeRGB, (UInt8) 85, 107, 47, 255);
-const	CColor	CColor::mDarkOrange(kColorTypeRGB, (UInt8) 255, 140, 0, 255);
-const	CColor	CColor::mDarkOrchid(kColorTypeRGB, (UInt8) 153, 50, 204, 255);
-const	CColor	CColor::mDarkdRed(kColorTypeRGB, (UInt8) 139, 0, 0, 255);
-const	CColor	CColor::mDarkSalmon(kColorTypeRGB, (UInt8) 233, 150, 122, 255);
-const	CColor	CColor::mDarkSeaGreen(kColorTypeRGB, (UInt8) 143, 188, 143, 255);
-const	CColor	CColor::mDarkSlateBlue(kColorTypeRGB, (UInt8) 72, 61, 139, 255);
-const	CColor	CColor::mDarkSlateGray(kColorTypeRGB, (UInt8) 47, 79, 79, 255);
-const	CColor	CColor::mDarkSlateGrey(kColorTypeRGB, (UInt8) 47, 79, 79, 255);
-const	CColor	CColor::mDarkTurquoise(kColorTypeRGB, (UInt8) 0, 206, 209, 255);
-const	CColor	CColor::mDarkViolet(kColorTypeRGB, (UInt8) 148, 0, 211, 255);
-const	CColor	CColor::mDeepPink(kColorTypeRGB, (UInt8) 255, 20, 147, 255);
-const	CColor	CColor::mDeepSkyBlue(kColorTypeRGB, (UInt8) 0, 191, 255, 255);
-const	CColor	CColor::mDimGray(kColorTypeRGB, (UInt8) 105, 105, 105, 255);
-const	CColor	CColor::mDimGrey(kColorTypeRGB, (UInt8) 105, 105, 105, 255);
-const	CColor	CColor::mDodgerBlue(kColorTypeRGB, (UInt8) 30, 144, 255, 255);
-const	CColor	CColor::mFireBrick(kColorTypeRGB, (UInt8) 178, 34, 34, 255);
-const	CColor	CColor::mFloralWhite(kColorTypeRGB, (UInt8) 255, 250, 240, 255);
-const	CColor	CColor::mForestGreen(kColorTypeRGB, (UInt8) 34, 139, 34, 255);
-const	CColor	CColor::mFuchsia(kColorTypeRGB, (UInt8) 255, 0, 255, 255);
-const	CColor	CColor::mGainsboro(kColorTypeRGB, (UInt8) 220, 220, 220, 255);
-const	CColor	CColor::mGhostWhite(kColorTypeRGB, (UInt8) 248, 248, 255, 255);
-const	CColor	CColor::mGold(kColorTypeRGB, (UInt8) 255, 215, 0, 255);
-const	CColor	CColor::mGoldenrod(kColorTypeRGB, (UInt8) 218, 165, 32, 255);
-const	CColor	CColor::mGray(kColorTypeRGB, (UInt8) 128, 128, 128, 255);
-const	CColor	CColor::mGrey(kColorTypeRGB, (UInt8) 128, 128, 128, 255);
-const	CColor	CColor::mGreen(kColorTypeRGB, (UInt8) 0, 128, 0, 255);
-const	CColor	CColor::mGreenYellow(kColorTypeRGB, (UInt8) 173, 255, 47, 255);
-const	CColor	CColor::mHoneydew(kColorTypeRGB, (UInt8) 240, 255, 240, 255);
-const	CColor	CColor::mHotPink(kColorTypeRGB, (UInt8) 255, 105, 180, 255);
-const	CColor	CColor::mIndianRed(kColorTypeRGB, (UInt8) 205, 92, 92, 255);
-const	CColor	CColor::mIndigo(kColorTypeRGB, (UInt8) 75, 0, 130, 255);
-const	CColor	CColor::mIvory(kColorTypeRGB, (UInt8) 255, 255, 240, 255);
-const	CColor	CColor::mKhaki(kColorTypeRGB, (UInt8) 240, 230, 140, 255);
-const	CColor	CColor::mLavender(kColorTypeRGB, (UInt8) 230, 230, 250, 255);
-const	CColor	CColor::mLavenderBlush(kColorTypeRGB, (UInt8) 255, 240, 245, 255);
-const	CColor	CColor::mLawnGreen(kColorTypeRGB, (UInt8) 124, 252, 0, 255);
-const	CColor	CColor::mLemonChiffon(kColorTypeRGB, (UInt8) 255, 250, 205, 255);
-const	CColor	CColor::mLightBlue(kColorTypeRGB, (UInt8) 173, 216, 230, 255);
-const	CColor	CColor::mLightCoral(kColorTypeRGB, (UInt8) 240, 128, 128, 255);
-const	CColor	CColor::mLightCyan(kColorTypeRGB, (UInt8) 224, 255, 255, 255);
-const	CColor	CColor::mLightGoldenrodYellow(kColorTypeRGB, (UInt8) 250, 250, 210, 255);
-const	CColor	CColor::mLightGray(kColorTypeRGB, (UInt8) 211, 211, 211, 255);
-const	CColor	CColor::mLightGreen(kColorTypeRGB, (UInt8) 144, 238, 144, 255);
-const	CColor	CColor::mLightGrey(kColorTypeRGB, (UInt8) 211, 211, 211, 255);
-const	CColor	CColor::mLightPink(kColorTypeRGB, (UInt8) 255, 182, 193, 255);
-const	CColor	CColor::mLighSalmon(kColorTypeRGB, (UInt8) 255, 160, 122, 255);
-const	CColor	CColor::mLightSeaGreen(kColorTypeRGB, (UInt8) 32, 178, 170, 255);
-const	CColor	CColor::mLightSkyBlue(kColorTypeRGB, (UInt8) 135, 206, 250, 255);
-const	CColor	CColor::mLightSlateGray(kColorTypeRGB, (UInt8) 119, 136, 153, 255);
-const	CColor	CColor::mLightSlateGrey(kColorTypeRGB, (UInt8) 119, 136, 153, 255);
-const	CColor	CColor::mLightSteelBlue(kColorTypeRGB, (UInt8) 176, 196, 222, 255);
-const	CColor	CColor::mLightYellow(kColorTypeRGB, (UInt8) 255, 255, 224, 255);
-const	CColor	CColor::mLime(kColorTypeRGB, (UInt8) 0, 255, 0, 255);
-const	CColor	CColor::mLimeGreen(kColorTypeRGB, (UInt8) 50, 205, 50, 255);
-const	CColor	CColor::mLinen(kColorTypeRGB, (UInt8) 250, 240, 230, 255);
-const	CColor	CColor::mMagenta(kColorTypeRGB, (UInt8) 255, 0, 255, 255);
-const	CColor	CColor::mMaroon(kColorTypeRGB, (UInt8) 128, 0, 0, 255);
-const	CColor	CColor::mMediumAquamarine(kColorTypeRGB, (UInt8) 102, 205, 170, 255);
-const	CColor	CColor::mMediumBlue(kColorTypeRGB, (UInt8) 0, 0, 205, 255);
-const	CColor	CColor::mMediumOrchid(kColorTypeRGB, (UInt8) 186, 85, 211, 255);
-const	CColor	CColor::mMediumPurple(kColorTypeRGB, (UInt8) 147, 112, 219, 255);
-const	CColor	CColor::mMediumSeaGreen(kColorTypeRGB, (UInt8) 60, 179, 113, 255);
-const	CColor	CColor::mMediumSlateBlue(kColorTypeRGB, (UInt8) 123, 104, 238, 255);
-const	CColor	CColor::mMediumSpringGreen(kColorTypeRGB, (UInt8) 0, 250, 154, 255);
-const	CColor	CColor::mMediumTurquoise(kColorTypeRGB, (UInt8) 72, 209, 204, 255);
-const	CColor	CColor::mMediumVioletRed(kColorTypeRGB, (UInt8) 199, 21, 133, 255);
-const	CColor	CColor::mMidnightBlue(kColorTypeRGB, (UInt8) 25, 25, 112, 255);
-const	CColor	CColor::mMintCream(kColorTypeRGB, (UInt8) 245, 255, 250, 255);
-const	CColor	CColor::mMistyRose(kColorTypeRGB, (UInt8) 255, 228, 225, 255);
-const	CColor	CColor::mMoccasin(kColorTypeRGB, (UInt8) 255, 228, 181, 255);
-const	CColor	CColor::mNavajoWhite(kColorTypeRGB, (UInt8) 255, 222, 173, 255);
-const	CColor	CColor::mNavy(kColorTypeRGB, (UInt8) 0, 0, 128, 255);
-const	CColor	CColor::mOldLace(kColorTypeRGB, (UInt8) 253, 245, 230, 255);
-const	CColor	CColor::mOlive(kColorTypeRGB, (UInt8) 128, 128, 0, 255);
-const	CColor	CColor::mOliveDrab(kColorTypeRGB, (UInt8) 107, 142, 35, 255);
-const	CColor	CColor::mOrange(kColorTypeRGB, (UInt8) 255, 165, 0, 255);
-const	CColor	CColor::mOrangeRed(kColorTypeRGB, (UInt8) 255, 69, 0, 255);
-const	CColor	CColor::mOrchid(kColorTypeRGB, (UInt8) 218, 112, 214, 255);
-const	CColor	CColor::mPaleGoldenrod(kColorTypeRGB, (UInt8) 238, 232, 170, 255);
-const	CColor	CColor::mPaleGreen(kColorTypeRGB, (UInt8) 152, 251, 152, 255);
-const	CColor	CColor::mPaleTurquoise(kColorTypeRGB, (UInt8) 175, 238, 238, 255);
-const	CColor	CColor::mPaleVioletRed(kColorTypeRGB, (UInt8) 219, 112, 147, 255);
-const	CColor	CColor::mPapayaWhip(kColorTypeRGB, (UInt8) 255, 239, 213, 255);
-const	CColor	CColor::mPeachPuff(kColorTypeRGB, (UInt8) 255, 218, 185, 255);
-const	CColor	CColor::mPeru(kColorTypeRGB, (UInt8) 205, 133, 63, 255);
-const	CColor	CColor::mPink(kColorTypeRGB, (UInt8) 255, 192, 203, 255);
-const	CColor	CColor::mPlum(kColorTypeRGB, (UInt8) 221, 160, 221, 255);
-const	CColor	CColor::mPowderBlue(kColorTypeRGB, (UInt8) 176, 224, 230, 255);
-const	CColor	CColor::mPurple(kColorTypeRGB, (UInt8) 128, 0, 128, 255);
-const	CColor	CColor::mRed(kColorTypeRGB, (UInt8) 255, 0, 0, 255);
-const	CColor	CColor::mRosyBrown(kColorTypeRGB, (UInt8) 188, 143, 143, 255);
-const	CColor	CColor::mRoyalBlue(kColorTypeRGB, (UInt8) 65, 105, 225, 255);
-const	CColor	CColor::mSadleBrown(kColorTypeRGB, (UInt8) 139, 69, 19, 255);
-const	CColor	CColor::mSalmon(kColorTypeRGB, (UInt8) 250, 128, 114, 255);
-const	CColor	CColor::mSandyBrown(kColorTypeRGB, (UInt8) 244, 164, 96, 255);
-const	CColor	CColor::mSeaGreen(kColorTypeRGB, (UInt8) 46, 139, 87, 255);
-const	CColor	CColor::mSeashell(kColorTypeRGB, (UInt8) 255, 245, 238, 255);
-const	CColor	CColor::mSienna(kColorTypeRGB, (UInt8) 160, 82, 45, 255);
-const	CColor	CColor::mSilver(kColorTypeRGB, (UInt8) 192, 192, 192, 255);
-const	CColor	CColor::mSkyBlue(kColorTypeRGB, (UInt8) 135, 206, 235, 255);
-const	CColor	CColor::mSlateBlue(kColorTypeRGB, (UInt8) 106, 90, 205, 255);
-const	CColor	CColor::mSlateGray(kColorTypeRGB, (UInt8) 112, 128, 144, 255);
-const	CColor	CColor::mSlateGrey(kColorTypeRGB, (UInt8) 112, 128, 144, 255);
-const	CColor	CColor::mSnow(kColorTypeRGB, (UInt8) 255, 250, 250, 255);
-const	CColor	CColor::mSpringGreen(kColorTypeRGB, (UInt8) 0, 255, 127, 255);
-const	CColor	CColor::mSteelBlue(kColorTypeRGB, (UInt8) 70, 130, 180, 255);
-const	CColor	CColor::mTan(kColorTypeRGB, (UInt8) 210, 180, 140, 255);
-const	CColor	CColor::mTeal(kColorTypeRGB, (UInt8) 0, 128, 128, 255);
-const	CColor	CColor::mThistle(kColorTypeRGB, (UInt8) 216, 191, 216, 255);
-const	CColor	CColor::mTomato(kColorTypeRGB, (UInt8) 255, 99, 71, 255);
-const	CColor	CColor::mTurquoise(kColorTypeRGB, (UInt8) 64, 224, 208, 255);
-const	CColor	CColor::mViolet(kColorTypeRGB, (UInt8) 238, 130, 238, 255);
-const	CColor	CColor::mWheat(kColorTypeRGB, (UInt8) 245, 222, 179, 255);
-const	CColor	CColor::mWhite(kColorTypeRGB, (UInt8) 255, 255, 255, 255);
-const	CColor	CColor::mWhiteSmoke(kColorTypeRGB, (UInt8) 245, 245, 245, 255);
-const	CColor	CColor::mYellow(kColorTypeRGB, (UInt8) 255, 255, 0, 255);
-const	CColor	CColor::mYellowGreen(kColorTypeRGB, (UInt8) 154, 205, 50, 255);
+const	CColor	CColor::mClear(kTypeHSV, (UInt8) 0, 0, 0, 0);
+const	CColor	CColor::mAliceBlue(kTypeRGB, (UInt8) 240, 248, 255, 255);
+const	CColor	CColor::mAntiqueWhite(kTypeRGB, (UInt8) 250, 235, 215, 255);
+const	CColor	CColor::mAqua(kTypeRGB, (UInt8) 0, 255, 255, 255);
+const	CColor	CColor::mAquamarine(kTypeRGB, (UInt8) 127, 255, 212, 255);
+const	CColor	CColor::mAzure(kTypeRGB, (UInt8) 240, 255, 255, 255);
+const	CColor	CColor::mBeige(kTypeRGB, (UInt8) 245, 245, 220, 255);
+const	CColor	CColor::mBisque(kTypeRGB, (UInt8) 255, 228, 196, 255);
+const	CColor	CColor::mBlack(kTypeRGB, (UInt8) 0, 0, 0, 255);
+const	CColor	CColor::mBlanchedAlmond(kTypeRGB, (UInt8) 255, 235, 205, 255);
+const	CColor	CColor::mBlue(kTypeRGB, (UInt8) 0, 0, 255, 255);
+const	CColor	CColor::mBlueViolet(kTypeRGB, (UInt8) 138, 43, 226, 255);
+const	CColor	CColor::mBrown(kTypeRGB, (UInt8) 165, 42, 42, 255);
+const	CColor	CColor::mBurlywood(kTypeRGB, (UInt8) 222, 184, 135, 255);
+const	CColor	CColor::mCadetBlue(kTypeRGB, (UInt8) 95, 158, 160, 255);
+const	CColor	CColor::mChartreuse(kTypeRGB, (UInt8) 127, 255, 0, 255);
+const	CColor	CColor::mChocolate(kTypeRGB, (UInt8) 210, 105, 30, 255);
+const	CColor	CColor::mCoral(kTypeRGB, (UInt8) 255, 127, 80, 255);
+const	CColor	CColor::mCornflowerBlue(kTypeRGB, (UInt8) 100, 149, 237, 255);
+const	CColor	CColor::mCornSilk(kTypeRGB, (UInt8) 255, 248, 220, 255);
+const	CColor	CColor::mCrimson(kTypeRGB, (UInt8) 220, 20, 60, 255);
+const	CColor	CColor::mCyan(kTypeRGB, (UInt8) 0, 255, 255, 255);
+const	CColor	CColor::mDarkBlue(kTypeRGB, (UInt8) 0, 0, 139, 255);
+const	CColor	CColor::mDarkCyan(kTypeRGB, (UInt8) 0, 139, 139, 255);
+const	CColor	CColor::mDarkGoldenrod(kTypeRGB, (UInt8) 184, 134, 11, 255);
+const	CColor	CColor::mDarkGray(kTypeRGB, (UInt8) 169, 169, 169, 255);
+const	CColor	CColor::mDarkGreen(kTypeRGB, (UInt8) 0, 100, 0, 255);
+const	CColor	CColor::mDarkGrey(kTypeRGB, (UInt8) 169, 169, 169, 255);
+const	CColor	CColor::mDarkKhaki(kTypeRGB, (UInt8) 189, 183, 107, 255);
+const	CColor	CColor::mDarkMagenta(kTypeRGB, (UInt8) 139, 0, 139, 255);
+const	CColor	CColor::mDarkOliveGreen(kTypeRGB, (UInt8) 85, 107, 47, 255);
+const	CColor	CColor::mDarkOrange(kTypeRGB, (UInt8) 255, 140, 0, 255);
+const	CColor	CColor::mDarkOrchid(kTypeRGB, (UInt8) 153, 50, 204, 255);
+const	CColor	CColor::mDarkdRed(kTypeRGB, (UInt8) 139, 0, 0, 255);
+const	CColor	CColor::mDarkSalmon(kTypeRGB, (UInt8) 233, 150, 122, 255);
+const	CColor	CColor::mDarkSeaGreen(kTypeRGB, (UInt8) 143, 188, 143, 255);
+const	CColor	CColor::mDarkSlateBlue(kTypeRGB, (UInt8) 72, 61, 139, 255);
+const	CColor	CColor::mDarkSlateGray(kTypeRGB, (UInt8) 47, 79, 79, 255);
+const	CColor	CColor::mDarkSlateGrey(kTypeRGB, (UInt8) 47, 79, 79, 255);
+const	CColor	CColor::mDarkTurquoise(kTypeRGB, (UInt8) 0, 206, 209, 255);
+const	CColor	CColor::mDarkViolet(kTypeRGB, (UInt8) 148, 0, 211, 255);
+const	CColor	CColor::mDeepPink(kTypeRGB, (UInt8) 255, 20, 147, 255);
+const	CColor	CColor::mDeepSkyBlue(kTypeRGB, (UInt8) 0, 191, 255, 255);
+const	CColor	CColor::mDimGray(kTypeRGB, (UInt8) 105, 105, 105, 255);
+const	CColor	CColor::mDimGrey(kTypeRGB, (UInt8) 105, 105, 105, 255);
+const	CColor	CColor::mDodgerBlue(kTypeRGB, (UInt8) 30, 144, 255, 255);
+const	CColor	CColor::mFireBrick(kTypeRGB, (UInt8) 178, 34, 34, 255);
+const	CColor	CColor::mFloralWhite(kTypeRGB, (UInt8) 255, 250, 240, 255);
+const	CColor	CColor::mForestGreen(kTypeRGB, (UInt8) 34, 139, 34, 255);
+const	CColor	CColor::mFuchsia(kTypeRGB, (UInt8) 255, 0, 255, 255);
+const	CColor	CColor::mGainsboro(kTypeRGB, (UInt8) 220, 220, 220, 255);
+const	CColor	CColor::mGhostWhite(kTypeRGB, (UInt8) 248, 248, 255, 255);
+const	CColor	CColor::mGold(kTypeRGB, (UInt8) 255, 215, 0, 255);
+const	CColor	CColor::mGoldenrod(kTypeRGB, (UInt8) 218, 165, 32, 255);
+const	CColor	CColor::mGray(kTypeRGB, (UInt8) 128, 128, 128, 255);
+const	CColor	CColor::mGrey(kTypeRGB, (UInt8) 128, 128, 128, 255);
+const	CColor	CColor::mGreen(kTypeRGB, (UInt8) 0, 128, 0, 255);
+const	CColor	CColor::mGreenYellow(kTypeRGB, (UInt8) 173, 255, 47, 255);
+const	CColor	CColor::mHoneydew(kTypeRGB, (UInt8) 240, 255, 240, 255);
+const	CColor	CColor::mHotPink(kTypeRGB, (UInt8) 255, 105, 180, 255);
+const	CColor	CColor::mIndianRed(kTypeRGB, (UInt8) 205, 92, 92, 255);
+const	CColor	CColor::mIndigo(kTypeRGB, (UInt8) 75, 0, 130, 255);
+const	CColor	CColor::mIvory(kTypeRGB, (UInt8) 255, 255, 240, 255);
+const	CColor	CColor::mKhaki(kTypeRGB, (UInt8) 240, 230, 140, 255);
+const	CColor	CColor::mLavender(kTypeRGB, (UInt8) 230, 230, 250, 255);
+const	CColor	CColor::mLavenderBlush(kTypeRGB, (UInt8) 255, 240, 245, 255);
+const	CColor	CColor::mLawnGreen(kTypeRGB, (UInt8) 124, 252, 0, 255);
+const	CColor	CColor::mLemonChiffon(kTypeRGB, (UInt8) 255, 250, 205, 255);
+const	CColor	CColor::mLightBlue(kTypeRGB, (UInt8) 173, 216, 230, 255);
+const	CColor	CColor::mLightCoral(kTypeRGB, (UInt8) 240, 128, 128, 255);
+const	CColor	CColor::mLightCyan(kTypeRGB, (UInt8) 224, 255, 255, 255);
+const	CColor	CColor::mLightGoldenrodYellow(kTypeRGB, (UInt8) 250, 250, 210, 255);
+const	CColor	CColor::mLightGray(kTypeRGB, (UInt8) 211, 211, 211, 255);
+const	CColor	CColor::mLightGreen(kTypeRGB, (UInt8) 144, 238, 144, 255);
+const	CColor	CColor::mLightGrey(kTypeRGB, (UInt8) 211, 211, 211, 255);
+const	CColor	CColor::mLightPink(kTypeRGB, (UInt8) 255, 182, 193, 255);
+const	CColor	CColor::mLighSalmon(kTypeRGB, (UInt8) 255, 160, 122, 255);
+const	CColor	CColor::mLightSeaGreen(kTypeRGB, (UInt8) 32, 178, 170, 255);
+const	CColor	CColor::mLightSkyBlue(kTypeRGB, (UInt8) 135, 206, 250, 255);
+const	CColor	CColor::mLightSlateGray(kTypeRGB, (UInt8) 119, 136, 153, 255);
+const	CColor	CColor::mLightSlateGrey(kTypeRGB, (UInt8) 119, 136, 153, 255);
+const	CColor	CColor::mLightSteelBlue(kTypeRGB, (UInt8) 176, 196, 222, 255);
+const	CColor	CColor::mLightYellow(kTypeRGB, (UInt8) 255, 255, 224, 255);
+const	CColor	CColor::mLime(kTypeRGB, (UInt8) 0, 255, 0, 255);
+const	CColor	CColor::mLimeGreen(kTypeRGB, (UInt8) 50, 205, 50, 255);
+const	CColor	CColor::mLinen(kTypeRGB, (UInt8) 250, 240, 230, 255);
+const	CColor	CColor::mMagenta(kTypeRGB, (UInt8) 255, 0, 255, 255);
+const	CColor	CColor::mMaroon(kTypeRGB, (UInt8) 128, 0, 0, 255);
+const	CColor	CColor::mMediumAquamarine(kTypeRGB, (UInt8) 102, 205, 170, 255);
+const	CColor	CColor::mMediumBlue(kTypeRGB, (UInt8) 0, 0, 205, 255);
+const	CColor	CColor::mMediumOrchid(kTypeRGB, (UInt8) 186, 85, 211, 255);
+const	CColor	CColor::mMediumPurple(kTypeRGB, (UInt8) 147, 112, 219, 255);
+const	CColor	CColor::mMediumSeaGreen(kTypeRGB, (UInt8) 60, 179, 113, 255);
+const	CColor	CColor::mMediumSlateBlue(kTypeRGB, (UInt8) 123, 104, 238, 255);
+const	CColor	CColor::mMediumSpringGreen(kTypeRGB, (UInt8) 0, 250, 154, 255);
+const	CColor	CColor::mMediumTurquoise(kTypeRGB, (UInt8) 72, 209, 204, 255);
+const	CColor	CColor::mMediumVioletRed(kTypeRGB, (UInt8) 199, 21, 133, 255);
+const	CColor	CColor::mMidnightBlue(kTypeRGB, (UInt8) 25, 25, 112, 255);
+const	CColor	CColor::mMintCream(kTypeRGB, (UInt8) 245, 255, 250, 255);
+const	CColor	CColor::mMistyRose(kTypeRGB, (UInt8) 255, 228, 225, 255);
+const	CColor	CColor::mMoccasin(kTypeRGB, (UInt8) 255, 228, 181, 255);
+const	CColor	CColor::mNavajoWhite(kTypeRGB, (UInt8) 255, 222, 173, 255);
+const	CColor	CColor::mNavy(kTypeRGB, (UInt8) 0, 0, 128, 255);
+const	CColor	CColor::mOldLace(kTypeRGB, (UInt8) 253, 245, 230, 255);
+const	CColor	CColor::mOlive(kTypeRGB, (UInt8) 128, 128, 0, 255);
+const	CColor	CColor::mOliveDrab(kTypeRGB, (UInt8) 107, 142, 35, 255);
+const	CColor	CColor::mOrange(kTypeRGB, (UInt8) 255, 165, 0, 255);
+const	CColor	CColor::mOrangeRed(kTypeRGB, (UInt8) 255, 69, 0, 255);
+const	CColor	CColor::mOrchid(kTypeRGB, (UInt8) 218, 112, 214, 255);
+const	CColor	CColor::mPaleGoldenrod(kTypeRGB, (UInt8) 238, 232, 170, 255);
+const	CColor	CColor::mPaleGreen(kTypeRGB, (UInt8) 152, 251, 152, 255);
+const	CColor	CColor::mPaleTurquoise(kTypeRGB, (UInt8) 175, 238, 238, 255);
+const	CColor	CColor::mPaleVioletRed(kTypeRGB, (UInt8) 219, 112, 147, 255);
+const	CColor	CColor::mPapayaWhip(kTypeRGB, (UInt8) 255, 239, 213, 255);
+const	CColor	CColor::mPeachPuff(kTypeRGB, (UInt8) 255, 218, 185, 255);
+const	CColor	CColor::mPeru(kTypeRGB, (UInt8) 205, 133, 63, 255);
+const	CColor	CColor::mPink(kTypeRGB, (UInt8) 255, 192, 203, 255);
+const	CColor	CColor::mPlum(kTypeRGB, (UInt8) 221, 160, 221, 255);
+const	CColor	CColor::mPowderBlue(kTypeRGB, (UInt8) 176, 224, 230, 255);
+const	CColor	CColor::mPurple(kTypeRGB, (UInt8) 128, 0, 128, 255);
+const	CColor	CColor::mRed(kTypeRGB, (UInt8) 255, 0, 0, 255);
+const	CColor	CColor::mRosyBrown(kTypeRGB, (UInt8) 188, 143, 143, 255);
+const	CColor	CColor::mRoyalBlue(kTypeRGB, (UInt8) 65, 105, 225, 255);
+const	CColor	CColor::mSadleBrown(kTypeRGB, (UInt8) 139, 69, 19, 255);
+const	CColor	CColor::mSalmon(kTypeRGB, (UInt8) 250, 128, 114, 255);
+const	CColor	CColor::mSandyBrown(kTypeRGB, (UInt8) 244, 164, 96, 255);
+const	CColor	CColor::mSeaGreen(kTypeRGB, (UInt8) 46, 139, 87, 255);
+const	CColor	CColor::mSeashell(kTypeRGB, (UInt8) 255, 245, 238, 255);
+const	CColor	CColor::mSienna(kTypeRGB, (UInt8) 160, 82, 45, 255);
+const	CColor	CColor::mSilver(kTypeRGB, (UInt8) 192, 192, 192, 255);
+const	CColor	CColor::mSkyBlue(kTypeRGB, (UInt8) 135, 206, 235, 255);
+const	CColor	CColor::mSlateBlue(kTypeRGB, (UInt8) 106, 90, 205, 255);
+const	CColor	CColor::mSlateGray(kTypeRGB, (UInt8) 112, 128, 144, 255);
+const	CColor	CColor::mSlateGrey(kTypeRGB, (UInt8) 112, 128, 144, 255);
+const	CColor	CColor::mSnow(kTypeRGB, (UInt8) 255, 250, 250, 255);
+const	CColor	CColor::mSpringGreen(kTypeRGB, (UInt8) 0, 255, 127, 255);
+const	CColor	CColor::mSteelBlue(kTypeRGB, (UInt8) 70, 130, 180, 255);
+const	CColor	CColor::mTan(kTypeRGB, (UInt8) 210, 180, 140, 255);
+const	CColor	CColor::mTeal(kTypeRGB, (UInt8) 0, 128, 128, 255);
+const	CColor	CColor::mThistle(kTypeRGB, (UInt8) 216, 191, 216, 255);
+const	CColor	CColor::mTomato(kTypeRGB, (UInt8) 255, 99, 71, 255);
+const	CColor	CColor::mTurquoise(kTypeRGB, (UInt8) 64, 224, 208, 255);
+const	CColor	CColor::mViolet(kTypeRGB, (UInt8) 238, 130, 238, 255);
+const	CColor	CColor::mWheat(kTypeRGB, (UInt8) 245, 222, 179, 255);
+const	CColor	CColor::mWhite(kTypeRGB, (UInt8) 255, 255, 255, 255);
+const	CColor	CColor::mWhiteSmoke(kTypeRGB, (UInt8) 245, 245, 245, 255);
+const	CColor	CColor::mYellow(kTypeRGB, (UInt8) 255, 255, 0, 255);
+const	CColor	CColor::mYellowGreen(kTypeRGB, (UInt8) 154, 205, 50, 255);
 
 // MARK: Lifecycle methods
 
@@ -221,33 +290,24 @@ CColor::CColor()
 CColor::CColor(const CColor& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorInternals();
-	
-	// Copy
-	*this = other;
+	mInternals = new CColorInternals(*other.mInternals);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CColor::CColor(const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorInternals();
-
-	mInternals->mR = info.getFloat32(sRedKey);
-	mInternals->mG = info.getFloat32(sGreenKey);
-	mInternals->mB = info.getFloat32(sBlueKey);
-	mInternals->mH = info.getFloat32(sHueKey);
-	mInternals->mS = info.getFloat32(sSaturationKey);
-	mInternals->mV = info.getFloat32(sValueKey);
-	mInternals->mA = info.getFloat32(sAlphaKey);
+	mInternals =
+			new CColorInternals(info.getFloat32(CString(OSSTR("r"))), info.getFloat32(CString(OSSTR("g"))),
+					info.getFloat32(CString(OSSTR("b"))), info.getFloat32(CString(OSSTR("h"))),
+					info.getFloat32(CString(OSSTR("s"))), info.getFloat32(CString(OSSTR("v"))),
+					info.getFloat32(CString(OSSTR("a"))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CColor::CColor(const CString& hexString)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorInternals();
-	
 	// hexString can be of the form:
 	//	#RGB
 	//	#RRGGBB
@@ -262,82 +322,48 @@ CColor::CColor(const CString& hexString)
 		UInt8	value;
 		
 		value = hexString.getSubString(startIndex + 0, 1).getUInt8(16);
-		mInternals->mR = ((Float32) value * (Float32) 16.0 + (Float32) value) / (Float32) 255.0;
+		Float32	r = ((Float32) value * (Float32) 16.0 + (Float32) value) / (Float32) 255.0;
 		
 		value = hexString.getSubString(startIndex + 1, 1).getUInt8(16);
-		mInternals->mG = ((Float32) value * (Float32) 16.0 + (Float32) value) / (Float32) 255.0;
+		Float32	g = ((Float32) value * (Float32) 16.0 + (Float32) value) / (Float32) 255.0;
 		
 		value = hexString.getSubString(startIndex + 2, 1).getUInt8(16);
-		mInternals->mB = ((Float32) value * (Float32) 16.0 + (Float32) value) / (Float32) 255.0;
-		
-		mInternals->mA = 1.0;
+		Float32	b = ((Float32) value * (Float32) 16.0 + (Float32) value) / (Float32) 255.0;
+
+		mInternals = new CColorInternals(kTypeRGB, r, g, b, 255);
 	} else if ((hexString.getLength() - startIndex) == 6) {
 		// RRGGBB
-		mInternals->mR = (Float32) hexString.getSubString(startIndex + 0, 2).getUInt8(16) / (Float32) 255.0;
-		mInternals->mG = (Float32) hexString.getSubString(startIndex + 2, 2).getUInt8(16) / (Float32) 255.0;
-		mInternals->mB = (Float32) hexString.getSubString(startIndex + 4, 2).getUInt8(16) / (Float32) 255.0;
-		mInternals->mA = 1.0;
+		Float32	r = (Float32) hexString.getSubString(startIndex + 0, 2).getUInt8(16) / (Float32) 255.0;
+		Float32	g = (Float32) hexString.getSubString(startIndex + 2, 2).getUInt8(16) / (Float32) 255.0;
+		Float32	b = (Float32) hexString.getSubString(startIndex + 4, 2).getUInt8(16) / (Float32) 255.0;
+
+		mInternals = new CColorInternals(kTypeRGB, r, g, b, 255);
+
 	} else {
 		// RRGGBBAA
-		mInternals->mR = (Float32) hexString.getSubString(startIndex + 0, 2).getUInt8(16) / (Float32) 255.0;
-		mInternals->mG = (Float32) hexString.getSubString(startIndex + 2, 2).getUInt8(16) / (Float32) 255.0;
-		mInternals->mB = (Float32) hexString.getSubString(startIndex + 4, 2).getUInt8(16) / (Float32) 255.0;
-		mInternals->mA = (Float32) hexString.getSubString(startIndex + 6, 2).getUInt8(16) / (Float32) 255.0;
-	}
+		Float32	r = (Float32) hexString.getSubString(startIndex + 0, 2).getUInt8(16) / (Float32) 255.0;
+		Float32	g = (Float32) hexString.getSubString(startIndex + 2, 2).getUInt8(16) / (Float32) 255.0;
+		Float32	b = (Float32) hexString.getSubString(startIndex + 4, 2).getUInt8(16) / (Float32) 255.0;
+		Float32	a = (Float32) hexString.getSubString(startIndex + 6, 2).getUInt8(16) / (Float32) 255.0;
 
-	sConvertRGBToHSV(*mInternals);
+		mInternals = new CColorInternals(kTypeRGB, r, g, b, a);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColor::CColor(EColorType type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha)
+CColor::CColor(Type type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorInternals();
-
-	// Initializor
-	if (type == kColorTypeRGB) {
-		// RGB Color
-		mInternals->mR = val1;
-		mInternals->mG = val2;
-		mInternals->mB = val3;
-		
-		sConvertRGBToHSV(*mInternals);
-	} else {
-		// HSV Color
-		mInternals->mH = val1;
-		mInternals->mS = val2;
-		mInternals->mV = val3;
-		
-		sConvertHSVToRGB(*mInternals);
-	}
-	
-	mInternals->mA = alpha;
+	mInternals = new CColorInternals(type, val1, val2, val3, alpha);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColor::CColor(EColorType type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha)
+CColor::CColor(Type type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorInternals();
-
-	// Initializor
-	if (type == kColorTypeRGB) {
-		// RGB Color
-		mInternals->mR = (Float32) val1 / (Float32) 255.0;
-		mInternals->mG = (Float32) val2 / (Float32) 255.0;
-		mInternals->mB = (Float32) val3 / (Float32) 255.0;
-		
-		sConvertRGBToHSV(*mInternals);
-	} else {
-		// HSV Color
-		mInternals->mH = (Float32) val1 / (Float32) 255.0;
-		mInternals->mS = (Float32) val2 / (Float32) 255.0;
-		mInternals->mV = (Float32) val3 / (Float32) 255.0;
-		
-		sConvertHSVToRGB(*mInternals);
-	}
-	
-	mInternals->mA = (Float32) alpha / (Float32) 255.0;
+	mInternals =
+			new CColorInternals(type, (Float32) val1 / (Float32) 255.0, (Float32) val2 / (Float32) 255.0,
+					(Float32) val3 / (Float32) 255.0, (Float32) alpha / (Float32) 255.0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -404,13 +430,13 @@ CDictionary CColor::getInfo() const
 {
 	CDictionary	info;
 
-	info.set(sRedKey, mInternals->mR);
-	info.set(sGreenKey, mInternals->mG);
-	info.set(sBlueKey, mInternals->mB);
-	info.set(sHueKey, mInternals->mH);
-	info.set(sSaturationKey, mInternals->mS);
-	info.set(sValueKey, mInternals->mV);
-	info.set(sAlphaKey, mInternals->mA);
+	info.set(CString(OSSTR("r")), mInternals->mR);
+	info.set(CString(OSSTR("g")), mInternals->mG);
+	info.set(CString(OSSTR("b")), mInternals->mB);
+	info.set(CString(OSSTR("h")), mInternals->mH);
+	info.set(CString(OSSTR("s")), mInternals->mS);
+	info.set(CString(OSSTR("v")), mInternals->mV);
+	info.set(CString(OSSTR("a")), mInternals->mA);
 
 	return info;
 }
@@ -442,108 +468,31 @@ bool CColor::equals(const CColor& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColor& CColor::operator=(const CColor& other)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	if (this != &other) {
-		mInternals->mR = other.mInternals->mR;
-		mInternals->mG = other.mInternals->mG;
-		mInternals->mB = other.mInternals->mB;
-
-		mInternals->mH = other.mInternals->mH;
-		mInternals->mS = other.mInternals->mS;
-		mInternals->mV = other.mInternals->mV;
-
-		mInternals->mA = other.mInternals->mA;
-	}
-	
-	return *this;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CColor CColor::operator+(const CColor& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CColor	color;
-
-	// Perform addition
-	color.mInternals->mR = mInternals->mR + other.mInternals->mR;
-	color.mInternals->mG = mInternals->mG + other.mInternals->mG;
-	color.mInternals->mB = mInternals->mB + other.mInternals->mB;
-	color.mInternals->mA = mInternals->mA + other.mInternals->mA;
-
-	// Update HSV
-	sConvertRGBToHSV(*color.mInternals);
-	
-	return color;
+	return CColor(kTypeRGB, mInternals->mR + other.mInternals->mR, mInternals->mG + other.mInternals->mG,
+			mInternals->mB + other.mInternals->mB, mInternals->mA + other.mInternals->mA);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColor CColor::operator*(const SRGBColorTransform& transform) const
+CColor CColor::operator*(const RGBColorTransform& transform) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CColor	color;
-	
-	// Perform transform
-	color.mInternals->mR = mInternals->mR * transform.mMultiplier.mR + transform.mAdder.mR;
-	color.mInternals->mG = mInternals->mG * transform.mMultiplier.mG + transform.mAdder.mG;
-	color.mInternals->mB = mInternals->mB * transform.mMultiplier.mB + transform.mAdder.mB;
-	color.mInternals->mA = mInternals->mA * transform.mMultiplier.mA + transform.mAdder.mA;
-
-	// Update HSV
-	sConvertRGBToHSV(*color.mInternals);
-	
-	return color;
+	return CColor(kTypeRGB, mInternals->mR * transform.mMultiplier.mR + transform.mAdder.mR,
+			mInternals->mG * transform.mMultiplier.mG + transform.mAdder.mG,
+			mInternals->mB * transform.mMultiplier.mB + transform.mAdder.mB,
+			mInternals->mA * transform.mMultiplier.mA + transform.mAdder.mA);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColor CColor::operator*(const SHSVColorTransform& transform) const
+CColor CColor::operator*(const HSVColorTransform& transform) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CColor	color;
-	
-	// Perform transform
-	color.mInternals->mH = mInternals->mH * transform.mMultiplier.mH + transform.mAdder.mH;
-	color.mInternals->mS = mInternals->mS * transform.mMultiplier.mS + transform.mAdder.mS;
-	color.mInternals->mV = mInternals->mV * transform.mMultiplier.mV + transform.mAdder.mV;
-	color.mInternals->mA = mInternals->mA * transform.mMultiplier.mA + transform.mAdder.mA;
-
-	// Update RGB
-	sConvertHSVToRGB(*color.mInternals);
-	
-	return color;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CColor& CColor::operator*=(const SRGBColorTransform& transform)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Perform transform
-	mInternals->mR = mInternals->mR * transform.mMultiplier.mR + transform.mAdder.mR;
-	mInternals->mG = mInternals->mG * transform.mMultiplier.mG + transform.mAdder.mG;
-	mInternals->mB = mInternals->mB * transform.mMultiplier.mB + transform.mAdder.mB;
-	mInternals->mA = mInternals->mA * transform.mMultiplier.mA + transform.mAdder.mA;
-
-	// Update HSV
-	sConvertRGBToHSV(*mInternals);
-	
-	return *this;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CColor& CColor::operator*=(const SHSVColorTransform& transform)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Perform transform
-	mInternals->mH = mInternals->mH * transform.mMultiplier.mH + transform.mAdder.mH;
-	mInternals->mS = mInternals->mS * transform.mMultiplier.mS + transform.mAdder.mS;
-	mInternals->mV = mInternals->mV * transform.mMultiplier.mV + transform.mAdder.mV;
-	mInternals->mA = mInternals->mA * transform.mMultiplier.mA + transform.mAdder.mA;
-
-	// Update RGB
-	sConvertHSVToRGB(*mInternals);
-	
-	return *this;
+	return CColor(kTypeHSV, mInternals->mH * transform.mMultiplier.mH + transform.mAdder.mH,
+			mInternals->mS * transform.mMultiplier.mS + transform.mAdder.mS,
+			mInternals->mV * transform.mMultiplier.mV + transform.mAdder.mV,
+			mInternals->mA * transform.mMultiplier.mA + transform.mAdder.mA);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -849,105 +798,4 @@ OR<const CColor> CColor::getColorWithName(const CString& colorName)
 		return OR<const CColor>(mYellowGreen);
 
 	return OR<const CColor>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-
-//----------------------------------------------------------------------------------------------------------------------
-void sConvertRGBToHSV(CColorInternals& internals)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Based on http://www.cs.rit.edu/~ncs/color/t_convert.html
-	
-	Float32	min =
-					(internals.mR < internals.mG) ?
-							((internals.mR < internals.mB) ? internals.mR : internals.mB) :
-							((internals.mG < internals.mB) ? internals.mG : internals.mB);
-	Float32	max =
-					(internals.mR > internals.mG) ?
-							((internals.mR > internals.mB) ? internals.mR : internals.mB) :
-							((internals.mG > internals.mB) ? internals.mG : internals.mB);
-	
-	// Value
-	internals.mV = max;
-	
-	// Any hue?
-	if (min == max) {
-		// No
-		internals.mH = 0.0;
-		internals.mS = 0.0;
-		
-		return;
-	}
-	
-	Float32	delta = max - min;
-	
-	// Saturation
-	internals.mS = delta / max;
-	
-	if (internals.mR == max)
-		// between yellow and magenta
-		internals.mH = (internals.mG - internals.mB) / delta;
-	else if (internals.mG == max)
-		// between cyan and yellow
-		internals.mH = 2 + (internals.mB - internals.mR) / delta;
-	else
-		// between magenta & cyan
-		internals.mH = 4 + (internals.mR - internals.mG) / delta;
-	
-	// degrees
-	internals.mH *= 60.0;
-	if (internals.mH < 0)
-		internals.mH += 360.0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void sConvertHSVToRGB(CColorInternals& internals)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// From http://www.easyrgb.com/math.php?MATH=M21#text21
-	
-	if (internals.mS == 0.0) {
-		// Achromatic (gray)
-		internals.mR = internals.mG = internals.mB = internals.mV;
-		
-		return;
-	}
-	
-	Float32	h = internals.mH / (Float32) 60.0;
-	if (h == 6.0)
-		h = 0.0;
-	
-	Float32	i = floorf(h);
-	Float32	v1 = internals.mV * ((Float32) 1.0 - internals.mS);
-	Float32	v2 = internals.mV * ((Float32) 1.0 - internals.mS * (h - i));
-	Float32	v3 = internals.mV * ((Float32) 1.0 - internals.mS * ((Float32) 1.0 - (h - i)));
-	
-	if (i == 0.0) {
-		internals.mR = internals.mV;
-		internals.mG = v3;
-		internals.mB = v1;
-	} else if (i == 1.0) {
-		internals.mR = v2;
-		internals.mG = internals.mV;
-		internals.mB = v1;
-	} else if (i == 2.0) {
-		internals.mR = v1;
-		internals.mG = internals.mV;
-		internals.mB = v3;
-	} else if (i == 3.0) {
-		internals.mR = v1;
-		internals.mG = v2;
-		internals.mB = internals.mV;
-	} else if (i == 4.0) {
-		internals.mR = v3;
-		internals.mG = v1;
-		internals.mB = internals.mV;
-	} else {
-		internals.mR = internals.mV;
-		internals.mG = v1;
-		internals.mB = v2;
-	}
 }

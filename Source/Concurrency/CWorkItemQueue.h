@@ -78,9 +78,9 @@ class CWorkItemQueue {
 		virtual					~CWorkItemQueue();
 		
 								// Instance methods
-				void			add(CWorkItem& workItem, EWorkItemPriority priority = kWorkItemPriorityNormal);
-				CWorkItem&		add(CWorkItemProc proc, void* userData,
-										EWorkItemPriority priority = kWorkItemPriorityNormal);
+				void			add(CWorkItem& workItem, CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
+				CWorkItem&		add(CProcWorkItem::Proc proc, void* userData,
+										CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
 
 				void			cancel(CWorkItem& workItem);
 

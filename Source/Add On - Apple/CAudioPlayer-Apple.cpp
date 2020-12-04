@@ -325,7 +325,7 @@ class CAudioPlayerReaderThread : public CThread {
 						UInt32	bytesToRead = framesToRead * mBytesPerFrame;
 
 						// Request write
-						CSRSWBIPSegmentedQueue::SWriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRead);
+						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRead);
 						if (!writeBufferInfo.hasBuffer())
 							// No space
 							return false;
@@ -459,7 +459,7 @@ class CAudioPlayerInternals {
 										internals.mRenderProcPreviousFrameCount = 0;
 
 										// Notify player
-										CThread::runOnMainThread(renderProcPositionUpdated, &internals);
+										CThread::runOnMain(renderProcPositionUpdated, &internals);
 
 										// Inform the reader thread
 										internals.mAudioPlayerReaderThread->noteQueueReadComplete();
@@ -468,7 +468,7 @@ class CAudioPlayerInternals {
 									// Check if should send frames
 									if (internals.mRenderProcShouldSendFrames) {
 										// Sending frames
-										CSRSWBIPSegmentedQueue::SReadBufferInfo readBufferInfo =
+										CSRSWBIPSegmentedQueue::ReadBufferInfo	readBufferInfo =
 																						internals.mQueue->requestRead();
 										UInt32	requiredByteCount = inNumFrames * *internals.mBytesPerFrame;
 										if (readBufferInfo.hasBuffer() && (readBufferInfo.mSize >= requiredByteCount)) {
@@ -519,7 +519,7 @@ class CAudioPlayerInternals {
 													internals.mRenderProcIsSendingFrames = false;
 
 													// Notify player
-													CThread::runOnMainThread(renderProcEndOfData, &internals);
+													CThread::runOnMain(renderProcEndOfData, &internals);
 												} else if ((internals.mRenderProcFrameIndex > 0) &&
 														(internals.mRenderProcPreviousFrameCount > 0)) {
 													// We ran out of data...  we will glitch

@@ -7,20 +7,16 @@
 #include "CFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Application Object (representing an Application on the target system)
-
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-typedef	CFolder	CApplicationObject;
-#endif
-
-#if TARGET_OS_LINUX || TARGET_OS_WINDOWS
-typedef	CFile	CApplicationObject;
-#endif
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFilesystem
+// MARK: CFilesystem
 
 class CFilesystem {
+	// Types
+	public:
+		// Application Object (representing an Application on the target system)
+#if TARGET_OS_MACOS
+		typedef	CFolder	Application;
+#endif
+
 	// Methods
 	public:
 							// Class methods
@@ -46,7 +42,7 @@ class CFilesystem {
 		static	OI<SError>	replace(const CFile& sourceFile, const CFile& destinationFile);
 
 #if TARGET_OS_MACOS
-		static	OI<SError>	open(const TArray<CFile> files, const CApplicationObject& applicationObject);
+		static	OI<SError>	open(const TArray<CFile> files, const Application& application);
 		static	void		moveToTrash(const TArray<CFile> files, TArray<CFile>& outUntrashedFiles);
 		static	OI<SError>	moveToTrash(const TArray<CFile> files);
 

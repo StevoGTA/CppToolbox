@@ -106,7 +106,7 @@ OI<SError> CFileDataSource::setPos(EDataSourcePosition position, SInt64 newPos)
 	// Prepare for change
 	mInternals = mInternals->prepareForWrite();
 
-	return mInternals->getFileReader().setPos((EFileReaderPositionMode) position, newPos);
+	return mInternals->getFileReader().setPos((CFileReader::PositionMode) position, newPos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

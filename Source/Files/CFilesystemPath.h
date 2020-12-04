@@ -7,47 +7,42 @@
 #include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Path style
-
-enum EFilesystemPathStyle {
-	// Paths in the style "Volume/Folder/Folder/"
-	kFilesystemPathStylePOSIX,
-
-	// Paths in the style "Volume\Folder\Folder\"
-	kFilesystemPathStyleWindows,
-
-#if TARGET_OS_MACOS
-	// Deprecated paths in the style "Volume:Folder:Folder:"
-	kFilesystemPathStyleHFS,
-#endif
-
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS || TARGET_OS_LINUX
-	kFilesystemPathStylePlatformDefault = kFilesystemPathStylePOSIX,
-#endif
-
-#if TARGET_OS_WINDOWS
-	kFilesystemPathStylePlatformDefault = kFilesystemPathStyleWindows,
-#endif
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Make Legal Filename options
-
-enum EFilesystemPathMakeLegalFilenameOptions {
-	kFilesystemPathMakeLegalFilenameOptionsNone				= 0,
-	kFilesystemPathMakeLegalFilenameOptionsDisallowSpaces	= 1 << 0,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFilesystemPath
+// MARK: CFilesystemPath
 
 class CFilesystemPathInternals;
 class CFilesystemPath : public CHashable {
+	// Enums
+	public:
+		enum Style {
+			// Paths in the style "Volume/Folder/Folder/"
+			kStylePOSIX,
+
+			// Paths in the style "Volume\Folder\Folder\"
+			kStyleWindows,
+
+#if TARGET_OS_MACOS
+			// Deprecated paths in the style "Volume:Folder:Folder:"
+			kStyleHFS,
+#endif
+
+#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS || TARGET_OS_LINUX
+			kStylePlatformDefault = kStylePOSIX,
+#endif
+
+#if TARGET_OS_WINDOWS
+			kStylePlatformDefault = kStyleWindows,
+#endif
+		};
+
+		enum MakeLegalFilenameOptions {
+			kMakeLegalFilenameOptionsNone				= 0,
+			kMakeLegalFilenameOptionsDisallowSpaces	= 1 << 0,
+		};
+
 	// Methods
 	public:
 								// Lifecycle methods
-								CFilesystemPath(const CString& string,
-										EFilesystemPathStyle pathStyle = kFilesystemPathStylePlatformDefault);
+								CFilesystemPath(const CString& string, Style style = kStylePlatformDefault);
 								CFilesystemPath(const CFilesystemPath& other);
 								~CFilesystemPath();
 
@@ -60,7 +55,7 @@ class CFilesystemPath : public CHashable {
 									{ getString().hashInto(hasher); }
 
 								// Instance methods
-				CString			getString(EFilesystemPathStyle pathStyle = kFilesystemPathStylePlatformDefault) const;
+				CString			getString(Style style = kStylePlatformDefault) const;
 
 				CString			getExtension() const;
 
@@ -78,8 +73,8 @@ class CFilesystemPath : public CHashable {
 
 								// Class methods
 		static	CString			makeLegalFilename(const CString& string,
-										EFilesystemPathMakeLegalFilenameOptions options =
-												kFilesystemPathMakeLegalFilenameOptionsNone);
+										MakeLegalFilenameOptions makeLegalFilenameOptions =
+												kMakeLegalFilenameOptionsNone);
 
 	// Properties
 	private:

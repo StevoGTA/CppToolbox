@@ -7,19 +7,9 @@
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
+// MARK: Local proc declarations
 
-static	CString	sPathSeparatorPOSIX(OSSTR("/"));
-static	CString	sPathSeparatorWindows(OSSTR("\\"));
-#if TARGET_OS_MACOS
-static	CString	sPathSeparatorHFS(OSSTR(":"));
-#endif
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	const	CString&	sPathSeparator(EFilesystemPathStyle pathStyle);
+static	const	CString&	sPathSeparator(CFilesystemPath::Style style);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -27,12 +17,12 @@ static	const	CString&	sPathSeparator(EFilesystemPathStyle pathStyle);
 
 class CFilesystemPathInternals : public TReferenceCountable<CFilesystemPathInternals> {
 	public:
-		CFilesystemPathInternals(const CString& string, EFilesystemPathStyle pathStyle) :
-			TReferenceCountable(), mString(string), mPathStyle(pathStyle)
+		CFilesystemPathInternals(const CString& string, CFilesystemPath::Style style) :
+			TReferenceCountable(), mString(string), mStyle(style)
 			{}
 
 		CString					mString;
-		EFilesystemPathStyle	mPathStyle;
+		CFilesystemPath::Style	mStyle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -42,10 +32,10 @@ class CFilesystemPathInternals : public TReferenceCountable<CFilesystemPathInter
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CFilesystemPath::CFilesystemPath(const CString& string, EFilesystemPathStyle pathStyle) : CHashable()
+CFilesystemPath::CFilesystemPath(const CString& string, Style style) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFilesystemPathInternals(string, pathStyle);
+	mInternals = new CFilesystemPathInternals(string, style);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -65,16 +55,16 @@ CFilesystemPath::~CFilesystemPath()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CFilesystemPath::getString(EFilesystemPathStyle pathStyle) const
+CString CFilesystemPath::getString(Style style) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if same path style
-	if (pathStyle == mInternals->mPathStyle)
+	if (style == mInternals->mStyle)
 		// Same
 		return mInternals->mString;
 
 	// Must translate path separator
-	return mInternals->mString.replacingSubStrings(sPathSeparator(mInternals->mPathStyle), sPathSeparator(pathStyle));
+	return mInternals->mString.replacingSubStrings(sPathSeparator(mInternals->mStyle), sPathSeparator(style));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -101,7 +91,7 @@ TArray<CString> CFilesystemPath::getComponents() const
 		// No components
 		return TNArray<CString>();
 
-	return mInternals->mString.breakUp(sPathSeparator(mInternals->mPathStyle));
+	return mInternals->mString.breakUp(sPathSeparator(mInternals->mStyle));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -134,7 +124,7 @@ CString CFilesystemPath::getLastComponentDeletingExtension() const
 CFilesystemPath CFilesystemPath::appendingComponent(const CString& component) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mPathStyle) + component);
+	return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mStyle) + component);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -181,14 +171,14 @@ CFilesystemPath CFilesystemPath::getForResourceFork() const
 		return *this;
 	else
 		// Update
-		return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mPathStyle) +
-				CString(OSSTR("..namedfork")) + sPathSeparator(mInternals->mPathStyle) + CString(OSSTR("rsrc")));
+		return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mStyle) +
+				CString(OSSTR("..namedfork")) + sPathSeparator(mInternals->mStyle) + CString(OSSTR("rsrc")));
 }
 
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CFilesystemPath::makeLegalFilename(const CString& string, EFilesystemPathMakeLegalFilenameOptions options)
+CString CFilesystemPath::makeLegalFilename(const CString& string, MakeLegalFilenameOptions makeLegalFilenameOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get length of string
@@ -204,7 +194,7 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, EFilesystemPat
 		if ((*p < 0x20) || (*p == ':') || (*p == 0x7F))
 			*p = '_';
 
-		if ((options & kFilesystemPathMakeLegalFilenameOptionsDisallowSpaces) && (*p == ' '))
+		if ((makeLegalFilenameOptions & kMakeLegalFilenameOptionsDisallowSpaces) && (*p == ' '))
 			*p = '_';
 	}
 
@@ -216,15 +206,22 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, EFilesystemPat
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-const CString& sPathSeparator(EFilesystemPathStyle pathStyle)
+const CString& sPathSeparator(CFilesystemPath::Style style)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check path style
-	switch (pathStyle) {
-		case kFilesystemPathStylePOSIX:		return sPathSeparatorPOSIX;
-		case kFilesystemPathStyleWindows:	return sPathSeparatorWindows;
+	// Setup
+	static	CString	sPathSeparatorPOSIX(OSSTR("/"));
+	static	CString	sPathSeparatorWindows(OSSTR("\\"));
 #if TARGET_OS_MACOS
-		case kFilesystemPathStyleHFS:		return sPathSeparatorHFS;
+	static	CString	sPathSeparatorHFS(OSSTR(":"));
+#endif
+
+	// Check path style
+	switch (style) {
+		case CFilesystemPath::kStylePOSIX:		return sPathSeparatorPOSIX;
+		case CFilesystemPath::kStyleWindows:	return sPathSeparatorWindows;
+#if TARGET_OS_MACOS
+		case CFilesystemPath::kStyleHFS:		return sPathSeparatorHFS;
 #endif
 
 #if TARGET_OS_WINDOWS

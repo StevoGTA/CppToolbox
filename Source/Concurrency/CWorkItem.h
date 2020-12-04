@@ -5,60 +5,50 @@
 #pragma once
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Priority
-
-enum EWorkItemPriority {
-	kWorkItemPriorityHigh,
-	kWorkItemPriorityNormal,
-	kWorkItemPriorityBackground,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - State
-
-enum EWorkItemState {
-	kWorkItemStateWaiting,
-	kWorkItemStateActive,
-	kWorkItemStateCompleted,
-	kWorkItemStateCancelled,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Procs
-
-class CWorkItem;
-typedef	void	(*CWorkItemProc)(void* userData, CWorkItem& workItem);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CWorkItem
+// MARK: CWorkItem
 
 class CWorkItemInternals;
 class CWorkItem {
+	// Enums
+	public:
+		enum Priority {
+			kPriorityHigh,
+			kPriorityNormal,
+			kPriorityBackground,
+		};
+
+		enum State {
+			kStateWaiting,
+			kStateActive,
+			kStateCompleted,
+			kStateCancelled,
+		};
+
 	// Methods
 	public:
-								// Lifecycle methods
-								CWorkItem();
-		virtual					~CWorkItem();
+						// Lifecycle methods
+						CWorkItem();
+		virtual			~CWorkItem();
 
-								// Instance methods
-				EWorkItemState	getState() const;
-				bool			isWaiting() const
-									{ return getState() == kWorkItemStateWaiting; }
-				bool			isActive() const
-									{ return getState() == kWorkItemStateActive; }
-				bool			isCompleted() const
-									{ return getState() == kWorkItemStateCompleted; }
-				bool			isCancelled() const
-									{ return getState() == kWorkItemStateCancelled; }
+						// Instance methods
+				State	getState() const;
+				bool	isWaiting() const
+							{ return getState() == kStateWaiting; }
+				bool	isActive() const
+							{ return getState() == kStateActive; }
+				bool	isCompleted() const
+							{ return getState() == kStateCompleted; }
+				bool	isCancelled() const
+							{ return getState() == kStateCancelled; }
 
-								// Subclass methods
-		virtual	void			perform() = 0;
+						// Subclass methods
+		virtual	void	perform() = 0;
 
-		virtual	void			completed() const {}
-		virtual	void			cancelled() const {}
+		virtual	void	completed() const {}
+		virtual	void	cancelled() const {}
 
-								// Internal-use only methods
-				void			transitionTo(EWorkItemState state);
+						// Internal-use only methods
+				void	transitionTo(State state);
 
 	// Properties
 	private:
@@ -69,19 +59,21 @@ class CWorkItem {
 // MARK: - CProcWorkItem
 
 class CProcWorkItem : public CWorkItem {
+	// Procs
+	public:
+		typedef	void	(*Proc)(CWorkItem& workItem, void* userData);
+
 	// Methods
 	public:
 				// Lifecycle methods
-				CProcWorkItem(CWorkItemProc proc, void* userData) :
-					CWorkItem(/*true*/), mProc(proc), mUserData(userData)
-					{}
+				CProcWorkItem(Proc proc, void* userData) : CWorkItem(), mProc(proc), mUserData(userData) {}
 
 				// CWorkItem methods
 		void	perform()
-					{ mProc(mUserData, *this); }
+					{ mProc(*this, mUserData); }
 
 	// Properties
 	private:
-		CWorkItemProc	mProc;
-		void*			mUserData;
+		Proc	mProc;
+		void*	mUserData;
 };

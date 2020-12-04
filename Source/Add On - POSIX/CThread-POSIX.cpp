@@ -15,10 +15,10 @@
 
 class CThreadInternals {
 	public:
-						CThreadInternals(CThread& thread, CThreadProc threadProc, void* threadProcUserData,
+						CThreadInternals(CThread& thread, CThread::ThreadProc threadProc, void* userData,
 								const CString& name) :
 							mIsRunning(true), mThread(thread), mThreadProc(threadProc),
-									mThreadProcUserData(threadProcUserData), mThreadName(name)
+									mThreadProcUserData(userData), mThreadName(name)
 							{
 								// Create thread attributes
 								int				result;
@@ -61,13 +61,13 @@ class CThreadInternals {
 								return nil;
 							}
 
-		bool		mIsRunning;
-		CThreadProc	mThreadProc;
-		void*		mThreadProcUserData;
-		CString		mThreadName;
-		CThread&	mThread;
+		bool				mIsRunning;
+		CThread::ThreadProc	mThreadProc;
+		void*				mThreadProcUserData;
+		CString				mThreadName;
+		CThread&			mThread;
 
-		pthread_t	mPThread;
+		pthread_t			mPThread;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,19 +77,19 @@ class CThreadInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
+CThread::CThread(ThreadProc threadProc, void* userData, const CString& name)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup internals
+	mInternals = new CThreadInternals(*this, threadProc, userData, name);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CThread::CThread(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
 	mInternals = new CThreadInternals(*this, CThread::runThreadProc, nil, name);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CThread::CThread(CThreadProc threadProc, void* threadProcUserData, const CString& name)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup internals
-	mInternals = new CThreadInternals(*this, threadProc, threadProcUserData, name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ CThread::~CThread()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CThreadRef CThread::getThreadRef() const
+CThread::CThreadRef CThread::getThreadRef() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mPThread;
@@ -118,7 +118,7 @@ bool CThread::getIsRunning() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CThreadRef CThread::getCurrentThreadRef()
+CThread::CThreadRef CThread::getCurrentThreadRef()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return pthread_self();

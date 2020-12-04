@@ -22,12 +22,12 @@
 struct SWorkItemInfo : public CEquatable {
 			// Lifecycle methods
 			SWorkItemInfo(CWorkItemQueueInternals& owningWorkItemQueueInternals, CWorkItem& workItem,
-					EWorkItemPriority priority) :
+					CWorkItem::Priority priority) :
 				mOwningWorkItemQueueInternals(owningWorkItemQueueInternals), mWorkItem(workItem), mPriority(priority),
 						mIndex(SWorkItemInfo::mNextIndex++)
 				{}
-			SWorkItemInfo(CWorkItemQueueInternals& owningWorkItemQueueInternals, CWorkItemProc proc, void* userData,
-					EWorkItemPriority priority) :
+			SWorkItemInfo(CWorkItemQueueInternals& owningWorkItemQueueInternals, CProcWorkItem::Proc proc,
+					void* userData, CWorkItem::Priority priority) :
 				mOwningWorkItemQueueInternals(owningWorkItemQueueInternals),
 						mProcWorkItem(new CProcWorkItem(proc, userData)), mPriority(priority),
 						mIndex(SWorkItemInfo::mNextIndex++)
@@ -38,7 +38,7 @@ struct SWorkItemInfo : public CEquatable {
 				{ return this == &other; }
 
 			// Instance methods
-	void	transitionTo(EWorkItemState state)
+	void	transitionTo(CWorkItem::State state)
 				{
 					// Check what we have
 					if (mWorkItem.hasReference())
@@ -63,7 +63,7 @@ struct SWorkItemInfo : public CEquatable {
 			CWorkItemQueueInternals&	mOwningWorkItemQueueInternals;
 			OR<CWorkItem>				mWorkItem;
 			OI<CProcWorkItem>			mProcWorkItem;
-			EWorkItemPriority			mPriority;
+			CWorkItem::Priority			mPriority;
 			UInt32						mIndex;
 
 	static	UInt32						mNextIndex;
@@ -77,7 +77,7 @@ UInt32	SWorkItemInfo::mNextIndex = 0;
 
 struct SWorkItemThreadInfo {
 	// Lifecycle methods
-	SWorkItemThreadInfo(SWorkItemInfo& initialWorkItemInfo, CThreadProc threadProc, const CString& name) :
+	SWorkItemThreadInfo(SWorkItemInfo& initialWorkItemInfo, CThread::ThreadProc threadProc, const CString& name) :
 		mThread(threadProc, this, name), mWorkItemInfo(&initialWorkItemInfo)
 		{}
 
@@ -162,14 +162,14 @@ class CWorkItemQueueInternals {
 											}
 										}
 
-				void				add(CWorkItem& workItem, EWorkItemPriority priority)
+				void				add(CWorkItem& workItem, CWorkItem::Priority priority)
 										{
 											// Add
 											mWorkItemInfosLock.lock();
 											mIdleWorkItemInfos += new SWorkItemInfo(*this, workItem, priority);
 											mWorkItemInfosLock.unlock();
 										}
-				CWorkItem&			add(CWorkItemProc proc, void* userData, EWorkItemPriority priority)
+				CWorkItem&			add(CProcWorkItem::Proc proc, void* userData, CWorkItem::Priority priority)
 										{
 											// Add
 											mWorkItemInfosLock.lock();
@@ -204,7 +204,7 @@ class CWorkItemQueueInternals {
 														*workItemInfo,
 														workItemInfo->mOwningWorkItemQueueInternals
 																.mActiveWorkItemInfos);
-												workItemInfo->transitionTo(kWorkItemStateActive);
+												workItemInfo->transitionTo(CWorkItem::kStateActive);
 												workItemInfo->mOwningWorkItemQueueInternals.mWorkItemInfosLock.unlock();
 
 												// Find thread
@@ -317,7 +317,7 @@ class CWorkItemQueueInternals {
 												workItemInfo.perform();
 
 												// Note completed
-												workItemInfo.transitionTo(kWorkItemStateCompleted);
+												workItemInfo.transitionTo(CWorkItem::kStateCompleted);
 												workItemThreadInfo.mWorkItemInfo = nil;
 
 												// Remove work item info from active
@@ -450,7 +450,7 @@ CWorkItemQueue::~CWorkItemQueue()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CWorkItemQueue::add(CWorkItem& workItem, EWorkItemPriority priority)
+void CWorkItemQueue::add(CWorkItem& workItem, CWorkItem::Priority priority)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add
@@ -461,7 +461,7 @@ void CWorkItemQueue::add(CWorkItem& workItem, EWorkItemPriority priority)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CWorkItem& CWorkItemQueue::add(CWorkItemProc proc, void* userData, EWorkItemPriority priority)
+CWorkItem& CWorkItemQueue::add(CProcWorkItem::Proc proc, void* userData, CWorkItem::Priority priority)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add

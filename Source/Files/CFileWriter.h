@@ -8,19 +8,18 @@
 #include "CFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Position mode
-
-enum EFileWriterPositionMode {
-	kFileWriterPositionModeFromBeginning,
-	kFileWriterPositionModeFromCurrent,
-	kFileWriterPositionModeFromEnd,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFileWriter
+// MARK: CFileWriter
 
 class CFileWriterInternals;
 class CFileWriter {
+	// Enums
+	public:
+		enum PositionMode {
+			kPositionModeFromBeginning,
+			kPositionModeFromCurrent,
+			kPositionModeFromEnd,
+		};
+
 	// Methods
 	public:
 					// Lifecycle methods
@@ -54,7 +53,7 @@ class CFileWriter {
 						{ return write(&value, sizeof(UInt64)); }
 
 		SInt64		getPos() const;
-		OI<SError>	setPos(EFileWriterPositionMode mode, SInt64 newPos) const;
+		OI<SError>	setPos(PositionMode positionMode, SInt64 newPos) const;
 		OI<SError>	setSize(UInt64 newSize) const;
 
 		OI<SError>	flush() const;

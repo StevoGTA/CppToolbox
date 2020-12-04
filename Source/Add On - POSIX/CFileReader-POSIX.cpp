@@ -146,7 +146,7 @@ OI<SError> CFileReader::open(bool buffered)
 				CFileReaderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
-			return setPos(kFileReaderPositionModeFromBeginning, 0);
+			return setPos(kPositionModeFromBeginning, 0);
 	} else {
 		// Not buffered, check if open
 		if (mInternals->mFILE != nil) {
@@ -168,7 +168,7 @@ OI<SError> CFileReader::open(bool buffered)
 				CFileReaderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
-			return setPos(kFileReaderPositionModeFromBeginning, 0);
+			return setPos(kPositionModeFromBeginning, 0);
 	}
 }
 
@@ -230,17 +230,17 @@ SInt64 CFileReader::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
+OI<SError> CFileReader::setPos(PositionMode positionMode, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
 	if (mInternals->mFILE != nil) {
 		// FILE
 		int	posMode;
-		switch (mode) {
-			case kFileReaderPositionModeFromBeginning:	posMode = SEEK_SET;	break;
-			case kFileReaderPositionModeFromCurrent:	posMode = SEEK_CUR;	break;
-			case kFileReaderPositionModeFromEnd:		posMode = SEEK_END;	break;
+		switch (positionMode) {
+			case kPositionModeFromBeginning:	posMode = SEEK_SET;	break;
+			case kPositionModeFromCurrent:		posMode = SEEK_CUR;	break;
+			case kPositionModeFromEnd:			posMode = SEEK_END;	break;
 		}
 
 		// Set position
@@ -254,10 +254,10 @@ OI<SError> CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) cons
 	} else if (mInternals->mFD != -1) {
 		// file
 		SInt32	posMode;
-		switch (mode) {
-			case kFileReaderPositionModeFromBeginning:	posMode = SEEK_SET;	break;
-			case kFileReaderPositionModeFromCurrent:	posMode = SEEK_CUR;	break;
-			case kFileReaderPositionModeFromEnd:		posMode = SEEK_END;	break;
+		switch (positionMode) {
+			case kPositionModeFromBeginning:	posMode = SEEK_SET;	break;
+			case kPositionModeFromCurrent:		posMode = SEEK_CUR;	break;
+			case kPositionModeFromEnd:			posMode = SEEK_END;	break;
 		}
 
 		// Set position

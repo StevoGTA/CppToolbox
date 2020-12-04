@@ -8,16 +8,7 @@
 #include "CFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Position mode
-
-enum EFileReaderPositionMode {
-	kFileReaderPositionModeFromBeginning,
-	kFileReaderPositionModeFromCurrent,
-	kFileReaderPositionModeFromEnd,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFileMemoryMap
+// MARK: CFileMemoryMap
 
 struct SFileMemoryMapSetupInfo;
 
@@ -47,6 +38,14 @@ class CFileMemoryMap {
 
 class CFileReaderInternals;
 class CFileReader {
+	// Enums
+	public:
+		enum PositionMode {
+			kPositionModeFromBeginning,
+			kPositionModeFromCurrent,
+			kPositionModeFromEnd,
+		};
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -135,7 +134,7 @@ class CFileReader {
 											}
 
 						SInt64			getPos() const;
-						OI<SError>		setPos(EFileReaderPositionMode mode, SInt64 newPos) const;
+						OI<SError>		setPos(PositionMode positionMode, SInt64 newPos) const;
 
 						CFileMemoryMap	getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount,
 												OI<SError>& outError) const;

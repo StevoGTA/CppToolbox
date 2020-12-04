@@ -7,164 +7,109 @@
 #include "CDictionary.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Color Type
-
-//----------------------------------------------------------------------------------------------------------------------
+// MARK: CColor
 /*
 	RGB:
 		Red 0.0 to 1.0
 		Green 0.0 to 1.0
 		Blue 0.0 to 1.0
-	
+
 	HSV:
 		Hue 0.0 to 360.0: 0.0 is red, 60.0 is yellow, 120.0 is green, 180.0 is cyan, 240.0 is blue,
 				300.0 is magenta, 360.0 = 0.0
 		Saturation 0.0 to 1.0: 0.0 is all white, 1.0 is fully hue
 		Value 0.0 to 1.0: 0.0 is all black, 1.0 is fully hue + saturation
-	
+
 	Alpha 0.0 to 1.0: 0.0 is fully transparent, 1.0 is fully opaque
 */
 
-enum EColorType {
-	kColorTypeRGB,
-	kColorTypeHSV,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SRGBColorTransformMultiplier
-
-struct SRGBColorTransformMultiplier {
-											// Lifecycle methods
-											SRGBColorTransformMultiplier() : mR(1.0), mG(1.0), mB(1.0), mA(1.0) {}
-											SRGBColorTransformMultiplier(Float32 r, Float32 g, Float32 b, Float32 a) :
-												mR(r), mG(g), mB(b), mA(a)
-												{}
-
-											// Instance methods
-	inline	SRGBColorTransformMultiplier	operator*(Float32 factor) const
-												{
-													return SRGBColorTransformMultiplier(mR * factor, mG * factor,
-															mB * factor, mA * factor);
-												}
-	inline	SRGBColorTransformMultiplier	operator+(const SRGBColorTransformMultiplier& other) const
-												{
-													return SRGBColorTransformMultiplier(mR + other.mR,
-															mG + other.mG, mB + other.mB, mA + other.mA);
-												}
-
-	// Properties
-	Float32	mR;
-	Float32	mG;
-	Float32	mB;
-	Float32	mA;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SRGBColorTransformAdder
-
-struct SRGBColorTransformAdder {
-									// Lifecycle methods
-									SRGBColorTransformAdder() : mR(0.0), mG(0.0), mB(0.0), mA(0.0) {}
-									SRGBColorTransformAdder(Float32 r, Float32 g, Float32 b, Float32 a) :
-										mR(r), mG(g), mB(b), mA(a)
-										{}
-
-									// Instance methods
-	inline	SRGBColorTransformAdder	operator*(Float32 factor) const
-										{
-											return SRGBColorTransformAdder(mR * factor, mG * factor,
-													mB * factor, mA * factor);
-										}
-	inline	SRGBColorTransformAdder	operator+(const SRGBColorTransformAdder& other) const
-										{
-											return SRGBColorTransformAdder(mR + other.mR,
-													mG + other.mG, mB + other.mB, mA + other.mA);
-										}
-
-	// Properties
-	Float32	mR;
-	Float32	mG;
-	Float32	mB;
-	Float32	mA;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SRGBColorTransform
-
-struct SRGBColorTransform {
-								// Lifecycle methods
-								SRGBColorTransform() :
-									mMultiplier(SRGBColorTransformMultiplier()),
-									mAdder(SRGBColorTransformAdder())
-									{}
-								SRGBColorTransform(const SRGBColorTransformMultiplier& multiplier,
-										const SRGBColorTransformAdder& adder) :
-									mMultiplier(multiplier), mAdder(adder)
-									{}
-
-								// Instance methods
-	inline	SRGBColorTransform	operator*(Float32 factor) const
-									{ return SRGBColorTransform(mMultiplier * factor, mAdder * factor); }
-	inline	SRGBColorTransform	operator+(const SRGBColorTransform& other) const
-									{
-										return SRGBColorTransform(mMultiplier + other.mMultiplier,
-												mAdder + other.mAdder);
-									}
-
-	// Properties
-	SRGBColorTransformMultiplier	mMultiplier;
-	SRGBColorTransformAdder			mAdder;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SHSVColorTransformMultiplier
-
-struct SHSVColorTransformMultiplier {
-	// Lifecycle methods
-	SHSVColorTransformMultiplier() : mH(1.0), mS(1.0), mV(1.0), mA(1.0) {}
-	SHSVColorTransformMultiplier(Float32 h, Float32 s, Float32 v, Float32 a) : mH(h), mS(s), mV(v), mA(a) {}
-
-	// Properties
-	Float32	mH;
-	Float32	mS;
-	Float32	mV;
-	Float32	mA;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SHSVColorTransformAdder
-
-struct SHSVColorTransformAdder {
-	// Lifecycle methods
-	SHSVColorTransformAdder() : mH(0.0), mS(0.0), mV(0.0), mA(0.0) {}
-	SHSVColorTransformAdder(Float32 h, Float32 s, Float32 v, Float32 a) : mH(h), mS(s), mV(v), mA(a) {}
-
-	// Properties
-	Float32	mH;
-	Float32	mS;
-	Float32	mV;
-	Float32	mA;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SHSVColorTransform
-
-struct SHSVColorTransform {
-	// Lifecycle methods
-	SHSVColorTransform(const SHSVColorTransformMultiplier& multiplier, const SHSVColorTransformAdder& adder) :
-		mMultiplier(multiplier), mAdder(adder)
-		{}
-
-	// Properties
-	SHSVColorTransformMultiplier	mMultiplier;
-	SHSVColorTransformAdder			mAdder;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CColor
-
 class CColorInternals;
 class CColor : public CEquatable {
+	// Enums
+	public:
+		enum Type {
+			kTypeRGB,
+			kTypeHSV,
+		};
+
+	// Structs
+	public:
+		struct RGBTransformer {
+							// Lifecycle methods
+							RGBTransformer() : mR(1.0), mG(1.0), mB(1.0), mA(1.0) {}
+							RGBTransformer(Float32 r, Float32 g, Float32 b, Float32 a) : mR(r), mG(g), mB(b), mA(a) {}
+
+							// Instance methods
+			RGBTransformer	operator*(Float32 factor) const
+								{ return RGBTransformer(mR * factor, mG * factor, mB * factor, mA * factor); }
+			RGBTransformer	operator+(const RGBTransformer& other) const
+								{ return RGBTransformer(mR + other.mR, mG + other.mG, mB + other.mB, mA + other.mA); }
+
+			// Properties
+			Float32	mR;
+			Float32	mG;
+			Float32	mB;
+			Float32	mA;
+		};
+
+		struct RGBColorTransform {
+										// Lifecycle methods
+										RGBColorTransform() {}
+										RGBColorTransform(const RGBTransformer& multiplier,
+												const RGBTransformer& adder) :
+											mMultiplier(multiplier), mAdder(adder)
+											{}
+
+										// Instance methods
+			inline	RGBColorTransform	operator*(Float32 factor) const
+											{ return RGBColorTransform(mMultiplier * factor, mAdder * factor); }
+			inline	RGBColorTransform	operator+(const RGBColorTransform& other) const
+											{ return RGBColorTransform(mMultiplier + other.mMultiplier,
+														mAdder + other.mAdder); }
+
+			// Properties
+			RGBTransformer	mMultiplier;
+			RGBTransformer	mAdder;
+		};
+
+		struct HSVTransformer {
+							// Lifecycle methods
+							HSVTransformer() : mH(1.0), mS(1.0), mV(1.0), mA(1.0) {}
+							HSVTransformer(Float32 r, Float32 g, Float32 b, Float32 a) : mH(r), mS(g), mV(b), mA(a) {}
+
+							// Instance methods
+			HSVTransformer	operator*(Float32 factor) const
+								{ return HSVTransformer(mH * factor, mS * factor, mV * factor, mA * factor); }
+			HSVTransformer	operator+(const HSVTransformer& other) const
+								{ return HSVTransformer(mH + other.mH, mS + other.mS, mV + other.mV, mA + other.mA); }
+
+			// Properties
+			Float32	mH;
+			Float32	mS;
+			Float32	mV;
+			Float32	mA;
+		};
+
+		struct HSVColorTransform {
+										// Lifecycle methods
+										HSVColorTransform() {}
+										HSVColorTransform(const HSVTransformer& multiplier,
+												const HSVTransformer& adder) :
+											mMultiplier(multiplier), mAdder(adder)
+											{}
+
+										// Instance methods
+			inline	HSVColorTransform	operator*(Float32 factor) const
+											{ return HSVColorTransform(mMultiplier * factor, mAdder * factor); }
+			inline	HSVColorTransform	operator+(const HSVColorTransform& other) const
+											{ return HSVColorTransform(mMultiplier + other.mMultiplier,
+														mAdder + other.mAdder); }
+
+			// Properties
+			HSVTransformer	mMultiplier;
+			HSVTransformer	mAdder;
+		};
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -173,8 +118,8 @@ class CColor : public CEquatable {
 									CColor(const CDictionary& info);
 									CColor(const CString& hexString);
 
-									CColor(EColorType type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha);
-									CColor(EColorType type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha);
+									CColor(Type type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha);
+									CColor(Type type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha);
 
 									~CColor();
 
@@ -198,14 +143,10 @@ class CColor : public CEquatable {
 
 				bool				equals(const CColor& other) const;
 
-				CColor&				operator=(const CColor& other);
-
 				CColor				operator+(const CColor& other) const;
 
-				CColor				operator*(const SRGBColorTransform& transform) const;
-				CColor				operator*(const SHSVColorTransform& transform) const;
-				CColor&				operator*=(const SRGBColorTransform& transform);
-				CColor&				operator*=(const SHSVColorTransform& transform);
+				CColor				operator*(const RGBColorTransform& transform) const;
+				CColor				operator*(const HSVColorTransform& transform) const;
 
 									// Class methods
 		static	OR<const CColor>	getColorWithName(const CString& colorName);

@@ -8,26 +8,23 @@
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Types
-
-typedef	void*	CThreadRef;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Procs
-
-class CThread;
-typedef	void	(*CThreadProc)(CThread& thread, void* userData);
-typedef void	(*CThreadRunOnMainThreadProc)(void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CThread
+// MARK: CThread
 
 class CThreadInternals;
 class CThread {
+	// Types
+	public:
+		typedef	void*	CThreadRef;
+
+	// Procs:
+	public:
+		typedef void	(*Proc)(void* userData);
+		typedef	void	(*ThreadProc)(CThread& thread, void* userData);
+
 	// Methods
 	public:
 									// Lifecycle methods
-									CThread(CThreadProc threadProc, void* threadProcUserData = nil,
+									CThread(ThreadProc threadProc, void* userData = nil,
 											const CString& name = CString::mEmpty);
 				virtual				~CThread();
 
@@ -38,7 +35,7 @@ class CThread {
 									// Class methods
 		static			CThreadRef	getCurrentThreadRef();
 		static			void		sleepFor(UniversalTimeInterval universalTimeInterval);
-		static			void		runOnMainThread(CThreadRunOnMainThreadProc runOnMainThreadProc, void* userData);
+		static			void		runOnMain(Proc proc, void* userData);
 
 	protected:
 									// Lifecycle methods

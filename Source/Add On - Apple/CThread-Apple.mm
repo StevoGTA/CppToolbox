@@ -5,8 +5,8 @@
 #include "CThread.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-void CThread::runOnMainThread(CThreadRunOnMainThreadProc runOnMainThreadProc, void* userData)
+void CThread::runOnMain(Proc proc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	dispatch_async(dispatch_get_main_queue(), ^{ runOnMainThreadProc(userData); });
+	dispatch_async(dispatch_get_main_queue(), ^{ proc(userData); });
 }

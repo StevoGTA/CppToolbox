@@ -8,24 +8,7 @@
 #include "CPreferences.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
-
-CString eColorRegistryColorChangedNotificationName(OSSTR("colorRegistryColorChangedNotification"));
-
-CString	eColorRegistryGroupIDKey(OSSTR("groupID"));
-CString	eColorRegistryColorIDKey(OSSTR("colorID"));
-CString	eColorRegistryColorKey(OSSTR("color"));
-
-static	CString	sColorGroupIDKey(OSSTR("groupID"));
-static	CString	sColorIDKey(OSSTR("colorID"));
-static	CString	sColorInfoKey(OSSTR("color"));
-static	CString	sColorSetColorInfosKey(OSSTR("colors"));
-static	CString	sColorSetInfosKey(OSSTR("presets"));
-static	CString	sCurrentColorSetKey(OSSTR("currentColorSet"));
-static	CString	sNameKey(OSSTR("name"));
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CColorGroupInternals
+// MARK: CColorGroupInternals
 
 class CColorGroupInternals : public TReferenceCountable<CColorGroupInternals> {
 	public:
@@ -145,19 +128,19 @@ CColorSet::CColorSet(const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Retrieve name
-	CString		name = info.getString(sNameKey);
+	CString		name = info.getString(CString(OSSTR("name")));
 
 	// Setup
 	mInternals = new CColorSetInternals(name);
 
 	// Setup colors
-	TArray<CDictionary>	colorSetColorInfos = info.getArrayOfDictionaries(sColorSetColorInfosKey);
+	TArray<CDictionary>	colorSetColorInfos = info.getArrayOfDictionaries(CString(OSSTR("colors")));
 	for (CArray::ItemIndex j = 0; j < colorSetColorInfos.getCount(); j++) {
 		// Get color set color info
 		const	CDictionary&	colorSetColorInfo = colorSetColorInfos[j];
-				OSType			colorGroupID = colorSetColorInfo.getOSType(sColorGroupIDKey);
-				OSType			colorID = colorSetColorInfo.getOSType(sColorIDKey);
-				CDictionary		colorInfo = colorSetColorInfo.getDictionary(sColorInfoKey);
+				OSType			colorGroupID = colorSetColorInfo.getOSType(CString(OSSTR("groupID")));
+				OSType			colorID = colorSetColorInfo.getOSType(CString(OSSTR("colorID")));
+				CDictionary		colorInfo = colorSetColorInfo.getDictionary(CString(OSSTR("color")));
 
 		// Store
 		UInt64	key = ((UInt64) colorGroupID << 32) | colorID;
@@ -231,7 +214,7 @@ CDictionary CColorSet::getInfo() const
 	// Setup
 	CDictionary	info;
 
-	info.set(sNameKey, mInternals->mName);
+	info.set(CString(OSSTR("name")), mInternals->mName);
 
 	TNArray<CDictionary>	colorSetColorInfos;
 	for (TIteratorS<SDictionaryItem> iterator = mInternals->mColorsMap.getIterator(); iterator.hasValue();
@@ -242,14 +225,14 @@ CDictionary CColorSet::getInfo() const
 		OSType	colorID = (OSType) (key & 0xFFFFFFFF);
 
 		CDictionary	colorSetColorInfo;
-		colorSetColorInfo.set(sColorGroupIDKey, colorGroupID);
-		colorSetColorInfo.set(sColorIDKey, colorID);
-		colorSetColorInfo.set(sColorInfoKey, ((CColor*) iterator.getValue().mValue.getItemRef())->getInfo());
+		colorSetColorInfo.set(CString(OSSTR("groupID")), colorGroupID);
+		colorSetColorInfo.set(CString(OSSTR("colorID")), colorID);
+		colorSetColorInfo.set(CString(OSSTR("color")), ((CColor*) iterator.getValue().mValue.getItemRef())->getInfo());
 
 		// Add to array
 		colorSetColorInfos += colorSetColorInfo;
 	}
-	info.set(sColorSetColorInfosKey, colorSetColorInfos);
+	info.set(CString(OSSTR("colors")), colorSetColorInfos);
 
 	return info;
 }
@@ -290,11 +273,11 @@ class CColorRegistryInternals {
 								for (CArray::ItemIndex i = 0; i < mColorSets.getCount(); i++)
 									// Add info
 									colorSetInfos += mColorSets[i].getInfo();
-								info.set(sColorSetInfosKey, colorSetInfos);
+								info.set(CString(OSSTR("presets")), colorSetInfos);
 
 								if (mCurrentColorSet.hasInstance())
 									// Add current color set
-									info.set(sCurrentColorSetKey, mCurrentColorSet->getInfo());
+									info.set(CString(OSSTR("currentColorSet")), mCurrentColorSet->getInfo());
 
 								// Write
 								CPreferences::mDefault.set(*mPref, info);
@@ -331,6 +314,15 @@ class CColorRegistryInternals {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorRegistry
 
+// MARK: Notifications
+
+CString CColorRegistry::mColorChangedNotificationName(OSSTR("colorRegistryColorChangedNotification"));
+
+CString	CColorRegistry::mGroupIDKey(OSSTR("groupID"));
+CString	CColorRegistry::mColorIDKey(OSSTR("colorID"));
+CString	CColorRegistry::mColorKey(OSSTR("color"));
+
+
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -351,13 +343,13 @@ CColorRegistry::CColorRegistry(const CPreferences::Pref& pref)
 	CDictionary	info = CPreferences::mDefault.getDictionary(pref);
 
 	// Color sets
-	TArray<CDictionary>	colorSetInfos = info.getArrayOfDictionaries(sColorSetInfosKey);
+	TArray<CDictionary>	colorSetInfos = info.getArrayOfDictionaries(CString(OSSTR("presets")));
 	for (CArray::ItemIndex i = 0; i < colorSetInfos.getCount(); i++)
 		// Add to color sets
 		mInternals->mColorSets += CColorSet(colorSetInfos[i]);
 
 	// Current color set
-	CDictionary	currentColorSetInfo = info.getDictionary(sCurrentColorSetKey);
+	CDictionary	currentColorSetInfo = info.getDictionary(CString(OSSTR("currentColorSet")));
 	if (!currentColorSetInfo.isEmpty())
 		// Setup current color set
 		mInternals->mCurrentColorSet = OI<CColorSet>(CColorSet(currentColorSetInfo));
@@ -469,7 +461,7 @@ void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 		TNumericArray<OSType>	colorIDs = colorGroup.getColorIDs();
 
 		// Setup
-		info.set(eColorRegistryGroupIDKey, colorGroupID);
+		info.set(mGroupIDKey, colorGroupID);
 
 		// Iterate color IDs
 		for (CArray::ItemIndex j = 0; j < colorIDs.getCount(); j++) {
@@ -478,11 +470,11 @@ void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 			const	CColor&	color = mInternals->getCurrentColorSet().getColor(colorGroupID, colorID);
 
 			// Setup
-			info.set(eColorRegistryColorIDKey, colorID);
-			info.set(eColorRegistryColorKey, &color);
+			info.set(mColorIDKey, colorID);
+			info.set(mColorKey, &color);
 
 			// Send notification
-			CNotificationCenter::mStandard.send(eColorRegistryColorChangedNotificationName, this, info);
+			CNotificationCenter::mStandard.send(mColorChangedNotificationName, this, info);
 		}
 	}
 }
@@ -499,11 +491,11 @@ void CColorRegistry::setCurrentColorSetColor(OSType colorGroupID, OSType colorID
 
 	// Send notification
 	CDictionary	info;
-	info.set(eColorRegistryGroupIDKey, colorGroupID);
-	info.set(eColorRegistryColorIDKey, colorID);
-	info.set(eColorRegistryColorKey, &color);
+	info.set(mGroupIDKey, colorGroupID);
+	info.set(mColorIDKey, colorID);
+	info.set(mColorKey, &color);
 
-	CNotificationCenter::mStandard.send(eColorRegistryColorChangedNotificationName, this, info);
+	CNotificationCenter::mStandard.send(mColorChangedNotificationName, this, info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

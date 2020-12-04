@@ -141,7 +141,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 							}
 
 						// Class methods
-		static	void	load(void* userData, CWorkItem& workItem)
+		static	void	load(CWorkItem& workItem, void* userData)
 							{
 								// Get info
 								CGPUTextureReferenceInternals&	internals =

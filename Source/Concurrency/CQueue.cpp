@@ -57,7 +57,7 @@ CSRSWBIPQueue::~CSRSWBIPQueue()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CSRSWBIPQueue::SReadBufferInfo CSRSWBIPQueue::requestRead() const
+CSRSWBIPQueue::ReadBufferInfo CSRSWBIPQueue::requestRead() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Capture info locally
@@ -67,13 +67,13 @@ CSRSWBIPQueue::SReadBufferInfo CSRSWBIPQueue::requestRead() const
 	// Check stuffs
 	if (writePtr > mInternals->mReadPtr)
 		// Write leads, read follows
-		return SReadBufferInfo(mInternals->mReadPtr, (UInt32) (writePtr - mInternals->mReadPtr));
+		return ReadBufferInfo(mInternals->mReadPtr, (UInt32) (writePtr - mInternals->mReadPtr));
 	else if (writePtr == mInternals->mReadPtr)
 		// Nothing to read
-		return SReadBufferInfo();
+		return ReadBufferInfo();
 	else
 		// Can read to write watermark
-		return SReadBufferInfo(mInternals->mReadPtr, (UInt32) (writeWatermarkPtr - mInternals->mReadPtr));
+		return ReadBufferInfo(mInternals->mReadPtr, (UInt32) (writeWatermarkPtr - mInternals->mReadPtr));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ void CSRSWBIPQueue::commitRead(UInt32 size)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSRSWBIPQueue::SWriteBufferInfo CSRSWBIPQueue::requestWrite(UInt32 maxSize) const
+CSRSWBIPQueue::WriteBufferInfo CSRSWBIPQueue::requestWrite(UInt32 maxSize) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Capture info locally
@@ -102,24 +102,24 @@ CSRSWBIPQueue::SWriteBufferInfo CSRSWBIPQueue::requestWrite(UInt32 maxSize) cons
 		// Write trails read
 		if ((UInt32) (mInternals->mWriteWatermarkPtr - mInternals->mWritePtr) >= maxSize)
 			// Can write more from current position
-			return SWriteBufferInfo(mInternals->mWritePtr, maxSize);
+			return WriteBufferInfo(mInternals->mWritePtr, maxSize);
 		else if ((UInt32) (readPtr - mInternals->mBuffer) >= maxSize) {
 			// Must start at beginning of the buffer now
 			mInternals->mWriteWatermarkPtr = mInternals->mWritePtr;
 			mInternals->mWritePtr = mInternals->mBuffer;
 
-			return SWriteBufferInfo(mInternals->mWritePtr, maxSize);
+			return WriteBufferInfo(mInternals->mWritePtr, maxSize);
 		} else
 			// Not enough space
-			return SWriteBufferInfo();
+			return WriteBufferInfo();
 	} else {
 		// Write preceeds read
 		if ((UInt32) (readPtr - mInternals->mWritePtr) >= maxSize)
 			// Can write more from current position
-			return SWriteBufferInfo(mInternals->mWritePtr, maxSize);
+			return WriteBufferInfo(mInternals->mWritePtr, maxSize);
 		else
 			// Not enough space
-			return SWriteBufferInfo();
+			return WriteBufferInfo();
 	}
 }
 
@@ -208,7 +208,7 @@ UInt32 CSRSWBIPSegmentedQueue::getSegmentCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSRSWBIPSegmentedQueue::SReadBufferInfo CSRSWBIPSegmentedQueue::requestRead() const
+CSRSWBIPSegmentedQueue::ReadBufferInfo CSRSWBIPSegmentedQueue::requestRead() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Capture info locally
@@ -218,15 +218,15 @@ CSRSWBIPSegmentedQueue::SReadBufferInfo CSRSWBIPSegmentedQueue::requestRead() co
 	// Check stuffs
 	if (writePtr > mInternals->mReadPtr)
 		// Can read to write pointer
-		return SReadBufferInfo(mInternals->mReadPtr, mInternals->mSegmentSize,
+		return ReadBufferInfo(mInternals->mReadPtr, mInternals->mSegmentSize,
 				(UInt32) (writePtr - mInternals->mReadPtr));
 	else if (writePtr < mInternals->mReadPtr)
 		// Can read to write watermark pointer
-		return SReadBufferInfo(mInternals->mReadPtr, mInternals->mSegmentSize,
+		return ReadBufferInfo(mInternals->mReadPtr, mInternals->mSegmentSize,
 				(UInt32) (writeWatermarkPtr - mInternals->mReadPtr));
 	else
 		// Queue is empty
-		return SReadBufferInfo();
+		return ReadBufferInfo();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -244,7 +244,7 @@ void CSRSWBIPSegmentedQueue::commitRead(UInt32 size)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSRSWBIPSegmentedQueue::SWriteBufferInfo CSRSWBIPSegmentedQueue::requestWrite(UInt32 maxSize) const
+CSRSWBIPSegmentedQueue::WriteBufferInfo CSRSWBIPSegmentedQueue::requestWrite(UInt32 maxSize) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Capture info locally
@@ -258,24 +258,24 @@ CSRSWBIPSegmentedQueue::SWriteBufferInfo CSRSWBIPSegmentedQueue::requestWrite(UI
 		// Can write up to end of buffer, or set watermark and write to beginning of buffer
 		if ((UInt32) (mInternals->mWriteWatermarkPtr - mInternals->mWritePtr) >= maxSize)
 			// Can write more from current position
-			return SWriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
+			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
 		else if ((UInt32) (readPtr - mInternals->mBuffer) >= maxSize) {
 			// Must start at beginning of the buffer now
 			mInternals->mWriteWatermarkPtr = mInternals->mWritePtr;
 			mInternals->mWritePtr = mInternals->mBuffer;
 
-			return SWriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
+			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
 		} else
 			// Not enough space
-			return SWriteBufferInfo();
+			return WriteBufferInfo();
 	} else {
 		// Write pointer is before read pointer
 		if ((UInt32) (readPtr - mInternals->mWritePtr) >= maxSize)
 			// Can write more from current position
-			return SWriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
+			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
 		else
 			// Not enough space
-			return SWriteBufferInfo();
+			return WriteBufferInfo();
 	}
 }
 

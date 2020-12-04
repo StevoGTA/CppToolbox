@@ -80,7 +80,7 @@ OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::open(const TArray<CFile> files, const CApplicationObject& applicationObject)
+OI<SError> CFilesystem::open(const TArray<CFile> files, const Application& application)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -93,7 +93,7 @@ OI<SError> CFilesystem::open(const TArray<CFile> files, const CApplicationObject
 
 	NSURL*	applicationURL =
 					(NSURL*) CFBridgingRelease(
-							CCoreFoundation::createURLRefFrom(applicationObject.getFilesystemPath(), true));
+							CCoreFoundation::createURLRefFrom(application.getFilesystemPath(), true));
 	// Open
 	NSError*	error;
 	if ([[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:applicationURL options:0 configuration:@{}
@@ -103,7 +103,7 @@ OI<SError> CFilesystem::open(const TArray<CFile> files, const CApplicationObject
 	else
 		// Error
 		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "opening files with",
-				applicationObject);
+				application);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
