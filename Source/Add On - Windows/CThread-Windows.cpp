@@ -9,48 +9,54 @@
 
 #undef Delete
 #include <Windows.h>
-#define Delete(x)		{ delete x; x = nil; }
+#define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CThreadInternals
 
 class CThreadInternals {
 	public:
-		CThreadInternals(CThread& thread, CThreadProc proc, void* userData, const CString& name) :
-			mThreadProc(proc), mThreadProcUserData(userData), mThreadName(name), mThread(thread),
-					mWindowsThreadHandle(NULL)
-			{}
-		~CThreadInternals() {}
+						CThreadInternals(CThread& thread, CThread::ThreadProc threadProc, void* userData,
+								const CString& name) :
+							mThreadProc(threadProc), mThreadProcUserData(userData), mThreadName(name), mThread(thread),
+									mWindowsThreadHandle(NULL)
+							{}
 
-		CThreadProc	mThreadProc;
-		void*		mThreadProcUserData;
-		CString		mThreadName;
-		CThread&	mThread;
+		static	DWORD	threadProc(void* userData)
+							{
+								// Setup
+								CThreadInternals* threadInternals = (CThreadInternals*)userData;
 
-		HANDLE		mWindowsThreadHandle;
+								// Call proc
+								threadInternals->mThreadProc(threadInternals->mThread,
+										threadInternals->mThreadProcUserData);
+
+								return 0;
+							}
+
+		CThread::ThreadProc	mThreadProc;
+		void*				mThreadProcUserData;
+		CString				mThreadName;
+		CThread&			mThread;
+
+		HANDLE				mWindowsThreadHandle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	DWORD sThreadProc(void* userData);
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CThreadInternals
+// MARK: - CThread
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CThread::CThread(CThreadProc proc, void* userData, const CString& name)
+CThread::CThread(ThreadProc threadProc, void* userData, const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
-	mInternals = new CThreadInternals(*this, proc, userData, name);
+	mInternals = new CThreadInternals(*this, threadProc, userData, name);
 
 	// Create thread
-	mInternals->mWindowsThreadHandle = CreateThread(NULL, 0, sThreadProc, mInternals, 0, NULL);
+	mInternals->mWindowsThreadHandle = CreateThread(NULL, 0, CThreadInternals::threadProc, mInternals, 0, NULL);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,7 +70,7 @@ CThread::~CThread()
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-CThreadRef CThread::getThreadRef() const
+CThread::Ref CThread::getRef() const
 {
 	return mInternals->mWindowsThreadHandle;
 }
@@ -72,32 +78,8 @@ CThreadRef CThread::getThreadRef() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-////----------------------------------------------------------------------------------------------------------------------
-//void CThread::sleepFor(UniversalTimeInterval timeInterval)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	::usleep((UInt32) (timeInterval * 1000000.0));
-//}
-
-//----------------------------------------------------------------------------------------------------------------------
-CThreadRef CThread::getCurrentThreadRef()
+CThread::Ref CThread::getCurrentRef()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return GetCurrentThread();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-//----------------------------------------------------------------------------------------------------------------------
-DWORD sThreadProc(void* userData)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	CThreadInternals* threadInternals = (CThreadInternals*)userData;
-
-	// Call proc
-	threadInternals->mThreadProc(threadInternals->mThread, threadInternals->mThreadProcUserData);
-
-	return 0;
 }

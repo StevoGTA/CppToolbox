@@ -14,7 +14,7 @@ class CThreadInternals;
 class CThread {
 	// Types
 	public:
-		typedef	void*	CThreadRef;
+		typedef	void*	Ref;
 
 	// Procs:
 	public:
@@ -23,31 +23,31 @@ class CThread {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									CThread(ThreadProc threadProc, void* userData = nil,
-											const CString& name = CString::mEmpty);
-				virtual				~CThread();
+								// Lifecycle methods
+								CThread(ThreadProc threadProc, void* userData = nil,
+										const CString& name = CString::mEmpty);
+				virtual			~CThread();
 
-									// Instance methods
-						CThreadRef	getThreadRef() const;
-						bool		getIsRunning() const;
+								// Instance methods
+						Ref		getRef() const;
+						bool	getIsRunning() const;
 
-									// Class methods
-		static			CThreadRef	getCurrentThreadRef();
-		static			void		sleepFor(UniversalTimeInterval universalTimeInterval);
-		static			void		runOnMain(Proc proc, void* userData);
+								// Class methods
+		static			Ref		getCurrentRef();
+		static			void	sleepFor(UniversalTimeInterval universalTimeInterval);
+		static			void	runOnMain(Proc proc, void* userData);
 
 	protected:
-									// Lifecycle methods
-									CThread(const CString& name = CString::mEmpty);
+								// Lifecycle methods
+								CThread(const CString& name = CString::mEmpty);
 
-									// Subclass methods
-				virtual	void		run()
-										{}
+								// Subclass methods
+				virtual	void	run()
+									{}
 
 	private:
-		static			void		runThreadProc(CThread& thread, void* userData)
-										{ thread.run(); }
+		static			void	runThreadProc(CThread& thread, void* userData)
+									{ thread.run(); }
 
 	// Properties
 	private:

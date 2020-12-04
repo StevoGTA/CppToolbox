@@ -112,7 +112,7 @@ return 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setPos(EFileWriterPositionMode mode, SInt64 newPos) const
+OI<SError> CFileWriter::setPos(PositionMode positionMode, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();

@@ -102,7 +102,7 @@ CThread::~CThread()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CThread::CThreadRef CThread::getThreadRef() const
+CThread::Ref CThread::getRef() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mPThread;
@@ -118,7 +118,7 @@ bool CThread::getIsRunning() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CThread::CThreadRef CThread::getCurrentThreadRef()
+CThread::Ref CThread::getCurrentRef()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return pthread_self();

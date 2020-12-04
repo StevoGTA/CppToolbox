@@ -174,7 +174,7 @@ SInt64 CFileReader::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) const
+OI<SError> CFileReader::setPos(PositionMode positionMode, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -182,10 +182,10 @@ OI<SError> CFileReader::setPos(EFileReaderPositionMode mode, SInt64 newPos) cons
 	position.QuadPart = newPos;
 
 	DWORD	moveMethod;
-	switch (mode) {
-		case kFileReaderPositionModeFromBeginning:	moveMethod = FILE_BEGIN;	break;
-		case kFileReaderPositionModeFromCurrent:	moveMethod = FILE_CURRENT;	break;
-		case kFileReaderPositionModeFromEnd:		moveMethod = FILE_END;		break;
+	switch (positionMode) {
+		case kPositionModeFromBeginning:	moveMethod = FILE_BEGIN;	break;
+		case kPositionModeFromCurrent:		moveMethod = FILE_CURRENT;	break;
+		case kPositionModeFromEnd:			moveMethod = FILE_END;		break;
 	}
 
 	// Set position
