@@ -146,11 +146,11 @@ TArray<SAudioProcessingSetup> CDVIIntelIMAADPCMAudioCodec::getDecodeAudioProcess
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		CByteParceller& byteParceller, const I<CAudioCodec::CDecodeInfo>& decodeInfo)
+		CByteParceller& byteParceller, const I<CAudioCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SDataDecodeInfo*	dataDecodeInfo = (SDataDecodeInfo*) &*decodeInfo;
+	DataDecodeInfo*	dataDecodeInfo = (DataDecodeInfo*) &*decodeInfo;
 
 	// Store
 	mInternals->mByteParceller =
@@ -177,7 +177,7 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 		if (packetIndex != mInternals->mDecodeCurrentPacketIndex) {
 			// Need to seek
 			SInt64		byteIndex = packetIndex * bytesPerPacket;
-			OI<SError>	error = mInternals->mByteParceller->setPos(kDataSourcePositionFromBeginning, byteIndex);
+			OI<SError>	error = mInternals->mByteParceller->setPos(CDataSource::kPositionFromBeginning, byteIndex);
 			if (error.hasInstance())
 				return SAudioReadStatus(*error);
 
@@ -277,6 +277,6 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 // MARK: - Declare audio codecs
 
 REGISTER_AUDIO_CODEC(DVIIntelIMA,
-		CAudioCodec::SInfo(CDVIIntelIMAADPCMAudioCodec::mID, CString("DVI/Intel IMA ADPCM 4:1"),
+		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString("DVI/Intel IMA ADPCM 4:1"),
 				CDVIIntelIMAADPCMAudioCodecInternals::getAudioProcessingSetups,
 				CDVIIntelIMAADPCMAudioCodecInternals::instantiate));

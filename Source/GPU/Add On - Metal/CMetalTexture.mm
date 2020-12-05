@@ -9,7 +9,7 @@
 
 class CMetalTextureInternals : public TReferenceCountable<CMetalTextureInternals> {
 	public:
-		CMetalTextureInternals(id<MTLDevice> device, const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
+		CMetalTextureInternals(id<MTLDevice> device, const CData& data, CGPUTexture::DataFormat dataFormat,
 				const S2DSizeU16& size) :
 mUsedPixelsSize(size),
 			TReferenceCountable(), mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
@@ -17,12 +17,12 @@ mUsedPixelsSize(size),
 			{
 				// Setup
 				NSUInteger		bytesPerRow;
-				switch (gpuTextureDataFormat) {
-//					case kGPUTextureDataFormatRGB565:	pixelFormat = MTLPixelFormatB5G6R5Unorm;
-//					case kGPUTextureDataFormatRGBA4444:	pixelFormat = MTLPixelFormatABGR4Unorm;
-//					case kGPUTextureDataFormatRGBA5551:	pixelFormat = MTLPixelFormatBGR5A1Unorm;
+				switch (dataFormat) {
+//					case CGPUTexture::kDataFormatRGB565:	pixelFormat = MTLPixelFormatB5G6R5Unorm;
+//					case CGPUTexture::kDataFormatRGBA4444:	pixelFormat = MTLPixelFormatABGR4Unorm;
+//					case CGPUTexture::kDataFormatRGBA5551:	pixelFormat = MTLPixelFormatBGR5A1Unorm;
 
-					case kGPUTextureDataFormatRGBA8888:
+					case CGPUTexture::kDataFormatRGBA8888:
 						// RGBA8888
 						mPixelFormat = MTLPixelFormatRGBA8Unorm;
 						bytesPerRow = 4 * size.mWidth;
@@ -60,11 +60,11 @@ mUsedPixelsSize(size),
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMetalTexture::CMetalTexture(id<MTLDevice> device, const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
+CMetalTexture::CMetalTexture(id<MTLDevice> device, const CData& data, CGPUTexture::DataFormat dataFormat,
 		const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMetalTextureInternals(device, data, gpuTextureDataFormat, size);
+	mInternals = new CMetalTextureInternals(device, data, dataFormat, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

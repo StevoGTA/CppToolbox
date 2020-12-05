@@ -102,13 +102,12 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
+SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
 		const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
-	CGPUTexture*	gpuTexture =
-							new CMetalTexture(mInternals->mProcsInfo.getDevice(), data, gpuTextureDataFormat, size);
+	CGPUTexture*	gpuTexture = new CMetalTexture(mInternals->mProcsInfo.getDevice(), data, dataFormat, size);
 
 	return SGPUTextureReference(*gpuTexture);
 }
@@ -211,12 +210,12 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Finalize render state
-	switch (renderState.getRenderMode()) {
-		case kGPURenderMode2D:
+	switch (renderState.getMode()) {
+		case CGPURenderState::kMode2D:
 			// 2D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
@@ -228,7 +227,7 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 							mInternals->mProjectionMatrix2D));
 			break;
 
-		case kGPURenderMode3D:
+		case CGPURenderState::kMode3D:
 			// 3D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
@@ -242,15 +241,15 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 	}
 
 	// Check type
-	switch (type) {
-		case kGPURenderTypeTriangleList:
+	switch (renderType) {
+		case kRenderTypeTriangleList:
 			// Triangle list
 			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
 			AssertFailUnimplemented();
 			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
 			break;
 
-		case kGPURenderTypeTriangleStrip:
+		case kRenderTypeTriangleStrip:
 			// Triangle strip
 			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
 			[mInternals->mCurrentRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
@@ -261,7 +260,7 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -269,8 +268,8 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 			id<MTLBuffer>			mtlBuffer = (__bridge id<MTLBuffer>) indexBuffer->mPlatformReference;
 
 	// Finalize render state
-	switch (renderState.getRenderMode()) {
-		case kGPURenderMode2D:
+	switch (renderState.getMode()) {
+		case CGPURenderState::kMode2D:
 			// 2D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
@@ -282,7 +281,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 							mInternals->mProjectionMatrix2D));
 			break;
 
-		case kGPURenderMode3D:
+		case CGPURenderState::kMode3D:
 			// 3D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
@@ -296,8 +295,8 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 	}
 
 	// Check type
-	switch (type) {
-		case kGPURenderTypeTriangleList:
+	switch (renderType) {
+		case kRenderTypeTriangleList:
 			// Triangle list
 			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle List Indexed"];
 			[mInternals->mCurrentRenderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:count
@@ -305,7 +304,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
 			break;
 
-		case kGPURenderTypeTriangleStrip:
+		case kRenderTypeTriangleStrip:
 			// Triangle strip
 			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip Indexed"];
 			AssertFailUnimplemented();

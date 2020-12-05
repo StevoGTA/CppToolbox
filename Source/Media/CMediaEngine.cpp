@@ -51,7 +51,7 @@ static	SAudioProcessingFormats		sComposeAudioProcessingFormats(
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  - CMediaEngine
+// MARK: - CMediaEngine
 
 // MARK: Instance methods
 
@@ -86,7 +86,7 @@ SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSo
 	UInt8	audioSourceBits = audioSourceFirstAudioProcessingSetup.getBitsInfo().getValue();
 	UInt8	bits;
 	if (audioDestinationFirstAudioProcessingSetup.getBitsInfo().getOption() ==
-			SAudioProcessingSetup::SBitsInfo::kUnchanged)
+			SAudioProcessingSetup::BitsInfo::kUnchanged)
 		// Use first source setup
 		bits = audioSourceBits;
 	else
@@ -102,7 +102,7 @@ SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSo
 		// Setup
 		Float32	audioSourceSampleRate = audioSourceFirstAudioProcessingSetup.getSampleRateInfo().getValue();
 		if (audioDestinationFirstAudioProcessingSetup.getSampleRateInfo().getOption() ==
-				SAudioProcessingSetup::SSampleRateInfo::kUnchanged)
+				SAudioProcessingSetup::SampleRateInfo::kUnchanged)
 			// Use first source setup
 			sampleRate = audioSourceSampleRate;
 		else
@@ -117,7 +117,7 @@ SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSo
 								audioSourceFirstAudioProcessingSetup.getChannelMapInfo().getValue();
 	EAudioChannelMap	channelMap;
 	if (audioDestinationFirstAudioProcessingSetup.getChannelMapInfo().getOption() ==
-			SAudioProcessingSetup::SChannelMapInfo::kUnchanged)
+			SAudioProcessingSetup::ChannelMapInfo::kUnchanged)
 		// Use first source setup
 		channelMap = audioSourceChannelMap;
 	else {
@@ -172,7 +172,7 @@ SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSo
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaEngine::SConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audioProcessorSource,
+CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audioProcessorSource,
 		const I<CAudioProcessor>& audioProcessorDestination, const SAudioProcessingFormat& audioProcessingFormat) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -219,17 +219,17 @@ CMediaEngine::SConnectResult CMediaEngine::connect(const I<CAudioProcessor>& aud
 			error =
 					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioConverter,
 							audioProcessingFormats.mDestinationAudioProcessingFormat);
-			if (error.hasInstance()) return SConnectResult(*error);
+			if (error.hasInstance()) return ConnectResult(*error);
 
 			error =
 					audioConverter->connectInput((I<CAudioProcessor>&) audioChannelMapper,
 							intermediateAudioProcessingFormat);
-			if (error.hasInstance()) return SConnectResult(*error);
+			if (error.hasInstance()) return ConnectResult(*error);
 
 			error =
 					audioChannelMapper->connectInput(audioProcessorSource,
 							audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasInstance()) return SConnectResult(*error);
+			if (error.hasInstance()) return ConnectResult(*error);
 		} else if (requiresConverter) {
 			// Requires converter
 			I<CAudioConverter>	audioConverter(new CAudioConverter());
@@ -238,11 +238,11 @@ CMediaEngine::SConnectResult CMediaEngine::connect(const I<CAudioProcessor>& aud
 			error =
 					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioConverter,
 							audioProcessingFormats.mDestinationAudioProcessingFormat);
-			if (error.hasInstance()) return SConnectResult(*error);
+			if (error.hasInstance()) return ConnectResult(*error);
 
 			error =
 					audioConverter->connectInput(audioProcessorSource, audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasInstance()) return SConnectResult(*error);
+			if (error.hasInstance()) return ConnectResult(*error);
 		} else {
 			// Requires channel mapper
 			I<CAudioChannelMapper>	audioChannelMapper(new CAudioChannelMapper());
@@ -251,12 +251,12 @@ CMediaEngine::SConnectResult CMediaEngine::connect(const I<CAudioProcessor>& aud
 			error =
 					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioChannelMapper,
 							audioProcessingFormats.mDestinationAudioProcessingFormat);
-			if (error.hasInstance()) return SConnectResult(*error);
+			if (error.hasInstance()) return ConnectResult(*error);
 
 			error =
 					audioChannelMapper->connectInput(audioProcessorSource,
 							audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasInstance()) return SConnectResult(*error);
+			if (error.hasInstance()) return ConnectResult(*error);
 		}
 
 		return audioProcessingFormats.mSourceAudioProcessingFormat;
@@ -279,10 +279,10 @@ OI<SAudioProcessingFormat> sDetermineCommonAudioProcessingFormat(
 			sourceIterator.hasValue(); sourceIterator.advance()) {
 		// Setup
 		const	SAudioProcessingSetup&						sourceAudioProcessingSetup = sourceIterator.getValue();
-		const	SAudioProcessingSetup::SBitsInfo&			sourceBitsInfo = sourceAudioProcessingSetup.getBitsInfo();
-		const	SAudioProcessingSetup::SSampleRateInfo&		sourceSampleRateInfo =
+		const	SAudioProcessingSetup::BitsInfo&			sourceBitsInfo = sourceAudioProcessingSetup.getBitsInfo();
+		const	SAudioProcessingSetup::SampleRateInfo&		sourceSampleRateInfo =
 																	sourceAudioProcessingSetup.getSampleRateInfo();
-		const	SAudioProcessingSetup::SChannelMapInfo&		sourceChannelMapInfo =
+		const	SAudioProcessingSetup::ChannelMapInfo&		sourceChannelMapInfo =
 																	sourceAudioProcessingSetup.getChannelMapInfo();
 				SAudioProcessingSetup::SampleTypeOption		sourceSampleTypeOption =
 																	sourceAudioProcessingSetup.getSampleTypeOption();
@@ -297,12 +297,12 @@ OI<SAudioProcessingFormat> sDetermineCommonAudioProcessingFormat(
 			// Setup
 			const	SAudioProcessingSetup&						destinationAudioProcessingSetup =
 																		destinationIterator.getValue();
-			const	SAudioProcessingSetup::SBitsInfo&			destinationBitsInfo =
+			const	SAudioProcessingSetup::BitsInfo&			destinationBitsInfo =
 																		destinationAudioProcessingSetup.getBitsInfo();
-			const	SAudioProcessingSetup::SSampleRateInfo&		destinationSampleRateInfo =
+			const	SAudioProcessingSetup::SampleRateInfo&		destinationSampleRateInfo =
 																		destinationAudioProcessingSetup
 																				.getSampleRateInfo();
-			const	SAudioProcessingSetup::SChannelMapInfo&		destinationChannelMapInfo =
+			const	SAudioProcessingSetup::ChannelMapInfo&		destinationChannelMapInfo =
 																		destinationAudioProcessingSetup
 																				.getChannelMapInfo();
 					SAudioProcessingSetup::SampleTypeOption		destinationSampleTypeOption =
@@ -465,10 +465,10 @@ SAudioProcessingFormats sComposeAudioProcessingFormats(const SAudioProcessingSet
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SAudioProcessingSetup::SBitsInfo&			sourceBitsInfo = sourceAudioProcessingSetup.getBitsInfo();
-	const	SAudioProcessingSetup::SSampleRateInfo&		sourceSampleRateInfo =
+	const	SAudioProcessingSetup::BitsInfo&			sourceBitsInfo = sourceAudioProcessingSetup.getBitsInfo();
+	const	SAudioProcessingSetup::SampleRateInfo&		sourceSampleRateInfo =
 																sourceAudioProcessingSetup.getSampleRateInfo();
-	const	SAudioProcessingSetup::SChannelMapInfo&		sourceChannelMapInfo =
+	const	SAudioProcessingSetup::ChannelMapInfo&		sourceChannelMapInfo =
 																sourceAudioProcessingSetup.getChannelMapInfo();
 			SAudioProcessingSetup::SampleTypeOption		sourceSampleTypeOption =
 																sourceAudioProcessingSetup.getSampleTypeOption();
@@ -477,11 +477,11 @@ SAudioProcessingFormats sComposeAudioProcessingFormats(const SAudioProcessingSet
 			SAudioProcessingSetup::InterleavedOption	sourceInterleavedOption =
 																sourceAudioProcessingSetup.getInterleavedOption();
 
-	const	SAudioProcessingSetup::SBitsInfo&			destinationBitsInfo =
+	const	SAudioProcessingSetup::BitsInfo&			destinationBitsInfo =
 																destinationAudioProcessingSetup.getBitsInfo();
-	const	SAudioProcessingSetup::SSampleRateInfo&		destinationSampleRateInfo =
+	const	SAudioProcessingSetup::SampleRateInfo&		destinationSampleRateInfo =
 																destinationAudioProcessingSetup.getSampleRateInfo();
-	const	SAudioProcessingSetup::SChannelMapInfo&		destinationChannelMapInfo =
+	const	SAudioProcessingSetup::ChannelMapInfo&		destinationChannelMapInfo =
 																destinationAudioProcessingSetup.getChannelMapInfo();
 			SAudioProcessingSetup::SampleTypeOption		destinationSampleTypeOption =
 																destinationAudioProcessingSetup.getSampleTypeOption();

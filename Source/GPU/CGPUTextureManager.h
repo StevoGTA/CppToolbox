@@ -9,20 +9,7 @@
 #include "CGPU.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: EGPUTextureReferenceOptions
-
-enum EGPUTextureReferenceOptions {
-	kGPUTextureReferenceOptionsNone				= 0,
-	kGPUTextureReferenceOptionsLoadImmediately	= 1 << 0,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Procs
-
-typedef	CBitmap	(*CGPUTextureManagerBitmapProc)(const CByteParceller& byteParceller);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUTextureReference
+// MARK: CGPUTextureReference
 
 class CGPUTextureReferenceInternals;
 class CGPUTextureReference : public CEquatable {
@@ -58,6 +45,17 @@ class CGPUTextureReference : public CEquatable {
 
 class CGPUTextureManagerInternals;
 class CGPUTextureManager {
+	// Enums
+	public:
+		enum ReferenceOptions {
+			kReferenceOptionsNone				= 0,
+			kReferenceOptionsLoadImmediately	= 1 << 0,
+		};
+
+	// Types
+	public:
+		typedef	CBitmap	(*BitmapProc)(const CByteParceller& byteParceller);
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -68,28 +66,23 @@ class CGPUTextureManager {
 								// Instance methods
 		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap,
 												const OR<const CString>& reference = OR<const CString>(),
-												EGPUTextureReferenceOptions
-														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, EGPUTextureDataFormat gpuTextureDataFormat,
+												ReferenceOptions referenceOptions = kReferenceOptionsNone);
+		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, CGPUTexture::DataFormat dataFormat,
 												const OR<const CString>& reference = OR<const CString>(),
-												EGPUTextureReferenceOptions
-														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
+												ReferenceOptions referenceOptions = kReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
-												CGPUTextureManagerBitmapProc bitmapProc,
+												BitmapProc bitmapProc,
 												const OR<const CString>& reference = OR<const CString>(),
-												EGPUTextureReferenceOptions
-														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
+												ReferenceOptions referenceOptions = kReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
-												CGPUTextureManagerBitmapProc bitmapProc,
-												EGPUTextureDataFormat gpuTextureDataFormat,
+												BitmapProc bitmapProc,
+												CGPUTexture::DataFormat dataFormat,
 												const OR<const CString>& reference = OR<const CString>(),
-												EGPUTextureReferenceOptions
-														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
+												ReferenceOptions referenceOptions = kReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
-												EGPUTextureDataFormat gpuTextureDataFormat, S2DSizeU16 size,
+												CGPUTexture::DataFormat dataFormat, S2DSizeU16 size,
 												const OR<const CString>& reference = OR<const CString>(),
-												EGPUTextureReferenceOptions
-														gpuTextureReferenceOptions = kGPUTextureReferenceOptionsNone);
+												ReferenceOptions referenceOptions = kReferenceOptionsNone);
 
 		void					loadAll();
 		void					pauseLoading();

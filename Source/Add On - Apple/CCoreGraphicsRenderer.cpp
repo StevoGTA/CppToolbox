@@ -78,7 +78,7 @@ void CCoreGraphicsRenderer::setStrokeColor(const CColor& color)
 // MARK: T2DRenderer methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsRenderer::strokeLine(const T2DPoint<CGFloat>& startPoint, const T2DPoint<CGFloat>& endPoint,
+void CCoreGraphicsRenderer::strokeLine(const CCoreGraphics::Point& startPoint, const CCoreGraphics::Point& endPoint,
 		bool antiAlias, CGFloat lineWidth)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -90,7 +90,7 @@ void CCoreGraphicsRenderer::strokeLine(const T2DPoint<CGFloat>& startPoint, cons
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsRenderer::strokeLines(const T2DPoint<CGFloat>* points, UInt32 count, bool antiAlias,
+void CCoreGraphicsRenderer::strokeLines(const CCoreGraphics::Point* points, UInt32 count, bool antiAlias,
 		CGFloat lineWidth)
 //----------------------------------------------------------------------------------------------------------------------
 {

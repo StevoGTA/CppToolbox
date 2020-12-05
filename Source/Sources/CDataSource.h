@@ -7,18 +7,17 @@
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Position mode
-
-enum EDataSourcePosition {
-	kDataSourcePositionFromBeginning,
-	kDataSourcePositionFromCurrent,
-	kDataSourcePositionFromEnd,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDataSource
 
 class CDataSource {
+	// Enums
+	public:
+		enum Position {
+			kPositionFromBeginning,
+			kPositionFromCurrent,
+			kPositionFromEnd,
+		};
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -31,7 +30,7 @@ class CDataSource {
 		virtual	OI<SError>		readData(void* buffer, UInt64 byteCount) = 0;
 
 		virtual	SInt64			getPos() const = 0;
-		virtual	OI<SError>		setPos(EDataSourcePosition position, SInt64 newPos) = 0;
+		virtual	OI<SError>		setPos(Position position, SInt64 newPos) = 0;
 
 		virtual	CDataSource*	clone() const = 0;
 

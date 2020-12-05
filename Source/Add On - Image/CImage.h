@@ -8,36 +8,35 @@
 #include "CByteParceller.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Image Type
-
-enum ImageType {
-	kImageTypeJPEG	= MAKE_OSTYPE('J', 'P', 'E', 'G'),
-	kImageTypePNG	= MAKE_OSTYPE('P', 'N', 'G', ' '),
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CImage
+// MARK: CImage
 
 class CImageInternals;
 class CImage {
+	// Types
+	public:
+		enum Type {
+			kTypeJPEG	= MAKE_OSTYPE('J', 'P', 'E', 'G'),
+			kTypePNG	= MAKE_OSTYPE('P', 'N', 'G', ' '),
+		};
+
 	// Methods
 	public:
-								// Lifecycle methods
-								CImage(const CByteParceller& byteParceller, OV<ImageType> imageType = OV<ImageType>());
-								CImage(const CImage& other);
-								~CImage();
+							// Lifecycle methods
+							CImage(const CByteParceller& byteParceller, OV<Type> type = OV<Type>());
+							CImage(const CImage& other);
+							~CImage();
 
-								// Instance methods
-				CBitmap			getBitmap() const;
+							// Instance methods
+				CBitmap		getBitmap() const;
 
-								// Class methods
-		static	CBitmap			getBitmap(const CByteParceller& byteParceller);
+							// Class methods
+		static	CBitmap		getBitmap(const CByteParceller& byteParceller);
 
-		static	OV<ImageType>	getImageTypeFromResourceName(const CString& resourceName);
-		static	OV<ImageType>	getImageTypeFromMIMEType(const CString& MIMEType);
-		static	OV<ImageType>	getImageTypeFromData(const CData& data);
-		static	CString			getDefaultFilenameExtensionForImageType(ImageType imageType);
-		static	CString			getMIMETypeForImageType(ImageType imageType);
+		static	OV<Type>	getTypeFromResourceName(const CString& resourceName);
+		static	OV<Type>	getTypeFromMIMEType(const CString& MIMEType);
+		static	OV<Type>	getTypeFromData(const CData& data);
+		static	CString		getDefaultFilenameExtension(Type type);
+		static	CString		getMIMEType(Type type);
 
 	// Properties
 	private:

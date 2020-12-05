@@ -7,7 +7,7 @@
 #include "CMediaSource.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CWAVEMediaSource
+// MARK: CWAVEMediaSource
 
 class CWAVEMediaSourceInternals;
 class CWAVEMediaSource : public CMediaSource {

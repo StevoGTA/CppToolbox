@@ -22,7 +22,7 @@ class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 												const SAudioStorageFormat& storedAudioSampleFormat) const;
 		void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 												CByteParceller& byteParceller,
-												const I<CAudioCodec::CDecodeInfo>& decodeInfo);
+												const I<CAudioCodec::DecodeInfo>& decodeInfo);
 		SAudioReadStatus				decode(const SMediaPosition& mediaPosition, CAudioData& audioData);
 
 	// Properties

@@ -10,25 +10,25 @@
 #include "SMediaPosition.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CAudioCodec
+// MARK: CAudioCodec
 
 class CAudioCodec {
 	// Classes
 	public:
-		class CDecodeInfo {
+		class DecodeInfo {
 			// Methods
 			public:
 						// Lifecycle methods
-						CDecodeInfo() {}
-				virtual	~CDecodeInfo() {}
+						DecodeInfo() {}
+				virtual	~DecodeInfo() {}
 		};
 
-		class SDataDecodeInfo : public CDecodeInfo {
+		class DataDecodeInfo : public DecodeInfo {
 			// Methods
 			public:
 						// Lifecycle methods
-						SDataDecodeInfo(SInt64 startOffset, SInt64 size) :
-							CDecodeInfo(), mStartOffset(startOffset), mSize(size)
+						DataDecodeInfo(SInt64 startOffset, SInt64 size) :
+							DecodeInfo(), mStartOffset(startOffset), mSize(size)
 							{}
 
 						// Instance methods
@@ -43,12 +43,12 @@ class CAudioCodec {
 				SInt64	mSize;
 		};
 
-		class CEncodeSettings {
+		class EncodeSettings {
 			// Methods
 			public:
 				// Lifecycle methods
-				CEncodeSettings() : mDummy(false) {}
-				CEncodeSettings(const CEncodeSettings& other) : mDummy(other.mDummy) {}
+				EncodeSettings() : mDummy(false) {}
+				EncodeSettings(const EncodeSettings& other) : mDummy(other.mDummy) {}
 
 			// Properties
 			private:
@@ -57,14 +57,14 @@ class CAudioCodec {
 
 	// Structs
 	public:
-		struct SInfo {
+		struct Info {
 			// Procs
 			typedef	TArray<SAudioProcessingSetup>	(*GetAudioProcessingSetupsProc)(OSType id,
 															const SAudioStorageFormat& audioStorageFormat);
 			typedef	I<CAudioCodec>					(*InstantiateProc)(OSType id);
 
 													// Lifecycle methods
-													SInfo(OSType id, const CString& name,
+													Info(OSType id, const CString& name,
 															GetAudioProcessingSetupsProc getAudioProcessingSetupsProc,
 															InstantiateProc instantiateProc) :
 														mID(id), mDecodeName(name), mEncodeName(name),
@@ -72,28 +72,28 @@ class CAudioCodec {
 																		getAudioProcessingSetupsProc),
 																mInstantiateProc(instantiateProc)
 														{}
-													SInfo(OSType id, const CString& name,
-															const CEncodeSettings& encodeSettings,
+													Info(OSType id, const CString& name,
+															const EncodeSettings& encodeSettings,
 															GetAudioProcessingSetupsProc getAudioProcessingSetupsProc,
 															InstantiateProc instantiateProc) :
 														mID(id), mDecodeName(name), mEncodeName(name),
-																mEncodeSettings(OI<CEncodeSettings>(encodeSettings)),
+																mEncodeSettings(OI<EncodeSettings>(encodeSettings)),
 																mGetAudioProcessingSetupsProc(
 																		getAudioProcessingSetupsProc),
 																mInstantiateProc(instantiateProc)
 														{}
-													SInfo(OSType id, const CString& decodeName,
+													Info(OSType id, const CString& decodeName,
 															const CString& encodeName,
-															const CEncodeSettings& encodeSettings,
+															const EncodeSettings& encodeSettings,
 															GetAudioProcessingSetupsProc getAudioProcessingSetupsProc,
 															InstantiateProc instantiateProc) :
 														mID(id), mDecodeName(decodeName), mEncodeName(encodeName),
-																mEncodeSettings(OI<CEncodeSettings>(encodeSettings)),
+																mEncodeSettings(OI<EncodeSettings>(encodeSettings)),
 																mGetAudioProcessingSetupsProc(
 																		getAudioProcessingSetupsProc),
 																mInstantiateProc(instantiateProc)
 														{}
-													SInfo(const SInfo& other) :
+													Info(const Info& other) :
 														mID(other.mID), mDecodeName(other.mDecodeName),
 																mEncodeName(other.mEncodeName),
 																mEncodeSettings(other.mEncodeSettings),
@@ -121,7 +121,7 @@ class CAudioCodec {
 				OSType							mID;
 				CString							mDecodeName;
 				CString							mEncodeName;
-				OI<CEncodeSettings>				mEncodeSettings;
+				OI<EncodeSettings>				mEncodeSettings;
 				InstantiateProc					mInstantiateProc;
 				GetAudioProcessingSetupsProc	mGetAudioProcessingSetupsProc;
 		};
@@ -137,7 +137,7 @@ class CAudioCodec {
 														const SAudioStorageFormat& storedAudioSampleFormat) const = 0;
 		virtual	void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 														CByteParceller& byteParceller,
-														const I<CAudioCodec::CDecodeInfo>& decodeInfo) = 0;
+														const I<CAudioCodec::DecodeInfo>& decodeInfo) = 0;
 		virtual	SAudioReadStatus				decode(const SMediaPosition& mediaPosition, CAudioData& audioData) = 0;
 
 		virtual	TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const = 0;
@@ -175,7 +175,7 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 											{ AssertFailUnimplemented(); return TNArray<SAudioProcessingSetup>(); }
 		void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 												CByteParceller& byteParceller,
-												const I<CAudioCodec::CDecodeInfo>& decodeInfo)
+												const I<CAudioCodec::DecodeInfo>& decodeInfo)
 											{ AssertFailUnimplemented(); }
 		SAudioReadStatus				decode(const SMediaPosition& mediaPosition, CAudioData& audioData)
 											{

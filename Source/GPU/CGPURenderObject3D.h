@@ -7,7 +7,7 @@
 #include "CGPURenderObject.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPURenderObject3D
+// MARK: CGPURenderObject3D
 
 class CGPURenderObject3DInternals;
 class CGPURenderObject3D : public CGPURenderObject {

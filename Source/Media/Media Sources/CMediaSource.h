@@ -10,7 +10,7 @@
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CMediaSource
+// MARK: CMediaSource
 
 class CMediaSource {
 	// Methods

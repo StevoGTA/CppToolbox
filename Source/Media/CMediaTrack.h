@@ -7,7 +7,7 @@
 #include "SMediaPosition.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CMediaTrack
+// MARK: CMediaTrack
 
 //class CMediaTrackInternals;
 class CMediaTrack {

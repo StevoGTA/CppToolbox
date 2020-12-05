@@ -23,9 +23,10 @@ class CCoreGraphicsRenderer : public T2DRenderer<CGFloat> {
 		void	setStrokeColor(const CColor& color);
 
 				// T2DRenderer methods
-		void	strokeLine(const S2DPointCGF& startPoint, const S2DPointCGF& endPoint, bool antiAlias = true,
+		void	strokeLine(const CCoreGraphics::Point& startPoint, const CCoreGraphics::Point& endPoint,
+						bool antiAlias = true, CGFloat lineWidth = 1.0);
+		void	strokeLines(const CCoreGraphics::Point* points, UInt32 count, bool antiAlias = true,
 						CGFloat lineWidth = 1.0);
-		void	strokeLines(const S2DPointCGF* points, UInt32 count, bool antiAlias = true, CGFloat lineWidth = 1.0);
 
 	// Properties
 	private:

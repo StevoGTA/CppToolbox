@@ -142,7 +142,7 @@ OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
-			return setPos(kPositionModeFromBeginning, 0);
+			return setPos(kPositionFromBeginning, 0);
 	} else {
 		// Not buffered, check if open
 		if (mInternals->mFILE != nil) {
@@ -164,7 +164,7 @@ OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
-			return setPos(kPositionModeFromBeginning, 0);
+			return setPos(kPositionFromBeginning, 0);
 	}
 }
 
@@ -204,17 +204,17 @@ SInt64 CFileWriter::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setPos(PositionMode positionMode, SInt64 newPos) const
+OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
 	if (mInternals->mFILE != nil) {
 		// FILE
 		int	posMode;
-		switch (positionMode) {
-			case kPositionModeFromBeginning:	posMode = SEEK_SET;	break;
-			case kPositionModeFromCurrent:		posMode = SEEK_CUR;	break;
-			case kPositionModeFromEnd:			posMode = SEEK_END;	break;
+		switch (position) {
+			case kPositionFromBeginning:	posMode = SEEK_SET;	break;
+			case kPositionFromCurrent:		posMode = SEEK_CUR;	break;
+			case kPositionFromEnd:			posMode = SEEK_END;	break;
 		}
 
 		// Set position
@@ -228,10 +228,10 @@ OI<SError> CFileWriter::setPos(PositionMode positionMode, SInt64 newPos) const
 	} else if (mInternals->mFD != -1) {
 		// file
 		SInt32	posMode;
-		switch (positionMode) {
-			case kPositionModeFromBeginning:	posMode = SEEK_SET;	break;
-			case kPositionModeFromCurrent:		posMode = SEEK_CUR;	break;
-			case kPositionModeFromEnd:			posMode = SEEK_END;	break;
+		switch (position) {
+			case kPositionFromBeginning:	posMode = SEEK_SET;	break;
+			case kPositionFromCurrent:		posMode = SEEK_CUR;	break;
+			case kPositionFromEnd:			posMode = SEEK_END;	break;
 		}
 
 		// Set position

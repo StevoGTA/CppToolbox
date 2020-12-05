@@ -13,22 +13,19 @@ class CAudioPlayerInternals;
 class CAudioPlayer : public CAudioDestination {
 	// Structs
 	public:
-		struct SAudioPlayerProcs {
+		struct AudioPlayerProcs {
 			// Procs
-			public:
-				typedef	void	(*PositionUpdatedProc)(UniversalTimeInterval timeInterval, void* userData);
-				typedef	void	(*EndOfDataProc)(void* userData);
-				typedef	void	(*ErrorProc)(const SError& error, void* userData);
+			typedef	void	(*PositionUpdatedProc)(UniversalTimeInterval timeInterval, void* userData);
+			typedef	void	(*EndOfDataProc)(void* userData);
+			typedef	void	(*ErrorProc)(const SError& error, void* userData);
 
-			// Methods
-			public:
 						// Lifecycle methods
-						SAudioPlayerProcs(PositionUpdatedProc positionUpdatedProc, EndOfDataProc endOfDataProc,
+						AudioPlayerProcs(PositionUpdatedProc positionUpdatedProc, EndOfDataProc endOfDataProc,
 								ErrorProc errorProc, void* userData) :
 							mPositionUpdatedProc(positionUpdatedProc), mEndOfDataProc(endOfDataProc),
 									mErrorProc(errorProc), mUserData(userData)
 							{}
-						SAudioPlayerProcs(const SAudioPlayerProcs& other) :
+						AudioPlayerProcs(const AudioPlayerProcs& other) :
 							mPositionUpdatedProc(other.mPositionUpdatedProc), mEndOfDataProc(other.mEndOfDataProc),
 									mErrorProc(other.mErrorProc), mUserData(other.mUserData)
 							{}
@@ -53,7 +50,7 @@ class CAudioPlayer : public CAudioDestination {
 	public:
 														// Lifecycle methods
 														CAudioPlayer(const CString& identifier,
-																const SAudioPlayerProcs& audioPlayerProcs);
+																const AudioPlayerProcs& audioPlayerProcs);
 														~CAudioPlayer();
 
 														// CAudioProcessor methods

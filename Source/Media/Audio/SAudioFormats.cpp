@@ -5,26 +5,26 @@
 #include "SAudioFormats.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SBitsInfo
+// MARK: BitsInfo
 
-SAudioProcessingSetup::SBitsInfo	SAudioProcessingSetup::SBitsInfo::mUnspecified(kUnspecified);
-SAudioProcessingSetup::SBitsInfo	SAudioProcessingSetup::SBitsInfo::mUnchanged(kUnchanged);
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SSampleRateInfo
-
-SAudioProcessingSetup::SSampleRateInfo	SAudioProcessingSetup::SSampleRateInfo::mUnspecified(kUnspecified);
-SAudioProcessingSetup::SSampleRateInfo	SAudioProcessingSetup::SSampleRateInfo::mUnchanged(kUnchanged);
+SAudioProcessingSetup::BitsInfo	SAudioProcessingSetup::BitsInfo::mUnspecified(kUnspecified);
+SAudioProcessingSetup::BitsInfo	SAudioProcessingSetup::BitsInfo::mUnchanged(kUnchanged);
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - SChannelMapInfo
+// MARK: - SampleRateInfo
 
-SAudioProcessingSetup::SChannelMapInfo	SAudioProcessingSetup::SChannelMapInfo::mUnspecified(kUnspecified);
-SAudioProcessingSetup::SChannelMapInfo	SAudioProcessingSetup::SChannelMapInfo::mUnchanged(kUnchanged);
+SAudioProcessingSetup::SampleRateInfo	SAudioProcessingSetup::SampleRateInfo::mUnspecified(kUnspecified);
+SAudioProcessingSetup::SampleRateInfo	SAudioProcessingSetup::SampleRateInfo::mUnchanged(kUnchanged);
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - ChannelMapInfo
+
+SAudioProcessingSetup::ChannelMapInfo	SAudioProcessingSetup::ChannelMapInfo::mUnspecified(kUnspecified);
+SAudioProcessingSetup::ChannelMapInfo	SAudioProcessingSetup::ChannelMapInfo::mUnchanged(kUnchanged);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SAudioProcessingSetup
 
-SAudioProcessingSetup	SAudioProcessingSetup::mUnspecified(SBitsInfo::mUnspecified, SSampleRateInfo::mUnspecified,
-								SChannelMapInfo::mUnspecified, kSampleTypeUnspecified, kEndianUnspecified,
+SAudioProcessingSetup	SAudioProcessingSetup::mUnspecified(BitsInfo::mUnspecified, SampleRateInfo::mUnspecified,
+								ChannelMapInfo::mUnspecified, kSampleTypeUnspecified, kEndianUnspecified,
 								kInterleavedUnspecified);

@@ -420,7 +420,7 @@ class CAudioPlayerReaderThread : public CThread {
 class CAudioPlayerInternals {
 	public:
 							CAudioPlayerInternals(const CString& identifier,
-									const CAudioPlayer::SAudioPlayerProcs& audioPlayerProcs) :
+									const CAudioPlayer::AudioPlayerProcs& audioPlayerProcs) :
 								mIdentifier(identifier), mAudioPlayerProcs(audioPlayerProcs),
 										mIsPlaying(false), mStartTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
@@ -581,7 +581,7 @@ class CAudioPlayerInternals {
 								}
 
 				CString							mIdentifier;
-				CAudioPlayer::SAudioPlayerProcs	mAudioPlayerProcs;
+				CAudioPlayer::AudioPlayerProcs	mAudioPlayerProcs;
 
 				OI<CAudioPlayerReaderThread>	mAudioPlayerReaderThread;
 				OI<CSRSWBIPSegmentedQueue>		mQueue;
@@ -613,7 +613,7 @@ TIArray<CAudioPlayerInternals>	CAudioPlayerInternals::mActiveInternals;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayer::CAudioPlayer(const CString& identifier, const SAudioPlayerProcs& audioPlayerProcs) : CAudioDestination()
+CAudioPlayer::CAudioPlayer(const CString& identifier, const AudioPlayerProcs& audioPlayerProcs) : CAudioDestination()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CAudioPlayerInternals(identifier, audioPlayerProcs);

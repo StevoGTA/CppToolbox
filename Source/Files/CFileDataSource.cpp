@@ -100,13 +100,13 @@ SInt64 CFileDataSource::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileDataSource::setPos(EDataSourcePosition position, SInt64 newPos)
+OI<SError> CFileDataSource::setPos(Position position, SInt64 newPos)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Prepare for change
 	mInternals = mInternals->prepareForWrite();
 
-	return mInternals->getFileReader().setPos((CFileReader::PositionMode) position, newPos);
+	return mInternals->getFileReader().setPos((CFileReader::Position) position, newPos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -245,7 +245,7 @@ SInt64 CMappedFileDataSource::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMappedFileDataSource::setPos(EDataSourcePosition position, SInt64 newPos)
+OI<SError> CMappedFileDataSource::setPos(Position position, SInt64 newPos)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -259,17 +259,17 @@ OI<SError> CMappedFileDataSource::setPos(EDataSourcePosition position, SInt64 ne
 	// Figure new offset
 	SInt64	offset;
 	switch (position) {
-		case kDataSourcePositionFromBeginning:
+		case kPositionFromBeginning:
 			// From beginning
 			offset = newPos;
 			break;
 
-		case kDataSourcePositionFromCurrent:
+		case kPositionFromCurrent:
 			// From current
 			offset = mInternals->mCurrentOffset + newPos;
 			break;
 
-		case kDataSourcePositionFromEnd:
+		case kPositionFromEnd:
 			// From end
 			offset = mInternals->getFileMemoryMap().getByteCount() - newPos;
 			break;

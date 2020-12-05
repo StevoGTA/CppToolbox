@@ -9,21 +9,21 @@
 
 class COpenGLTextureInternals : public TReferenceCountable<COpenGLTextureInternals> {
 	public:
-		COpenGLTextureInternals(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size) :
+		COpenGLTextureInternals(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size) :
 mUsedPixelsSize(size),
 			TReferenceCountable(), mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
 					SNumber::getNextPowerOf2(size.mHeight)))
 			{
 				// Setup
-//				GLint	format = (gpuTextureDataFormat == kGPUTextureDataFormatRGB565) ? GL_RGB : GL_RGBA;
+//				GLint	format = (gpuTextureDataFormat == CGPUTexture::kDataFormatRGB565) ? GL_RGB : GL_RGBA;
 				GLint	format = GL_RGBA;
 
-				switch (gpuTextureDataFormat) {
-//					case kGPUTextureDataFormatRGB565:	mPixelFormat = GL_UNSIGNED_SHORT_5_6_5;		break;
-//					case kGPUTextureDataFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;	break;
-//					case kGPUTextureDataFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;	break;
+				switch (dataFormat) {
+//					case CGPUTexture::kDataFormatRGB565:	mPixelFormat = GL_UNSIGNED_SHORT_5_6_5;		break;
+//					case CGPUTexture::kDataFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;	break;
+//					case CGPUTexture::kDataFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;	break;
 
-					case kGPUTextureDataFormatRGBA8888:	mPixelFormat = GL_UNSIGNED_BYTE;			break;
+					case CGPUTexture::kDataFormatRGBA8888:	mPixelFormat = GL_UNSIGNED_BYTE;			break;
 				}
 
 				// Setup GL texture
@@ -71,10 +71,10 @@ mUsedPixelsSize(size),
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-COpenGLTexture::COpenGLTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size)
+COpenGLTexture::COpenGLTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLTextureInternals(data, gpuTextureDataFormat, size);
+	mInternals = new COpenGLTextureInternals(data, dataFormat, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

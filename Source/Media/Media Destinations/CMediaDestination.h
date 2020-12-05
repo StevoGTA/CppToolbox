@@ -7,7 +7,7 @@
 #include "CAudioProcessor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CMediaDestination
+// MARK: CMediaDestination
 
 class CMediaDestinationInternals;
 class CMediaDestination {

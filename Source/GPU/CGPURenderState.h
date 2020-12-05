@@ -10,24 +10,23 @@
 #include "SGPUBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: EGPURenderMode
-
-enum EGPURenderMode {
-	kGPURenderMode2D,
-	kGPURenderMode3D,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPURenderState
+// MARK: CGPURenderState
 
 class CGPURenderStateInternals;
 struct SGPURenderStateCommitInfo;
 
 class CGPURenderState {
+	// Enums
+	public:
+		enum Mode {
+			kMode2D,
+			kMode3D,
+		};
+
 	// Methods
 	public:
 										// Lifecycle methods
-										CGPURenderState(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+										CGPURenderState(Mode mode, CGPUVertexShader& vertexShader,
 												CGPUFragmentShader& fragmentShader);
 										~CGPURenderState();
 
@@ -38,7 +37,7 @@ class CGPURenderState {
 				void					setIndexBuffer(const SGPUBuffer& gpuIndexBuffer);
 				void					setTextures(const TArray<const CGPUTexture>& gpuTextures);
 
-				EGPURenderMode			getRenderMode() const;
+				Mode					getMode() const;
 				void					commit(const SGPURenderStateCommitInfo& renderStateCommitInfo);
 
 	// Properties

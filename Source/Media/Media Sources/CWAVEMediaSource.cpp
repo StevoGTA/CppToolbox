@@ -54,7 +54,7 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 	OI<SError>	error;
 
 	// Reset to beginning
-	error = byteParceller.setPos(kDataSourcePositionFromBeginning, 0);
+	error = byteParceller.setPos(CDataSource::kPositionFromBeginning, 0);
 	ReturnErrorIfError(error);
 
 	// Verify it's a WAVE Media Source
@@ -81,7 +81,7 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 		switch (chunkHeader32.getNativeChunkID()) {
 			case kWAVEFormatChunkID: {
 				// Format chunk
-				error = byteParceller.setPos(kDataSourcePositionFromCurrent, -((SInt64) sizeof(SWAVEChunkHeader32)));
+				error = byteParceller.setPos(CDataSource::kPositionFromCurrent, -((SInt64) sizeof(SWAVEChunkHeader32)));
 				ReturnErrorIfError(error);
 
 				SWAVEFORMAT	waveFormat;
@@ -116,14 +116,14 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 		}
 
 		// Seek to next chunk
-		error = byteParceller.setPos(kDataSourcePositionFromBeginning, nextChunkPos);
+		error = byteParceller.setPos(CDataSource::kPositionFromBeginning, nextChunkPos);
 		ReturnErrorIfError(error);
 	}
 
 	// Store
 	mInternals->mAudioTracks +=
 			CAudioTrack(*audioStorageFormat,
-					I<CAudioCodec::CDecodeInfo>(new CAudioCodec::SDataDecodeInfo(dataStartOffset, dataSize)));
+					I<CAudioCodec::DecodeInfo>(new CAudioCodec::DataDecodeInfo(dataStartOffset, dataSize)));
 
 	return OI<SError>();
 }

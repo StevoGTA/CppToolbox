@@ -12,19 +12,20 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SGPUProcsInfo
 
-typedef	id<MTLDevice>				(*CMetalGPUGetDeviceProc)(void* userData);
-typedef	id<CAMetalDrawable>			(*CMetalGPUGetCurrentDrawableProc)(void* userData);
-typedef	MTLPixelFormat				(*CMetalGPUGetPixelFormatProc)(void* userData);
-typedef	NSUInteger					(*CMetalGPUGetSampleCountProc)(void* userData);
-typedef	MTLRenderPassDescriptor*	(*CMetalGPUGetCurrentRenderPassDescriptor)(void* userData);
-
 struct SGPUProcsInfo {
+	// Procs
+	typedef	id<MTLDevice>				(*GetDeviceProc)(void* userData);
+	typedef	id<CAMetalDrawable>			(*GetCurrentDrawableProc)(void* userData);
+	typedef	MTLPixelFormat				(*GetPixelFormatProc)(void* userData);
+	typedef	NSUInteger					(*GetSampleCountProc)(void* userData);
+	typedef	MTLRenderPassDescriptor*	(*GetCurrentRenderPassDescriptor)(void* userData);
+
 									// Lifecycle methods
-									SGPUProcsInfo(CMetalGPUGetDeviceProc getDeviceProc,
-											CMetalGPUGetCurrentDrawableProc getCurrentDrawableProc,
-											CMetalGPUGetPixelFormatProc getPixelFormatProc,
-											CMetalGPUGetSampleCountProc getSampleCountProc,
-											CMetalGPUGetCurrentRenderPassDescriptor getCurrentRenderPassDescriptorProc,
+									SGPUProcsInfo(GetDeviceProc getDeviceProc,
+											GetCurrentDrawableProc getCurrentDrawableProc,
+											GetPixelFormatProc getPixelFormatProc,
+											GetSampleCountProc getSampleCountProc,
+											GetCurrentRenderPassDescriptor getCurrentRenderPassDescriptorProc,
 											void* userData) :
 										mGetDeviceProc(getDeviceProc), mGetCurrentDrawableProc(getCurrentDrawableProc),
 												mGetPixelFormatProc(getPixelFormatProc),
@@ -56,10 +57,10 @@ struct SGPUProcsInfo {
 
 	// Properties
 	private:
-		CMetalGPUGetDeviceProc					mGetDeviceProc;
-		CMetalGPUGetCurrentDrawableProc			mGetCurrentDrawableProc;
-		CMetalGPUGetPixelFormatProc				mGetPixelFormatProc;
-		CMetalGPUGetSampleCountProc				mGetSampleCountProc;
-		CMetalGPUGetCurrentRenderPassDescriptor	mGetCurrentRenderPassDescriptorProc;
-		void*									mUserData;
+		GetDeviceProc					mGetDeviceProc;
+		GetCurrentDrawableProc			mGetCurrentDrawableProc;
+		GetPixelFormatProc				mGetPixelFormatProc;
+		GetSampleCountProc				mGetSampleCountProc;
+		GetCurrentRenderPassDescriptor	mGetCurrentRenderPassDescriptorProc;
+		void*							mUserData;
 };

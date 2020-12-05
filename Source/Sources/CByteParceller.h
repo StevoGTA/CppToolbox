@@ -101,7 +101,7 @@ class CByteParceller {
 						}
 
 		SInt64		getPos() const;
-		OI<SError>	setPos(EDataSourcePosition position, SInt64 newPos) const;
+		OI<SError>	setPos(CDataSource::Position position, SInt64 newPos) const;
 
 		void		reset() const;
 

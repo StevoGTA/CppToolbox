@@ -7,15 +7,15 @@
 #include "CAudioCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CAudioCodecRegistry
+// MARK: CAudioCodecRegistry
 
 class CAudioCodecRegistryInternals;
 class CAudioCodecRegistry {
 	// Methods
 	public:
 									// Instance methods
-		void						registerCodec(const CAudioCodec::SInfo& info);
-		const	CAudioCodec::SInfo&	getInfo(OSType codecID);
+		void						registerCodec(const CAudioCodec::Info& info);
+		const	CAudioCodec::Info&	getInfo(OSType codecID);
 
 	private:
 									// Lifecycle methods

@@ -9,36 +9,37 @@
 #include "TIndexes.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPURenderObject2DItem
-
-struct SGPURenderObject2DItem {
-	// Methods
-	SGPURenderObject2DItem(const S2DRectF32& screenRect, UInt8 textureIndex, const S2DRectF32& textureRect) :
-		mScreenRect(screenRect), mTextureRect(textureRect), mTextureIndex(textureIndex)
-		{}
-	SGPURenderObject2DItem(const SGPURenderObject2DItem& other) :
-		mScreenRect(other.mScreenRect), mTextureRect(other.mTextureRect), mTextureIndex(other.mTextureIndex)
-		{}
-
-	// Properties
-	S2DRectF32	mScreenRect;
-	S2DRectF32	mTextureRect;
-	UInt8		mTextureIndex;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPURenderObject2D
-
-typedef	TIndexes<UInt16>	CGPURenderObject2DIndexes;
+// MARK: CGPURenderObject2D
 
 class CGPURenderObject2DInternals;
 class CGPURenderObject2D : public CGPURenderObject {
+	// Structs
+	public:
+		struct Item {
+			// Methods
+			Item(const S2DRectF32& screenRect, UInt8 textureIndex, const S2DRectF32& textureRect) :
+				mScreenRect(screenRect), mTextureRect(textureRect), mTextureIndex(textureIndex)
+				{}
+			Item(const Item& other) :
+				mScreenRect(other.mScreenRect), mTextureRect(other.mTextureRect), mTextureIndex(other.mTextureIndex)
+				{}
+
+			// Properties
+			S2DRectF32	mScreenRect;
+			S2DRectF32	mTextureRect;
+			UInt8		mTextureIndex;
+		};
+
+	// Types
+	public:
+		typedef	TIndexes<UInt16>	Indexes;
+
 	// Methods
 	public:
 							// Lifecycle methods
 							CGPURenderObject2D(CGPU& gpu, const S2DRectF32& screenRect, const S2DRectF32& textureRect,
 									const CGPUTextureReference& gpuTextureReference);
-							CGPURenderObject2D(CGPU& gpu, const TArray<SGPURenderObject2DItem>& items,
+							CGPURenderObject2D(CGPU& gpu, const TArray<Item>& items,
 									const TArray<CGPUTextureReference>& gpuTextureReferences);
 							CGPURenderObject2D(const CGPURenderObject2D& other);
 							~CGPURenderObject2D();
@@ -66,8 +67,8 @@ class CGPURenderObject2D : public CGPURenderObject {
 
 				void		finishLoading() const;
 
-				void		render(const CGPURenderObject2DIndexes& indexes,
-									const SGPURenderObjectRenderInfo& renderInfo = SGPURenderObjectRenderInfo())
+				void		render(const Indexes& indexes,
+									const CGPURenderObject::RenderInfo& renderInfo = CGPURenderObject::RenderInfo())
 									const;
 
 							// Deprecated methods

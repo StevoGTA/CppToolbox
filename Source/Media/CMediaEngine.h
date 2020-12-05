@@ -9,19 +9,19 @@
 #include "TInstance.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CMediaEngine
+// MARK: CMediaEngine
 
 class CMediaEngine {
 	// Structs
 	public:
-		struct SConnectResult {
+		struct ConnectResult {
 
 												// Lifecycle methods
-												SConnectResult(const SAudioProcessingFormat& audioProcessingFormat) :
+												ConnectResult(const SAudioProcessingFormat& audioProcessingFormat) :
 													mAudioProcessingFormat(
 															OI<SAudioProcessingFormat>(audioProcessingFormat))
 													{}
-												SConnectResult(const SError& error) : mError(OI<SError>(error)) {}
+												ConnectResult(const SError& error) : mError(OI<SError>(error)) {}
 
 												// Instance methods
 					bool						isSuccess() const
@@ -47,7 +47,7 @@ class CMediaEngine {
 				SAudioProcessingFormat	composeAudioProcessingFormat(const CAudioSource& audioSource,
 												const CAudioDestination& audioDestination,
 												const OV<Float32>& processingSampleRate = OV<Float32>()) const;
-				SConnectResult			connect(const I<CAudioProcessor>& audioProcessorSource,
+				ConnectResult			connect(const I<CAudioProcessor>& audioProcessorSource,
 												const I<CAudioProcessor>& audioProcessorDestination,
 												const SAudioProcessingFormat& audioProcessingFormat) const;
 };

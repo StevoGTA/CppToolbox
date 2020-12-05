@@ -254,7 +254,7 @@ void CBPLDataSource::readData(SInt64 offset, void* buffer, UInt64 byteCount, con
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set position
-	mError = mByteParceller.setPos(kDataSourcePositionFromBeginning, offset);
+	mError = mByteParceller.setPos(CDataSource::kPositionFromBeginning, offset);
 	LogIfErrorAndReturn(mError, errorWhen);
 
 	// Read data
@@ -523,7 +523,7 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 	}
 
 	// Validate trailer
-	outError = byteParceller.setPos(kDataSourcePositionFromEnd, sizeof(SBinaryPListTrailer));
+	outError = byteParceller.setPos(CDataSource::kPositionFromEnd, sizeof(SBinaryPListTrailer));
 	LogIfErrorAndReturnValue(outError, "positiong data source to read trailer", CDictionary());
 
 	SBinaryPListTrailer	trailer;

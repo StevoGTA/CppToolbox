@@ -223,7 +223,7 @@ struct SAudioProcessingFormat {
 
 struct SAudioProcessingSetup {
 	// Structs
-	struct SBitsInfo {
+	struct BitsInfo {
 		// Enums
 		enum Option {
 			kSpecified,
@@ -234,7 +234,7 @@ struct SAudioProcessingSetup {
 		// Methods
 		public:
 				// Lifecycle methods
-				SBitsInfo(UInt8 bits) : mOption(kSpecified), mValue(bits) {}
+				BitsInfo(UInt8 bits) : mOption(kSpecified), mValue(bits) {}
 
 				// Instance methods
 		bool	isSpecified() const
@@ -246,19 +246,19 @@ struct SAudioProcessingSetup {
 
 		private:
 				// Lifecycle methods
-				SBitsInfo(Option option) : mOption(option) {}
+				BitsInfo(Option option) : mOption(option) {}
 
 		// Properties
 		public:
-			static	SBitsInfo	mUnspecified;
-			static	SBitsInfo	mUnchanged;
+			static	BitsInfo	mUnspecified;
+			static	BitsInfo	mUnchanged;
 
 		private:
 					Option		mOption;
 					OV<UInt8>	mValue;
 	};
 
-	struct SSampleRateInfo {
+	struct SampleRateInfo {
 		// Enums
 		enum Option {
 			kSpecified,
@@ -269,7 +269,7 @@ struct SAudioProcessingSetup {
 		// Methods
 		public:
 				// Lifecycle methods
-				SSampleRateInfo(Float32 sampleRate) : mOption(kSpecified), mValue(sampleRate) {}
+				SampleRateInfo(Float32 sampleRate) : mOption(kSpecified), mValue(sampleRate) {}
 
 				// Instance methods
 		bool	isSpecified() const
@@ -281,19 +281,19 @@ struct SAudioProcessingSetup {
 
 		private:
 				// Lifecycle methods
-				SSampleRateInfo(Option option) : mOption(option) {}
+				SampleRateInfo(Option option) : mOption(option) {}
 
 		// Properties
 		public:
-			static	SSampleRateInfo	mUnspecified;
-			static	SSampleRateInfo	mUnchanged;
+			static	SampleRateInfo	mUnspecified;
+			static	SampleRateInfo	mUnchanged;
 
 		private:
 					Option			mOption;
 					OV<Float32>		mValue;
 	};
 
-	struct SChannelMapInfo {
+	struct ChannelMapInfo {
 		// Enums
 		enum Option {
 			kSpecified,
@@ -304,7 +304,7 @@ struct SAudioProcessingSetup {
 		// Methods
 		public:
 							// Lifecycle methods
-							SChannelMapInfo(EAudioChannelMap audioChannelMap) :
+							ChannelMapInfo(EAudioChannelMap audioChannelMap) :
 								mOption(kSpecified), mValue(audioChannelMap)
 								{}
 
@@ -318,12 +318,12 @@ struct SAudioProcessingSetup {
 
 		private:
 							// Lifecycle methods
-							SChannelMapInfo(Option option) : mOption(option) {}
+							ChannelMapInfo(Option option) : mOption(option) {}
 
 		// Properties
 		public:
-			static	SChannelMapInfo			mUnspecified;
-			static	SChannelMapInfo			mUnchanged;
+			static	ChannelMapInfo			mUnspecified;
+			static	ChannelMapInfo			mUnchanged;
 
 		private:
 					Option					mOption;
@@ -354,8 +354,8 @@ struct SAudioProcessingSetup {
 	};
 
 								// Lifecycle methods
-								SAudioProcessingSetup(const SBitsInfo& bitsInfo, const SSampleRateInfo& sampleRateInfo,
-										const SChannelMapInfo& channelMapInfo, SampleTypeOption sampleTypeOption,
+								SAudioProcessingSetup(const BitsInfo& bitsInfo, const SampleRateInfo& sampleRateInfo,
+										const ChannelMapInfo& channelMapInfo, SampleTypeOption sampleTypeOption,
 										EndianOption endianOption, InterleavedOption interleavedOption) :
 									mBitsInfo(bitsInfo), mSampleRateInfo(sampleRateInfo),
 											mChannelMapInfo(channelMapInfo), mSampleTypeOption(sampleTypeOption),
@@ -385,11 +385,11 @@ struct SAudioProcessingSetup {
 									{}
 
 								// Instance methods
-	const	SBitsInfo&			getBitsInfo() const
+	const	BitsInfo&			getBitsInfo() const
 									{ return mBitsInfo; }
-	const	SSampleRateInfo&	getSampleRateInfo() const
+	const	SampleRateInfo&		getSampleRateInfo() const
 									{ return mSampleRateInfo; }
-	const	SChannelMapInfo&	getChannelMapInfo() const
+	const	ChannelMapInfo&		getChannelMapInfo() const
 									{ return mChannelMapInfo; }
 			bool				isSampleTypeOptionSpecified() const
 									{ return mSampleTypeOption != kSampleTypeUnspecified; }
@@ -409,9 +409,9 @@ struct SAudioProcessingSetup {
 		static	SAudioProcessingSetup	mUnspecified;
 
 	private:
-				SBitsInfo				mBitsInfo;
-				SSampleRateInfo			mSampleRateInfo;
-				SChannelMapInfo			mChannelMapInfo;
+				BitsInfo				mBitsInfo;
+				SampleRateInfo			mSampleRateInfo;
+				ChannelMapInfo			mChannelMapInfo;
 				SampleTypeOption		mSampleTypeOption;
 				EndianOption			mEndianOption;
 				InterleavedOption		mInterleavedOption;

@@ -52,12 +52,12 @@ static	void	sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t 
 
 class CImageInternals : public TReferenceCountable<CImageInternals> {
 	public:
-		CImageInternals(const CByteParceller& byteParceller, OV<ImageType> imageType) :
-			TReferenceCountable(), mByteParceller(byteParceller), mImageType(imageType)
+		CImageInternals(const CByteParceller& byteParceller, OV<CImage::Type> type) :
+			TReferenceCountable(), mByteParceller(byteParceller), mType(type)
 			{}
 
-		const	CByteParceller	mByteParceller;
-				OV<ImageType>	mImageType;
+		const	CByteParceller		mByteParceller;
+				OV<CImage::Type>	mType;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -67,11 +67,11 @@ class CImageInternals : public TReferenceCountable<CImageInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CImage::CImage(const CByteParceller& byteParceller, OV<ImageType> imageType)
+CImage::CImage(const CByteParceller& byteParceller, OV<Type> type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CImageInternals(byteParceller, imageType);
+	mInternals = new CImageInternals(byteParceller, type);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -101,18 +101,18 @@ CBitmap CImage::getBitmap() const
 	ReturnValueIfError(error, CBitmap());
 
 	// Setup/Validate image type
-	if (!mInternals->mImageType.hasValue())
+	if (!mInternals->mType.hasValue())
 		// Determine from data
-		mInternals->mImageType = getImageTypeFromData(data);
-	AssertFailIf(!mInternals->mImageType.hasValue());
+		mInternals->mType = getTypeFromData(data);
+	AssertFailIf(!mInternals->mType.hasValue());
 
 	// Check image type
-	switch (*mInternals->mImageType) {
-		case kImageTypeJPEG:
+	switch (*mInternals->mType) {
+		case kTypeJPEG:
 			// JPEG
 			return sDecodeJPEGData(data);
 
-		case kImageTypePNG:
+		case kTypePNG:
 			// PNG
 			return sDecodePNGData(data);
 
@@ -134,7 +134,7 @@ CBitmap CImage::getBitmap(const CByteParceller& byteParceller)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<ImageType> CImage::getImageTypeFromResourceName(const CString& resourceName)
+OV<CImage::Type> CImage::getTypeFromResourceName(const CString& resourceName)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -148,17 +148,17 @@ OV<ImageType> CImage::getImageTypeFromResourceName(const CString& resourceName)
 			resourceNameUse.hasSuffix(CString(OSSTR("jfif"))) ||
 			resourceNameUse.hasSuffix(CString(OSSTR("jfi"))))
 		// JPEG
-		return OV<ImageType>(kImageTypeJPEG);
+		return OV<Type>(kTypeJPEG);
 	else if (resourceNameUse.hasSuffix(CString(OSSTR("png"))))
 		// PNG
-		return OV<ImageType>(kImageTypePNG);
+		return OV<Type>(kTypePNG);
 	else
 		// Unknown
-		return OV<ImageType>();
+		return OV<Type>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<ImageType> CImage::getImageTypeFromMIMEType(const CString& MIMEType)
+OV<CImage::Type> CImage::getTypeFromMIMEType(const CString& MIMEType)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -169,52 +169,52 @@ OV<ImageType> CImage::getImageTypeFromMIMEType(const CString& MIMEType)
 	// Check MIME type
 	if ((MIMETypeUse == CString(OSSTR("image/jpeg"))) || (MIMETypeUse == CString(OSSTR("image/jpg"))))
 		// JPEG
-		return OV<ImageType>(kImageTypeJPEG);
+		return OV<Type>(kTypeJPEG);
 	else if (MIMETypeUse == CString(OSSTR("image/png")))
 		// PNG
-		return OV<ImageType>(kImageTypePNG);
+		return OV<Type>(kTypePNG);
 	else
 		// Unknown
-		return OV<ImageType>();
+		return OV<Type>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<ImageType> CImage::getImageTypeFromData(const CData& data)
+OV<CImage::Type> CImage::getTypeFromData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	const	void*	bytePtr = data.getBytePtr();
 	if ((data.getSize() >= 8) && (EndianU32_BtoN(*((const UInt32*) ((const UInt8*) bytePtr + 6))) == 'JFIF'))
 		// JPEG
-		return OV<ImageType>(kImageTypeJPEG);
+		return OV<Type>(kTypeJPEG);
 	else if ((data.getSize() >= 4) && (EndianU32_BtoN(*((const UInt32*) bytePtr)) == 0x89504E47))
 		// PNG
-		return OV<ImageType>(kImageTypePNG);
+		return OV<Type>(kTypePNG);
 	else
 		// Unknown
-		return OV<ImageType>();
+		return OV<Type>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CImage::getDefaultFilenameExtensionForImageType(ImageType imageType)
+CString CImage::getDefaultFilenameExtension(Type type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check image type
-	switch (imageType) {
-		case kImageTypeJPEG:	return CString(OSSTR(".jpg"));
-		case kImageTypePNG:		return CString(OSSTR(".png"));
-		default:				return CString::mEmpty;
+	switch (type) {
+		case kTypeJPEG:	return CString(OSSTR(".jpg"));
+		case kTypePNG:	return CString(OSSTR(".png"));
+		default:		return CString::mEmpty;
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CImage::getMIMETypeForImageType(ImageType imageType)
+CString CImage::getMIMEType(Type type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check image type
-	switch (imageType) {
-		case kImageTypeJPEG:	return CString(OSSTR("image/jpeg"));
-		case kImageTypePNG:		return CString(OSSTR("image/png"));
-		default:				return CString::mEmpty;
+	switch (type) {
+		case kTypeJPEG:	return CString(OSSTR("image/jpeg"));
+		case kTypePNG:	return CString(OSSTR("image/png"));
+		default:		return CString::mEmpty;
 	}
 }
 

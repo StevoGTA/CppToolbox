@@ -9,23 +9,22 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SGPUProcsInfo
 
-typedef	void		(*COpenGLGPUAcquireContextProc)(void* userData);
-typedef	bool		(*COpenGLGPUTryAcquireContextProc)(void* userData);
-typedef	void		(*COpenGLGPUReleaseContextProc)(void* userData);
-typedef S2DSizeU16	(*COpenGLGPUGetSizeProc)(void* userData);
-typedef	Float32		(*COpenGLGPUGetScaleProc)(void* userData);
+struct SGPUProcsInfo {
+	// Procs
+	typedef	void		(*AcquireContextProc)(void* userData);
+	typedef	bool		(*TryAcquireContextProc)(void* userData);
+	typedef	void		(*ReleaseContextProc)(void* userData);
+	typedef S2DSizeU16	(*GetSizeProc)(void* userData);
+	typedef	Float32		(*GetScaleProc)(void* userData);
 #if TARGET_OS_IOS
-typedef	void*		(*COpenGLGPUGetRenderBufferStorageContextProc)(void* userData);
+	typedef	void*		(*GetRenderBufferStorageContextProc)(void* userData);
 #endif
 
-struct SGPUProcsInfo {
 			// Lifecycle methods
-			SGPUProcsInfo(COpenGLGPUAcquireContextProc acquireContextProc,
-					COpenGLGPUTryAcquireContextProc tryAcquireContextProc,
-					COpenGLGPUReleaseContextProc releaseContextProc, COpenGLGPUGetSizeProc getSizeProc,
-					COpenGLGPUGetScaleProc getScaleProc,
+			SGPUProcsInfo(AcquireContextProc acquireContextProc, TryAcquireContextProc tryAcquireContextProc,
+					ReleaseContextProc releaseContextProc, GetSizeProc getSizeProc, GetScaleProc getScaleProc,
 #if TARGET_OS_IOS
-					COpenGLGPUGetRenderBufferStorageContextProc getRenderBufferStorageContextProc,
+					GetRenderBufferStorageContextProc getRenderBufferStorageContextProc,
 #endif
 					void* userData) :
 				mAcquireContextProc(acquireContextProc), mTryAcquireContextProc(tryAcquireContextProc),
@@ -63,13 +62,13 @@ struct SGPUProcsInfo {
 
 	// Properties
 	private:
-		COpenGLGPUAcquireContextProc				mAcquireContextProc;
-		COpenGLGPUTryAcquireContextProc				mTryAcquireContextProc;
-		COpenGLGPUReleaseContextProc				mReleaseContextProc;
-		COpenGLGPUGetSizeProc						mGetSizeProc;
-		COpenGLGPUGetScaleProc						mGetScaleProc;
+		AcquireContextProc					mAcquireContextProc;
+		TryAcquireContextProc				mTryAcquireContextProc;
+		ReleaseContextProc					mReleaseContextProc;
+		GetSizeProc							mGetSizeProc;
+		GetScaleProc						mGetScaleProc;
 #if TARGET_OS_IOS
-		COpenGLGPUGetRenderBufferStorageContextProc	mGetRenderBufferStorageContextProc;
+		GetRenderBufferStorageContextProc	mGetRenderBufferStorageContextProc;
 #endif
-		void*										mUserData;
+		void*								mUserData;
 };

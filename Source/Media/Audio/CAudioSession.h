@@ -7,7 +7,7 @@
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CAudioSession
+// MARK: CAudioSession
 
 class CAudioSession {
 	// Enums

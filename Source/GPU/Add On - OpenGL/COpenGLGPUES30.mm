@@ -78,13 +78,13 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
+SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
 		const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
 	mInternals->mProcsInfo.acquireContext();
-	CGPUTexture*	gpuTexture = new COpenGLTexture(data, gpuTextureDataFormat, size);
+	CGPUTexture*	gpuTexture = new COpenGLTexture(data, dataFormat, size);
 	mInternals->mProcsInfo.releaseContext();
 
 	return SGPUTextureReference(*gpuTexture);
@@ -188,19 +188,19 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Finalize render state
-	switch (renderState.getRenderMode()) {
-		case kGPURenderMode2D:
+	switch (renderState.getMode()) {
+		case CGPURenderState::kMode2D:
 			// 2D
 			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			break;
 
-		case kGPURenderMode3D:
+		case CGPURenderState::kMode3D:
 			// 3D
 			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
 			glEnable(GL_DEPTH_TEST);
@@ -211,13 +211,13 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 	}
 
 	// Check type
-	switch (type) {
-		case kGPURenderTypeTriangleList:
+	switch (renderType) {
+		case kRenderTypeTriangleList:
 			// Triangle list
 			glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, (GLvoid*) (GLintptr) offset);
 			break;
 
-		case kGPURenderTypeTriangleStrip:
+		case kRenderTypeTriangleStrip:
 			// Triangle strip
 			glDrawArrays(GL_TRIANGLE_STRIP, offset, count);
 			break;
@@ -225,19 +225,19 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Finalize render state
-	switch (renderState.getRenderMode()) {
-		case kGPURenderMode2D:
+	switch (renderState.getMode()) {
+		case CGPURenderState::kMode2D:
 			// 2D
 			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			break;
 
-		case kGPURenderMode3D:
+		case CGPURenderState::kMode3D:
 			// 3D
 			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
 			glEnable(GL_DEPTH_TEST);
@@ -249,13 +249,13 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 	}
 
 	// Check type
-	switch (type) {
-		case kGPURenderTypeTriangleList:
+	switch (renderType) {
+		case kRenderTypeTriangleList:
 			// Triangle list
 			glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, (GLvoid*) (GLintptr) offset);
 			break;
 
-		case kGPURenderTypeTriangleStrip:
+		case kRenderTypeTriangleStrip:
 			// Triangle strip
 			glDrawArrays(GL_TRIANGLE_STRIP, offset, count);
 			break;

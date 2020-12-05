@@ -26,8 +26,7 @@ class COpenGLTexture : public CGPUTexture {
 	// Methods
 	public:
 								// Lifecycle methods
-								COpenGLTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
-										const S2DSizeU16& size);
+								COpenGLTexture(const CData& data, DataFormat dataFormat, const S2DSizeU16& size);
 								COpenGLTexture(const COpenGLTexture& other);
 								~COpenGLTexture();
 

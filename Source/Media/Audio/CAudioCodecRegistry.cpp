@@ -13,7 +13,7 @@ class CAudioCodecRegistryInternals {
 	public:
 		CAudioCodecRegistryInternals() {}
 
-		TKeyConvertibleDictionary<OSType, CAudioCodec::SInfo>	mInfo;
+		TKeyConvertibleDictionary<OSType, CAudioCodec::Info>	mInfo;
 };
 
 CAudioCodecRegistryInternals*	sInternals = nil;
@@ -45,7 +45,7 @@ CAudioCodecRegistry::~CAudioCodecRegistry()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioCodecRegistry::registerCodec(const CAudioCodec::SInfo& info)
+void CAudioCodecRegistry::registerCodec(const CAudioCodec::Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 //	mInternals->mInfo.set(info.getID(), info);
@@ -55,7 +55,7 @@ void CAudioCodecRegistry::registerCodec(const CAudioCodec::SInfo& info)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CAudioCodec::SInfo& CAudioCodecRegistry::getInfo(OSType codecID)
+const CAudioCodec::Info& CAudioCodecRegistry::getInfo(OSType codecID)
 //----------------------------------------------------------------------------------------------------------------------
 {
 //	return *mInternals->mInfo.get(codecID);

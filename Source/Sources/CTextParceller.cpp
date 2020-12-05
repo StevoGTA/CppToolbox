@@ -109,7 +109,7 @@ CString CTextParceller::readStringToEOL(OI<SError>& outError)
 			}
 
 			// Reset the file's position to the beginning of the next line
-			outError = mInternals->mDataSource->setPos(kDataSourcePositionFromCurrent, delta);
+			outError = mInternals->mDataSource->setPos(CDataSource::kPositionFromCurrent, delta);
 			ReturnValueIfError(outError, outString);
 
 			// Append the chars we found to the return string

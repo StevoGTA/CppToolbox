@@ -8,7 +8,7 @@
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  SAudioReadStatus
+// MARK: SAudioReadStatus
 
 struct SAudioReadStatus {
 							// Lifecycle methods

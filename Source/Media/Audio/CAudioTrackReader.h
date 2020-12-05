@@ -9,7 +9,7 @@
 #include "SAudioFormats.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CAudioTrackReader
+// MARK: CAudioTrackReader
 
 class CAudioTrackReaderInternals;
 class CAudioTrackReader : public CAudioSource {

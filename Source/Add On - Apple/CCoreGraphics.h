@@ -9,26 +9,25 @@
 #include <CoreGraphics/CoreGraphics.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Types
-
-typedef	T2DPoint<CGFloat>	S2DPointCGF;
-typedef	T2DRect<CGFloat>	S2DRectCGF;
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CCoreGraphics
+// MARK: CCoreGraphics
 
 class CCoreGraphics {
+	// Types
+	public:
+		typedef	T2DPoint<CGFloat>	Point;
+		typedef	T2DRect<CGFloat>	Rect;
+
 	// Methods
 	public:
 							// Class methods
-		static	S2DPointCGF	from(const CGPoint& point)
-								{ return S2DPointCGF(point.x, point.y); }
-		static	CGPoint		from(const S2DPointCGF& point)
+		static	Point		from(const CGPoint& point)
+								{ return Point(point.x, point.y); }
+		static	CGPoint		from(const Point& point)
 								{ return CGPointMake(point.mX, point.mY); }
 
-		static	S2DRectCGF	from(const CGRect& rect)
-								{ return S2DRectCGF(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height); }
-		static	CGRect		from(const S2DRectCGF& rect)
+		static	Rect		from(const CGRect& rect)
+								{ return Rect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height); }
+		static	CGRect		from(const Rect& rect)
 								{ return CGRectMake(rect.mOrigin.mX, rect.mOrigin.mY, rect.mSize.mWidth,
 										rect.mSize.mHeight); }
 

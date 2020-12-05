@@ -60,7 +60,7 @@ class CMediaPlayerInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  - CMediaPlayer
+// MARK: - CMediaPlayer
 
 // MARK: Lifecycle methods
 
@@ -98,7 +98,7 @@ I<CAudioPlayer> CMediaPlayer::newAudioPlayer(const CString& identifier)
 {
 	return I<CAudioPlayer>(
 			new CAudioPlayer(identifier,
-					CAudioPlayer::SAudioPlayerProcs(CMediaPlayerInternals::audioPlayerPositionUpdated,
+					CAudioPlayer::AudioPlayerProcs(CMediaPlayerInternals::audioPlayerPositionUpdated,
 							CMediaPlayerInternals::audioPlayerEndOfData, CMediaPlayerInternals::audioPlayerError,
 							mInternals)));
 }

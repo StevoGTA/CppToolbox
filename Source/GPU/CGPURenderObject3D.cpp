@@ -89,7 +89,7 @@ void CGPURenderObject3D::render() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup render state
-	CGPURenderState	renderState(kGPURenderMode3D, mInternals->mVertexShader, mInternals->mFragmentShader);
+	CGPURenderState	renderState(CGPURenderState::kMode3D, mInternals->mVertexShader, mInternals->mFragmentShader);
 
 	SMatrix4x4_32	modelMatrix =
 							SMatrix4x4_32()
@@ -102,5 +102,5 @@ void CGPURenderObject3D::render() const
 	renderState.setIndexBuffer(mInternals->mGPUIndexBuffer);
 
 	// Render
-	mInternals->mGPU.renderIndexed(renderState, kGPURenderTypeTriangleList, mInternals->mIndexCount, 0);
+	mInternals->mGPU.renderIndexed(renderState, CGPU::kRenderTypeTriangleList, mInternals->mIndexCount, 0);
 }

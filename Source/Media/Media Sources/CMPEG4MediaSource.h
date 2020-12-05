@@ -5,14 +5,14 @@
 #pragma once
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CMPEG4MediaSource
+// MARK: CMPEG4MediaSource
 
 class CMPEG4MediaSource {
 	// Methods
 	public:
-						// Lifecycle methods
-						CMPEG4MediaSource() {}
-						~CMPEG4MediaSource() {}
+		// Lifecycle methods
+		CMPEG4MediaSource() {}
+		~CMPEG4MediaSource() {}
 
-						// Instance methods
+		// Instance methods
 };

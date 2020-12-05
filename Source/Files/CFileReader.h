@@ -40,10 +40,10 @@ class CFileReaderInternals;
 class CFileReader {
 	// Enums
 	public:
-		enum PositionMode {
-			kPositionModeFromBeginning,
-			kPositionModeFromCurrent,
-			kPositionModeFromEnd,
+		enum Position {
+			kPositionFromBeginning,
+			kPositionFromCurrent,
+			kPositionFromEnd,
 		};
 
 	// Methods
@@ -134,7 +134,7 @@ class CFileReader {
 											}
 
 						SInt64			getPos() const;
-						OI<SError>		setPos(PositionMode positionMode, SInt64 newPos) const;
+						OI<SError>		setPos(Position position, SInt64 newPos) const;
 
 						CFileMemoryMap	getFileMemoryMap(UInt64 byteOffset, UInt64 byteCount,
 												OI<SError>& outError) const;

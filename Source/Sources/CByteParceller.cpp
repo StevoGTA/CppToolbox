@@ -85,7 +85,7 @@ OI<SError> CByteParceller::readData(void* buffer, UInt64 byteCount) const
 	// Check if need to finish setup
 	if (mInternals->mNeedToSetPos) {
 		// Yes
-		OI<SError>	error = setPos(kDataSourcePositionFromBeginning, 0);
+		OI<SError>	error = setPos(CDataSource::kPositionFromBeginning, 0);
 		ReturnErrorIfError(error);
 	}
 
@@ -130,7 +130,7 @@ SInt64 CByteParceller::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CByteParceller::setPos(EDataSourcePosition position, SInt64 newPos) const
+OI<SError> CByteParceller::setPos(CDataSource::Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -138,13 +138,13 @@ OI<SError> CByteParceller::setPos(EDataSourcePosition position, SInt64 newPos) c
 	if (mInternals->mNeedToSetPos) {
 		// Yes
 		switch (position) {
-			case kDataSourcePositionFromBeginning:
-			case kDataSourcePositionFromCurrent:
+			case CDataSource::kPositionFromBeginning:
+			case CDataSource::kPositionFromCurrent:
 				// From beginning or "current" (which is "beginning" since hasn't actually been set yet)
 				newPosUse = mInternals->mDataSourceOffset + newPos;
 				break;
 
-			case kDataSourcePositionFromEnd:
+			case CDataSource::kPositionFromEnd:
 				// From end
 				newPosUse = mInternals->mDataSourceOffset + mInternals->mSize - newPos;
 				break;
@@ -152,17 +152,17 @@ OI<SError> CByteParceller::setPos(EDataSourcePosition position, SInt64 newPos) c
 	} else {
 		// Setup complete
 		switch (position) {
-			case kDataSourcePositionFromBeginning:
+			case CDataSource::kPositionFromBeginning:
 				// From beginning
 				newPosUse = mInternals->mDataSourceOffset + newPos;
 				break;
 
-			case kDataSourcePositionFromCurrent:
+			case CDataSource::kPositionFromCurrent:
 				// From current
 				newPosUse = getPos() + newPos;
 				break;
 
-			case kDataSourcePositionFromEnd:
+			case CDataSource::kPositionFromEnd:
 				newPosUse = mInternals->mDataSourceOffset + mInternals->mSize - newPos;
 				break;
 		}
@@ -173,7 +173,7 @@ OI<SError> CByteParceller::setPos(EDataSourcePosition position, SInt64 newPos) c
 	AssertFailIf((UInt64) newPosUse > (mInternals->mDataSourceOffset + mInternals->mSize));
 
 	// Do it
-	OI<SError>	error = mInternals->mDataSource->setPos(kDataSourcePositionFromBeginning, newPosUse);
+	OI<SError>	error = mInternals->mDataSource->setPos(CDataSource::kPositionFromBeginning, newPosUse);
 	ReturnErrorIfError(error);
 
 	// Setup complete

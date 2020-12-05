@@ -10,7 +10,7 @@
 #include "TInstance.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CAudioProcessor
+// MARK: CAudioProcessor
 
 class CAudioProcessorInternals;
 class CAudioProcessor {

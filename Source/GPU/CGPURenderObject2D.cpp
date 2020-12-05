@@ -11,7 +11,7 @@
 
 class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2DInternals> {
 	public:
-				CGPURenderObject2DInternals(CGPU& gpu, const TArray<SGPURenderObject2DItem>& items,
+				CGPURenderObject2DInternals(CGPU& gpu, const TArray<CGPURenderObject2D::Item>& items,
 						const TArray<CGPUTextureReference>& gpuTextureReferences) :
 					TReferenceCountable(),
 							mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
@@ -25,29 +25,29 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 						mGPU.disposeBuffer(mGPUVertexBuffer);
 					}
 
-		CData	vertexData(const TArray<SGPURenderObject2DItem>& items)
+		CData	vertexData(const TArray<CGPURenderObject2D::Item>& items)
 					{
 						// Setup buffer
 						CData					vertexData(
 														(CData::Size) sizeof(SVertex2DMultitexture) * items.getCount() *
 																6);
 						SVertex2DMultitexture*	vertexInfoPtr = (SVertex2DMultitexture*) vertexData.getMutableBytePtr();
-						for (TIteratorD<SGPURenderObject2DItem> iterator = items.getIterator(); iterator.hasValue();
+						for (TIteratorD<CGPURenderObject2D::Item> iterator = items.getIterator(); iterator.hasValue();
 								iterator.advance()) {
 							// Setup
-							const	SGPURenderObject2DItem&	item = iterator.getValue();
-							const	S2DRectF32&				screenRect = item.mScreenRect;
-							const	S2DRectF32&				textureRect = item.mTextureRect;
+							const	CGPURenderObject2D::Item&	item = iterator.getValue();
+							const	S2DRectF32&					screenRect = item.mScreenRect;
+							const	S2DRectF32&					textureRect = item.mTextureRect;
 
-									Float32					minX = screenRect.mOrigin.mX;
-									Float32					maxX = screenRect.mOrigin.mX + screenRect.getWidth();
-									Float32					minY = screenRect.mOrigin.mY;
-									Float32					maxY = screenRect.mOrigin.mY + screenRect.getHeight();
+									Float32						minX = screenRect.mOrigin.mX;
+									Float32						maxX = screenRect.mOrigin.mX + screenRect.getWidth();
+									Float32						minY = screenRect.mOrigin.mY;
+									Float32						maxY = screenRect.mOrigin.mY + screenRect.getHeight();
 
-									Float32					minS = textureRect.getMinX();
-									Float32					maxS = textureRect.getMaxX();
-									Float32					minT = textureRect.getMinY();
-									Float32					maxT = textureRect.getMaxY();
+									Float32						minS = textureRect.getMinX();
+									Float32						maxS = textureRect.getMaxX();
+									Float32						minT = textureRect.getMinY();
+									Float32						maxT = textureRect.getMaxY();
 
 							// Store in buffer
 							*(vertexInfoPtr++) =
@@ -99,13 +99,12 @@ CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const S2DRectF32& screenRect, 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CGPURenderObject2DInternals(gpu,
-					TNArray<SGPURenderObject2DItem>(SGPURenderObject2DItem(screenRect, 0, textureRect)),
+			new CGPURenderObject2DInternals(gpu, TNArray<Item>(Item(screenRect, 0, textureRect)),
 					TNArray<CGPUTextureReference>(gpuTextureReference));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const TArray<SGPURenderObject2DItem>& items,
+CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const TArray<Item>& items,
 		const TArray<CGPUTextureReference>& gpuTextureReferences) : CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -224,8 +223,7 @@ const TArray<CGPUTextureReference>& CGPURenderObject2D::getGPUTextureReferences(
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderObject2D::render(const CGPURenderObject2DIndexes& indexes,
-		const SGPURenderObjectRenderInfo& renderInfo) const
+void CGPURenderObject2D::render(const Indexes& indexes, const RenderInfo& renderInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -272,7 +270,7 @@ void CGPURenderObject2D::render(const CGPURenderObject2DIndexes& indexes,
 												(renderInfo.mClipPlane.hasValue() || (mInternals->mAlpha != 1.0)) ?
 														CGPUFragmentShader::getOpacityMultiTexture(mInternals->mAlpha) :
 														CGPUFragmentShader::getBasicMultiTexture();
-	CGPURenderState						renderState(kGPURenderMode2D, vertexShader, fragmentShader);
+	CGPURenderState						renderState(CGPURenderState::kMode2D, vertexShader, fragmentShader);
 
 	// Iterate index ranges
 	for (; iterator.hasValue(); iterator.advance()) {
@@ -283,7 +281,7 @@ void CGPURenderObject2D::render(const CGPURenderObject2DIndexes& indexes,
 		renderState.setModelMatrix(modelMatrix);
 		renderState.setVertexBuffer(mInternals->mGPUVertexBuffer);
 		renderState.setTextures(gpuTextures);
-		mInternals->mGPU.render(renderState, kGPURenderTypeTriangleStrip,
+		mInternals->mGPU.render(renderState, CGPU::kRenderTypeTriangleStrip,
 				(indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2, indexRange.mStart * 6 + 1);
 	}
 }

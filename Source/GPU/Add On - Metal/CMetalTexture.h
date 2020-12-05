@@ -17,7 +17,7 @@ class CMetalTexture : public CGPUTexture {
 	public:
 								// Lifecycle methods
 								CMetalTexture(id<MTLDevice> device, const CData& data,
-										EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size);
+										CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size);
 								CMetalTexture(const CMetalTexture& other);
 								~CMetalTexture();
 

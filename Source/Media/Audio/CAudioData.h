@@ -13,7 +13,7 @@
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CAudioData
+// MARK: CAudioData
 
 class CAudioDataInternals;
 class CAudioData : public CData {

@@ -8,22 +8,21 @@
 #include "CData.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: EGPUTextureDataFormat
-
-enum EGPUTextureDataFormat {
-	// 16 bpp raw formats
-//	kGPUTextureDataFormatRGB565		= 0x0001,
-//	kGPUTextureDataFormatRGBA4444	= 0x0002,
-//	kGPUTextureDataFormatRGBA5551	= 0x0003,
-
-	// 32 bpp raw formats
-	kGPUTextureDataFormatRGBA8888	= 0x0010,
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUTexture
+// MARK: CGPUTexture
 
 class CGPUTexture {
+	// Enums
+	public:
+		enum DataFormat {
+			// 16 bpp raw formats
+		//	kDataFormatRGB565	= 0x0001,
+		//	kDataFormatRGBA4444	= 0x0002,
+		//	kDataFormatRGBA5551	= 0x0003,
+
+			// 32 bpp raw formats
+			kDataFormatRGBA8888	= 0x0010,
+		};
+
 	// Methods
 	public:
 										// Lifecycle methods

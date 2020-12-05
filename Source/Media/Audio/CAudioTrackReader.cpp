@@ -18,7 +18,7 @@ class CAudioTrackReaderInternals : public TReferenceCountable<CAudioTrackReaderI
 					mAudioTrack(audioTrack), mByteParceller(byteParceller), mAudioCodec(mAudioCodecInfo.instantiate())
 			{}
 
-		const	CAudioCodec::SInfo&	mAudioCodecInfo;
+		const	CAudioCodec::Info&	mAudioCodecInfo;
 				CAudioTrack			mAudioTrack;
 				CByteParceller		mByteParceller;
 				I<CAudioCodec>		mAudioCodec;

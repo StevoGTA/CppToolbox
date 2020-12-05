@@ -25,7 +25,7 @@ class CFileDataSource : public CDataSource {
 		OI<SError>		readData(void* buffer, UInt64 byteCount);
 
 		SInt64			getPos() const;
-		OI<SError>		setPos(EDataSourcePosition position, SInt64 newPos);
+		OI<SError>		setPos(Position position, SInt64 newPos);
 
 		CDataSource*	clone() const
 							{ return new CFileDataSource(*this); }
@@ -55,7 +55,7 @@ class CMappedFileDataSource : public CDataSource {
 		OI<SError>		readData(void* buffer, UInt64 byteCount);
 
 		SInt64			getPos() const;
-		OI<SError>		setPos(EDataSourcePosition position, SInt64 newPos);
+		OI<SError>		setPos(Position position, SInt64 newPos);
 
 		CDataSource*	clone() const
 							{ return new CMappedFileDataSource(*this); }

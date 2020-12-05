@@ -8,23 +8,23 @@
 #include "CMediaTrack.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  CAudioTrack
+// MARK: CAudioTrack
 
 class CAudioTrackInternals;
 class CAudioTrack : public CMediaTrack {
 	// Methods
 	public:
-												// Lifecycle methods
-												CAudioTrack(const SAudioStorageFormat& audioStorageFormat,
-														const I<CAudioCodec::CDecodeInfo>& decodeInfo);
-												CAudioTrack(UInt32 index, const SAudioStorageFormat& audioStorageFormat,
-														const I<CAudioCodec::CDecodeInfo>& decodeInfo);
-												CAudioTrack(const CAudioTrack& other);
-												~CAudioTrack();
+											// Lifecycle methods
+											CAudioTrack(const SAudioStorageFormat& audioStorageFormat,
+													const I<CAudioCodec::DecodeInfo>& decodeInfo);
+											CAudioTrack(UInt32 index, const SAudioStorageFormat& audioStorageFormat,
+													const I<CAudioCodec::DecodeInfo>& decodeInfo);
+											CAudioTrack(const CAudioTrack& other);
+											~CAudioTrack();
 
-												// Instance methods
-		const	SAudioStorageFormat&			getAudioStorageFormat() const;
-		const	I<CAudioCodec::CDecodeInfo>&	getDecodeInfo() const;
+											// Instance methods
+		const	SAudioStorageFormat&		getAudioStorageFormat() const;
+		const	I<CAudioCodec::DecodeInfo>&	getDecodeInfo() const;
 
 	// Properties
 	private:

@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CLogServices-macOS.h			©2020 Stevo Brock	All rights reserved.
+//	CLogServicesMacOS.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -7,7 +7,7 @@
 #include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CLogServicesMacOS
+// MARK: CLogServicesMacOS
 
 class CLogServicesMacOS {
 	// Methods

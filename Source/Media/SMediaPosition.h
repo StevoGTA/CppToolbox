@@ -7,7 +7,7 @@
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK:  SMediaPosition
+// MARK: SMediaPosition
 
 struct SMediaPosition {
 	// Enums
