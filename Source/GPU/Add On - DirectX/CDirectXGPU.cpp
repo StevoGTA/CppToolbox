@@ -665,7 +665,7 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
+SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
 		const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -673,7 +673,7 @@ SGPUTextureReference CGPU::registerTexture(const CData& data, EGPUTextureDataFor
 	mInternals->mD3DDeviceContextLock.lock();
 	CGPUTexture*	gpuTexture =
 							new CDirectXTexture(*mInternals->mD3DDeviceComPtr.Get(),
-									*mInternals->mD3DDeviceContextComPtr.Get(), data, gpuTextureDataFormat, size);
+									*mInternals->mD3DDeviceContextComPtr.Get(), data, dataFormat, size);
 	mInternals->mD3DDeviceContextLock.unlock();
 
 	return SGPUTextureReference(*gpuTexture);
@@ -828,15 +828,15 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset render targets to the screen.
 	ID3D11RenderTargetView *const targets[1] = { mInternals->mD3DRenderTargetViewComPtr.Get() };
 
 	// Finalize render state
-	switch (renderState.getRenderMode()) {
-		case kGPURenderMode2D:
+	switch (renderState.getMode()) {
+		case CGPURenderState::kMode2D:
 			// 2D
 			mInternals->mD3DDeviceContextComPtr->RSSetState(mInternals->mD3DRasterizerState2D);
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets, NULL);
@@ -846,7 +846,7 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 							mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
 			break;
 
-		case kGPURenderMode3D:
+		case CGPURenderState::kMode3D:
 			// 3D
 			mInternals->mD3DDeviceContextComPtr->RSSetState(mInternals->mD3DRasterizerState3D);
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets,
@@ -859,13 +859,13 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 	}
 
 	// Check type
-	switch (type) {
-		case kGPURenderTypeTriangleList:
+	switch (renderType) {
+		case kRenderTypeTriangleList:
 			// Triangle list
 			mInternals->mD3DDeviceContextComPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			break;
 
-		case kGPURenderTypeTriangleStrip:
+		case kRenderTypeTriangleStrip:
 			// Triangle strip
 			mInternals->mD3DDeviceContextComPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 			break;
@@ -876,15 +876,15 @@ void CGPU::render(CGPURenderState& renderState, EGPURenderType type, UInt32 coun
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt32 count, UInt32 offset)
+void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UInt32 count, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset render targets to the screen.
 	ID3D11RenderTargetView *const targets[1] = { mInternals->mD3DRenderTargetViewComPtr.Get() };
 
 	// Finalize render state
-	switch (renderState.getRenderMode()) {
-		case kGPURenderMode2D:
+	switch (renderState.getMode()) {
+		case CGPURenderState::kMode2D:
 			// 2D
 			mInternals->mD3DDeviceContextComPtr->RSSetState(mInternals->mD3DRasterizerState2D);
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets, NULL);
@@ -894,7 +894,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 							mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
 			break;
 
-		case kGPURenderMode3D:
+		case CGPURenderState::kMode3D:
 			// 3D
 			mInternals->mD3DDeviceContextComPtr->RSSetState(mInternals->mD3DRasterizerState3D);
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets,
@@ -907,13 +907,13 @@ void CGPU::renderIndexed(CGPURenderState& renderState, EGPURenderType type, UInt
 	}
 
 	// Check type
-	switch (type) {
-		case kGPURenderTypeTriangleList:
+	switch (renderType) {
+		case kRenderTypeTriangleList:
 			// Triangle list
 			mInternals->mD3DDeviceContextComPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			break;
 
-		case kGPURenderTypeTriangleStrip:
+		case kRenderTypeTriangleStrip:
 			// Triangle strip
 			mInternals->mD3DDeviceContextComPtr->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 			break;

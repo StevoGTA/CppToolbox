@@ -174,22 +174,23 @@ SInt64 CFileReader::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileReader::setPos(PositionMode positionMode, SInt64 newPos) const
+OI<SError> CFileReader::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	LARGE_INTEGER	position;
-	position.QuadPart = newPos;
+	LARGE_INTEGER	localPosition;
+	localPosition.QuadPart = newPos;
 
 	DWORD	moveMethod;
-	switch (positionMode) {
-		case kPositionModeFromBeginning:	moveMethod = FILE_BEGIN;	break;
-		case kPositionModeFromCurrent:		moveMethod = FILE_CURRENT;	break;
-		case kPositionModeFromEnd:			moveMethod = FILE_END;		break;
+	switch (position) {
+		case kPositionFromBeginning:	moveMethod = FILE_BEGIN;	break;
+		case kPositionFromCurrent:		moveMethod = FILE_CURRENT;	break;
+		case kPositionFromEnd:			moveMethod = FILE_END;		break;
 	}
 
 	// Set position
-	DWORD	newPositionLow = SetFilePointer(mInternals->mFileHandle, position.LowPart, &position.HighPart, moveMethod);
+	DWORD	newPositionLow =
+					SetFilePointer(mInternals->mFileHandle, localPosition.LowPart, &localPosition.HighPart, moveMethod);
 	if (newPositionLow == INVALID_SET_FILE_POINTER)
 		CFileReaderReportErrorAndReturnError(SErrorFromWindowsError(GetLastError()), "setting position");
 

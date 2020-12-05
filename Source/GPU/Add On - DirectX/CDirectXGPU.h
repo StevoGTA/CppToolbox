@@ -13,26 +13,25 @@ using namespace Windows::UI::Core;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SGPUProcsInfo
 
-typedef CoreWindow^					(*CDirectXGPUGetCoreWindowProc)(void* userData);
-typedef SDirectXDisplaySupportInfo	(*CDirectXGPUGetDisplaySupportInfoProc)(void* userData);
-typedef	UInt32						(*CDirectXGPUGetFPSProc)(void* userData);
-typedef Float32						(*CDirectXGPUGetDPIProc)(void* userData);
-typedef S2DSizeF32					(*CDirectXGPUGetSizeProc)(void* userData);
-typedef DisplayOrientations			(*CDirectXGPUGetOrientationProc)(void* userData);
-typedef	bool						(*CDirectXGPURequiresDeviceValidationProc)(void* userData);
-typedef void						(*CDirectXGPUHandledDeviceValidationProc)(void* userData);
-
 struct SGPUProcsInfo {
+	// Procs
+	typedef CoreWindow^					(*GetCoreWindowProc)(void* userData);
+	typedef SDirectXDisplaySupportInfo	(*GetDisplaySupportInfoProc)(void* userData);
+	typedef	UInt32						(*GetFPSProc)(void* userData);
+	typedef Float32						(*GetDPIProc)(void* userData);
+	typedef S2DSizeF32					(*GetSizeProc)(void* userData);
+	typedef DisplayOrientations			(*GetOrientationProc)(void* userData);
+	typedef	bool						(*RequiresDeviceValidationProc)(void* userData);
+	typedef void						(*HandledDeviceValidationProc)(void* userData);
+
 								// Lifecycle methods
 								SGPUProcsInfo(
-										CDirectXGPUGetCoreWindowProc getCoreWindowProc,
-										CDirectXGPUGetDisplaySupportInfoProc getDisplaySupportInfoProc,
-										CDirectXGPUGetFPSProc getFPSProc, CDirectXGPUGetDPIProc getDPIProc,
-										CDirectXGPUGetSizeProc getSizeProc,
-										CDirectXGPUGetOrientationProc getOrientationProc,
-										CDirectXGPURequiresDeviceValidationProc requiresDeviceValidationProc,
-										CDirectXGPUHandledDeviceValidationProc handledDeviceValidationProc,
-										void* userData) :
+										GetCoreWindowProc getCoreWindowProc,
+										GetDisplaySupportInfoProc getDisplaySupportInfoProc, GetFPSProc getFPSProc,
+										GetDPIProc getDPIProc, GetSizeProc getSizeProc,
+										GetOrientationProc getOrientationProc,
+										RequiresDeviceValidationProc requiresDeviceValidationProc,
+										HandledDeviceValidationProc handledDeviceValidationProc, void* userData) :
 									mGetCoreWindowProc(getCoreWindowProc),
 											mGetDisplaySupportInfoProc(getDisplaySupportInfoProc),
 											mGetFPSProc(getFPSProc), mGetDPIProc(getDPIProc), mGetSizeProc(getSizeProc),
@@ -72,13 +71,13 @@ struct SGPUProcsInfo {
 
 	// Properties
 	private:
-		CDirectXGPUGetCoreWindowProc			mGetCoreWindowProc;
-		CDirectXGPUGetDisplaySupportInfoProc	mGetDisplaySupportInfoProc;
-		CDirectXGPUGetFPSProc					mGetFPSProc;
-		CDirectXGPUGetDPIProc					mGetDPIProc;
-		CDirectXGPUGetSizeProc					mGetSizeProc;
-		CDirectXGPUGetOrientationProc			mGetOrientationProc;
-		CDirectXGPURequiresDeviceValidationProc	mRequiresDeviceValidationProc;
-		CDirectXGPUHandledDeviceValidationProc	mHandledDeviceValidationProc;
-		void*									mUserData;
+		GetCoreWindowProc				mGetCoreWindowProc;
+		GetDisplaySupportInfoProc		mGetDisplaySupportInfoProc;
+		GetFPSProc						mGetFPSProc;
+		GetDPIProc						mGetDPIProc;
+		GetSizeProc						mGetSizeProc;
+		GetOrientationProc				mGetOrientationProc;
+		RequiresDeviceValidationProc	mRequiresDeviceValidationProc;
+		HandledDeviceValidationProc		mHandledDeviceValidationProc;
+		void*							mUserData;
 };

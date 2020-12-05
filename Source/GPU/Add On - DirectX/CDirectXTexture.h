@@ -19,8 +19,7 @@ class CDirectXTexture : public CGPUTexture {
 	public:
 											// Lifecycle methods
 											CDirectXTexture(ID3D11Device& device, ID3D11DeviceContext& deviceContext,
-													const CData& data, EGPUTextureDataFormat gpuTextureDataFormat,
-													const S2DSizeU16& size);
+													const CData& data, DataFormat dataFormat, const S2DSizeU16& size);
 											CDirectXTexture(const CDirectXTexture& other);
 											~CDirectXTexture();
 

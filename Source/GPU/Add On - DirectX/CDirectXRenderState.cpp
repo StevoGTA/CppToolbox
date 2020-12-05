@@ -15,12 +15,12 @@
 
 class CGPURenderStateInternals {
 	public:
-		CGPURenderStateInternals(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
+		CGPURenderStateInternals(CGPURenderState::Mode mode, CGPUVertexShader& vertexShader,
 				CGPUFragmentShader& pixelShader) :
-			mRenderMode(renderMode), mVertexShader(vertexShader), mPixelShader(pixelShader)
+			mMode(mode), mVertexShader(vertexShader), mPixelShader(pixelShader)
 			{}
 
-		EGPURenderMode						mRenderMode;
+		CGPURenderState::Mode				mMode;
 		CGPUVertexShader&					mVertexShader;
 		CGPUFragmentShader&					mPixelShader;
 
@@ -38,12 +38,11 @@ class CGPURenderStateInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderState::CGPURenderState(EGPURenderMode renderMode, CGPUVertexShader& vertexShader,
-		CGPUFragmentShader& pixelShader)
+CGPURenderState::CGPURenderState(Mode mode, CGPUVertexShader& vertexShader, CGPUFragmentShader& pixelShader)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CGPURenderStateInternals(renderMode, vertexShader, pixelShader);
+	mInternals = new CGPURenderStateInternals(mode, vertexShader, pixelShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -92,10 +91,10 @@ void CGPURenderState::setTextures(const TArray<const CGPUTexture>& gpuTextures)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-EGPURenderMode CGPURenderState::getRenderMode() const
+CGPURenderState::Mode CGPURenderState::getMode() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mRenderMode;
+	return mInternals->mMode;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

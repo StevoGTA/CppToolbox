@@ -98,7 +98,7 @@ I<CAudioPlayer> CMediaPlayer::newAudioPlayer(const CString& identifier)
 {
 	return I<CAudioPlayer>(
 			new CAudioPlayer(identifier,
-					CAudioPlayer::AudioPlayerProcs(CMediaPlayerInternals::audioPlayerPositionUpdated,
+					CAudioPlayer::Procs(CMediaPlayerInternals::audioPlayerPositionUpdated,
 							CMediaPlayerInternals::audioPlayerEndOfData, CMediaPlayerInternals::audioPlayerError,
 							mInternals)));
 }

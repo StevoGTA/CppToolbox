@@ -10,8 +10,8 @@
 class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInternals> {
 	public:
 		CDirectXTextureInternals(ID3D11Device& device, ID3D11DeviceContext& deviceContext, const CData& data,
-				EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size) :
-			mGPUTextureDataFormat(gpuTextureDataFormat), mSize(size), mTexture2D(NULL), mShaderResourceView(NULL)
+				CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size) :
+			mDataFormat(dataFormat), mSize(size), mTexture2D(NULL), mShaderResourceView(NULL)
 			{
 				// Setup
 				D3D11_TEXTURE2D_DESC	texture2DDesc;
@@ -27,8 +27,8 @@ class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInter
 				texture2DDesc.MiscFlags = 0;
 
 				UINT	bytesPerRow;
-				switch (mGPUTextureDataFormat) {
-					case kGPUTextureDataFormatRGBA8888:
+				switch (mDataFormat) {
+					case CGPUTexture::kDataFormatRGBA8888:
 						// RGBA8888
 						texture2DDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 						bytesPerRow = 4 * size.mWidth;
@@ -57,7 +57,7 @@ class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInter
 					mShaderResourceView->Release();
 			}
 
-		EGPUTextureDataFormat		mGPUTextureDataFormat;
+		CGPUTexture::DataFormat		mDataFormat;
 		S2DSizeU16					mSize;
 
 		ID3D11Texture2D*			mTexture2D;
@@ -72,10 +72,10 @@ class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInter
 
 //----------------------------------------------------------------------------------------------------------------------
 CDirectXTexture::CDirectXTexture(ID3D11Device& device, ID3D11DeviceContext& deviceContext, const CData& data,
-			EGPUTextureDataFormat gpuTextureDataFormat, const S2DSizeU16& size)
+		DataFormat dataFormat, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CDirectXTextureInternals(device, deviceContext, data, gpuTextureDataFormat, size);
+	mInternals = new CDirectXTextureInternals(device, deviceContext, data, dataFormat, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -122,8 +122,8 @@ bool CDirectXTexture::hasTransparency() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check format
-	switch (mInternals->mGPUTextureDataFormat) {
-		case kGPUTextureDataFormatRGBA8888:	return true;
-		default:							return false;
+	switch (mInternals->mDataFormat) {
+		case kDataFormatRGBA8888:	return true;
+		default:					return false;
 	}
 }
