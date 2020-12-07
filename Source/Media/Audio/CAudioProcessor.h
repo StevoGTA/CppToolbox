@@ -114,14 +114,13 @@ class CAudioConverter : public CAudioProcessor {
 										CAudioConverter();
 										~CAudioConverter();
 
-										// Instance methods
+										// CAudioProcessor methods
 		OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 												const SAudioProcessingFormat& audioProcessingFormat);
 
 		SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioData& audioData);
 		OI<SError>						reset();
 
-										// Subclass methods
 		TArray<SAudioProcessingSetup>	getInputSetups() const;
 
 		TArray<SAudioProcessingSetup>	getOutputSetups() const;

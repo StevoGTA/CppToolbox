@@ -13,18 +13,62 @@
 
 class CAudioConverterInternals {
 	public:
-		CAudioConverterInternals(CAudioConverter& audioConverter) :
-			mAudioConverter(audioConverter),
-					mOutputAudioBufferList(nil), mAudioConverterRef(nil),
-					mSourceHasMoreToRead(true), mSourceMediaPosition(SMediaPosition::fromStart(0.0)),
-							mSourceSourceProcessed(0.0)
-			{}
-		~CAudioConverterInternals()
-			{
-				::free(mOutputAudioBufferList);
-				if (mAudioConverterRef != nil)
-					::AudioConverterDispose(mAudioConverterRef);
-			}
+							CAudioConverterInternals(CAudioConverter& audioConverter) :
+								mAudioConverter(audioConverter),
+										mOutputAudioBufferList(nil), mAudioConverterRef(nil),
+										mSourceHasMoreToRead(true),
+										mSourceMediaPosition(SMediaPosition::fromStart(0.0)),
+										mSourceSourceProcessed(0.0)
+								{}
+							~CAudioConverterInternals()
+								{
+									::free(mOutputAudioBufferList);
+									if (mAudioConverterRef != nil)
+										::AudioConverterDispose(mAudioConverterRef);
+								}
+
+		static	OSStatus	fillBufferData(AudioConverterRef inAudioConverter, UInt32* ioNumberDataPackets,
+									AudioBufferList* ioBufferList,
+									AudioStreamPacketDescription** outDataPacketDescription, void* inUserData)
+								{
+									// Setup
+									CAudioConverterInternals&	internals = *((CAudioConverterInternals*) inUserData);
+									internals.mInputAudioData->reset();
+
+									// Check if have more to read
+									OSStatus	status;
+									if (internals.mSourceHasMoreToRead) {
+										// Try to read
+										SAudioReadStatus	audioReadStatus =
+																	internals.mAudioConverter.CAudioProcessor::perform(
+																			internals.mSourceMediaPosition,
+																			*internals.mInputAudioData);
+										if (audioReadStatus.isSuccess()) {
+											// Success
+											internals.mSourceSourceProcessed = *audioReadStatus.getSourceProcessed();
+											status = noErr;
+										} else if (*audioReadStatus.getError() == SError::mEndOfData) {
+											// End of data
+											internals.mSourceHasMoreToRead = false;
+											status = noErr;
+										} else {
+											// Error
+											internals.mPerformError = audioReadStatus.getError();
+											status = -1;
+										}
+									} else
+										// No more source data, reset everything
+										status = noErr;
+
+									// Prepare return info
+									internals.mInputAudioData->getAsRead(*ioBufferList);
+
+									*ioNumberDataPackets = internals.mInputAudioData->getCurrentFrameCount();
+
+									if (outDataPacketDescription != nil) *outDataPacketDescription = nil;
+
+									return status;
+								}
 
 		CAudioConverter&			mAudioConverter;
 		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
@@ -38,15 +82,6 @@ class CAudioConverterInternals {
 		SMediaPosition				mSourceMediaPosition;
 		Float32						mSourceSourceProcessed;
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	OSStatus	sFillBufferDataProc(AudioConverterRef inAudioConverter, UInt32* ioNumberDataPackets,
-							AudioBufferList* ioBufferList, AudioStreamPacketDescription** outDataPacketDescription,
-							void* inUserData);
-
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -68,14 +103,7 @@ CAudioConverter::~CAudioConverter()
 	Delete(mInternals);
 }
 
-// MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioConverter::getInputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(*mInternals->mOutputAudioProcessingFormat));
-}
+// MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
@@ -143,20 +171,6 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioConverter::getOutputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup::mUnspecified);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAudioConverter::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mOutputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -171,8 +185,9 @@ SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, C
 
 	// Fill buffer
 	OSStatus	status =
-						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, sFillBufferDataProc,
-								mInternals, &packetCount, mInternals->mOutputAudioBufferList, nil);
+						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
+								CAudioConverterInternals::fillBufferData, mInternals, &packetCount,
+								mInternals->mOutputAudioBufferList, nil);
 	if (status != noErr) return SAudioReadStatus(*mInternals->mPerformError);
 	if (packetCount == 0) return SAudioReadStatus(SError::mEndOfData);
 
@@ -197,48 +212,22 @@ OI<SError> CAudioConverter::reset()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-
-//----------------------------------------------------------------------------------------------------------------------
-OSStatus sFillBufferDataProc(AudioConverterRef inAudioConverter, UInt32* ioNumberDataPackets,
-		AudioBufferList* ioBufferList, AudioStreamPacketDescription** outDataPacketDescription, void* inUserData)
+TArray<SAudioProcessingSetup> CAudioConverter::getInputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CAudioConverterInternals&	internals = *((CAudioConverterInternals*) inUserData);
-	internals.mInputAudioData->reset();
+	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(*mInternals->mOutputAudioProcessingFormat));
+}
 
-	// Check if have more to read
-	OSStatus	status;
-	if (internals.mSourceHasMoreToRead) {
-		// Try to read
-		SAudioReadStatus	audioReadStatus =
-									internals.mAudioConverter.CAudioProcessor::perform(internals.mSourceMediaPosition,
-											*internals.mInputAudioData);
-		if (audioReadStatus.isSuccess()) {
-			// Success
-			internals.mSourceSourceProcessed = *audioReadStatus.getSourceProcessed();
-			status = noErr;
-		} else if (*audioReadStatus.getError() == SError::mEndOfData) {
-			// End of data
-			internals.mSourceHasMoreToRead = false;
-			status = noErr;
-		} else {
-			// Error
-			internals.mPerformError = audioReadStatus.getError();
-			status = -1;
-		}
-	} else
-		// No more source data, reset everything
-		status = noErr;
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CAudioConverter::getOutputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup::mUnspecified);
+}
 
-	// Prepare return info
-	internals.mInputAudioData->getAsRead(*ioBufferList);
-
-	*ioNumberDataPackets = internals.mInputAudioData->getCurrentFrameCount();
-
-	if (outDataPacketDescription != nil) *outDataPacketDescription = nil;
-
-	return status;
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioConverter::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mOutputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 }
