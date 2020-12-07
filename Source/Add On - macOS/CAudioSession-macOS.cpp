@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioPlayer-macOS.cpp			©2020 Stevo Brock	All rights reserved.
+//	CAudioSession-macOS.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CAudioPlayer.h"
+#include "CAudioSession.h"
 
 #include "CLogServices.h"
 #include "SVersionInfo.h"
@@ -10,12 +10,12 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioPlayer
+// MARK: CAudioSession
 
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::logInfo()
+void CAudioSession::logInfo()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

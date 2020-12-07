@@ -83,10 +83,6 @@ class CAudioPlayer : public CAudioDestination {
 		static			void							setPlaybackBufferDuration(
 																UniversalTimeInterval playbackBufferDuration);
 
-#if TARGET_OS_MACOS
-		static			void							logInfo();
-#endif
-
 	// Properties
 	private:
 		static	const	UniversalTimeInterval		kMinBufferDuration;

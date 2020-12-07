@@ -43,6 +43,10 @@ class CAudioSession {
 //		void					addPropertyChangedListener(OSType propertyID, CEventHandler& eventHandler);
 //		void					removePropertyChangedListener(CEventHandler& eventHandler);
 
+#if TARGET_OS_MACOS || TARGET_OS_WINDOWS
+		void					logInfo();
+#endif
+
 	private:
 								// Lifecycle methods
 								CAudioSession();
