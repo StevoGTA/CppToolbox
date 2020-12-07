@@ -419,9 +419,8 @@ class CAudioPlayerReaderThread : public CThread {
 
 class CAudioPlayerInternals {
 	public:
-							CAudioPlayerInternals(const CString& identifier,
-									const CAudioPlayer::AudioPlayerProcs& audioPlayerProcs) :
-								mIdentifier(identifier), mAudioPlayerProcs(audioPlayerProcs),
+							CAudioPlayerInternals(const CString& identifier, const CAudioPlayer::Procs& procs) :
+								mIdentifier(identifier), mProcs(procs),
 										mIsPlaying(false), mStartTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
 										mRenderProcShouldStopSendingFramesAtEndOfData(false),
@@ -435,7 +434,7 @@ class CAudioPlayerInternals {
 									CAudioPlayerInternals&	internals = *((CAudioPlayerInternals*) userData);
 
 									// Call proc
-									internals.mAudioPlayerProcs.error(error);
+									internals.mProcs.error(error);
 								}
 
 		static	OSStatus	renderProc(void* inRefCon, AudioUnitRenderActionFlags* inActionFlags,
@@ -562,7 +561,7 @@ class CAudioPlayerInternals {
 									// Check if still around
 									if (mActiveInternals.contains(internals))
 										// Call proc
-										internals.mAudioPlayerProcs.positionUpdated(
+										internals.mProcs.positionUpdated(
 												internals.mStartTimeInterval +
 														(Float32) internals.mRenderProcFrameIndex /
 																*internals.mSampleRate);
@@ -577,11 +576,11 @@ class CAudioPlayerInternals {
 									internals.mRenderProcShouldSendFrames = false;
 
 									// Call proc
-									internals.mAudioPlayerProcs.endOfData();
+									internals.mProcs.endOfData();
 								}
 
 				CString							mIdentifier;
-				CAudioPlayer::AudioPlayerProcs	mAudioPlayerProcs;
+				CAudioPlayer::Procs				mProcs;
 
 				OI<CAudioPlayerReaderThread>	mAudioPlayerReaderThread;
 				OI<CSRSWBIPSegmentedQueue>		mQueue;
@@ -613,10 +612,10 @@ TIArray<CAudioPlayerInternals>	CAudioPlayerInternals::mActiveInternals;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayer::CAudioPlayer(const CString& identifier, const AudioPlayerProcs& audioPlayerProcs) : CAudioDestination()
+CAudioPlayer::CAudioPlayer(const CString& identifier, const Procs& procs) : CAudioDestination()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioPlayerInternals(identifier, audioPlayerProcs);
+	mInternals = new CAudioPlayerInternals(identifier, procs);
 	CAudioPlayerInternals::mActiveInternals += mInternals;
 }
 
