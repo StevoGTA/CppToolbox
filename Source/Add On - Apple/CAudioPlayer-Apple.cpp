@@ -23,7 +23,7 @@
 static	CString	sErrorDomain(OSSTR("CAudioPlayer-Apple"));
 static	SError	sUnableToLoadTracks(sErrorDomain, 1, CString(OSSTR("No available tracks")));
 
-#define LOG_ERROR(method, status)																					\
+#define LOG_IF_ERROR(method, status)																				\
 				if (status != noErr) {																				\
 					CLogServices::logError(CString(method) + CString(" returned OSStatus of ") + CString(status));	\
 				}
@@ -88,17 +88,17 @@ AudioStreamBasicDescription CAudioEngine::getInputFormat()
 		AudioComponent	audioComponent = ::AudioComponentFindNext(nil, &audioComponentDescription);
 
 		status = ::AudioComponentInstanceNew(audioComponent, &mOutputAudioUnit);
-		LOG_ERROR(CFSTR("AudioComponentInstanceNew(OutputAudioUnit)"), status);
+		LOG_IF_ERROR(OSSTR("AudioComponentInstanceNew(OutputAudioUnit)"), status);
 
 		status = ::AudioUnitInitialize(mOutputAudioUnit);
-		LOG_ERROR(CFSTR("AudioUnitInitialize(OutputAudioUnit)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitInitialize(OutputAudioUnit)"), status);
 
 		AudioStreamBasicDescription	asbd;
 		UInt32						size = sizeof(AudioStreamBasicDescription);
 		status =
 				::AudioUnitGetProperty(mOutputAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0,
 						&asbd, &size);
-		LOG_ERROR(CFSTR("AudioUnitGetProperty(OutputAudioUnit, StreamFormat)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitGetProperty(OutputAudioUnit, StreamFormat)"), status);
 		Float32	outputAudioUnitSampleRate = asbd.mSampleRate;
 
 		// Setup Mixer Audio Unit
@@ -108,27 +108,27 @@ AudioStreamBasicDescription CAudioEngine::getInputFormat()
 		audioComponent = ::AudioComponentFindNext(nil, &audioComponentDescription);
 
 		status = ::AudioComponentInstanceNew(audioComponent, &mMixerAudioUnit);
-		LOG_ERROR(CFSTR("AudioComponentInstanceNew(MixerAudioUnit)"), status);
+		LOG_IF_ERROR(OSSTR("AudioComponentInstanceNew(MixerAudioUnit)"), status);
 
 		status = ::AudioUnitInitialize(mMixerAudioUnit);
-		LOG_ERROR(CFSTR("AudioUnitInitialize(MixerAudioUnit)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitInitialize(MixerAudioUnit)"), status);
 
 		size = sizeof(UInt32);
 		status =
 				::AudioUnitGetProperty(mMixerAudioUnit, kAudioUnitProperty_MaximumFramesPerSlice,
 						kAudioUnitScope_Global, 0, &mMaxOutputFrames, &size);
-		LOG_ERROR(CFSTR("AudioUnitGetProperty(MixerAudioUnit, MaximumFramesPerSlice)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitGetProperty(MixerAudioUnit, MaximumFramesPerSlice)"), status);
 
 		size = sizeof(UInt32);
 		status =
 				::AudioUnitSetProperty(mMixerAudioUnit, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0,
 						&mMaxAudioPlayers, size);
-		LOG_ERROR(CFSTR("AudioUnitSetProperty(MixerAudioUnit, ElementCount)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitSetProperty(MixerAudioUnit, ElementCount)"), status);
 
 		status =
 				::AudioUnitSetParameter(mMixerAudioUnit, kMultiChannelMixerParam_Volume, kAudioUnitScope_Output, 0, 1.0,
 						0);
-		LOG_ERROR(CFSTR("AudioUnitSetParameter(MixerAudioUnit, Volume)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitSetParameter(MixerAudioUnit, Volume)"), status);
 
 		// Connect Mixer Audio Unit to Output Audio Unit
 		AudioUnitConnection	audioUnitConnection;
@@ -139,19 +139,19 @@ AudioStreamBasicDescription CAudioEngine::getInputFormat()
 		status =
 				::AudioUnitSetProperty(mOutputAudioUnit, kAudioUnitProperty_MakeConnection, kAudioUnitScope_Input, 0,
 						&audioUnitConnection, size);
-		LOG_ERROR(CFSTR("AudioUnitSetProperty(Connecting MixerAudioUnit to OutputAudioUnit)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitSetProperty(Connecting MixerAudioUnit to OutputAudioUnit)"), status);
 
 		size = sizeof(AudioStreamBasicDescription);
 		status =
 				::AudioUnitGetProperty(mMixerAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0,
 						&mASBD, &size);
-		LOG_ERROR(CFSTR("AudioUnitGetProperty(MixerAudioUnit, StreamFormat)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitGetProperty(MixerAudioUnit, StreamFormat)"), status);
 
 		mASBD.mSampleRate = outputAudioUnitSampleRate;
 		status =
 				::AudioUnitSetProperty(mMixerAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0,
 						&mASBD, size);
-		LOG_ERROR(CFSTR("AudioUnitSetProperty(MixerAudioUnit, StreamFormat)"), status);
+		LOG_IF_ERROR(OSSTR("AudioUnitSetProperty(MixerAudioUnit, StreamFormat)"), status);
 	}
 
 	return mASBD;
@@ -188,7 +188,7 @@ OV<UInt32> CAudioEngine::addAudioPlayer(AURenderCallback inputProc, void* userDa
 								::AudioUnitSetProperty(mMixerAudioUnit, kAudioUnitProperty_SetRenderCallback,
 										kAudioUnitScope_Input, i, &renderCallbackStruct,
 										sizeof(AURenderCallbackStruct));
-			LOG_ERROR(CFSTR("AudioUnitSetProperty(MixerAudioUnit, RenderCallback)"), status);
+			LOG_IF_ERROR(OSSTR("AudioUnitSetProperty(MixerAudioUnit, RenderCallback)"), status);
 
 			return OV<UInt32>(i);
 		}
@@ -208,7 +208,7 @@ void CAudioEngine::setAudioPlayerGain(UInt32 index, Float32 gain)
 	OSStatus	status =
 						::AudioUnitSetParameter(mMixerAudioUnit, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input,
 								index, gain, 0);
-	LOG_ERROR(CFSTR("AudioUnitSetParameter(MixerAudioUnit, Volume)"), status);
+	LOG_IF_ERROR(OSSTR("AudioUnitSetParameter(MixerAudioUnit, Volume)"), status);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ void CAudioEngine::play()
 {
 	// Start
 	OSStatus	status = ::AudioOutputUnitStart(mOutputAudioUnit);
-	LOG_ERROR(CFSTR("AudioOutputUnitStart()"), status);
+	LOG_IF_ERROR(OSSTR("AudioOutputUnitStart()"), status);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -229,7 +229,7 @@ void CAudioEngine::removeAudioPlayer(UInt32 index)
 	OSStatus	status =
 						::AudioUnitSetProperty(mMixerAudioUnit, kAudioUnitProperty_SetRenderCallback,
 								kAudioUnitScope_Input, index, &renderCallbackStruct, sizeof(AURenderCallbackStruct));
-	LOG_ERROR(CFSTR("AudioUnitSetProperty(MixerAudioUnit, RenderCallback)"), status);
+	LOG_IF_ERROR(OSSTR("AudioUnitSetProperty(MixerAudioUnit, RenderCallback)"), status);
 
 	// Clear Audio Player
 	mConnectedAudioPlayers.clear(index);
@@ -244,7 +244,7 @@ void CAudioEngine::removeAudioPlayer(UInt32 index)
 
 	// No connected Audio Players
 	status = ::AudioOutputUnitStop(mOutputAudioUnit);
-	LOG_ERROR(CFSTR("AudioOutputUnitStop()"), status);
+	LOG_IF_ERROR(OSSTR("AudioOutputUnitStop()"), status);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -269,7 +269,10 @@ class CAudioPlayerReaderThread : public CThread {
 							mResumeRequesed(false), mStopReadingRequested(false), mShutdownRequested(false),
 							mReachedEndOfData(false), mState(kStateStarting),
 							mMediaPosition(SMediaPosition::fromStart(0.0)), mFramesToRead(~0)
-					{}
+					{
+						// Start
+						start();
+					}
 
 		void	run()
 					{

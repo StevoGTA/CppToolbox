@@ -31,22 +31,6 @@ struct SError {
 			bool	operator!=(const SError& other) const
 						{ return (mDomain != other.mDomain) || (mCode != other.mCode); }
 
-					// Class methods
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-	static	SError	fromOSStatus(OSStatus status)
-						{ return SError(CString(OSSTR("OSStatus")), status, CString(status)); }
-#endif
-#if TARGET_OS_MACOS
-	static	SError	fromOSStatus(OSStatus status)
-						{
-							// Setup
-							const	char*	commentString = ::GetMacOSStatusCommentString(status);
-
-							return SError(CString(OSSTR("OSStatus")), status,
-									(commentString != nil) ? CString(commentString) : CString(status));
-						}
-#endif
-
 	// Properties
 	public:
 		static	SError	mUnimplemented;

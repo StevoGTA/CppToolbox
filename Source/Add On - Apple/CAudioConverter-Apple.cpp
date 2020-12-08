@@ -5,6 +5,7 @@
 #include "CAudioProcessor.h"
 
 #include "CLogServices.h"
+#include "SError-Apple.h"
 
 #include <AudioToolbox/AudioToolbox.h>
 
@@ -203,7 +204,7 @@ OI<SError> CAudioConverter::reset()
 {
 	// Reset
 	OSStatus	status = ::AudioConverterReset(mInternals->mAudioConverterRef);
-	if (status != noErr) return SError::fromOSStatus(status);
+	if (status != noErr) return SErrorFromOSStatus(status);
 
 	mInternals->mSourceHasMoreToRead = true;
 

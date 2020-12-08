@@ -59,14 +59,14 @@ const SVersionInfo& CCoreServices::getCoreAudioVersion()
 		CFURLRef	urlRef =
 							CCoreFoundation::createURLRefFrom(
 									CFolder::systemFrameworksFolder().getFilesystemPath()
-											.appendingComponent(CString(CFSTR("CoreAudio.framework"))), true);
+											.appendingComponent(CString(OSSTR("CoreAudio.framework"))), true);
 		CFBundleRef	bundleRef = ::CFBundleCreate(kCFAllocatorDefault, urlRef);
 		::CFRelease(urlRef);
 		CFStringRef	stringRef =
 							(CFStringRef) ::CFBundleGetValueForInfoDictionaryKey(bundleRef,
-									CFSTR("CFBundleShortVersionString"));
+									OSSTR("CFBundleShortVersionString"));
 		::CFRelease(bundleRef);
-		TArray<CString>	array = CString(stringRef).breakUp(CString(CFSTR(".")));
+		TArray<CString>	array = CString(stringRef).breakUp(CString(OSSTR(".")));
 		UInt8			majorVersion = (array.getCount() > 0) ? array[0].getUInt8() : 0;
 		UInt8			minorVersion = (array.getCount() > 1) ? array[1].getUInt8() : 0;
 		UInt8			patchVersion = (array.getCount() > 2) ? array[2].getUInt8() : 0;

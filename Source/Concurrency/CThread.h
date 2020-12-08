@@ -41,6 +41,9 @@ class CThread {
 								// Lifecycle methods
 								CThread(const CString& name = CString::mEmpty);
 
+								// Instance methods
+						void	start();
+
 								// Subclass methods
 				virtual	void	run()
 									{}

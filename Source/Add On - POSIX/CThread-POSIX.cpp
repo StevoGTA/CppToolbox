@@ -18,28 +18,8 @@ class CThreadInternals {
 						CThreadInternals(CThread& thread, CThread::ThreadProc threadProc, void* userData,
 								const CString& name) :
 							mIsRunning(true), mThread(thread), mThreadProc(threadProc),
-									mThreadProcUserData(userData), mThreadName(name)
-							{
-								// Create thread attributes
-								int				result;
-								pthread_attr_t	attr;
-								result = ::pthread_attr_init(&attr);
-								if (result != 0)
-									LogError(SErrorFromPOSIXerror(result), "initing pthread attrs");
-								AssertFailIf(result != 0);
-
-								result = ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-								if (result != 0) {
-									LogError(SErrorFromPOSIXerror(result), "setting pthread detached state");
-									::pthread_attr_destroy(&attr);
-								}
-
-								// Create thread
-								result = ::pthread_create(&mPThread, &attr, CThreadInternals::threadProc, this);
-								::pthread_attr_destroy(&attr);
-								if (result != 0)
-									LogError(SErrorFromPOSIXerror(result), "creating pthread");
-							}
+									mThreadProcUserData(userData), mThreadName(name), mPThread(nil)
+							{}
 
 		static	void*	threadProc(void* userData)
 							{
@@ -82,6 +62,9 @@ CThread::CThread(ThreadProc threadProc, void* userData, const CString& name)
 {
 	// Setup internals
 	mInternals = new CThreadInternals(*this, threadProc, userData, name);
+
+	// Start
+	start();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -113,6 +96,31 @@ bool CThread::getIsRunning() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mIsRunning;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CThread::start()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create thread attributes
+	int				result;
+	pthread_attr_t	attr;
+	result = ::pthread_attr_init(&attr);
+	if (result != 0)
+		LogError(SErrorFromPOSIXerror(result), "initing pthread attrs");
+	AssertFailIf(result != 0);
+
+	result = ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	if (result != 0) {
+		LogError(SErrorFromPOSIXerror(result), "setting pthread detached state");
+		::pthread_attr_destroy(&attr);
+	}
+
+	// Create thread
+	result = ::pthread_create(&mInternals->mPThread, &attr, CThreadInternals::threadProc, mInternals);
+	::pthread_attr_destroy(&attr);
+	if (result != 0)
+		LogError(SErrorFromPOSIXerror(result), "creating pthread");
 }
 
 // MARK: Class methods
