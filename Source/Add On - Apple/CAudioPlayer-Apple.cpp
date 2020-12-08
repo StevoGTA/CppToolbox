@@ -9,6 +9,7 @@
 #include "ConcurrencyPrimitives.h"
 #include "CQueue.h"
 #include "CThread.h"
+#include "SError-Apple.h"
 
 #import <AudioToolbox/AudioToolbox.h>
 
@@ -23,10 +24,11 @@
 static	CString	sErrorDomain(OSSTR("CAudioPlayer-Apple"));
 static	SError	sUnableToLoadTracks(sErrorDomain, 1, CString(OSSTR("No available tracks")));
 
-#define LOG_IF_ERROR(method, status)																				\
-				if (status != noErr) {																				\
-					CLogServices::logError(CString(method) + CString(" returned OSStatus of ") + CString(status));	\
-				}
+#define LOG_IF_ERROR(method, status)												\
+				if (status != noErr)												\
+					CLogServices::logError(											\
+							CString(method) + CString(OSSTR(" returned ")) +		\
+									SErrorFromOSStatus(status).getDescription());
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
