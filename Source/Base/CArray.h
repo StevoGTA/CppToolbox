@@ -45,8 +45,6 @@ class CArray : public CEquatable {
 
 				ItemRef				getItemAt(ItemIndex itemIndex) const;
 
-				bool				isSorted() const;
-
 	protected:
 									// Lifecycle methods
 									CArray(ItemCount initialCapacity = 0, CopyProc copyProc = nil,

@@ -54,7 +54,6 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 											CArrayInternals(CArray::ItemCount initialCapacity,
 													CArray::CopyProc copyProc, CArray::DisposeProc disposeProc) :
 												TCopyOnWriteReferenceCountable(),
-														mIsSorted(true),
 														mCapacity(std::max(initialCapacity, (UInt32) 10)), mCount(0),
 														mItemRefs(
 																(CArray::ItemRef*)
@@ -64,8 +63,7 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 												{}
 											CArrayInternals(const CArrayInternals& other) :
 												TCopyOnWriteReferenceCountable(),
-														mIsSorted(other.mIsSorted), mCapacity(other.mCount),
-														mCount(other.mCount),
+														mCapacity(other.mCount), mCount(other.mCount),
 														mItemRefs(
 																(CArray::ItemRef*)
 																		::calloc(mCapacity, sizeof(CArray::ItemRef))),
@@ -134,7 +132,6 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													}
 
 													// Update info
-													arrayInternals->mIsSorted = false;
 													arrayInternals->mReference++;
 
 													return arrayInternals;
@@ -170,7 +167,6 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													arrayInternals->mCount++;
 
 													// Update info
-													arrayInternals->mIsSorted = false;
 													arrayInternals->mReference++;
 
 													return arrayInternals;
@@ -276,7 +272,6 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 												}
 
 	public:
-		bool				mIsSorted;
 		CArray::ItemCount	mCapacity;
 		CArray::ItemCount	mCount;
 		CArray::ItemRef*	mItemRefs;
@@ -559,20 +554,9 @@ CArray& CArray::apply(ApplyProc applyProc, void* userData)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CArray::isSorted() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mIsSorted;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CArray& CArray::sort(CompareProc compareProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if sorted
-	if (mInternals->mIsSorted)
-		return *this;
-		
 	// Prepare for write
 	mInternals = mInternals->prepareForWrite();
 
@@ -592,9 +576,6 @@ CArray& CArray::sort(CompareProc compareProc, void* userData)
 	// Unknown platform
 	AssertFailUnimplemented();
 #endif
-
-	// Update
-	mInternals->mIsSorted = true;
 
 	return *this;
 }
