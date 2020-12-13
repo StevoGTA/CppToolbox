@@ -12,7 +12,7 @@
 
 class CImageInternals;
 class CImage {
-	// Types
+	// Enums
 	public:
 		enum Type {
 			kTypeJPEG	= MAKE_OSTYPE('J', 'P', 'E', 'G'),

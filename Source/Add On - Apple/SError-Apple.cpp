@@ -4,6 +4,7 @@
 
 #include "SError-Apple.h"
 
+#if TARGET_OS_MACOS
 //----------------------------------------------------------------------------------------------------------------------
 SError SErrorFromOSStatus(OSStatus status)
 //----------------------------------------------------------------------------------------------------------------------
@@ -13,3 +14,4 @@ SError SErrorFromOSStatus(OSStatus status)
 
 	return SError(CString(OSSTR("OSStatus")), status, (string != nil) ? CString(string) : CString(status));
 }
+#endif

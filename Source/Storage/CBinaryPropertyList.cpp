@@ -137,7 +137,7 @@ class CBPLDictionaryInfo {
 		static	CDictionary				dictionaryWith(CBPLDataSource& bplDataSource, CDictionary::KeyCount keyCount)
 											{
 												return CDictionary(
-														CDictionary::ProcsInfo(getKeyCount, getValue, disposeUserData,
+														CDictionary::Procs(getKeyCount, getValue, disposeUserData,
 																new CBPLDictionaryInfo(bplDataSource, keyCount)));
 											}
 		static	CDictionary::KeyCount	getKeyCount(void* userData)

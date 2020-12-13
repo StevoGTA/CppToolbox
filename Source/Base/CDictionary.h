@@ -32,14 +32,14 @@ class CDictionary : public CEquatable {
 
 	// Structs
 	public:
-		struct ProcsInfo {
+		struct Procs {
 			// Procs
 			typedef	KeyCount				(*GetKeyCountProc)(void* userData);
 			typedef	OR<SDictionaryValue>	(*GetValueProc)(const CString& key, void* userData);
 			typedef	void					(*DisposeUserDataProc)(void* userData);
 
 									// Lifecycle methods
-									ProcsInfo(GetKeyCountProc getKeyCountProc, GetValueProc getValueProc,
+									Procs(GetKeyCountProc getKeyCountProc, GetValueProc getValueProc,
 											DisposeUserDataProc disposeUserDataProc, void* userData) :
 										mGetKeyCountProc(getKeyCountProc), mGetValueProc(getValueProc),
 												mDisposeUserDataProc(disposeUserDataProc), mUserData(userData)
@@ -67,7 +67,7 @@ class CDictionary : public CEquatable {
 													CDictionary(ItemCopyProc itemCopyProc = nil,
 															ItemDisposeProc itemDisposeProc = nil,
 															ItemEqualsProc itemEqualsProc = nil);
-													CDictionary(const ProcsInfo& procsInfo);
+													CDictionary(const Procs& procs);
 													CDictionary(const CDictionary& other);
 		virtual										~CDictionary();
 

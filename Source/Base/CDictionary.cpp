@@ -436,25 +436,23 @@ void* CStandardDictionaryInternals::iteratorAdvance(CIterator::Info& iteratorInf
 class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryInternals> {
 	public:
 											// Lifecycle methods
-											CProcsDictionaryInternals(const CDictionary::ProcsInfo& procsInfo) :
-												TDictionaryInternals(),
-														mProcsInfo(procsInfo)
+											CProcsDictionaryInternals(const CDictionary::Procs& procs) :
+												TDictionaryInternals(), mProcs(procs)
 												{}
 											CProcsDictionaryInternals(const CProcsDictionaryInternals& other) :
-												TDictionaryInternals(),
-														mProcsInfo(other.mProcsInfo)
+												TDictionaryInternals(), mProcs(other.mProcs)
 												{
 // TODO
 AssertFailUnimplemented();
 												}
 											~CProcsDictionaryInternals()
-												{ mProcsInfo.disposeUserData(); }
+												{ mProcs.disposeUserData(); }
 
 											// TDictionaryInternals methods
 				CDictionary::KeyCount		getKeyCount()
-												{ return mProcsInfo.getKeyCount(); }
+												{ return mProcs.getKeyCount(); }
 				OR<SDictionaryValue>		getValue(const CString& key)
-												{ return mProcsInfo.getValue(key); }
+												{ return mProcs.getValue(key); }
 				CDictionaryInternals*		set(const CString& key, const SDictionaryValue& value)
 												{
 //													// Convert to standard dictionary
@@ -500,7 +498,7 @@ return TIteratorS<SDictionaryItem>(nil, nil, *iteratorInfo);
 				CDictionary::ItemEqualsProc	getItemEqualsProc() const
 												{ return nil; }
 
-		CDictionary::ProcsInfo	mProcsInfo;
+		CDictionary::Procs	mProcs;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -524,11 +522,11 @@ CDictionary::CDictionary(ItemCopyProc itemCopyProc, ItemDisposeProc itemDisposeP
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary::CDictionary(const ProcsInfo& procsInfo) : CEquatable()
+CDictionary::CDictionary(const Procs& procs) : CEquatable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = (CDictionaryInternals*) new CProcsDictionaryInternals(procsInfo);
+	mInternals = (CDictionaryInternals*) new CProcsDictionaryInternals(procs);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

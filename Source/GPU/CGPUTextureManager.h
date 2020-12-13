@@ -52,7 +52,7 @@ class CGPUTextureManager {
 			kReferenceOptionsLoadImmediately	= 1 << 0,
 		};
 
-	// Types
+	// Procs
 	public:
 		typedef	CBitmap	(*BitmapProc)(const CByteParceller& byteParceller);
 

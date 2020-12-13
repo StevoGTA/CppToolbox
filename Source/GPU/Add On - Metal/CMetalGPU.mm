@@ -22,10 +22,10 @@ static	const	UInt32	kBufferCount = 3;
 
 class CGPUInternals {
 	public:
-		CGPUInternals(const SGPUProcsInfo& procsInfo) :
-			mProcsInfo(procsInfo),
-					mCommandQueue([procsInfo.getDevice() newCommandQueue]),
-					mShaderLibrary([procsInfo.getDevice() newDefaultLibrary]),
+		CGPUInternals(const SGPUProcsInfo& procs) :
+			mProcs(procs),
+					mCommandQueue([procs.getDevice() newCommandQueue]),
+					mShaderLibrary([procs.getDevice() newDefaultLibrary]),
 					mFunctionsCache([[NSMutableDictionary alloc] init]),
 					mRenderPipelineDescriptor([[MTLRenderPipelineDescriptor alloc] init]),
 					mRenderPipelineStateCache([[NSMutableDictionary alloc] init]),
@@ -34,27 +34,25 @@ class CGPUInternals {
 			{
 				// Finish setup
 				MTLSamplerDescriptor*	samplerDescriptor = [[MTLSamplerDescriptor alloc] init];
-				mSamplerState = [procsInfo.getDevice() newSamplerStateWithDescriptor:samplerDescriptor];
+				mSamplerState = [procs.getDevice() newSamplerStateWithDescriptor:samplerDescriptor];
 
 				MTLDepthStencilDescriptor*	depthStencilDescriptor = [[MTLDepthStencilDescriptor alloc] init];
 				depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionLessEqual;
 				depthStencilDescriptor.depthWriteEnabled = NO;
-				mDepthStencilState2D =
-						[procsInfo.getDevice() newDepthStencilStateWithDescriptor:depthStencilDescriptor];
+				mDepthStencilState2D = [procs.getDevice() newDepthStencilStateWithDescriptor:depthStencilDescriptor];
 
 				depthStencilDescriptor.depthWriteEnabled = YES;
-				mDepthStencilState3D =
-						[procsInfo.getDevice() newDepthStencilStateWithDescriptor:depthStencilDescriptor];
+				mDepthStencilState3D = [procs.getDevice() newDepthStencilStateWithDescriptor:depthStencilDescriptor];
 
 				mMetalBufferCaches = [NSMutableArray arrayWithCapacity:kBufferCount];
 				for (NSUInteger i = 0; i < kBufferCount; i++)
-					[mMetalBufferCaches addObject:[[MetalBufferCache alloc] initWithDevice:mProcsInfo.getDevice()]];
+					[mMetalBufferCaches addObject:[[MetalBufferCache alloc] initWithDevice:mProcs.getDevice()]];
 
- 				mRenderPipelineDescriptor.sampleCount = procsInfo.getSampleCount();
-				mRenderPipelineDescriptor.colorAttachments[0].pixelFormat = procsInfo.getPixelFormat();
+ 				mRenderPipelineDescriptor.sampleCount = procs.getSampleCount();
+				mRenderPipelineDescriptor.colorAttachments[0].pixelFormat = procs.getPixelFormat();
 			}
 
-	SGPUProcsInfo												mProcsInfo;
+	SGPUProcsInfo												mProcs;
 
 	id<MTLCommandQueue>											mCommandQueue;
 	id<MTLLibrary>												mShaderLibrary;
@@ -86,10 +84,10 @@ class CGPUInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPU::CGPU(const SGPUProcsInfo& procsInfo)
+CGPU::CGPU(const SGPUProcsInfo& procs)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUInternals(procsInfo);
+	mInternals = new CGPUInternals(procs);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -107,7 +105,7 @@ SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataF
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
-	CGPUTexture*	gpuTexture = new CMetalTexture(mInternals->mProcsInfo.getDevice(), data, dataFormat, size);
+	CGPUTexture*	gpuTexture = new CMetalTexture(mInternals->mProcs.getDevice(), data, dataFormat, size);
 
 	return SGPUTextureReference(*gpuTexture);
 }
@@ -129,7 +127,7 @@ SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
 {
 	// Create buffer
 	id<MTLBuffer>	mtlBuffer =
-							[mInternals->mProcsInfo.getDevice() newBufferWithBytes:data.getBytePtr()
+							[mInternals->mProcs.getDevice() newBufferWithBytes:data.getBytePtr()
 									length:data.getSize() options:MTLResourceStorageModeShared];
 
 	return SGPUBuffer((void*) ::CFBridgingRetain(mtlBuffer));
@@ -141,7 +139,7 @@ SGPUVertexBuffer CGPU::allocateVertexBuffer(UInt32 perVertexByteCount, const CDa
 {
 	// Create buffer
 	id<MTLBuffer>	mtlBuffer =
-							[mInternals->mProcsInfo.getDevice() newBufferWithBytes:data.getBytePtr()
+							[mInternals->mProcs.getDevice() newBufferWithBytes:data.getBytePtr()
 									length:data.getSize() options:MTLResourceStorageModeShared];
 
 	return SGPUVertexBuffer(perVertexByteCount, (void*) ::CFBridgingRetain(mtlBuffer));
@@ -167,7 +165,7 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 	// Setup current render command encoder
 	mInternals->mCurrentRenderCommandEncoder =
 			[mInternals->mCurrentCommandBuffer
-					renderCommandEncoderWithDescriptor:mInternals->mProcsInfo.getCurrentRenderPassDescriptor()];
+					renderCommandEncoderWithDescriptor:mInternals->mProcs.getCurrentRenderPassDescriptor()];
 	mInternals->mCurrentRenderCommandEncoder.label = @"Render Command Encoder";
 	[mInternals->mCurrentRenderCommandEncoder setFragmentSamplerState:mInternals->mSamplerState atIndex:0];
 
@@ -219,7 +217,7 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			// 2D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
-					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
+					SGPURenderStateCommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -231,7 +229,7 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			// 3D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
-					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
+					SGPURenderStateCommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -273,7 +271,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			// 2D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
-					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
+					SGPURenderStateCommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -285,7 +283,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			// 3D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
-					SGPURenderStateCommitInfo(mInternals->mProcsInfo.getDevice(), mInternals->mShaderLibrary,
+					SGPURenderStateCommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -330,7 +328,7 @@ void CGPU::renderEnd() const
 	[mInternals->mCurrentRenderCommandEncoder endEncoding];
 	mInternals->mCurrentRenderCommandEncoder = nil;
 
-	[mInternals->mCurrentCommandBuffer presentDrawable:mInternals->mProcsInfo.getCurrentDrawable()];
+	[mInternals->mCurrentCommandBuffer presentDrawable:mInternals->mProcs.getCurrentDrawable()];
 	[mInternals->mCurrentCommandBuffer commit];
 	mInternals->mCurrentCommandBuffer = nil;
 }

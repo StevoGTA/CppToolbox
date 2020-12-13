@@ -24,7 +24,7 @@ class CGPU {
 	// Methods
 	public:
 										// Lifecycle methods
-										CGPU(const SGPUProcsInfo& procsInfo);
+										CGPU(const SGPUProcsInfo& procs);
 										~CGPU();
 
 										// Instance methods

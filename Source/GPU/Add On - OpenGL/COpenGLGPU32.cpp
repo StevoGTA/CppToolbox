@@ -12,9 +12,9 @@
 
 class CGPUInternals {
 	public:
-		CGPUInternals(const SGPUProcsInfo& procsInfo) : mProcsInfo(procsInfo) {}
+		CGPUInternals(const SGPUProcsInfo& procs) : mProcs(procs) {}
 
-	SGPUProcsInfo	mProcsInfo;
+	SGPUProcsInfo	mProcs;
 
 	SMatrix4x4_32	mViewMatrix2D;
 	SMatrix4x4_32	mProjectionMatrix2D;
@@ -30,10 +30,10 @@ class CGPUInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPU::CGPU(const SGPUProcsInfo& procsInfo)
+CGPU::CGPU(const SGPUProcsInfo& procs)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUInternals(procsInfo);
+	mInternals = new CGPUInternals(procs);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,9 +51,9 @@ SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataF
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
-	mInternals->mProcsInfo.acquireContext();
+	mInternals->mProcs.acquireContext();
 	CGPUTexture*	gpuTexture = new COpenGLTexture(data, dataFormat, size);
-	mInternals->mProcsInfo.releaseContext();
+	mInternals->mProcs.releaseContext();
 
 	return SGPUTextureReference(*gpuTexture);
 }
@@ -67,18 +67,18 @@ void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
 	gpuTexture.reset();
 
 	// Cleanup
-	mInternals->mProcsInfo.acquireContext();
+	mInternals->mProcs.acquireContext();
 	Delete(openGLTexture);
-	mInternals->mProcsInfo.releaseContext();
+	mInternals->mProcs.releaseContext();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SGPUVertexBuffer CGPU::allocateVertexBuffer(UInt32 perVertexByteCount, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mProcsInfo.acquireContext();
+	mInternals->mProcs.acquireContext();
 	SGPUVertexBuffer	gpuVertexBuffer(perVertexByteCount, new COpenGLVertexBufferInfo(data));
-	mInternals->mProcsInfo.releaseContext();
+	mInternals->mProcs.releaseContext();
 
 	return gpuVertexBuffer;
 }
@@ -87,9 +87,9 @@ SGPUVertexBuffer CGPU::allocateVertexBuffer(UInt32 perVertexByteCount, const CDa
 SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mProcsInfo.acquireContext();
+	mInternals->mProcs.acquireContext();
 	SGPUBuffer	gpuBuffer(new COpenGLIndexBufferInfo(data));
-	mInternals->mProcsInfo.releaseContext();
+	mInternals->mProcs.releaseContext();
 
 	return gpuBuffer;
 }
@@ -99,10 +99,10 @@ void CGPU::disposeBuffer(const SGPUBuffer& buffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals->mProcsInfo.acquireContext();
+	mInternals->mProcs.acquireContext();
 	COpenGLBufferInfo*	openGLBufferInfo = (COpenGLBufferInfo*) buffer.mPlatformReference;
 	Delete(openGLBufferInfo);
-	mInternals->mProcsInfo.releaseContext();
+	mInternals->mProcs.releaseContext();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,8 +111,8 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get info
-	S2DSizeU16	viewSize = mInternals->mProcsInfo.getSize();
-	Float32		scale = mInternals->mProcsInfo.getScale();
+	S2DSizeU16	viewSize = mInternals->mProcs.getSize();
+	Float32		scale = mInternals->mProcs.getScale();
 
 	// Projection 2D
 	mInternals->mProjectionMatrix2D =
@@ -148,7 +148,7 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 					0.0,	0.0,	nearZ3D * zs,	0.0);
 
 	// Prepare to render
-	mInternals->mProcsInfo.acquireContext();
+	mInternals->mProcs.acquireContext();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -240,5 +240,5 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 void CGPU::renderEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mProcsInfo.releaseContext();
+	mInternals->mProcs.releaseContext();
 }
