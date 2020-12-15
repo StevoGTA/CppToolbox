@@ -4,11 +4,9 @@
 
 #include "CAudioPlayer.h"
 
+#include "CAudioPlayerReaderThread.h"
 #include "CBits.h"
 #include "CLogServices-Apple.h"
-#include "ConcurrencyPrimitives.h"
-#include "CQueue.h"
-#include "CThread.h"
 #include "SError-Apple.h"
 
 #import <AudioToolbox/AudioToolbox.h>
@@ -245,174 +243,6 @@ void CAudioEngine::removeAudioPlayer(UInt32 index)
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerReaderThread
-
-class CAudioPlayerReaderThread : public CThread {
-	public:
-		enum State {
-			kStateStarting,
-			kStateWaiting,
-			kStateReading,
-		};
-
-		typedef	void	(*ErrorProc)(const SError& error, void* userData);
-
-				CAudioPlayerReaderThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
-						UInt32 bytesPerFrame, ErrorProc errorProc, void* procsUserData) :
-					CThread(audioPlayer.getIdentifier()),
-							mAudioPlayer(audioPlayer), mErrorProc(errorProc), mQueue(queue),
-							mBytesPerFrame(bytesPerFrame), mProcsUserData(procsUserData),
-							mResumeRequesed(false), mStopReadingRequested(false), mShutdownRequested(false),
-							mReachedEndOfData(false), mState(kStateStarting),
-							mMediaPosition(SMediaPosition::fromStart(0.0)), mFramesToRead(~0)
-					{
-						// Start
-						start();
-					}
-
-		void	run()
-					{
-						// Run until shutdown
-						while (!mShutdownRequested) {
-							// Check state
-							switch (mState) {
-								case kStateStarting:
-									// Starting
-									if (mResumeRequesed) {
-										// Start reading
-										mState = kStateReading;
-										break;
-									} else {
-										// Wait for resume
-										mState = kStateWaiting;
-
-										// Fall through
-									}
-
-								case kStateWaiting:
-									// Waiting
-									mSemaphore.waitFor();
-
-									// Check if reset requested
-									if (!mStopReadingRequested)
-										// Go for reading
-										mState = kStateReading;
-									break;
-
-								case kStateReading:
-									// Reading
-									if (mStopReadingRequested || !tryRead())
-										// Go to waiting
-										mState = kStateWaiting;
-									break;
-							}
-						}
-					}
-
-		bool	tryRead()
-					{
-						// Setup
-// Not sure yet the best way to approach this...
-//	A) Just use maxOutputFrameCount
-//	B) Use some multiple of maxOutputFrameCount (like 4)
-//	C) Use a constant like 4096
-// -We want the first read to go fast enough that we have the initial audio data ASAP, so not too big
-// -But we also want to be efficient with system resources, so not too small
-						UInt32	framesToRead =
-									std::min<UInt32>(CAudioEngine::mShared.getMaxOutputFrames() * 4, mFramesToRead);
-						UInt32	bytesToRead = framesToRead * mBytesPerFrame;
-
-						// Request write
-						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRead);
-						if (!writeBufferInfo.hasBuffer())
-							// No space
-							return false;
-
-						// Perform read
-						CAudioData			audioData(writeBufferInfo.mBuffer, mQueue.getSegmentCount(),
-													writeBufferInfo.mSegmentSize / mBytesPerFrame,
-													writeBufferInfo.mSize / mBytesPerFrame, mBytesPerFrame);
-						SAudioReadStatus	audioReadStatus = mAudioPlayer.perform(mMediaPosition, audioData);
-						if (audioReadStatus.isSuccess()) {
-							// Success
-							mQueue.commitWrite(audioData.getCurrentFrameCount() * mBytesPerFrame);
-							mMediaPosition = SMediaPosition::fromCurrent();
-							mFramesToRead -= audioData.getCurrentFrameCount();
-
-							return true;
-						} else {
-							// Finished
-							mReachedEndOfData = true;
-							if (*audioReadStatus.getError() != SError::mEndOfData)
-								// Error
-								mErrorProc(*audioReadStatus.getError(), mProcsUserData);
-
-							return false;
-						}
-					}
-		void	noteQueueReadComplete()
-					{
-						// Signal
-						mSemaphore.signal();
-					}
-		void	seek(UniversalTimeInterval timeInterval, UInt32 maxFrames)
-					{
-						// Update
-						mMediaPosition = SMediaPosition::fromStart(timeInterval);
-						mFramesToRead = maxFrames;
-						mReachedEndOfData = false;
-					}
-		void	resume()
-					{
-						// Update
-						mResumeRequesed = true;
-						mStopReadingRequested = false;
-
-						// Signal
-						mSemaphore.signal();
-					}
-		void	stopReading()
-					{
-						// Request reset
-						mStopReadingRequested = true;
-
-						// Wait until waiting
-						while (mState != kStateWaiting)
-							// Sleep
-							CThread::sleepFor(0.001);
-					}
-		void	shutdown()
-					{
-						// Request shutdown
-						mShutdownRequested = true;
-
-						// Signal if waiting
-						mSemaphore.signal();
-
-						// Wait until is no lonnger running
-						while (getIsRunning())
-							// Sleep
-							CThread::sleepFor(0.001);
-					}
-
-		CAudioPlayer&			mAudioPlayer;
-		ErrorProc				mErrorProc;
-		CSemaphore				mSemaphore;
-		CSRSWBIPSegmentedQueue&	mQueue;
-		UInt32					mBytesPerFrame;
-		void*					mProcsUserData;
-
-		bool					mResumeRequesed;
-		bool					mStopReadingRequested;
-		bool					mShutdownRequested;
-		bool					mReachedEndOfData;
-		State					mState;
-		SMediaPosition			mMediaPosition;
-		UInt32					mFramesToRead;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAudioPlayerInternals
 
 class CAudioPlayerInternals {
@@ -511,7 +341,7 @@ class CAudioPlayerInternals {
 															requiredByteCount);
 
 												// Check if at the end
-												if (internals.mAudioPlayerReaderThread->mReachedEndOfData) {
+												if (internals.mAudioPlayerReaderThread->getDidReachEndOfData()) {
 													// End of data
 													internals.mRenderProcIsSendingFrames = false;
 
@@ -694,7 +524,8 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 	mInternals->mAudioPlayerReaderThread =
 			OI<CAudioPlayerReaderThread>(
 					new CAudioPlayerReaderThread(*this, *mInternals->mQueue, *mInternals->mBytesPerFrame,
-							CAudioPlayerInternals::readerThreadError, mInternals));
+							CAudioEngine::mShared.getMaxOutputFrames(), CAudioPlayerInternals::readerThreadError,
+							mInternals));
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
