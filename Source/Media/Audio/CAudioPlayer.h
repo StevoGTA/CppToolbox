@@ -5,51 +5,59 @@
 #pragma once
 
 #include "CAudioProcessor.h"
+#include "CNotificationCenter.h"
+#include "CQueue.h"
+#include "CThread.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioPlayer
 
 class CAudioPlayerInternals;
 class CAudioPlayer : public CAudioDestination {
+	// Notifications
+	public:
+		/*
+			Sent when the playback position has been updated
+				senderRef is CAudioPlayer*
+				info contains the following keys:
+					mPlaybackPositionKey
+		*/
+		static	CString mPlaybackPositionUpdatedNotificationName;
+
+		static	CString	mPlaybackPositionKey;	// UniversalTime
+
+		/*
+			Sent when end of data has been reached
+				senderRef is CAudioPlayer*
+		*/
+		static	CString mEndOfDataNotificationName;
+
 	// Structs
 	public:
 		struct Procs {
 			// Procs
-			typedef	void	(*PositionUpdatedProc)(UniversalTimeInterval timeInterval, void* userData);
-			typedef	void	(*EndOfDataProc)(void* userData);
 			typedef	void	(*ErrorProc)(const SError& error, void* userData);
 
 						// Lifecycle methods
-						Procs(PositionUpdatedProc positionUpdatedProc, EndOfDataProc endOfDataProc,
-								ErrorProc errorProc, void* userData) :
-							mPositionUpdatedProc(positionUpdatedProc), mEndOfDataProc(endOfDataProc),
-									mErrorProc(errorProc), mUserData(userData)
-							{}
-						Procs(const Procs& other) :
-							mPositionUpdatedProc(other.mPositionUpdatedProc), mEndOfDataProc(other.mEndOfDataProc),
-									mErrorProc(other.mErrorProc), mUserData(other.mUserData)
-							{}
+						Procs(ErrorProc errorProc, void* userData) : mErrorProc(errorProc), mUserData(userData) {}
+						Procs(const Procs& other) : mErrorProc(other.mErrorProc), mUserData(other.mUserData) {}
 
 						// Instance methods
-				void	positionUpdated(UniversalTimeInterval timeInterval) const
-							{ mPositionUpdatedProc(timeInterval, mUserData); }
-				void	endOfData() const
-							{ mEndOfDataProc(mUserData); }
 				void	error(const SError& error) const
 							{ mErrorProc(error, mUserData); }
 
 			// Properties
 			private:
-				PositionUpdatedProc	mPositionUpdatedProc;
-				EndOfDataProc		mEndOfDataProc;
-				ErrorProc			mErrorProc;
-				void*				mUserData;
+				ErrorProc	mErrorProc;
+				void*		mUserData;
 		};
 
 	// Methods
 	public:
 														// Lifecycle methods
-														CAudioPlayer(const CString& identifier, const Procs& procs);
+														CAudioPlayer(const CString& identifier,
+																CNotificationCenter& notificationCenter,
+																const Procs& procs);
 														~CAudioPlayer();
 
 														// CAudioProcessor methods
@@ -90,4 +98,84 @@ class CAudioPlayer : public CAudioDestination {
 		static	const	UniversalTimeInterval	kPreviewDuration;
 
 						CAudioPlayerInternals*	mInternals;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioPlayerReaderThread
+
+class CAudioPlayerReaderThreadInternals;
+class CAudioPlayerReaderThread : public CThread {
+	// Procs
+	public:
+		typedef	void	(*ErrorProc)(const SError& error, void* userData);
+
+	// Methods
+	public:
+				// Lifecycle methods
+				CAudioPlayerReaderThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue, UInt32 bytesPerFrame,
+						UInt32 maxOutputFrames, ErrorProc errorProc, void* procsUserData);
+				~CAudioPlayerReaderThread();
+
+				// CThread methods
+		void	run();
+
+				// Instance methods
+		void	seek(UniversalTimeInterval timeInterval, UInt32 maxFrames);
+		void	resume();
+		void	noteQueueReadComplete();
+		bool	getDidReachEndOfData() const;
+		void	stopReading();
+		void	shutdown();
+
+	// Properties
+	private:
+		CAudioPlayerReaderThreadInternals*	mInternals;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioPlayerPlaybackPositionUpdatedNotificationThread
+
+class CAudioPlayerPlaybackPositionUpdatedNotificationThreadInternals;
+class CAudioPlayerPlaybackPositionUpdatedNotificationThread : public CThread {
+	// Methods
+	public:
+				// Lifecycle methods
+				CAudioPlayerPlaybackPositionUpdatedNotificationThread(CNotificationCenter& notificationCenter,
+						CAudioPlayer& audioPlayer);
+				~CAudioPlayerPlaybackPositionUpdatedNotificationThread();
+
+				// CThread methods
+		void	run();
+
+				// Instance methods
+		void	notePlaybackPositionUpdated(UniversalTimeInterval timeInterval);
+		void	shutdown();
+
+	// Properties
+	private:
+		CAudioPlayerPlaybackPositionUpdatedNotificationThreadInternals*	mInternals;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioPlayerEndOfDataNotificationThread
+
+class CAudioPlayerEndOfDataNotificationThreadInternals;
+class CAudioPlayerEndOfDataNotificationThread : public CThread {
+	// Methods
+	public:
+				// Lifecycle methods
+				CAudioPlayerEndOfDataNotificationThread(CNotificationCenter& notificationCenter,
+						CAudioPlayer& audioPlayer);
+				~CAudioPlayerEndOfDataNotificationThread();
+
+				// CThread methods
+		void	run();
+
+				// Instance methods
+		void	noteEndOfData();
+		void	shutdown();
+
+	// Properties
+	private:
+		CAudioPlayerEndOfDataNotificationThreadInternals*	mInternals;
 };

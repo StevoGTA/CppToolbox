@@ -15,11 +15,11 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer> {
 	// Methods
 	public:
 								// Lifecycle methods
-								CMediaPlayer();
-		virtual					~CMediaPlayer();
+								CMediaPlayer(CNotificationCenter& notificationCenter);
+								~CMediaPlayer();
 
 								// CMediaDestination methods
-		virtual	void			setupComplete();
+				void			setupComplete();
 
 								// Instance methods
 		virtual	I<CAudioPlayer>	newAudioPlayer(const CString& identifier);

@@ -35,7 +35,6 @@ class CThread {
 								// Class methods
 		static			Ref		getCurrentRef();
 		static			void	sleepFor(UniversalTimeInterval universalTimeInterval);
-		static			void	runOnMain(Proc proc, void* userData);
 
 	protected:
 								// Lifecycle methods

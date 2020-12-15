@@ -11,14 +11,17 @@
 
 class CMediaPlayerInternals {
 	public:
-						CMediaPlayerInternals(CMediaPlayer& mediaPlayer) :
-							mMediaPlayer(mediaPlayer), mEndOfDataCount(0), mCurrentLoopCount(0)
+						CMediaPlayerInternals(CMediaPlayer& mediaPlayer, CNotificationCenter& notificationCenter) :
+							mMediaPlayer(mediaPlayer), mNotificationCenter(notificationCenter),
+									mEndOfDataCount(0), mCurrentLoopCount(0)
 							{}
 
-		static	void	audioPlayerPositionUpdated(UniversalTimeInterval timeInterval, void* userData)
+		static	void	audioPlayerPositionUpdated(const CString& notificationName, const void* senderRef,
+								const CDictionary& info, void* userData)
 							{
 							}
-		static	void	audioPlayerEndOfData(void* userData)
+		static	void	audioPlayerEndOfData(const CString& notificationName, const void* senderRef,
+								const CDictionary& info, void* userData)
 							{
 								// Setup
 								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
@@ -51,11 +54,12 @@ class CMediaPlayerInternals {
 							{
 							}
 
-		CMediaPlayer&	mMediaPlayer;
+		CMediaPlayer&			mMediaPlayer;
+		CNotificationCenter&	mNotificationCenter;
 
-		UInt32			mEndOfDataCount;
-		OV<UInt32>		mLoopCount;
-		UInt32			mCurrentLoopCount;
+		UInt32					mEndOfDataCount;
+		OV<UInt32>				mLoopCount;
+		UInt32					mCurrentLoopCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -65,16 +69,19 @@ class CMediaPlayerInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaPlayer::CMediaPlayer()
+CMediaPlayer::CMediaPlayer(CNotificationCenter& notificationCenter)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMediaPlayerInternals(*this);
+	mInternals = new CMediaPlayerInternals(*this, notificationCenter);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CMediaPlayer::~CMediaPlayer()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Cleanup
+	mInternals->mNotificationCenter.unregisterObserver(this);
+
 	Delete(mInternals);
 }
 
@@ -96,11 +103,19 @@ void CMediaPlayer::setupComplete()
 I<CAudioPlayer> CMediaPlayer::newAudioPlayer(const CString& identifier)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CAudioPlayer>(
-			new CAudioPlayer(identifier,
-					CAudioPlayer::Procs(CMediaPlayerInternals::audioPlayerPositionUpdated,
-							CMediaPlayerInternals::audioPlayerEndOfData, CMediaPlayerInternals::audioPlayerError,
-							mInternals)));
+	// Create Audio Player
+	I<CAudioPlayer>	audioPlayer(
+			new CAudioPlayer(identifier, mInternals->mNotificationCenter,
+					CAudioPlayer::Procs(CMediaPlayerInternals::audioPlayerError, mInternals)));
+
+	// Setup notifications
+	mInternals->mNotificationCenter.registerObserver(CAudioPlayer::mPlaybackPositionUpdatedNotificationName,
+			&*audioPlayer,
+			CNotificationCenter::ObserverInfo(this, CMediaPlayerInternals::audioPlayerPositionUpdated, mInternals));
+	mInternals->mNotificationCenter.registerObserver(CAudioPlayer::mEndOfDataNotificationName, &*audioPlayer,
+			CNotificationCenter::ObserverInfo(this, CMediaPlayerInternals::audioPlayerEndOfData, mInternals));
+
+	return audioPlayer;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

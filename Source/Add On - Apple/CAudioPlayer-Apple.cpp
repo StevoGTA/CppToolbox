@@ -4,7 +4,6 @@
 
 #include "CAudioPlayer.h"
 
-#include "CAudioPlayerReaderThread.h"
 #include "CBits.h"
 #include "CLogServices-Apple.h"
 #include "SError-Apple.h"
@@ -247,8 +246,9 @@ void CAudioEngine::removeAudioPlayer(UInt32 index)
 
 class CAudioPlayerInternals {
 	public:
-							CAudioPlayerInternals(const CString& identifier, const CAudioPlayer::Procs& procs) :
-								mIdentifier(identifier), mProcs(procs),
+							CAudioPlayerInternals(const CString& identifier, CNotificationCenter& notificationCenter,
+									const CAudioPlayer::Procs& procs) :
+								mIdentifier(identifier), mNotificationCenter(notificationCenter), mProcs(procs),
 										mIsPlaying(false), mStartTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
 										mRenderProcShouldStopSendingFramesAtEndOfData(false),
@@ -285,10 +285,13 @@ class CAudioPlayerInternals {
 										internals.mRenderProcFrameIndex += internals.mRenderProcPreviousFrameCount;
 										internals.mRenderProcPreviousFrameCount = 0;
 
-										// Notify player
-										CThread::runOnMain(renderProcPositionUpdated, &internals);
+										// Notify playback position updated
+										internals.mAudioPlayerPlaybackPositionUpdatedNotificationThread->
+												notePlaybackPositionUpdated(internals.mStartTimeInterval +
+														(Float32) internals.mRenderProcFrameIndex /
+																*internals.mSampleRate);
 
-										// Inform the reader thread
+										// Notify queue read complete
 										internals.mAudioPlayerReaderThread->noteQueueReadComplete();
 									}
 
@@ -297,7 +300,9 @@ class CAudioPlayerInternals {
 										// Sending frames
 										CSRSWBIPSegmentedQueue::ReadBufferInfo	readBufferInfo =
 																						internals.mQueue->requestRead();
-										UInt32	requiredByteCount = inNumFrames * *internals.mBytesPerFrame;
+										UInt32									requiredByteCount =
+																						inNumFrames *
+																								*internals.mBytesPerFrame;
 										if (readBufferInfo.hasBuffer() && (readBufferInfo.mSize >= requiredByteCount)) {
 											// Can point to buffer
 											for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
@@ -345,8 +350,8 @@ class CAudioPlayerInternals {
 													// End of data
 													internals.mRenderProcIsSendingFrames = false;
 
-													// Notify player
-													CThread::runOnMain(renderProcEndOfData, &internals);
+													// Notify end of data
+													internals.mAudioPlayerEndOfDataNotificationThread->noteEndOfData();
 												} else if ((internals.mRenderProcFrameIndex > 0) &&
 														(internals.mRenderProcPreviousFrameCount > 0)) {
 													// We ran out of data...  we will glitch
@@ -381,54 +386,32 @@ class CAudioPlayerInternals {
 
 									return noErr;
 								}
-		static	void		renderProcPositionUpdated(void* userData)
-								{
-									// Setup
-									CAudioPlayerInternals&	internals = *((CAudioPlayerInternals*) userData);
 
-									// Check if still around
-									if (mActiveInternals.contains(internals))
-										// Call proc
-										internals.mProcs.positionUpdated(
-												internals.mStartTimeInterval +
-														(Float32) internals.mRenderProcFrameIndex /
-																*internals.mSampleRate);
-								}
-		static	void		renderProcEndOfData(void* userData)
-								{
-									// Setup
-									CAudioPlayerInternals&	internals = *((CAudioPlayerInternals*) userData);
+				CString														mIdentifier;
+				CNotificationCenter&										mNotificationCenter;
+				CAudioPlayer::Procs											mProcs;
 
-									// Update
-									internals.mIsPlaying = false;
-									internals.mRenderProcShouldSendFrames = false;
+				OI<CAudioPlayerReaderThread>								mAudioPlayerReaderThread;
+				OI<CAudioPlayerPlaybackPositionUpdatedNotificationThread>	mAudioPlayerPlaybackPositionUpdatedNotificationThread;
+				OI<CAudioPlayerEndOfDataNotificationThread>					mAudioPlayerEndOfDataNotificationThread;
+				OI<CSRSWBIPSegmentedQueue>									mQueue;
+				OV<UInt32>													mAudioEngineIndex;
+				OV<Float32>													mSampleRate;
+				OV<UInt32>													mBytesPerFrame;
 
-									// Call proc
-									internals.mProcs.endOfData();
-								}
+				bool														mIsPlaying;
+				UniversalTimeInterval										mStartTimeInterval;
+				OV<UniversalTimeInterval>									mDurationTimeInterval;
+				Float32														mGain;
 
-				CString							mIdentifier;
-				CAudioPlayer::Procs				mProcs;
+				bool														mRenderProcShouldSendFrames;
+				bool														mRenderProcShouldStopSendingFramesAtEndOfData;
+				bool														mRenderProcIsSendingFrames;
+				UInt32														mRenderProcPreviousReadSize;
+				UInt32														mRenderProcPreviousFrameCount;
+				UInt32														mRenderProcFrameIndex;
 
-				OI<CAudioPlayerReaderThread>	mAudioPlayerReaderThread;
-				OI<CSRSWBIPSegmentedQueue>		mQueue;
-				OV<UInt32>						mAudioEngineIndex;
-				OV<Float32>						mSampleRate;
-				OV<UInt32>						mBytesPerFrame;
-
-				bool							mIsPlaying;
-				UniversalTimeInterval			mStartTimeInterval;
-				OV<UniversalTimeInterval>		mDurationTimeInterval;
-				Float32							mGain;
-
-				bool							mRenderProcShouldSendFrames;
-				bool							mRenderProcShouldStopSendingFramesAtEndOfData;
-				bool							mRenderProcIsSendingFrames;
-				UInt32							mRenderProcPreviousReadSize;
-				UInt32							mRenderProcPreviousFrameCount;
-				UInt32							mRenderProcFrameIndex;
-
-		static	TIArray<CAudioPlayerInternals>	mActiveInternals;
+		static	TIArray<CAudioPlayerInternals>								mActiveInternals;
 };
 
 TIArray<CAudioPlayerInternals>	CAudioPlayerInternals::mActiveInternals;
@@ -440,10 +423,11 @@ TIArray<CAudioPlayerInternals>	CAudioPlayerInternals::mActiveInternals;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayer::CAudioPlayer(const CString& identifier, const Procs& procs) : CAudioDestination()
+CAudioPlayer::CAudioPlayer(const CString& identifier, CNotificationCenter& notificationCenter, const Procs& procs) :
+		CAudioDestination()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioPlayerInternals(identifier, procs);
+	mInternals = new CAudioPlayerInternals(identifier, notificationCenter, procs);
 	CAudioPlayerInternals::mActiveInternals += mInternals;
 }
 
@@ -462,10 +446,16 @@ CAudioPlayer::~CAudioPlayer()
 		// Remove
 		CAudioEngine::mShared.removeAudioPlayer(mInternals->mAudioEngineIndex.getValue());
 
-	// Stop Audio Player Reader Thread
+	// Stop threads
 	if (mInternals->mAudioPlayerReaderThread.hasInstance())
 		// Shutdown
 		mInternals->mAudioPlayerReaderThread->shutdown();
+	if (mInternals->mAudioPlayerPlaybackPositionUpdatedNotificationThread.hasInstance())
+		// Shutdown
+		mInternals->mAudioPlayerPlaybackPositionUpdatedNotificationThread->shutdown();
+	if (mInternals->mAudioPlayerEndOfDataNotificationThread.hasInstance())
+		// Shutdown
+		mInternals->mAudioPlayerEndOfDataNotificationThread->shutdown();
 
 	// Cleanup
 	CAudioPlayerInternals::mActiveInternals -= *mInternals;
@@ -481,7 +471,6 @@ TArray<SAudioProcessingSetup> CAudioPlayer::getInputSetups() const
 	static	SAudioProcessingSetup*	sAudioProcessingSetup = nil;
 	if (sAudioProcessingSetup == nil) {
 		// Compose SAudioProcessingSetup
-
 		AudioStreamBasicDescription	asbd = CAudioEngine::mShared.getInputFormat();
 		sAudioProcessingSetup =
 				new SAudioProcessingSetup(asbd.mBitsPerChannel, asbd.mSampleRate,
@@ -526,6 +515,12 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 					new CAudioPlayerReaderThread(*this, *mInternals->mQueue, *mInternals->mBytesPerFrame,
 							CAudioEngine::mShared.getMaxOutputFrames(), CAudioPlayerInternals::readerThreadError,
 							mInternals));
+	mInternals->mAudioPlayerPlaybackPositionUpdatedNotificationThread =
+			OI<CAudioPlayerPlaybackPositionUpdatedNotificationThread>(
+					new CAudioPlayerPlaybackPositionUpdatedNotificationThread(mInternals->mNotificationCenter, *this));
+	mInternals->mAudioPlayerEndOfDataNotificationThread =
+			OI<CAudioPlayerEndOfDataNotificationThread>(
+					new CAudioPlayerEndOfDataNotificationThread(mInternals->mNotificationCenter, *this));
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);

@@ -39,7 +39,6 @@ class CNotificationCenter {
 	// Methods
 	public:
 						// Lifcycle methods
-						CNotificationCenter();
 		virtual			~CNotificationCenter();
 
 						// Instance methods
@@ -49,15 +48,55 @@ class CNotificationCenter {
 				void	unregisterObserver(const CString& notificationName, const void* observerRef);
 				void	unregisterObserver(const void* observerRef);
 
-				void	send(const CString& notificationName, const void* senderRef = nil,
-								const CDictionary& info = CDictionary::mEmpty) const;
-//				void	postOnMainThread(const CString& notificationName, const void* senderRef = nil,
-//								const CDictionary& info = CDictionary::mEmpty) const;
+		virtual	void	queue(const CString& notificationName, const void* senderRef = nil,
+								const CDictionary& info = CDictionary::mEmpty) = 0;
+
+	protected:
+						// Lifcycle methods
+						CNotificationCenter();
+
+						// Instance methods
+				void	send(const CString& notificationName, const void* senderRef, const CDictionary& info) const;
 
 	// Properties
 	private:
-				CNotificationCenterInternals*	mInternals;
+		CNotificationCenterInternals*	mInternals;
+};
 
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CImmediateNotificationCenter
+
+class CImmediateNotificationCenter : public CNotificationCenter {
+	// Methods
 	public:
-		static	CNotificationCenter				mStandard;
+				// Lifecycle methods
+				CImmediateNotificationCenter() {}
+
+				// CNotificationCenter methods
+		void	queue(const CString& notificationName, const void* senderRef = nil,
+						const CDictionary& info = CDictionary::mEmpty)
+					{ send(notificationName, senderRef, info); }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CDeferredNotificationCenter
+
+class CDeferredNotificationCenterInternals;
+class CDeferredNotificationCenter : public CNotificationCenter {
+	// Methods
+	public:
+				// Lifecycle methods
+				CDeferredNotificationCenter();
+				~CDeferredNotificationCenter();
+
+				// CNotificationCenter methods
+		void	queue(const CString& notificationName, const void* senderRef = nil,
+						const CDictionary& info = CDictionary::mEmpty);
+
+				// Instance methods
+		void	flush();
+
+	// Properties
+	private:
+		CDeferredNotificationCenterInternals*	mInternals;
 };

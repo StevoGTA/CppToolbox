@@ -221,7 +221,7 @@ class CWorkItemQueueInternals {
 													// Create new active thread
 													UInt32	threadNumber = mActiveWorkItemThreadInfos.getCount() + 1;
 													CString	threadName =
-																	CString(OSSTR("CWorkItemQueue Thread #")) +
+																	CString(OSSTR("CWorkItemQueue #")) +
 																			CString(threadNumber);
 													mActiveWorkItemThreadInfos +=
 															new SWorkItemThreadInfo(*workItemInfo, threadProc,

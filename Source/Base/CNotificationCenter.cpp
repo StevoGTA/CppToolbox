@@ -4,6 +4,8 @@
 
 #include "CNotificationCenter.h"
 
+#include "TLockingArray.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SNotificationObserverFullInfo
 
@@ -108,8 +110,6 @@ class CNotificationCenterInternals {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CNotificationCenter
 
-CNotificationCenter	CNotificationCenter::mStandard;
-
 // MARK: Lifcycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -189,9 +189,76 @@ void CNotificationCenter::send(const CString& notificationName, const void* send
 	}
 }
 
-////----------------------------------------------------------------------------------------------------------------------
-//void CNotificationCenter::postOnMainThread(const CString& notificationName, const void* senderRef,
-//		const CDictionary& info) const
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//}
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDeferredNotificationCenterInternals
+
+class CDeferredNotificationCenterInternals {
+	public:
+		struct Info {
+			Info(const CString& notificationName, const void* senderRef, const CDictionary& info) :
+				mNotificationName(notificationName), mSenderRef(senderRef), mInfo(info)
+				{}
+			Info(const Info& other) :
+				mNotificationName(other.mNotificationName), mSenderRef(other.mSenderRef), mInfo(other.mInfo)
+				{}
+
+					CString		mNotificationName;
+			const	void*		mSenderRef;
+					CDictionary	mInfo;
+		};
+
+		CDeferredNotificationCenterInternals() {}
+
+		TNLockingArray<Info>	mInfos;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDeferredNotificationCenter
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CDeferredNotificationCenter::CDeferredNotificationCenter()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new CDeferredNotificationCenterInternals();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDeferredNotificationCenter::~CDeferredNotificationCenter()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Make sure to flush
+	flush();
+
+	// Cleanup
+	Delete(mInternals);
+}
+
+// MARK: CNotificationCenter methods
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDeferredNotificationCenter::queue(const CString& notificationName, const void* senderRef, const CDictionary& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Add
+	mInternals->mInfos += CDeferredNotificationCenterInternals::Info(notificationName, senderRef, info);
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDeferredNotificationCenter::flush()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Send all
+	while (mInternals->mInfos.getCount() > 0) {
+		// Pop first
+		CDeferredNotificationCenterInternals::Info	info = mInternals->mInfos.popFirst();
+
+		// Send
+		send(info.mNotificationName, info.mSenderRef, info.mInfo);
+	}
+}

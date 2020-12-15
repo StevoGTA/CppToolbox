@@ -5,8 +5,9 @@
 #pragma once
 
 #include "CColor.h"
+#include "CNotificationCenter.h"
 #include "CPreferences.h"
-#include "CString.h"
+//#include "CString.h"
 #include "CUUID.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -97,8 +98,9 @@ class CColorRegistry {
 	// Methods
 	public:
 									// Lifecycle methods
-									CColorRegistry();
-									CColorRegistry(const CPreferences::Pref& pref);
+									CColorRegistry(CNotificationCenter& notificationCenter);
+									CColorRegistry(CNotificationCenter& notificationCenter,
+											const CPreferences::Pref& pref);
 									~CColorRegistry();
 
 									// Instance methods
