@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioPlayerReaderThread
 
-//class CAudioPlayer;
 class CAudioPlayerReaderThreadInternals;
 class CAudioPlayerReaderThread : public CThread {
 	// Procs

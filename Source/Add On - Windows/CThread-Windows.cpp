@@ -83,3 +83,10 @@ CThread::Ref CThread::getCurrentRef()
 {
 	return GetCurrentThread();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+void CThread::sleepFor(UniversalTimeInterval universalTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	Sleep((DWORD) (universalTimeInterval * 1000.0));
+}

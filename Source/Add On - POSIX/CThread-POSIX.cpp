@@ -17,8 +17,9 @@ class CThreadInternals {
 	public:
 						CThreadInternals(CThread& thread, CThread::ThreadProc threadProc, void* userData,
 								const CString& name) :
-							mIsRunning(true), mThread(thread), mThreadProc(threadProc),
-									mThreadProcUserData(userData), mThreadName(name), mPThread(nil)
+							mIsRunning(true), mThreadProc(threadProc), mThreadProcUserData(userData), mThreadName(name),
+									mThread(thread),
+									mPThread(nil)
 							{}
 
 		static	void*	threadProc(void* userData)

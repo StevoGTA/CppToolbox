@@ -85,9 +85,9 @@ class CAudioPlayer : public CAudioDestination {
 
 	// Properties
 	private:
-		static	const	UniversalTimeInterval		kMinBufferDuration;
-		static	const	UniversalTimeInterval		kMaxBufferDuration;
-		static	const	UniversalTimeInterval		kPreviewDuration;
+		static	const	UniversalTimeInterval	kMinBufferDuration;
+		static	const	UniversalTimeInterval	kMaxBufferDuration;
+		static	const	UniversalTimeInterval	kPreviewDuration;
 
-						CAudioPlayerInternals*		mInternals;
+						CAudioPlayerInternals*	mInternals;
 };

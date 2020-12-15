@@ -13,4 +13,5 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Global methods
 
+SError SErrorFromHRESULT(HRESULT result);
 SError SErrorFromWindowsError(DWORD error);
