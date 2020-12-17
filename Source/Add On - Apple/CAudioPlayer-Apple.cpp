@@ -246,9 +246,9 @@ void CAudioEngine::removeAudioPlayer(UInt32 index)
 
 class CAudioPlayerInternals {
 	public:
-							CAudioPlayerInternals(const CString& identifier, CNotificationCenter& notificationCenter,
+							CAudioPlayerInternals(CAudioPlayer& audioPlayer, const CString& identifier,
 									const CAudioPlayer::Procs& procs) :
-								mIdentifier(identifier), mNotificationCenter(notificationCenter), mProcs(procs),
+								mAudioPlayer(audioPlayer), mIdentifier(identifier), mProcs(procs),
 										mIsPlaying(false), mStartTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
 										mRenderProcShouldStopSendingFramesAtEndOfData(false),
@@ -262,7 +262,7 @@ class CAudioPlayerInternals {
 									CAudioPlayerInternals&	internals = *((CAudioPlayerInternals*) userData);
 
 									// Call proc
-									internals.mProcs.error(error);
+									internals.mProcs.error(internals.mAudioPlayer, error);
 								}
 
 		static	OSStatus	renderProc(void* inRefCon, AudioUnitRenderActionFlags* inActionFlags,
@@ -286,10 +286,11 @@ class CAudioPlayerInternals {
 										internals.mRenderProcPreviousFrameCount = 0;
 
 										// Notify playback position updated
-										internals.mAudioPlayerPlaybackPositionUpdatedNotificationThread->
-												notePlaybackPositionUpdated(internals.mStartTimeInterval +
-														(Float32) internals.mRenderProcFrameIndex /
-																*internals.mSampleRate);
+										UniversalTime	position =
+																internals.mStartTimeInterval +
+																		(Float32) internals.mRenderProcFrameIndex /
+																				*internals.mSampleRate;
+										internals.mProcs.positionUpdated(internals.mAudioPlayer, position);
 
 										// Notify queue read complete
 										internals.mAudioPlayerReaderThread->noteQueueReadComplete();
@@ -351,7 +352,7 @@ class CAudioPlayerInternals {
 													internals.mRenderProcIsSendingFrames = false;
 
 													// Notify end of data
-													internals.mAudioPlayerEndOfDataNotificationThread->noteEndOfData();
+													internals.mProcs.endOfData(internals.mAudioPlayer);
 												} else if ((internals.mRenderProcFrameIndex > 0) &&
 														(internals.mRenderProcPreviousFrameCount > 0)) {
 													// We ran out of data...  we will glitch
@@ -387,34 +388,28 @@ class CAudioPlayerInternals {
 									return noErr;
 								}
 
-				CString														mIdentifier;
-				CNotificationCenter&										mNotificationCenter;
-				CAudioPlayer::Procs											mProcs;
+		CAudioPlayer&					mAudioPlayer;
+		CString							mIdentifier;
+		CAudioPlayer::Procs				mProcs;
 
-				OI<CAudioPlayerReaderThread>								mAudioPlayerReaderThread;
-				OI<CAudioPlayerPlaybackPositionUpdatedNotificationThread>	mAudioPlayerPlaybackPositionUpdatedNotificationThread;
-				OI<CAudioPlayerEndOfDataNotificationThread>					mAudioPlayerEndOfDataNotificationThread;
-				OI<CSRSWBIPSegmentedQueue>									mQueue;
-				OV<UInt32>													mAudioEngineIndex;
-				OV<Float32>													mSampleRate;
-				OV<UInt32>													mBytesPerFrame;
+		OI<CAudioPlayerReaderThread>	mAudioPlayerReaderThread;
+		OI<CSRSWBIPSegmentedQueue>		mQueue;
+		OV<UInt32>						mAudioEngineIndex;
+		OV<Float32>						mSampleRate;
+		OV<UInt32>						mBytesPerFrame;
 
-				bool														mIsPlaying;
-				UniversalTimeInterval										mStartTimeInterval;
-				OV<UniversalTimeInterval>									mDurationTimeInterval;
-				Float32														mGain;
+		bool							mIsPlaying;
+		UniversalTimeInterval			mStartTimeInterval;
+		OV<UniversalTimeInterval>		mDurationTimeInterval;
+		Float32							mGain;
 
-				bool														mRenderProcShouldSendFrames;
-				bool														mRenderProcShouldStopSendingFramesAtEndOfData;
-				bool														mRenderProcIsSendingFrames;
-				UInt32														mRenderProcPreviousReadSize;
-				UInt32														mRenderProcPreviousFrameCount;
-				UInt32														mRenderProcFrameIndex;
-
-		static	TIArray<CAudioPlayerInternals>								mActiveInternals;
+		bool							mRenderProcShouldSendFrames;
+		bool							mRenderProcShouldStopSendingFramesAtEndOfData;
+		bool							mRenderProcIsSendingFrames;
+		UInt32							mRenderProcPreviousReadSize;
+		UInt32							mRenderProcPreviousFrameCount;
+		UInt32							mRenderProcFrameIndex;
 };
-
-TIArray<CAudioPlayerInternals>	CAudioPlayerInternals::mActiveInternals;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -423,12 +418,10 @@ TIArray<CAudioPlayerInternals>	CAudioPlayerInternals::mActiveInternals;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayer::CAudioPlayer(const CString& identifier, CNotificationCenter& notificationCenter, const Procs& procs) :
-		CAudioDestination()
+CAudioPlayer::CAudioPlayer(const CString& identifier, const Procs& procs) : CAudioDestination()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioPlayerInternals(identifier, notificationCenter, procs);
-	CAudioPlayerInternals::mActiveInternals += mInternals;
+	mInternals = new CAudioPlayerInternals(*this, identifier, procs);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -450,15 +443,9 @@ CAudioPlayer::~CAudioPlayer()
 	if (mInternals->mAudioPlayerReaderThread.hasInstance())
 		// Shutdown
 		mInternals->mAudioPlayerReaderThread->shutdown();
-	if (mInternals->mAudioPlayerPlaybackPositionUpdatedNotificationThread.hasInstance())
-		// Shutdown
-		mInternals->mAudioPlayerPlaybackPositionUpdatedNotificationThread->shutdown();
-	if (mInternals->mAudioPlayerEndOfDataNotificationThread.hasInstance())
-		// Shutdown
-		mInternals->mAudioPlayerEndOfDataNotificationThread->shutdown();
 
 	// Cleanup
-	CAudioPlayerInternals::mActiveInternals -= *mInternals;
+	Delete(mInternals);
 }
 
 // MARK: CAudioProcessor methods
@@ -515,12 +502,6 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 					new CAudioPlayerReaderThread(*this, *mInternals->mQueue, *mInternals->mBytesPerFrame,
 							CAudioEngine::mShared.getMaxOutputFrames(), CAudioPlayerInternals::readerThreadError,
 							mInternals));
-	mInternals->mAudioPlayerPlaybackPositionUpdatedNotificationThread =
-			OI<CAudioPlayerPlaybackPositionUpdatedNotificationThread>(
-					new CAudioPlayerPlaybackPositionUpdatedNotificationThread(mInternals->mNotificationCenter, *this));
-	mInternals->mAudioPlayerEndOfDataNotificationThread =
-			OI<CAudioPlayerEndOfDataNotificationThread>(
-					new CAudioPlayerEndOfDataNotificationThread(mInternals->mNotificationCenter, *this));
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);

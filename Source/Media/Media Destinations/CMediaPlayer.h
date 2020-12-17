@@ -15,7 +15,7 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer> {
 	// Methods
 	public:
 								// Lifecycle methods
-								CMediaPlayer(CNotificationCenter& notificationCenter);
+								CMediaPlayer(CSRSWMessageQueue& messageQueue);
 								~CMediaPlayer();
 
 								// CMediaDestination methods

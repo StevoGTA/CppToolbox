@@ -7,6 +7,13 @@
 #include "TBuffer.h"
 #include "TOptional.h"
 
+/*
+	Terminology:
+		SR - Single Reader
+		SW - Single Writer
+		BIP - Bip Buffer
+*/
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSRSWBIPQueue
 
@@ -189,3 +196,64 @@ class CSRSWBIPSegmentedQueue {
 	private:
 		CSRSWBIPSegmentedQueueInternals*	mInternals;
  };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSRSWMessageQueue
+
+// This class is primarily in place to facilite sending messages from the realtime audio player thread up the stack
+//	to classes that need to make decisions or show UI.  The only current implementation is in Scene App where it
+//	runs its own loop tied to the display refresh.  During this loop, it is free to call flush() to keep things running.
+//	In a UI update scenario, we do not have access to the UI thread event loop so will need to introduce another
+//	mechanism to flush the message queue.  The current thinking is to introduce a thread that will be triggered on
+//	submit and will then, on its own thread, allocate whatever is needed for that platform to schedule something to be
+//	run on the next iteration of the UI loop.
+//		On macOS, this can be some kind of dispatch to the main queue.
+//		On Windows, this can be connected to the CoreDispatcher of each CoreWindow.
+
+class CSRSWMessageQueue : public CSRSWBIPQueue {
+	// Structs
+	public:
+		struct Message {
+			// Methods
+			Message(OSType type, UInt32 size) : mType(type), mSize(size) {}
+
+			// Properties
+			OSType	mType;
+			UInt32	mSize;
+		};
+
+		struct ProcMessage : public Message {
+			// Procs
+			typedef	void	(*Proc)(const ProcMessage& message, void* userData);
+
+					// Methods
+					ProcMessage(Proc proc, void* userData) :
+						Message(mType, sizeof(ProcMessage)), mProc(proc), mUserData(userData)
+						{}
+					ProcMessage(UInt32 size, Proc proc, void* userData) :
+						Message(mType, size), mProc(proc), mUserData(userData)
+						{}
+
+			void	perform()
+						{ mProc(*this, mUserData); }
+
+			// Properties
+			static	OSType	mType;
+
+					Proc	mProc;
+					void*	mUserData;
+		};
+
+	// Methods
+	public:
+						// Lifecycle methods
+						CSRSWMessageQueue(UInt32 size);
+
+						// Instance methods
+				void	flush();
+
+		virtual	void	submit(const Message& message);
+
+						// Subclass methods
+		virtual	void	handle(const Message& message);
+};
