@@ -340,22 +340,25 @@ class CAudioPlayerInternals {
 
 											// Check situation
 											if (requiredByteCount > 0) {
-												// Still need to add more frames
+												// Fill the rest with silence
 												for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
 													// Copy
 													::bzero((UInt8*) ioData->mBuffers[i].mData + byteOffset,
 															requiredByteCount);
 
-												// Check if at the end
-												if (internals.mAudioPlayerReaderThread->getDidReachEndOfData()) {
-													// End of data
-													internals.mRenderProcIsSendingFrames = false;
+												// Check if silence
+												if (internals.mRenderProcPreviousFrameCount == 0)
+													// Buffer is entirely silence
+													*inActionFlags = kAudioUnitRenderAction_OutputIsSilence;
 
-													// Notify end of data
-													internals.mProcs.endOfData(internals.mAudioPlayer);
-												} else if ((internals.mRenderProcFrameIndex > 0) &&
-														(internals.mRenderProcPreviousFrameCount > 0)) {
-													// We ran out of data...  we will glitch
+												// Check situation
+												if ((internals.mRenderProcFrameIndex == 0) &&
+														(internals.mRenderProcPreviousFrameCount == 0))
+													// Was recently started, but the reader thread doesn't yet have
+													//	frames queued.
+													internals.mRenderProcIsSendingFrames = true;
+												else if (!internals.mAudioPlayerReaderThread->getDidReachEndOfData()) {
+													// Have a discontinuity in the queued frames
 													CLogServices::logError(
 															CString(OSSTR("CAudioPlayer ")) + internals.mIdentifier +
 																	CString(OSSTR(" requires ")) +
@@ -365,12 +368,18 @@ class CAudioPlayerInternals {
 																			internals.mRenderProcPreviousFrameCount) +
 																	CString(OSSTR(" frames short, will glitch...")));
 
-													// Update
 													internals.mRenderProcIsSendingFrames = true;
-												} else
-													// Just getting started.  We are asked for frames before the reader
-													//	has them ready initially.  All good.
-													*inActionFlags = kAudioUnitRenderAction_OutputIsSilence;
+												} else if (internals.mRenderProcPreviousFrameCount > 0)
+													// At the end, but have queued framnes
+													internals.mRenderProcIsSendingFrames = true;
+												else {
+													// At the end, did not queue any frames
+													if (internals.mRenderProcIsSendingFrames)
+														// Just reached the end of data
+														internals.mProcs.endOfData(internals.mAudioPlayer);
+
+													internals.mRenderProcIsSendingFrames = false;
+												}
 											} else
 												// Update
 												internals.mRenderProcIsSendingFrames = true;
