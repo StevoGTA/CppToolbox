@@ -68,10 +68,12 @@ class CMediaPlayerInternals {
 								void* userData)
 							{
 								// Setup
-//								CMediaPlayerInternals&				internals = *((CMediaPlayerInternals*) userData);
+								CMediaPlayerInternals&				internals = *((CMediaPlayerInternals*) userData);
 //								AudioPlayerPositionUpdatedMessage&	positionUpdatedMessage =
 //																			(AudioPlayerPositionUpdatedMessage&)
 //																					message;
+								if (!mActiveInternals.contains(internals))
+									return;
 							}
 		static	void	audioPlayerEndOfData(const CAudioPlayer& audioPlayer, void* userData)
 							{
@@ -88,6 +90,8 @@ class CMediaPlayerInternals {
 								CMediaPlayerInternals&			internals = *((CMediaPlayerInternals*) userData);
 //								AudioPlayerEndOfDataMessage&	endOfDataMessage =
 //																		(AudioPlayerEndOfDataMessage&) message;
+								if (!mActiveInternals.contains(internals))
+									return;
 
 								// One more at end
 								if (++internals.mEndOfDataCount == internals.mMediaPlayer.getAudioTrackCount()) {
@@ -125,8 +129,10 @@ class CMediaPlayerInternals {
 		static	void	handleAudioPlayerError(const CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
-//								CMediaPlayerInternals&		internals = *((CMediaPlayerInternals*) userData);
+								CMediaPlayerInternals&		internals = *((CMediaPlayerInternals*) userData);
 //								AudioPlayerErrorMessage&	errorMessage = (AudioPlayerErrorMessage&) message;
+								if (!mActiveInternals.contains(internals))
+									return;
 							}
 
 		CMediaPlayer&							mMediaPlayer;
@@ -162,6 +168,10 @@ CMediaPlayer::CMediaPlayer(CSRSWMessageQueue& messageQueue)
 CMediaPlayer::~CMediaPlayer()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Reset
+	reset();
+
+	// Cleanup
 	CMediaPlayerInternals::mActiveInternals -= *mInternals;
 }
 

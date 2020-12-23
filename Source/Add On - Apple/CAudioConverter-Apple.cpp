@@ -4,7 +4,7 @@
 
 #include "CAudioProcessor.h"
 
-#include "CLogServices.h"
+#include "CLogServices-Apple.h"
 #include "SError-Apple.h"
 
 #include <AudioToolbox/AudioToolbox.h>
@@ -130,9 +130,7 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 
 	// Create Audio Converter
 	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
-	if (status != noErr)
-		// Huh?
-		CLogServices::logError(CString("CAudioConverter - error when creating AudioConverter: ") + CString(status));
+	LOG_OSSTATUS_IF_FAILED(status, OSSTR("AudioConverterNew"));
 
 	if (audioProcessingFormat.getSampleRate() != mInternals->mOutputAudioProcessingFormat->getSampleRate()) {
 		// Highest quality SRC
@@ -140,9 +138,7 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 		status =
 				::AudioConverterSetProperty(mInternals->mAudioConverterRef, kAudioConverterSampleRateConverterQuality,
 						sizeof(UInt32), &value);
-		if (status != noErr)
-			// Huh?
-			CLogServices::logError(CString("CAudioConverter - error when setting quality: ") + CString(status));
+		LOG_OSSTATUS_IF_FAILED(status, OSSTR("AudioConverterSetProperty"));
 	}
 
 	// Create Audio Buffer List
@@ -175,25 +171,31 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-// TODO: handle mediaPosition
-
 	// Store
 	mInternals->mSourceMediaPosition = mediaPosition;
 
 	// Setup
-	UInt32	packetCount = audioData.getAvailableFrameCount();
+	if ((mediaPosition.getMode() != SMediaPosition::kFromCurrent) && (mInternals->mSourceSourceProcessed != 0.0)) {
+		// Reset
+		OI<SError>	error = reset();
+		if (error.hasInstance())
+			// Error
+			return SAudioReadStatus(*error);
+	}
+
+	UInt32	frameCount = audioData.getAvailableFrameCount();
 	audioData.getAsWrite(*mInternals->mOutputAudioBufferList);
 
 	// Fill buffer
 	OSStatus	status =
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
-								CAudioConverterInternals::fillBufferData, mInternals, &packetCount,
+								CAudioConverterInternals::fillBufferData, mInternals, &frameCount,
 								mInternals->mOutputAudioBufferList, nil);
 	if (status != noErr) return SAudioReadStatus(*mInternals->mPerformError);
-	if (packetCount == 0) return SAudioReadStatus(SError::mEndOfData);
+	if (frameCount == 0) return SAudioReadStatus(SError::mEndOfData);
 
 	// Update
-	audioData.completeWrite(packetCount);
+	audioData.completeWrite(frameCount);
 
 	return SAudioReadStatus(mInternals->mSourceSourceProcessed);
 }

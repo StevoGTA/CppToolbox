@@ -251,7 +251,6 @@ class CAudioPlayerInternals {
 								mAudioPlayer(audioPlayer), mIdentifier(identifier), mProcs(procs),
 										mIsPlaying(false), mStartTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
-										mRenderProcShouldStopSendingFramesAtEndOfData(false),
 										mRenderProcIsSendingFrames(false), mRenderProcPreviousReadSize(0),
 										mRenderProcPreviousFrameCount(0), mRenderProcFrameIndex(0)
 								{}
@@ -413,7 +412,6 @@ class CAudioPlayerInternals {
 		Float32							mGain;
 
 		bool							mRenderProcShouldSendFrames;
-		bool							mRenderProcShouldStopSendingFramesAtEndOfData;
 		bool							mRenderProcIsSendingFrames;
 		UInt32							mRenderProcPreviousReadSize;
 		UInt32							mRenderProcPreviousFrameCount;
