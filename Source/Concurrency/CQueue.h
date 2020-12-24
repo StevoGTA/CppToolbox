@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CEquatable.h"
 #include "TBuffer.h"
 #include "TOptional.h"
 
@@ -18,7 +19,7 @@
 // MARK: CSRSWBIPQueue
 
 class CSRSWBIPQueueInternals;
-class CSRSWBIPQueue {
+class CSRSWBIPQueue : public CEquatable {
 	// Structs
 	public:
 		struct ReadBufferInfo {
@@ -53,12 +54,17 @@ class CSRSWBIPQueue {
 
 	// Methods
 	public:
+								// CEquatable methods
+				bool			operator==(const CEquatable& other) const
+									{ return this == &other; }
+
 								// Instance methods
 				void			reset();
 
 	protected:
 								// Lifecycle methods
 								CSRSWBIPQueue(UInt32 size);
+								CSRSWBIPQueue(const CSRSWBIPQueue& other);
 		virtual					~CSRSWBIPQueue();
 
 								// Instance methods
@@ -248,12 +254,35 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 	public:
 						// Lifecycle methods
 						CSRSWMessageQueue(UInt32 size);
+						CSRSWMessageQueue(const CSRSWMessageQueue& other);
 
 						// Instance methods
-				void	flush();
+				void	handleAll();
 
 		virtual	void	submit(const Message& message);
 
 						// Subclass methods
 		virtual	void	handle(const Message& message);
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSRSWMessageQueues
+
+class CSRSWMessageQueuesInternals;
+class CSRSWMessageQueues {
+	// Methods
+	public:
+				// Lifecycle methods
+				CSRSWMessageQueues();
+				~CSRSWMessageQueues();
+
+				// Instance methods
+		void	add(CSRSWMessageQueue& messageQueue);
+		void	remove(CSRSWMessageQueue& messageQueue);
+
+		void	handleAll();
+
+	// Properties
+	private:
+		CSRSWMessageQueuesInternals*	mInternals;
 };

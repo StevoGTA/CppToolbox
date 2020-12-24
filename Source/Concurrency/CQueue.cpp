@@ -13,7 +13,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSRSWBIPQueueInternals
 
-class CSRSWBIPQueueInternals {
+class CSRSWBIPQueueInternals : public TCopyOnWriteReferenceCountable<CSRSWBIPQueueInternals> {
 	public:
 		CSRSWBIPQueueInternals(UInt32 size) :
 			mBuffer((UInt8*) ::malloc(size)), mSize(size), mReadPtr(mBuffer), mWritePtr(mBuffer),
@@ -48,10 +48,17 @@ CSRSWBIPQueue::CSRSWBIPQueue(UInt32 size)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CSRSWBIPQueue::CSRSWBIPQueue(const CSRSWBIPQueue& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CSRSWBIPQueue::~CSRSWBIPQueue()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	Delete(mInternals);
+	mInternals->removeReference();
 }
 
 // MARK: Instance methods
@@ -312,10 +319,16 @@ CSRSWMessageQueue::CSRSWMessageQueue(UInt32 size) : CSRSWBIPQueue(size)
 {
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CSRSWMessageQueue::CSRSWMessageQueue(const CSRSWMessageQueue& other) : CSRSWBIPQueue(other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CSRSWMessageQueue::flush()
+void CSRSWMessageQueue::handleAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Process
@@ -358,4 +371,66 @@ void CSRSWMessageQueue::handle(const Message& message)
 	if (message.mType == ProcMessage::mType)
 		// Perform
 		((ProcMessage&) message).perform();
+}
+
+#include "CArray.h"
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSRSWMessageQueuesInternals
+
+class CSRSWMessageQueuesInternals {
+	public:
+		CSRSWMessageQueuesInternals() {}
+
+		TNArray<CSRSWMessageQueue>	mMessageQueues;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSRSWMessageQueues
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CSRSWMessageQueues::CSRSWMessageQueues()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new CSRSWMessageQueuesInternals();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CSRSWMessageQueues::~CSRSWMessageQueues()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	Delete(mInternals);
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+void CSRSWMessageQueues::add(CSRSWMessageQueue& messageQueue)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mMessageQueues.add(messageQueue);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CSRSWMessageQueues::remove(CSRSWMessageQueue& messageQueue)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mMessageQueues.remove(messageQueue);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CSRSWMessageQueues::handleAll()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all
+	for (TIteratorD<CSRSWMessageQueue> iterator = mInternals->mMessageQueues.getIterator(); iterator.hasValue();
+			iterator.advance()) {
+		// Handle all
+		CSRSWMessageQueue&	messageQueue = iterator.getValue();
+		messageQueue.handleAll();
+	}
 }

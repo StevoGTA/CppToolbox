@@ -48,8 +48,8 @@ class CMediaPlayerInternals {
 					SError			mError;
 		};
 
-						CMediaPlayerInternals(CMediaPlayer& mediaPlayer, CSRSWMessageQueue& messageQueue) :
-							mMediaPlayer(mediaPlayer), mMessageQueue(messageQueue),
+						CMediaPlayerInternals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues) :
+							mMediaPlayer(mediaPlayer), mMessageQueues(messageQueues),
 									mEndOfDataCount(0), mCurrentLoopCount(0)
 							{}
 
@@ -58,9 +58,12 @@ class CMediaPlayerInternals {
 							{
 								// Setup
 								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
+								CSRSWMessageQueue&		messageQueue =
+																*internals.mAudioPlayerMessageQueueMap[audioPlayer
+																		.getIdentifier()];
 
 								// Submit
-								internals.mMessageQueue.submit(
+								messageQueue.submit(
 										AudioPlayerPositionUpdatedMessage(handleAudioPlayerPositionUpdated, userData,
 												audioPlayer, position));
 							}
@@ -79,9 +82,12 @@ class CMediaPlayerInternals {
 							{
 								// Setup
 								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
+								CSRSWMessageQueue&		messageQueue =
+																*internals.mAudioPlayerMessageQueueMap[audioPlayer
+																		.getIdentifier()];
 
 								// Submit
-								internals.mMessageQueue.submit(
+								messageQueue.submit(
 										AudioPlayerEndOfDataMessage(handleAudioPlayerEndOfData, userData, audioPlayer));
 							}
 		static	void	handleAudioPlayerEndOfData(const CSRSWMessageQueue::ProcMessage& message, void* userData)
@@ -121,9 +127,12 @@ class CMediaPlayerInternals {
 							{
 								// Setup
 								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
+								CSRSWMessageQueue&		messageQueue =
+																*internals.mAudioPlayerMessageQueueMap[audioPlayer
+																		.getIdentifier()];
 
 								// Submit
-								internals.mMessageQueue.submit(
+								messageQueue.submit(
 										AudioPlayerErrorMessage(handleAudioPlayerError, userData, audioPlayer, error));
 							}
 		static	void	handleAudioPlayerError(const CSRSWMessageQueue::ProcMessage& message, void* userData)
@@ -135,12 +144,14 @@ class CMediaPlayerInternals {
 									return;
 							}
 
-		CMediaPlayer&							mMediaPlayer;
-		CSRSWMessageQueue&						mMessageQueue;
+				CMediaPlayer&					mMediaPlayer;
+				CSRSWMessageQueues&				mMessageQueues;
 
-		UInt32									mEndOfDataCount;
-		OV<UInt32>								mLoopCount;
-		UInt32									mCurrentLoopCount;
+				TDictionary<CSRSWMessageQueue>	mAudioPlayerMessageQueueMap;
+
+				UInt32							mEndOfDataCount;
+				OV<UInt32>						mLoopCount;
+				UInt32							mCurrentLoopCount;
 
 		static	TIArray<CMediaPlayerInternals>	mActiveInternals;
 };
@@ -154,11 +165,11 @@ TIArray<CMediaPlayerInternals>	CMediaPlayerInternals::mActiveInternals;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaPlayer::CMediaPlayer(CSRSWMessageQueue& messageQueue)
+CMediaPlayer::CMediaPlayer(CSRSWMessageQueues& messageQueues)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CMediaPlayerInternals(*this, messageQueue);
+	mInternals = new CMediaPlayerInternals(*this, messageQueues);
 
 	// Add to array
 	CMediaPlayerInternals::mActiveInternals += mInternals;
@@ -172,6 +183,11 @@ CMediaPlayer::~CMediaPlayer()
 	reset();
 
 	// Cleanup
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+		// Remove message queue
+		mInternals->mMessageQueues.remove(
+				*mInternals->mAudioPlayerMessageQueueMap[getAudioProcessor(i)->getIdentifier()]);
+
 	CMediaPlayerInternals::mActiveInternals -= *mInternals;
 }
 
@@ -199,6 +215,11 @@ I<CAudioPlayer> CMediaPlayer::newAudioPlayer(const CString& identifier)
 					CAudioPlayer::Procs(CMediaPlayerInternals::audioPlayerPositionUpdated,
 							CMediaPlayerInternals::audioPlayerEndOfData, CMediaPlayerInternals::audioPlayerError,
 							mInternals)));
+
+	// Setup message queue
+	CSRSWMessageQueue	messageQueue(10 * 1024);
+	mInternals->mAudioPlayerMessageQueueMap.set(identifier, messageQueue);
+	mInternals->mMessageQueues.add(messageQueue);
 
 	return audioPlayer;
 }
