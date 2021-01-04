@@ -64,26 +64,27 @@ class CAudioPlayerReaderThreadInternals {
 
 		bool	tryRead()
 					{
-						// Setup
-// Not sure yet the best way to approach this...
-//	A) Just use maxOutputFrameCount
-//	B) Use some multiple of maxOutputFrameCount (like 4)
-//	C) Use a constant like 4096
-// -We want the first read to go fast enough that we have the initial audio data ASAP, so not too big
-// -But we also want to be efficient with system resources, so not too small
-						UInt32	framesToRead = std::min<UInt32>(mMaxOutputFrames * 4, mFramesToRead);
-						UInt32	bytesToRead = framesToRead * mBytesPerFrame;
-
 						// Request write
-						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRead);
-						if (!writeBufferInfo.hasBuffer() || (writeBufferInfo.mSize < mBytesPerFrame))
+						UInt32									bytesToRequest =
+																		std::min<UInt32>(
+																						mMaxOutputFrames * 2,
+																						mFramesToRead) *
+																				mBytesPerFrame;
+						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRequest);
+						if (writeBufferInfo.mSize < mBytesPerFrame)
 							// No space
 							return false;
 
 						// Perform read
+						// If the media position is "from start", we queue 2 * max output frames to get us started.
+						//	Subsequently (i.e. if media position is "from current"), we try to fill the buffer as much
+						//	as possible.
+						UInt32				bytesToRead =
+													(mMediaPosition.getMode() == SMediaPosition::kFromStart) ?
+															bytesToRequest : writeBufferInfo.mSize;
 						CAudioData			audioData(writeBufferInfo.mBuffer, mQueue.getSegmentCount(),
 													writeBufferInfo.mSegmentSize / mBytesPerFrame,
-													writeBufferInfo.mSize / mBytesPerFrame, mBytesPerFrame);
+													bytesToRead / mBytesPerFrame, mBytesPerFrame);
 						SAudioReadStatus	audioReadStatus = mAudioPlayer.perform(mMediaPosition, audioData);
 						if (audioReadStatus.isSuccess()) {
 							// Success

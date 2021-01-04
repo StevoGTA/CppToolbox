@@ -247,35 +247,36 @@ class CAudioPlayerImplementation :
 									}
 
 									// Commit frames
-//CLogServices::logMessage(mIdentifier + CString(OSSTR(": Filling playback buffer with ")) + CString(mOnFillBufferPreviousFrameCount) + CString(OSSTR(" frames.")));
 									result = mAudioRenderClient->ReleaseBuffer(mOnFillBufferPreviousFrameCount, 0);
 									processHRESULT(result, OSSTR("ReleaseBuffer()"));
 
 									// Check situation
 									if (requiredByteCount > 0) {
 										// Check situation
-										if ((mOnFillBufferFrameIndex == 0) && (mOnFillBufferPreviousFrameCount == 0))
+										if (mOnFillBufferPreviousFrameCount > 0)
+											// Added frames
+											mOnFillBufferIsSendingFrames = true;
+										else if (mOnFillBufferFrameIndex == 0)
 											// Was recently started, but the reader thread doesn't yet have frames
 											//	queued.
 											mOnFillBufferIsSendingFrames = true;
-										else if (!mAudioPlayerReaderThread->getDidReachEndOfData() &&
-												(mOnFillBufferPreviousFrameCount == 0)) {
+										else if (paddingFrames > 0)
+											// Did not add frames, but still have frames queued
+											mOnFillBufferIsSendingFrames = true;
+										else if (mAudioPlayerReaderThread->getDidReachEndOfData()) {
+											// At the end
+											if (mOnFillBufferIsSendingFrames)
+												// Just reached the end of data
+												mProcs.endOfData(mAudioPlayer);
+
+											mOnFillBufferIsSendingFrames = false;
+										} else {
 											// Have a discontinuity in the queued frames
 											CLogServices::logError(
 													CString(OSSTR("CAudioPlayer ")) + mIdentifier +
 															CString(OSSTR(" requires frames but queue is empty, will glitch...")));
 
 											mOnFillBufferIsSendingFrames = true;
-										} else if (mOnFillBufferPreviousFrameCount > 0)
-											// At the end, but have queued frames
-											mOnFillBufferIsSendingFrames = true;
-										else {
-											// At the end, did not queue any frames
-											if (mOnFillBufferIsSendingFrames)
-												// Just reached the end of data
-												mProcs.endOfData(mAudioPlayer);
-
-											mOnFillBufferIsSendingFrames = false;
 										}
 									} else
 										// Update
