@@ -251,6 +251,14 @@ void CLogServices::logWarning(const CString& string)
 	if (sPrimaryLogFile.hasInstance())
 		// Pass to primary log file
 		(*sPrimaryLogFile).logWarning(string);
+#if defined(DEBUG)
+	// Pass to output/console
+	dateString = SGregorianDate().getString();
+	sLogToConsoleOutput(CString::mEmpty);
+	sLogToConsoleOutput(*dateString + CString(OSSTR(": *** WARNING ***")));
+	sLogToConsoleOutput(*dateString + CString(OSSTR(": ")) + string);
+	sLogToConsoleOutput(CString::mEmpty);
+#else
 	else {
 		// Pass to output/console
 		dateString = SGregorianDate().getString();
@@ -259,6 +267,7 @@ void CLogServices::logWarning(const CString& string)
 		sLogToConsoleOutput(*dateString + CString(OSSTR(": ")) + string);
 		sLogToConsoleOutput(CString::mEmpty);
 	}
+#endif
 
 	// Check if have procs
 	if (sLogWarningProcInfos != nil)
@@ -297,6 +306,14 @@ void CLogServices::logError(const CString& string)
 	if (sPrimaryLogFile.hasInstance())
 		// Pass to primary log file
 		(*sPrimaryLogFile).logError(string);
+#if defined(DEBUG)
+	// Pass to output/console
+	dateString = SGregorianDate().getString();
+	sLogToConsoleOutput(CString::mEmpty);
+	sLogToConsoleOutput(*dateString + CString(OSSTR(": *** ERROR ***")));
+	sLogToConsoleOutput(*dateString + CString(OSSTR(": ")) + string);
+	sLogToConsoleOutput(CString::mEmpty);
+#else
 	else {
 		// Pass to output/console
 		dateString = SGregorianDate().getString();
@@ -305,6 +322,7 @@ void CLogServices::logError(const CString& string)
 		sLogToConsoleOutput(*dateString + CString(OSSTR(": ")) + string);
 		sLogToConsoleOutput(CString::mEmpty);
 	}
+#endif
 
 	// Check if have procs
 	if (sLogErrorProcInfos != nil)

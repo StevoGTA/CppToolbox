@@ -114,15 +114,27 @@ template <typename T> class TArray : public CArray {
 				TArray<T>&		addFrom(const TArray<T>& array)
 									{
 										// Iterate all
-										for (ItemIndex i = 0; i < array.getCount(); i++)
+										ItemCount	count = array.getCount();
+										for (ItemIndex i = 0; i < count; i++)
 											// Add
-											CArray::add(new T(array[i]));
+											CArray::add(CArray::copy(array.getItemAt(i)));
 
 										return *this;
 									}
 
 				bool			contains(const T& item) const
-									{ return getIndexOf(item).hasValue(); }
+									{
+										// Iterate all
+										ItemCount	count = getCount();
+										for (ItemIndex i = 0; i < count; i++) {
+											// Check if same
+											if (item == getAt(i))
+												// Match
+												return true;
+										}
+
+										return false;
+									}
 
 				T&				getAt(ItemIndex index) const
 									{ return *((T*) getItemAt(index)); }
@@ -133,7 +145,8 @@ template <typename T> class TArray : public CArray {
 				OV<ItemIndex>	getIndexOf(const T& item) const
 									{
 										// Iterate all
-										for (ItemIndex i = 0; i < getCount(); i++) {
+										ItemCount	count = getCount();
+										for (ItemIndex i = 0; i < count; i++) {
 											// Check if same
 											if (item == getAt(i))
 												// Match
@@ -145,7 +158,8 @@ template <typename T> class TArray : public CArray {
 				OV<ItemIndex>	getIndexWhere(bool (proc)(const T& item, void* userData), void* userData = nil)
 									{
 										// Iterate all items
-										for (ItemIndex i = 0; i < getCount(); i++) {
+										ItemCount	count = getCount();
+										for (ItemIndex i = 0; i < count; i++) {
 											// Get item
 											const	T&	item = getAt(i);
 
@@ -174,7 +188,8 @@ template <typename T> class TArray : public CArray {
 				TArray<T>&		removeFrom(const TArray<T>& array)
 									{
 										// Iterate all
-										for (ItemIndex i = 0; i < array.getCount(); i++)
+										ItemCount	count = array.getCount();
+										for (ItemIndex i = 0; i < count; i++)
 											// Remove
 											remove(array[i]);
 
@@ -197,7 +212,8 @@ template <typename T> class TArray : public CArray {
 				OR<T>			getFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
 									{
 										// Iterate all items
-										for (ItemIndex i = 0; i < getCount(); i++) {
+										ItemCount	count = getCount();
+										for (ItemIndex i = 0; i < count; i++) {
 											// Get item
 											T&	item = getAt(i);
 
@@ -223,7 +239,8 @@ template <typename T> class TArray : public CArray {
 				OV<T>			popFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
 									{
 										// Iterate all items
-										for (ItemIndex i = 0; i < getCount(); i++) {
+										ItemCount	count = getCount();
+										for (ItemIndex i = 0; i < count; i++) {
 											// Get item
 											T&	item = getAt(i);
 
@@ -275,7 +292,8 @@ template <typename T> class TNArray : public TArray<T> {
 						TArray<T>((CArray::CopyProc) copy)
 						{
 							// Iterate all items
-							for (CArray::ItemIndex i = 0; i < array.getCount(); i++)
+							ItemCount	count = array.getCount();
+							for (CArray::ItemIndex i = 0; i < count; i++)
 								// Add mapped item
 								this->add(mappingProc(array.getItemAt(i)));
 						}
@@ -317,7 +335,8 @@ template <typename T> class TNumericArray : public CArray {
 															T (mappingProc)(ItemRef item)) :
 														CArray(0, (CArray::CopyProc) copy, dispose)
 														{
-															for (ItemIndex i = 0; i < array.getCount(); i++)
+															ItemCount	count = array.getCount();
+															for (ItemIndex i = 0; i < count; i++)
 																CArray::add(mappingProc(array.getItemAt(i)));
 														}
 													TNumericArray(const TNumericArray<T>& array) : CArray(array) {}
@@ -380,7 +399,19 @@ template <typename T> class TIArray : public CArray {
 									{ CArray::add(item); return *this; }
 
 				bool			contains(const T& item) const
-									{ return getIndexOf(item).hasValue(); }
+									{
+										// Iterate all
+										ItemCount	count = getCount();
+										for (ItemIndex i = 0; i < count; i++) {
+											// Check if same
+											T&	testItem = getAt(i);
+											if (&item == &testItem)
+												// Match
+												return true;
+										}
+
+										return false;
+									}
 
 				T&				getAt(ItemIndex index) const
 									{ return *((T*) getItemAt(index)); }
@@ -391,7 +422,8 @@ template <typename T> class TIArray : public CArray {
 				OV<ItemIndex>	getIndexOf(const T& item) const
 									{
 										// Iterate all
-										for (ItemIndex i = 0; i < getCount(); i++) {
+										ItemCount	count = getCount();
+										for (ItemIndex i = 0; i < count; i++) {
 											// Check if same
 											T&	testItem = getAt(i);
 											if (&item == &testItem)

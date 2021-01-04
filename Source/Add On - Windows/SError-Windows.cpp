@@ -13,6 +13,7 @@
 SError SErrorFromHRESULT(HRESULT result)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	return SError(CString(OSSTR("HRESULT")), result, CString(_com_error(result, nullptr).ErrorMessage()));
 }
 

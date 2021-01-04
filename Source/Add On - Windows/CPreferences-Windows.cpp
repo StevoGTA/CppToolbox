@@ -96,54 +96,69 @@ CString CPreferences::getString(const StringPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
-	String^	value =
-					safe_cast<String^>(ApplicationData::Current->LocalSettings->Values->Lookup(
-							ref new String(pref.mKeyString)));
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString));
 
-	return value ? CPlatform::stringFrom(value) : CString::mEmpty;
+	return (object != nullptr) ? CPlatform::stringFrom(safe_cast<String^>(object)) : pref.mDefaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 Float32 CPreferences::getFloat32(const Float32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return safe_cast<Float32>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
+	// Get value
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString));
+
+	return (object != nullptr) ? safe_cast<Float32>(object) : pref.mDefaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 Float64 CPreferences::getFloat64(const Float64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return safe_cast<Float64>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
+	// Get value
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString));
+
+	return (object != nullptr) ? safe_cast<Float64>(object) : pref.mDefaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return safe_cast<SInt32>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
+	// Get value
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString));
+
+	return (object != nullptr) ? safe_cast<SInt32>(object) : pref.mDefaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return safe_cast<UInt32>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
+	// Get value
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString));
+
+	return (object != nullptr) ? safe_cast<UInt32>(object) : pref.mDefaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return safe_cast<UInt64>(ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
+	// Get value
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString));
+
+	return (object != nullptr) ? safe_cast<UInt64>(object) : pref.mDefaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTimeIntervalPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return safe_cast<UniversalTimeInterval>(
-			ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString)));
+	// Get value
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.mKeyString));
+
+	return (object != nullptr) ? safe_cast<UniversalTimeInterval>(object) : pref.mDefaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

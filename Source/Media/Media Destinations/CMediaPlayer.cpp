@@ -7,7 +7,21 @@
 #include "CAudioPlayer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CMediaPlayerInternals
+// MARK: CMediaPlayerAudioPlayer
+
+class CMediaPlayerAudioPlayer : public CAudioPlayer {
+	public:
+		CMediaPlayerAudioPlayer(const CString& identifier, const CAudioPlayer::Procs& procs) :
+			CAudioPlayer(identifier, procs),
+					mMessageQueue(10 * 1024)
+			{}
+
+		CSRSWMessageQueue	mMessageQueue;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CMediaPlayerInternals
 
 class CMediaPlayerInternals {
 	public:
@@ -59,8 +73,7 @@ class CMediaPlayerInternals {
 								// Setup
 								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
 								CSRSWMessageQueue&		messageQueue =
-																*internals.mAudioPlayerMessageQueueMap[audioPlayer
-																		.getIdentifier()];
+																((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue;
 
 								// Submit
 								messageQueue.submit(
@@ -83,8 +96,7 @@ class CMediaPlayerInternals {
 								// Setup
 								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
 								CSRSWMessageQueue&		messageQueue =
-																*internals.mAudioPlayerMessageQueueMap[audioPlayer
-																		.getIdentifier()];
+																((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue;
 
 								// Submit
 								messageQueue.submit(
@@ -128,8 +140,7 @@ class CMediaPlayerInternals {
 								// Setup
 								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
 								CSRSWMessageQueue&		messageQueue =
-																*internals.mAudioPlayerMessageQueueMap[audioPlayer
-																		.getIdentifier()];
+																((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue;
 
 								// Submit
 								messageQueue.submit(
@@ -146,8 +157,6 @@ class CMediaPlayerInternals {
 
 				CMediaPlayer&					mMediaPlayer;
 				CSRSWMessageQueues&				mMessageQueues;
-
-				TDictionary<CSRSWMessageQueue>	mAudioPlayerMessageQueueMap;
 
 				UInt32							mEndOfDataCount;
 				OV<UInt32>						mLoopCount;
@@ -183,10 +192,11 @@ CMediaPlayer::~CMediaPlayer()
 	reset();
 
 	// Cleanup
-	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
 		// Remove message queue
-		mInternals->mMessageQueues.remove(
-				*mInternals->mAudioPlayerMessageQueueMap[getAudioProcessor(i)->getIdentifier()]);
+		CMediaPlayerAudioPlayer&	audioPlayer = (CMediaPlayerAudioPlayer&) *getAudioProcessor(i);
+		mInternals->mMessageQueues.remove(audioPlayer.mMessageQueue);
+	}
 
 	CMediaPlayerInternals::mActiveInternals -= *mInternals;
 }
@@ -210,18 +220,16 @@ I<CAudioPlayer> CMediaPlayer::newAudioPlayer(const CString& identifier)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create Audio Player
-	I<CAudioPlayer>	audioPlayer(
-			new CAudioPlayer(identifier,
+	I<CMediaPlayerAudioPlayer>	audioPlayer(
+			new CMediaPlayerAudioPlayer(identifier,
 					CAudioPlayer::Procs(CMediaPlayerInternals::audioPlayerPositionUpdated,
 							CMediaPlayerInternals::audioPlayerEndOfData, CMediaPlayerInternals::audioPlayerError,
 							mInternals)));
 
-	// Setup message queue
-	CSRSWMessageQueue	messageQueue(10 * 1024);
-	mInternals->mAudioPlayerMessageQueueMap.set(identifier, messageQueue);
-	mInternals->mMessageQueues.add(messageQueue);
+	// Add message queue
+	mInternals->mMessageQueues.add(audioPlayer->mMessageQueue);
 
-	return audioPlayer;
+	return *((I<CAudioPlayer>*) &audioPlayer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -58,9 +58,6 @@ class CSRSWBIPQueue : public CEquatable {
 				bool			operator==(const CEquatable& other) const
 									{ return this == &other; }
 
-								// Instance methods
-				void			reset();
-
 	protected:
 								// Lifecycle methods
 								CSRSWBIPQueue(UInt32 size);
@@ -71,8 +68,10 @@ class CSRSWBIPQueue : public CEquatable {
 				ReadBufferInfo	requestRead() const;
 		virtual	void			commitRead(UInt32 size);
 
-				WriteBufferInfo	requestWrite(UInt32 maxSize) const;
+				WriteBufferInfo	requestWrite(UInt32 requiredSize) const;
 		virtual	void			commitWrite(UInt32 size);
+
+				void			reset();
 
 	// Properties
 	private:
@@ -193,7 +192,7 @@ class CSRSWBIPSegmentedQueue {
 				ReadBufferInfo	requestRead() const;
 		virtual	void			commitRead(UInt32 size);
 
-				WriteBufferInfo	requestWrite(UInt32 maxSize) const;
+				WriteBufferInfo	requestWrite(UInt32 requiredSize) const;
 		virtual	void			commitWrite(UInt32 size);
 
 				void			reset();
@@ -214,7 +213,8 @@ class CSRSWBIPSegmentedQueue {
 //	submit and will then, on its own thread, allocate whatever is needed for that platform to schedule something to be
 //	run on the next iteration of the UI loop.
 //		On macOS, this can be some kind of dispatch to the main queue.
-//		On Windows, this can be connected to the CoreDispatcher of each CoreWindow.
+//		On Windows, this can be connected to the CoreDispatcher of each CoreWindow (where each window would have its own
+//			queue).
 
 class CSRSWMessageQueue : public CSRSWBIPQueue {
 	// Structs

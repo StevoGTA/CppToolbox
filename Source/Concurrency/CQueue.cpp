@@ -4,10 +4,34 @@
 
 #include "CQueue.h"
 
+#include "CArray.h"
+
 /*
 	Inspired by
 		https://www.codeproject.com/Articles/3479/The-Bip-Buffer-The-Circular-Buffer-with-a-Twist
 		https://ferrous-systems.com/blog/lock-free-ring-buffer/
+
+	Notes...
+		Basically we have read (R), write (W), and write watermark (WW) pointers.  The writer informs the minimum amount
+			to write, and the queue ensures that at least the requested amount is available contiguously or fails.  We
+			set up the following rules:
+				WW is always >= W
+				R is always <= WW
+				Always update WW, then update W
+		As the system moves through the various situations, with reads and writes happening concurrently, we end up with
+			the following states and meanings:
+		(1) R...W,WW	Can read R -> W and can read R -> WW
+		(2) R,W,WW		Empty
+		(3) W,WW...R	Illegal (R > WW)
+		(4) R...W...WW	Can read R -> W
+		(5) R,W...WW	Empty
+		(6) W...R...WW	Can read R -> WW
+		(7) W...R,WW	Empty
+		(8) W...WW...R	Illegal (R > WW)
+
+		In summary...
+			R <= W => Can read R -> W (possibly empty)
+			R > W => Can read R -> WW (possibly empty)
 */
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -17,7 +41,7 @@ class CSRSWBIPQueueInternals : public TCopyOnWriteReferenceCountable<CSRSWBIPQue
 	public:
 		CSRSWBIPQueueInternals(UInt32 size) :
 			mBuffer((UInt8*) ::malloc(size)), mSize(size), mReadPtr(mBuffer), mWritePtr(mBuffer),
-					mWriteWatermarkPtr(mBuffer + mSize)
+					mWriteWatermarkPtr(mBuffer)
 			{}
 		~CSRSWBIPQueueInternals()
 			{ ::free(mBuffer); }
@@ -71,20 +95,20 @@ CSRSWBIPQueue::ReadBufferInfo CSRSWBIPQueue::requestRead() const
 	UInt8*	writePtr = mInternals->mWritePtr;
 	UInt8*	writeWatermarkPtr = mInternals->mWriteWatermarkPtr;
 
-	// Check if time to go back to the beginning
-	if (mInternals->mReadPtr == writeWatermarkPtr)
+	// Check if time to go back to the beginning, (7) => (5)
+	if ((writePtr != writeWatermarkPtr) && (mInternals->mReadPtr == writeWatermarkPtr))
 		// Reached the end, wrap around
 		mInternals->mReadPtr = mInternals->mBuffer;
 
-	// Check stuffs
-	if (writePtr > mInternals->mReadPtr)
-		// Can read to write pointer
+	// Check situation
+	if (mInternals->mReadPtr < writePtr)
+		// Can read to write pointer, (1), (4)
 		return ReadBufferInfo(mInternals->mReadPtr, (UInt32) (writePtr - mInternals->mReadPtr));
-	else if (writePtr < mInternals->mReadPtr)
-		// Can read to write watermark pointer
+	else if (mInternals->mReadPtr > writePtr)
+		// Can read to write watermark pointer, (6)
 		return ReadBufferInfo(mInternals->mReadPtr, (UInt32) (writeWatermarkPtr - mInternals->mReadPtr));
 	else
-		// Queue is empty
+		// Queue is empty, (2), (5)
 		return ReadBufferInfo();
 }
 
@@ -97,35 +121,34 @@ void CSRSWBIPQueue::commitRead(UInt32 size)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSRSWBIPQueue::WriteBufferInfo CSRSWBIPQueue::requestWrite(UInt32 maxSize) const
+CSRSWBIPQueue::WriteBufferInfo CSRSWBIPQueue::requestWrite(UInt32 requiredSize) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Capture info locally
 	UInt8*	readPtr = mInternals->mReadPtr;
 
 	// Check situation
-	if (mInternals->mWritePtr >= readPtr) {
-		// Reset watermark
-		mInternals->mWriteWatermarkPtr = mInternals->mBuffer + mInternals->mSize;
-
-		// Can write up to end of buffer, or set watermark and write to beginning of buffer
-		if ((UInt32) (mInternals->mWriteWatermarkPtr - mInternals->mWritePtr) >= maxSize)
+	if (readPtr <= mInternals->mWritePtr) {
+		// Read is before write, (1), (2), (4), (5)
+		mInternals->mWriteWatermarkPtr = mInternals->mWritePtr;	// (4) or (5) => (1) or (2)
+		if ((UInt32) (mInternals->mBuffer + mInternals->mSize - mInternals->mWritePtr) >= requiredSize)
 			// Can write more from current position
-			return WriteBufferInfo(mInternals->mWritePtr, maxSize);
-		else if ((UInt32) (readPtr - mInternals->mBuffer) >= maxSize) {
-			// Must start at beginning of the buffer now
-			mInternals->mWriteWatermarkPtr = mInternals->mWritePtr;
+			return WriteBufferInfo(mInternals->mWritePtr,
+					(UInt32) (mInternals->mBuffer + mInternals->mSize - mInternals->mWritePtr));
+		else if ((UInt32) (readPtr - mInternals->mBuffer) > requiredSize) {
+			// Can write at the beginning of the buffer, (1) or (2) => (6) or (7)
+			//	(but not allowed to completely fill or would appear empty)
 			mInternals->mWritePtr = mInternals->mBuffer;
 
-			return WriteBufferInfo(mInternals->mWritePtr, maxSize);
+			return WriteBufferInfo(mInternals->mWritePtr, (UInt32) (readPtr - mInternals->mWritePtr - 1));
 		} else
 			// Not enough space
 			return WriteBufferInfo();
 	} else {
-		// Write pointer is before read pointer
-		if ((UInt32) (readPtr - mInternals->mWritePtr) >= maxSize)
-			// Can write more from current position
-			return WriteBufferInfo(mInternals->mWritePtr, maxSize);
+		// Read is after write, (6), (7)
+		if ((UInt32) (readPtr - mInternals->mWritePtr) > requiredSize)
+			// Can write more from current position (but not allowed to completely fill or would appear empty)
+			return WriteBufferInfo(mInternals->mWritePtr, (UInt32) (readPtr - mInternals->mWritePtr - 1));
 		else
 			// Not enough space
 			return WriteBufferInfo();
@@ -136,11 +159,19 @@ CSRSWBIPQueue::WriteBufferInfo CSRSWBIPQueue::requestWrite(UInt32 maxSize) const
 void CSRSWBIPQueue::commitWrite(UInt32 size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Update stuffs
-	mInternals->mWritePtr += size;
-	if (mInternals->mWritePtr == mInternals->mWriteWatermarkPtr)
-		// Back to beginning
-		mInternals->mWritePtr = mInternals->mBuffer;
+	// Capture info locally
+	UInt8*	readPtr = mInternals->mReadPtr;
+
+	// Update
+	if (readPtr <= mInternals->mWritePtr) {
+		// Read is before write, (1), (2)
+		UInt8*	ptr = mInternals->mWritePtr + size;
+		mInternals->mWriteWatermarkPtr = ptr;	// (1) or (2) => (4) or (5)
+		mInternals->mWritePtr = ptr;			// (4) or (5) => (1) or (2)
+	} else {
+		// Read is after write, (6), (7); size needs to be less than the space available or will appear empty)
+		mInternals->mWritePtr += size;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -163,7 +194,7 @@ class CSRSWBIPSegmentedQueueInternals {
 		CSRSWBIPSegmentedQueueInternals(UInt32 segmentSize, UInt32 segmentCount) :
 			mBuffer((UInt8*) ::malloc(segmentSize * segmentCount)), mSegmentSize(segmentSize),
 					mSegmentCount(segmentCount), mReadPtr(mBuffer), mWritePtr(mBuffer),
-					mWriteWatermarkPtr(mBuffer + mSegmentSize)
+					mWriteWatermarkPtr(mBuffer)
 			{}
 		~CSRSWBIPSegmentedQueueInternals()
 			{ ::free(mBuffer); }
@@ -218,22 +249,22 @@ CSRSWBIPSegmentedQueue::ReadBufferInfo CSRSWBIPSegmentedQueue::requestRead() con
 	UInt8*	writePtr = mInternals->mWritePtr;
 	UInt8*	writeWatermarkPtr = mInternals->mWriteWatermarkPtr;
 
-	// Check if time to go back to the beginning
-	if (mInternals->mReadPtr == writeWatermarkPtr)
+	// Check if time to go back to the beginning, (7) => (5)
+	if ((writePtr != writeWatermarkPtr) && (mInternals->mReadPtr == writeWatermarkPtr))
 		// Reached the end, wrap around
 		mInternals->mReadPtr = mInternals->mBuffer;
 
-	// Check stuffs
-	if (writePtr > mInternals->mReadPtr)
-		// Can read to write pointer
+	// Check situation
+	if (mInternals->mReadPtr < writePtr)
+		// Can read to write pointer, (1), (4)
 		return ReadBufferInfo(mInternals->mReadPtr, mInternals->mSegmentSize,
 				(UInt32) (writePtr - mInternals->mReadPtr));
-	else if (writePtr < mInternals->mReadPtr)
-		// Can read to write watermark pointer
+	else if (mInternals->mReadPtr > writePtr)
+		// Can read to write watermark pointer, (6)
 		return ReadBufferInfo(mInternals->mReadPtr, mInternals->mSegmentSize,
 				(UInt32) (writeWatermarkPtr - mInternals->mReadPtr));
 	else
-		// Queue is empty
+		// Queue is empty, (2), (5)
 		return ReadBufferInfo();
 }
 
@@ -246,35 +277,36 @@ void CSRSWBIPSegmentedQueue::commitRead(UInt32 size)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSRSWBIPSegmentedQueue::WriteBufferInfo CSRSWBIPSegmentedQueue::requestWrite(UInt32 maxSize) const
+CSRSWBIPSegmentedQueue::WriteBufferInfo CSRSWBIPSegmentedQueue::requestWrite(UInt32 requiredSize) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Capture info locally
 	UInt8*	readPtr = mInternals->mReadPtr;
 
 	// Check situation
-	if (mInternals->mWritePtr >= readPtr) {
-		// Reset watermark
-		mInternals->mWriteWatermarkPtr = mInternals->mBuffer + mInternals->mSegmentSize;
-
-		// Can write up to end of buffer, or set watermark and write to beginning of buffer
-		if ((UInt32) (mInternals->mWriteWatermarkPtr - mInternals->mWritePtr) >= maxSize)
+	if (readPtr <= mInternals->mWritePtr) {
+		// Read is before write, (1), (2), (4), (5)
+		mInternals->mWriteWatermarkPtr = mInternals->mWritePtr;	// (4) or (5) => (1) or (2)
+		if ((UInt32) (mInternals->mBuffer + mInternals->mSegmentSize - mInternals->mWritePtr) >= requiredSize)
 			// Can write more from current position
-			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
-		else if ((UInt32) (readPtr - mInternals->mBuffer) >= maxSize) {
-			// Must start at beginning of the buffer now
-			mInternals->mWriteWatermarkPtr = mInternals->mWritePtr;
+			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize,
+					(UInt32) (mInternals->mBuffer + mInternals->mSegmentSize - mInternals->mWritePtr));
+		else if ((UInt32) (readPtr - mInternals->mBuffer) > requiredSize) {
+			// Can write at the beginning of the buffer, (1) or (2) => (6) or (7)
+			//	(but not allowed to completely fill or would appear empty)
 			mInternals->mWritePtr = mInternals->mBuffer;
 
-			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
+			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize,
+					(UInt32) (readPtr - mInternals->mWritePtr - 1));
 		} else
 			// Not enough space
 			return WriteBufferInfo();
 	} else {
-		// Write pointer is before read pointer
-		if ((UInt32) (readPtr - mInternals->mWritePtr) >= maxSize)
-			// Can write more from current position
-			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize, maxSize);
+		// Read is after write, (6), (7)
+		if ((UInt32) (readPtr - mInternals->mWritePtr) > requiredSize)
+			// Can write more from current position (but not allowed to completely fill or would appear empty)
+			return WriteBufferInfo(mInternals->mWritePtr, mInternals->mSegmentSize,
+					(UInt32) (readPtr - mInternals->mWritePtr - 1));
 		else
 			// Not enough space
 			return WriteBufferInfo();
@@ -285,11 +317,19 @@ CSRSWBIPSegmentedQueue::WriteBufferInfo CSRSWBIPSegmentedQueue::requestWrite(UIn
 void CSRSWBIPSegmentedQueue::commitWrite(UInt32 size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Update stuffs
-	mInternals->mWritePtr += size;
-	if (mInternals->mWritePtr == mInternals->mWriteWatermarkPtr)
-		// Back to beginning
-		mInternals->mWritePtr = mInternals->mBuffer;
+	// Capture info locally
+	UInt8*	readPtr = mInternals->mReadPtr;
+
+	// Update
+	if (readPtr <= mInternals->mWritePtr) {
+		// Read is before write, (1), (2)
+		UInt8*	ptr = mInternals->mWritePtr + size;
+		mInternals->mWriteWatermarkPtr = ptr;	// (1) or (2) => (4) or (5)
+		mInternals->mWritePtr = ptr;			// (4) or (5) => (1) or (2)
+	} else {
+		// Read is after write, (6), (7); size needs to be less than the space available or will appear empty)
+		mInternals->mWritePtr += size;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -372,8 +412,6 @@ void CSRSWMessageQueue::handle(const Message& message)
 		// Perform
 		((ProcMessage&) message).perform();
 }
-
-#include "CArray.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

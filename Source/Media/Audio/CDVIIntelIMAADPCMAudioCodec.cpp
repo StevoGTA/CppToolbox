@@ -48,17 +48,13 @@ const	UInt32	kDVIIntelFramesPerPacket = 505;
 const	UInt32	kDVIIntelBytesPerPacketPerChannel =
 						sizeof(SDVIIntelPacketHeader) + (kDVIIntelFramesPerPacket - 1) / 2;
 
-const	UInt64	kPacketIndexNotSet = ~0;
-
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDVIIntelIMAADPCMAudioCodecInternals
 
 class CDVIIntelIMAADPCMAudioCodecInternals {
 	public:
-												CDVIIntelIMAADPCMAudioCodecInternals() :
-													mDecodeCurrentPacketIndex(kPacketIndexNotSet)
-													{}
+												CDVIIntelIMAADPCMAudioCodecInternals() {}
 
 				SInt16							sampleForDeltaCode(UInt8 deltaCode, SStateInfo& stateInfo)
 													{
@@ -71,19 +67,17 @@ class CDVIIntelIMAADPCMAudioCodecInternals {
 														if (deltaCode & 0x08) diff = -diff;
 
 														// Update
-														stateInfo.mIndex =
-																std::max<SInt32>(
-																		std::min<SInt32>(
-																				stateInfo.mIndex +
-																						sIndexAdjustTable[deltaCode],
-																				88),
-																		0);
-														stateInfo.mPreviousValue =
-																std::max<SInt32>(
-																		std::min<SInt32>(
-																				stateInfo.mPreviousValue + diff,
-																				0x7FFF),
-																		-0x7FFF);
+														stateInfo.mIndex += sIndexAdjustTable[deltaCode];
+														if (stateInfo.mIndex > 88)
+															stateInfo.mIndex = 88;
+														else if (stateInfo.mIndex < 0)
+															stateInfo.mIndex = 0;
+
+														stateInfo.mPreviousValue += diff;
+														if (stateInfo.mPreviousValue > 0x7FFF)
+															stateInfo.mPreviousValue = 0x7FFF;
+														else if (stateInfo.mPreviousValue < -0x7FFF)
+															stateInfo.mPreviousValue = -0x7FFF;
 
 														return stateInfo.mPreviousValue;
 													}
@@ -104,7 +98,6 @@ class CDVIIntelIMAADPCMAudioCodecInternals {
 
 		OI<CByteParceller>			mByteParceller;
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
-		UInt64						mDecodeCurrentPacketIndex;
 };
 
 
@@ -168,22 +161,14 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 	UInt32	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * channels;
 
 	// Update read position if needed
-	UInt64	nextPacketIndex = mInternals->mDecodeCurrentPacketIndex + 1;
 	if (mediaPosition.getMode() == SMediaPosition::kFromStart) {
 		// Get new sample position
-		UInt64	frameIndex = mediaPosition.getFrameIndex(mInternals->mAudioProcessingFormat->getSampleRate());
-		UInt64	packetIndex = (frameIndex + kDVIIntelFramesPerPacket - 1) / kDVIIntelFramesPerPacket;
-
-		if (packetIndex != mInternals->mDecodeCurrentPacketIndex) {
-			// Need to seek
-			SInt64		byteIndex = packetIndex * bytesPerPacket;
-			OI<SError>	error = mInternals->mByteParceller->setPos(CDataSource::kPositionFromBeginning, byteIndex);
-			if (error.hasInstance())
-				return SAudioReadStatus(*error);
-
-			mInternals->mDecodeCurrentPacketIndex = kPacketIndexNotSet;
-			nextPacketIndex = packetIndex;
-		}
+		UInt64		frameIndex = mediaPosition.getFrameIndex(mInternals->mAudioProcessingFormat->getSampleRate());
+		UInt64		packetIndex = (frameIndex + kDVIIntelFramesPerPacket - 1) / kDVIIntelFramesPerPacket;
+		SInt64		byteIndex = packetIndex * bytesPerPacket;
+		OI<SError>	error = mInternals->mByteParceller->setPos(CDataSource::kPositionFromBeginning, byteIndex);
+		if (error.hasInstance())
+			return SAudioReadStatus(*error);
 	}
 
 	// Decode packets

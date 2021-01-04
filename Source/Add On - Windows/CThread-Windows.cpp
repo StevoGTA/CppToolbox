@@ -101,6 +101,7 @@ void CThread::start()
 {
 	// Create thread
 	mInternals->mWindowsThreadHandle = CreateThread(NULL, 0, CThreadInternals::threadProc, mInternals, 0, NULL);
+	SetThreadDescription(mInternals->mWindowsThreadHandle, mInternals->mThreadName.getOSString());
 }
 
 // MARK: Class methods

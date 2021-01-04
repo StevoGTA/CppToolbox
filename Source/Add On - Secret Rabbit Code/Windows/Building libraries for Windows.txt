@@ -1,0 +1,19 @@
+Building libraries for Windows
+
+Reference: http://www.mega-nerd.com/SRC/win32.html
+
+-Create a workspace folder.
+-Download and install libsndfile binaries from http://www.mega-nerd.com/libsndfile/#Download
+-Download and extract libsamplerate source from http://www.mega-nerd.com/SRC/download.html
+-Use appropriate application to extract libsamplerate package.
+-Copy the header file include/sndfile.h from where libsndfile was installed to the Win32 directory under the libsamplerate directory.
+-Copy libsndfile-1.dll, libsndfile-1.lib and libsndfile-1.def from the directory libsndfile was installed in to the the directory containing libsamplerate.
+-In the directory containing the extracted files, find the file Win32\Makefile.msvc and open it in a text editor (ie Notepad or similar).
+	Update to work for the current environment.  Using Visual Studio Community 2019 on 12/21/2020, the following changes were made:
+		MSVCDir="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
+		CFLAGS=/nologo /MD /W1 /EHsc /O2 /I $(MSVCDir)\Include /I $(MSVCDir)\PlatformSDK\Include /I . /I "Win32" /I "src" /D "WIN32" /D "_USRDLL" /FD /Zm1000
+		PROG_LINK_FLAGS=/nologo /incremental:no /libpath:$(MSVCDir)\Lib\amd64 /libpath:$(MSVCDir)\PlatformSDK\Lib /pdb:"libsamplerate-0.pdb" /exetype:dynamic
+
+		DLL_LINK_FLAGS=/nologo /dll /incremental:no /libpath:$(MSVCDir)\Lib\amd64 /pdb:"libsamplerate-0.pdb" /implib:".\libsamplerate-0.lib" /out:"libsamplerate-0.dll"
+-Run the Developer Command Prompt appropriate for the current environment (use Start menu approach so variables are set correctly).
+-Run "make"

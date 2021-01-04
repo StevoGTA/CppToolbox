@@ -6,9 +6,6 @@
 
 #include "SError-Windows.h"
 
-//#undef Delete
-//#include <Windows.h>
-//#define Delete(x)		{ delete x; x = nil; }
 #undef THIS
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -56,21 +53,17 @@ struct SFileMemoryMapSetupInfo {
 
 class CFileReaderInternals : public TCopyOnWriteReferenceCountable<CFileReaderInternals> {
 	public:
-					CFileReaderInternals(const CFile& file) :
-						TCopyOnWriteReferenceCountable(),
-								mFile(file)
-						{}
+					CFileReaderInternals(const CFile& file) : TCopyOnWriteReferenceCountable(), mFile(file) {}
 					CFileReaderInternals(const CFileReaderInternals& other) :
 						TCopyOnWriteReferenceCountable(),
 								mFile(other.mFile)
 						{}
 					~CFileReaderInternals()
-						{
-							close();
-						}
+						{ close(); }
 
 		OI<SError>	close()
 						{
+							// Cleanup
 							CloseHandle(mFileMappingHandle);
 							mFileMappingHandle = NULL;
 
@@ -280,9 +273,7 @@ public:
 									}
 
 	CFileMemoryMapInternals*	addReference()
-									{
-										mReferenceCount++; return this;
-									}
+									{ mReferenceCount++; return this; }
 	void						removeReference()
 									{
 										// Decrement reference count and check if we are the last one

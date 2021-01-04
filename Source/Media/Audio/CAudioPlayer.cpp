@@ -76,7 +76,7 @@ class CAudioPlayerReaderThreadInternals {
 
 						// Request write
 						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRead);
-						if (!writeBufferInfo.hasBuffer())
+						if (!writeBufferInfo.hasBuffer() || (writeBufferInfo.mSize < mBytesPerFrame))
 							// No space
 							return false;
 
