@@ -46,11 +46,13 @@ class CAudioConverterInternals {
 																			*internals.mInputAudioData);
 										if (audioReadStatus.isSuccess()) {
 											// Success
+											internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
 											internals.mSourceSourceProcessed = *audioReadStatus.getSourceProcessed();
 											status = noErr;
 										} else if (*audioReadStatus.getError() == SError::mEndOfData) {
 											// End of data
 											internals.mSourceHasMoreToRead = false;
+											internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
 											status = noErr;
 										} else {
 											// Error
