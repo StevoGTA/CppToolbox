@@ -2,7 +2,7 @@
 //	CAudioConverter-SecretRabbitCode.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CAudioProcessor.h"
+#include "CSecretRabbitCodeAudioConverter.h"
 
 #include <samplerate.h>
 
@@ -14,17 +14,17 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioConverterInternals
+// MARK: - CSecretRabbitCodeAudioConverterInternals
 
-class CAudioConverterInternals {
+class CSecretRabbitCodeAudioConverterInternals {
 	public:
-						CAudioConverterInternals(CAudioConverter& audioConverter) :
+						CSecretRabbitCodeAudioConverterInternals(CAudioConverter& audioConverter) :
 								mAudioConverter(audioConverter),
 										mSRCState(nil), mSourceHasMoreToRead(true),
 										mSourceMediaPosition(SMediaPosition::fromStart(0.0)),
 										mSourceSourceProcessed(0.0)
 							{}
-						~CAudioConverterInternals()
+						~CSecretRabbitCodeAudioConverterInternals()
 							{
 								if (mSRCState != nil)
 									src_delete(mSRCState);
@@ -33,7 +33,9 @@ class CAudioConverterInternals {
 		static	long	fillBufferData(void* userData, float** data)
 							{
 								// Setup
-								CAudioConverterInternals&	internals = *((CAudioConverterInternals*) userData);
+								CSecretRabbitCodeAudioConverterInternals&	internals =
+																					*((CSecretRabbitCodeAudioConverterInternals*)
+																							userData);
 								internals.mInputAudioData->reset();
 
 								// Check if have more to read
@@ -90,7 +92,6 @@ class CAudioConverterInternals {
 
 		CAudioConverter&			mAudioConverter;
 		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
-		OI<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
 
 		SRC_STATE*					mSRCState;
 		OI<CAudioData>				mInputAudioData;
@@ -103,19 +104,19 @@ class CAudioConverterInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioConverter
+// MARK: - CSecretRabbitCodeAudioConverter
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioConverter::CAudioConverter() : CAudioProcessor()
+CSecretRabbitCodeAudioConverter::CSecretRabbitCodeAudioConverter() : CAudioConverter()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioConverterInternals(*this);
+	mInternals = new CSecretRabbitCodeAudioConverterInternals(*this);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioConverter::~CAudioConverter()
+CSecretRabbitCodeAudioConverter::~CSecretRabbitCodeAudioConverter()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
@@ -124,7 +125,7 @@ CAudioConverter::~CAudioConverter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
+OI<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
 	const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -134,7 +135,7 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 	// Create Secret Rabbit Code
 	int	error;
 	mInternals->mSRCState =
-		src_callback_new(CAudioConverterInternals::fillBufferData, SRC_SINC_BEST_QUALITY,
+		src_callback_new(CSecretRabbitCodeAudioConverterInternals::fillBufferData, SRC_SINC_BEST_QUALITY,
 				audioProcessingFormat.getChannels(), &error, mInternals);
 	ReturnErrorIfSRCError(error);
 
@@ -149,7 +150,7 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
+SAudioReadStatus CSecretRabbitCodeAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -168,7 +169,7 @@ SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, C
 
 	// Fill buffer
 	double	srcRatio =
-					mInternals->mOutputAudioProcessingFormat->getSampleRate() /
+					mOutputAudioProcessingFormat->getSampleRate() /
 							mInternals->mInputAudioProcessingFormat->getSampleRate();
 	frameCount =
 			src_callback_read(mInternals->mSRCState, srcRatio, frameCount, (float*) audioData.getMutableBytePtr());
@@ -181,7 +182,7 @@ SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, C
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioConverter::reset()
+OI<SError> CSecretRabbitCodeAudioConverter::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset
@@ -192,27 +193,4 @@ OI<SError> CAudioConverter::reset()
 
 	// Do super
 	return CAudioProcessor::reset();
-}
-
-// MARK: Subclass methods
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioConverter::getInputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(*mInternals->mOutputAudioProcessingFormat));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioConverter::getOutputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup::mUnspecified);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAudioConverter::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mOutputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 }
