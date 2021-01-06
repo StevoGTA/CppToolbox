@@ -107,26 +107,25 @@ class CAudioChannelMapper : public CAudioProcessor {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAudioConverter
 
-class CAudioConverterInternals;
 class CAudioConverter : public CAudioProcessor {
 	public:
-										// Lifecycle methods
-										CAudioConverter();
-										~CAudioConverter();
-
 										// CAudioProcessor methods
-		OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-												const SAudioProcessingFormat& audioProcessingFormat);
+		TArray<SAudioProcessingSetup>	getInputSetups() const
+											{ return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(
+													*mOutputAudioProcessingFormat)); }
 
-		SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioData& audioData);
-		OI<SError>						reset();
+		TArray<SAudioProcessingSetup>	getOutputSetups() const
+											{ return TNArray<SAudioProcessingSetup>(
+													SAudioProcessingSetup::mUnspecified); }
+		void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+											{ mOutputAudioProcessingFormat =
+													OI<SAudioProcessingFormat>(audioProcessingFormat); }
 
-		TArray<SAudioProcessingSetup>	getInputSetups() const;
-
-		TArray<SAudioProcessingSetup>	getOutputSetups() const;
-		void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
+	protected:
+										// Lifecycle methods
+										CAudioConverter() {}
 
 	// Properties
-	private:
-		CAudioConverterInternals*	mInternals;
+	protected:
+		OI<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
 };

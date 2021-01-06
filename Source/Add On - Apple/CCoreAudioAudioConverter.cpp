@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioConverter-Apple.cpp			©2020 Stevo Brock	All rights reserved.
+//	CCoreAudioAudioConverter.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CAudioProcessor.h"
+#include "CCoreAudioAudioConverter.h"
 
 #include "CLogServices-Apple.h"
 #include "SError-Apple.h"
@@ -10,18 +10,18 @@
 #include <AudioToolbox/AudioToolbox.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioConverterInternals
+// MARK: CCoreAudioAudioConverterInternals
 
-class CAudioConverterInternals {
+class CCoreAudioAudioConverterInternals {
 	public:
-							CAudioConverterInternals(CAudioConverter& audioConverter) :
+							CCoreAudioAudioConverterInternals(CAudioConverter& audioConverter) :
 								mAudioConverter(audioConverter),
 										mOutputAudioBufferList(nil), mAudioConverterRef(nil),
 										mSourceHasMoreToRead(true),
 										mSourceMediaPosition(SMediaPosition::fromStart(0.0)),
 										mSourceSourceProcessed(0.0)
 								{}
-							~CAudioConverterInternals()
+							~CCoreAudioAudioConverterInternals()
 								{
 									::free(mOutputAudioBufferList);
 									if (mAudioConverterRef != nil)
@@ -33,7 +33,9 @@ class CAudioConverterInternals {
 									AudioStreamPacketDescription** outDataPacketDescription, void* inUserData)
 								{
 									// Setup
-									CAudioConverterInternals&	internals = *((CAudioConverterInternals*) inUserData);
+									CCoreAudioAudioConverterInternals&	internals =
+																				*((CCoreAudioAudioConverterInternals*)
+																						inUserData);
 									internals.mInputAudioData->reset();
 
 									// Check if have more to read
@@ -75,7 +77,6 @@ class CAudioConverterInternals {
 
 		CAudioConverter&			mAudioConverter;
 		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
-		OI<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
 
 		AudioBufferList*			mOutputAudioBufferList;
 		AudioConverterRef			mAudioConverterRef;
@@ -88,19 +89,19 @@ class CAudioConverterInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioConverter
+// MARK: - CCoreAudioAudioConverter
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioConverter::CAudioConverter() : CAudioProcessor()
+CCoreAudioAudioConverter::CCoreAudioAudioConverter() : CAudioConverter()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioConverterInternals(*this);
+	mInternals = new CCoreAudioAudioConverterInternals(*this);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioConverter::~CAudioConverter()
+CCoreAudioAudioConverter::~CCoreAudioAudioConverter()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
@@ -109,7 +110,7 @@ CAudioConverter::~CAudioConverter()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
+OI<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -123,18 +124,16 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 			audioProcessingFormat.getIsBigEndian(), !audioProcessingFormat.getIsInterleaved());
 
 	AudioStreamBasicDescription	destinationFormat;
-	FillOutASBDForLPCM(destinationFormat, mInternals->mOutputAudioProcessingFormat->getSampleRate(),
-			mInternals->mOutputAudioProcessingFormat->getChannels(),
-			mInternals->mOutputAudioProcessingFormat->getBits(), mInternals->mOutputAudioProcessingFormat->getBits(),
-			mInternals->mOutputAudioProcessingFormat->getIsFloat(),
-			mInternals->mOutputAudioProcessingFormat->getIsBigEndian(),
-			!mInternals->mOutputAudioProcessingFormat->getIsInterleaved());
+	FillOutASBDForLPCM(destinationFormat, mOutputAudioProcessingFormat->getSampleRate(),
+			mOutputAudioProcessingFormat->getChannels(), mOutputAudioProcessingFormat->getBits(),
+			mOutputAudioProcessingFormat->getBits(), mOutputAudioProcessingFormat->getIsFloat(),
+			mOutputAudioProcessingFormat->getIsBigEndian(), !mOutputAudioProcessingFormat->getIsInterleaved());
 
 	// Create Audio Converter
 	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
 	LOG_OSSTATUS_IF_FAILED(status, OSSTR("AudioConverterNew"));
 
-	if (audioProcessingFormat.getSampleRate() != mInternals->mOutputAudioProcessingFormat->getSampleRate()) {
+	if (audioProcessingFormat.getSampleRate() != mOutputAudioProcessingFormat->getSampleRate()) {
 		// Highest quality SRC
 		UInt32	value = kAudioCodecQuality_Max;
 		status =
@@ -144,16 +143,15 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 	}
 
 	// Create Audio Buffer List
-	if (mInternals->mOutputAudioProcessingFormat->getIsInterleaved()) {
+	if (mOutputAudioProcessingFormat->getIsInterleaved()) {
 		// Interleaved
 		mInternals->mOutputAudioBufferList = (AudioBufferList*) ::calloc(1, sizeof(AudioBufferList));
 		mInternals->mOutputAudioBufferList->mNumberBuffers = 1;
 	} else {
 		// Non-interleaved
 		mInternals->mOutputAudioBufferList =
-				(AudioBufferList*) ::calloc(mInternals->mOutputAudioProcessingFormat->getChannels(),
-						sizeof(AudioBufferList));
-		mInternals->mOutputAudioBufferList->mNumberBuffers = mInternals->mOutputAudioProcessingFormat->getChannels();
+				(AudioBufferList*) ::calloc(mOutputAudioProcessingFormat->getChannels(), sizeof(AudioBufferList));
+		mInternals->mOutputAudioBufferList->mNumberBuffers = mOutputAudioProcessingFormat->getChannels();
 	}
 
 	// Create Audio Data
@@ -170,7 +168,7 @@ OI<SError> CAudioConverter::connectInput(const I<CAudioProcessor>& audioProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
+SAudioReadStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -191,7 +189,7 @@ SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, C
 	// Fill buffer
 	OSStatus	status =
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
-								CAudioConverterInternals::fillBufferData, mInternals, &frameCount,
+								CCoreAudioAudioConverterInternals::fillBufferData, mInternals, &frameCount,
 								mInternals->mOutputAudioBufferList, nil);
 	if (status != noErr) return SAudioReadStatus(*mInternals->mPerformError);
 	if (frameCount == 0) return SAudioReadStatus(SError::mEndOfData);
@@ -203,7 +201,7 @@ SAudioReadStatus CAudioConverter::perform(const SMediaPosition& mediaPosition, C
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioConverter::reset()
+OI<SError> CCoreAudioAudioConverter::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset
@@ -214,25 +212,4 @@ OI<SError> CAudioConverter::reset()
 
 	// Do super
 	return CAudioProcessor::reset();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioConverter::getInputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(*mInternals->mOutputAudioProcessingFormat));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioConverter::getOutputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup::mUnspecified);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAudioConverter::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mOutputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 }

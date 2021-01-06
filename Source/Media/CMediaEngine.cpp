@@ -178,7 +178,8 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 {
 	// Setup
 	TArray<SAudioProcessingSetup>	audioProcessorSourceAudioProcessingSetups = audioProcessorSource->getOutputSetups();
-	TArray<SAudioProcessingSetup>	audioProcessorDestinationAudioProcessingSetups = audioProcessorDestination->getInputSetups();
+	TArray<SAudioProcessingSetup>	audioProcessorDestinationAudioProcessingSetups =
+											audioProcessorDestination->getInputSetups();
 
 	// Determine if can connect directly
 	OI<SAudioProcessingFormat>	commonAudioProcessingFormat =
@@ -193,8 +194,10 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 	} else {
 		// Requires converter and/or channel mapper
 		SAudioProcessingFormats	audioProcessingFormats =
-										sComposeAudioProcessingFormats(audioProcessorSourceAudioProcessingSetups.getFirst(),
-												audioProcessorDestinationAudioProcessingSetups.getFirst(), audioProcessingFormat);
+										sComposeAudioProcessingFormats(
+												audioProcessorSourceAudioProcessingSetups.getFirst(),
+												audioProcessorDestinationAudioProcessingSetups.getFirst(),
+												audioProcessingFormat);
 		bool					requiresConverter =
 										!audioProcessingFormats.doBitsMatch() ||
 												!audioProcessingFormats.doSampleRatesMatch() ||
@@ -213,7 +216,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 
 			// Setup
 			I<CAudioChannelMapper>	audioChannelMapper(new CAudioChannelMapper());
-			I<CAudioConverter>		audioConverter(new CAudioConverter());
+			I<CAudioConverter>		audioConverter = createAudioConverter();
 
 			// Connect
 			error =
@@ -232,7 +235,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 			if (error.hasInstance()) return ConnectResult(*error);
 		} else if (requiresConverter) {
 			// Requires converter
-			I<CAudioConverter>	audioConverter(new CAudioConverter());
+			I<CAudioConverter>	audioConverter = createAudioConverter();
 
 			// Connect
 			error =
@@ -241,7 +244,8 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 			if (error.hasInstance()) return ConnectResult(*error);
 
 			error =
-					audioConverter->connectInput(audioProcessorSource, audioProcessingFormats.mSourceAudioProcessingFormat);
+					audioConverter->connectInput(audioProcessorSource,
+							audioProcessingFormats.mSourceAudioProcessingFormat);
 			if (error.hasInstance()) return ConnectResult(*error);
 		} else {
 			// Requires channel mapper

@@ -50,4 +50,8 @@ class CMediaEngine {
 				ConnectResult			connect(const I<CAudioProcessor>& audioProcessorSource,
 												const I<CAudioProcessor>& audioProcessorDestination,
 												const SAudioProcessingFormat& audioProcessingFormat) const;
+
+	protected:
+										// Subclass methods
+		virtual	I<CAudioConverter>		createAudioConverter() const = 0;
 };
