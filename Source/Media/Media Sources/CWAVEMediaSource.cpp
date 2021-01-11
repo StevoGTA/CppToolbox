@@ -31,7 +31,8 @@ class CWAVEMediaSourceInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CWAVEMediaSource::CWAVEMediaSource() : CMediaSource()
+CWAVEMediaSource::CWAVEMediaSource(const CByteParceller& byteParceller) :
+	CChunkMediaSource(byteParceller, kLittleEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CWAVEMediaSourceInternals();
@@ -47,55 +48,50 @@ CWAVEMediaSource::~CWAVEMediaSource()
 // MARK: CMediaSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
+OI<SError> CWAVEMediaSource::loadTracks()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	OI<SError>	error;
 
 	// Reset to beginning
-	error = byteParceller.setPos(CDataSource::kPositionFromBeginning, 0);
+	error = reset();
 	ReturnErrorIfError(error);
 
 	// Verify it's a WAVE Media Source
 	SWAVEFORMChunk32	formChunk32;
-	error = byteParceller.readData(&formChunk32, sizeof(SWAVEFORMChunk32));
+	error = mByteParceller.readData(&formChunk32, sizeof(SWAVEFORMChunk32));
 	ReturnErrorIfError(error);
-	if ((formChunk32.getNativeChunkID() != kWAVEFORMChunkID) || (formChunk32.getNativeFormType() != kWAVEFORMType))
+	if ((formChunk32.getID() != kWAVEFORMChunkID) || (formChunk32.getFormType() != kWAVEFORMType))
+		// Not a WAVE file
 		return OI<SError>(sNotAWAVEFile);
 
 	// Process chunks
 	OI<SAudioStorageFormat>	audioStorageFormat;
 	SInt64					dataStartOffset = 0;
 	SInt64					dataSize = 0;
-	while (!audioStorageFormat.hasInstance() || (dataStartOffset == 0) || (dataSize == 0)) {
-		// Read next chunk header
-		SWAVEChunkHeader32	chunkHeader32;
-		error = byteParceller.readData(&chunkHeader32, sizeof(SWAVEChunkHeader32));
+	while (true) {
+		// Read next chunk info
+		OI<ChunkInfo>	chunkInfo = getChunkInfo(error);
 		ReturnErrorIfError(error);
 
-		UInt32	chunkDataSize = chunkHeader32.getNativeChunkSize();
-		SInt64	nextChunkPos = byteParceller.getPos() + chunkDataSize + (chunkDataSize % 1);
-
 		// What did we get?
-		switch (chunkHeader32.getNativeChunkID()) {
+		switch (chunkInfo->mID) {
 			case kWAVEFormatChunkID: {
 				// Format chunk
-				error = byteParceller.setPos(CDataSource::kPositionFromCurrent, -((SInt64) sizeof(SWAVEChunkHeader32)));
+				OI<CData>	data = getChunk(*chunkInfo, error);
 				ReturnErrorIfError(error);
 
-				SWAVEFORMAT	waveFormat;
-				error = byteParceller.readData(&waveFormat, sizeof(SWAVEFORMAT));
-				ReturnErrorIfError(error);
+				const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) data->getBytePtr());
 
-				switch (waveFormat.getNativeFormatTag()) {
+				switch (waveFormat.getFormatTag()) {
 					case 0x0011:
 						// DVI/Intel ADPCM
 						audioStorageFormat =
 								OI<SAudioStorageFormat>(
 										SAudioStorageFormat(CDVIIntelIMAADPCMAudioCodec::mID, 16,
-												(Float32) waveFormat.getNativeSamplesPerSec(),
-												AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getNativeChannels())));
+												(Float32) waveFormat.getSamplesPerSec(),
+												AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels())));
 						break;
 
 					default:
@@ -106,17 +102,18 @@ OI<SError> CWAVEMediaSource::loadTracks(const CByteParceller& byteParceller)
 
 			case kWAVEDataChunkID:
 				// Data chunk
-				dataStartOffset = byteParceller.getPos();
-				dataSize = std::min<SInt64>(chunkDataSize, byteParceller.getSize() - dataStartOffset);
-				break;
-
-			default:
-				// Something else
+				dataStartOffset = mByteParceller.getPos();
+				dataSize = std::min<SInt64>(chunkInfo->mSize, mByteParceller.getSize() - dataStartOffset);
 				break;
 		}
 
+		// Check if done
+		if ((audioStorageFormat.hasInstance() && (dataStartOffset != 0) && (dataSize != 0)))
+			// Done
+			break;
+
 		// Seek to next chunk
-		error = byteParceller.setPos(CDataSource::kPositionFromBeginning, nextChunkPos);
+		error = seekToNextChunk(*chunkInfo);
 		ReturnErrorIfError(error);
 	}
 

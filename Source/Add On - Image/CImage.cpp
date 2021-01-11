@@ -96,25 +96,25 @@ CBitmap CImage::getBitmap() const
 {
 	// Get data
 	OI<SError>	error;
-	CData		data = mInternals->mByteParceller.readData(error);
+	OI<CData>	data = mInternals->mByteParceller.readData(error);
 	mInternals->mByteParceller.reset();
 	ReturnValueIfError(error, CBitmap());
 
 	// Setup/Validate image type
 	if (!mInternals->mType.hasValue())
 		// Determine from data
-		mInternals->mType = getTypeFromData(data);
+		mInternals->mType = getTypeFromData(*data);
 	AssertFailIf(!mInternals->mType.hasValue());
 
 	// Check image type
 	switch (*mInternals->mType) {
 		case kTypeJPEG:
 			// JPEG
-			return sDecodeJPEGData(data);
+			return sDecodeJPEGData(*data);
 
 		case kTypePNG:
 			// PNG
-			return sDecodePNGData(data);
+			return sDecodePNGData(*data);
 
 #if TARGET_OS_WINDOWS
 		default:

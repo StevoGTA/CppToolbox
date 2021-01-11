@@ -83,23 +83,18 @@ class CDVIIntelIMAADPCMAudioCodecInternals {
 													}
 
 												// Class methods
-		static	I<CAudioCodec>					instantiate(OSType id)
-													{
-														return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec());
-													}
 		static	TArray<SAudioProcessingSetup>	getAudioProcessingSetups(OSType id,
 														const SAudioStorageFormat& audioStorageFormat)
-													{
-														return TNArray<SAudioProcessingSetup>(
-																SAudioProcessingSetup(*audioStorageFormat.getBits(),
-																		audioStorageFormat.getSampleRate(),
-																		audioStorageFormat.getChannelMap()));
-													}
+													{ return TNArray<SAudioProcessingSetup>(
+															SAudioProcessingSetup(*audioStorageFormat.getBits(),
+																	audioStorageFormat.getSampleRate(),
+																	audioStorageFormat.getChannelMap())); }
+		static	I<CAudioCodec>					instantiate(OSType id)
+													{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
 
 		OI<CByteParceller>			mByteParceller;
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
 };
-
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -128,27 +123,17 @@ CDVIIntelIMAADPCMAudioCodec::~CDVIIntelIMAADPCMAudioCodec()
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CDVIIntelIMAADPCMAudioCodec::getDecodeAudioProcessingSetups(
-		const SAudioStorageFormat& storedAudioSampleFormat) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(
-			SAudioProcessingSetup(*storedAudioSampleFormat.getBits(), storedAudioSampleFormat.getSampleRate(),
-					storedAudioSampleFormat.getChannelMap()));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 		CByteParceller& byteParceller, const I<CAudioCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	DataDecodeInfo*	dataDecodeInfo = (DataDecodeInfo*) &*decodeInfo;
+	const	DataDecodeInfo&	dataDecodeInfo = *((DataDecodeInfo*) &*decodeInfo);
 
 	// Store
 	mInternals->mByteParceller =
 			OI<CByteParceller>(
-					new CByteParceller(byteParceller, dataDecodeInfo->getStartOffset(), dataDecodeInfo->getSize()));
+					new CByteParceller(byteParceller, dataDecodeInfo.getStartOffset(), dataDecodeInfo.getSize()));
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 }
 

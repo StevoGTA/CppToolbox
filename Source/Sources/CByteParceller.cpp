@@ -93,30 +93,30 @@ OI<SError> CByteParceller::readData(void* buffer, UInt64 byteCount) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CByteParceller::readData(UInt64 byteCount, OI<SError>& outError) const
+OI<CData> CByteParceller::readData(UInt64 byteCount, OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CData	data((CData::Size) byteCount);
+	OI<CData>	data(new CData((CData::Size) byteCount));
 
 	// Read
-	outError = readData(data.getMutableBytePtr(), byteCount);
-	ReturnValueIfError(outError, CData::mEmpty);
+	outError = readData(data->getMutableBytePtr(), byteCount);
+	ReturnValueIfError(outError, OI<CData>());
 
 	return data;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CByteParceller::readData(OI<SError>& outError) const
+OI<CData> CByteParceller::readData(OI<SError>& outError) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64	byteCount = getSize() - getPos();
-	CData	data((CData::Size) byteCount);
+	UInt64		byteCount = getSize() - getPos();
+	OI<CData>	data(new CData((CData::Size) byteCount));
 
 	// Read
-	outError = readData(data.getMutableBytePtr(), byteCount);
-	ReturnValueIfError(outError, CData::mEmpty);
+	outError = readData(data->getMutableBytePtr(), byteCount);
+	ReturnValueIfError(outError, OI<CData>());
 
 	return data;
 }

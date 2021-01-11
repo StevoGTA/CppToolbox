@@ -225,14 +225,14 @@ CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 object
 			continue;
 
 		// Get string content
-		CData	data = mByteParceller.readData(count, mError);
+		OI<CData>	data = mByteParceller.readData(count, mError);
 		if (mError.hasInstance())
 			// Error
 			continue;
 
 		// Create string
 		mStrings[i] =
-				new CString(data,
+				new CString(*data,
 						(marker == kMarkerTypeStringASCII) ? CString::kEncodingASCII : CString::kEncodingUTF16BE);
 	}
 }
@@ -310,11 +310,11 @@ UInt64 CBPLDataSource::readCount(const char* errorWhen)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get count marker
-	UInt8	countMarker = mByteParceller.readUInt8(mError);
+	OV<UInt8>	countMarker = mByteParceller.readUInt8(mError);
 	LogIfErrorAndReturnValue(mError, errorWhen, 0);
 
 	UInt8	fieldSize;
-	switch (countMarker) {
+	switch (*countMarker) {
 		case kMarkerTypeInteger1Byte:	fieldSize = 1;	break;
 		case kMarkerTypeInteger2Bytes:	fieldSize = 2;	break;
 		case kMarkerTypeInteger4Bytes:	fieldSize = 4;	break;
@@ -514,9 +514,9 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 	}
 
 	// Validate header
-	CData	header = byteParceller.readData(sBinaryPListV10Header.getSize(), outError);
+	OI<CData>	header = byteParceller.readData(sBinaryPListV10Header.getSize(), outError);
 	LogIfErrorAndReturnValue(outError, "reading header", CDictionary());
-	if (header != sBinaryPListV10Header) {
+	if (*header != sBinaryPListV10Header) {
 		// Header does not match
 		outError = OI<SError>(sUnknownFormatError);
 		LogIfErrorAndReturnValue(outError, "validating header", CDictionary());

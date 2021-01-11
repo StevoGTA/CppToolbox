@@ -313,21 +313,23 @@ class CDataGPUTextureReferenceInternals : public CGPUTextureReferenceInternals {
 		void	load()
 					{
 						// Setup
-						CData	data;
+						CData	textureData;
 
 						// Is loading continuing
 						if (isLoadingContinuing()) {
 							// Read data
 							OI<SError>	error;
-							data = mByteParceller.readData(error);
+							OI<CData>	data = mByteParceller.readData(error);
 							mByteParceller.reset();
 							LogIfErrorAndReturn(error, "reading data from data provider");
+
+							textureData = *data;
 						}
 
 						// Is loading continuing
 						if (isLoadingContinuing())
 							// Create render material texture
-							loadComplete(data, mDataFormat.getValue(), mSize);
+							loadComplete(textureData, mDataFormat.getValue(), mSize);
 					}
 
 		const	CByteParceller	mByteParceller;

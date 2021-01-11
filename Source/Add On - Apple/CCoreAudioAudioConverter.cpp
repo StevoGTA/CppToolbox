@@ -58,7 +58,7 @@ class CCoreAudioAudioConverterInternals {
 											status = noErr;
 										} else {
 											// Error
-											internals.mPerformError = audioReadStatus.getError();
+											internals.mFillBufferDataError = audioReadStatus.getError();
 											status = -1;
 										}
 									} else
@@ -81,7 +81,7 @@ class CCoreAudioAudioConverterInternals {
 		AudioBufferList*			mOutputAudioBufferList;
 		AudioConverterRef			mAudioConverterRef;
 		OI<CAudioData>				mInputAudioData;
-		OI<SError>					mPerformError;
+		OI<SError>					mFillBufferDataError;
 		bool						mSourceHasMoreToRead;
 		SMediaPosition				mSourceMediaPosition;
 		Float32						mSourceSourceProcessed;
@@ -191,7 +191,7 @@ SAudioReadStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPo
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
 								CCoreAudioAudioConverterInternals::fillBufferData, mInternals, &frameCount,
 								mInternals->mOutputAudioBufferList, nil);
-	if (status != noErr) return SAudioReadStatus(*mInternals->mPerformError);
+	if (status != noErr) return SAudioReadStatus(*mInternals->mFillBufferDataError);
 	if (frameCount == 0) return SAudioReadStatus(SError::mEndOfData);
 
 	// Update

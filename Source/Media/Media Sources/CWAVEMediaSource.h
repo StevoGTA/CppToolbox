@@ -10,15 +10,15 @@
 // MARK: CWAVEMediaSource
 
 class CWAVEMediaSourceInternals;
-class CWAVEMediaSource : public CMediaSource {
+class CWAVEMediaSource : public CChunkMediaSource {
 	// Methods
 	public:
 							// Lifecycle methods
-							CWAVEMediaSource();
+							CWAVEMediaSource(const CByteParceller& byteParceller);
 							~CWAVEMediaSource();
 
 							// CMediaSource methods
-		OI<SError>			loadTracks(const CByteParceller& byteParceller);
+		OI<SError>			loadTracks();
 		TArray<CAudioTrack>	getAudioTracks();
 
 	// Properties

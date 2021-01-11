@@ -13,6 +13,35 @@
 // MARK: CAudioCodec
 
 class CAudioCodec {
+	// Structs
+	public:
+		struct Packet {
+			// Lifecycle methods
+			Packet(UInt32 sampleCount, UInt32 size) : mSampleCount(sampleCount), mSize(size) {}
+
+			// Properties
+			UInt32	mSampleCount;
+			UInt32	mSize;
+		};
+
+		struct PacketLocation {
+			// Lifecycle methods
+			PacketLocation(Packet packet, SInt64 pos) : mPacket(packet), mPos(pos) {}
+
+			// Properties
+			Packet	mPacket;
+			SInt64	mPos;
+		};
+
+		struct PacketBlock {
+			// Lifecycle methods
+			PacketBlock(UInt32 count, Packet packet) : mCount(count), mPacket(packet) {}
+
+			// Properties
+			UInt32	mCount;
+			Packet	mPacket;
+		};
+
 	// Classes
 	public:
 		class DecodeInfo {
@@ -41,6 +70,41 @@ class CAudioCodec {
 			private:
 				SInt64	mStartOffset;
 				SInt64	mSize;
+		};
+
+		class PacketsDecodeInfo : public DecodeInfo {
+			// Methods
+			public:
+												// Lifecycle methods
+												PacketsDecodeInfo(const TArray<PacketLocation>& packetLocations) :
+													DecodeInfo(), mPacketLocations(packetLocations)
+													{}
+
+												// Instance methods
+				const	TArray<PacketLocation>&	getPacketLocations() const
+							{ return mPacketLocations; }
+
+			// Properties
+			private:
+				TArray<PacketLocation>	mPacketLocations;
+		};
+
+		class PacketsWithMagicCookieDecodeInfo : public PacketsDecodeInfo {
+			// Methods
+			public:
+								// Lifecycle methods
+								PacketsWithMagicCookieDecodeInfo(const TArray<PacketLocation>& packetLocations,
+										const CData& magicCookie) :
+									PacketsDecodeInfo(packetLocations), mMagicCookie(magicCookie)
+									{}
+
+								// Instance methods
+				const	CData&	getMagicCookie() const
+									{ return mMagicCookie; }
+
+			// Properties
+			private:
+				CData	mMagicCookie;
 		};
 
 		class EncodeSettings {
@@ -133,8 +197,6 @@ class CAudioCodec {
 		virtual									~CAudioCodec() {}
 
 												// Instance methods
-		virtual	TArray<SAudioProcessingSetup>	getDecodeAudioProcessingSetups(
-														const SAudioStorageFormat& storedAudioSampleFormat) const = 0;
 		virtual	void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 														CByteParceller& byteParceller,
 														const I<CAudioCodec::DecodeInfo>& decodeInfo) = 0;
@@ -166,21 +228,17 @@ class CDecodeOnlyAudioCodec : public CAudioCodec {
 class CEncodeOnlyAudioCodec : public CAudioCodec {
 	// Methods
 	public:
-										// Lifecycle methods
-										CEncodeOnlyAudioCodec() {}
+							// Lifecycle methods
+							CEncodeOnlyAudioCodec() {}
 
-										// CAudioCodec methods
-		TArray<SAudioProcessingSetup>	getDecodeAudioProcessingSetups(
-												const SAudioStorageFormat& storedAudioSampleFormat) const
-											{ AssertFailUnimplemented(); return TNArray<SAudioProcessingSetup>(); }
-		void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-												CByteParceller& byteParceller,
-												const I<CAudioCodec::DecodeInfo>& decodeInfo)
-											{ AssertFailUnimplemented(); }
-		SAudioReadStatus				decode(const SMediaPosition& mediaPosition, CAudioData& audioData)
-											{
-												AssertFailUnimplemented();
+							// CAudioCodec methods
+		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+									CByteParceller& byteParceller, const I<CAudioCodec::DecodeInfo>& decodeInfo)
+								{ AssertFailUnimplemented(); }
+		SAudioReadStatus	decode(const SMediaPosition& mediaPosition, CAudioData& audioData)
+								{
+									AssertFailUnimplemented();
 
-												return SAudioReadStatus(SError::mUnimplemented);
-											}
+									return SAudioReadStatus(SError::mUnimplemented);
+								}
 };

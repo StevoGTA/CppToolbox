@@ -67,7 +67,7 @@ template <typename T> class TIteratorS : public CIterator {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TIteratorD (for double dereference!)
+// MARK: - TIteratorD (for double dereference!!)
 
 template <typename T> class TIteratorD : public CIterator {
 	// Methods

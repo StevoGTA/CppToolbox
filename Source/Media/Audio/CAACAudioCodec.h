@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CDVIIntelIMAADPCMAudioCodec.h			©2020 Stevo Brock	All rights reserved.
+//	CAACAudioCodec.h			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -7,15 +7,15 @@
 #include "CAudioCodecRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDVIIntelIMAADPCMAudioCodec
+// MARK: CAACAudioCodec
 
-class CDVIIntelIMAADPCMAudioCodecInternals;
-class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
+class CAACAudioCodecInternals;
+class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 	// Methods
 	public:
 							// Lifecycle methods
-							CDVIIntelIMAADPCMAudioCodec();
-							~CDVIIntelIMAADPCMAudioCodec();
+							CAACAudioCodec(OSType codecID);
+							~CAACAudioCodec();
 
 							// CAudioCodec methods - Decoding
 		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
@@ -24,8 +24,9 @@ class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 
 	// Properties
 	public:
-		static	OSType									mID;
+		static	OSType						mAACLCID;
+		static	OSType						mAACLDID;
 
 	private:
-				CDVIIntelIMAADPCMAudioCodecInternals*	mInternals;
+				CAACAudioCodecInternals*	mInternals;
 };
