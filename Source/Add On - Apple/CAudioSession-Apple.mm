@@ -33,7 +33,7 @@
 		case AVAudioSessionInterruptionTypeBegan:
 			// Began
 			// Post notification
-			CNotificationCenter::mStandard.send(CAudioSession::mInterruptionDidBeginNotificationName,
+			CAudioSession::mNotificationCenter.queue(CAudioSession::mInterruptionDidBeginNotificationName,
 					&CAudioSession::mShared);
 			break;
 
@@ -49,7 +49,7 @@
 			info.set(CAudioSession::mInterruptionDidEndPlaybackShouldContinue,
 					(interruptionOptions & AVAudioSessionInterruptionOptionShouldResume) != 0);
 
-			CNotificationCenter::mStandard.send(CAudioSession::mInterruptionDidEndNotificationName,
+			CAudioSession::mNotificationCenter.queue(CAudioSession::mInterruptionDidEndNotificationName,
 					&CAudioSession::mShared, info);
 			break;
 	}
@@ -73,7 +73,8 @@ static	NotificationObserver*	sNotificationObserver = [[NotificationObserver allo
 
 // MARK: Properties
 
-CAudioSession CAudioSession::mShared;
+CAudioSession					CAudioSession::mShared;
+CImmediateNotificationCenter	CAudioSession::mNotificationCenter;
 
 CString CAudioSession::mInterruptionDidBeginNotificationName(OSSTR("CAudioSession - Interruption Did Begin"));
 CString CAudioSession::mInterruptionDidEndNotificationName(OSSTR("CAudioSession - Interruption Did End"));

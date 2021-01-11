@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CNotificationCenter.h"
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -54,7 +55,8 @@ class CAudioSession {
 
 	// Properties
 	public:
-		static	CAudioSession	mShared;
+		static	CAudioSession					mShared;
+		static	CImmediateNotificationCenter	mNotificationCenter;
 
 		/*
 			Sent when the the audio session is interrupted
