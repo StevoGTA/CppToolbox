@@ -4,3 +4,33 @@
 
 #include "CAudioCodec.h"
 
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CAudioCodec
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CAudioCodec::getPacketIndex(const SMediaPosition& mediaPosition,
+		const SAudioProcessingFormat& audioProcessingFormat, const TArray<CAudioCodec::PacketLocation>& packetLocations)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get new sample position
+	UInt64	frameIndex = mediaPosition.getFrameIndex(audioProcessingFormat.getSampleRate());
+
+	// Find packet index
+	UInt32	packetIndex = 0;
+	for (TIteratorD<CAudioCodec::PacketLocation> iterator = packetLocations.getIterator(); iterator.hasValue();
+			iterator.advance()) {
+		// Setup
+		const	CAudioCodec::Packet& packet = iterator->mPacket;
+		if (frameIndex > packet.mSampleCount) {
+			// Advance another packet
+			packetIndex++;
+			frameIndex -= packet.mSampleCount;
+		} else
+			// Done
+			break;
+	}
+
+	return packetIndex;
+}

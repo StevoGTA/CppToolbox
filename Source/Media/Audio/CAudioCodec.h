@@ -204,6 +204,12 @@ class CAudioCodec {
 
 		virtual	TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const = 0;
 		virtual	void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat) = 0;
+
+	protected:
+												// Class methods
+		static	UInt32							getPacketIndex(const SMediaPosition& mediaPosition,
+														const SAudioProcessingFormat& audioProcessingFormat,
+														const TArray<CAudioCodec::PacketLocation>& packetLocations);
 };
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -11,8 +11,8 @@
 // MARK: Local data
 
 static	CString	sErrorDomain(OSSTR("CWAVEMediaSource"));
-static	SError	sNotAWAVEFile(sErrorDomain, 1, CString(OSSTR("Not a WAVE file")));
-static	SError	sUnsupportedCodec(sErrorDomain, 2, CString(OSSTR("Unsupported codec")));
+static	SError	sNotAWAVEFileError(sErrorDomain, 1, CString(OSSTR("Not a WAVE file")));
+static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported codec")));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CWAVEMediaSourceInternals
@@ -64,7 +64,7 @@ OI<SError> CWAVEMediaSource::loadTracks()
 	ReturnErrorIfError(error);
 	if ((formChunk32.getID() != kWAVEFORMChunkID) || (formChunk32.getFormType() != kWAVEFORMType))
 		// Not a WAVE file
-		return OI<SError>(sNotAWAVEFile);
+		return OI<SError>(sNotAWAVEFileError);
 
 	// Process chunks
 	OI<SAudioStorageFormat>	audioStorageFormat;
@@ -96,7 +96,7 @@ OI<SError> CWAVEMediaSource::loadTracks()
 
 					default:
 						// Not supported
-						return OI<SError>(sUnsupportedCodec);
+						return OI<SError>(sUnsupportedCodecError);
 				}
 			} break;
 

@@ -125,8 +125,6 @@ template <typename T> struct OR {
 	string3.getObject();	// CString&
 	*string3;				// CString&
 	string3->isEmpty();		// false
-
-
  */
 
 template <typename T> struct OI {
@@ -145,17 +143,21 @@ template <typename T> struct OI {
 			~OI()
 				{
 					// Check for instance
-					if ((mInstance != nil) && (--(*mReferenceCount) == 0))
+					if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
 						// All done
 						Delete(mInstance);
+						Delete(mReferenceCount);
+					}
 				}
 
 	OI<T>&	operator=(const OI<T>& other)
 				{
 					// Check for instance
-					if ((mInstance != nil) && (--(*mReferenceCount) == 0))
+					if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
 						// All done
 						Delete(mInstance);
+						Delete(mReferenceCount);
+					}
 
 					// Copy
 					mInstance = other.mInstance;

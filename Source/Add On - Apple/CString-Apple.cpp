@@ -18,7 +18,7 @@
 // MARK: Local data
 
 static	CString	sErrorDomain(OSSTR("CString-Apple"));
-static	SError	sCreateFailed(sErrorDomain, 1, CString(OSSTR("Unable to create")));
+static	SError	sCreateFailedError(sErrorDomain, 1, CString(OSSTR("Unable to create")));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -312,7 +312,7 @@ CString::CString(const CData& data, Encoding encoding)
 	::CFRelease(dataRef);
 
 	if (mStringRef == nil) {
-		LogError(sCreateFailed, "creating CFStringRef from external representation");
+		LogError(sCreateFailedError, "creating CFStringRef from external representation");
 		mStringRef = CFSTR("");
 	}
 }
@@ -478,7 +478,7 @@ CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 		return data;
 	} else {
 		// Failed
-		LogError(sCreateFailed, "getting data");
+		LogError(sCreateFailedError, "getting data");
 
 		return CData::mEmpty;
 	}

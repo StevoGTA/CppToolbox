@@ -592,10 +592,10 @@ struct Sco64AtomPayload {
 #pragma pack(pop)
 
 static	CString	sErrorDomain(OSSTR("CMPEG4MediaSource"));
-static	SError	sNotAnMPEG4File(sErrorDomain, 1, CString(OSSTR("Not an MPEG-4 file")));
-//static	SError	sUnsupportedCodec(sErrorDomain, 2, CString(OSSTR("Unsupported codec")));
+static	SError	sNotAnMPEG4FileError(sErrorDomain, 1, CString(OSSTR("Not an MPEG-4 file")));
+static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported codec")));
 
-#define ReturnNotAnMPEG4FileIf(check)	{ if (check) return OI<SError>(sNotAnMPEG4File); }
+#define ReturnNotAnMPEG4FileIf(check)	{ if (check) return OI<SError>(sNotAnMPEG4FileError); }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMPEG4MediaSourceInternals
@@ -914,7 +914,9 @@ OI<SError> CMPEG4MediaSource::loadTracks()
 					mInternals->addMP4AAudioTrack(stsdDescription,
 							CMPEG4MediaSourceInternals::composePacketLocations(sttsAtomPayload, stscAtomPayload,
 									stszAtomPayload, stcoAtomPayload, co64AtomPayload));
-				}
+				} else
+					// Unsupported codec
+					return OI<SError>(sUnsupportedCodecError);
 			}
 		}
 	}

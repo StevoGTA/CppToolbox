@@ -34,12 +34,10 @@ class CAACAudioCodecInternals {
 									CAACAudioCodecInternals&	internals = *((CAACAudioCodecInternals*) inUserData);
 
 									// Add packets
-									UInt32									available =
-																					internals.mInputPacketData
-																							.getSize();
-									UInt8*									packetDataPtr =
-																					(UInt8*) internals.mInputPacketData
-																							.getMutableBytePtr();
+									UInt32							available = internals.mInputPacketData.getSize();
+									UInt8*							packetDataPtr =
+																			(UInt8*) internals.mInputPacketData
+																					.getMutableBytePtr();
 									TNArray<CAudioCodec::Packet>	packets;
 									while (internals.mNextPacketIndex < internals.mPacketLocations->getCount()) {
 										// Setup
@@ -94,7 +92,7 @@ class CAACAudioCodecInternals {
 																							.getMutableBytePtr();
 									*outDataPacketDescription = packetDescription;
 
-									SInt64							offset = 0;
+									SInt64	offset = 0;
 									for (TIteratorD<CAudioCodec::Packet> iterator = packets.getIterator();
 											iterator.hasValue(); iterator.advance(), packetDescription++) {
 										// Update
@@ -193,26 +191,15 @@ SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAu
 		// Reset audio converter
 		::AudioConverterReset(mInternals->mAudioConverterRef);
 
-		// Get new sample position
-		UInt64		frameIndex = mediaPosition.getFrameIndex(mInternals->mAudioProcessingFormat->getSampleRate());
-
-		// Adjust next packet index
-		mInternals->mNextPacketIndex = 0;
-		for (TIteratorD<CAudioCodec::PacketLocation> iterator = mInternals->mPacketLocations->getIterator();
-				iterator.hasValue(); iterator.advance()) {
-			// Setup
-			const	CAudioCodec::Packet& packet = iterator->mPacket;
-			if (frameIndex > packet.mSampleCount) {
-				// Advance another packet
-				mInternals->mNextPacketIndex++;
-				frameIndex -= packet.mSampleCount;
-			} else
-				// Done
-				break;
-		}
+		// Update next packet index
+		mInternals->mNextPacketIndex =
+				getPacketIndex(mediaPosition, *mInternals->mAudioProcessingFormat, *mInternals->mPacketLocations);
 	}
 
 	// Setup
+	Float32		sourceProcessed =
+						(Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mPacketLocations->getCount();
+
 	AudioBufferList	audioBufferList;
 	audioBufferList.mNumberBuffers = 1;
 	audioData.getAsWrite(audioBufferList);
@@ -229,6 +216,5 @@ SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAu
 	// Update
 	audioData.completeWrite(frameCount);
 
-	return SAudioReadStatus(
-			(Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mPacketLocations->getCount());
+	return SAudioReadStatus(sourceProcessed);
 }
