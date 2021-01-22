@@ -64,7 +64,7 @@ HRESULT LogMediaType(IMFMediaType *pType);
 LPCWSTR GetGUIDNameConst(const GUID& guid);
 HRESULT GetGUIDName(const GUID& guid, WCHAR **ppwsz);
 
-HRESULT LogAttributeValueByIndex(IMFAttributes *pAttr, DWORD index);
+HRESULT LogAttributeValueByIndex(IMFAttributes *pAttr, UINT32 index);
 HRESULT SpecialCaseAttributeValue(GUID guid, const PROPVARIANT& var);
 
 void DBGMSG(PCWSTR format, ...);
@@ -301,37 +301,37 @@ OI<SError> CMediaFoundationServices::copySample(IMFSample* sample, CAudioData& a
 // TODO: Cleanup these procs
 
 //----------------------------------------------------------------------------------------------------------------------
-HRESULT LogMediaType(IMFMediaType *pType)
+HRESULT LogMediaType(IMFMediaType* mediaType)
 //----------------------------------------------------------------------------------------------------------------------
 {
-    UINT32 count = 0;
+	// Setup
+	HRESULT	result;
 
-    HRESULT hr = pType->GetCount(&count);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
+	// Get attribute count
+    UINT32	attributeCount;
+    result = mediaType->GetCount(&attributeCount);
+	if (FAILED(result)) return result;
 
-    if (count == 0)
-    {
-        DBGMSG(L"Empty media type.\n");
-    }
+	// Check attribute count
+	if (attributeCount > 0)
+		// Log attributes
+		for (UINT32 i = 0; i < attributeCount; i++) {
+			// Log attribute
+			result = LogAttributeValueByIndex(mediaType, i);
+			if (FAILED(result)) return result;
+		}
+	else
+		CLogServices::logMessage(OSSTR("Empty media type."));
 
-    for (UINT32 i = 0; i < count; i++)
-    {
-        hr = LogAttributeValueByIndex(pType, i);
-        if (FAILED(hr))
-        {
-            break;
-        }
-    }
-    return hr;
+	return S_OK;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-HRESULT LogAttributeValueByIndex(IMFAttributes *pAttr, DWORD index)
+HRESULT LogAttributeValueByIndex(IMFAttributes* pAttr, UINT32 index)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+
     WCHAR *pGuidName = NULL;
     WCHAR *pGuidValName = NULL;
 

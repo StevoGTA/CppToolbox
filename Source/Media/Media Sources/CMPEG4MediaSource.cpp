@@ -446,15 +446,15 @@ struct SstsdDescription {
 };
 
 struct SstsdAtomPayload {
-									// Methods
-	const	SstsdDescription&	getDescription() const { return mDescriptions[0]; }
+								// Methods
+	const	SstsdDescription&	getDescription() const { return *((SstsdDescription*) mDescriptions); }
 
 	// Properties (in storage endian)
 	private:
-		UInt8				mVersion;				// 0
-		UInt8				mFlags[3];
-		UInt32				mDescriptionCount;
-		SstsdDescription	mDescriptions[];
+		UInt8	mVersion;				// 0
+		UInt8	mFlags[3];
+		UInt32	mDescriptionCount;
+		UInt8	mDescriptions[];
 };
 
 //struct SALACSpecificConfig {

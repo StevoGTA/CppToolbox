@@ -99,17 +99,14 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	PacketsWithMagicCookieDecodeInfo&	packetsWithMagicCookieDecodeInfo =
-														*((PacketsWithMagicCookieDecodeInfo*) &*decodeInfo);
+	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
 	// Store
 	mInternals->mByteParceller = OI<CByteParceller>(byteParceller);
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-	mInternals->mPacketLocations = OI<TArray<CAudioCodec::PacketLocation> >(
-			packetsWithMagicCookieDecodeInfo.getPacketLocations());
+	mInternals->mPacketLocations = OI<TArray<CAudioCodec::PacketLocation> >(aacDecodeInfo.getPacketLocations());
 
 	// Setup
-// TODO: Get audio specific config from actual AAC info
 #pragma pack(push,1)
 	struct UserData {
 		WORD	mPayloadType;
@@ -120,7 +117,7 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 		WORD	mAudioSpecificConfig;
 	} userData = {0};
 #pragma pack(pop)
-	userData.mAudioSpecificConfig = 0x1012;
+	userData.mAudioSpecificConfig = EndianU16_NtoB(aacDecodeInfo.getStartCodes());
 
 	mInternals->mAudioDecoder =
 			CMediaFoundationServices::createAudioDecoder(MFAudioFormat_AAC, audioProcessingFormat,
