@@ -147,14 +147,12 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	PacketsWithMagicCookieDecodeInfo&	packetsWithMagicCookieDecodeInfo =
-														*((PacketsWithMagicCookieDecodeInfo*) &*decodeInfo);
+	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
 	// Store
 	mInternals->mByteParceller = OI<CByteParceller>(byteParceller);
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-	mInternals->mPacketLocations = OI<TArray<CAudioCodec::PacketLocation> >(
-			packetsWithMagicCookieDecodeInfo.getPacketLocations());
+	mInternals->mPacketLocations = OI<TArray<CAudioCodec::PacketLocation> >(aacDecodeInfo.getPacketLocations());
 
 	// Setup
 	AudioStreamBasicDescription	sourceFormat = {0};
@@ -176,9 +174,8 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 	// Set magic cookie
 	status =
 			::AudioConverterSetProperty(mInternals->mAudioConverterRef,
-					kAudioConverterDecompressionMagicCookie,
-					packetsWithMagicCookieDecodeInfo.getMagicCookie().getSize(),
-					packetsWithMagicCookieDecodeInfo.getMagicCookie().getBytePtr());
+					kAudioConverterDecompressionMagicCookie, aacDecodeInfo.getMagicCookie().getSize(),
+					aacDecodeInfo.getMagicCookie().getBytePtr());
 	LOG_OSSTATUS_IF_FAILED(status, OSSTR("AudioConverterSetProperty for magic cookie"));
 }
 

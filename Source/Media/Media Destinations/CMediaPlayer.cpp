@@ -70,13 +70,8 @@ class CMediaPlayerInternals {
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTime position,
 								void* userData)
 							{
-								// Setup
-								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
-								CSRSWMessageQueue&		messageQueue =
-																((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue;
-
 								// Submit
-								messageQueue.submit(
+								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
 										AudioPlayerPositionUpdatedMessage(handleAudioPlayerPositionUpdated, userData,
 												audioPlayer, position));
 							}
@@ -93,13 +88,8 @@ class CMediaPlayerInternals {
 							}
 		static	void	audioPlayerEndOfData(const CAudioPlayer& audioPlayer, void* userData)
 							{
-								// Setup
-								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
-								CSRSWMessageQueue&		messageQueue =
-																((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue;
-
 								// Submit
-								messageQueue.submit(
+								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
 										AudioPlayerEndOfDataMessage(handleAudioPlayerEndOfData, userData, audioPlayer));
 							}
 		static	void	handleAudioPlayerEndOfData(const CSRSWMessageQueue::ProcMessage& message, void* userData)
@@ -137,13 +127,8 @@ class CMediaPlayerInternals {
 							}
 		static	void	audioPlayerError(const CAudioPlayer& audioPlayer, const SError& error, void* userData)
 							{
-								// Setup
-								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
-								CSRSWMessageQueue&		messageQueue =
-																((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue;
-
 								// Submit
-								messageQueue.submit(
+								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
 										AudioPlayerErrorMessage(handleAudioPlayerError, userData, audioPlayer, error));
 							}
 		static	void	handleAudioPlayerError(const CSRSWMessageQueue::ProcMessage& message, void* userData)

@@ -74,7 +74,7 @@ CString::CString(const char* chars, Length charsCount, Encoding encoding) : CHas
 	if (chars == nil)
 		// No initial string
 		mStringRef = CFSTR("");
-	else if (charsCount == ~0)
+	else if (charsCount == (Length) ~0)
 		// Use entire string
 		mStringRef =
 				::CFStringCreateWithCString(kCFAllocatorDefault, chars,

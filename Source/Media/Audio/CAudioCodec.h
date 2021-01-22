@@ -89,24 +89,6 @@ class CAudioCodec {
 				TArray<PacketLocation>	mPacketLocations;
 		};
 
-		class PacketsWithMagicCookieDecodeInfo : public PacketsDecodeInfo {
-			// Methods
-			public:
-								// Lifecycle methods
-								PacketsWithMagicCookieDecodeInfo(const TArray<PacketLocation>& packetLocations,
-										const CData& magicCookie) :
-									PacketsDecodeInfo(packetLocations), mMagicCookie(magicCookie)
-									{}
-
-								// Instance methods
-				const	CData&	getMagicCookie() const
-									{ return mMagicCookie; }
-
-			// Properties
-			private:
-				CData	mMagicCookie;
-		};
-
 		class EncodeSettings {
 			// Methods
 			public:

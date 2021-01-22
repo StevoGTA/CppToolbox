@@ -9,6 +9,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
+/*
+	Info on MPEG 4 files can be found here:
+		http://www.geocities.com/xhelmboyx/quicktime/formats/mp4-layout.txt (no longer active)
+		http://atomicparsley.sourceforge.net/mpeg-4files.html
+*/
+
 #pragma pack(push,1)
 
 #if TARGET_OS_WINDOWS
@@ -231,63 +237,84 @@ struct ShdlrAtomPayload {
 
 struct SesdsDecoderSpecificDescriptor {
 			// Methods
-	UInt16	getStartCodes() const { return mStartCodes[0] << 8 | mStartCodes[1]; }
+	CData	getStartCodes() const
+				{
+					// Check for minimal/extended
+					if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+						// Minimal
+						return CData(_.mMinimalInfo.mStartCodes, _.mMinimalInfo.mDescriptorLength);
+					else
+						// Extended
+						return CData(_.mExtendedInfo.mStartCodes, _.mExtendedInfo.mDescriptorLength);
+				}
 
 	// Properties (in storage endian)
 	private:
-		UInt8	mDescriptorType;				// 5
-		UInt8	mDescriptorLength;				// size of 5
+		UInt8	mDescriptorType;					// 5
+		union {
+			struct MinimalInfo {
+				UInt8	mDescriptorLength;			// size of 5
 
-		UInt8	mStartCodes[2];
-};
+				UInt8	mStartCodes[];
+			} mMinimalInfo;
+			struct ExtendedInfo {
+				UInt8	mExtendedDescriptorType[3];
+				UInt8	mDescriptorLength;			// size of 5
 
-struct SesdsDecoderSpecificDescriptorExtended {
-			// Methods
-	UInt16	getStartCodes() const { return mStartCodes[0] << 8 | mStartCodes[1]; }
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mDescriptorType;				// 5
-		UInt8	mExtendedDescriptorType[3];
-		UInt8	mDescriptorLength;				// size of 5
-
-		UInt8	mStartCodes[2];
+				UInt8	mStartCodes[];
+			} mExtendedInfo;
+		} _;
 };
 
 struct SesdsDecoderConfigDescriptor {
 											// Methods
-	const	SesdsDecoderSpecificDescriptor&	getDecoderSpecificDescriptor() const { return mDecoderSpecificDescriptor; }
+			UInt32							getLength() const
+												{
+													// Check for minimal/extended
+													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+														// Minimal
+														return _.mMinimalInfo.mDescriptorLength;
+													else
+														// Extended
+														return _.mExtendedInfo.mDescriptorLength;
+												}
+	const	SesdsDecoderSpecificDescriptor&	getDecoderSpecificDescriptor() const
+												{
+													// Check for minimal/extended
+													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+														// Minimal
+														return _.mMinimalInfo.mDecoderSpecificDescriptor;
+													else
+														// Extended
+														return _.mExtendedInfo.mDecoderSpecificDescriptor;
+												}
 
 	// Properties (in storage endian)
 	private:
-		UInt8							mDescriptorType;				// 4
-		UInt8							mDescriptorLength;				// size of 4 + 5
+		UInt8							mDescriptorType;					// 4
+		union {
+			struct MinimalInfo {
+				UInt8							mDescriptorLength;			// size of 4 + 5
 
-		UInt8							mObjectTypeID;
-		UInt8							mStreamTypeAndFlags;
-		UInt8							mBufferSize[3];
-		UInt32							mMaximumBitrate;
-		UInt32							mAverageBitrate;
-		SesdsDecoderSpecificDescriptor	mDecoderSpecificDescriptor;
-};
+				UInt8							mObjectTypeID;
+				UInt8							mStreamTypeAndFlags;
+				UInt8							mBufferSize[3];
+				UInt32							mMaximumBitrate;
+				UInt32							mAverageBitrate;
+				SesdsDecoderSpecificDescriptor	mDecoderSpecificDescriptor;
+			} mMinimalInfo;
+			struct ExtendedInfo {
+				UInt8							mExtendedDescriptorType[3];
+				UInt8							mDescriptorLength;			// size of 4 + 5
 
-struct SesdsDecoderConfigDescriptorExtended {
-													// Methods
-	const	SesdsDecoderSpecificDescriptorExtended&	getDecoderSpecificDescriptor() const
-														{ return mDecoderSpecificDescriptor; }
-
-	// Properties (in storage endian)
-	private:
-		UInt8									mDescriptorType;				// 4
-		UInt8									mExtendedDescriptorType[3];
-		UInt8									mDescriptorLength;				// size of 4 + 5
-
-		UInt8									mObjectTypeID;
-		UInt8									mStreamTypeAndFlags;
-		UInt8									mBufferSize[3];
-		UInt32									mMaximumBitrate;
-		UInt32									mAverageBitrate;
-		SesdsDecoderSpecificDescriptorExtended	mDecoderSpecificDescriptor;
+				UInt8							mObjectTypeID;
+				UInt8							mStreamTypeAndFlags;
+				UInt8							mBufferSize[3];
+				UInt32							mMaximumBitrate;
+				UInt32							mAverageBitrate;
+				SesdsDecoderSpecificDescriptor	mDecoderSpecificDescriptor;
+			} mExtendedInfo;
+		} _;
 };
 
 struct SesdsSyncLayerDescriptor {
@@ -295,75 +322,92 @@ struct SesdsSyncLayerDescriptor {
 
 	// Properties (in storage endian)
 	private:
-		UInt8	mDescriptorType;				// 6
-		UInt8	mDescriptorLength;				// size of 6
+		UInt8	mDescriptorType;					// 6
+		union {
+			struct MinimalInfo {
+				UInt8	mDescriptorLength;			// size of 6
 
-		UInt8	mSyncLayerValue;
-};
+				UInt8	mSyncLayerValue;
+			} mMinimalInfo;
+			struct ExtendedInfo {
+				UInt8	mExtendedDescriptorType[3];
+				UInt8	mDescriptorLength;			// size of 6
 
-struct SesdsSyncLayerDescriptorExtended {
-			// Methods
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mDescriptorType;				// 6
-		UInt8	mExtendedDescriptorType[3];
-		UInt8	mDescriptorLength;				// size of 6
-
-		UInt8	mSyncLayerValue;
+				UInt8	mSyncLayerValue;
+			} mExtendedInfo;
+		} _;
 };
 
 struct SesdsDescriptor {
 											// Methods
-	const	SesdsDecoderConfigDescriptor&	getDecoderConfigDescriptor() const { return mDecoderConfigDescriptor; }
+	const	SesdsDecoderConfigDescriptor&	getDecoderConfigDescriptor() const
+												{
+													// Check for minimal/extended
+													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+														// Minimal
+														return *((SesdsDecoderConfigDescriptor*)
+																&_.mMinimalInfo.mChildDescriptorData);
+													else
+														// Extended
+														return *((SesdsDecoderConfigDescriptor*)
+																&_.mExtendedInfo.mChildDescriptorData);
+												}
+	const	SesdsSyncLayerDescriptor&		getSyncLayerDescriptor() const
+												{
+													// Setup
+													UInt32	offset = getDecoderConfigDescriptor().getLength();
+
+													// Check for minimal/extended
+													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+														// Minimal
+														return *((SesdsSyncLayerDescriptor*)
+																&_.mMinimalInfo.mChildDescriptorData[offset]);
+													else
+														// Extended
+														return *((SesdsSyncLayerDescriptor*)
+																&_.mExtendedInfo.mChildDescriptorData[offset]);
+												}
 
 	// Properties (in storage endian)
 	private:
-		UInt8							mDescriptorType;				// 3
-		UInt8							mDescriptorLength;				// size of 3 + 4 + 5 + 6
+		UInt8	mDescriptorType;					// 3
+		union {
+			struct MinimalInfo {
+				UInt8	mDescriptorLength;			// size of 3 + 4 + 5 + 6
 
-		UInt16							mESID;
-		UInt8							mStreamPriority;
-		SesdsDecoderConfigDescriptor	mDecoderConfigDescriptor;
-		SesdsSyncLayerDescriptor		mSyncLayerDescriptor;
-};
+				UInt16	mESID;
+				UInt8	mStreamPriority;
+				UInt8	mChildDescriptorData[];
+			} mMinimalInfo;
 
-struct SesdsDescriptorExtended {
-													// Methods
-	const	SesdsDecoderConfigDescriptorExtended&	getDecoderConfigDescriptor() const
-														{ return mDecoderConfigDescriptor; }
+			struct ExtendedInfo {
+				UInt8	mExtendedDescriptorType[3];
+				UInt8	mDescriptorLength;			// size of 3 + 4 + 5 + 6
 
-	// Properties (in storage endian)
-	private:
-		UInt8									mDescriptorType;				// 3
-		UInt8									mExtendedDescriptorType[3];
-		UInt8									mDescriptorLength;				// size of 3 + 4 + 5 + 6
-
-		UInt16									mESID;
-		UInt8									mStreamPriority;
-		SesdsDecoderConfigDescriptorExtended	mDecoderConfigDescriptor;
-		SesdsSyncLayerDescriptorExtended		mSyncLayerDescriptor;
+				UInt16	mESID;
+				UInt8	mStreamPriority;
+				UInt8	mChildDescriptorData[];
+			} mExtendedInfo;
+		} _;
 };
 
 struct SesdsInfo {
 			// Methods
-			UInt32						getSize() const { return EndianU32_BtoN(mSize); }
+			UInt32				getSize() const { return EndianU32_BtoN(mHeader.mSize); }
 
-	const	SesdsDescriptor&			getDescriptor() const { return mESDSDescriptor; }
-	const	SesdsDescriptorExtended&	getDescriptorExtended() const { return mESDSDescriptorExtended; }
+	const	SesdsDescriptor&	getDescriptor() const { return mESDSDescriptor; }
+			UInt32				getDescriptorSize() const { return getSize() - sizeof(Header); }
 
 	// Properties (in storage endian)
 	private:
-		UInt32	mSize;
-		OSType	mType;	// 'esds'
+		struct Header {
+			UInt32	mSize;
+			OSType	mType;	// 'esds'
 
-		UInt8	mVersion;
-		UInt8	mFlags[3];
-
-		union {
-			SesdsDescriptor			mESDSDescriptor;
-			SesdsDescriptorExtended	mESDSDescriptorExtended;
-		};
+			UInt8	mVersion;
+			UInt8	mFlags[3];
+		} mHeader;
+		SesdsDescriptor	mESDSDescriptor;
 };
 
 struct SMP4AAudioFormat {
@@ -624,76 +668,28 @@ void CMPEG4MediaSourceInternals::addMP4AAudioTrack(const SstsdDescription& stsdD
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// MPEG 4 Audio
-	const	SMP4AAudioFormat&	audioFormat = stsdDescription.getMP4AAudioFormat();
-	const	SesdsInfo&			esdsInfo = audioFormat.getESDSInfo();
+	const	SMP4AAudioFormat&				audioFormat = stsdDescription.getMP4AAudioFormat();
+	const	SesdsInfo&						esdsInfo = audioFormat.getESDSInfo();
+	const	SesdsDescriptor&				descriptor = esdsInfo.getDescriptor();
+	const	SesdsDecoderConfigDescriptor&	decoderConfigDescriptor = descriptor.getDecoderConfigDescriptor();
+	const	SesdsDecoderSpecificDescriptor&	decoderSpecificDescriptor =
+													decoderConfigDescriptor.getDecoderSpecificDescriptor();
+			CData							startCodesData = decoderSpecificDescriptor.getStartCodes();
+			UInt16							startCodes = EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()));
 
-			CData				magicCookie;
-			UInt16				startCodes;
-	if (esdsInfo.getSize() == 0x27) {
-		// Normal
-		const	SesdsDescriptor&				descriptor = esdsInfo.getDescriptor();
-		const	SesdsDecoderConfigDescriptor&	decoderConfigDescriptor = descriptor.getDecoderConfigDescriptor();
-		const	SesdsDecoderSpecificDescriptor&	decoderSpecificDescriptor =
-														decoderConfigDescriptor.getDecoderSpecificDescriptor();
-		magicCookie = CData(&descriptor, sizeof(SesdsDescriptor));
-		startCodes = decoderSpecificDescriptor.getStartCodes();
-	} else if (esdsInfo.getSize() == 0x33) {
-		// Extended
-		const	SesdsDescriptorExtended&				descriptor = esdsInfo.getDescriptorExtended();
-		const	SesdsDecoderConfigDescriptorExtended&	decoderConfigDescriptor =
-																descriptor.getDecoderConfigDescriptor();
-		const	SesdsDecoderSpecificDescriptorExtended&	decoderSpecificDescriptor =
-																decoderConfigDescriptor.getDecoderSpecificDescriptor();
-		magicCookie = CData(&descriptor, sizeof(SesdsDescriptorExtended));
-		startCodes = decoderSpecificDescriptor.getStartCodes();
-	} else
-		// Unknown size
+	// Compose audio storage format
+	OI<SAudioStorageFormat>	audioStorageFormat =
+									CAACAudioCodec::composeAudioStorageFormat(startCodes, audioFormat.getChannels());
+	if (!audioStorageFormat.hasInstance())
+		// Unknown
 		return;
 
-	// See https://wiki.multimedia.cx/index.php/MPEG-4_Audio
-	// Codec ID
-	OSType	codecID;
-	switch (startCodes >> 11) {
-		case 02:	codecID = CAACAudioCodec::mAACLCID;	break;
-		case 23:	codecID = CAACAudioCodec::mAACLDID;	break;
-		default:	return;
-	}
-
-	Float32	sampleRate;
-	switch ((startCodes & 0x0780) >> 7) {
-		case 0:		sampleRate = 96000.0;	break;
-		case 1:		sampleRate = 88200.0;	break;
-		case 2:		sampleRate = 64000.0;	break;
-		case 3:		sampleRate = 48000.0;	break;
-		case 4:		sampleRate = 44100.0;	break;
-		case 5:		sampleRate = 32000.0;	break;
-		case 6:		sampleRate = 24000.0;	break;
-		case 7:		sampleRate = 22050.0;	break;
-		case 8:		sampleRate = 16000.0;	break;
-		case 9:		sampleRate = 12000.0;	break;
-		case 10:	sampleRate = 11025.0;	break;
-		case 11:	sampleRate = 8000.0;	break;
-		case 12:	sampleRate = 7350.0;	break;
-		default:	return;
-	}
-
-	EAudioChannelMap	channelMap;
-	switch ((startCodes & 0x0078) >> 3) {
-		case 0:		channelMap = AUDIOCHANNELMAP_FORUNKNOWN(audioFormat.getChannels());	break;
-		case 1:		channelMap = kAudioChannelMap_1_0;									break;
-		case 2:		channelMap = kAudioChannelMap_2_0_Option1;							break;
-		case 3:		channelMap = kAudioChannelMap_3_0_Option2;							break;
-		case 4:		channelMap = kAudioChannelMap_4_0_Option3;							break;
-		case 5:		channelMap = kAudioChannelMap_5_0_Option4;							break;
-		case 6:		channelMap = kAudioChannelMap_5_1_Option4;							break;
-		case 7:		channelMap = kAudioChannelMap_7_1_Option2;							break;
-		default:	return;
-	}
-
+	// Add audio track
 	mAudioTracks +=
-			CAudioTrack(SAudioStorageFormat(codecID, sampleRate, channelMap),
+			CAudioTrack(*audioStorageFormat,
 					I<CAudioCodec::DecodeInfo>(
-							new CAudioCodec::PacketsWithMagicCookieDecodeInfo(packetLocations, magicCookie)));
+							new CAACAudioCodec::DecodeInfo(packetLocations,
+									CData(&descriptor, esdsInfo.getDescriptorSize()), startCodes)));
 }
 
 // MARK: Class methods
