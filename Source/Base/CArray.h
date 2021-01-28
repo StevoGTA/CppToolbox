@@ -54,8 +54,8 @@ class CArray : public CEquatable {
 									// Instance methods
 				ItemRef				copy(const ItemRef itemRef) const;
 
-				CArray&				add(const ItemRef itemRef, bool avoidDuplicates = false);
-				CArray&				addFrom(const CArray& other, bool avoidDuplicates = false);
+				CArray&				add(const ItemRef itemRef);
+				CArray&				addFrom(const CArray& other);
 
 				bool				contains(const ItemRef itemRef) const;
 

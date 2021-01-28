@@ -105,31 +105,30 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													return OV<CArray::ItemIndex>();
 												}
 
-				CArrayInternals*			append(const CArray::ItemRef* itemRefs, CArray::ItemCount count,
-													bool avoidDuplicates)
+				CArrayInternals*			append(const CArray::ItemRef* itemRefs, CArray::ItemCount count)
 												{
 													// Prepare for write
 													CArrayInternals*	arrayInternals = prepareForWrite();
 
-													if (!avoidDuplicates)
-														// General case
-														arrayInternals->append(itemRefs, count);
-													else {
-														// Must ensure we are not adding an itemRef we already have
-														for (CArray::ItemCount i = 0; i < count; i++) {
-															// Get itemRef
-															CArray::ItemRef	itemRef = itemRefs[i];
+													// Setup
+													CArray::ItemCount	neededCount = arrayInternals->mCount + count;
 
-															// Check if found
-															OV<CArray::ItemIndex>	index =
-																							arrayInternals->getIndexOf(
-																									itemRef);
-
-															if (!index.hasValue())
-																// Not found
-																arrayInternals->append(&itemRef, 1);
-														}
+													// Check storage
+													if (neededCount > arrayInternals->mCapacity) {
+														// Expand storage
+														arrayInternals->mCapacity =
+																std::max(neededCount, arrayInternals->mCapacity * 2);
+														arrayInternals->mItemRefs =
+																(CArray::ItemRef*)
+																		::realloc(arrayInternals->mItemRefs,
+																				arrayInternals->mCapacity *
+																						sizeof(CArray::ItemRef));
 													}
+
+													// Append itemRefs into place
+													::memcpy(arrayInternals->mItemRefs + arrayInternals->mCount,
+															itemRefs, count * sizeof(CArray::ItemRef));
+													arrayInternals->mCount = neededCount;
 
 													// Update info
 													arrayInternals->mReference++;
@@ -249,28 +248,6 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 
 												}
 
-	private:
-				void						append(const CArray::ItemRef itemRefs, CArray::ItemCount count)
-												{
-													// Setup
-													CArray::ItemCount	neededCount = mCount + count;
-
-													// Check storage
-													if (neededCount > mCapacity) {
-														// Expand storage
-														mCapacity = std::max(neededCount, mCapacity * 2);
-														mItemRefs =
-																(CArray::ItemRef*)
-																		::realloc(mItemRefs,
-																				mCapacity * sizeof(CArray::ItemRef));
-													}
-
-													// Append itemRefs into place
-													::memcpy(mItemRefs + mCount, itemRefs,
-															count * sizeof(CArray::ItemRef));
-													mCount = neededCount;
-												}
-
 	public:
 		CArray::ItemCount	mCapacity;
 		CArray::ItemCount	mCount;
@@ -326,20 +303,20 @@ CArray::ItemRef CArray::copy(const ItemRef itemRef) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::add(const ItemRef itemRef, bool avoidDuplicates)
+CArray& CArray::add(const ItemRef itemRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
 	AssertNotNil(itemRef);
 
 	// Add item
-	mInternals = mInternals->append(&itemRef, 1, avoidDuplicates);
+	mInternals = mInternals->append(&itemRef, 1);
 
 	return *this;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::addFrom(const CArray& other, bool avoidDuplicates)
+CArray& CArray::addFrom(const CArray& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -348,7 +325,7 @@ CArray& CArray::addFrom(const CArray& other, bool avoidDuplicates)
 		return *this;
 
 	// Add items
-	mInternals = mInternals->append(other.mInternals->mItemRefs, other.mInternals->mCount, avoidDuplicates);
+	mInternals = mInternals->append(other.mInternals->mItemRefs, other.mInternals->mCount);
 
 	return *this;
 }
