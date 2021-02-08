@@ -77,7 +77,7 @@ CString CFilesystemPath::getExtension() const
 		return CString::mEmpty;
 
 	// Get last component and break into fields based on "."
-	TArray<CString>	parts = getLastComponent().breakUp(CString(OSSTR(".")));
+	TArray<CString>	parts = getLastComponent().components(CString(OSSTR(".")));
 
 	return (parts.getCount() > 1) ? parts.getLast() : CString::mEmpty;
 }
@@ -91,7 +91,7 @@ TArray<CString> CFilesystemPath::getComponents() const
 		// No components
 		return TNArray<CString>();
 
-	return mInternals->mString.breakUp(sPathSeparator(mInternals->mStyle));
+	return mInternals->mString.components(sPathSeparator(mInternals->mStyle));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ CString CFilesystemPath::getLastComponentDeletingExtension() const
 		return CString::mEmpty;
 
 	// Get fields
-	TArray<CString>	fields = component.breakUp(CString(OSSTR(".")));
+	TArray<CString>	fields = component.components(CString(OSSTR(".")));
 
 	return (fields.getCount() > 1) ?
 			component.getSubString(0, component.getLength() - fields.getLast().getLength() - 1) : component;

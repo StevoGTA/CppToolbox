@@ -27,14 +27,14 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 		char	line[256];
 
 		::fgets(line, sizeof(line), file);
-		CString	productName = CString(line).breakUp(CString::mTab)[1].removingLeadingAndTrailingWhitespace();
+		CString	productName = CString(line).components(CString::mTab)[1].removingLeadingAndTrailingWhitespace();
 
 		::fgets(line, sizeof(line), file);
 		TArray<CString>	components =
-								CString(line).breakUp(CString::mTab)[1].breakUp(CString::mPeriod);
+								CString(line).components(CString::mTab)[1].components(CString::mPeriod);
 
 		::fgets(line, sizeof(line), file);
-		CString	buildVersion = CString(line).breakUp(CString::mTab)[1].removingLeadingAndTrailingWhitespace();
+		CString	buildVersion = CString(line).components(CString::mTab)[1].removingLeadingAndTrailingWhitespace();
 
 		sVersionInfo =
 				new SSystemVersionInfo(productName, components[0].getUInt32(), components[1].getUInt32(),
@@ -66,7 +66,7 @@ const SVersionInfo& CCoreServices::getCoreAudioVersion()
 							(CFStringRef) ::CFBundleGetValueForInfoDictionaryKey(bundleRef,
 									OSSTR("CFBundleShortVersionString"));
 		::CFRelease(bundleRef);
-		TArray<CString>	array = CString(stringRef).breakUp(CString(OSSTR(".")));
+		TArray<CString>	array = CString(stringRef).components(CString(OSSTR(".")));
 		UInt8			majorVersion = (array.getCount() > 0) ? array[0].getUInt8() : 0;
 		UInt8			minorVersion = (array.getCount() > 1) ? array[1].getUInt8() : 0;
 		UInt8			patchVersion = (array.getCount() > 2) ? array[2].getUInt8() : 0;

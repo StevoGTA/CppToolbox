@@ -7,7 +7,7 @@
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDataSource
+// MARK: CDataSource
 
 class CDataSource {
 	// Enums

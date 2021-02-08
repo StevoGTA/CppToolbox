@@ -18,7 +18,7 @@ template <typename T> struct T3DPoint {
 								// {0.0,0.0,0.0} => ,0.0,0.0,0.0}
 								TArray<CString>	array =
 														string.replacingSubStrings(CString(OSSTR("{")),
-																CString(OSSTR(","))).breakUp(CString(OSSTR(",")));
+																CString(OSSTR(","))).components(CString(OSSTR(",")));
 								if (array.getCount() >= 4) {
 									// Extract values
 									mX = array[1].getFloat32();

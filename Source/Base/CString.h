@@ -206,10 +206,10 @@ class CString : public CHashable {
 										CString(const UTF32Char* chars, Length charsCount,
 												Encoding encoding = kEncodingUTF32Native);
 
-										CString(Float32 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint,
-												bool padWithZeros = false);
-										CString(Float64 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint,
-												bool padWithZeros = false);
+										CString(Float32 value, UInt32 fieldSize = 0,
+												UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
+										CString(Float64 value, UInt32 fieldSize = 0,
+												UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
 										CString(SInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false);
 										CString(SInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false);
 										CString(SInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false);
@@ -225,6 +225,9 @@ class CString : public CHashable {
 										CString(OSType osType, bool isOSType, bool includeQuotes = true);
 										CString(UInt64 value, SpecialFormattingOptions specialFormattingOptions);
 										CString(const void* pointer);
+
+										CString(const TArray<CString>& components,
+												const CString& separator = CString(OSSTR(", ")));
 
 										CString(const CData& data, Encoding encoding = kEncodingTextDefault);
 
@@ -308,8 +311,8 @@ class CString : public CHashable {
 						bool			isValidEmailAddress() const;
 						CString			getCommonPrefix(const CString& other) const;
 					
-						TArray<CString>	breakUp(const CString& delimiterString) const;
-						TArray<CString>	breakUpRespectingQuotes(const CString& delimiterString) const;
+						TArray<CString>	components(const CString& separator) const;
+						TArray<CString>	componentsRespectingQuotes(const CString& separator) const;
 
 						ECompareResult	compareTo(const CString& other,
 												CompareFlags compareFlags = kCompareFlagsDefault) const;

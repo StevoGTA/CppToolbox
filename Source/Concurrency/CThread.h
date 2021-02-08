@@ -34,6 +34,8 @@ class CThread {
 
 								// Class methods
 		static			Ref		getCurrentRef();
+		static			CString	getCurrentRefAsString()
+									{ return CString(getCurrentRef()); }
 		static			void	sleepFor(UniversalTimeInterval universalTimeInterval);
 
 	protected:

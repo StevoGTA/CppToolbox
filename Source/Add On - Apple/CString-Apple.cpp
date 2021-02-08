@@ -141,8 +141,8 @@ CString::CString(Float32 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 	// Check field size
 	if (fieldSize == 0)
 		mStringRef =
-				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%*.*f"), (int) fieldSize,
-						(int) digitsAfterDecimalPoint, (double) value);
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%0.*f"), (int) digitsAfterDecimalPoint,
+						(double) value);
 	else
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%0*.*f") : CFSTR("%*.*f"),
@@ -156,8 +156,8 @@ CString::CString(Float64 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 	// Check field size
 	if (fieldSize == 0)
 		mStringRef =
-				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%*.*f"), (int) fieldSize,
-						(int) digitsAfterDecimalPoint, value);
+				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%0.*f"), (int) digitsAfterDecimalPoint,
+						value);
 	else
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%0*.*f") : CFSTR("%*.*f"),
@@ -299,6 +299,28 @@ CString::CString(const void* pointer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%p"), pointer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const TArray<CString>& components, const CString& separator)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFMutableStringRef	stringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+
+	// Iterate array
+	for (CArray::ItemIndex i = 0; i < components.getCount(); i++) {
+		// Check if need to add separator
+		if (i > 0)
+			// Add separator
+			::CFStringAppend(stringRef, separator.mStringRef);
+
+		// Append this component
+		::CFStringAppend(stringRef, components[i].mStringRef);
+	}
+
+	// Store
+	mStringRef = stringRef;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -660,7 +682,7 @@ CString CString::getCommonPrefix(const CString& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CString::breakUp(const CString& delimiterString) const
+TArray<CString> CString::components(const CString& separator) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -668,8 +690,7 @@ TArray<CString> CString::breakUp(const CString& delimiterString) const
 
 	// Get array
 	CFArrayRef	arrayRef =
-						::CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, mStringRef,
-								delimiterString.mStringRef);
+						::CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, mStringRef, separator.mStringRef);
 
 	for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++)
 		array += CString((CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i));

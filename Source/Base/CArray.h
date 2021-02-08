@@ -79,12 +79,13 @@ class CArray : public CEquatable {
 				bool				equals(const CArray& other) const;
 
 				TIteratorS<ItemRef>	getIterator() const;
+
 				CArray&				apply(ApplyProc applyProc, void* userData = nil);
 
 				CArray&				sort(CompareProc compareProc, void* userData = nil);
 				CArray				sorted(CompareProc compareProc, void* userData = nil) const;
 
-				CArray				filtered(IsIncludedProc isIncludedProc, void* userData = nil);
+				CArray				filtered(IsIncludedProc isIncludedProc, void* userData = nil) const;
 
 				CArray&				operator=(const CArray& other);
 				CArray&				operator+=(const CArray& other)
@@ -287,7 +288,17 @@ template <typename T> class TNArray : public TArray<T> {
 	public:
 					// Lifecycle methods
 					TNArray() : TArray<T>((CArray::CopyProc) copy) {}
-					TNArray(const T& item) : TArray<T>(item, (CArray::CopyProc) copy) {}
+					TNArray(const T& item, UInt32 count = 1) :
+						TArray<T>((CArray::CopyProc) copy)
+						{
+							// Loop requested times
+							for (UInt32 i = 0; i < count; i++)
+								// Add
+								this->add(item);
+						}
+					TNArray(const TArray<T>& array) :
+						TArray<T>((CArray::CopyProc) copy)
+						{ TArray<T>::addFrom(array); }
 					TNArray(const CArray& array, T (mappingProc)(CArray::ItemRef item)) :
 						TArray<T>((CArray::CopyProc) copy)
 						{

@@ -37,7 +37,10 @@ class CFolder : CHashable {
 						OI<SError>			remove() const;
 						bool				doesExist() const;
 
-						CFolder				getFolder() const;
+						CFolder				getParentFolder() const;
+
+						CFolder				getChildFolder(const CString& name) const;
+						CFile				getFile(const CString& name) const;
 
 #if TARGET_OS_MACOS
 						bool				isPackage() const;

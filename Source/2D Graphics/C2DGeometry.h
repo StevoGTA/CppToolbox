@@ -29,7 +29,7 @@ template <typename T> struct T2DPoint {
 								// {0.0,0.0} => ,0.0,0.0}
 								TArray<CString>	array =
 														string.replacingSubStrings(CString(OSSTR("{")),
-																CString(OSSTR(","))).breakUp(CString(OSSTR(",")));
+																CString(OSSTR(","))).components(CString(OSSTR(",")));
 								if (array.getCount() >= 3) {
 									// Extract values
 									mX = array[1].getFloat32();
@@ -130,7 +130,7 @@ template <typename T> struct T2DSize {
 							// {0.0,0.0} => ,0.0,0.0}
 							TArray<CString>	array =
 													string.replacingSubStrings(CString(OSSTR("{")),
-															CString(OSSTR(","))).breakUp(CString(OSSTR(",")));
+															CString(OSSTR(","))).components(CString(OSSTR(",")));
 							if (array.getCount() >= 3) {
 								// Extract values
 								mWidth = array[1].getFloat32();
@@ -226,7 +226,7 @@ template <typename T> struct T2DRect {
 								// {{0.0,0.0},{0.0,0.0}} => ,,0.0,0.0},,0.0,0.0}}
 								TArray<CString>	array =
 														string.replacingSubStrings(CString(OSSTR("{")),
-																CString(OSSTR(","))).breakUp(CString(OSSTR(",")));
+																CString(OSSTR(","))).components(CString(OSSTR(",")));
 								if (array.getCount() >= 7) {
 									// Extract values
 									mOrigin.mX = array[2].getFloat32();

@@ -324,11 +324,11 @@ bool CString::isValidEmailAddress() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Must have at least one "@"
-	TArray<CString>	array1 = breakUp(CString(OSSTR("@")));
+	TArray<CString>	array1 = components(CString(OSSTR("@")));
 	bool			isValid = array1.getCount() >= 2;
 	if (isValid) {
 		// Before the last "@", can be pretty much anything.
-		TArray<CString>	array2 = array1[array1.getCount() - 1].breakUp(CString(OSSTR(".")));
+		TArray<CString>	array2 = array1[array1.getCount() - 1].components(CString(OSSTR(".")));
 
 		// After the last "@", must have at least one "."
 		isValid = array2.getCount() >= 2;
@@ -362,13 +362,13 @@ bool CString::isValidEmailAddress() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CString::breakUpRespectingQuotes(const CString& delimiterString) const
+TArray<CString> CString::componentsRespectingQuotes(const CString& separator) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	TNArray<CString>	array;
 
-	// Quotes around a string with the delimiter is not a real delimiter
+	// Quotes around a string with the separator is not a real separator
 	bool	inQuotes = false;
 	CString	tempString;
 	for (CharIndex i = 0; i < getLength();) {
@@ -376,11 +376,11 @@ TArray<CString> CString::breakUpRespectingQuotes(const CString& delimiterString)
 			// Found quote
 			inQuotes = !inQuotes;
 			i++;
-		} else if (!inQuotes && (getSubString(i).hasPrefix(delimiterString))) {
-			// Found delimiter
+		} else if (!inQuotes && (getSubString(i).hasPrefix(separator))) {
+			// Found separator
 			array += tempString;
 			tempString = mEmpty;
-			i += delimiterString.getLength();
+			i += separator.getLength();
 		} else {
 			// Found another character
 			tempString += getSubString(i, 1);

@@ -231,21 +231,16 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 																						mReference);
 
 													return TIteratorS<CArray::ItemRef>((mCount > 0) ? mItemRefs : nil,
-															iteratorAdvance, *iteratorInfo);
+															(CIterator::AdvanceProc) iteratorAdvance, *iteratorInfo);
 												}
 
-		static	void*						iteratorAdvance(CIterator::Info& iteratorInfo)
+		static	void*						iteratorAdvance(CArrayIteratorInfo& arrayIteratorInfo)
 												{
-													// Setup
-													CArrayIteratorInfo&	arrayIteratorInfo =
-																				(CArrayIteratorInfo&) iteratorInfo;
-
 													return (++arrayIteratorInfo.mCurrentIndex <
 																	arrayIteratorInfo.mInternals.mCount) ?
 															arrayIteratorInfo.mInternals.mItemRefs +
 																	arrayIteratorInfo.mCurrentIndex :
 															nil;
-
 												}
 
 	public:
@@ -571,7 +566,7 @@ CArray CArray::sorted(CompareProc compareProc, void* userData) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray CArray::filtered(IsIncludedProc isIncludedProc, void* userData)
+CArray CArray::filtered(IsIncludedProc isIncludedProc, void* userData) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
