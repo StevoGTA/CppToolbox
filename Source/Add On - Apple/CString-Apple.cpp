@@ -295,14 +295,14 @@ CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const void* pointer)
+CString::CString(const void* pointer) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%p"), pointer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const TArray<CString>& components, const CString& separator)
+CString::CString(const TArray<CString>& components, const CString& separator) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -324,7 +324,7 @@ CString::CString(const TArray<CString>& components, const CString& separator)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CData& data, Encoding encoding)
+CString::CString(const CData& data, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDataRef	dataRef = ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getSize());

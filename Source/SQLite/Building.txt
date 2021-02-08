@@ -1,0 +1,10 @@
+Building for different platforms
+
+Windows
+-------
+-Download the Source Code from https://www.sqlite.org/download.html, specifically the "sqlite-amalgamation..." file.
+-Unzip to reveal the sqlite3.h and sqlite3.c files.
+-Place those files in the SQLite folder.
+-Add sqlite3.c to the project.  Adjust these settings:
+	Set Consume Windows Runtime Extension to No
+	Add "SQLITE_OS_WINRT=1" to Preprocessor Definitions

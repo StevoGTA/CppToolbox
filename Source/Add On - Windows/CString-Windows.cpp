@@ -268,7 +268,7 @@ CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const void* pointer)
+CString::CString(const void* pointer) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -282,7 +282,23 @@ CString::CString(const void* pointer)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CData& data, Encoding encoding)
+CString::CString(const TArray<CString>& components, const CString& separator) : CHashable(), mString()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate array
+	for (CArray::ItemIndex i = 0; i < components.getCount(); i++) {
+		// Check if need to add separator
+		if (i > 0)
+			// Add separator
+			mString += separator.mString;
+
+		// Append this component
+		mString += components[i].mString;
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CData& data, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Ensure we have something to convert
@@ -506,7 +522,7 @@ return CString::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CString::breakUp(const CString& delimiterString) const
+TArray<CString> CString::components(const CString& delimiterString) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
