@@ -172,8 +172,8 @@ class CSQLiteTableInternals {
 		CString										mName;
 		CSQLiteTable::Options						mOptions;
 		TArray<CSQLiteTableColumn>					mTableColumns;
-		TDictionary<CSQLiteTableColumn>				mTableColumnsMap;
-		TDictionary<CSQLiteTableColumn::Reference>	mTableColumnReferenceMap;
+		TNDictionary<CSQLiteTableColumn>			mTableColumnsMap;
+		TNDictionary<CSQLiteTableColumn::Reference>	mTableColumnReferenceMap;
 		CSQLiteStatementPerformer&					mStatementPerformer;
 };
 

@@ -52,6 +52,8 @@ template <typename T> struct OV {
 
 	bool	operator==(const OV<T>& other) const
 				{ return (mHasValue == other.mHasValue) && (!mHasValue || (mValue == other.mValue)); }
+	bool	operator!=(const OV<T>& other) const
+				{ return (mHasValue != other.mHasValue) || (mHasValue && (mValue != other.mValue)); }
 
 	// Properties
 	private:
@@ -150,6 +152,15 @@ template <typename T> struct OI {
 					}
 				}
 
+			// Instamce methods
+	bool	hasInstance() const
+				{ return mInstance != nil; }
+
+	T&		operator*() const
+				{ AssertFailIf(mInstance == nil); return *mInstance; }
+	T*		operator->() const
+				{ AssertFailIf(mInstance == nil); return mInstance; }
+
 	OI<T>&	operator=(const OI<T>& other)
 				{
 					// Check for instance
@@ -170,14 +181,12 @@ template <typename T> struct OI {
 					return *this;
 				}
 
-			// Instamce methods
-	bool	hasInstance() const
-				{ return mInstance != nil; }
-
-	T&		operator*() const
-				{ AssertFailIf(mInstance == nil); return *mInstance; }
-	T*		operator->() const
-				{ AssertFailIf(mInstance == nil); return mInstance; }
+	bool	operator==(const OI<T>& other) const
+				{ return (hasInstance() == other.hasInstance()) &&
+						(!hasInstance() || (*mInstance == *other.mInstance)); }
+	bool	operator!=(const OI<T>& other) const
+				{ return (hasInstance() != other.hasInstance()) ||
+						(hasInstance() && (*mInstance != *other.mInstance)); }
 
 	// Properties
 	private:

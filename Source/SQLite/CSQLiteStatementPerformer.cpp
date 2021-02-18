@@ -129,10 +129,10 @@ class CSQLiteStatementPerformerInternals {
 	public:
 		CSQLiteStatementPerformerInternals(sqlite3* database) : mDatabase(database) {}
 
-		sqlite3*								mDatabase;
-		CLock									mLock;
-		TDictionary<TNArray<CSQLiteStatement> >	mTransactionsMap;
-		CReadPreferringLock						mTransacftionsMapLock;
+		sqlite3*									mDatabase;
+		CLock										mLock;
+		TNDictionary<TNArray<CSQLiteStatement> >	mTransactionsMap;
+		CReadPreferringLock							mTransacftionsMapLock;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

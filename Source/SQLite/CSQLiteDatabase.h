@@ -19,7 +19,7 @@ class CSQLiteDatabase {
 			kWALMode	= 1 << 0,
 		};
 
-	// Transaction result
+	// TransactionResult
 	public:
 		enum TransactionResult {
 			kCommit,

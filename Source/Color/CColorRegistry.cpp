@@ -217,7 +217,7 @@ CDictionary CColorSet::getInfo() const
 	info.set(CString(OSSTR("name")), mInternals->mName);
 
 	TNArray<CDictionary>	colorSetColorInfos;
-	for (TIteratorS<SDictionaryItem> iterator = mInternals->mColorsMap.getIterator(); iterator.hasValue();
+	for (TIteratorS<CDictionary::Item> iterator = mInternals->mColorsMap.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Get info
 		UInt64	key = iterator.getValue().mKey.getUInt64();
@@ -384,7 +384,7 @@ TArray<CColorGroup> CColorRegistry::getColorGroups() const
 {
 	// Get color groups
 	TNArray<CColorGroup>	colorGroups;
-	for (TIteratorS<SDictionaryItem> iterator = mInternals->mColorGroupMap.getIterator();
+	for (TIteratorS<CDictionary::Item> iterator = mInternals->mColorGroupMap.getIterator();
 			iterator.hasValue(); iterator.advance())
 		// Insert value
 		colorGroups += *((CColorGroup*) iterator.getValue().mValue.getItemRef());

@@ -103,7 +103,7 @@ class CNotificationCenterInternals {
 					}
 
 	public:
-		TDictionary<TNArray<SNotificationObserverFullInfo> >	mInfo;
+		TNDictionary<TNArray<SNotificationObserverFullInfo> >	mInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

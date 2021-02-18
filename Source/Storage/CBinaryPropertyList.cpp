@@ -67,7 +67,7 @@ class CBPLDataSource : public TReferenceCountable<CBPLDataSource> {
 		UInt64				readValue(UInt8 fieldSize, const char* errorWhen);
 		CDictionary			readDictionary(UInt64 objectIndex);
 
-		SDictionaryValue*	createDictionaryValue(UInt64 objectIndex);
+		CDictionary::Value*	createDictionaryValue(UInt64 objectIndex);
 
 		CByteParceller	mByteParceller;
 		OI<SError>		mError;
@@ -94,8 +94,8 @@ class CBPLDictionaryInfo {
 												mKeys = new CString*[mKeyCount];
 												mValueIndexes = new UInt64[mKeyCount];
 
-												mDictionaryValues = new SDictionaryValue*[mKeyCount];
-												::memset(mDictionaryValues, 0, sizeof(SDictionaryValue*) * mKeyCount);
+												mDictionaryValues = new CDictionary::Value*[mKeyCount];
+												::memset(mDictionaryValues, 0, sizeof(CDictionary::Value*) * mKeyCount);
 
 												// Setup keys
 												for (CDictionary::KeyCount i = 0; i < mKeyCount; i++) {
@@ -147,7 +147,7 @@ class CBPLDictionaryInfo {
 
 												return bplDictionaryInfo->mKeyCount;
 											}
-		static	OR<SDictionaryValue>	getValue(const CString& key, void* userData)
+		static	OR<CDictionary::Value>	getValue(const CString& key, void* userData)
 											{
 												// Get CBPLDictionaryInfo
 												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
@@ -168,12 +168,12 @@ class CBPLDictionaryInfo {
 																					bplDictionaryInfo->
 																							mValueIndexes[i]);
 
-														return OR<SDictionaryValue>(
+														return OR<CDictionary::Value>(
 																*bplDictionaryInfo->mDictionaryValues[i]);
 													}
 												}
 
-												return OR<SDictionaryValue>();
+												return OR<CDictionary::Value>();
 											}
 		static	void					disposeUserData(void* userData)
 											{
@@ -187,7 +187,7 @@ class CBPLDictionaryInfo {
 		UInt32*					mKeyHashes;
 		CString**				mKeys;
 		UInt64*					mValueIndexes;
-		SDictionaryValue**		mDictionaryValues;
+		CDictionary::Value**	mDictionaryValues;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -361,13 +361,13 @@ CDictionary CBPLDataSource::readDictionary(UInt64 objectIndex)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SDictionaryValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
+CDictionary::Value* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for string
 	if (mStrings[objectIndex] != nil)
 		// Is a string
-		return new SDictionaryValue(*mStrings[objectIndex]);
+		return new CDictionary::Value(*mStrings[objectIndex]);
 
 	// Read marker and count
 	UInt64	count;
@@ -408,7 +408,7 @@ AssertFailUnimplemented();
 						// Add dictionary
 						array.add(readDictionary(objectIndexes[(UInt32) i]));
 
-					return new SDictionaryValue(array);
+					return new CDictionary::Value(array);
 				}
 
 				case kMarkerTypeFloat32:
@@ -431,18 +431,18 @@ AssertFailUnimplemented();
 						// Add string
 						array.add(*mStrings[objectIndexes[(UInt32) i]]);
 
-					return new SDictionaryValue(array);
+					return new CDictionary::Value(array);
 				}
 			}
 		}
 
 		case kMarkerTypeBooleanTrue:
 			// True
-			return new SDictionaryValue(true);
+			return new CDictionary::Value(true);
 
 		case kMarkerTypeBooleanFalse:
 			// False
-			return new SDictionaryValue(false);
+			return new CDictionary::Value(false);
 
 		case kMarkerTypeData:
 			// Data
@@ -451,14 +451,14 @@ AssertFailUnimplemented();
 
 		case kMarkerTypeDictionary:
 			// Dictionary
-			return new SDictionaryValue(readDictionary(objectIndex));
+			return new CDictionary::Value(readDictionary(objectIndex));
 
 		case kMarkerTypeFloat32: {
 			// Float32
 			SwappableFloat32	swappableFloat32;
 			swappableFloat32.mStoredValue = (UInt32) readValue(4, "reading float32");
 
-			return new SDictionaryValue(swappableFloat32.mValue);
+			return new CDictionary::Value(swappableFloat32.mValue);
 			} break;
 
 		case kMarkerTypeFloat64: {
@@ -466,24 +466,24 @@ AssertFailUnimplemented();
 			SwappableFloat64	swappableFloat64;
 			swappableFloat64.mStoredValue = readValue(8, "reading float64");
 
-			return new SDictionaryValue(swappableFloat64.mValue);
+			return new CDictionary::Value(swappableFloat64.mValue);
 			} break;
 
 		case kMarkerTypeInteger1Byte:
 			// Integer, 1 byte
-			return new SDictionaryValue((SInt8) readValue(1, "reading integer, 1 byte"));
+			return new CDictionary::Value((SInt8) readValue(1, "reading integer, 1 byte"));
 
 		case kMarkerTypeInteger2Bytes:
 			// Integer, 2 bytes
-			return new SDictionaryValue((SInt16) readValue(2, "reading integer, 2 bytes"));
+			return new CDictionary::Value((SInt16) readValue(2, "reading integer, 2 bytes"));
 
 		case kMarkerTypeInteger4Bytes:
 			// Integer, 4 bytes
-			return new SDictionaryValue((SInt32) readValue(4, "reading integer, 4 bytes"));
+			return new CDictionary::Value((SInt32) readValue(4, "reading integer, 4 bytes"));
 
 		case kMarkerTypeInteger8Bytes:
 			// Integer, 8 bytes
-			return new SDictionaryValue((SInt64) readValue(8, "reading integer, 8 bytes"));
+			return new CDictionary::Value((SInt64) readValue(8, "reading integer, 8 bytes"));
 
 		default:
 			// We should never get here
