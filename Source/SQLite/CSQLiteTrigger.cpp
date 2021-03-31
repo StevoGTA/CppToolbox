@@ -48,7 +48,8 @@ CString CSQLiteTrigger::getString(const CSQLiteTable& table) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Return string
-	return CString(OSSTR("CREATE TRIGGER ")) + mInternals->mUpdateTableColumn.getName() + CString(OSSTR("Trigger")) +
+	return CString(OSSTR("CREATE TRIGGER `")) + table.getName() + CString(OSSTR("-")) +
+					mInternals->mUpdateTableColumn.getName() + CString(OSSTR("Trigger`")) +
 			CString(OSSTR(" AFTER UPDATE ON `")) + table.getName() + CString(OSSTR("`")) +
 			CString(OSSTR(" FOR EACH ROW")) +
 			CString(OSSTR(" BEGIN UPDATE `")) + table.getName() + CString(OSSTR("`")) +

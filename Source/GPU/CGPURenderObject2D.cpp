@@ -77,7 +77,7 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 					}
 
 		CGPU&							mGPU;
-		TArray<CGPUTextureReference>	mGPUTextureReferences;
+		TNArray<CGPUTextureReference>	mGPUTextureReferences;
 		SGPUVertexBuffer				mGPUVertexBuffer;
 
 		S2DPointF32						mAnchorPoint;
@@ -99,8 +99,8 @@ CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const S2DRectF32& screenRect, 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CGPURenderObject2DInternals(gpu, TNArray<Item>(Item(screenRect, 0, textureRect)),
-					TNArray<CGPUTextureReference>(gpuTextureReference));
+			new CGPURenderObject2DInternals(gpu, TSArray<Item>(Item(screenRect, 0, textureRect)),
+					TSArray<CGPUTextureReference>(gpuTextureReference));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

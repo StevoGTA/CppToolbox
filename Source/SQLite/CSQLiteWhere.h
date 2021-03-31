@@ -42,7 +42,6 @@ class CSQLiteWhere {
 
 										// Instance methods
 		const	CString&				getString() const;
-		const	TArray<SSQLiteValue>&	getValues() const;
 
 				TArray<ValueGroup>		getValueGroups(UInt32 groupSize) const;
 

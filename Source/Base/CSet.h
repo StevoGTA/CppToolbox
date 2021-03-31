@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include "CArray.h"
 #include "CHashing.h"
-#include "CIterator.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSet
@@ -57,37 +57,107 @@ class CSet {
 // MARK: - TSet
 
 template <typename T> class TSet : public CSet {
+	// Procs
+	public:
+		typedef	bool	(*IsIncludedProc)(const T& item, void* userData);
+
 	// Methods
 	public:
 						// Lifecycle methods
 						TSet() : CSet(true) {}
+						TSet(const T& item) :
+							CSet(true)
+							{ CSet::add(new T(item)); }
+						TSet(const TArray<T>& array) :
+							CSet(true)
+							{
+								// Iterate all
+								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Add
+									CSet::add(new T(*iterator));
+							}
+						TSet(const CArray& array, T (mappingProc)(CArray::ItemRef item)) :
+							CSet(true)
+							{
+								// Iterate all items
+								ItemCount	count = array.getCount();
+								for (CArray::ItemIndex i = 0; i < count; i++)
+									// Add mapped item
+									this->add(mappingProc(array.getItemAt(i)));
+							}
 						TSet(const TSet<T>& other) : CSet(other) {}
+						TSet(const TSet<T>& other, IsIncludedProc isIncludedProc, void* userData) :
+							CSet(true)
+							{
+								// Iterate all items
+								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
+										iterator.advance()) {
+									// Call proc
+									if (isIncludedProc(*iterator, userData))
+										// Add
+										CSet::add(new T(*iterator));
+								}
+							}
 
 						// Instance methods
 		TSet<T>&		add(const T& item)
 							{ CSet::add(new T(item)); return *this; }
 		TSet<T>&		add(const T* item)
 							{ CSet::add(new T(*item)); return *this; }
+		TSet<T>&		addFrom(const TArray<T>& array)
+							{
+								// Iterate all
+								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Add
+									CSet::add(new T(*iterator));
+
+								return *this;
+							}
 		TSet<T>&		addFrom(const TSet<T>& other)
 							{
 								// Iterate all
 								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
 										iterator.advance())
 									// Add
-									CSet::add(new T(iterator.getValue()));
+									CSet::add(new T(*iterator));
 
 								return *this;
+							}
+		bool			intersects(const TSet<T>& other) const
+							{
+								// Iterate values
+								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
+										iterator.advance()) {
+									// Check if have value
+									if (contains(*iterator))
+										// Has value
+										return true;
+								}
+
+								return false;
 							}
 
 		TSet<T>&		remove(const T item)
 							{ CSet::remove(item); return *this; }
+		TSet<T>&		removeFrom(const TArray<T>& array)
+							{
+								// Iterate all
+								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Add
+									CSet::remove(T(*iterator));
+
+								return *this;
+							}
 		TSet<T>&		removeFrom(const TSet<T>& other)
 							{
 								// Iterate all
 								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
 										iterator.advance())
 									// Add
-									CSet::remove(T(iterator.getValue()));
+									CSet::remove(T(*iterator));
 
 								return *this;
 							}

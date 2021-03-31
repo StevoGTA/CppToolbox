@@ -7,6 +7,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
+// Based on https://stackoverflow.com/questions/8317508/hash-function-for-a-string
 const	UInt32	kA = 54059; /* a prime */
 const	UInt32	kB = 76963; /* another prime */
 //const	UInt32	kC = 86969; /* yet another prime */
@@ -23,8 +24,9 @@ class CHasherInternals {
 
 		void	add(const char* string)
 					{
-						// Based on https://stackoverflow.com/questions/8317508/hash-function-for-a-string
+						// Iterate all characters
 						for (; *string != 0; string++)
+							// Update value
 							mValue = (mValue * kA) ^ ((UInt32) string[0] * kB);
 					}
 

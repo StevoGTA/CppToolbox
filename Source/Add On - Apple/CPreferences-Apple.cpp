@@ -122,7 +122,7 @@ bool CPreferences::hasValue(const Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CData> CPreferences::getDataArray(const Pref& pref)
+TArray<CData> CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -143,7 +143,7 @@ TNArray<CData> CPreferences::getDataArray(const Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
+TArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

@@ -5,7 +5,102 @@
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGregorianDate
+// MARK: SUniversalTime
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTime SUniversalTime::getDistantFuture()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return 64092211200.0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTime SUniversalTime::getDistantPast()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return -62135769600.0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString SUniversalTime::getRFC339Extended(UniversalTime universalTime)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+	//	2021-03-23T22:54:13.922-0700
+	SGregorianDate	gregorianDate(universalTime);
+	SInt32			offset = (SInt32) (SUniversalTime::getCurrentTimeZoneOffset() / 60.0);
+	char			offsetSign = (offset > 0) ? '+' : '-';
+	SInt32			offsetAbsolute = abs(offset);
+
+	return CString::make("%4u-%02u-%02uT%02u:%02u:%06.3f%c%02u%02u", gregorianDate.mYear, gregorianDate.mMonth,
+			gregorianDate.mDay, gregorianDate.mHour, gregorianDate.mMinute, gregorianDate.mSecond,
+			offsetSign, offsetAbsolute / 60, offsetAbsolute % 60);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<UniversalTime> SUniversalTime::getFromRFC3339Extended(const CString& string)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// "yyyy-MM-dd'T'HH:mm:ss.SX"
+	// "yyyy-MM-dd'T'HH:mm:ss.SSX"
+	// "yyyy-MM-dd'T'HH:mm:ss.SSSX"
+	// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+	// "yyyy-MM-dd'T'HH:mm:ss.SSSSX"
+	// "yyyy-MM-dd'T'HH:mm:ss.SSSSSX"
+	// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSX"
+	// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSX"
+	// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
+	//	2021-03-23T22:54:13.922-0700
+
+	// Setup
+	CString::Length	length = string.getLength();
+	char	buffer[length + 1];
+	string.get(buffer, length + 1);
+
+	// Check for required characters
+	if ((buffer[4] != '-') || (buffer[7] != '-') || (buffer[10] != 'T') || (buffer[13] != ':') || (buffer[16] != ':'))
+		// Required characters not in their respective positions
+		return OV<UniversalTime>();
+
+	// Check for timezone offset sign
+	CString::Range	timezoneOffsetMinusRange = string.findSubString(CString(OSSTR("-")), 17);
+	CString::Range	timezoneOffsetPlusRange = string.findSubString(CString(OSSTR("+")), 17);
+	if (!timezoneOffsetMinusRange.isValid() && !timezoneOffsetPlusRange.isValid())
+		// Did not find timezone offset sign
+		return OV<UniversalTime>();
+
+	CString::CharIndex	timezoneOffsetSignCharIndex =
+								timezoneOffsetMinusRange.isValid() ?
+										timezoneOffsetMinusRange.mStart : timezoneOffsetPlusRange.mStart;
+
+	// Compose gregorian date
+	SGregorianDate	gregorianDate;
+	gregorianDate.mYear = string.getSubString(0, 4).getUInt32();
+	gregorianDate.mMonth = string.getSubString(5, 2).getUInt8();
+	gregorianDate.mDay = string.getSubString(8, 2).getUInt8();
+	gregorianDate.mHour = string.getSubString(11, 2).getUInt8();
+	gregorianDate.mMinute = string.getSubString(14, 2).getUInt8();
+	gregorianDate.mSecond = string.getSubString(17, timezoneOffsetSignCharIndex - 17).getFloat32();
+
+	// Compose timezone offset
+	SInt32					timezoneOffsetRaw = string.getSubString(timezoneOffsetSignCharIndex + 1).getSInt32();
+	SInt32					timezoneOffsetHours = timezoneOffsetRaw / 100;
+	SInt32					timezoneOffsetMinutes = timezoneOffsetRaw % 100;
+	UniversalTimeInterval	timezoneOffset =
+									timezoneOffsetMinusRange.isValid() ?
+											(UniversalTimeInterval)
+													(-timezoneOffsetHours * 60 * 60 - timezoneOffsetMinutes * 60) :
+											(UniversalTimeInterval)
+													(timezoneOffsetHours * 60 * 60 + timezoneOffsetMinutes * 60);
+
+	return gregorianDate.getUniversalTime() - timezoneOffset + SUniversalTime::getCurrentTimeZoneOffset();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SGregorianDate
 
 // MARK: Properties
 

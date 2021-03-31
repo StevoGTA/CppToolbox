@@ -1,17 +1,27 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CBinaryPropertyList.h			©2019 Stevo Brock	All rights reserved.
+//	CJSON.h			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-#include "CByteParceller.h"
 #include "CDictionary.h"
-#include "CFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CBinaryPropertyList
+// MARK: CJSON
 
-class CBinaryPropertyList {
+class CJSON {
+	// DataResult
+	public:
+		struct DataResult {
+			// Lifecycle methods
+			DataResult(const CData& data) : mData(OI<CData>(data)) {}
+			DataResult(const SError& error) : mError(OI<SError>(error)) {}
+
+			// Properties
+			OI<CData>	mData;
+			OI<SError>	mError;
+		};
+
 	// DictionaryResult
 	public:
 		struct DictionaryResult {
@@ -26,7 +36,7 @@ class CBinaryPropertyList {
 
 	// Methods
 	public:
-									// Class methods
-		static	DictionaryResult	dictionaryFrom(const CByteParceller& byteParceller);
-//		static	OI<SError>			writeTo(const CFile& file);
+		// Class methods
+		static	DictionaryResult	dictionaryFrom(const CData& data);
+		static	DataResult			dataFrom(const CDictionary& dictionary);
 };

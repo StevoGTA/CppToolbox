@@ -24,7 +24,7 @@ CFDateFormatterStyle	sGetCFDateFormatterStyleForGregorianDateStringStyle(SGregor
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UniversalTime SUniversalTime::getCurrentUniversalTime()
+UniversalTime SUniversalTime::getCurrent()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// CFAbsoluteTimeGetCurrent is relative to 1/1/2001
@@ -32,16 +32,51 @@ UniversalTime SUniversalTime::getCurrentUniversalTime()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SUniversalTime::setCurrentUniversalTime(UniversalTime time)
+void SUniversalTime::setCurrent(UniversalTime time)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// CFAbsoluteTimeGetCurrent is relative to 1/1/2001
 	sOffsetInterval = time - (UniversalTime) ::CFAbsoluteTimeGetCurrent();
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CString SUniversalTime::getCurrentTimeZoneName()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFTimeZoneRef	timeZoneRef = ::CFTimeZoneCopyDefault();
+	CFLocaleRef		localeRef = ::CFLocaleCopyCurrent();
+	CFStringRef		stringRef =
+							::CFTimeZoneCopyLocalizedName(timeZoneRef,
+									::CFTimeZoneIsDaylightSavingTime(timeZoneRef, ::CFAbsoluteTimeGetCurrent()) ?
+											kCFTimeZoneNameStyleShortDaylightSaving :
+											kCFTimeZoneNameStyleShortStandard,
+									localeRef);
+	::CFRelease(timeZoneRef);
+	::CFRelease(localeRef);
+
+	// Compose string
+	CString	string(stringRef);
+	::CFRelease(stringRef);
+
+	return string;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTimeInterval SUniversalTime::getCurrentTimeZoneOffset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get offset
+	CFTimeZoneRef	timeZoneRef = ::CFTimeZoneCopyDefault();
+	CFTimeInterval	offset = ::CFTimeZoneGetSecondsFromGMT(timeZoneRef, ::CFAbsoluteTimeGetCurrent());
+	::CFRelease(timeZoneRef);
+
+	return offset;
+}
+
 #if TARGET_OS_MACOS
 //----------------------------------------------------------------------------------------------------------------------
-UniversalTime SUniversalTime::getUniversalTimeForUTCDateTime(const UTCDateTime& utcDateTime)
+UniversalTime SUniversalTime::get(const UTCDateTime& utcDateTime)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFAbsoluteTime	time = ::CFAbsoluteTimeGetCurrent();

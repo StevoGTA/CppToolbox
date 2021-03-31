@@ -12,7 +12,7 @@
 class CSQLiteTable;
 
 class CSQLiteTableColumnInternals;
-class CSQLiteTableColumn {
+class CSQLiteTableColumn : public CEquatable {
 	// Kind
 	public:
 		enum Kind {
@@ -69,7 +69,12 @@ class CSQLiteTableColumn {
 											// Lifecycle methods
 											CSQLiteTableColumn(const CString& name, Kind kind, Options options = kNone,
 													OI<SSQLiteValue> defaultValue = nil);
+											CSQLiteTableColumn(const CSQLiteTableColumn& other);
 											~CSQLiteTableColumn();
+
+											// CEquatable methods
+						bool				operator==(const CEquatable& other) const
+												{ return getName() == ((const CSQLiteTableColumn&) other).getName(); }
 
 											// Instance methods
 				const	CString&			getName() const;

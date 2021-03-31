@@ -13,7 +13,7 @@
 // MARK: Array utilities
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CData> CCoreFoundation::arrayOfDatasFrom(CFArrayRef arrayRef)
+TArray<CData> CCoreFoundation::arrayOfDatasFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -31,7 +31,7 @@ TNArray<CData> CCoreFoundation::arrayOfDatasFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CDictionary> CCoreFoundation::arrayOfDictionariesFrom(CFArrayRef arrayRef)
+TArray<CDictionary> CCoreFoundation::arrayOfDictionariesFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -49,7 +49,7 @@ TNArray<CDictionary> CCoreFoundation::arrayOfDictionariesFrom(CFArrayRef arrayRe
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CCoreFoundation::arrayOfStringsFrom(CFArrayRef arrayRef)
+TArray<CString> CCoreFoundation::arrayOfStringsFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

@@ -7,7 +7,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteTableColumnInternals
 
-class CSQLiteTableColumnInternals {
+class CSQLiteTableColumnInternals : public TReferenceCountable<CSQLiteTableColumnInternals> {
 	public:
 		CSQLiteTableColumnInternals(const CString& name, CSQLiteTableColumn::Kind kind,
 				CSQLiteTableColumn::Options options, OI<SSQLiteValue> defaultValue = nil) :
@@ -39,10 +39,17 @@ CSQLiteTableColumn::CSQLiteTableColumn(const CString& name, Kind kind, Options o
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CSQLiteTableColumn::CSQLiteTableColumn(const CSQLiteTableColumn& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CSQLiteTableColumn::~CSQLiteTableColumn()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	Delete(mInternals);
+	mInternals->removeReference();
 }
 
 // MARK: Instance methods

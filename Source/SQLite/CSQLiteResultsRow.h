@@ -27,6 +27,13 @@ class CSQLiteResultsRow {
 		bool		moveToNext() const;
 
 		OV<SInt64>	getSInt64(const CSQLiteTableColumn& tableColumn) const;
+		OV<UInt32>	getUInt32(const CSQLiteTableColumn& tableColumn) const
+						{
+							// Setup
+							OV<SInt64>	value = getSInt64(tableColumn);
+
+							return value.hasValue() ? OV<UInt32>((UInt32) *value) : OV<UInt32>();
+						}
 		OV<Float64>	getFloat64(const CSQLiteTableColumn& tableColumn) const;
 		OI<CString>	getString(const CSQLiteTableColumn& tableColumn) const;
 		OI<CData>	getData(const CSQLiteTableColumn& tableColumn) const;

@@ -554,8 +554,10 @@ CString CString::replacingCharacters(CharIndex startIndex, Length charCount, con
 CString::Range CString::findSubString(const CString& subString, CharIndex startIndex, Length charCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	CFIndex	length = std::min<CFIndex>(charCount, ::CFStringGetLength(mStringRef) - startIndex);
 	CFRange	range = {0, 0};
-	::CFStringFindWithOptions(mStringRef, subString.mStringRef, CFRangeMake(startIndex, charCount), 0, &range);
+	::CFStringFindWithOptions(mStringRef, subString.mStringRef, CFRangeMake(startIndex, length), 0, &range);
 
 	return Range((CharIndex) range.location, (Length) range.length);
 }
@@ -790,7 +792,7 @@ CString CString::make(const char* format, va_list args)
 {
 	CFStringRef	formatStringRef = ::CFStringCreateWithCString(kCFAllocatorDefault, format, kCFStringEncodingMacRoman);
 
-	CFStringRef	stringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, formatStringRef, args);
+	CFStringRef	stringRef = ::CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, nil, formatStringRef, args);
 	::CFRelease(formatStringRef);
 
 	CString		string(stringRef);

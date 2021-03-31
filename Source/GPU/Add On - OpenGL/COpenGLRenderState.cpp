@@ -118,7 +118,7 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static	TDictionary<COpenGLProgram>	sPrograms;
+	static	TNDictionary<COpenGLProgram>	sPrograms;
 
 	// Setup buffers
 	((COpenGLVertexBufferInfo*) mInternals->mVertexBuffer->mPlatformReference)->makeCurrent();

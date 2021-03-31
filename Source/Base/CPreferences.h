@@ -128,8 +128,8 @@ class CPreferences {
 								// Instance methods
 		bool					hasValue(const Pref& pref);
 
-		TNArray<CData>			getDataArray(const Pref& pref);
-		TNArray<CDictionary>	getDictionaryArray(const Pref& pref);
+		TArray<CData>			getDataArray(const Pref& pref);
+		TArray<CDictionary>		getDictionaryArray(const Pref& pref);
 		TNumericArray<OSType>	getOSTypeArray(const Pref& pref);
 		CData					getData(const Pref& pref);
 		CDictionary				getDictionary(const Pref& pref);

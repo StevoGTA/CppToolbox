@@ -25,6 +25,7 @@ template <typename T> class TDictionaryInternals : public TCopyOnWriteReferenceC
 		virtual	OR<CDictionary::Value>			getValue(const CString& key) = 0;
 		virtual	CDictionaryInternals*			set(const CString& key, const CDictionary::Value& value) = 0;
 		virtual	CDictionaryInternals*			remove(const CString& key) = 0;
+		virtual	CDictionaryInternals*			remove(const TSet<CString>& keys) = 0;
 		virtual	CDictionaryInternals*			removeAll() = 0;
 
 		virtual	TIteratorS<CDictionary::Item>	getIterator() const = 0;
@@ -65,46 +66,39 @@ struct SDictionaryItemInfo {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDictionaryIteratorInfo
-
-class CStandardDictionaryInternals;
-
-struct CDictionaryIteratorInfo : public CIterator::Info {
-	// Methods
-	public:
-							// Lifecycle methods
-							CDictionaryIteratorInfo(const CStandardDictionaryInternals& internals,
-									UInt32 initialReference) :
-								CIterator::Info(),
-										mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0),
-										mCurrentItemInfo(nil)
-								{}
-
-							// CIterator::Info methods
-		CIterator::Info*	copy()
-								{
-									// Make copy
-									CDictionaryIteratorInfo*	iteratorInfo =
-																		new CDictionaryIteratorInfo(mInternals,
-																				mInitialReference);
-									iteratorInfo->mCurrentIndex = mCurrentIndex;
-									iteratorInfo->mCurrentItemInfo = mCurrentItemInfo;
-
-									return iteratorInfo;
-								}
-
-	// Properties
-	const	CStandardDictionaryInternals&	mInternals;
-			UInt32							mInitialReference;
-			UInt32							mCurrentIndex;
-			SDictionaryItemInfo*			mCurrentItemInfo;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CStandardDictionaryInternals
 
 class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictionaryInternals> {
+	// IteratorInfo
+	class IteratorInfo : public CIterator::Info {
+		// Methods
+		public:
+								// Lifecycle methods
+								IteratorInfo(const CStandardDictionaryInternals& internals, UInt32 initialReference) :
+									CIterator::Info(),
+											mInternals(internals), mInitialReference(initialReference),
+											mCurrentIndex(0), mCurrentItemInfo(nil)
+									{}
+								IteratorInfo(const CStandardDictionaryInternals& internals, UInt32 initialReference,
+										UInt32 currentIndex, SDictionaryItemInfo* curretItemInfo) :
+									CIterator::Info(),
+											mInternals(internals), mInitialReference(initialReference),
+											mCurrentIndex(currentIndex), mCurrentItemInfo(curretItemInfo)
+									{}
+
+								// CIterator::Info methods
+			CIterator::Info*	copy()
+									{ return new IteratorInfo(mInternals, mInitialReference, mCurrentIndex,
+											mCurrentItemInfo); }
+
+		// Properties
+		const	CStandardDictionaryInternals&	mInternals;
+				UInt32							mInitialReference;
+				UInt32							mCurrentIndex;
+				SDictionaryItemInfo*			mCurrentItemInfo;
+	};
+
+
 	public:
 												// Lifecycle methods
 												CStandardDictionaryInternals(CDictionary::ItemCopyProc itemCopyProc,
@@ -121,6 +115,7 @@ class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictio
 				OR<CDictionary::Value>			getValue(const CString& key);
 				CDictionaryInternals*			set(const CString& key, const CDictionary::Value& value);
 				CDictionaryInternals*			remove(const CString& key);
+				CDictionaryInternals*			remove(const TSet<CString>& keys);
 				CDictionaryInternals*			removeAll();
 
 				TIteratorS<CDictionary::Item>	getIterator() const;
@@ -132,7 +127,7 @@ class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictio
 				void							remove(SDictionaryItemInfo* itemInfo, bool removeAll);
 
 												// Class methods
-		static	void*							iteratorAdvance(CIterator::Info& iteratorInfo);
+		static	void*							iteratorAdvance(IteratorInfo& iteratorInfo);
 
 		CDictionary::ItemCopyProc		mItemCopyProc;
 		CDictionary::ItemDisposeProc	mItemDisposeProc;
@@ -314,6 +309,21 @@ CDictionaryInternals* CStandardDictionaryInternals::remove(const CString& key)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CDictionaryInternals* CStandardDictionaryInternals::remove(const TSet<CString>& keys)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Prepare for write
+	CStandardDictionaryInternals*	dictionaryInternals = (CStandardDictionaryInternals*) prepareForWrite();
+
+	// Iterate keys
+	for (TIteratorS<CString> iterator = keys.getIterator(); iterator.hasValue(); iterator.advance())
+		// Remove this key
+		dictionaryInternals->remove(*iterator);
+
+	return (CDictionaryInternals*) dictionaryInternals;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CDictionaryInternals* CStandardDictionaryInternals::removeAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -340,7 +350,7 @@ TIteratorS<CDictionary::Item> CStandardDictionaryInternals::getIterator() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CDictionaryIteratorInfo*	iteratorInfo = new CDictionaryIteratorInfo(*this, mReference);
+	IteratorInfo*	iteratorInfo = new IteratorInfo(*this, mReference);
 
 	// Find first item info
 	while ((mItemInfos[iteratorInfo->mCurrentIndex] == nil) && (++iteratorInfo->mCurrentIndex < mItemInfosCount)) ;
@@ -352,7 +362,7 @@ TIteratorS<CDictionary::Item> CStandardDictionaryInternals::getIterator() const
 		firstItem = &mItemInfos[iteratorInfo->mCurrentIndex]->mItem;
 	}
 
-	return TIteratorS<CDictionary::Item>(firstItem, iteratorAdvance, *iteratorInfo);
+	return TIteratorS<CDictionary::Item>(firstItem, (CIterator::AdvanceProc) iteratorAdvance, *iteratorInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -397,36 +407,31 @@ void CStandardDictionaryInternals::remove(SDictionaryItemInfo* itemInfo, bool re
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void* CStandardDictionaryInternals::iteratorAdvance(CIterator::Info& iteratorInfo)
+void* CStandardDictionaryInternals::iteratorAdvance(IteratorInfo& iteratorInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CDictionaryIteratorInfo&	dictionaryIteratorInfo = (CDictionaryIteratorInfo&) iteratorInfo;
-
 	// Internals check
-	AssertFailIf(dictionaryIteratorInfo.mInitialReference != dictionaryIteratorInfo.mInternals.mReference);
+	AssertFailIf(iteratorInfo.mInitialReference != iteratorInfo.mInternals.mReference);
 
 	// Check for additional item info in linked list
-	if (dictionaryIteratorInfo.mCurrentItemInfo->mNextItemInfo != nil) {
+	if (iteratorInfo.mCurrentItemInfo->mNextItemInfo != nil) {
 		// Have next item info
-		dictionaryIteratorInfo.mCurrentItemInfo = dictionaryIteratorInfo.mCurrentItemInfo->mNextItemInfo;
+		iteratorInfo.mCurrentItemInfo = iteratorInfo.mCurrentItemInfo->mNextItemInfo;
 	} else {
 		// End of item info linked list
-		while ((++dictionaryIteratorInfo.mCurrentIndex < dictionaryIteratorInfo.mInternals.mItemInfosCount) &&
-				(dictionaryIteratorInfo.mInternals.mItemInfos [dictionaryIteratorInfo.mCurrentIndex] == nil)) ;
+		while ((++iteratorInfo.mCurrentIndex < iteratorInfo.mInternals.mItemInfosCount) &&
+				(iteratorInfo.mInternals.mItemInfos [iteratorInfo.mCurrentIndex] == nil)) ;
 
 		// Check if found another item info
-		if (dictionaryIteratorInfo.mCurrentIndex < dictionaryIteratorInfo.mInternals.mItemInfosCount)
+		if (iteratorInfo.mCurrentIndex < iteratorInfo.mInternals.mItemInfosCount)
 			// Found another item info
-			dictionaryIteratorInfo.mCurrentItemInfo =
-					dictionaryIteratorInfo.mInternals.mItemInfos[dictionaryIteratorInfo.mCurrentIndex];
+			iteratorInfo.mCurrentItemInfo = iteratorInfo.mInternals.mItemInfos[iteratorInfo.mCurrentIndex];
 		else
 			// No more item infos
-			dictionaryIteratorInfo.mCurrentItemInfo = nil;
+			iteratorInfo.mCurrentItemInfo = nil;
 	}
 
-	return (dictionaryIteratorInfo.mCurrentItemInfo != nil) ?
-			(void*) &dictionaryIteratorInfo.mCurrentItemInfo->mItem : nil;
+	return (iteratorInfo.mCurrentItemInfo != nil) ? (void*) &iteratorInfo.mCurrentItemInfo->mItem : nil;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -434,6 +439,27 @@ void* CStandardDictionaryInternals::iteratorAdvance(CIterator::Info& iteratorInf
 // MARK: - CProcsDictionaryInternals
 
 class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryInternals> {
+	// Types
+	class IteratorInfo : public CIterator::Info {
+		// Methods
+		public:
+			// Lifecycle methods
+			IteratorInfo(const CProcsDictionaryInternals& internals) : mInternals(internals), mCurrentIndex(0) {}
+			IteratorInfo(const CProcsDictionaryInternals& internals, OI<CDictionary::Item> item, UInt32 currentIndex) :
+				mInternals(internals), mItem(item), mCurrentIndex(currentIndex)
+				{}
+
+								// CIterator::Info methods
+			CIterator::Info*	copy()
+									{ return new IteratorInfo(mInternals, mItem, mCurrentIndex); }
+
+		// Properties
+		const	CProcsDictionaryInternals&	mInternals;
+				OI<CDictionary::Item>		mItem;
+				UInt32						mCurrentIndex;
+	};
+
+	// Methods
 	public:
 												// Lifecycle methods
 												CProcsDictionaryInternals(const CDictionary::Procs& procs) :
@@ -441,10 +467,7 @@ class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryIn
 													{}
 												CProcsDictionaryInternals(const CProcsDictionaryInternals& other) :
 													TDictionaryInternals(), mProcs(other.mProcs)
-													{
-// TODO
-AssertFailUnimplemented();
-													}
+													{}
 												~CProcsDictionaryInternals()
 													{ mProcs.disposeUserData(); }
 
@@ -454,49 +477,65 @@ AssertFailUnimplemented();
 				OR<CDictionary::Value>			getValue(const CString& key)
 													{ return mProcs.getValue(key); }
 				CDictionaryInternals*			set(const CString& key, const CDictionary::Value& value)
-													{
-//														// Convert to standard dictionary
-//														CDictionaryInternals*	dictionaryInternals = prepareForWrite();
-
-// TODO
-AssertFailUnimplemented();
-
-//														return dictionaryInternals;
-return (CDictionaryInternals*) this;
-													}
+													{ mProcs.set(key, value); return (CDictionaryInternals*) this; }
 				CDictionaryInternals*			remove(const CString& key)
 													{
-//														// Convert to standard dictionary
-//														CDictionaryInternals*	dictionaryInternals = prepareForWrite();
+														// Remove key
+														mProcs.removeKeys(TSet<CString>(key));
 
-// TODO
-AssertFailUnimplemented();
-
-//														return dictionaryInternals;
-return (CDictionaryInternals*) this;
+														return (CDictionaryInternals*) this;
 													}
+				CDictionaryInternals*			remove(const TSet<CString>& keys)
+													{ mProcs.removeKeys(keys); return (CDictionaryInternals*) this; }
 				CDictionaryInternals*			removeAll()
-													{
-//														// Convert to standard dictionary
-//														CDictionaryInternals*	dictionaryInternals = prepareForWrite();
-
-// TODO
-AssertFailUnimplemented();
-
-//														return dictionaryInternals;
-return (CDictionaryInternals*) this;
-													}
+													{ mProcs.removeAll(); return (CDictionaryInternals*) this; }
 
 				TIteratorS<CDictionary::Item>	getIterator() const
 													{
-// TODO
-AssertFailUnimplemented();
-CIterator::Info*	iteratorInfo = nil;
-return TIteratorS<CDictionary::Item>(nil, nil, *iteratorInfo);
+														// Setup
+														IteratorInfo*	iteratorInfo = new IteratorInfo(*this);
+														if (mProcs.getKeyCount() > 0) {
+															// Have content
+															CString	key = mProcs.getKeyAtIndex(0);
+															iteratorInfo->mItem =
+																	OI<CDictionary::Item>(
+																			CDictionary::Item(key,
+																					*mProcs.getValue(key)));
+														}
+
+														return TIteratorS<CDictionary::Item>(&(*iteratorInfo->mItem),
+																(CIterator::AdvanceProc) iteratorAdvance,
+																*iteratorInfo);
 													}
 
 				CDictionary::ItemEqualsProc		getItemEqualsProc() const
 													{ return nil; }
+
+		static	void*							iteratorAdvance(IteratorInfo& iteratorInfo)
+													{
+														// Setup
+														const	CDictionary::Procs&	procs =
+																		iteratorInfo.mInternals.mProcs;
+
+														// Advance
+														if (++iteratorInfo.mCurrentIndex < procs.getKeyCount()) {
+															// Have more keys
+															CString	key =
+																			procs.getKeyAtIndex(
+																					iteratorInfo.mCurrentIndex);
+															iteratorInfo.mItem =
+																	OI<CDictionary::Item>(
+																			CDictionary::Item(key,
+																					*procs.getValue(key)));
+
+															return &(*iteratorInfo.mItem);
+														} else {
+															// No more keys
+															iteratorInfo.mItem = OI<CDictionary::Item>();
+
+															return nil;
+														}
+													}
 
 		CDictionary::Procs	mProcs;
 };
@@ -1413,11 +1452,45 @@ void CDictionary::set(const CString& key, const Value& value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CDictionary::set(const CString& key, const OI<CDictionary::Value>& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for value
+	if (value.hasInstance())
+		// Have value
+		mInternals = (CDictionaryInternals*) mInternals->set(key, *value);
+	else
+		// Don't have value
+		mInternals = (CDictionaryInternals*) mInternals->remove(key);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDictionary::set(const CString& key, const OR<CDictionary::Value>& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for value
+	if (value.hasReference())
+		// Have value
+		mInternals = (CDictionaryInternals*) mInternals->set(key, *value);
+	else
+		// Don't have value
+		mInternals = (CDictionaryInternals*) mInternals->remove(key);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CDictionary::remove(const CString& key)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove
 	mInternals = (CDictionaryInternals*) mInternals->remove(key);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDictionary::remove(const TSet<CString>& keys)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Remove
+	mInternals = (CDictionaryInternals*) mInternals->remove(keys);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1455,6 +1528,13 @@ TIteratorS<CDictionary::Item> CDictionary::getIterator() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getIterator();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const OR<CDictionary::Value> CDictionary::operator[](const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->getValue(key);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

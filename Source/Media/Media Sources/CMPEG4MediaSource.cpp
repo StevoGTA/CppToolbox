@@ -648,7 +648,7 @@ class CMPEG4MediaSourceInternals {
 	public:
 													CMPEG4MediaSourceInternals() {}
 
-		void										addMP4AAudioTrack(const SstsdDescription& stsdDescription,
+				void								addMP4AAudioTrack(const SstsdDescription& stsdDescription,
 															const TArray<CAudioCodec::PacketLocation>& packetLocations);
 
 		static	TArray<CAudioCodec::PacketLocation>	composePacketLocations(const SsttsAtomPayload& sttsAtomPayload,

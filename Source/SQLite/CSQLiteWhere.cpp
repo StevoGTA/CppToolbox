@@ -39,14 +39,14 @@ class CSQLiteWhereInternals {
 						} else if (value.mType != SSQLiteValue::kLastInsertRowID) {
 							// Actual value
 							mString += CString::mSpace + comparison + CString(OSSTR(" ?"));
-							mValues += value;
+							mValues += TNArray<SSQLiteValue>(value);
 						} else
 							// Unsupported operation
 							AssertFail();
 					}
 
-		CString					mString;
-		TNArray<SSQLiteValue>	mValues;
+		CString							mString;
+		TNArray<TArray<SSQLiteValue> >	mValues;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -140,31 +140,70 @@ const CString& CSQLiteWhere::getString() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<SSQLiteValue>& CSQLiteWhere::getValues() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mValues;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 TArray<CSQLiteWhere::ValueGroup> CSQLiteWhere::getValueGroups(UInt32 groupSize) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TArray<TArray<SSQLiteValue> >	valuesChunks = SSQLiteValue::chunked(mInternals->mValues, groupSize);
-
-	// Iterate values chunks
 	TNArray<ValueGroup>	valueGroups;
-	for (TIteratorD<TArray<SSQLiteValue> > iterator = valuesChunks.getIterator(); iterator.hasValue();
-			iterator.advance()) {
-		// Transmogrify string
-		CString	string =
-						mInternals->mString.replacingSubStrings(sVariablePlaceholder,
-								CString(TNArray<CString>(CString(OSSTR("?")), iterator->getCount()),
-										CString(OSSTR(","))));
 
-		// Add value group
-		valueGroups += ValueGroup(string, *iterator);
+	// Check if need to group
+	if (!mInternals->mString.contains(sVariablePlaceholder)) {
+		// Single group
+		TNArray<SSQLiteValue>	values;
+		for (TIteratorD<TArray<SSQLiteValue> > iterator = mInternals->mValues.getIterator(); iterator.hasValue();
+				iterator.advance())
+			// Append
+			values += *iterator;
+		valueGroups += ValueGroup(mInternals->mString, values);
+	} else {
+		// Group
+		TNArray<SSQLiteValue>	preValueGroupValues;
+		TNArray<SSQLiteValue>	valueGroup;
+		TNArray<SSQLiteValue>	postValueGroupValues;
+		for (TIteratorD<TArray<SSQLiteValue> > iterator = mInternals->mValues.getIterator(); iterator.hasValue();
+				iterator.advance()) {
+			// Check count
+			if (iterator->getCount() == 1) {
+				// Single value
+				if (valueGroup.isEmpty())
+					// Pre
+					preValueGroupValues += *iterator;
+				else
+					// Post
+					postValueGroupValues += *iterator;
+			} else
+				// Value group
+				valueGroup = *iterator;
+		}
+
+		// Check if need to group
+		TNArray<SSQLiteValue>	allValues = preValueGroupValues + valueGroup + postValueGroupValues;
+		if (allValues.getCount() <= groupSize) {
+			// Can perform as a single group
+			CString	string =
+							mInternals->mString.replacingSubStrings(sVariablePlaceholder,
+									CString(
+											TSArray<CString>(CString(OSSTR("?")),
+													(UInt32) std::max<CArray::ItemCount>(allValues.getCount(), 1)),
+											CString(OSSTR(","))));
+			valueGroups += ValueGroup(string, allValues);
+		} else {
+			// Must perform in groups
+			TArray<TArray<SSQLiteValue> >	valuesChunks = TNArray<SSQLiteValue>::asChunksFrom(valueGroup, groupSize);
+			for (TIteratorD<TArray<SSQLiteValue> > iterator = valuesChunks.getIterator(); iterator.hasValue();
+					iterator.advance()) {
+				// Setup
+				CString					string =
+												mInternals->mString.replacingSubStrings(sVariablePlaceholder,
+														CString(TSArray<CString>(CString(OSSTR("?")),
+																iterator->getCount()),
+														CString(OSSTR(","))));
+				TNArray<SSQLiteValue>	values = preValueGroupValues + *iterator + postValueGroupValues;
+
+				// Add ValueGroup
+				valueGroups += ValueGroup(string, values);
+			}
+		}
 	}
 
 	return valueGroups;

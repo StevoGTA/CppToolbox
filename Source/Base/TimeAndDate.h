@@ -31,12 +31,33 @@ const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
 // MARK: - SUniversalTime
 
 struct SUniversalTime {
-							// Class methods
-	static	UniversalTime	getCurrentUniversalTime();
-	static	void			setCurrentUniversalTime(UniversalTime time);
+									// Class methods
+	static	UniversalTime			getCurrent();
+	static	UniversalTime			getDistantFuture();
+	static	UniversalTime			getDistantPast();
+
+	static	CString					getISO8601(UniversalTime universalTime);
+	static	OV<UniversalTime>		getFromISO8601(const CString& string);
+	static	OV<UniversalTime>		getFromISO8601(const OR<CString>& string)
+										{ return (string.hasReference()) ?
+												getFromISO8601(*string) : OV<UniversalTime>(); }
+	static	CString					getRFC3339(UniversalTime universalTime);
+	static	OV<UniversalTime>		getFromRFC3339(const CString& string);
+	static	OV<UniversalTime>		getFromRFC3339(const OR<CString>& string)
+										{ return (string.hasReference()) ?
+												getFromRFC3339(*string) : OV<UniversalTime>(); }
+	static	CString					getRFC339Extended(UniversalTime universalTime);
+	static	OV<UniversalTime>		getFromRFC3339Extended(const CString& string);
+	static	OV<UniversalTime>		getFromRFC3339Extended(const OR<CString>& string)
+										{ return (string.hasReference()) ?
+												getFromRFC3339Extended(*string) : OV<UniversalTime>(); }
+	static	void					setCurrent(UniversalTime time);
+
+	static	CString					getCurrentTimeZoneName();
+	static	UniversalTimeInterval	getCurrentTimeZoneOffset();
 
 #if TARGET_OS_MACOS
-	static	UniversalTime	getUniversalTimeForUTCDateTime(const UTCDateTime& utcDateTime);
+	static	UniversalTime			get(const UTCDateTime& utcDateTime);
 #endif
 };
 
@@ -82,7 +103,7 @@ struct SGregorianDate {
 						mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute), mSecond(second),
 								mDayOfWeek(dayOfWeek)
 						{}
-					SGregorianDate(UniversalTime time = SUniversalTime::getCurrentUniversalTime());
+					SGregorianDate(UniversalTime time = SUniversalTime::getCurrent());
 					SGregorianDate(const CString& string, StringStyle dateStringStyle = kStringStyleMedium,
 							StringStyle timeStringStyle = kStringStyleShort);
 
@@ -95,6 +116,14 @@ struct SGregorianDate {
 	SGregorianDate&	operator+=(const Units& units);
 
 	// Properties
+			UInt32	mYear;		// i.e. 2010
+			UInt8	mMonth;		// 1 - 12
+			UInt8	mDay;		// 1 - 28/29/30/31
+			UInt8	mHour;		// 0 - 23
+			UInt8	mMinute;	// 0 - 59
+			Float32	mSecond;	// 0 - 59.9
+			UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
+
 	static	CString	mJanString;
 	static	CString	mFebString;
 	static	CString	mMarString;
@@ -130,12 +159,4 @@ struct SGregorianDate {
 
 	static	CString	mAMString;
 	static	CString	mPMString;
-
-			UInt32	mYear;		// i.e. 2010
-			UInt8	mMonth;		// 1 - 12
-			UInt8	mDay;		// 1 - 28/29/30/31
-			UInt8	mHour;		// 0 - 23
-			UInt8	mMinute;	// 0 - 59
-			Float32	mSecond;	// 0 - 59.9
-			UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
 };

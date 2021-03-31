@@ -49,6 +49,10 @@ class CDictionary : public CEquatable {
 					kItemRef,
 				};
 
+			// Procs
+			public:
+				typedef	const OR<Value>	(*Proc)(const CString& key, void* userData);
+
 			// Methods
 			public:
 												// Lifecycle methods
@@ -63,7 +67,7 @@ class CDictionary : public CEquatable {
 												Value(SInt8 value);
 												Value(SInt16 value);
 												Value(SInt32 value);
-												Value(SInt64 value) ;
+												Value(SInt64 value);
 												Value(UInt8 value);
 												Value(UInt16 value);
 												Value(UInt32 value);
@@ -144,6 +148,9 @@ class CDictionary : public CEquatable {
 		};
 
 		struct Item {
+			// Procs
+			typedef bool	(*IncludeProc)(const Item& item, void* userData);
+
 			// Lifecycle methods
 			Item(const CString& key, const Value& value) : mKey(key), mValue(value) {}
 			Item(const CString& key, const Value& value, ItemCopyProc itemCopyProc) :
@@ -159,28 +166,47 @@ class CDictionary : public CEquatable {
 		struct Procs {
 			// Procs
 			typedef	KeyCount	(*GetKeyCountProc)(void* userData);
+			typedef	CString		(*GetKeyAtIndexProc)(UInt32 index, void* userData);
 			typedef	OR<Value>	(*GetValueProc)(const CString& key, void* userData);
+			typedef	void		(*SetProc)(const CString& key, const CDictionary::Value& value, void* userData);
+			typedef	void		(*RemoveKeysProc)(const TSet<CString>& keys, void* userData);
+			typedef	void		(*RemoveAllProc)(void* userData);
 			typedef	void		(*DisposeUserDataProc)(void* userData);
 
 						// Lifecycle methods
-						Procs(GetKeyCountProc getKeyCountProc, GetValueProc getValueProc,
-								DisposeUserDataProc disposeUserDataProc, void* userData) :
-							mGetKeyCountProc(getKeyCountProc), mGetValueProc(getValueProc),
-									mDisposeUserDataProc(disposeUserDataProc), mUserData(userData)
+						Procs(GetKeyCountProc getKeyCountProc, GetKeyAtIndexProc getKeyAtIndexProc,
+								GetValueProc getValueProc, SetProc setProc, RemoveKeysProc removeKeysProc,
+								RemoveAllProc removeAllProc, DisposeUserDataProc disposeUserDataProc, void* userData) :
+							mGetKeyCountProc(getKeyCountProc), mGetKeyAtIndexProc(getKeyAtIndexProc),
+									mGetValueProc(getValueProc), mSetProc(setProc), mRemoveKeysProc(removeKeysProc),
+									mRemoveAllProc(removeAllProc), mDisposeUserDataProc(disposeUserDataProc),
+									mUserData(userData)
 							{}
 
 						// Instance methods
 			KeyCount	getKeyCount() const
 							{ return mGetKeyCountProc(mUserData); }
+			CString		getKeyAtIndex(UInt32 index) const
+							{ return mGetKeyAtIndexProc(index, mUserData); }
 			OR<Value>	getValue(const CString& key) const
 							{ return mGetValueProc(key, mUserData); }
+			void		set(const CString& key, const CDictionary::Value& value)
+							{ mSetProc(key, value, mUserData); }
+			void		removeKeys(const TSet<CString>& keys)
+							{ mRemoveKeysProc(keys, mUserData); }
+			void		removeAll()
+							{ mRemoveAllProc(mUserData); }
 			void		disposeUserData() const
 							{ return mDisposeUserDataProc(mUserData); }
 
 			// Properties
 			private:
 				GetKeyCountProc		mGetKeyCountProc;
+				GetKeyAtIndexProc	mGetKeyAtIndexProc;
 				GetValueProc		mGetValueProc;
+				SetProc				mSetProc;
+				RemoveKeysProc		mRemoveKeysProc;
+				RemoveAllProc		mRemoveAllProc;
 				DisposeUserDataProc	mDisposeUserDataProc;
 				void*				mUserData;
 		};
@@ -282,8 +308,11 @@ class CDictionary : public CEquatable {
 						void					set(const CString& key, UInt64 value);
 						void					set(const CString& key, ItemRef value);
 						void					set(const CString& key, const Value& value);
+						void					set(const CString& key, const OI<CDictionary::Value>& value);
+						void					set(const CString& key, const OR<CDictionary::Value>& value);
 
 						void					remove(const CString& key);
+						void					remove(const TSet<CString>& keys);
 						void					removeAll();
 
 						bool					equals(const CDictionary& other, void* itemCompareProcUserData = nil)
@@ -291,6 +320,7 @@ class CDictionary : public CEquatable {
 
 						TIteratorS<Item>		getIterator() const;
 
+				const	OR<Value>				operator[](const CString& key) const;
 						CDictionary&			operator=(const CDictionary& other);
 						CDictionary&			operator+=(const CDictionary& other);
 
@@ -308,9 +338,6 @@ class CDictionary : public CEquatable {
 template <typename T> class TDictionary : public CDictionary {
 	// Methods
 	public:
-						// Lifecycle methods
-						TDictionary(const TDictionary& dictionary) : CDictionary(dictionary) {}
-
 						// Instance methods
 		const	OR<T>	get(const CString& key) const
 							{
@@ -325,7 +352,7 @@ template <typename T> class TDictionary : public CDictionary {
 
 	protected:
 						// Lifecycle methods
-						TDictionary(CDictionary::ItemEqualsProc itemEqualsProc, CDictionary::ItemCopyProc copyProc) :
+						TDictionary(CDictionary::ItemCopyProc copyProc, CDictionary::ItemEqualsProc itemEqualsProc) :
 							CDictionary(copyProc, dispose, itemEqualsProc)
 							{}
 
@@ -342,12 +369,34 @@ template <typename T> class TNDictionary : public TDictionary<T> {
 	public:
 						// Lifecycle methods
 						TNDictionary(CDictionary::ItemEqualsProc itemEqualsProc = nil) :
-							TDictionary<T>(itemEqualsProc, (CDictionary::ItemCopyProc) copy)
+							TDictionary<T>((CDictionary::ItemCopyProc) copy, itemEqualsProc)
 							{}
+						TNDictionary(const TDictionary<T>& other, CDictionary::Item::IncludeProc itemIncludeProc,
+								void* userData) :
+							TDictionary<T>((CDictionary::ItemCopyProc) copy, nil)
+							{
+								for (TIteratorS<CDictionary::Item> iterator = other.getIterator(); iterator.hasValue();
+										iterator.advance()) {
+									// Call proc
+									if (itemIncludeProc(*iterator, userData))
+										// Add item
+										CDictionary::set(iterator->mKey, iterator->mValue);
+								}
+							}
 
 						// Instance methods
 				void	set(const CString& key, const T& item)
 							{ CDictionary::set(key, new T(item)); }
+				void	set(const CString& key, const OI<T>& item)
+							{
+								// Check for instance
+								if (item.hasInstance())
+									// Set
+									CDictionary::set(key, new T(*item));
+								else
+									// Remove
+									CDictionary::remove(key);
+							}
 
 	private:
 						// Class methods
@@ -363,7 +412,7 @@ template <typename T> class TCDictionary : public TDictionary<T> {
 	public:
 						// Lifecycle methods
 						TCDictionary(CDictionary::ItemEqualsProc itemEqualsProc = nil) :
-							TDictionary<T>(itemEqualsProc, (CDictionary::ItemCopyProc) copy)
+							TDictionary<T>((CDictionary::ItemCopyProc) copy, itemEqualsProc)
 							{}
 
 						// Instance methods

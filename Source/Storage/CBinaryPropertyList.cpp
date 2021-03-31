@@ -137,21 +137,21 @@ class CBPLDictionaryInfo {
 		static	CDictionary				dictionaryWith(CBPLDataSource& bplDataSource, CDictionary::KeyCount keyCount)
 											{
 												return CDictionary(
-														CDictionary::Procs(getKeyCount, getValue, disposeUserData,
+														CDictionary::Procs(
+																(CDictionary::Procs::GetKeyCountProc) getKeyCount,
+																(CDictionary::Procs::GetKeyAtIndexProc) getKeyAtIndex,
+																(CDictionary::Procs::GetValueProc) getValue,
+																nil, nil, nil,
+																(CDictionary::Procs::DisposeUserDataProc)
+																		disposeUserData,
 																new CBPLDictionaryInfo(bplDataSource, keyCount)));
 											}
-		static	CDictionary::KeyCount	getKeyCount(void* userData)
+		static	CDictionary::KeyCount	getKeyCount(CBPLDictionaryInfo* bplDictionaryInfo)
+											{ return bplDictionaryInfo->mKeyCount; }
+		static	CString					getKeyAtIndex(UInt32 index, CBPLDictionaryInfo* bplDictionaryInfo)
+											{ return *bplDictionaryInfo->mKeys[index]; }
+		static	OR<CDictionary::Value>	getValue(const CString& key, CBPLDictionaryInfo* bplDictionaryInfo)
 											{
-												// Get CBPLDictionaryInfo
-												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
-
-												return bplDictionaryInfo->mKeyCount;
-											}
-		static	OR<CDictionary::Value>	getValue(const CString& key, void* userData)
-											{
-												// Get CBPLDictionaryInfo
-												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
-
 												// Iterate keys
 												UInt32	keyHash = CHasher::getValueForHashable(key);
 												for (CDictionary::KeyCount i = 0;
@@ -175,12 +175,8 @@ class CBPLDictionaryInfo {
 
 												return OR<CDictionary::Value>();
 											}
-		static	void					disposeUserData(void* userData)
-											{
-												// Get CBPLDictionaryInfo
-												CBPLDictionaryInfo*	bplDictionaryInfo = (CBPLDictionaryInfo*) userData;
-												Delete(bplDictionaryInfo);
-											}
+		static	void					disposeUserData(CBPLDictionaryInfo* bplDictionaryInfo)
+											{ Delete(bplDictionaryInfo); }
 
 		CBPLDataSource&			mBPLDataSource;
 		CDictionary::KeyCount	mKeyCount;
@@ -500,35 +496,36 @@ AssertFailUnimplemented();
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParceller, OI<SError>& outError)
+CBinaryPropertyList::DictionaryResult CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParceller)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64	dataSize = byteParceller.getSize();
+	UInt64		dataSize = byteParceller.getSize();
+	OI<SError>	error;
 
 	// Check size
 	if (dataSize < (sBinaryPListV10Header.getSize() + sizeof(SBinaryPListTrailer))) {
 		// Too small to be a binary property list
-		outError = OI<SError>(sUnknownFormatError);
-		LogIfErrorAndReturnValue(outError, "checking data source size", CDictionary());
+		DictionaryResult	dictionaryResult(sUnknownFormatError);
+		LogIfErrorAndReturnValue(dictionaryResult.mError, "checking data source size", dictionaryResult);
 	}
 
 	// Validate header
-	OI<CData>	header = byteParceller.readData(sBinaryPListV10Header.getSize(), outError);
-	LogIfErrorAndReturnValue(outError, "reading header", CDictionary());
+	OI<CData>	header = byteParceller.readData(sBinaryPListV10Header.getSize(), error);
+	LogIfErrorAndReturnValue(error, "reading header", DictionaryResult(*error));
 	if (*header != sBinaryPListV10Header) {
 		// Header does not match
-		outError = OI<SError>(sUnknownFormatError);
-		LogIfErrorAndReturnValue(outError, "validating header", CDictionary());
+		DictionaryResult	dictionaryResult(sUnknownFormatError);
+		LogIfErrorAndReturnValue(dictionaryResult.mError, "validating header", dictionaryResult);
 	}
 
 	// Validate trailer
-	outError = byteParceller.setPos(CDataSource::kPositionFromEnd, sizeof(SBinaryPListTrailer));
-	LogIfErrorAndReturnValue(outError, "positiong data source to read trailer", CDictionary());
+	error = byteParceller.setPos(CDataSource::kPositionFromEnd, sizeof(SBinaryPListTrailer));
+	LogIfErrorAndReturnValue(error, "positiong data source to read trailer", DictionaryResult(*error));
 
 	SBinaryPListTrailer	trailer;
-	outError = byteParceller.readData(&trailer, sizeof(SBinaryPListTrailer));
-	LogIfErrorAndReturnValue(outError, "reading trailer", CDictionary());
+	error = byteParceller.readData(&trailer, sizeof(SBinaryPListTrailer));
+	LogIfErrorAndReturnValue(error, "reading trailer", DictionaryResult(*error));
 
 	// Create CBPLDataSource
 	UInt8			objectOffsetFieldSize = trailer.mObjectOffsetFieldSize;
@@ -546,8 +543,8 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 	if (marker != kMarkerTypeDictionary) {
 		// Top object is not a dictionary
 		Delete(bplDataSource);
-		outError = OI<SError>(sUnknownFormatError);
-		LogIfErrorAndReturnValue(outError, "top object is not a dictionary", CDictionary());
+		DictionaryResult	dictionaryResult(sUnknownFormatError);
+		LogIfErrorAndReturnValue(dictionaryResult.mError, "top object is not a dictionary", dictionaryResult);
 	}
 
 	// Create dictionary
@@ -556,13 +553,13 @@ CDictionary CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParcel
 	// Remove reference
 	bplDataSource->removeReference();
 
-	return dictionary;
+	return DictionaryResult(dictionary);
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CBinaryPropertyList::writeTo(const CFile& file)
-//----------------------------------------------------------------------------------------------------------------------
-{
-AssertFailUnimplemented();
-return OI<SError>();
-}
+////----------------------------------------------------------------------------------------------------------------------
+//OI<SError> CBinaryPropertyList::writeTo(const CFile& file)
+////----------------------------------------------------------------------------------------------------------------------
+//{
+//AssertFailUnimplemented();
+//return OI<SError>();
+//}

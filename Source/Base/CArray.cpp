@@ -470,22 +470,22 @@ CArray& CArray::removeAtIndex(ItemIndex itemIndex)
 	return *this;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-CArray& CArray::removeFrom(const CArray& other)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Iterate all in the other
-	for (ItemIndex otherItemIndex = 0; otherItemIndex < other.mInternals->mCount; otherItemIndex++) {
-		// Check if other item is in local storage
-		ItemRef			otherItemRef = other.mInternals->mItemRefs[otherItemIndex];
-		OV<ItemIndex>	itemIndex = getIndexOf(otherItemRef);
-		if (itemIndex.hasValue())
-			// Remove
-			mInternals = mInternals->removeAtIndex(*itemIndex, true);
-	}
-
-	return *this;
-}
+////----------------------------------------------------------------------------------------------------------------------
+//CArray& CArray::removeFrom(const CArray& other)
+////----------------------------------------------------------------------------------------------------------------------
+//{
+//	// Iterate all in the other
+//	for (ItemIndex otherItemIndex = 0; otherItemIndex < other.mInternals->mCount; otherItemIndex++) {
+//		// Check if other item is in local storage
+//		ItemRef			otherItemRef = other.mInternals->mItemRefs[otherItemIndex];
+//		OV<ItemIndex>	itemIndex = getIndexOf(otherItemRef);
+//		if (itemIndex.hasValue())
+//			// Remove
+//			mInternals = mInternals->removeAtIndex(*itemIndex, true);
+//	}
+//
+//	return *this;
+//}
 
 //----------------------------------------------------------------------------------------------------------------------
 CArray& CArray::removeAll()
