@@ -4,6 +4,8 @@
 
 #include "TimeAndDate.h"
 
+#include "TBuffer.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SUniversalTime
 
@@ -56,8 +58,8 @@ OV<UniversalTime> SUniversalTime::getFromRFC3339Extended(const CString& string)
 
 	// Setup
 	CString::Length	length = string.getLength();
-	char	buffer[length + 1];
-	string.get(buffer, length + 1);
+	TBuffer<char>	buffer(length + 1);
+	string.get(*buffer, length + 1);
 
 	// Check for required characters
 	if ((buffer[4] != '-') || (buffer[7] != '-') || (buffer[10] != 'T') || (buffer[13] != ':') || (buffer[16] != ':'))

@@ -4,7 +4,9 @@
 
 #include "TimeAndDate.h"
 
-#include <time.h>
+#undef Delete
+
+#include "Windows.h"
 #include <sys/timeb.h>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -19,7 +21,7 @@ static	UniversalTimeInterval	sOffsetInterval = 0.0;
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UniversalTime SUniversalTime::getCurrentUniversalTime()
+UniversalTime SUniversalTime::getCurrent()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// _ftime64_s is relative to 1/1/1970
@@ -31,7 +33,7 @@ UniversalTime SUniversalTime::getCurrentUniversalTime()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void SUniversalTime::setCurrentUniversalTime(UniversalTime time)
+void SUniversalTime::setCurrent(UniversalTime time)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// _ftime64_s is relative to 1/1/1970
@@ -39,7 +41,32 @@ void SUniversalTime::setCurrentUniversalTime(UniversalTime time)
 	::_ftime64_s(&timebuffer);
 
 	sOffsetInterval =
-			time - (timebuffer.time + (UniversalTime)timebuffer.millitm / 1000.0 - kUniversalTimeInterval1970To2001);
+			time - (timebuffer.time + (UniversalTime) timebuffer.millitm / 1000.0 - kUniversalTimeInterval1970To2001);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString SUniversalTime::getCurrentTimeZoneName()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get time zone information
+	TIME_ZONE_INFORMATION	timeZoneInformation;
+	DWORD					result = GetTimeZoneInformation(&timeZoneInformation);
+
+	return CString(
+			(result == TIME_ZONE_ID_DAYLIGHT) ? timeZoneInformation.DaylightName : timeZoneInformation.StandardName);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTimeInterval SUniversalTime::getCurrentTimeZoneOffset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get time zone information
+	TIME_ZONE_INFORMATION	timeZoneInformation;
+	DWORD					result = GetTimeZoneInformation(&timeZoneInformation);
+
+	return (-timeZoneInformation.Bias -
+			((result == TIME_ZONE_ID_DAYLIGHT) ?
+					timeZoneInformation.DaylightBias : timeZoneInformation.StandardBias)) * 60;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

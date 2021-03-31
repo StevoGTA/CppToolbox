@@ -52,7 +52,7 @@ bool CPreferences::hasValue(const Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CData> CPreferences::getDataArray(const Pref& pref)
+TArray<CData> CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
@@ -60,7 +60,7 @@ return TNArray<CData>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
+TArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
