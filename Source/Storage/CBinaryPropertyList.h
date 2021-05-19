@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "CByteParceller.h"
+#include "CDataSource.h"
 #include "CDictionary.h"
 #include "CFile.h"
+#include "TInstance.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CBinaryPropertyList
@@ -27,6 +28,6 @@ class CBinaryPropertyList {
 	// Methods
 	public:
 									// Class methods
-		static	DictionaryResult	dictionaryFrom(const CByteParceller& byteParceller);
+		static	DictionaryResult	dictionaryFrom(const I<CDataSource>& dataSource);
 //		static	OI<SError>			writeTo(const CFile& file);
 };

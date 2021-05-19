@@ -21,15 +21,24 @@ class CThread {
 		typedef void	(*Proc)(void* userData);
 		typedef	void	(*ThreadProc)(CThread& thread, void* userData);
 
+	// Options:
+	public:
+		enum Options {
+			kOptionsNone		= 0,
+			kOptionsAutoStart	= 1 << 0,
+		};
+
 	// Methods
 	public:
 								// Lifecycle methods
 								CThread(ThreadProc threadProc, void* userData = nil,
-										const CString& name = CString::mEmpty);
+										const CString& name = CString::mEmpty, Options options = kOptionsAutoStart);
 				virtual			~CThread();
 
 								// Instance methods
 						Ref		getRef() const;
+
+						void	start();
 						bool	getIsRunning() const;
 
 								// Class methods
@@ -41,9 +50,6 @@ class CThread {
 	protected:
 								// Lifecycle methods
 								CThread(const CString& name = CString::mEmpty);
-
-								// Instance methods
-						void	start();
 
 								// Subclass methods
 				virtual	void	run()

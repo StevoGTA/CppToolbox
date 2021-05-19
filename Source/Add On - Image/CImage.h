@@ -5,7 +5,8 @@
 #pragma once
 
 #include "CBitmap.h"
-#include "CByteParceller.h"
+#include "CDataSource.h"
+#include "TInstance.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CImage
@@ -22,7 +23,7 @@ class CImage {
 	// Methods
 	public:
 							// Lifecycle methods
-							CImage(const CByteParceller& byteParceller, OV<Type> type = OV<Type>());
+							CImage(const I<CDataSource>& dataSource, OV<Type> type = OV<Type>());
 							CImage(const CImage& other);
 							~CImage();
 
@@ -30,7 +31,7 @@ class CImage {
 				CBitmap		getBitmap() const;
 
 							// Class methods
-		static	CBitmap		getBitmap(const CByteParceller& byteParceller);
+		static	CBitmap		getBitmap(const I<CDataSource>& dataSource);
 
 		static	OV<Type>	getTypeFromResourceName(const CString& resourceName);
 		static	OV<Type>	getTypeFromMIMEType(const CString& MIMEType);

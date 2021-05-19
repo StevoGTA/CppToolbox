@@ -10,12 +10,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFileDataSourceInternals
 
-class CFileDataSourceInternals : public TCopyOnWriteReferenceCountable<CFileDataSourceInternals> {
+class CFileDataSourceInternals {
 	public:
 						CFileDataSourceInternals(const CFile& file) : mFile(file), mFileReader(nil) {}
-						CFileDataSourceInternals(const CFileDataSourceInternals& other) :
-							mFile(other.mFile), mFileReader(nil)
-							{}
 						~CFileDataSourceInternals()
 							{
 								reset();
@@ -60,17 +57,10 @@ CFileDataSource::CFileDataSource(const CFile& file) : CDataSource()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFileDataSource::CFileDataSource(const CFileDataSource& other) : CDataSource()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = other.mInternals->addReference();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CFileDataSource::~CFileDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->removeReference();
+	Delete(mInternals);
 }
 
 // MARK: CDataSource methods
@@ -86,9 +76,6 @@ UInt64 CFileDataSource::getSize() const
 OI<SError> CFileDataSource::readData(void* buffer, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for change
-	mInternals = mInternals->prepareForWrite();
-
 	return mInternals->getFileReader().readData(buffer, byteCount);
 }
 
@@ -103,9 +90,6 @@ SInt64 CFileDataSource::getPos() const
 OI<SError> CFileDataSource::setPos(Position position, SInt64 newPos)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for change
-	mInternals = mInternals->prepareForWrite();
-
 	return mInternals->getFileReader().setPos((CFileReader::Position) position, newPos);
 }
 
@@ -113,9 +97,6 @@ OI<SError> CFileDataSource::setPos(Position position, SInt64 newPos)
 void CFileDataSource::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for change
-	mInternals = mInternals->prepareForWrite();
-
 	// Reset
 	mInternals->reset();
 }
@@ -124,13 +105,10 @@ void CFileDataSource::reset()
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMappedFileDataSourceInternals
 
-class CMappedFileDataSourceInternals : public TCopyOnWriteReferenceCountable<CMappedFileDataSourceInternals> {
+class CMappedFileDataSourceInternals {
 	public:
 						CMappedFileDataSourceInternals(const CFile& file) :
 							mFile(file), mFileReader(nil), mFileMemoryMap(nil), mCurrentOffset(0)
-							{}
-						CMappedFileDataSourceInternals(const CMappedFileDataSourceInternals& other) :
-							mFile(other.mFile), mFileReader(nil), mFileMemoryMap(nil), mCurrentOffset(0)
 							{}
 						~CMappedFileDataSourceInternals()
 							{
@@ -187,17 +165,10 @@ CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CDataSource()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CMappedFileDataSource::CMappedFileDataSource(const CMappedFileDataSource& other)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = other.mInternals->addReference();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CMappedFileDataSource::~CMappedFileDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->removeReference();
+	Delete(mInternals);
 }
 
 // MARK: CDataSource methods
@@ -213,9 +184,6 @@ UInt64 CMappedFileDataSource::getSize() const
 OI<SError> CMappedFileDataSource::readData(void* buffer, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for change
-	mInternals = mInternals->prepareForWrite();
-
 	// Preflight
 	AssertFailIf(mInternals->mError.hasInstance());
 	if (mInternals->mError.hasInstance())
@@ -252,9 +220,6 @@ OI<SError> CMappedFileDataSource::setPos(Position position, SInt64 newPos)
 	AssertFailIf(mInternals->mError.hasInstance());
 	if (mInternals->mError.hasInstance())
 		return mInternals->mError;
-
-	// Prepare for change
-	mInternals = mInternals->prepareForWrite();
 
 	// Figure new offset
 	SInt64	offset;
@@ -294,9 +259,6 @@ OI<SError> CMappedFileDataSource::setPos(Position position, SInt64 newPos)
 void CMappedFileDataSource::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for change
-	mInternals = mInternals->prepareForWrite();
-
 	// Reset
 	mInternals->reset();
 }

@@ -277,6 +277,19 @@ const	CColor	CColor::mWhiteSmoke(kTypeRGB, (UInt8) 245, 245, 245, 255);
 const	CColor	CColor::mYellow(kTypeRGB, (UInt8) 255, 255, 0, 255);
 const	CColor	CColor::mYellowGreen(kTypeRGB, (UInt8) 154, 205, 50, 255);
 
+const	SMatrix3x3_32	CColor::mYCbCrConverstionMatrixRec601VideoRange(
+								1.164,  1.164, 1.164,
+								0.000, -0.392, 2.017,
+								1.596, -0.813, 0.000);
+const	SMatrix3x3_32	CColor::mYCbCrConverstionMatrixRec601FullRange(
+								1.000,  1.000, 1.000,
+								0.000, -0.343, 1.765,
+								1.400, -0.711, 0.000);
+const	SMatrix3x3_32	CColor::mYCbCrConverstionMatrixRec709VideoRange(
+								1.164,  1.164, 1.164,
+								0.000, -0.213, 2.112,
+								1.793, -0.533, 0.000);
+
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------

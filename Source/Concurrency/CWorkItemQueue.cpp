@@ -78,8 +78,11 @@ UInt32	SWorkItemInfo::mNextIndex = 0;
 struct SWorkItemThreadInfo {
 	// Lifecycle methods
 	SWorkItemThreadInfo(SWorkItemInfo& initialWorkItemInfo, CThread::ThreadProc threadProc, const CString& name) :
-		mThread(threadProc, this, name), mWorkItemInfo(&initialWorkItemInfo)
-		{}
+		mThread(threadProc, this, name, CThread::kOptionsNone), mWorkItemInfo(&initialWorkItemInfo)
+		{
+			// Start
+			mThread.start();
+		}
 
 	// Properties
 	CSemaphore		mSemaphore;

@@ -52,11 +52,11 @@ static	void	sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t 
 
 class CImageInternals : public TReferenceCountable<CImageInternals> {
 	public:
-		CImageInternals(const CByteParceller& byteParceller, OV<CImage::Type> type) :
-			TReferenceCountable(), mByteParceller(byteParceller), mType(type)
+		CImageInternals(const I<CDataSource>& dataSource, OV<CImage::Type> type) :
+			TReferenceCountable(), mDataSource(dataSource), mType(type)
 			{}
 
-		const	CByteParceller		mByteParceller;
+		const	I<CDataSource>		mDataSource;
 				OV<CImage::Type>	mType;
 };
 
@@ -67,11 +67,11 @@ class CImageInternals : public TReferenceCountable<CImageInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CImage::CImage(const CByteParceller& byteParceller, OV<Type> type)
+CImage::CImage(const I<CDataSource>& dataSource, OV<Type> type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CImageInternals(byteParceller, type);
+	mInternals = new CImageInternals(dataSource, type);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -96,8 +96,8 @@ CBitmap CImage::getBitmap() const
 {
 	// Get data
 	OI<SError>	error;
-	OI<CData>	data = mInternals->mByteParceller.readData(error);
-	mInternals->mByteParceller.reset();
+	OI<CData>	data = mInternals->mDataSource->readData(error);
+	mInternals->mDataSource->reset();
 	ReturnValueIfError(error, CBitmap());
 
 	// Setup/Validate image type
@@ -127,10 +127,10 @@ CBitmap CImage::getBitmap() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap CImage::getBitmap(const CByteParceller& byteParceller)
+CBitmap CImage::getBitmap(const I<CDataSource>& dataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CImage(byteParceller).getBitmap();
+	return CImage(dataSource).getBitmap();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -5,33 +5,22 @@
 #include "CMediaSource.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CChunkMediaSourceInternals
+// MARK: Local data
 
-class CChunkMediaSourceInternals {
-	public:
-		CChunkMediaSourceInternals(CChunkMediaSource::Type type) : mType(type) {}
-
-		CChunkMediaSource::Type	mType;
-};
+static	CString	sAtomMediaSourceErrorDomain(OSSTR("CCAtomMediaSource"));
+static	SError	sNoAtomInfoError(sAtomMediaSourceErrorDomain, 1, CString(OSSTR("No Atom Info")));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CChunkMediaSource
 
-// MARK: Lifecycle methods
+// CMediaSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CChunkMediaSource::CChunkMediaSource(const CByteParceller& byteParceller, Type type) : CMediaSource(byteParceller)
+OI<SError> CChunkMediaSource::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CChunkMediaSourceInternals(type);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CChunkMediaSource::~CChunkMediaSource()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
+	return mByteParceller.setPos(CDataSource::kPositionFromBeginning, 0);
 }
 
 // MARK: Instance methods
@@ -48,12 +37,13 @@ OI<CChunkMediaSource::ChunkInfo> CChunkMediaSource::getChunkInfo(OI<SError>& out
 	UInt64	size;
 	if (true) {
 		// Read 32-bit header
-		struct SHeader { OSType	mID; UInt32	mSize; } header;
-		outError = mByteParceller.readData(&header, sizeof(SHeader));
+		OV<OSType>	_id = mByteParceller.readOSType(outError);
 		ReturnValueIfError(outError, OI<ChunkInfo>());
+		id = *_id;
 
-		id = EndianU32_BtoN(header.mID);
-		size = (mInternals->mType == kBigEndian) ? EndianU32_BtoN(header.mSize) : EndianU32_LtoN(header.mSize);
+		OV<UInt32>	_size = mByteParceller.readUInt32(outError);
+		ReturnValueIfError(outError, OI<ChunkInfo>());
+		size = *_size;
 	}
 
 	return OI<ChunkInfo>(new ChunkInfo(id, size, pos, mByteParceller.getPos() + size + (size % 1)));
@@ -81,12 +71,13 @@ OI<SError> CChunkMediaSource::seekToNextChunk(const ChunkInfo& chunkInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAtomMediaSource
 
-// Lifecycle methods
+// CMediaSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAtomMediaSource::CAtomMediaSource(const CByteParceller& byteParceller) : CMediaSource(byteParceller)
+OI<SError> CAtomMediaSource::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	return mByteParceller.setPos(CDataSource::kPositionFromBeginning, 0);
 }
 
 // Instance methods
@@ -105,17 +96,17 @@ OI<CAtomMediaSource::AtomInfo> CAtomMediaSource::getAtomInfo(OI<SError>& outErro
 
 	// Do we need to read large size?
 	UInt64	payloadSize;
-	if (EndianU32_BtoN(*size32) == 1) {
+	if (*size32 == 1) {
 		// Yes
 		OV<UInt64>	size64 = mByteParceller.readUInt64(outError);
 		ReturnValueIfError(outError, OI<AtomInfo>());
 
-		payloadSize = EndianU64_BtoN(*size64) - 12;
+		payloadSize = *size64 - 12;
 	} else
 		// No
-		payloadSize = EndianU32_BtoN(*size32) - 8;
+		payloadSize = *size32 - 8;
 
-	return OI<AtomInfo>(new AtomInfo(EndianU32_BtoN(*type), mByteParceller.getPos(), payloadSize));
+	return OI<AtomInfo>(new AtomInfo(*type, mByteParceller.getPos(), payloadSize));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -123,10 +114,50 @@ OI<CData> CAtomMediaSource::getAtomPayload(const AtomInfo& atomInfo, OI<SError>&
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	OI<SError>	error = mByteParceller.setPos(CDataSource::kPositionFromBeginning, atomInfo.mPayloadPos);
+	outError = mByteParceller.setPos(CDataSource::kPositionFromBeginning, atomInfo.mPayloadPos);
 	ReturnValueIfError(outError, OI<CData>());
 
 	return mByteParceller.readData(atomInfo.mPayloadSize, outError);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<CData> CAtomMediaSource::getAtomPayload(const OR<AtomInfo>& atomInfo, OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if have AtomInfo
+	if (atomInfo.hasReference())
+		// Have AtomInfo
+		return getAtomPayload(*atomInfo, outError);
+	else {
+		// Don't have AtomInfo
+		outError = OI<SError>(sNoAtomInfoError);
+
+		return OI<CData>();
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<CData> CAtomMediaSource::getAtomPayload(const AtomInfo& atomInfo, SInt64 offset, OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Retrieve child AtomInfo
+	OI<AtomInfo>	childAtomInfo = getAtomInfo(atomInfo, offset, outError);
+	ReturnValueIfError(outError, OI<CData>());
+
+	return getAtomPayload(*childAtomInfo, outError);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<CAtomMediaSource::AtomInfo> CAtomMediaSource::getAtomInfo(const AtomInfo& atomInfo, SInt64 offset,
+		OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Move to
+	outError = mByteParceller.setPos(CDataSource::kPositionFromBeginning, atomInfo.mPayloadPos + offset);
+	ReturnValueIfError(outError, OI<AtomInfo>());
+
+	// Read
+	return getAtomInfo(outError);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -135,7 +166,7 @@ OI<CAtomMediaSource::AtomGroup> CAtomMediaSource::getAtomGroup(const AtomInfo& g
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	OI<SError>	error = mByteParceller.setPos(CDataSource::kPositionFromBeginning, groupAtomInfo.mPayloadPos);
+	outError = mByteParceller.setPos(CDataSource::kPositionFromBeginning, groupAtomInfo.mPayloadPos);
 	ReturnValueIfError(outError, OI<AtomGroup>());
 
 	// Read Atom
@@ -154,6 +185,22 @@ OI<CAtomMediaSource::AtomGroup> CAtomMediaSource::getAtomGroup(const AtomInfo& g
 	}
 
 	return OI<AtomGroup>(new AtomGroup(atomInfos));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<CAtomMediaSource::AtomGroup> CAtomMediaSource::getAtomGroup(const OR<AtomInfo>& atomInfo, OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if have AtomInfo
+	if (atomInfo.hasReference())
+		// Have AtomInfo
+		return getAtomGroup(*atomInfo, outError);
+	else {
+		// Don't have AtomInfo
+		outError = OI<SError>(sNoAtomInfoError);
+
+		return OI<AtomGroup>();
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

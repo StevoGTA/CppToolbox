@@ -4,7 +4,9 @@
 
 #pragma once
 
-#include "CByteParceller.h"
+#include "CAudioFrames.h"
+#include "CCodec.h"
+#include "CDataSource.h"
 #include "SAudioFormats.h"
 #include "SAudioReadStatus.h"
 #include "SMediaPosition.h"
@@ -12,95 +14,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioCodec
 
-class CAudioCodec {
-	// Structs
-	public:
-		struct Packet {
-			// Lifecycle methods
-			Packet(UInt32 sampleCount, UInt32 size) : mSampleCount(sampleCount), mSize(size) {}
-
-			// Properties
-			UInt32	mSampleCount;
-			UInt32	mSize;
-		};
-
-		struct PacketLocation {
-			// Lifecycle methods
-			PacketLocation(Packet packet, SInt64 pos) : mPacket(packet), mPos(pos) {}
-
-			// Properties
-			Packet	mPacket;
-			SInt64	mPos;
-		};
-
-		struct PacketBlock {
-			// Lifecycle methods
-			PacketBlock(UInt32 count, Packet packet) : mCount(count), mPacket(packet) {}
-
-			// Properties
-			UInt32	mCount;
-			Packet	mPacket;
-		};
-
-	// Classes
-	public:
-		class DecodeInfo {
-			// Methods
-			public:
-						// Lifecycle methods
-						DecodeInfo() {}
-				virtual	~DecodeInfo() {}
-		};
-
-		class DataDecodeInfo : public DecodeInfo {
-			// Methods
-			public:
-						// Lifecycle methods
-						DataDecodeInfo(SInt64 startOffset, SInt64 size) :
-							DecodeInfo(), mStartOffset(startOffset), mSize(size)
-							{}
-
-						// Instance methods
-				SInt64	getStartOffset() const
-							{ return mStartOffset; }
-				SInt64	getSize() const
-							{ return mSize; }
-
-			// Properties
-			private:
-				SInt64	mStartOffset;
-				SInt64	mSize;
-		};
-
-		class PacketsDecodeInfo : public DecodeInfo {
-			// Methods
-			public:
-												// Lifecycle methods
-												PacketsDecodeInfo(const TArray<PacketLocation>& packetLocations) :
-													DecodeInfo(), mPacketLocations(packetLocations)
-													{}
-
-												// Instance methods
-				const	TArray<PacketLocation>&	getPacketLocations() const
-							{ return mPacketLocations; }
-
-			// Properties
-			private:
-				TArray<PacketLocation>	mPacketLocations;
-		};
-
-		class EncodeSettings {
-			// Methods
-			public:
-				// Lifecycle methods
-				EncodeSettings() : mDummy(false) {}
-				EncodeSettings(const EncodeSettings& other) : mDummy(other.mDummy) {}
-
-			// Properties
-			private:
-				bool	mDummy;
-		};
-
+class CAudioCodec : public CCodec {
 	// Structs
 	public:
 		struct Info {
@@ -175,14 +89,15 @@ class CAudioCodec {
 	// Methods
 	public:
 												// Lifecycle methods
-												CAudioCodec() {}
-		virtual									~CAudioCodec() {}
+												CAudioCodec() :CCodec() {}
+												~CAudioCodec() {}
 
 												// Instance methods
 		virtual	void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-														CByteParceller& byteParceller,
-														const I<CAudioCodec::DecodeInfo>& decodeInfo) = 0;
-		virtual	SAudioReadStatus				decode(const SMediaPosition& mediaPosition, CAudioData& audioData) = 0;
+														const I<CDataSource>& dataSource,
+														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
+		virtual	SAudioReadStatus				decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames) =
+														0;
 
 		virtual	TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const = 0;
 		virtual	void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat) = 0;
@@ -191,7 +106,7 @@ class CAudioCodec {
 												// Class methods
 		static	UInt32							getPacketIndex(const SMediaPosition& mediaPosition,
 														const SAudioProcessingFormat& audioProcessingFormat,
-														const TArray<CAudioCodec::PacketLocation>& packetLocations);
+														const TArray<CCodec::PacketAndLocation>& packetAndLocations);
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -221,9 +136,9 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 
 							// CAudioCodec methods
 		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-									CByteParceller& byteParceller, const I<CAudioCodec::DecodeInfo>& decodeInfo)
+									const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo)
 								{ AssertFailUnimplemented(); }
-		SAudioReadStatus	decode(const SMediaPosition& mediaPosition, CAudioData& audioData)
+		SAudioReadStatus	decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 								{
 									AssertFailUnimplemented();
 

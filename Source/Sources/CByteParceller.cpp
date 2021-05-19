@@ -11,15 +11,13 @@
 
 class CByteParcellerInternals : public TReferenceCountable<CByteParcellerInternals> {
 	public:
-		CByteParcellerInternals(const I<CDataSource>& dataSource) :
-			TReferenceCountable(), mNeedToSetPos(false), mDataSource(dataSource), mDataSourceOffset(0),
-					mSize(dataSource->getSize())
-			{}
-		CByteParcellerInternals(const I<CDataSource>& dataSource, UInt64 dataSourceOffset, UInt64 size) :
-			TReferenceCountable(), mNeedToSetPos(true), mDataSource(dataSource), mDataSourceOffset(dataSourceOffset),
-					mSize(size)
+		CByteParcellerInternals(const I<CDataSource>& dataSource, UInt64 dataSourceOffset, UInt64 size,
+				bool isBigEndian) :
+			TReferenceCountable(), mIsBigEndian(isBigEndian), mNeedToSetPos(true), mDataSource(dataSource),
+					mDataSourceOffset(dataSourceOffset), mSize(size)
 			{}
 
+		bool			mIsBigEndian;
 		bool			mNeedToSetPos;
 		I<CDataSource>	mDataSource;
 		UInt64			mDataSourceOffset;
@@ -33,21 +31,21 @@ class CByteParcellerInternals : public TReferenceCountable<CByteParcellerInterna
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CByteParceller::CByteParceller(const I<CDataSource>& dataSource)
+CByteParceller::CByteParceller(const I<CDataSource>& dataSource, bool isBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CByteParcellerInternals(dataSource);
+	mInternals = new CByteParcellerInternals(dataSource, 0, dataSource->getSize(), isBigEndian);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CByteParceller::CByteParceller(const CByteParceller& other, UInt64 offset, UInt64 size)
+CByteParceller::CByteParceller(const I<CDataSource>& dataSource, UInt64 offset, UInt64 size, bool isBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf((offset + size) > other.mInternals->mDataSource->getSize());
+	AssertFailIf((offset + size) > dataSource->getSize());
 
 	// Setup
-	mInternals = new CByteParcellerInternals(I<CDataSource>(other.mInternals->mDataSource->clone()), offset, size);
+	mInternals = new CByteParcellerInternals(dataSource, offset, size, isBigEndian);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -71,54 +69,6 @@ UInt64 CByteParceller::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mSize;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CByteParceller::readData(void* buffer, UInt64 byteCount) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if can read
-	if ((mInternals->mSize - getPos()) < byteCount)
-		// Can't read that many bytes
-		return OI<SError>(SError::mEndOfData);
-
-	// Check if need to finish setup
-	if (mInternals->mNeedToSetPos) {
-		// Yes
-		OI<SError>	error = setPos(CDataSource::kPositionFromBeginning, 0);
-		ReturnErrorIfError(error);
-	}
-
-	return mInternals->mDataSource->readData(buffer, byteCount);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<CData> CByteParceller::readData(UInt64 byteCount, OI<SError>& outError) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	OI<CData>	data(new CData((CData::Size) byteCount));
-
-	// Read
-	outError = readData(data->getMutableBytePtr(), byteCount);
-	ReturnValueIfError(outError, OI<CData>());
-
-	return data;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<CData> CByteParceller::readData(OI<SError>& outError) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	UInt64		byteCount = getSize() - getPos();
-	OI<CData>	data(new CData((CData::Size) byteCount));
-
-	// Read
-	outError = readData(data->getMutableBytePtr(), byteCount);
-	ReturnValueIfError(outError, OI<CData>());
-
-	return data;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -183,10 +133,151 @@ OI<SError> CByteParceller::setPos(CDataSource::Position position, SInt64 newPos)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OI<SError> CByteParceller::readData(void* buffer, UInt64 byteCount) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if can read
+	if ((mInternals->mSize - getPos()) < byteCount)
+		// Can't read that many bytes
+		return OI<SError>(SError::mEndOfData);
+
+	// Check if need to finish setup
+	if (mInternals->mNeedToSetPos) {
+		// Yes
+		OI<SError>	error = setPos(CDataSource::kPositionFromBeginning, 0);
+		ReturnErrorIfError(error);
+	}
+
+	return mInternals->mDataSource->readData(buffer, byteCount);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<CData> CByteParceller::readData(UInt64 byteCount, OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	OI<CData>	data(new CData((CData::Size) byteCount));
+
+	// Read
+	outError = readData(data->getMutableBytePtr(), byteCount);
+	ReturnValueIfError(outError, OI<CData>());
+
+	return data;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SInt8> CByteParceller::readSInt8(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	SInt8	value = 0;
+	outError = readData(&value, sizeof(SInt8));
+	ReturnValueIfError(outError, OV<SInt8>());
+
+	return OV<SInt8>(value);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SInt16> CByteParceller::readSInt16(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	SInt16	value = 0;
+	outError = readData(&value, sizeof(SInt16));
+	ReturnValueIfError(outError, OV<SInt16>());
+
+	return OV<SInt16>(mInternals->mIsBigEndian ? EndianS16_BtoN(value) : EndianS16_LtoN(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SInt32> CByteParceller::readSInt32(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	SInt32	value = 0;
+	outError = readData(&value, sizeof(SInt32));
+	ReturnValueIfError(outError, OV<SInt32>());
+
+	return OV<SInt32>(mInternals->mIsBigEndian ? EndianS32_BtoN(value) : EndianS32_LtoN(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SInt64> CByteParceller::readSInt64(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	SInt64	value = 0;
+	outError = readData(&value, sizeof(SInt64));
+	ReturnValueIfError(outError, OV<SInt64>());
+
+	return OV<SInt64>(mInternals->mIsBigEndian ? EndianS64_BtoN(value) : EndianS64_LtoN(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<UInt8> CByteParceller::readUInt8(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	UInt8	value = 0;
+	outError = readData(&value, sizeof(UInt8));
+	ReturnValueIfError(outError, OV<UInt8>());
+
+	return OV<UInt8>(value);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<UInt16> CByteParceller::readUInt16(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	UInt16	value = 0;
+	outError = readData(&value, sizeof(UInt16));
+	ReturnValueIfError(outError, OV<UInt16>());
+
+	return OV<UInt16>(mInternals->mIsBigEndian ? EndianU16_BtoN(value) : EndianU16_LtoN(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<UInt32> CByteParceller::readUInt32(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	UInt32	value = 0;
+	outError = readData(&value, sizeof(UInt32));
+	ReturnValueIfError(outError, OV<UInt32>());
+
+	return OV<UInt32>(mInternals->mIsBigEndian ? EndianU32_BtoN(value) : EndianU32_LtoN(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<UInt64> CByteParceller::readUInt64(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	UInt64	value = 0;
+	outError = readData(&value, sizeof(UInt64));
+	ReturnValueIfError(outError, OV<UInt64>());
+
+	return OV<UInt64>(mInternals->mIsBigEndian ? EndianU64_BtoN(value) : EndianU64_LtoN(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<OSType> CByteParceller::readOSType(OI<SError>& outError) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	OSType	value = 0;
+	outError = readData(&value, sizeof(OSType));
+	ReturnValueIfError(outError, OV<OSType>());
+
+	return OV<OSType>(EndianU32_BtoN(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CByteParceller::reset() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset
-	mInternals->mDataSource->reset();
 	mInternals->mNeedToSetPos = true;
+	mInternals->mDataSource->reset();
 }

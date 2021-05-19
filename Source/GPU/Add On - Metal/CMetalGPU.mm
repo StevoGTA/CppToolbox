@@ -4,6 +4,7 @@
 
 #import "CMetalGPU.h"
 
+#import "CLogServices.h"
 #import "CMetalRenderState.h"
 #import "CMetalTexture.h"
 #import "ConcurrencyPrimitives.h"
@@ -51,6 +52,13 @@ class CGPUInternals {
  				mRenderPipelineDescriptor.sampleCount = procs.getSampleCount();
 				mRenderPipelineDescriptor.colorAttachments[0].pixelFormat = procs.getPixelFormat();
 			}
+		~CGPUInternals()
+			{
+				// Cleanup
+				if (mMetalTextureCache.hasInstance())
+					// Release
+					::CFRelease(*mMetalTextureCache);
+			}
 
 	SGPUProcsInfo												mProcs;
 
@@ -66,9 +74,12 @@ class CGPUInternals {
 	CSharedResource												mSharedResourceBuffers;
 	NSMutableArray<MetalBufferCache*>*							mMetalBufferCaches;
 	UInt32														mMetalBufferCacheIndex;
+	OI<CVMetalTextureCacheRef>									mMetalTextureCache;
 
 	id<MTLCommandBuffer>										mCurrentCommandBuffer;
 	id<MTLRenderCommandEncoder>									mCurrentRenderCommandEncoder;
+	TNArray<const I<CGPUTexture> >								mPreviousTextures;
+	TNArray<const I<CGPUTexture> >								mCurrentTextures;
 
 	SMatrix4x4_32												mViewMatrix2D;
 	SMatrix4x4_32												mProjectionMatrix2D;
@@ -100,25 +111,60 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
-		const S2DSizeU16& size)
+CVideoCodec::DecodeFrameInfo::Compatibility CGPU::getVideoCodecDecodeFrameInfoCompatibility() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Register texture
-	CGPUTexture*	gpuTexture = new CMetalTexture(mInternals->mProcs.getDevice(), data, dataFormat, size);
-
-	return SGPUTextureReference(*gpuTexture);
+	return CVideoCodec::DecodeFrameInfo::kCompatibilityAppleMetal;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
+I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CMetalTexture*	metalTexture = (CMetalTexture*) gpuTexture.mGPUTexture;
+	return I<CGPUTexture>(new CMetalTexture(mInternals->mProcs.getDevice(), data, dataFormat, size));
+}
 
-	// Cleanup
-	Delete(metalTexture);
+//----------------------------------------------------------------------------------------------------------------------
+TArray<I<CGPUTexture> > CGPU::registerTextures(const CVideoFrame& videoFrame)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup Metal Texture Cache
+	if (!mInternals->mMetalTextureCache.hasInstance()) {
+		// Create
+		CVMetalTextureCacheRef	metalTextureCacheRef;
+		CVReturn				result =
+										::CVMetalTextureCacheCreate(kCFAllocatorDefault, nil,
+												mInternals->mProcs.getDevice(), nil, &metalTextureCacheRef);
+		if (result != kCVReturnSuccess) {
+			// Error
+			CLogServices::logError(CString(OSSTR("CMetalGPU - error when creating texture cache: ")) + CString(result));
+
+			return TNArray<I<CGPUTexture> >();
+		}
+
+		// Store
+		mInternals->mMetalTextureCache = OI<CVMetalTextureCacheRef>(metalTextureCacheRef);
+	} else
+		// Flush
+		::CVMetalTextureCacheFlush(*mInternals->mMetalTextureCache, 0);
+
+	// Load textures
+	CVImageBufferRef			imageBufferRef = videoFrame.getImageBufferRef();
+	UInt32						planeCount =
+										::CVPixelBufferIsPlanar(imageBufferRef) ?
+												(UInt32) ::CVPixelBufferGetPlaneCount(imageBufferRef) : 1;
+	TNArray<I<CGPUTexture> >	textures;
+	for (UInt32 i = 0; i < planeCount; i++)
+		// Add texture
+		textures += I<CGPUTexture>(new CMetalTexture(*mInternals->mMetalTextureCache, imageBufferRef, i));
+
+	return textures;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPU::unregisterTexture(I<CGPUTexture>& gpuTexture)
+//----------------------------------------------------------------------------------------------------------------------
+{
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -205,6 +251,15 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 	// Setup Metal Buffer Cache
 	mInternals->mSharedResourceBuffers.consume();
 	[mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex] reset];
+
+	// Manage textures
+	//	Until unveiling video frame handling, this was unnecessary, but possibly because textures largely don't change
+	//	frame to frame.  With video frame handling, it seems that we need to keep (video frame) textures around for an
+	//	extra frame or the visuals on-screen seem to be affected by frame decoding going into textures not longer active
+	//	but affecting what is seen on screen.  This is probably not the right solution, but I don't know anything better
+	//	at this time.  (Stevo 4/30/2021).
+	mInternals->mPreviousTextures = mInternals->mCurrentTextures;
+	mInternals->mCurrentTextures.removeAll();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -238,11 +293,17 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			break;
 	}
 
+	// Query textures
+	const OR<const TArray<const I<CGPUTexture> > >	textures = renderState.getTextures();
+	if (textures.hasReference())
+		// Save a reference to the textures
+		mInternals->mCurrentTextures += *textures;
+
 	// Check type
 	switch (renderType) {
 		case kRenderTypeTriangleList:
 			// Triangle list
-			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
+			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle List"];
 			AssertFailUnimplemented();
 			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
 			break;
@@ -250,8 +311,8 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 		case kRenderTypeTriangleStrip:
 			// Triangle strip
 			[mInternals->mCurrentRenderCommandEncoder pushDebugGroup:@"Triangle Strip"];
-			[mInternals->mCurrentRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
-					vertexStart:offset vertexCount:count];
+			[mInternals->mCurrentRenderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:offset
+					vertexCount:count];
 			[mInternals->mCurrentRenderCommandEncoder popDebugGroup];
 			break;
 	}
@@ -292,6 +353,12 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			break;
 	}
 
+	// Query textures
+	const OR<const TArray<const I<CGPUTexture> > >	textures = renderState.getTextures();
+	if (textures.hasReference())
+		// Save a reference to the textures
+		mInternals->mCurrentTextures += *textures;
+
 	// Check type
 	switch (renderType) {
 		case kRenderTypeTriangleList:
@@ -315,9 +382,6 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 void CGPU::renderEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Next Metal Buffer Cache
-	mInternals->mMetalBufferCacheIndex = (mInternals->mMetalBufferCacheIndex + 1) % kBufferCount;
-
 	// Setup for command completion
 	[mInternals->mCurrentCommandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
 		// We're done
@@ -331,4 +395,7 @@ void CGPU::renderEnd() const
 	[mInternals->mCurrentCommandBuffer presentDrawable:mInternals->mProcs.getCurrentDrawable()];
 	[mInternals->mCurrentCommandBuffer commit];
 	mInternals->mCurrentCommandBuffer = nil;
+
+	// Next Metal Buffer Cache
+	mInternals->mMetalBufferCacheIndex = (mInternals->mMetalBufferCacheIndex + 1) % kBufferCount;
 }

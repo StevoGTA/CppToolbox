@@ -23,6 +23,7 @@ void eAssertHandleProc(const SError& error, const char* file, const char* proc, 
 	if (symbols != nil) {
 		// Log symbols
 		for (int i = 0; i < size; i++)
+			// Log this symbol
 			CLogServices::logMessage(CString(symbols[i]));
 		::free(symbols);
 	} else

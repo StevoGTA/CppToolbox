@@ -4,6 +4,7 @@
 
 #include "CBinaryPropertyList.h"
 
+#include "CByteParceller.h"
 #include "CppToolboxAssert.h"
 #include "TBuffer.h"
 
@@ -51,24 +52,24 @@ static	SError	sUnknownFormatError(sErrorDomain, 1, CString(OSSTR("Unknown format
 
 class CBPLDataSource : public TReferenceCountable<CBPLDataSource> {
 	public:
-							// Lifecycle methods
-							CBPLDataSource(const CByteParceller& byteParceller, UInt8 objectOffsetFieldSize,
-									UInt8 objectIndexFieldSize, UInt64 totalObjectCount,
-									UInt64 objectOffsetTableOffset);
-							~CBPLDataSource();
+					// Lifecycle methods
+					CBPLDataSource(const I<CDataSource>& dataSource, UInt8 objectOffsetFieldSize,
+							UInt8 objectIndexFieldSize, UInt64 totalObjectCount, UInt64 objectOffsetTableOffset);
+					~CBPLDataSource();
 
-							// Instance methods
-		void				readData(SInt64 offset, void* buffer, UInt64 byteCount, const char* errorWhen);
-		UInt8				readMarker(UInt64 objectIndex, OR<UInt64> count = OR<UInt64>());
-		UInt64				readIndex();
-		UInt64				readCount(const char* errorWhen);
+					// Instance methods
+		void		readData(SInt64 offset, void* buffer, UInt64 byteCount, const char* errorWhen);
+		UInt8		readMarker(UInt64 objectIndex, OR<UInt64> count = OR<UInt64>());
+		UInt64		readIndex();
+		UInt64		readCount(const char* errorWhen);
 
-		UInt64				readValue(SInt64 offset, UInt8 fieldSize, const char* errorWhen);
-		UInt64				readValue(UInt8 fieldSize, const char* errorWhen);
-		CDictionary			readDictionary(UInt64 objectIndex);
+		UInt64		readValue(SInt64 offset, UInt8 fieldSize, const char* errorWhen);
+		UInt64		readValue(UInt8 fieldSize, const char* errorWhen);
+		CDictionary	readDictionary(UInt64 objectIndex);
 
-		CDictionary::Value*	createDictionaryValue(UInt64 objectIndex);
+		SValue*		createDictionaryValue(UInt64 objectIndex);
 
+		// Properties
 		CByteParceller	mByteParceller;
 		OI<SError>		mError;
 
@@ -94,8 +95,8 @@ class CBPLDictionaryInfo {
 												mKeys = new CString*[mKeyCount];
 												mValueIndexes = new UInt64[mKeyCount];
 
-												mDictionaryValues = new CDictionary::Value*[mKeyCount];
-												::memset(mDictionaryValues, 0, sizeof(CDictionary::Value*) * mKeyCount);
+												mDictionaryValues = new SValue*[mKeyCount];
+												::memset(mDictionaryValues, 0, sizeof(SValue*) * mKeyCount);
 
 												// Setup keys
 												for (CDictionary::KeyCount i = 0; i < mKeyCount; i++) {
@@ -150,7 +151,7 @@ class CBPLDictionaryInfo {
 											{ return bplDictionaryInfo->mKeyCount; }
 		static	CString					getKeyAtIndex(UInt32 index, CBPLDictionaryInfo* bplDictionaryInfo)
 											{ return *bplDictionaryInfo->mKeys[index]; }
-		static	OR<CDictionary::Value>	getValue(const CString& key, CBPLDictionaryInfo* bplDictionaryInfo)
+		static	OR<SValue>				getValue(const CString& key, CBPLDictionaryInfo* bplDictionaryInfo)
 											{
 												// Iterate keys
 												UInt32	keyHash = CHasher::getValueForHashable(key);
@@ -168,12 +169,12 @@ class CBPLDictionaryInfo {
 																					bplDictionaryInfo->
 																							mValueIndexes[i]);
 
-														return OR<CDictionary::Value>(
+														return OR<SValue>(
 																*bplDictionaryInfo->mDictionaryValues[i]);
 													}
 												}
 
-												return OR<CDictionary::Value>();
+												return OR<SValue>();
 											}
 		static	void					disposeUserData(CBPLDictionaryInfo* bplDictionaryInfo)
 											{ Delete(bplDictionaryInfo); }
@@ -183,7 +184,7 @@ class CBPLDictionaryInfo {
 		UInt32*					mKeyHashes;
 		CString**				mKeys;
 		UInt64*					mValueIndexes;
-		CDictionary::Value**	mDictionaryValues;
+		SValue**				mDictionaryValues;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -191,9 +192,9 @@ class CBPLDictionaryInfo {
 // MARK: - CBPLDataSource definition
 
 //----------------------------------------------------------------------------------------------------------------------
-CBPLDataSource::CBPLDataSource(const CByteParceller& byteParceller, UInt8 objectOffsetFieldSize,
+CBPLDataSource::CBPLDataSource(const I<CDataSource>& dataSource, UInt8 objectOffsetFieldSize,
 		UInt8 objectIndexFieldSize, UInt64 totalObjectCount, UInt64 objectOffsetTableOffset) :
-	TReferenceCountable(), mByteParceller(byteParceller), mObjectIndexFieldSize(objectIndexFieldSize),
+	TReferenceCountable(), mByteParceller(dataSource, true), mObjectIndexFieldSize(objectIndexFieldSize),
 			mTotalObjectCount(totalObjectCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -357,13 +358,13 @@ CDictionary CBPLDataSource::readDictionary(UInt64 objectIndex)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary::Value* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
+SValue* CBPLDataSource::createDictionaryValue(UInt64 objectIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for string
 	if (mStrings[objectIndex] != nil)
 		// Is a string
-		return new CDictionary::Value(*mStrings[objectIndex]);
+		return new SValue(*mStrings[objectIndex]);
 
 	// Read marker and count
 	UInt64	count;
@@ -404,7 +405,7 @@ AssertFailUnimplemented();
 						// Add dictionary
 						array.add(readDictionary(objectIndexes[(UInt32) i]));
 
-					return new CDictionary::Value(array);
+					return new SValue(array);
 				}
 
 				case kMarkerTypeFloat32:
@@ -427,18 +428,18 @@ AssertFailUnimplemented();
 						// Add string
 						array.add(*mStrings[objectIndexes[(UInt32) i]]);
 
-					return new CDictionary::Value(array);
+					return new SValue(array);
 				}
 			}
 		}
 
 		case kMarkerTypeBooleanTrue:
 			// True
-			return new CDictionary::Value(true);
+			return new SValue(true);
 
 		case kMarkerTypeBooleanFalse:
 			// False
-			return new CDictionary::Value(false);
+			return new SValue(false);
 
 		case kMarkerTypeData:
 			// Data
@@ -447,14 +448,14 @@ AssertFailUnimplemented();
 
 		case kMarkerTypeDictionary:
 			// Dictionary
-			return new CDictionary::Value(readDictionary(objectIndex));
+			return new SValue(readDictionary(objectIndex));
 
 		case kMarkerTypeFloat32: {
 			// Float32
 			SwappableFloat32	swappableFloat32;
 			swappableFloat32.mStoredValue = (UInt32) readValue(4, "reading float32");
 
-			return new CDictionary::Value(swappableFloat32.mValue);
+			return new SValue(swappableFloat32.mValue);
 			} break;
 
 		case kMarkerTypeFloat64: {
@@ -462,24 +463,24 @@ AssertFailUnimplemented();
 			SwappableFloat64	swappableFloat64;
 			swappableFloat64.mStoredValue = readValue(8, "reading float64");
 
-			return new CDictionary::Value(swappableFloat64.mValue);
+			return new SValue(swappableFloat64.mValue);
 			} break;
 
 		case kMarkerTypeInteger1Byte:
 			// Integer, 1 byte
-			return new CDictionary::Value((SInt8) readValue(1, "reading integer, 1 byte"));
+			return new SValue((SInt8) readValue(1, "reading integer, 1 byte"));
 
 		case kMarkerTypeInteger2Bytes:
 			// Integer, 2 bytes
-			return new CDictionary::Value((SInt16) readValue(2, "reading integer, 2 bytes"));
+			return new SValue((SInt16) readValue(2, "reading integer, 2 bytes"));
 
 		case kMarkerTypeInteger4Bytes:
 			// Integer, 4 bytes
-			return new CDictionary::Value((SInt32) readValue(4, "reading integer, 4 bytes"));
+			return new SValue((SInt32) readValue(4, "reading integer, 4 bytes"));
 
 		case kMarkerTypeInteger8Bytes:
 			// Integer, 8 bytes
-			return new CDictionary::Value((SInt64) readValue(8, "reading integer, 8 bytes"));
+			return new SValue((SInt64) readValue(8, "reading integer, 8 bytes"));
 
 		default:
 			// We should never get here
@@ -496,11 +497,11 @@ AssertFailUnimplemented();
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CBinaryPropertyList::DictionaryResult CBinaryPropertyList::dictionaryFrom(const CByteParceller& byteParceller)
+CBinaryPropertyList::DictionaryResult CBinaryPropertyList::dictionaryFrom(const I<CDataSource>& dataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64		dataSize = byteParceller.getSize();
+	UInt64		dataSize = dataSource->getSize();
 	OI<SError>	error;
 
 	// Check size
@@ -511,7 +512,7 @@ CBinaryPropertyList::DictionaryResult CBinaryPropertyList::dictionaryFrom(const 
 	}
 
 	// Validate header
-	OI<CData>	header = byteParceller.readData(sBinaryPListV10Header.getSize(), error);
+	OI<CData>	header = dataSource->readData(sBinaryPListV10Header.getSize(), error);
 	LogIfErrorAndReturnValue(error, "reading header", DictionaryResult(*error));
 	if (*header != sBinaryPListV10Header) {
 		// Header does not match
@@ -520,11 +521,11 @@ CBinaryPropertyList::DictionaryResult CBinaryPropertyList::dictionaryFrom(const 
 	}
 
 	// Validate trailer
-	error = byteParceller.setPos(CDataSource::kPositionFromEnd, sizeof(SBinaryPListTrailer));
+	error = dataSource->setPos(CDataSource::kPositionFromEnd, sizeof(SBinaryPListTrailer));
 	LogIfErrorAndReturnValue(error, "positiong data source to read trailer", DictionaryResult(*error));
 
 	SBinaryPListTrailer	trailer;
-	error = byteParceller.readData(&trailer, sizeof(SBinaryPListTrailer));
+	error = dataSource->readData(&trailer, sizeof(SBinaryPListTrailer));
 	LogIfErrorAndReturnValue(error, "reading trailer", DictionaryResult(*error));
 
 	// Create CBPLDataSource
@@ -534,7 +535,7 @@ CBinaryPropertyList::DictionaryResult CBinaryPropertyList::dictionaryFrom(const 
 	UInt64			topObjectIndex = EndianU64_BtoN(trailer.mTopObjectIndex);
 	UInt64			objectOffsetTableOffset = EndianU64_BtoN(trailer.mObjectOffsetTableOffset);
 	CBPLDataSource*	bplDataSource =
-							new CBPLDataSource(byteParceller, objectOffsetFieldSize, objectIndexFieldSize,
+							new CBPLDataSource(dataSource, objectOffsetFieldSize, objectIndexFieldSize,
 									totalObjectCount, objectOffsetTableOffset);
 
 	// Get top level object

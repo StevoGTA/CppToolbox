@@ -14,6 +14,7 @@ class CMediaDestinationInternals {
 		CMediaDestinationInternals() {}
 
 		TKeyConvertibleDictionary<UInt32, I<CAudioProcessor> >	mAudioProcessors;
+		TKeyConvertibleDictionary<UInt32, I<CVideoProcessor> >	mVideoProcessors;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -58,4 +59,26 @@ OR<I<CAudioProcessor> > CMediaDestination::CMediaDestination::getAudioProcessor(
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAudioProcessors[trackIndex];
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaDestination::add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mVideoProcessors.set(trackIndex, videoProcessor);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CMediaDestination::CMediaDestination::getVideoTrackCount() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mVideoProcessors.getKeyCount();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OR<I<CVideoProcessor> > CMediaDestination::CMediaDestination::getVideoProcessor(UInt32 trackIndex) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mVideoProcessors[trackIndex];
 }

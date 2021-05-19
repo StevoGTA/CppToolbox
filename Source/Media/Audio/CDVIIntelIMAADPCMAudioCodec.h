@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CAudioCodecRegistry.h"
+#include "CCodecRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDVIIntelIMAADPCMAudioCodec
@@ -19,8 +19,8 @@ class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 
 							// CAudioCodec methods - Decoding
 		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-									CByteParceller& byteParceller, const I<CAudioCodec::DecodeInfo>& decodeInfo);
-		SAudioReadStatus	decode(const SMediaPosition& mediaPosition, CAudioData& audioData);
+									const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo);
+		SAudioReadStatus	decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 
 	// Properties
 	public:

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CAudioFrames.h"
 #include "SAudioFormats.h"
 #include "SAudioReadStatus.h"
 #include "SMediaPosition.h"
@@ -24,7 +25,7 @@ class CAudioProcessor {
 		virtual	OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
 
-		virtual	SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioData& audioData);
+		virtual	SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 		virtual	OI<SError>						reset();
 
 												// Subclass methods
@@ -87,7 +88,7 @@ class CAudioChannelMapper : public CAudioProcessor {
 				OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
 
-				SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioData& audioData);
+				SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 
 												// Subclass methods
 				TArray<SAudioProcessingSetup>	getInputSetups() const;

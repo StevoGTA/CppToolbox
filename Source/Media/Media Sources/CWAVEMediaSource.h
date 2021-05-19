@@ -14,7 +14,7 @@ class CWAVEMediaSource : public CChunkMediaSource {
 	// Methods
 	public:
 							// Lifecycle methods
-							CWAVEMediaSource(const CByteParceller& byteParceller);
+							CWAVEMediaSource(const I<CDataSource>& dataSource);
 							~CWAVEMediaSource();
 
 							// CMediaSource methods

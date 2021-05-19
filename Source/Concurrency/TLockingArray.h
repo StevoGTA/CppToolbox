@@ -172,6 +172,19 @@ template <typename T> class TNLockingArray : public CArray {
 														return item;
 													}
 
+						TNLockingArray<T>&		sort(ECompareResult
+																(compareProc)(const T& item1, const T& item2,
+																		void* userData),
+														void* userData = nil)
+													{
+														// Perform under lock
+														mLock.lockForWriting();
+														CArray::sort((CompareProc) compareProc, userData);
+														mLock.unlockForWriting();
+
+														return *this;
+													}
+
 												// Instance methods
 				const	T&						operator[] (CArray::ItemIndex index) const
 													{ return *((T*) getItemAt(index)); }

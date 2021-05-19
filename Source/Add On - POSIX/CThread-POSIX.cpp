@@ -58,14 +58,16 @@ class CThreadInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CThread::CThread(ThreadProc threadProc, void* userData, const CString& name)
+CThread::CThread(ThreadProc threadProc, void* userData, const CString& name, Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
 	mInternals = new CThreadInternals(*this, threadProc, userData, name);
 
-	// Start
-	start();
+	// Check options
+	if (options & kOptionsAutoStart)
+		// Start
+		start();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -93,13 +95,6 @@ CThread::Ref CThread::getRef() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CThread::getIsRunning() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mIsRunning;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CThread::start()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -122,6 +117,13 @@ void CThread::start()
 	::pthread_attr_destroy(&attr);
 	if (result != 0)
 		LogError(SErrorFromPOSIXerror(result), "creating pthread");
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CThread::getIsRunning() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mIsRunning;
 }
 
 // MARK: Class methods

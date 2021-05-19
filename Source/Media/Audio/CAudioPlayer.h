@@ -14,35 +14,35 @@
 
 class CAudioPlayerInternals;
 class CAudioPlayer : public CAudioDestination {
-	// Structs
+	// Info
 	public:
-		struct Procs {
+		struct Info {
 			// Procs - called from the audio render thread so they must not allocate memory and must be QUICK.
-			typedef	void	(*PositionUpdatedProc)(const CAudioPlayer& audioPlayer, UniversalTime position,
+			typedef	void	(*PositionUpdatedProc)(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
 									void* userData);
 			typedef	void	(*EndOfDataProc)(const CAudioPlayer& audioPlayer, void* userData);
 
-			// Proces - called from the reader thread so do whatever you want
+			// Procs - called from the reader thread so do whatever you want
 			typedef	void	(*ErrorProc)(const CAudioPlayer& audioPlayer, const SError& error, void* userData);
 
-						// Lifecycle methods
-						Procs(PositionUpdatedProc positionUpdatedProc, EndOfDataProc endOfDataProc, ErrorProc errorProc,
-								void* userData) :
-							mPositionUpdatedProc(positionUpdatedProc), mEndOfDataProc(endOfDataProc),
-									mErrorProc(errorProc), mUserData(userData)
-							{}
-						Procs(const Procs& other) :
-							mPositionUpdatedProc(other.mPositionUpdatedProc), mEndOfDataProc(other.mEndOfDataProc),
-									mErrorProc(other.mErrorProc), mUserData(other.mUserData)
-							{}
+					// Lifecycle methods
+					Info(PositionUpdatedProc positionUpdatedProc, EndOfDataProc endOfDataProc, ErrorProc errorProc,
+							void* userData) :
+						mPositionUpdatedProc(positionUpdatedProc), mEndOfDataProc(endOfDataProc), mErrorProc(errorProc),
+								mUserData(userData)
+						{}
+					Info(const Info& other) :
+						mPositionUpdatedProc(other.mPositionUpdatedProc), mEndOfDataProc(other.mEndOfDataProc),
+								mErrorProc(other.mErrorProc), mUserData(other.mUserData)
+						{}
 
-						// Instance methods
-				void	positionUpdated(const CAudioPlayer& audioPlayer, UniversalTime position)
-							{ mPositionUpdatedProc(audioPlayer, position, mUserData); }
-				void	endOfData(const CAudioPlayer& audioPlayer) const
-							{ mEndOfDataProc(audioPlayer, mUserData); }
-				void	error(const CAudioPlayer& audioPlayer, const SError& error) const
-							{ mErrorProc(audioPlayer, error, mUserData); }
+					// Instance methods
+			void	positionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position)
+						{ mPositionUpdatedProc(audioPlayer, position, mUserData); }
+			void	endOfData(const CAudioPlayer& audioPlayer) const
+						{ mEndOfDataProc(audioPlayer, mUserData); }
+			void	error(const CAudioPlayer& audioPlayer, const SError& error) const
+						{ mErrorProc(audioPlayer, error, mUserData); }
 
 			// Properties
 			private:
@@ -55,7 +55,7 @@ class CAudioPlayer : public CAudioDestination {
 	// Methods
 	public:
 														// Lifecycle methods
-														CAudioPlayer(const CString& identifier, const Procs& procs);
+														CAudioPlayer(const CString& identifier, const Info& info);
 														~CAudioPlayer();
 
 														// CAudioProcessor methods

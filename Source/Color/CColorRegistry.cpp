@@ -95,7 +95,7 @@ ECompareResult CColorGroup::compareDisplayIndexes(const CColorGroup& colorGroup1
 class CColorSetInternals : public TReferenceCountable<CColorSetInternals> {
 	public:
 		CColorSetInternals(const CString& name, OV<OSType> id = OV<OSType>()) :
-			TReferenceCountable(), mName(name), mID(id), mColorsMap((CDictionary::ItemEqualsProc) CColor::areEqual)
+			TReferenceCountable(), mName(name), mID(id), mColorsMap((SValue::OpaqueEqualsProc) CColor::areEqual)
 			{}
 
 	CString										mName;
@@ -227,7 +227,7 @@ CDictionary CColorSet::getInfo() const
 		CDictionary	colorSetColorInfo;
 		colorSetColorInfo.set(CString(OSSTR("groupID")), colorGroupID);
 		colorSetColorInfo.set(CString(OSSTR("colorID")), colorID);
-		colorSetColorInfo.set(CString(OSSTR("color")), ((CColor*) iterator.getValue().mValue.getItemRef())->getInfo());
+		colorSetColorInfo.set(CString(OSSTR("color")), ((CColor*) iterator.getValue().mValue.getOpaque())->getInfo());
 
 		// Add to array
 		colorSetColorInfos += colorSetColorInfo;
@@ -387,7 +387,7 @@ TArray<CColorGroup> CColorRegistry::getColorGroups() const
 	for (TIteratorS<CDictionary::Item> iterator = mInternals->mColorGroupMap.getIterator();
 			iterator.hasValue(); iterator.advance())
 		// Insert value
-		colorGroups += *((CColorGroup*) iterator.getValue().mValue.getItemRef());
+		colorGroups += *((CColorGroup*) iterator.getValue().mValue.getOpaque());
 
 	// Sort by display index
 	colorGroups.sort(CColorGroup::compareDisplayIndexes);

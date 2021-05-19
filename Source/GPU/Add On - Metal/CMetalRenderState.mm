@@ -21,15 +21,15 @@ class CGPURenderStateInternals {
 			mMode(mode), mVertexShader(vertexShader), mFragmentShader(fragmentShader)
 			{}
 
-		CGPURenderState::Mode					mMode;
-		CGPUVertexShader&						mVertexShader;
-		CGPUFragmentShader&						mFragmentShader;
+		CGPURenderState::Mode						mMode;
+		CGPUVertexShader&							mVertexShader;
+		CGPUFragmentShader&							mFragmentShader;
 
-		SMatrix4x4_32							mModelMatrix;
+		SMatrix4x4_32								mModelMatrix;
 
-		OR<const SGPUVertexBuffer>				mVertexBuffer;
-		OR<const SGPUBuffer>					mIndexBuffer;
-		OR<const TArray<const CGPUTexture> >	mTextures;
+		OR<const SGPUVertexBuffer>					mVertexBuffer;
+		OR<const SGPUBuffer>						mIndexBuffer;
+		OR<const TArray<const I<CGPUTexture> > >	mTextures;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,11 +87,18 @@ void CGPURenderState::setIndexBuffer(const SGPUBuffer& gpuIndexBuffer)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setTextures(const TArray<const CGPUTexture>& gpuTextures)
+void CGPURenderState::setTextures(const TArray<const I<CGPUTexture> >& gpuTextures)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mTextures = OR<const TArray<const CGPUTexture> >(gpuTextures);
+	mInternals->mTextures = OR<const TArray<const I<CGPUTexture> > >(gpuTextures);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const OR<const TArray<const I<CGPUTexture> > > CGPURenderState::getTextures() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mTextures;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -121,10 +128,10 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	bool	needBlend = false;
 	if (mInternals->mTextures.hasReference()) {
 		// Setup textures
-		const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();
+		const	TArray<const I<CGPUTexture> >&	gpuTextures = mInternals->mTextures.getReference();
 		for (CArray::ItemIndex i = 0; i < gpuTextures.getCount(); i++) {
 			// Setup
-			const	CMetalTexture&	metalTexture = (const CMetalTexture&) gpuTextures[i];
+			const	CMetalTexture&	metalTexture = (const CMetalTexture&) *gpuTextures[i];
 
 			// Setup this texture
 			[renderStateCommitInfo.mRenderCommandEncoder setFragmentTexture:metalTexture.getMetalTexture() atIndex:i];

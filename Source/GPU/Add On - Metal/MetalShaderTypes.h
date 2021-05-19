@@ -22,8 +22,13 @@ struct ClipVertexUniforms {
 	vector_float4	mClipPlane;
 };
 
-struct OpacityFragmentUniforms {
+struct SRGBAMultiTextureUniforms {
 	float	mOpacity;
+};
+
+struct SYCbCrUniforms {
+	matrix_float3x3	mColorConversionMatrix;
+	float			mOpacity;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -41,6 +46,7 @@ enum BufferIndex {
 	kBufferIndexVertexColor,
 	kBufferIndexVertexTextureCoordinate,
 	kBufferIndexVertexTextureIndex,
+
 	kBufferIndexGlobalUniforms,
 	kBufferIndexVertexUniforms,
 	kBufferIndexFragmentUniforms,

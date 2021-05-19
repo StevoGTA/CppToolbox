@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CAudioCodecRegistry.h"
+#include "CAudioCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAACAudioCodec
@@ -13,13 +13,13 @@ class CAACAudioCodecInternals;
 class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 	// Decode info
 	public:
-		class DecodeInfo : public CAudioCodec::PacketsDecodeInfo {
+		class DecodeInfo : public CCodec::PacketsDecodeInfo {
 			// Methods
 			public:
 								// Lifecycle methods
-								DecodeInfo(const TArray<PacketLocation>& packetLocations, const CData& magicCookie,
-										UInt16 startCodes) :
-									PacketsDecodeInfo(packetLocations), mMagicCookie(magicCookie),
+								DecodeInfo(const TArray<PacketAndLocation>& packetAndLocations,
+										const CData& magicCookie, UInt16 startCodes) :
+									PacketsDecodeInfo(packetAndLocations), mMagicCookie(magicCookie),
 											mStartCodes(startCodes)
 									{}
 
@@ -43,12 +43,12 @@ class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 
 										// CAudioCodec methods - Decoding
 				void					setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-												CByteParceller& byteParceller,
-												const I<CAudioCodec::DecodeInfo>& decodeInfo);
-				SAudioReadStatus		decode(const SMediaPosition& mediaPosition, CAudioData& audioData);
+												const I<CDataSource>& dataSource,
+												const I<CCodec::DecodeInfo>& decodeInfo);
+				SAudioReadStatus		decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 
 										// Class methods
-		static	OI<SAudioStorageFormat>	composeAudioStorageFormat(UInt16 startCodes, UInt16 channels);
+		static	OI<SAudioStorageFormat>	composeStorageFormat(UInt16 startCodes, UInt16 channels);
 
 	// Properties
 	public:

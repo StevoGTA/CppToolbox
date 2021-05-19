@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CBitmap.h"
-#include "CByteParceller.h"
 #include "CGPU.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -31,7 +30,7 @@ class CGPUTextureReference : public CEquatable {
 				void					finishLoading() const;
 				void					unload() const;
 
-		const	CGPUTexture&			getGPUTexture() const;
+		const	I<CGPUTexture>&			getGPUTexture() const;
 
 				CGPUTextureReference&	operator=(const CGPUTextureReference& other);
 
@@ -54,7 +53,7 @@ class CGPUTextureManager {
 
 	// Procs
 	public:
-		typedef	CBitmap	(*BitmapProc)(const CByteParceller& byteParceller);
+		typedef	CBitmap	(*BitmapProc)(const I<CDataSource>& dataSource);
 
 	// Methods
 	public:
@@ -70,19 +69,18 @@ class CGPUTextureManager {
 		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, CGPUTexture::DataFormat dataFormat,
 												const OR<const CString>& reference = OR<const CString>(),
 												ReferenceOptions referenceOptions = kReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
-												BitmapProc bitmapProc,
+		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
 												const OR<const CString>& reference = OR<const CString>(),
 												ReferenceOptions referenceOptions = kReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
-												BitmapProc bitmapProc,
+		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
 												CGPUTexture::DataFormat dataFormat,
 												const OR<const CString>& reference = OR<const CString>(),
 												ReferenceOptions referenceOptions = kReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CByteParceller& byteParceller,
+		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource,
 												CGPUTexture::DataFormat dataFormat, S2DSizeU16 size,
 												const OR<const CString>& reference = OR<const CString>(),
 												ReferenceOptions referenceOptions = kReferenceOptionsNone);
+		CGPUTextureReference	gpuTextureReference(const I<CGPUTexture>& gpuTexture);
 
 		void					loadAll();
 		void					pauseLoading();

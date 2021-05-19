@@ -82,15 +82,15 @@ class CAudioPlayerReaderThreadInternals {
 						UInt32				bytesToRead =
 													(mMediaPosition.getMode() == SMediaPosition::kFromStart) ?
 															bytesToRequest : writeBufferInfo.mSize;
-						CAudioData			audioData(writeBufferInfo.mBuffer, mQueue.getSegmentCount(),
+						CAudioFrames		audioFrames(writeBufferInfo.mBuffer, mQueue.getSegmentCount(),
 													writeBufferInfo.mSegmentSize / mBytesPerFrame,
 													bytesToRead / mBytesPerFrame, mBytesPerFrame);
-						SAudioReadStatus	audioReadStatus = mAudioPlayer.perform(mMediaPosition, audioData);
+						SAudioReadStatus	audioReadStatus = mAudioPlayer.perform(mMediaPosition, audioFrames);
 						if (audioReadStatus.isSuccess()) {
 							// Success
-							mQueue.commitWrite(audioData.getCurrentFrameCount() * mBytesPerFrame);
+							mQueue.commitWrite(audioFrames.getCurrentFrameCount() * mBytesPerFrame);
 							mMediaPosition = SMediaPosition::fromCurrent();
-							mFramesToRead -= audioData.getCurrentFrameCount();
+							mFramesToRead -= audioFrames.getCurrentFrameCount();
 
 							return true;
 						} else {

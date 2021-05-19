@@ -5,7 +5,6 @@
 #include "CCoreAudioAudioConverter.h"
 
 #include "CLogServices-Apple.h"
-#include "SError-Apple.h"
 
 #include <AudioToolbox/AudioToolbox.h>
 
@@ -36,7 +35,7 @@ class CCoreAudioAudioConverterInternals {
 									CCoreAudioAudioConverterInternals&	internals =
 																				*((CCoreAudioAudioConverterInternals*)
 																						inUserData);
-									internals.mInputAudioData->reset();
+									internals.mInputAudioFrames->reset();
 
 									// Check if have more to read
 									OSStatus	status;
@@ -45,7 +44,7 @@ class CCoreAudioAudioConverterInternals {
 										SAudioReadStatus	audioReadStatus =
 																	internals.mAudioConverter.CAudioProcessor::perform(
 																			internals.mSourceMediaPosition,
-																			*internals.mInputAudioData);
+																			*internals.mInputAudioFrames);
 										if (audioReadStatus.isSuccess()) {
 											// Success
 											internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
@@ -66,9 +65,9 @@ class CCoreAudioAudioConverterInternals {
 										status = noErr;
 
 									// Prepare return info
-									internals.mInputAudioData->getAsRead(*ioBufferList);
+									internals.mInputAudioFrames->getAsRead(*ioBufferList);
 
-									*ioNumberDataPackets = internals.mInputAudioData->getCurrentFrameCount();
+									*ioNumberDataPackets = internals.mInputAudioFrames->getCurrentFrameCount();
 
 									if (outDataPacketDescription != nil) *outDataPacketDescription = nil;
 
@@ -80,7 +79,7 @@ class CCoreAudioAudioConverterInternals {
 
 		AudioBufferList*			mOutputAudioBufferList;
 		AudioConverterRef			mAudioConverterRef;
-		OI<CAudioData>				mInputAudioData;
+		OI<CAudioFrames>			mInputAudioFrames;
 		OI<SError>					mFillBufferDataError;
 		bool						mSourceHasMoreToRead;
 		SMediaPosition				mSourceMediaPosition;
@@ -131,7 +130,7 @@ OI<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 
 	// Create Audio Converter
 	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
-	LOG_OSSTATUS_IF_FAILED(status, OSSTR("AudioConverterNew"));
+	LogOSStatusIfFailed(status, OSSTR("AudioConverterNew"));
 
 	if (audioProcessingFormat.getSampleRate() != mOutputAudioProcessingFormat->getSampleRate()) {
 		// Highest quality SRC
@@ -139,7 +138,7 @@ OI<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 		status =
 				::AudioConverterSetProperty(mInternals->mAudioConverterRef, kAudioConverterSampleRateConverterQuality,
 						sizeof(UInt32), &value);
-		LOG_OSSTATUS_IF_FAILED(status, OSSTR("AudioConverterSetProperty"));
+		LogOSStatusIfFailed(status, OSSTR("AudioConverterSetProperty"));
 	}
 
 	// Create Audio Buffer List
@@ -157,18 +156,18 @@ OI<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 	// Create Audio Data
 	if (audioProcessingFormat.getIsInterleaved())
 		// Interleaved
-		mInternals->mInputAudioData = OI<CAudioData>(new CAudioData(1, audioProcessingFormat.getBytesPerFrame()));
+		mInternals->mInputAudioFrames = OI<CAudioFrames>(new CAudioFrames(1, audioProcessingFormat.getBytesPerFrame()));
 	else
 		// Non-interleaved
-		mInternals->mInputAudioData =
-				OI<CAudioData>(
-						new CAudioData(audioProcessingFormat.getChannels(), audioProcessingFormat.getBits() / 8));
+		mInternals->mInputAudioFrames =
+				OI<CAudioFrames>(
+						new CAudioFrames(audioProcessingFormat.getChannels(), audioProcessingFormat.getBits() / 8));
 
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
+SAudioReadStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -183,8 +182,8 @@ SAudioReadStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPo
 			return SAudioReadStatus(*error);
 	}
 
-	UInt32	frameCount = audioData.getAvailableFrameCount();
-	audioData.getAsWrite(*mInternals->mOutputAudioBufferList);
+	UInt32	frameCount = audioFrames.getAvailableFrameCount();
+	audioFrames.getAsWrite(*mInternals->mOutputAudioBufferList);
 
 	// Fill buffer
 	OSStatus	status =
@@ -195,7 +194,7 @@ SAudioReadStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPo
 	if (frameCount == 0) return SAudioReadStatus(SError::mEndOfData);
 
 	// Update
-	audioData.completeWrite(frameCount);
+	audioFrames.completeWrite(frameCount);
 
 	return SAudioReadStatus(mInternals->mSourceSourceProcessed);
 }

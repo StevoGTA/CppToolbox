@@ -4,6 +4,7 @@
 
 #include "CDVIIntelIMAADPCMAudioCodec.h"
 
+#include "CByteParceller.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -124,7 +125,7 @@ CDVIIntelIMAADPCMAudioCodec::~CDVIIntelIMAADPCMAudioCodec()
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		CByteParceller& byteParceller, const I<CAudioCodec::DecodeInfo>& decodeInfo)
+		const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -133,12 +134,12 @@ void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& a
 	// Store
 	mInternals->mByteParceller =
 			OI<CByteParceller>(
-					new CByteParceller(byteParceller, dataDecodeInfo.getStartOffset(), dataDecodeInfo.getSize()));
+					new CByteParceller(dataSource, dataDecodeInfo.getStartOffset(), dataDecodeInfo.getSize(), true));
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioData& audioData)
+SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -157,8 +158,8 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 	}
 
 	// Decode packets
-	SInt16*	bufferPtr = (SInt16*) (*audioData.getBuffers())[0];
-	UInt32	availableFrameCount = audioData.getAvailableFrameCount();
+	SInt16*	bufferPtr = (SInt16*) (*audioFrames.getBuffers())[0];
+	UInt32	availableFrameCount = audioFrames.getAvailableFrameCount();
 	UInt32	decodedFrameCount = 0;
 	while (availableFrameCount >= kDVIIntelFramesPerPacket) {
 		// Read next packet
@@ -236,7 +237,7 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 	}
 
 	// Update
-	audioData.completeWrite(decodedFrameCount);
+	audioFrames.completeWrite(decodedFrameCount);
 
 	return SAudioReadStatus(
 			(Float32) mInternals->mByteParceller->getPos() / (Float32) mInternals->mByteParceller->getSize());
@@ -246,7 +247,7 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
-REGISTER_AUDIO_CODEC(DVIIntelIMA,
+REGISTER_CODEC(DVIIntelIMA,
 		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString("DVI/Intel IMA ADPCM 4:1"),
 				CDVIIntelIMAADPCMAudioCodecInternals::getAudioProcessingSetups,
 				CDVIIntelIMAADPCMAudioCodecInternals::instantiate));

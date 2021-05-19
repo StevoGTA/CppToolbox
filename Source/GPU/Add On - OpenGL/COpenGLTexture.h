@@ -7,6 +7,7 @@
 #include "CGPUTexture.h"
 
 #if TARGET_OS_IOS
+	#include <CoreVideo/CoreVideo.h>
 	#include <OpenGLES/ES3/gl.h>
 #endif
 
@@ -15,6 +16,7 @@
 //#endif
 
 #if TARGET_OS_MACOS
+	#include <CoreVideo/CoreVideo.h>
 	#include <OpenGL/gl3.h>
 #endif
 
@@ -27,6 +29,14 @@ class COpenGLTexture : public CGPUTexture {
 	public:
 								// Lifecycle methods
 								COpenGLTexture(const CData& data, DataFormat dataFormat, const S2DSizeU16& size);
+#if TARGET_OS_IOS
+								COpenGLTexture(CVOpenGLESTextureCacheRef openGLTextureCacheRef,
+										CVImageBufferRef imageBufferRef, UInt32 planeIndex);
+#endif
+#if TARGET_OS_MACOS
+								COpenGLTexture(CGLContextObj context,
+										CVImageBufferRef imageBufferRef, UInt32 planeIndex);
+#endif
 								COpenGLTexture(const COpenGLTexture& other);
 								~COpenGLTexture();
 
@@ -39,7 +49,7 @@ class COpenGLTexture : public CGPUTexture {
 		const	S2DSizeU16&		getUsedSize() const;
 
 								// Instance methods
-				GLuint			getTextureName() const;
+				void			bind() const;
 				bool			hasTransparency() const;
 
 	// Properties

@@ -12,9 +12,11 @@
 class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2DInternals> {
 	public:
 				CGPURenderObject2DInternals(CGPU& gpu, const TArray<CGPURenderObject2D::Item>& items,
-						const TArray<CGPUTextureReference>& gpuTextureReferences) :
+						const TArray<CGPUTextureReference>& gpuTextureReferences,
+						CGPUFragmentShader::Proc fragmentShaderProc) :
 					TReferenceCountable(),
 							mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
+							mFragmentShaderProc(fragmentShaderProc),
 							mGPUVertexBuffer(
 									mGPU.allocateVertexBuffer(sizeof(SVertex2DMultitexture), vertexData(items))),
 							mAngleRadians(0.0), mAlpha(1.0), mScale(1.0, 1.0)
@@ -78,6 +80,7 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 
 		CGPU&							mGPU;
 		TNArray<CGPUTextureReference>	mGPUTextureReferences;
+		CGPUFragmentShader::Proc		mFragmentShaderProc;
 		SGPUVertexBuffer				mGPUVertexBuffer;
 
 		S2DPointF32						mAnchorPoint;
@@ -94,21 +97,30 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const S2DRectF32& screenRect, const S2DRectF32& textureRect,
-		const CGPUTextureReference& gpuTextureReference) : CGPURenderObject()
+CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const Item& item, const CGPUTextureReference& gpuTextureReference,
+		CGPUFragmentShader::Proc fragmentShaderProc) : CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CGPURenderObject2DInternals(gpu, TSArray<Item>(Item(screenRect, 0, textureRect)),
-					TSArray<CGPUTextureReference>(gpuTextureReference));
+			new CGPURenderObject2DInternals(gpu, TSArray<Item>(item),
+					TSArray<CGPUTextureReference>(gpuTextureReference), fragmentShaderProc);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const Item& item,
+		const TArray<CGPUTextureReference>& gpuTextureReferences, CGPUFragmentShader::Proc fragmentShaderProc)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new CGPURenderObject2DInternals(gpu, TSArray<Item>(item), gpuTextureReferences, fragmentShaderProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const TArray<Item>& items,
-		const TArray<CGPUTextureReference>& gpuTextureReferences) : CGPURenderObject()
+		const TArray<CGPUTextureReference>& gpuTextureReferences, CGPUFragmentShader::Proc fragmentShaderProc) :
+		CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPURenderObject2DInternals(gpu, items, gpuTextureReferences);
+	mInternals = new CGPURenderObject2DInternals(gpu, items, gpuTextureReferences, fragmentShaderProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -226,7 +238,7 @@ const TArray<CGPUTextureReference>& CGPURenderObject2D::getGPUTextureReferences(
 void CGPURenderObject2D::render(const Indexes& indexes, const RenderInfo& renderInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
+	// Setup model matrix
 	const	S2DOffsetF32&	offset = renderInfo.mOffset;
 			SMatrix4x4_32	modelMatrix =
 									SMatrix4x4_32()
@@ -254,8 +266,10 @@ void CGPURenderObject2D::render(const Indexes& indexes, const RenderInfo& render
 															-mInternals->mAnchorPoint.mY,
 															0.0));
 
-	TCArray<const CGPUTexture>	gpuTextures;
+	// Collect textures
+	TNArray<const I<CGPUTexture> >	gpuTextures;
 	for (CArray::ItemIndex i = 0; i < mInternals->mGPUTextureReferences.getCount(); i++)
+		// Add texture
 		gpuTextures += mInternals->mGPUTextureReferences[i].getGPUTexture();
 
 	// Draw
@@ -264,12 +278,10 @@ void CGPURenderObject2D::render(const Indexes& indexes, const RenderInfo& render
 
 	CGPUVertexShader&					vertexShader =
 												renderInfo.mClipPlane.hasValue() ?
-														CGPUVertexShader::getClip2DMultiTexture(*renderInfo.mClipPlane) :
+														CGPUVertexShader::getClip2DMultiTexture(
+																*renderInfo.mClipPlane) :
 														CGPUVertexShader::getBasic2DMultiTexture();
-	CGPUFragmentShader&					fragmentShader =
-												(renderInfo.mClipPlane.hasValue() || (mInternals->mAlpha != 1.0)) ?
-														CGPUFragmentShader::getOpacityMultiTexture(mInternals->mAlpha) :
-														CGPUFragmentShader::getBasicMultiTexture();
+	CGPUFragmentShader&					fragmentShader = mInternals->mFragmentShaderProc(mInternals->mAlpha);
 	CGPURenderState						renderState(CGPURenderState::kMode2D, vertexShader, fragmentShader);
 
 	// Iterate index ranges

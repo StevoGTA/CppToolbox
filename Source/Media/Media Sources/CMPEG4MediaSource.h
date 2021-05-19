@@ -14,12 +14,13 @@ class CMPEG4MediaSource : public CAtomMediaSource {
 	// Methods
 	public:
 							// Lifecycle methods
-							CMPEG4MediaSource(const CByteParceller& byteParceller);
+							CMPEG4MediaSource(const I<CDataSource>& dataSource);
 							~CMPEG4MediaSource();
 
 							// CMediaSource methods
 		OI<SError>			loadTracks();
 		TArray<CAudioTrack>	getAudioTracks();
+		TArray<CVideoTrack>	getVideoTracks();
 
 	// Properties
 	private:

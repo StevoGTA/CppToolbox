@@ -1,41 +1,40 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioCodecRegistry.h			©2020 Stevo Brock	All rights reserved.
+//	CCodecRegistry.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
 #include "CAudioCodec.h"
+#include "CVideoCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioCodecRegistry
+// MARK: CCodecRegistry
 
-class CAudioCodecRegistryInternals;
-class CAudioCodecRegistry {
+class CCodecRegistry {
 	// Methods
 	public:
 									// Instance methods
 		void						registerCodec(const CAudioCodec::Info& info);
-		const	CAudioCodec::Info&	getInfo(OSType codecID);
+		void						registerCodec(const CVideoCodec::Info& info);
+
+		const	CAudioCodec::Info&	getAudioCodecInfo(OSType codecID);
+		const	CVideoCodec::Info&	getVideoCodecInfo(OSType codecID);
 
 	private:
 									// Lifecycle methods
-									CAudioCodecRegistry();
-									~CAudioCodecRegistry();
+									CCodecRegistry();
 
 	// Properties
 	public:
-		static	CAudioCodecRegistry				mShared;
-
-	private:
-				CAudioCodecRegistryInternals*	mInternals;
+		static	CCodecRegistry	mShared;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define REGISTER_AUDIO_CODEC(codecCodedName, info)												\
-	class codecCodedName##Initializor {															\
-		public:																					\
-			codecCodedName##Initializor() { CAudioCodecRegistry::mShared.registerCodec(info); }	\
-	};																							\
-	static	codecCodedName##Initializor _##codecCodedName##Initializor
+#define REGISTER_CODEC(codecCodedName, info)												\
+	class codecCodedName##Registerer {														\
+		public:																				\
+			codecCodedName##Registerer() { CCodecRegistry::mShared.registerCodec(info); }	\
+	};																						\
+	static	codecCodedName##Registerer _##codecCodedName##Registerer

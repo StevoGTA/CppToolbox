@@ -4,6 +4,7 @@
 
 #import "COpenGLGPU.h"
 
+#import "CLogServices.h"
 #import "COpenGLRenderState.h"
 #import "COpenGLTexture.h"
 
@@ -11,8 +12,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUInternals
+// MARK: CGPUInternals
 
 class CGPUInternals {
 	public:
@@ -32,7 +32,7 @@ class CGPUInternals {
 
 #if DEBUG
 						glClearColor(0.5, 0.0, 0.25, 1.0);
-			#else
+#else
 						glClearColor(0.0, 0.0, 0.0, 1.0);
 #endif
 					}
@@ -41,18 +41,25 @@ class CGPUInternals {
 						// Cleanup
 						glDeleteFramebuffers(1, &mFrameBufferName);
 						glDeleteRenderbuffers(1, &mRenderBufferName);
+
+						// Cleanup
+						if (mOpenGLTextureCache.hasInstance())
+							// Release
+							::CFRelease(*mOpenGLTextureCache);
 					}
 
-	SGPUProcsInfo	mProcs;
+	SGPUProcsInfo					mProcs;
 
-	GLuint			mFrameBufferName;
-	GLuint			mRenderBufferName;
+	GLuint							mFrameBufferName;
+	GLuint							mRenderBufferName;
 
-	SMatrix4x4_32	mViewMatrix2D;
-	SMatrix4x4_32	mProjectionMatrix2D;
+	SMatrix4x4_32					mViewMatrix2D;
+	SMatrix4x4_32					mProjectionMatrix2D;
 
-	SMatrix4x4_32	mViewMatrix3D;
-	SMatrix4x4_32	mProjectionMatrix3D;
+	SMatrix4x4_32					mViewMatrix3D;
+	SMatrix4x4_32					mProjectionMatrix3D;
+
+	OI<CVOpenGLESTextureCacheRef>	mOpenGLTextureCache;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -78,30 +85,69 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
-		const S2DSizeU16& size)
+CVideoCodec::DecodeFrameInfo::Compatibility CGPU::getVideoCodecDecodeFrameInfoCompatibility() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CVideoCodec::DecodeFrameInfo::kCompatibilityAppleOpenGLES;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
 	mInternals->mProcs.acquireContext();
-	CGPUTexture*	gpuTexture = new COpenGLTexture(data, dataFormat, size);
+	I<CGPUTexture>	gpuTexture = I<CGPUTexture>(new COpenGLTexture(data, dataFormat, size));
 	mInternals->mProcs.releaseContext();
 
-	return SGPUTextureReference(*gpuTexture);
+	return gpuTexture;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
+TArray<I<CGPUTexture> > CGPU::registerTextures(const CVideoFrame& videoFrame)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	COpenGLTexture*	openGLTexture = (COpenGLTexture*) gpuTexture.mGPUTexture;
-	gpuTexture.reset();
-
-	// Cleanup
 	mInternals->mProcs.acquireContext();
-	Delete(openGLTexture);
+
+	// Setup OpenGL Texture Cache
+	if (!mInternals->mOpenGLTextureCache.hasInstance()) {
+		// Create
+		CVOpenGLESTextureCacheRef	openGLTextureCacheRef;
+		CVReturn					result =
+											::CVOpenGLESTextureCacheCreate(kCFAllocatorDefault, nil,
+													mInternals->mProcs.getContext(), nil, &openGLTextureCacheRef);
+		if (result != kCVReturnSuccess) {
+			// Error
+			CLogServices::logError(CString(OSSTR("COpenGLESGPU - error when creating texture cache: ")) + CString(result));
+
+			return TNArray<I<CGPUTexture> >();
+		}
+
+		// Store
+		mInternals->mOpenGLTextureCache = OI<CVOpenGLESTextureCacheRef>(openGLTextureCacheRef);
+	}
+
+	// Load textures
+	CVImageBufferRef			imageBufferRef = videoFrame.getImageBufferRef();
+	UInt32						planeCount =
+										::CVPixelBufferIsPlanar(imageBufferRef) ?
+												(UInt32) ::CVPixelBufferGetPlaneCount(imageBufferRef) : 1;
+	TNArray<I<CGPUTexture> >	textures;
+	for (UInt32 i = 0; i < planeCount; i++)
+		// Add texture
+		textures += I<CGPUTexture>(new COpenGLTexture(*mInternals->mOpenGLTextureCache, imageBufferRef, i));
+
+	// Reset
 	mInternals->mProcs.releaseContext();
+
+	return textures;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPU::unregisterTexture(I<CGPUTexture>& gpuTexture)
+//----------------------------------------------------------------------------------------------------------------------
+{
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -185,6 +231,11 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 	glBindFramebuffer(GL_FRAMEBUFFER, mInternals->mFrameBufferName);
 	glViewport(0, 0, viewSize.mWidth * scale, viewSize.mHeight * scale);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Check if have texture cache
+	if (mInternals->mOpenGLTextureCache.hasInstance())
+		// Flush
+		::CVOpenGLESTextureCacheFlush(*mInternals->mOpenGLTextureCache, 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

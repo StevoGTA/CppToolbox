@@ -4,6 +4,7 @@
 
 #include "COpenGLGPU.h"
 
+#include "CLogServices.h"
 #include "COpenGLRenderState.h"
 #include "COpenGLTexture.h"
 
@@ -46,30 +47,51 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
-		const S2DSizeU16& size)
+CVideoCodec::DecodeFrameInfo::Compatibility CGPU::getVideoCodecDecodeFrameInfoCompatibility() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CVideoCodec::DecodeFrameInfo::kCompatibilityAppleOpenGL;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
 	mInternals->mProcs.acquireContext();
-	CGPUTexture*	gpuTexture = new COpenGLTexture(data, dataFormat, size);
+	I<CGPUTexture>	gpuTexture = I<CGPUTexture>(new COpenGLTexture(data, dataFormat, size));
 	mInternals->mProcs.releaseContext();
 
-	return SGPUTextureReference(*gpuTexture);
+	return gpuTexture;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
+TArray<I<CGPUTexture> > CGPU::registerTextures(const CVideoFrame& videoFrame)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	COpenGLTexture*	openGLTexture = (COpenGLTexture*) gpuTexture.mGPUTexture;
-	gpuTexture.reset();
-
-	// Cleanup
 	mInternals->mProcs.acquireContext();
-	Delete(openGLTexture);
+
+	// Load textures
+	CVImageBufferRef			imageBufferRef = videoFrame.getImageBufferRef();
+	UInt32						planeCount =
+										::CVPixelBufferIsPlanar(imageBufferRef) ?
+												(UInt32) ::CVPixelBufferGetPlaneCount(imageBufferRef) : 1;
+	TNArray<I<CGPUTexture> >	textures;
+	for (UInt32 i = 0; i < planeCount; i++)
+		// Add texture
+		textures += I<CGPUTexture>(new COpenGLTexture(mInternals->mProcs.getContext(), imageBufferRef, i));
+
+	// Reset
 	mInternals->mProcs.releaseContext();
+
+	return textures;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CGPU::unregisterTexture(I<CGPUTexture>& gpuTexture)
+//----------------------------------------------------------------------------------------------------------------------
+{
 }
 
 //----------------------------------------------------------------------------------------------------------------------

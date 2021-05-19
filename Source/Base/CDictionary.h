@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include "CData.h"
 #include "CSet.h"
-#include "CString.h"
+#include "SValue.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDictionary
@@ -15,160 +14,34 @@ class CDictionaryInternals;
 class CDictionary : public CEquatable {
 	// Types
 	public:
-		typedef			UInt32	KeyCount;
-		typedef	const	void*	ItemRef;
-
-	// Procs
-	public:
-		typedef	ItemRef	(*ItemCopyProc)(ItemRef itemRef);
-		typedef	void	(*ItemDisposeProc)(ItemRef itemRef);
-		typedef	bool	(*ItemEqualsProc)(ItemRef itemRef1, ItemRef itemRef2);
+		typedef	UInt32	KeyCount;
 
 	// Structs
 	public:
-		struct Value {
-			// Enums
-			public:
-				enum Type {
-					kArrayOfDictionaries,
-					kArrayOfStrings,
-					kBool,
-					kData,
-					kDictionary,
-					kString,
-					kFloat32,
-					kFloat64,
-					kSInt8,
-					kSInt16,
-					kSInt32,
-					kSInt64,
-					kUInt8,
-					kUInt16,
-					kUInt32,
-					kUInt64,
-					kItemRef,
-				};
-
-			// Procs
-			public:
-				typedef	const OR<Value>	(*Proc)(const CString& key, void* userData);
-
-			// Methods
-			public:
-												// Lifecycle methods
-												Value(const TArray<CDictionary>& value);
-												Value(const TArray<CString>& value);
-												Value(bool value);
-												Value(const CData& value);
-												Value(const CDictionary& value);
-												Value(const CString& value);
-												Value(Float32 value);
-												Value(Float64 value);
-												Value(SInt8 value);
-												Value(SInt16 value);
-												Value(SInt32 value);
-												Value(SInt64 value);
-												Value(UInt8 value);
-												Value(UInt16 value);
-												Value(UInt32 value);
-												Value(UInt64 value);
-												Value(ItemRef value);
-												Value(const Value& other, ItemCopyProc itemCopyProc = nil);
-
-												// Instance methods
-						Type					getType() const { return mType; }
-
-				const	TArray<CDictionary>&	getArrayOfDictionaries(
-														const TArray<CDictionary>& defaultValue =
-																TNArray<CDictionary>()) const;
-				const	TArray<CString>&		getArrayOfStrings(
-														const TArray<CString>& defaultValue = TNArray<CString>()) const;
-						bool					getBool(bool defaultValue = false) const;
-				const	CData&					getData(const CData& defaultValue = CData::mEmpty) const;
-				const	CDictionary&			getDictionary(const CDictionary& defaultValue = mEmpty) const;
-				const	CString&				getString(const CString& defaultValue = CString::mEmpty) const;
-						Float32					getFloat32(Float32 defaultValue = 0.0) const;
-						Float64					getFloat64(Float64 defaultValue = 0.0) const;
-						SInt8					getSInt8(SInt8 defaultValue = 0) const;
-						SInt16					getSInt16(SInt16 defaultValue = 0) const;
-						SInt32					getSInt32(SInt32 defaultValue = 0) const;
-						SInt64					getSInt64(SInt64 defaultValue = 0) const;
-						UInt8					getUInt8(UInt8 defaultValue = 0) const;
-						UInt16					getUInt16(UInt16 defaultValue = 0) const;
-						UInt32					getUInt32(UInt32 defaultValue = 0) const;
-						UInt64					getUInt64(UInt64 defaultValue = 0) const;
-						CDictionary::ItemRef	getItemRef() const;
-
-						bool					equals(const Value& other, ItemEqualsProc itemEqualsProc) const;
-
-						void					dispose(ItemDisposeProc itemDisposeProc);
-
-			// Properties
-			private:
-				Type	mType;
-				union ValueValue {
-					// Lifecycle methods
-					ValueValue(TArray<CDictionary>* value) : mArrayOfDictionaries(value) {}
-					ValueValue(TArray<CString>* value) : mArrayOfStrings(value) {}
-					ValueValue(bool value) : mBool(value) {}
-					ValueValue(CData* value) : mData(value) {}
-					ValueValue(CDictionary* value) : mDictionary(value) {}
-					ValueValue(CString* value) : mString(value) {}
-					ValueValue(Float32 value) : mFloat32(value) {}
-					ValueValue(Float64 value) : mFloat64(value) {}
-					ValueValue(SInt8 value) : mSInt8(value) {}
-					ValueValue(SInt16 value) : mSInt16(value) {}
-					ValueValue(SInt32 value) : mSInt32(value) {}
-					ValueValue(SInt64 value) : mSInt64(value) {}
-					ValueValue(UInt8 value) : mUInt8(value) {}
-					ValueValue(UInt16 value) : mUInt16(value) {}
-					ValueValue(UInt32 value) : mUInt32(value) {}
-					ValueValue(UInt64 value) : mUInt64(value) {}
-					ValueValue(ItemRef value) : mItemRef(value) {}
-
-					// Properties
-					TArray<CDictionary>*	mArrayOfDictionaries;
-					TArray<CString>*		mArrayOfStrings;
-					bool					mBool;
-					CData*					mData;
-					CDictionary*			mDictionary;
-					CString*				mString;
-					Float32					mFloat32;
-					Float64					mFloat64;
-					SInt8					mSInt8;
-					SInt16					mSInt16;
-					SInt32					mSInt32;
-					SInt64					mSInt64;
-					UInt8					mUInt8;
-					UInt16					mUInt16;
-					UInt32					mUInt32;
-					UInt64					mUInt64;
-					ItemRef					mItemRef;
-				}	mValue;
-		};
-
 		struct Item {
 			// Procs
 			typedef bool	(*IncludeProc)(const Item& item, void* userData);
 
 			// Lifecycle methods
-			Item(const CString& key, const Value& value) : mKey(key), mValue(value) {}
-			Item(const CString& key, const Value& value, ItemCopyProc itemCopyProc) :
-				mKey(key), mValue(value, itemCopyProc)
+			Item(const CString& key, const SValue& value) : mKey(key), mValue(value) {}
+			Item(const CString& key, const SValue& value, SValue::OpaqueCopyProc opaqueCopyProc) :
+				mKey(key), mValue(value, opaqueCopyProc)
 				{}
-			Item(const Item& other, ItemCopyProc itemCopyProc) : mKey(other.mKey), mValue(other.mValue, itemCopyProc) {}
+			Item(const Item& other, SValue::OpaqueCopyProc opaqueCopyProc) :
+				mKey(other.mKey), mValue(other.mValue, opaqueCopyProc)
+				{}
 
 			// Properties
 			CString	mKey;
-			Value	mValue;
+			SValue	mValue;
 		};
 
 		struct Procs {
 			// Procs
 			typedef	KeyCount	(*GetKeyCountProc)(void* userData);
 			typedef	CString		(*GetKeyAtIndexProc)(UInt32 index, void* userData);
-			typedef	OR<Value>	(*GetValueProc)(const CString& key, void* userData);
-			typedef	void		(*SetProc)(const CString& key, const CDictionary::Value& value, void* userData);
+			typedef	OR<SValue>	(*GetValueProc)(const CString& key, void* userData);
+			typedef	void		(*SetProc)(const CString& key, const SValue& value, void* userData);
 			typedef	void		(*RemoveKeysProc)(const TSet<CString>& keys, void* userData);
 			typedef	void		(*RemoveAllProc)(void* userData);
 			typedef	void		(*DisposeUserDataProc)(void* userData);
@@ -188,9 +61,9 @@ class CDictionary : public CEquatable {
 							{ return mGetKeyCountProc(mUserData); }
 			CString		getKeyAtIndex(UInt32 index) const
 							{ return mGetKeyAtIndexProc(index, mUserData); }
-			OR<Value>	getValue(const CString& key) const
+			OR<SValue>	getValue(const CString& key) const
 							{ return mGetValueProc(key, mUserData); }
-			void		set(const CString& key, const CDictionary::Value& value)
+			void		set(const CString& key, const SValue& value)
 							{ mSetProc(key, value, mUserData); }
 			void		removeKeys(const TSet<CString>& keys)
 							{ mRemoveKeysProc(keys, mUserData); }
@@ -214,9 +87,9 @@ class CDictionary : public CEquatable {
 	// Methods
 	public:
 												// Lifecycle methods
-												CDictionary(ItemCopyProc itemCopyProc = nil,
-														ItemDisposeProc itemDisposeProc = nil,
-														ItemEqualsProc itemEqualsProc = nil);
+												CDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
+														SValue::OpaqueDisposeProc opaqueDisposeProc = nil,
+														SValue::OpaqueEqualsProc opaqueEqualsProc = nil);
 												CDictionary(const Procs& procs);
 												CDictionary(const CDictionary& other);
 		virtual									~CDictionary();
@@ -233,7 +106,7 @@ class CDictionary : public CEquatable {
 
 						bool					contains(const CString& key) const;
 
-				const	Value&					getValue(const CString& key) const;
+				const	SValue&					getValue(const CString& key) const;
 						bool					getBool(const CString& key, bool defaultValue = false) const;
 				const	TArray<CDictionary>&	getArrayOfDictionaries(const CString& key,
 														const TArray<CDictionary>& defaultValue =
@@ -256,7 +129,7 @@ class CDictionary : public CEquatable {
 						UInt16					getUInt16(const CString& key, UInt16 defaultValue = 0) const;
 						UInt32					getUInt32(const CString& key, UInt32 defaultValue = 0) const;
 						UInt64					getUInt64(const CString& key, UInt64 defaultValue = 0) const;
-						OV<ItemRef>				getItemRef(const CString& key) const;
+						OV<SValue::Opaque>		getOpaque(const CString& key) const;
 						OSType					getOSType(const CString& key, OSType defaultValue = 0) const
 													{ return getUInt32(key, defaultValue); }
 						void					getValue(const CString& key, Float32& outValue,
@@ -306,10 +179,10 @@ class CDictionary : public CEquatable {
 						void					set(const CString& key, UInt16 value);
 						void					set(const CString& key, UInt32 value);
 						void					set(const CString& key, UInt64 value);
-						void					set(const CString& key, ItemRef value);
-						void					set(const CString& key, const Value& value);
-						void					set(const CString& key, const OI<CDictionary::Value>& value);
-						void					set(const CString& key, const OR<CDictionary::Value>& value);
+						void					set(const CString& key, SValue::Opaque value);
+						void					set(const CString& key, const SValue& value);
+						void					set(const CString& key, const OI<SValue>& value);
+						void					set(const CString& key, const OR<SValue>& value);
 
 						void					remove(const CString& key);
 						void					remove(const TSet<CString>& keys);
@@ -320,7 +193,7 @@ class CDictionary : public CEquatable {
 
 						TIteratorS<Item>		getIterator() const;
 
-				const	OR<Value>				operator[](const CString& key) const;
+				const	OR<SValue>				operator[](const CString& key) const;
 						CDictionary&			operator=(const CDictionary& other);
 						CDictionary&			operator+=(const CDictionary& other);
 
@@ -341,10 +214,10 @@ template <typename T> class TDictionary : public CDictionary {
 						// Instance methods
 		const	OR<T>	get(const CString& key) const
 							{
-								// Get itemRef
-								OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(key);
+								// Get opaque
+								OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 
-								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
+								return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
 							}
 
 		const	OR<T>	operator[](const CString& key) const
@@ -352,13 +225,13 @@ template <typename T> class TDictionary : public CDictionary {
 
 	protected:
 						// Lifecycle methods
-						TDictionary(CDictionary::ItemCopyProc copyProc, CDictionary::ItemEqualsProc itemEqualsProc) :
-							CDictionary(copyProc, dispose, itemEqualsProc)
+						TDictionary(SValue::OpaqueCopyProc opaqueCopyProc, SValue::OpaqueEqualsProc opaqueEqualsProc) :
+							CDictionary(opaqueCopyProc, dispose, opaqueEqualsProc)
 							{}
 
 	private:
-		static	void	dispose(CDictionary::ItemRef itemRef)
-							{ T* t = (T*) itemRef; Delete(t); }
+		static	void	dispose(SValue::Opaque opaque)
+							{ T* t = (T*) opaque; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -368,12 +241,12 @@ template <typename T> class TNDictionary : public TDictionary<T> {
 	// Methods
 	public:
 						// Lifecycle methods
-						TNDictionary(CDictionary::ItemEqualsProc itemEqualsProc = nil) :
-							TDictionary<T>((CDictionary::ItemCopyProc) copy, itemEqualsProc)
+						TNDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+							TDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc)
 							{}
 						TNDictionary(const TDictionary<T>& other, CDictionary::Item::IncludeProc itemIncludeProc,
 								void* userData) :
-							TDictionary<T>((CDictionary::ItemCopyProc) copy, nil)
+							TDictionary<T>((SValue::OpaqueCopyProc) copy, nil)
 							{
 								for (TIteratorS<CDictionary::Item> iterator = other.getIterator(); iterator.hasValue();
 										iterator.advance()) {
@@ -400,19 +273,19 @@ template <typename T> class TNDictionary : public TDictionary<T> {
 
 	private:
 						// Class methods
-		static	T*		copy(CDictionary::ItemRef itemRef)
-							{ return new T(*((T*) itemRef)); }
+		static	T*		copy(SValue::Opaque opaque)
+							{ return new T(*((T*) opaque)); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TCDictionary (TDictionary where copy happens through itemRef->copy())
+// MARK: - TCDictionary (TDictionary where copy happens through opaque->copy())
 
 template <typename T> class TCDictionary : public TDictionary<T> {
 	// Methods
 	public:
 						// Lifecycle methods
-						TCDictionary(CDictionary::ItemEqualsProc itemEqualsProc = nil) :
-							TDictionary<T>((CDictionary::ItemCopyProc) copy, itemEqualsProc)
+						TCDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+							TDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc)
 							{}
 
 						// Instance methods
@@ -421,8 +294,8 @@ template <typename T> class TCDictionary : public TDictionary<T> {
 
 	private:
 						// Class methods
-		static	T*		copy(CDictionary::ItemRef itemRef)
-							{ return ((T*) itemRef)->copy(); }
+		static	T*		copy(SValue::Opaque opaque)
+							{ return ((T*) opaque)->copy(); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -439,10 +312,10 @@ template <typename T> class TReferenceDictionary : public CDictionary {
 						// Instance methods
 		const	OR<T>	get(const CString& key) const
 							{
-								// Get itemRef
-								OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(key);
+								// Get opaque
+								OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 
-								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
+								return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
 							}
 				void	set(const CString& key, const T& item)
 							{ CDictionary::set(key, &item); }
@@ -458,8 +331,8 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 	// Methods
 	public:
 						// Lifecycle methods
-						TKeyConvertibleDictionary(CDictionary::ItemEqualsProc itemEqualsProc = nil) :
-							CDictionary((CDictionary::ItemCopyProc) copy, dispose, itemEqualsProc)
+						TKeyConvertibleDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+							CDictionary((SValue::OpaqueCopyProc) copy, dispose, opaqueEqualsProc)
 							{}
 						TKeyConvertibleDictionary(const TKeyConvertibleDictionary& dictionary) :
 							CDictionary(dictionary)
@@ -469,10 +342,10 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 						// Instance methods
 		const	OR<T>	get(K key) const
 							{
-								// Get itemRef
-								OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(CString(key));
+								// Get opaque
+								OV<SValue::Opaque>	opaque = CDictionary::getOpaque(CString(key));
 
-								return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
+								return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
 							}
 				void	set(K key, const T& item)
 							{ CDictionary::set(CString(key), new T(item)); }
@@ -485,8 +358,8 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public CDict
 
 	private:
 						// Class methods
-		static	T*		copy(CDictionary::ItemRef itemRef)
-							{ return new T(*((T*) itemRef)); }
-		static	void	dispose(CDictionary::ItemRef itemRef)
-							{ T* t = (T*) itemRef; Delete(t); }
+		static	T*		copy(SValue::Opaque opaque)
+							{ return new T(*((T*) opaque)); }
+		static	void	dispose(SValue::Opaque opaque)
+							{ T* t = (T*) opaque; Delete(t); }
 };

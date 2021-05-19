@@ -14,23 +14,19 @@ class CFileDataSourceInternals;
 class CFileDataSource : public CDataSource {
 	// Methods
 	public:
-						// Lifecycle methods
-						CFileDataSource(const CFile& file);
-						CFileDataSource(const CFileDataSource& other);
-						~CFileDataSource();
+					// Lifecycle methods
+					CFileDataSource(const CFile& file);
+					~CFileDataSource();
 
-						// CDataSource methods
-		UInt64			getSize() const;
+					// CDataSource methods
+		UInt64		getSize() const;
 
-		OI<SError>		readData(void* buffer, UInt64 byteCount);
+		OI<SError>	readData(void* buffer, UInt64 byteCount);
 
-		SInt64			getPos() const;
-		OI<SError>		setPos(Position position, SInt64 newPos);
+		SInt64		getPos() const;
+		OI<SError>	setPos(Position position, SInt64 newPos);
 
-		CDataSource*	clone() const
-							{ return new CFileDataSource(*this); }
-
-		void			reset();
+		void		reset();
 
 	// Properties
 	private:
@@ -44,23 +40,19 @@ class CMappedFileDataSourceInternals;
 class CMappedFileDataSource : public CDataSource {
 	// Methods
 	public:
-						// Lifecycle methods
-						CMappedFileDataSource(const CFile& file);
-						CMappedFileDataSource(const CMappedFileDataSource& other);
-						~CMappedFileDataSource();
+					// Lifecycle methods
+					CMappedFileDataSource(const CFile& file);
+					~CMappedFileDataSource();
 
-						// CDataSource methods
-		UInt64			getSize() const;
+					// CDataSource methods
+		UInt64		getSize() const;
 
-		OI<SError>		readData(void* buffer, UInt64 byteCount);
+		OI<SError>	readData(void* buffer, UInt64 byteCount);
 
-		SInt64			getPos() const;
-		OI<SError>		setPos(Position position, SInt64 newPos);
+		SInt64		getPos() const;
+		OI<SError>	setPos(Position position, SInt64 newPos);
 
-		CDataSource*	clone() const
-							{ return new CMappedFileDataSource(*this); }
-
-		void			reset();
+		void		reset();
 
 	// Properties
 	private:

@@ -31,8 +31,8 @@ class CWAVEMediaSourceInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CWAVEMediaSource::CWAVEMediaSource(const CByteParceller& byteParceller) :
-	CChunkMediaSource(byteParceller, kLittleEndian)
+CWAVEMediaSource::CWAVEMediaSource(const I<CDataSource>& dataSource) :
+		CChunkMediaSource(CByteParceller(dataSource, false))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CWAVEMediaSourceInternals();
@@ -120,7 +120,7 @@ OI<SError> CWAVEMediaSource::loadTracks()
 	// Store
 	mInternals->mAudioTracks +=
 			CAudioTrack(*audioStorageFormat,
-					I<CAudioCodec::DecodeInfo>(new CAudioCodec::DataDecodeInfo(dataStartOffset, dataSize)));
+					I<CCodec::DecodeInfo>(new CAudioCodec::DataDecodeInfo(dataStartOffset, dataSize)));
 
 	return OI<SError>();
 }

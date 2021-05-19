@@ -152,7 +152,7 @@ static	CString	sBasicFragmentShaderString("#version 300 es												\
 				fragColor = color;																		\
 			}																							\
 		");
-static	CString	sOpacityFragmentShaderString("#version 300 es											\
+static	CString	sRGBAMultiTextureFragmentShaderString("#version 300 es									\
 			uniform			sampler2D   diffuseTexture[16];												\
 			uniform lowp	float       opacity;														\
 																										\
@@ -267,6 +267,29 @@ static	CString	sOpacityFragmentShaderString("#version 300 es											\
 				fragColor = color;																		\
 			}																							\
 		");
+static	CString	sYCbCrFragmentShaderString("#version 300 es														\
+			uniform			sampler2D   yTexture;																\
+			uniform			sampler2D   uvTexture;																\
+			uniform lowp	float       opacity;																\
+			uniform	mediump	mat3		colorConversionMatrix;													\
+																												\
+			in		highp	vec3		fTextureCoordinate;														\
+																												\
+			out		highp	vec4		fragColor;																\
+																												\
+			void main() {																						\
+				highp	vec2	size = vec2(textureSize(yTexture, 0));											\
+				highp	vec2	position = vec2(fTextureCoordinate.s / size.x, fTextureCoordinate.t / size.y);	\
+																												\
+				mediump	vec3	yuv;																			\
+				yuv.x = texture(yTexture, position).r - 16.0 / 255.0;											\
+				yuv.yz = texture(uvTexture, position).ra - vec2(0.5, 0.5);										\
+																												\
+				lowp	vec3	rgb = colorConversionMatrix * yuv;												\
+																												\
+				fragColor = vec4(rgb, opacity);																	\
+			}																									\
+		");
 #elif TARGET_OS_MACOS
 static	CString	sBasicVertexShaderString("#version 330 core			\
 			uniform	mat4    modelViewProjectionMatrix;				\
@@ -315,7 +338,7 @@ static	CString	sBasicFragmentShaderString("#version 330 core											\
 				fragColor = color;																		\
 			}																							\
 		");
-static	CString	sOpacityFragmentShaderString("#version 330 core											\
+static	CString	sRGBAMultiTextureFragmentShaderString("#version 330 core								\
 			uniform	sampler2D   diffuseTexture[16];														\
 			uniform	float       opacity;																\
 																										\
@@ -334,7 +357,34 @@ static	CString	sOpacityFragmentShaderString("#version 330 core											\
 				fragColor = color;																		\
 			}																							\
 		");
+static	CString	sYCbCrFragmentShaderString("#version 330 core						\
+			uniform	sampler2DRect	yTexture;										\
+			uniform	sampler2DRect	uvTexture;										\
+			uniform	float			opacity;										\
+			uniform	mat3			colorConversionMatrix;							\
+																					\
+			in		vec3			fTextureCoordinate;								\
+																					\
+			out		vec4			fragColor;										\
+																					\
+			void main() {															\
+				vec2	uvCoords = fTextureCoordinate.xy * vec2(0.5, 0.5);			\
+				vec3	yuv;														\
+				yuv.x = texture(yTexture, fTextureCoordinate.xy).x - 16.0 / 255.0;	\
+				yuv.yz = texture(uvTexture, uvCoords).xy - vec2(0.5, 0.5);			\
+																					\
+				vec3	rgb = colorConversionMatrix * yuv;							\
+																					\
+				fragColor = vec4(rgb, opacity);										\
+			}																		\
+		");
 #endif
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc declarations
+
+static	CGPUFragmentShader&	sYCbCrFragmentShader(Float32 opacity);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -412,66 +462,71 @@ CString	COpenGLVertexShaderBasic::mModelViewProjectionMatrixUniformName(OSSTR("m
 
 class COpenGLVertexShaderClip : public COpenGLVertexShader {
 	public:
-				COpenGLVertexShaderClip() :
-					COpenGLVertexShader(sClipVertexShaderString, attributeNames(), uniformNames())
-					{}
+								COpenGLVertexShaderClip() :
+									COpenGLVertexShader(sClipVertexShaderString, attributeNames(), uniformNames())
+									{}
 
-		UInt32	getPerVertexByteCount() const
-					{ return sizeof(SVertex2DMultitexture); }
+				UInt32			getPerVertexByteCount() const
+									{ return sizeof(SVertex2DMultitexture); }
 
-		void	setAttibutes(const CDictionary& attributeInfo)
-					{
-						// Setup attributes
-						GLint	positionAttributeLocation = attributeInfo.getSInt32(mPositionAttributeName);
-						glEnableVertexAttribArray(positionAttributeLocation);
-						glVertexAttribPointer(positionAttributeLocation, 2, GL_FLOAT, GL_FALSE, 20, 0);
+				void			setAttibutes(const CDictionary& attributeInfo)
+									{
+										// Setup attributes
+										GLint	positionAttributeLocation =
+														attributeInfo.getSInt32(mPositionAttributeName);
+										glEnableVertexAttribArray(positionAttributeLocation);
+										glVertexAttribPointer(positionAttributeLocation, 2, GL_FLOAT, GL_FALSE, 20, 0);
 
-						GLint	textureCoordinateAttributeLocation =
-										attributeInfo.getSInt32(mTextureCoordinateAttributeName);
-						glEnableVertexAttribArray(textureCoordinateAttributeLocation);
-						glVertexAttribPointer(textureCoordinateAttributeLocation, 2, GL_FLOAT, GL_FALSE, 20,
-								(GLvoid*) 8);
-					}
+										GLint	textureCoordinateAttributeLocation =
+														attributeInfo.getSInt32(mTextureCoordinateAttributeName);
+										glEnableVertexAttribArray(textureCoordinateAttributeLocation);
+										glVertexAttribPointer(textureCoordinateAttributeLocation, 2, GL_FLOAT, GL_FALSE,
+												20, (GLvoid*) 8);
+									}
 
-		void	setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
-						const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
-					{
-						// Setup uniforms
-						GLint	modelMatrixUniformLocation = uniformInfo.getSInt32(mModelMatrixUniformName);
-						GLint	viewMatrixUniformLocation = uniformInfo.getSInt32(mViewMatrixUniformName);
-						GLint	projectionMatrixUniformLocation = uniformInfo.getSInt32(mProjectionMatrixUniformName);
-						GLint	clipPlaneUniformLocation = uniformInfo.getSInt32(mClipPlaneUniformName);
+				void			setUniforms(const CDictionary& uniformInfo, const SMatrix4x4_32& projectionMatrix,
+										const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& modelMatrix)
+									{
+										// Setup uniforms
+										GLint	modelMatrixUniformLocation =
+														uniformInfo.getSInt32(mModelMatrixUniformName);
+										GLint	viewMatrixUniformLocation =
+														uniformInfo.getSInt32(mViewMatrixUniformName);
+										GLint	projectionMatrixUniformLocation =
+														uniformInfo.getSInt32(mProjectionMatrixUniformName);
+										GLint	clipPlaneUniformLocation = uniformInfo.getSInt32(mClipPlaneUniformName);
 
-						glUniformMatrix4fv(modelMatrixUniformLocation, 1, 0, (GLfloat*) &modelMatrix);
-						glUniformMatrix4fv(viewMatrixUniformLocation, 1, 0, (GLfloat*) &viewMatrix);
-						glUniformMatrix4fv(projectionMatrixUniformLocation, 1, 0, (GLfloat*) &projectionMatrix);
-						glUniform4fv(clipPlaneUniformLocation, 1, (GLfloat*) &mClipPlane);
-					}
+										glUniformMatrix4fv(modelMatrixUniformLocation, 1, 0, (GLfloat*) &modelMatrix);
+										glUniformMatrix4fv(viewMatrixUniformLocation, 1, 0, (GLfloat*) &viewMatrix);
+										glUniformMatrix4fv(projectionMatrixUniformLocation, 1, 0,
+												(GLfloat*) &projectionMatrix);
+										glUniform4fv(clipPlaneUniformLocation, 1, (GLfloat*) &mClipPlane);
+									}
 
-		void	configureGL()
-					{
-						// Setup GL
+				void			configureGL()
+									{
+										// Setup GL
 #if TARGET_OS_IOS
-						glEnable(GL_CLIP_DISTANCE0_APPLE);
+										glEnable(GL_CLIP_DISTANCE0_APPLE);
 #endif
 
 #if TARGET_OS_MACOS
-						glEnable(GL_CLIP_DISTANCE0);
+										glEnable(GL_CLIP_DISTANCE0);
 #endif
-					}
-		void	resetGL()
-					{
+									}
+				void			resetGL()
+									{
 #if TARGET_OS_IOS
-						glDisable(GL_CLIP_DISTANCE0_APPLE);
+										glDisable(GL_CLIP_DISTANCE0_APPLE);
 #endif
 
 #if TARGET_OS_MACOS
-						glDisable(GL_CLIP_DISTANCE0);
+										glDisable(GL_CLIP_DISTANCE0);
 #endif
-					}
+									}
 
-		void	setClipPlane(const SMatrix4x1_32& clipPlane)
-					{ mClipPlane = clipPlane; }
+				void			setClipPlane(const SMatrix4x1_32& clipPlane)
+									{ mClipPlane = clipPlane; }
 
 		static	TArray<CString>	attributeNames()
 									{
@@ -558,60 +613,91 @@ CGPUVertexShader& CGPUVertexShader::getClip2DMultiTexture(const SMatrix4x1_32& c
 
 class COpenGLFragmentShaderBasic : public COpenGLFragmentShader {
 	public:
-				COpenGLFragmentShaderBasic(const TArray<CString>& uniformNames) :
-					COpenGLFragmentShader(sBasicFragmentShaderString, uniformNames),
-							mDidSetupDiffuseTextureUniforms(false)
-					{}
+								COpenGLFragmentShaderBasic() :
+									COpenGLFragmentShader(sBasicFragmentShaderString, uniformNames()),
+											mDidSetupDiffuseTextureUniforms(false)
+									{}
 
-		void	setUniforms(const CDictionary& uniformInfo)
-					{
-						// Setup uniforms
-						if (!mDidSetupDiffuseTextureUniforms) {
-							// Setup diffuse texture uniforms
-							for (UInt32 i = 0; i < 16; i++) {
-								// Setup
-								CString	uniform = CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
-								glUniform1i(uniformInfo.getSInt32(uniform), i);
-							}
+				void			setUniforms(const CDictionary& uniformInfo)
+									{
+										// Setup uniforms
+										if (!mDidSetupDiffuseTextureUniforms) {
+											// Setup diffuse texture uniforms
+											for (UInt32 i = 0; i < 16; i++) {
+												// Setup
+												CString	uniform =
+																CString(OSSTR("diffuseTexture[")) + CString(i) +
+																		CString(OSSTR("]"));
+												glUniform1i(uniformInfo.getSInt32(uniform), i);
+											}
 
-							mDidSetupDiffuseTextureUniforms = true;
-						}
-					}
+											mDidSetupDiffuseTextureUniforms = true;
+										}
+									}
+
+		static	TArray<CString>	uniformNames()
+									{
+										// Setup
+										TNArray<CString>	uniformNames;
+										for (UInt32 i = 0; i < 16; i++)
+											// Setup
+											uniformNames +=
+													CString(OSSTR("diffuseTexture[")) + CString(i) +
+															CString(OSSTR("]"));
+
+										return uniformNames;
+									}
 
 		bool	mDidSetupDiffuseTextureUniforms;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLFragmentShaderOpacity
+// MARK: - COpenGLFragmentShaderRGBAMultiTexture
 
-class COpenGLFragmentShaderOpacity : public COpenGLFragmentShader {
+class COpenGLFragmentShaderRGBAMultiTexture : public COpenGLFragmentShader {
 	public:
-				COpenGLFragmentShaderOpacity(const TArray<CString>& uniformNames) :
-					COpenGLFragmentShader(sOpacityFragmentShaderString, uniformNames),
-							mOpacity(1.0), mDidSetupDiffuseTextureUniforms(false)
-					{}
+								COpenGLFragmentShaderRGBAMultiTexture() :
+									COpenGLFragmentShader(sRGBAMultiTextureFragmentShaderString, uniformNames()),
+											mOpacity(1.0), mDidSetupDiffuseTextureUniforms(false)
+									{}
 
-		void	setUniforms(const CDictionary& uniformInfo)
-					{
-						// Setup uniforms
-						if (!mDidSetupDiffuseTextureUniforms) {
-							// Setup diffuse texture uniforms
-							for (UInt32 i = 0; i < 16; i++) {
-								// Setup
-								CString	uniform = CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
-								glUniform1i(uniformInfo.getSInt32(uniform), i);
-							}
+				void			setUniforms(const CDictionary& uniformInfo)
+									{
+										// Setup uniforms
+										if (!mDidSetupDiffuseTextureUniforms) {
+											// Setup diffuse texture uniforms
+											for (UInt32 i = 0; i < 16; i++) {
+												// Setup
+												CString	uniform =
+																CString(OSSTR("diffuseTexture[")) + CString(i) +
+																		CString(OSSTR("]"));
+												glUniform1i(uniformInfo.getSInt32(uniform), i);
+											}
 
-							mDidSetupDiffuseTextureUniforms = true;
-						}
+											mDidSetupDiffuseTextureUniforms = true;
+										}
 
-						GLint	opacityUniformLocation = uniformInfo.getSInt32(mOpacityUniformName);
-						glUniform1f(opacityUniformLocation, mOpacity);
-					}
+										GLint	opacityUniformLocation = uniformInfo.getSInt32(mOpacityUniformName);
+										glUniform1f(opacityUniformLocation, mOpacity);
+									}
 
-		void	setOpacity(Float32 opacity)
-					{ mOpacity = opacity; }
+				void			setOpacity(Float32 opacity)
+									{ mOpacity = opacity; }
+
+		static	TArray<CString>	uniformNames()
+									{
+										// Setup
+										TNArray<CString>	uniformNames;
+										for (UInt32 i = 0; i < 16; i++)
+											// Setup
+											uniformNames +=
+													CString(OSSTR("diffuseTexture[")) + CString(i) +
+															CString(OSSTR("]"));
+										uniformNames += mOpacityUniformName;
+
+										return uniformNames;
+									}
 
 				Float32	mOpacity;
 
@@ -620,7 +706,71 @@ class COpenGLFragmentShaderOpacity : public COpenGLFragmentShader {
 		static	CString	mOpacityUniformName;
 };
 
-CString	COpenGLFragmentShaderOpacity::mOpacityUniformName(OSSTR("opacity"));
+CString	COpenGLFragmentShaderRGBAMultiTexture::mOpacityUniformName(OSSTR("opacity"));
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CCOpenGLFragmentShaderYCbCr
+
+class CCOpenGLFragmentShaderYCbCr : public COpenGLFragmentShader {
+	public:
+								CCOpenGLFragmentShaderYCbCr() :
+									COpenGLFragmentShader(sYCbCrFragmentShaderString, uniformNames()),
+											mOpacity(1.0), mDidSetupTextureUniforms(false)
+									{}
+
+				void			setUniforms(const CDictionary& uniformInfo)
+									{
+										// Setup uniforms
+										if (!mDidSetupTextureUniforms) {
+											// Setup texture uniforms
+											glUniform1i(uniformInfo.getSInt32(mYTextureUniformName), 0);
+											glUniform1i(uniformInfo.getSInt32(mUVTextureUniformName), 1);
+
+											mDidSetupTextureUniforms = true;
+										}
+
+										GLint	colorConversionMatrixUniformLocation =
+														uniformInfo.getSInt32(mColorConversionMatrixUniformName);
+										glUniformMatrix3fv(colorConversionMatrixUniformLocation, 1, GL_FALSE,
+												(GLfloat*) &mColorConversionMatrix);
+
+										GLint	opacityUniformLocation = uniformInfo.getSInt32(mOpacityUniformName);
+										glUniform1f(opacityUniformLocation, mOpacity);
+									}
+
+				void			setColorConversionMatrix(const SMatrix3x3_32& colorConversionMatrix)
+									{ mColorConversionMatrix = colorConversionMatrix; }
+				void			setOpacity(Float32 opacity)
+									{ mOpacity = opacity; }
+
+		static	TArray<CString>	uniformNames()
+									{
+										// Setup
+										TNArray<CString>	uniformNames;
+										uniformNames += mYTextureUniformName;
+										uniformNames += mUVTextureUniformName;
+										uniformNames += mColorConversionMatrixUniformName;
+										uniformNames += mOpacityUniformName;
+
+										return uniformNames;
+									}
+
+				SMatrix3x3_32	mColorConversionMatrix;
+				Float32			mOpacity;
+
+				bool			mDidSetupTextureUniforms;
+
+		static	CString			mYTextureUniformName;
+		static	CString			mUVTextureUniformName;
+		static	CString			mColorConversionMatrixUniformName;
+		static	CString			mOpacityUniformName;
+};
+
+CString	CCOpenGLFragmentShaderYCbCr::mYTextureUniformName(OSSTR("yTexture"));
+CString	CCOpenGLFragmentShaderYCbCr::mUVTextureUniformName(OSSTR("uvTexture"));
+CString	CCOpenGLFragmentShaderYCbCr::mColorConversionMatrixUniformName(OSSTR("colorConversionMatrix"));
+CString	CCOpenGLFragmentShaderYCbCr::mOpacityUniformName(OSSTR("opacity"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -629,46 +779,60 @@ CString	COpenGLFragmentShaderOpacity::mOpacityUniformName(OSSTR("opacity"));
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getBasicMultiTexture()
+CGPUFragmentShader& CGPUFragmentShader::getRGBAMultiTexture(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	static	COpenGLFragmentShaderBasic*	sFragmentShader = nil;
+	// Check opacity
+	if (opacity == 1.0) {
+		// No opacity
+		static	COpenGLFragmentShaderBasic*		sFragmentShaderBasic = nil;
 
-	// Check if have shader
-	if (sFragmentShader == nil) {
-		// Create shader
-		TNArray<CString>	uniformNames;
-		for (UInt32 i = 0; i < 16; i++)
-			// Setup
-			uniformNames += CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
+		if (sFragmentShaderBasic == nil)
+			// Create shader
+			sFragmentShaderBasic = new COpenGLFragmentShaderBasic();
 
-		sFragmentShader = new COpenGLFragmentShaderBasic(uniformNames);
+		return *sFragmentShaderBasic;
+	} else {
+		// Have opacity
+		static	COpenGLFragmentShaderRGBAMultiTexture*	sFragmentShaderRGBAMultiTexture = nil;
+
+		if (sFragmentShaderRGBAMultiTexture == nil)
+			// Create shader
+			sFragmentShaderRGBAMultiTexture = new COpenGLFragmentShaderRGBAMultiTexture();
+
+		// Setup
+		sFragmentShaderRGBAMultiTexture->setOpacity(opacity);
+
+		return *sFragmentShaderRGBAMultiTexture;
 	}
-
-	return *sFragmentShader;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getOpacityMultiTexture(Float32 opacity)
+CGPUFragmentShader::Proc CGPUFragmentShader::getProc(CColor::Primaries primaries,
+		CColor::YCbCrConversionMatrix yCbCrConversionMatrix, CColor::TransferFunction transferFunction)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return sYCbCrFragmentShader;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc definitions
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPUFragmentShader&	sYCbCrFragmentShader(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static	COpenGLFragmentShaderOpacity*	sFragmentShader = nil;
+	static	CCOpenGLFragmentShaderYCbCr*	sFragmentShader = nil;
 
 	// Check if have shader
-	if (sFragmentShader == nil) {
+	if (sFragmentShader == nil)
 		// Create shader
-		TNArray<CString>	uniformNames;
-		for (UInt32 i = 0; i < 16; i++)
-			// Setup
-			uniformNames += CString(OSSTR("diffuseTexture[")) + CString(i) + CString(OSSTR("]"));
-		uniformNames += COpenGLFragmentShaderOpacity::mOpacityUniformName;
-
-		sFragmentShader = new COpenGLFragmentShaderOpacity(uniformNames);
-	}
+		sFragmentShader = new CCOpenGLFragmentShaderYCbCr();
 
 	// Setup
+	sFragmentShader->setColorConversionMatrix(CColor::mYCbCrConverstionMatrixRec601VideoRange);
 	sFragmentShader->setOpacity(opacity);
 
 	return *sFragmentShader;

@@ -11,7 +11,8 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 CAudioCodec::getPacketIndex(const SMediaPosition& mediaPosition,
-		const SAudioProcessingFormat& audioProcessingFormat, const TArray<CAudioCodec::PacketLocation>& packetLocations)
+		const SAudioProcessingFormat& audioProcessingFormat,
+		const TArray<CCodec::PacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get new sample position
@@ -19,14 +20,14 @@ UInt32 CAudioCodec::getPacketIndex(const SMediaPosition& mediaPosition,
 
 	// Find packet index
 	UInt32	packetIndex = 0;
-	for (TIteratorD<CAudioCodec::PacketLocation> iterator = packetLocations.getIterator(); iterator.hasValue();
+	for (TIteratorD<CCodec::PacketAndLocation> iterator = packetAndLocations.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Setup
 		const	CAudioCodec::Packet& packet = iterator->mPacket;
-		if (frameIndex > packet.mSampleCount) {
+		if (frameIndex > packet.mDuration) {
 			// Advance another packet
 			packetIndex++;
-			frameIndex -= packet.mSampleCount;
+			frameIndex -= packet.mDuration;
 		} else
 			// Done
 			break;

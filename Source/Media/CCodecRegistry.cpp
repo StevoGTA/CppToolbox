@@ -1,63 +1,78 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioCodecRegistry.cpp			©2020 Stevo Brock	All rights reserved.
+//	CCodecRegistry.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CAudioCodecRegistry.h"
+#include "CCodecRegistry.h"
 
 #include "CDictionary.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioCodecRegistryInternals
+// MARK: CCodecRegistryInternals
 
-class CAudioCodecRegistryInternals {
+class CCodecRegistryInternals {
 	public:
-		CAudioCodecRegistryInternals() {}
+		CCodecRegistryInternals() {}
 
-		TKeyConvertibleDictionary<OSType, CAudioCodec::Info>	mInfo;
+		TKeyConvertibleDictionary<OSType, CAudioCodec::Info>	mAudioCodecInfo;
+		TKeyConvertibleDictionary<OSType, CVideoCodec::Info>	mVideoCodecInfo;
 };
 
-CAudioCodecRegistryInternals*	sInternals = nil;
+CCodecRegistryInternals*	sInternals = nil;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioCodecRegistry
+// MARK: - CCodecRegistry
 
 // MARK: Properties
 
-CAudioCodecRegistry	CAudioCodecRegistry::mShared;
+CCodecRegistry	CCodecRegistry::mShared;
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioCodecRegistry::CAudioCodecRegistry()
+CCodecRegistry::CCodecRegistry()
 //----------------------------------------------------------------------------------------------------------------------
 {
-//	mInternals = new CAudioCodecRegistryInternals();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CAudioCodecRegistry::~CAudioCodecRegistry()
-//----------------------------------------------------------------------------------------------------------------------
-{
-//	Delete(mInternals);
 }
 
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioCodecRegistry::registerCodec(const CAudioCodec::Info& info)
+void CCodecRegistry::registerCodec(const CAudioCodec::Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-//	mInternals->mInfo.set(info.getID(), info);
+	// Check if initialized
 	if (sInternals == nil)
-		sInternals = new CAudioCodecRegistryInternals();
-	sInternals->mInfo.set(info.getID(), info);
+		// Initialize
+		sInternals = new CCodecRegistryInternals();
+
+	// Add info
+	sInternals->mAudioCodecInfo.set(info.getID(), info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CAudioCodec::Info& CAudioCodecRegistry::getInfo(OSType codecID)
+void CCodecRegistry::registerCodec(const CVideoCodec::Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-//	return *mInternals->mInfo.get(codecID);
-	return *sInternals->mInfo.get(codecID);
+	// Check if initialized
+	if (sInternals == nil)
+		// Initialize
+		sInternals = new CCodecRegistryInternals();
+
+	// Add info
+	sInternals->mVideoCodecInfo.set(info.getID(), info);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CAudioCodec::Info& CCodecRegistry::getAudioCodecInfo(OSType codecID)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return *sInternals->mAudioCodecInfo.get(codecID);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CVideoCodec::Info& CCodecRegistry::getVideoCodecInfo(OSType codecID)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return *sInternals->mVideoCodecInfo.get(codecID);
 }

@@ -6,6 +6,7 @@
 
 #include "CGPUTexture.h"
 
+#include <CoreVideo/CoreVideo.h>
 #include <Metal/Metal.h>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -18,12 +19,12 @@ class CMetalTexture : public CGPUTexture {
 								// Lifecycle methods
 								CMetalTexture(id<MTLDevice> device, const CData& data,
 										CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size);
+								CMetalTexture(CVMetalTextureCacheRef metalTextureCacheRef,
+										CVImageBufferRef imageBufferRef, UInt32 planeIndex);
 								CMetalTexture(const CMetalTexture& other);
 								~CMetalTexture();
 
 								// CGPUTexture methods
-				CGPUTexture*	copy() const
-									{ return new CMetalTexture(*this); }
 		const	S2DSizeU16&		getSize() const;
 
 								// Temporary methods - will be removed in the future

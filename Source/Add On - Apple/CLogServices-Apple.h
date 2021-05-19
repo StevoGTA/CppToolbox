@@ -5,9 +5,24 @@
 #pragma once
 
 #include "CLogServices.h"
+#include "SError-Apple.h"
 
-#define LOG_OSSTATUS_IF_FAILED(status, method)										\
+#define LogOSStatusIfFailed(status, method)											\
 				if (status != noErr)												\
 					CLogServices::logError(											\
 							CString(method) + CString(OSSTR(" returned ")) +		\
 									SErrorFromOSStatus(status).getDescription());
+#define LogOSStatusIfFailedAndReturn(status, method)								\
+				if (status != noErr) {												\
+					CLogServices::logError(											\
+							CString(method) + CString(OSSTR(" returned ")) +		\
+									SErrorFromOSStatus(status).getDescription());	\
+					return;															\
+				}
+#define LogOSStatusIfFailedAndReturnValue(status, method, value)					\
+				if (status != noErr) {												\
+					CLogServices::logError(											\
+							CString(method) + CString(OSSTR(" returned ")) +		\
+									SErrorFromOSStatus(status).getDescription());	\
+					return value;													\
+				}

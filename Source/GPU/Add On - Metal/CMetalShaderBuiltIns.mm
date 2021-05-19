@@ -7,7 +7,13 @@
 #import "MetalShaderTypes.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CMetalVertexShaderBasic
+// MARK: Local proc declarations
+
+static	CGPUFragmentShader&	sYCbCrFragmentShader(Float32 opacity);
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CMetalVertexShaderBasic
 
 class CMetalVertexShaderBasic : public CMetalVertexShader {
 	public:
@@ -212,7 +218,7 @@ CGPUVertexShader& CGPUVertexShader::getClip2DMultiTexture(const SMatrix4x1_32& c
 
 class CMetalFragmentShaderBasic : public CMetalFragmentShader {
 	public:
-				CMetalFragmentShaderBasic() : CMetalFragmentShader(CString(OSSTR("fragmentShaderBasic"))) {}
+				CMetalFragmentShaderBasic() : CMetalFragmentShader(CString(OSSTR("fragmentShaderRGBABasic"))) {}
 
 		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{}
@@ -220,28 +226,28 @@ class CMetalFragmentShaderBasic : public CMetalFragmentShader {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMetalFragmentShaderOpacity
+// MARK: - CMetalFragmentShaderRGBAMultiTexture
 
-class CMetalFragmentShaderOpacity : public CMetalFragmentShader {
+class CMetalFragmentShaderRGBAMultiTexture : public CMetalFragmentShader {
 	public:
-				CMetalFragmentShaderOpacity() :
-					CMetalFragmentShader(CString(OSSTR("fragmentShaderOpacity"))), mOpacity(1.0)
+				CMetalFragmentShaderRGBAMultiTexture() :
+					CMetalFragmentShader(CString(OSSTR("fragmentShaderRGBAMultiTexture"))), mOpacity(1.0)
 					{}
 
 		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
 					{
 						// Setup instance uniforms
-						id<MTLBuffer>	opacityFragmentUniformsBuffer =
-												[metalBufferCache bufferWithLength:sizeof(OpacityFragmentUniforms)
+						id<MTLBuffer>	rgbaMultiTextureUniformsBuffer =
+												[metalBufferCache bufferWithLength:sizeof(SRGBAMultiTextureUniforms)
 														options:MTLResourceStorageModeShared];
-						opacityFragmentUniformsBuffer.label = @"Opacity Fragment Shader";
+						rgbaMultiTextureUniformsBuffer.label = @"RGBA Multi-Texture Fragment Shader";
 
-						OpacityFragmentUniforms*	opacityFragmentUniforms =
-														(OpacityFragmentUniforms*)
-																opacityFragmentUniformsBuffer.contents;
-						opacityFragmentUniforms->mOpacity = mOpacity;
+						SRGBAMultiTextureUniforms*	rgbaMultiTextureUniforms =
+															(SRGBAMultiTextureUniforms*)
+																	rgbaMultiTextureUniformsBuffer.contents;
+						rgbaMultiTextureUniforms->mOpacity = mOpacity;
 
-						[renderCommandEncoder setFragmentBuffer:opacityFragmentUniformsBuffer offset:0
+						[renderCommandEncoder setFragmentBuffer:rgbaMultiTextureUniformsBuffer offset:0
 								atIndex:kBufferIndexFragmentUniforms];
 					}
 
@@ -253,38 +259,108 @@ class CMetalFragmentShaderOpacity : public CMetalFragmentShader {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - CMetalFragmentShaderYCbCr
+
+class CMetalFragmentShaderYCbCr : public CMetalFragmentShader {
+	public:
+				CMetalFragmentShaderYCbCr() :
+					CMetalFragmentShader(CString(OSSTR("fragmentShaderYCbCr"))), mOpacity(1.0)
+					{}
+
+		void	setup(id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache) const
+					{
+						// Setup instance uniforms
+						id<MTLBuffer>	yCbCrUniformsBuffer =
+												[metalBufferCache bufferWithLength:sizeof(SYCbCrUniforms)
+														options:MTLResourceStorageModeShared];
+						yCbCrUniformsBuffer.label = @"YCbCr Fragment Shader";
+
+						SYCbCrUniforms*	yCbCrUniforms = (SYCbCrUniforms*) yCbCrUniformsBuffer.contents;
+						yCbCrUniforms->mColorConversionMatrix = mColorConversionMatrix;
+						yCbCrUniforms->mOpacity = mOpacity;
+
+						[renderCommandEncoder setFragmentBuffer:yCbCrUniformsBuffer offset:0
+								atIndex:kBufferIndexFragmentUniforms];
+					}
+
+		void	setColorConversionMatrix(const SMatrix3x3_32& colorConversionMatrix)
+					{
+						mColorConversionMatrix.columns[0] =
+								simd_make_float3(colorConversionMatrix.m1_1, colorConversionMatrix.m2_1,
+										colorConversionMatrix.m3_1);
+						mColorConversionMatrix.columns[1] =
+								simd_make_float3(colorConversionMatrix.m1_2, colorConversionMatrix.m2_2,
+										colorConversionMatrix.m3_2);
+						mColorConversionMatrix.columns[2] =
+								simd_make_float3(colorConversionMatrix.m1_3, colorConversionMatrix.m2_3,
+										colorConversionMatrix.m3_3);
+					}
+		void	setOpacity(Float32 opacity)
+					{ mOpacity = opacity; }
+
+		matrix_float3x3	mColorConversionMatrix;
+		Float32			mOpacity;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUFragmentShader
 
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getBasicMultiTexture()
+CGPUFragmentShader& CGPUFragmentShader::getRGBAMultiTexture(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	static	CMetalFragmentShaderBasic*	sFragmentShader = nil;
+	// Check opacity
+	if (opacity == 1.0) {
+		// No opacity
+		static	CMetalFragmentShaderBasic*		sFragmentShaderBasic = nil;
+		if (sFragmentShaderBasic == nil)
+			// Create shader
+			sFragmentShaderBasic = new CMetalFragmentShaderBasic();
 
-	// Check if have shader
-	if (sFragmentShader == nil)
-		// Create shader
-		sFragmentShader = new CMetalFragmentShaderBasic();
+		return *sFragmentShaderBasic;
+	} else {
+		// Have opacity
+		static	CMetalFragmentShaderRGBAMultiTexture*	sFragmentShaderRGBAMultiTexture = nil;
+		if (sFragmentShaderRGBAMultiTexture == nil)
+			// Create shader
+			sFragmentShaderRGBAMultiTexture = new CMetalFragmentShaderRGBAMultiTexture();
 
-	return *sFragmentShader;
+		// Setup
+		sFragmentShaderRGBAMultiTexture->setOpacity(opacity);
+
+		return *sFragmentShaderRGBAMultiTexture;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getOpacityMultiTexture(Float32 opacity)
+CGPUFragmentShader::Proc CGPUFragmentShader::getProc(CColor::Primaries primaries,
+		CColor::YCbCrConversionMatrix yCbCrConversionMatrix, CColor::TransferFunction transferFunction)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return sYCbCrFragmentShader;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc definitions
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPUFragmentShader&	sYCbCrFragmentShader(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static	CMetalFragmentShaderOpacity*	sFragmentShader = nil;
+	static	CMetalFragmentShaderYCbCr*	sFragmentShader = nil;
 
 	// Check if have shader
 	if (sFragmentShader == nil)
 		// Create shader
-		sFragmentShader = new CMetalFragmentShaderOpacity();
+		sFragmentShader = new CMetalFragmentShaderYCbCr();
 
 	// Setup
+	sFragmentShader->setColorConversionMatrix(CColor::mYCbCrConverstionMatrixRec601VideoRange);
 	sFragmentShader->setOpacity(opacity);
 
 	return *sFragmentShader;

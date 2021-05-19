@@ -4,6 +4,7 @@
 
 #include "CAACAudioCodec.h"
 
+#include "CByteParceller.h"
 #include "CLogServices-Apple.h"
 #include "SError-Apple.h"
 
@@ -22,6 +23,7 @@ class CAACAudioCodecInternals {
 								{}
 							~CAACAudioCodecInternals()
 								{
+									// Cleanup
 									if (mAudioConverterRef != nil)
 										::AudioConverterDispose(mAudioConverterRef);
 								}
@@ -39,33 +41,33 @@ class CAACAudioCodecInternals {
 																			(UInt8*) internals.mInputPacketData
 																					.getMutableBytePtr();
 									TNArray<CAudioCodec::Packet>	packets;
-									while (internals.mNextPacketIndex < internals.mPacketLocations->getCount()) {
+									while (internals.mNextPacketIndex < internals.mPacketAndLocations->getCount()) {
 										// Setup
-										CAudioCodec::PacketLocation&	packetLocation =
-																				internals.mPacketLocations->getAt(
-																						internals.mNextPacketIndex);
+										CCodec::PacketAndLocation&	packetAndLocations =
+																			internals.mPacketAndLocations->getAt(
+																					internals.mNextPacketIndex);
 
 										// Check if have space
-										if (packetLocation.mPacket.mSize <= available) {
+										if (packetAndLocations.mPacket.mByteCount <= available) {
 											// Add packet
 											OI<SError>	error =
 																internals.mByteParceller->setPos(
 																		CDataSource::kPositionFromBeginning,
-																		packetLocation.mPos);
+																		packetAndLocations.mPos);
 											ReturnValueIfError(error, -1);
 
 											error =
 													internals.mByteParceller->readData(packetDataPtr,
-															packetLocation.mPacket.mSize);
+															packetAndLocations.mPacket.mByteCount);
 											ReturnValueIfError(error, -1);
 
-											packets += packetLocation.mPacket;
+											packets += packetAndLocations.mPacket;
 
 											// Update
 											internals.mNextPacketIndex++;
 
-											available -= packetLocation.mPacket.mSize;
-											packetDataPtr += packetLocation.mPacket.mSize;
+											available -= packetAndLocations.mPacket.mByteCount;
+											packetDataPtr += packetAndLocations.mPacket.mByteCount;
 										} else
 											// No more space
 											break;
@@ -97,26 +99,26 @@ class CAACAudioCodecInternals {
 											iterator.hasValue(); iterator.advance(), packetDescription++) {
 										// Update
 										packetDescription->mStartOffset = offset;
-										packetDescription->mVariableFramesInPacket = iterator->mSampleCount;
-										packetDescription->mDataByteSize = iterator->mSize;
+										packetDescription->mVariableFramesInPacket = iterator->mDuration;
+										packetDescription->mDataByteSize = iterator->mByteCount;
 
-										offset += iterator->mSize;
+										offset += iterator->mByteCount;
 									}
 
 									return noErr;
 								}
 
-		OSType										mCodecID;
-		OI<CByteParceller>							mByteParceller;
-		OI<SAudioProcessingFormat>					mAudioProcessingFormat;
-		OI<TArray<CAudioCodec::PacketLocation> >	mPacketLocations;
+		OSType									mCodecID;
+		OI<CByteParceller>						mByteParceller;
+		OI<SAudioProcessingFormat>				mAudioProcessingFormat;
+		OI<TArray<CCodec::PacketAndLocation> >	mPacketAndLocations;
 
-		AudioConverterRef							mAudioConverterRef;
-		CData										mInputPacketData;
-		CData										mInputPacketDescriptionsData;
-		OI<SError>									mFillBufferDataError;
+		AudioConverterRef						mAudioConverterRef;
+		CData									mInputPacketData;
+		CData									mInputPacketDescriptionsData;
+		OI<SError>								mFillBufferDataError;
 
-		UInt32										mNextPacketIndex;
+		UInt32									mNextPacketIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -142,17 +144,17 @@ CAACAudioCodec::~CAACAudioCodec()
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat, CByteParceller& byteParceller,
-		const I<CAudioCodec::DecodeInfo>& decodeInfo)
+void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+		const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
 	// Store
-	mInternals->mByteParceller = OI<CByteParceller>(byteParceller);
+	mInternals->mByteParceller = OI<CByteParceller>(CByteParceller(dataSource, true));
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-	mInternals->mPacketLocations = OI<TArray<CAudioCodec::PacketLocation> >(aacDecodeInfo.getPacketLocations());
+	mInternals->mPacketAndLocations = OI<TArray<CCodec::PacketAndLocation> >(aacDecodeInfo.getPacketAndLocations());
 
 	// Setup
 	AudioStreamBasicDescription	sourceFormat = {0};
@@ -169,18 +171,18 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 
 	// Create Audio Converter
 	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
-	LOG_OSSTATUS_IF_FAILED(status, OSSTR("AudioConverterNew"));
+	LogOSStatusIfFailed(status, OSSTR("AudioConverterNew"));
 
 	// Set magic cookie
 	status =
 			::AudioConverterSetProperty(mInternals->mAudioConverterRef,
 					kAudioConverterDecompressionMagicCookie, aacDecodeInfo.getMagicCookie().getSize(),
 					aacDecodeInfo.getMagicCookie().getBytePtr());
-	LOG_OSSTATUS_IF_FAILED(status, OSSTR("AudioConverterSetProperty for magic cookie"));
+	LogOSStatusIfFailed(status, OSSTR("AudioConverterSetProperty for magic cookie"));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioData& audioData)
+SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update read position if needed
@@ -190,19 +192,19 @@ SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAu
 
 		// Update next packet index
 		mInternals->mNextPacketIndex =
-				getPacketIndex(mediaPosition, *mInternals->mAudioProcessingFormat, *mInternals->mPacketLocations);
+				getPacketIndex(mediaPosition, *mInternals->mAudioProcessingFormat, *mInternals->mPacketAndLocations);
 	}
 
 	// Setup
 	Float32		sourceProcessed =
-						(Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mPacketLocations->getCount();
+						(Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mPacketAndLocations->getCount();
 
 	AudioBufferList	audioBufferList;
 	audioBufferList.mNumberBuffers = 1;
-	audioData.getAsWrite(audioBufferList);
+	audioFrames.getAsWrite(audioBufferList);
 
 	// Fill buffer
-	UInt32		frameCount = audioData.getAvailableFrameCount();
+	UInt32		frameCount = audioFrames.getAvailableFrameCount();
 	OSStatus	status =
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
 								CAACAudioCodecInternals::fillBufferData, mInternals, &frameCount, &audioBufferList,
@@ -211,7 +213,7 @@ SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAu
 	if (frameCount == 0) return SAudioReadStatus(SError::mEndOfData);
 
 	// Update
-	audioData.completeWrite(frameCount);
+	audioFrames.completeWrite(frameCount);
 
 	return SAudioReadStatus(sourceProcessed);
 }

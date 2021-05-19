@@ -29,28 +29,12 @@ class CGPUTexture {
 		virtual							~CGPUTexture() {}
 
 										// Instance methods
-		virtual			CGPUTexture*	copy() const = 0;
-
 		virtual	const	S2DSizeU16&		getSize() const = 0;
 
 										// Temporary methods - will be removed in the future
 		virtual	const	S2DSizeU16&		getUsedSize() const = 0;
-};
 
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SGPUTextureReference
-
-struct SGPUTextureReference {
-			// Lifecycle methods
-			SGPUTextureReference() : mGPUTexture(nil) {}
-			SGPUTextureReference(const CGPUTexture& gpuTexture) : mGPUTexture(&gpuTexture) {}
-
-			// Instance methods
-	bool	hasGPUTexture() const
-				{ return mGPUTexture != nil; }
-	void	reset()
-				{ mGPUTexture = nil; }
-
-	// Properties
-	const	CGPUTexture*	mGPUTexture;
+	protected:
+										// Lifecycle methods
+										CGPUTexture() {}
 };

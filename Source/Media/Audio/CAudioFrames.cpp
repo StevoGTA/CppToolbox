@@ -1,15 +1,15 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioData.cpp			©2020 Stevo Brock	All rights reserved.
+//	CAudioFrames.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CAudioData.h"
+#include "CAudioFrames.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioDataInternals
+// MARK: CAudioFramesInternals
 
-class CAudioDataInternals {
+class CAudioFramesInternals {
 	public:
-		CAudioDataInternals(UInt32 bufferCount, UInt32 bytesPerBuffer, UInt32 availableFrameCount,
+		CAudioFramesInternals(UInt32 bufferCount, UInt32 bytesPerBuffer, UInt32 availableFrameCount,
 				UInt32 bytesPerFrame) :
 			mBufferCount(bufferCount), mBytesPerBuffer(bytesPerBuffer), mAvailableFrameCount(availableFrameCount),
 					mCurrentFrameCount(0), mBytesPerFrame(bytesPerFrame)
@@ -24,32 +24,33 @@ class CAudioDataInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioData
+// MARK: - CAudioFrames
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioData::CAudioData(void* buffer, UInt32 bufferCount, UInt32 bufferTotalFrameCount, UInt32 bufferAvailableFrameCount,
-		UInt32 bytesPerFrame) : CData(buffer, bufferCount * bufferTotalFrameCount * bytesPerFrame, false)
+CAudioFrames::CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferTotalFrameCount,
+		UInt32 bufferAvailableFrameCount, UInt32 bytesPerFrame) :
+		CData(buffers, bufferCount * bufferTotalFrameCount * bytesPerFrame, false)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CAudioDataInternals(bufferCount, bufferTotalFrameCount * bytesPerFrame, bufferAvailableFrameCount,
+			new CAudioFramesInternals(bufferCount, bufferTotalFrameCount * bytesPerFrame, bufferAvailableFrameCount,
 					bytesPerFrame);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioData::CAudioData(UInt32 bufferCount, UInt32 bytesPerFrame, UInt32 frameCountPerBuffer) :
+CAudioFrames::CAudioFrames(UInt32 bufferCount, UInt32 bytesPerFrame, UInt32 frameCountPerBuffer) :
 		CData(bufferCount * frameCountPerBuffer * bytesPerFrame)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CAudioDataInternals(bufferCount, frameCountPerBuffer * bytesPerFrame, frameCountPerBuffer,
+			new CAudioFramesInternals(bufferCount, frameCountPerBuffer * bytesPerFrame, frameCountPerBuffer,
 					bytesPerFrame);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioData::~CAudioData()
+CAudioFrames::~CAudioFrames()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
@@ -58,21 +59,21 @@ CAudioData::~CAudioData()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CAudioData::getAvailableFrameCount() const
+UInt32 CAudioFrames::getAvailableFrameCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAvailableFrameCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CAudioData::getCurrentFrameCount() const
+UInt32 CAudioFrames::getCurrentFrameCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mCurrentFrameCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<TBuffer<void*> > CAudioData::getBuffers() const
+I<TBuffer<void*> > CAudioFrames::getBuffers() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -85,14 +86,14 @@ I<TBuffer<void*> > CAudioData::getBuffers() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioData::completeWrite(UInt32 frameCount)
+void CAudioFrames::completeWrite(UInt32 frameCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mCurrentFrameCount = frameCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioData::reset()
+void CAudioFrames::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mCurrentFrameCount = 0;
@@ -101,7 +102,7 @@ void CAudioData::reset()
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioData::getAsRead(AudioBufferList& audioBufferList) const
+void CAudioFrames::getAsRead(AudioBufferList& audioBufferList) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -119,7 +120,7 @@ void CAudioData::getAsRead(AudioBufferList& audioBufferList) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioData::getAsWrite(AudioBufferList& audioBufferList)
+void CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight

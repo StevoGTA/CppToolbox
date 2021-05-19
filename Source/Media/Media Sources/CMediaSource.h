@@ -6,6 +6,7 @@
 
 #include "CArray.h"
 #include "CAudioTrack.h"
+#include "CVideoTrack.h"
 #include "CByteParceller.h"
 #include "SError.h"
 
@@ -16,35 +17,23 @@ class CMediaSource {
 	// Methods
 	public:
 									// Lifecycle methods
-									CMediaSource(const CByteParceller& byteParceller) : mByteParceller(byteParceller) {}
+									CMediaSource() {}
 		virtual						~CMediaSource() {}
 
 									// Instance methods
 		virtual	OI<SError>			loadTracks() = 0;
 		virtual	TArray<CAudioTrack>	getAudioTracks() { return TNArray<CAudioTrack>(); }
+		virtual	TArray<CVideoTrack>	getVideoTracks() { return TNArray<CVideoTrack>(); }
 
 	protected:
 									// Subclass methods
-				OI<SError>			reset()
-										{ return mByteParceller.setPos(CDataSource::kPositionFromBeginning, 0); }
-
-	// Properties
-	protected:
-		const	CByteParceller&	mByteParceller;
+		virtual	OI<SError>			reset() = 0;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CChunkMediaSource
 
-class CChunkMediaSourceInternals;
 class CChunkMediaSource : public CMediaSource {
-	// Types
-	public:
-		enum Type {
-			kBigEndian,
-			kLittleEndian,
-		};
-
 	// Structs
 	protected:
 		struct ChunkInfo {
@@ -63,8 +52,10 @@ class CChunkMediaSource : public CMediaSource {
 	// Methods
 	protected:
 						// Lifecycle methods
-						CChunkMediaSource(const CByteParceller& byteParceller, Type type);
-						~CChunkMediaSource();
+						CChunkMediaSource(const CByteParceller& byteParceller) : mByteParceller(byteParceller) {}
+
+						// CMediaSource methods
+		OI<SError>		reset();
 
 						// Instance methods
 		OI<ChunkInfo>	getChunkInfo(OI<SError>& outError) const;
@@ -72,8 +63,8 @@ class CChunkMediaSource : public CMediaSource {
 		OI<SError>		seekToNextChunk(const ChunkInfo& chunkInfo) const;
 
 	// Properties
-	private:
-		CChunkMediaSourceInternals*	mInternals;
+	protected:
+		CByteParceller	mByteParceller;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -118,11 +109,22 @@ class CAtomMediaSource : public CMediaSource {
 	// Methods
 	protected:
 						// Lifecycle methods
-						CAtomMediaSource(const CByteParceller& byteParceller);
+						CAtomMediaSource(const CByteParceller& byteParceller) : mByteParceller(byteParceller) {}
+
+						// CMediaSource methods
+		OI<SError>		reset();
 
 						// Instance methods
 		OI<AtomInfo>	getAtomInfo(OI<SError>& outError) const;
+		OI<AtomInfo>	getAtomInfo(const AtomInfo& atomInfo, SInt64 offset, OI<SError>& outError) const;
 		OI<CData>		getAtomPayload(const AtomInfo& atomInfo, OI<SError>& outError) const;
+		OI<CData>		getAtomPayload(const OR<AtomInfo>& atomInfo, OI<SError>& outError) const;
+		OI<CData>		getAtomPayload(const AtomInfo& atomInfo, SInt64 offset, OI<SError>& outError) const;
 		OI<AtomGroup>	getAtomGroup(const AtomInfo& atomInfo, OI<SError>& outError) const;
+		OI<AtomGroup>	getAtomGroup(const OR<AtomInfo>& atomInfo, OI<SError>& outError) const;
 		OI<SError>		seekToNextAtom(const AtomInfo& atomInfo) const;
+
+	// Properties
+	protected:
+		CByteParceller	mByteParceller;
 };

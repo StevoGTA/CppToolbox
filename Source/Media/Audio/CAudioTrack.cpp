@@ -10,13 +10,13 @@
 class CAudioTrackInternals : public TReferenceCountable<CAudioTrackInternals> {
 	public:
 		CAudioTrackInternals(UInt32 index, const SAudioStorageFormat& audioStorageFormat,
-				const I<CAudioCodec::DecodeInfo>& decodeInfo) :
+				const I<CCodec::DecodeInfo>& decodeInfo) :
 			TReferenceCountable(), mIndex(index), mAudioStorageFormat(audioStorageFormat), mDecodeInfo(decodeInfo)
 			{}
 
-		UInt32						mIndex;
-		SAudioStorageFormat			mAudioStorageFormat;
-		I<CAudioCodec::DecodeInfo>	mDecodeInfo;
+		UInt32					mIndex;
+		SAudioStorageFormat		mAudioStorageFormat;
+		I<CCodec::DecodeInfo>	mDecodeInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ class CAudioTrackInternals : public TReferenceCountable<CAudioTrackInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrack::CAudioTrack(const SAudioStorageFormat& audioStorageFormat, const I<CAudioCodec::DecodeInfo>& decodeInfo) :
+CAudioTrack::CAudioTrack(const SAudioStorageFormat& audioStorageFormat, const I<CCodec::DecodeInfo>& decodeInfo) :
 		CMediaTrack()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -36,7 +36,7 @@ CAudioTrack::CAudioTrack(const SAudioStorageFormat& audioStorageFormat, const I<
 
 //----------------------------------------------------------------------------------------------------------------------
 CAudioTrack::CAudioTrack(UInt32 index, const SAudioStorageFormat& audioStorageFormat,
-		const I<CAudioCodec::DecodeInfo>& decodeInfo) : CMediaTrack()
+		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -67,7 +67,7 @@ const SAudioStorageFormat& CAudioTrack::getAudioStorageFormat() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const I<CAudioCodec::DecodeInfo>& CAudioTrack::getDecodeInfo() const
+const I<CCodec::DecodeInfo>& CAudioTrack::getDecodeInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mDecodeInfo;

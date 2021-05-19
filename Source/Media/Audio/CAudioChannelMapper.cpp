@@ -9,18 +9,19 @@
 
 class CAudioChannelMapperInternals {
 	public:
-		typedef	void	(*PerformProc)(const CAudioData& sourceData, CAudioData& destinationData);
+		typedef	void	(*PerformProc)(const CAudioFrames& sourceAudioFrames, CAudioFrames& destinationAudioFrames);
 
 						CAudioChannelMapperInternals() : mPerformProc(nil) {}
 
-		static	void	performMonoToStereoSInt16Interleaved(const CAudioData& sourceData, CAudioData& destinationData)
+		static	void	performMonoToStereoSInt16Interleaved(const CAudioFrames& sourceAudioFrames,
+								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
-								SInt16*	sourcePtr = (SInt16*) (*sourceData.getBuffers())[0];
-								SInt16*	destinationPtr = (SInt16*) (*destinationData.getBuffers())[0];
+								SInt16*	sourcePtr = (SInt16*) (*sourceAudioFrames.getBuffers())[0];
+								SInt16*	destinationPtr = (SInt16*) (*destinationAudioFrames.getBuffers())[0];
 
 								// Perform
-								UInt32	frameCount = sourceData.getCurrentFrameCount();
+								UInt32	frameCount = sourceAudioFrames.getCurrentFrameCount();
 								for (UInt32 i = 0; i < frameCount; i++) {
 									// Copy sample
 									(*destinationPtr++) = *sourcePtr;
@@ -29,7 +30,7 @@ class CAudioChannelMapperInternals {
 							}
 
 		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
-		OI<CAudioData>				mInputAudioData;
+		OI<CAudioFrames>			mInputAudioFrames;
 		OI<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
 		PerformProc					mPerformProc;
 };
@@ -106,39 +107,39 @@ void CAudioChannelMapper::setOutputFormat(const SAudioProcessingFormat& audioPro
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAudioChannelMapper::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
+SAudioReadStatus CAudioChannelMapper::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	if (!mInternals->mInputAudioData.hasInstance() ||
-			(mInternals->mInputAudioData->getAvailableFrameCount() != audioData.getAvailableFrameCount())) {
+	if (!mInternals->mInputAudioFrames.hasInstance() ||
+			(mInternals->mInputAudioFrames->getAvailableFrameCount() != audioFrames.getAvailableFrameCount())) {
 		// Create or reset Audio Data
 		if (mInternals->mInputAudioProcessingFormat->getIsInterleaved())
 			// Interleaved
-			mInternals->mInputAudioData =
-					OI<CAudioData>(
-							new CAudioData(1, mInternals->mInputAudioProcessingFormat->getBytesPerFrame(),
-									audioData.getAvailableFrameCount()));
+			mInternals->mInputAudioFrames =
+					OI<CAudioFrames>(
+							new CAudioFrames(1, mInternals->mInputAudioProcessingFormat->getBytesPerFrame(),
+									audioFrames.getAvailableFrameCount()));
 		else
 			// Non-interleaved
-			mInternals->mInputAudioData =
-					OI<CAudioData>(
-							new CAudioData(mInternals->mInputAudioProcessingFormat->getChannels(),
+			mInternals->mInputAudioFrames =
+					OI<CAudioFrames>(
+							new CAudioFrames(mInternals->mInputAudioProcessingFormat->getChannels(),
 									mInternals->mInputAudioProcessingFormat->getBits() / 8,
-									audioData.getAvailableFrameCount()));
+									audioFrames.getAvailableFrameCount()));
 	} else
 		// Use existing Audio Data
-		mInternals->mInputAudioData->reset();
+		mInternals->mInputAudioFrames->reset();
 
 	// Read
-	SAudioReadStatus	audioReadStatus = CAudioProcessor::perform(mediaPosition, *mInternals->mInputAudioData);
+	SAudioReadStatus	audioReadStatus = CAudioProcessor::perform(mediaPosition, *mInternals->mInputAudioFrames);
 	if (!audioReadStatus.isSuccess())
 		// Error
 		return audioReadStatus;
 
 	// Perform
-	mInternals->mPerformProc(*mInternals->mInputAudioData, audioData);
-	audioData.completeWrite(mInternals->mInputAudioData->getCurrentFrameCount());
+	mInternals->mPerformProc(*mInternals->mInputAudioFrames, audioFrames);
+	audioFrames.completeWrite(mInternals->mInputAudioFrames->getCurrentFrameCount());
 
 	return audioReadStatus;
 }

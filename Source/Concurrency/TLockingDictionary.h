@@ -18,8 +18,8 @@ template <typename T> class TNLockingDictionary : public CDictionary {
 	// Methods
 	public:
 								// Lifecycle methods
-								TNLockingDictionary(CDictionary::ItemEqualsProc itemEqualsProc = nil) :
-									CDictionary((CDictionary::ItemCopyProc) copy, dispose, itemEqualsProc)
+								TNLockingDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+									CDictionary((SValue::OpaqueCopyProc) copy, dispose, opaqueEqualsProc)
 									{}
 
 								// Instance methods
@@ -27,10 +27,10 @@ template <typename T> class TNLockingDictionary : public CDictionary {
 									{
 										// Get
 										mLock.lockForReading();
-										OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(key);
+										OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 										mLock.unlockForReading();
 
-										return itemRef.hasValue() ? OR<T>(*((T*) itemRef.getValue())) : OR<T>();
+										return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
 									}
 						void	set(const CString& key, const T& item)
 									{
@@ -43,11 +43,11 @@ template <typename T> class TNLockingDictionary : public CDictionary {
 									{
 										// Update
 										mLock.lockForWriting();
-										OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(key);
+										OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 										OI<T>	updatedValue =
 														updateProc(
-																itemRef.hasValue() ?
-																		OR<T>(*((T*) itemRef.getValue())) : OR<T>(),
+																opaque.hasValue() ?
+																		OR<T>(*((T*) opaque.getValue())) : OR<T>(),
 																userData);
 										if (updatedValue.hasInstance())
 											// Store
@@ -70,10 +70,10 @@ template <typename T> class TNLockingDictionary : public CDictionary {
 
 	private:
 								// Class methods
-		static			T*		copy(CDictionary::ItemRef itemRef)
-									{ return new T(*((T*) itemRef)); }
-		static			void	dispose(CDictionary::ItemRef itemRef)
-									{ T* t = (T*) itemRef; Delete(t); }
+		static			T*		copy(SValue::Opaque opaque)
+									{ return new T(*((T*) opaque)); }
+		static			void	dispose(SValue::Opaque opaque)
+									{ T* t = (T*) opaque; Delete(t); }
 
 	// Properties
 	private:
@@ -88,19 +88,19 @@ template <typename T> class TNLockingArrayDictionary : public CDictionary {
 	public:
 										// Lifecycle methods
 										TNLockingArrayDictionary() :
-											CDictionary((CDictionary::ItemCopyProc) copy, dispose, nil)
+											CDictionary((SValue::OpaqueCopyProc) copy, dispose, nil)
 											{}
 
 										// Instance methods
 				const	OR<TArray<T> >	get(const CString& key) const
 											{
-												// Get itemRef
+												// Get opaque
 												mLock.lockForReading();
-												OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(key);
+												OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 												mLock.unlockForReading();
 
-												return itemRef.hasValue() ?
-														OR<TArray<T> >(*((TArray<T>*) itemRef.getValue())) :
+												return opaque.hasValue() ?
+														OR<TArray<T> >(*((TArray<T>*) opaque.getValue())) :
 														OR<TArray<T> >();
 											}
 						void			add(const CString& key, const T& item)
@@ -109,10 +109,10 @@ template <typename T> class TNLockingArrayDictionary : public CDictionary {
 												mLock.lockForWriting();
 
 												// Retrieve current value
-												OV<CDictionary::ItemRef>	itemRef = CDictionary::getItemRef(key);
+												OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 												TNArray<T>	array(
-																	itemRef.hasValue() ?
-																			*(TNArray<T>*) itemRef.getValue() :
+																	opaque.hasValue() ?
+																			*(TNArray<T>*) opaque.getValue() :
 																			TNArray<T>());
 
 												// Add
@@ -127,10 +127,10 @@ template <typename T> class TNLockingArrayDictionary : public CDictionary {
 
 	private:
 										// Class methods
-		static			TArray<T>*		copy(CDictionary::ItemRef itemRef)
-											{ return new TNArray<T>(*((TArray<T>*) itemRef)); }
-		static			void			dispose(CDictionary::ItemRef itemRef)
-											{ TArray<T>* t = (TArray<T>*) itemRef; Delete(t); }
+		static			TArray<T>*		copy(SValue::Opaque opaque)
+											{ return new TNArray<T>(*((TArray<T>*) opaque)); }
+		static			void			dispose(SValue::Opaque opaque)
+											{ TArray<T>* t = (TArray<T>*) opaque; Delete(t); }
 
 	// Properties
 	private:

@@ -17,16 +17,16 @@ static	SError	sInvalidTokenError(sErrorDomain, 2, CString(OSSTR("Invalid Token")
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local method declarations
 
-static	OI<SError>				sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array);
-static	OI<SError>				sAddArrayOfStrings(CData& data, const TArray<CString>& array);
-static	OI<SError>				sAddDictionary(CData& data, const CDictionary& dictionary);
-static	void					sAddString(CData& data, const CString& string);
+static	OI<SError>		sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array);
+static	OI<SError>		sAddArrayOfStrings(CData& data, const TArray<CString>& array);
+static	OI<SError>		sAddDictionary(CData& data, const CDictionary& dictionary);
+static	void			sAddString(CData& data, const CString& string);
 
-static	OI<CDictionary>			sReadDictionary(const SInt8*& charPtr, OI<SError>& outError);
-static	OI<CString>				sReadString(const SInt8*& charPtr, OI<SError>& outError);
-static	OI<CDictionary::Value>	sReadValue(const SInt8*& charPtr, OI<SError>& outError);
-static	void					sSkipWhitespace(const SInt8*& charPtr);
-static	OI<SError>				sValidateToken(const SInt8*& charPtr, char token, bool advance = false);
+static	OI<CDictionary>	sReadDictionary(const SInt8*& charPtr, OI<SError>& outError);
+static	OI<CString>		sReadString(const SInt8*& charPtr, OI<SError>& outError);
+static	OI<SValue>		sReadValue(const SInt8*& charPtr, OI<SError>& outError);
+static	void			sSkipWhitespace(const SInt8*& charPtr);
+static	OI<SError>		sValidateToken(const SInt8*& charPtr, char token, bool advance = false);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -137,19 +137,19 @@ OI<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 		// Add value
 		OI<SError>	error;
 		switch (iterator->mValue.getType()) {
-			case CDictionary::Value::kArrayOfDictionaries:
+			case SValue::kArrayOfDictionaries:
 				// Array of dictionaries
 				error = sAddArrayOfDictionaries(data, iterator->mValue.getArrayOfDictionaries());
 				ReturnErrorIfError(error);
 				break;
 
-			case CDictionary::Value::kArrayOfStrings:
+			case SValue::kArrayOfStrings:
 				// Array of strings
 				error = sAddArrayOfStrings(data, iterator->mValue.getArrayOfStrings());
 				ReturnErrorIfError(error);
 				break;
 
-			case CDictionary::Value::kBool:
+			case SValue::kBool:
 				// Add bool
 				if (iterator->mValue.getBool())
 					// True
@@ -159,69 +159,69 @@ OI<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 					data.appendBytes("false", 5);
 				break;
 
-			case CDictionary::Value::kDictionary:
+			case SValue::kDictionary:
 				// Add dictionary
 				error = sAddDictionary(data, iterator->mValue.getDictionary());
 				ReturnErrorIfError(error);
 				break;
 
-			case CDictionary::Value::kString:
+			case SValue::kString:
 				// String
 				sAddString(data, iterator->mValue.getString());
 				break;
 
-			case CDictionary::Value::kFloat32:
+			case SValue::kFloat32:
 				// Float32
 				data += CString(iterator->mValue.getFloat32()).getData();
 				break;
 
-			case CDictionary::Value::kFloat64:
+			case SValue::kFloat64:
 				// Float64
 				data += CString(iterator->mValue.getFloat64()).getData();
 				break;
 
-			case CDictionary::Value::kSInt8:
+			case SValue::kSInt8:
 				// SInt8
 				data += CString(iterator->mValue.getSInt8()).getData();
 				break;
 
-			case CDictionary::Value::kSInt16:
+			case SValue::kSInt16:
 				// SInt16
 				data += CString(iterator->mValue.getSInt16()).getData();
 				break;
 
-			case CDictionary::Value::kSInt32:
+			case SValue::kSInt32:
 				// SInt32
 				data += CString(iterator->mValue.getSInt32()).getData();
 				break;
 
-			case CDictionary::Value::kSInt64:
+			case SValue::kSInt64:
 				// SInt64
 				data += CString(iterator->mValue.getSInt64()).getData();
 				break;
 
-			case CDictionary::Value::kUInt8:
+			case SValue::kUInt8:
 				// UInt8
 				data += CString(iterator->mValue.getUInt8()).getData();
 				break;
 
-			case CDictionary::Value::kUInt16:
+			case SValue::kUInt16:
 				// UInt16
 				data += CString(iterator->mValue.getUInt16()).getData();
 				break;
 
-			case CDictionary::Value::kUInt32:
+			case SValue::kUInt32:
 				// UInt32
 				data += CString(iterator->mValue.getUInt32()).getData();
 				break;
 
-			case CDictionary::Value::kUInt64:
+			case SValue::kUInt64:
 				// UInt64
 				data += CString(iterator->mValue.getUInt64()).getData();
 				break;
 
-			case CDictionary::Value::kData:
-			case CDictionary::Value::kItemRef:
+			case SValue::kData:
+			case SValue::kOpaque:
 				// Invalid
 				return OI<SError>(sInvalidItemTypeError);
 		}
@@ -280,7 +280,7 @@ OI<CDictionary> sReadDictionary(const SInt8*& charPtr, OI<SError>& outError)
 			ReturnValueIfError(outError, OI<CDictionary>());
 
 			// Read value
-			OI<CDictionary::Value>	value = sReadValue(charPtr, outError);
+			OI<SValue>	value = sReadValue(charPtr, outError);
 			ReturnValueIfError(outError, OI<CDictionary>());
 
 			// Check if got value
@@ -354,28 +354,26 @@ OI<CString> sReadString(const SInt8*& charPtr, OI<SError>& outError)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CDictionary::Value> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
+OI<SValue> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Skip whitespace
 	sSkipWhitespace(charPtr);
 
 	// Check token
-	OI<CDictionary::Value>	value;
+	OI<SValue>	value;
 	if (*charPtr == '\"') {
 		// String
 		OI<CString>	string = sReadString(charPtr, outError);
 		ReturnValueIfError(outError, value);
 
-		value = OI<CDictionary::Value>(CDictionary::Value(*string));
+		value = OI<SValue>(SValue(*string));
 	} else if (*charPtr == '{') {
 		// Dictionary
 		OI<CDictionary>	dictionary = sReadDictionary(charPtr, outError);
 		ReturnValueIfError(outError, value);
 
-		value =
-				dictionary.hasInstance() ?
-						OI<CDictionary::Value>(CDictionary::Value(*dictionary)) : OI<CDictionary::Value>();
+		value = dictionary.hasInstance() ? OI<SValue>(SValue(*dictionary)) : OI<SValue>();
 	} else if (*charPtr == '[') {
 		// Array
 		charPtr++;
@@ -406,7 +404,7 @@ OI<CDictionary::Value> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 					// End of array
 					charPtr++;
 
-					return OI<CDictionary::Value>(CDictionary::Value(array));
+					return OI<SValue>(SValue(array));
 				} else {
 					// Invalid token
 					outError =  OI<SError>(sInvalidTokenError);
@@ -436,7 +434,7 @@ OI<CDictionary::Value> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 					// End of array
 					charPtr++;
 
-					return OI<CDictionary::Value>(CDictionary::Value(array));
+					return OI<SValue>(SValue(array));
 				} else {
 					// Invalid token
 					outError =  OI<SError>(sInvalidTokenError);
@@ -446,22 +444,22 @@ OI<CDictionary::Value> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 		} else if (*charPtr == ']') {
 			// Empty array
 			charPtr++;
-			value = OI<CDictionary::Value>(CDictionary::Value(TNArray<CDictionary>()));
+			value = OI<SValue>(SValue(TNArray<CDictionary>()));
 		} else
 			// Invalid token
 			outError =  OI<SError>(sInvalidTokenError);
 	} else if (::memcmp(charPtr, "true", 4) == 0) {
 		// True
 		charPtr += 4;
-		value = OI<CDictionary::Value>(CDictionary::Value(true));
+		value = OI<SValue>(SValue(true));
 	} else if (::memcmp(charPtr, "false", 5) == 0) {
 		// False
 		charPtr += 5;
-		value = OI<CDictionary::Value>(CDictionary::Value(false));
+		value = OI<SValue>(SValue(false));
 	} else if (::memcmp(charPtr, "null", 4) == 0) {
 		// Null
 		charPtr += 4;
-		value = OI<CDictionary::Value>();
+		value = OI<SValue>();
 	} else {
 		// Number
 		const	SInt8*	startCharPtr = charPtr;
@@ -475,10 +473,10 @@ OI<CDictionary::Value> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 
 		if (isFloat)
 			// Float
-			value = OI<CDictionary::Value>(CString((char*) startCharPtr, (UInt32) (charPtr - startCharPtr)).getFloat64());
+			value = OI<SValue>(CString((char*) startCharPtr, (UInt32) (charPtr - startCharPtr)).getFloat64());
 		else
 			// Integer
-			value = OI<CDictionary::Value>(CString((char*) startCharPtr, (UInt32) (charPtr - startCharPtr)).getSInt64());
+			value = OI<SValue>(CString((char*) startCharPtr, (UInt32) (charPtr - startCharPtr)).getSInt64());
 	}
 
 	// Skip whitespace

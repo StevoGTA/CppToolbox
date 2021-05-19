@@ -1,51 +1,51 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioTrackReader.cpp			©2020 Stevo Brock	All rights reserved.
+//	CAudioTrackDecoder.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CAudioTrackReader.h"
+#include "CAudioTrackDecoder.h"
 
-#include "CAudioCodecRegistry.h"
+#include "CCodecRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioTrackReaderInternals
+// MARK: CAudioTrackDecoderInternals
 
-class CAudioTrackReaderInternals : public TReferenceCountable<CAudioTrackReaderInternals> {
+class CAudioTrackDecoderInternals : public TReferenceCountable<CAudioTrackDecoderInternals> {
 	public:
-		CAudioTrackReaderInternals(const CAudioTrack& audioTrack, CByteParceller& byteParceller) :
+		CAudioTrackDecoderInternals(const CAudioTrack& audioTrack, const I<CDataSource>& dataSource) :
 			TReferenceCountable(),
 					mAudioCodecInfo(
-							CAudioCodecRegistry::mShared.getInfo(audioTrack.getAudioStorageFormat().getCodecID())),
-					mAudioTrack(audioTrack), mByteParceller(byteParceller), mAudioCodec(mAudioCodecInfo.instantiate())
+							CCodecRegistry::mShared.getAudioCodecInfo(audioTrack.getAudioStorageFormat().getCodecID())),
+					mAudioTrack(audioTrack), mDataSource(dataSource), mAudioCodec(mAudioCodecInfo.instantiate())
 			{}
 
 		const	CAudioCodec::Info&	mAudioCodecInfo;
 				CAudioTrack			mAudioTrack;
-				CByteParceller		mByteParceller;
+				I<CDataSource>		mDataSource;
 				I<CAudioCodec>		mAudioCodec;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioTrackReader
+// MARK: - CAudioTrackDecoder
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrackReader::CAudioTrackReader(const CAudioTrack& audioTrack, CByteParceller& byteParceller) : CAudioSource()
+CAudioTrackDecoder::CAudioTrackDecoder(const CAudioTrack& audioTrack, const I<CDataSource>& dataSource) : CAudioSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioTrackReaderInternals(audioTrack, byteParceller);
+	mInternals = new CAudioTrackDecoderInternals(audioTrack, dataSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrackReader::CAudioTrackReader(const CAudioTrackReader& other) : CAudioSource(other)
+CAudioTrackDecoder::CAudioTrackDecoder(const CAudioTrackDecoder& other) : CAudioSource(other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = other.mInternals->addReference();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrackReader::~CAudioTrackReader()
+CAudioTrackDecoder::~CAudioTrackDecoder()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->removeReference();
@@ -54,23 +54,23 @@ CAudioTrackReader::~CAudioTrackReader()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioTrackReader::getOutputSetups() const
+TArray<SAudioProcessingSetup> CAudioTrackDecoder::getOutputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAudioCodecInfo.getAudioProcessingSetups(mInternals->mAudioTrack.getAudioStorageFormat());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioTrackReader::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+void CAudioTrackDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mByteParceller,
+	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mDataSource,
 			mInternals->mAudioTrack.getDecodeInfo());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAudioTrackReader::perform(const SMediaPosition& mediaPosition, CAudioData& audioData)
+SAudioReadStatus CAudioTrackDecoder::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAudioCodec->decode(mediaPosition, audioData);
+	return mInternals->mAudioCodec->decode(mediaPosition, audioFrames);
 }

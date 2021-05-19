@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CDictionary.h"
+#include "CMatrix.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CColor
@@ -25,11 +26,44 @@
 
 class CColorInternals;
 class CColor : public CEquatable {
-	// Enums
+	// Type
 	public:
 		enum Type {
 			kTypeRGB,
 			kTypeHSV,
+		};
+
+	// Primaries
+	public:
+		enum Primaries {
+			// Values
+			kPrimariesRec601,	// SD Video
+			kPrimariesRec709,	// HD Video
+			kPrimariesRec2020,	// HDR Video
+			kPrimariesEBU3213,	// PAL Video
+
+			kPrimariesDCIP3,
+			kPrimariesP3D65,
+			kPrimariesP22,		// sRGB Video
+
+			// Aliases
+			kPrimariesSMPTE_C = kPrimariesRec601,
+		};
+
+	// Conversion Matrix
+	public:
+		enum YCbCrConversionMatrix {
+			kYCbCrConversionMatrixRec601,
+			kYCbCrConversionMatrixRec709,
+			kYCbCrConversionMatrixRec2020,
+		};
+
+	// Transfer function
+	public:
+		enum TransferFunction {
+			kTransferFunctionRec709,	// SD and HD Video
+			kTransferFunctionRec2020,	// HDR Video
+			kTransferFunctionSRGB,		// sRGB Video
 		};
 
 	// Structs
@@ -303,6 +337,10 @@ class CColor : public CEquatable {
 		static	const	CColor				mWhiteSmoke;
 		static	const	CColor				mYellow;
 		static	const	CColor				mYellowGreen;
+
+		static	const	SMatrix3x3_32		mYCbCrConverstionMatrixRec601VideoRange;
+		static	const	SMatrix3x3_32		mYCbCrConverstionMatrixRec601FullRange;
+		static	const	SMatrix3x3_32		mYCbCrConverstionMatrixRec709VideoRange;
 
 	private:
 						CColorInternals*	mInternals;

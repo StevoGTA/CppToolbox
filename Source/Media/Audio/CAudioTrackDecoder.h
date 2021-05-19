@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioTrackReader.h			©2020 Stevo Brock	All rights reserved.
+//	CAudioTrackDecoder.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -9,24 +9,25 @@
 #include "SAudioFormats.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioTrackReader
+// MARK: CAudioTrackDecoder
 
-class CAudioTrackReaderInternals;
-class CAudioTrackReader : public CAudioSource {
+class CAudioTrackDecoderInternals;
+class CAudioTrackDecoder : public CAudioSource {
 	// Methods
 	public:
 										// Lifecycle methods
-										CAudioTrackReader(const CAudioTrack& audioTrack, CByteParceller& byteParceller);
-										CAudioTrackReader(const CAudioTrackReader& other);
-										~CAudioTrackReader();
+										CAudioTrackDecoder(const CAudioTrack& audioTrack,
+												const I<CDataSource>& dataSource);
+										CAudioTrackDecoder(const CAudioTrackDecoder& other);
+										~CAudioTrackDecoder();
 
 										// CAudioProcessor methods
 		TArray<SAudioProcessingSetup>	getOutputSetups() const;
 		void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
 
-		SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioData& audioData);
+		SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 
 	// Properties
 	private:
-		CAudioTrackReaderInternals*	mInternals;
+		CAudioTrackDecoderInternals*	mInternals;
 };

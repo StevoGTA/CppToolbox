@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "C2DGeometry.h"
+#include "CColor.h"
 #include "CMatrix.h"
+#include "CGPUTexture.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SVertex2DMultitexture
@@ -49,14 +50,20 @@ class CGPUVertexShader {
 // MARK: - CGPUFragmentShader
 
 class CGPUFragmentShader {
+	// Types
+	public:
+		typedef	CGPUFragmentShader&	(*Proc)(Float32 opacity);
+
 	// Methods
 	public:
 									// Lifecycle methods
 		virtual						~CGPUFragmentShader() {}
 
 									// Class methods
-		static	CGPUFragmentShader&	getBasicMultiTexture();
-		static	CGPUFragmentShader&	getOpacityMultiTexture(Float32 opacity);
+		static	CGPUFragmentShader&	getRGBAMultiTexture(Float32 opacity);
+		static	Proc				getProc(CColor::Primaries primaries,
+											CColor::YCbCrConversionMatrix yCbCrConversionMatrix,
+											CColor::TransferFunction transferFunction);
 
 	protected:
 									// Lifecycle methods
