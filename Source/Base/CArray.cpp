@@ -570,9 +570,9 @@ bool CArray::isSorted() const
 CArray& CArray::sort(CArrayCompareProc compareProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if sorted
-	if (mInternals->mIsSorted)
-		return *this;
+//	// Check if sorted
+//	if (mInternals->mIsSorted)
+//		return *this;
 		
 	// Prepare for write
 	mInternals = mInternals->prepareForWrite();
