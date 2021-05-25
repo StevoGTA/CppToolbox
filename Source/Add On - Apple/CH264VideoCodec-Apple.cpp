@@ -25,33 +25,33 @@ class CH264VideoCodecInternals {
 									mNextFrameTime(0)
 							{
 								// Setup
-								const	CData&							configurationData =
-																				decodeInfo.getConfigurationData();
-								const	CH264VideoCodec::Configuration&	configuration =
-																				*((CH264VideoCodec::Configuration*)
-																						configurationData.getBytePtr());
-										OSStatus						status;
+										CH264VideoCodec::DecodeInfo::SPSPPSInfo	spsppsInfo = decodeInfo.getSPSPPSInfo();
+								const	TArray<CH264VideoCodec::NALUInfo>		spsNALUInfos =
+																						spsppsInfo.getSPSNALUInfos();
+								const	TArray<CH264VideoCodec::NALUInfo>		ppsNALUInfos =
+																						spsppsInfo.getPPSNALUInfos();
+										OSStatus								status;
 
 								// Setup format description
-										UInt32		spsCount = configuration.getSPSCount();
-										UInt32		ppsCount = configuration.getPPSCount();
-								const	uint8_t*	parameterSetPointers[spsCount + ppsCount];
-										size_t		parameterSetSizes[spsCount + ppsCount];
-								for (UInt32 i = 0; i < spsCount; i++) {
+										CArray::ItemCount	spsCount = spsNALUInfos.getCount();
+										CArray::ItemCount	ppsCount = ppsNALUInfos.getCount();
+								const	uint8_t*			parameterSetPointers[spsCount + ppsCount];
+										size_t				parameterSetSizes[spsCount + ppsCount];
+								for (CArray::ItemIndex i = 0; i < spsCount; i++) {
 									// Store
-									parameterSetPointers[i] = configuration.getSPSPayload(i);
-									parameterSetSizes[i] = configuration.getSPSSize(i);
+									parameterSetPointers[i] = spsNALUInfos[i].getBytePtr();
+									parameterSetSizes[i] = spsNALUInfos[i].getSize();
 								}
-								for (UInt32 i = 0; i < ppsCount; i++) {
+								for (CArray::ItemIndex i = 0; i < ppsCount; i++) {
 									// Store
-									parameterSetPointers[spsCount + i] = configuration.getPPSPayload(i);
-									parameterSetSizes[spsCount + i] = configuration.getPPSSize(i);
+									parameterSetPointers[spsCount + i] = ppsNALUInfos[i].getBytePtr();
+									parameterSetSizes[spsCount + i] = ppsNALUInfos[i].getSize();
 								}
 
 								status =
 										::CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
 												spsCount + ppsCount, parameterSetPointers, parameterSetSizes,
-												configuration.getNALUHeaderLengthSize(), &mFormatDescriptionRef);
+												decodeInfo.getNALUHeaderLengthSize(), &mFormatDescriptionRef);
 								LogOSStatusIfFailed(status,
 										OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"));
 
