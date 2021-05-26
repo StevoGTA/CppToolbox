@@ -20,13 +20,13 @@ class CVideoDecoderInternals {
 								CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
 								const CVideoDecoder::RenderInfo& renderInfo) :
 							mVideoDecoder(videoDecoder), mDecodeInfo(decodeInfo), mRenderInfo(renderInfo),
-									mVideoCodec(
-											videoCodecInfo.instantiate(dataSource, videoTrack.getDecodeInfo(),
-													CVideoCodec::DecodeFrameInfo(compatibility, frameReady, error,
-															this))),
-									mTrackIndex(trackIndex),
+									mVideoCodec(videoCodecInfo.instantiate()), mTrackIndex(trackIndex),
 									mNotifiedFirstFrameReady(false), mDecodeInProgress(false), mResetPending(false)
-							{}
+							{
+								// Setup for decode
+								mVideoCodec->setupForDecode(dataSource, videoTrack.getDecodeInfo(),
+										CVideoCodec::DecodeFrameInfo(compatibility, frameReady, error, this));
+							}
 						~CVideoDecoderInternals()
 							{
 								// Reset video codec

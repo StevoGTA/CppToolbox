@@ -263,12 +263,13 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 	// Methods
 	public:
 										// Lifecycle methods
-										CH264VideoCodec(const I<CDataSource>& dataSource,
-												const I<CCodec::DecodeInfo>& decodeInfo,
-												const DecodeFrameInfo& decodeFrameInfo);
+										CH264VideoCodec();
 										~CH264VideoCodec();
 
-										// CVideoCodec methods - Decoding
+										// CVideoCodec methods
+				void					setupForDecode(const I<CDataSource>& dataSource,
+												const I<CCodec::DecodeInfo>& decodeInfo,
+												const DecodeFrameInfo& decodeFrameInfo);
 				bool					triggerDecode();
 				OI<SError>				set(const SMediaPosition& mediaPosition);
 				OI<SError>				reset();
