@@ -21,106 +21,8 @@
 
 class CH264VideoCodecInternals;
 class CH264VideoCodec : public CDecodeOnlyVideoCodec {
-	// Configuration
-	public:
-		struct Configuration {
-			// Methods
-			public:
-						UInt32	getNALUHeaderLengthSize() const
-									{ return (mLengthCoded & ~0xFC) + 1; }
-
-						UInt32	getSPSCount() const
-									{ return mSPSPPSInfo[0] & 0x1F; }
-				const	UInt8*	getSPSPayload(UInt32 index) const
-									{
-										// Setup
-										const	UInt8*	ptr = &mSPSPPSInfo[1];
-										while (index > 0) ptr += getSize(ptr) + 2;
-
-										return ptr + 2;
-									}
-						UInt16	getSPSSize(UInt32 index) const
-									{
-										// Setup
-										const	UInt8*	ptr = &mSPSPPSInfo[1];
-										while (index > 0) ptr += getSize(ptr) + 2;
-
-										return getSize(ptr);
-									}
-
-						UInt32	getPPSCount() const
-									{
-										// Setup
-										const	UInt8*	ptr = &mSPSPPSInfo[1];
-										for (UInt32 i = 0; i < getSPSCount(); i++, ptr += getSize(ptr) + 2) ;
-
-										return *ptr;
-									}
-				const	UInt8*	getPPSPayload(UInt32 index) const
-									{
-										// Skip SPS
-										const	UInt8*	ptr = &mSPSPPSInfo[1];
-										for (UInt32 i = 0; i < getSPSCount(); i++, ptr += getSize(ptr) + 2) ;
-										ptr++;
-
-										// Find PPS
-										while (index > 0) ptr += getSize(ptr) + 2;
-
-										return ptr + 2;
-									}
-						UInt16	getPPSSize(UInt32 index) const
-									{
-										// Skip SPS
-										const	UInt8*	ptr = &mSPSPPSInfo[1];
-										for (UInt32 i = 0; i < getSPSCount(); i++, ptr += getSize(ptr) + 2) ;
-										ptr++;
-
-										// Find PPS
-										while (index > 0) ptr += getSize(ptr) + 2;
-
-										return getSize(ptr);
-									}
-
-			private:
-						UInt16	getSize(const UInt8* ptr) const
-									{ return (*ptr << 8) | *(ptr + 1); }
-
-			// Properties
-			private:
-				UInt8	mVersion;
-				UInt8	mProfile;
-				UInt8	mProfileCompatibility;
-				UInt8	mLevel;
-				UInt8	mLengthCoded;
-				UInt8	mSPSPPSInfo[];
-		};
-
-	// Decode info
-	public:
-		class DecodeInfo : public CCodec::PacketsDecodeInfo {
-			// Methods
-			public:
-								// Lifecycle methods
-								DecodeInfo(const CData& configurationData, UInt32 timeScale,
-										const TArray<PacketAndLocation>& packetAndLocations) :
-									PacketsDecodeInfo(packetAndLocations), mConfigurationData(configurationData),
-											mTimeScale(timeScale)
-									{}
-
-								// Instance methods
-				const	CData&	getConfigurationData() const
-									{ return mConfigurationData; }
-						UInt32	getTimeScale() const
-									{ return mTimeScale; }
-
-			// Properties
-			private:
-				CData	mConfigurationData;
-				UInt32	mTimeScale;
-		};
-
 	// NALU
-	private:
+	public:
 		// Network Abstraction Layer Unit Info
 		struct NALUInfo {
 
@@ -160,26 +62,38 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 				kTypeUnspecified9,											// 31, Non-VCL
 			};
 
-							// Lifecycle methods
-							NALUInfo(const CData& data, UInt32 offset) : mData(data), mOffset(offset) {}
-							NALUInfo(const NALUInfo& other) : mData(other.mData), mOffset(other.mOffset) {}
+											// Lifecycle methods
+											NALUInfo(const CData& data, UInt32 offset, CData::Size size) :
+													mData(data), mOffset(offset), mSize(size)
+													{}
+											NALUInfo(const NALUInfo& other) :
+													mData(other.mData), mOffset(other.mOffset), mSize(other.mSize)
+													{}
 
-							// Instance methods
-					Type	getType() const
-								{ return (Type) (*((const UInt8*) getBytePtr()) & 0x1F); }
+											// Instance methods
+						Type				getType() const
+												{ return (Type) (*((const UInt8*) getBytePtr()) & 0x1F); }
+				const	UInt8*				getBytePtr() const
+												{ return (UInt8*) mData.getBytePtr() + mOffset; }
+						CData::Size			getSize() const
+												{ return mSize; }
 
-			const	void*	getBytePtr() const
-								{ return (const void*) ((UInt8*) mData.getBytePtr() + mOffset); }
+											// Class methods
+		static			TArray<NALUInfo>	getNALUInfos(const CData& data);
+		static			CData				composeAnnexB(const TArray<NALUInfo>& spsNALUInfos,
+													const TArray<NALUInfo>& ppsNALUInfos,
+													const TArray<NALUInfo>& naluInfos);
 
 			// Properties
 			private:
-				CData	mData;
-				UInt32	mOffset;
+				CData		mData;
+				UInt32		mOffset;
+				CData::Size	mSize;
 		};
 
+	// SequenceParameterSetPayload
 	public:
 		struct SequenceParameterSetPayload {
-
 			// Lifecycle methods
 			SequenceParameterSetPayload(const CData& data)
 				{
@@ -225,53 +139,126 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 			UInt8			mPicOrderCountLSBBitCount;
 		};
 
-//		struct CodedSliceNonIDRPicturePayload {
-//
-//					// Lifecycle methods
-//					CodedSliceNonIDRPicturePayload(const NALUInfo& naluInfo) : mNALUInfo(naluInfo) {}
-//
-//					// Instance methods
-//			UInt8	getFrameNum() const
-//						{
-//							UInt32	bits = EndianU32_BtoN(*((const UInt32*) mNALUInfo.getBytePtr()));
-//
-//							return (bits & 0x0007C000) >> 14;
-//						}
-//			UInt8	getPicOrderCntLsb() const
-//						{
-//							UInt32	bits = EndianU32_BtoN(*((const UInt32*) mNALUInfo.getBytePtr()));
-//
-//							return (bits & 0x00003F80) >> 7;
-//						}
-//
-//			// Properties
-//			private:
-//				NALUInfo	mNALUInfo;
-//		};
+	// Decode info
+	public:
+		class DecodeInfo : public CCodec::PacketsDecodeInfo {
+			// SPSPPSInfo
+			public:
+				struct SPSPPSInfo {
+												// Lifecycle methods
+												SPSPPSInfo(const TArray<NALUInfo>& spsNALUInfos,
+														const TArray<NALUInfo>& ppsNALUInfos) :
+													mSPSNALUInfos(spsNALUInfos), mPPSNALUInfos(ppsNALUInfos)
+													{}
+												SPSPPSInfo(const SPSPPSInfo& other) :
+													mSPSNALUInfos(other.mSPSNALUInfos), mPPSNALUInfos(other.mPPSNALUInfos)
+													{}
 
-//		struct CodedSliceIDRPictureNALUPayload {
-//
-//					// Lifecycle methods
-//					CodedSliceIDRPictureNALUPayload(const NALUInfo& naluInfo) : mNALUInfo(naluInfo) {}
-//
-//					// Instance methods
-//			UInt8	getFrameNum() const
-//						{
-//							UInt32	bits = EndianU32_BtoN(*((const UInt32*) mNALUInfo.getBytePtr()));
-//
-//							return (bits & 0x0007C000) >> 14;
-//						}
-//			UInt8	getPicOrderCntLsb() const
-//						{
-//							UInt32	bits = EndianU32_BtoN(*((const UInt32*) mNALUInfo.getBytePtr()));
-//
-//							return (bits & 0x00001FC0) >> 6;
-//						}
-//
-//			// Properties
-//			private:
-//				NALUInfo	mNALUInfo;
-//		};
+												// Instance methods
+					const	TArray<NALUInfo>&	getSPSNALUInfos() const
+													{ return mSPSNALUInfos; }
+					const	TArray<NALUInfo>&	getPPSNALUInfos() const
+													{ return mPPSNALUInfos; }
+
+					// Properties
+					private:
+						TArray<NALUInfo>	mSPSNALUInfos;
+						TArray<NALUInfo>	mPPSNALUInfos;
+				};
+
+			// Configuration
+			private:
+#if TARGET_OS_WINDOWS
+	#pragma warning(disable:4200)
+#endif
+				struct Configuration {
+					// Properties
+					UInt8	mVersion;
+					UInt8	mProfile;
+					UInt8	mProfileCompatibility;
+					UInt8	mLevel;
+					UInt8	mLengthCoded;
+					UInt8	mSPSPPSInfo[];
+				};
+#if TARGET_OS_WINDOWS
+	#pragma warning(default:4200)
+#endif
+
+			// Methods
+			public:
+							// Lifecycle methods
+							DecodeInfo(const CData& configurationData, UInt32 timeScale,
+									const TArray<PacketAndLocation>& packetAndLocations) :
+								PacketsDecodeInfo(packetAndLocations), mConfigurationData(configurationData),
+										mTimeScale(timeScale)
+								{}
+
+							// Instance methods
+				UInt32		getNALUHeaderLengthSize() const
+								{
+									// Setup
+									const	Configuration&	configuration =
+																	*((Configuration*) mConfigurationData.getBytePtr());
+
+									return (configuration.mLengthCoded & ~0xFC) + 1;
+
+								}
+				SPSPPSInfo	getSPSPPSInfo() const
+								{
+									// Setup
+									const	Configuration&		configuration =
+																		*((Configuration*)
+																				mConfigurationData.getBytePtr());
+									const	UInt8*				bytePtr = &configuration.mSPSPPSInfo[0];
+											UInt32				offset = sizeof(Configuration);
+
+											TNArray<NALUInfo>	spsNALUInfos;
+											TNArray<NALUInfo>	ppsNALUInfos;
+
+									// Compose SPS NALUInfos
+									UInt32	count = *bytePtr & 0x1F;
+									bytePtr++;
+									offset++;
+									for (UInt32 i = 0; i < count; i++) {
+										// Add SPS NALUInfo
+										UInt16	size = getSize(bytePtr);
+										spsNALUInfos += NALUInfo(mConfigurationData, offset + 2, size);
+
+										// Update
+										bytePtr += 2 + size;
+										offset += 2 + size;
+									}
+
+									// Compose PPS NALUInfos
+									count = *bytePtr;
+									bytePtr++;
+									offset++;
+									for (UInt32 i = 0; i < count; i++) {
+										// Add PPS NALUInfo
+										UInt16	size = getSize(bytePtr);
+										ppsNALUInfos += NALUInfo(mConfigurationData, offset + 2, size);
+
+										// Update
+										bytePtr += 2 + size;
+										offset += 2 + size;
+									}
+
+									return SPSPPSInfo(spsNALUInfos, ppsNALUInfos);
+								}
+
+				UInt32		getTimeScale() const
+								{ return mTimeScale; }
+
+			private:
+							// Private methods
+				UInt16		getSize(const UInt8* ptr) const
+								{ return (*ptr << 8) | *(ptr + 1); }
+
+			// Properties
+			private:
+				CData	mConfigurationData;
+				UInt32	mTimeScale;
+		};
 
 	// Methods
 	public:
@@ -288,12 +275,6 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 
 										// Class methods
 		static	OI<SVideoStorageFormat>	composeStorageFormat(const S2DSizeU16& frameSize);
-
-	private:
-										// Instance methods
-				TArray<NALUInfo>		getSPSNALUInfos(const CData& configurationData);
-				TArray<NALUInfo>		getPPSNALUInfos(const CData& configurationData);
-//				TArray<NALUInfo>		getNALUInfos(const CData& data);
 
 	// Properties
 	public:
