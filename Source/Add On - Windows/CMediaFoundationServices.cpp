@@ -83,7 +83,7 @@ OCI<IMFTransform> CMediaFoundationServices::createAudioDecoder(const GUID& guid,
 	// Setup
 	HRESULT	result;
 
-	// Enum Audio Codecs to find AAC Audio Codec
+	// Enum Audio Codecs to find Audio Decoder
 	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Audio, guid};
 	IMFActivate**			activates;
 	UINT32					count;
@@ -268,7 +268,7 @@ OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::copySample(IMFSample* sample, CAudioData& audioData,
+OI<SError> CMediaFoundationServices::copySample(IMFSample* sample, CAudioFrames& audioFrames,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -282,8 +282,8 @@ OI<SError> CMediaFoundationServices::copySample(IMFSample* sample, CAudioData& a
 	result = mediaBuffer->Lock(&bytePtr, NULL, &length);
 	ReturnErrorIfFailed(result, "Lock for outputSample");
 
-	::memcpy(audioData.getMutableBytePtr(), bytePtr, length);
-	audioData.completeWrite(length / audioProcessingFormat.getBytesPerFrame());
+	::memcpy(audioFrames.getMutableBytePtr(), bytePtr, length);
+	audioFrames.completeWrite(length / audioProcessingFormat.getBytesPerFrame());
 
 	result = mediaBuffer->SetCurrentLength(0);
 	ReturnErrorIfFailed(result, "SetCurrentLength");

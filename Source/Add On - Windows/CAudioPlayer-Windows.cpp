@@ -41,8 +41,8 @@ class CAudioPlayerImplementation :
 		};
 
 						CAudioPlayerImplementation(CAudioPlayer& audioPlayer, const CString& identifier,
-								const CAudioPlayer::Procs& procs) :
-							mAudioPlayer(audioPlayer), mIdentifier(identifier), mProcs(procs),
+								const CAudioPlayer::Info& info) :
+							mAudioPlayer(audioPlayer), mIdentifier(identifier), mInfo(info),
 									mFinishSeekShouldPause(false), mAudioClient(nullptr), mAudioRenderClient(nullptr),
 									mFillBufferAsyncResult(nullptr), mSimpleAudioVolume(nullptr), mFillBufferKey(0),
 									mState(kInitializing), mFillBufferAsyncCallback(*this, onFillBuffer),
@@ -202,7 +202,7 @@ class CAudioPlayerImplementation :
 															mStartTimeInterval +
 																	(Float32) mOnFillBufferFrameIndex /
 																			mMixFormat->nSamplesPerSec;
-									//mProcs.positionUpdated(mAudioPlayer, position);
+									//mInfo.positionUpdated(mAudioPlayer, position);
 
 									// Notify queue read complete
 									mAudioPlayerReaderThread->noteQueueReadComplete();
@@ -267,7 +267,7 @@ class CAudioPlayerImplementation :
 											// At the end
 											if (mOnFillBufferIsSendingFrames)
 												// Just reached the end of data
-												mProcs.endOfData(mAudioPlayer);
+												mInfo.endOfData(mAudioPlayer);
 
 											mOnFillBufferIsSendingFrames = false;
 										} else {
@@ -434,7 +434,7 @@ class CAudioPlayerImplementation :
  
 		CAudioPlayer&									mAudioPlayer;
 		CString											mIdentifier;
-		CAudioPlayer::Procs								mProcs;
+		CAudioPlayer::Info								mInfo;
 
 		bool											mFinishSeekShouldPause;
 		HANDLE											mFillBufferEvent;
@@ -473,9 +473,9 @@ class CAudioPlayerImplementation :
 class CAudioPlayerInternals {
 	public:
 						CAudioPlayerInternals(CAudioPlayer& audioPlayer, const CString& identifier,
-									const CAudioPlayer::Procs& procs) :
-							mAudioPlayer(audioPlayer), mProcs(procs),
-									mImplementation(Make<CAudioPlayerImplementation>(audioPlayer, identifier, procs))
+									const CAudioPlayer::Info& info) :
+							mAudioPlayer(audioPlayer), mInfo(info),
+									mImplementation(Make<CAudioPlayerImplementation>(audioPlayer, identifier, info))
 							{}
 						~CAudioPlayerInternals()
 							{
@@ -488,11 +488,11 @@ class CAudioPlayerInternals {
 								CAudioPlayerInternals&	internals = *((CAudioPlayerInternals*) userData);
 
 								// Call proc
-								internals.mProcs.error(internals.mAudioPlayer, error);
+								internals.mInfo.error(internals.mAudioPlayer, error);
 							}
 
 		CAudioPlayer&						mAudioPlayer;
-		CAudioPlayer::Procs					mProcs;
+		CAudioPlayer::Info					mInfo;
 		ComPtr<CAudioPlayerImplementation>	mImplementation;
 };
 
@@ -503,10 +503,10 @@ class CAudioPlayerInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayer::CAudioPlayer(const CString& identifier, const Procs& procs) : CAudioDestination()
+CAudioPlayer::CAudioPlayer(const CString& identifier, const Info& info) : CAudioDestination()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioPlayerInternals(*this, identifier, procs);
+	mInternals = new CAudioPlayerInternals(*this, identifier, info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

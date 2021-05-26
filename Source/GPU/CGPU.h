@@ -20,7 +20,7 @@ class CGPU {
 	public:
 		enum RenderType {
 			kRenderTypeTriangleList,
-			kRenderTypeTriangleStrip
+			kRenderTypeTriangleStrip,
 		};
 
 	// Methods

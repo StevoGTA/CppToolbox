@@ -54,14 +54,16 @@ class CThreadInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CThread::CThread(ThreadProc threadProc, void* userData, const CString& name)
+CThread::CThread(ThreadProc threadProc, void* userData, const CString& name, Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
 	mInternals = new CThreadInternals(*this, threadProc, userData, name);
 
-	// Start
-	start();
+	// Check options
+	if (options & kOptionsAutoStart)
+		// Start
+		start();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

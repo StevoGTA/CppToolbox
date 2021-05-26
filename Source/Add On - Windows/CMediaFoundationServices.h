@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CAudioData.h"
+#include "CAudioFrames.h"
 #include "CByteParceller.h"
 #include "SAudioFormats.h"
 #include "TOptional-Windows.h"
@@ -37,6 +37,6 @@ class CMediaFoundationServices {
 		static	OI<SError>			processOutput(IMFTransform* transform, IMFSample* inputSample,
 											IMFSample* outputSample, ReadInputProc readInputProc, void* userData);
 
-		static	OI<SError>			copySample(IMFSample* sample, CAudioData& audioData,
+		static	OI<SError>			copySample(IMFSample* sample, CAudioFrames& audioFrames,
 											const SAudioProcessingFormat& audioProcessingFormat);
 };

@@ -4,9 +4,8 @@
 
 #include "CAACAudioCodec.h"
 
-#include "CMediaFoundationServices.h"
-
 #include "CLogServices-Windows.h"
+#include "CMediaFoundationServices.h"
 #include "SError-Windows.h"
 
 #undef Delete
@@ -37,17 +36,17 @@ class CAACAudioCodecInternals {
 									CAACAudioCodecInternals&	internals = *((CAACAudioCodecInternals*) userData);
 
 									// Check packet index
-									if (internals.mNextPacketIndex < internals.mPacketLocations->getCount()) {
+									if (internals.mNextPacketIndex < internals.mPacketAndLocations->getCount()) {
 										// Read next packet
-										CAudioCodec::PacketLocation&	packetLocation =
-																				internals.mPacketLocations->getAt(
-																						internals.mNextPacketIndex);
+										CCodec::PacketAndLocation&	packetAndLocation =
+																			internals.mPacketAndLocations->getAt(
+																					internals.mNextPacketIndex);
 
 										// Read
 										OI<SError>	error =
 															CMediaFoundationServices::readSample(
-																	*internals.mByteParceller, packetLocation.mPos,
-																	packetLocation.mPacket.mSize, mediaBuffer);
+																	*internals.mByteParceller, packetAndLocation.mPos,
+																	packetAndLocation.mPacket.mByteCount, mediaBuffer);
 										ReturnErrorIfError(error);
 
 										// Update
@@ -60,15 +59,15 @@ class CAACAudioCodecInternals {
 								}
 
 
-		OSType										mCodecID;
-		OI<CByteParceller>							mByteParceller;
-		OI<SAudioProcessingFormat>					mAudioProcessingFormat;
-		OI<TArray<CAudioCodec::PacketLocation> >	mPacketLocations;
+		OSType									mCodecID;
+		OI<CByteParceller>						mByteParceller;
+		OI<SAudioProcessingFormat>				mAudioProcessingFormat;
+		OI<TArray<CCodec::PacketAndLocation> >	mPacketAndLocations;
 
-		OCI<IMFTransform>							mAudioDecoder;
-		OCI<IMFSample>								mInputSample;
-		OCI<IMFSample>								mOutputSample;
-		UInt32										mNextPacketIndex;
+		OCI<IMFTransform>						mAudioDecoder;
+		OCI<IMFSample>							mInputSample;
+		OCI<IMFSample>							mOutputSample;
+		UInt32									mNextPacketIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,17 +93,17 @@ CAACAudioCodec::~CAACAudioCodec()
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat, CByteParceller& byteParceller,
-		const I<CAudioCodec::DecodeInfo>& decodeInfo)
+void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+		const I<CDataSource>& dataSource, const I<CAudioCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
 	// Store
-	mInternals->mByteParceller = OI<CByteParceller>(byteParceller);
+	mInternals->mByteParceller = OI<CByteParceller>(CByteParceller(dataSource, true));
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-	mInternals->mPacketLocations = OI<TArray<CAudioCodec::PacketLocation> >(aacDecodeInfo.getPacketLocations());
+	mInternals->mPacketAndLocations = OI<TArray<CCodec::PacketAndLocation> >(aacDecodeInfo.getPacketAndLocations());
 
 	// Setup
 #pragma pack(push,1)
@@ -150,7 +149,7 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioData& audioData)
+SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -170,19 +169,19 @@ SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAu
 
 		// Update next packet index
 		mInternals->mNextPacketIndex =
-				getPacketIndex(mediaPosition, *mInternals->mAudioProcessingFormat, *mInternals->mPacketLocations);
+				getPacketIndex(mediaPosition, *mInternals->mAudioProcessingFormat, *mInternals->mPacketAndLocations);
 	}
 
 	// Process output
 	Float32	sourceProcessed =
-					(Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mPacketLocations->getCount();
+					(Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mPacketAndLocations->getCount();
 	error =
 			CMediaFoundationServices::processOutput(*mInternals->mAudioDecoder, *mInternals->mInputSample,
 					*mInternals->mOutputSample, CAACAudioCodecInternals::readInputPacket, mInternals);
 	if (error.hasInstance()) return SAudioReadStatus(*error);
 
 	error =
-			CMediaFoundationServices::copySample(*mInternals->mOutputSample, audioData,
+			CMediaFoundationServices::copySample(*mInternals->mOutputSample, audioFrames,
 					*mInternals->mAudioProcessingFormat);
 	if (error.hasInstance()) return SAudioReadStatus(*error);
 

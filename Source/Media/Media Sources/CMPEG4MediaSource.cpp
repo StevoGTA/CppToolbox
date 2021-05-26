@@ -232,8 +232,8 @@ struct SmdhdAtomPayload {
 					const	Payload&	payload = *((Payload*) mData.getBytePtr());
 
 					return (payload.mVersion == 0) ?
-							EndianU32_BtoN(payload._.mInfoV0.mDuration) :
-							EndianU32_BtoN(payload._.mInfoV1.mDuration);
+							(UInt64) EndianU32_BtoN(payload._.mInfoV0.mDuration) :
+							EndianU64_BtoN(payload._.mInfoV1.mDuration);
 				}
 
 	// Properties (in storage endian)

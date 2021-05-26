@@ -315,7 +315,7 @@ CGPUFragmentShader& CGPUFragmentShader::getRGBAMultiTexture(Float32 opacity)
 	// Check opacity
 	if (opacity == 1.0) {
 		// No opacity
-		static	CMetalFragmentShaderBasic*		sFragmentShaderBasic = nil;
+		static	CMetalFragmentShaderBasic*	sFragmentShaderBasic = nil;
 		if (sFragmentShaderBasic == nil)
 			// Create shader
 			sFragmentShaderBasic = new CMetalFragmentShaderBasic();

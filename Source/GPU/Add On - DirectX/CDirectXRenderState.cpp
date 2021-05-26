@@ -20,15 +20,15 @@ class CGPURenderStateInternals {
 			mMode(mode), mVertexShader(vertexShader), mPixelShader(pixelShader)
 			{}
 
-		CGPURenderState::Mode				mMode;
-		CGPUVertexShader&					mVertexShader;
-		CGPUFragmentShader&					mPixelShader;
+		CGPURenderState::Mode						mMode;
+		CGPUVertexShader&							mVertexShader;
+		CGPUFragmentShader&							mPixelShader;
 
-		SMatrix4x4_32						mModelMatrix;
+		SMatrix4x4_32								mModelMatrix;
 
-		OR<const SGPUVertexBuffer>			mVertexBuffer;
-		OR<const SGPUBuffer>				mIndexBuffer;
-		OR<const TArray<const CGPUTexture>>	mTextures;
+		OR<const SGPUVertexBuffer>					mVertexBuffer;
+		OR<const SGPUBuffer>						mIndexBuffer;
+		OR<const TArray<const I<CGPUTexture> > >	mTextures;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -84,10 +84,17 @@ void CGPURenderState::setIndexBuffer(const SGPUBuffer& gpuIndexBuffer)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::setTextures(const TArray<const CGPUTexture>& gpuTextures)
+void CGPURenderState::setTextures(const TArray<const I<CGPUTexture> >& gpuTextures)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mTextures = OR<const TArray<const CGPUTexture>>(gpuTextures);
+	mInternals->mTextures = OR<const TArray<const I<CGPUTexture> > >(gpuTextures);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const OR<const TArray<const I<CGPUTexture> > > CGPURenderState::getTextures() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mTextures;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -119,11 +126,11 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	// Check for textures
 	if (mInternals->mTextures.hasReference()) {
 		// Setup textures
-				bool						needBlend = false;
-		const	TArray<const CGPUTexture>&	gpuTextures = mInternals->mTextures.getReference();
+				bool							needBlend = false;
+		const	TArray<const I<CGPUTexture> >&	gpuTextures = mInternals->mTextures.getReference();
 		for (CArray::ItemIndex i = 0; i < gpuTextures.getCount(); i++) {
 			// Setup
-			const	CDirectXTexture&	texture = (const CDirectXTexture&) gpuTextures[i];
+			const	CDirectXTexture&	texture = (const CDirectXTexture&) *gpuTextures[i];
 
 			// Setup this texture
 			ID3D11ShaderResourceView*	shaderResourceView = texture.getShaderResourceView();
