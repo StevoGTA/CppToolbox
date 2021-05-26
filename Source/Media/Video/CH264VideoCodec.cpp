@@ -24,9 +24,9 @@ TArray<CH264VideoCodec::NALUInfo> CH264VideoCodec::NALUInfo::getNALUInfos(const 
 	// Setup
 	TNArray<NALUInfo>	naluInfos;
 
-	const	UInt8*	bytePtr = (const UInt8*) data.getBytePtr();
-			UInt32	offset = 0;
-			Size	bytesRemaining = data.getSize();
+	const	UInt8*		bytePtr = (const UInt8*) data.getBytePtr();
+			UInt32		offset = 0;
+			CData::Size	bytesRemaining = data.getSize();
 	while (bytesRemaining > 0) {
 		// Get NALU size
 		CData::Size	size = EndianU32_BtoN(*((const UInt32*) bytePtr));
