@@ -15,111 +15,11 @@
 
 class CH264VideoCodecInternals {
 	public:
-						CH264VideoCodecInternals(const I<CDataSource>& dataSource,
-								const CH264VideoCodec::DecodeInfo& decodeInfo,
-								const CVideoCodec::DecodeFrameInfo& decodeFrameInfo) :
-							mBitParceller(dataSource, true), mTimeScale(decodeInfo.getTimeScale()),
-									mPacketAndLocations(decodeInfo.getPacketAndLocations()),
-									mDecodeFrameInfo(decodeFrameInfo),
-									mFormatDescriptionRef(nil), mDecompressionSessionRef(nil), mNextFrameIndex(0),
-									mNextFrameTime(0)
+						CH264VideoCodecInternals() :
+							mTimeScale(0),
+									mFormatDescriptionRef(nil), mDecompressionSessionRef(nil),
+									mNextFrameIndex(0), mNextFrameTime(0)
 							{
-								// Setup
-										CH264VideoCodec::DecodeInfo::SPSPPSInfo	spsppsInfo = decodeInfo.getSPSPPSInfo();
-								const	TArray<CH264VideoCodec::NALUInfo>		spsNALUInfos =
-																						spsppsInfo.getSPSNALUInfos();
-								const	TArray<CH264VideoCodec::NALUInfo>		ppsNALUInfos =
-																						spsppsInfo.getPPSNALUInfos();
-										OSStatus								status;
-
-								// Setup format description
-										CArray::ItemCount	spsCount = spsNALUInfos.getCount();
-										CArray::ItemCount	ppsCount = ppsNALUInfos.getCount();
-								const	uint8_t*			parameterSetPointers[spsCount + ppsCount];
-										size_t				parameterSetSizes[spsCount + ppsCount];
-								for (CArray::ItemIndex i = 0; i < spsCount; i++) {
-									// Store
-									parameterSetPointers[i] = spsNALUInfos[i].getBytePtr();
-									parameterSetSizes[i] = spsNALUInfos[i].getSize();
-								}
-								for (CArray::ItemIndex i = 0; i < ppsCount; i++) {
-									// Store
-									parameterSetPointers[spsCount + i] = ppsNALUInfos[i].getBytePtr();
-									parameterSetSizes[spsCount + i] = ppsNALUInfos[i].getSize();
-								}
-
-								status =
-										::CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
-												spsCount + ppsCount, parameterSetPointers, parameterSetSizes,
-												decodeInfo.getNALUHeaderLengthSize(), &mFormatDescriptionRef);
-								LogOSStatusIfFailed(status,
-										OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"));
-
-								// Setup Decompression Session
-								VTDecompressionOutputCallbackRecord	decompressionOutputCallbackRecord;
-								decompressionOutputCallbackRecord.decompressionOutputCallback =
-										CH264VideoCodecInternals::decompressionOutputCallback;
-								decompressionOutputCallbackRecord.decompressionOutputRefCon = this;
-
-								CFMutableDictionaryRef	destinationImageBufferAttributes =
-																::CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
-																		&kCFTypeDictionaryKeyCallBacks,
-																		&kCFTypeDictionaryValueCallBacks);
-
-								switch (mDecodeFrameInfo.getCompatibility()) {
-									case CVideoCodec::DecodeFrameInfo::kCompatibilityAppleMetal:
-										// Metal
-										::CFDictionarySetValue(destinationImageBufferAttributes,
-												kCVPixelBufferMetalCompatibilityKey, kCFBooleanTrue);
-										break;
-
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-									case CVideoCodec::DecodeFrameInfo::kCompatibilityAppleOpenGLES:
-										// OpenGLES
-										::CFDictionarySetValue(destinationImageBufferAttributes,
-												kCVPixelBufferOpenGLESCompatibilityKey, kCFBooleanTrue);
-										break;
-
-#else
-									case CVideoCodec::DecodeFrameInfo::kCompatibilityAppleOpenGL: {
-										// OpenGL
-										::CFDictionarySetValue(destinationImageBufferAttributes,
-												kCVPixelBufferOpenGLCompatibilityKey, kCFBooleanTrue);
-										::CFDictionarySetValue(destinationImageBufferAttributes,
-												kCVPixelBufferOpenGLTextureCacheCompatibilityKey, kCFBooleanTrue);
-
-										OSType	pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-										::CFDictionarySetValue(destinationImageBufferAttributes,
-												kCVPixelBufferPixelFormatTypeKey,
-												::CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &pixelFormat));
-										} break;
-#endif
-								}
-
-								CFMutableDictionaryRef	videoDecoderSpecification =
-																::CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
-																		&kCFTypeDictionaryKeyCallBacks,
-																		&kCFTypeDictionaryValueCallBacks);
-								::CFDictionarySetValue(videoDecoderSpecification, kVTDecompressionPropertyKey_RealTime,
-										kCFBooleanTrue);
-
-								status =
-										::VTDecompressionSessionCreate(kCFAllocatorDefault, mFormatDescriptionRef,
-												videoDecoderSpecification, destinationImageBufferAttributes,
-												&decompressionOutputCallbackRecord, &mDecompressionSessionRef);
-								::CFRelease(destinationImageBufferAttributes);
-								::CFRelease(videoDecoderSpecification);
-								LogOSStatusIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
-
-								// Finish setup
-								CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
-																						CData(parameterSetPointers[0],
-																								(CData::Size)
-																										parameterSetSizes[0],
-																								false));
-								mCurrentFrameNumberBitCount = spsPayload.mFrameNumberBitCount;
-								mCurrentPicOrderCountLSBBitCount = spsPayload.mPicOrderCountLSBBitCount;
-								mPicOrderCountMSBChangeThreshold = 1 << (mCurrentPicOrderCountLSBBitCount - 1);
 							}
 						~CH264VideoCodecInternals()
 							{
@@ -149,7 +49,7 @@ class CH264VideoCodecInternals {
 								// Check status
 								if (status == noErr)
 									// Success
-									internals.mDecodeFrameInfo.frameReady(
+									internals.mDecodeFrameInfo->frameReady(
 											CVideoFrame(
 													CMTIME_IS_VALID(presentationTime) ?
 															CMTimeGetSeconds(presentationTime) : 0.0,
@@ -160,27 +60,27 @@ class CH264VideoCodecInternals {
 									CLogServices::logError(
 											CString(OSSTR("VTDecompressionSessionDecodeFrame returned ")) +
 													error.getDescription());
-									internals.mDecodeFrameInfo.error(error);
+									internals.mDecodeFrameInfo->error(error);
 								}
 							}
 
-		CBitParceller						mBitParceller;
-		UInt32								mTimeScale;
-		TArray<CCodec::PacketAndLocation>	mPacketAndLocations;
-		CVideoCodec::DecodeFrameInfo		mDecodeFrameInfo;
+		OI<CBitParceller>						mBitParceller;
+		UInt32									mTimeScale;
+		OI<TArray<CCodec::PacketAndLocation> >	mPacketAndLocations;
+		OI<CVideoCodec::DecodeFrameInfo>		mDecodeFrameInfo;
 
-		CMFormatDescriptionRef				mFormatDescriptionRef;
-		VTDecompressionSessionRef			mDecompressionSessionRef;
-		UInt8								mCurrentFrameNumberBitCount;
-		UInt8								mCurrentPicOrderCountLSBBitCount;
-		UInt8								mPicOrderCountMSBChangeThreshold;
+		CMFormatDescriptionRef					mFormatDescriptionRef;
+		VTDecompressionSessionRef				mDecompressionSessionRef;
+		UInt8									mCurrentFrameNumberBitCount;
+		UInt8									mCurrentPicOrderCountLSBBitCount;
+		UInt8									mPicOrderCountMSBChangeThreshold;
 
-		UInt32								mNextFrameIndex;
-		UInt64								mNextFrameTime;
+		UInt32									mNextFrameIndex;
+		UInt64									mNextFrameTime;
 
-		UInt64								mPicOrderCountMSB;
-		UInt64								mPreviousPicOrderCountLSB;
-		UInt64								mLastIDRFrameTime;
+		UInt64									mPicOrderCountMSB;
+		UInt64									mPreviousPicOrderCountLSB;
+		UInt64									mLastIDRFrameTime;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -188,11 +88,10 @@ class CH264VideoCodecInternals {
 // MARK: - CH264VideoCodec
 
 //----------------------------------------------------------------------------------------------------------------------
-CH264VideoCodec::CH264VideoCodec(const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo,
-		const DecodeFrameInfo& decodeFrameInfo) : CDecodeOnlyVideoCodec()
+CH264VideoCodec::CH264VideoCodec() : CDecodeOnlyVideoCodec()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CH264VideoCodecInternals(dataSource, *((DecodeInfo*) &*decodeInfo), decodeFrameInfo);
+	mInternals = new CH264VideoCodecInternals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -202,25 +101,130 @@ CH264VideoCodec::~CH264VideoCodec()
 	Delete(mInternals);
 }
 
-// MARK: CVideoCodec methods - Decoding
+// MARK: CVideoCodec methods
+
+//----------------------------------------------------------------------------------------------------------------------
+void CH264VideoCodec::setupForDecode(const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo,
+		const DecodeFrameInfo& decodeFrameInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	DecodeInfo&								h264DecodeInfo = *((DecodeInfo*) &*decodeInfo);
+			CH264VideoCodec::DecodeInfo::SPSPPSInfo	spsppsInfo = h264DecodeInfo.getSPSPPSInfo();
+	const	TArray<CH264VideoCodec::NALUInfo>		spsNALUInfos = spsppsInfo.getSPSNALUInfos();
+	const	TArray<CH264VideoCodec::NALUInfo>		ppsNALUInfos = spsppsInfo.getPPSNALUInfos();
+			OSStatus								status;
+
+	// Setup format description
+			CArray::ItemCount	spsCount = spsNALUInfos.getCount();
+			CArray::ItemCount	ppsCount = ppsNALUInfos.getCount();
+	const	uint8_t*			parameterSetPointers[spsCount + ppsCount];
+			size_t				parameterSetSizes[spsCount + ppsCount];
+	for (CArray::ItemIndex i = 0; i < spsCount; i++) {
+		// Store
+		parameterSetPointers[i] = spsNALUInfos[i].getBytePtr();
+		parameterSetSizes[i] = spsNALUInfos[i].getSize();
+	}
+	for (CArray::ItemIndex i = 0; i < ppsCount; i++) {
+		// Store
+		parameterSetPointers[spsCount + i] = ppsNALUInfos[i].getBytePtr();
+		parameterSetSizes[spsCount + i] = ppsNALUInfos[i].getSize();
+	}
+
+	status =
+			::CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, spsCount + ppsCount,
+					parameterSetPointers, parameterSetSizes, h264DecodeInfo.getNALUHeaderLengthSize(),
+					&mInternals->mFormatDescriptionRef);
+	LogOSStatusIfFailed(status, OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"));
+
+	// Setup Decompression Session
+	VTDecompressionOutputCallbackRecord	decompressionOutputCallbackRecord;
+	decompressionOutputCallbackRecord.decompressionOutputCallback =
+			CH264VideoCodecInternals::decompressionOutputCallback;
+	decompressionOutputCallbackRecord.decompressionOutputRefCon = mInternals;
+
+	CFMutableDictionaryRef	destinationImageBufferAttributes =
+									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
+											&kCFTypeDictionaryValueCallBacks);
+
+	switch (decodeFrameInfo.getCompatibility()) {
+		case CVideoCodec::DecodeFrameInfo::kCompatibilityAppleMetal:
+			// Metal
+			::CFDictionarySetValue(destinationImageBufferAttributes,
+					kCVPixelBufferMetalCompatibilityKey, kCFBooleanTrue);
+			break;
+
+#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+		case CVideoCodec::DecodeFrameInfo::kCompatibilityAppleOpenGLES:
+			// OpenGLES
+			::CFDictionarySetValue(destinationImageBufferAttributes,
+					kCVPixelBufferOpenGLESCompatibilityKey, kCFBooleanTrue);
+			break;
+
+#else
+		case CVideoCodec::DecodeFrameInfo::kCompatibilityAppleOpenGL: {
+			// OpenGL
+			::CFDictionarySetValue(destinationImageBufferAttributes,
+					kCVPixelBufferOpenGLCompatibilityKey, kCFBooleanTrue);
+			::CFDictionarySetValue(destinationImageBufferAttributes,
+					kCVPixelBufferOpenGLTextureCacheCompatibilityKey, kCFBooleanTrue);
+
+			OSType	pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+			::CFDictionarySetValue(destinationImageBufferAttributes,
+					kCVPixelBufferPixelFormatTypeKey,
+					::CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &pixelFormat));
+			} break;
+#endif
+	}
+
+	CFMutableDictionaryRef	videoDecoderSpecification =
+									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
+											&kCFTypeDictionaryKeyCallBacks,
+											&kCFTypeDictionaryValueCallBacks);
+	::CFDictionarySetValue(videoDecoderSpecification, kVTDecompressionPropertyKey_RealTime,
+			kCFBooleanTrue);
+
+	status =
+			::VTDecompressionSessionCreate(kCFAllocatorDefault, mInternals->mFormatDescriptionRef,
+					videoDecoderSpecification, destinationImageBufferAttributes,
+					&decompressionOutputCallbackRecord, &mInternals->mDecompressionSessionRef);
+	::CFRelease(destinationImageBufferAttributes);
+	::CFRelease(videoDecoderSpecification);
+	LogOSStatusIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
+
+	// Finish setup
+	mInternals->mBitParceller = OI<CBitParceller>(CBitParceller(dataSource, true));
+	mInternals->mTimeScale = h264DecodeInfo.getTimeScale();
+	mInternals->mPacketAndLocations = OI<TArray<CCodec::PacketAndLocation> >(h264DecodeInfo.getPacketAndLocations());
+	mInternals->mDecodeFrameInfo = OI<CVideoCodec::DecodeFrameInfo>(decodeFrameInfo);
+
+	CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
+															CData(parameterSetPointers[0],
+																	(CData::Size)
+																			parameterSetSizes[0],
+																	false));
+	mInternals->mCurrentFrameNumberBitCount = spsPayload.mFrameNumberBitCount;
+	mInternals->mCurrentPicOrderCountLSBBitCount = spsPayload.mPicOrderCountLSBBitCount;
+	mInternals->mPicOrderCountMSBChangeThreshold = 1 << (mInternals->mCurrentPicOrderCountLSBBitCount - 1);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CH264VideoCodec::triggerDecode()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	if (mInternals->mNextFrameIndex >= mInternals->mPacketAndLocations.getCount())
+	if (mInternals->mNextFrameIndex >= mInternals->mPacketAndLocations->getCount())
 		return false;
 
 	// Setup
-	CCodec::PacketAndLocation&	packetAndLocation = mInternals->mPacketAndLocations.getAt(mInternals->mNextFrameIndex);
+	CCodec::PacketAndLocation&	packetAndLocation = mInternals->mPacketAndLocations->getAt(mInternals->mNextFrameIndex);
 	OSStatus					status;
 
 	// Read packet
-	OI<SError>	error = mInternals->mBitParceller.setPos(CDataSource::kPositionFromBeginning, packetAndLocation.mPos);
+	OI<SError>	error = mInternals->mBitParceller->setPos(CDataSource::kPositionFromBeginning, packetAndLocation.mPos);
 	LogIfErrorAndReturnValue(error, OSSTR("setting position for video frame packet"), false);
 
-	OI<CData>	data = mInternals->mBitParceller.readData(packetAndLocation.mPacket.mByteCount, error);
+	OI<CData>	data = mInternals->mBitParceller->readData(packetAndLocation.mPacket.mByteCount, error);
 	LogIfErrorAndReturnValue(error, OSSTR("reading video frame packet data"), false);
 
 //CLogServices::logMessage(
@@ -262,25 +266,25 @@ UInt8	frameNum;
 UInt8	picOrderCntLSB;
 UInt8	deltaPicOrderCntBottom;
 
-error = mInternals->mBitParceller.setPos(CDataSource::kPositionFromBeginning, packetAndLocation.mPos);
+error = mInternals->mBitParceller->setPos(CDataSource::kPositionFromBeginning, packetAndLocation.mPos);
 while (true) {
 	//
-	OV<UInt32>	size = mInternals->mBitParceller.readUInt32(error);
-	SInt64		pos = mInternals->mBitParceller.getPos();
+	OV<UInt32>	size = mInternals->mBitParceller->readUInt32(error);
+	SInt64		pos = mInternals->mBitParceller->getPos();
 
-	OV<UInt8>	forbidden_zero_bit = mInternals->mBitParceller.readUInt8(1, error);
-	OV<UInt8>	nal_ref_idc = mInternals->mBitParceller.readUInt8(2, error);
-	OV<UInt8>	nal_unit_type = mInternals->mBitParceller.readUInt8(5, error);
+	OV<UInt8>	forbidden_zero_bit = mInternals->mBitParceller->readUInt8(1, error);
+	OV<UInt8>	nal_ref_idc = mInternals->mBitParceller->readUInt8(2, error);
+	OV<UInt8>	nal_unit_type = mInternals->mBitParceller->readUInt8(5, error);
 	NALUInfo::Type	naluType = (NALUInfo::Type) *nal_unit_type;
 
 	if (naluType == NALUInfo::kTypeCodedSliceNonIDRPicture) {
 		// Coded Slice Non-IDR Picture
-		OV<UInt32>	first_mb_in_slice = mInternals->mBitParceller.readUEColumbusCode(error);
-		OV<UInt32>	slice_type = mInternals->mBitParceller.readUEColumbusCode(error);
-		OV<UInt32>	pic_parameter_set_id = mInternals->mBitParceller.readUEColumbusCode(error);
-		OV<UInt8>	frame_num = mInternals->mBitParceller.readUInt8(mInternals->mCurrentFrameNumberBitCount, error);
-		OV<UInt8>	pic_order_cnt_lsb = mInternals->mBitParceller.readUInt8(mInternals->mCurrentPicOrderCountLSBBitCount, error);
-		OV<UInt32>	delta_pic_order_cnt_bottom = mInternals->mBitParceller.readUEColumbusCode(error);
+		OV<UInt32>	first_mb_in_slice = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt32>	slice_type = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt32>	pic_parameter_set_id = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt8>	frame_num = mInternals->mBitParceller->readUInt8(mInternals->mCurrentFrameNumberBitCount, error);
+		OV<UInt8>	pic_order_cnt_lsb = mInternals->mBitParceller->readUInt8(mInternals->mCurrentPicOrderCountLSBBitCount, error);
+		OV<UInt32>	delta_pic_order_cnt_bottom = mInternals->mBitParceller->readUEColumbusCode(error);
 
 		naluUnitType = *nal_unit_type;
 		sliceType = *slice_type;
@@ -290,13 +294,13 @@ while (true) {
 		break;
 	} else if (naluType == NALUInfo::kTypeCodedSliceIDRPicture) {
 		// Coded Slice IDR Picture
-		OV<UInt32>	first_mb_in_slice = mInternals->mBitParceller.readUEColumbusCode(error);
-		OV<UInt32>	slice_type = mInternals->mBitParceller.readUEColumbusCode(error);
-		OV<UInt32>	pic_parameter_set_id = mInternals->mBitParceller.readUEColumbusCode(error);
-		OV<UInt8>	frame_num = mInternals->mBitParceller.readUInt8(mInternals->mCurrentFrameNumberBitCount, error);
-		OV<UInt32>	idr_pic_id = mInternals->mBitParceller.readUEColumbusCode(error);
-		OV<UInt8>	pic_order_cnt_lsb = mInternals->mBitParceller.readUInt8(mInternals->mCurrentPicOrderCountLSBBitCount, error);
-		OV<UInt32>	delta_pic_order_cnt_bottom = mInternals->mBitParceller.readUEColumbusCode(error);
+		OV<UInt32>	first_mb_in_slice = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt32>	slice_type = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt32>	pic_parameter_set_id = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt8>	frame_num = mInternals->mBitParceller->readUInt8(mInternals->mCurrentFrameNumberBitCount, error);
+		OV<UInt32>	idr_pic_id = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt8>	pic_order_cnt_lsb = mInternals->mBitParceller->readUInt8(mInternals->mCurrentPicOrderCountLSBBitCount, error);
+		OV<UInt32>	delta_pic_order_cnt_bottom = mInternals->mBitParceller->readUEColumbusCode(error);
 
 		naluUnitType = *nal_unit_type;
 		sliceType = *slice_type;
@@ -312,7 +316,7 @@ while (true) {
 	}
 
 	// Next NALU
-	error = mInternals->mBitParceller.setPos(CDataSource::kPositionFromBeginning, pos + *size);
+	error = mInternals->mBitParceller->setPos(CDataSource::kPositionFromBeginning, pos + *size);
 }
 //CLogServices::logMessage(
 //		CString("Packet ") + CString(mInternals->mNextFrameIndex) + CString(" (") + CString(data->getSize()) +

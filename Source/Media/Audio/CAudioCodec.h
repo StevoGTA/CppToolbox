@@ -89,7 +89,7 @@ class CAudioCodec : public CCodec {
 	// Methods
 	public:
 												// Lifecycle methods
-												CAudioCodec() :CCodec() {}
+												CAudioCodec() : CCodec() {}
 												~CAudioCodec() {}
 
 												// Instance methods
@@ -116,7 +116,7 @@ class CDecodeOnlyAudioCodec : public CAudioCodec {
 	// Methods
 	public:
 										// Lifecycle methods
-										CDecodeOnlyAudioCodec() {}
+										CDecodeOnlyAudioCodec() : CAudioCodec() {}
 
 										// CAudioCodec methods
 		TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const
@@ -132,7 +132,7 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 	// Methods
 	public:
 							// Lifecycle methods
-							CEncodeOnlyAudioCodec() {}
+							CEncodeOnlyAudioCodec() : CAudioCodec() {}
 
 							// CAudioCodec methods
 		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,

@@ -89,10 +89,8 @@ OI<SVideoStorageFormat> CH264VideoCodec::composeStorageFormat(const S2DSizeU16& 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local procs
 
-static	I<CVideoCodec>	sInstantiate(OSType id, const I<CDataSource>& dataSource,
-								const I<CCodec::DecodeInfo>& decodeInfo,
-								const CVideoCodec::DecodeFrameInfo& decodeFrameInfo)
-							{ return I<CVideoCodec>(new CH264VideoCodec(dataSource, decodeInfo, decodeFrameInfo)); }
+static	I<CVideoCodec>	sInstantiate(OSType id)
+							{ return I<CVideoCodec>(new CH264VideoCodec()); }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

@@ -65,9 +65,7 @@ class CVideoCodec : public CCodec {
 	public:
 		struct Info {
 			// Procs
-			typedef	I<CVideoCodec>	(*InstantiateProc)(OSType id, const I<CDataSource>& dataSource,
-											const I<CCodec::DecodeInfo>& decodeInfo,
-											const DecodeFrameInfo& decodeFrameInfo);
+			typedef	I<CVideoCodec>	(*InstantiateProc)(OSType id);
 
 									// Lifecycle methods
 									Info(OSType id, const CString& name, InstantiateProc instantiateProc) :
@@ -83,10 +81,8 @@ class CVideoCodec : public CCodec {
 										{ return mID; }
 			const	CString&		getDecodeName() const
 										{ return mDecodeName; }
-					I<CVideoCodec>	instantiate(const I<CDataSource>& dataSource,
-											const I<CCodec::DecodeInfo>& decodeInfo,
-											const DecodeFrameInfo& decodeFrameInfo) const
-										{ return mInstantiateProc(mID, dataSource, decodeInfo, decodeFrameInfo); }
+					I<CVideoCodec>	instantiate() const
+										{ return mInstantiateProc(mID); }
 
 			// Properties
 			private:
@@ -98,10 +94,12 @@ class CVideoCodec : public CCodec {
 	// Methods
 	public:
 							// Lifecycle methods
-							CVideoCodec() {}
+							CVideoCodec() : CCodec() {}
 		virtual				~CVideoCodec() {}
 
-							// Instance methods - Decoding
+							// Instance methods
+		virtual	void		setupForDecode(const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo,
+									const DecodeFrameInfo& decodeFrameInfo) = 0;
 		virtual	bool		triggerDecode() = 0;
 		virtual	OI<SError>	set(const SMediaPosition& mediaPosition) = 0;
 		virtual	OI<SError>	reset() = 0;
@@ -114,5 +112,5 @@ class CDecodeOnlyVideoCodec : public CVideoCodec {
 	// Methods
 	public:
 		// Lifecycle methods
-		CDecodeOnlyVideoCodec() {}
+		CDecodeOnlyVideoCodec() : CVideoCodec() {}
 };
