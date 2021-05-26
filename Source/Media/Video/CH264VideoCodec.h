@@ -80,6 +80,9 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 
 											// Class methods
 		static			TArray<NALUInfo>	getNALUInfos(const CData& data);
+		static			CData				composeAnnexB(const TArray<NALUInfo>& spsNALUInfos,
+													const TArray<NALUInfo>& ppsNALUInfos,
+													const TArray<NALUInfo>& naluInfos);
 
 			// Properties
 			private:
