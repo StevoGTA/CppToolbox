@@ -149,7 +149,18 @@ CString::CString(SInt32 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 CString::CString(SInt64 value, UInt32 fieldSize, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Setup
+	mString.resize(100);
+
+	// Check field size
+	int	count;
+	if (fieldSize == 0)
+		count = _stprintf_s(&mString[0], 100, _TEXT("%lld"), value);
+	else
+		count = _stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*lld") : _TEXT("%*lld"), fieldSize, value);
+
+	// Update
+	mString.resize(count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

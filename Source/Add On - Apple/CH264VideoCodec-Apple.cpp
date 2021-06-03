@@ -18,9 +18,11 @@ class CH264VideoCodecInternals {
 						CH264VideoCodecInternals() :
 							mTimeScale(0),
 									mFormatDescriptionRef(nil), mDecompressionSessionRef(nil),
+									mCurrentFrameNumberBitCount(0), mCurrentPicOrderCountLSBBitCount(0),
+									mPicOrderCountMSBChangeThreshold(0),
+									mPicOrderCountMSB(0), mPreviousPicOrderCountLSB(0), mLastIDRFrameTime(0),
 									mNextFrameIndex(0), mNextFrameTime(0)
-							{
-							}
+							{}
 						~CH264VideoCodecInternals()
 							{
 								// Cleanup
@@ -75,12 +77,11 @@ class CH264VideoCodecInternals {
 		UInt8									mCurrentPicOrderCountLSBBitCount;
 		UInt8									mPicOrderCountMSBChangeThreshold;
 
-		UInt32									mNextFrameIndex;
-		UInt64									mNextFrameTime;
-
 		UInt64									mPicOrderCountMSB;
 		UInt64									mPreviousPicOrderCountLSB;
 		UInt64									mLastIDRFrameTime;
+		UInt32									mNextFrameIndex;
+		UInt64									mNextFrameTime;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
