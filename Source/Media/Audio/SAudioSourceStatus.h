@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	SAudioReadStatus.h			©2020 Stevo Brock	All rights reserved.
+//	SAudioSourceStatus.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -7,23 +7,23 @@
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SAudioReadStatus
+// MARK: SAudioSourceStatus
 
-struct SAudioReadStatus {
+struct SAudioSourceStatus {
 							// Lifecycle methods
-							SAudioReadStatus(const SError& error) : mError(OI<SError>(error)) {}
-							SAudioReadStatus(Float32 sourceProcessed) : mSourceProcessed(sourceProcessed) {}
+							SAudioSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
+							SAudioSourceStatus(Float32 percentConsumed) : mPercentConsumed(percentConsumed) {}
 
 							// Instance methods
 				bool		isSuccess() const
 								{ return !mError.hasInstance(); }
-		const	OV<Float32>	getSourceProcessed() const
-								{ return mSourceProcessed; }
+		const	OV<Float32>	getPercentConsumed() const
+								{ return mPercentConsumed; }
 		const	OI<SError>&	getError() const
 								{ return mError; }
 
 	// Properties
 	private:
-		OV<Float32>	mSourceProcessed;
+		OV<Float32>	mPercentConsumed;
 		OI<SError>	mError;
 };

@@ -85,8 +85,8 @@ class CAudioPlayerReaderThreadInternals {
 						CAudioFrames		audioFrames(writeBufferInfo.mBuffer, mQueue.getSegmentCount(),
 													writeBufferInfo.mSegmentSize / mBytesPerFrame,
 													bytesToRead / mBytesPerFrame, mBytesPerFrame);
-						SAudioReadStatus	audioReadStatus = mAudioPlayer.perform(mMediaPosition, audioFrames);
-						if (audioReadStatus.isSuccess()) {
+						SAudioSourceStatus	audioSourceStatus = mAudioPlayer.perform(mMediaPosition, audioFrames);
+						if (audioSourceStatus.isSuccess()) {
 							// Success
 							mQueue.commitWrite(audioFrames.getCurrentFrameCount() * mBytesPerFrame);
 							mMediaPosition = SMediaPosition::fromCurrent();
@@ -96,9 +96,9 @@ class CAudioPlayerReaderThreadInternals {
 						} else {
 							// Finished
 							mReachedEndOfData = true;
-							if (*audioReadStatus.getError() != SError::mEndOfData)
+							if (*audioSourceStatus.getError() != SError::mEndOfData)
 								// Error
-								mErrorProc(*audioReadStatus.getError(), mProcsUserData);
+								mErrorProc(*audioSourceStatus.getError(), mProcsUserData);
 
 							return false;
 						}

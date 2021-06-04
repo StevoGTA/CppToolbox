@@ -8,7 +8,7 @@
 #include "CCodec.h"
 #include "CDataSource.h"
 #include "SAudioFormats.h"
-#include "SAudioReadStatus.h"
+#include "SAudioSourceStatus.h"
 #include "SMediaPosition.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ class CAudioCodec : public CCodec {
 		virtual	void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 														const I<CDataSource>& dataSource,
 														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
-		virtual	SAudioReadStatus				decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames) =
+		virtual	SAudioSourceStatus				decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames) =
 														0;
 
 		virtual	TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const = 0;
@@ -138,11 +138,11 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 									const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo)
 								{ AssertFailUnimplemented(); }
-		SAudioReadStatus	decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+		SAudioSourceStatus	decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 								{
 									AssertFailUnimplemented();
 
-									return SAudioReadStatus(SError::mUnimplemented);
+									return SAudioSourceStatus(SError::mUnimplemented);
 								}
 
 	protected:

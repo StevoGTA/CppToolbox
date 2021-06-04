@@ -53,7 +53,7 @@ OI<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAudioProcessor::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+SAudioSourceStatus CAudioProcessor::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return (*mInternals->mAudioProcessor)->perform(mediaPosition, audioFrames);

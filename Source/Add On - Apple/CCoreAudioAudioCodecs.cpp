@@ -182,7 +182,7 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+SAudioSourceStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update read position if needed
@@ -196,7 +196,7 @@ SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAu
 	}
 
 	// Setup
-	Float32		sourceProcessed =
+	Float32		percentConsumed =
 						(Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mPacketAndLocations->getCount();
 
 	AudioBufferList	audioBufferList;
@@ -209,11 +209,11 @@ SAudioReadStatus CAACAudioCodec::decode(const SMediaPosition& mediaPosition, CAu
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
 								CAACAudioCodecInternals::fillBufferData, mInternals, &frameCount, &audioBufferList,
 								nil);
-	if (status != noErr) return SAudioReadStatus(*mInternals->mFillBufferDataError);
-	if (frameCount == 0) return SAudioReadStatus(SError::mEndOfData);
+	if (status != noErr) return SAudioSourceStatus(*mInternals->mFillBufferDataError);
+	if (frameCount == 0) return SAudioSourceStatus(SError::mEndOfData);
 
 	// Update
 	audioFrames.completeWrite(frameCount);
 
-	return SAudioReadStatus(sourceProcessed);
+	return SAudioSourceStatus(percentConsumed);
 }

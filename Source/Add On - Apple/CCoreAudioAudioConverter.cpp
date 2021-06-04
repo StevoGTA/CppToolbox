@@ -18,7 +18,7 @@ class CCoreAudioAudioConverterInternals {
 										mOutputAudioBufferList(nil), mAudioConverterRef(nil),
 										mSourceHasMoreToRead(true),
 										mSourceMediaPosition(SMediaPosition::fromStart(0.0)),
-										mSourceSourceProcessed(0.0)
+										mSourcePercentConsumed(0.0)
 								{}
 							~CCoreAudioAudioConverterInternals()
 								{
@@ -41,23 +41,23 @@ class CCoreAudioAudioConverterInternals {
 									OSStatus	status;
 									if (internals.mSourceHasMoreToRead) {
 										// Try to read
-										SAudioReadStatus	audioReadStatus =
+										SAudioSourceStatus	audioSourceStatus =
 																	internals.mAudioConverter.CAudioProcessor::perform(
 																			internals.mSourceMediaPosition,
 																			*internals.mInputAudioFrames);
-										if (audioReadStatus.isSuccess()) {
+										if (audioSourceStatus.isSuccess()) {
 											// Success
 											internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
-											internals.mSourceSourceProcessed = *audioReadStatus.getSourceProcessed();
+											internals.mSourcePercentConsumed = *audioSourceStatus.getPercentConsumed();
 											status = noErr;
-										} else if (*audioReadStatus.getError() == SError::mEndOfData) {
+										} else if (*audioSourceStatus.getError() == SError::mEndOfData) {
 											// End of data
 											internals.mSourceHasMoreToRead = false;
 											internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
 											status = noErr;
 										} else {
 											// Error
-											internals.mFillBufferDataError = audioReadStatus.getError();
+											internals.mFillBufferDataError = audioSourceStatus.getError();
 											status = -1;
 										}
 									} else
@@ -83,7 +83,7 @@ class CCoreAudioAudioConverterInternals {
 		OI<SError>					mFillBufferDataError;
 		bool						mSourceHasMoreToRead;
 		SMediaPosition				mSourceMediaPosition;
-		Float32						mSourceSourceProcessed;
+		Float32						mSourcePercentConsumed;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -167,19 +167,19 @@ OI<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+SAudioSourceStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mSourceMediaPosition = mediaPosition;
 
 	// Setup
-	if ((mediaPosition.getMode() != SMediaPosition::kFromCurrent) && (mInternals->mSourceSourceProcessed != 0.0)) {
+	if ((mediaPosition.getMode() != SMediaPosition::kFromCurrent) && (mInternals->mSourcePercentConsumed != 0.0)) {
 		// Reset
 		OI<SError>	error = reset();
 		if (error.hasInstance())
 			// Error
-			return SAudioReadStatus(*error);
+			return SAudioSourceStatus(*error);
 	}
 
 	UInt32	frameCount = audioFrames.getAvailableFrameCount();
@@ -190,13 +190,13 @@ SAudioReadStatus CCoreAudioAudioConverter::perform(const SMediaPosition& mediaPo
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
 								CCoreAudioAudioConverterInternals::fillBufferData, mInternals, &frameCount,
 								mInternals->mOutputAudioBufferList, nil);
-	if (status != noErr) return SAudioReadStatus(*mInternals->mFillBufferDataError);
-	if (frameCount == 0) return SAudioReadStatus(SError::mEndOfData);
+	if (status != noErr) return SAudioSourceStatus(*mInternals->mFillBufferDataError);
+	if (frameCount == 0) return SAudioSourceStatus(SError::mEndOfData);
 
 	// Update
 	audioFrames.completeWrite(frameCount);
 
-	return SAudioReadStatus(mInternals->mSourceSourceProcessed);
+	return SAudioSourceStatus(mInternals->mSourcePercentConsumed);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

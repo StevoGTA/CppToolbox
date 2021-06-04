@@ -6,7 +6,7 @@
 
 #include "CAudioFrames.h"
 #include "SAudioFormats.h"
-#include "SAudioReadStatus.h"
+#include "SAudioSourceStatus.h"
 #include "SMediaPosition.h"
 #include "TInstance.h"
 
@@ -25,7 +25,7 @@ class CAudioProcessor {
 		virtual	OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
 
-		virtual	SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
+		virtual	SAudioSourceStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 		virtual	OI<SError>						reset();
 
 												// Subclass methods
@@ -88,7 +88,7 @@ class CAudioChannelMapper : public CAudioProcessor {
 				OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
 
-				SAudioReadStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
+				SAudioSourceStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 
 												// Subclass methods
 				TArray<SAudioProcessingSetup>	getInputSetups() const;

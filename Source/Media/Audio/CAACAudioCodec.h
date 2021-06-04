@@ -45,7 +45,7 @@ class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 				void					setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 												const I<CDataSource>& dataSource,
 												const I<CCodec::DecodeInfo>& decodeInfo);
-				SAudioReadStatus		decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
+				SAudioSourceStatus		decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 
 										// Class methods
 		static	OI<SAudioStorageFormat>	composeStorageFormat(UInt16 startCodes, UInt16 channels);

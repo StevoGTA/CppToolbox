@@ -139,7 +139,7 @@ void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& a
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+SAudioSourceStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -154,7 +154,7 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 		SInt64		byteIndex = packetIndex * bytesPerPacket;
 		OI<SError>	error = mInternals->mByteParceller->setPos(CDataSource::kPositionFromBeginning, byteIndex);
 		if (error.hasInstance())
-			return SAudioReadStatus(*error);
+			return SAudioSourceStatus(*error);
 	}
 
 	// Decode packets
@@ -172,7 +172,7 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 				break;
 			else
 				// EOF, no decoded frames
-				return SAudioReadStatus(*error);
+				return SAudioSourceStatus(*error);
 		}
 
 		// Decode packet
@@ -239,7 +239,7 @@ SAudioReadStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& media
 	// Update
 	audioFrames.completeWrite(decodedFrameCount);
 
-	return SAudioReadStatus(
+	return SAudioSourceStatus(
 			(Float32) mInternals->mByteParceller->getPos() / (Float32) mInternals->mByteParceller->getSize());
 }
 

@@ -107,7 +107,7 @@ void CAudioChannelMapper::setOutputFormat(const SAudioProcessingFormat& audioPro
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAudioChannelMapper::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+SAudioSourceStatus CAudioChannelMapper::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -132,16 +132,16 @@ SAudioReadStatus CAudioChannelMapper::perform(const SMediaPosition& mediaPositio
 		mInternals->mInputAudioFrames->reset();
 
 	// Read
-	SAudioReadStatus	audioReadStatus = CAudioProcessor::perform(mediaPosition, *mInternals->mInputAudioFrames);
-	if (!audioReadStatus.isSuccess())
+	SAudioSourceStatus	audioSourceStatus = CAudioProcessor::perform(mediaPosition, *mInternals->mInputAudioFrames);
+	if (!audioSourceStatus.isSuccess())
 		// Error
-		return audioReadStatus;
+		return audioSourceStatus;
 
 	// Perform
 	mInternals->mPerformProc(*mInternals->mInputAudioFrames, audioFrames);
 	audioFrames.completeWrite(mInternals->mInputAudioFrames->getCurrentFrameCount());
 
-	return audioReadStatus;
+	return audioSourceStatus;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

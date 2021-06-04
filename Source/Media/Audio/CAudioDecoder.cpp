@@ -73,7 +73,7 @@ void CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessin
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAudioDecoder::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+SAudioSourceStatus CAudioDecoder::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAudioCodec->decode(mediaPosition, audioFrames);
