@@ -1,25 +1,27 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioTrackDecoder.h			©2020 Stevo Brock	All rights reserved.
+//	CAudioDecoder.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-#include "CAudioTrack.h"
 #include "CAudioProcessor.h"
+#include "CCodec.h"
+#include "CDataSource.h"
 #include "SAudioFormats.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioTrackDecoder
+// MARK: CAudioDecoder
 
-class CAudioTrackDecoderInternals;
-class CAudioTrackDecoder : public CAudioSource {
+class CAudioDecoderInternals;
+class CAudioDecoder : public CAudioSource {
 	// Methods
 	public:
 										// Lifecycle methods
-										CAudioTrackDecoder(const CAudioTrack& audioTrack,
+										CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
+												const I<CCodec::DecodeInfo>& codecDecodeInfo,
 												const I<CDataSource>& dataSource);
-										CAudioTrackDecoder(const CAudioTrackDecoder& other);
-										~CAudioTrackDecoder();
+										CAudioDecoder(const CAudioDecoder& other);
+										~CAudioDecoder();
 
 										// CAudioProcessor methods
 		TArray<SAudioProcessingSetup>	getOutputSetups() const;
@@ -29,5 +31,5 @@ class CAudioTrackDecoder : public CAudioSource {
 
 	// Properties
 	private:
-		CAudioTrackDecoderInternals*	mInternals;
+		CAudioDecoderInternals*	mInternals;
 };

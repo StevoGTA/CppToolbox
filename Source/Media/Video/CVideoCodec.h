@@ -94,8 +94,7 @@ class CVideoCodec : public CCodec {
 	// Methods
 	public:
 							// Lifecycle methods
-							CVideoCodec() : CCodec() {}
-		virtual				~CVideoCodec() {}
+							~CVideoCodec() {}
 
 							// Instance methods
 		virtual	void		setupForDecode(const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo,
@@ -103,6 +102,10 @@ class CVideoCodec : public CCodec {
 		virtual	bool		triggerDecode() = 0;
 		virtual	OI<SError>	set(const SMediaPosition& mediaPosition) = 0;
 		virtual	OI<SError>	reset() = 0;
+
+	protected:
+							// Lifecycle methods
+							CVideoCodec() : CCodec() {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------

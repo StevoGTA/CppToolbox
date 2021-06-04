@@ -4,8 +4,9 @@
 
 #pragma once
 
+#include "CVideoCodec.h"
 #include "CVideoProcessor.h"
-#include "CVideoTrack.h"
+#include "SVideoFormats.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoDecoder
@@ -69,7 +70,8 @@ class CVideoDecoder : public CVideoProcessor {
 	// Methods
 	public:
 					// Lifecycle methods
-					CVideoDecoder(const CVideoTrack& videoTrack, const I<CDataSource>& dataSource,
+					CVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
+							const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource,
 							const CString& identifier, UInt32 trackIndex, const DecodeInfo& decodeInfo,
 							CVideoCodec::DecodeFrameInfo::Compatibility compatibility, const RenderInfo& renderInfo);
 					~CVideoDecoder();

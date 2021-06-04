@@ -89,7 +89,6 @@ class CAudioCodec : public CCodec {
 	// Methods
 	public:
 												// Lifecycle methods
-												CAudioCodec() : CCodec() {}
 												~CAudioCodec() {}
 
 												// Instance methods
@@ -103,6 +102,9 @@ class CAudioCodec : public CCodec {
 		virtual	void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat) = 0;
 
 	protected:
+												// Lifecycle methods
+												CAudioCodec() : CCodec() {}
+
 												// Class methods
 		static	UInt32							getPacketIndex(const SMediaPosition& mediaPosition,
 														const SAudioProcessingFormat& audioProcessingFormat,
@@ -115,14 +117,15 @@ class CAudioCodec : public CCodec {
 class CDecodeOnlyAudioCodec : public CAudioCodec {
 	// Methods
 	public:
-										// Lifecycle methods
-										CDecodeOnlyAudioCodec() : CAudioCodec() {}
-
 										// CAudioCodec methods
 		TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const
 											{ AssertFailUnimplemented(); return TNArray<SAudioProcessingSetup>(); }
 		void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat)
 											{ AssertFailUnimplemented(); }
+
+	protected:
+										// Lifecycle methods
+										CDecodeOnlyAudioCodec() : CAudioCodec() {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -131,9 +134,6 @@ class CDecodeOnlyAudioCodec : public CAudioCodec {
 class CEncodeOnlyAudioCodec : public CAudioCodec {
 	// Methods
 	public:
-							// Lifecycle methods
-							CEncodeOnlyAudioCodec() : CAudioCodec() {}
-
 							// CAudioCodec methods
 		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 									const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo)
@@ -144,4 +144,8 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 
 									return SAudioReadStatus(SError::mUnimplemented);
 								}
+
+	protected:
+							// Lifecycle methods
+							CEncodeOnlyAudioCodec() : CAudioCodec() {}
 };

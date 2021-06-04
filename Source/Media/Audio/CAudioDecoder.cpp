@@ -1,51 +1,55 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CAudioTrackDecoder.cpp			©2020 Stevo Brock	All rights reserved.
+//	CAudioDecoder.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CAudioTrackDecoder.h"
+#include "CAudioDecoder.h"
 
 #include "CCodecRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioTrackDecoderInternals
+// MARK: CAudioDecoderInternals
 
-class CAudioTrackDecoderInternals : public TReferenceCountable<CAudioTrackDecoderInternals> {
+class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals> {
 	public:
-		CAudioTrackDecoderInternals(const CAudioTrack& audioTrack, const I<CDataSource>& dataSource) :
+		CAudioDecoderInternals(const SAudioStorageFormat& audioStorageFormat,
+				const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource) :
 			TReferenceCountable(),
-					mAudioCodecInfo(
-							CCodecRegistry::mShared.getAudioCodecInfo(audioTrack.getAudioStorageFormat().getCodecID())),
-					mAudioTrack(audioTrack), mDataSource(dataSource), mAudioCodec(mAudioCodecInfo.instantiate())
+					mAudioStorageFormat(audioStorageFormat),
+					mAudioCodecInfo(CCodecRegistry::mShared.getAudioCodecInfo(mAudioStorageFormat.getCodecID())),
+					mCodecDecodeInfo(codecDecodeInfo), mDataSource(dataSource),
+							mAudioCodec(mAudioCodecInfo.instantiate())
 			{}
 
-		const	CAudioCodec::Info&	mAudioCodecInfo;
-				CAudioTrack			mAudioTrack;
-				I<CDataSource>		mDataSource;
-				I<CAudioCodec>		mAudioCodec;
+				SAudioStorageFormat		mAudioStorageFormat;
+		const	CAudioCodec::Info&		mAudioCodecInfo;
+				I<CCodec::DecodeInfo>	mCodecDecodeInfo;
+				I<CDataSource>			mDataSource;
+				I<CAudioCodec>			mAudioCodec;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioTrackDecoder
+// MARK: - CAudioDecoder
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrackDecoder::CAudioTrackDecoder(const CAudioTrack& audioTrack, const I<CDataSource>& dataSource) : CAudioSource()
+CAudioDecoder::CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
+		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource) : CAudioSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioTrackDecoderInternals(audioTrack, dataSource);
+	mInternals = new CAudioDecoderInternals(audioStorageFormat, codecDecodeInfo, dataSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrackDecoder::CAudioTrackDecoder(const CAudioTrackDecoder& other) : CAudioSource(other)
+CAudioDecoder::CAudioDecoder(const CAudioDecoder& other) : CAudioSource(other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = other.mInternals->addReference();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrackDecoder::~CAudioTrackDecoder()
+CAudioDecoder::~CAudioDecoder()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->removeReference();
@@ -54,22 +58,22 @@ CAudioTrackDecoder::~CAudioTrackDecoder()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioTrackDecoder::getOutputSetups() const
+TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAudioCodecInfo.getAudioProcessingSetups(mInternals->mAudioTrack.getAudioStorageFormat());
+	return mInternals->mAudioCodecInfo.getAudioProcessingSetups(mInternals->mAudioStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioTrackDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+void CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mDataSource,
-			mInternals->mAudioTrack.getDecodeInfo());
+			mInternals->mCodecDecodeInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CAudioTrackDecoder::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+SAudioReadStatus CAudioDecoder::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAudioCodec->decode(mediaPosition, audioFrames);

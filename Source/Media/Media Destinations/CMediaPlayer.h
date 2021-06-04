@@ -54,8 +54,10 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoDecoder> {
 		virtual	I<CAudioPlayer>		newAudioPlayer(const CString& identifier, UInt32 trackIndex);
 		virtual	void				setAudioGain(Float32 audioGain);
 
-		virtual	I<CVideoDecoder>	newVideoDecoder(const CVideoTrack& videoTrack, const I<CDataSource>& dataSource,
-											const CString& identifier, UInt32 trackIndex,
+		virtual	I<CVideoDecoder>	newVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
+											const I<CCodec::DecodeInfo>& codecDecodeInfo,
+											const I<CDataSource>& dataSource, const CString& identifier,
+											UInt32 trackIndex,
 											CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
 											const CVideoDecoder::RenderInfo& renderInfo);
 
