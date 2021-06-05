@@ -2,12 +2,11 @@
 //	CFilesystem-Apple.mm			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CFilesystem.h"
+#import "CFilesystem.h"
 
-#include "CCoreFoundation.h"
-#include "SError-Apple.h"
-
-#include <Foundation/Foundation.h>
+#import "CCoreFoundation.h"
+#import "NSURL+C++.h"
+#import "SError-Apple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -16,13 +15,6 @@
 				{																					\
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
 					fileFolder.logAsError(CString::mSpaceX4);										\
-				}
-#define	CFilesystemReportErrorFileFolderX1AndReturnError(error, message, fileFolder)				\
-				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
-					fileFolder.logAsError(CString::mSpaceX4);										\
-																									\
-					return OI<SError>(error);														\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
@@ -40,97 +32,126 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolders)
+CFilesystem::GetFoldersFilesResult CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*				url =
-								(NSURL*) CFBridgingRelease(
-										CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(), false));
+	// Setup
+	NSURL*							folderURL =
+											(NSURL*) CFBridgingRelease(
+													CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
+															false));
+	NSDirectoryEnumerationOptions	directoryEnumerationOptions =
+											deep ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants;
 
-	NSError*			error;
-	NSFileManager*		fileManager = [NSFileManager defaultManager];
-	NSArray<NSURL*>*	URLs =
-								[fileManager contentsOfDirectoryAtURL:url includingPropertiesForKeys:nil options:0
-										error:&error];
-	if (URLs != nil) {
-		// Iterate URLs
-		for (url in URLs) {
-			// Determine if file or folder
-			NSNumber*	number;
-			if ([url getResourceValue:&number forKey:NSURLIsDirectoryKey error:nil] && number.boolValue)
-				// Folder
-				outFolders += CFolder(CFilesystemPath(CString((__bridge CFStringRef) url.path)));
-		}
+	// Retrieve urls
+	__block	NSError*						nsError = nil;
+			NSDirectoryEnumerator<NSURL*>*	directoryEnumerator =
+													[NSFileManager.defaultManager enumeratorAtURL:folderURL
+															includingPropertiesForKeys:[NSArray array]
+															options:directoryEnumerationOptions
+															errorHandler:^BOOL(NSURL* url, NSError* error) {
+																// Store
+																nsError = error;
 
-		return OI<SError>();
-	} else
+																// Stop
+																return NO;
+															}];
+	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
+	for (NSURL* url in directoryEnumerator) [urls addObject:url];
+
+	// Check results
+	if (nsError == nil)
+		// Have urls
+		return GetFoldersFilesResult([NSURL foldersFilesFor:urls]);
+	else {
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "getting folders", folder);
+		SError	sError = SErrorFromNSError(nsError);
+		CFilesystemReportErrorFileFolderX1(sError, "getting folders and files", folder);
+
+		return GetFoldersFilesResult(sError);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
+CFilesystem::GetFoldersResult CFilesystem::getFolders(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*				url =
-								(NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
-										false));
+	// Setup
+	NSURL*							folderURL =
+											(NSURL*) CFBridgingRelease(
+													CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
+															false));
+	NSDirectoryEnumerationOptions	directoryEnumerationOptions =
+											deep ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants;
 
-	NSError*			error;
-	NSFileManager*		fileManager = [NSFileManager defaultManager];
-	NSArray<NSURL*>*	URLs =
-								[fileManager contentsOfDirectoryAtURL:url includingPropertiesForKeys:nil options:0
-										error:&error];
-	if (URLs != nil) {
-		// Iterate URLs
-		for (url in URLs) {
-			// Determine if file or folder
-			NSNumber*	number;
-			if ([url getResourceValue:&number forKey:NSURLIsDirectoryKey error:nil] && !number.boolValue)
-				// File
-				outFiles += CFile(CFilesystemPath(CString((__bridge CFStringRef) url.path)));
-		}
+	// Retrieve urls
+	__block	NSError*						nsError = nil;
+			NSDirectoryEnumerator<NSURL*>*	directoryEnumerator =
+													[NSFileManager.defaultManager enumeratorAtURL:folderURL
+															includingPropertiesForKeys:[NSArray array]
+															options:directoryEnumerationOptions
+															errorHandler:^BOOL(NSURL* url, NSError* error) {
+																// Store
+																nsError = error;
 
-		return OI<SError>();
-	} else
+																// Stop
+																return NO;
+															}];
+	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
+	for (NSURL* url in directoryEnumerator) [urls addObject:url];
+
+	// Check results
+	if (nsError == nil)
+		// Have urls
+		return GetFoldersResult([NSURL foldersFor:urls]);
+	else {
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "getting files", folder);
+		SError	sError = SErrorFromNSError(nsError);
+		CFilesystemReportErrorFileFolderX1(sError, "getting folders", folder);
+
+		return GetFoldersResult(sError);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outFolders, TArray<CFile>& outFiles)
+CFilesystem::GetFilesResult CFilesystem::getFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*				url =
-								(NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
-										false));
+	// Setup
+	NSURL*							folderURL =
+											(NSURL*) CFBridgingRelease(
+													CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
+															false));
+	NSDirectoryEnumerationOptions	directoryEnumerationOptions =
+											deep ? 0 : NSDirectoryEnumerationSkipsSubdirectoryDescendants;
 
-	NSError*			error;
-	NSFileManager*		fileManager = [NSFileManager defaultManager];
-	NSArray<NSURL*>*	URLs =
-								[fileManager contentsOfDirectoryAtURL:url includingPropertiesForKeys:nil options:0
-										error:&error];
-	if (URLs != nil) {
-		// Iterate URLs
-		for (url in URLs) {
-			// Determine if file or folder
-			NSNumber*	number;
-			if ([url getResourceValue:&number forKey:NSURLIsDirectoryKey error:nil] && number.boolValue)
-				// Folder
-				outFolders += CFolder(CFilesystemPath(CString((__bridge CFStringRef) url.path)));
-			else
-				// File
-				outFiles += CFile(CFilesystemPath(CString((__bridge CFStringRef) url.path)));
-		}
+	// Retrieve urls
+	__block	NSError*						nsError = nil;
+			NSDirectoryEnumerator<NSURL*>*	directoryEnumerator =
+													[NSFileManager.defaultManager enumeratorAtURL:folderURL
+															includingPropertiesForKeys:[NSArray array]
+															options:directoryEnumerationOptions
+															errorHandler:^BOOL(NSURL* url, NSError* error) {
+																// Store
+																nsError = error;
 
-		return OI<SError>();
-	} else
+																// Stop
+																return NO;
+															}];
+	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
+	for (NSURL* url in directoryEnumerator) [urls addObject:url];
+
+	// Check results
+	if (nsError == nil)
+		// Have urls
+		return GetFilesResult([NSURL filesFor:urls]);
+	else {
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "getting folders and files",
-				folder);
+		SError	sError = SErrorFromNSError(nsError);
+		CFilesystemReportErrorFileFolderX1(sError, "getting files", folder);
+
+		return GetFilesResult(sError);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
