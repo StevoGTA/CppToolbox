@@ -36,22 +36,23 @@ OI<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destina
 				destinationFolder);
 
 	// Get contents of source folder
-	TNArray<CFolder>	folders;
-	TNArray<CFile>		files;
-	OI<SError>			error;
-	error = getFoldersFiles(sourceFolder, folders, files);
-	ReturnErrorIfError(error);
+	GetFoldersFilesResult	getFoldersFilesResult = getFoldersFiles(sourceFolder, true);
+	if (getFoldersFilesResult.getError().hasInstance())
+		// Error
+		return *getFoldersFilesResult.getError();
 
 	// Create folders in destination folder
+	const	SFoldersFiles&	foldersFiles = *getFoldersFilesResult.getFoldersFiles();
+	const	TArray<CFolder>	folders = foldersFiles.getFolders();
 	for (CArray::ItemIndex i = 0; i < folders.getCount(); i++) {
 		// Create folder
 		CFolder	folder(destinationFolder.getFilesystemPath().appendingComponent(folders[i].getName()));
-		error = folder.create();
+		OI<SError>	error = folder.create();
 		ReturnErrorIfError(error);
 	}
 
 	// Copy files
-	error = copy(files, destinationFolder);
+	OI<SError>	error = copy(foldersFiles.getFiles(), destinationFolder);
 	ReturnErrorIfError(error);
 
 	return OI<SError>();
