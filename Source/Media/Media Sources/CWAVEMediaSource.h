@@ -14,7 +14,7 @@ class CWAVEMediaSource : public CChunkMediaSource {
 	// Methods
 	public:
 							// Lifecycle methods
-							CWAVEMediaSource(const I<CDataSource>& dataSource);
+							CWAVEMediaSource(const I<CSeekableDataSource>& seekableDataSource);
 							~CWAVEMediaSource();
 
 							// CMediaSource methods

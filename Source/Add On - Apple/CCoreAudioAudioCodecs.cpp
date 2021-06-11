@@ -4,7 +4,7 @@
 
 #include "CAACAudioCodec.h"
 
-#include "CByteParceller.h"
+#include "CByteReader.h"
 #include "CLogServices-Apple.h"
 #include "SError-Apple.h"
 
@@ -51,13 +51,13 @@ class CAACAudioCodecInternals {
 										if (packetAndLocations.mPacket.mByteCount <= available) {
 											// Add packet
 											OI<SError>	error =
-																internals.mByteParceller->setPos(
-																		CDataSource::kPositionFromBeginning,
+																internals.mByteReader->setPos(
+																		CByteReader::kPositionFromBeginning,
 																		packetAndLocations.mPos);
 											ReturnValueIfError(error, -1);
 
 											error =
-													internals.mByteParceller->readData(packetDataPtr,
+													internals.mByteReader->readData(packetDataPtr,
 															packetAndLocations.mPacket.mByteCount);
 											ReturnValueIfError(error, -1);
 
@@ -109,7 +109,7 @@ class CAACAudioCodecInternals {
 								}
 
 		OSType									mCodecID;
-		OI<CByteParceller>						mByteParceller;
+		OI<CByteReader>							mByteReader;
 		OI<SAudioProcessingFormat>				mAudioProcessingFormat;
 		OI<TArray<CCodec::PacketAndLocation> >	mPacketAndLocations;
 
@@ -145,14 +145,14 @@ CAACAudioCodec::~CAACAudioCodec()
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo)
+		const I<CSeekableDataSource>& seekableDataSource, const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
 	// Store
-	mInternals->mByteParceller = OI<CByteParceller>(CByteParceller(dataSource, true));
+	mInternals->mByteReader = OI<CByteReader>(CByteReader(seekableDataSource, true));
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 	mInternals->mPacketAndLocations = OI<TArray<CCodec::PacketAndLocation> >(aacDecodeInfo.getPacketAndLocations());
 

@@ -4,7 +4,7 @@
 
 #include "CH264VideoCodec.h"
 
-#include "CBitParceller.h"
+#include "CBitReader.h"
 #include "CLogServices-Apple.h"
 
 #include <CoreMedia/CoreMedia.h>
@@ -66,7 +66,7 @@ class CH264VideoCodecInternals {
 								}
 							}
 
-		OI<CBitParceller>						mBitParceller;
+		OI<CBitReader>							mBitReader;
 		UInt32									mTimeScale;
 		OI<TArray<CCodec::PacketAndLocation> >	mPacketAndLocations;
 		OI<CVideoCodec::DecodeFrameInfo>		mDecodeFrameInfo;
@@ -105,8 +105,8 @@ CH264VideoCodec::~CH264VideoCodec()
 // MARK: CVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CH264VideoCodec::setupForDecode(const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo,
-		const DecodeFrameInfo& decodeFrameInfo)
+void CH264VideoCodec::setupForDecode(const I<CSeekableDataSource>& seekableDataSource,
+		const I<CCodec::DecodeInfo>& decodeInfo, const DecodeFrameInfo& decodeFrameInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -194,7 +194,7 @@ void CH264VideoCodec::setupForDecode(const I<CDataSource>& dataSource, const I<C
 	LogOSStatusIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
 
 	// Finish setup
-	mInternals->mBitParceller = OI<CBitParceller>(CBitParceller(dataSource, true));
+	mInternals->mBitReader = OI<CBitReader>(CBitReader(seekableDataSource, true));
 	mInternals->mTimeScale = h264DecodeInfo.getTimeScale();
 	mInternals->mPacketAndLocations = OI<TArray<CCodec::PacketAndLocation> >(h264DecodeInfo.getPacketAndLocations());
 	mInternals->mDecodeFrameInfo = OI<CVideoCodec::DecodeFrameInfo>(decodeFrameInfo);
@@ -222,11 +222,14 @@ bool CH264VideoCodec::triggerDecode()
 	OSStatus					status;
 
 	// Read packet
-	OI<SError>	error = mInternals->mBitParceller->setPos(CDataSource::kPositionFromBeginning, packetAndLocation.mPos);
+	OI<SError>	error = mInternals->mBitReader->setPos(CBitReader::kPositionFromBeginning, packetAndLocation.mPos);
 	LogIfErrorAndReturnValue(error, OSSTR("setting position for video frame packet"), false);
 
-	OI<CData>	data = mInternals->mBitParceller->readData(packetAndLocation.mPacket.mByteCount, error);
+	TIResult<CData>	dataResult = mInternals->mBitReader->readData(packetAndLocation.mPacket.mByteCount);
+	error = dataResult.getError();
 	LogIfErrorAndReturnValue(error, OSSTR("reading video frame packet data"), false);
+
+	const	CData&	data = *dataResult.getValue();
 
 //CLogServices::logMessage(
 //		CString("Packet ") + CString(mInternals->mNextFrameIndex) + CString(" (") + CString(data->getSize()) +
@@ -267,25 +270,25 @@ UInt8	frameNum;
 UInt8	picOrderCntLSB;
 UInt8	deltaPicOrderCntBottom;
 
-error = mInternals->mBitParceller->setPos(CDataSource::kPositionFromBeginning, packetAndLocation.mPos);
+error = mInternals->mBitReader->setPos(CBitReader::kPositionFromBeginning, packetAndLocation.mPos);
 while (true) {
 	//
-	OV<UInt32>	size = mInternals->mBitParceller->readUInt32(error);
-	SInt64		pos = mInternals->mBitParceller->getPos();
+	OV<UInt32>	size = mInternals->mBitReader->readUInt32().getValue();
+	SInt64		pos = mInternals->mBitReader->getPos();
 
-	OV<UInt8>	forbidden_zero_bit = mInternals->mBitParceller->readUInt8(1, error);
-	OV<UInt8>	nal_ref_idc = mInternals->mBitParceller->readUInt8(2, error);
-	OV<UInt8>	nal_unit_type = mInternals->mBitParceller->readUInt8(5, error);
+	OV<UInt8>	forbidden_zero_bit = mInternals->mBitReader->readUInt8(1).getValue();
+	OV<UInt8>	nal_ref_idc = mInternals->mBitReader->readUInt8(2).getValue();
+	OV<UInt8>	nal_unit_type = mInternals->mBitReader->readUInt8(5).getValue();
 	NALUInfo::Type	naluType = (NALUInfo::Type) *nal_unit_type;
 
 	if (naluType == NALUInfo::kTypeCodedSliceNonIDRPicture) {
 		// Coded Slice Non-IDR Picture
-		OV<UInt32>	first_mb_in_slice = mInternals->mBitParceller->readUEColumbusCode(error);
-		OV<UInt32>	slice_type = mInternals->mBitParceller->readUEColumbusCode(error);
-		OV<UInt32>	pic_parameter_set_id = mInternals->mBitParceller->readUEColumbusCode(error);
-		OV<UInt8>	frame_num = mInternals->mBitParceller->readUInt8(mInternals->mCurrentFrameNumberBitCount, error);
-		OV<UInt8>	pic_order_cnt_lsb = mInternals->mBitParceller->readUInt8(mInternals->mCurrentPicOrderCountLSBBitCount, error);
-		OV<UInt32>	delta_pic_order_cnt_bottom = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt32>	first_mb_in_slice = mInternals->mBitReader->readUEColumbusCode().getValue();
+		OV<UInt32>	slice_type = mInternals->mBitReader->readUEColumbusCode().getValue();
+		OV<UInt32>	pic_parameter_set_id = mInternals->mBitReader->readUEColumbusCode().getValue();
+		OV<UInt8>	frame_num = mInternals->mBitReader->readUInt8(mInternals->mCurrentFrameNumberBitCount).getValue();
+		OV<UInt8>	pic_order_cnt_lsb = mInternals->mBitReader->readUInt8(mInternals->mCurrentPicOrderCountLSBBitCount).getValue();
+		OV<UInt32>	delta_pic_order_cnt_bottom = mInternals->mBitReader->readUEColumbusCode().getValue();
 
 		naluUnitType = *nal_unit_type;
 		sliceType = *slice_type;
@@ -295,13 +298,13 @@ while (true) {
 		break;
 	} else if (naluType == NALUInfo::kTypeCodedSliceIDRPicture) {
 		// Coded Slice IDR Picture
-		OV<UInt32>	first_mb_in_slice = mInternals->mBitParceller->readUEColumbusCode(error);
-		OV<UInt32>	slice_type = mInternals->mBitParceller->readUEColumbusCode(error);
-		OV<UInt32>	pic_parameter_set_id = mInternals->mBitParceller->readUEColumbusCode(error);
-		OV<UInt8>	frame_num = mInternals->mBitParceller->readUInt8(mInternals->mCurrentFrameNumberBitCount, error);
-		OV<UInt32>	idr_pic_id = mInternals->mBitParceller->readUEColumbusCode(error);
-		OV<UInt8>	pic_order_cnt_lsb = mInternals->mBitParceller->readUInt8(mInternals->mCurrentPicOrderCountLSBBitCount, error);
-		OV<UInt32>	delta_pic_order_cnt_bottom = mInternals->mBitParceller->readUEColumbusCode(error);
+		OV<UInt32>	first_mb_in_slice = mInternals->mBitReader->readUEColumbusCode().getValue();
+		OV<UInt32>	slice_type = mInternals->mBitReader->readUEColumbusCode().getValue();
+		OV<UInt32>	pic_parameter_set_id = mInternals->mBitReader->readUEColumbusCode().getValue();
+		OV<UInt8>	frame_num = mInternals->mBitReader->readUInt8(mInternals->mCurrentFrameNumberBitCount).getValue();
+		OV<UInt32>	idr_pic_id = mInternals->mBitReader->readUEColumbusCode().getValue();
+		OV<UInt8>	pic_order_cnt_lsb = mInternals->mBitReader->readUInt8(mInternals->mCurrentPicOrderCountLSBBitCount).getValue();
+		OV<UInt32>	delta_pic_order_cnt_bottom = mInternals->mBitReader->readUEColumbusCode().getValue();
 
 		naluUnitType = *nal_unit_type;
 		sliceType = *slice_type;
@@ -317,7 +320,7 @@ while (true) {
 	}
 
 	// Next NALU
-	error = mInternals->mBitParceller->setPos(CDataSource::kPositionFromBeginning, pos + *size);
+	error = mInternals->mBitReader->setPos(CBitReader::kPositionFromBeginning, pos + *size);
 }
 //CLogServices::logMessage(
 //		CString("Packet ") + CString(mInternals->mNextFrameIndex) + CString(" (") + CString(data->getSize()) +
@@ -333,8 +336,8 @@ while (true) {
 	// Setup sample buffer
 	CMBlockBufferRef	blockBufferRef;
 	status =
-			::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) data->getBytePtr(), data->getSize(),
-					kCFAllocatorNull, nil, 0, data->getSize(), 0, &blockBufferRef);
+			::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) data.getBytePtr(), data.getSize(),
+					kCFAllocatorNull, nil, 0, data.getSize(), 0, &blockBufferRef);
 	LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMBlockBufferCreateWithMemoryBlock"), false);
 
 	CMSampleTimingInfo	sampleTimingInfo;
@@ -378,7 +381,7 @@ sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(frameTime, mInternals->mTi
 
 	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime, mInternals->mTimeScale);
 
-	size_t				sampleSize = data->getSize();
+	size_t				sampleSize = data.getSize();
 	CMSampleBufferRef	sampleBufferRef;
 	status =
 			::CMSampleBufferCreate(kCFAllocatorDefault, blockBufferRef, true, nil, nil,

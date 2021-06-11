@@ -11,22 +11,17 @@
 // MARK: CFileDataSource
 
 class CFileDataSourceInternals;
-class CFileDataSource : public CDataSource {
+class CFileDataSource : public CSeekableDataSource {
 	// Methods
 	public:
 					// Lifecycle methods
-					CFileDataSource(const CFile& file);
+					CFileDataSource(const CFile& file, bool buffered = false);
 					~CFileDataSource();
 
-					// CDataSource methods
+					// CSeekableDataSource methods
 		UInt64		getSize() const;
 
-		OI<SError>	readData(void* buffer, UInt64 byteCount);
-
-		SInt64		getPos() const;
-		OI<SError>	setPos(Position position, SInt64 newPos);
-
-		void		reset();
+		OI<SError>	readData(UInt64 position, void* buffer, CData::Size byteCount);
 
 	// Properties
 	private:
@@ -37,22 +32,18 @@ class CFileDataSource : public CDataSource {
 // MARK: - CMappedFileDataSource
 
 class CMappedFileDataSourceInternals;
-class CMappedFileDataSource : public CDataSource {
+class CMappedFileDataSource : public CSeekableDataSource {
 	// Methods
 	public:
 					// Lifecycle methods
+					CMappedFileDataSource(const CFile& file, UInt64 byteOffset, UInt64 byteCount);
 					CMappedFileDataSource(const CFile& file);
 					~CMappedFileDataSource();
 
-					// CDataSource methods
+					// CSeekableDataSource methods
 		UInt64		getSize() const;
 
-		OI<SError>	readData(void* buffer, UInt64 byteCount);
-
-		SInt64		getPos() const;
-		OI<SError>	setPos(Position position, SInt64 newPos);
-
-		void		reset();
+		OI<SError>	readData(UInt64 position, void* buffer, CData::Size byteCount);
 
 	// Properties
 	private:

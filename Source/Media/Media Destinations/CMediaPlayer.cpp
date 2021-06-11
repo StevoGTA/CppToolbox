@@ -25,10 +25,10 @@ class CMediaPlayerAudioPlayer : public CAudioPlayer {
 class CMediaPlayerVideoDecoder : public CVideoDecoder {
 	public:
 		CMediaPlayerVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
-				const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource,
+				const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource,
 				const CString& identifier, UInt32 trackIndex, const DecodeInfo& decodeInfo,
 				CVideoCodec::DecodeFrameInfo::Compatibility compatibility, const RenderInfo& renderInfo) :
-			CVideoDecoder(videoStorageFormat, codecDecodeInfo, dataSource, identifier, trackIndex, decodeInfo,
+			CVideoDecoder(videoStorageFormat, codecDecodeInfo, seekableDataSource, identifier, trackIndex, decodeInfo,
 					compatibility, renderInfo), mMessageQueue(10 * 1024)
 			{}
 
@@ -324,15 +324,15 @@ void CMediaPlayer::setAudioGain(Float32 audioGain)
 
 //----------------------------------------------------------------------------------------------------------------------
 I<CVideoDecoder> CMediaPlayer::newVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
-		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource, const CString& identifier,
-		UInt32 trackIndex, CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
+		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource,
+		const CString& identifier, UInt32 trackIndex, CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
 		const CVideoDecoder::RenderInfo& renderInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create Video Decoder
 	I<CMediaPlayerVideoDecoder>	videoDecoder(
-										new CMediaPlayerVideoDecoder(videoStorageFormat, codecDecodeInfo, dataSource,
-												identifier, trackIndex,
+										new CMediaPlayerVideoDecoder(videoStorageFormat, codecDecodeInfo,
+												seekableDataSource, identifier, trackIndex,
 												CVideoDecoder::DecodeInfo(CMediaPlayerInternals::videoDecoderFrameReady,
 														CMediaPlayerInternals::videoDecoderError, mInternals),
 												compatibility, renderInfo));

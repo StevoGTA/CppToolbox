@@ -19,7 +19,8 @@ class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 
 							// CAudioCodec methods - Decoding
 		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-									const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo);
+									const I<CSeekableDataSource>& seekableDataSource,
+									const I<CCodec::DecodeInfo>& decodeInfo);
 		SAudioSourceStatus	decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
 
 	// Properties

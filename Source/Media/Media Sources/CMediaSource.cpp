@@ -20,7 +20,7 @@ static	SError	sNoAtomInfoError(sAtomMediaSourceErrorDomain, 1, CString(OSSTR("No
 OI<SError> CChunkMediaSource::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mByteParceller.setPos(CDataSource::kPositionFromBeginning, 0);
+	return mByteReader.setPos(CByteReader::kPositionFromBeginning, 0);
 }
 
 // MARK: Instance methods
@@ -30,23 +30,25 @@ OI<CChunkMediaSource::ChunkInfo> CChunkMediaSource::getChunkInfo(OI<SError>& out
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SInt64	pos = mByteParceller.getPos();
+	SInt64	pos = mByteReader.getPos();
 
 	// Read chunk header
 	OSType	id;
 	UInt64	size;
 	if (true) {
 		// Read 32-bit header
-		OV<OSType>	_id = mByteParceller.readOSType(outError);
+		TVResult<OSType>	_id = mByteReader.readOSType();
+		outError = _id.getError();
 		ReturnValueIfError(outError, OI<ChunkInfo>());
-		id = *_id;
+		id = *_id.getValue();
 
-		OV<UInt32>	_size = mByteParceller.readUInt32(outError);
+		TVResult<UInt32>	_size = mByteReader.readUInt32();
+		outError = _size.getError();
 		ReturnValueIfError(outError, OI<ChunkInfo>());
-		size = *_size;
+		size = *_size.getValue();
 	}
 
-	return OI<ChunkInfo>(new ChunkInfo(id, size, pos, mByteParceller.getPos() + size + (size % 1)));
+	return OI<ChunkInfo>(new ChunkInfo(id, size, pos, mByteReader.getPos() + size + (size % 1)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -54,17 +56,20 @@ OI<CData> CChunkMediaSource::getChunk(const ChunkInfo& chunkInfo, OI<SError>& ou
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to begining of chunk
-	outError = mByteParceller.setPos(CDataSource::kPositionFromBeginning, chunkInfo.mThisChunkPos);
+	outError = mByteReader.setPos(CByteReader::kPositionFromBeginning, chunkInfo.mThisChunkPos);
 	ReturnValueIfError(outError, OI<CData>());
 
-	return mByteParceller.readData(chunkInfo.mSize, outError);
+	TIResult<CData>	dataResult = mByteReader.readData(chunkInfo.mSize);
+	outError = dataResult.getError();
+
+	return dataResult.getValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CChunkMediaSource::seekToNextChunk(const ChunkInfo& chunkInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mByteParceller.setPos(CDataSource::kPositionFromBeginning, chunkInfo.mNextChunkPos);
+	return mByteReader.setPos(CByteReader::kPositionFromBeginning, chunkInfo.mNextChunkPos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,7 +82,7 @@ OI<SError> CChunkMediaSource::seekToNextChunk(const ChunkInfo& chunkInfo) const
 OI<SError> CAtomMediaSource::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mByteParceller.setPos(CDataSource::kPositionFromBeginning, 0);
+	return mByteReader.setPos(CByteReader::kPositionFromBeginning, 0);
 }
 
 // Instance methods
@@ -87,26 +92,29 @@ OI<CAtomMediaSource::AtomInfo> CAtomMediaSource::getAtomInfo(OI<SError>& outErro
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read size as UInt32
-	OV<UInt32>	size32 = mByteParceller.readUInt32(outError);
+	TVResult<UInt32>	size32 = mByteReader.readUInt32();
+	outError = size32.getError();
 	ReturnValueIfError(outError, OI<AtomInfo>());
 
 	// Read type as OSType
-	OV<OSType>	type = mByteParceller.readOSType(outError);
+	TVResult<OSType>	type = mByteReader.readOSType();
+	outError = type.getError();
 	ReturnValueIfError(outError, OI<AtomInfo>());
 
 	// Do we need to read large size?
 	UInt64	payloadSize;
-	if (*size32 == 1) {
+	if (*size32.getValue() == 1) {
 		// Yes
-		OV<UInt64>	size64 = mByteParceller.readUInt64(outError);
+		TVResult<UInt64>	size64 = mByteReader.readUInt64();
+		outError = size64.getError();
 		ReturnValueIfError(outError, OI<AtomInfo>());
 
-		payloadSize = *size64 - 12;
+		payloadSize = *size64.getValue() - 12;
 	} else
 		// No
-		payloadSize = *size32 - 8;
+		payloadSize = *size32.getValue() - 8;
 
-	return OI<AtomInfo>(new AtomInfo(*type, mByteParceller.getPos(), payloadSize));
+	return OI<AtomInfo>(new AtomInfo(*type.getValue(), mByteReader.getPos(), payloadSize));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,10 +122,13 @@ OI<CData> CAtomMediaSource::getAtomPayload(const AtomInfo& atomInfo, OI<SError>&
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	outError = mByteParceller.setPos(CDataSource::kPositionFromBeginning, atomInfo.mPayloadPos);
+	outError = mByteReader.setPos(CByteReader::kPositionFromBeginning, atomInfo.mPayloadPos);
 	ReturnValueIfError(outError, OI<CData>());
 
-	return mByteParceller.readData(atomInfo.mPayloadSize, outError);
+	TIResult<CData>	dataResult = mByteReader.readData(atomInfo.mPayloadSize);
+	outError = dataResult.getError();
+
+	return dataResult.getValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -153,7 +164,7 @@ OI<CAtomMediaSource::AtomInfo> CAtomMediaSource::getAtomInfo(const AtomInfo& ato
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	outError = mByteParceller.setPos(CDataSource::kPositionFromBeginning, atomInfo.mPayloadPos + offset);
+	outError = mByteReader.setPos(CByteReader::kPositionFromBeginning, atomInfo.mPayloadPos + offset);
 	ReturnValueIfError(outError, OI<AtomInfo>());
 
 	// Read
@@ -166,12 +177,12 @@ OI<CAtomMediaSource::AtomGroup> CAtomMediaSource::getAtomGroup(const AtomInfo& g
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	outError = mByteParceller.setPos(CDataSource::kPositionFromBeginning, groupAtomInfo.mPayloadPos);
+	outError = mByteReader.setPos(CByteReader::kPositionFromBeginning, groupAtomInfo.mPayloadPos);
 	ReturnValueIfError(outError, OI<AtomGroup>());
 
 	// Read Atom
 	TNArray<AtomInfo>	atomInfos;
-	while (mByteParceller.getPos() - (groupAtomInfo.mPayloadPos + groupAtomInfo.mPayloadSize)) {
+	while (mByteReader.getPos() - (groupAtomInfo.mPayloadPos + groupAtomInfo.mPayloadSize)) {
 		// Get atom info
 		OI<AtomInfo>	atomInfo = getAtomInfo(outError);
 		ReturnValueIfError(outError, OI<AtomGroup>());
@@ -207,5 +218,5 @@ OI<CAtomMediaSource::AtomGroup> CAtomMediaSource::getAtomGroup(const OR<AtomInfo
 OI<SError> CAtomMediaSource::seekToNextAtom(const AtomInfo& atomInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mByteParceller.setPos(CDataSource::kPositionFromBeginning, atomInfo.mPayloadPos + atomInfo.mPayloadSize);
+	return mByteReader.setPos(CByteReader::kPositionFromBeginning, atomInfo.mPayloadPos + atomInfo.mPayloadSize);
 }

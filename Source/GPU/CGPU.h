@@ -8,7 +8,7 @@
 #include "CGPUTexture.h"
 #include "CVideoCodec.h"
 #include "SGPUBuffer.h"
-#include "TInstance.h"
+#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPU

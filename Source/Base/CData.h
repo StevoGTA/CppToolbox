@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CString.h"
+#include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CData
@@ -13,8 +13,8 @@ class CDataInternals;
 class CData {
 	// Types
 	public:
-		typedef	UInt32	Size;
-		typedef	UInt32	ByteIndex;
+		typedef	UInt64	Size;
+		typedef	UInt64	ByteIndex;
 
 	// Methods
 	public:

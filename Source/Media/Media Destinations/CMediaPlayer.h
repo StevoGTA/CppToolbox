@@ -56,7 +56,7 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoDecoder> {
 
 		virtual	I<CVideoDecoder>	newVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
 											const I<CCodec::DecodeInfo>& codecDecodeInfo,
-											const I<CDataSource>& dataSource, const CString& identifier,
+											const I<CSeekableDataSource>& seekableDataSource, const CString& identifier,
 											UInt32 trackIndex,
 											CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
 											const CVideoDecoder::RenderInfo& renderInfo);

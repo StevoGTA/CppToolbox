@@ -52,12 +52,12 @@ static	void	sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t 
 
 class CImageInternals : public TReferenceCountable<CImageInternals> {
 	public:
-		CImageInternals(const I<CDataSource>& dataSource, OV<CImage::Type> type) :
-			TReferenceCountable(), mDataSource(dataSource), mType(type)
+		CImageInternals(const CData& data, OV<CImage::Type> type) :
+			TReferenceCountable(), mData(data), mType(type)
 			{}
 
-		const	I<CDataSource>		mDataSource;
-				OV<CImage::Type>	mType;
+		CData				mData;
+		OV<CImage::Type>	mType;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -67,11 +67,11 @@ class CImageInternals : public TReferenceCountable<CImageInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CImage::CImage(const I<CDataSource>& dataSource, OV<Type> type)
+CImage::CImage(const CData& data, OV<Type> type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CImageInternals(dataSource, type);
+	mInternals = new CImageInternals(data, type);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,27 +94,21 @@ CImage::~CImage()
 CBitmap CImage::getBitmap() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get data
-	OI<SError>	error;
-	OI<CData>	data = mInternals->mDataSource->readData(error);
-	mInternals->mDataSource->reset();
-	ReturnValueIfError(error, CBitmap());
-
 	// Setup/Validate image type
 	if (!mInternals->mType.hasValue())
 		// Determine from data
-		mInternals->mType = getTypeFromData(*data);
+		mInternals->mType = getTypeFromData(mInternals->mData);
 	AssertFailIf(!mInternals->mType.hasValue());
 
 	// Check image type
 	switch (*mInternals->mType) {
 		case kTypeJPEG:
 			// JPEG
-			return sDecodeJPEGData(*data);
+			return sDecodeJPEGData(mInternals->mData);
 
 		case kTypePNG:
 			// PNG
-			return sDecodePNGData(*data);
+			return sDecodePNGData(mInternals->mData);
 
 #if TARGET_OS_WINDOWS
 		default:
@@ -127,10 +121,10 @@ CBitmap CImage::getBitmap() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap CImage::getBitmap(const I<CDataSource>& dataSource)
+CBitmap CImage::getBitmap(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CImage(dataSource).getBitmap();
+	return CImage(data).getBitmap();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

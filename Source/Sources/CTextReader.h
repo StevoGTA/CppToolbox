@@ -1,33 +1,31 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CTextParceller.h			©2019 Stevo Brock	All rights reserved.
+//	CTextReader.h			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
 #include "CDataSource.h"
 #include "CString.h"
-#include "TInstance.h"
+#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CTextParceller
+// MARK: CTextReader
 
-class CTextParcellerInternals;
-class CTextParceller {
+class CTextReaderInternals;
+class CTextReader {
 	// Methods
 	public:
-				// Lifecycle methods
-				CTextParceller(const I<CDataSource>& dataSource);
-				CTextParceller(const CTextParceller& other);
-				~CTextParceller();
+							// Lifecycle methods
+							CTextReader(const I<CSeekableDataSource>& seekableDataSource);
+							CTextReader(const CTextReader& other);
+							~CTextReader();
 
-				// Instance methods
-		UInt64	getSize() const;
+							// Instance methods
+		UInt64				getSize() const;
 
-		CString	readStringToEOL(OI<SError>& outError);
-
-		void	reset() const;
+		TIResult<CString>	readStringToEOL();
 
 	// Properties
 	private:
-		CTextParcellerInternals*	mInternals;
+		CTextReaderInternals*	mInternals;
 };

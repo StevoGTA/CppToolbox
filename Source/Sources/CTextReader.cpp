@@ -1,44 +1,49 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CTextParceller.cpp			©2019 Stevo Brock	All rights reserved.
+//	CTextReader.cpp			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CTextParceller.h"
+#include "CTextReader.h"
 
 #include "CDataSource.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CTextParcellerInternals
+// MARK: CTextReaderInternals
 
-class CTextParcellerInternals : public TReferenceCountable<CTextParcellerInternals> {
+class CTextReaderInternals : public TReferenceCountable<CTextReaderInternals> {
 	public:
-		CTextParcellerInternals(const I<CDataSource>& dataSource) : TReferenceCountable(), mDataSource(dataSource) {}
+		CTextReaderInternals(const I<CSeekableDataSource>& seekableDataSource) :
+			TReferenceCountable(),
+					mSeekableDataSource(seekableDataSource), mDataSourceOffset(0), mSize(mSeekableDataSource->getSize())
+			{}
 
-		I<CDataSource>	mDataSource;
+		I<CSeekableDataSource>	mSeekableDataSource;
+		UInt64					mDataSourceOffset;
+		UInt64					mSize;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CTextParceller
+// MARK: - CTextReader
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CTextParceller::CTextParceller(const I<CDataSource>& dataSource)
+CTextReader::CTextReader(const I<CSeekableDataSource>& seekableDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CTextParcellerInternals(dataSource);
+	mInternals = new CTextReaderInternals(seekableDataSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CTextParceller::CTextParceller(const CTextParceller& other)
+CTextReader::CTextReader(const CTextReader& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = other.mInternals->addReference();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CTextParceller::~CTextParceller()
+CTextReader::~CTextReader()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->removeReference();
@@ -47,14 +52,14 @@ CTextParceller::~CTextParceller()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CTextParceller::getSize() const
+UInt64 CTextReader::getSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mDataSource->getSize();
+	return mInternals->mSize;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CTextParceller::readStringToEOL(OI<SError>& outError)
+TIResult<CString> CTextReader::readStringToEOL()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -63,19 +68,19 @@ CString CTextParceller::readStringToEOL(OI<SError>& outError)
 	bool	foundEnd = false;
 	while (!foundEnd) {
 		// First, read as much as we can
-		UInt64	bytesRead = std::min<UInt64>(1024, getSize() - mInternals->mDataSource->getPos());
-		if (bytesRead == 0) {
+		UInt64	bytesRead = std::min<UInt64>(1024, mInternals->mSize - mInternals->mDataSourceOffset);
+		if (bytesRead == 0)
 			// EOF
-			outError = outString.isEmpty() ? OI<SError>(SError::mEndOfData) : OI<SError>();
+			return outString.isEmpty() ? TIResult<CString>(SError::mEndOfData) : TIResult<CString>(outString);
 
-			return outString;
-		}
-
+		// Read
 		TBuffer<char>	buffer((UInt32) bytesRead + 1);
-		outError = mInternals->mDataSource->readData(*buffer, bytesRead);
-		if (outError.hasInstance())
-			// Error
-			return CString::mEmpty;
+		OI<SError>		error =
+								mInternals->mSeekableDataSource->readData(mInternals->mDataSourceOffset, *buffer,
+										bytesRead);
+		ReturnValueIfError(error, TIResult<CString>(*error));
+
+		mInternals->mDataSourceOffset += bytesRead;
 
 		// Did we actually read anything?
 		if (bytesRead > 0) {
@@ -108,9 +113,8 @@ CString CTextParceller::readStringToEOL(OI<SError>& outError)
 				}
 			}
 
-			// Reset the file's position to the beginning of the next line
-			outError = mInternals->mDataSource->setPos(CDataSource::kPositionFromCurrent, delta);
-			ReturnValueIfError(outError, outString);
+			// Seek to beginning of the next line
+			mInternals->mDataSourceOffset += delta;
 
 			// Append the chars we found to the return string
 			outString += CString(*buffer);
@@ -118,12 +122,5 @@ CString CTextParceller::readStringToEOL(OI<SError>& outError)
 			foundEnd = true;
 	}
 
-	return outString;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CTextParceller::reset() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mDataSource->reset();
+	return TIResult<CString>(outString);
 }

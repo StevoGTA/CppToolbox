@@ -8,7 +8,7 @@
 #include "SAudioFormats.h"
 #include "SAudioSourceStatus.h"
 #include "SMediaPosition.h"
-#include "TInstance.h"
+#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioProcessor

@@ -53,7 +53,7 @@ class CGPUTextureManager {
 
 	// Procs
 	public:
-		typedef	CBitmap	(*BitmapProc)(const I<CDataSource>& dataSource);
+		typedef	CBitmap	(*BitmapProc)(const CData& data);
 
 	// Methods
 	public:

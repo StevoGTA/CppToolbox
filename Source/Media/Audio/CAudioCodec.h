@@ -93,7 +93,7 @@ class CAudioCodec : public CCodec {
 
 												// Instance methods
 		virtual	void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-														const I<CDataSource>& dataSource,
+														const I<CSeekableDataSource>& seekableDataSource,
 														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
 		virtual	SAudioSourceStatus				decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames) =
 														0;
@@ -136,7 +136,8 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 	public:
 							// CAudioCodec methods
 		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-									const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo)
+									const I<CSeekableDataSource>& seekableDataSource,
+									const I<CCodec::DecodeInfo>& decodeInfo)
 								{ AssertFailUnimplemented(); }
 		SAudioSourceStatus	decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 								{

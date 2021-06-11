@@ -7,7 +7,7 @@
 #include "CArray.h"
 #include "CAudioTrack.h"
 #include "CVideoTrack.h"
-#include "CByteParceller.h"
+#include "CByteReader.h"
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -27,7 +27,7 @@ class CMediaSource {
 
 	protected:
 									// Subclass methods
-		virtual	OI<SError>			reset() = 0;
+//		virtual	OI<SError>			reset() = 0;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ class CChunkMediaSource : public CMediaSource {
 	// Methods
 	protected:
 						// Lifecycle methods
-						CChunkMediaSource(const CByteParceller& byteParceller) : mByteParceller(byteParceller) {}
+						CChunkMediaSource(const CByteReader& byteReader) : mByteReader(byteReader) {}
 
 						// CMediaSource methods
 		OI<SError>		reset();
@@ -64,7 +64,7 @@ class CChunkMediaSource : public CMediaSource {
 
 	// Properties
 	protected:
-		CByteParceller	mByteParceller;
+		CByteReader	mByteReader;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ class CAtomMediaSource : public CMediaSource {
 	// Methods
 	protected:
 						// Lifecycle methods
-						CAtomMediaSource(const CByteParceller& byteParceller) : mByteParceller(byteParceller) {}
+						CAtomMediaSource(const CByteReader& byteReader) : mByteReader(byteReader) {}
 
 						// CMediaSource methods
 		OI<SError>		reset();
@@ -126,5 +126,5 @@ class CAtomMediaSource : public CMediaSource {
 
 	// Properties
 	protected:
-		CByteParceller	mByteParceller;
+		CByteReader	mByteReader;
 };

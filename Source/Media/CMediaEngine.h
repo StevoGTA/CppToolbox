@@ -6,7 +6,7 @@
 
 #include "CAudioProcessor.h"
 #include "CMediaDestination.h"
-#include "TInstance.h"
+#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaEngine

@@ -14,7 +14,7 @@ class CMPEG4MediaSource : public CAtomMediaSource {
 	// Methods
 	public:
 							// Lifecycle methods
-							CMPEG4MediaSource(const I<CDataSource>& dataSource);
+							CMPEG4MediaSource(const I<CSeekableDataSource>& seekableDataSource);
 							~CMPEG4MediaSource();
 
 							// CMediaSource methods

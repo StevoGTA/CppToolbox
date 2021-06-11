@@ -7,42 +7,29 @@
 #include "CData.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDataSource
+// MARK: CSeekableDataSource
 
 // MARK: Properties
 
-SError	CDataSource::mSetPosBeforeStartError(CString(OSSTR("CDataSource")), 1,
+SError	CSeekableDataSource::mSetPosBeforeStartError(CString(OSSTR("CDataSource")), 1,
 				CString(OSSTR("Data source set position before start")));
-SError	CDataSource::mSetPosAfterEndError(CString(OSSTR("CDataSource")), 2,
+SError	CSeekableDataSource::mSetPosAfterEndError(CString(OSSTR("CDataSource")), 2,
 				CString(OSSTR("Data source set position after end")));
 
-//----------------------------------------------------------------------------------------------------------------------
-OI<CData> CDataSource::readData(UInt64 byteCount, OI<SError>& outError)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	OI<CData>	data(new CData((CData::Size) byteCount));
-
-	// Read
-	outError = readData(data->getMutableBytePtr(), byteCount);
-	ReturnValueIfError(outError, OI<CData>());
-
-	return data;
-}
+// MARK: CDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CData> CDataSource::readData(OI<SError>& outError)
+TIResult<CData> CSeekableDataSource::readData()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64		byteCount = getSize() - getPos();
-	OI<CData>	data(new CData((CData::Size) byteCount));
+	CData	data((CData::Size) getSize());
 
 	// Read
-	outError = readData(data->getMutableBytePtr(), byteCount);
-	ReturnValueIfError(outError, OI<CData>());
+	OI<SError>	error = readData(0, data.getMutableBytePtr(), getSize());
+	ReturnValueIfError(error, TIResult<CData>(*error));
 
-	return data;
+	return TIResult<CData>(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,71 +74,17 @@ UInt64 CDataDataSource::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDataDataSource::readData(void* buffer, UInt64 byteCount)
+OI<SError> CDataDataSource::readData(UInt64 position, void* buffer, CData::Size byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	if (byteCount > (mInternals->mData.getSize() - mInternals->mCurrentOffset))
+	AssertFailIf((position + byteCount) > mInternals->mData.getSize());
+	if ((position + byteCount) > mInternals->mData.getSize())
 		// Attempting to ready beyond end of data
 		return OI<SError>(SError::mEndOfData);
 
-	// Copy
-	::memcpy(buffer, (UInt8*) mInternals->mData.getBytePtr() + mInternals->mCurrentOffset, byteCount);
-
-	// Update
-	mInternals->mCurrentOffset += byteCount;
+	// Copy bytes
+	::memcpy(buffer, (UInt8*) mInternals->mData.getBytePtr() + position, byteCount);
 
 	return OI<SError>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-SInt64 CDataDataSource::getPos() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mCurrentOffset;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDataDataSource::setPos(Position position, SInt64 newPos)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Figure new offset
-	SInt64	offset;
-	switch (position) {
-		case kPositionFromBeginning:
-			// From beginning
-			offset = newPos;
-			break;
-
-		case kPositionFromCurrent:
-			// From current
-			offset = mInternals->mCurrentOffset + newPos;
-			break;
-
-		case kPositionFromEnd:
-			// From end
-			offset = mInternals->mData.getSize() - newPos;
-			break;
-	}
-
-	// Ensure new offset is within available window
-	AssertFailIf(offset < 0)
-	if (offset < 0)
-		return CDataSource::mSetPosBeforeStartError;
-
-	AssertFailIf(offset > (SInt64) mInternals->mData.getSize());
-	if (offset > (SInt64) mInternals->mData.getSize())
-		return CDataSource::mSetPosAfterEndError;
-
-	// Set
-	mInternals->mCurrentOffset = offset;
-
-	return OI<SError>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CDataDataSource::reset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mCurrentOffset = 0;
 }

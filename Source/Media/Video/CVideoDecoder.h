@@ -71,8 +71,9 @@ class CVideoDecoder : public CVideoProcessor {
 	public:
 					// Lifecycle methods
 					CVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
-							const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource,
-							const CString& identifier, UInt32 trackIndex, const DecodeInfo& decodeInfo,
+							const I<CCodec::DecodeInfo>& codecDecodeInfo,
+							const I<CSeekableDataSource>& seekableDataSource, const CString& identifier,
+							UInt32 trackIndex, const DecodeInfo& decodeInfo,
 							CVideoCodec::DecodeFrameInfo::Compatibility compatibility, const RenderInfo& renderInfo);
 					~CVideoDecoder();
 

@@ -31,8 +31,8 @@ class CWAVEMediaSourceInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CWAVEMediaSource::CWAVEMediaSource(const I<CDataSource>& dataSource) :
-		CChunkMediaSource(CByteParceller(dataSource, false))
+CWAVEMediaSource::CWAVEMediaSource(const I<CSeekableDataSource>& seekableDataSource) :
+		CChunkMediaSource(CByteReader(seekableDataSource, false))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CWAVEMediaSourceInternals();
@@ -60,7 +60,7 @@ OI<SError> CWAVEMediaSource::loadTracks()
 
 	// Verify it's a WAVE Media Source
 	SWAVEFORMChunk32	formChunk32;
-	error = mByteParceller.readData(&formChunk32, sizeof(SWAVEFORMChunk32));
+	error = mByteReader.readData(&formChunk32, sizeof(SWAVEFORMChunk32));
 	ReturnErrorIfError(error);
 	if ((formChunk32.getID() != kWAVEFORMChunkID) || (formChunk32.getFormType() != kWAVEFORMType))
 		// Not a WAVE file
@@ -102,8 +102,8 @@ OI<SError> CWAVEMediaSource::loadTracks()
 
 			case kWAVEDataChunkID:
 				// Data chunk
-				dataStartOffset = mByteParceller.getPos();
-				dataSize = std::min<SInt64>(chunkInfo->mSize, mByteParceller.getSize() - dataStartOffset);
+				dataStartOffset = mByteReader.getPos();
+				dataSize = std::min<SInt64>(chunkInfo->mSize, mByteReader.getSize() - dataStartOffset);
 				break;
 		}
 

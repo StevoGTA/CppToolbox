@@ -17,16 +17,16 @@ static	SError	sInvalidTokenError(sErrorDomain, 2, CString(OSSTR("Invalid Token")
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local method declarations
 
-static	OI<SError>		sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array);
-static	OI<SError>		sAddArrayOfStrings(CData& data, const TArray<CString>& array);
-static	OI<SError>		sAddDictionary(CData& data, const CDictionary& dictionary);
-static	void			sAddString(CData& data, const CString& string);
+static	OI<SError>				sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array);
+static	OI<SError>				sAddArrayOfStrings(CData& data, const TArray<CString>& array);
+static	OI<SError>				sAddDictionary(CData& data, const CDictionary& dictionary);
+static	void					sAddString(CData& data, const CString& string);
 
-static	OI<CDictionary>	sReadDictionary(const SInt8*& charPtr, OI<SError>& outError);
-static	OI<CString>		sReadString(const SInt8*& charPtr, OI<SError>& outError);
-static	OI<SValue>		sReadValue(const SInt8*& charPtr, OI<SError>& outError);
-static	void			sSkipWhitespace(const SInt8*& charPtr);
-static	OI<SError>		sValidateToken(const SInt8*& charPtr, char token, bool advance = false);
+static	TIResult<CDictionary>	sReadDictionary(const SInt8*& charPtr);
+static	TIResult<CString>		sReadString(const SInt8*& charPtr);
+static	TIResult<SValue>		sReadValue(const SInt8*& charPtr);
+static	void					sSkipWhitespace(const SInt8*& charPtr);
+static	OI<SError>				sValidateToken(const SInt8*& charPtr, char token, bool advance = false);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -35,19 +35,17 @@ static	OI<SError>		sValidateToken(const SInt8*& charPtr, char token, bool advanc
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CJSON::DictionaryResult CJSON::dictionaryFrom(const CData& data)
+TIResult<CDictionary> CJSON::dictionaryFrom(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read dictionary
-			OI<SError>		error;
-	const	SInt8*			charPtr = (const SInt8*) data.getBytePtr();
-			OI<CDictionary>	dictionary = sReadDictionary(charPtr, error);
+	const	SInt8*	charPtr = (const SInt8*) data.getBytePtr();
 
-	return dictionary.hasInstance() ? DictionaryResult(*dictionary) : DictionaryResult(*error);
+	return sReadDictionary(charPtr);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CJSON::DataResult CJSON::dataFrom(const CDictionary& dictionary)
+TIResult<CData> CJSON::dataFrom(const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -57,9 +55,9 @@ CJSON::DataResult CJSON::dataFrom(const CDictionary& dictionary)
 	OI<SError>	error = sAddDictionary(data, dictionary);
 	if (error.hasInstance())
 		// Error
-		return DataResult(*error);
+		return TIResult<CData>(*error);
 
-	return DataResult(data);
+	return TIResult<CData>(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -137,6 +135,11 @@ OI<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 		// Add value
 		OI<SError>	error;
 		switch (iterator->mValue.getType()) {
+			case SValue::kEmpty:
+				// Empty (null)
+				data.appendBytes("null", 4);
+				break;
+
 			case SValue::kArrayOfDictionaries:
 				// Array of dictionaries
 				error = sAddArrayOfDictionaries(data, iterator->mValue.getArrayOfDictionaries());
@@ -253,12 +256,12 @@ void sAddString(CData& data, const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CDictionary> sReadDictionary(const SInt8*& charPtr, OI<SError>& outError)
+TIResult<CDictionary> sReadDictionary(const SInt8*& charPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Validate start token
-	outError = sValidateToken(charPtr, '{', true);
-	ReturnValueIfError(outError, OI<CDictionary>());
+	OI<SError>	error = sValidateToken(charPtr, '{', true);
+	ReturnValueIfError(error, TIResult<CDictionary>(*error));
 
 	// Skip whitespace
 	sSkipWhitespace(charPtr);
@@ -269,24 +272,24 @@ OI<CDictionary> sReadDictionary(const SInt8*& charPtr, OI<SError>& outError)
 		// Inspect token
 		if (*charPtr == '\"') {
 			// Read key
-			OI<CString>	key = sReadString(charPtr, outError);
-			ReturnValueIfError(outError, OI<CDictionary>());
+			TIResult<CString>	keyResult = sReadString(charPtr);
+			ReturnValueIfError(keyResult.getError(), TIResult<CDictionary>(*keyResult.getError()));
 
 			// Skip whitespace
 			sSkipWhitespace(charPtr);
 
 			// Validate token
-			outError = sValidateToken(charPtr, ':', true);
-			ReturnValueIfError(outError, OI<CDictionary>());
+			error = sValidateToken(charPtr, ':', true);
+			ReturnValueIfError(error, TIResult<CDictionary>(*error));
 
 			// Read value
-			OI<SValue>	value = sReadValue(charPtr, outError);
-			ReturnValueIfError(outError, OI<CDictionary>());
+			TIResult<SValue>	valueResult = sReadValue(charPtr);
+			ReturnValueIfError(valueResult.getError(), TIResult<CDictionary>(*valueResult.getError()));
 
 			// Check if got value
-			if (value.hasInstance())
+			if (valueResult.getValue().hasInstance())
 				// Store
-				dictionary.set(*key, *value);
+				dictionary.set(*keyResult.getValue(), *valueResult.getValue());
 
 			// Skip whitespace
 			sSkipWhitespace(charPtr);
@@ -297,33 +300,27 @@ OI<CDictionary> sReadDictionary(const SInt8*& charPtr, OI<SError>& outError)
 				charPtr++;
 
 				sSkipWhitespace(charPtr);
-			} else if (*charPtr != '}') {
+			} else if (*charPtr != '}')
 				// Invalid token
-				outError =  OI<SError>(sInvalidTokenError);
-
-				return OI<CDictionary>();
-			}
+				return TIResult<CDictionary>(sInvalidTokenError);
 		} else if (*charPtr == '}') {
 			// End
 			charPtr++;
 
-			return OI<CDictionary>(dictionary);
-		} else {
+			return TIResult<CDictionary>(dictionary);
+		} else
 			// Invalid token
-			outError =  OI<SError>(sInvalidTokenError);
-
-			return OI<CDictionary>();
-		}
+			return TIResult<CDictionary>(sInvalidTokenError);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CString> sReadString(const SInt8*& charPtr, OI<SError>& outError)
+TIResult<CString> sReadString(const SInt8*& charPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Validate opening "
-	outError = sValidateToken(charPtr, '\"', true);
-	ReturnValueIfError(outError, OI<CString>());
+	OI<SError>	error = sValidateToken(charPtr, '\"', true);
+	ReturnValueIfError(error, TIResult<CString>(*error));
 
 	// Scan looking for closing "
 	const	SInt8*	startCharPtr = charPtr;
@@ -336,7 +333,7 @@ OI<CString> sReadString(const SInt8*& charPtr, OI<SError>& outError)
 			// End quote
 			charPtr++;
 
-			return OI<CString>(
+			return TIResult<CString>(
 					CString((char*) startCharPtr, (CString::Length) (charPtr - startCharPtr - 1),
 									CString::kEncodingUTF8)
 							.replacingSubStrings(CString(OSSTR("\\\"")), CString(OSSTR("\"")))
@@ -354,26 +351,31 @@ OI<CString> sReadString(const SInt8*& charPtr, OI<SError>& outError)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SValue> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
+TIResult<SValue> sReadValue(const SInt8*& charPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Skip whitespace
 	sSkipWhitespace(charPtr);
 
 	// Check token
-	OI<SValue>	value;
 	if (*charPtr == '\"') {
 		// String
-		OI<CString>	string = sReadString(charPtr, outError);
-		ReturnValueIfError(outError, value);
+		TIResult<CString>	result = sReadString(charPtr);
+		ReturnValueIfError(result.getError(), TIResult<SValue>(*result.getError()));
 
-		value = OI<SValue>(SValue(*string));
+		// Skip whitespace
+		sSkipWhitespace(charPtr);
+
+		return TIResult<SValue>(SValue(*result.getValue()));
 	} else if (*charPtr == '{') {
 		// Dictionary
-		OI<CDictionary>	dictionary = sReadDictionary(charPtr, outError);
-		ReturnValueIfError(outError, value);
+		TIResult<CDictionary>	result = sReadDictionary(charPtr);
+		ReturnValueIfError(result.getError(), TIResult<SValue>(*result.getError()));
 
-		value = dictionary.hasInstance() ? OI<SValue>(SValue(*dictionary)) : OI<SValue>();
+		// Skip whitespace
+		sSkipWhitespace(charPtr);
+
+		return TIResult<SValue>(SValue(*result.getValue()));
 	} else if (*charPtr == '[') {
 		// Array
 		charPtr++;
@@ -386,9 +388,9 @@ OI<SValue> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 			TNArray<CDictionary>	array;
 			while (true) {
 				// Read dictionary
-				OI<CDictionary>	dictionary = sReadDictionary(charPtr, outError);
-				ReturnValueIfError(outError, value);
-				array += *dictionary;
+				TIResult<CDictionary>	result = sReadDictionary(charPtr);
+				ReturnValueIfError(result.getError(), TIResult<SValue>(*result.getError()));
+				array += *result.getValue();
 
 				// Skip whitespace
 				sSkipWhitespace(charPtr);
@@ -404,21 +406,22 @@ OI<SValue> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 					// End of array
 					charPtr++;
 
-					return OI<SValue>(SValue(array));
-				} else {
+					// Skip whitespace
+					sSkipWhitespace(charPtr);
+
+					return TIResult<SValue>(SValue(array));
+				} else
 					// Invalid token
-					outError =  OI<SError>(sInvalidTokenError);
-					break;
-				}
+					return TIResult<SValue>(sInvalidTokenError);
 			}
 		} else if (*charPtr == '\"') {
 			// Array of strings
 			TNArray<CString>	array;
 			while (true) {
 				// Read string
-				OI<CString>	string = sReadString(charPtr, outError);
-				ReturnValueIfError(outError, value);
-				array += *string;
+				TIResult<CString>	result = sReadString(charPtr);
+				ReturnValueIfError(result.getError(), TIResult<SValue>(*result.getError()));
+				array += *result.getValue();
 
 				// Skip whitespace
 				sSkipWhitespace(charPtr);
@@ -434,32 +437,49 @@ OI<SValue> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 					// End of array
 					charPtr++;
 
-					return OI<SValue>(SValue(array));
-				} else {
+					// Skip whitespace
+					sSkipWhitespace(charPtr);
+
+					return TIResult<SValue>(SValue(array));
+				} else
 					// Invalid token
-					outError =  OI<SError>(sInvalidTokenError);
-					break;
-				}
+					return TIResult<SValue>(sInvalidTokenError);
 			}
 		} else if (*charPtr == ']') {
 			// Empty array
 			charPtr++;
-			value = OI<SValue>(SValue(TNArray<CDictionary>()));
+
+			// Skip whitespace
+			sSkipWhitespace(charPtr);
+
+			return TIResult<SValue>(SValue(TNArray<CDictionary>()));
 		} else
 			// Invalid token
-			outError =  OI<SError>(sInvalidTokenError);
+			return TIResult<SValue>(sInvalidTokenError);
 	} else if (::memcmp(charPtr, "true", 4) == 0) {
 		// True
 		charPtr += 4;
-		value = OI<SValue>(SValue(true));
+
+		// Skip whitespace
+		sSkipWhitespace(charPtr);
+
+		return TIResult<SValue>(SValue(true));
 	} else if (::memcmp(charPtr, "false", 5) == 0) {
 		// False
 		charPtr += 5;
-		value = OI<SValue>(SValue(false));
+
+		// Skip whitespace
+		sSkipWhitespace(charPtr);
+
+		return TIResult<SValue>(SValue(false));
 	} else if (::memcmp(charPtr, "null", 4) == 0) {
 		// Null
 		charPtr += 4;
-		value = OI<SValue>();
+
+		// Skip whitespace
+		sSkipWhitespace(charPtr);
+
+		return TIResult<SValue>(SValue::mEmpty);
 	} else {
 		// Number
 		const	SInt8*	startCharPtr = charPtr;
@@ -471,18 +491,16 @@ OI<SValue> sReadValue(const SInt8*& charPtr, OI<SError>& outError)
 			charPtr++;
 		}
 
+		// Skip whitespace
+		sSkipWhitespace(charPtr);
+
 		if (isFloat)
 			// Float
-			value = OI<SValue>(CString((char*) startCharPtr, (UInt32) (charPtr - startCharPtr)).getFloat64());
+			return TIResult<SValue>(CString((char*) startCharPtr, (UInt32) (charPtr - startCharPtr)).getFloat64());
 		else
 			// Integer
-			value = OI<SValue>(CString((char*) startCharPtr, (UInt32) (charPtr - startCharPtr)).getSInt64());
+			return TIResult<SValue>(CString((char*) startCharPtr, (UInt32) (charPtr - startCharPtr)).getSInt64());
 	}
-
-	// Skip whitespace
-	sSkipWhitespace(charPtr);
-
-	return value;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

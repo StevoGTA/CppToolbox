@@ -879,8 +879,8 @@ TArray<CCodec::PacketAndLocation> CMPEG4MediaSourceInternals::composePacketAndLo
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMPEG4MediaSource::CMPEG4MediaSource(const I<CDataSource>& dataSource) :
-		CAtomMediaSource(CByteParceller(dataSource, true))
+CMPEG4MediaSource::CMPEG4MediaSource(const I<CSeekableDataSource>& seekableDataSource) :
+		CAtomMediaSource(CByteReader(seekableDataSource, true))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CMPEG4MediaSourceInternals();

@@ -15,7 +15,7 @@
 class CVideoDecoderInternals {
 	public:
 						CVideoDecoderInternals(CVideoDecoder& videoDecoder, const I<CCodec::DecodeInfo>& codecDecodeInfo,
-								const I<CDataSource>& dataSource, UInt32 trackIndex,
+								const I<CSeekableDataSource>& seekableDataSource, UInt32 trackIndex,
 								const CVideoCodec::Info& videoCodecInfo, const CVideoDecoder::DecodeInfo& decodeInfo,
 								CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
 								const CVideoDecoder::RenderInfo& renderInfo) :
@@ -24,7 +24,7 @@ class CVideoDecoderInternals {
 									mNotifiedFirstFrameReady(false), mDecodeInProgress(false), mResetPending(false)
 							{
 								// Setup for decode
-								mVideoCodec->setupForDecode(dataSource, codecDecodeInfo,
+								mVideoCodec->setupForDecode(seekableDataSource, codecDecodeInfo,
 										CVideoCodec::DecodeFrameInfo(compatibility, frameReady, error, this));
 							}
 						~CVideoDecoderInternals()
@@ -113,14 +113,14 @@ class CVideoDecoderInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 CVideoDecoder::CVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
-		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource, const CString& identifier,
-		UInt32 trackIndex, const DecodeInfo& decodeInfo, CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
-		const RenderInfo& renderInfo) : CVideoProcessor()
+		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource,
+		const CString& identifier, UInt32 trackIndex, const DecodeInfo& decodeInfo,
+		CVideoCodec::DecodeFrameInfo::Compatibility compatibility, const RenderInfo& renderInfo) : CVideoProcessor()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	mInternals =
-			new CVideoDecoderInternals(*this, codecDecodeInfo, dataSource, trackIndex,
+			new CVideoDecoderInternals(*this, codecDecodeInfo, seekableDataSource, trackIndex,
 					CCodecRegistry::mShared.getVideoCodecInfo(videoStorageFormat.getCodecID()),
 					decodeInfo, compatibility, renderInfo);
 

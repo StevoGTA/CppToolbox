@@ -12,18 +12,18 @@
 class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals> {
 	public:
 		CAudioDecoderInternals(const SAudioStorageFormat& audioStorageFormat,
-				const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource) :
+				const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource) :
 			TReferenceCountable(),
 					mAudioStorageFormat(audioStorageFormat),
 					mAudioCodecInfo(CCodecRegistry::mShared.getAudioCodecInfo(mAudioStorageFormat.getCodecID())),
-					mCodecDecodeInfo(codecDecodeInfo), mDataSource(dataSource),
+					mCodecDecodeInfo(codecDecodeInfo), mSeekableDataSource(seekableDataSource),
 							mAudioCodec(mAudioCodecInfo.instantiate())
 			{}
 
 				SAudioStorageFormat		mAudioStorageFormat;
 		const	CAudioCodec::Info&		mAudioCodecInfo;
 				I<CCodec::DecodeInfo>	mCodecDecodeInfo;
-				I<CDataSource>			mDataSource;
+				I<CSeekableDataSource>	mSeekableDataSource;
 				I<CAudioCodec>			mAudioCodec;
 };
 
@@ -35,10 +35,10 @@ class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals
 
 //----------------------------------------------------------------------------------------------------------------------
 CAudioDecoder::CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
-		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CDataSource>& dataSource) : CAudioSource()
+		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource) : CAudioSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioDecoderInternals(audioStorageFormat, codecDecodeInfo, dataSource);
+	mInternals = new CAudioDecoderInternals(audioStorageFormat, codecDecodeInfo, seekableDataSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
 void CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mDataSource,
+	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mSeekableDataSource,
 			mInternals->mCodecDecodeInfo);
 }
 

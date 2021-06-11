@@ -86,7 +86,7 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 					// Set default bytes per row
 					mBytesPerRow = (mSize.mWidth * mBytesPerPixel) & 0xFFFFFFF0 + 0x0F;
 
-				mPixelData = !pixelData.isEmpty() ? pixelData : CData(mBytesPerRow * mSize.mHeight);
+				mPixelData = !pixelData.isEmpty() ? pixelData : CData((CData::Size) (mBytesPerRow * mSize.mHeight));
 			}
 		CBitmapInternals(const CBitmapInternals& other) :
 			TCopyOnWriteReferenceCountable(),

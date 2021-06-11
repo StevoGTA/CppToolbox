@@ -4,37 +4,39 @@
 
 #pragma once
 
-#include "SError.h"
+#include "CData.h"
+#include "TResult.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDataSource
 
 class CDataSource {
-	// Enums
-	public:
-		enum Position {
-			kPositionFromBeginning,
-			kPositionFromCurrent,
-			kPositionFromEnd,
-		};
-
 	// Methods
 	public:
-							// Lifecycle methods
-							CDataSource() {}
-		virtual				~CDataSource() {}
+								// Lifecycle methods
+								CDataSource() {}
+		virtual					~CDataSource() {}
 
-							// Instance methods
-		virtual	UInt64		getSize() const = 0;
+								// Instance methods
+		virtual	TIResult<CData>	readData() = 0;
+};
 
-		virtual	OI<SError>	readData(void* buffer, UInt64 byteCount) = 0;
-				OI<CData>	readData(UInt64 byteCount, OI<SError>& outError);
-				OI<CData>	readData(OI<SError>& outError);
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSeekableDataSource
 
-		virtual	SInt64		getPos() const = 0;
-		virtual	OI<SError>	setPos(Position position, SInt64 newPos) = 0;
+class CSeekableDataSource : public CDataSource {
+	// Methods
+	public:
+								// Lifecycle methods
+								CSeekableDataSource() : CDataSource() {}
 
-		virtual	void		reset() = 0;
+								// CDataSource methods
+				TIResult<CData>	readData();
+
+								// Instance methods
+		virtual	UInt64			getSize() const = 0;
+
+		virtual	OI<SError>		readData(UInt64 position, void* buffer, CData::Size byteCount) = 0;
 
 	// Properties
 	protected:
@@ -43,25 +45,20 @@ class CDataSource {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDataDataSource
+// MARK: - CDataDataSource
 
 class CDataDataSourceInternals;
-class CDataDataSource : public CDataSource {
+class CDataDataSource : public CSeekableDataSource {
 	// Methods
 	public:
 					// Lifecycle methods
 					CDataDataSource(const CData& data);
 					~CDataDataSource();
 
-					// CDataSource methods
+					// CSeekableDataSource methods
 		UInt64		getSize() const;
 
-		OI<SError>	readData(void* buffer, UInt64 byteCount);
-
-		SInt64		getPos() const;
-		OI<SError>	setPos(Position position, SInt64 newPos);
-
-		void		reset();
+		OI<SError>	readData(UInt64 position, void* buffer, CData::Size byteCount);
 
 	// Properties
 	private:

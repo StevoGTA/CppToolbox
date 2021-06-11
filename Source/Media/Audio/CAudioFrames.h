@@ -6,7 +6,7 @@
 
 #include "CData.h"
 #include "TBuffer.h"
-#include "TInstance.h"
+#include "TWrappers.h"
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 	#include <CoreAudioTypes/CoreAudioTypes.h>

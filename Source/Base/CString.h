@@ -157,19 +157,6 @@ class CString : public CHashable {
 
 	// Structs
 	public:
-		struct Range {
-					// Lifecycle methods
-					Range(CharIndex start, Length length = ~0) : mStart(start), mLength(length) {}
-
-					// Instance methods
-			bool	isValid() const
-						{ return mLength != 0; }
-
-			// Properties
-			CharIndex	mStart;
-			Length		mLength;	// 0 if not found
-		};
-
 		struct C : SReferenceCountable {
 							// Lifecycle methods
 							C(Length length) : SReferenceCountable()
@@ -195,6 +182,19 @@ class CString : public CHashable {
 
 			// Properties
 			char*	mBuffer;
+		};
+
+		struct Range {
+					// Lifecycle methods
+					Range(CharIndex start, Length length = ~0) : mStart(start), mLength(length) {}
+
+					// Instance methods
+			bool	isValid() const
+						{ return mLength != 0; }
+
+			// Properties
+			CharIndex	mStart;
+			Length		mLength;	// 0 if not found
 		};
 
 	// Methods

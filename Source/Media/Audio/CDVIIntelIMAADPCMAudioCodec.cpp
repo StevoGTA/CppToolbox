@@ -4,7 +4,7 @@
 
 #include "CDVIIntelIMAADPCMAudioCodec.h"
 
-#include "CByteParceller.h"
+#include "CByteReader.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ class CDVIIntelIMAADPCMAudioCodecInternals {
 		static	I<CAudioCodec>					instantiate(OSType id)
 													{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
 
-		OI<CByteParceller>			mByteParceller;
+		OI<CByteReader>				mByteReader;
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
 };
 
@@ -125,16 +125,17 @@ CDVIIntelIMAADPCMAudioCodec::~CDVIIntelIMAADPCMAudioCodec()
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo)
+		const I<CSeekableDataSource>& seekableDataSource, const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	const	DataDecodeInfo&	dataDecodeInfo = *((DataDecodeInfo*) &*decodeInfo);
 
 	// Store
-	mInternals->mByteParceller =
-			OI<CByteParceller>(
-					new CByteParceller(dataSource, dataDecodeInfo.getStartOffset(), dataDecodeInfo.getSize(), true));
+	mInternals->mByteReader =
+			OI<CByteReader>(
+					new CByteReader(seekableDataSource, dataDecodeInfo.getStartOffset(), dataDecodeInfo.getSize(),
+							true));
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 }
 
@@ -152,7 +153,7 @@ SAudioSourceStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& med
 		UInt64		frameIndex = mediaPosition.getFrameIndex(mInternals->mAudioProcessingFormat->getSampleRate());
 		UInt64		packetIndex = (frameIndex + kDVIIntelFramesPerPacket - 1) / kDVIIntelFramesPerPacket;
 		SInt64		byteIndex = packetIndex * bytesPerPacket;
-		OI<SError>	error = mInternals->mByteParceller->setPos(CDataSource::kPositionFromBeginning, byteIndex);
+		OI<SError>	error = mInternals->mByteReader->setPos(CByteReader::kPositionFromBeginning, byteIndex);
 		if (error.hasInstance())
 			return SAudioSourceStatus(*error);
 	}
@@ -164,7 +165,7 @@ SAudioSourceStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& med
 	while (availableFrameCount >= kDVIIntelFramesPerPacket) {
 		// Read next packet
 		TBuffer<UInt8>	packetBuffer(bytesPerPacket);
-		OI<SError>		error = mInternals->mByteParceller->readData(*packetBuffer, bytesPerPacket);
+		OI<SError>		error = mInternals->mByteReader->readData(*packetBuffer, bytesPerPacket);
 		if (error.hasInstance()) {
 			// Check situation
 			if (decodedFrameCount > 0)
@@ -240,7 +241,7 @@ SAudioSourceStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& med
 	audioFrames.completeWrite(decodedFrameCount);
 
 	return SAudioSourceStatus(
-			(Float32) mInternals->mByteParceller->getPos() / (Float32) mInternals->mByteParceller->getSize());
+			(Float32) mInternals->mByteReader->getPos() / (Float32) mInternals->mByteReader->getSize());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

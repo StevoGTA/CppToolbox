@@ -7,7 +7,7 @@
 #include "ConcurrencyPrimitives.h"
 #include "CLogServices.h"
 #include "CWorkItemQueue.h"
-#include "TOptional.h"
+#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SGPUTextureDataInfo
@@ -354,12 +354,10 @@ class CDataGPUTextureReferenceInternals : public CGPULoadableTextureReferenceInt
 						// Is loading continuing
 						if (isLoadingContinuing()) {
 							// Read data
-							OI<SError>	error;
-							OI<CData>	data = mDataSource->readData(error);
-							mDataSource->reset();
-							LogIfErrorAndReturn(error, "reading data from data provider");
+							TIResult<CData>	dataResult = mDataSource->readData();
+							LogIfErrorAndReturn(dataResult.getError(), "reading data from data provider");
 
-							textureData = *data;
+							textureData = *dataResult.getValue();
 						}
 
 						// Is loading continuing
@@ -394,7 +392,7 @@ class CBitmapProcGPUTextureReferenceInternals : public CBitmapGPUTextureReferenc
 						// Is loading continuing
 						if (isLoadingContinuing())
 							// Create bitmap
-							mLoadingBitmap = new CBitmap(mBitmapProc(mDataSource));
+							mLoadingBitmap = new CBitmap(mBitmapProc(*mDataSource->readData().getValue()));
 
 						// Do super
 						CBitmapGPUTextureReferenceInternals::load();

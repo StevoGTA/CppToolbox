@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	TOptional.h			©2019 Stevo Brock	All rights reserved.
+//	TWrappers.h			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -8,95 +8,32 @@
 #include "TReferenceTracking.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: OV (Optional Value)
-/*
-	Examples:
+// MARK: I (Instance)
 
-	OV<UInt32>	optionalValue1;
-	optionalValue1.hasValue();	// false
-	optionalValue1.getValue();	// Assert fail
-	optionalValue1 = 42;
-	optionalValue1.getValue();	// 42
-	optionalValue1.removeValue();
-	optionalValue1.getValue();	// Assert fail
+template <typename T> struct I {
+		// Lifecycle methods
+		I(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+		I(const I<T>& other) :
+			mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
+			{ (*mReferenceCount)++; }
+		~I()
+			{
+				// One less reference
+				if (--(*mReferenceCount) == 0)
+					// All done
+					Delete(mInstance);
+			}
 
-	OV<UInt32>	optionalValue2(0);
-	optionalValue2.hasValue();	// true
-	UInt32	result1 = optionalValue2.getValue();
-	UInt32	result2 = *optionalValue2;
- */
-
-template <typename T> struct OV {
-			// Lifecycle methods
-			OV() : mHasValue(false) {}
-			OV(T value) : mHasValue(true), mValue(value) {}
-			OV(const OV& other) : mHasValue(other.mHasValue), mValue(other.mValue) {}
-
-			// Instamce methods
-	bool	hasValue() const
-				{ return mHasValue; }
-	T		getValue() const
-				{ AssertFailIf(!mHasValue); return mValue; }
-	T		getValue(T defaultValue) const
-				{ return mHasValue ? mValue : defaultValue; }
-	void	setValue(T value)
-				{ mHasValue = true; mValue = value; }
-	void	removeValue()
-				{ mHasValue = false; }
-
-	T		operator*() const
-				{ AssertFailIf(!mHasValue); return mValue; }
-
-	OV<T>&	operator=(T value)
-				{ mHasValue = true; mValue = value; return *this; }
-
-	bool	operator==(const OV<T>& other) const
-				{ return (mHasValue == other.mHasValue) && (!mHasValue || (mValue == other.mValue)); }
-	bool	operator!=(const OV<T>& other) const
-				{ return (mHasValue != other.mHasValue) || (mHasValue && (mValue != other.mValue)); }
+		// Instamce methods
+	T&	operator*() const
+			{ return *mInstance; }
+	T*	operator->() const
+			{ return mInstance; }
 
 	// Properties
 	private:
-		bool	mHasValue;
-		T		mValue;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - OR (Optional Reference)
-/*
-	Examples:
-
-	OR<CString>	optionalString1;
-	optionalString1.hasReference();	// false
-	optionalString1.getReference();	// Assert fail
-
-	CString	string(OSSTR("Hello World!"));
-	OR<CString>	optionalString2(string);
-	optionalString2.getReference().isEmpty();	// false
-	*optionalString;							// CString&
-	optionalString2->isEmpty();					// false
- */
-
-template <typename T> struct OR {
-			// Lifecycle methods
-			OR() : mReference(nil) {}
-			OR(T& reference) : mReference(&reference) {}
-			OR(const OR& other) : mReference(other.mReference) {}
-
-			// Instamce methods
-	bool	hasReference() const
-				{ return mReference != nil; }
-	T&		getReference() const
-				{ AssertFailIf(mReference == nil); return *mReference; }
-
-	T&		operator*() const
-				{ AssertFailIf(mReference == nil); return *mReference; }
-	T*		operator->() const
-				{ AssertFailIf(mReference == nil); return mReference; }
-
-	// Properties
-	private:
-		T*	mReference;
+		T*		mInstance;
+		UInt32*	mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -226,4 +163,115 @@ template <typename T> struct OP {
 	// Properties
 	private:
 		T	mProc;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - R (Reference)
+
+template <typename T> struct R {
+		// Lifecycle methods
+		R(T& reference) : mReference(&reference) {}
+		R(const R<T>& other) : mReference(other.mReference) {}
+
+		// Instamce methods
+	T&	operator*() const
+			{ return *mReference; }
+	T*	operator->() const
+			{ return mReference; }
+
+	// Properties
+	private:
+		T*	mReference;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - OR (Optional Reference)
+/*
+	Examples:
+
+	OR<CString>	optionalString1;
+	optionalString1.hasReference();	// false
+	optionalString1.getReference();	// Assert fail
+
+	CString	string(OSSTR("Hello World!"));
+	OR<CString>	optionalString2(string);
+	optionalString2.getReference().isEmpty();	// false
+	*optionalString;							// CString&
+	optionalString2->isEmpty();					// false
+ */
+
+template <typename T> struct OR {
+			// Lifecycle methods
+			OR() : mReference(nil) {}
+			OR(T& reference) : mReference(&reference) {}
+			OR(const OR& other) : mReference(other.mReference) {}
+
+			// Instamce methods
+	bool	hasReference() const
+				{ return mReference != nil; }
+	T&		getReference() const
+				{ AssertFailIf(mReference == nil); return *mReference; }
+
+	T&		operator*() const
+				{ AssertFailIf(mReference == nil); return *mReference; }
+	T*		operator->() const
+				{ AssertFailIf(mReference == nil); return mReference; }
+
+	// Properties
+	private:
+		T*	mReference;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - OV (Optional Value)
+/*
+	Examples:
+
+	OV<UInt32>	optionalValue1;
+	optionalValue1.hasValue();	// false
+	optionalValue1.getValue();	// Assert fail
+	optionalValue1 = 42;
+	optionalValue1.getValue();	// 42
+	optionalValue1.removeValue();
+	optionalValue1.getValue();	// Assert fail
+
+	OV<UInt32>	optionalValue2(0);
+	optionalValue2.hasValue();	// true
+	UInt32	result1 = optionalValue2.getValue();
+	UInt32	result2 = *optionalValue2;
+ */
+
+template <typename T> struct OV {
+			// Lifecycle methods
+			OV() : mHasValue(false) {}
+			OV(T value) : mHasValue(true), mValue(value) {}
+			OV(const OV& other) : mHasValue(other.mHasValue), mValue(other.mValue) {}
+
+			// Instamce methods
+	bool	hasValue() const
+				{ return mHasValue; }
+	T		getValue() const
+				{ AssertFailIf(!mHasValue); return mValue; }
+	T		getValue(T defaultValue) const
+				{ return mHasValue ? mValue : defaultValue; }
+	void	setValue(T value)
+				{ mHasValue = true; mValue = value; }
+	void	removeValue()
+				{ mHasValue = false; }
+
+	T		operator*() const
+				{ AssertFailIf(!mHasValue); return mValue; }
+
+	OV<T>&	operator=(T value)
+				{ mHasValue = true; mValue = value; return *this; }
+
+	bool	operator==(const OV<T>& other) const
+				{ return (mHasValue == other.mHasValue) && (!mHasValue || (mValue == other.mValue)); }
+	bool	operator!=(const OV<T>& other) const
+				{ return (mHasValue != other.mHasValue) || (mHasValue && (mValue != other.mValue)); }
+
+	// Properties
+	private:
+		bool	mHasValue;
+		T		mValue;
 };

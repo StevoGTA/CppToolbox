@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CBitParceller.h"
+#include "CBitReader.h"
 #include "CVideoCodec.h"
 #include "SVideoFormats.h"
 
@@ -98,26 +98,25 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 			SequenceParameterSetPayload(const CData& data)
 				{
 					// Setup
-					CBitParceller	bitParceller(I<CDataSource>(new CDataDataSource(data)), true);
-					OI<SError>		error;
+					CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(data)), true);
 
 					// Decode
-					mForbiddenZero = *bitParceller.readUInt8(1, error);
-					mNALRef = *bitParceller.readUInt8(2, error);
-					mNALUnitType = (NALUInfo::Type) *bitParceller.readUInt8(5, error);
-					mProfile = *bitParceller.readUInt8(error);
-					mConstraintSet0Flag = *bitParceller.readUInt8(1, error);
-					mConstraintSet1Flag = *bitParceller.readUInt8(1, error);
-					mConstraintSet2Flag = *bitParceller.readUInt8(1, error);
-					mConstraintSet3Flag = *bitParceller.readUInt8(1, error);
-					mConstraintSet4Flag = *bitParceller.readUInt8(1, error);
-					mConstraintSet5Flag = *bitParceller.readUInt8(1, error);
-					mReserved2Bits = *bitParceller.readUInt8(2, error);
-					mLevel = *bitParceller.readUInt8(error);
-					mSPSID = *bitParceller.readUEColumbusCode(error);
-					mFrameNumberBitCount = *bitParceller.readUEColumbusCode(error) + 4;
-					mPicOrderCountType = *bitParceller.readUEColumbusCode(error);
-					mPicOrderCountLSBBitCount = *bitParceller.readUEColumbusCode(error) + 4;
+					mForbiddenZero = *bitReader.readUInt8(1).getValue();
+					mNALRef = *bitReader.readUInt8(2).getValue();
+					mNALUnitType = (NALUInfo::Type) *bitReader.readUInt8(5).getValue();
+					mProfile = *bitReader.readUInt8().getValue();
+					mConstraintSet0Flag = *bitReader.readUInt8(1).getValue();
+					mConstraintSet1Flag = *bitReader.readUInt8(1).getValue();
+					mConstraintSet2Flag = *bitReader.readUInt8(1).getValue();
+					mConstraintSet3Flag = *bitReader.readUInt8(1).getValue();
+					mConstraintSet4Flag = *bitReader.readUInt8(1).getValue();
+					mConstraintSet5Flag = *bitReader.readUInt8(1).getValue();
+					mReserved2Bits = *bitReader.readUInt8(2).getValue();
+					mLevel = *bitReader.readUInt8().getValue();
+					mSPSID = *bitReader.readUEColumbusCode().getValue();
+					mFrameNumberBitCount = *bitReader.readUEColumbusCode().getValue() + 4;
+					mPicOrderCountType = *bitReader.readUEColumbusCode().getValue();
+					mPicOrderCountLSBBitCount = *bitReader.readUEColumbusCode().getValue() + 4;
 				}
 
 			// Properties
@@ -267,7 +266,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 										~CH264VideoCodec();
 
 										// CVideoCodec methods
-				void					setupForDecode(const I<CDataSource>& dataSource,
+				void					setupForDecode(const I<CSeekableDataSource>& seekableDataSource,
 												const I<CCodec::DecodeInfo>& decodeInfo,
 												const DecodeFrameInfo& decodeFrameInfo);
 				bool					triggerDecode();
