@@ -8,7 +8,8 @@
 #include "CDataSource.h"
 #include "CVideoFrame.h"
 #include "SMediaPosition.h"
-#include "TInstance.h"
+#include "SVideoSourceStatus.h"
+#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoCodec
@@ -91,14 +92,24 @@ class CVideoCodec : public CCodec {
 				InstantiateProc	mInstantiateProc;
 		};
 
+	public:
+		struct DecodeResult {
+
+			private:
+				SVideoSourceStatus	mVideoSourceStatus;
+				OI<CVideoFrame>		mVideoFrame;
+
+		};
+
 	// Methods
 	public:
 							// Lifecycle methods
 							~CVideoCodec() {}
 
 							// Instance methods
-		virtual	void		setupForDecode(const I<CDataSource>& dataSource, const I<CCodec::DecodeInfo>& decodeInfo,
-									const DecodeFrameInfo& decodeFrameInfo) = 0;
+		virtual	void		setupForDecode(const I<CSeekableDataSource>& seekableDataSource,
+									const I<CCodec::DecodeInfo>& decodeInfo, const DecodeFrameInfo& decodeFrameInfo)
+									= 0;
 		virtual	bool		triggerDecode() = 0;
 		virtual	OI<SError>	set(const SMediaPosition& mediaPosition) = 0;
 		virtual	OI<SError>	reset() = 0;
