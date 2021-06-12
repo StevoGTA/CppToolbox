@@ -17,7 +17,7 @@ class CCodecRegistryInternals {
 		TKeyConvertibleDictionary<OSType, CVideoCodec::Info>	mVideoCodecInfo;
 };
 
-CCodecRegistryInternals*	sInternals = nil;
+CCodecRegistryInternals*	sCodecRegistryInternals = nil;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -42,12 +42,12 @@ void CCodecRegistry::registerCodec(const CAudioCodec::Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if initialized
-	if (sInternals == nil)
+	if (sCodecRegistryInternals == nil)
 		// Initialize
-		sInternals = new CCodecRegistryInternals();
+		sCodecRegistryInternals = new CCodecRegistryInternals();
 
 	// Add info
-	sInternals->mAudioCodecInfo.set(info.getID(), info);
+	sCodecRegistryInternals->mAudioCodecInfo.set(info.getID(), info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -55,24 +55,24 @@ void CCodecRegistry::registerCodec(const CVideoCodec::Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if initialized
-	if (sInternals == nil)
+	if (sCodecRegistryInternals == nil)
 		// Initialize
-		sInternals = new CCodecRegistryInternals();
+		sCodecRegistryInternals = new CCodecRegistryInternals();
 
 	// Add info
-	sInternals->mVideoCodecInfo.set(info.getID(), info);
+	sCodecRegistryInternals->mVideoCodecInfo.set(info.getID(), info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 const CAudioCodec::Info& CCodecRegistry::getAudioCodecInfo(OSType codecID)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return *sInternals->mAudioCodecInfo.get(codecID);
+	return *sCodecRegistryInternals->mAudioCodecInfo.get(codecID);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 const CVideoCodec::Info& CCodecRegistry::getVideoCodecInfo(OSType codecID)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return *sInternals->mVideoCodecInfo.get(codecID);
+	return *sCodecRegistryInternals->mVideoCodecInfo.get(codecID);
 }

@@ -2,9 +2,9 @@
 //	CWAVEMediaSource.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CWAVEMediaSource.h"
-
+#include "CChunkReader.h"
 #include "CDVIIntelIMAADPCMAudioCodec.h"
+#include "CMediaSourceRegistry.h"
 #include "SWAVEMediaInfo.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -15,56 +15,39 @@ static	SError	sNotAWAVEFileError(sErrorDomain, 1, CString(OSSTR("Not a WAVE file
 static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported codec")));
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CWAVEMediaSourceInternals
+// MARK: - Local proc declarations
 
-class CWAVEMediaSourceInternals {
-	public:
-		CWAVEMediaSourceInternals() {}
-
-		TNArray<CAudioTrack>	mAudioTracks;
-};
+static	TIResult<SMediaTracks>	sQueryWAVETracksProc(const I<CSeekableDataSource>& seekableDataSource);
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CWAVEMediaSource
+// MARK: - Register media source
 
-// MARK: Lifecycle methods
+CString	sWAVEExtensions[] = { CString(OSSTR("wav")) };
 
-//----------------------------------------------------------------------------------------------------------------------
-CWAVEMediaSource::CWAVEMediaSource(const I<CSeekableDataSource>& seekableDataSource) :
-		CChunkMediaSource(CByteReader(seekableDataSource, false))
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CWAVEMediaSourceInternals();
-}
+REGISTER_MEDIA_SOURCE(wave,
+		SMediaSource::Info(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")),
+				TSArray<CString>(sWAVEExtensions, 1), sQueryWAVETracksProc));
 
 //----------------------------------------------------------------------------------------------------------------------
-CWAVEMediaSource::~CWAVEMediaSource()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
-
-// MARK: CMediaSource methods
+// MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CWAVEMediaSource::loadTracks()
+TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekableDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	OI<SError>	error;
+	CChunkReader			chunkReader(seekableDataSource, false);
+	TNArray<CAudioTrack>	audioTracks;
 
-	// Reset to beginning
-	error = reset();
-	ReturnErrorIfError(error);
+	OI<SError>	error;
 
 	// Verify it's a WAVE Media Source
 	SWAVEFORMChunk32	formChunk32;
-	error = mByteReader.readData(&formChunk32, sizeof(SWAVEFORMChunk32));
-	ReturnErrorIfError(error);
+	error = chunkReader.CByteReader::readData(&formChunk32, sizeof(SWAVEFORMChunk32));
+	ReturnValueIfError(error, TIResult<SMediaTracks>(*error));
 	if ((formChunk32.getID() != kWAVEFORMChunkID) || (formChunk32.getFormType() != kWAVEFORMType))
 		// Not a WAVE file
-		return OI<SError>(sNotAWAVEFileError);
+		return TIResult<SMediaTracks>(sNotAWAVEFileError);
 
 	// Process chunks
 	OI<SAudioStorageFormat>	audioStorageFormat;
@@ -72,17 +55,17 @@ OI<SError> CWAVEMediaSource::loadTracks()
 	SInt64					dataSize = 0;
 	while (true) {
 		// Read next chunk info
-		OI<ChunkInfo>	chunkInfo = getChunkInfo(error);
-		ReturnErrorIfError(error);
+		TIResult<CChunkReader::ChunkInfo>	chunkInfo = chunkReader.readChunkInfo();
+		ReturnValueIfError(chunkInfo.getError(), TIResult<SMediaTracks>(*chunkInfo.getError()));
 
 		// What did we get?
-		switch (chunkInfo->mID) {
+		switch (chunkInfo.getValue()->mID) {
 			case kWAVEFormatChunkID: {
 				// Format chunk
-				OI<CData>	data = getChunk(*chunkInfo, error);
-				ReturnErrorIfError(error);
+				TIResult<CData>	data = chunkReader.readData(*chunkInfo.getValue());
+				ReturnValueIfError(data.getError(), TIResult<SMediaTracks>(*data.getError()));
 
-				const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) data->getBytePtr());
+				const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) data.getValue()->getBytePtr());
 
 				switch (waveFormat.getFormatTag()) {
 					case 0x0011:
@@ -96,14 +79,14 @@ OI<SError> CWAVEMediaSource::loadTracks()
 
 					default:
 						// Not supported
-						return OI<SError>(sUnsupportedCodecError);
+						return TIResult<SMediaTracks>(sUnsupportedCodecError);
 				}
 			} break;
 
 			case kWAVEDataChunkID:
 				// Data chunk
-				dataStartOffset = mByteReader.getPos();
-				dataSize = std::min<SInt64>(chunkInfo->mSize, mByteReader.getSize() - dataStartOffset);
+				dataStartOffset = chunkReader.getPos();
+				dataSize = std::min<SInt64>(chunkInfo.getValue()->mSize, chunkReader.getSize() - dataStartOffset);
 				break;
 		}
 
@@ -113,21 +96,14 @@ OI<SError> CWAVEMediaSource::loadTracks()
 			break;
 
 		// Seek to next chunk
-		error = seekToNextChunk(*chunkInfo);
-		ReturnErrorIfError(error);
+		error = chunkReader.seekToNextChunk(*chunkInfo.getValue());
+		ReturnValueIfError(error, TIResult<SMediaTracks>(*error));
 	}
 
 	// Store
-	mInternals->mAudioTracks +=
+	audioTracks +=
 			CAudioTrack(*audioStorageFormat,
 					I<CCodec::DecodeInfo>(new CAudioCodec::DataDecodeInfo(dataStartOffset, dataSize)));
 
-	return OI<SError>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<CAudioTrack> CWAVEMediaSource::getAudioTracks()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mAudioTracks;
+	return TIResult<SMediaTracks>(SMediaTracks(audioTracks));
 }

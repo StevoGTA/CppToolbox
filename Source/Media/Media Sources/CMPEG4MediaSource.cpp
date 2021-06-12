@@ -2,9 +2,9 @@
 //	CMPEG4MediaSource.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CMPEG4MediaSource.h"
-
 #include "CAACAudioCodec.h"
+#include "CAtomReader.h"
+#include "CMediaSourceRegistry.h"
 #include "CH264VideoCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -698,38 +698,217 @@ static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported
 #define ReturnNotAnMPEG4FileIf(check)	{ if (check) return OI<SError>(sNotAnMPEG4FileError); }
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMPEG4MediaSourceInternals
+// MARK: - Local proc declarations
 
-class CMPEG4MediaSourceInternals {
-	public:
-													CMPEG4MediaSourceInternals() {}
-
-				void								addMP4AAudioTrack(const SstsdDescription& stsdDescription,
-															const CData& esdsAtomPayloadData,
-															const TArray<CCodec::PacketAndLocation>&
-																	packetAndLocations);
-				void								addH264VideoTrack(const SstsdDescription& stsdDescription,
-															const CData& configurationData,
-															const SmdhdAtomPayload& mdhdAtomPayload,
-															const TArray<CCodec::PacketAndLocation>&
-																	packetAndLocations,
-															const OI<CData>& stssAtomPayloadData);
-
-		static	TArray<CCodec::PacketAndLocation>	composePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
-															const SstscAtomPayload& stscAtomPayload,
-															const SstszAtomPayload& stszAtomPayload,
-															SstcoAtomPayload* stcoAtomPayload,
-															Sco64AtomPayload* co64AtomPayload);
-
-		TNArray<CAudioTrack>	mAudioTracks;
-		TNArray<CVideoTrack>	mVideoTracks;
-};
-
-// MARK: Instance methods
+static	TIResult<SMediaTracks>				sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource);
+static	OI<CAudioTrack>						sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription,
+													const CData& esdsAtomPayloadData,
+													const TArray<CCodec::PacketAndLocation>& packetAndLocations);
+static	OI<CVideoTrack>						sComposeH264VideoTrack(const SstsdDescription& stsdDescription,
+													const CData& configurationData,
+													const SmdhdAtomPayload& mdhdAtomPayload,
+													const TArray<CCodec::PacketAndLocation>& packetAndLocations,
+													const OI<CData>& stssAtomPayloadData);
+static	TArray<CCodec::PacketAndLocation>	sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
+													const SstscAtomPayload& stscAtomPayload,
+													const SstszAtomPayload& stszAtomPayload,
+													SstcoAtomPayload* stcoAtomPayload,
+													Sco64AtomPayload* co64AtomPayload);
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMPEG4MediaSourceInternals::addMP4AAudioTrack(const SstsdDescription& stsdDescription,
-		const CData& esdsAtomPayloadData, const TArray<CCodec::PacketAndLocation>& packetAndLocations)
+// MARK: - Register media source
+
+CString	sMPEG4Extensions[] = { CString(OSSTR("m4v")) };
+
+REGISTER_MEDIA_SOURCE(mp4,
+		SMediaSource::Info(MAKE_OSTYPE('m', 'p', '4', '*'), CString(OSSTR("MPEG 4")),
+				TSArray<CString>(sMPEG4Extensions, 1), sQueryMPEG4TracksProc));
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc definitions
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CAtomReader				atomReader(seekableDataSource);
+	TNArray<CAudioTrack>	audioTracks;
+	TNArray<CVideoTrack>	videoTracks;
+
+	OI<SError>	error;
+
+	// Read root atom
+	TIResult<CAtomReader::AtomInfo>	atomInfo = atomReader.readAtomInfo();
+	ReturnValueIfError(atomInfo.getError(), TIResult<SMediaTracks>(*atomInfo.getError()));
+	if (atomInfo.getValue()->mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
+		return TIResult<SMediaTracks>(sNotAnMPEG4FileError);
+
+	// Find moov atom
+	while (atomInfo.getValue()->mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
+		// Go to next atom
+		error = atomReader.seekToNextAtom(*atomInfo.getValue());
+		ReturnValueIfError(error, TIResult<SMediaTracks>(*error));
+
+		// Get atom
+		atomInfo = atomReader.readAtomInfo();
+		ReturnValueIfError(atomInfo.getError(), TIResult<SMediaTracks>(*atomInfo.getError()));
+	}
+
+	TIResult<CAtomReader::AtomGroup>	moovAtomGroup = atomReader.readAtomGroup(*atomInfo.getValue());
+	ReturnValueIfError(moovAtomGroup.getError(), TIResult<SMediaTracks>(*moovAtomGroup.getError()));
+
+	for (TIteratorD<CAtomReader::AtomInfo> moovIterator = moovAtomGroup.getValue()->getIterator();
+			moovIterator.hasValue(); moovIterator.advance()) {
+		// Check type
+		if (moovIterator->mType == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
+			// Track
+			TIResult<CAtomReader::AtomGroup>	trakAtomGroup = atomReader.readAtomGroup(*moovIterator);
+			if (trakAtomGroup.getError().hasInstance()) continue;
+
+			// Media
+			TIResult<CAtomReader::AtomGroup>	mdiaAtomGroup =
+														atomReader.readAtomGroup(
+																trakAtomGroup.getValue()->getAtomInfo(
+																		MAKE_OSTYPE('m', 'd', 'i', 'a')));
+			if (mdiaAtomGroup.getError().hasInstance()) continue;
+
+			// Handler
+			TIResult<CData>	hdlrAtomPayloadData =
+									atomReader.readAtomPayload(
+											mdiaAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('h', 'd', 'l', 'r')));
+			if (hdlrAtomPayloadData.getError().hasInstance()) continue;
+			const	ShdlrAtomPayload&	hdlrAtomPayload =
+												*((ShdlrAtomPayload*) hdlrAtomPayloadData.getValue()->getBytePtr());
+
+			// Media Information
+			TIResult<CAtomReader::AtomGroup>	minfAtomGroup =
+														atomReader.readAtomGroup(
+																mdiaAtomGroup.getValue()->getAtomInfo(
+																		MAKE_OSTYPE('m', 'i', 'n', 'f')));
+			if (minfAtomGroup.getError().hasInstance()) continue;
+
+			// Sample Table
+			TIResult<CAtomReader::AtomGroup>	stblAtomGroup =
+														atomReader.readAtomGroup(
+																minfAtomGroup.getValue()->getAtomInfo(
+																		MAKE_OSTYPE('s', 't', 'b', 'l')));
+			if (stblAtomGroup.getError().hasInstance()) continue;
+
+			// Sample Table Sample Description
+			OR<CAtomReader::AtomInfo>	stsdAtomInfo =
+												stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'd'));
+			if (!stsdAtomInfo.hasReference()) continue;
+			TIResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtomInfo);
+			if (error.hasInstance()) continue;
+			const	SstsdAtomPayload&	stsdAtomPayload =
+												*((SstsdAtomPayload*) stsdAtomPayloadData.getValue()->getBytePtr());
+			const	SstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
+
+			// Sample Table Time-to-Sample
+			TIResult<CData>	sttsAtomPayloadData =
+									atomReader.readAtomPayload(
+											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 't', 's')));
+			if (sttsAtomPayloadData.getError().hasInstance()) continue;
+			const	SsttsAtomPayload&	sttsAtomPayload =
+												*((SsttsAtomPayload*) sttsAtomPayloadData.getValue()->getBytePtr());
+
+			// Sample Table Sample Blocks
+			TIResult<CData>	stscAtomPayloadData =
+									atomReader.readAtomPayload(
+											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'c')));
+			if (stscAtomPayloadData.getError().hasInstance()) continue;
+			const	SstscAtomPayload&	stscAtomPayload =
+												*((SstscAtomPayload*) stscAtomPayloadData.getValue()->getBytePtr());
+
+			// Sample Table Packet Sizes
+			TIResult<CData>	stszAtomPayloadData =
+									atomReader.readAtomPayload(
+											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'z')));
+			if (stszAtomPayloadData.getError().hasInstance()) continue;
+			const	SstszAtomPayload&	stszAtomPayload =
+												*((SstszAtomPayload*) stszAtomPayloadData.getValue()->getBytePtr());
+
+			// Sample Table Block offsets
+			TIResult<CData>	stcoAtomPayloadData =
+									atomReader.readAtomPayload(
+											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 'c', 'o')));
+			TIResult<CData>	co64AtomPayloadData =
+									atomReader.readAtomPayload(
+											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('c', 'o', '6', '4')));
+			if (!stcoAtomPayloadData.getValue().hasInstance() && !co64AtomPayloadData.getValue().hasInstance())
+					continue;
+			SstcoAtomPayload*	stcoAtomPayload =
+										stcoAtomPayloadData.getValue().hasInstance() ?
+												(SstcoAtomPayload*) stcoAtomPayloadData.getValue()->getBytePtr() : nil;
+			Sco64AtomPayload*	co64AtomPayload =
+										co64AtomPayloadData.getValue().hasInstance() ?
+												(Sco64AtomPayload*) co64AtomPayloadData.getValue()->getBytePtr() : nil;
+
+			// Check track type
+			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
+				// Audio track
+				if (stsdDescription.getType() == MAKE_OSTYPE('m', 'p', '4', 'a')) {
+					// MPEG4 Audio
+					TIResult<CData>	esdsAtomPayloadData =
+											atomReader.readAtomPayload(*stsdAtomInfo,
+													sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
+															sizeof(SMP4AAudioFormat));
+  					if (esdsAtomPayloadData.getError().hasInstance()) continue;
+  					OI<CAudioTrack>	audioTrack =
+  											sComposeMP4AAudioTrack(stsdDescription, *esdsAtomPayloadData.getValue(),
+													sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload,
+															stszAtomPayload, stcoAtomPayload, co64AtomPayload));
+					if (audioTrack.hasInstance())
+						// Add audio track
+						audioTracks += *audioTrack;
+				} else
+					// Unsupported codec
+					return TIResult<SMediaTracks>(sUnsupportedCodecError);
+			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
+				// Video track
+				TIResult<CData>	mdhdAtomPayloadData =
+										atomReader.readAtomPayload(
+												mdiaAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('m', 'd', 'h', 'd')));
+				if (mdhdAtomPayloadData.getError().hasInstance()) continue;
+
+				TIResult<CData>	stssAtomPayloadData =
+										atomReader.readAtomPayload(
+												stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 's')));
+				if (stssAtomPayloadData.getError().hasInstance()) continue;
+
+				// Check type
+				if (stsdDescription.getType() == MAKE_OSTYPE('a', 'v', 'c', '1')) {
+					// h.264 Video
+					TIResult<CData>	h264ConfigurationAtomPayloadData =
+										atomReader.readAtomPayload(*stsdAtomInfo,
+												sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
+														sizeof(SH264VideoFormat));
+					if (h264ConfigurationAtomPayloadData.getError().hasInstance()) continue;
+
+					OI<CVideoTrack>	videoTrack =
+											sComposeH264VideoTrack(stsdDescription,
+													*h264ConfigurationAtomPayloadData.getValue(),
+													SmdhdAtomPayload(*mdhdAtomPayloadData.getValue()),
+													sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload,
+															stszAtomPayload, stcoAtomPayload, co64AtomPayload),
+													stssAtomPayloadData.getValue());
+					if (videoTrack.hasInstance())
+						// Add video track
+						videoTracks += *videoTrack;
+				} else
+					// Unsupported codec
+					return TIResult<SMediaTracks>(sUnsupportedCodecError);
+			}
+		}
+	}
+
+	return TIResult<SMediaTracks>(SMediaTracks(audioTracks, videoTracks));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<CAudioTrack> sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription, const CData& esdsAtomPayloadData,
+		const TArray<CCodec::PacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -744,24 +923,23 @@ void CMPEG4MediaSourceInternals::addMP4AAudioTrack(const SstsdDescription& stsdD
 	// Compose storage format
 	OI<SAudioStorageFormat>	audioStorageFormat =
 									CAACAudioCodec::composeStorageFormat(startCodes, audioFormat.getChannels());
-	if (!audioStorageFormat.hasInstance()) return;
+	if (!audioStorageFormat.hasInstance())
+		return OI<CAudioTrack>();
 
-	// Add audio track
-	mAudioTracks +=
+	return OI<CAudioTrack>(
 			CAudioTrack(*audioStorageFormat,
 					I<CCodec::DecodeInfo>(
 							new CAACAudioCodec::DecodeInfo(packetAndLocations,
 									CData((UInt8*) esdsAtomPayloadData.getBytePtr() + 4,
-											esdsAtomPayloadData.getSize() - 4),
-									startCodes)));
+									esdsAtomPayloadData.getSize() - 4), startCodes))));
 }
 
 //#include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMPEG4MediaSourceInternals::addH264VideoTrack(const SstsdDescription& stsdDescription,
-		const CData& configurationData, const SmdhdAtomPayload& mdhdAtomPayload,
-		const TArray<CCodec::PacketAndLocation>& packetAndLocations, const OI<CData>& stssAtomPayloadData)
+OI<CVideoTrack> sComposeH264VideoTrack(const SstsdDescription& stsdDescription, const CData& configurationData,
+		const SmdhdAtomPayload& mdhdAtomPayload, const TArray<CCodec::PacketAndLocation>& packetAndLocations,
+		const OI<CData>& stssAtomPayloadData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -780,21 +958,20 @@ void CMPEG4MediaSourceInternals::addH264VideoTrack(const SstsdDescription& stsdD
 	OI<SVideoStorageFormat>	videoStorageFormat =
 									CH264VideoCodec::composeStorageFormat(
 											S2DSizeU16(videoFormat.getWidth(), videoFormat.getHeight()));
-	if (!videoStorageFormat.hasInstance()) return;
+	if (!videoStorageFormat.hasInstance())
+		return OI<CVideoTrack>();
 
 	// Add video track
-	mVideoTracks +=
+	return OI<CVideoTrack>(
 			CVideoTrack(*videoStorageFormat,
 					I<CCodec::DecodeInfo>(
-							new CH264VideoCodec::DecodeInfo(configurationData, timeScale, packetAndLocations)));
+							new CH264VideoCodec::DecodeInfo(configurationData, timeScale, packetAndLocations))));
 }
 
-// MARK: Class methods
-
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CCodec::PacketAndLocation> CMPEG4MediaSourceInternals::composePacketAndLocations(
-		const SsttsAtomPayload& sttsAtomPayload, const SstscAtomPayload& stscAtomPayload,
-		const SstszAtomPayload& stszAtomPayload, SstcoAtomPayload* stcoAtomPayload, Sco64AtomPayload* co64AtomPayload)
+TArray<CCodec::PacketAndLocation> sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
+		const SstscAtomPayload& stscAtomPayload, const SstszAtomPayload& stszAtomPayload,
+		SstcoAtomPayload* stcoAtomPayload, Sco64AtomPayload* co64AtomPayload)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -870,192 +1047,4 @@ TArray<CCodec::PacketAndLocation> CMPEG4MediaSourceInternals::composePacketAndLo
 	}
 
 	return packetAndLocations;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMPEG4MediaSource
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CMPEG4MediaSource::CMPEG4MediaSource(const I<CSeekableDataSource>& seekableDataSource) :
-		CAtomMediaSource(CByteReader(seekableDataSource, true))
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CMPEG4MediaSourceInternals();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CMPEG4MediaSource::~CMPEG4MediaSource()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
-
-// MARK: CMediaSource methods
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMPEG4MediaSource::loadTracks()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	OI<SError>	error;
-
-	// Reset to beginning
-	error = reset();
-	ReturnErrorIfError(error);
-
-	// Read root atom
-	OI<AtomInfo>	atomInfo = getAtomInfo(error);
-	ReturnErrorIfError(error);
-	ReturnNotAnMPEG4FileIf(atomInfo->mType != MAKE_OSTYPE('f', 't', 'y', 'p'));
-
-	// Find moov atom
-	while (atomInfo->mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
-		// Go to next atom
-		error = seekToNextAtom(*atomInfo);
-		ReturnErrorIfError(error);
-
-		// Get atom
-		atomInfo = getAtomInfo(error);
-		ReturnErrorIfError(error);
-	}
-
-	OI<AtomGroup>	moovAtomGroup = getAtomGroup(*atomInfo, error);
-	ReturnErrorIfError(error);
-
-	for (TIteratorD<AtomInfo> moovIterator = moovAtomGroup->getIterator(); moovIterator.hasValue();
-			moovIterator.advance()) {
-		// Check type
-		if (moovIterator->mType == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
-			// Track
-			OI<AtomGroup>	trakAtomGroup = getAtomGroup(*moovIterator, error);
-			if (error.hasInstance()) continue;
-
-			// Media
-			OI<AtomGroup>	mdiaAtomGroup =
-									getAtomGroup(trakAtomGroup->getAtomInfo(MAKE_OSTYPE('m', 'd', 'i', 'a')), error);
-			if (error.hasInstance()) continue;
-
-			// Handler
-			OI<CData>	hdlrAtomPayloadData =
-								getAtomPayload(mdiaAtomGroup->getAtomInfo(MAKE_OSTYPE('h', 'd', 'l', 'r')), error);
-			if (error.hasInstance()) continue;
-			const	ShdlrAtomPayload&	hdlrAtomPayload = *((ShdlrAtomPayload*) hdlrAtomPayloadData->getBytePtr());
-
-			// Media Information
-			OI<AtomGroup>	minfAtomGroup =
-									getAtomGroup(mdiaAtomGroup->getAtomInfo(MAKE_OSTYPE('m', 'i', 'n', 'f')), error);
-			if (error.hasInstance()) continue;
-
-			// Sample Table
-			OI<AtomGroup>	stblAtomGroup =
-									getAtomGroup(minfAtomGroup->getAtomInfo(MAKE_OSTYPE('s', 't', 'b', 'l')), error);
-			if (error.hasInstance()) continue;
-
-			// Sample Table Sample Description
-			OR<AtomInfo>	stsdAtomInfo = stblAtomGroup->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'd'));
-			if (!stsdAtomInfo.hasReference()) continue;
-			OI<CData>	stsdAtomPayloadData = getAtomPayload(*stsdAtomInfo, error);
-			if (error.hasInstance()) continue;
-			const	SstsdAtomPayload&	stsdAtomPayload = *((SstsdAtomPayload*) stsdAtomPayloadData->getBytePtr());
-			const	SstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
-
-			// Sample Table Time-to-Sample
-			OI<CData>	sttsAtomPayloadData =
-								getAtomPayload(stblAtomGroup->getAtomInfo(MAKE_OSTYPE('s', 't', 't', 's')), error);
-			if (error.hasInstance()) continue;
-			const	SsttsAtomPayload&	sttsAtomPayload = *((SsttsAtomPayload*) sttsAtomPayloadData->getBytePtr());
-
-			// Sample Table Sample Blocks
-			OI<CData>	stscAtomPayloadData =
-								getAtomPayload(stblAtomGroup->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'c')), error);
-			if (error.hasInstance()) continue;
-			const	SstscAtomPayload&	stscAtomPayload = *((SstscAtomPayload*) stscAtomPayloadData->getBytePtr());
-
-			// Sample Table Packet Sizes
-			OI<CData>	stszAtomPayloadData =
-								getAtomPayload(stblAtomGroup->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'z')), error);
-			if (error.hasInstance()) continue;
-			const	SstszAtomPayload&	stszAtomPayload = *((SstszAtomPayload*) stszAtomPayloadData->getBytePtr());
-
-			// Sample Table Block offsets
-			OI<CData>	stcoAtomPayloadData =
-								getAtomPayload(stblAtomGroup->getAtomInfo(MAKE_OSTYPE('s', 't', 'c', 'o')), error);
-			OI<CData>	co64AtomPayloadData =
-								getAtomPayload(stblAtomGroup->getAtomInfo(MAKE_OSTYPE('c', 'o', '6', '4')), error);
-			if (!stcoAtomPayloadData.hasInstance() && !co64AtomPayloadData.hasInstance()) continue;
-			SstcoAtomPayload*	stcoAtomPayload =
-										stcoAtomPayloadData.hasInstance() ?
-												(SstcoAtomPayload*) stcoAtomPayloadData->getBytePtr() : nil;
-			Sco64AtomPayload*	co64AtomPayload =
-										co64AtomPayloadData.hasInstance() ?
-												(Sco64AtomPayload*) co64AtomPayloadData->getBytePtr() : nil;
-
-			// Check track type
-			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
-				// Audio track
-				if (stsdDescription.getType() == MAKE_OSTYPE('m', 'p', '4', 'a')) {
-					// MPEG4 Audio
-					OI<CData>	esdsAtomPayloadData =
-										getAtomPayload(*stsdAtomInfo,
-												sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
-														sizeof(SMP4AAudioFormat),
-												error);
-  					if (error.hasInstance()) continue;
-
-					mInternals->addMP4AAudioTrack(stsdDescription, *esdsAtomPayloadData,
-							CMPEG4MediaSourceInternals::composePacketAndLocations(sttsAtomPayload, stscAtomPayload,
-									stszAtomPayload, stcoAtomPayload, co64AtomPayload));
-				} else
-					// Unsupported codec
-					return OI<SError>(sUnsupportedCodecError);
-			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
-				// Video track
-				OI<CData>	mdhdAtomPayloadData =
-									getAtomPayload(mdiaAtomGroup->getAtomInfo(MAKE_OSTYPE('m', 'd', 'h', 'd')), error);
-				if (error.hasInstance()) continue;
-
-				OI<CData>	stssAtomPayloadData =
-									getAtomPayload(stblAtomGroup->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 's')), error);
-				if (error.hasInstance()) continue;
-
-				// Check type
-				if (stsdDescription.getType() == MAKE_OSTYPE('a', 'v', 'c', '1')) {
-					// h.264 Video
-					OI<CData>	h264ConfigurationAtomPayloadData =
-										getAtomPayload(*stsdAtomInfo,
-												sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
-														sizeof(SH264VideoFormat),
-												error);
-					if (error.hasInstance()) continue;
-
-					mInternals->addH264VideoTrack(stsdDescription, *h264ConfigurationAtomPayloadData,
-							SmdhdAtomPayload(*mdhdAtomPayloadData),
-							CMPEG4MediaSourceInternals::composePacketAndLocations(sttsAtomPayload, stscAtomPayload,
-									stszAtomPayload, stcoAtomPayload, co64AtomPayload),
-							stssAtomPayloadData);
-				} else
-					// Unsupported codec
-					return OI<SError>(sUnsupportedCodecError);
-			}
-		}
-	}
-
-	return OI<SError>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<CAudioTrack> CMPEG4MediaSource::getAudioTracks()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mAudioTracks;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<CVideoTrack> CMPEG4MediaSource::getVideoTracks()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mVideoTracks;
 }

@@ -32,7 +32,7 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CFilesystem::GetFoldersFilesResult CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
+TIResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -62,18 +62,18 @@ CFilesystem::GetFoldersFilesResult CFilesystem::getFoldersFiles(const CFolder& f
 	// Check results
 	if (nsError == nil)
 		// Have urls
-		return GetFoldersFilesResult([NSURL foldersFilesFor:urls]);
+		return TIResult<SFoldersFiles>([NSURL foldersFilesFor:urls]);
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportErrorFileFolderX1(sError, "getting folders and files", folder);
 
-		return GetFoldersFilesResult(sError);
+		return TIResult<SFoldersFiles>(sError);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFilesystem::GetFoldersResult CFilesystem::getFolders(const CFolder& folder, bool deep)
+TIResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -103,18 +103,18 @@ CFilesystem::GetFoldersResult CFilesystem::getFolders(const CFolder& folder, boo
 	// Check results
 	if (nsError == nil)
 		// Have urls
-		return GetFoldersResult([NSURL foldersFor:urls]);
+		return TIResult<TArray<CFolder> >([NSURL foldersFor:urls]);
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportErrorFileFolderX1(sError, "getting folders", folder);
 
-		return GetFoldersResult(sError);
+		return TIResult<TArray<CFolder> >(sError);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFilesystem::GetFilesResult CFilesystem::getFiles(const CFolder& folder, bool deep)
+TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -144,13 +144,13 @@ CFilesystem::GetFilesResult CFilesystem::getFiles(const CFolder& folder, bool de
 	// Check results
 	if (nsError == nil)
 		// Have urls
-		return GetFilesResult([NSURL filesFor:urls]);
+		return TIResult<TArray<CFile> >([NSURL filesFor:urls]);
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportErrorFileFolderX1(sError, "getting files", folder);
 
-		return GetFilesResult(sError);
+		return TIResult<TArray<CFile> >(sError);
 	}
 }
 
