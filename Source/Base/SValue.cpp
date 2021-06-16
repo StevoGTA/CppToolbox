@@ -452,6 +452,10 @@ bool SValue::equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc) cons
 		return false;
 
 	switch (mType) {
+		case kEmpty:
+			// Empty
+			return true;
+
 		case kBool:
 			// Bool
 			return mValue.mBool == other.mValue.mBool;
