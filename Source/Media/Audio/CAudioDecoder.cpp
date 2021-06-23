@@ -17,14 +17,17 @@ class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals
 					mAudioStorageFormat(audioStorageFormat),
 					mAudioCodecInfo(CCodecRegistry::mShared.getAudioCodecInfo(mAudioStorageFormat.getCodecID())),
 					mCodecDecodeInfo(codecDecodeInfo), mSeekableDataSource(seekableDataSource),
-							mAudioCodec(mAudioCodecInfo.instantiate())
+					mAudioCodec(mAudioCodecInfo.instantiate()),
+					mMediaReader(codecDecodeInfo->createMediaReader(seekableDataSource))
 			{}
 
-				SAudioStorageFormat		mAudioStorageFormat;
-		const	CAudioCodec::Info&		mAudioCodecInfo;
-				I<CCodec::DecodeInfo>	mCodecDecodeInfo;
-				I<CSeekableDataSource>	mSeekableDataSource;
-				I<CAudioCodec>			mAudioCodec;
+				SAudioStorageFormat			mAudioStorageFormat;
+		const	CAudioCodec::Info&			mAudioCodecInfo;
+				I<CCodec::DecodeInfo>		mCodecDecodeInfo;
+				I<CSeekableDataSource>		mSeekableDataSource;
+				I<CAudioCodec>				mAudioCodec;
+				I<CMediaReader>				mMediaReader;
+				OI<SAudioProcessingFormat>	mAudioProcessingFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -68,7 +71,11 @@ TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
 void CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mSeekableDataSource,
+	// Store
+	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+
+	// Setup Audio Codec
+	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mMediaReader,
 			mInternals->mCodecDecodeInfo);
 }
 
@@ -76,5 +83,23 @@ void CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessin
 SAudioSourceStatus CAudioDecoder::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAudioCodec->decode(mediaPosition, audioFrames);
+	// Setup
+	Float32		percentConsumed = mInternals->mMediaReader->getPercenConsumed();
+	OI<SError>	error;
+
+	// Update read position if needed
+	if (mediaPosition.getMode() != SMediaPosition::kFromCurrent) {
+		// Reset audio codec
+		mInternals->mAudioCodec->decodeReset();
+
+		// Set media position
+		error = mInternals->mMediaReader->set(mediaPosition, *mInternals->mAudioProcessingFormat);
+		ReturnValueIfError(error, SAudioSourceStatus(*error));
+	}
+
+	// Decode
+	error = mInternals->mAudioCodec->decode(audioFrames);
+	ReturnValueIfError(error, SAudioSourceStatus(*error));
+
+	return SAudioSourceStatus(percentConsumed);
 }

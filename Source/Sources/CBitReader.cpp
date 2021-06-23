@@ -18,7 +18,7 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 					mCurrentByte(0), mCurrentByteBitsAvailable(0)
 			{}
 
-		SInt64		getPos()
+		UInt64		getPos()
 						{ return mDataSourceOffset; }
 		OI<SError>	setPos(CBitReader::Position position, SInt64 newPos)
 						{
@@ -139,7 +139,7 @@ UInt64 CBitReader::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt64 CBitReader::getPos() const
+UInt64 CBitReader::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->getPos();

@@ -73,7 +73,7 @@ UInt64 CByteReader::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt64 CByteReader::getPos() const
+UInt64 CByteReader::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mCurrentDataSourceOffset - mInternals->mInitialDataSourceOffset;

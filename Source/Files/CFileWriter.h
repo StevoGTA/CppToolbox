@@ -52,7 +52,7 @@ class CFileWriter {
 		OI<SError>	write(UInt64 value) const
 						{ return write(&value, sizeof(UInt64)); }
 
-		SInt64		getPos() const;
+		UInt64		getPos() const;
 		OI<SError>	setPos(Position position, SInt64 newPos) const;
 		OI<SError>	setSize(UInt64 newSize) const;
 

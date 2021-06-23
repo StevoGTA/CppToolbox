@@ -4,80 +4,25 @@
 
 #pragma once
 
-#include "CArray.h"
+#include "CDataSource.h"
+#include "CMediaReader.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCodec
 
 class CCodec {
-	// Structs
-	public:
-		// Opaque data for compressed audio or video frames
-		struct Packet {
-			// Lifecycle methods
-			Packet(UInt32 duration, UInt32 byteCount) : mDuration(duration), mByteCount(byteCount) {}
-
-			// Properties
-			UInt32	mDuration;	// Duration is contextual - typically frame count for audio and time for video
-			UInt32	mByteCount;
-		};
-
-		// Packet with corresponding absolute position in the containing opaque data.
-		struct PacketAndLocation {
-			// Lifecycle methods
-			PacketAndLocation(Packet packet, SInt64 pos) : mPacket(packet), mPos(pos) {}
-
-			// Properties
-			Packet	mPacket;
-			SInt64	mPos;
-		};
 
 	// Classes
 	public:
 		class DecodeInfo {
 			// Methods
 			public:
-						// Lifecycle methods
-						DecodeInfo() {}
-				virtual	~DecodeInfo() {}
-		};
+										// Lifecycle methods
+										DecodeInfo() {}
+				virtual					~DecodeInfo() {}
 
-		class DataDecodeInfo : public DecodeInfo {
-			// Methods
-			public:
-						// Lifecycle methods
-						DataDecodeInfo(SInt64 startOffset, SInt64 size) :
-							DecodeInfo(), mStartOffset(startOffset), mSize(size)
-							{}
-
-						// Instance methods
-				SInt64	getStartOffset() const
-							{ return mStartOffset; }
-				SInt64	getSize() const
-							{ return mSize; }
-
-			// Properties
-			private:
-				SInt64	mStartOffset;
-				SInt64	mSize;
-		};
-
-		class PacketsDecodeInfo : public DecodeInfo {
-			// Methods
-			public:
-													// Lifecycle methods
-													PacketsDecodeInfo(
-															const TArray<PacketAndLocation>& packetAndLocations) :
-														DecodeInfo(), mPacketAndLocations(packetAndLocations)
-														{}
-
-													// Instance methods
-				const	TArray<PacketAndLocation>&	getPacketAndLocations() const
-														{ return mPacketAndLocations; }
-
-			// Properties
-			private:
-				TArray<PacketAndLocation>	mPacketAndLocations;
+										// Instance methods
+				virtual	I<CMediaReader>	createMediaReader(const I<CSeekableDataSource>& seekableDataSource) const = 0;
 		};
 
 		class EncodeSettings {

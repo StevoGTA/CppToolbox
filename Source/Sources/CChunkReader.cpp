@@ -32,7 +32,7 @@ TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SInt64	pos = getPos();
+	UInt64	pos = getPos();
 
 	// Read chunk header
 	OSType	id;

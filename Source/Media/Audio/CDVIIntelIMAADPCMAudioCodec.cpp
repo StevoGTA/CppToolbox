@@ -4,7 +4,7 @@
 
 #include "CDVIIntelIMAADPCMAudioCodec.h"
 
-#include "CByteReader.h"
+#include "SMediaPacket.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ class CDVIIntelIMAADPCMAudioCodecInternals {
 		static	I<CAudioCodec>					instantiate(OSType id)
 													{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
 
-		OI<CByteReader>				mByteReader;
+		OR<CPacketMediaReader>		mPacketMediaReader;
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
 };
 
@@ -125,38 +125,21 @@ CDVIIntelIMAADPCMAudioCodec::~CDVIIntelIMAADPCMAudioCodec()
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		const I<CSeekableDataSource>& seekableDataSource, const I<CCodec::DecodeInfo>& decodeInfo)
+		const I<CMediaReader>& mediaReader, const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	DataDecodeInfo&	dataDecodeInfo = *((DataDecodeInfo*) &*decodeInfo);
-
-	// Store
-	mInternals->mByteReader =
-			OI<CByteReader>(
-					new CByteReader(seekableDataSource, dataDecodeInfo.getStartOffset(), dataDecodeInfo.getSize(),
-							true));
+	mInternals->mPacketMediaReader = OR<CPacketMediaReader>(*((CPacketMediaReader*) &*mediaReader));
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	UInt16	channels = mInternals->mAudioProcessingFormat->getChannels();
 	UInt32	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * channels;
-
-	// Update read position if needed
-	if (mediaPosition.getMode() == SMediaPosition::kFromStart) {
-		// Get new sample position
-		UInt64		frameIndex = mediaPosition.getFrameIndex(mInternals->mAudioProcessingFormat->getSampleRate());
-		UInt64		packetIndex = (frameIndex + kDVIIntelFramesPerPacket - 1) / kDVIIntelFramesPerPacket;
-		SInt64		byteIndex = packetIndex * bytesPerPacket;
-		OI<SError>	error = mInternals->mByteReader->setPos(CByteReader::kPositionFromBeginning, byteIndex);
-		if (error.hasInstance())
-			return SAudioSourceStatus(*error);
-	}
 
 	// Decode packets
 	SInt16*	bufferPtr = (SInt16*) (*audioFrames.getBuffers())[0];
@@ -164,8 +147,10 @@ SAudioSourceStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& med
 	UInt32	decodedFrameCount = 0;
 	while (availableFrameCount >= kDVIIntelFramesPerPacket) {
 		// Read next packet
-		TBuffer<UInt8>	packetBuffer(bytesPerPacket);
-		OI<SError>		error = mInternals->mByteReader->readData(*packetBuffer, bytesPerPacket);
+				TBuffer<UInt8>	packetBuffer(bytesPerPacket);
+		const	OI<SError>&		error =
+										mInternals->mPacketMediaReader->readPacket(*packetBuffer, bytesPerPacket)
+											.getError();
 		if (error.hasInstance()) {
 			// Check situation
 			if (decodedFrameCount > 0)
@@ -173,7 +158,7 @@ SAudioSourceStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& med
 				break;
 			else
 				// EOF, no decoded frames
-				return SAudioSourceStatus(*error);
+				return error;
 		}
 
 		// Decode packet
@@ -240,8 +225,22 @@ SAudioSourceStatus CDVIIntelIMAADPCMAudioCodec::decode(const SMediaPosition& med
 	// Update
 	audioFrames.completeWrite(decodedFrameCount);
 
-	return SAudioSourceStatus(
-			(Float32) mInternals->mByteReader->getPos() / (Float32) mInternals->mByteReader->getSize());
+	return OI<SError>();
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CCodec::DecodeInfo> CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(UInt64 dataStartOffset, UInt64 dataSize,
+		const SAudioStorageFormat& audioStorageFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt32	byteCount = kDVIIntelBytesPerPacketPerChannel * audioStorageFormat.getChannels();
+
+	return I<CCodec::DecodeInfo>(
+			new CPacketsDecodeInfo(SMediaPacket(kDVIIntelFramesPerPacket, byteCount), dataStartOffset,
+					(UInt32) dataSize / byteCount));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

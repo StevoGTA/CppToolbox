@@ -140,6 +140,8 @@ struct SAudioStorageFormat {
 							{ return mSampleRate; }
 	EAudioChannelMap	getChannelMap() const
 							{ return mChannelMap; }
+	UInt8				getChannels() const
+							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
 
 	// Properties
 	private:
@@ -187,10 +189,10 @@ struct SAudioProcessingFormat {
 							{ return mBits; }
 	Float32				getSampleRate() const
 							{ return mSampleRate; }
-	UInt8				getChannels() const
-							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
 	EAudioChannelMap	getChannelMap() const
 							{ return mChannelMap; }
+	UInt8				getChannels() const
+							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
 	bool				getIsFloat() const
 							{ return mSampleType == kSampleTypeFloat; }
 	bool				getIsSignedInteger() const

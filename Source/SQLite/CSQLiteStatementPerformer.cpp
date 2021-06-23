@@ -75,7 +75,7 @@ class CSQLiteStatement {
 													// Data
 													sqlite3_bind_blob(statement, i + 1,
 															value.mValue.mData->getBytePtr(),
-															value.mValue.mData->getSize(), SQLITE_STATIC);
+															(int) value.mValue.mData->getSize(), SQLITE_STATIC);
 													break;
 
 												case SSQLiteValue::kLastInsertRowID:

@@ -13,15 +13,19 @@ class CDVIIntelIMAADPCMAudioCodecInternals;
 class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 	// Methods
 	public:
-							// Lifecycle methods
-							CDVIIntelIMAADPCMAudioCodec();
-							~CDVIIntelIMAADPCMAudioCodec();
+										// Lifecycle methods
+										CDVIIntelIMAADPCMAudioCodec();
+										~CDVIIntelIMAADPCMAudioCodec();
 
-							// CAudioCodec methods - Decoding
-		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-									const I<CSeekableDataSource>& seekableDataSource,
-									const I<CCodec::DecodeInfo>& decodeInfo);
-		SAudioSourceStatus	decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
+										// CAudioCodec methods - Decoding
+				void					setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+												const I<CMediaReader>& mediaReader,
+												const I<CCodec::DecodeInfo>& decodeInfo);
+				OI<SError>				decode(CAudioFrames& audioFrames);
+
+										// Class methods
+		static	I<CCodec::DecodeInfo>	composeDecodeInfo(UInt64 dataStartOffset, UInt64 dataSize,
+												const SAudioStorageFormat& audioStorageFormat);
 
 	// Properties
 	public:

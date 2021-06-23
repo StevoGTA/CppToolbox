@@ -6,6 +6,7 @@
 
 #include "CBitReader.h"
 #include "CVideoCodec.h"
+#include "SMediaPacket.h"
 #include "SVideoFormats.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 
 	// Decode info
 	public:
-		class DecodeInfo : public CCodec::PacketsDecodeInfo {
+		class DecodeInfo : public CPacketsDecodeInfo {
 			// SPSPPSInfo
 			public:
 				struct SPSPPSInfo {
@@ -187,8 +188,8 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 			public:
 							// Lifecycle methods
 							DecodeInfo(const CData& configurationData, UInt32 timeScale,
-									const TArray<PacketAndLocation>& packetAndLocations) :
-								PacketsDecodeInfo(packetAndLocations), mConfigurationData(configurationData),
+									const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
+								CPacketsDecodeInfo(mediaPacketAndLocations), mConfigurationData(configurationData),
 										mTimeScale(timeScale)
 								{}
 

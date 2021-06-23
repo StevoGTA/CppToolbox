@@ -33,7 +33,7 @@ class CByteReader {
 							// Instance methods
 		UInt64				getSize() const;
 
-		SInt64				getPos() const;
+		UInt64				getPos() const;
 		OI<SError>			setPos(Position position, SInt64 newPos) const;
 
 		OI<SError>			readData(void* buffer, UInt64 byteCount) const;

@@ -13,12 +13,12 @@
 CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::Size> uncompressedDataSize)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	UInt32	sourceSize = data.getSize();
-	CData	decompressedData(uncompressedDataSize.hasValue() ? *uncompressedDataSize : sourceSize + sourceSize / 2);
+	CData::Size	sourceSize = data.getSize();
+	CData		decompressedData(uncompressedDataSize.hasValue() ? *uncompressedDataSize : sourceSize + sourceSize / 2);
 
 	z_stream	strm;
 	strm.next_in = (Bytef*) data.getBytePtr();
-	strm.avail_in = sourceSize;
+	strm.avail_in = (uInt) sourceSize;
 	strm.total_out = 0;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;

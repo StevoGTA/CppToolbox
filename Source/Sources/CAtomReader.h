@@ -14,7 +14,7 @@ class CAtomReader : public CByteReader {
 	public:
 		struct AtomInfo {
 			// Lifecycle methods
-			AtomInfo(OSType type, SInt64 payloadPos, UInt64 payloadSize) :
+			AtomInfo(OSType type, UInt64 payloadPos, UInt64 payloadSize) :
 				mType(type), mPayloadPos(payloadPos), mPayloadSize(payloadSize)
 				{}
 			AtomInfo(const AtomInfo& other) :
@@ -23,7 +23,7 @@ class CAtomReader : public CByteReader {
 
 			// Properties
 			OSType	mType;
-			SInt64	mPayloadPos;
+			UInt64	mPayloadPos;
 			UInt64	mPayloadSize;
 		};
 

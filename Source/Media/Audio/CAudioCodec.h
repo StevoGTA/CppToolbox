@@ -15,6 +15,11 @@
 // MARK: CAudioCodec
 
 class CAudioCodec : public CCodec {
+	// Types
+	public:
+		typedef	I<CCodec::DecodeInfo>	(*ComposeDecodeInfoProc)(UInt64 dataStartOffset, UInt64 dataSize,
+												const SAudioStorageFormat& audioStorageFormat);
+
 	// Structs
 	public:
 		struct Info {
@@ -93,10 +98,10 @@ class CAudioCodec : public CCodec {
 
 												// Instance methods
 		virtual	void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-														const I<CSeekableDataSource>& seekableDataSource,
+														const I<CMediaReader>& mediaReader,
 														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
-		virtual	SAudioSourceStatus				decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames) =
-														0;
+		virtual	OI<SError>						decode(CAudioFrames& audioFrames) = 0;
+		virtual	void							decodeReset() {}
 
 		virtual	TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const = 0;
 		virtual	void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat) = 0;
@@ -104,11 +109,6 @@ class CAudioCodec : public CCodec {
 	protected:
 												// Lifecycle methods
 												CAudioCodec() : CCodec() {}
-
-												// Class methods
-		static	UInt32							getPacketIndex(const SMediaPosition& mediaPosition,
-														const SAudioProcessingFormat& audioProcessingFormat,
-														const TArray<CCodec::PacketAndLocation>& packetAndLocations);
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -134,17 +134,16 @@ class CDecodeOnlyAudioCodec : public CAudioCodec {
 class CEncodeOnlyAudioCodec : public CAudioCodec {
 	// Methods
 	public:
-							// CAudioCodec methods
-		void				setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-									const I<CSeekableDataSource>& seekableDataSource,
-									const I<CCodec::DecodeInfo>& decodeInfo)
-								{ AssertFailUnimplemented(); }
-		SAudioSourceStatus	decode(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
-								{
-									AssertFailUnimplemented();
+					// CAudioCodec methods
+		void		setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+							const I<CMediaReader>& mediaReader, const I<CCodec::DecodeInfo>& decodeInfo)
+						{ AssertFailUnimplemented(); }
+		OI<SError>	decode(CAudioFrames& audioFrames)
+						{
+							AssertFailUnimplemented();
 
-									return SAudioSourceStatus(SError::mUnimplemented);
-								}
+							return OI<SError>(SError::mUnimplemented);
+						}
 
 	protected:
 							// Lifecycle methods

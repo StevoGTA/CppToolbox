@@ -703,13 +703,13 @@ static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported
 static	TIResult<SMediaTracks>				sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource);
 static	OI<CAudioTrack>						sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription,
 													const CData& esdsAtomPayloadData,
-													const TArray<CCodec::PacketAndLocation>& packetAndLocations);
+													const TArray<SMediaPacketAndLocation>& packetAndLocations);
 static	OI<CVideoTrack>						sComposeH264VideoTrack(const SstsdDescription& stsdDescription,
 													const CData& configurationData,
 													const SmdhdAtomPayload& mdhdAtomPayload,
-													const TArray<CCodec::PacketAndLocation>& packetAndLocations,
+													const TArray<SMediaPacketAndLocation>& packetAndLocations,
 													const OI<CData>& stssAtomPayloadData);
-static	TArray<CCodec::PacketAndLocation>	sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
+static	TArray<SMediaPacketAndLocation>	sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
 													const SstscAtomPayload& stscAtomPayload,
 													const SstszAtomPayload& stszAtomPayload,
 													SstcoAtomPayload* stcoAtomPayload,
@@ -908,7 +908,7 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<CAudioTrack> sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription, const CData& esdsAtomPayloadData,
-		const TArray<CCodec::PacketAndLocation>& packetAndLocations)
+		const TArray<SMediaPacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -938,7 +938,7 @@ OI<CAudioTrack> sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription, 
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<CVideoTrack> sComposeH264VideoTrack(const SstsdDescription& stsdDescription, const CData& configurationData,
-		const SmdhdAtomPayload& mdhdAtomPayload, const TArray<CCodec::PacketAndLocation>& packetAndLocations,
+		const SmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations,
 		const OI<CData>& stssAtomPayloadData)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -969,13 +969,13 @@ OI<CVideoTrack> sComposeH264VideoTrack(const SstsdDescription& stsdDescription, 
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CCodec::PacketAndLocation> sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
+TArray<SMediaPacketAndLocation> sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
 		const SstscAtomPayload& stscAtomPayload, const SstszAtomPayload& stszAtomPayload,
 		SstcoAtomPayload* stcoAtomPayload, Sco64AtomPayload* co64AtomPayload)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNArray<CCodec::PacketAndLocation>	packetAndLocations;
+	TNArray<SMediaPacketAndLocation>	packetAndLocations;
 
 	// Construct info
 	UInt32	stszPacketByteCountIndex = 0;
@@ -1007,7 +1007,7 @@ TArray<CCodec::PacketAndLocation> sComposePacketAndLocations(const SsttsAtomPayl
 
 			// Add Packet Location Info
 			packetAndLocations +=
-					CCodec::PacketAndLocation(CCodec::Packet(sttsChunkPacketDuration, packetByteCount),
+					SMediaPacketAndLocation(SMediaPacket(sttsChunkPacketDuration, packetByteCount),
 							currentByteOffset);
 
 			// Update

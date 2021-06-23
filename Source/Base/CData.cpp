@@ -324,7 +324,7 @@ CString CData::getBase64String(bool prettyPrint) const
 
 	// Setup
 	Size			dataLength = mInternals->mBufferSize;
-	CString::Length	stringLength = (dataLength + 2) / 3 * 4;	// 3 byte blocks to 4 characters
+	CString::Length	stringLength = (CString::Length) (dataLength + 2) / 3 * 4;	// 3 byte blocks to 4 characters
 	if (prettyPrint)
 		// Add for newlines
 		stringLength += (stringLength + 71) / 72; // line feeds

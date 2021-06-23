@@ -30,7 +30,7 @@ class CBitReader {
 							// Instance methods
 		UInt64				getSize() const;
 
-		SInt64				getPos() const;	// Will return next byte pos if bits still to read in current byte
+		UInt64				getPos() const;	// Will return next byte pos if bits still to read in current byte
 		OI<SError>			setPos(Position position, SInt64 newPos) const;	// kPositionFromCurrent of 0 advances to next byte boundary
 
 		OI<SError>			readData(void* buffer, UInt64 byteCount) const;

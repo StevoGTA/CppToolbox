@@ -50,9 +50,10 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 		return TIResult<SMediaTracks>(sNotAWAVEFileError);
 
 	// Process chunks
-	OI<SAudioStorageFormat>	audioStorageFormat;
-	SInt64					dataStartOffset = 0;
-	SInt64					dataSize = 0;
+	OI<SAudioStorageFormat>				audioStorageFormat;
+	UInt64								dataStartOffset = 0;
+	UInt64								dataSize = 0;
+	CAudioCodec::ComposeDecodeInfoProc	composeDecodeInfoProc = nil;
 	while (true) {
 		// Read next chunk info
 		TIResult<CChunkReader::ChunkInfo>	chunkInfo = chunkReader.readChunkInfo();
@@ -75,6 +76,7 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 										SAudioStorageFormat(CDVIIntelIMAADPCMAudioCodec::mID, 16,
 												(Float32) waveFormat.getSamplesPerSec(),
 												AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels())));
+						composeDecodeInfoProc = CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo;
 						break;
 
 					default:
@@ -102,8 +104,7 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 
 	// Store
 	audioTracks +=
-			CAudioTrack(*audioStorageFormat,
-					I<CCodec::DecodeInfo>(new CAudioCodec::DataDecodeInfo(dataStartOffset, dataSize)));
+			CAudioTrack(*audioStorageFormat, composeDecodeInfoProc(dataStartOffset, dataSize, *audioStorageFormat));
 
 	return TIResult<SMediaTracks>(SMediaTracks(audioTracks));
 }

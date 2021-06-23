@@ -68,7 +68,7 @@ class CH264VideoCodecInternals {
 
 		OI<CBitReader>							mBitReader;
 		UInt32									mTimeScale;
-		OI<TArray<CCodec::PacketAndLocation> >	mPacketAndLocations;
+		OI<TArray<SMediaPacketAndLocation> >	mPacketAndLocations;
 		OI<CVideoCodec::DecodeFrameInfo>		mDecodeFrameInfo;
 
 		CMFormatDescriptionRef					mFormatDescriptionRef;
@@ -196,7 +196,7 @@ void CH264VideoCodec::setupForDecode(const I<CSeekableDataSource>& seekableDataS
 	// Finish setup
 	mInternals->mBitReader = OI<CBitReader>(CBitReader(seekableDataSource, true));
 	mInternals->mTimeScale = h264DecodeInfo.getTimeScale();
-	mInternals->mPacketAndLocations = OI<TArray<CCodec::PacketAndLocation> >(h264DecodeInfo.getPacketAndLocations());
+	mInternals->mPacketAndLocations = OI<TArray<SMediaPacketAndLocation> >(h264DecodeInfo.getPacketAndLocations());
 	mInternals->mDecodeFrameInfo = OI<CVideoCodec::DecodeFrameInfo>(decodeFrameInfo);
 
 	CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
@@ -218,14 +218,15 @@ bool CH264VideoCodec::triggerDecode()
 		return false;
 
 	// Setup
-	CCodec::PacketAndLocation&	packetAndLocation = mInternals->mPacketAndLocations->getAt(mInternals->mNextFrameIndex);
+	SMediaPacketAndLocation&	mediaPacketAndLocation =
+										mInternals->mPacketAndLocations->getAt(mInternals->mNextFrameIndex);
 	OSStatus					status;
 
 	// Read packet
-	OI<SError>	error = mInternals->mBitReader->setPos(CBitReader::kPositionFromBeginning, packetAndLocation.mPos);
+	OI<SError>	error = mInternals->mBitReader->setPos(CBitReader::kPositionFromBeginning, mediaPacketAndLocation.mPos);
 	LogIfErrorAndReturnValue(error, OSSTR("setting position for video frame packet"), false);
 
-	TIResult<CData>	dataResult = mInternals->mBitReader->readData(packetAndLocation.mPacket.mByteCount);
+	TIResult<CData>	dataResult = mInternals->mBitReader->readData(mediaPacketAndLocation.mMediaPacket.mByteCount);
 	error = dataResult.getError();
 	LogIfErrorAndReturnValue(error, OSSTR("reading video frame packet data"), false);
 
@@ -270,11 +271,11 @@ UInt8	frameNum;
 UInt8	picOrderCntLSB;
 UInt8	deltaPicOrderCntBottom;
 
-error = mInternals->mBitReader->setPos(CBitReader::kPositionFromBeginning, packetAndLocation.mPos);
+error = mInternals->mBitReader->setPos(CBitReader::kPositionFromBeginning, mediaPacketAndLocation.mPos);
 while (true) {
 	//
 	OV<UInt32>	size = mInternals->mBitReader->readUInt32().getValue();
-	SInt64		pos = mInternals->mBitReader->getPos();
+	UInt64		pos = mInternals->mBitReader->getPos();
 
 	OV<UInt8>	forbidden_zero_bit = mInternals->mBitReader->readUInt8(1).getValue();
 	OV<UInt8>	nal_ref_idc = mInternals->mBitReader->readUInt8(2).getValue();
@@ -341,7 +342,7 @@ while (true) {
 	LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMBlockBufferCreateWithMemoryBlock"), false);
 
 	CMSampleTimingInfo	sampleTimingInfo;
-	sampleTimingInfo.duration = ::CMTimeMake(packetAndLocation.mPacket.mDuration, mInternals->mTimeScale);
+	sampleTimingInfo.duration = ::CMTimeMake(mediaPacketAndLocation.mMediaPacket.mDuration, mInternals->mTimeScale);
 
 //	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime, mInternals->mTimeScale);
 
@@ -365,7 +366,7 @@ if (sliceType == 2) {
 
 	frameTime =
 			mInternals->mLastIDRFrameTime +
-					(mInternals->mPicOrderCountMSB + picOrderCntLSB) / 2 * packetAndLocation.mPacket.mDuration;
+					(mInternals->mPicOrderCountMSB + picOrderCntLSB) / 2 * mediaPacketAndLocation.mMediaPacket.mDuration;
 
 	mInternals->mPreviousPicOrderCountLSB = picOrderCntLSB;
 }
@@ -398,7 +399,7 @@ sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(frameTime, mInternals->mTi
 
 	// Update
 	mInternals->mNextFrameIndex++;
-	mInternals->mNextFrameTime += packetAndLocation.mPacket.mDuration;
+	mInternals->mNextFrameTime += mediaPacketAndLocation.mMediaPacket.mDuration;
 
 	return true;
 }

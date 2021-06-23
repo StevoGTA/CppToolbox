@@ -255,6 +255,11 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 		// Store value in dictionary
 		const	SValue&	value = iterator.getValue().mValue;
 		switch (value.getType()) {
+			case SValue::kEmpty:
+				// Empty (null)
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, kCFNull);
+				break;
+
 			case SValue::kBool:
 				// Bool
 				::CFDictionarySetValue(dictionaryRef, keyStringRef,
