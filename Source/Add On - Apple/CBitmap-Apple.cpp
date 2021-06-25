@@ -90,31 +90,31 @@ void CBitmap::setPixels(const S2DRectS32& rect, const CColor& color)
 	const	S2DSizeS32	bitmapSize = getSize();
 
 	// Parameter check
-	AssertFailIf((rect.mOrigin.mX < 0) || (rect.mOrigin.mX >= bitmapSize.mWidth));
+//	AssertFailIf((rect.mOrigin.mX < 0) || (rect.mOrigin.mX >= bitmapSize.mWidth));
 	if ((rect.mOrigin.mX < 0) || (rect.mOrigin.mX >= bitmapSize.mWidth))
 		return;
 
-	AssertFailIf((rect.mOrigin.mY < 0) || (rect.mOrigin.mY >= bitmapSize.mHeight));
+//	AssertFailIf((rect.mOrigin.mY < 0) || (rect.mOrigin.mY >= bitmapSize.mHeight));
 	if ((rect.mOrigin.mY < 0) || (rect.mOrigin.mY >= bitmapSize.mHeight))
 		return;
 
-	AssertFailIf(((rect.mOrigin.mX + rect.getWidth()) < 0) ||
-			((rect.mOrigin.mX + rect.getWidth()) > bitmapSize.mWidth));
+//	AssertFailIf(((rect.mOrigin.mX + rect.getWidth()) < 0) ||
+//			((rect.mOrigin.mX + rect.getWidth()) > bitmapSize.mWidth));
 	if (((rect.mOrigin.mX + rect.getWidth()) < 0) ||
 			((rect.mOrigin.mX + rect.getWidth()) > bitmapSize.mWidth))
 		return;
 
-	AssertFailIf(((rect.mOrigin.mY + rect.getHeight()) < 0) ||
-			((rect.mOrigin.mY + rect.getHeight()) > bitmapSize.mHeight));
+//	AssertFailIf(((rect.mOrigin.mY + rect.getHeight()) < 0) ||
+//			((rect.mOrigin.mY + rect.getHeight()) > bitmapSize.mHeight));
 	if (((rect.mOrigin.mY + rect.getHeight()) < 0) ||
 			((rect.mOrigin.mY + rect.getHeight()) > bitmapSize.mHeight))
 		return;
 
-	AssertFailIf(rect.getWidth() < 0);
+//	AssertFailIf(rect.getWidth() < 0);
 	if (rect.getWidth() < 0)
 		return;
 
-	AssertFailIf(rect.getHeight() < 0);
+//	AssertFailIf(rect.getHeight() < 0);
 	if (rect.getHeight() < 0)
 		return;
 
