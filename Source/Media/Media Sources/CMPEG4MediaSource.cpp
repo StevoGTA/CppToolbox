@@ -740,110 +740,109 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 
 	// Read root atom
 	TIResult<CAtomReader::AtomInfo>	atomInfo = atomReader.readAtomInfo();
-	ReturnValueIfError(atomInfo.getError(), TIResult<SMediaTracks>(*atomInfo.getError()));
-	if (atomInfo.getValue()->mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
+	ReturnValueIfResultError(atomInfo, TIResult<SMediaTracks>(atomInfo.getError()));
+	if (atomInfo.getValue().mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
 		return TIResult<SMediaTracks>(sNotAnMPEG4FileError);
 
 	// Find moov atom
-	while (atomInfo.getValue()->mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
+	while (atomInfo.getValue().mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
 		// Go to next atom
-		error = atomReader.seekToNextAtom(*atomInfo.getValue());
+		error = atomReader.seekToNextAtom(atomInfo.getValue());
 		ReturnValueIfError(error, TIResult<SMediaTracks>(*error));
 
 		// Get atom
 		atomInfo = atomReader.readAtomInfo();
-		ReturnValueIfError(atomInfo.getError(), TIResult<SMediaTracks>(*atomInfo.getError()));
+		ReturnValueIfResultError(atomInfo, TIResult<SMediaTracks>(atomInfo.getError()));
 	}
 
-	TIResult<CAtomReader::AtomGroup>	moovAtomGroup = atomReader.readAtomGroup(*atomInfo.getValue());
-	ReturnValueIfError(moovAtomGroup.getError(), TIResult<SMediaTracks>(*moovAtomGroup.getError()));
+	TIResult<CAtomReader::AtomGroup>	moovAtomGroup = atomReader.readAtomGroup(atomInfo.getValue());
+	ReturnValueIfResultError(moovAtomGroup, TIResult<SMediaTracks>(moovAtomGroup.getError()));
 
-	for (TIteratorD<CAtomReader::AtomInfo> moovIterator = moovAtomGroup.getValue()->getIterator();
+	for (TIteratorD<CAtomReader::AtomInfo> moovIterator = moovAtomGroup.getValue().getIterator();
 			moovIterator.hasValue(); moovIterator.advance()) {
 		// Check type
 		if (moovIterator->mType == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
 			// Track
 			TIResult<CAtomReader::AtomGroup>	trakAtomGroup = atomReader.readAtomGroup(*moovIterator);
-			if (trakAtomGroup.getError().hasInstance()) continue;
+			if (trakAtomGroup.hasError()) continue;
 
 			// Media
 			TIResult<CAtomReader::AtomGroup>	mdiaAtomGroup =
 														atomReader.readAtomGroup(
-																trakAtomGroup.getValue()->getAtomInfo(
+																trakAtomGroup.getValue().getAtomInfo(
 																		MAKE_OSTYPE('m', 'd', 'i', 'a')));
-			if (mdiaAtomGroup.getError().hasInstance()) continue;
+			if (mdiaAtomGroup.hasError()) continue;
 
 			// Handler
 			TIResult<CData>	hdlrAtomPayloadData =
 									atomReader.readAtomPayload(
-											mdiaAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('h', 'd', 'l', 'r')));
-			if (hdlrAtomPayloadData.getError().hasInstance()) continue;
+											mdiaAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('h', 'd', 'l', 'r')));
+			if (hdlrAtomPayloadData.hasError()) continue;
 			const	ShdlrAtomPayload&	hdlrAtomPayload =
-												*((ShdlrAtomPayload*) hdlrAtomPayloadData.getValue()->getBytePtr());
+												*((ShdlrAtomPayload*) hdlrAtomPayloadData.getValue().getBytePtr());
 
 			// Media Information
 			TIResult<CAtomReader::AtomGroup>	minfAtomGroup =
 														atomReader.readAtomGroup(
-																mdiaAtomGroup.getValue()->getAtomInfo(
+																mdiaAtomGroup.getValue().getAtomInfo(
 																		MAKE_OSTYPE('m', 'i', 'n', 'f')));
-			if (minfAtomGroup.getError().hasInstance()) continue;
+			if (minfAtomGroup.hasError()) continue;
 
 			// Sample Table
 			TIResult<CAtomReader::AtomGroup>	stblAtomGroup =
 														atomReader.readAtomGroup(
-																minfAtomGroup.getValue()->getAtomInfo(
+																minfAtomGroup.getValue().getAtomInfo(
 																		MAKE_OSTYPE('s', 't', 'b', 'l')));
-			if (stblAtomGroup.getError().hasInstance()) continue;
+			if (stblAtomGroup.hasError()) continue;
 
 			// Sample Table Sample Description
 			OR<CAtomReader::AtomInfo>	stsdAtomInfo =
-												stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'd'));
+												stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'd'));
 			if (!stsdAtomInfo.hasReference()) continue;
 			TIResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtomInfo);
 			if (error.hasInstance()) continue;
 			const	SstsdAtomPayload&	stsdAtomPayload =
-												*((SstsdAtomPayload*) stsdAtomPayloadData.getValue()->getBytePtr());
+												*((SstsdAtomPayload*) stsdAtomPayloadData.getValue().getBytePtr());
 			const	SstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
 
 			// Sample Table Time-to-Sample
 			TIResult<CData>	sttsAtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 't', 's')));
-			if (sttsAtomPayloadData.getError().hasInstance()) continue;
+											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 't', 's')));
+			if (sttsAtomPayloadData.hasError()) continue;
 			const	SsttsAtomPayload&	sttsAtomPayload =
-												*((SsttsAtomPayload*) sttsAtomPayloadData.getValue()->getBytePtr());
+												*((SsttsAtomPayload*) sttsAtomPayloadData.getValue().getBytePtr());
 
 			// Sample Table Sample Blocks
 			TIResult<CData>	stscAtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'c')));
-			if (stscAtomPayloadData.getError().hasInstance()) continue;
+											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'c')));
+			if (stscAtomPayloadData.hasError()) continue;
 			const	SstscAtomPayload&	stscAtomPayload =
-												*((SstscAtomPayload*) stscAtomPayloadData.getValue()->getBytePtr());
+												*((SstscAtomPayload*) stscAtomPayloadData.getValue().getBytePtr());
 
 			// Sample Table Packet Sizes
 			TIResult<CData>	stszAtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'z')));
-			if (stszAtomPayloadData.getError().hasInstance()) continue;
+											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'z')));
+			if (stszAtomPayloadData.hasError()) continue;
 			const	SstszAtomPayload&	stszAtomPayload =
-												*((SstszAtomPayload*) stszAtomPayloadData.getValue()->getBytePtr());
+												*((SstszAtomPayload*) stszAtomPayloadData.getValue().getBytePtr());
 
 			// Sample Table Block offsets
 			TIResult<CData>	stcoAtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 'c', 'o')));
+											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 'c', 'o')));
 			TIResult<CData>	co64AtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('c', 'o', '6', '4')));
-			if (!stcoAtomPayloadData.getValue().hasInstance() && !co64AtomPayloadData.getValue().hasInstance())
-					continue;
+											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('c', 'o', '6', '4')));
+			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
 			SstcoAtomPayload*	stcoAtomPayload =
-										stcoAtomPayloadData.getValue().hasInstance() ?
-												(SstcoAtomPayload*) stcoAtomPayloadData.getValue()->getBytePtr() : nil;
+										stcoAtomPayloadData.hasValue() ?
+												(SstcoAtomPayload*) stcoAtomPayloadData.getValue().getBytePtr() : nil;
 			Sco64AtomPayload*	co64AtomPayload =
-										co64AtomPayloadData.getValue().hasInstance() ?
-												(Sco64AtomPayload*) co64AtomPayloadData.getValue()->getBytePtr() : nil;
+										co64AtomPayloadData.hasValue() ?
+												(Sco64AtomPayload*) co64AtomPayloadData.getValue().getBytePtr() : nil;
 
 			// Check track type
 			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
@@ -854,9 +853,9 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 											atomReader.readAtomPayload(*stsdAtomInfo,
 													sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
 															sizeof(SMP4AAudioFormat));
-  					if (esdsAtomPayloadData.getError().hasInstance()) continue;
+  					if (esdsAtomPayloadData.hasError()) continue;
   					OI<CAudioTrack>	audioTrack =
-  											sComposeMP4AAudioTrack(stsdDescription, *esdsAtomPayloadData.getValue(),
+  											sComposeMP4AAudioTrack(stsdDescription, esdsAtomPayloadData.getValue(),
 													sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload,
 															stszAtomPayload, stcoAtomPayload, co64AtomPayload));
 					if (audioTrack.hasInstance())
@@ -869,13 +868,13 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 				// Video track
 				TIResult<CData>	mdhdAtomPayloadData =
 										atomReader.readAtomPayload(
-												mdiaAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('m', 'd', 'h', 'd')));
-				if (mdhdAtomPayloadData.getError().hasInstance()) continue;
+												mdiaAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('m', 'd', 'h', 'd')));
+				if (mdhdAtomPayloadData.hasError()) continue;
 
 				TIResult<CData>	stssAtomPayloadData =
 										atomReader.readAtomPayload(
-												stblAtomGroup.getValue()->getAtomInfo(MAKE_OSTYPE('s', 't', 's', 's')));
-				if (stssAtomPayloadData.getError().hasInstance()) continue;
+												stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 's')));
+				if (stssAtomPayloadData.hasError()) continue;
 
 				// Check type
 				if (stsdDescription.getType() == MAKE_OSTYPE('a', 'v', 'c', '1')) {
@@ -884,12 +883,12 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 										atomReader.readAtomPayload(*stsdAtomInfo,
 												sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
 														sizeof(SH264VideoFormat));
-					if (h264ConfigurationAtomPayloadData.getError().hasInstance()) continue;
+					if (h264ConfigurationAtomPayloadData.hasError()) continue;
 
 					OI<CVideoTrack>	videoTrack =
 											sComposeH264VideoTrack(stsdDescription,
-													*h264ConfigurationAtomPayloadData.getValue(),
-													SmdhdAtomPayload(*mdhdAtomPayloadData.getValue()),
+													h264ConfigurationAtomPayloadData.getValue(),
+													SmdhdAtomPayload(mdhdAtomPayloadData.getValue()),
 													sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload,
 															stszAtomPayload, stcoAtomPayload, co64AtomPayload),
 													stssAtomPayloadData.getValue());

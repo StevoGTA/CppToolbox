@@ -102,22 +102,22 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 					CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(data)), true);
 
 					// Decode
-					mForbiddenZero = *bitReader.readUInt8(1).getValue();
-					mNALRef = *bitReader.readUInt8(2).getValue();
-					mNALUnitType = (NALUInfo::Type) *bitReader.readUInt8(5).getValue();
-					mProfile = *bitReader.readUInt8().getValue();
-					mConstraintSet0Flag = *bitReader.readUInt8(1).getValue();
-					mConstraintSet1Flag = *bitReader.readUInt8(1).getValue();
-					mConstraintSet2Flag = *bitReader.readUInt8(1).getValue();
-					mConstraintSet3Flag = *bitReader.readUInt8(1).getValue();
-					mConstraintSet4Flag = *bitReader.readUInt8(1).getValue();
-					mConstraintSet5Flag = *bitReader.readUInt8(1).getValue();
-					mReserved2Bits = *bitReader.readUInt8(2).getValue();
-					mLevel = *bitReader.readUInt8().getValue();
-					mSPSID = *bitReader.readUEColumbusCode().getValue();
-					mFrameNumberBitCount = *bitReader.readUEColumbusCode().getValue() + 4;
-					mPicOrderCountType = *bitReader.readUEColumbusCode().getValue();
-					mPicOrderCountLSBBitCount = *bitReader.readUEColumbusCode().getValue() + 4;
+					mForbiddenZero = bitReader.readUInt8(1).getValue();
+					mNALRef = bitReader.readUInt8(2).getValue();
+					mNALUnitType = (NALUInfo::Type) bitReader.readUInt8(5).getValue();
+					mProfile = bitReader.readUInt8().getValue();
+					mConstraintSet0Flag = bitReader.readUInt8(1).getValue();
+					mConstraintSet1Flag = bitReader.readUInt8(1).getValue();
+					mConstraintSet2Flag = bitReader.readUInt8(1).getValue();
+					mConstraintSet3Flag = bitReader.readUInt8(1).getValue();
+					mConstraintSet4Flag = bitReader.readUInt8(1).getValue();
+					mConstraintSet5Flag = bitReader.readUInt8(1).getValue();
+					mReserved2Bits = bitReader.readUInt8(2).getValue();
+					mLevel = bitReader.readUInt8().getValue();
+					mSPSID = bitReader.readUEColumbusCode().getValue();
+					mFrameNumberBitCount = bitReader.readUEColumbusCode().getValue() + 4;
+					mPicOrderCountType = bitReader.readUEColumbusCode().getValue();
+					mPicOrderCountLSBBitCount = bitReader.readUEColumbusCode().getValue() + 4;
 				}
 
 			// Properties

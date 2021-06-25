@@ -36,7 +36,7 @@ class CAtomReader : public CByteReader {
 											// Instance methods
 					TIteratorD<AtomInfo>	getIterator() const
 												{ return mAtomInfos.getIterator(); }
-					OR<AtomInfo>			getAtomInfo(OSType type)
+					OR<AtomInfo>			getAtomInfo(OSType type) const
 												{ return mAtomInfos.getFirst(compareType, &type); }
 
 											// Class methods

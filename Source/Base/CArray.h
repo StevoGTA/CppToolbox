@@ -212,7 +212,7 @@ template <typename T> class TArray : public CArray {
 							{ CArray::sort((CompareProc) compareProc, userData); return *this; }
 
 						// Instance methods
-		OR<T>			getFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
+		OR<T>			getFirst(bool (proc)(const T& item, void* userData), void* userData = nil) const
 							{
 								// Iterate all items
 								ItemCount	count = getCount();

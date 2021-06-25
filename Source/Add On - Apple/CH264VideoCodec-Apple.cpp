@@ -227,10 +227,8 @@ bool CH264VideoCodec::triggerDecode()
 	LogIfErrorAndReturnValue(error, OSSTR("setting position for video frame packet"), false);
 
 	TIResult<CData>	dataResult = mInternals->mBitReader->readData(mediaPacketAndLocation.mMediaPacket.mByteCount);
-	error = dataResult.getError();
-	LogIfErrorAndReturnValue(error, OSSTR("reading video frame packet data"), false);
-
-	const	CData&	data = *dataResult.getValue();
+	LogIfResultErrorAndReturnValue(dataResult, "reading video frame packet data", false);
+	const	CData&	data = dataResult.getValue();
 
 //CLogServices::logMessage(
 //		CString("Packet ") + CString(mInternals->mNextFrameIndex) + CString(" (") + CString(data->getSize()) +

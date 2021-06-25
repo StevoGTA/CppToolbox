@@ -38,10 +38,10 @@ class CAACAudioCodecInternals {
 									TIResult<TArray<SMediaPacket> >	mediaPacketsResult =
 																			internals.mPacketMediaReader->readPackets(
 																					internals.mInputPacketData);
-									ReturnValueIfError(mediaPacketsResult.getError(), -1);
+									ReturnValueIfResultError(mediaPacketsResult, -1);
 
 									// Prepare return info
-									const	TArray<SMediaPacket>&	mediaPackets = *mediaPacketsResult.getValue();
+									const	TArray<SMediaPacket>&	mediaPackets = mediaPacketsResult.getValue();
 
 									*ioNumberDataPackets = mediaPackets.getCount();
 

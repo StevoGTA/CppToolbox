@@ -333,7 +333,7 @@ TVResult<UInt32> CBitReader::readUEColumbusCode() const
 	}
 
 	TVResult<UInt32>	value = readUInt32(leadingZeroBits);
-	ReturnValueIfError(value.getError(), TVResult<UInt32>(*value.getError()));
+	ReturnValueIfResultError(value, TVResult<UInt32>(value.getError()));
 
-	return TVResult<UInt32>((1 << leadingZeroBits) - 1 + *value.getValue());
+	return TVResult<UInt32>((1 << leadingZeroBits) - 1 + value.getValue());
 }

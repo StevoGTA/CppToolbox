@@ -357,7 +357,7 @@ class CDataGPUTextureReferenceInternals : public CGPULoadableTextureReferenceInt
 							TIResult<CData>	dataResult = mDataSource->readData();
 							LogIfErrorAndReturn(dataResult.getError(), "reading data from data provider");
 
-							textureData = *dataResult.getValue();
+							textureData = dataResult.getValue();
 						}
 
 						// Is loading continuing

@@ -10,16 +10,21 @@
 // MARK: TIResult (Instance)
 
 template <typename T> struct TIResult {
-						// Lifecycle Methods
-						TIResult(const T& value) : mValue(OI<T>(value)) {}
-						TIResult(const SError& error) : mError(OI<SError>(error)) {}
-						TIResult(const TIResult& other) : mValue(other.mValue), mError(other.mError) {}
+					// Lifecycle Methods
+					TIResult(const T& value) : mValue(OI<T>(value)) {}
+					TIResult(const SError& error) : mError(OI<SError>(error)) {}
+					TIResult(const TIResult& other) : mValue(other.mValue), mError(other.mError) {}
 
-						// Instance Methods
-	const	OI<T>&		getValue() const
-							{ return mValue; }
-	const	OI<SError>&	getError() const
-							{ return mError; }
+					// Instance Methods
+			bool	hasValue() const
+						{ return mValue.hasInstance(); }
+	const	T&		getValue() const
+						{ return *mValue; }
+
+			bool	hasError() const
+						{ return mError.hasInstance(); }
+	const	SError&	getError() const
+						{ return *mError; }
 
 	private:
 		OI<T>		mValue;
@@ -30,18 +35,60 @@ template <typename T> struct TIResult {
 // MARK: - TVResult (Value)
 
 template <typename T> struct TVResult {
-						// Lifecycle Methods
-						TVResult(const T value) : mValue(OV<T>(value)) {}
-						TVResult(const SError& error) : mError(OI<SError>(error)) {}
-						TVResult(const TVResult& other) : mValue(other.mValue), mError(other.mError) {}
+					// Lifecycle Methods
+					TVResult(const T value) : mValue(OV<T>(value)) {}
+					TVResult(const SError& error) : mError(OI<SError>(error)) {}
+					TVResult(const TVResult& other) : mValue(other.mValue), mError(other.mError) {}
 
-						// Instance Methods
-	const	OV<T>&		getValue() const
-							{ return mValue; }
-	const	OI<SError>&	getError() const
-							{ return mError; }
+					// Instance Methods
+			bool	hasValue() const
+						{ return mValue.hasInstance(); }
+	const	T		getValue() const
+						{ return *mValue; }
+
+			bool	hasError() const
+						{ return mError.hasInstance(); }
+	const	SError&	getError() const
+						{ return *mError; }
 
 	private:
 		OV<T>		mValue;
 		OI<SError>	mError;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Macros
+
+#define ReturnIfResultError(result)				{ if (result.hasError()) return; }
+#define ReturnErrorIfResultError(result)		{ if (result.hasError()) return OI<SError>(result.getError()); }
+#define	ReturnValueIfResultError(result, value)	{ if (result.hasError()) return value; }
+
+#define LogIfResultError(result, when)																\
+			{																						\
+				if (result.hasError())																\
+					CLogServices::logError(result.getError(), when, __FILE__, __func__, __LINE__);	\
+			}
+
+#define	LogIfResultErrorAndReturn(result, when)														\
+			{																						\
+				if (result.hasError()) {															\
+					CLogServices::logError(result.getError(), when, __FILE__, __func__, __LINE__);	\
+					return;																			\
+				}																					\
+			}
+
+#define LogIfResultErrorAndReturnError(result, when)												\
+			{																						\
+				if (result.hasError()) {															\
+					CLogServices::logError(result.getError(), when, __FILE__, __func__, __LINE__);	\
+					return error;																	\
+				}																					\
+			}
+
+#define	LogIfResultErrorAndReturnValue(result, when, value)											\
+			{																						\
+				if (result.hasError()) {															\
+					CLogServices::logError(result.getError(), when, __FILE__, __func__, __LINE__);	\
+					return value;																	\
+				}																					\
+			}
