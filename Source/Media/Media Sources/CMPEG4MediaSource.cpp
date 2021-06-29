@@ -946,6 +946,7 @@ OI<CVideoTrack> sComposeH264VideoTrack(const SstsdDescription& stsdDescription, 
 			UInt32				timeScale = mdhdAtomPayload.getTimeScale();
 //			UInt64				duration = mdhdAtomPayload.getDuration();
 //			Float32				framerate = (Float32) timeScale / 100.0;
+Float32	framerate = 24.0;
 // TODO
 //	const	SstssAtomPayload&	stssAtomPayload = *((SstssAtomPayload*) stssAtomPayloadData->getBytePtr());
 //UInt32	keyframesCount = EndianU32_BtoN(stssAtomPayload.mKeyframesCount);
@@ -956,7 +957,7 @@ OI<CVideoTrack> sComposeH264VideoTrack(const SstsdDescription& stsdDescription, 
 	// Compose storage format
 	OI<SVideoStorageFormat>	videoStorageFormat =
 									CH264VideoCodec::composeStorageFormat(
-											S2DSizeU16(videoFormat.getWidth(), videoFormat.getHeight()));
+											S2DSizeU16(videoFormat.getWidth(), videoFormat.getHeight()), framerate);
 	if (!videoStorageFormat.hasInstance())
 		return OI<CVideoTrack>();
 

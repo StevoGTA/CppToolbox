@@ -275,7 +275,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 				OI<SError>				reset();
 
 										// Class methods
-		static	OI<SVideoStorageFormat>	composeStorageFormat(const S2DSizeU16& frameSize);
+		static	OI<SVideoStorageFormat>	composeStorageFormat(const S2DSizeU16& frameSize, Float32 framerate);
 
 	// Properties
 	public:
