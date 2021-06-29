@@ -395,7 +395,7 @@ template <typename T> class TSArray : public TArray<T> {
 	public:
 		// Lifecycle methods
 		TSArray(const T& item, UInt32 count = 1) :
-			TArray<T>(item, nil, nil)
+			TArray<T>(nil, nil)
 			{
 				// Loop requested times
 				for (UInt32 i = 0; i < count; i++)
