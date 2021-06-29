@@ -74,13 +74,19 @@ CString::CString(const char* chars, CStringLength charsCount, EStringEncoding en
 						sGetCFStringEncodingForCStringEncoding(encoding));
 	else {
 		// Use only the length specified
-		char	buffer[charsCount + 1];
+		char*	buffer = new char[charsCount + 1];
 		::memmove(buffer, chars, charsCount);
 		buffer[charsCount] = 0;
 		mStringRef =
 				::CFStringCreateWithCString(kCFAllocatorDefault, buffer,
 						sGetCFStringEncodingForCStringEncoding(encoding));
+		DeleteArray(buffer);
 	}
+
+	// Check if have string
+	if (mStringRef == nil)
+		// Probably failed encoding
+		mStringRef = CFSTR("<Unable to create string - likely bad characters or wrong encoding>");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
