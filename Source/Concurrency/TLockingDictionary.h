@@ -119,7 +119,7 @@ template <typename T> class TNLockingArrayDictionary : public CDictionary {
 												array.add(item);
 
 												// Set
-												set(key, &array);
+												set(key, new TNArray<T>(array));
 
 												// All done
 												mLock.unlockForWriting();
