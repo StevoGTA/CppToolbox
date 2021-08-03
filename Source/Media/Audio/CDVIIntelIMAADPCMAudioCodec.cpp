@@ -147,10 +147,8 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 	UInt32	decodedFrameCount = 0;
 	while (availableFrameCount >= kDVIIntelFramesPerPacket) {
 		// Read next packet
-				TBuffer<UInt8>	packetBuffer(bytesPerPacket);
-		const	OI<SError>&		error =
-										mInternals->mPacketMediaReader->readPacket(*packetBuffer, bytesPerPacket)
-											.getError();
+				CData			data((CData::Size) bytesPerPacket);
+		const	OI<SError>&		error = mInternals->mPacketMediaReader->readMediaPackets(data).getError();
 		if (error.hasInstance()) {
 			// Check situation
 			if (decodedFrameCount > 0)
@@ -162,7 +160,7 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 		}
 
 		// Decode packet
-		const	UInt8*	packetBufferPtr = *packetBuffer;
+		const	UInt8*	packetBufferPtr = (const UInt8*) data.getBytePtr();
 
 		// Setup state infos by decoding packet headers
 		TBuffer<SStateInfo>	stateInfos(channels);

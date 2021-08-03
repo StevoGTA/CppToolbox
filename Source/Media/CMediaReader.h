@@ -19,6 +19,9 @@ class CMediaReader {
 
 							// Instance methods
 		virtual	Float32		getPercenConsumed() const = 0;
-		virtual	OI<SError>	set(const SMediaPosition& mediaPosition,
-									const SAudioProcessingFormat& audioProcessingFormat) = 0;
+
+		virtual	OI<SError>	set(UInt64 frameIndex) = 0;
+				OI<SError>	set(const SMediaPosition& mediaPosition,
+									const SAudioProcessingFormat& audioProcessingFormat)
+								{ return set(mediaPosition.getFrameIndex(audioProcessingFormat.getSampleRate())); }
 };

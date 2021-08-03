@@ -41,6 +41,28 @@ struct SMediaPacketAndLocation {
 
 class CPacketMediaReaderInternals;
 class CPacketMediaReader : public CMediaReader {
+	// MediaPacketDataInfo
+	public:
+		struct MediaPacketDataInfo {
+								// Methods
+								MediaPacketDataInfo(const CData& data, UInt32 duration) :
+									mData(data), mDuration(duration)
+									{}
+								MediaPacketDataInfo(const MediaPacketDataInfo& other) :
+									mData(other.mData), mDuration(other.mDuration)
+									{}
+
+				const	CData&	getData() const
+									{ return mData; }
+						UInt32	getDuration() const
+									{ return mDuration; }
+
+			// Properties
+			private:
+				CData	mData;
+				UInt32	mDuration;
+		};
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -50,12 +72,11 @@ class CPacketMediaReader : public CMediaReader {
 
 										// CMediaReader methods
 		Float32							getPercenConsumed() const;
-		OI<SError>						set(const SMediaPosition& mediaPosition,
-												const SAudioProcessingFormat& audioProcessingFormat);
+		OI<SError>						set(UInt64 frameIndex);
 
 										// Instance methods
-		TIResult<SMediaPacket>			readPacket(void* buffer, UInt64 bufferAvailableByteCount) const;
-		TIResult<TArray<SMediaPacket> >	readPackets(CData& data) const;
+		TIResult<TArray<SMediaPacket> >	readMediaPackets(CData& data) const;
+		TIResult<MediaPacketDataInfo>	readNextMediaPacketDataInfo() const;
 
 	// Properties
 	public:
@@ -71,32 +92,33 @@ class CPacketMediaReader : public CMediaReader {
 class CPacketsDecodeInfo : public CCodec::DecodeInfo {
 	// Methods
 	public:
-						// Lifecycle methods
-						CPacketsDecodeInfo(const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
-							DecodeInfo(), mMediaPacketAndLocations(mediaPacketAndLocations)
-							{}
-						CPacketsDecodeInfo(const SMediaPacket& mediaPacket, UInt64 startingPos,
-								UInt32 mediaPacketCount) :
-							DecodeInfo(), mMediaPacketAndLocations(TNArray<SMediaPacketAndLocation>())
-							{
-								// Compose media packet and locations
-								TNArray<SMediaPacketAndLocation>	mediaPacketAndLocations;
-								for (UInt32 i = 0; i < mediaPacketCount; i++, startingPos += mediaPacket.mByteCount)
-									// Add media packet and location
-									mediaPacketAndLocations +=
-											SMediaPacketAndLocation(mediaPacket, startingPos);
-								mMediaPacketAndLocations = mediaPacketAndLocations;
-							}
+								// Lifecycle methods
+								CPacketsDecodeInfo(const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
+									DecodeInfo(), mMediaPacketAndLocations(mediaPacketAndLocations)
+									{}
+								CPacketsDecodeInfo(const SMediaPacket& mediaPacket, UInt64 startingPos,
+										UInt32 mediaPacketCount) :
+									DecodeInfo(), mMediaPacketAndLocations(TNArray<SMediaPacketAndLocation>())
+									{
+										// Compose media packet and locations
+										TNArray<SMediaPacketAndLocation>	mediaPacketAndLocations;
+										for (UInt32 i = 0; i < mediaPacketCount;
+												i++, startingPos += mediaPacket.mByteCount)
+											// Add media packet and location
+											mediaPacketAndLocations +=
+													SMediaPacketAndLocation(mediaPacket, startingPos);
+										mMediaPacketAndLocations = mediaPacketAndLocations;
+									}
 
-						// DecodeInfo methods
-		I<CMediaReader>	createMediaReader(const I<CSeekableDataSource>& seekableDataSource) const
-							{ return I<CMediaReader>(
-									new CPacketMediaReader(seekableDataSource, mMediaPacketAndLocations)); }
+								// DecodeInfo methods
+		I<CMediaReader>			createMediaReader(const I<CSeekableDataSource>& seekableDataSource) const
+									{ return I<CMediaReader>(
+											new CPacketMediaReader(seekableDataSource, mMediaPacketAndLocations)); }
 
-// Deprecated
-											// Instance methods
-		const	TArray<SMediaPacketAndLocation>&	getPacketAndLocations() const
-												{ return mMediaPacketAndLocations; }
+								// Instance methods
+		I<CPacketMediaReader>	createPacketMediaReader(const I<CSeekableDataSource>& seekableDataSource) const
+									{ return I<CPacketMediaReader>(
+											new CPacketMediaReader(seekableDataSource, mMediaPacketAndLocations)); }
 
 	// Properties
 	private:

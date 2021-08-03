@@ -36,8 +36,9 @@ class CAACAudioCodecInternals {
 
 									// Read packets
 									TIResult<TArray<SMediaPacket> >	mediaPacketsResult =
-																			internals.mPacketMediaReader->readPackets(
-																					internals.mInputPacketData);
+																			internals.mPacketMediaReader->
+																					readMediaPackets(
+																							internals.mInputPacketData);
 									ReturnValueIfError(mediaPacketsResult.getError(), -1);
 
 									// Prepare return info

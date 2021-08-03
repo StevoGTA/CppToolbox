@@ -57,13 +57,9 @@ Float32 CPacketMediaReader::getPercenConsumed() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CPacketMediaReader::set(const SMediaPosition& mediaPosition,
-		const SAudioProcessingFormat& audioProcessingFormat)
+OI<SError> CPacketMediaReader::set(UInt64 frameIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get new sample position
-	UInt64	frameIndex = mediaPosition.getFrameIndex(audioProcessingFormat.getSampleRate());
-
 	// Find packet index
 	mInternals->mNextPacketIndex = 0;
 	for (TIteratorD<SMediaPacketAndLocation> iterator = mInternals->mMediaPacketAndLocations.getIterator();
@@ -85,37 +81,7 @@ OI<SError> CPacketMediaReader::set(const SMediaPosition& mediaPosition,
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<SMediaPacket> CPacketMediaReader::readPacket(void* buffer, UInt64 bufferAvailableByteCount) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if still have available packets
-	if (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
-		// Setup
-		SMediaPacketAndLocation&	mediaPacketAndLocation =
-											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
-
-		// Check if have space
-		if (mediaPacketAndLocation.mMediaPacket.mByteCount <= bufferAvailableByteCount) {
-			// Copy packet data
-			OI<SError>	error =
-								mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mPos, buffer,
-										mediaPacketAndLocation.mMediaPacket.mByteCount);
-			ReturnValueIfError(error, TIResult<SMediaPacket>(*error));
-
-			// Update
-			mInternals->mNextPacketIndex++;
-
-			return TIResult<SMediaPacket>(mediaPacketAndLocation.mMediaPacket);
-		} else
-			// Not enough space
-			return TIResult<SMediaPacket>(mBufferTooSmall);
-	} else
-		// No more data
-		return TIResult<SMediaPacket>(SError::mEndOfData);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<SMediaPacket> > CPacketMediaReader::readPackets(CData& data) const
+TIResult<TArray<SMediaPacket> > CPacketMediaReader::readMediaPackets(CData& data) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add packets
@@ -149,4 +115,30 @@ TIResult<TArray<SMediaPacket> > CPacketMediaReader::readPackets(CData& data) con
 	}
 
 	return TIResult<TArray<SMediaPacket> >(mediaPackets);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<CPacketMediaReader::MediaPacketDataInfo> CPacketMediaReader::readNextMediaPacketDataInfo() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if can read next packet
+	if (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
+		// Setup
+		SMediaPacketAndLocation&	mediaPacketAndLocation =
+											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
+
+		// Copy packet data
+		CData		data((CData::Size) mediaPacketAndLocation.mMediaPacket.mByteCount);
+		OI<SError>	error =
+							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mPos,
+									data.getMutableBytePtr(), mediaPacketAndLocation.mMediaPacket.mByteCount);
+		ReturnValueIfError(error, TIResult<MediaPacketDataInfo>(*error));
+
+		// Update
+		mInternals->mNextPacketIndex++;
+
+		return TIResult<MediaPacketDataInfo>(MediaPacketDataInfo(data, mediaPacketAndLocation.mMediaPacket.mDuration));
+	} else
+		// End of data
+		return TIResult<MediaPacketDataInfo>(SError::mEndOfData);
 }
