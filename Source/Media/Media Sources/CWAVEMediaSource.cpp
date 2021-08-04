@@ -57,16 +57,16 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 	while (true) {
 		// Read next chunk info
 		TIResult<CChunkReader::ChunkInfo>	chunkInfo = chunkReader.readChunkInfo();
-		ReturnValueIfError(chunkInfo.getError(), TIResult<SMediaTracks>(*chunkInfo.getError()));
+		ReturnValueIfResultError(chunkInfo, TIResult<SMediaTracks>(chunkInfo.getError()));
 
 		// What did we get?
-		switch (chunkInfo.getValue()->mID) {
+		switch (chunkInfo.getValue().mID) {
 			case kWAVEFormatChunkID: {
 				// Format chunk
-				TIResult<CData>	data = chunkReader.readData(*chunkInfo.getValue());
-				ReturnValueIfError(data.getError(), TIResult<SMediaTracks>(*data.getError()));
+				TIResult<CData>	data = chunkReader.readData(chunkInfo.getValue());
+				ReturnValueIfResultError(data, TIResult<SMediaTracks>(data.getError()));
 
-				const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) data.getValue()->getBytePtr());
+				const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) data.getValue().getBytePtr());
 
 				switch (waveFormat.getFormatTag()) {
 					case 0x0011:
@@ -88,7 +88,7 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 			case kWAVEDataChunkID:
 				// Data chunk
 				dataStartOffset = chunkReader.getPos();
-				dataSize = std::min<SInt64>(chunkInfo.getValue()->mSize, chunkReader.getSize() - dataStartOffset);
+				dataSize = std::min<SInt64>(chunkInfo.getValue().mSize, chunkReader.getSize() - dataStartOffset);
 				break;
 		}
 
@@ -98,7 +98,7 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 			break;
 
 		// Seek to next chunk
-		error = chunkReader.seekToNextChunk(*chunkInfo.getValue());
+		error = chunkReader.seekToNextChunk(chunkInfo.getValue());
 		ReturnValueIfError(error, TIResult<SMediaTracks>(*error));
 	}
 

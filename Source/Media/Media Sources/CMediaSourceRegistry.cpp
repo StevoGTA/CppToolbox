@@ -63,8 +63,8 @@ const SMediaSource::Info& CMediaSourceRegistry::getMediaSourceInfo(OSType id) co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<SMediaTracks> CMediaSourceRegistry::queryTracks(const CString& extension,
-		const I<CSeekableDataSource>& seekableDataSource) const
+TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
+		const I<CSeekableDataSource>& seekableDataSource, const CString& extension) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSourceInfo.getKeys();
@@ -73,10 +73,14 @@ TIResult<SMediaTracks> CMediaSourceRegistry::queryTracks(const CString& extensio
 		SMediaSource::Info&	mediaSourceInfo = *sMediaSourceRegistryInternals->mMediaSourceInfo[iterator->getUInt32()];
 
 		// Check extensions
-		if (mediaSourceInfo.getExtensions().contains(extension))
+		if (mediaSourceInfo.getExtensions().contains(extension)) {
 			// Found by extension
-			return mediaSourceInfo.queryTracks(seekableDataSource);
+			TIResult<SMediaTracks>	mediaTracks = mediaSourceInfo.queryTracks(seekableDataSource);
+			if (mediaTracks.hasValue())
+				// Success
+				return TIResult<IdentifyInfo>(IdentifyInfo(mediaSourceInfo.getID(), mediaTracks.getValue()));
+		}
 	}
 
-	return TIResult<SMediaTracks>(sUnknownExtension);
+	return TIResult<IdentifyInfo>(sUnknownExtension);
 }

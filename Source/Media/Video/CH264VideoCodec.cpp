@@ -80,10 +80,10 @@ OSType	CH264VideoCodec::mID = MAKE_OSTYPE('h', '2', '6', '4');
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SVideoStorageFormat> CH264VideoCodec::composeStorageFormat(const S2DSizeU16& frameSize)
+OI<SVideoStorageFormat> CH264VideoCodec::composeStorageFormat(const S2DSizeU16& frameSize, Float32 framerate)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OI<SVideoStorageFormat>(new SVideoStorageFormat(mID, frameSize));
+	return OI<SVideoStorageFormat>(new SVideoStorageFormat(mID, frameSize, framerate));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

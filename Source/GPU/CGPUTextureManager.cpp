@@ -355,9 +355,9 @@ class CDataGPUTextureReferenceInternals : public CGPULoadableTextureReferenceInt
 						if (isLoadingContinuing()) {
 							// Read data
 							TIResult<CData>	dataResult = mDataSource->readData();
-							LogIfErrorAndReturn(dataResult.getError(), "reading data from data provider");
+							LogIfResultErrorAndReturn(dataResult, "reading data from data provider");
 
-							textureData = *dataResult.getValue();
+							textureData = dataResult.getValue();
 						}
 
 						// Is loading continuing
@@ -392,7 +392,7 @@ class CBitmapProcGPUTextureReferenceInternals : public CBitmapGPUTextureReferenc
 						// Is loading continuing
 						if (isLoadingContinuing())
 							// Create bitmap
-							mLoadingBitmap = new CBitmap(mBitmapProc(*mDataSource->readData().getValue()));
+							mLoadingBitmap = new CBitmap(mBitmapProc(mDataSource->readData().getValue()));
 
 						// Do super
 						CBitmapGPUTextureReferenceInternals::load();

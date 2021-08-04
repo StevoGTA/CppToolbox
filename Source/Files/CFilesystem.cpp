@@ -37,16 +37,14 @@ OI<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destina
 
 	// Get contents of source folder
 	TIResult<SFoldersFiles>	foldersFilesResult = getFoldersFiles(sourceFolder, true);
-	if (foldersFilesResult.getError().hasInstance())
-		// Error
-		return *foldersFilesResult.getError();
+	ReturnValueIfResultError(foldersFilesResult, OI<SError>(foldersFilesResult.getError()));
 
 	// Create folders in destination folder
-	const	SFoldersFiles&	foldersFiles = *foldersFilesResult.getValue();
+	const	SFoldersFiles&	foldersFiles = foldersFilesResult.getValue();
 	const	TArray<CFolder>	folders = foldersFiles.getFolders();
 	for (CArray::ItemIndex i = 0; i < folders.getCount(); i++) {
 		// Create folder
-		CFolder	folder(destinationFolder.getFilesystemPath().appendingComponent(folders[i].getName()));
+		CFolder		folder(destinationFolder.getFilesystemPath().appendingComponent(folders[i].getName()));
 		OI<SError>	error = folder.create();
 		ReturnErrorIfError(error);
 	}

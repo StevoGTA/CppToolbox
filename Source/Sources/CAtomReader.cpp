@@ -21,25 +21,25 @@ TIResult<CAtomReader::AtomInfo> CAtomReader::readAtomInfo() const
 {
 	// Read size as UInt32
 	TVResult<UInt32>	size32 = readUInt32();
-	ReturnValueIfError(size32.getError(), TIResult<CAtomReader::AtomInfo>(*size32.getError()));
+	ReturnValueIfResultError(size32, TIResult<CAtomReader::AtomInfo>(size32.getError()));
 
 	// Read type as OSType
 	TVResult<OSType>	type = readOSType();
-	ReturnValueIfError(type.getError(), TIResult<CAtomReader::AtomInfo>(*type.getError()));
+	ReturnValueIfResultError(type, TIResult<CAtomReader::AtomInfo>(type.getError()));
 
 	// Do we need to read large size?
 	UInt64	payloadSize;
-	if (*size32.getValue() == 1) {
+	if (size32.getValue() == 1) {
 		// Yes
 		TVResult<UInt64>	size64 = readUInt64();
-		ReturnValueIfError(size64.getError(), TIResult<CAtomReader::AtomInfo>(*size64.getError()));
+		ReturnValueIfResultError(size64, TIResult<CAtomReader::AtomInfo>(size64.getError()));
 
-		payloadSize = *size64.getValue() - 12;
+		payloadSize = size64.getValue() - 12;
 	} else
 		// No
-		payloadSize = *size32.getValue() - 8;
+		payloadSize = size32.getValue() - 8;
 
-	return TIResult<AtomInfo>(AtomInfo(*type.getValue(), getPos(), payloadSize));
+	return TIResult<AtomInfo>(AtomInfo(type.getValue(), getPos(), payloadSize));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,9 +77,9 @@ TIResult<CData> CAtomReader::readAtomPayload(const AtomInfo& atomInfo, SInt64 of
 {
 	// Retrieve child AtomInfo
 	TIResult<AtomInfo>	childAtomInfo = readAtomInfo(atomInfo, offset);
-	ReturnValueIfError(childAtomInfo.getError(), TIResult<CData>(*childAtomInfo.getError()));
+	ReturnValueIfResultError(childAtomInfo, TIResult<CData>(childAtomInfo.getError()));
 
-	return readAtomPayload(*childAtomInfo.getValue());
+	return readAtomPayload(childAtomInfo.getValue());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -95,13 +95,13 @@ TIResult<CAtomReader::AtomGroup> CAtomReader::readAtomGroup(const AtomInfo& grou
 	while (getPos() - (groupAtomInfo.mPayloadPos + groupAtomInfo.mPayloadSize)) {
 		// Get atom info
 		TIResult<AtomInfo>	atomInfo = readAtomInfo();
-		ReturnValueIfError(atomInfo.getError(), TIResult<AtomGroup>(*atomInfo.getError()));
+		ReturnValueIfResultError(atomInfo, TIResult<AtomGroup>(atomInfo.getError()));
 
 		// Add to array
-		atomInfos += *atomInfo.getValue();
+		atomInfos += atomInfo.getValue();
 
 		// Seek
-		error = seekToNextAtom(*atomInfo.getValue());
+		error = seekToNextAtom(atomInfo.getValue());
 		ReturnValueIfError(error, TIResult<AtomGroup>(*error));
 	}
 

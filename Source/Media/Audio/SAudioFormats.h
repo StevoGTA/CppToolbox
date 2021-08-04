@@ -32,7 +32,7 @@
 
 // EAudioChannelMap is 0xoocc where oo is the option variant and cc is the number of channels.
 
-enum EAudioChannelMap {
+enum EAudioChannelMap : UInt16 {
 	// 1 Channel
 	kAudioChannelMap_1_0			= 0x0001,	// C
 
@@ -146,7 +146,7 @@ struct SAudioStorageFormat {
 	// Properties
 	private:
 		OSType				mCodecID;		// All stored audio must be in some format
-		OV<UInt8>			mBits;			// Some stored audio can be rendered as multiple bits
+		OV<UInt8>			mBits;			// Some stored audio does not have an inherent bits
 		Float32				mSampleRate;	// All stored audio has a sample rate
 		EAudioChannelMap	mChannelMap;	// All stored audio has a channel map
 };

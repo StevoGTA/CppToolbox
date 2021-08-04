@@ -17,9 +17,14 @@ static	const	CString&	sPathSeparator(CFilesystemPath::Style style);
 
 class CFilesystemPathInternals : public TReferenceCountable<CFilesystemPathInternals> {
 	public:
-		CFilesystemPathInternals(const CString& string, CFilesystemPath::Style style) :
-			TReferenceCountable(), mString(string), mStyle(style)
-			{}
+						CFilesystemPathInternals(const CString& string, CFilesystemPath::Style style) :
+							TReferenceCountable(), mString(string), mStyle(style)
+							{}
+
+		static	CString	pathComponentConvertedFromPOSIX(const CString& string)
+							{ return string.replacingSubStrings(CString(OSSTR(":")), CString(OSSTR("/"))); }
+		static	CString	pathComponentConvertedToPOSIX(const CString& string)
+							{ return string.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR(":"))); }
 
 		CString					mString;
 		CFilesystemPath::Style	mStyle;
@@ -63,8 +68,9 @@ CString CFilesystemPath::getString(Style style) const
 		// Same
 		return mInternals->mString;
 
-	// Must translate path separator
-	return mInternals->mString.replacingSubStrings(sPathSeparator(mInternals->mStyle), sPathSeparator(style));
+	return (style != mInternals->mStyle) ?
+			mInternals->mString.replacingSubStrings(sPathSeparator(mInternals->mStyle), sPathSeparator(style)) :
+			mInternals->mString;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,7 +97,23 @@ TArray<CString> CFilesystemPath::getComponents() const
 		// No components
 		return TNArray<CString>();
 
-	return mInternals->mString.components(sPathSeparator(mInternals->mStyle));
+	// Setup
+	const	CString&	pathSeparator = sPathSeparator(mInternals->mStyle);
+
+	// Check style
+	if (mInternals->mStyle == kStylePOSIX) {
+		// POSIX converts "/" in path components to ":"
+		if (mInternals->mString.hasPrefix(CString(OSSTR("/"))))
+			// Process as full path
+			return TNArray<CString>(mInternals->mString.getSubString(1).components(pathSeparator),
+					(TNArray<CString>::MappingProc) CFilesystemPathInternals::pathComponentConvertedFromPOSIX);
+		else
+			// Process as subPath
+			return TNArray<CString>(mInternals->mString.components(pathSeparator),
+					(TNArray<CString>::MappingProc) CFilesystemPathInternals::pathComponentConvertedFromPOSIX);
+	} else
+		// All others get passed through
+		return mInternals->mString.components(pathSeparator);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -124,7 +146,15 @@ CString CFilesystemPath::getLastComponentDeletingExtension() const
 CFilesystemPath CFilesystemPath::appendingComponent(const CString& component) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mStyle) + component);
+	// Check style
+	if (mInternals->mStyle == kStylePOSIX)
+		// POSIX converts "/" in path components to ":"
+		return CFilesystemPath(
+				mInternals->mString + sPathSeparator(mInternals->mStyle) +
+						CFilesystemPathInternals::pathComponentConvertedToPOSIX(component));
+	else
+		// All others get passed through
+		return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mStyle) + component);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

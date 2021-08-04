@@ -222,14 +222,15 @@ CBPLReader::CBPLReader(const I<CSeekableDataSource>& seekableDataSource, UInt8 o
 
 		// Get string content
 		TIResult<CData>	dataResult = mByteReader.readData(count);
-		mError = dataResult.getError();
-		if (mError.hasInstance())
+		if (dataResult.hasError()) {
 			// Error
+			mError = OI<SError>(dataResult.getError());
 			continue;
+		}
 
 		// Create string
 		mStrings[i] =
-				new CString(*dataResult.getValue(),
+				new CString(dataResult.getValue(),
 						(marker == kMarkerTypeStringASCII) ? CString::kEncodingASCII : CString::kEncodingUTF16BE);
 	}
 }
@@ -308,11 +309,11 @@ UInt64 CBPLReader::readCount(const char* errorWhen)
 {
 	// Get count marker
 	TVResult<UInt8>	countMarker = mByteReader.readUInt8();
-	mError = countMarker.getError();
+	if (countMarker.hasError()) mError = OI<SError>(countMarker.getError());
 	LogIfErrorAndReturnValue(mError, errorWhen, 0);
 
 	UInt8	fieldSize;
-	switch (*countMarker.getValue()) {
+	switch (countMarker.getValue()) {
 		case kMarkerTypeInteger1Byte:	fieldSize = 1;	break;
 		case kMarkerTypeInteger2Bytes:	fieldSize = 2;	break;
 		case kMarkerTypeInteger4Bytes:	fieldSize = 4;	break;
@@ -508,8 +509,8 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataS
 	// Check size
 	if (dataSize < (sBinaryPListV10Header.getSize() + sizeof(SBinaryPListTrailer))) {
 		// Too small to be a binary property list
-		TIResult<CDictionary>	dictionaryResult(sUnknownFormatError);
-		LogIfErrorAndReturnValue(dictionaryResult.getError(), "checking data source size", dictionaryResult);
+		LogErrorAndReturnValue(sUnknownFormatError, "checking data source size",
+				TIResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Validate header
@@ -518,8 +519,7 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataS
 	LogIfErrorAndReturnValue(error, "reading header", TIResult<CDictionary>(*error));
 	if (data != sBinaryPListV10Header) {
 		// Header does not match
-		TIResult<CDictionary>	dictionaryResult(sUnknownFormatError);
-		LogIfErrorAndReturnValue(dictionaryResult.getError(), "validating header", dictionaryResult);
+		LogErrorAndReturnValue(sUnknownFormatError, "validating header", TIResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Validate trailer
@@ -543,8 +543,8 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataS
 	if (marker != kMarkerTypeDictionary) {
 		// Top object is not a dictionary
 		Delete(bplReader);
-		TIResult<CDictionary>	dictionaryResult(sUnknownFormatError);
-		LogIfErrorAndReturnValue(dictionaryResult.getError(), "top object is not a dictionary", dictionaryResult);
+		LogErrorAndReturnValue(sUnknownFormatError, "top object is not a dictionary",
+				TIResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Create dictionary

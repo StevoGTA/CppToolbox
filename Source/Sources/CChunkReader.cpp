@@ -40,12 +40,13 @@ TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 	if (true) {
 		// Read 32-bit header
 		TVResult<OSType>	_id = readOSType();
-		ReturnValueIfError(_id.getError(), TIResult<CChunkReader::ChunkInfo>(*_id.getError()));
-		id = *_id.getValue();
+		ReturnValueIfResultError(_id, TIResult<CChunkReader::ChunkInfo>(_id.getError()));
 
 		TVResult<UInt32>	_size = readUInt32();
-		ReturnValueIfError(_size.getError(), TIResult<CChunkReader::ChunkInfo>(*_size.getError()));
-		size = *_size.getValue();
+		ReturnValueIfResultError(_size, TIResult<CChunkReader::ChunkInfo>(_size.getError()));
+
+		id = _id.getValue();
+		size = _size.getValue();
 	}
 
 	return TIResult<ChunkInfo>(ChunkInfo(id, size, pos, getPos() + size + (size % 1)));

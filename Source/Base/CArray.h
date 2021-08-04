@@ -212,7 +212,7 @@ template <typename T> class TArray : public CArray {
 							{ CArray::sort((CompareProc) compareProc, userData); return *this; }
 
 						// Instance methods
-		OR<T>			getFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
+		OR<T>			getFirst(bool (proc)(const T& item, void* userData), void* userData = nil) const
 							{
 								// Iterate all items
 								ItemCount	count = getCount();
@@ -395,7 +395,7 @@ template <typename T> class TSArray : public TArray<T> {
 	public:
 		// Lifecycle methods
 		TSArray(const T& item, UInt32 count = 1) :
-			TArray<T>(item, nil, nil)
+			TArray<T>(nil, nil)
 			{
 				// Loop requested times
 				for (UInt32 i = 0; i < count; i++)

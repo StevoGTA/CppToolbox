@@ -11,7 +11,7 @@
 
 class CProgressInternals;
 class CProgress {
-	// Procs
+	// UpdateInfo
 	public:
 		struct UpdateInfo {
 			// Types

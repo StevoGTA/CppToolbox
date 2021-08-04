@@ -1,45 +1,14 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CMediaSourceRegistry.h			©20021 Stevo Brock	All rights reserved.
+//	CMediaSourceRegistry.h			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-//#include "CArray.h"
-#include "CAudioTrack.h"
 #include "CDataSource.h"
-#include "CVideoTrack.h"
-//#include "TResult.h"
+#include "SMediaTracks.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SMediaTracks
-
-struct SMediaTracks {
-
-									// Lifecycle methods
-									SMediaTracks(const TArray<CAudioTrack>& audioTracks,
-											const TArray<CVideoTrack>& videoTracks) :
-										mAudioTracks(audioTracks), mVideoTracks(videoTracks)
-										{}
-									SMediaTracks(const TArray<CAudioTrack>& audioTracks) : mAudioTracks(audioTracks) {}
-									SMediaTracks(const TArray<CVideoTrack>& videoTracks) : mVideoTracks(videoTracks) {}
-									SMediaTracks(const SMediaTracks& other) :
-										mAudioTracks(other.mAudioTracks), mVideoTracks(other.mVideoTracks)
-										{}
-
-									// Instance methods
-	const	TArray<CAudioTrack>&	getAudioTracks() const
-										{ return mAudioTracks; }
-	const	TArray<CVideoTrack>&	getVideoTracks() const
-										{ return mVideoTracks; }
-
-	// Properties
-	private:
-		TNArray<CAudioTrack>	mAudioTracks;
-		TNArray<CVideoTrack>	mVideoTracks;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SMediaSource
+// MARK: SMediaSource
 
 struct SMediaSource {
 	// Info
@@ -82,13 +51,36 @@ struct SMediaSource {
 // MARK: - CMediaSourceRegistry
 
 class CMediaSourceRegistry {
+	// IdentifyInfo
+	public:
+		struct IdentifyInfo {
+									// Lifecycle methods
+									IdentifyInfo(OSType id, const SMediaTracks& mediaTracks) :
+										mID(id), mMediaTracks(mediaTracks)
+										{}
+									IdentifyInfo(const IdentifyInfo& other) :
+										mID(other.mID), mMediaTracks(other.mMediaTracks)
+										{}
+
+									// Instance methods
+					OSType			getID() const
+										{ return mID; }
+			const	SMediaTracks&	getMediaTracks() const
+										{ return mMediaTracks; }
+
+			// Properties
+			private:
+				OSType			mID;
+				SMediaTracks	mMediaTracks;
+		};
+
 	// Methods
 	public:
 										// Instance methods
 				void					registerMediaSource(const SMediaSource::Info& info);
 		const	SMediaSource::Info&		getMediaSourceInfo(OSType id) const;
-				TIResult<SMediaTracks>	queryTracks(const CString& extension,
-												const I<CSeekableDataSource>& seekableDataSource) const;
+				TIResult<IdentifyInfo>	identify(const I<CSeekableDataSource>& seekableDataSource,
+												const CString& extension) const;
 
 	private:
 										// Lifecycle methods

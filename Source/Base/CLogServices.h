@@ -10,37 +10,42 @@
 // MARK: Macros
 
 #define	LogWarning(warning, when)	CLogServices::logWarning(warning, when, __FILE__, __func__, __LINE__)
+
 #define	LogError(error, when)	CLogServices::logError(error, when, __FILE__, __func__, __LINE__)
 
-#define LogIfError(error, when)																\
-		{																					\
-			if (error.hasInstance())														\
-				CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);			\
-		}
+#define LogErrorAndReturnValue(error, when, value)										\
+			CLogServices::logError(error, when, __FILE__, __func__, __LINE__);			\
+			return value;																\
 
-#define	LogIfErrorAndReturn(error, when)													\
-		{																					\
-			if (error.hasInstance()) {														\
-				CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);			\
-				return;																		\
-			}																				\
-		}
+#define LogIfError(error, when)															\
+			{																			\
+				if (error.hasInstance())												\
+					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
+			}
 
-#define LogIfErrorAndReturnError(error, when)												\
-		{																					\
-			if (error.hasInstance()) {														\
-				CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);			\
-				return error;																\
-			}																				\
-		}
+#define	LogIfErrorAndReturn(error, when)												\
+			{																			\
+				if (error.hasInstance()) {												\
+					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
+					return;																\
+				}																		\
+			}
 
-#define	LogIfErrorAndReturnValue(error, when, value)										\
-		{																					\
-			if (error.hasInstance()) {														\
-				CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);			\
-				return value;																\
-			}																				\
-		}
+#define LogIfErrorAndReturnError(error, when)											\
+			{																			\
+				if (error.hasInstance()) {												\
+					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
+					return error;														\
+				}																		\
+			}
+
+#define	LogIfErrorAndReturnValue(error, when, value)									\
+			{																			\
+				if (error.hasInstance()) {												\
+					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
+					return value;														\
+				}																		\
+			}
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CLogFile

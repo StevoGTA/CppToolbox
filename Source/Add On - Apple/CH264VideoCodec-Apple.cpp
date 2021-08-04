@@ -215,7 +215,7 @@ bool CH264VideoCodec::triggerDecode()
 	TIResult<CPacketMediaReader::MediaPacketDataInfo>	mediaPacketDataInfo =
 																(*mInternals->mPacketMediaReader)->
 																		readNextMediaPacketDataInfo();
-	ReturnValueIfError(mediaPacketDataInfo.getError(), false);
+	ReturnValueIfResultError(mediaPacketDataInfo, false);
 
 //CLogServices::logMessage(
 //		CString("Packet ") + CString(mInternals->mNextFrameIndex) + CString(" (") + CString(data->getSize()) +
@@ -256,10 +256,10 @@ UInt8	frameNum;
 UInt8	picOrderCntLSB;
 UInt8	deltaPicOrderCntBottom;
 
-const	CData&		data = mediaPacketDataInfo.getValue()->getData();
+const	CData&		data = mediaPacketDataInfo.getValue().getData();
 		CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(data)), true);
 
-		UInt32		duration = mediaPacketDataInfo.getValue()->getDuration();
+		UInt32		duration = mediaPacketDataInfo.getValue().getDuration();
 
 while (true) {
 	//
