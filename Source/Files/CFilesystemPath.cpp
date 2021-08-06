@@ -17,14 +17,9 @@ static	const	CString&	sPathSeparator(CFilesystemPath::Style style);
 
 class CFilesystemPathInternals : public TReferenceCountable<CFilesystemPathInternals> {
 	public:
-						CFilesystemPathInternals(const CString& string, CFilesystemPath::Style style) :
-							TReferenceCountable(), mString(string), mStyle(style)
-							{}
-
-		static	CString	pathComponentConvertedFromPOSIX(const CString& string)
-							{ return string.replacingSubStrings(CString(OSSTR(":")), CString(OSSTR("/"))); }
-		static	CString	pathComponentConvertedToPOSIX(const CString& string)
-							{ return string.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR(":"))); }
+		CFilesystemPathInternals(const CString& string, CFilesystemPath::Style style) :
+			TReferenceCountable(), mString(string), mStyle(style)
+			{}
 
 		CString					mString;
 		CFilesystemPath::Style	mStyle;
@@ -105,12 +100,10 @@ TArray<CString> CFilesystemPath::getComponents() const
 		// POSIX converts "/" in path components to ":"
 		if (mInternals->mString.hasPrefix(CString(OSSTR("/"))))
 			// Process as full path
-			return TNArray<CString>(mInternals->mString.getSubString(1).components(pathSeparator),
-					(TNArray<CString>::MappingProc) CFilesystemPathInternals::pathComponentConvertedFromPOSIX);
+			return TNArray<CString>(mInternals->mString.getSubString(1).components(pathSeparator));
 		else
 			// Process as subPath
-			return TNArray<CString>(mInternals->mString.components(pathSeparator),
-					(TNArray<CString>::MappingProc) CFilesystemPathInternals::pathComponentConvertedFromPOSIX);
+			return TNArray<CString>(mInternals->mString.components(pathSeparator));
 	} else
 		// All others get passed through
 		return mInternals->mString.components(pathSeparator);
@@ -143,18 +136,77 @@ CString CFilesystemPath::getLastComponentDeletingExtension() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFilesystemPath CFilesystemPath::appendingComponent(const CString& component) const
+CString CFilesystemPath::getLastComponentForDisplay() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check style
-	if (mInternals->mStyle == kStylePOSIX)
-		// POSIX converts "/" in path components to ":"
+	// Check if have path
+	if (!mInternals->mString.isEmpty()) {
+		// Have path
+		CString	lastComponent = getComponents().getLast();
+		switch (mInternals->mStyle) {
+			case kStylePOSIX:
+				// POSIX - ":" => "/"
+				return lastComponent.replacingSubStrings(CString(OSSTR(":")), CString(OSSTR("/")));
+
+#if TARGET_OS_MACOS
+			case kStyleHFS:
+				// HFS - "/" => ":"
+				return lastComponent.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR(":")));
+#endif
+
+			default:
+				// Everything else
+				return lastComponent;
+		}
+	} else
+		// No path
+		return CString::mEmpty;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CFilesystemPath CFilesystemPath::appendingComponent(const CString& component, Style style) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if styles match
+	if (mInternals->mStyle == style)
+		// Add
+		return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mStyle) + component);
+	else if ((mInternals->mStyle == kStylePOSIX) && (style == kStyleWindows))
+		// Convert Windows => POSIX
 		return CFilesystemPath(
 				mInternals->mString + sPathSeparator(mInternals->mStyle) +
-						CFilesystemPathInternals::pathComponentConvertedToPOSIX(component));
+						component.replacingSubStrings(CString(OSSTR("\\")), CString(OSSTR("/"))));
+	else if ((mInternals->mStyle == kStylePOSIX) && (style == kStyleHFS))
+		// Convert HFS => POSIX
+		return CFilesystemPath(
+				mInternals->mString + sPathSeparator(mInternals->mStyle) +
+						component
+								.replacingSubStrings(CString(OSSTR(":")), CString(OSSTR("{COLON}")))
+								.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR(":")))
+								.replacingSubStrings(CString(OSSTR("{COLON}")), CString(OSSTR("/"))));
+	else if ((mInternals->mStyle == kStyleWindows) && (style == kStylePOSIX))
+		// Convert POSIX => Windows
+		return CFilesystemPath(
+				mInternals->mString + sPathSeparator(mInternals->mStyle) +
+						component.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR("\\"))));
+	else if ((mInternals->mStyle == kStyleWindows) && (style == kStyleHFS))
+		// Convert HFS => Windows
+		return CFilesystemPath(
+				mInternals->mString + sPathSeparator(mInternals->mStyle) +
+						component.replacingSubStrings(CString(OSSTR(":")), CString(OSSTR("\\"))));
+	else if ((mInternals->mStyle == kStyleHFS) && (style == kStylePOSIX))
+		// Convert POSIX => HFS
+		return CFilesystemPath(
+				mInternals->mString + sPathSeparator(mInternals->mStyle) +
+						component
+								.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR("{SLASH}")))
+								.replacingSubStrings(CString(OSSTR(":")), CString(OSSTR("/")))
+								.replacingSubStrings(CString(OSSTR("{SLASH}")), CString(OSSTR(":"))));
 	else
-		// All others get passed through
-		return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mStyle) + component);
+		// Convert Windows => HFS
+		return CFilesystemPath(
+				mInternals->mString + sPathSeparator(mInternals->mStyle) +
+						component.replacingSubStrings(CString(OSSTR("\\")), CString(OSSTR(":"))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

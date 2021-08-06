@@ -32,6 +32,7 @@ class CFile : CHashable {
 
 						CString				getName() const;
 						CString				getNameDeletingExtension() const;
+						CString				getNameForDisplay() const;
 						OI<SError>			rename(const CString& string);
 
 						UInt64				getSize() const;
