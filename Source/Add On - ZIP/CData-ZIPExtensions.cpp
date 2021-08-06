@@ -13,6 +13,7 @@
 CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::Size> uncompressedDataSize)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CData::Size	sourceSize = data.getSize();
 	CData		decompressedData(uncompressedDataSize.hasValue() ? *uncompressedDataSize : sourceSize + sourceSize / 2);
 

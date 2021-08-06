@@ -41,7 +41,8 @@ class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInter
 
 				// Update subresource
 				D3D11_BOX	rect = {0, 0, 0, size.mWidth, size.mHeight, 1};
-				deviceContext.UpdateSubresource(mTexture2D, 0, &rect, data.getBytePtr(), bytesPerRow, data.getSize());
+				deviceContext.UpdateSubresource(mTexture2D, 0, &rect, data.getBytePtr(), bytesPerRow,
+						(UINT) data.getSize());
 
 				// Create resource view
 				CD3D11_SHADER_RESOURCE_VIEW_DESC	shaderResourceViewDesc(mTexture2D, D3D_SRV_DIMENSION_TEXTURE2D,

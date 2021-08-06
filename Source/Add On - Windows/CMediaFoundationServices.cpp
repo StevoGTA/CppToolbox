@@ -76,7 +76,7 @@ void DBGMSG(PCWSTR format, ...);
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OCI<IMFTransform> CMediaFoundationServices::createAudioDecoder(const GUID& guid,
+OCI<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(const GUID& guid,
 		const SAudioProcessingFormat& audioProcessingFormat, const OI<CData>& userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -127,7 +127,9 @@ OCI<IMFTransform> CMediaFoundationServices::createAudioDecoder(const GUID& guid,
 	ReturnNoTransformIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for input");
 
 	if (userData.hasInstance()) {
-		result = inputMediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(), userData->getSize());
+		result =
+				inputMediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
+						(UINT32) userData->getSize());
 		ReturnNoTransformIfFailed(result, "SetBlob of MF_MT_USER_DATA for input");
 	}
 
@@ -170,17 +172,17 @@ OCI<IMFSample> CMediaFoundationServices::createSample(UInt32 size)
 	// Setup
 	HRESULT	result;
 
-	// Create memory buffer
-	IMFMediaBuffer*	tempMediaBuffer;
-	result = MFCreateMemoryBuffer(10 * 1024, &tempMediaBuffer);
-	ReturnNoSampleIfFailed(result, "MFCreateMemoryBuffer");
-	OCI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
-
 	// Create sample
 	IMFSample*	tempSample;
 	result = MFCreateSample(&tempSample);
 	ReturnNoSampleIfFailed(result, "MFCreateSample");
 	OCI<IMFSample>	sample(tempSample);
+
+	// Create memory buffer
+	IMFMediaBuffer*	tempMediaBuffer;
+	result = MFCreateMemoryBuffer(size, &tempMediaBuffer);
+	ReturnNoSampleIfFailed(result, "MFCreateMemoryBuffer");
+	OCI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
 
 	// Add buffer to sample
 	result = sample->AddBuffer(*mediaBuffer);
@@ -190,42 +192,71 @@ OCI<IMFSample> CMediaFoundationServices::createSample(UInt32 size)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::flush(IMFTransform* transform)
+OCI<IMFSample> CMediaFoundationServices::createSample(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	HRESULT	result = transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
-	ReturnErrorIfFailed(result, "ProcessMessage of MFT_MESSAGE_COMMAND_FLUSH");
+	// Setup
+	HRESULT	result;
 
-	return OI<SError>();
+	// Create sample
+	IMFSample*	tempSample;
+	result = MFCreateSample(&tempSample);
+	ReturnNoSampleIfFailed(result, "MFCreateSample");
+	OCI<IMFSample>	sample(tempSample);
+
+	// Create memory buffer
+	IMFMediaBuffer*	tempMediaBuffer;
+	result = MFCreateMemoryBuffer((DWORD) data.getSize(), &tempMediaBuffer);
+	ReturnNoSampleIfFailed(result, "MFCreateMemoryBuffer");
+	OCI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
+
+	// Add buffer to sample
+	result = sample->AddBuffer(*mediaBuffer);
+	ReturnNoSampleIfFailed(result, "AddBuffer");
+
+	// Lock media buffer
+	BYTE*	bytePtr;
+	DWORD	length;
+	result = tempMediaBuffer->Lock(&bytePtr, NULL, &length);
+	ReturnNoSampleIfFailed(result, "Lock for media buffer")
+
+	// Copy data
+	::memcpy(bytePtr, data.getBytePtr(), data.getSize());
+
+	// Set current length
+	result = tempMediaBuffer->SetCurrentLength((DWORD) data.getSize());
+	ReturnNoSampleIfFailed(result, "SetCurrentLength");
+
+	// Unlock media buffer
+	result = tempMediaBuffer->Unlock();
+	ReturnNoSampleIfFailed(result, "Unlock for media buffer");
+
+	return sample;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::readSample(CByteParceller& byteParceller, SInt64 position, UInt64 byteCount,
-		IMFMediaBuffer* mediaBuffer)
+OI<SError> CMediaFoundationServices::completeAudioFramesWrite(IMFSample* sample, CAudioFrames& audioFrames,
+		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Copy
+	IMFMediaBuffer*	mediaBuffer;
+	HRESULT	result = sample->GetBufferByIndex(0, &mediaBuffer);
+	ReturnErrorIfFailed(result, "GetBufferByIndex for outputSample");
+
 	BYTE*	bytePtr;
-	HRESULT	result;
+	DWORD	length;
+	result = mediaBuffer->Lock(&bytePtr, NULL, &length);
+	ReturnErrorIfFailed(result, "Lock for outputSample");
 
-	// Set position
-	OI<SError>	error = byteParceller.setPos(CDataSource::kPositionFromBeginning, position);
-	ReturnErrorIfError(error);
+	::memcpy(audioFrames.getMutableBytePtr(), bytePtr, length);
+	audioFrames.completeWrite(length / audioProcessingFormat.getBytesPerFrame());
 
-	// Lock media buffer
-	result = mediaBuffer->Lock(&bytePtr, NULL, NULL);
-	ReturnErrorIfFailed(result, "Lock");
-
-	// Read data
-	error = byteParceller.readData(bytePtr, byteCount);
-	ReturnErrorIfError(error);
-
-	// Update current length
-	result = mediaBuffer->SetCurrentLength((DWORD) byteCount);
+	result = mediaBuffer->SetCurrentLength(0);
 	ReturnErrorIfFailed(result, "SetCurrentLength");
 
-	// Unlock media buffer
 	result = mediaBuffer->Unlock();
-	ReturnErrorIfFailed(result, "Unlock");
+	ReturnErrorIfFailed(result, "Unlock for outputSample");
 
 	return OI<SError>();
 }
@@ -268,28 +299,26 @@ OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::copySample(IMFSample* sample, CAudioFrames& audioFrames,
-		const SAudioProcessingFormat& audioProcessingFormat)
+OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CPacketMediaReader& packetMediaReader)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Copy
-	IMFMediaBuffer*	mediaBuffer;
-	HRESULT	result = sample->GetBufferByIndex(0, &mediaBuffer);
-	ReturnErrorIfFailed(result, "GetBufferByIndex for outputSample");
-
+	// Lock media buffer
 	BYTE*	bytePtr;
-	DWORD	length;
-	result = mediaBuffer->Lock(&bytePtr, NULL, &length);
-	ReturnErrorIfFailed(result, "Lock for outputSample");
+	HRESULT	result;
+	result = mediaBuffer->Lock(&bytePtr, NULL, NULL);
+	ReturnErrorIfFailed(result, "Lock");
 
-	::memcpy(audioFrames.getMutableBytePtr(), bytePtr, length);
-	audioFrames.completeWrite(length / audioProcessingFormat.getBytesPerFrame());
+	// Read next media packet
+	TVResult<UInt32>	byteCount = packetMediaReader.readNextMediaPacket(bytePtr);
+	ReturnErrorIfResultError(byteCount);
 
-	result = mediaBuffer->SetCurrentLength(0);
+	// Update current length
+	result = mediaBuffer->SetCurrentLength((DWORD) byteCount.getValue());
 	ReturnErrorIfFailed(result, "SetCurrentLength");
 
+	// Unlock media buffer
 	result = mediaBuffer->Unlock();
-	ReturnErrorIfFailed(result, "Unlock for outputSample");
+	ReturnErrorIfFailed(result, "Unlock");
 
 	return OI<SError>();
 }

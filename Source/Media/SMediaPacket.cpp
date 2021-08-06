@@ -142,3 +142,28 @@ TIResult<CPacketMediaReader::MediaPacketDataInfo> CPacketMediaReader::readNextMe
 		// End of data
 		return TIResult<MediaPacketDataInfo>(SError::mEndOfData);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<UInt32> CPacketMediaReader::readNextMediaPacket(void* buffer) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if can read next packet
+	if (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
+		// Setup
+		SMediaPacketAndLocation&	mediaPacketAndLocation =
+											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
+
+		// Copy packet data
+		OI<SError>	error =
+							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mPos, buffer,
+									mediaPacketAndLocation.mMediaPacket.mByteCount);
+		ReturnValueIfError(error, TVResult<UInt32>(*error));
+
+		// Update
+		mInternals->mNextPacketIndex++;
+
+		return TVResult<UInt32>(mediaPacketAndLocation.mMediaPacket.mByteCount);
+	} else
+		// End of data
+		return TVResult<UInt32>(SError::mEndOfData);
+}

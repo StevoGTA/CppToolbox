@@ -320,7 +320,7 @@ CString::CString(const CData& data, Encoding encoding) : CHashable()
 		// Convert
 		int	count =
 					MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (char*) data.getBytePtr(),
-							data.getSize(), &mString[0], data.getSize());
+							(int) data.getSize(), &mString[0], (int) data.getSize());
 		AssertFailIf(count == 0);
 	}
 }
@@ -356,7 +356,7 @@ const CString::C CString::getCString(Encoding encoding) const
 		c.mBuffer[count] = 0;
 	}
 
-	return C1_DIGIT;
+	return c;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

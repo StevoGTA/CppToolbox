@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CAudioFrames.h"
-#include "CByteParceller.h"
+#include "SMediaPacket.h"
 #include "SAudioFormats.h"
 #include "TOptional-Windows.h"
 
@@ -25,18 +25,19 @@ class CMediaFoundationServices {
 	// Methods
 	public:
 									// Class methods
-		static	OCI<IMFTransform>	createAudioDecoder(const GUID& guid,
+		static	OCI<IMFTransform>	createTransformForAudioDecode(const GUID& guid,
 											const SAudioProcessingFormat& audioProcessingFormat,
 											const OI<CData>& userData = OI<CData>());
-		static	OCI<IMFSample>		createSample(UInt32 size);
-
+		static	OCI<IMFTransform>	createTransformForVideoDecode(const GUID& guid);
 		static	OI<SError>			flush(IMFTransform* transform);
-		static	OI<SError>			readSample(CByteParceller& byteParceller, SInt64 position, UInt64 byteCount,
-											IMFMediaBuffer* mediaBuffer);
+
+		static	OCI<IMFSample>		createSample(UInt32 size);
+		static	OCI<IMFSample>		createSample(const CData& data);
+		static	OI<SError>			completeAudioFramesWrite(IMFSample* sample, CAudioFrames& audioFrames,
+											const SAudioProcessingFormat& audioProcessingFormat);
 
 		static	OI<SError>			processOutput(IMFTransform* transform, IMFSample* inputSample,
 											IMFSample* outputSample, ReadInputProc readInputProc, void* userData);
 
-		static	OI<SError>			copySample(IMFSample* sample, CAudioFrames& audioFrames,
-											const SAudioProcessingFormat& audioProcessingFormat);
+		static	OI<SError>			load(IMFMediaBuffer* mediaBuffer, CPacketMediaReader& packetMediaReader);
 };

@@ -104,7 +104,7 @@ OI<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SInt64 CFileWriter::getPos() const
+UInt64 CFileWriter::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();

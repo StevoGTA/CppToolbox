@@ -39,25 +39,35 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::getFolders(const CFolder& folder, TArray<CFolder>& outFolders)
+TIResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return TIResult<SFoldersFiles>(SError::mUnimplemented);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
+TIResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool deep)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented();
+return TIResult<TArray<CFolder> >(SError::mUnimplemented);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CFilesystemPath	filesystemPath = folder.getFilesystemPath();
 
+	// Find
 	WIN32_FIND_DATA	findData;
 	HANDLE			findHandle =
 							FindFirstFile(
 									filesystemPath.appendingComponent(CString(OSSTR("*"))).getString().getOSString(),
 									&findData);
+	TNArray<CFile>	files;
 	if (findHandle != INVALID_HANDLE_VALUE) {
 		//
 		do {
@@ -73,21 +83,13 @@ OI<SError> CFilesystem::getFiles(const CFolder& folder, TArray<CFile>& outFiles)
 				//fileSize.HighPart = findData.nFileSizeHigh;
 				//_stprintf_s(directory, MAX_PATH, TEXT("    %s    %lld bytes\n"), findData.cFileName, fileSize.QuadPart);
 				//OutputDebugString(directory);
-				outFiles += CFile(filesystemPath.appendingComponent(CString(findData.cFileName)));
+				files += CFile(filesystemPath.appendingComponent(CString(findData.cFileName)));
 			}
 		} while (FindNextFile(findHandle, &findData) != 0);
 	}
 	FindClose(findHandle);
 
-	return OI<SError>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::getFoldersFiles(const CFolder& folder, TArray<CFolder>& outFolders, TArray<CFile>& outFiles)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailUnimplemented();
-return OI<SError>();
+	return TIResult<TArray<CFile> >(files);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
