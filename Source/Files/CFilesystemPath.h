@@ -17,7 +17,7 @@ class CFilesystemPath : public CHashable {
 			// Paths in the style "Volume/Folder/Folder/"
 			kStylePOSIX,
 
-			// Paths in the style "Volume\Folder\Folder\"
+			// Paths in the style "C:\Volume\Folder\Folder\"
 			kStyleWindows,
 
 #if TARGET_OS_MACOS

@@ -109,13 +109,7 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::Size 
 	if (mInternals->mFILE != nil) {
 		// FILE
 		off_t	offset = ::fseeko(mInternals->mFILE, position, SEEK_SET);
-		if (offset == -1) {
-			// Error
-			error = OI<SError>(SErrorFromPOSIXerror(errno));
-			CLogServices::logError(*error, "setting position buffered", __FILE__, __func__, __LINE__);
-		}
-
-		if (!error.hasInstance()) {
+		if (offset != -1) {
 			// Read
 			ssize_t	bytesRead = ::fread(buffer, 1, (size_t) byteCount, mInternals->mFILE);
 			if (bytesRead != (ssize_t) byteCount) {
@@ -123,17 +117,15 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::Size 
 				error = OI<SError>(SErrorFromPOSIXerror(errno));
 				CLogServices::logError(*error, "reading data buffered", __FILE__, __func__, __LINE__);
 			}
+		} else {
+			// Error
+			error = OI<SError>(SErrorFromPOSIXerror(errno));
+			CLogServices::logError(*error, "setting position buffered", __FILE__, __func__, __LINE__);
 		}
 	} else {
 		// file
 		off_t	offset = ::lseek(mInternals->mFD, position, SEEK_SET);
-		if (offset == -1) {
-			// Error
-			error = OI<SError>(SErrorFromPOSIXerror(errno));
-			CLogServices::logError(*error, "setting non-position buffered", __FILE__, __func__, __LINE__);
-		}
-
-		if (!error.hasInstance()) {
+		if (offset != -1) {
 			// Read
 			ssize_t bytesRead = ::read(mInternals->mFD, buffer, (size_t) byteCount);
 			if (bytesRead == -1) {
@@ -141,6 +133,10 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::Size 
 				error = OI<SError>(SErrorFromPOSIXerror(errno));
 				CLogServices::logError(*error, "reading data non-buffered", __FILE__, __func__, __LINE__);
 			}
+		} else {
+			// Error
+			error = OI<SError>(SErrorFromPOSIXerror(errno));
+			CLogServices::logError(*error, "setting non-position buffered", __FILE__, __func__, __LINE__);
 		}
 	}
 
