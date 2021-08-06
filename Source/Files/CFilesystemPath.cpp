@@ -176,6 +176,12 @@ CFilesystemPath CFilesystemPath::appendingComponent(const CString& component, St
 		return CFilesystemPath(
 				mInternals->mString + sPathSeparator(mInternals->mStyle) +
 						component.replacingSubStrings(CString(OSSTR("\\")), CString(OSSTR("/"))));
+	else if ((mInternals->mStyle == kStyleWindows) && (style == kStylePOSIX))
+		// Convert POSIX => Windows
+		return CFilesystemPath(
+				mInternals->mString + sPathSeparator(mInternals->mStyle) +
+						component.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR("\\"))));
+#if TARGET_OS_MACOS
 	else if ((mInternals->mStyle == kStylePOSIX) && (style == kStyleHFS))
 		// Convert HFS => POSIX
 		return CFilesystemPath(
@@ -184,11 +190,6 @@ CFilesystemPath CFilesystemPath::appendingComponent(const CString& component, St
 								.replacingSubStrings(CString(OSSTR(":")), CString(OSSTR("{COLON}")))
 								.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR(":")))
 								.replacingSubStrings(CString(OSSTR("{COLON}")), CString(OSSTR("/"))));
-	else if ((mInternals->mStyle == kStyleWindows) && (style == kStylePOSIX))
-		// Convert POSIX => Windows
-		return CFilesystemPath(
-				mInternals->mString + sPathSeparator(mInternals->mStyle) +
-						component.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR("\\"))));
 	else if ((mInternals->mStyle == kStyleWindows) && (style == kStyleHFS))
 		// Convert HFS => Windows
 		return CFilesystemPath(
@@ -207,6 +208,11 @@ CFilesystemPath CFilesystemPath::appendingComponent(const CString& component, St
 		return CFilesystemPath(
 				mInternals->mString + sPathSeparator(mInternals->mStyle) +
 						component.replacingSubStrings(CString(OSSTR("\\")), CString(OSSTR(":"))));
+#else
+	// For non-macOS platforms - need to make the compiler happy
+	else
+		return *this;
+#endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
