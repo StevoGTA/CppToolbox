@@ -722,7 +722,7 @@ CString	sMPEG4Extensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), CSt
 
 REGISTER_MEDIA_SOURCE(mp4,
 		SMediaSource::Info(MAKE_OSTYPE('m', 'p', '4', '*'), CString(OSSTR("MPEG 4")),
-				TSArray<CString>(sMPEG4Extensions, 1), sQueryMPEG4TracksProc));
+				TSArray<CString>(sMPEG4Extensions, 3), sQueryMPEG4TracksProc));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
