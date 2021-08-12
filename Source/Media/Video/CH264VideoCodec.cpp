@@ -39,7 +39,7 @@ TArray<CH264VideoCodec::NALUInfo> CH264VideoCodec::NALUInfo::getNALUInfos(const 
 
 		// Update
 		bytePtr += size;
-		offset += size;
+		offset += (UInt32) size;
 		bytesRemaining -= size;
 	}
 

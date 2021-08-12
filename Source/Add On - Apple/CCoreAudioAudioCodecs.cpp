@@ -117,8 +117,10 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 	// Setup
 	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
+	// Store
 	mInternals->mPacketMediaReader = OR<CPacketMediaReader>(*((CPacketMediaReader*) &*mediaReader));
 
+	// Create Audio Converter
 	AudioStreamBasicDescription	sourceFormat = {0};
 	sourceFormat.mFormatID = (mInternals->mCodecID == mAACLCID) ? kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
 	sourceFormat.mFormatFlags = 0;
@@ -131,7 +133,6 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 			audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(),
 			audioProcessingFormat.getIsBigEndian(), !audioProcessingFormat.getIsInterleaved());
 
-	// Create Audio Converter
 	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
 	LogOSStatusIfFailed(status, OSSTR("AudioConverterNew"));
 

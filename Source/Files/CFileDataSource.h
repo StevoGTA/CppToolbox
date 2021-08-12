@@ -14,14 +14,18 @@ class CFileDataSourceInternals;
 class CFileDataSource : public CSeekableDataSource {
 	// Methods
 	public:
-					// Lifecycle methods
-					CFileDataSource(const CFile& file, bool buffered = false);
-					~CFileDataSource();
+								// Lifecycle methods
+								CFileDataSource(const CFile& file, bool buffered = false);
+								~CFileDataSource();
 
-					// CSeekableDataSource methods
-		UInt64		getSize() const;
+								// CSeekableDataSource methods
+		UInt64					getSize() const;
 
-		OI<SError>	readData(UInt64 position, void* buffer, CData::Size byteCount);
+		OI<SError>				readData(UInt64 position, void* buffer, CData::Size byteCount);
+
+								// Class methods
+		static	TIResult<CData>	readData(const CFile& file)
+									{ return CFileDataSource(file).CSeekableDataSource::readData(); }
 
 	// Properties
 	private:

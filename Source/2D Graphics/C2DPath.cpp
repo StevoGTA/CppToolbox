@@ -126,6 +126,7 @@ void C2DPath::addLargerArcClockwiseTo(const CData& data)
 void C2DPath::iterateSegments(bool constructing)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	const	UInt8*		bytePtr = (const UInt8*) mInternals->mPathSegmentData.getBytePtr();
 			CData::Size	bytesRemaining = mInternals->mPathSegmentData.getSize();
 	

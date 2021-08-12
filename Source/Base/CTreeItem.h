@@ -15,6 +15,4 @@ class CTreeItem {
 				CTreeItem() {}
 				CTreeItem(const CTreeItem& other) {}
 		virtual	~CTreeItem() {}
-
-				// Instance methods
 };

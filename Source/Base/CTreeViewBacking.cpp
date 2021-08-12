@@ -18,19 +18,20 @@ class CRootTreeItem : public CTreeItem {};
 
 class CTreeViewBackingItem {
 	public:
-				CTreeViewBackingItem(const I<CTreeItem>& treeItem) :
-					mViewItemID(CUUID().getBase64String()), mTreeItem(treeItem)
+				CTreeViewBackingItem(const I<CTreeItem>& treeItem,
+						const CString& viewItemID = CUUID().getBase64String()) :
+					 mTreeItem(treeItem), mViewItemID(viewItemID)
 					{}
 				CTreeViewBackingItem(const CTreeViewBackingItem& other) :
-					mViewItemID(other.mViewItemID), mTreeItem(other.mTreeItem),
+					mTreeItem(other.mTreeItem), mViewItemID(other.mViewItemID),
 							mChildViewItemIDs(other.mChildViewItemIDs)
 					{}
 
-		void	addChild(const CTreeViewBackingItem& treeViewBackingItem)
+		void	noteChild(const CTreeViewBackingItem& treeViewBackingItem)
 					{ mChildViewItemIDs += treeViewBackingItem.mViewItemID; }
 
-		CString				mViewItemID;
 		I<CTreeItem>		mTreeItem;
+		CString				mViewItemID;
 		TNArray<CString>	mChildViewItemIDs;
 };
 
@@ -77,7 +78,7 @@ void CTreeViewBacking::set(const I<CTreeItem>& rootTreeItem)
 {
 	// Setup
 	mInternals->mTreeViewBackingItemMap.removeAll();
-	mInternals->mTreeViewBackingItemMap.set(mRootViewItemID, CTreeViewBackingItem(rootTreeItem));
+	mInternals->mTreeViewBackingItemMap.set(mRootViewItemID, CTreeViewBackingItem(rootTreeItem, mRootViewItemID));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -97,7 +98,7 @@ void CTreeViewBacking::set(const TArray<I<CTreeItem> >& topLevelTreeItems)
 		CTreeViewBackingItem	treeViewBackingItem(*iterator);
 		mInternals->mTreeViewBackingItemMap.set(treeViewBackingItem.mViewItemID, treeViewBackingItem);
 
-		rootTreeViewBackingItem.addChild(treeViewBackingItem);
+		rootTreeViewBackingItem.noteChild(treeViewBackingItem);
 	}
 }
 
@@ -121,7 +122,7 @@ void CTreeViewBacking::add(const TArray<I<CTreeItem> >& topLevelTreeItems)
 		CTreeViewBackingItem	treeViewBackingItem(*iterator);
 		mInternals->mTreeViewBackingItemMap.set(treeViewBackingItem.mViewItemID, treeViewBackingItem);
 
-		rootTreeViewBackingItem->addChild(treeViewBackingItem);
+		rootTreeViewBackingItem->noteChild(treeViewBackingItem);
 	}
 }
 

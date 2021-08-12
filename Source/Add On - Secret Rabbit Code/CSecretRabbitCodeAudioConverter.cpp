@@ -22,7 +22,7 @@ class CSecretRabbitCodeAudioConverterInternals {
 								mAudioConverter(audioConverter),
 										mSRCState(nil), mSourceHasMoreToRead(true),
 										mSourceMediaPosition(SMediaPosition::fromStart(0.0)),
-										mSourceSourceProcessed(0.0)
+										mSourcePercentConsumed(0.0)
 							{}
 						~CSecretRabbitCodeAudioConverterInternals()
 							{
@@ -41,14 +41,14 @@ class CSecretRabbitCodeAudioConverterInternals {
 								// Check if have more to read
 								if (internals.mSourceHasMoreToRead) {
 									// Try to read
-									SAudioReadStatus	audioReadStatus =
+									SAudioSourceStatus	audioSourceStatus =
 																internals.mAudioConverter.CAudioProcessor::perform(
 																		internals.mSourceMediaPosition,
 																		*internals.mInputAudioFrames);
-									if (audioReadStatus.isSuccess()) {
+									if (audioSourceStatus.isSuccess()) {
 										// Success
 										internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
-										internals.mSourceSourceProcessed = *audioReadStatus.getSourceProcessed();
+										internals.mSourcePercentConsumed = *audioSourceStatus.getPercentConsumed();
 
 										// Check if need to convert
 										if (internals.mInputAudioProcessingFormat->getIsSignedInteger()) {
@@ -70,13 +70,13 @@ class CSecretRabbitCodeAudioConverterInternals {
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->getChannels());
 										}
-									} else if (*audioReadStatus.getError() == SError::mEndOfData) {
+									} else if (*audioSourceStatus.getError() == SError::mEndOfData) {
 										// End of data
 										internals.mSourceHasMoreToRead = false;
 										internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
 									} else
 										// Error
-										internals.mPerformError = audioReadStatus.getError();
+										internals.mPerformError = audioSourceStatus.getError();
 								}
 
 								// Prepare return info
@@ -99,7 +99,7 @@ class CSecretRabbitCodeAudioConverterInternals {
 		OI<SError>					mPerformError;
 		bool						mSourceHasMoreToRead;
 		SMediaPosition				mSourceMediaPosition;
-		Float32						mSourceSourceProcessed;
+		Float32						mSourcePercentConsumed;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ CSecretRabbitCodeAudioConverter::~CSecretRabbitCodeAudioConverter()
 	Delete(mInternals);
 }
 
-// MARK: Instance methods
+// MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
@@ -150,7 +150,7 @@ OI<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioReadStatus CSecretRabbitCodeAudioConverter::perform(const SMediaPosition& mediaPosition,
+SAudioSourceStatus CSecretRabbitCodeAudioConverter::perform(const SMediaPosition& mediaPosition,
 		CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -158,12 +158,12 @@ SAudioReadStatus CSecretRabbitCodeAudioConverter::perform(const SMediaPosition& 
 	mInternals->mSourceMediaPosition = mediaPosition;
 
 	// Setup
-	if ((mediaPosition.getMode() != SMediaPosition::kFromCurrent) && (mInternals->mSourceSourceProcessed != 0.0)) {
+	if ((mediaPosition.getMode() != SMediaPosition::kFromCurrent) && (mInternals->mSourcePercentConsumed != 0.0)) {
 		// Reset
 		OI<SError>	error = reset();
 		if (error.hasInstance())
 			// Error
-			return SAudioReadStatus(*error);
+			return SAudioSourceStatus(*error);
 	}
 
 	UInt32	frameCount = audioFrames.getAvailableFrameCount();
@@ -174,12 +174,12 @@ SAudioReadStatus CSecretRabbitCodeAudioConverter::perform(const SMediaPosition& 
 							mInternals->mInputAudioProcessingFormat->getSampleRate();
 	frameCount =
 			src_callback_read(mInternals->mSRCState, srcRatio, frameCount, (float*) audioFrames.getMutableBytePtr());
-	if (frameCount == 0) return SAudioReadStatus(SError::mEndOfData);
+	if (frameCount == 0) return SAudioSourceStatus(SError::mEndOfData);
 
 	// Update
 	audioFrames.completeWrite(frameCount);
 
-	return SAudioReadStatus(mInternals->mSourceSourceProcessed);
+	return SAudioSourceStatus(mInternals->mSourcePercentConsumed);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

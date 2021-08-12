@@ -4,7 +4,7 @@
 
 #include "CDirectXShader.h"
 
-#include "CFileReader.h"
+#include "CFileDataSource.h"
 
 #include <DirectXMath.h>
 
@@ -65,17 +65,18 @@ void CDirectXVertexShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& 
 	// Finish setup if needed
 	if (mInternals->mShader == NULL) {
 		// Load data
-		OI<SError>	error;
-		CData		data = CFileReader::readData(CFile(mInternals->mFilesystemPath), error);
-		AssertFailIf(error.hasInstance());
+		TIResult<CData>	data = CFileDataSource::readData(CFile(mInternals->mFilesystemPath));
+		AssertFailIf(data.hasError());
 
 		// Create Vertex Shader
 		HRESULT	result;	
-		result = d3dDevice.CreateVertexShader(data.getBytePtr(), data.getSize(), NULL, &mInternals->mShader);
+		result =
+				d3dDevice.CreateVertexShader(data.getValue().getBytePtr(), data.getValue().getSize(), NULL,
+						&mInternals->mShader);
 		AssertFailIf(FAILED(result));
 
 		// Create resources
-		createResources(d3dDevice, data);
+		createResources(d3dDevice, data.getValue());
 	}
 
 	// Make current
@@ -149,16 +150,17 @@ void CDirectXPixelShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d
 	// Finish setup if needed
 	if (mInternals->mShader == NULL) {
 		// Load data
-		OI<SError>	error;
-		CData		data = CFileReader::readData(CFile(mInternals->mFilesystemPath), error);
-		AssertFailIf(error.hasInstance());
+		TIResult<CData>	data = CFileDataSource::readData(CFile(mInternals->mFilesystemPath));
+		AssertFailIf(data.hasError());
 
 		// Create Pixel Shader
-		HRESULT	result = d3dDevice.CreatePixelShader(data.getBytePtr(), data.getSize(), NULL, &mInternals->mShader);
+		HRESULT	result =
+						d3dDevice.CreatePixelShader(data.getValue().getBytePtr(), data.getValue().getSize(), NULL,
+								&mInternals->mShader);
 		AssertFailIf(FAILED(result));
 
 		// Create resources
-		createResources(d3dDevice, data);
+		createResources(d3dDevice, data.getValue());
 
 		// Setup Sampler State
 		D3D11_SAMPLER_DESC	samplerDesc;

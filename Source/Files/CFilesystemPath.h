@@ -17,7 +17,7 @@ class CFilesystemPath : public CHashable {
 			// Paths in the style "Volume/Folder/Folder/"
 			kStylePOSIX,
 
-			// Paths in the style "Volume\Folder\Folder\"
+			// Paths in the style "C:\Volume\Folder\Folder\"
 			kStyleWindows,
 
 #if TARGET_OS_MACOS
@@ -62,8 +62,9 @@ class CFilesystemPath : public CHashable {
 				TArray<CString>	getComponents() const;
 				CString			getLastComponent() const;
 				CString			getLastComponentDeletingExtension() const;
+				CString			getLastComponentForDisplay() const;
 
-				CFilesystemPath	appendingComponent(const CString& component) const;
+				CFilesystemPath	appendingComponent(const CString& component, Style style = kStylePlatformDefault) const;
 				CFilesystemPath	deletingLastComponent() const;
 				CFilesystemPath	appendingExtension(const CString& extension) const;
 				CFilesystemPath	getForResourceFork() const;

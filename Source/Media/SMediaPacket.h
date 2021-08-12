@@ -77,6 +77,7 @@ class CPacketMediaReader : public CMediaReader {
 										// Instance methods
 		TIResult<TArray<SMediaPacket> >	readMediaPackets(CData& data) const;
 		TIResult<MediaPacketDataInfo>	readNextMediaPacketDataInfo() const;
+		TVResult<UInt32>				readNextMediaPacket(void* buffer) const;
 
 	// Properties
 	public:

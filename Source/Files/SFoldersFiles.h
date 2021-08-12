@@ -4,8 +4,8 @@
 
 #pragma once
 
-#import "CFolder.h"
-#import "CFile.h"
+#include "CFolder.h"
+#include "CFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SFoldersFiles
