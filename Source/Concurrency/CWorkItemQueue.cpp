@@ -282,7 +282,7 @@ class CWorkItemQueueInternals {
 										}
 
 	private:
-		static	ECompareResult		workItemInfoCompareProc(const SWorkItemInfo& workItemInfo1,
+		static	bool				workItemInfoCompareProc(const SWorkItemInfo& workItemInfo1,
 											const SWorkItemInfo& workItemInfo2, void* userData)
 										{
 											// Sort in this order:
@@ -290,16 +290,13 @@ class CWorkItemQueueInternals {
 											//	Index
 											if (workItemInfo1.mPriority < workItemInfo2.mPriority)
 												// Work item 1 has a higher priority
-												return kCompareResultBefore;
+												return true;
 											else if (workItemInfo2.mPriority < workItemInfo1.mPriority)
 												// Work item 2 has a higher priority
-												return kCompareResultAfter;
-											else if (workItemInfo1.mIndex < workItemInfo2.mIndex)
-												// Work item 1 has an earlier index
-												return kCompareResultBefore;
+												return false;
 											else
-												// Work item 1 has a later index
-												return kCompareResultAfter;
+												// Use index
+												return workItemInfo1.mIndex < workItemInfo2.mIndex;
 										}
 		static	void				threadProc(CThread& thread, void* userData)
 										{

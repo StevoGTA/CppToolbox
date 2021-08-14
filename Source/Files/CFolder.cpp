@@ -132,12 +132,3 @@ void CFolder::update(const CFilesystemPath& filesystemPath)
 	// Update
 	mInternals->mFilesystemPath = filesystemPath;
 }
-
-// MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-ECompareResult CFolder::compareName(CFolder* const folder1, CFolder* const folder2, void* context)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return folder1->getName().compareTo(folder2->getName());
-}

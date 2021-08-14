@@ -172,9 +172,7 @@ template <typename T> class TNLockingArray : public CArray {
 														return item;
 													}
 
-						TNLockingArray<T>&		sort(ECompareResult
-																(compareProc)(const T& item1, const T& item2,
-																		void* userData),
+						TNLockingArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData),
 														void* userData = nil)
 													{
 														// Perform under lock

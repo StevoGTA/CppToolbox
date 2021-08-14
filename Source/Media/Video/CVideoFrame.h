@@ -52,11 +52,11 @@ class CVideoFrame {
 						CColor::TransferFunction		getColorTransferFunction() const;
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-				CVImageBufferRef						getImageBufferRef() const;
+						CVImageBufferRef				getImageBufferRef() const;
 #endif
 
 														// Class methods
-		static	ECompareResult							comparePresentationTimeInterval(const CVideoFrame& videoFrame1,
+		static			bool							comparePresentationTimeInterval(const CVideoFrame& videoFrame1,
 																const CVideoFrame& videoFrame2, void* userData);
 
 	// Properties

@@ -560,11 +560,11 @@ TArray<CString> CString::components(const CString& delimiterString) const
 // MARK: Comparison methods
 
 //----------------------------------------------------------------------------------------------------------------------
-ECompareResult CString::compareTo(const CString& other, CString::CompareFlags compareFlags) const
+bool CString::compareTo(const CString& other, CString::CompareFlags compareFlags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return kCompareResultEquivalent;
+return false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

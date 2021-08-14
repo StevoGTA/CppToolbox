@@ -23,11 +23,11 @@ class CArray : public CEquatable {
 
 	// Procs:
 	public:
-		typedef	void			(*ApplyProc)(ItemRef itemRef, void* userData);
-		typedef	ECompareResult	(*CompareProc)(ItemRef itemRef1, ItemRef itemRef2, void* userData);
-		typedef	ItemRef			(*CopyProc)(ItemRef itemRef);
-		typedef	void			(*DisposeProc)(ItemRef itemRef);
-		typedef bool			(*IsIncludedProc)(ItemRef itemRef, void* userData);
+		typedef	void	(*ApplyProc)(ItemRef itemRef, void* userData);
+		typedef	bool	(*CompareProc)(ItemRef itemRef1, ItemRef itemRef2, void* userData);
+		typedef	ItemRef	(*CopyProc)(ItemRef itemRef);
+		typedef	void	(*DisposeProc)(ItemRef itemRef);
+		typedef bool	(*IsIncludedProc)(ItemRef itemRef, void* userData);
 
 	// Methods
 	public:
@@ -207,8 +207,7 @@ template <typename T> class TArray : public CArray {
 							{ TIteratorS<ItemRef> iterator = CArray::getIterator();
 								return TIteratorD<T>((TIteratorD<T>*) &iterator); }
 
-		TArray<T>&		sort(ECompareResult (compareProc)(const T& item1, const T& item2, void* userData),
-								void* userData = nil)
+		TArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData), void* userData = nil)
 							{ CArray::sort((CompareProc) compareProc, userData); return *this; }
 
 						// Instance methods
@@ -572,8 +571,7 @@ template <typename T> class TIArray : public CArray {
 										return TIteratorD<T>((TIteratorD<T>*) &iterator);
 									}
 
-				TIArray<T>&		sort(ECompareResult (proc)(const T& item1, const T& item2, void* userData),
-										void* userData = nil)
+				TIArray<T>&		sort(bool (proc)(const T& item1, const T& item2, void* userData), void* userData = nil)
 									{ CArray::sort((CompareProc) proc, userData); return *this; }
 
 								// Instance methods

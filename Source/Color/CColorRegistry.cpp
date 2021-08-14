@@ -81,8 +81,7 @@ const TNumericArray<OSType>& CColorGroup::getColorIDs() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-ECompareResult CColorGroup::compareDisplayIndexes(const CColorGroup& colorGroup1, const CColorGroup& colorGroup2,
-		void* userData)
+bool CColorGroup::compareDisplayIndexes(const CColorGroup& colorGroup1, const CColorGroup& colorGroup2, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return eCompare(colorGroup1.getDisplayIndex(), colorGroup2.getDisplayIndex());

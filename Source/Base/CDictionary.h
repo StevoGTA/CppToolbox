@@ -185,6 +185,7 @@ class CDictionary : public CEquatable {
 						void					set(const CString& key, const OR<SValue>& value);
 
 						void					remove(const CString& key);
+						void					remove(const TArray<CString>& keys);
 						void					remove(const TSet<CString>& keys);
 						void					removeAll();
 

@@ -704,14 +704,11 @@ TArray<CString> CString::components(const CString& separator) const
 // MARK: Comparison methods
 
 //----------------------------------------------------------------------------------------------------------------------
-ECompareResult CString::compareTo(const CString& other, CompareFlags compareFlags) const
+bool CString::compareTo(const CString& other, CompareFlags compareFlags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	ECompareResult	compareResult =
-							(ECompareResult) ::CFStringCompare(mStringRef, other.mStringRef,
-									sGetCFOptionFlagsForCStringOptionFlags(compareFlags));
-
-	return compareResult;
+	return ::CFStringCompare(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(compareFlags)) ==
+			kCFCompareLessThan;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
