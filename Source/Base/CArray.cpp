@@ -610,6 +610,6 @@ int sSortProc(void* info, const void* itemRef1, const void* itemRef2)
 {
 	SArraySortInfo*	sortInfo = (SArraySortInfo*) info;
 
-	return (int) sortInfo->mCompareProc(*((CArray::ItemRef*) itemRef1), *((CArray::ItemRef*) itemRef2),
-			sortInfo->mUserData);
+	return sortInfo->mCompareProc(*((CArray::ItemRef*) itemRef1), *((CArray::ItemRef*) itemRef2), sortInfo->mUserData) ?
+			-1 : 1;
 }
