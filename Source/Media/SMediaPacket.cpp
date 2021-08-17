@@ -50,7 +50,7 @@ CPacketMediaReader::~CPacketMediaReader()
 // MARK: CMediaReader methods
 
 //----------------------------------------------------------------------------------------------------------------------
-Float32 CPacketMediaReader::getPercenConsumed() const
+Float32 CPacketMediaReader::getPercentConsumed() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return (Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mMediaPacketAndLocations.getCount();

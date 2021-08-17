@@ -22,7 +22,7 @@ class CAudioPlayer : public CAudioDestination {
 									void* userData);
 			typedef	void	(*EndOfDataProc)(const CAudioPlayer& audioPlayer, void* userData);
 
-			// Procs - called from the reader thread so do whatever you want
+			// Procs - called from the buffer thread so do whatever you want
 			typedef	void	(*ErrorProc)(const CAudioPlayer& audioPlayer, const SError& error, void* userData);
 
 					// Lifecycle methods
@@ -99,10 +99,10 @@ class CAudioPlayer : public CAudioDestination {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerReaderThread
+// MARK: - CAudioPlayerBufferThread
 
-class CAudioPlayerReaderThreadInternals;
-class CAudioPlayerReaderThread : public CThread {
+class CAudioPlayerBufferThreadInternals;
+class CAudioPlayerBufferThread : public CThread {
 	// Procs
 	public:
 		typedef	void	(*ErrorProc)(const SError& error, void* userData);
@@ -110,9 +110,9 @@ class CAudioPlayerReaderThread : public CThread {
 	// Methods
 	public:
 				// Lifecycle methods
-				CAudioPlayerReaderThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue, UInt32 bytesPerFrame,
+				CAudioPlayerBufferThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue, UInt32 bytesPerFrame,
 						UInt32 maxOutputFrames, ErrorProc errorProc, void* procsUserData);
-				~CAudioPlayerReaderThread();
+				~CAudioPlayerBufferThread();
 
 				// CThread methods
 		void	run();
@@ -121,11 +121,11 @@ class CAudioPlayerReaderThread : public CThread {
 		void	seek(UniversalTimeInterval timeInterval, UInt32 maxFrames);
 		void	resume();
 		void	noteQueueReadComplete();
-		bool	getDidReachEndOfData() const;
+		bool	getDidReachEnd() const;
 		void	stopReading();
 		void	shutdown();
 
 	// Properties
 	private:
-		CAudioPlayerReaderThreadInternals*	mInternals;
+		CAudioPlayerBufferThreadInternals*	mInternals;
 };

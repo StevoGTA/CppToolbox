@@ -6,27 +6,80 @@
 
 #include "CAudioPlayer.h"
 #include "CMediaDestination.h"
-#include "CVideoDecoder.h"
+#include "CVideoFrameStore.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaPlayer
 
 class CMediaPlayerInternals;
-class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoDecoder> {
+class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 	// Info
 	public:
 		struct Info {
 			// Procs
+			typedef	void	(*AudioPositionUpdatedProc)(UniversalTimeInterval position, void* userData);
+			typedef	void	(*AudioErrorProc)(const SError& error, void* userData);
+
+			typedef	void	(*VideoFrameUpdatedProc)(const CVideoFrame& videoFrame, void* userData);
+			typedef	void	(*VideoErrorProc)(const SError& error, void* userData);
+
 			typedef	void	(*FinishedProc)(void* userData);
 
 					// Lifecycle methods
-					Info() : mFinishedProc(nil), mUserData(nil) {}
-					Info(FinishedProc finishedProc, void* userData) :
-						mFinishedProc(finishedProc), mUserData(userData)
+					Info() :
+						mAudioPositionUpdatedProc(nil), mAudioErrorProc(nil),
+								mVideoFrameUpdatedProc(nil), mVideoErrorProc(nil),
+								mFinishedProc(nil),
+								mUserData(nil)
 						{}
-					Info(const Info& other) : mFinishedProc(other.mFinishedProc), mUserData(other.mUserData) {}
+					Info(AudioPositionUpdatedProc audioPositionUpdatedProc, AudioErrorProc audioErrorProc,
+							VideoFrameUpdatedProc videoFrameUpdatedProc, VideoErrorProc videoErrorProc,
+							FinishedProc finishedProc, void* userData) :
+						mAudioPositionUpdatedProc(audioPositionUpdatedProc), mAudioErrorProc(audioErrorProc),
+								mVideoFrameUpdatedProc(videoFrameUpdatedProc), mVideoErrorProc(videoErrorProc),
+								mFinishedProc(finishedProc),
+								mUserData(userData)
+						{}
+					Info(const Info& other) :
+						mAudioPositionUpdatedProc(other.mAudioPositionUpdatedProc),
+								mAudioErrorProc(other.mAudioErrorProc),
+								mVideoFrameUpdatedProc(other.mVideoFrameUpdatedProc),
+								mVideoErrorProc(other.mVideoErrorProc),
+								mFinishedProc(other.mFinishedProc),
+								mUserData(other.mUserData)
+						{}
 
 					// Instance methods
+			void	audioPositionUpdated(UniversalTimeInterval position) const
+						{
+							// Check for proc
+							if (mAudioPositionUpdatedProc != nil)
+								// Call proc
+								mAudioPositionUpdatedProc(position, mUserData);
+						}
+			void	audioError(const SError& error) const
+						{
+							// Check for proc
+							if (mAudioErrorProc != nil)
+								// Call proc
+								mAudioErrorProc(error, mUserData);
+						}
+
+			void	videoFrameUpdated(const CVideoFrame& videoFrame) const
+						{
+							// Check for proc
+							if (mVideoFrameUpdatedProc != nil)
+								// Call proc
+								mVideoFrameUpdatedProc(videoFrame, mUserData);
+						}
+			void	videoError(const SError& error) const
+						{
+							// Check for proc
+							if (mVideoErrorProc != nil)
+								// Call proc
+								mVideoErrorProc(error, mUserData);
+						}
+
 			void	finished() const
 						{
 							// Check for proc
@@ -35,10 +88,17 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoDecoder> {
 								mFinishedProc(mUserData);
 						}
 
-
 			// Properties
-			FinishedProc	mFinishedProc;
-			void*			mUserData;
+			private:
+				AudioPositionUpdatedProc	mAudioPositionUpdatedProc;
+				AudioErrorProc				mAudioErrorProc;
+
+				VideoFrameUpdatedProc		mVideoFrameUpdatedProc;
+				VideoErrorProc				mVideoErrorProc;
+
+				FinishedProc				mFinishedProc;
+
+				void*						mUserData;
 		};
 
 	// Methods
@@ -54,12 +114,7 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoDecoder> {
 		virtual	I<CAudioPlayer>		newAudioPlayer(const CString& identifier, UInt32 trackIndex);
 		virtual	void				setAudioGain(Float32 audioGain);
 
-		virtual	I<CVideoDecoder>	newVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
-											const I<CCodec::DecodeInfo>& codecDecodeInfo,
-											const I<CSeekableDataSource>& seekableDataSource, const CString& identifier,
-											UInt32 trackIndex,
-											CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
-											const CVideoDecoder::RenderInfo& renderInfo);
+		virtual	I<CVideoFrameStore>	newVideoFrameStore(const CString& identifier, UInt32 trackIndex);
 
 		virtual	void				setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
 

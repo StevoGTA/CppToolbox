@@ -18,7 +18,7 @@ class CMediaReader {
 		virtual				~CMediaReader() {}
 
 							// Instance methods
-		virtual	Float32		getPercenConsumed() const = 0;
+		virtual	Float32		getPercentConsumed() const = 0;
 
 		virtual	OI<SError>	set(UInt64 frameIndex) = 0;
 				OI<SError>	set(const SMediaPosition& mediaPosition,

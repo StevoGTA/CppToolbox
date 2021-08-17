@@ -700,15 +700,14 @@ static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	TIResult<SMediaTracks>				sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource);
-static	OI<CAudioTrack>						sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription,
-													const CData& esdsAtomPayloadData,
-													const TArray<SMediaPacketAndLocation>& packetAndLocations);
-static	OI<CVideoTrack>						sComposeH264VideoTrack(const SstsdDescription& stsdDescription,
-													const CData& configurationData,
-													const SmdhdAtomPayload& mdhdAtomPayload,
-													const TArray<SMediaPacketAndLocation>& packetAndLocations,
-													const OI<CData>& stssAtomPayloadData);
+static	TIResult<SMediaTracks>			sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource);
+static	OI<CAudioTrack>					sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription,
+												const CData& esdsAtomPayloadData,
+												const TArray<SMediaPacketAndLocation>& packetAndLocations);
+static	OI<CVideoTrack>					sComposeH264VideoTrack(const SstsdDescription& stsdDescription,
+												const CData& configurationData, const SmdhdAtomPayload& mdhdAtomPayload,
+												const TArray<SMediaPacketAndLocation>& packetAndLocations,
+												const OI<CData>& stssAtomPayloadData);
 static	TArray<SMediaPacketAndLocation>	sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
 													const SstscAtomPayload& stscAtomPayload,
 													const SstszAtomPayload& stszAtomPayload,

@@ -9,12 +9,11 @@
 
 class CVideoProcessorInternals {
 	public:
-//		CVideoProcessorInternals() : mVideoProcessor(nil) {}
-		CVideoProcessorInternals() {}
-//		~CVideoProcessorInternals()
-//			{ Delete(mVideoProcessor); }
+		CVideoProcessorInternals() : mVideoProcessor(nil) {}
+		~CVideoProcessorInternals()
+			{ Delete(mVideoProcessor); }
 
-//		I<CVideoProcessor>*	mVideoProcessor;
+		I<CVideoProcessor>*	mVideoProcessor;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,32 +38,32 @@ CVideoProcessor::~CVideoProcessor()
 
 // MARK: Instance methods
 
-////----------------------------------------------------------------------------------------------------------------------
-//OI<SError> CVideoProcessor::connectInput(const I<CVideoProcessor>& videoProcessor)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	// Store
-//	mInternals->mVideoProcessor = new I<CVideoProcessor>(videoProcessor);
-//
-//	return OI<SError>();
-//}
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CVideoProcessor::connectInput(const I<CVideoProcessor>& videoProcessor)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mVideoProcessor = new I<CVideoProcessor>(videoProcessor);
 
-////----------------------------------------------------------------------------------------------------------------------
-//SVideoReadStatus CVideoProcessor::perform(const SMediaPosition& mediaPosition, CVideoFrame& videoFrame)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	return (*mInternals->mVideoProcessor)->perform(mediaPosition, videoFrame);
-//}
+	return OI<SError>();
+}
 
-////----------------------------------------------------------------------------------------------------------------------
-//OI<SError> CVideoProcessor::reset()
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	// Check for instance
-//	if (mInternals->mVideoProcessor != nil)
-//		// Reset
-//		return (*mInternals->mVideoProcessor)->reset();
-//	else
-//		// No Video Processor
-//		return OI<SError>();
-//}
+//----------------------------------------------------------------------------------------------------------------------
+CVideoProcessor::PerformResult CVideoProcessor::perform(const SMediaPosition& mediaPosition)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (*mInternals->mVideoProcessor)->perform(mediaPosition);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CVideoProcessor::reset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for instance
+	if (mInternals->mVideoProcessor != nil)
+		// Reset
+		return (*mInternals->mVideoProcessor)->reset();
+	else
+		// No Video Processor
+		return OI<SError>();
+}

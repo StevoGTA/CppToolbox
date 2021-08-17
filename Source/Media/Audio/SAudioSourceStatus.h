@@ -11,8 +11,8 @@
 
 struct SAudioSourceStatus {
 							// Lifecycle methods
-							SAudioSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
 							SAudioSourceStatus(Float32 percentConsumed) : mPercentConsumed(percentConsumed) {}
+							SAudioSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
 
 							// Instance methods
 				bool		isSuccess() const

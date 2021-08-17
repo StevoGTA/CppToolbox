@@ -5,104 +5,27 @@
 #include "CVideoDecoder.h"
 
 #include "CCodecRegistry.h"
-#include "TLockingArray.h"
-
-#include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoDecoderInternals
 
-class CVideoDecoderInternals {
+class CVideoDecoderInternals : public TReferenceCountable<CVideoDecoderInternals> {
 	public:
-						CVideoDecoderInternals(CVideoDecoder& videoDecoder, const I<CCodec::DecodeInfo>& codecDecodeInfo,
-								const I<CSeekableDataSource>& seekableDataSource, UInt32 trackIndex,
-								const CVideoCodec::Info& videoCodecInfo, const CVideoDecoder::DecodeInfo& decodeInfo,
-								CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
-								const CVideoDecoder::RenderInfo& renderInfo) :
-							mVideoDecoder(videoDecoder), mDecodeInfo(decodeInfo), mRenderInfo(renderInfo),
-									mVideoCodec(videoCodecInfo.instantiate()), mTrackIndex(trackIndex),
-									mNotifiedFirstFrameReady(false), mDecodeInProgress(false), mResetPending(false)
-							{
-								// Setup for decode
-								mVideoCodec->setupForDecode(seekableDataSource, codecDecodeInfo,
-										CVideoCodec::DecodeFrameInfo(compatibility, frameReady, error, this));
-							}
-						~CVideoDecoderInternals()
-							{
-								// Reset video codec
-								mVideoCodec->reset();
-							}
+		CVideoDecoderInternals(const SVideoStorageFormat& videoStorageFormat,
+				const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource) :
+			TReferenceCountable(),
+					mVideoStorageFormat(videoStorageFormat),
+					mCodecDecodeInfo(codecDecodeInfo), mSeekableDataSource(seekableDataSource),
+					mVideoCodec(
+							CCodecRegistry::mShared.getVideoCodecInfo(videoStorageFormat.getCodecID()).instantiate()),
+					mMediaReader(codecDecodeInfo->createMediaReader(seekableDataSource))
+			{}
 
-				void	triggerDecode()
-							{
-								// Trigger decode
-								if (mVideoCodec->triggerDecode())
-									// Decode in progress
-									mDecodeInProgress = true;
-							}
-				void	triggerReset()
-							{
-								// Dump all video frames
-								mVideoFrames.removeAll();
-
-								// Reset
-								mVideoCodec->reset();
-
-								// Reset handled
-								mNotifiedFirstFrameReady = false;
-								mResetPending = false;
-
-								// Queue first frame
-								triggerDecode();
-							}
-
-		static	void	frameReady(const CVideoFrame& videoFrame, void* userData)
-							{
-								// Setup
-								CVideoDecoderInternals&	internals = *((CVideoDecoderInternals*) userData);
-
-								// Add and order
-								internals.mVideoFrames.add(videoFrame);
-								internals.mVideoFrames.sort(CVideoFrame::comparePresentationTimeInterval);
-
-								// Decode finished
-								internals.mDecodeInProgress = false;
-
-								// Check for reset pending
-								if (internals.mResetPending)
-									// Must reset
-									internals.triggerReset();
-								else
-									// Call proc
-									internals.mDecodeInfo.frameReady(internals.mVideoDecoder);
-							}
-		static	void	error(const SError& error, void* userData)
-							{
-								// Setup
-								CVideoDecoderInternals&	internals = *((CVideoDecoderInternals*) userData);
-
-								// Decode finished
-								internals.mDecodeInProgress = false;
-
-								// Check for reset pending
-								if (internals.mResetPending)
-									// Must reset
-									internals.triggerReset();
-								else
-									// Call proc
-									internals.mDecodeInfo.error(internals.mVideoDecoder, error);
-							}
-
-		CVideoDecoder&				mVideoDecoder;
-		CVideoDecoder::DecodeInfo	mDecodeInfo;
-		CVideoDecoder::RenderInfo	mRenderInfo;
-		I<CVideoCodec>				mVideoCodec;
-		UInt32						mTrackIndex;
-
-		TNLockingArray<CVideoFrame>	mVideoFrames;
-		bool						mNotifiedFirstFrameReady;
-		bool						mDecodeInProgress;
-		bool						mResetPending;
+		SVideoStorageFormat		mVideoStorageFormat;
+		I<CCodec::DecodeInfo>	mCodecDecodeInfo;
+		I<CSeekableDataSource>	mSeekableDataSource;
+		I<CVideoCodec>			mVideoCodec;
+		I<CMediaReader>			mMediaReader;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,72 +37,62 @@ class CVideoDecoderInternals {
 //----------------------------------------------------------------------------------------------------------------------
 CVideoDecoder::CVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
 		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource,
-		const CString& identifier, UInt32 trackIndex, const DecodeInfo& decodeInfo,
-		CVideoCodec::DecodeFrameInfo::Compatibility compatibility, const RenderInfo& renderInfo) : CVideoProcessor()
+		CVideoFrame::Compatibility compatibility) : CVideoSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	mInternals =
-			new CVideoDecoderInternals(*this, codecDecodeInfo, seekableDataSource, trackIndex,
-					CCodecRegistry::mShared.getVideoCodecInfo(videoStorageFormat.getCodecID()),
-					decodeInfo, compatibility, renderInfo);
+	mInternals = new CVideoDecoderInternals(videoStorageFormat, codecDecodeInfo, seekableDataSource);
 
-	// Queue first frame
-	mInternals->triggerDecode();
+	// Setup Video Codec
+	mInternals->mVideoCodec->setupForDecode(mInternals->mMediaReader, mInternals->mCodecDecodeInfo, compatibility);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CVideoDecoder::CVideoDecoder(const CVideoDecoder& other) : CVideoSource(other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CVideoDecoder::~CVideoDecoder()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	Delete(mInternals);
+	mInternals->removeReference();
 }
 
-// CVideoProcessor methods
+// MARK: CVideoProcessor methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CVideoProcessor::PerformResult CVideoDecoder::perform(const SMediaPosition& mediaPosition)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	Float32		percentConsumed = mInternals->mMediaReader->getPercentConsumed();
+	OI<SError>	error;
+
+	// Update read position if needed
+	if (mediaPosition.getMode() != SMediaPosition::kFromCurrent) {
+		// Reset audio codec
+		mInternals->mVideoCodec->decodeReset();
+
+//		// Set media position
+//		error = mInternals->mMediaReader->set(mediaPosition, *mInternals->mAudioProcessingFormat);
+//		ReturnValueIfError(error, SVideoSourceStatus(*error));
+	}
+
+	// Decode
+	TIResult<CVideoFrame>	videoFrame = mInternals->mVideoCodec->decode();
+	ReturnValueIfResultError(videoFrame, PerformResult(videoFrame.getError()));
+
+	return PerformResult(percentConsumed, videoFrame.getValue());
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CVideoDecoder::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Reset pending
-	mInternals->mResetPending = true;
-
-	// Check situation
-	if (!mInternals->mDecodeInProgress)
-		// Can do reset now
-		mInternals->triggerReset();
+	// Reset audio codec
+	mInternals->mVideoCodec->decodeReset();
 
 	return OI<SError>();
-}
-
-// MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CVideoDecoder::handleFrameReady()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if notified first frame ready
-	if (!mInternals->mNotifiedFirstFrameReady) {
-		// Call proc
-		mInternals->mRenderInfo.currentVideoFrameUpdated(mInternals->mTrackIndex, mInternals->mVideoFrames[0]);
-		mInternals->mNotifiedFirstFrameReady = true;
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CVideoDecoder::notePositionUpdated(UniversalTimeInterval position)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if time to go to next frame
-	if ((mInternals->mVideoFrames.getCount() > 1) &&
-			(position >= mInternals->mVideoFrames[1].getPresentationTimeInterval())) {
-		// Next frame!
-		mInternals->mVideoFrames.removeAtIndex(0);
-		mInternals->mRenderInfo.currentVideoFrameUpdated(mInternals->mTrackIndex, mInternals->mVideoFrames[0]);
-	}
-
-	// Check if need to queue more frames
-	if (!mInternals->mDecodeInProgress && (mInternals->mVideoFrames.getCount() < 10))
-		// Trigger decode
-		mInternals->triggerDecode();
 }

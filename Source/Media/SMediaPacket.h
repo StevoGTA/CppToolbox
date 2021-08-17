@@ -71,7 +71,7 @@ class CPacketMediaReader : public CMediaReader {
 										~CPacketMediaReader();
 
 										// CMediaReader methods
-		Float32							getPercenConsumed() const;
+		Float32							getPercentConsumed() const;
 		OI<SError>						set(UInt64 frameIndex);
 
 										// Instance methods

@@ -267,12 +267,11 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 										~CH264VideoCodec();
 
 										// CVideoCodec methods
-				void					setupForDecode(const I<CSeekableDataSource>& seekableDataSource,
+				void					setupForDecode(const I<CMediaReader>& mediaReader,
 												const I<CCodec::DecodeInfo>& decodeInfo,
-												const DecodeFrameInfo& decodeFrameInfo);
-				bool					triggerDecode();
-				OI<SError>				set(const SMediaPosition& mediaPosition);
-				OI<SError>				reset();
+												CVideoFrame::Compatibility compatibility);
+				TIResult<CVideoFrame>	decode();
+				void					decodeReset();
 
 										// Class methods
 		static	OI<SVideoStorageFormat>	composeStorageFormat(const S2DSizeU16& frameSize, Float32 framerate);

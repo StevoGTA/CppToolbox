@@ -11,7 +11,7 @@
 
 class CMediaPlayerAudioPlayer : public CAudioPlayer {
 	public:
-		CMediaPlayerAudioPlayer(const CString& identifier, const CAudioPlayer::Info& info) :
+		CMediaPlayerAudioPlayer(const CString& identifier, const Info& info) :
 			CAudioPlayer(identifier, info), mMessageQueue(10 * 1024)
 			{}
 
@@ -20,16 +20,12 @@ class CMediaPlayerAudioPlayer : public CAudioPlayer {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMediaPlayerVideoDecoder
+// MARK: - CMediaPlayerVideoFrameStore
 
-class CMediaPlayerVideoDecoder : public CVideoDecoder {
+class CMediaPlayerVideoFrameStore : public CVideoFrameStore {
 	public:
-		CMediaPlayerVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
-				const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource,
-				const CString& identifier, UInt32 trackIndex, const DecodeInfo& decodeInfo,
-				CVideoCodec::DecodeFrameInfo::Compatibility compatibility, const RenderInfo& renderInfo) :
-			CVideoDecoder(videoStorageFormat, codecDecodeInfo, seekableDataSource, identifier, trackIndex, decodeInfo,
-					compatibility, renderInfo), mMessageQueue(10 * 1024)
+		CMediaPlayerVideoFrameStore(const CString& identifier, const Info& info) :
+			CVideoFrameStore(identifier, info), mMessageQueue(10 * 1024)
 			{}
 
 		CSRSWMessageQueue	mMessageQueue;
@@ -78,28 +74,17 @@ class CMediaPlayerInternals {
 					SError			mError;
 		};
 
-		struct VideoDecoderFrameReadyMessage : public CSRSWMessageQueue::ProcMessage {
+		struct VideoFrameStoreErrorMessage : public CSRSWMessageQueue::ProcMessage {
 			// Lifecycle Methods
-			VideoDecoderFrameReadyMessage(Proc proc, void* userData, CVideoDecoder& videoDecoder) :
-				CSRSWMessageQueue::ProcMessage(sizeof(VideoDecoderFrameReadyMessage), proc, userData),
-						mVideoDecoder(videoDecoder)
-				{}
-
-			// Properties
-			CVideoDecoder&	mVideoDecoder;
-		};
-
-		struct VideoDecoderErrorMessage : public CSRSWMessageQueue::ProcMessage {
-			// Lifecycle Methods
-			VideoDecoderErrorMessage(Proc proc, void* userData, const CVideoDecoder& videoDecoder,
+			VideoFrameStoreErrorMessage(Proc proc, void* userData, const CVideoFrameStore& videoFrameStore,
 					const SError& error) :
-				CSRSWMessageQueue::ProcMessage(sizeof(VideoDecoderErrorMessage), proc, userData),
-						mVideoDecoder(videoDecoder), mError(error)
+				CSRSWMessageQueue::ProcMessage(sizeof(VideoFrameStoreErrorMessage), proc, userData),
+						mVideoFrameStore(videoFrameStore), mError(error)
 				{}
 
 			// Properties
-			const	CVideoDecoder&	mVideoDecoder;
-					SError			mError;
+			const	CVideoFrameStore&	mVideoFrameStore;
+					SError				mError;
 		};
 
 						CMediaPlayerInternals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
@@ -111,7 +96,7 @@ class CMediaPlayerInternals {
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
 								void* userData)
 							{
-								// Submit
+								// Queue message
 								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
 										AudioPlayerPositionUpdatedMessage(handleAudioPlayerPositionUpdated, userData,
 												audioPlayer, position));
@@ -120,18 +105,15 @@ class CMediaPlayerInternals {
 								void* userData)
 							{
 								// Setup
-								CMediaPlayerInternals&				internals = *((CMediaPlayerInternals*) userData);
-								AudioPlayerPositionUpdatedMessage&	positionUpdatedMessage =
-																			(AudioPlayerPositionUpdatedMessage&)
-																					message;
+								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
 								if (!mActiveInternals.contains(internals))
 									return;
 
-								// Iterate all video decoders
+								// Iterate all video frame stores
 								for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++)
 									// Update video decoder
 									internals.mMediaPlayer.getVideoProcessor(i)->notePositionUpdated(
-											positionUpdatedMessage.mPosition);
+											((AudioPlayerPositionUpdatedMessage&) message).mPosition);
 							}
 		static	void	audioPlayerEndOfData(const CAudioPlayer& audioPlayer, void* userData)
 							{
@@ -142,9 +124,7 @@ class CMediaPlayerInternals {
 		static	void	handleAudioPlayerEndOfData(const CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
-								CMediaPlayerInternals&			internals = *((CMediaPlayerInternals*) userData);
-//								AudioPlayerEndOfDataMessage&	endOfDataMessage =
-//																		(AudioPlayerEndOfDataMessage&) message;
+								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
 								if (!mActiveInternals.contains(internals))
 									return;
 
@@ -191,44 +171,41 @@ class CMediaPlayerInternals {
 							{
 								// Setup
 								CMediaPlayerInternals&		internals = *((CMediaPlayerInternals*) userData);
-//								AudioPlayerErrorMessage&	errorMessage = (AudioPlayerErrorMessage&) message;
-								if (!mActiveInternals.contains(internals))
-									return;
-							}
-
-		static	void	videoDecoderFrameReady(CVideoDecoder& videoDecoder, void* userData)
-							{
-								// Submit
-								((CMediaPlayerVideoDecoder&) videoDecoder).mMessageQueue.submit(
-										VideoDecoderFrameReadyMessage(handleVideoDeciderFrameReady, userData,
-												videoDecoder));
-							}
-		static	void	handleVideoDeciderFrameReady(const CSRSWMessageQueue::ProcMessage& message, void* userData)
-							{
-								// Setup
-								CMediaPlayerInternals&			internals = *((CMediaPlayerInternals*) userData);
-								VideoDecoderFrameReadyMessage&	frameReadyMessage =
-																		(VideoDecoderFrameReadyMessage&) message;
+								AudioPlayerErrorMessage&	errorMessage = (AudioPlayerErrorMessage&) message;
 								if (!mActiveInternals.contains(internals))
 									return;
 
 								// Handle
-								frameReadyMessage.mVideoDecoder.handleFrameReady();
+								internals.mInfo.audioError(errorMessage.mError);
 							}
-		static	void	videoDecoderError(const CVideoDecoder& videoDecoder, const SError& error, void* userData)
-							{
-								// Submit
-								((CMediaPlayerVideoDecoder&) videoDecoder).mMessageQueue.submit(
-										VideoDecoderErrorMessage(handleVideoDecoderError, userData, videoDecoder,
-												error));
-							}
-		static	void	handleVideoDecoderError(const CSRSWMessageQueue::ProcMessage& message, void* userData)
+
+		static	void	videoFrameStoreCurrentFrameUpdated(const CVideoFrameStore& videoFrameStore,
+								const CVideoFrame& videoFrame, void* userData)
 							{
 								// Setup
-								CMediaPlayerInternals&		internals = *((CMediaPlayerInternals*) userData);
-//								VideoDecoderErrorMessage&	errorMessage = (VideoDecoderErrorMessage&) message;
+								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
+
+								// Handle
+								internals.mInfo.videoFrameUpdated(videoFrame);
+							}
+		static	void	videoFrameStoreError(const CVideoFrameStore& videoFrameStore, const SError& error,
+								void* userData)
+							{
+								// Submit
+								((CMediaPlayerVideoFrameStore&) videoFrameStore).mMessageQueue.submit(
+										VideoFrameStoreErrorMessage(handleVideoFrameStoreError, userData,
+												videoFrameStore, error));
+							}
+		static	void	handleVideoFrameStoreError(const CSRSWMessageQueue::ProcMessage& message, void* userData)
+							{
+								// Setup
+								CMediaPlayerInternals&			internals = *((CMediaPlayerInternals*) userData);
+								VideoFrameStoreErrorMessage&	errorMessage = (VideoFrameStoreErrorMessage&) message;
 								if (!mActiveInternals.contains(internals))
 									return;
+
+								// Handle
+								internals.mInfo.videoError(errorMessage.mError);
 							}
 
 				CMediaPlayer&					mMediaPlayer;
@@ -274,11 +251,16 @@ CMediaPlayer::~CMediaPlayer()
 		CMediaPlayerAudioPlayer&	audioPlayer = (CMediaPlayerAudioPlayer&) *getAudioProcessor(i);
 		mInternals->mMessageQueues.remove(audioPlayer.mMessageQueue);
 	}
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++) {
+		// Remove message queue
+		CMediaPlayerVideoFrameStore&	videoFrameStore = (CMediaPlayerVideoFrameStore&) *getVideoProcessor(i);
+		mInternals->mMessageQueues.remove(videoFrameStore.mMessageQueue);
+	}
 
 	CMediaPlayerInternals::mActiveInternals -= *mInternals;
 }
 
-// MARK: - CMediaDestination methods
+// MARK: CMediaDestination methods
 
 //----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::setupComplete()
@@ -323,27 +305,24 @@ void CMediaPlayer::setAudioGain(Float32 audioGain)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CVideoDecoder> CMediaPlayer::newVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
-		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource,
-		const CString& identifier, UInt32 trackIndex, CVideoCodec::DecodeFrameInfo::Compatibility compatibility,
-		const CVideoDecoder::RenderInfo& renderInfo)
+I<CVideoFrameStore> CMediaPlayer::newVideoFrameStore(const CString& identifier, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create Video Decoder
-	I<CMediaPlayerVideoDecoder>	videoDecoder(
-										new CMediaPlayerVideoDecoder(videoStorageFormat, codecDecodeInfo,
-												seekableDataSource, identifier, trackIndex,
-												CVideoDecoder::DecodeInfo(CMediaPlayerInternals::videoDecoderFrameReady,
-														CMediaPlayerInternals::videoDecoderError, mInternals),
-												compatibility, renderInfo));
+	// Create Video Frame Store
+	I<CMediaPlayerVideoFrameStore>	videoFrameStore(
+											new CMediaPlayerVideoFrameStore(identifier,
+													CVideoFrameStore::Info(
+															CMediaPlayerInternals::videoFrameStoreCurrentFrameUpdated,
+															CMediaPlayerInternals::videoFrameStoreError,
+															mInternals)));
 
 	// Add message queue
-	mInternals->mMessageQueues.add(videoDecoder->mMessageQueue);
+	mInternals->mMessageQueues.add(videoFrameStore->mMessageQueue);
 
 	// Add
-	add((const I<CVideoProcessor>&) videoDecoder, trackIndex);
+	add((const I<CVideoProcessor>&) videoFrameStore, trackIndex);
 
-	return *((I<CVideoDecoder>*) &videoDecoder);
+	return *((I<CVideoFrameStore>*) &videoFrameStore);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -361,6 +340,11 @@ void CMediaPlayer::play()
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Play
 		getAudioProcessor(i)->play();
+
+	// Iterate all video tracks
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
+		// Resume
+		getVideoProcessor(i)->resume();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -369,8 +353,13 @@ void CMediaPlayer::pause()
 {
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
-		// Play
+		// Pause
 		getAudioProcessor(i)->pause();
+
+	// Iterate all video tracks
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
+		// Pause
+		getVideoProcessor(i)->pause();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

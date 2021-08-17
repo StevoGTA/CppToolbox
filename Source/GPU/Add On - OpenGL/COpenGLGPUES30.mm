@@ -85,10 +85,10 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoCodec::DecodeFrameInfo::Compatibility CGPU::getVideoCodecDecodeFrameInfoCompatibility() const
+CVideoFrame::Compatibility CGPU::getVideoFrameCompatibility() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CVideoCodec::DecodeFrameInfo::kCompatibilityAppleOpenGLES;
+	return CVideoFrame::kCompatibilityAppleOpenGLES;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

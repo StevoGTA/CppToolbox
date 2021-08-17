@@ -20,7 +20,7 @@ class CAudioCodec : public CCodec {
 		typedef	I<CCodec::DecodeInfo>	(*ComposeDecodeInfoProc)(UInt64 dataStartOffset, UInt64 dataSize,
 												const SAudioStorageFormat& audioStorageFormat);
 
-	// Structs
+	// Info
 	public:
 		struct Info {
 			// Procs

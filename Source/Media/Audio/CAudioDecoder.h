@@ -28,6 +28,7 @@ class CAudioDecoder : public CAudioSource {
 		void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
 
 		SAudioSourceStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
+		OI<SError>						reset();
 
 	// Properties
 	private:

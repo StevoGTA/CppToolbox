@@ -26,6 +26,20 @@
 
 class CVideoFrameInternals;
 class CVideoFrame {
+	// Compatibility
+	public:
+		enum Compatibility {
+#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+			kCompatibilityAppleMetal,
+			kCompatibilityAppleOpenGLES,
+#elif TARGET_OS_MACOS
+			kCompatibilityAppleMetal,
+			kCompatibilityAppleOpenGL,
+#else
+			kCompatibilityNotApplicable,
+#endif
+		};
+
 	// Data Format
 	public:
 		enum DataFormat {

@@ -42,33 +42,32 @@ void CAudioPlayer::setPlaybackBufferDuration(UniversalTimeInterval playbackBuffe
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerReaderThreadInternals
+// MARK: - CAudioPlayerBufferThreadInternals
 
-class CAudioPlayerReaderThreadInternals {
+class CAudioPlayerBufferThreadInternals {
 	public:
 		enum State {
 			kStateStarting,
 			kStateWaiting,
-			kStateReading,
+			kStateFilling,
 		};
 
-				CAudioPlayerReaderThreadInternals(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
-						UInt32 bytesPerFrame, UInt32 maxOutputFrames, CAudioPlayerReaderThread::ErrorProc errorProc,
+				CAudioPlayerBufferThreadInternals(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
+						UInt32 bytesPerFrame, UInt32 maxOutputFrames, CAudioPlayerBufferThread::ErrorProc errorProc,
 						void* procsUserData) :
 					mAudioPlayer(audioPlayer), mErrorProc(errorProc), mQueue(queue), mBytesPerFrame(bytesPerFrame),
 							mMaxOutputFrames(maxOutputFrames), mProcsUserData(procsUserData),
-							mResumeRequesed(false), mStopReadingRequested(false),
-							mShutdownRequested(false), mReachedEndOfData(false), mState(kStateStarting),
+							mResumeRequested(false), mStopFillingRequested(false),
+							mShutdownRequested(false), mReachedEnd(false), mState(kStateStarting),
 							mMediaPosition(SMediaPosition::fromStart(0.0)), mFramesToRead(~0)
 					{}
 
-		bool	tryRead()
+		bool	tryFill()
 					{
 						// Request write
 						UInt32									bytesToRequest =
-																		std::min<UInt32>(
-																						mMaxOutputFrames * 2,
-																						mFramesToRead) *
+																		std::min<UInt32>(mMaxOutputFrames * 2,
+																				mFramesToRead) *
 																				mBytesPerFrame;
 						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRequest);
 						if (writeBufferInfo.mSize < mBytesPerFrame)
@@ -95,7 +94,7 @@ class CAudioPlayerReaderThreadInternals {
 							return true;
 						} else {
 							// Finished
-							mReachedEndOfData = true;
+							mReachedEnd = true;
 							if (*audioSourceStatus.getError() != SError::mEndOfData)
 								// Error
 								mErrorProc(*audioSourceStatus.getError(), mProcsUserData);
@@ -105,17 +104,17 @@ class CAudioPlayerReaderThreadInternals {
 					}
 
 		CAudioPlayer&						mAudioPlayer;
-		CAudioPlayerReaderThread::ErrorProc	mErrorProc;
+		CAudioPlayerBufferThread::ErrorProc	mErrorProc;
 		CSemaphore							mSemaphore;
 		CSRSWBIPSegmentedQueue&				mQueue;
 		UInt32								mBytesPerFrame;
 		UInt32								mMaxOutputFrames;
 		void*								mProcsUserData;
 
-		bool								mResumeRequesed;
-		bool								mStopReadingRequested;
+		bool								mResumeRequested;
+		bool								mStopFillingRequested;
 		bool								mShutdownRequested;
-		bool								mReachedEndOfData;
+		bool								mReachedEnd;
 		State								mState;
 		SMediaPosition						mMediaPosition;
 		UInt32								mFramesToRead;
@@ -123,19 +122,19 @@ class CAudioPlayerReaderThreadInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerReaderThread
+// MARK: - CAudioPlayerBufferThread
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayerReaderThread::CAudioPlayerReaderThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
+CAudioPlayerBufferThread::CAudioPlayerBufferThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
 		UInt32 bytesPerFrame, UInt32 maxOutputFrames, ErrorProc errorProc, void* procsUserData) :
 	CThread(CString(OSSTR("Audio Reader - ")) + audioPlayer.getIdentifier())
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	mInternals =
-			new CAudioPlayerReaderThreadInternals(audioPlayer, queue, bytesPerFrame, maxOutputFrames, errorProc,
+			new CAudioPlayerBufferThreadInternals(audioPlayer, queue, bytesPerFrame, maxOutputFrames, errorProc,
 					procsUserData);
 
 	// Start
@@ -143,7 +142,7 @@ CAudioPlayerReaderThread::CAudioPlayerReaderThread(CAudioPlayer& audioPlayer, CS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayerReaderThread::~CAudioPlayerReaderThread()
+CAudioPlayerBufferThread::~CAudioPlayerBufferThread()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
@@ -152,41 +151,41 @@ CAudioPlayerReaderThread::~CAudioPlayerReaderThread()
 // MARK: CThread methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerReaderThread::run()
+void CAudioPlayerBufferThread::run()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Run until shutdown
 	while (!mInternals->mShutdownRequested) {
 		// Check state
 		switch (mInternals->mState) {
-			case CAudioPlayerReaderThreadInternals::kStateStarting:
+			case CAudioPlayerBufferThreadInternals::kStateStarting:
 				// Starting
-				if (mInternals->mResumeRequesed) {
-					// Start reading
-					mInternals->mState = CAudioPlayerReaderThreadInternals::kStateReading;
+				if (mInternals->mResumeRequested) {
+					// Start filling
+					mInternals->mState = CAudioPlayerBufferThreadInternals::kStateFilling;
 					break;
 				} else {
 					// Wait for resume
-					mInternals->mState = CAudioPlayerReaderThreadInternals::kStateWaiting;
+					mInternals->mState = CAudioPlayerBufferThreadInternals::kStateWaiting;
 
 					// Fall through
 				}
 
-			case CAudioPlayerReaderThreadInternals::kStateWaiting:
+			case CAudioPlayerBufferThreadInternals::kStateWaiting:
 				// Waiting
 				mInternals->mSemaphore.waitFor();
 
-				// Check if reset requested
-				if (!mInternals->mStopReadingRequested)
-					// Go for reading
-					mInternals->mState = CAudioPlayerReaderThreadInternals::kStateReading;
+				// Check if stop filling requested
+				if (!mInternals->mStopFillingRequested)
+					// Go for filling
+					mInternals->mState = CAudioPlayerBufferThreadInternals::kStateFilling;
 				break;
 
-			case CAudioPlayerReaderThreadInternals::kStateReading:
-				// Reading
-				if (mInternals->mStopReadingRequested || !mInternals->tryRead())
+			case CAudioPlayerBufferThreadInternals::kStateFilling:
+				// Filling
+				if (mInternals->mStopFillingRequested || !mInternals->tryFill())
 					// Go to waiting
-					mInternals->mState = CAudioPlayerReaderThreadInternals::kStateWaiting;
+					mInternals->mState = CAudioPlayerBufferThreadInternals::kStateWaiting;
 				break;
 		}
 	}
@@ -195,29 +194,29 @@ void CAudioPlayerReaderThread::run()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerReaderThread::seek(UniversalTimeInterval timeInterval, UInt32 maxFrames)
+void CAudioPlayerBufferThread::seek(UniversalTimeInterval timeInterval, UInt32 maxFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
 	mInternals->mMediaPosition = SMediaPosition::fromStart(timeInterval);
 	mInternals->mFramesToRead = maxFrames;
-	mInternals->mReachedEndOfData = false;
+	mInternals->mReachedEnd = false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerReaderThread::resume()
+void CAudioPlayerBufferThread::resume()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
-	mInternals->mResumeRequesed = true;
-	mInternals->mStopReadingRequested = false;
+	mInternals->mResumeRequested = true;
+	mInternals->mStopFillingRequested = false;
 
 	// Signal
 	mInternals->mSemaphore.signal();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerReaderThread::noteQueueReadComplete()
+void CAudioPlayerBufferThread::noteQueueReadComplete()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Signal
@@ -225,27 +224,27 @@ void CAudioPlayerReaderThread::noteQueueReadComplete()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CAudioPlayerReaderThread::getDidReachEndOfData() const
+bool CAudioPlayerBufferThread::getDidReachEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mReachedEndOfData;
+	return mInternals->mReachedEnd;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerReaderThread::stopReading()
+void CAudioPlayerBufferThread::stopReading()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Request reset
-	mInternals->mStopReadingRequested = true;
+	// Request stop filling
+	mInternals->mStopFillingRequested = true;
 
 	// Wait until waiting
-	while (mInternals->mState != CAudioPlayerReaderThreadInternals::kStateWaiting)
+	while (mInternals->mState != CAudioPlayerBufferThreadInternals::kStateWaiting)
 		// Sleep
 		CThread::sleepFor(0.001);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerReaderThread::shutdown()
+void CAudioPlayerBufferThread::shutdown()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Request shutdown

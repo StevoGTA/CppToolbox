@@ -5,63 +5,12 @@
 #pragma once
 
 #include "CCodec.h"
-#include "CDataSource.h"
 #include "CVideoFrame.h"
-#include "SMediaPosition.h"
-#include "SVideoSourceStatus.h"
-#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoCodec
 
 class CVideoCodec : public CCodec {
-	// DecodeFrameInfo
-	public:
-		struct DecodeFrameInfo {
-			// Compatibility
-			enum Compatibility {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-				kCompatibilityAppleMetal,
-				kCompatibilityAppleOpenGLES,
-#elif TARGET_OS_MACOS
-				kCompatibilityAppleMetal,
-				kCompatibilityAppleOpenGL,
-#else
-				kCompatibilityNotApplicable,
-#endif
-			};
-
-			// Procs
-			typedef	void	(*FrameReadyProc)(const CVideoFrame& videoFrame, void* userData);
-			typedef	void	(*ErrorProc)(const SError& error, void* userData);
-
-							// Lifecycle methods
-							DecodeFrameInfo(Compatibility compatibility, FrameReadyProc frameReadyProc,
-									ErrorProc errorProc, void* userData) :
-								mCompatibility(compatibility), mFrameReadyProc(frameReadyProc), mErrorProc(errorProc),
-										mUserData(userData)
-								{}
-							DecodeFrameInfo(const DecodeFrameInfo& other) :
-								mCompatibility(other.mCompatibility), mFrameReadyProc(other.mFrameReadyProc),
-										mErrorProc(other.mErrorProc), mUserData(other.mUserData)
-								{}
-
-							// Instance methods
-			Compatibility	getCompatibility() const
-								{ return mCompatibility; }
-			void			frameReady(const CVideoFrame& videoFrame) const
-								{ mFrameReadyProc(videoFrame, mUserData); }
-			void			error(const SError& error) const
-								{ mErrorProc(error, mUserData); }
-
-			// Properties
-			private:
-				Compatibility	mCompatibility;
-				FrameReadyProc	mFrameReadyProc;
-				ErrorProc		mErrorProc;
-				void*			mUserData;
-		};
-
 	// Info
 	public:
 		struct Info {
@@ -92,31 +41,21 @@ class CVideoCodec : public CCodec {
 				InstantiateProc	mInstantiateProc;
 		};
 
-	public:
-		struct DecodeResult {
-
-			private:
-				SVideoSourceStatus	mVideoSourceStatus;
-				OI<CVideoFrame>		mVideoFrame;
-
-		};
-
 	// Methods
 	public:
-							// Lifecycle methods
-							~CVideoCodec() {}
+										// Lifecycle methods
+										~CVideoCodec() {}
 
-							// Instance methods
-		virtual	void		setupForDecode(const I<CSeekableDataSource>& seekableDataSource,
-									const I<CCodec::DecodeInfo>& decodeInfo, const DecodeFrameInfo& decodeFrameInfo)
-									= 0;
-		virtual	bool		triggerDecode() = 0;
-		virtual	OI<SError>	set(const SMediaPosition& mediaPosition) = 0;
-		virtual	OI<SError>	reset() = 0;
+										// Instance methods
+		virtual	void					setupForDecode(const I<CMediaReader>& mediaReader,
+												const I<CCodec::DecodeInfo>& decodeInfo,
+												CVideoFrame::Compatibility compatibility) = 0;
+		virtual	TIResult<CVideoFrame>	decode() = 0;
+		virtual	void					decodeReset() {}
 
 	protected:
-							// Lifecycle methods
-							CVideoCodec() : CCodec() {}
+										// Lifecycle methods
+										CVideoCodec() : CCodec() {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------

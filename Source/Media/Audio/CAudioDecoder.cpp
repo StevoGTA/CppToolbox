@@ -84,7 +84,7 @@ SAudioSourceStatus CAudioDecoder::perform(const SMediaPosition& mediaPosition, C
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	Float32		percentConsumed = mInternals->mMediaReader->getPercenConsumed();
+	Float32		percentConsumed = mInternals->mMediaReader->getPercentConsumed();
 	OI<SError>	error;
 
 	// Update read position if needed
@@ -102,4 +102,14 @@ SAudioSourceStatus CAudioDecoder::perform(const SMediaPosition& mediaPosition, C
 	ReturnValueIfError(error, SAudioSourceStatus(*error));
 
 	return SAudioSourceStatus(percentConsumed);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CAudioDecoder::reset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Reset audio codec
+	mInternals->mAudioCodec->decodeReset();
+
+	return OI<SError>();
 }
