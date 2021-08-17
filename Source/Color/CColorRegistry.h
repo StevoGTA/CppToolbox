@@ -30,7 +30,7 @@ class CColorGroup {
 				const	TNumericArray<OSType>&	getColorIDs() const;
 
 												// Class methods
-		static	ECompareResult					compareDisplayIndexes(const CColorGroup& colorGroup1,
+		static			bool					compareDisplayIndexes(const CColorGroup& colorGroup1,
 														const CColorGroup& colorGroup2, void* userData);
 
 	// Properties

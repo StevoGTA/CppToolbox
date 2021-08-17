@@ -318,7 +318,7 @@ class CString : public CHashable {
 						TArray<CString>	components(const CString& separator) const;
 						TArray<CString>	componentsRespectingQuotes(const CString& separator) const;
 
-						ECompareResult	compareTo(const CString& other,
+						bool			compareTo(const CString& other,
 												CompareFlags compareFlags = kCompareFlagsDefault) const;
 						bool			equals(const CString& other, CompareFlags compareFlags = kCompareFlagsDefault)
 												const;
@@ -332,7 +332,7 @@ class CString : public CHashable {
 						CString			operator+(const CString& other) const;
 												
 										// Class methods
-		static			ECompareResult	compare(CString* const string1, CString* const string2, void* compareFlags);
+		static			bool			compare(CString* const string1, CString* const string2, void* compareFlags);
 
 		static			CString			make(const char* format, ...);
 		static			CString			make(const char* format, va_list args);

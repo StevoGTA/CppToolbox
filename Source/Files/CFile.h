@@ -86,8 +86,6 @@ class CFile : CHashable {
 						CString				getComment() const;
 						OI<SError>			setComment(const CString& string) const;
 #endif
-											// Class methods
-		static			ECompareResult		compareName(CFile* const file1, CFile* const file2, void* context);
 
 	private:
 											// Instance methods

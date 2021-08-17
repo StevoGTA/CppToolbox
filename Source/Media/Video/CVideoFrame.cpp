@@ -204,8 +204,8 @@ CVImageBufferRef CVideoFrame::getImageBufferRef() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-ECompareResult CVideoFrame::comparePresentationTimeInterval(const CVideoFrame& videoFrame1,
-		const CVideoFrame& videoFrame2, void* userData)
+bool CVideoFrame::comparePresentationTimeInterval(const CVideoFrame& videoFrame1, const CVideoFrame& videoFrame2,
+		void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return eCompare(videoFrame1.getPresentationTimeInterval(), videoFrame2.getPresentationTimeInterval());

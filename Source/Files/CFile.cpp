@@ -135,12 +135,3 @@ void CFile::update(const CFilesystemPath& filesystemPath)
 	// Update
 	mInternals->mFilesystemPath = filesystemPath;
 }
-
-// MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-ECompareResult CFile::compareName(CFile* const file1, CFile* const file2, void* context)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return file1->getName().compareTo(file2->getName());
-}

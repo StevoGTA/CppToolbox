@@ -75,8 +75,6 @@ class CFolder : CHashable {
 											// Class methods
 		static	const	CFolder&			tempFolder();
 
-		static			ECompareResult		compareName(CFolder* const folder1, CFolder* const folder2, void* context);
-
 #if TARGET_OS_MACOS
 		static	const	CFolder&			systemApplicationSupportFolder();
 		static	const	CFolder&			systemAudioPluginsFolder();

@@ -397,7 +397,7 @@ TArray<CString> CString::componentsRespectingQuotes(const CString& separator) co
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-ECompareResult CString::compare(CString* const string1, CString* const string2, void* compareFlags)
+bool CString::compare(CString* const string1, CString* const string2, void* compareFlags)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return string1->compareTo(*string2, *((CompareFlags*) compareFlags));
