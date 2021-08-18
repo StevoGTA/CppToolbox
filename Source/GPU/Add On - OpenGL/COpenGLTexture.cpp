@@ -30,7 +30,11 @@ mUsedPixelsSize(size),
 //					case CGPUTexture::kDataFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;	break;
 //					case CGPUTexture::kDataFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;	break;
 
-					case CGPUTexture::kDataFormatRGBA8888:	pixelFormat = GL_UNSIGNED_BYTE;			break;
+					case CGPUTexture::kDataFormatRGBA8888:
+						// RGBA8888
+						mHasTransparency = true;
+						pixelFormat = GL_UNSIGNED_BYTE;
+						break;
 				}
 
 				// Setup GL texture
@@ -62,7 +66,7 @@ mUsedPixelsSize(size),
 #if TARGET_OS_IOS
 		COpenGLTextureInternals(CVOpenGLESTextureCacheRef openGLTextureCacheRef, CVImageBufferRef imageBufferRef,
 				UInt32 planeIndex) :
-			TReferenceCountable()
+			TReferenceCountable(), mHasTransparency(false)
 			{
 				// Setup
 				size_t	width = ::CVPixelBufferGetWidthOfPlane(imageBufferRef, planeIndex);
