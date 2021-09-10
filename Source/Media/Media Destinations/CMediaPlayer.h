@@ -27,18 +27,15 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 					// Lifecycle methods
 					Info() :
-						mAudioPositionUpdatedProc(nil), mAudioErrorProc(nil),
-								mVideoFrameUpdatedProc(nil), mVideoErrorProc(nil),
-								mFinishedProc(nil),
-								mUserData(nil)
+						mAudioPositionUpdatedProc(nil), mAudioErrorProc(nil), mVideoFrameUpdatedProc(nil),
+								mVideoErrorProc(nil), mFinishedProc(nil), mUserData(nil)
 						{}
 					Info(AudioPositionUpdatedProc audioPositionUpdatedProc, AudioErrorProc audioErrorProc,
 							VideoFrameUpdatedProc videoFrameUpdatedProc, VideoErrorProc videoErrorProc,
 							FinishedProc finishedProc, void* userData) :
 						mAudioPositionUpdatedProc(audioPositionUpdatedProc), mAudioErrorProc(audioErrorProc),
 								mVideoFrameUpdatedProc(videoFrameUpdatedProc), mVideoErrorProc(videoErrorProc),
-								mFinishedProc(finishedProc),
-								mUserData(userData)
+								mFinishedProc(finishedProc), mUserData(userData)
 						{}
 					Info(const Info& other) :
 						mAudioPositionUpdatedProc(other.mAudioPositionUpdatedProc),

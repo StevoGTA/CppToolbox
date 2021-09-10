@@ -72,3 +72,21 @@ const I<CCodec::DecodeInfo>& CAudioTrack::getDecodeInfo() const
 {
 	return mInternals->mDecodeInfo;
 }
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CAudioTrack::getStringFromDB(Float32 db, Float32 muteDB)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check value
+	if (db == muteDB)
+		// Silence
+		return CString(OSSTR("-\u221EdB"));
+	else if (db < 1.0)
+		// Negative
+		return CString(db, 0, 1) + CString(OSSTR("dB"));
+	else
+		// Positive
+		return CString(OSSTR("+")) + CString(db, 0, 1) + CString(OSSTR("dB"));
+}

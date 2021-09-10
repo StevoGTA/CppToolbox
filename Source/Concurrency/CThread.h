@@ -49,7 +49,7 @@ class CThread {
 
 	protected:
 								// Lifecycle methods
-								CThread(const CString& name = CString::mEmpty);
+								CThread(const CString& name = CString::mEmpty, Options options = kOptionsAutoStart);
 
 								// Subclass methods
 				virtual	void	run()

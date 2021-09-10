@@ -33,9 +33,9 @@ struct SMediaSource {
 												{ return mID; }
 			const	CString&				getName() const
 												{ return mName; }
-			const	TArray<CString>&		getExtensions()
+			const	TArray<CString>&		getExtensions() const
 												{ return mExtensions; }
-					TIResult<SMediaTracks>	queryTracks(const I<CSeekableDataSource>& seekableDataSource)
+					TIResult<SMediaTracks>	queryTracks(const I<CSeekableDataSource>& seekableDataSource) const
 												{ return mQueryTracksProc(seekableDataSource); }
 
 			// Properties
