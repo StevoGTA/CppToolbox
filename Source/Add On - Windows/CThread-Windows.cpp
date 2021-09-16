@@ -72,6 +72,11 @@ CThread::CThread(const CString& name)
 {
 	// Setup internals
 	mInternals = new CThreadInternals(*this, CThread::runThreadProc, nil, name);
+
+	// Check options
+	if (options & kOptionsAutoStart)
+		// Start
+		start();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -28,22 +28,30 @@ class CMediaPlaybackQueue {
 	public:
 		struct Info {
 			// Types
-			typedef	void	(*ItemPrepareCompletedProc)(const TIResult<I<CMediaPlayer> >& mediaPlayer, void* userData);
+			typedef	void	(*ItemPrepareStartedProc)(const I<Item>& item, void* userData);
+			typedef	void	(*ItemPrepareCompletedProc)(const I<Item>& item,
+									const TIResult<I<CMediaPlayer> >& mediaPlayer, void* userData);
 
 					// Lifecycle methods
-					Info(ItemPrepareCompletedProc itemPrepareCompletedProc, void* userData) :
-						mItemPrepareCompletedProc(itemPrepareCompletedProc), mUserData(userData)
+					Info(ItemPrepareStartedProc itemPrepareStartedProc,
+							ItemPrepareCompletedProc itemPrepareCompletedProc, void* userData) :
+						mItemPrepareStartedProc(itemPrepareStartedProc),
+								mItemPrepareCompletedProc(itemPrepareCompletedProc), mUserData(userData)
 						{}
 					Info(const Info& other) :
-						mItemPrepareCompletedProc(other.mItemPrepareCompletedProc), mUserData(other.mUserData)
+						mItemPrepareStartedProc(other.mItemPrepareStartedProc),
+								mItemPrepareCompletedProc(other.mItemPrepareCompletedProc), mUserData(other.mUserData)
 						{}
 
 					// Instance methods
-			void	itemPrepareCompleted(const TIResult<I<CMediaPlayer> >& mediaPlayer)
-						{ mItemPrepareCompletedProc(mediaPlayer, mUserData); }
+			void	itemPrepareStarted(const I<Item>& item)
+						{ mItemPrepareStartedProc(item, mUserData); }
+			void	itemPrepareCompleted(const I<Item>& item, const TIResult<I<CMediaPlayer> >& mediaPlayer)
+						{ mItemPrepareCompletedProc(item, mediaPlayer, mUserData); }
 
 			// Properties
 			private:
+				ItemPrepareStartedProc		mItemPrepareStartedProc;
 				ItemPrepareCompletedProc	mItemPrepareCompletedProc;
 				void*						mUserData;
 		};

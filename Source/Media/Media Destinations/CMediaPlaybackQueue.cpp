@@ -12,22 +12,43 @@
 
 class CMediaPlaybackQueueThread : public CThread {
 	public:
-		struct ItemPreparedMessage : public CSRSWMessageQueue::ProcMessage {
+		struct ItemPrepareStartedMessage : public CSRSWMessageQueue::ProcMessage {
 					// Lifecycle Methods
-					ItemPreparedMessage(Proc proc, void* userData, const TIResult<I<CMediaPlayer> >& mediaPlayer) :
-						CSRSWMessageQueue::ProcMessage(sizeof(ItemPreparedMessage), proc, userData),
+					ItemPrepareStartedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item) :
+						CSRSWMessageQueue::ProcMessage(sizeof(ItemPrepareStartedMessage), proc, userData),
+								mItem(new I<CMediaPlaybackQueue::Item>(item))
+						{}
+
+					// Instance methods
+			void	cleanup()
+						{ Delete(mItem); }
+
+			// Properties
+			I<CMediaPlaybackQueue::Item>*	mItem;
+		};
+		struct ItemPrepareCompletedMessage : public CSRSWMessageQueue::ProcMessage {
+					// Lifecycle Methods
+					ItemPrepareCompletedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item,
+							const TIResult<I<CMediaPlayer> >& mediaPlayer) :
+						CSRSWMessageQueue::ProcMessage(sizeof(ItemPrepareCompletedMessage), proc, userData),
+								mItem(new I<CMediaPlaybackQueue::Item>(item)),
 								mMediaPlayer(new TIResult<I<CMediaPlayer> >(mediaPlayer))
 						{}
 
 					// Instance methods
 			void	cleanup()
-						{ Delete(mMediaPlayer); }
+						{
+							Delete(mItem);
+							Delete(mMediaPlayer);
+						}
 
 			// Properties
-			TIResult<I<CMediaPlayer> >*	mMediaPlayer;
+			I<CMediaPlaybackQueue::Item>*	mItem;
+			TIResult<I<CMediaPlayer> >*		mMediaPlayer;
 		};
 
-						CMediaPlaybackQueueThread(CSRSWMessageQueues& messageQueues, const CMediaPlaybackQueue::Info& info) :
+						CMediaPlaybackQueueThread(CSRSWMessageQueues& messageQueues,
+								const CMediaPlaybackQueue::Info& info) :
 							CThread(CString(OSSTR("CMediaPlaybackQueueThread"))),
 									mInfo(info), mMessageQueue(1024),
 									mShutdownRequested(false),
@@ -35,6 +56,9 @@ class CMediaPlaybackQueueThread : public CThread {
 							{
 								// Setup
 								messageQueues.add(mMessageQueue);
+
+								// Start
+								start();
 							}
 
 				void	run()
@@ -51,12 +75,18 @@ class CMediaPlaybackQueueThread : public CThread {
 
 									// Check for current item
 									if (mCurrentItem.hasReference()) {
+										// Queue message
+										mMessageQueue.submit(ItemPrepareStartedMessage(handleItemPrepareStarted, this,
+												*item));
+
 										// Prepare
 										TIResult<I<CMediaPlayer> >	mediaPlayer = (*mCurrentItem)->prepare();
+
+										// Check cancelled
 										if (!mCurrentItemPrepareCancelled) {
 											// Queue message
-											mMessageQueue.submit(ItemPreparedMessage(handleItemPrepared, this,
-													mediaPlayer));
+											mMessageQueue.submit(ItemPrepareCompletedMessage(handleItemPrepareCompleted,
+													this, *item, mediaPlayer));
 										}
 
 										// Clear current item
@@ -96,6 +126,9 @@ class CMediaPlaybackQueueThread : public CThread {
 
 								// Check if need to wait
 								while (currentItemHasReference) {
+									// Signal
+									mSemaphore.signal();
+
 									// Sleep
 									CThread::sleepFor(0.001);
 
@@ -114,19 +147,36 @@ class CMediaPlaybackQueueThread : public CThread {
 								// Signal
 								mSemaphore.signal();
 							}
-		static	void	handleItemPrepared(CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleItemPrepareStarted(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
 								CMediaPlaybackQueueThread&	internals = *((CMediaPlaybackQueueThread*) userData);
-								ItemPreparedMessage&		itemPreparedMessage = (ItemPreparedMessage&) message;
+								ItemPrepareStartedMessage&	itemPrepareStartedMessage =
+																	(ItemPrepareStartedMessage&) message;
 
 								// Check if shutdown requested
 								if (!internals.mShutdownRequested)
 									// Inform
-									internals.mInfo.itemPrepareCompleted(*itemPreparedMessage.mMediaPlayer);
+									internals.mInfo.itemPrepareStarted(*itemPrepareStartedMessage.mItem);
 
 								// Cleanup
-								itemPreparedMessage.cleanup();
+								itemPrepareStartedMessage.cleanup();
+							}
+		static	void	handleItemPrepareCompleted(CSRSWMessageQueue::ProcMessage& message, void* userData)
+							{
+								// Setup
+								CMediaPlaybackQueueThread&		internals = *((CMediaPlaybackQueueThread*) userData);
+								ItemPrepareCompletedMessage&	itemPrepareCompletedMessage =
+																		(ItemPrepareCompletedMessage&) message;
+
+								// Check if shutdown requested
+								if (!internals.mShutdownRequested)
+									// Inform
+									internals.mInfo.itemPrepareCompleted(*itemPrepareCompletedMessage.mItem,
+											*itemPrepareCompletedMessage.mMediaPlayer);
+
+								// Cleanup
+								itemPrepareCompletedMessage.cleanup();
 							}
 
 	private:

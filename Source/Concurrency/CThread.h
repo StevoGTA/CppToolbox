@@ -32,7 +32,7 @@ class CThread {
 	public:
 								// Lifecycle methods
 								CThread(ThreadProc threadProc, void* userData = nil,
-										const CString& name = CString::mEmpty, Options options = kOptionsAutoStart);
+										const CString& name = CString::mEmpty, Options options = kOptionsNone);
 				virtual			~CThread();
 
 								// Instance methods
@@ -49,7 +49,7 @@ class CThread {
 
 	protected:
 								// Lifecycle methods
-								CThread(const CString& name = CString::mEmpty, Options options = kOptionsAutoStart);
+								CThread(const CString& name = CString::mEmpty, Options options = kOptionsNone);
 
 								// Subclass methods
 				virtual	void	run()
