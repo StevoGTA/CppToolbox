@@ -51,12 +51,13 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImage
 
 	DataFormat	dataFormat;
 	switch (::CVPixelBufferGetPixelFormatType(imageBufferRef)) {
-		case 'BGRA':
+		case kCVPixelFormatType_32BGRA:
 			// RGB
 			dataFormat = kDataFormatRGB;
 			break;
 
-		case '420v':
+		case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+		case '&8v0':
 			// YCbCr
 			dataFormat = kDataFormatYCbCr;
 			break;
