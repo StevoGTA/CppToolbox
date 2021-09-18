@@ -254,5 +254,71 @@ void CMediaPlaybackQueue::set(const TArray<I<Item> >& items)
 	// Check for items
 	if (!mInternals->mItems.isEmpty())
 		// Prepare
-		mInternals->mThread.prepare(mInternals->mItems[0]);
+		mInternals->mThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CMediaPlaybackQueue::prepareFirst()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Preflight
+	if (mInternals->mItems.isEmpty())
+		// No items
+		return false;
+	if (mInternals->mCurrentItemIndex == 0)
+		// Already at the first
+		return false;
+
+	// Cancel in-flight prepare
+	mInternals->mThread.cancelInFlightPrepare();
+
+	// Update
+	mInternals->mCurrentItemIndex = 0;
+
+	// Prepare
+	mInternals->mThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
+
+	return true;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CMediaPlaybackQueue::preparePrevious()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Preflight
+	if (mInternals->mCurrentItemIndex == 0)
+		// Already at the first
+		return false;
+
+	// Cancel in-flight prepare
+	mInternals->mThread.cancelInFlightPrepare();
+
+	// Update
+	mInternals->mCurrentItemIndex--;
+
+	// Prepare
+	mInternals->mThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
+
+	return true;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CMediaPlaybackQueue::prepareNext()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Preflight
+	if (mInternals->mCurrentItemIndex == (mInternals->mItems.getCount() - 1))
+		// Already at the last
+		return false;
+
+	// Cancel in-flight prepare
+	mInternals->mThread.cancelInFlightPrepare();
+
+	// Update
+	mInternals->mCurrentItemIndex++;
+
+	// Prepare
+	mInternals->mThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
+
+	return true;
 }

@@ -64,6 +64,9 @@ class CMediaPlaybackQueue {
 
 				// Instance methods
 		void	set(const TArray<I<Item> >& items);
+		bool	prepareFirst();
+		bool	preparePrevious();
+		bool	prepareNext();
 
 	// Properties
 	private:

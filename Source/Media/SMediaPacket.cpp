@@ -114,7 +114,9 @@ TIResult<TArray<SMediaPacket> > CPacketMediaReader::readMediaPackets(CData& data
 		packetDataPtr += mediaPacketAndLocation.mMediaPacket.mByteCount;
 	}
 
-	return TIResult<TArray<SMediaPacket> >(mediaPackets);
+	return !mediaPackets.isEmpty() ?
+			TIResult<TArray<SMediaPacket> >(mediaPackets) :
+			TIResult<TArray<SMediaPacket> >(SError::mEndOfData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
