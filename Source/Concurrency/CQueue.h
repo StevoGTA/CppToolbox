@@ -230,7 +230,7 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 
 		struct ProcMessage : public Message {
 			// Procs
-			typedef	void	(*Proc)(const ProcMessage& message, void* userData);
+			typedef	void	(*Proc)(ProcMessage& message, void* userData);
 
 					// Methods
 					ProcMessage(Proc proc, void* userData) :

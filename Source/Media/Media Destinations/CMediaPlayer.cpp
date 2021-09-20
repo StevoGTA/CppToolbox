@@ -101,11 +101,13 @@ class CMediaPlayerInternals {
 										AudioPlayerPositionUpdatedMessage(handleAudioPlayerPositionUpdated, userData,
 												audioPlayer, position));
 							}
-		static	void	handleAudioPlayerPositionUpdated(const CSRSWMessageQueue::ProcMessage& message,
-								void* userData)
+		static	void	handleAudioPlayerPositionUpdated(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
-								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
+								AudioPlayerPositionUpdatedMessage&	audioPlayerPositionUpdatedMessage =
+																			(AudioPlayerPositionUpdatedMessage&)
+																					message;
+								CMediaPlayerInternals&				internals = *((CMediaPlayerInternals*) userData);
 								if (!mActiveInternals.contains(internals))
 									return;
 
@@ -113,7 +115,10 @@ class CMediaPlayerInternals {
 								for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++)
 									// Update video decoder
 									internals.mMediaPlayer.getVideoProcessor(i)->notePositionUpdated(
-											((AudioPlayerPositionUpdatedMessage&) message).mPosition);
+											audioPlayerPositionUpdatedMessage.mPosition);
+
+								// Call proc
+								internals.mInfo.audioPositionUpdated(audioPlayerPositionUpdatedMessage.mPosition);
 							}
 		static	void	audioPlayerEndOfData(const CAudioPlayer& audioPlayer, void* userData)
 							{
@@ -121,7 +126,7 @@ class CMediaPlayerInternals {
 								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
 										AudioPlayerEndOfDataMessage(handleAudioPlayerEndOfData, userData, audioPlayer));
 							}
-		static	void	handleAudioPlayerEndOfData(const CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleAudioPlayerEndOfData(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
 								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
@@ -167,7 +172,7 @@ class CMediaPlayerInternals {
 								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
 										AudioPlayerErrorMessage(handleAudioPlayerError, userData, audioPlayer, error));
 							}
-		static	void	handleAudioPlayerError(const CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleAudioPlayerError(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
 								CMediaPlayerInternals&		internals = *((CMediaPlayerInternals*) userData);
@@ -196,7 +201,7 @@ class CMediaPlayerInternals {
 										VideoFrameStoreErrorMessage(handleVideoFrameStoreError, userData,
 												videoFrameStore, error));
 							}
-		static	void	handleVideoFrameStoreError(const CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleVideoFrameStoreError(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
 								CMediaPlayerInternals&			internals = *((CMediaPlayerInternals*) userData);

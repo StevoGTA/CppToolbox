@@ -71,11 +71,16 @@ CThread::CThread(ThreadProc threadProc, void* userData, const CString& name, Opt
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CThread::CThread(const CString& name)
+CThread::CThread(const CString& name, Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
 	mInternals = new CThreadInternals(*this, CThread::runThreadProc, nil, name);
+
+	// Check options
+	if (options & kOptionsAutoStart)
+		// Start
+		start();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

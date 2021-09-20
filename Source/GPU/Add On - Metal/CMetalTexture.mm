@@ -69,8 +69,9 @@ mUsedPixelsSize(size),
 						break;
 
 					case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+					case '&8v0':
 						// 420 YUV
-						pixelFormat = ((bytesPerRow / width) == 1) ? MTLPixelFormatR8Unorm : MTLPixelFormatRG8Unorm;
+						pixelFormat = (planeIndex == 0) ? MTLPixelFormatR8Unorm : MTLPixelFormatRG8Unorm;
 						break;
 
 					default:

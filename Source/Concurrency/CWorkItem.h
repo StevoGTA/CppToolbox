@@ -44,11 +44,13 @@ class CWorkItem {
 						// Subclass methods
 		virtual	void	perform() = 0;
 
-		virtual	void	completed() const {}
-		virtual	void	cancelled() const {}
-
 						// Internal-use only methods
 				void	transitionTo(State state);
+
+	protected:
+						// Subclass methods
+		virtual	void	completed() const {}
+		virtual	void	cancelled() const {}
 
 	// Properties
 	private:
