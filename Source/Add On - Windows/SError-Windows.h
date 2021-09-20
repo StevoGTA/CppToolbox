@@ -15,3 +15,38 @@
 
 SError SErrorFromHRESULT(HRESULT result);
 SError SErrorFromWindowsError(DWORD error);
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Macros
+
+#define	ReturnError(result, method)														\
+				{																		\
+					SError	error = SErrorFromHRESULT(result);							\
+					CLogServices::logError(												\
+							CString(method) + CString(OSSTR(" returned ")) +			\
+									error.getDescription());							\
+																						\
+					return OI<SError>(error);											\
+				}
+#define	ReturnErrorIfFailed(result, method)												\
+				{																		\
+					if (FAILED(result)) {												\
+						SError	error = SErrorFromHRESULT(result);						\
+						CLogServices::logError(											\
+								CString(method) + CString(OSSTR(" returned ")) +		\
+										error.getDescription());						\
+																						\
+						return OI<SError>(error);										\
+					}																	\
+				}
+#define	ReturnValueIfFailed(result, method, value)										\
+				{																		\
+					if (FAILED(result)) {												\
+						SError	error = SErrorFromHRESULT(result);						\
+						CLogServices::logError(											\
+								CString(method) + CString(OSSTR(" returned ")) +		\
+										error.getDescription());						\
+																						\
+						return value;										\
+					}																	\
+				}

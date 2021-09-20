@@ -10,6 +10,11 @@
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 	#include <CoreVideo/CoreVideo.h>
+#elif TARGET_OS_WINDOWS
+	#undef Delete
+	#include <mftransform.h>
+	#undef THIS
+	#define Delete(x)	{ delete x; x = nil; }
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -53,6 +58,10 @@ class CVideoFrame {
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 														CVideoFrame(UniversalTimeInterval presentationTimeInterval,
 																CVImageBufferRef imageBufferRef);
+#elif TARGET_OS_WINDOWS
+														CVideoFrame(UniversalTimeInterval presentationTimeInterval,
+																const S2DSizeU16& frameSize, const GUID& dataFormatGUID,
+																IMFSample* sample);
 #endif
 														CVideoFrame(const CVideoFrame& other);
 														~CVideoFrame();

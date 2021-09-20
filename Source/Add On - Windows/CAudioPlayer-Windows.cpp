@@ -205,7 +205,7 @@ class CAudioPlayerImplementation :
 									//mInfo.positionUpdated(mAudioPlayer, position);
 
 									// Notify queue read complete
-									mAudioPlayerReaderThread->noteQueueReadComplete();
+									mAudioPlayerBufferThread->noteQueueReadComplete();
 								}
 
 								// Get current padding
@@ -263,7 +263,7 @@ class CAudioPlayerImplementation :
 										else if (paddingFrames > 0)
 											// Did not add frames, but still have frames queued
 											mOnFillBufferIsSendingFrames = true;
-										else if (mAudioPlayerReaderThread->getDidReachEndOfData()) {
+										else if (mAudioPlayerBufferThread->getDidReachEnd()) {
 											// At the end
 											if (mOnFillBufferIsSendingFrames)
 												// Just reached the end of data
@@ -443,7 +443,7 @@ class CAudioPlayerImplementation :
 		IMFAsyncResult*									mFillBufferAsyncResult;
 		ISimpleAudioVolume*								mSimpleAudioVolume;
 		MFWORKITEM_KEY									mFillBufferKey;
-		OI<CAudioPlayerReaderThread>					mAudioPlayerReaderThread;
+		OI<CAudioPlayerBufferThread>					mAudioPlayerBufferThread;
 		OI<CSRSWBIPSegmentedQueue>						mQueue;
 		OI<SError>										mError;
 		State											mState;
@@ -520,9 +520,9 @@ CAudioPlayer::~CAudioPlayer()
 		CThread::sleepFor(0.001);
 
 	// Stop threads
-	if (mInternals->mImplementation->mAudioPlayerReaderThread.hasInstance())
+	if (mInternals->mImplementation->mAudioPlayerBufferThread.hasInstance())
 		// Shutdown
-		mInternals->mImplementation->mAudioPlayerReaderThread->shutdown();
+		mInternals->mImplementation->mAudioPlayerBufferThread->shutdown();
 
 	// Cleanup
 	Delete(mInternals);
@@ -573,9 +573,9 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 	mInternals->mImplementation->mQueue =
 			OI<CSRSWBIPSegmentedQueue>(
 					new CSRSWBIPSegmentedQueue(frameCount * mInternals->mImplementation->mMixFormat->nBlockAlign, 1));
-	mInternals->mImplementation->mAudioPlayerReaderThread =
-			OI<CAudioPlayerReaderThread>(
-					new CAudioPlayerReaderThread(*this, *mInternals->mImplementation->mQueue,
+	mInternals->mImplementation->mAudioPlayerBufferThread =
+			OI<CAudioPlayerBufferThread>(
+					new CAudioPlayerBufferThread(*this, *mInternals->mImplementation->mQueue,
 							mInternals->mImplementation->mMixFormat->nBlockAlign,
 							mInternals->mImplementation->mMaxPeriodInFrames, CAudioPlayerInternals::readerThreadError,
 							mInternals));
@@ -595,13 +595,13 @@ OI<SError> CAudioPlayer::reset()
 		CThread::sleepFor(0.001);
 
 	// Reset Reader Thread
-	mInternals->mImplementation->mAudioPlayerReaderThread->stopReading();
+	mInternals->mImplementation->mAudioPlayerBufferThread->stopReading();
 
 	// Reset buffer
 	mInternals->mImplementation->mQueue->reset();
 
 	// Setup to play requested frames
-	mInternals->mImplementation->mAudioPlayerReaderThread->seek(mInternals->mImplementation->mStartTimeInterval,
+	mInternals->mImplementation->mAudioPlayerBufferThread->seek(mInternals->mImplementation->mStartTimeInterval,
 			mInternals->mImplementation->mDurationTimeInterval.hasValue() ?
 					(UInt32) (*mInternals->mImplementation->mDurationTimeInterval *
 							(UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec) :
@@ -615,7 +615,7 @@ OI<SError> CAudioPlayer::reset()
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
 
 	// Resume
-	mInternals->mImplementation->mAudioPlayerReaderThread->resume();
+	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
 
 	return OI<SError>();
 }
@@ -626,7 +626,7 @@ OI<SError> CAudioPlayer::reset()
 void CAudioPlayer::setupComplete()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mImplementation->mAudioPlayerReaderThread->resume();
+	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
 }
 
 // MARK: Instance methods
@@ -699,7 +699,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval, OV<UniversalTimeInte
 		CThread::sleepFor(0.001);
 
 	// Reset Reader Thread
-	mInternals->mImplementation->mAudioPlayerReaderThread->stopReading();
+	mInternals->mImplementation->mAudioPlayerBufferThread->stopReading();
 
 	// Reset buffer
 	mInternals->mImplementation->mQueue->reset();
@@ -713,7 +713,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval, OV<UniversalTimeInte
 	// Check for preview
 	if (playPreview) {
 		// Setup to play preview length frames
-		mInternals->mImplementation->mAudioPlayerReaderThread->seek(timeInterval,
+		mInternals->mImplementation->mAudioPlayerBufferThread->seek(timeInterval,
 				(UInt32) (timeInterval * CAudioPlayer::kPreviewDuration));
 
 		// Send frames
@@ -737,13 +737,13 @@ void CAudioPlayer::finishSeek()
 		CThread::sleepFor(0.001);
 
 	// Reset Reader Thread
-	mInternals->mImplementation->mAudioPlayerReaderThread->stopReading();
+	mInternals->mImplementation->mAudioPlayerBufferThread->stopReading();
 
 	// Reset buffer
 	mInternals->mImplementation->mQueue->reset();
 
 	// Setup to play requested frames
-	mInternals->mImplementation->mAudioPlayerReaderThread->seek(mInternals->mImplementation->mStartTimeInterval,
+	mInternals->mImplementation->mAudioPlayerBufferThread->seek(mInternals->mImplementation->mStartTimeInterval,
 			mInternals->mImplementation->mDurationTimeInterval.hasValue() ?
 					(UInt32) (*mInternals->mImplementation->mDurationTimeInterval *
 							(UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec) :
@@ -756,7 +756,7 @@ void CAudioPlayer::finishSeek()
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
 
 	// Resume
-	mInternals->mImplementation->mAudioPlayerReaderThread->resume();
+	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
 
 	// Restore pre-seek state
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;

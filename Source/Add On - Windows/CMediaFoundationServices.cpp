@@ -5,59 +5,13 @@
 #include "CMediaFoundationServices.h"
 
 #include "CLogServices-Windows.h"
-#include "SError-Windows.h"
 
 #include <mfapi.h>
 #include <Mferror.h>
 #include <strsafe.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
-
-#define	ReturnError(result, method)														\
-				{																		\
-					SError	error = SErrorFromHRESULT(result);							\
-					CLogServices::logError(												\
-							CString(method) + CString(OSSTR(" returned ")) +			\
-									error.getDescription());							\
-																						\
-					return OI<SError>(error);											\
-				}
-#define	ReturnErrorIfFailed(result, method)												\
-				{																		\
-					if (FAILED(result)) {												\
-						SError	error = SErrorFromHRESULT(result);						\
-						CLogServices::logError(											\
-								CString(method) + CString(OSSTR(" returned ")) +		\
-										error.getDescription());						\
-																						\
-						return OI<SError>(error);										\
-					}																	\
-				}
-#define	ReturnNoTransformIfFailed(result, method)										\
-				{																		\
-					if (FAILED(result)) {												\
-						CLogServices::logError(											\
-								CString(method) + CString(OSSTR(" returned ")) +		\
-										SErrorFromHRESULT(result).getDescription());	\
-																						\
-						return OCI<IMFTransform>();										\
-					}																	\
-				}
-#define	ReturnNoSampleIfFailed(result, method)											\
-				{																		\
-					if (FAILED(result)) {												\
-						CLogServices::logError(											\
-								CString(method) + CString(OSSTR(" returned ")) +		\
-										SErrorFromHRESULT(result).getDescription());	\
-																						\
-						return OCI<IMFSample>();										\
-					}																	\
-				}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
+// MARK: Local proc declarations
 
 HRESULT LogMediaType(IMFMediaType *pType);
 
@@ -76,7 +30,7 @@ void DBGMSG(PCWSTR format, ...);
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OCI<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(const GUID& guid,
+TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(const GUID& guid,
 		const SAudioProcessingFormat& audioProcessingFormat, const OI<CData>& userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -91,7 +45,7 @@ OCI<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(const 
 			MFTEnumEx(MFT_CATEGORY_AUDIO_DECODER,
 					MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_LOCALMFT | MFT_ENUM_FLAG_SORTANDFILTER, &info, NULL,
 					&activates, &count);
-	ReturnNoTransformIfFailed(result, "MFTEnumEx");
+	ReturnValueIfFailed(result, "MFTEnumEx", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Create the Audio Decoder
 	IMFTransform*	transform;
@@ -103,70 +57,83 @@ OCI<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(const 
 		activates[i]->Release();
 	CoTaskMemFree(activates);
 
-	ReturnNoTransformIfFailed(result, "ActivateObject");
+	ReturnValueIfFailed(result, "ActivateObject", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Setup input media type
 	IMFMediaType*	mediaType;
 	result = MFCreateMediaType(&mediaType);
-	ReturnNoTransformIfFailed(result, "MFCreateMediaType for input");
-	OCI<IMFMediaType>	inputMediaType(mediaType);
+	ReturnValueIfFailed(result, "MFCreateMediaType for input", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	CI<IMFMediaType>	inputMediaType(mediaType);
 
 	result = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-	ReturnNoTransformIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input");
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = inputMediaType->SetGUID(MF_MT_SUBTYPE, guid);
-	ReturnNoTransformIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input");
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = inputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
-	ReturnNoTransformIfFailed(result, "SetUINT32 of MF_MT_AUDIO_BITS_PER_SAMPLE for input");
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_BITS_PER_SAMPLE for input",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = inputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) audioProcessingFormat.getSampleRate());
-	ReturnNoTransformIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for input");
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for input",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = inputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioProcessingFormat.getChannels());
-	ReturnNoTransformIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for input");
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for input",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	if (userData.hasInstance()) {
 		result =
 				inputMediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
 						(UINT32) userData->getSize());
-		ReturnNoTransformIfFailed(result, "SetBlob of MF_MT_USER_DATA for input");
+		ReturnValueIfFailed(result, "SetBlob of MF_MT_USER_DATA for input",
+				TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 	}
 
 	result = audioDecoder->SetInputType(0, *inputMediaType, 0);
-	ReturnNoTransformIfFailed(result, "SetInputType");
+	ReturnValueIfFailed(result, "SetInputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Setup output media type
 	result = MFCreateMediaType(&mediaType);
-	ReturnNoTransformIfFailed(result, "MFCreateMediaType for output");
-	OCI<IMFMediaType>	outputMediaType(mediaType);
+	ReturnValueIfFailed(result, "MFCreateMediaType for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	CI<IMFMediaType>	outputMediaType(mediaType);
 
 	result = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-	ReturnNoTransformIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output");
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = outputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
-	ReturnNoTransformIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output");
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = outputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
-	ReturnNoTransformIfFailed(result, "SetSetUINT32UID of MF_MT_AUDIO_BITS_PER_SAMPLE for output");
+	ReturnValueIfFailed(result, "SetSetUINT32UID of MF_MT_AUDIO_BITS_PER_SAMPLE for output",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = outputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) audioProcessingFormat.getSampleRate());
-	ReturnNoTransformIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for output");
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for output",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = outputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioProcessingFormat.getChannels());
-	ReturnNoTransformIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for output");
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for output",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = outputMediaType->SetUINT32(MF_MT_AUDIO_PREFER_WAVEFORMATEX, 1);
-	ReturnNoTransformIfFailed(result, "SetUINT32 of MF_MT_AUDIO_PREFER_WAVEFORMATEX for output");
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_PREFER_WAVEFORMATEX for output",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	result = audioDecoder->SetOutputType(0, *outputMediaType, 0);
-	ReturnNoTransformIfFailed(result, "SetOutputType");
+	ReturnValueIfFailed(result, "SetOutputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	return audioDecoder;
+	return TCIResult<IMFTransform>(audioDecoder);
+}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OCI<IMFSample> CMediaFoundationServices::createSample(UInt32 size)
+TCIResult<IMFSample> CMediaFoundationServices::createSample(UInt32 size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -175,24 +142,24 @@ OCI<IMFSample> CMediaFoundationServices::createSample(UInt32 size)
 	// Create sample
 	IMFSample*	tempSample;
 	result = MFCreateSample(&tempSample);
-	ReturnNoSampleIfFailed(result, "MFCreateSample");
+	ReturnValueIfFailed(result, "MFCreateSample", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 	OCI<IMFSample>	sample(tempSample);
 
 	// Create memory buffer
 	IMFMediaBuffer*	tempMediaBuffer;
 	result = MFCreateMemoryBuffer(size, &tempMediaBuffer);
-	ReturnNoSampleIfFailed(result, "MFCreateMemoryBuffer");
-	OCI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
+	ReturnValueIfFailed(result, "MFCreateMemoryBuffer", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
+	CI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
 
 	// Add buffer to sample
 	result = sample->AddBuffer(*mediaBuffer);
-	ReturnNoSampleIfFailed(result, "AddBuffer");
+	ReturnValueIfFailed(result, "AddBuffer", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
-	return sample;
+	return TCIResult<IMFSample>(sample);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OCI<IMFSample> CMediaFoundationServices::createSample(const CData& data)
+TCIResult<IMFSample> CMediaFoundationServices::createSample(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -201,101 +168,57 @@ OCI<IMFSample> CMediaFoundationServices::createSample(const CData& data)
 	// Create sample
 	IMFSample*	tempSample;
 	result = MFCreateSample(&tempSample);
-	ReturnNoSampleIfFailed(result, "MFCreateSample");
+	ReturnValueIfFailed(result, "MFCreateSample", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 	OCI<IMFSample>	sample(tempSample);
 
 	// Create memory buffer
 	IMFMediaBuffer*	tempMediaBuffer;
 	result = MFCreateMemoryBuffer((DWORD) data.getSize(), &tempMediaBuffer);
-	ReturnNoSampleIfFailed(result, "MFCreateMemoryBuffer");
-	OCI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
+	ReturnValueIfFailed(result, "MFCreateMemoryBuffer", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
+	CI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
 
 	// Add buffer to sample
 	result = sample->AddBuffer(*mediaBuffer);
-	ReturnNoSampleIfFailed(result, "AddBuffer");
+	ReturnValueIfFailed(result, "AddBuffer", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	// Lock media buffer
 	BYTE*	bytePtr;
 	DWORD	length;
 	result = tempMediaBuffer->Lock(&bytePtr, NULL, &length);
-	ReturnNoSampleIfFailed(result, "Lock for media buffer")
+	ReturnValueIfFailed(result, "Lock for media buffer", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	// Copy data
 	::memcpy(bytePtr, data.getBytePtr(), data.getSize());
 
 	// Set current length
 	result = tempMediaBuffer->SetCurrentLength((DWORD) data.getSize());
-	ReturnNoSampleIfFailed(result, "SetCurrentLength");
+	ReturnValueIfFailed(result, "SetCurrentLength", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	// Unlock media buffer
 	result = tempMediaBuffer->Unlock();
-	ReturnNoSampleIfFailed(result, "Unlock for media buffer");
+	ReturnValueIfFailed(result, "Unlock for media buffer", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
-	return sample;
+	return TCIResult<IMFSample>(sample);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::completeAudioFramesWrite(IMFSample* sample, CAudioFrames& audioFrames,
-		const SAudioProcessingFormat& audioProcessingFormat)
+OI<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Copy
-	IMFMediaBuffer*	mediaBuffer;
-	HRESULT	result = sample->GetBufferByIndex(0, &mediaBuffer);
-	ReturnErrorIfFailed(result, "GetBufferByIndex for outputSample");
+	// Remove existing memory buffer
+	HRESULT	result = sample->RemoveAllBuffers();
 
-	BYTE*	bytePtr;
-	DWORD	length;
-	result = mediaBuffer->Lock(&bytePtr, NULL, &length);
-	ReturnErrorIfFailed(result, "Lock for outputSample");
+	// Create memory buffer
+	IMFMediaBuffer*	tempMediaBuffer;
+	result = MFCreateMemoryBuffer(size, &tempMediaBuffer);
+	ReturnErrorIfFailed(result, "MFCreateMemoryBuffer in CH264VideoCodecInternals::noteFormatChanged");
+	OCI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
 
-	::memcpy(audioFrames.getMutableBytePtr(), bytePtr, length);
-	audioFrames.completeWrite(length / audioProcessingFormat.getBytesPerFrame());
-
-	result = mediaBuffer->SetCurrentLength(0);
-	ReturnErrorIfFailed(result, "SetCurrentLength");
-
-	result = mediaBuffer->Unlock();
-	ReturnErrorIfFailed(result, "Unlock for outputSample");
+	// Add buffer to sample
+	result = sample->AddBuffer(*mediaBuffer);
+	ReturnErrorIfFailed(result, "AddBuffer in CH264VideoCodecInternals::noteFormatChanged");
 
 	return OI<SError>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFSample* inputSample,
-		IMFSample* outputSample, ReadInputProc readInputProc, void* userData)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	HRESULT			result;
-	IMFMediaBuffer*	mediaBuffer;
-	result = inputSample->GetBufferByIndex(0, &mediaBuffer);
-	ReturnErrorIfFailed(result, "GetBufferByIndex for inputSample");
-
-	// Run as long as needed
-	while (true) {
-		// Process output
-		MFT_OUTPUT_DATA_BUFFER	outputDataBuffer = {0, outputSample, 0, NULL};
-		DWORD					status = 0;
-		result = transform->ProcessOutput(0, 1, &outputDataBuffer, &status);
-		if (SUCCEEDED(result))
-			// Success
-			return OI<SError>();
-		else if (result != MF_E_TRANSFORM_NEED_MORE_INPUT)
-			// Error
-			ReturnError(result, "ProcessOutput");
-
-		// Read input
-		OI<SError>	error = readInputProc(mediaBuffer, userData);
-		if (!error.hasInstance()) {
-			// Process input
-			result = transform->ProcessInput(0, inputSample, 0);
-			ReturnErrorIfFailed(result, "ProcessInput");
-		} else {
-			// Error
-			return error;
-		}
-	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -322,6 +245,103 @@ OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CPacketMe
 
 	return OI<SError>();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFSample* outputSample,
+		CMediaFoundationServices::ProcessOutputInfo& processOutputInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	HRESULT	result;
+
+	// Run as long as needed
+	while (true) {
+		// Process output
+		MFT_OUTPUT_DATA_BUFFER	outputDataBuffer = {0, outputSample, 0, NULL};
+		DWORD					status = 0;
+		result = transform->ProcessOutput(0, 1, &outputDataBuffer, &status);
+		if (result == S_OK) {
+			// Success
+//LogMediaType(outputSample);
+			return OI<SError>();
+		} else if (result == MF_E_TRANSFORM_STREAM_CHANGE) {
+			// Input stream format change
+CLogServices::logMessage(CString(OSSTR("Video Decoder Input Stream Format Change")));
+			if (outputDataBuffer.dwStatus == MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
+				// Output data buffer format change
+				IMFMediaType*	mediaType = NULL;
+				result = transform->GetOutputAvailableType(0, 0, &mediaType);
+				ReturnErrorIfFailed(result, "GetOutputAvailableType for format change");
+
+				// Call proc
+LogMediaType(mediaType);
+				OI<SError>	error = processOutputInfo.noteFormatChanged(mediaType);
+				ReturnErrorIfError(error);
+
+				// Set output type
+				result = transform->SetOutputType(0, mediaType, 0);
+				ReturnErrorIfFailed(result, "SetOutputType for format change");
+
+				//// Flush
+				//result = transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, NULL);
+				//ReturnErrorIfFailed(result, "ProcessMessage MFT_MESSAGE_COMMAND_FLUSH for format change");
+			} else {
+				// outputDataBuffer didn't have the data buffer format change flag set
+				ReturnError(E_NOTIMPL, "Input stream format changed, but no updated output format given");
+			}
+		} else if (result == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+			// Get input sample
+			TCIResult<IMFSample>	inputSample = processOutputInfo.getInputSample();
+			ReturnErrorIfResultError(inputSample);
+
+			// Process input
+			result = transform->ProcessInput(0, *inputSample.getInstance(), 0);
+			ReturnErrorIfFailed(result, "ProcessInput");
+		} else
+			// Error
+			ReturnError(result, "ProcessOutput");
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CMediaFoundationServices::completeWrite(IMFSample* sample, CAudioFrames& audioFrames,
+		const SAudioProcessingFormat& audioProcessingFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Copy
+	IMFMediaBuffer*	mediaBuffer;
+	HRESULT	result = sample->GetBufferByIndex(0, &mediaBuffer);
+	ReturnErrorIfFailed(result, "GetBufferByIndex for outputSample");
+
+	BYTE*	bytePtr;
+	DWORD	length;
+	result = mediaBuffer->Lock(&bytePtr, NULL, &length);
+	ReturnErrorIfFailed(result, "Lock for outputSample");
+
+	::memcpy(audioFrames.getMutableBytePtr(), bytePtr, length);
+	audioFrames.completeWrite(length / audioProcessingFormat.getBytesPerFrame());
+
+	result = mediaBuffer->SetCurrentLength(0);
+	ReturnErrorIfFailed(result, "SetCurrentLength");
+
+	result = mediaBuffer->Unlock();
+	ReturnErrorIfFailed(result, "Unlock for outputSample");
+
+	return OI<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CMediaFoundationServices::flush(IMFTransform* transform)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	HRESULT	result = transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
+	ReturnErrorIfFailed(result, "ProcessMessage MFT_MESSAGE_COMMAND_FLUSH");
+
+	return OI<SError>();
+}
+
+
+
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

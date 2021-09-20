@@ -6,6 +6,10 @@
 
 #include "SError.h"
 
+#if TARGET_OS_WINDOWS
+	#include <mfapi.h>
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoFrameInternals
 
@@ -17,12 +21,24 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 			mPresentationTimeInterval(presentationTimeInterval), mFrameSize(frameSize), mDataFormat(dataFormat),
 					mImageBufferRef((CVImageBufferRef) ::CFRetain(imageBufferRef))
 			{}
+#elif TARGET_OS_WINDOWS
+		CVideoFrameInternals(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
+				CVideoFrame::DataFormat dataFormat, IMFSample* sample) :
+			mPresentationTimeInterval(presentationTimeInterval), mFrameSize(frameSize), mDataFormat(dataFormat),
+					mSample(sample)
+			{
+				// Keep around
+				mSample->AddRef();
+			}
 #endif
 		~CVideoFrameInternals()
 			{
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 				// Cleanup
 				::CFRelease(mImageBufferRef);
+#elif TARGET_OS_WINDOWS
+				// Cleanup
+				mSample->Release();
 #endif
 			}
 
@@ -32,6 +48,8 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 		CVImageBufferRef		mImageBufferRef;
+#elif TARGET_OS_WINDOWS
+		IMFSample*				mSample;
 #endif
 };
 
@@ -65,6 +83,23 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImage
 	mInternals =
 			new CVideoFrameInternals(presentationTimeInterval, S2DSizeU16(frameSize.width, frameSize.height),
 					dataFormat, imageBufferRef);
+}
+#elif TARGET_OS_WINDOWS
+//----------------------------------------------------------------------------------------------------------------------
+CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
+		const GUID& dataFormatGUID, IMFSample* sample)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	DataFormat	dataFormat;
+	if (dataFormatGUID == MFVideoFormat_NV12)
+		// YCbCr
+		dataFormat = kDataFormatYCbCr;
+	else
+		// Unknown
+		AssertFailUnimplemented();
+
+	mInternals = new CVideoFrameInternals(presentationTimeInterval, frameSize, dataFormat, sample);
 }
 #endif
 

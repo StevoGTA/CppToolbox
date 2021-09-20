@@ -19,9 +19,11 @@ template <typename T> struct I {
 		~I()
 			{
 				// One less reference
-				if (--(*mReferenceCount) == 0)
+				if (--(*mReferenceCount) == 0) {
 					// All done
 					Delete(mInstance);
+					Delete(mReferenceCount);
+				}
 			}
 
 		// Instamce methods

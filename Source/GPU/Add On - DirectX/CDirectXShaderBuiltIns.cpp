@@ -7,7 +7,13 @@
 #include "CDirectXGPU.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDirectXVertexShaderBasic
+// MARK: Local proc declarations
+
+static	CGPUFragmentShader&	sYCbCrFragmentShader(Float32 opacity);
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDirectXVertexShaderBasic
 
 class CDirectXVertexShaderBasic : public CDirectXVertexShader {
 	private:
@@ -212,9 +218,9 @@ class CDirectXPixelShaderBasic : public CDirectXPixelShader {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDirectXPixelShaderOpacity
+// MARK: - CDirectXPixelShaderRGBAMultiTexture
 
-class CDirectXPixelShaderOpacity : public CDirectXPixelShader {
+class CDirectXPixelShaderRGBAMultiTexture : public CDirectXPixelShader {
 	private:
 		struct SConstants {
 			// Lifecycle methods
@@ -226,11 +232,11 @@ class CDirectXPixelShaderOpacity : public CDirectXPixelShader {
 		};
 
 	public:
-				CDirectXPixelShaderOpacity() :
-					CDirectXPixelShader(CFilesystemPath(CString(OSSTR("PixelShaderOpacity.cso")))),
+				CDirectXPixelShaderRGBAMultiTexture() :
+					CDirectXPixelShader(CFilesystemPath(CString(OSSTR("PixelShaderRGBAMultiTexture.cso")))),
 							mConstantBuffer(NULL), mConstants(1.0)
 					{}
-				~CDirectXPixelShaderOpacity()
+				~CDirectXPixelShaderRGBAMultiTexture()
 					{
 						// Cleanup
 						if (mConstantBuffer != NULL)
@@ -268,18 +274,30 @@ class CDirectXPixelShaderOpacity : public CDirectXPixelShader {
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getBasicMultiTexture()
+CGPUFragmentShader& CGPUFragmentShader::getRGBAMultiTexture(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	static	CDirectXPixelShaderBasic* sPixelShader = NULL;
+	// Check opacity
+	if (opacity == 1.0) {
+		// No opacity
+		static	CDirectXPixelShaderBasic*	sPixelShaderBasic = nil;
+		if (sPixelShaderBasic == nil)
+			// Create shader
+			sPixelShaderBasic = new CDirectXPixelShaderBasic();
 
-	// Check if have shader
-	if (sPixelShader == NULL)
-		// Create shader
-		sPixelShader = new CDirectXPixelShaderBasic();
+		return *sPixelShaderBasic;
+	} else {
+		// Have opacity
+		static	CDirectXPixelShaderRGBAMultiTexture*	sPixelShaderRGBAMultiTexture = nil;
+		if (sPixelShaderRGBAMultiTexture == nil)
+			// Create shader
+			sPixelShaderRGBAMultiTexture = new CDirectXPixelShaderRGBAMultiTexture();
 
-	return *sPixelShader;
+		// Setup
+		sPixelShaderRGBAMultiTexture->setOpacity(opacity);
+
+		return *sPixelShaderRGBAMultiTexture;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

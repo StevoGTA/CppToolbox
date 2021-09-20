@@ -661,8 +661,14 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
-		const S2DSizeU16& size)
+CVideoFrame::Compatibility CGPU::getVideoFrameCompatibility() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CVideoFrame::kCompatibilityNotApplicable;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
@@ -672,18 +678,19 @@ SGPUTextureReference CGPU::registerTexture(const CData& data, CGPUTexture::DataF
 									*mInternals->mD3DDeviceContextComPtr.Get(), data, dataFormat, size);
 	mInternals->mD3DDeviceContextLock.unlock();
 
-	return SGPUTextureReference(*gpuTexture);
+	return I<CGPUTexture>(gpuTexture);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::unregisterTexture(SGPUTextureReference& gpuTexture)
+TArray<I<CGPUTexture> > CGPU::registerTextures(const CVideoFrame& videoFrame)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CDirectXTexture*	directXTexture = (CDirectXTexture*) gpuTexture.mGPUTexture;
+}
 
-	// Cleanup
-	Delete(directXTexture);
+//----------------------------------------------------------------------------------------------------------------------
+void CGPU::unregisterTexture(I<CGPUTexture>& gpuTexture)
+//----------------------------------------------------------------------------------------------------------------------
+{
 }
 
 //----------------------------------------------------------------------------------------------------------------------

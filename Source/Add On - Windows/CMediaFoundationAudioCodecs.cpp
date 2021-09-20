@@ -30,7 +30,7 @@ class CAACAudioCodecInternals {
 	public:
 							CAACAudioCodecInternals(OSType codecID) : mCodecID(codecID), mNextPacketIndex(0) {}
 
-		static	OI<SError>	readInputPacket(IMFMediaBuffer* mediaBuffer, void* userData)
+		static	OI<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
 								{
 									// Setup
 									CAACAudioCodecInternals&	internals = *((CAACAudioCodecInternals*) userData);
@@ -96,16 +96,19 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 #pragma pack(pop)
 	userData.mAudioSpecificConfig = EndianU16_NtoB(aacDecodeInfo.getStartCodes());
 
-	mInternals->mAudioDecoder =
-			CMediaFoundationServices::createTransformForAudioDecode(MFAudioFormat_AAC, audioProcessingFormat,
-					OI<CData>(new CData(&userData, sizeof(UserData), false)));
-	if (!mInternals->mAudioDecoder.hasInstance())
+	TCIResult<IMFTransform>	audioDecoder =
+									CMediaFoundationServices::createTransformForAudioDecode(MFAudioFormat_AAC,
+											audioProcessingFormat,
+											OI<CData>(new CData(&userData, sizeof(UserData), false)));
+	if (audioDecoder.hasError())
 		return;
+	mInternals->mAudioDecoder = audioDecoder.getInstance();
 
 	// Create input sample
-	mInternals->mInputSample = CMediaFoundationServices::createSample(10 * 1024);
-	if (!mInternals->mInputSample.hasInstance())
+	TCIResult<IMFSample>	sample = CMediaFoundationServices::createSample(10 * 1024);
+	if (sample.hasError())
 		return;
+	mInternals->mInputSample = sample.getInstance();
 
 	// Create output sample
 	MFT_OUTPUT_STREAM_INFO	outputStreamInfo;
@@ -117,9 +120,10 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 		return;
 	}
 
-	mInternals->mOutputSample = CMediaFoundationServices::createSample(outputStreamInfo.cbSize);
-	if (!mInternals->mOutputSample.hasInstance())
+	sample = CMediaFoundationServices::createSample(outputStreamInfo.cbSize);
+	if (sample.hasError())
 		return;
+	mInternals->mOutputSample = sample.getInstance();
 
 	// Begin streaming!
 	result = mInternals->mAudioDecoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
@@ -141,12 +145,13 @@ OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
 
 	// Process output
 	error =
-			CMediaFoundationServices::processOutput(*mInternals->mAudioDecoder, *mInternals->mInputSample,
-					*mInternals->mOutputSample, CAACAudioCodecInternals::readInputPacket, mInternals);
+			CMediaFoundationServices::processOutput(*mInternals->mAudioDecoder, *mInternals->mOutputSample,
+					CMediaFoundationServices::ProcessOutputInfo(CAACAudioCodecInternals::fillInputBuffer,
+							mInternals->mInputSample, mInternals));
 	ReturnErrorIfError(error);
 
 	error =
-			CMediaFoundationServices::completeAudioFramesWrite(*mInternals->mOutputSample, audioFrames,
+			CMediaFoundationServices::completeWrite(*mInternals->mOutputSample, audioFrames,
 					*mInternals->mAudioProcessingFormat);
 	ReturnErrorIfError(error);
 
