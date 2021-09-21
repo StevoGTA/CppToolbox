@@ -27,9 +27,9 @@ class CAudioTrack : public CMediaTrack {
 				const	I<CCodec::DecodeInfo>&	getDecodeInfo() const;
 
 		static			Float32					getDBFromValue(Float32 value)
-													{ return 20.0 * log10(value); }
+													{ return (Float32) (20.0 * log10(value)); }
 		static			Float32					getValueFromDB(Float32 db)
-													{ return powf(10.0, db / 20.0); }
+													{ return powf(10.0, (Float32) (db / 20.0)); }
 //		static			Float32					getPercentFromValue(Float32 value)
 //													{ return value / 100.0; }
 
