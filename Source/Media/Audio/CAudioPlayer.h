@@ -73,14 +73,15 @@ class CAudioPlayer : public CAudioDestination {
 
 						void							setGain(Float32 gain);
 
+						void							setWindow(UniversalTimeInterval startTimeInterval,
+																UniversalTimeInterval durationTimeInterval);
+
 						void							play();
 						void							pause();
 						bool							isPlaying() const;
 
 						void							startSeek();
-						void							seek(UniversalTimeInterval timeInterval,
-																OV<UniversalTimeInterval> durationTimeInterval,
-																bool playPreview);
+						void							seek(UniversalTimeInterval timeInterval);
 						void							finishSeek();
 
 														// Class methods

@@ -15,9 +15,11 @@ class CAudioTrack : public CMediaTrack {
 	// Methods
 	public:
 												// Lifecycle methods
-												CAudioTrack(const SAudioStorageFormat& audioStorageFormat,
+												CAudioTrack(const Info& info,
+														const SAudioStorageFormat& audioStorageFormat,
 														const I<CCodec::DecodeInfo>& decodeInfo);
-												CAudioTrack(UInt32 index, const SAudioStorageFormat& audioStorageFormat,
+												CAudioTrack(UInt32 index, const Info& info,
+														const SAudioStorageFormat& audioStorageFormat,
 														const I<CCodec::DecodeInfo>& decodeInfo);
 												CAudioTrack(const CAudioTrack& other);
 												~CAudioTrack();
@@ -26,6 +28,9 @@ class CAudioTrack : public CMediaTrack {
 				const	SAudioStorageFormat&	getAudioStorageFormat() const;
 				const	I<CCodec::DecodeInfo>&	getDecodeInfo() const;
 
+												// Class methods
+		static			Info					composeInfo(const SAudioStorageFormat& audioStorageFormat,
+														UInt64 frameCount, UInt64 byteCount);
 		static			Float32					getDBFromValue(Float32 value)
 													{ return (Float32) (20.0 * log10(value)); }
 		static			Float32					getValueFromDB(Float32 db)

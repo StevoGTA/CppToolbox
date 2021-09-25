@@ -27,10 +27,12 @@ class CTimerInternals {
 						// Done
 						dispatch_source_cancel((__bridge dispatch_source_t) mDispatchSourceTimer);
 						mDispatchSourceTimer = nil;
+						mIsResumed = false;
 					}
 				});
 
 				mDispatchSourceTimer = (void*) ::CFBridgingRetain(dispatchSourceTimer);
+				mIsResumed = false;
 			}
 		~CTimerInternals()
 			{
@@ -43,6 +45,7 @@ class CTimerInternals {
 			}
 
 		void*	mDispatchSourceTimer;
+		bool	mIsResumed;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -78,10 +81,11 @@ CTimer::~CTimer()
 void CTimer::resume()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if have internal timer
-	if (mInternals->mDispatchSourceTimer != nil) {
-		// Suspend
+	// Check if have internal timer and not already resumed
+	if ((mInternals->mDispatchSourceTimer != nil) && !mInternals->mIsResumed) {
+		// Resume
 		dispatch_resume((__bridge dispatch_source_t) mInternals->mDispatchSourceTimer);
+		mInternals->mIsResumed = true;
 	}
 }
 
@@ -89,9 +93,10 @@ void CTimer::resume()
 void CTimer::suspend()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if have internal timer
-	if (mInternals->mDispatchSourceTimer != nil) {
+	// Check if have internal timer and resumed
+	if ((mInternals->mDispatchSourceTimer != nil) && mInternals->mIsResumed) {
 		// Suspend
 		dispatch_suspend((__bridge dispatch_source_t) mInternals->mDispatchSourceTimer);
+		mInternals->mIsResumed = false;
 	}
 }

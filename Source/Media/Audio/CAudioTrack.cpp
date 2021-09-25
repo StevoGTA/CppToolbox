@@ -26,8 +26,8 @@ class CAudioTrackInternals : public TReferenceCountable<CAudioTrackInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrack::CAudioTrack(const SAudioStorageFormat& audioStorageFormat, const I<CCodec::DecodeInfo>& decodeInfo) :
-		CMediaTrack()
+CAudioTrack::CAudioTrack(const Info& info, const SAudioStorageFormat& audioStorageFormat,
+		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack(info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -35,8 +35,8 @@ CAudioTrack::CAudioTrack(const SAudioStorageFormat& audioStorageFormat, const I<
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrack::CAudioTrack(UInt32 index, const SAudioStorageFormat& audioStorageFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack()
+CAudioTrack::CAudioTrack(UInt32 index, const Info& info, const SAudioStorageFormat& audioStorageFormat,
+		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack(info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -74,6 +74,19 @@ const I<CCodec::DecodeInfo>& CAudioTrack::getDecodeInfo() const
 }
 
 // MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CMediaTrack::Info CAudioTrack::composeInfo(const SAudioStorageFormat& audioStorageFormat, UInt64 frameCount,
+		UInt64 byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UniversalTimeInterval	duration =
+									(UniversalTimeInterval) frameCount /
+											(UniversalTimeInterval) audioStorageFormat.getSampleRate();
+
+	return Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration));
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 CString CAudioTrack::getStringFromDB(Float32 db, Float32 muteDB)

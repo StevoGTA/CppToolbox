@@ -100,26 +100,35 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info);
-									~CMediaPlayer();
+										// Lifecycle methods
+										CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info);
+										~CMediaPlayer();
 
-									// CMediaDestination methods
-				void				setupComplete();
+										// CMediaDestination methods
+				void					setupComplete();
 
-									// Instance methods
-		virtual	I<CAudioPlayer>		newAudioPlayer(const CString& identifier, UInt32 trackIndex);
-		virtual	void				setAudioGain(Float32 audioGain);
+										// Instance methods
+		virtual	I<CAudioPlayer>			newAudioPlayer(const CString& identifier, UInt32 trackIndex);
+		virtual	void					setAudioGain(Float32 audioGain);
 
-		virtual	I<CVideoFrameStore>	newVideoFrameStore(const CString& identifier, UInt32 trackIndex);
+		virtual	I<CVideoFrameStore>		newVideoFrameStore(const CString& identifier, UInt32 trackIndex);
 
-		virtual	void				setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
+		virtual	void					setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
 
-		virtual	void				play();
-		virtual	void				pause();
-		virtual	bool				isPlaying() const;
+				void					setWindow(UniversalTimeInterval startTimeInterval,
+												UniversalTimeInterval durationTimeInterval);
 
-		virtual	OI<SError>			reset();
+				UniversalTimeInterval	getCurrentPosition() const;
+
+		virtual	void					play();
+		virtual	void					pause();
+		virtual	bool					isPlaying() const;
+
+				void					startSeek();
+				void					seek(UniversalTimeInterval timeInterval);
+				void					finishSeek();
+
+		virtual	OI<SError>				reset();
 
 	// Properties
 	private:

@@ -51,8 +51,9 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 
 	// Process chunks
 	OI<SAudioStorageFormat>				audioStorageFormat;
-	UInt64								dataStartOffset = 0;
-	UInt64								dataSize = 0;
+	UInt64								dataChunkStartByteOffset = 0;
+	UInt64								dataChunkByteCount = 0;
+	CAudioCodec::ComposeFrameCountProc	composeFrameCountProc = nil;
 	CAudioCodec::ComposeDecodeInfoProc	composeDecodeInfoProc = nil;
 	while (true) {
 		// Read next chunk info
@@ -67,15 +68,15 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 				ReturnValueIfResultError(data, TIResult<SMediaTracks>(data.getError()));
 
 				const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) data.getValue().getBytePtr());
-
 				switch (waveFormat.getFormatTag()) {
 					case 0x0011:
 						// DVI/Intel ADPCM
 						audioStorageFormat =
 								OI<SAudioStorageFormat>(
-										SAudioStorageFormat(CDVIIntelIMAADPCMAudioCodec::mID, 16,
+										CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat(
 												(Float32) waveFormat.getSamplesPerSec(),
 												AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels())));
+						composeFrameCountProc = CDVIIntelIMAADPCMAudioCodec::composeFrameCount;
 						composeDecodeInfoProc = CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo;
 						break;
 
@@ -87,13 +88,14 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 
 			case kWAVEDataChunkID:
 				// Data chunk
-				dataStartOffset = chunkReader.getPos();
-				dataSize = std::min<SInt64>(chunkInfo.getValue().mSize, chunkReader.getSize() - dataStartOffset);
+				dataChunkStartByteOffset = chunkReader.getPos();
+				dataChunkByteCount =
+						std::min<SInt64>(chunkInfo.getValue().mSize, chunkReader.getSize() - dataChunkStartByteOffset);
 				break;
 		}
 
 		// Check if done
-		if ((audioStorageFormat.hasInstance() && (dataStartOffset != 0) && (dataSize != 0)))
+		if ((audioStorageFormat.hasInstance() && (dataChunkStartByteOffset != 0) && (dataChunkByteCount != 0)))
 			// Done
 			break;
 
@@ -103,8 +105,12 @@ TIResult<SMediaTracks> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekab
 	}
 
 	// Store
+	UInt64	frameCount = composeFrameCountProc(*audioStorageFormat, dataChunkByteCount);
+	
 	audioTracks +=
-			CAudioTrack(*audioStorageFormat, composeDecodeInfoProc(dataStartOffset, dataSize, *audioStorageFormat));
+			CAudioTrack(CAudioTrack::composeInfo(*audioStorageFormat, frameCount, dataChunkByteCount),
+					*audioStorageFormat,
+					composeDecodeInfoProc(*audioStorageFormat, dataChunkStartByteOffset, dataChunkByteCount));
 
 	return TIResult<SMediaTracks>(SMediaTracks(audioTracks));
 }

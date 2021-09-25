@@ -97,17 +97,17 @@ class CPacketsDecodeInfo : public CCodec::DecodeInfo {
 								CPacketsDecodeInfo(const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
 									DecodeInfo(), mMediaPacketAndLocations(mediaPacketAndLocations)
 									{}
-								CPacketsDecodeInfo(const SMediaPacket& mediaPacket, UInt64 startingPos,
+								CPacketsDecodeInfo(const SMediaPacket& mediaPacket, UInt64 startByteOffset,
 										UInt32 mediaPacketCount) :
 									DecodeInfo(), mMediaPacketAndLocations(TNArray<SMediaPacketAndLocation>())
 									{
 										// Compose media packet and locations
 										TNArray<SMediaPacketAndLocation>	mediaPacketAndLocations;
 										for (UInt32 i = 0; i < mediaPacketCount;
-												i++, startingPos += mediaPacket.mByteCount)
+												i++, startByteOffset += mediaPacket.mByteCount)
 											// Add media packet and location
 											mediaPacketAndLocations +=
-													SMediaPacketAndLocation(mediaPacket, startingPos);
+													SMediaPacketAndLocation(mediaPacket, startByteOffset);
 										mMediaPacketAndLocations = mediaPacketAndLocations;
 									}
 

@@ -242,10 +242,12 @@ class CAudioPlayerInternals {
 							CAudioPlayerInternals(CAudioPlayer& audioPlayer, const CString& identifier,
 									const CAudioPlayer::Info& info) :
 								mAudioPlayer(audioPlayer), mIdentifier(identifier), mInfo(info),
-										mIsPlaying(false), mStartTimeInterval(0.0), mGain(1.0),
+										mIsPlaying(false), mStartTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0),
+										mLastSeekTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
-										mRenderProcIsSendingFrames(false), mRenderProcPreviousReadSize(0),
-										mRenderProcPreviousFrameCount(0), mRenderProcFrameIndex(0)
+										mRenderProcIsSendingFrames(false), mRenderProcShouldNotifyEndOfData(false),
+										mRenderProcPreviousReadSize(0), mRenderProcPreviousFrameCount(0),
+										mRenderProcFrameIndex(0)
 								{}
 
 		static	void		readerThreadError(const SError& error, void* userData)
@@ -273,17 +275,18 @@ class CAudioPlayerInternals {
 
 									// Check if rendered any frames
 									if (internals.mRenderProcPreviousFrameCount > 0) {
-										// Update position
+										// Update info
 										internals.mRenderProcFrameIndex += internals.mRenderProcPreviousFrameCount;
+										internals.mCurrentPlaybackTimeInterval +=
+												(UniversalTimeInterval) internals.mRenderProcPreviousFrameCount /
+														*internals.mSampleRate;
+
+										// Reset
 										internals.mRenderProcPreviousFrameCount = 0;
 
 										// Notify playback position updated
-										UniversalTimeInterval	position =
-																		internals.mStartTimeInterval +
-																				(Float32) internals
-																								.mRenderProcFrameIndex /
-																						*internals.mSampleRate;
-										internals.mInfo.positionUpdated(internals.mAudioPlayer, position);
+										internals.mInfo.positionUpdated(internals.mAudioPlayer,
+												internals.mCurrentPlaybackTimeInterval);
 
 										// Notify queue read complete
 										internals.mAudioPlayerBufferThread->noteQueueReadComplete();
@@ -367,7 +370,8 @@ class CAudioPlayerInternals {
 													internals.mRenderProcIsSendingFrames = true;
 												else {
 													// At the end, did not queue any frames
-													if (internals.mRenderProcIsSendingFrames)
+													if (internals.mRenderProcIsSendingFrames &&
+															internals.mRenderProcShouldNotifyEndOfData)
 														// Just reached the end of data
 														internals.mInfo.endOfData(internals.mAudioPlayer);
 
@@ -403,10 +407,13 @@ class CAudioPlayerInternals {
 		bool							mIsPlaying;
 		UniversalTimeInterval			mStartTimeInterval;
 		OV<UniversalTimeInterval>		mDurationTimeInterval;
+		UniversalTimeInterval			mCurrentPlaybackTimeInterval;
+		UniversalTimeInterval			mLastSeekTimeInterval;
 		Float32							mGain;
 
 		bool							mRenderProcShouldSendFrames;
 		bool							mRenderProcIsSendingFrames;
+		bool							mRenderProcShouldNotifyEndOfData;
 		UInt32							mRenderProcPreviousReadSize;
 		UInt32							mRenderProcPreviousFrameCount;
 		UInt32							mRenderProcFrameIndex;
@@ -544,6 +551,7 @@ OI<SError> CAudioPlayer::reset()
 	ReturnErrorIfError(error);
 
 	// Reset frame index
+	mInternals->mCurrentPlaybackTimeInterval = mInternals->mStartTimeInterval;
 	mInternals->mRenderProcFrameIndex = 0;
 
 	// Resume
@@ -584,6 +592,26 @@ void CAudioPlayer::setGain(Float32 gain)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CAudioPlayer::setWindow(UniversalTimeInterval startTimeInterval, UniversalTimeInterval durationTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	bool	performSeek = startTimeInterval != mInternals->mStartTimeInterval;
+
+	// Store
+	mInternals->mStartTimeInterval = startTimeInterval;
+	mInternals->mDurationTimeInterval = OV<UniversalTimeInterval>(durationTimeInterval);
+
+	// Check if need seek
+	if (performSeek) {
+		// Seek
+		startSeek();
+		seek(mInternals->mStartTimeInterval);
+		finishSeek();
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::play()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -603,6 +631,7 @@ void CAudioPlayer::play()
 
 	// Send frames
 	mInternals->mRenderProcShouldSendFrames = true;
+	mInternals->mRenderProcShouldNotifyEndOfData = true;
 
 	// Start the engine if not already started
 	CAudioEngine::mShared.play();
@@ -630,42 +659,62 @@ bool CAudioPlayer::isPlaying() const
 void CAudioPlayer::startSeek()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if have audio engine index
+	if (!mInternals->mAudioEngineIndex.hasValue()) {
+		// Add player
+		mInternals->mAudioEngineIndex =
+				CAudioEngine::mShared.addAudioPlayer(CAudioPlayerInternals::renderProc, mInternals);
+		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), mInternals->mGain);
+	}
+	if (!mInternals->mAudioEngineIndex.hasValue())
+		// No available slots
+		return;
+
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
+	mInternals->mRenderProcShouldNotifyEndOfData = false;
+
+	// Setup
+	mInternals->mLastSeekTimeInterval = mInternals->mCurrentPlaybackTimeInterval;
+
+	// Start the engine if not already started
+	CAudioEngine::mShared.play();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::seek(UniversalTimeInterval timeInterval, OV<UniversalTimeInterval> durationTimeInterval,
-		bool playPreview)
+void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Store
-	mInternals->mStartTimeInterval = timeInterval;
-	mInternals->mDurationTimeInterval = durationTimeInterval;
+	// Stay within the window
+	if ((timeInterval >= mInternals->mStartTimeInterval) &&
+			(!mInternals->mDurationTimeInterval.hasValue() ||
+					(timeInterval < ((mInternals->mStartTimeInterval + *mInternals->mDurationTimeInterval))))) {
+		// Stop sending frames
+		mInternals->mRenderProcShouldSendFrames = false;
+		while (mInternals->mRenderProcIsSendingFrames)
+			// Sleep
+			CThread::sleepFor(0.001);
 
-	// Stop sending frames
-	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsSendingFrames)
-		// Sleep
-		CThread::sleepFor(0.001);
+		// Reset Reader Thread
+		mInternals->mAudioPlayerBufferThread->stopReading();
 
-	// Reset Reader Thread
-	mInternals->mAudioPlayerBufferThread->stopReading();
+		// Reset buffer
+		mInternals->mQueue->reset();
 
-	// Reset buffer
-	mInternals->mQueue->reset();
+		// Reset the pipeline
+		CAudioDestination::reset();
 
-	// Reset the pipeline
-	CAudioDestination::reset();
+		// Reset stuffs
+		mInternals->mCurrentPlaybackTimeInterval = timeInterval;
+		mInternals->mRenderProcFrameIndex = 0;
 
-	// Reset frame index
-	mInternals->mRenderProcFrameIndex = 0;
-
-	// Check for preview
-	if (playPreview) {
 		// Setup to play preview length frames
+		mInternals->mLastSeekTimeInterval = timeInterval;
 		mInternals->mAudioPlayerBufferThread->seek(timeInterval,
-				(UInt32) (timeInterval * CAudioPlayer::kPreviewDuration));
+				(UInt32) (*mInternals->mSampleRate * CAudioPlayer::kPreviewDuration));
+
+		// Resume
+		mInternals->mAudioPlayerBufferThread->resume();
 
 		// Send frames
 		mInternals->mRenderProcShouldSendFrames = true;
@@ -688,15 +737,21 @@ void CAudioPlayer::finishSeek()
 	// Reset buffer
 	mInternals->mQueue->reset();
 
-	// Setup to play requested frames
-	mInternals->mAudioPlayerBufferThread->seek(mInternals->mStartTimeInterval,
-			mInternals->mDurationTimeInterval.hasValue() ?
-					(UInt32) (*mInternals->mDurationTimeInterval * *mInternals->mSampleRate) : ~0);
+	// Setup to play frames
+	if (mInternals->mDurationTimeInterval.hasValue()) {
+		// Setup to play the request of the frames in the window
+		mInternals->mAudioPlayerBufferThread->seek(mInternals->mLastSeekTimeInterval,
+				(UInt32) ((mInternals->mStartTimeInterval + *mInternals->mDurationTimeInterval -
+						mInternals->mLastSeekTimeInterval) * *mInternals->mSampleRate));
+	} else
+		// Setup to play the rest of the frames
+		mInternals->mAudioPlayerBufferThread->seek(mInternals->mLastSeekTimeInterval, ~0);
 
 	// Reset the pipeline
 	CAudioDestination::reset();
 
 	// Reset frame index
+	mInternals->mCurrentPlaybackTimeInterval = mInternals->mLastSeekTimeInterval;
 	mInternals->mRenderProcFrameIndex = 0;
 
 	// Resume
@@ -704,6 +759,7 @@ void CAudioPlayer::finishSeek()
 
 	// Begin sending frames again
 	mInternals->mRenderProcShouldSendFrames = mInternals->mIsPlaying;
+	mInternals->mRenderProcShouldNotifyEndOfData = true;
 }
 
 // MARK: Class methods

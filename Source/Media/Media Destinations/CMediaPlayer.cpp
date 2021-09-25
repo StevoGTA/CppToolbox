@@ -90,7 +90,7 @@ class CMediaPlayerInternals {
 						CMediaPlayerInternals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
 								const CMediaPlayer::Info& info) :
 							mMediaPlayer(mediaPlayer), mMessageQueues(messageQueues), mInfo(info),
-									mEndOfDataCount(0), mCurrentLoopCount(0)
+									mCurrentPosition(0.0), mEndOfDataCount(0), mCurrentLoopCount(0)
 							{}
 
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
@@ -111,11 +111,14 @@ class CMediaPlayerInternals {
 								if (!mActiveInternals.contains(internals))
 									return;
 
+								// Store
+								internals.mCurrentPosition = audioPlayerPositionUpdatedMessage.mPosition;
+
 								// Iterate all video frame stores
 								for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++)
 									// Update video decoder
 									internals.mMediaPlayer.getVideoProcessor(i)->notePositionUpdated(
-											audioPlayerPositionUpdatedMessage.mPosition);
+											internals.mCurrentPosition);
 
 								// Call proc
 								internals.mInfo.audioPositionUpdated(audioPlayerPositionUpdatedMessage.mPosition);
@@ -217,6 +220,7 @@ class CMediaPlayerInternals {
 				CSRSWMessageQueues&				mMessageQueues;
 				CMediaPlayer::Info				mInfo;
 
+				UniversalTimeInterval			mCurrentPosition;
 				UInt32							mEndOfDataCount;
 				OV<UInt32>						mLoopCount;
 				UInt32							mCurrentLoopCount;
@@ -338,6 +342,23 @@ void CMediaPlayer::setLoopCount(OV<UInt32> loopCount)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::setWindow(UniversalTimeInterval startTimeInterval, UniversalTimeInterval durationTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all audio tracks
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+		// Set window
+		getAudioProcessor(i)->setWindow(startTimeInterval, durationTimeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTimeInterval CMediaPlayer::getCurrentPosition() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mCurrentPosition;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::play()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -383,6 +404,36 @@ bool CMediaPlayer::isPlaying() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::startSeek()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all audio tracks
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+		// Start seek
+		getAudioProcessor(i)->startSeek();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all audio tracks
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+		// Seek
+		getAudioProcessor(i)->seek(timeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::finishSeek()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all audio tracks
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+		// Finish seek
+		getAudioProcessor(i)->finishSeek();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OI<SError> CMediaPlayer::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -401,6 +452,7 @@ OI<SError> CMediaPlayer::reset()
 	}
 
 	// Update internals
+	mInternals->mCurrentPosition = 0.0;
 	mInternals->mEndOfDataCount = 0;
 
 	return OI<SError>();

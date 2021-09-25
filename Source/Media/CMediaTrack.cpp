@@ -9,25 +9,15 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaTrackInternals
 
-//class CMediaTrackInternals : public TReferenceCountable<CMediaTrackInternals> {
-//	public:
-//		CMediaTrackInternals(void* externalReference,
-//				CMediaTrack::ExternalReferenceDeleteProc externalReferenceDeleteProc) :
-//			TReferenceCountable(),
-//					mExternalReference(externalReference), mExternalReferenceDeleteProc(externalReferenceDeleteProc)
-//			{
-//			}
-//		~CMediaTrackInternals()
-//			{
-//				// Cleanup
-//				if (mExternalReferenceDeleteProc != nil)
-//					// Call proc
-//					mExternalReferenceDeleteProc(mExternalReference);
-//			}
-//
-//		void*										mExternalReference;
-//		CMediaTrack::ExternalReferenceDeleteProc	mExternalReferenceDeleteProc;
-//};
+class CMediaTrackInternals : public TReferenceCountable<CMediaTrackInternals> {
+	public:
+		CMediaTrackInternals(const CMediaTrack::Info& info) :
+			TReferenceCountable(),
+					mInfo(info)
+			{}
+
+		CMediaTrack::Info	mInfo;
+};
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -35,27 +25,33 @@
 
 // MARK: Lifecycle methods
 
-////----------------------------------------------------------------------------------------------------------------------
-//CMediaTrack::CMediaTrack(void* externalReference, ExternalReferenceDeleteProc externalReferenceDeleteProc)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	// Setup
-//	mInternals = new CMediaTrackInternals(externalReference, externalReferenceDeleteProc);
-//}
-//
-////----------------------------------------------------------------------------------------------------------------------
-//CMediaTrack::CMediaTrack(const CMediaTrack& other)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	mInternals = other.mInternals->addReference();
-//}
-//
-////----------------------------------------------------------------------------------------------------------------------
-//CMediaTrack::~CMediaTrack()
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	mInternals->removeReference();
-//}
+//----------------------------------------------------------------------------------------------------------------------
+CMediaTrack::CMediaTrack(const Info& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mInternals = new CMediaTrackInternals(info);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CMediaTrack::CMediaTrack(const CMediaTrack& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CMediaTrack::~CMediaTrack()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->removeReference();
+}
 
 // MARK: Instance methods
 
+//----------------------------------------------------------------------------------------------------------------------
+const CMediaTrack::Info& CMediaTrack::getInfo() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mInfo;
+}

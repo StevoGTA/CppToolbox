@@ -26,8 +26,8 @@ class CVideoTrackInternals : public TReferenceCountable<CVideoTrackInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoTrack::CVideoTrack(const SVideoStorageFormat& videoStorageFormat, const I<CCodec::DecodeInfo>& decodeInfo) :
-		CMediaTrack()
+CVideoTrack::CVideoTrack(const Info& info, const SVideoStorageFormat& videoStorageFormat,
+		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack(info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -35,8 +35,8 @@ CVideoTrack::CVideoTrack(const SVideoStorageFormat& videoStorageFormat, const I<
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoTrack::CVideoTrack(UInt32 index, const SVideoStorageFormat& videoStorageFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack()
+CVideoTrack::CVideoTrack(UInt32 index, const Info& info, const SVideoStorageFormat& videoStorageFormat,
+		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack(info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

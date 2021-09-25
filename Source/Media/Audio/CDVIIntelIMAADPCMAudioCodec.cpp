@@ -229,16 +229,34 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CCodec::DecodeInfo> CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(UInt64 dataStartOffset, UInt64 dataSize,
-		const SAudioStorageFormat& audioStorageFormat)
+SAudioStorageFormat CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat(Float32 sampleRate,
+		EAudioChannelMap channelMap)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return SAudioStorageFormat(mID, 16, sampleRate, channelMap);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CDVIIntelIMAADPCMAudioCodec::composeFrameCount(const SAudioStorageFormat& audioStorageFormat, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	byteCount = kDVIIntelBytesPerPacketPerChannel * audioStorageFormat.getChannels();
+	UInt64	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * audioStorageFormat.getChannels();
+
+	return byteCount / bytesPerPacket * kDVIIntelFramesPerPacket;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CCodec::DecodeInfo> CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(const SAudioStorageFormat& audioStorageFormat,
+		UInt64 startByteOffset, UInt64 byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt32	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * audioStorageFormat.getChannels();
 
 	return I<CCodec::DecodeInfo>(
-			new CPacketsDecodeInfo(SMediaPacket(kDVIIntelFramesPerPacket, byteCount), dataStartOffset,
-					(UInt32) dataSize / byteCount));
+			new CPacketsDecodeInfo(SMediaPacket(kDVIIntelFramesPerPacket, bytesPerPacket), startByteOffset,
+					(UInt32) byteCount / bytesPerPacket));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
