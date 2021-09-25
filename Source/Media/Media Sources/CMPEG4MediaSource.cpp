@@ -120,68 +120,86 @@ struct ShdlrAtomPayload {
 //	UInt32	mNextTrackID;
 //};
 //
-//struct StkhdAtomInfoV0 {
-//	UInt8	mVersion;	// 0
-//	UInt8	mFlags[3];	// 0x000001:	Track Enabled
-//						// 0x000002:	Track In Movie
-//						// 0x000004:	Track In Preview
-//						// 0x000008:	Track In Poster
+
+//struct StkhdAtomPayload {
+//	// Structs
+//	struct Payload {
+//		UInt8	mVersion;
+//		UInt8	mFlags[3];	// 0x000001:	Track Enabled
+//							// 0x000002:	Track In Movie
+//							// 0x000004:	Track In Preview
+//							// 0x000008:	Track In Poster
+//		union {
+//			struct InfoV0 {
+//				UInt32	mCreatedDate;
+//				UInt32	mModifiedDate;
 //
-//	UInt32	mCreatedDate;
-//	UInt32	mModifiedDate;
+//				UInt32	mTrackID;
+//				UInt32	mReserved;
+//				UInt32	mDuration;
+//				UInt32	mReserved1[2];
+//				UInt16	mVideoLayer;
+//				UInt16	mQuickTimeAlternateID;
+//				UInt16	mAudioVolume;
+//				UInt16	mReserved4;
+//				UInt32	mMatrixA;		// Width Scale
+//				UInt32	mMatrixB;		// Width Rotate
+//				UInt32	mMatrixU;		// Width Angle
+//				UInt32	mMatrixC;		// Height Rotate
+//				UInt32	mMatrixD;		// Height Scale
+//				UInt32	mMatrixV;		// Height Angle
+//				UInt32	mMatrixX;
+//				UInt32	mMatrixY;
+//				UInt32	mMatrixW;
+//				UInt32	mFrameWidth;
+//				UInt32	mFrameHeight;
+//			} mInfoV0;
 //
-//	UInt32	mTrackID;
-//	UInt32	mReserved;
-//	UInt32	mDuration;
-//	UInt32	mReserved1[2];
-//	UInt16	mVideoLayer;
-//	UInt16	mQuickTimeAlternateID;
-//	UInt16	mAudioVolume;
-//	UInt16	mReserved4;
-//	UInt32	mMatrixA;		// Width Scale
-//	UInt32	mMatrixB;		// Width Rotate
-//	UInt32	mMatrixU;		// Width Angle
-//	UInt32	mMatrixC;		// Height Rotate
-//	UInt32	mMatrixD;		// Height Scale
-//	UInt32	mMatrixV;		// Height Angle
-//	UInt32	mMatrixX;
-//	UInt32	mMatrixY;
-//	UInt32	mMatrixW;
-//	UInt32	mFrameWidth;
-//	UInt32	mFrameHeight;
+//			struct InfoV1 {
+//				UInt64	mCreatedDate;
+//				UInt64	mModifiedDate;
+//
+//				UInt32	mTrackID;
+//				UInt32	mReserved;
+//				UInt64	mDuration;
+//				UInt32	mReserved1[2];
+//				UInt16	mVideoLayer;
+//				UInt16	mQuickTimeAlternateID;
+//				UInt16	mAudioVolume;
+//				UInt16	mReserved4;
+//				UInt32	mMatrixA;		// Width Scale
+//				UInt32	mMatrixB;		// Width Rotate
+//				UInt32	mMatrixU;		// Width Angle
+//				UInt32	mMatrixC;		// Height Rotate
+//				UInt32	mMatrixD;		// Height Scale
+//				UInt32	mMatrixV;		// Height Angle
+//				UInt32	mMatrixX;
+//				UInt32	mMatrixY;
+//				UInt32	mMatrixW;
+//				UInt32	mFrameWidth;
+//				UInt32	mFrameHeight;
+//			} mInfoV1;
+//		} _;
+//	};
+//
+//			// Lifecycle methods
+//			StkhdAtomPayload(const CData& data) : mData(data) {}
+//
+//			// Instance Methods
+//	UInt64	getDuration() const
+//				{
+//					// Setup
+//					const	Payload&	payload = *((Payload*) mData.getBytePtr());
+//
+//					return (payload.mVersion == 0) ?
+//							EndianU32_BtoN(payload._.mInfoV0.mDuration) :
+//							EndianU64_BtoN(payload._.mInfoV1.mDuration);
+//				}
+//
+//	// Properties (in storage endian)
+//	private:
+//		const	CData&	mData;
 //};
-//
-//struct StkhdAtomInfoV1 {
-//	UInt8	mVersion;	// 0
-//	UInt8	mFlags[3];	// 0x000001:	Track Enabled
-//						// 0x000002:	Track In Movie
-//						// 0x000004:	Track In Preview
-//						// 0x000008:	Track In Poster
-//
-//	UInt64	mCreatedDate;
-//	UInt64	mModifiedDate;
-//
-//	UInt32	mTrackID;
-//	UInt32	mReserved;
-//	UInt64	mDuration;
-//	UInt32	mReserved1[2];
-//	UInt16	mVideoLayer;
-//	UInt16	mQuickTimeAlternateID;
-//	UInt16	mAudioVolume;
-//	UInt16	mReserved4;
-//	UInt32	mMatrixA;		// Width Scale
-//	UInt32	mMatrixB;		// Width Rotate
-//	UInt32	mMatrixU;		// Width Angle
-//	UInt32	mMatrixC;		// Height Rotate
-//	UInt32	mMatrixD;		// Height Scale
-//	UInt32	mMatrixV;		// Height Angle
-//	UInt32	mMatrixX;
-//	UInt32	mMatrixY;
-//	UInt32	mMatrixW;
-//	UInt32	mFrameWidth;
-//	UInt32	mFrameHeight;
-//};
-//
 
 struct SmdhdAtomPayload {
 	// Structs
@@ -703,6 +721,7 @@ static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported
 static	TIResult<SMediaTracks>			sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource);
 static	OI<CAudioTrack>					sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription,
 												const CData& esdsAtomPayloadData,
+												const SmdhdAtomPayload& mdhdAtomPayload,
 												const TArray<SMediaPacketAndLocation>& packetAndLocations);
 static	OI<CVideoTrack>					sComposeH264VideoTrack(const SstsdDescription& stsdDescription,
 												const CData& configurationData, const SmdhdAtomPayload& mdhdAtomPayload,
@@ -734,8 +753,7 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 	CAtomReader				atomReader(seekableDataSource);
 	TNArray<CAudioTrack>	audioTracks;
 	TNArray<CVideoTrack>	videoTracks;
-
-	OI<SError>	error;
+	OI<SError>				error;
 
 	// Read root atom
 	TIResult<CAtomReader::AtomInfo>	atomInfo = atomReader.readAtomInfo();
@@ -765,12 +783,25 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 			TIResult<CAtomReader::AtomGroup>	trakAtomGroup = atomReader.readAtomGroup(*moovIterator);
 			if (trakAtomGroup.hasError()) continue;
 
+//			//
+//			OR<CAtomReader::AtomInfo>	tkhdAtomInfo =
+//												trakAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('t', 'k', 'h', 'd'));
+//			if (!tkhdAtomInfo.hasReference()) continue;
+//			TIResult<CData>	tkhdAtomPayloadData = atomReader.readAtomPayload(*tkhdAtomInfo);
+//			if (error.hasInstance()) continue;
+//
 			// Media
 			TIResult<CAtomReader::AtomGroup>	mdiaAtomGroup =
 														atomReader.readAtomGroup(
 																trakAtomGroup.getValue().getAtomInfo(
 																		MAKE_OSTYPE('m', 'd', 'i', 'a')));
 			if (mdiaAtomGroup.hasError()) continue;
+
+			// Media header
+			TIResult<CData>	mdhdAtomPayloadData =
+									atomReader.readAtomPayload(
+											mdiaAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('m', 'd', 'h', 'd')));
+			if (mdhdAtomPayloadData.hasError()) continue;
 
 			// Handler
 			TIResult<CData>	hdlrAtomPayloadData =
@@ -855,6 +886,7 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
   					if (esdsAtomPayloadData.hasError()) continue;
   					OI<CAudioTrack>	audioTrack =
   											sComposeMP4AAudioTrack(stsdDescription, esdsAtomPayloadData.getValue(),
+													SmdhdAtomPayload(mdhdAtomPayloadData.getValue()),
 													sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload,
 															stszAtomPayload, stcoAtomPayload, co64AtomPayload));
 					if (audioTrack.hasInstance())
@@ -865,11 +897,6 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 					return TIResult<SMediaTracks>(sUnsupportedCodecError);
 			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
 				// Video track
-				TIResult<CData>	mdhdAtomPayloadData =
-										atomReader.readAtomPayload(
-												mdiaAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('m', 'd', 'h', 'd')));
-				if (mdhdAtomPayloadData.hasError()) continue;
-
 				TIResult<CData>	stssAtomPayloadData =
 										atomReader.readAtomPayload(
 												stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 's')));
@@ -906,7 +933,7 @@ TIResult<SMediaTracks> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seeka
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<CAudioTrack> sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription, const CData& esdsAtomPayloadData,
-		const TArray<SMediaPacketAndLocation>& packetAndLocations)
+		const SmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -924,8 +951,16 @@ OI<CAudioTrack> sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription, 
 	if (!audioStorageFormat.hasInstance())
 		return OI<CAudioTrack>();
 
+	// Compose info
+	UniversalTimeInterval	duration =
+									(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
+											(UniversalTimeInterval) mdhdAtomPayload.getTimeScale();
+	UInt64					byteCount = SMediaPacketAndLocation::getTotalByteCount(packetAndLocations);
+
 	return OI<CAudioTrack>(
-			CAudioTrack(*audioStorageFormat,
+			CAudioTrack(
+					CMediaTrack::Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration)),
+					*audioStorageFormat,
 					I<CCodec::DecodeInfo>(
 							new CAACAudioCodec::DecodeInfo(packetAndLocations,
 									CData((UInt8*) esdsAtomPayloadData.getBytePtr() + 4,
@@ -960,9 +995,17 @@ Float32	framerate = 24.0;
 	if (!videoStorageFormat.hasInstance())
 		return OI<CVideoTrack>();
 
+	// Compose info
+	UniversalTimeInterval	duration =
+									(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
+											(UniversalTimeInterval) mdhdAtomPayload.getTimeScale();
+	UInt64					byteCount = SMediaPacketAndLocation::getTotalByteCount(packetAndLocations);
+
 	// Add video track
 	return OI<CVideoTrack>(
-			CVideoTrack(*videoStorageFormat,
+			CVideoTrack(
+					CMediaTrack::Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration)),
+					*videoStorageFormat,
 					I<CCodec::DecodeInfo>(
 							new CH264VideoCodec::DecodeInfo(configurationData, timeScale, packetAndLocations))));
 }

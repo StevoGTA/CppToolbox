@@ -28,12 +28,29 @@ struct SMediaPacket {
 
 // SMediaPacket with corresponding absolute position in the containing opaque data.
 struct SMediaPacketAndLocation {
-	// Lifecycle methods
-	SMediaPacketAndLocation(SMediaPacket mediaPacket, UInt64 pos) : mMediaPacket(mediaPacket), mPos(pos) {}
+					// Lifecycle methods
+					SMediaPacketAndLocation(SMediaPacket mediaPacket, UInt64 byteOffset) :
+						mMediaPacket(mediaPacket), mByteOffset(byteOffset)
+						{}
+
+					// Class methods
+	static	UInt64	getTotalByteCount(const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations)
+						{
+							// Setup
+							UInt64	byteCount = 0;
+
+							// Iterate
+							for (TIteratorD<SMediaPacketAndLocation> iterator = mediaPacketAndLocations.getIterator();
+									iterator.hasValue(); iterator.advance())
+								// Update byte count
+								byteCount += iterator->mMediaPacket.mByteCount;
+
+							return byteCount;
+						}
 
 	// Properties
 	SMediaPacket	mMediaPacket;
-	UInt64			mPos;
+	UInt64			mByteOffset;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
