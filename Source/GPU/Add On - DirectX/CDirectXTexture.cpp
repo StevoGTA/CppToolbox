@@ -10,59 +10,100 @@
 class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInternals> {
 	public:
 		CDirectXTextureInternals(ID3D11Device& device, ID3D11DeviceContext& deviceContext, const CData& data,
-				CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size) :
-			mDataFormat(dataFormat), mSize(size), mTexture2D(NULL), mShaderResourceView(NULL)
+				DXGI_FORMAT format, const S2DSizeU16& size) :
+			mFormat(format), mSize(size)
 			{
 				// Setup
 				D3D11_TEXTURE2D_DESC	texture2DDesc;
+				texture2DDesc.Format = mFormat;
 				texture2DDesc.Width = mSize.mWidth;
 				texture2DDesc.Height = mSize.mHeight;
 				texture2DDesc.MipLevels = 1;
 				texture2DDesc.ArraySize = 1;
 				texture2DDesc.SampleDesc.Count = 1;
 				texture2DDesc.SampleDesc.Quality = 0;
-				texture2DDesc.Usage = D3D11_USAGE_DEFAULT;
+				texture2DDesc.Usage = D3D11_USAGE_IMMUTABLE;
 				texture2DDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-				texture2DDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+				texture2DDesc.CPUAccessFlags = 0;
 				texture2DDesc.MiscFlags = 0;
 
-				UINT	bytesPerRow;
-				switch (mDataFormat) {
-					case CGPUTexture::kDataFormatRGBA8888:
+				UINT bytesPerRow;
+				switch (mFormat) {
+					case DXGI_FORMAT_R8G8B8A8_UNORM:
 						// RGBA8888
-						texture2DDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-						bytesPerRow = 4 * size.mWidth;
+						mHasTransparency = true;
+						bytesPerRow = 4 * mSize.mWidth;
+						break;
+
+					case DXGI_FORMAT_NV12:
+						// NV12
+						mHasTransparency = false;
+						bytesPerRow = mSize.mWidth;
+						break;
+
+					default:
+						// ???
+						AssertFailUnimplemented();
 						break;
 				}
 
+				// Setup subresource data
+				D3D11_SUBRESOURCE_DATA	subresourceData;
+				subresourceData.pSysMem = data.getBytePtr();
+				subresourceData.SysMemPitch = bytesPerRow;
+				subresourceData.SysMemSlicePitch = 0;
+
 				// Create texture
-				HRESULT	result = device.CreateTexture2D(&texture2DDesc, NULL, &mTexture2D);
+				ID3D11Texture2D*	texture2D;
+				HRESULT	result = device.CreateTexture2D(&texture2DDesc, &subresourceData, &texture2D);
 				AssertFailIf(result != S_OK);
+				mTexture2D = OCI<ID3D11Texture2D>(texture2D);
 
-				// Update subresource
-				D3D11_BOX	rect = {0, 0, 0, size.mWidth, size.mHeight, 1};
-				deviceContext.UpdateSubresource(mTexture2D, 0, &rect, data.getBytePtr(), bytesPerRow,
-						(UINT) data.getSize());
+				// Create resource view(s)
+				D3D11_SHADER_RESOURCE_VIEW_DESC		shaderResourceViewDesc;
+				ID3D11ShaderResourceView*			shaderResourceView;
+				switch (mFormat) {
+					case DXGI_FORMAT_R8G8B8A8_UNORM:
+						// RGBA8888
+						shaderResourceViewDesc =
+								CD3D11_SHADER_RESOURCE_VIEW_DESC(*mTexture2D, D3D_SRV_DIMENSION_TEXTURE2D,
+										texture2DDesc.Format);
+						result =
+								device.CreateShaderResourceView(*mTexture2D, &shaderResourceViewDesc,
+										&shaderResourceView);
+						AssertFailIf(result != S_OK);
+						mShaderResourceViews += CI<ID3D11ShaderResourceView>(shaderResourceView);
+						break;
 
-				// Create resource view
-				CD3D11_SHADER_RESOURCE_VIEW_DESC	shaderResourceViewDesc(mTexture2D, D3D_SRV_DIMENSION_TEXTURE2D,
-															texture2DDesc.Format);
-				AssertFailIf(FAILED(
-						device.CreateShaderResourceView(mTexture2D, &shaderResourceViewDesc, &mShaderResourceView)));
+					case DXGI_FORMAT_NV12:
+						// NV12
+						shaderResourceViewDesc =
+								CD3D11_SHADER_RESOURCE_VIEW_DESC(*mTexture2D, D3D11_SRV_DIMENSION_TEXTURE2D,
+										DXGI_FORMAT_R8_UNORM);
+						result =
+								device.CreateShaderResourceView(*mTexture2D, &shaderResourceViewDesc,
+										&shaderResourceView);
+						AssertFailIf(result != S_OK);
+						mShaderResourceViews += CI<ID3D11ShaderResourceView>(shaderResourceView);
+
+						shaderResourceViewDesc =
+								CD3D11_SHADER_RESOURCE_VIEW_DESC(*mTexture2D, D3D11_SRV_DIMENSION_TEXTURE2D,
+										DXGI_FORMAT_R8G8_UNORM);
+						result =
+								device.CreateShaderResourceView(*mTexture2D, &shaderResourceViewDesc,
+										&shaderResourceView);
+						AssertFailIf(result != S_OK);
+						mShaderResourceViews += CI<ID3D11ShaderResourceView>(shaderResourceView);
+						break;
+				}
 			}
-		~CDirectXTextureInternals()
-			{
-				if (mTexture2D != NULL)
-					mTexture2D->Release();
-				if (mShaderResourceView != NULL)
-					mShaderResourceView->Release();
-			}
 
-		CGPUTexture::DataFormat		mDataFormat;
-		S2DSizeU16					mSize;
+		DXGI_FORMAT								mFormat;
+		S2DSizeU16								mSize;
+		bool									mHasTransparency;
 
-		ID3D11Texture2D*			mTexture2D;
-		ID3D11ShaderResourceView*	mShaderResourceView;
+		OCI<ID3D11Texture2D>					mTexture2D;
+		TNArray<CI<ID3D11ShaderResourceView> >	mShaderResourceViews;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -73,10 +114,10 @@ class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInter
 
 //----------------------------------------------------------------------------------------------------------------------
 CDirectXTexture::CDirectXTexture(ID3D11Device& device, ID3D11DeviceContext& deviceContext, const CData& data,
-		DataFormat dataFormat, const S2DSizeU16& size)
+		DXGI_FORMAT format, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CDirectXTextureInternals(device, deviceContext, data, dataFormat, size);
+	mInternals = new CDirectXTextureInternals(device, deviceContext, data, format, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -112,19 +153,15 @@ const S2DSizeU16& CDirectXTexture::getUsedSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-ID3D11ShaderResourceView* CDirectXTexture::getShaderResourceView() const
+const TArray<CI<ID3D11ShaderResourceView> >& CDirectXTexture::getShaderResourceViews() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mShaderResourceView;
+	return mInternals->mShaderResourceViews;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CDirectXTexture::hasTransparency() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check format
-	switch (mInternals->mDataFormat) {
-		case kDataFormatRGBA8888:	return true;
-		default:					return false;
-	}
+	return mInternals->mHasTransparency;
 }

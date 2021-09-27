@@ -4,8 +4,6 @@
 
 #include "CMediaFoundationServices.h"
 
-#include "CLogServices-Windows.h"
-
 #include <mfapi.h>
 #include <Mferror.h>
 #include <strsafe.h>
@@ -130,6 +128,77 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(
 
 	return TCIResult<IMFTransform>(audioDecoder);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+TCIResult<IMFTransform> CMediaFoundationServices::createTransformForVideoDecode(const GUID& guid)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	HRESULT	result;
+
+	// Enum Video Codecs to find Video Decoder
+	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Video, guid};
+	IMFActivate**			activates;
+	UINT32					count;
+	result =
+			MFTEnumEx(MFT_CATEGORY_VIDEO_DECODER,
+					MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_LOCALMFT | MFT_ENUM_FLAG_SORTANDFILTER, &info, NULL,
+					&activates, &count);
+	ReturnValueIfFailed(result, "MFTEnumEx", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	// Create the Video Decoder
+	IMFTransform*	transform;
+	result = activates[0]->ActivateObject(IID_PPV_ARGS(&transform));
+	OCI<IMFTransform>	videoDecoder(transform);
+
+	for (UINT32 i = 0; i < count; i++)
+		// Release
+		activates[i]->Release();
+	CoTaskMemFree(activates);
+
+	ReturnValueIfFailed(result, "ActivateObject", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	// Setup input media type
+	IMFMediaType*	mediaType;
+	result = MFCreateMediaType(&mediaType);
+	ReturnValueIfFailed(result, "MFCreateMediaType for input", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	CI<IMFMediaType>	inputMediaType(mediaType);
+
+	result = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	result = inputMediaType->SetGUID(MF_MT_SUBTYPE, guid);
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	result = MFSetAttributeSize(*inputMediaType, MF_MT_FRAME_SIZE, 320, 480);
+	ReturnValueIfFailed(result, "MFSetAttributeSize for input",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	result = videoDecoder->SetInputType(0, *inputMediaType, 0);
+	ReturnValueIfFailed(result, "SetInputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	// Setup output media type
+	result = MFCreateMediaType(&mediaType);
+	ReturnValueIfFailed(result, "MFCreateMediaType for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	CI<IMFMediaType>	outputMediaType(mediaType);
+
+	result = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	result = outputMediaType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output",
+			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	result = MFSetAttributeSize(*outputMediaType, MF_MT_FRAME_SIZE, 320, 480);
+	ReturnValueIfFailed(result, "MFSetAttributeSize for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	result = videoDecoder->SetOutputType(0, *outputMediaType, 0);
+	ReturnValueIfFailed(result, "SetOutputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	return TCIResult<IMFTransform>(videoDecoder);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -260,13 +329,11 @@ OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFS
 		MFT_OUTPUT_DATA_BUFFER	outputDataBuffer = {0, outputSample, 0, NULL};
 		DWORD					status = 0;
 		result = transform->ProcessOutput(0, 1, &outputDataBuffer, &status);
-		if (result == S_OK) {
+		if (result == S_OK)
 			// Success
-//LogMediaType(outputSample);
 			return OI<SError>();
-		} else if (result == MF_E_TRANSFORM_STREAM_CHANGE) {
+		else if (result == MF_E_TRANSFORM_STREAM_CHANGE) {
 			// Input stream format change
-CLogServices::logMessage(CString(OSSTR("Video Decoder Input Stream Format Change")));
 			if (outputDataBuffer.dwStatus == MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
 				// Output data buffer format change
 				IMFMediaType*	mediaType = NULL;
@@ -274,19 +341,14 @@ CLogServices::logMessage(CString(OSSTR("Video Decoder Input Stream Format Change
 				ReturnErrorIfFailed(result, "GetOutputAvailableType for format change");
 
 				// Call proc
-LogMediaType(mediaType);
 				OI<SError>	error = processOutputInfo.noteFormatChanged(mediaType);
 				ReturnErrorIfError(error);
 
 				// Set output type
 				result = transform->SetOutputType(0, mediaType, 0);
 				ReturnErrorIfFailed(result, "SetOutputType for format change");
-
-				//// Flush
-				//result = transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, NULL);
-				//ReturnErrorIfFailed(result, "ProcessMessage MFT_MESSAGE_COMMAND_FLUSH for format change");
 			} else {
-				// outputDataBuffer didn't have the data buffer format change flag set
+				// Unexpected setup
 				ReturnError(E_NOTIMPL, "Input stream format changed, but no updated output format given");
 			}
 		} else if (result == MF_E_TRANSFORM_NEED_MORE_INPUT) {
@@ -339,9 +401,6 @@ OI<SError> CMediaFoundationServices::flush(IMFTransform* transform)
 
 	return OI<SError>();
 }
-
-
-
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

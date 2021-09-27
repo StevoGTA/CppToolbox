@@ -11,26 +11,45 @@
 // MARK: I (Instance)
 
 template <typename T> struct I {
-		// Lifecycle methods
-		I(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
-		I(const I<T>& other) :
-			mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
-			{ (*mReferenceCount)++; }
-		~I()
-			{
-				// One less reference
-				if (--(*mReferenceCount) == 0) {
-					// All done
-					Delete(mInstance);
-					Delete(mReferenceCount);
+			// Lifecycle methods
+			I(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+			I(const I<T>& other) :
+				mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
+				{ (*mReferenceCount)++; }
+			~I()
+				{
+					// One less reference
+					if (--(*mReferenceCount) == 0) {
+						// All done
+						Delete(mInstance);
+						Delete(mReferenceCount);
+					}
 				}
-			}
 
-		// Instamce methods
-	T&	operator*() const
-			{ return *mInstance; }
-	T*	operator->() const
-			{ return mInstance; }
+	I<T>&	operator=(const I<T>& other)
+				{
+					// Check for instance
+					if (--(*mReferenceCount) == 0) {
+						// All done
+						mInstance->Release();
+						Delete(mReferenceCount);
+					}
+
+					// Copy
+					mInstance = other.mInstance;
+					mReferenceCount = other.mReferenceCount;
+
+					// Additional reference
+					(*mReferenceCount)++;
+
+					return *this;
+				}
+
+			// Instamce methods
+	T&		operator*() const
+				{ return *mInstance; }
+	T*		operator->() const
+				{ return mInstance; }
 
 	// Properties
 	private:

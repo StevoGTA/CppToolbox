@@ -76,99 +76,99 @@ float4 sample(float2 point, const array<texture2d<float, access::sample>, 16> te
 	if (textureIndex == 0) {
 		// 0
 		texture2d<float>	texture = textures[0];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 1) {
 		// 1
 		texture2d<float>	texture = textures[1];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 2) {
 		// 2
 		texture2d<float>	texture = textures[2];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 3) {
 		// 3
 		texture2d<float>	texture = textures[3];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 4) {
 		// 4
 		texture2d<float>	texture = textures[4];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 5) {
 		// 5
 		texture2d<float>	texture = textures[5];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 6) {
 		// 6
 		texture2d<float>	texture = textures[6];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 7) {
 		// 7
 		texture2d<float>	texture = textures[7];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 8) {
 		// 8
 		texture2d<float>	texture = textures[8];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 9) {
 		// 9
 		texture2d<float>	texture = textures[9];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 10) {
 		// 10
 		texture2d<float>	texture = textures[10];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 11) {
 		// 11
 		texture2d<float>	texture = textures[11];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 12) {
 		// 12
 		texture2d<float>	texture = textures[12];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 13) {
 		// 13
 		texture2d<float>	texture = textures[13];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else if (textureIndex == 14) {
 		// 14
 		texture2d<float>	texture = textures[14];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	} else {
 		// 15
 		texture2d<float>	texture = textures[15];
-		float2				normalizedTextureCoordinate(point.x / texture.get_width(), point.y / texture.get_height());
+		float2				textureUV(point.x / texture.get_width(), point.y / texture.get_height());
 
-		return texture.sample(sampler2D, normalizedTextureCoordinate.xy);
+		return texture.sample(sampler2D, textureUV.xy);
 	}
 }
 
@@ -199,7 +199,7 @@ fragment float4 fragmentShaderYCbCr(VertexToFragmentInfo vertexToFragmentInfo [[
 		const array<texture2d<float, access::sample>, 16> textures [[ texture(0) ]], sampler sampler2D [[sampler(0)]])
 {
 	// Setup
-	float2 point = vertexToFragmentInfo.mTextureCoordinate;
+	float2	point = vertexToFragmentInfo.mTextureCoordinate;
 	float3	yuv;
 
 	// Collect Y and UV values
@@ -208,7 +208,7 @@ fragment float4 fragmentShaderYCbCr(VertexToFragmentInfo vertexToFragmentInfo [[
 	yuv.x = texture.sample(sampler2D, textureUV.xy).r - 16.0 / 255.0;
 
 	texture = textures[1];
-	yuv.yz = texture.sample(sampler2D, textureUV.xy).rg - float2(0.5);
+	yuv.yz = texture.sample(sampler2D, textureUV.xy).rg - float2(128.0 / 255.0);
 
 	// Convert to RGB
 	float3	rgb = yCbCrUniforms.mColorConversionMatrix * yuv;

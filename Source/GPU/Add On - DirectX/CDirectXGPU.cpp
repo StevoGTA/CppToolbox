@@ -675,7 +675,7 @@ I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat 
 	mInternals->mD3DDeviceContextLock.lock();
 	CGPUTexture*	gpuTexture =
 							new CDirectXTexture(*mInternals->mD3DDeviceComPtr.Get(),
-									*mInternals->mD3DDeviceContextComPtr.Get(), data, dataFormat, size);
+									*mInternals->mD3DDeviceContextComPtr.Get(), data, DXGI_FORMAT_R8G8B8A8_UNORM, size);
 	mInternals->mD3DDeviceContextLock.unlock();
 
 	return I<CGPUTexture>(gpuTexture);
@@ -685,6 +685,28 @@ I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat 
 TArray<I<CGPUTexture> > CGPU::registerTextures(const CVideoFrame& videoFrame)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	IMFSample*	sample = videoFrame.getSample();
+
+	IMFMediaBuffer*	mediaBuffer;
+	sample->GetBufferByIndex(0, &mediaBuffer);
+
+	BYTE*	buffer;
+	mediaBuffer->Lock(&buffer, NULL, NULL);
+
+	DWORD	currentLength;
+	mediaBuffer->GetCurrentLength(&currentLength);
+
+	// Register texture
+	mInternals->mD3DDeviceContextLock.lock();
+	CGPUTexture*	gpuTexture =
+							new CDirectXTexture(*mInternals->mD3DDeviceComPtr.Get(),
+									*mInternals->mD3DDeviceContextComPtr.Get(), CData(buffer, currentLength, false),
+									DXGI_FORMAT_NV12, videoFrame.getFrameSize());
+	mediaBuffer->Unlock();
+	mInternals->mD3DDeviceContextLock.unlock();
+
+	return TNArray<I<CGPUTexture> >(I<CGPUTexture>(gpuTexture));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

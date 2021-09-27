@@ -60,22 +60,26 @@ class CVideoFrame {
 																CVImageBufferRef imageBufferRef);
 #elif TARGET_OS_WINDOWS
 														CVideoFrame(UniversalTimeInterval presentationTimeInterval,
-																const S2DSizeU16& frameSize, const GUID& dataFormatGUID,
-																IMFSample* sample);
+																IMFSample* sample, const GUID& dataFormatGUID,
+																const S2DSizeU16& frameSize,
+																const S2DRectU16& viewRect);
 #endif
 														CVideoFrame(const CVideoFrame& other);
 														~CVideoFrame();
 
 														// Instance methods
 						UniversalTimeInterval			getPresentationTimeInterval() const;
-				const	S2DSizeU16&						getFrameSize() const;
 						DataFormat						getDataFormat() const;
+				const	S2DSizeU16&						getFrameSize() const;
+				const	S2DRectU16&						getViewRect() const;
 						CColor::Primaries				getColorPrimaries() const;
 						CColor::YCbCrConversionMatrix	getYCbCrConversionMatrix() const;
 						CColor::TransferFunction		getColorTransferFunction() const;
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 						CVImageBufferRef				getImageBufferRef() const;
+#elif TARGET_OS_WINDOWS
+						IMFSample*						getSample() const;
 #endif
 
 														// Class methods

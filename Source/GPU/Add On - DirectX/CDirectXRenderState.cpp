@@ -7,6 +7,7 @@
 #include "CDirectXRenderState.h"
 #include "CDirectXShader.h"
 #include "CDirectXTexture.h"
+#include "TBuffer.h"
 
 #define Delete(x)	{ delete x; x = nil; }
 
@@ -126,16 +127,24 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	// Check for textures
 	if (mInternals->mTextures.hasReference()) {
 		// Setup textures
-				bool							needBlend = false;
 		const	TArray<const I<CGPUTexture> >&	gpuTextures = mInternals->mTextures.getReference();
+				bool							needBlend = false;
+				UINT							shaderResourceSlot = 0;
 		for (CArray::ItemIndex i = 0; i < gpuTextures.getCount(); i++) {
 			// Setup
-			const	CDirectXTexture&	texture = (const CDirectXTexture&) *gpuTextures[i];
+			const	CDirectXTexture&						texture = (const CDirectXTexture&) *gpuTextures[i];
+			const	TArray<CI<ID3D11ShaderResourceView> >&	shaderResourceViews = texture.getShaderResourceViews();
 
 			// Setup this texture
-			ID3D11ShaderResourceView*	shaderResourceView = texture.getShaderResourceView();
-			renderStateCommitInfo.mD3DDeviceContext.PSSetShaderResources(i, 1, &shaderResourceView);
+			TBuffer<ID3D11ShaderResourceView*>	shaderResourceViewPtrs(shaderResourceViews.getCount());
+			for (CArray::ItemIndex i = 0; i < shaderResourceViews.getCount(); i++)
+				shaderResourceViewPtrs[i] = *(shaderResourceViews[i]);
+			renderStateCommitInfo.mD3DDeviceContext.PSSetShaderResources(shaderResourceSlot,
+					shaderResourceViews.getCount(), *shaderResourceViewPtrs);
+
+			// Update
 			needBlend |= texture.hasTransparency();
+			shaderResourceSlot += shaderResourceViews.getCount();
 		}
 
 		// Check if need blend

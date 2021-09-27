@@ -5,6 +5,7 @@
 #include "CDirectXShader.h"
 
 #include "CFileDataSource.h"
+#include "TWrappers-Windows.h"
 
 #include <DirectXMath.h>
 
@@ -173,7 +174,6 @@ void CDirectXPixelShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d
 		samplerDesc.ComparisonFunc= D3D11_COMPARISON_NEVER;
 		samplerDesc.MinLOD = -FLT_MAX;
 		samplerDesc.MaxLOD = FLT_MAX;
-
 		AssertFailIf(FAILED(d3dDevice.CreateSamplerState(&samplerDesc, &mInternals->mSamplerState)));
 	}
 

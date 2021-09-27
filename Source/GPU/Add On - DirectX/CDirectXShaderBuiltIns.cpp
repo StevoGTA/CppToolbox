@@ -269,6 +269,73 @@ class CDirectXPixelShaderRGBAMultiTexture : public CDirectXPixelShader {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDirectXFragmentShaderYCbCr
+
+class CDirectXFragmentShaderYCbCr : public CDirectXPixelShader {
+	private:
+		struct SConstants {
+			// Lifecycle methods
+			SConstants(Float32 opacity) : mOpacity(opacity) {}
+
+			// Values
+			XMFLOAT3X4	mColorConversionMatrix;
+			Float32		mOpacity;
+			XMFLOAT3	mPadding;
+		};
+
+	public:
+				CDirectXFragmentShaderYCbCr() :
+					CDirectXPixelShader(CFilesystemPath(CString(OSSTR("PixelShaderYCbCr.cso")))),
+							mConstantBuffer(NULL), mConstants(1.0)
+					{}
+				~CDirectXFragmentShaderYCbCr()
+					{
+						// Cleanup
+						if (mConstantBuffer != NULL)
+							mConstantBuffer->Release();
+					}
+
+		void	setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d3dDeviceContext)
+					{
+						// Do super
+						CDirectXPixelShader::setup(d3dDevice, d3dDeviceContext);
+
+						// Update constants
+						d3dDeviceContext.UpdateSubresource1(mConstantBuffer, 0, NULL, &mConstants, 0, 0, 0);
+						d3dDeviceContext.PSSetConstantBuffers1(0, 1, &mConstantBuffer, NULL, NULL);
+					}
+
+		void	createResources(ID3D11Device& d3dDevice, const CData& shaderData)
+					{
+						// Create constant buffer
+						CD3D11_BUFFER_DESC	constantBufferDesc(sizeof(SConstants), D3D11_BIND_CONSTANT_BUFFER);
+						AssertFailIf(FAILED(d3dDevice.CreateBuffer(&constantBufferDesc, NULL, &mConstantBuffer)));
+					}
+
+		void	setColorConversionMatrix(const SMatrix3x3_32& colorConversionMatrix)
+					{
+						// Store
+						mConstants.mColorConversionMatrix._11 = colorConversionMatrix.m1_1;
+						mConstants.mColorConversionMatrix._12 = colorConversionMatrix.m1_2;
+						mConstants.mColorConversionMatrix._13 = colorConversionMatrix.m1_3;
+
+						mConstants.mColorConversionMatrix._21 = colorConversionMatrix.m2_1;
+						mConstants.mColorConversionMatrix._22 = colorConversionMatrix.m2_2;
+						mConstants.mColorConversionMatrix._23 = colorConversionMatrix.m2_3;
+
+						mConstants.mColorConversionMatrix._31 = colorConversionMatrix.m3_1;
+						mConstants.mColorConversionMatrix._32 = colorConversionMatrix.m3_2;
+						mConstants.mColorConversionMatrix._33 = colorConversionMatrix.m3_3;
+					}
+		void	setOpacity(Float32 opacity)
+					{ mConstants.mOpacity = opacity; }
+
+		ID3D11Buffer*	mConstantBuffer;
+		SConstants		mConstants;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUPixelShader
 
 // MARK: Class methods
@@ -280,16 +347,16 @@ CGPUFragmentShader& CGPUFragmentShader::getRGBAMultiTexture(Float32 opacity)
 	// Check opacity
 	if (opacity == 1.0) {
 		// No opacity
-		static	CDirectXPixelShaderBasic*	sPixelShaderBasic = nil;
-		if (sPixelShaderBasic == nil)
+		static	CDirectXPixelShaderBasic*	sPixelShaderBasic = NULL;
+		if (sPixelShaderBasic == NULL)
 			// Create shader
 			sPixelShaderBasic = new CDirectXPixelShaderBasic();
 
 		return *sPixelShaderBasic;
 	} else {
 		// Have opacity
-		static	CDirectXPixelShaderRGBAMultiTexture*	sPixelShaderRGBAMultiTexture = nil;
-		if (sPixelShaderRGBAMultiTexture == nil)
+		static	CDirectXPixelShaderRGBAMultiTexture*	sPixelShaderRGBAMultiTexture = NULL;
+		if (sPixelShaderRGBAMultiTexture == NULL)
 			// Create shader
 			sPixelShaderRGBAMultiTexture = new CDirectXPixelShaderRGBAMultiTexture();
 
@@ -301,19 +368,32 @@ CGPUFragmentShader& CGPUFragmentShader::getRGBAMultiTexture(Float32 opacity)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUFragmentShader& CGPUFragmentShader::getOpacityMultiTexture(Float32 opacity)
+CGPUFragmentShader::Proc CGPUFragmentShader::getProc(CColor::Primaries primaries,
+		CColor::YCbCrConversionMatrix yCbCrConversionMatrix, CColor::TransferFunction transferFunction)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return sYCbCrFragmentShader;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc definitions
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPUFragmentShader&	sYCbCrFragmentShader(Float32 opacity)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static	CDirectXPixelShaderOpacity* sPixelShader = NULL;
+	static	CDirectXFragmentShaderYCbCr*	sFragmentShader = nil;
 
 	// Check if have shader
-	if (sPixelShader == NULL)
+	if (sFragmentShader == nil)
 		// Create shader
-		sPixelShader = new CDirectXPixelShaderOpacity();
+		sFragmentShader = new CDirectXFragmentShaderYCbCr();
 
 	// Setup
-	sPixelShader->setOpacity(opacity);
+	sFragmentShader->setColorConversionMatrix(CColor::mYCbCrConverstionMatrixRec601VideoRange);
+	sFragmentShader->setOpacity(opacity);
 
-	return *sPixelShader;
+	return *sFragmentShader;
 }

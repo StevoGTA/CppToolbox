@@ -202,7 +202,7 @@ class CAudioPlayerImplementation :
 															mStartTimeInterval +
 																	(Float32) mOnFillBufferFrameIndex /
 																			mMixFormat->nSamplesPerSec;
-									//mInfo.positionUpdated(mAudioPlayer, position);
+									mInfo.positionUpdated(mAudioPlayer, position);
 
 									// Notify queue read complete
 									mAudioPlayerBufferThread->noteQueueReadComplete();

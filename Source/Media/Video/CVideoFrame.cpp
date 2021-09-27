@@ -18,14 +18,15 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 		CVideoFrameInternals(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
 				CVideoFrame::DataFormat dataFormat, CVImageBufferRef imageBufferRef) :
-			mPresentationTimeInterval(presentationTimeInterval), mFrameSize(frameSize), mDataFormat(dataFormat),
+			mPresentationTimeInterval(presentationTimeInterval), mFrameSize(frameSize),
+					mViewRect(S2DPointU16(), frameSize), mDataFormat(dataFormat),
 					mImageBufferRef((CVImageBufferRef) ::CFRetain(imageBufferRef))
 			{}
 #elif TARGET_OS_WINDOWS
-		CVideoFrameInternals(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
-				CVideoFrame::DataFormat dataFormat, IMFSample* sample) :
-			mPresentationTimeInterval(presentationTimeInterval), mFrameSize(frameSize), mDataFormat(dataFormat),
-					mSample(sample)
+		CVideoFrameInternals(UniversalTimeInterval presentationTimeInterval, CVideoFrame::DataFormat dataFormat,
+				const S2DSizeU16& frameSize, const S2DRectU16& viewRect, IMFSample* sample) :
+			mPresentationTimeInterval(presentationTimeInterval), mDataFormat(dataFormat), mFrameSize(frameSize),
+					mViewRect(viewRect), mSample(sample)
 			{
 				// Keep around
 				mSample->AddRef();
@@ -43,8 +44,9 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 			}
 
 		UniversalTimeInterval	mPresentationTimeInterval;
-		S2DSizeU16				mFrameSize;
 		CVideoFrame::DataFormat	mDataFormat;
+		S2DSizeU16				mFrameSize;
+		S2DRectU16				mViewRect;
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
 		CVImageBufferRef		mImageBufferRef;
@@ -87,8 +89,8 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImage
 }
 #elif TARGET_OS_WINDOWS
 //----------------------------------------------------------------------------------------------------------------------
-CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
-		const GUID& dataFormatGUID, IMFSample* sample)
+CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, IMFSample* sample, const GUID& dataFormatGUID,
+		const S2DSizeU16& frameSize, const S2DRectU16& viewRect)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -100,7 +102,7 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, const S
 		// Unknown
 		AssertFailUnimplemented();
 
-	mInternals = new CVideoFrameInternals(presentationTimeInterval, frameSize, dataFormat, sample);
+	mInternals = new CVideoFrameInternals(presentationTimeInterval, dataFormat, frameSize, viewRect, sample);
 }
 #endif
 
@@ -128,6 +130,13 @@ UniversalTimeInterval CVideoFrame::getPresentationTimeInterval() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CVideoFrame::DataFormat CVideoFrame::getDataFormat() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mDataFormat;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const S2DSizeU16& CVideoFrame::getFrameSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -135,10 +144,10 @@ const S2DSizeU16& CVideoFrame::getFrameSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoFrame::DataFormat CVideoFrame::getDataFormat() const
+const S2DRectU16& CVideoFrame::getViewRect() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mDataFormat;
+	return mInternals->mViewRect;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -234,6 +243,13 @@ CVImageBufferRef CVideoFrame::getImageBufferRef() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mImageBufferRef;
+}
+#elif TARGET_OS_WINDOWS
+//----------------------------------------------------------------------------------------------------------------------
+IMFSample* CVideoFrame::getSample() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mSample;
 }
 #endif
 

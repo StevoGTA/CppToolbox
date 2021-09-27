@@ -36,8 +36,8 @@ template <typename T> struct T2DPoint {
 									mY = array[2].getFloat32();
 								} else {
 									// Use default values
-									mX = 0.0;
-									mY = 0.0;
+									mX = 0;
+									mY = 0;
 								}
 							}
 
@@ -87,13 +87,14 @@ template <typename T> struct T2DPoint {
 
 typedef	T2DPoint<Float32>	S2DPointF32;
 typedef	T2DPoint<SInt32>	S2DPointS32;
+typedef	T2DPoint<UInt16>	S2DPointU16;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DOffset
 
 template <typename T> struct T2DOffset {
 						// Lifecycle methods
-						T2DOffset() : mDX(0.0), mDY(0.0) {}
+						T2DOffset() : mDX(0), mDY(0) {}
 						T2DOffset(T dx, T dy) : mDX(dx), mDY(dy) {}
 						T2DOffset(T2DPoint<T> fromPoint, T2DPoint<T> toPoint) :
 								mDX(toPoint.mX - fromPoint.mX), mDY(toPoint.mY - fromPoint.mY)
@@ -185,13 +186,13 @@ template <typename T> struct T2DVector {
 								{
 									// Calculate value
 									T	value = dot(v) / (magnitude() * v.magnitude());
-									if (value > 1.0)
-										value = 1.0;
-									else if (value < -1.0)
-										value = -1.0;
+									if (value > 1)
+										value = 1;
+									else if (value < -1)
+										value = -1;
 									
 									// Return angle
-									return ((mDX * v.mDY - mDY * v.mDX) >= 0.0) ? acosf(value) : -acosf(value);
+									return ((mDX * v.mDY - mDY * v.mDX) >= 0) ? acosf(value) : -acosf(value);
 								}
 	inline	T2DVector<T>	normalized() const { return *this / magnitude(); }
 
@@ -218,7 +219,7 @@ typedef	T2DVector<SInt32>	S2DVectorS32;
 
 template <typename T> struct T2DRect {
 						// Lifecycle methods
-						T2DRect() : mOrigin(0.0, 0.0), mSize(0.0, 0.0) {}
+						T2DRect() : mOrigin(0, 0), mSize(0, 0) {}
 						T2DRect(T x, T y, T width, T height) : mOrigin(x, y), mSize(width, height) {}
 						T2DRect(const T2DPoint<T>& origin, const T2DSize<T>& size) : mOrigin(origin), mSize(size) {}
 						T2DRect(const CString& string)
@@ -235,10 +236,10 @@ template <typename T> struct T2DRect {
 									mSize.mHeight = array[6].getFloat32();
 								} else {
 									// Use default values
-									mOrigin.mX = 0.0;
-									mOrigin.mY = 0.0;
-									mSize.mWidth = 0.0;
-									mSize.mHeight = 0.0;
+									mOrigin.mX = 0;
+									mOrigin.mY = 0;
+									mSize.mWidth = 0;
+									mSize.mHeight = 0;
 								}
 							}
 
@@ -246,13 +247,13 @@ template <typename T> struct T2DRect {
 	inline	T			getMinX() const
 							{ return mOrigin.mX; }
 	inline	T			getMidX() const
-							{ return mOrigin.mX + (T) 0.5 * mSize.mWidth; }
+							{ return mOrigin.mX + mSize.mWidth / 2; }
 	inline	T			getMaxX() const
 							{ return mOrigin.mX + mSize.mWidth; }
 	inline	T			getMinY() const
 							{ return mOrigin.mY; }
 	inline	T			getMidY() const
-							{ return mOrigin.mY + (T) 0.5 * mSize.mHeight; }
+							{ return mOrigin.mY + mSize.mHeight / 2; }
 	inline	T			getMaxY() const
 							{ return mOrigin.mY + mSize.mHeight; }
 	inline	T			getWidth() const
@@ -260,7 +261,7 @@ template <typename T> struct T2DRect {
 	inline	T			getHeight() const
 							{ return mSize.mHeight; }
 	inline	bool		isEmpty() const
-							{ return (mSize.mWidth == 0.0) && (mSize.mHeight == 0.0); }
+							{ return (mSize.mWidth == 0) && (mSize.mHeight == 0); }
 	inline	bool		contains(const T2DPoint<T>& point) const
 							{
 								return (point.mX >= getMinX()) && (point.mX < getMaxX()) &&
@@ -315,7 +316,8 @@ template <typename T> struct T2DRect {
 };
 
 typedef	T2DRect<Float32>	S2DRectF32;
-typedef T2DRect<SInt32>		S2DRectS32;
+typedef	T2DRect<SInt32>		S2DRectS32;
+typedef	T2DRect<UInt16>		S2DRectU16;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DAffineTransform

@@ -7,11 +7,7 @@ cbuffer ConstantBuffer {
 };
 
 // SamplerState
-SamplerState TextureSampler {
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = CLAMP;
-	AddressV = CLAMP;
-};
+SamplerState	textureSampler : s0;
 
 // PixelShaderInput
 struct PixelShaderInput {
@@ -26,15 +22,16 @@ float4 perform(PixelShaderInput input, Texture2D textureUse) {
 	float	width, height;
 	textureUse.GetDimensions(width, height);
 
+	float2	textureUV = float2(input.mTextureCoordinate.x / width, input.mTextureCoordinate.y / height);
+
 	// Compute color
-	float4	color =
-					textureUse.Sample(TextureSampler,
-							float2(input.mTextureCoordinate.x / width, input.mTextureCoordinate.y / height));
+	float4	color = textureUse.Sample(textureSampler, textureUV);
 	color.a *= mOpacity;
 
 	return color;
 }
 
+Texture2D<float4>  texture0 : t0;
 float4 main(PixelShaderInput input) : SV_TARGET {
 	// Check texture
 	if (input.mTextureCoordinate.z == 0.0)

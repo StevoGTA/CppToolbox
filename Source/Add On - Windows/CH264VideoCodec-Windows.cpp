@@ -9,11 +9,7 @@
 #include "CMediaFoundationServices.h"
 #include "SError-Windows.h"
 
-//#undef Delete
-
 #include <mfapi.h>
-
-//#define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
@@ -50,6 +46,7 @@ class CH264VideoCodecInternals {
 		DWORD										mOutputSampleRequiredByteCount;
 		GUID										mOutputSampleDataFormatGUID;
 		S2DSizeU16									mOutputSampleFrameSize;
+		S2DRectU16									mOutputSampleViewRect;
 		OCI<IMFSample>								mOutputSample;
 
 		OI<CH264VideoCodec::DecodeInfo::SPSPPSInfo>	mCurrentSPSPPSInfo;
@@ -77,39 +74,6 @@ TCIResult<IMFSample> CH264VideoCodecInternals::readInputSample(void* userData)
 																internals.mPacketMediaReader->
 																		readNextMediaPacketDataInfo();
 	ReturnValueIfResultError(mediaPacketDataInfo, TCIResult<IMFSample>(mediaPacketDataInfo.getError()));
-
-//CLogServices::logMessage(
-//		CString("Packet ") + CString(mInternals->mNextFrameIndex) + CString(" (") + CString(data->getSize()) +
-//				CString("), dts ") + CString((SInt32) mInternals->mNextFrameIndex * 100 - 100));
-//	// Get NALUs
-//	TArray<NALUInfo>	naluInfos = getNALUInfos(*data);
-//	for (CArray::ItemIndex i = 0; i < naluInfos.getCount(); i++) {
-//		//
-//		NALUInfo::Type	naluType = naluInfos[i].getType();
-//		if (naluType == NALUInfo::kTypeCodedSliceNonIDRPicture) {
-//			 // Coded Slice Non-IDR Picture
-//			CodedSliceNonIDRPicturePayload	payload(naluInfos[i]);
-//			UInt8	frameNum = payload.getFrameNum();
-//			UInt8	picOrderCntLSB = payload.getPicOrderCntLsb();
-//
-//			CLogServices::logMessage(
-//					CString("    NALU ") + CString(i) +
-//							CString(" (Coded Slice non-IDR Picture), frame_num: ") + CString(frameNum) +
-//							CString(", pic_order_cnt_lsb: ") + CString(picOrderCntLSB));
-//			break;
-//		} else if (naluType == NALUInfo::kTypeCodedSliceIDRPicture) {
-//			// Coded Slice IDR Picture
-//			CodedSliceIDRPictureNALUPayload	payload(naluInfos[i]);
-//			UInt8	frameNum = payload.getFrameNum();
-//			UInt8	picOrderCntLSB = payload.getPicOrderCntLsb();
-//
-//			CLogServices::logMessage(
-//					CString("    NALU ") + CString(i) +
-//							CString(" (Coded Slice IDR Picture), frame_num: ") + CString(frameNum) +
-//							CString(", pic_order_cnt_lsb: ") + CString(picOrderCntLSB));
-//			break;
-//		}
-//	}
 
 UInt8	naluUnitType;
 UInt8	sliceType;
@@ -186,22 +150,12 @@ while (true) {
 
 	// Create input sample
 	TArray<CH264VideoCodec::NALUInfo>	naluInfos = CH264VideoCodec::NALUInfo::getNALUInfos(data);
-	CData				annexBData =
-								CH264VideoCodec::NALUInfo::composeAnnexB(internals.mCurrentSPSPPSInfo->getSPSNALUInfos(),
-										internals.mCurrentSPSPPSInfo->getPPSNALUInfos(), naluInfos);
-	//internals.mInputSample = CMediaFoundationServices::createSample(annexBData);
-	TCIResult<IMFSample>	sample = CMediaFoundationServices::createSample(annexBData);
+	CData								annexBData =
+												CH264VideoCodec::NALUInfo::composeAnnexB(
+														internals.mCurrentSPSPPSInfo->getSPSNALUInfos(),
+														internals.mCurrentSPSPPSInfo->getPPSNALUInfos(), naluInfos);
+	TCIResult<IMFSample>				sample = CMediaFoundationServices::createSample(annexBData);
 	ReturnValueIfResultError(sample, sample);
-//IMFSample*	inputSample = *sample;
-//inputSample->AddRef();
-
-
-
-	//if (!inputSample.hasInstance())
-	//	return false;
-
-	//CMSampleTimingInfo	sampleTimingInfo;
-	//sampleTimingInfo.duration = ::CMTimeMake(packetAndLocation.mPacket.mDuration, mInternals->mTimeScale);
 
 UInt64	frameTime;
 if (sliceType == 2) {
@@ -226,13 +180,9 @@ if (sliceType == 2) {
 	internals.mPreviousPicOrderCountLSB = picOrderCntLSB;
 }
 
-//sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(frameTime, mInternals->mTimeScale);
-
-	//HRESULT	result = internals.mInputSample->SetSampleTime(frameTime * internals.mTimeScale);
-	HRESULT	result = sample.getInstance()->SetSampleTime(frameTime * internals.mTimeScale);
+	HRESULT	result = sample.getInstance()->SetSampleTime(frameTime * 10000 / internals.mTimeScale);
 	LogHRESULTIfFailed(result, "SetSampleTime");
 
-	//result = internals.mInputSample->SetSampleDuration(duration);
 	result = sample.getInstance()->SetSampleDuration(duration);
 	LogHRESULTIfFailed(result, "SetSampleDuration");
 
@@ -243,22 +193,43 @@ if (sliceType == 2) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError>	CH264VideoCodecInternals::noteFormatChanged(IMFMediaType* mediaType, void* userData)
+OI<SError> CH264VideoCodecInternals::noteFormatChanged(IMFMediaType* mediaType, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CH264VideoCodecInternals&	internals = *((CH264VideoCodecInternals*) userData);
 
-	//// Update Media Type
-	//HRESULT	result = mediaType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_IYUV);
-	//ReturnErrorIfFailed(result, "SetGUID for mediaType in CH264VideoCodecInternals::noteFormatChanged");
+	// Update Media Type
 	HRESULT	result = mediaType->GetGUID(MF_MT_SUBTYPE, &internals.mOutputSampleDataFormatGUID);
 	ReturnErrorIfFailed(result, "GetGUID for mediaType in CH264VideoCodecInternals::noteFormatChanged");
 
-	UINT32	width, height;
+	// Get Frame Size
+	UINT	width, height;
 	result = MFGetAttributeSize(mediaType, MF_MT_FRAME_SIZE, &width, &height);
-	ReturnErrorIfFailed(result, "MFGetAttributeSize for frame size in CH264VideoCodecInternals::noteFormatChanged");
+	ReturnErrorIfFailed(result,
+			"MFGetAttributeSize for frame size in CH264VideoCodecInternals::noteFormatChanged");
 	internals.mOutputSampleFrameSize = S2DSizeU16(width, height);
+
+	// Try to get Geometric Aperture
+	MFVideoArea	videoArea;
+	result = mediaType->GetBlob(MF_MT_GEOMETRIC_APERTURE, (UINT8*) &videoArea, sizeof(MFVideoArea), NULL);
+	if (SUCCEEDED(result))
+		// Have Geometric Aperture
+		internals.mOutputSampleViewRect =
+				S2DRectU16(S2DPointU16(videoArea.OffsetX.value, videoArea.OffsetY.value),
+						S2DSizeU16((UInt16) videoArea.Area.cx, (UInt16) videoArea.Area.cy));
+	else {
+		// Try to get Pan & Scan Aperture
+		result = mediaType->GetBlob(MF_MT_PAN_SCAN_APERTURE, (UINT8*) &videoArea, sizeof(MFVideoArea), NULL);
+		if (SUCCEEDED(result))
+			// Have Pan & Scan Apertrue
+			internals.mOutputSampleViewRect =
+					S2DRectU16(S2DPointU16(videoArea.OffsetX.value, videoArea.OffsetY.value),
+							S2DSizeU16((UInt16) videoArea.Area.cx, (UInt16) videoArea.Area.cy));
+		else
+			// Don't have aperture
+			internals.mOutputSampleViewRect = S2DRectU16(S2DPointU16(), internals.mOutputSampleFrameSize);
+	}
 
 	// Get output stream info
 	MFT_OUTPUT_STREAM_INFO	outputStreamInfo;
@@ -373,66 +344,9 @@ TIResult<CVideoFrame> CH264VideoCodec::decode()
 	ReturnValueIfFailed(result, "GetSampleTime", TIResult<CVideoFrame>(SErrorFromHRESULT(result)));
 
 	return TIResult<CVideoFrame>(
-			CVideoFrame((UniversalTimeInterval) sampleTime / 10000.0, mInternals->mOutputSampleFrameSize,
-					mInternals->mOutputSampleDataFormatGUID, *sample.getInstance()));
-
-
-
-
-//	// Process input
-//	result = mInternals->mVideoDecoder->ProcessInput(0, *inputSample, 0);
-//	LogHRESULTIfFailed(result, "ProcessInput");
-//
-//	//// Get output status
-//	//DWORD	status = 0;
-//	//result = mInternals->mVideoDecoder->GetOutputStatus(&status);
-//	//LogHRESULTIfFailed(result, "GetOutputStatus");
-//
-//	// Get output stream info
-//	MFT_OUTPUT_STREAM_INFO	outputStreamInfo;
-//	result = mInternals->mVideoDecoder->GetOutputStreamInfo(0, &outputStreamInfo);
-//
-//	// Process output
-//	OCI<IMFSample>	outputSample;
-//	outputSample = CMediaFoundationServices::createSample(outputStreamInfo.cbSize);
-//	//if (!outputSample.hasInstance())
-//	//	return;
-//
-//	MFT_OUTPUT_DATA_BUFFER	outputDataBuffer = {0, *outputSample, 0, NULL};
-//	DWORD					status = 0;
-//	result = mInternals->mVideoDecoder->ProcessOutput(0, 1, &outputDataBuffer, &status);
-//
-//
-//
-//
-////else if (sliceType == 1)
-////	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime - packetAndLocation.mPacket.mDuration, mInternals->mTimeScale);
-////else
-////	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime + packetAndLocation.mPacket.mDuration, mInternals->mTimeScale);
-//
-//	//sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime, mInternals->mTimeScale);
-//
-//	//size_t				sampleSize = data->getSize();
-//	//CMSampleBufferRef	sampleBufferRef;
-//	//status =
-//	//		::CMSampleBufferCreate(kCFAllocatorDefault, blockBufferRef, true, nil, nil,
-//	//				mInternals->mFormatDescriptionRef, 1, 1, &sampleTimingInfo, 1, &sampleSize, &sampleBufferRef);
-//	//::CFRelease(blockBufferRef);
-//	//LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMSampleBufferCreate"), false);
-//
-//	//// Decode frame
-//	//VTDecodeInfoFlags	decodeInfoFlags;
-//	//::VTDecompressionSessionDecodeFrame(mInternals->mDecompressionSessionRef, sampleBufferRef,
-//	//		kVTDecodeFrame_EnableAsynchronousDecompression | kVTDecodeFrame_EnableTemporalProcessing,
-//	//		nil, &decodeInfoFlags);
-//	//::CFRelease(sampleBufferRef);
-//
-//	// Update
-//	//mInternals->mNextFrameIndex++;
-//	mInternals->mNextFrameTime += duration;
-//
-//	//return true;
-//while (true) ;
+			CVideoFrame((UniversalTimeInterval) sampleTime / 10000.0, *sample.getInstance(),
+					mInternals->mOutputSampleDataFormatGUID, mInternals->mOutputSampleFrameSize,
+					mInternals->mOutputSampleViewRect));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -446,127 +360,3 @@ void CH264VideoCodec::decodeReset()
 	//}
 	//mInternals->mNextFrameIndex = 0;
 }
-
-
-
-#if false
-/**
-* Creates a new single buffer media sample.
-* @param[in] bufferSize: size of the media buffer to set on the create media sample.
-* @param[out] pSample: pointer to the create single buffer media sample.
-* @@Returns S_OK if successful or an error code if not.
-*/
-HRESULT CreateSingleBufferIMFSample(DWORD bufferSize, IMFSample** pSample)
-{
-  IMFMediaBuffer* pBuffer = NULL;
-
-  HRESULT hr = S_OK;
-
-  hr = MFCreateSample(pSample);
-  CHECK_HR(hr, "Failed to create MF sample.");
-
-  // Adds a ref count to the pBuffer object.
-  hr = MFCreateMemoryBuffer(bufferSize, &pBuffer);
-  CHECK_HR(hr, "Failed to create memory buffer.");
-
-  // Adds another ref count to the pBuffer object.
-  hr = (*pSample)->AddBuffer(pBuffer);
-  CHECK_HR(hr, "Failed to add sample to buffer.");
-
-done:
-  // Leave the single ref count that will be removed when the pSample is released.
-  SAFE_RELEASE(pBuffer);
-  return hr;
-}
-
-/**
-* Attempts to get an output sample from an MFT transform.
-* @param[in] pTransform: pointer to the media transform to apply.
-* @param[out] pOutSample: pointer to the media sample output by the transform. Can be NULL
-*  if the transform did not produce one.
-* @param[out] transformFlushed: if set to true means the transform format changed and the
-*  contents were flushed. Output format of sample most likely changed.
-* @@Returns S_OK if successful or an error code if not.
-*/
-HRESULT GetTransformOutput(IMFTransform* pTransform, IMFSample** pOutSample, BOOL* transformFlushed)
-{
-  MFT_OUTPUT_STREAM_INFO StreamInfo = { 0 };
-  MFT_OUTPUT_DATA_BUFFER outputDataBuffer = { 0 };
-  DWORD processOutputStatus = 0;
-  IMFMediaType* pChangedOutMediaType = NULL;
-
-  HRESULT hr = S_OK;
-  *transformFlushed = FALSE;
-
-  hr = pTransform->GetOutputStreamInfo(0, &StreamInfo);
-  CHECK_HR(hr, "Failed to get output stream info from MFT.");
-
-  outputDataBuffer.dwStreamID = 0;
-  outputDataBuffer.dwStatus = 0;
-  outputDataBuffer.pEvents = NULL;
-
-  if ((StreamInfo.dwFlags & MFT_OUTPUT_STREAM_PROVIDES_SAMPLES) == 0) {
-    hr = CreateSingleBufferIMFSample(StreamInfo.cbSize, pOutSample);
-    CHECK_HR(hr, "Failed to create new single buffer IMF sample.");
-    outputDataBuffer.pSample = *pOutSample;
-  }
-
-  auto mftProcessOutput = pTransform->ProcessOutput(0, 1, &outputDataBuffer, &processOutputStatus);
-
-  //printf("Process output result %.2X, MFT status %.2X.\n", mftProcessOutput, processOutputStatus);
-
-  if (mftProcessOutput == S_OK) {
-    // Sample is ready and allocated on the transform output buffer.
-    *pOutSample = outputDataBuffer.pSample;
-  }
-  else if (mftProcessOutput == MF_E_TRANSFORM_STREAM_CHANGE) {
-    // Format of the input stream has changed. https://docs.microsoft.com/en-us/windows/win32/medfound/handling-stream-changes
-    if (outputDataBuffer.dwStatus == MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
-      CLogServices::logMessage(CString(OSSTR("MFT stream changed.")));
-
-      hr = pTransform->GetOutputAvailableType(0, 0, &pChangedOutMediaType);
-      CHECK_HR(hr, "Failed to get the MFT output media type after a stream change.");
-
-      //std::cout << "MFT output media type: " << GetMediaTypeDescription(pChangedOutMediaType) << std::endl << std::endl;
-		//CLogServices::logMessage(CString(OSSTR("MFT format change...")));
-		LogMediaType(pChangedOutMediaType);
-
-      hr = pChangedOutMediaType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_IYUV);
-      CHECK_HR(hr, "Failed to set media sub type.");
-
-      hr = pTransform->SetOutputType(0, pChangedOutMediaType, 0);
-      CHECK_HR(hr, "Failed to set new output media type on MFT.");
-
-      hr = pTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, NULL);
-      CHECK_HR(hr, "Failed to process FLUSH command on MFT.");
-
-      *transformFlushed = TRUE;
-    }
-    else {
-      CLogServices::logMessage(CString(OSSTR("MFT stream changed but didn't have the data format change flag set. Don't know what to do.")));
-      hr = E_NOTIMPL;
-    }
-
-    SAFE_RELEASE(pOutSample);
-    *pOutSample = NULL;
-  }
-  else if (mftProcessOutput == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    // More input is not an error condition but it means the allocated output sample is empty.
-    SAFE_RELEASE(pOutSample);
-    *pOutSample = NULL;
-    hr = MF_E_TRANSFORM_NEED_MORE_INPUT;
-  }
-  else {
-    printf("MFT ProcessOutput error result %.2X, MFT status %.2X.\n", mftProcessOutput, processOutputStatus);
-    hr = mftProcessOutput;
-    SAFE_RELEASE(pOutSample);
-    *pOutSample = NULL;
-  }
-
-done:
-
-  SAFE_RELEASE(pChangedOutMediaType);
-
-  return hr;
-}
-#endif

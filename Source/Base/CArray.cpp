@@ -543,7 +543,7 @@ CArray& CArray::sort(CompareProc compareProc, void* userData)
 #elif TARGET_OS_WINDOWS
 	// Windows platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
-	qsort_s((void*) *mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), sSortProc, &sortInfo);
+	qsort_s((void*) mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), sSortProc, &sortInfo);
 #else
 	// Unknown platform
 	AssertFailUnimplemented();
