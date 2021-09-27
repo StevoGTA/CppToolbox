@@ -64,23 +64,32 @@ class CAudioPlayerBufferThreadInternals {
 
 		bool	tryFill()
 					{
+						// Check if have frames to read
+						if (mFramesToRead == 0)
+							// No frames to read
+							return false;
+
 						// Request write
 						UInt32									bytesToRequest =
-																		std::min<UInt32>(mMaxOutputFrames * 2,
-																				mFramesToRead) *
+																		std::min<UInt32>(mFramesToRead,
+																						mMaxOutputFrames * 2) *
 																				mBytesPerFrame;
 						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRequest);
 						if (writeBufferInfo.mSize < mBytesPerFrame)
 							// No space
 							return false;
 
-						// Perform read
 						// If the media position is "from start", we queue 2 * max output frames to get us started.
 						//	Subsequently (i.e. if media position is "from current"), we try to fill the buffer as much
 						//	as possible.
-						UInt32				bytesToRead =
-													(mMediaPosition.getMode() == SMediaPosition::kFromStart) ?
-															bytesToRequest : writeBufferInfo.mSize;
+						UInt32	bytesToRead =
+										(mMediaPosition.getMode() == SMediaPosition::kFromStart) ?
+												bytesToRequest : writeBufferInfo.mSize;
+						if ((bytesToRead / mBytesPerFrame) > mFramesToRead)
+							// Limit to the frames to read
+							bytesToRead = mFramesToRead * mBytesPerFrame;
+
+						// Perform read
 						CAudioFrames		audioFrames(writeBufferInfo.mBuffer, mQueue.getSegmentCount(),
 													writeBufferInfo.mSegmentSize / mBytesPerFrame,
 													bytesToRead / mBytesPerFrame, mBytesPerFrame);
@@ -90,6 +99,9 @@ class CAudioPlayerBufferThreadInternals {
 							mQueue.commitWrite(audioFrames.getCurrentFrameCount() * mBytesPerFrame);
 							mMediaPosition = SMediaPosition::fromCurrent();
 							mFramesToRead -= audioFrames.getCurrentFrameCount();
+							if (mFramesToRead == 0)
+								// Reached the end
+								mReachedEnd = true;
 
 							return true;
 						} else {
@@ -200,7 +212,6 @@ void CAudioPlayerBufferThread::seek(UniversalTimeInterval timeInterval, UInt32 m
 	// Update
 	mInternals->mMediaPosition = SMediaPosition::fromStart(timeInterval);
 	mInternals->mFramesToRead = maxFrames;
-	mInternals->mReachedEnd = false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -210,6 +221,7 @@ void CAudioPlayerBufferThread::resume()
 	// Update
 	mInternals->mResumeRequested = true;
 	mInternals->mStopFillingRequested = false;
+	mInternals->mReachedEnd = false;
 
 	// Signal
 	mInternals->mSemaphore.signal();

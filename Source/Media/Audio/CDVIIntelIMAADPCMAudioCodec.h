@@ -24,8 +24,11 @@ class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 				OI<SError>				decode(CAudioFrames& audioFrames);
 
 										// Class methods
-		static	I<CCodec::DecodeInfo>	composeDecodeInfo(UInt64 dataStartOffset, UInt64 dataSize,
-												const SAudioStorageFormat& audioStorageFormat);
+		static	SAudioStorageFormat		composeAudioStorageFormat(Float32 sampleRate, EAudioChannelMap channelMap);
+		static	UInt64					composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
+												UInt64 byteCount);
+		static	I<CCodec::DecodeInfo>	composeDecodeInfo(const SAudioStorageFormat& audioStorageFormat,
+												UInt64 startByteOffset, UInt64 byteCount);
 
 	// Properties
 	public:

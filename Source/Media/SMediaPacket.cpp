@@ -97,8 +97,8 @@ TIResult<TArray<SMediaPacket> > CPacketMediaReader::readMediaPackets(CData& data
 		if (mediaPacketAndLocation.mMediaPacket.mByteCount <= available) {
 			// Copy packet data
 			OI<SError>	error =
-								mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mPos, packetDataPtr,
-										mediaPacketAndLocation.mMediaPacket.mByteCount);
+								mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset,
+										packetDataPtr, mediaPacketAndLocation.mMediaPacket.mByteCount);
 			ReturnValueIfError(error, TIResult<TArray<SMediaPacket> >(*error));
 
 			// Update
@@ -132,7 +132,7 @@ TIResult<CPacketMediaReader::MediaPacketDataInfo> CPacketMediaReader::readNextMe
 		// Copy packet data
 		CData		data((CData::Size) mediaPacketAndLocation.mMediaPacket.mByteCount);
 		OI<SError>	error =
-							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mPos,
+							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset,
 									data.getMutableBytePtr(), mediaPacketAndLocation.mMediaPacket.mByteCount);
 		ReturnValueIfError(error, TIResult<MediaPacketDataInfo>(*error));
 
@@ -157,7 +157,7 @@ TVResult<UInt32> CPacketMediaReader::readNextMediaPacket(void* buffer) const
 
 		// Copy packet data
 		OI<SError>	error =
-							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mPos, buffer,
+							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset, buffer,
 									mediaPacketAndLocation.mMediaPacket.mByteCount);
 		ReturnValueIfError(error, TVResult<UInt32>(*error));
 

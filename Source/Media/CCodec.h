@@ -11,8 +11,7 @@
 // MARK: CCodec
 
 class CCodec {
-
-	// Classes
+	// DecodeInfo
 	public:
 		class DecodeInfo {
 			// Methods
@@ -25,6 +24,8 @@ class CCodec {
 				virtual	I<CMediaReader>	createMediaReader(const I<CSeekableDataSource>& seekableDataSource) const = 0;
 		};
 
+	// EncodeSettings
+	public:
 		class EncodeSettings {
 			// Methods
 			public:

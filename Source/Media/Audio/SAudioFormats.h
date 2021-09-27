@@ -130,6 +130,10 @@ struct SAudioStorageFormat {
 						SAudioStorageFormat(OSType codecID, Float32 sampleRate, EAudioChannelMap channelMap) :
 							mCodecID(codecID), mSampleRate(sampleRate), mChannelMap(channelMap)
 							{}
+						SAudioStorageFormat(const SAudioStorageFormat& other) :
+							mCodecID(other.mCodecID), mBits(other.mBits), mSampleRate(other.mSampleRate),
+									mChannelMap(other.mChannelMap)
+							{}
 
 						// Instance methods
 	OSType				getCodecID() const

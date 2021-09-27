@@ -16,9 +16,10 @@ class CVideoTrack : public CMediaTrack {
 	// Methods
 	public:
 										// Lifecycle methods
-										CVideoTrack(const SVideoStorageFormat& videoStorageFormat,
+										CVideoTrack(const Info& info, const SVideoStorageFormat& videoStorageFormat,
 												const I<CCodec::DecodeInfo>& decodeInfo);
-										CVideoTrack(UInt32 index, const SVideoStorageFormat& videoStorageFormat,
+										CVideoTrack(UInt32 index, const Info& info,
+												const SVideoStorageFormat& videoStorageFormat,
 												const I<CCodec::DecodeInfo>& decodeInfo);
 										CVideoTrack(const CVideoTrack& other);
 										~CVideoTrack();
