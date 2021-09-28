@@ -57,7 +57,6 @@ mUsedPixelsSize(size),
 				// Setup
 				size_t	width = ::CVPixelBufferGetWidthOfPlane(imageBufferRef, planeIndex);
 				size_t	height = ::CVPixelBufferGetHeightOfPlane(imageBufferRef, planeIndex);
-				size_t	bytesPerRow = ::CVPixelBufferGetBytesPerRowOfPlane(imageBufferRef, planeIndex);
 				OSType	formatType = ::CVPixelBufferGetPixelFormatType(imageBufferRef);
 
 				// Set pixel format
