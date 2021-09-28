@@ -184,6 +184,8 @@ CColor::Primaries CVideoFrame::getColorPrimaries() const
 		AssertFailUnimplemented();
 		return CColor::kPrimariesRec601;
 	}
+#else
+	return CColor::kPrimariesRec601;
 #endif
 }
 
@@ -209,6 +211,8 @@ CColor::YCbCrConversionMatrix CVideoFrame::getYCbCrConversionMatrix() const
 		AssertFailUnimplemented();
 		return CColor::kYCbCrConversionMatrixRec601;
 	}
+#else
+	return CColor::kYCbCrConversionMatrixRec601;
 #endif
 }
 
@@ -234,6 +238,8 @@ CColor::TransferFunction CVideoFrame::getColorTransferFunction() const
 		AssertFailUnimplemented();
 		return CColor::kTransferFunctionRec709;
 	}
+#else
+	return CColor::kTransferFunctionRec709;
 #endif
 }
 
