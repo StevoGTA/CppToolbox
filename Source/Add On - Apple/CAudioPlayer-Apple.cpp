@@ -550,7 +550,7 @@ OI<SError> CAudioPlayer::reset()
 	OI<SError>	error = CAudioDestination::reset();
 	ReturnErrorIfError(error);
 
-	// Reset frame index
+	// Reset
 	mInternals->mCurrentPlaybackTimeInterval = mInternals->mStartTimeInterval;
 	mInternals->mRenderProcFrameIndex = 0;
 
@@ -738,12 +738,12 @@ void CAudioPlayer::finishSeek()
 	mInternals->mQueue->reset();
 
 	// Setup to play frames
-	if (mInternals->mDurationTimeInterval.hasValue()) {
-		// Setup to play the request of the frames in the window
+	if (mInternals->mDurationTimeInterval.hasValue())
+		// Setup to play the rest of the frames in the window
 		mInternals->mAudioPlayerBufferThread->seek(mInternals->mLastSeekTimeInterval,
 				(UInt32) ((mInternals->mStartTimeInterval + *mInternals->mDurationTimeInterval -
 						mInternals->mLastSeekTimeInterval) * *mInternals->mSampleRate));
-	} else
+	else
 		// Setup to play the rest of the frames
 		mInternals->mAudioPlayerBufferThread->seek(mInternals->mLastSeekTimeInterval, ~0);
 

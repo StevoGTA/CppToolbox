@@ -49,9 +49,11 @@ class CAudioPlayerImplementation :
 									mPlayAsyncCallback(*this, onPlay), mPauseAsyncCallback(*this, onPause),
 									mBufferFrames(0), mDefaultPeriodInFrames(0), mFundamentalPeriodInFrames(0),
 									mMaxPeriodInFrames(0), mMinPeriodInFrames(0),  mMixFormat(nullptr),
-									mStartTimeInterval(0.0),
+									mStartTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0),
+									mLastSeekTimeInterval(0.0),
 									mOnFillBufferShouldSendFrames(true), mOnFillBufferIsSendingFrames(false),
-									mOnFillBufferPreviousFrameCount(0), mOnFillBufferFrameIndex(0)
+									mOnFillBufferShouldNotifyEndOfData(false), mOnFillBufferPreviousFrameCount(0),
+									mOnFillBufferFrameIndex(0)
 							{
 								// Setup
 								HRESULT	result;
@@ -195,14 +197,15 @@ class CAudioPlayerImplementation :
 								if (mOnFillBufferPreviousFrameCount > 0) {
 									// Update position
 									mOnFillBufferFrameIndex += mOnFillBufferPreviousFrameCount;
+									mCurrentPlaybackTimeInterval +=
+											(UniversalTimeInterval) mOnFillBufferPreviousFrameCount /
+													(UniversalTimeInterval) mMixFormat->nSamplesPerSec;
+
+									// Reset
 									mOnFillBufferPreviousFrameCount = 0;
 
 									// Notify playback position updated
-									UniversalTime	position =
-															mStartTimeInterval +
-																	(Float32) mOnFillBufferFrameIndex /
-																			mMixFormat->nSamplesPerSec;
-									mInfo.positionUpdated(mAudioPlayer, position);
+									mInfo.positionUpdated(mAudioPlayer, mCurrentPlaybackTimeInterval);
 
 									// Notify queue read complete
 									mAudioPlayerBufferThread->noteQueueReadComplete();
@@ -265,7 +268,7 @@ class CAudioPlayerImplementation :
 											mOnFillBufferIsSendingFrames = true;
 										else if (mAudioPlayerBufferThread->getDidReachEnd()) {
 											// At the end
-											if (mOnFillBufferIsSendingFrames)
+											if (mOnFillBufferIsSendingFrames && mOnFillBufferShouldNotifyEndOfData)
 												// Just reached the end of data
 												mInfo.endOfData(mAudioPlayer);
 
@@ -459,9 +462,12 @@ class CAudioPlayerImplementation :
 
 		UniversalTimeInterval							mStartTimeInterval;
 		OV<UniversalTimeInterval>						mDurationTimeInterval;
+		UniversalTimeInterval							mCurrentPlaybackTimeInterval;
+		UniversalTimeInterval							mLastSeekTimeInterval;
 
 		bool											mOnFillBufferShouldSendFrames;
 		bool											mOnFillBufferIsSendingFrames;
+		bool											mOnFillBufferShouldNotifyEndOfData;
 		UInt32											mOnFillBufferPreviousFrameCount;
 		UInt32											mOnFillBufferFrameIndex;
 };
@@ -611,7 +617,8 @@ OI<SError> CAudioPlayer::reset()
 	OI<SError>	error = CAudioDestination::reset();
 	ReturnErrorIfError(error);
 
-	// Reset frame index
+	// Reset
+	mInternals->mImplementation->mCurrentPlaybackTimeInterval = mInternals->mImplementation->mStartTimeInterval;
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
 
 	// Resume
@@ -646,6 +653,26 @@ void CAudioPlayer::setGain(Float32 gain)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CAudioPlayer::setWindow(UniversalTimeInterval startTimeInterval, UniversalTimeInterval durationTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	bool	performSeek = startTimeInterval != mInternals->mImplementation->mStartTimeInterval;
+
+	// Store
+	mInternals->mImplementation->mStartTimeInterval = startTimeInterval;
+	mInternals->mImplementation->mDurationTimeInterval = OV<UniversalTimeInterval>(durationTimeInterval);
+
+	// Check if need seek
+	if (performSeek) {
+		// Seek
+		startSeek();
+		seek(mInternals->mImplementation->mStartTimeInterval);
+		finishSeek();
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::play()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -653,6 +680,10 @@ void CAudioPlayer::play()
 	while (mInternals->mImplementation->mState == CAudioPlayerImplementation::kInitializing)
 		// Sleep
 		CThread::sleepFor(0.001);
+
+	// Send frames
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
+	mInternals->mImplementation->mOnFillBufferShouldNotifyEndOfData = true;
 
 	// Start
 	mInternals->mImplementation->play();
@@ -662,7 +693,11 @@ void CAudioPlayer::play()
 void CAudioPlayer::pause()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Pause
 	mInternals->mImplementation->pause();
+
+	// Don't send frames
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -678,51 +713,54 @@ void CAudioPlayer::startSeek()
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
+	mInternals->mImplementation->mOnFillBufferShouldNotifyEndOfData = false;
 
-	// Setup for finish seek
-	mInternals->mImplementation->mFinishSeekShouldPause =
-			mInternals->mImplementation->mState == CAudioPlayerImplementation::kPaused;
+	// Setup
+	mInternals->mImplementation->mLastSeekTimeInterval = mInternals->mImplementation->mCurrentPlaybackTimeInterval;
+
+	// Start
+	mInternals->mImplementation->play();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::seek(UniversalTimeInterval timeInterval, OV<UniversalTimeInterval> durationTimeInterval, bool playPreview)
+void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Store
-	mInternals->mImplementation->mStartTimeInterval = timeInterval;
-	mInternals->mImplementation->mDurationTimeInterval = durationTimeInterval;
+	// Stay within the window
+	if ((timeInterval >= mInternals->mImplementation->mStartTimeInterval) &&
+			(!mInternals->mImplementation->mDurationTimeInterval.hasValue() ||
+					(timeInterval < ((mInternals->mImplementation->mStartTimeInterval +
+							*mInternals->mImplementation->mDurationTimeInterval))))) {
+		// Stop sending frames
+		mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
+		while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
+			// Sleep
+			CThread::sleepFor(0.001);
 
-	// Stop sending frames
-	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
-		// Sleep
-		CThread::sleepFor(0.001);
+		// Reset Reader Thread
+		mInternals->mImplementation->mAudioPlayerBufferThread->stopReading();
 
-	// Reset Reader Thread
-	mInternals->mImplementation->mAudioPlayerBufferThread->stopReading();
+		// Reset buffer
+		mInternals->mImplementation->mQueue->reset();
 
-	// Reset buffer
-	mInternals->mImplementation->mQueue->reset();
+		// Reset the pipeline
+		CAudioDestination::reset();
 
-	// Reset the pipeline
-	CAudioDestination::reset();
+		// Reset stuffs
+		mInternals->mImplementation->mCurrentPlaybackTimeInterval = timeInterval;
+		mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
 
-	// Reset frame index
-	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
-
-	// Check for preview
-	if (playPreview) {
 		// Setup to play preview length frames
+		mInternals->mImplementation->mLastSeekTimeInterval = timeInterval;
 		mInternals->mImplementation->mAudioPlayerBufferThread->seek(timeInterval,
-				(UInt32) (timeInterval * CAudioPlayer::kPreviewDuration));
+					(UInt32) ((UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec *
+							CAudioPlayer::kPreviewDuration));
+
+		// Resume
+		mInternals->mImplementation->mAudioPlayerBufferThread->resume();
 
 		// Send frames
 		mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
-
-		// Check if need to start playing
-		if (mInternals->mImplementation->mState == CAudioPlayerImplementation::kPaused)
-			// Start playing
-			mInternals->mImplementation->play();
 	}
 }
 
@@ -742,27 +780,33 @@ void CAudioPlayer::finishSeek()
 	// Reset buffer
 	mInternals->mImplementation->mQueue->reset();
 
-	// Setup to play requested frames
-	mInternals->mImplementation->mAudioPlayerBufferThread->seek(mInternals->mImplementation->mStartTimeInterval,
-			mInternals->mImplementation->mDurationTimeInterval.hasValue() ?
-					(UInt32) (*mInternals->mImplementation->mDurationTimeInterval *
-							(UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec) :
-					~0);
+	// Setup to play frames
+	if (mInternals->mImplementation->mDurationTimeInterval.hasValue())
+		// Setup to play the rest of the frames in the window
+		mInternals->mImplementation->mAudioPlayerBufferThread->seek(mInternals->mImplementation->mLastSeekTimeInterval,
+				(UInt32) ((mInternals->mImplementation->mStartTimeInterval +
+						*mInternals->mImplementation->mDurationTimeInterval -
+						mInternals->mImplementation->mLastSeekTimeInterval) *
+						(UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec));
+	else
+		// Setup to play the rest of the frames
+		mInternals->mImplementation->mAudioPlayerBufferThread->seek(mInternals->mImplementation->mLastSeekTimeInterval,
+				~0);
 
 	// Reset the pipeline
 	CAudioDestination::reset();
 
 	// Reset frame index
+	mInternals->mImplementation->mCurrentPlaybackTimeInterval = mInternals->mImplementation->mLastSeekTimeInterval;
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
 
 	// Resume
 	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
 
-	// Restore pre-seek state
-	mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
-	if (mInternals->mImplementation->mFinishSeekShouldPause)
-		// Pause
-		mInternals->mImplementation->pause();
+	// Begin sending frames again
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames =
+			mInternals->mImplementation->mState == CAudioPlayerImplementation::kPlaying;
+	mInternals->mImplementation->mOnFillBufferShouldNotifyEndOfData = true;
 }
 
 // MARK: Class methods
