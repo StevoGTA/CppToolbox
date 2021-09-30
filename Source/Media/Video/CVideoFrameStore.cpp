@@ -80,8 +80,12 @@ class CVideoFrameStoreThread : public CThread {
 						// Perform
 						CVideoProcessor::PerformResult	performResult = mVideoFrameStore.perform(mMediaPosition);
 						if (!performResult.getVideoSourceStatus().isSuccess()) {
-							// Error
-							mInfo.error(mVideoFrameStore, *performResult.getVideoSourceStatus().getError());
+							// Finished or error
+							mReachedEnd = true;
+							
+							if (*performResult.getVideoSourceStatus().getError() != SError::mEndOfData)
+								// Error
+								mInfo.error(mVideoFrameStore, *performResult.getVideoSourceStatus().getError());
 
 							return false;
 						}

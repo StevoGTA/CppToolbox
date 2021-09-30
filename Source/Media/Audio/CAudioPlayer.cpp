@@ -105,8 +105,9 @@ class CAudioPlayerBufferThreadInternals {
 
 							return true;
 						} else {
-							// Finished
+							// Finished or error
 							mReachedEnd = true;
+							
 							if (*audioSourceStatus.getError() != SError::mEndOfData)
 								// Error
 								mErrorProc(*audioSourceStatus.getError(), mProcsUserData);

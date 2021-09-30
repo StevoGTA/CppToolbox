@@ -25,21 +25,21 @@ class CFilesystem {
 		static	TIResult<TArray<CFolder> >	getFolders(const CFolder& folder, bool deep = false);
 		static	TIResult<TArray<CFile> >	getFiles(const CFolder& folder, bool deep = false);
 
-												//	Will copy sourceFolder *into* destinationFolder
+											//	Will copy sourceFolder *into* destinationFolder
 		static	OI<SError>					copy(const CFolder& sourceFolder, const CFolder& destinationFolder);
 
-												//	Will copy file *into* destinationFolder
+											//	Will copy file *into* destinationFolder
 		static	OI<SError>					copy(const CFile& file, const CFolder& destinationFolder);
 
-												//	Will copy files *into* destinationFolder
+											//	Will copy files *into* destinationFolder
 		static	OI<SError>					copy(const TArray<CFile> files, const CFolder& destinationFolder);
 
-												//	Will replace destinationFile with sourceFile and remove sourceFile
+											//	Will replace destinationFile with sourceFile and remove sourceFile
 		static	OI<SError>					replace(const CFile& sourceFile, const CFile& destinationFile);
 
 #if TARGET_OS_MACOS
 		static	OI<SError>					open(const TArray<CFile> files, const Application& application);
-		static	void						moveToTrash(const TArray<CFile> files, TArray<CFile>& outUntrashedFiles);
+		static	void						moveToTrash(const TArray<CFile> files, TMArray<CFile>& outUntrashedFiles);
 		static	OI<SError>					moveToTrash(const TArray<CFile> files);
 
 		static	OI<SError>					revealInFinder(const CFolder& folder);

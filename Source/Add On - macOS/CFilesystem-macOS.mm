@@ -107,7 +107,7 @@ OI<SError> CFilesystem::open(const TArray<CFile> files, const Application& appli
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CFilesystem::moveToTrash(const TArray<CFile> files, TArray<CFile>& outUntrashedFiles)
+void CFilesystem::moveToTrash(const TArray<CFile> files, TMArray<CFile>& outUntrashedFiles)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate files
