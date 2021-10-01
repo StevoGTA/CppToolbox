@@ -77,7 +77,7 @@ struct SSQLiteValue {
 										}
 
 									// Class methods
-	static	TArray<SSQLiteValue>	valuesFrom(const TArray<CString>& values)
+	static	TMArray<SSQLiteValue>	valuesFrom(const TArray<CString>& values)
 										{
 											// Convert array
 											TNArray<SSQLiteValue>	sqliteValues;
@@ -88,7 +88,7 @@ struct SSQLiteValue {
 
 											return sqliteValues;
 										}
-	static	TArray<SSQLiteValue>	valuesFrom(const TNumericArray<SInt64>& values)
+	static	TMArray<SSQLiteValue>	valuesFrom(const TNumericArray<SInt64>& values)
 										{
 											// Convert array
 											TNArray<SSQLiteValue>	sqliteValues;

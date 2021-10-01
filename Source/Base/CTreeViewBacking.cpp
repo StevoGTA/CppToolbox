@@ -84,7 +84,7 @@ class CTreeViewBackingItem {
 						// Check how to get child items
 						if (mInfo.canGetChildTreeItemsSync()) {
 							// Get child tree items
-							TArray<I<CTreeItem> >	childTreeItems = mInfo.getChildTreeItems(mTreeItem);
+							TMArray<I<CTreeItem> >	childTreeItems = mInfo.getChildTreeItems(mTreeItem);
 							if (mInfo.mCompareTreeItemsProc != nil)
 								// Sort
 								childTreeItems.sort(mInfo.mCompareTreeItemsProc);

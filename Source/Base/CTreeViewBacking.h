@@ -16,7 +16,7 @@ class CTreeViewBacking {
 	public:
 		struct Info {
 			// Types
-			typedef	TArray<I<CTreeItem> >	(*ChildTreeItemsProc)(const I<CTreeItem>& treeItem, void* userData);
+			typedef	TMArray<I<CTreeItem> >	(*ChildTreeItemsProc)(const I<CTreeItem>& treeItem, void* userData);
 
 			typedef	bool					(*HasChildTreeItemsProc)(const I<CTreeItem>& treeItem, void* userData);
 			typedef	void					(*LoadChildTreeItemsCompletionProc)(const TArray<I<CTreeItem> > treeItems);
@@ -48,7 +48,7 @@ class CTreeViewBacking {
 					bool					canGetChildTreeItemsSync() const
 												{ return mChildTreeItemsProc != nil; }
 
-					TArray<I<CTreeItem> >	getChildTreeItems(const I<CTreeItem>& treeItem) const
+					TMArray<I<CTreeItem> >	getChildTreeItems(const I<CTreeItem>& treeItem) const
 												{ return mChildTreeItemsProc(treeItem, mUserData); }
 
 					bool					hasChildTreeItems(const I<CTreeItem>& treeItem) const

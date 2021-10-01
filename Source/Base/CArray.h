@@ -404,6 +404,26 @@ template <typename T> class TNArray : public TMArray<T> {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - TCArray (TArray where copy happens through itemRef->copy())
+
+template <typename T> class TCArray : public TMArray<T> {
+	// Methods
+	public:
+						// Lifecycle methods
+						TCArray() : TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose) {}
+						TCArray(const T& item) :
+							TMArray<T>(item, (CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
+							{}
+
+	private:
+						// Class methods
+		static	T*		copy(CArray::ItemRef itemRef)
+							{ return ((T*) itemRef)->copy(); }
+		static	void	dispose(CArray::ItemRef itemRef)
+							{ T* t = (T*) itemRef; Delete(t); }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TNumericArray
 
 template <typename T> class TNumericArray : public CArray {
