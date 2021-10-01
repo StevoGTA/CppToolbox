@@ -11,45 +11,51 @@
 // MARK: I (Instance)
 
 template <typename T> struct I {
-			// Lifecycle methods
-			I(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
-			I(const I<T>& other) :
-				mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
-				{ (*mReferenceCount)++; }
-			~I()
-				{
-					// One less reference
-					if (--(*mReferenceCount) == 0) {
-						// All done
-						Delete(mInstance);
-						Delete(mReferenceCount);
-					}
-				}
+					// Lifecycle methods
+					I(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+					I(const I<T>& other) :
+						mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
+						{ (*mReferenceCount)++; }
+					~I()
+						{
+							// One less reference
+							if (--(*mReferenceCount) == 0) {
+								// All done
+								Delete(mInstance);
+								Delete(mReferenceCount);
+							}
+						}
 
-	I<T>&	operator=(const I<T>& other)
-				{
-					// Check for instance
-					if (--(*mReferenceCount) == 0) {
-						// All done
-						mInstance->Release();
-						Delete(mReferenceCount);
-					}
+					// Instance methods
+			T&		operator*() const
+						{ return *mInstance; }
+			T*		operator->() const
+						{ return mInstance; }
 
-					// Copy
-					mInstance = other.mInstance;
-					mReferenceCount = other.mReferenceCount;
+			I<T>&	operator=(const I<T>& other)
+						{
+							// Check for instance
+							if (--(*mReferenceCount) == 0) {
+								// All done
+								mInstance->Release();
+								Delete(mReferenceCount);
+							}
 
-					// Additional reference
-					(*mReferenceCount)++;
+							// Copy
+							mInstance = other.mInstance;
+							mReferenceCount = other.mReferenceCount;
 
-					return *this;
-				}
+							// Additional reference
+							(*mReferenceCount)++;
 
-			// Instamce methods
-	T&		operator*() const
-				{ return *mInstance; }
-	T*		operator->() const
-				{ return mInstance; }
+							return *this;
+						}
+
+			bool	operator==(const I& other) const
+						{ return mInstance == other.mInstance; }
+
+	static	bool	doesInstanceMatch(const I<T>& reference, T* instance)
+						{ return reference.mInstance == instance; }
 
 	// Properties
 	private:
@@ -190,15 +196,18 @@ template <typename T> struct OP {
 // MARK: - R (Reference)
 
 template <typename T> struct R {
-		// Lifecycle methods
-		R(T& reference) : mReference(&reference) {}
-		R(const R<T>& other) : mReference(other.mReference) {}
+			// Lifecycle methods
+			R(T& reference) : mReference(&reference) {}
+			R(const R<T>& other) : mReference(other.mReference) {}
 
-		// Instamce methods
-	T&	operator*() const
-			{ return *mReference; }
-	T*	operator->() const
-			{ return mReference; }
+			// Instamce methods
+	T&		operator*() const
+				{ return *mReference; }
+	T*		operator->() const
+				{ return mReference; }
+
+	bool	operator==(const R<T>& other) const
+				{ return mReference == other.mReference; }
 
 	// Properties
 	private:

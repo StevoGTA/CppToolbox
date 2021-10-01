@@ -225,10 +225,10 @@ class CMediaPlayerInternals {
 				OV<UInt32>						mLoopCount;
 				UInt32							mCurrentLoopCount;
 
-		static	TIArray<CMediaPlayerInternals>	mActiveInternals;
+		static	TNArray<R<CMediaPlayerInternals> >	mActiveInternals;
 };
 
-TIArray<CMediaPlayerInternals>	CMediaPlayerInternals::mActiveInternals;
+TNArray<R<CMediaPlayerInternals> >	CMediaPlayerInternals::mActiveInternals;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -243,14 +243,17 @@ CMediaPlayer::CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info)
 	// Setup
 	mInternals = new CMediaPlayerInternals(*this, messageQueues, info);
 
-	// Add to array
-	CMediaPlayerInternals::mActiveInternals += mInternals;
+	// Add
+	CMediaPlayerInternals::mActiveInternals += R<CMediaPlayerInternals>(*mInternals);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CMediaPlayer::~CMediaPlayer()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Remove
+	CMediaPlayerInternals::mActiveInternals -= R<CMediaPlayerInternals>(*mInternals);
+
 	// Reset
 	reset();
 
@@ -266,7 +269,8 @@ CMediaPlayer::~CMediaPlayer()
 		mInternals->mMessageQueues.remove(videoFrameStore.mMessageQueue);
 	}
 
-	CMediaPlayerInternals::mActiveInternals -= *mInternals;
+	// Cleanup
+	Delete(mInternals);
 }
 
 // MARK: CMediaDestination methods

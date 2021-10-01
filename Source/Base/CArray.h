@@ -106,6 +106,10 @@ class CArray : public CEquatable {
 //		lifetime management.
 
 template <typename T> class TArray : public CArray {
+	// Types
+	public:
+		typedef	bool	(*IsMatchProc)(const T& item, void* userData);
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -145,7 +149,7 @@ template <typename T> class TArray : public CArray {
 
 								return OV<ItemIndex>();
 							}
-		OV<ItemIndex>	getIndexWhere(bool (proc)(const T& item, void* userData), void* userData = nil)
+		OV<ItemIndex>	getIndexWhere(IsMatchProc isMatchProc, void* userData)
 							{
 								// Iterate all items
 								ItemCount	count = getCount();
@@ -154,7 +158,7 @@ template <typename T> class TArray : public CArray {
 									const	T&	item = getAt(i);
 
 									// Call proc
-									if (proc(item, userData))
+									if (isMatchProc(item, userData))
 										// Proc indicates to return this item
 										return OV<ItemIndex>(i);
 								}
@@ -167,7 +171,7 @@ template <typename T> class TArray : public CArray {
 								return TIteratorD<T>((TIteratorD<T>*) &iterator); }
 
 						// Instance methods
-		OR<T>			getFirst(bool (proc)(const T& item, void* userData), void* userData = nil) const
+		OR<T>			getFirst(IsMatchProc isMatchProc, void* userData = nil) const
 							{
 								// Iterate all items
 								ItemCount	count = getCount();
@@ -176,7 +180,7 @@ template <typename T> class TArray : public CArray {
 									T&	item = getAt(i);
 
 									// Call proc
-									if (proc(item, userData))
+									if (isMatchProc(item, userData))
 										// Proc indicates to return this item
 										return OR<T>(item);
 								}
@@ -195,15 +199,30 @@ template <typename T> class TArray : public CArray {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - TSArray (Static CArray)
+
+template <typename T> class TSArray : public TArray<T> {
+	// Methods
+	public:
+		// Lifecycle methods
+		TSArray(const T& item, CArray::ItemCount repeatCount = 1) :
+			TArray<T>(nil, nil)
+			{ for (CArray::ItemIndex i = 0; i < repeatCount; i++) CArray::add(&item); }
+		TSArray(const T items[], CArray::ItemCount itemCount) :
+			TArray<T>(nil, nil)
+			{ for (CArray::ItemIndex i = 0; i < itemCount; CArray::add(&items[i++])) ; }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TMArray (TArray which can be modified)
 
 template <typename T> class TMArray : public TArray<T> {
 	// Methods
 	public:
 						// CArray methods
-		TArray<T>&		add(const T& item)
+		TMArray<T>&		add(const T& item)
 							{ CArray::add(CArray::copy(&item)); return *this; }
-		TArray<T>&		addFrom(const TArray<T>& array)
+		TMArray<T>&		addFrom(const TArray<T>& array)
 							{
 								// Iterate all
 								ItemCount	count = array.getCount();
@@ -214,10 +233,10 @@ template <typename T> class TMArray : public TArray<T> {
 								return *this;
 							}
 
-		TArray<T>&		insertAtIndex(const T& item, CArray::ItemIndex itemIndex)
+		TMArray<T>&		insertAtIndex(const T& item, CArray::ItemIndex itemIndex)
 							{ CArray::insertAtIndex(new T(item), itemIndex); return *this; }
 
-		TArray<T>&		remove(const T& item)
+		TMArray<T>&		remove(const T& item)
 							{
 								// Check if found
 								OV<CArray::ItemIndex>	index = TArray<T>::getIndexOf(item);
@@ -227,7 +246,7 @@ template <typename T> class TMArray : public TArray<T> {
 
 								return *this;
 							}
-		TArray<T>&		removeFrom(const TArray<T>& array)
+		TMArray<T>&		removeFrom(const TArray<T>& array)
 							{
 								// Iterate all
 								ItemCount	count = array.getCount();
@@ -237,15 +256,18 @@ template <typename T> class TMArray : public TArray<T> {
 
 								return *this;
 							}
-		TArray<T>&		removeAtIndex(CArray::ItemIndex itemIndex)
+		TMArray<T>&		removeAtIndex(CArray::ItemIndex itemIndex)
 							{ CArray::removeAtIndex(itemIndex); return *this; }
-		TArray<T>&		removeAll()
+		TMArray<T>&		removeAll()
 							{ CArray::removeAll(); return *this; }
 
-		TArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData), void* userData = nil)
+		TMArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData), void* userData = nil)
 							{ CArray::sort((CArray::CompareProc) compareProc, userData); return *this; }
 
 						// Instance methods
+		TMArray<T>&		move(const T& item, TMArray<T>& other)
+							{ CArray::move(&item, other); return *this; }
+
 		T				popFirst()
 							{
 								// Get first item
@@ -277,13 +299,13 @@ template <typename T> class TMArray : public TArray<T> {
 								return OV<T>();
 							}
 
-		TArray<T>&		operator+=(const T& item)
+		TMArray<T>&		operator+=(const T& item)
 							{ return add(item); }
-		TArray<T>&		operator+=(const TArray<T>& other)
+		TMArray<T>&		operator+=(const TArray<T>& other)
 							{ return addFrom(other); }
-		TArray<T>&		operator-=(const T& item)
+		TMArray<T>&		operator-=(const T& item)
 							{ return remove(item); }
-		TArray<T>&		operator-=(const TArray<T>& other)
+		TMArray<T>&		operator-=(const TArray<T>& other)
 							{ return removeFrom(other); }
 
 	protected:
@@ -382,41 +404,6 @@ template <typename T> class TNArray : public TMArray<T> {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TCArray (TArray where copy happens through itemRef->copy())
-
-template <typename T> class TCArray : public TMArray<T> {
-	// Methods
-	public:
-						// Lifecycle methods
-						TCArray() : TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose) {}
-						TCArray(const T& item) :
-							TMArray<T>(item, (CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
-							{}
-
-	private:
-						// Class methods
-		static	T*		copy(CArray::ItemRef itemRef)
-							{ return ((T*) itemRef)->copy(); }
-		static	void	dispose(CArray::ItemRef itemRef)
-							{ T* t = (T*) itemRef; Delete(t); }
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TSArray (Static CArray)
-
-template <typename T> class TSArray : public TArray<T> {
-	// Methods
-	public:
-		// Lifecycle methods
-		TSArray(const T& item, CArray::ItemCount repeatCount = 1) :
-			TArray<T>(nil, nil)
-			{ for (CArray::ItemIndex i = 0; i < repeatCount; i++) CArray::add(&item); }
-		TSArray(const T items[], CArray::ItemCount itemCount) :
-			TArray<T>(nil, nil)
-			{ for (CArray::ItemIndex i = 0; i < itemCount; CArray::add(&items[i++])) ; }
-};
-
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TNumericArray
 
 template <typename T> class TNumericArray : public CArray {
@@ -496,99 +483,4 @@ template <typename T> class TNumericArray : public CArray {
 														}
 		static	T									getValueForRawValue(SNumberWrapper<T>** rawValue)
 														{ return (*rawValue)->mValue; }
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TIArray
-//	TIArray is to be used when an object needs to manage an internal arroy of objects.  TIArray provides lifecycle
-//		management through simply calling Delete() (delete abc) when the object is being removed from the array or
-//		the array is being deleted itself.
-
-template <typename T> class TIArray : public CArray {
-	// Methods
-	public:
-								// Lifecycle methods
-								TIArray(CArray::ItemCount initialCapacity = 0) :
-									CArray(initialCapacity, nil, dispose)
-									{}
-
-								// CArray methods
-				TIArray<T>&		add(T* item)	// Pointer to mirror that this is an instance array
-									{ CArray::add(item); return *this; }
-
-				bool			contains(const T& item) const
-									{
-										// Iterate all
-										ItemCount	count = getCount();
-										for (ItemIndex i = 0; i < count; i++) {
-											// Check if same
-											T&	testItem = getAt(i);
-											if (&item == &testItem)
-												// Match
-												return true;
-										}
-
-										return false;
-									}
-
-				T&				getAt(ItemIndex index) const
-									{ return *((T*) getItemAt(index)); }
-				T&				getFirst() const
-									{ return *((T*) CArray::getFirst()); }
-				T&				getLast() const
-									{ return *((T*) CArray::getLast()); }
-				OV<ItemIndex>	getIndexOf(const T& item) const
-									{
-										// Iterate all
-										ItemCount	count = getCount();
-										for (ItemIndex i = 0; i < count; i++) {
-											// Check if same
-											T&	testItem = getAt(i);
-											if (&item == &testItem)
-												// Match
-												return OV<ItemIndex>(i);
-										}
-
-										return OV<ItemIndex>();
-									}
-
-				TIArray<T>&		move(T& item, TIArray<T>& other)
-									{ CArray::move(&item, other); return *this; }
-
-				TIArray<T>&		remove(T& item)
-									{
-										// Check if found
-										OV<ItemIndex>	index = getIndexOf(item);
-										if (index.hasValue())
-											// Remove
-											removeAtIndex(*index);
-
-										return *this;
-									}
-				TIArray<T>&		removeAll()
-									{ CArray::removeAll(); return *this; }
-
-				TIteratorD<T>	getIterator() const
-									{
-										// Setip
-										TIteratorS<ItemRef> iterator = CArray::getIterator();
-
-										return TIteratorD<T>((TIteratorD<T>*) &iterator);
-									}
-
-				TIArray<T>&		sort(bool (proc)(const T& item1, const T& item2, void* userData), void* userData = nil)
-									{ CArray::sort((CompareProc) proc, userData); return *this; }
-
-								// Instance methods
-				T&				operator[] (ItemIndex index) const
-									{ return *((T*) getItemAt(index)); }
-				TIArray<T>&		operator+=(T* item)	// Pointer to mirror that this is an instance array
-									{ return add(item); }
-				TIArray<T>&		operator-=(T& item)
-									{ return remove(item); }
-
-	private:
-								// Class methods
-		static	void			dispose(ItemRef itemRef)
-									{ T* t = (T*) itemRef; Delete(t); }
 };
