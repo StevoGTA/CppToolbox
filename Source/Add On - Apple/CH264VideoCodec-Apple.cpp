@@ -124,22 +124,28 @@ void CH264VideoCodec::setupForDecode(const I<CMediaReader>& mediaReader, const I
 									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
 											&kCFTypeDictionaryValueCallBacks);
 
-	switch (compatibility) {
-		case CVideoFrame::kCompatibilityAppleMetal:
+	switch (videoProcessingFormat.getCompatibility()) {
+		case CVideoFrame::kCompatibilityCGImage:
+			// CGImage
+			::CFDictionarySetValue(destinationImageBufferAttributes,
+					kCVPixelBufferCGImageCompatibilityKey, kCFBooleanTrue);
+			break;
+
+		case CVideoFrame::kCompatibilityMetal:
 			// Metal
 			::CFDictionarySetValue(destinationImageBufferAttributes,
 					kCVPixelBufferMetalCompatibilityKey, kCFBooleanTrue);
 			break;
 
 #if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-		case CVideoFrame::kCompatibilityAppleOpenGLES:
+		case CVideoFrame::kCompatibilityOpenGLES:
 			// OpenGLES
 			::CFDictionarySetValue(destinationImageBufferAttributes,
 					kCVPixelBufferOpenGLESCompatibilityKey, kCFBooleanTrue);
 			break;
 
 #else
-		case CVideoFrame::kCompatibilityAppleOpenGL: {
+		case CVideoFrame::kCompatibilityOpenGL: {
 			// OpenGL
 			::CFDictionarySetValue(destinationImageBufferAttributes,
 					kCVPixelBufferOpenGLCompatibilityKey, kCFBooleanTrue);

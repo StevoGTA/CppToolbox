@@ -415,6 +415,11 @@ void CMediaPlayer::startSeek()
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Start seek
 		getAudioProcessor(i)->startSeek();
+
+	// Iterate all video tracks
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
+		// Start seek
+		getVideoProcessor(i)->startSeek();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -425,6 +430,11 @@ void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Seek
 		getAudioProcessor(i)->seek(timeInterval);
+
+	// Iterate all video tracks
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
+		// Seek
+		getVideoProcessor(i)->seek(timeInterval);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -435,6 +445,11 @@ void CMediaPlayer::finishSeek()
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Finish seek
 		getAudioProcessor(i)->finishSeek();
+
+	// Iterate all video tracks
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
+		// Finish seek
+		getVideoProcessor(i)->finishSeek();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
