@@ -31,28 +31,30 @@
 */
 
 class CAudioFramesInternals;
-class CAudioFrames : public CData {
+class CAudioFrames : private CData {
 	// Methods
 	public:
-							// Lifecycle methods
-							CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferTotalFrameCount,
-									UInt32 bufferAvailableFrameCount, UInt32 bytesPerFrame);
-							CAudioFrames(UInt32 bufferCount, UInt32 bytesPerFrame, UInt32 frameCountPerBuffer = 4096);
-							~CAudioFrames();
+									// Lifecycle methods
+									CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferTotalFrameCount,
+											UInt32 bufferAvailableFrameCount, UInt32 bytesPerFrame);
+									CAudioFrames(UInt32 bufferCount, UInt32 bytesPerFrame,
+											UInt32 frameCountPerBuffer = 4096);
+									~CAudioFrames();
 
-							// Instance methods
-		UInt32				getAvailableFrameCount() const;
-		UInt32				getCurrentFrameCount() const;
+									// Instance methods
+		UInt32						getAvailableFrameCount() const;
+		UInt32						getCurrentFrameCount() const;
 
-		I<TBuffer<void*> >	getBuffers() const;
-		void				completeWrite(UInt32 frameCount);
+		I<const TBuffer<void*> >	getBuffersAsRead() const;
+		I<TBuffer<void*> >			getBuffersAsWrite();
+		void						completeWrite(UInt32 frameCount);
 
-		void				reset();
+		void						reset();
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-							// Apple methods
-		void				getAsRead(AudioBufferList& audioBufferList) const;
-		void				getAsWrite(AudioBufferList& audioBufferList);
+									// Apple methods
+		void						getAsRead(AudioBufferList& audioBufferList) const;
+		void						getAsWrite(AudioBufferList& audioBufferList);
 #endif
 
 	// Properties

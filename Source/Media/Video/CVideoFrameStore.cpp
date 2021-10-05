@@ -214,7 +214,7 @@ void CVideoFrameStore::resume()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
-				mInternals->mVideoFrameStoreThread.mResumeRequested = true;
+	mInternals->mVideoFrameStoreThread.mResumeRequested = true;
 	mInternals->mVideoFrameStoreThread.mStopFillingRequested = false;
 
 	// Signal

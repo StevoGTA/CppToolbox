@@ -964,7 +964,8 @@ OI<CAudioTrack> sComposeMP4AAudioTrack(const SstsdDescription& stsdDescription, 
 					I<CCodec::DecodeInfo>(
 							new CAACAudioCodec::DecodeInfo(packetAndLocations,
 									CData((UInt8*) esdsAtomPayloadData.getBytePtr() + 4,
-									esdsAtomPayloadData.getSize() - 4), startCodes))));
+											esdsAtomPayloadData.getSize() - 4),
+									startCodes))));
 }
 
 //#include "CLogServices.h"
@@ -994,12 +995,6 @@ Float32	framerate = 24.0;
 											S2DSizeU16(videoFormat.getWidth(), videoFormat.getHeight()), framerate);
 	if (!videoStorageFormat.hasInstance())
 		return OI<CVideoTrack>();
-
-	// Compose info
-	UniversalTimeInterval	duration =
-									(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
-											(UniversalTimeInterval) mdhdAtomPayload.getTimeScale();
-	UInt64					byteCount = SMediaPacketAndLocation::getTotalByteCount(packetAndLocations);
 
 	// Add video track
 	return OI<CVideoTrack>(

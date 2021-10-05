@@ -23,9 +23,18 @@ extern	SError	AsserNonNilValueError;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define AssertFail()				AssertFailWith(AssertFailedError);
-#define AssertFailUnimplemented()	AssertFailWith(SError::mUnimplemented)
-#define	AssertFailWith(error)		{ eAssertHandleProc(error, __FILE__, __func__, __LINE__); }
-#define	AssertFailIf(cond)			{ if (cond) AssertFailWith(AssertFailedError); }
-#define	AssertNotNil(value)			{ if ((value) == nil) AssertFailWith(AssertNilValueError); }
-#define	AssertNil(value)			{ if ((value) != nil) AssertFailWith(AsserNonNilValueError); }
+#if defined(DEBUG)
+	#define AssertFail()				AssertFailWith(AssertFailedError);
+	#define AssertFailUnimplemented()	AssertFailWith(SError::mUnimplemented)
+	#define	AssertFailWith(error)		{ eAssertHandleProc(error, __FILE__, __func__, __LINE__); }
+	#define	AssertFailIf(cond)			{ if (cond) AssertFailWith(AssertFailedError); }
+	#define	AssertNotNil(value)			{ if ((value) == nil) AssertFailWith(AssertNilValueError); }
+	#define	AssertNil(value)			{ if ((value) != nil) AssertFailWith(AsserNonNilValueError); }
+#else
+	#define AssertFail()
+	#define AssertFailUnimplemented()
+	#define	AssertFailWith(error)
+	#define	AssertFailIf(cond)
+	#define	AssertNotNil(value)
+	#define	AssertNil(value)
+#endif

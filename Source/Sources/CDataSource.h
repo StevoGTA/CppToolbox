@@ -64,3 +64,20 @@ class CDataDataSource : public CSeekableDataSource {
 	private:
 		CDataDataSourceInternals*	mInternals;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CStreamableDataSource
+
+class CStreamableDataSource : public CDataSource {
+	// Methods
+	public:
+								// Lifecycle methods
+								CStreamableDataSource() : CDataSource() {}
+
+								// CDataSource methods
+				TIResult<CData>	readData();
+
+								// Instance methods
+
+	// Properties
+};

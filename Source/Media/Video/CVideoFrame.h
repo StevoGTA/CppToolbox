@@ -35,11 +35,13 @@ class CVideoFrame {
 	public:
 		enum Compatibility {
 #if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-			kCompatibilityAppleMetal,
-			kCompatibilityAppleOpenGLES,
+			kCompatibilityCGImage,
+			kCompatibilityMetal,
+			kCompatibilityOpenGLES,
 #elif TARGET_OS_MACOS
-			kCompatibilityAppleMetal,
-			kCompatibilityAppleOpenGL,
+			kCompatibilityCGImage,
+			kCompatibilityMetal,
+			kCompatibilityOpenGL,
 #else
 			kCompatibilityNotApplicable,
 #endif

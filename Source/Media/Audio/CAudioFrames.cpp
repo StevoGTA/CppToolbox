@@ -73,7 +73,7 @@ UInt32 CAudioFrames::getCurrentFrameCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<TBuffer<void*> > CAudioFrames::getBuffers() const
+I<const TBuffer<void*> > CAudioFrames::getBuffersAsRead() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -81,6 +81,19 @@ I<TBuffer<void*> > CAudioFrames::getBuffers() const
 	for (UInt32 i = 0; i < mInternals->mBufferCount; i++)
 		// Update
 		(**buffer)[i] = (void*) ((UInt8*) getBytePtr() + mInternals->mBytesPerBuffer * i);
+
+	return I<const TBuffer<void*> >(buffer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<TBuffer<void*> > CAudioFrames::getBuffersAsWrite()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TBuffer<void*>*	buffer = new TBuffer<void*>(mInternals->mBufferCount);
+	for (UInt32 i = 0; i < mInternals->mBufferCount; i++)
+		// Update
+		(**buffer)[i] = (void*) ((UInt8*) getMutableBytePtr() + mInternals->mBytesPerBuffer * i);
 
 	return I<TBuffer<void*> >(buffer);
 }

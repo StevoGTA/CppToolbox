@@ -141,11 +141,7 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 							const I<CMediaReader>& mediaReader, const I<CCodec::DecodeInfo>& decodeInfo)
 						{ AssertFailUnimplemented(); }
 		OI<SError>	decode(CAudioFrames& audioFrames)
-						{
-							AssertFailUnimplemented();
-
-							return OI<SError>(SError::mUnimplemented);
-						}
+						{ AssertFailUnimplemented(); return OI<SError>(SError::mUnimplemented); }
 
 	protected:
 							// Lifecycle methods
