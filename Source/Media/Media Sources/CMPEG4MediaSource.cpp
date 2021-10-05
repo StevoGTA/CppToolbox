@@ -982,7 +982,9 @@ OI<CVideoTrack> sComposeH264VideoTrack(const SstsdDescription& stsdDescription, 
 			UniversalTimeInterval	duration =
 											(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
 													(UniversalTimeInterval) mdhdAtomPayload.getTimeScale();
-			Float32					framerate = (Float32) packetAndLocations.getCount() / duration;
+			Float32					framerate =
+											(Float32) ((UniversalTimeInterval) packetAndLocations.getCount() /
+													duration);
 			UInt64					byteCount = SMediaPacketAndLocation::getTotalByteCount(packetAndLocations);
 
 // TODO

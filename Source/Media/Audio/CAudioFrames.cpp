@@ -73,35 +73,39 @@ UInt32 CAudioFrames::getCurrentFrameCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<const TBuffer<void*> > CAudioFrames::getBuffersAsRead() const
+TNumericArray<const void*> CAudioFrames::getBuffersAsRead() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TBuffer<void*>*	buffer = new TBuffer<void*>(mInternals->mBufferCount);
+	TNumericArray<const void*>	bufferPtrs;
 	for (UInt32 i = 0; i < mInternals->mBufferCount; i++)
 		// Update
-		(**buffer)[i] = (void*) ((UInt8*) getBytePtr() + mInternals->mBytesPerBuffer * i);
+		bufferPtrs += (void*) ((UInt8*) getBytePtr() + mInternals->mBytesPerBuffer * i);
 
-	return I<const TBuffer<void*> >(buffer);
+	return bufferPtrs;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<TBuffer<void*> > CAudioFrames::getBuffersAsWrite()
+TNumericArray<void*> CAudioFrames::getBuffersAsWrite()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TBuffer<void*>*	buffer = new TBuffer<void*>(mInternals->mBufferCount);
+	TNumericArray<void*>	bufferPtrs;
 	for (UInt32 i = 0; i < mInternals->mBufferCount; i++)
 		// Update
-		(**buffer)[i] = (void*) ((UInt8*) getMutableBytePtr() + mInternals->mBytesPerBuffer * i);
+		bufferPtrs += (void*) ((UInt8*) getMutableBytePtr() + mInternals->mBytesPerBuffer * i);
 
-	return I<TBuffer<void*> >(buffer);
+	return bufferPtrs;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAudioFrames::completeWrite(UInt32 frameCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check
+	AssertFailIf(frameCount > mInternals->mAvailableFrameCount);
+
+	// Store
 	mInternals->mCurrentFrameCount = frameCount;
 }
 

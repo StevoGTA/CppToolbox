@@ -12,9 +12,9 @@
 		https://ferrous-systems.com/blog/lock-free-ring-buffer/
 
 	Notes...
-		Basically we have read (R), write (W), and write watermark (WW) pointers.  The writer informs the minimum amount
-			to write, and the queue ensures that at least the requested amount is available contiguously or fails.  We
-			set up the following rules:
+		We have read (R), write (W), and write watermark (WW) pointers.  The writer informs the minimum amount
+			to write, and the queue ensures that at least the requested amount is available contiguously or fails.
+			We set up the following rules:
 				WW is always >= W
 				R is always <= WW
 				Always update WW, then update W
@@ -30,8 +30,8 @@
 		(8) W...WW...R	Illegal (R > WW)
 
 		In summary...
-			R <= W => Can read R -> W (possibly empty)
-			R > W => Can read R -> WW (possibly empty)
+			R <= W	Can read R -> W (possibly empty)
+			R > W	Can read R -> WW (possibly empty)
 */
 
 //----------------------------------------------------------------------------------------------------------------------

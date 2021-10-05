@@ -45,8 +45,8 @@ class CAudioFrames : private CData {
 		UInt32						getAvailableFrameCount() const;
 		UInt32						getCurrentFrameCount() const;
 
-		I<const TBuffer<void*> >	getBuffersAsRead() const;
-		I<TBuffer<void*> >			getBuffersAsWrite();
+		TNumericArray<const void*>	getBuffersAsRead() const;
+		TNumericArray<void*>		getBuffersAsWrite();
 		void						completeWrite(UInt32 frameCount);
 
 		void						reset();

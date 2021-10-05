@@ -58,15 +58,15 @@ class CSecretRabbitCodeAudioConverterInternals {
 											if (internals.mInputAudioProcessingFormat->getBits() == 16)
 												// Convert SInt16 => Float32
 												src_short_to_float_array(
-														(short*) internals.mInputAudioFrames->getBytePtr(),
-														(float*) internals.mInputFloatAudioFrames->getMutableBytePtr(),
+														(short*) internals.mInputAudioFrames->getBuffersAsRead()[0],
+														(float*) internals.mInputAudioFrames->getBuffersAsWrite()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->getChannels());
 											else
 												// Convert SInt32 => Float32
 												src_int_to_float_array(
-														(int*) internals.mInputAudioFrames->getBytePtr(),
-														(float*) internals.mInputFloatAudioFrames->getMutableBytePtr(),
+														(int*) internals.mInputAudioFrames->getBuffersAsRead()[0],
+														(float*) internals.mInputAudioFrames->getBuffersAsWrite()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->getChannels());
 										}
@@ -82,10 +82,10 @@ class CSecretRabbitCodeAudioConverterInternals {
 								// Prepare return info
 								if (internals.mInputFloatAudioFrames.hasInstance())
 									// Use converted float
-									*data = (float*) internals.mInputFloatAudioFrames->getBytePtr();
+									*data = (float*) internals.mInputFloatAudioFrames->getBuffersAsRead()[0];
 								else
 									// Use input float
-									*data = (float*) internals.mInputAudioFrames->getBytePtr();
+									*data = (float*) internals.mInputAudioFrames->getBuffersAsRead()[0];
 
 								return internals.mInputAudioFrames->getCurrentFrameCount();
 							}
@@ -173,7 +173,7 @@ SAudioSourceStatus CSecretRabbitCodeAudioConverter::perform(const SMediaPosition
 					mOutputAudioProcessingFormat->getSampleRate() /
 							mInternals->mInputAudioProcessingFormat->getSampleRate();
 	frameCount =
-			src_callback_read(mInternals->mSRCState, srcRatio, frameCount, (float*) audioFrames.getMutableBytePtr());
+			src_callback_read(mInternals->mSRCState, srcRatio, frameCount, (float*) audioFrames.getBuffersAsWrite()[0]);
 	if (frameCount == 0) return SAudioSourceStatus(SError::mEndOfData);
 
 	// Update

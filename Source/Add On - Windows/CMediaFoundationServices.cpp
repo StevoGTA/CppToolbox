@@ -302,11 +302,21 @@ OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CPacketMe
 
 	// Read next media packet
 	TVResult<UInt32>	byteCount = packetMediaReader.readNextMediaPacket(bytePtr);
-	ReturnErrorIfResultError(byteCount);
+	if (byteCount.hasError()) {
+		// Unlock
+		mediaBuffer->Unlock();
+
+		return OI<SError>(byteCount.getError());
+	}
 
 	// Update current length
 	result = mediaBuffer->SetCurrentLength((DWORD) byteCount.getValue());
-	ReturnErrorIfFailed(result, "SetCurrentLength");
+	if (FAILED(result)) {
+		// Unlock
+		mediaBuffer->Unlock();
+
+		ReturnError(result, "SetCurrentLength");
+	}
 
 	// Unlock media buffer
 	result = mediaBuffer->Unlock();
@@ -380,7 +390,7 @@ OI<SError> CMediaFoundationServices::completeWrite(IMFSample* sample, CAudioFram
 	result = mediaBuffer->Lock(&bytePtr, NULL, &length);
 	ReturnErrorIfFailed(result, "Lock for outputSample");
 
-	::memcpy(audioFrames.getMutableBytePtr(), bytePtr, length);
+	::memcpy(audioFrames.getBuffersAsWrite()[0], bytePtr, length);
 	audioFrames.completeWrite(length / audioProcessingFormat.getBytesPerFrame());
 
 	result = mediaBuffer->SetCurrentLength(0);
