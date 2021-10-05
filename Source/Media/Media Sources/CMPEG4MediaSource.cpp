@@ -977,11 +977,14 @@ OI<CVideoTrack> sComposeH264VideoTrack(const SstsdDescription& stsdDescription, 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SH264VideoFormat&	videoFormat = stsdDescription.getH264VideoFormat();
-			UInt32				timeScale = mdhdAtomPayload.getTimeScale();
-//			UInt64				duration = mdhdAtomPayload.getDuration();
-//			Float32				framerate = (Float32) timeScale / 100.0;
-Float32	framerate = 24.0;
+	const	SH264VideoFormat&		videoFormat = stsdDescription.getH264VideoFormat();
+			UInt32					timeScale = mdhdAtomPayload.getTimeScale();
+			UniversalTimeInterval	duration =
+											(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
+													(UniversalTimeInterval) mdhdAtomPayload.getTimeScale();
+			Float32					framerate = (Float32) packetAndLocations.getCount() / duration;
+			UInt64					byteCount = SMediaPacketAndLocation::getTotalByteCount(packetAndLocations);
+
 // TODO
 //	const	SstssAtomPayload&	stssAtomPayload = *((SstssAtomPayload*) stssAtomPayloadData->getBytePtr());
 //UInt32	keyframesCount = EndianU32_BtoN(stssAtomPayload.mKeyframesCount);
