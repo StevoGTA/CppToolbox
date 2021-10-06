@@ -392,7 +392,7 @@ TVResult<OV<UInt32> > CMediaFoundationServices::completeWrite(IMFSample* sample,
 
 	UInt32	byteCount = std::min<UInt32>(sampleLength - sampleByteOffset, maxByteCount);
 
-	::memcpy(audioFrames.getBuffersAsWrite()[0], sampleBytePtr + sampleByteOffset, byteCount);
+	::memcpy(audioFrames.getSegmentsAsWrite()[0], sampleBytePtr + sampleByteOffset, byteCount);
 	audioFrames.completeWrite(byteCount / audioProcessingFormat.getBytesPerFrame());
 
 	// Check how much of the media buffer was used

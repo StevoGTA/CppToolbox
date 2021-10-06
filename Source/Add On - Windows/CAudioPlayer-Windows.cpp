@@ -236,7 +236,8 @@ class CAudioPlayerImplementation :
 									UInt32	byteOffset = 0;
 									while ((requiredByteCount > 0) && readBufferInfo.hasBuffer()) {
 										// Must copy
-										UInt32	bytesToCopy = std::min<UInt32>(requiredByteCount, readBufferInfo.mSize);
+										UInt32	bytesToCopy =
+														std::min<UInt32>(requiredByteCount, readBufferInfo.mByteCount);
 										::memcpy(data + byteOffset, readBufferInfo.bufferAtIndex(0), bytesToCopy);
 										mQueue->commitRead(bytesToCopy);
 
@@ -578,7 +579,7 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 	UInt32	frameCount = (UInt32) (CAudioPlayer::getPlaybackBufferDuration() * audioProcessingFormat.getSampleRate());
 	mInternals->mImplementation->mQueue =
 			OI<CSRSWBIPSegmentedQueue>(
-					new CSRSWBIPSegmentedQueue(frameCount * mInternals->mImplementation->mMixFormat->nBlockAlign, 1));
+					new CSRSWBIPSegmentedQueue(1, frameCount * mInternals->mImplementation->mMixFormat->nBlockAlign));
 	mInternals->mImplementation->mAudioPlayerBufferThread =
 			OI<CAudioPlayerBufferThread>(
 					new CAudioPlayerBufferThread(*this, *mInternals->mImplementation->mQueue,
