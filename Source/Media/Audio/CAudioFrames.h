@@ -27,7 +27,7 @@
 		Frames can be together in a single buffer (interleaved) or in separate buffers (non-interleaved).  For
 			simplicity and performance, CAudioFrames always uses a single data buffer in all cases.  For interleaved,
 			the buffer contains all the frames together.  For non-interleaved, the buffer is subdivided into separate
-			regions for each collection of samples.
+			segments for each collection of samples.
 */
 
 class CAudioFramesInternals;
@@ -35,18 +35,18 @@ class CAudioFrames : private CData {
 	// Methods
 	public:
 									// Lifecycle methods
-									CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferByteCount,
-											UInt32 bytesPerFrame);
-									CAudioFrames(UInt32 bufferCount, UInt32 bytesPerFrame,
-											UInt32 frameCountPerBuffer = 4096);
+									CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount,
+											UInt32 frameCount, UInt32 bytesPerFrame);
+									CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFrame,
+											UInt32 frameCountPerSegment = 4096);
 									~CAudioFrames();
 
 									// Instance methods
 		UInt32						getAvailableFrameCount() const;
 		UInt32						getCurrentFrameCount() const;
 
-		TNumericArray<const void*>	getBuffersAsRead() const;
-		TNumericArray<void*>		getBuffersAsWrite();
+		TNumericArray<const void*>	getSegmentsAsRead() const;
+		TNumericArray<void*>		getSegmentsAsWrite();
 		void						completeWrite(UInt32 frameCount);
 
 		void						reset();

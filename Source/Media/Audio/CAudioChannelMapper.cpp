@@ -17,9 +17,9 @@ class CAudioChannelMapperInternals {
 								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
-								const	SInt16*	sourcePtr = (const SInt16*) (sourceAudioFrames.getBuffersAsRead())[0];
+								const	SInt16*	sourcePtr = (const SInt16*) (sourceAudioFrames.getSegmentsAsRead())[0];
 										SInt16*	destinationPtr =
-														(SInt16*) (destinationAudioFrames.getBuffersAsWrite())[0];
+														(SInt16*) (destinationAudioFrames.getSegmentsAsWrite())[0];
 
 								// Perform
 								UInt32	frameCount = sourceAudioFrames.getCurrentFrameCount();

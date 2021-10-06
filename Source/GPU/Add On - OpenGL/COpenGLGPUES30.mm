@@ -88,7 +88,7 @@ CGPU::~CGPU()
 CVideoFrame::Compatibility CGPU::getVideoFrameCompatibility() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CVideoFrame::kCompatibilityAppleOpenGLES;
+	return CVideoFrame::kCompatibilityOpenGLES;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

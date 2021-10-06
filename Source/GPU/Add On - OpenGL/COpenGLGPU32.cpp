@@ -50,7 +50,7 @@ CGPU::~CGPU()
 CVideoFrame::Compatibility CGPU::getVideoFrameCompatibility() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CVideoFrame::kCompatibilityAppleOpenGL;
+	return CVideoFrame::kCompatibilityOpenGL;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

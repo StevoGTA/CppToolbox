@@ -142,7 +142,7 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 	UInt32	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * channels;
 
 	// Decode packets
-	SInt16*	bufferPtr = (SInt16*) (audioFrames.getBuffersAsWrite())[0];
+	SInt16*	bufferPtr = (SInt16*) (audioFrames.getSegmentsAsWrite())[0];
 	UInt32	availableFrameCount = audioFrames.getAvailableFrameCount();
 	UInt32	decodedFrameCount = 0;
 	while (availableFrameCount >= kDVIIntelFramesPerPacket) {

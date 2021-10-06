@@ -24,32 +24,36 @@ class CSRSWBIPQueue : public CEquatable {
 	public:
 		struct ReadBufferInfo {
 					// Lifecycle methods
-					ReadBufferInfo(const void* buffer, UInt32 size) : mBuffer(buffer), mSize(size) {}
-					ReadBufferInfo() : mBuffer(nil), mSize(0) {}
-					ReadBufferInfo(const ReadBufferInfo& other) : mBuffer(other.mBuffer), mSize(other.mSize) {}
+					ReadBufferInfo(const void* buffer, UInt32 byteCount) : mBuffer(buffer), mByteCount(byteCount) {}
+					ReadBufferInfo() : mBuffer(nil), mByteCount(0) {}
+					ReadBufferInfo(const ReadBufferInfo& other) :
+						mBuffer(other.mBuffer), mByteCount(other.mByteCount)
+						{}
 
 					// Instance methods
 			bool	hasBuffer() const
-						{ return mSize > 0; }
+						{ return mByteCount > 0; }
 
 			// Properties
 			const	void*	mBuffer;
-					UInt32	mSize;
+					UInt32	mByteCount;
 		};
 
 		struct WriteBufferInfo {
 					// Lifecycle methods
-					WriteBufferInfo(void* buffer, UInt32 size) : mBuffer(buffer), mSize(size) {}
-					WriteBufferInfo() : mBuffer(nil), mSize(0) {}
-					WriteBufferInfo(const WriteBufferInfo& other) : mBuffer(other.mBuffer), mSize(other.mSize) {}
+					WriteBufferInfo(void* buffer, UInt32 byteCount) : mBuffer(buffer), mByteCount(byteCount) {}
+					WriteBufferInfo() : mBuffer(nil), mByteCount(0) {}
+					WriteBufferInfo(const WriteBufferInfo& other) :
+						mBuffer(other.mBuffer), mByteCount(other.mByteCount)
+						{}
 
 					// Instance methods
 			bool	hasBuffer() const
-						{ return mSize > 0; }
+						{ return mByteCount > 0; }
 
 			// Properties
 			void*	mBuffer;
-			UInt32	mSize;
+			UInt32	mByteCount;
 		};
 
 	// Methods
@@ -60,16 +64,16 @@ class CSRSWBIPQueue : public CEquatable {
 
 	protected:
 								// Lifecycle methods
-								CSRSWBIPQueue(UInt32 size);
+								CSRSWBIPQueue(UInt32 byteCount);
 								CSRSWBIPQueue(const CSRSWBIPQueue& other);
 		virtual					~CSRSWBIPQueue();
 
 								// Instance methods
 				ReadBufferInfo	requestRead() const;
-		virtual	void			commitRead(UInt32 size);
+		virtual	void			commitRead(UInt32 byteCount);
 
-				WriteBufferInfo	requestWrite(UInt32 requiredSize) const;
-		virtual	void			commitWrite(UInt32 size);
+				WriteBufferInfo	requestWrite(UInt32 requiredByteCount) const;
+		virtual	void			commitWrite(UInt32 byteCount);
 
 				void			reset();
 
@@ -97,7 +101,7 @@ template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 										if (readBufferInfo.hasBuffer()) {
 											// Can read
 											mReadBuffer =
-													TBuffer<T>((T*) readBufferInfo.mBuffer, readBufferInfo.mSize);
+													TBuffer<T>((T*) readBufferInfo.mBuffer, readBufferInfo.mByteCount);
 
 											return OR<const TBuffer<T> >(mReadBuffer);
 										} else
@@ -115,7 +119,8 @@ template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 										if (writeBufferInfo.hasBuffer()) {
 											// Can write
 											mWriteBuffer =
-													TBuffer<T>((T*) writeBufferInfo.mBuffer, writeBufferInfo.mSize);
+													TBuffer<T>((T*) writeBufferInfo.mBuffer,
+															writeBufferInfo.mByteCount);
 
 											return OR<TBuffer<T> >(mWriteBuffer);
 										} else
@@ -140,60 +145,60 @@ class CSRSWBIPSegmentedQueue {
 	public:
 		struct ReadBufferInfo {
 					// Lifecycle methods
-					ReadBufferInfo(const void* buffer, UInt32 segmentSize, UInt32 size) :
-						mBuffer(buffer), mSegmentSize(segmentSize), mSize(size)
+					ReadBufferInfo(const void* buffer, UInt32 segmentByteCount, UInt32 byteCount) :
+						mBuffer(buffer), mSegmentByteCount(segmentByteCount), mByteCount(byteCount)
 						{}
-					ReadBufferInfo() : mBuffer(nil), mSegmentSize(0), mSize(0) {}
+					ReadBufferInfo() : mBuffer(nil), mSegmentByteCount(0), mByteCount(0) {}
 					ReadBufferInfo(const ReadBufferInfo& other) :
-						mBuffer(other.mBuffer), mSegmentSize(other.mSegmentSize), mSize(other.mSize)
+						mBuffer(other.mBuffer), mSegmentByteCount(other.mSegmentByteCount), mByteCount(other.mByteCount)
 						{}
 
 					// Instance methods
 			bool	hasBuffer() const
-						{ return mSize > 0; }
+						{ return mByteCount > 0; }
 			void*	bufferAtIndex(UInt32 index) const
-						{ return (UInt8*) mBuffer + index * mSegmentSize; }
+						{ return (UInt8*) mBuffer + index * mSegmentByteCount; }
 
 			// Properties
 			const	void*	mBuffer;
-					UInt32	mSegmentSize;
-					UInt32	mSize;
+					UInt32	mSegmentByteCount;
+					UInt32	mByteCount;
 		};
 
 		struct WriteBufferInfo {
 					// Lifecycle methods
-					WriteBufferInfo(void* buffer, UInt32 segmentSize, UInt32 size) :
-						mBuffer(buffer), mSegmentSize(segmentSize), mSize(size)
+					WriteBufferInfo(void* buffer, UInt32 segmentByteCount, UInt32 byteCount) :
+						mBuffer(buffer), mSegmentByteCount(segmentByteCount), mByteCount(byteCount)
 						{}
-					WriteBufferInfo() : mBuffer(nil), mSegmentSize(0), mSize(0) {}
+					WriteBufferInfo() : mBuffer(nil), mSegmentByteCount(0), mByteCount(0) {}
 					WriteBufferInfo(const WriteBufferInfo& other) :
-						mBuffer(other.mBuffer), mSegmentSize(other.mSegmentSize), mSize(other.mSize)
+						mBuffer(other.mBuffer), mSegmentByteCount(other.mSegmentByteCount), mByteCount(other.mByteCount)
 						{}
 
 					// Instance methods
 			bool	hasBuffer() const
-						{ return mSize > 0; }
+						{ return mByteCount > 0; }
 
 			// Properties
 			void*	mBuffer;
-			UInt32	mSegmentSize;
-			UInt32	mSize;
+			UInt32	mSegmentByteCount;
+			UInt32	mByteCount;
 		};
 
 	// Methods
 	public:
 								// Lifecycle methods
-								CSRSWBIPSegmentedQueue(UInt32 segmentSize, UInt32 segmentCount);
+								CSRSWBIPSegmentedQueue(UInt32 segmentCount, UInt32 segmentByteCount);
 		virtual					~CSRSWBIPSegmentedQueue();
 
 								// Instance methods
 				UInt32			getSegmentCount() const;
 				
 				ReadBufferInfo	requestRead() const;
-		virtual	void			commitRead(UInt32 size);
+		virtual	void			commitRead(UInt32 byteCount);
 
-				WriteBufferInfo	requestWrite(UInt32 requiredSize) const;
-		virtual	void			commitWrite(UInt32 size);
+				WriteBufferInfo	requestWrite(UInt32 requiredByteCount) const;
+		virtual	void			commitWrite(UInt32 byteCount);
 
 				void			reset();
 
@@ -221,11 +226,11 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 	public:
 		struct Message {
 			// Methods
-			Message(OSType type, UInt32 size) : mType(type), mSize(size) {}
+			Message(OSType type, UInt32 byteCount) : mType(type), mByteCount(byteCount) {}
 
 			// Properties
 			OSType	mType;
-			UInt32	mSize;
+			UInt32	mByteCount;
 		};
 
 		struct ProcMessage : public Message {
@@ -236,8 +241,8 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 					ProcMessage(Proc proc, void* userData) :
 						Message(mType, sizeof(ProcMessage)), mProc(proc), mUserData(userData)
 						{}
-					ProcMessage(UInt32 size, Proc proc, void* userData) :
-						Message(mType, size), mProc(proc), mUserData(userData)
+					ProcMessage(UInt32 byteCount, Proc proc, void* userData) :
+						Message(mType, byteCount), mProc(proc), mUserData(userData)
 						{}
 
 			void	perform()
@@ -253,7 +258,7 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 	// Methods
 	public:
 						// Lifecycle methods
-						CSRSWMessageQueue(UInt32 size);
+						CSRSWMessageQueue(UInt32 byteCount);
 						CSRSWMessageQueue(const CSRSWMessageQueue& other);
 
 						// Instance methods

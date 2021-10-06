@@ -300,7 +300,8 @@ class CAudioPlayerInternals {
 										UInt32									requiredByteCount =
 																						inNumFrames *
 																								*internals.mBytesPerFrame;
-										if (readBufferInfo.hasBuffer() && (readBufferInfo.mSize >= requiredByteCount)) {
+										if (readBufferInfo.hasBuffer() &&
+												(readBufferInfo.mByteCount >= requiredByteCount)) {
 											// Can point to buffer
 											for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
 												// Prepare this buffer
@@ -317,7 +318,7 @@ class CAudioPlayerInternals {
 												// Must copy
 												UInt32	bytesToCopy =
 																std::min<UInt32>(requiredByteCount,
-																		readBufferInfo.mSize);
+																		readBufferInfo.mByteCount);
 												for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
 													// Copy
 													::memcpy((UInt8*) ioData->mBuffers[i].mData + byteOffset,
@@ -504,7 +505,7 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 	UInt32	frameCount = CAudioPlayer::getPlaybackBufferDuration() * audioProcessingFormat.getSampleRate();
 	mInternals->mQueue =
 			OI<CSRSWBIPSegmentedQueue>(
-					new CSRSWBIPSegmentedQueue(frameCount * *mInternals->mBytesPerFrame, segmentCount));
+					new CSRSWBIPSegmentedQueue(segmentCount, frameCount * *mInternals->mBytesPerFrame));
 	mInternals->mAudioPlayerBufferThread =
 			OI<CAudioPlayerBufferThread>(
 					new CAudioPlayerBufferThread(*this, *mInternals->mQueue, *mInternals->mBytesPerFrame,

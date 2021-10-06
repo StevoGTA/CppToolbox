@@ -9,14 +9,14 @@
 
 class CAudioFramesInternals {
 	public:
-		CAudioFramesInternals(UInt32 bufferCount, UInt32 bytesPerBuffer, UInt32 availableFrameCount,
+		CAudioFramesInternals(UInt32 segmentCount, UInt32 segmentByteCount, UInt32 availableFrameCount,
 				UInt32 bytesPerFrame) :
-			mBufferCount(bufferCount), mBytesPerBuffer(bytesPerBuffer), mAvailableFrameCount(availableFrameCount),
+			mSegmentCount(segmentCount), mSegmentByteCount(segmentByteCount), mAvailableFrameCount(availableFrameCount),
 					mCurrentFrameCount(0), mBytesPerFrame(bytesPerFrame)
 			{}
 
-		UInt32	mBufferCount;
-		UInt32	mBytesPerBuffer;
+		UInt32	mSegmentCount;
+		UInt32	mSegmentByteCount;
 		UInt32	mAvailableFrameCount;
 		UInt32	mCurrentFrameCount;
 		UInt32	mBytesPerFrame;
@@ -29,21 +29,21 @@ class CAudioFramesInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferByteCount, UInt32 bytesPerFrame) :
-		CData(buffers, bufferCount * bufferByteCount, false)
+CAudioFrames::CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
+		UInt32 bytesPerFrame) : CData(buffer, segmentCount * segmentByteCount, false)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CAudioFramesInternals(bufferCount, bufferByteCount, bufferByteCount / bytesPerFrame, bytesPerFrame);
+			new CAudioFramesInternals(segmentCount, segmentByteCount, frameCount, bytesPerFrame);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::CAudioFrames(UInt32 bufferCount, UInt32 bytesPerFrame, UInt32 frameCountPerBuffer) :
-		CData((CData::Size) (bufferCount * frameCountPerBuffer * bytesPerFrame))
+CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFrame, UInt32 frameCountPerSegment) :
+		CData((CData::Size) (segmentCount * frameCountPerSegment * bytesPerFrame))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CAudioFramesInternals(bufferCount, frameCountPerBuffer * bytesPerFrame, frameCountPerBuffer,
+			new CAudioFramesInternals(segmentCount, frameCountPerSegment * bytesPerFrame, frameCountPerSegment,
 					bytesPerFrame);
 }
 
@@ -71,29 +71,29 @@ UInt32 CAudioFrames::getCurrentFrameCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<const void*> CAudioFrames::getBuffersAsRead() const
+TNumericArray<const void*> CAudioFrames::getSegmentsAsRead() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNumericArray<const void*>	bufferPtrs;
-	for (UInt32 i = 0; i < mInternals->mBufferCount; i++)
+	TNumericArray<const void*>	segmentPtrs;
+	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
 		// Update
-		bufferPtrs += (void*) ((UInt8*) getBytePtr() + mInternals->mBytesPerBuffer * i);
+		segmentPtrs += (void*) ((UInt8*) getBytePtr() + mInternals->mSegmentByteCount * i);
 
-	return bufferPtrs;
+	return segmentPtrs;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<void*> CAudioFrames::getBuffersAsWrite()
+TNumericArray<void*> CAudioFrames::getSegmentsAsWrite()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNumericArray<void*>	bufferPtrs;
-	for (UInt32 i = 0; i < mInternals->mBufferCount; i++)
+	TNumericArray<void*>	segmentPtrs;
+	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
 		// Update
-		bufferPtrs += (void*) ((UInt8*) getMutableBytePtr() + mInternals->mBytesPerBuffer * i);
+		segmentPtrs += (void*) ((UInt8*) getMutableBytePtr() + mInternals->mSegmentByteCount * i);
 
-	return bufferPtrs;
+	return segmentPtrs;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -121,15 +121,15 @@ void CAudioFrames::getAsRead(AudioBufferList& audioBufferList) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf(audioBufferList.mNumberBuffers != mInternals->mBufferCount);
+	AssertFailIf(audioBufferList.mNumberBuffers != mInternals->mSegmentCount);
 
 	// Setup
 	const	UInt8*	buffer = (const UInt8*) getBytePtr();
 
 	// Update AudioBufferList
-	for (UInt32 i = 0; i < mInternals->mBufferCount; i++) {
+	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++) {
 		// Update this buffer
-		audioBufferList.mBuffers[i].mData = (void*) (buffer + mInternals->mBytesPerBuffer * i);
+		audioBufferList.mBuffers[i].mData = (void*) (buffer + mInternals->mSegmentByteCount * i);
 		audioBufferList.mBuffers[i].mDataByteSize = mInternals->mCurrentFrameCount * mInternals->mBytesPerFrame;
 	}
 }
@@ -139,15 +139,15 @@ void CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf(audioBufferList.mNumberBuffers != mInternals->mBufferCount);
+	AssertFailIf(audioBufferList.mNumberBuffers != mInternals->mSegmentCount);
 
 	// Setup
 	UInt8*	buffer = (UInt8*) getMutableBytePtr();
 
 	// Update AudioBufferList
-	for (UInt32 i = 0; i < mInternals->mBufferCount; i++) {
+	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++) {
 		// Update this buffer
-		audioBufferList.mBuffers[i].mData = buffer + mInternals->mBytesPerBuffer * i;
+		audioBufferList.mBuffers[i].mData = buffer + mInternals->mSegmentByteCount * i;
 		audioBufferList.mBuffers[i].mDataByteSize = mInternals->mAvailableFrameCount * mInternals->mBytesPerFrame;
 	}
 }

@@ -114,7 +114,7 @@ CGPU::~CGPU()
 CVideoFrame::Compatibility CGPU::getVideoFrameCompatibility() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CVideoFrame::kCompatibilityAppleMetal;
+	return CVideoFrame::kCompatibilityMetal;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
