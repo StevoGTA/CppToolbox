@@ -376,30 +376,42 @@ OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::completeWrite(IMFSample* sample, CAudioFrames& audioFrames,
-		const SAudioProcessingFormat& audioProcessingFormat)
+TVResult<OV<UInt32> > CMediaFoundationServices::completeWrite(IMFSample* sample, UInt32 sampleByteOffset,
+		UInt32 maxByteCount, CAudioFrames& audioFrames, const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Copy
 	IMFMediaBuffer*	mediaBuffer;
 	HRESULT	result = sample->GetBufferByIndex(0, &mediaBuffer);
-	ReturnErrorIfFailed(result, "GetBufferByIndex for outputSample");
+	ReturnValueIfFailed(result, "GetBufferByIndex for outputSample", TVResult<OV<UInt32> >(SErrorFromHRESULT(result)));
 
-	BYTE*	bytePtr;
-	DWORD	length;
-	result = mediaBuffer->Lock(&bytePtr, NULL, &length);
-	ReturnErrorIfFailed(result, "Lock for outputSample");
+	BYTE*	sampleBytePtr;
+	DWORD	sampleLength;
+	result = mediaBuffer->Lock(&sampleBytePtr, NULL, &sampleLength);
+	ReturnValueIfFailed(result, "Lock for outputSample", TVResult<OV<UInt32> >(SErrorFromHRESULT(result)));
 
-	::memcpy(audioFrames.getBuffersAsWrite()[0], bytePtr, length);
-	audioFrames.completeWrite(length / audioProcessingFormat.getBytesPerFrame());
+	UInt32	byteCount = std::min<UInt32>(sampleLength - sampleByteOffset, maxByteCount);
 
-	result = mediaBuffer->SetCurrentLength(0);
-	ReturnErrorIfFailed(result, "SetCurrentLength");
+	::memcpy(audioFrames.getBuffersAsWrite()[0], sampleBytePtr + sampleByteOffset, byteCount);
+	audioFrames.completeWrite(byteCount / audioProcessingFormat.getBytesPerFrame());
 
-	result = mediaBuffer->Unlock();
-	ReturnErrorIfFailed(result, "Unlock for outputSample");
+	// Check how much of the media buffer was used
+	if (byteCount < (sampleLength - sampleByteOffset)) {
+		// Still have more to use
+		result = mediaBuffer->Unlock();
+		ReturnValueIfFailed(result, "Unlock for outputSample", TVResult<OV<UInt32> >(SErrorFromHRESULT(result)));
 
-	return OI<SError>();
+		return TVResult<OV<UInt32> >(OV<UInt32>(sampleByteOffset + byteCount));
+	} else {
+		// Used entire buffer
+		result = mediaBuffer->SetCurrentLength(0);
+		ReturnValueIfFailed(result, "SetCurrentLength", TVResult<OV<UInt32> >(SErrorFromHRESULT(result)));
+
+		result = mediaBuffer->Unlock();
+		ReturnValueIfFailed(result, "Unlock for outputSample", TVResult<OV<UInt32> >(SErrorFromHRESULT(result)));
+
+		return TVResult<OV<UInt32> >(OV<UInt32>());
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

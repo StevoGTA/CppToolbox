@@ -46,6 +46,7 @@ class CAACAudioCodecInternals {
 		OCI<IMFTransform>			mAudioDecoder;
 		OCI<IMFSample>				mInputSample;
 		OCI<IMFSample>				mOutputSample;
+		OV<UInt32>					mOutputSampleByteOffset;
 		UInt32						mNextPacketIndex;
 };
 
@@ -140,20 +141,31 @@ OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
 		// Can't decode
 		return OI<SError>(sSetupDidNotCompleteError);
 
-	// Setup
-	OI<SError>	error;
+	// Check if have byte offset
+	if (!mInternals->mOutputSampleByteOffset.hasValue()) {
+		// Process output
+		OI<SError>	error =
+							CMediaFoundationServices::processOutput(*mInternals->mAudioDecoder,
+									*mInternals->mOutputSample,
+									CMediaFoundationServices::ProcessOutputInfo(
+											CAACAudioCodecInternals::fillInputBuffer, mInternals->mInputSample,
+											mInternals));
+		ReturnErrorIfError(error);
 
-	// Process output
-	error =
-			CMediaFoundationServices::processOutput(*mInternals->mAudioDecoder, *mInternals->mOutputSample,
-					CMediaFoundationServices::ProcessOutputInfo(CAACAudioCodecInternals::fillInputBuffer,
-							mInternals->mInputSample, mInternals));
-	ReturnErrorIfError(error);
+		mInternals->mOutputSampleByteOffset = OV<UInt32>(0);
+	}
 
-	error =
-			CMediaFoundationServices::completeWrite(*mInternals->mOutputSample, audioFrames,
-					*mInternals->mAudioProcessingFormat);
-	ReturnErrorIfError(error);
+	// Complete write
+	TVResult<OV<UInt32> >	result =
+									CMediaFoundationServices::completeWrite(*mInternals->mOutputSample,
+											*mInternals->mOutputSampleByteOffset,
+											audioFrames.getAvailableFrameCount() *
+													mInternals->mAudioProcessingFormat->getBytesPerFrame(),
+											audioFrames, *mInternals->mAudioProcessingFormat);
+	ReturnErrorIfResultError(result);
+
+	// Update
+	mInternals->mOutputSampleByteOffset = result.getValue();
 
 	return OI<SError>();
 }

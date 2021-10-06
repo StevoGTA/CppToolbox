@@ -18,7 +18,7 @@
 /*
 	Terms:
 		"sample" is an individual LPCM sample of typically between 8 and 64 bits.
-		"frame" is the collection of samples for all channels that are active at the same time slice.
+		"frame" is the collection of samples for all channels for the same time slice.
 		"bytesPerFrame" is how many bytes are required to store a single frame of audio data.
 
 		"packet" is opaque data comprising a certain number of samples (or frames) compressed into a certain number of
@@ -35,8 +35,8 @@ class CAudioFrames : private CData {
 	// Methods
 	public:
 									// Lifecycle methods
-									CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferTotalFrameCount,
-											UInt32 bufferAvailableFrameCount, UInt32 bytesPerFrame);
+									CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferByteCount,
+											UInt32 bytesPerFrame);
 									CAudioFrames(UInt32 bufferCount, UInt32 bytesPerFrame,
 											UInt32 frameCountPerBuffer = 4096);
 									~CAudioFrames();

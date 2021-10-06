@@ -99,7 +99,8 @@ class CMediaFoundationServices {
 		static	OI<SError>				processOutput(IMFTransform* transform, IMFSample* outputSample,
 												ProcessOutputInfo& processOutputInfo);
 
-		static	OI<SError>				completeWrite(IMFSample* sample, CAudioFrames& audioFrames,
+		static	TVResult<OV<UInt32> >	completeWrite(IMFSample* sample, UInt32 sampleByteOffset, UInt32 maxByteCount,
+												CAudioFrames& audioFrames,
 												const SAudioProcessingFormat& audioProcessingFormat);
 
 		static	OI<SError>				flush(IMFTransform* transform);

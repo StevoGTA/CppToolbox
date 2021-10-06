@@ -29,14 +29,12 @@ class CAudioFramesInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferTotalFrameCount,
-		UInt32 bufferAvailableFrameCount, UInt32 bytesPerFrame) :
-		CData(buffers, bufferCount * bufferTotalFrameCount * bytesPerFrame, false)
+CAudioFrames::CAudioFrames(void* buffers, UInt32 bufferCount, UInt32 bufferByteCount, UInt32 bytesPerFrame) :
+		CData(buffers, bufferCount * bufferByteCount, false)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CAudioFramesInternals(bufferCount, bufferTotalFrameCount * bytesPerFrame, bufferAvailableFrameCount,
-					bytesPerFrame);
+			new CAudioFramesInternals(bufferCount, bufferByteCount, bufferByteCount / bytesPerFrame, bytesPerFrame);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

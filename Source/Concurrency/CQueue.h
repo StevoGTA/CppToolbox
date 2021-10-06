@@ -90,7 +90,7 @@ template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 									{}
 
 								// Instance methods
-		OR<const TBuffer<T> >	requestRead() const
+		OR<const TBuffer<T> >	requestRead()
 									{
 										// Check situation
 										ReadBufferInfo	readBufferInfo = CSRSWBIPQueue::requestRead();
@@ -107,7 +107,7 @@ template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 		void					commitRead(UInt32 elementCount)
 									{ CSRSWBIPQueue::commitRead(elementCount * sizeof(T)); }
 
-		OR<TBuffer<T> >			requestWrite(UInt32 elementCount) const
+		OR<TBuffer<T> >			requestWrite(UInt32 elementCount)
 									{
 										// Check situation
 										WriteBufferInfo	writeBufferInfo =

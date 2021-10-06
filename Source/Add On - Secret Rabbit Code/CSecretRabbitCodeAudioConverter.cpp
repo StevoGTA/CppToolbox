@@ -59,14 +59,14 @@ class CSecretRabbitCodeAudioConverterInternals {
 												// Convert SInt16 => Float32
 												src_short_to_float_array(
 														(short*) internals.mInputAudioFrames->getBuffersAsRead()[0],
-														(float*) internals.mInputAudioFrames->getBuffersAsWrite()[0],
+														(float*) internals.mInputFloatAudioFrames->getBuffersAsWrite()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->getChannels());
 											else
 												// Convert SInt32 => Float32
 												src_int_to_float_array(
 														(int*) internals.mInputAudioFrames->getBuffersAsRead()[0],
-														(float*) internals.mInputAudioFrames->getBuffersAsWrite()[0],
+														(float*) internals.mInputFloatAudioFrames->getBuffersAsWrite()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->getChannels());
 										}

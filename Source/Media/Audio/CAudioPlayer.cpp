@@ -75,7 +75,8 @@ class CAudioPlayerBufferThreadInternals {
 																						mMaxOutputFrames * 2) *
 																				mBytesPerFrame;
 						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo = mQueue.requestWrite(bytesToRequest);
-						if (writeBufferInfo.mSize < mBytesPerFrame)
+						//if (writeBufferInfo.mSize < mBytesPerFrame)
+						if (!writeBufferInfo.hasBuffer())
 							// No space
 							return false;
 
@@ -91,8 +92,7 @@ class CAudioPlayerBufferThreadInternals {
 
 						// Perform read
 						CAudioFrames		audioFrames(writeBufferInfo.mBuffer, mQueue.getSegmentCount(),
-													writeBufferInfo.mSegmentSize / mBytesPerFrame,
-													bytesToRead / mBytesPerFrame, mBytesPerFrame);
+													bytesToRead, mBytesPerFrame);
 						SAudioSourceStatus	audioSourceStatus = mAudioPlayer.perform(mMediaPosition, audioFrames);
 						if (audioSourceStatus.isSuccess()) {
 							// Success
