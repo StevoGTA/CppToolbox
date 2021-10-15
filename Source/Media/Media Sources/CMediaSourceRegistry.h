@@ -58,24 +58,24 @@ class CMediaSourceRegistry {
 	// IdentifyInfo
 	public:
 		struct IdentifyInfo {
-									// Lifecycle methods
-									IdentifyInfo(OSType id, const SMediaTracks& mediaTracks) :
-										mID(id), mMediaTracks(mediaTracks)
-										{}
-									IdentifyInfo(const IdentifyInfo& other) :
-										mID(other.mID), mMediaTracks(other.mMediaTracks)
-										{}
+										// Lifecycle methods
+										IdentifyInfo(OSType id, const CMediaTrackInfos& mediaTrackInfos) :
+											mID(id), mMediaTrackInfos(mediaTrackInfos)
+											{}
+										IdentifyInfo(const IdentifyInfo& other) :
+											mID(other.mID), mMediaTrackInfos(other.mMediaTrackInfos)
+											{}
 
-									// Instance methods
-					OSType			getID() const
-										{ return mID; }
-			const	SMediaTracks&	getMediaTracks() const
-										{ return mMediaTracks; }
+										// Instance methods
+					OSType				getID() const
+											{ return mID; }
+			const	CMediaTrackInfos&	getMediaTrackInfos() const
+											{ return mMediaTrackInfos; }
 
 			// Properties
 			private:
-				OSType			mID;
-				SMediaTracks	mMediaTracks;
+				OSType				mID;
+				CMediaTrackInfos	mMediaTrackInfos;
 		};
 
 	// Methods
@@ -84,7 +84,8 @@ class CMediaSourceRegistry {
 				void					registerMediaSource(const SMediaSource& mediaSource);
 		const	SMediaSource&			getMediaSource(OSType id) const;
 				TIResult<IdentifyInfo>	identify(const I<CSeekableDataSource>& seekableDataSource,
-												const CString& extension) const;
+												const CString& extension,
+												SMediaSource::Options options = SMediaSource::kNone) const;
 
 	private:
 										// Lifecycle methods
