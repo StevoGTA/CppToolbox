@@ -205,8 +205,7 @@ TIResult<CVideoFrame> CH264VideoCodec::decode()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get next packet
-	TIResult<CMediaPacketSource::DataInfo>	dataInfo =
-													(*mInternals->mDecodeInfo)->getMediaPacketSource()->getNextPacket();
+	TIResult<CMediaPacketSource::DataInfo>	dataInfo = (*mInternals->mDecodeInfo)->getMediaPacketSource()->readNext();
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
 
 //CLogServices::logMessage(

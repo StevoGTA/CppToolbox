@@ -39,7 +39,7 @@ class CAACAudioCodecInternals {
 									TIResult<TArray<SMediaPacket> >	mediaPacketsResult =
 																			(*internals.mDecodeInfo)->
 																					getMediaPacketSource()->
-																					getMediaPackets(
+																					readNextInto(
 																							internals.mInputPacketData);
 									ReturnValueIfResultError(mediaPacketsResult, -1);
 
