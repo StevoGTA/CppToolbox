@@ -162,15 +162,14 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 	UInt16	channels = mInternals->mAudioProcessingFormat->getChannels();
 
 	// Decode packets
-	CAudioFrames::WriteInfo	writeInfo = audioFrames.getSegmentsAsWrite();
+	CAudioFrames::WriteInfo	writeInfo = audioFrames.getWriteInfo();
 	UInt32					remainingFrames = writeInfo.getFrameCount();
 	SInt16*					bufferPtr = (SInt16*) writeInfo.getSegments()[0];
 	UInt32					decodedFrameCount = 0;
 	while (remainingFrames >= kDVIIntelFramesPerPacket) {
 		// Get next packet
 		TIResult<CMediaPacketSource::DataInfo>	dataInfo =
-														(*mInternals->mDecodeInfo)->getMediaPacketSource()->
-																getNextPacket();
+														(*mInternals->mDecodeInfo)->getMediaPacketSource()->readNext();
 		if (dataInfo.hasError()) {
 			// Check situation
 			if (decodedFrameCount > 0)

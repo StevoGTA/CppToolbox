@@ -112,9 +112,9 @@ class CAudioFrames : private CData {
 		UInt32		getAvailableFrameCount() const;
 		UInt32		getCurrentFrameCount() const;
 
-		ReadInfo	getSegmentsAsRead() const;
+		ReadInfo	getReadInfo() const;
 
-		WriteInfo	getSegmentsAsWrite();
+		WriteInfo	getWriteInfo();
 		void		completeWrite(UInt32 frameCount);
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS

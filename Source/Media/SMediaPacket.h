@@ -80,8 +80,9 @@ class CMediaPacketSource {
 		virtual	UInt32							seekToDuration(UInt32 duration) = 0;
 		virtual	void							seekToPacket(UInt32 packetIndex) = 0;
 
-		virtual	TIResult<DataInfo>				getNextPacket() = 0;
-		virtual	TIResult<TArray<SMediaPacket> >	getMediaPackets(CData& data) = 0;
+		virtual	TIResult<DataInfo>				readNext() = 0;
+		virtual	TIResult<TArray<SMediaPacket> >	readNextInto(CData& data,
+														const OV<UInt32>& maxPacketCount = OV<UInt32>()) = 0;
 
 	protected:
 												// Lifecycle methods
@@ -107,8 +108,9 @@ class CSeekableUniformMediaPacketSource : public CMediaPacketSource {
 		void									seekToPacket(UInt32 packetIndex)
 													{ AssertFailUnimplemented(); }
 
-		TIResult<CMediaPacketSource::DataInfo>	getNextPacket();
-		TIResult<TArray<SMediaPacket> >			getMediaPackets(CData& data)
+		TIResult<CMediaPacketSource::DataInfo>	readNext();
+		TIResult<TArray<SMediaPacket> >			readNextInto(CData& data,
+														const OV<UInt32>& maxPacketCount = OV<UInt32>())
 													{
 														AssertFailUnimplemented();
 
@@ -137,8 +139,9 @@ class CSeekableVaryingMediaPacketSource : public CMediaPacketSource {
 		UInt32									seekToDuration(UInt32 duration);
 		void									seekToPacket(UInt32 packetIndex);
 
-		TIResult<CMediaPacketSource::DataInfo>	getNextPacket();
-		TIResult<TArray<SMediaPacket> >			getMediaPackets(CData& data);
+		TIResult<CMediaPacketSource::DataInfo>	readNext();
+		TIResult<TArray<SMediaPacket> >			readNextInto(CData& data,
+														const OV<UInt32>& maxPacketCount = OV<UInt32>());
 
 	// Properties
 	private:

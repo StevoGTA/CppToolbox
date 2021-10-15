@@ -53,7 +53,7 @@ class CAudioPlayerImplementation :
 									mLastSeekTimeInterval(0.0),
 									mOnFillBufferShouldSendFrames(true), mOnFillBufferIsSendingFrames(false),
 									mOnFillBufferShouldNotifyEndOfData(false), mOnFillBufferPreviousFrameCount(0),
-									mOnFillBufferFrameIndex(0)
+									mOnFillBufferFrameIndex(0), mOnFillBufferFrameCount(~0)
 							{
 								// Setup
 								HRESULT	result;
@@ -195,13 +195,13 @@ class CAudioPlayerImplementation :
 
 								// Check if rendered any frames
 								if (mOnFillBufferPreviousFrameCount > 0) {
-									// Update position
+									// Update info
 									mOnFillBufferFrameIndex += mOnFillBufferPreviousFrameCount;
 									mCurrentPlaybackTimeInterval +=
 											(UniversalTimeInterval) mOnFillBufferPreviousFrameCount /
 													(UniversalTimeInterval) mMixFormat->nSamplesPerSec;
 
-									// Reset
+									mOnFillBufferFrameCount -= mOnFillBufferPreviousFrameCount;
 									mOnFillBufferPreviousFrameCount = 0;
 
 									// Notify playback position updated
@@ -228,8 +228,11 @@ class CAudioPlayerImplementation :
 								if ((mState == kPlaying) && mOnFillBufferShouldSendFrames) {
 									// Sending frames
 									CSRSWBIPSegmentedQueue::ReadBufferInfo	readBufferInfo = mQueue->requestRead();
+									UInt32									frameCount =
+																					std::min<UInt32>(framesAvailable,
+																							mOnFillBufferFrameCount);
 									UInt32									requiredByteCount =
-																					framesAvailable *
+																					frameCount *
 																							mMixFormat->nBlockAlign;
 
 									// Copy frames
@@ -471,6 +474,7 @@ class CAudioPlayerImplementation :
 		bool											mOnFillBufferShouldNotifyEndOfData;
 		UInt32											mOnFillBufferPreviousFrameCount;
 		UInt32											mOnFillBufferFrameIndex;
+		UInt32											mOnFillBufferFrameCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -592,7 +596,42 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioPlayer::reset()
+void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Stop sending frames
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
+	while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
+		// Sleep
+		CThread::sleepFor(0.001);
+
+	// Pause Reader Thread
+	mInternals->mImplementation->mAudioPlayerBufferThread->pause();
+
+	// Reset buffer
+	mInternals->mImplementation->mQueue->reset();
+
+	// Seek
+	CAudioDestination::seek(timeInterval);
+
+	// Reset stuffs
+	mInternals->mImplementation->mCurrentPlaybackTimeInterval = timeInterval;
+	mInternals->mImplementation->mLastSeekTimeInterval = timeInterval;
+
+	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
+	mInternals->mImplementation->mOnFillBufferFrameCount =
+			(UInt32) ((UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec *
+					CAudioPlayer::kPreviewDuration);
+
+	// Resume
+	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
+
+	// Send frames
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioPlayer::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Stop sending frames
@@ -601,31 +640,21 @@ OI<SError> CAudioPlayer::reset()
 		// Sleep
 		CThread::sleepFor(0.001);
 
-	// Reset Reader Thread
-	mInternals->mImplementation->mAudioPlayerBufferThread->stopReading();
+	// Pause Reader Thread
+	mInternals->mImplementation->mAudioPlayerBufferThread->pause();
 
 	// Reset buffer
 	mInternals->mImplementation->mQueue->reset();
 
-	// Setup to play requested frames
-	mInternals->mImplementation->mAudioPlayerBufferThread->seek(mInternals->mImplementation->mStartTimeInterval,
-			mInternals->mImplementation->mDurationTimeInterval.hasValue() ?
-					(UInt32) (*mInternals->mImplementation->mDurationTimeInterval *
-							(UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec) :
-					~0);
-
 	// Reset the pipeline
-	OI<SError>	error = CAudioDestination::reset();
-	ReturnErrorIfError(error);
+	CAudioDestination::reset();
 
 	// Reset
-	mInternals->mImplementation->mCurrentPlaybackTimeInterval = mInternals->mImplementation->mStartTimeInterval;
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
+	mInternals->mImplementation->mOnFillBufferFrameCount = ~0;
 
 	// Resume
 	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
-
-	return OI<SError>();
 }
 
 // MARK: CAudioDestination methods
@@ -651,26 +680,6 @@ void CAudioPlayer::setGain(Float32 gain)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mImplementation->setGain(gain);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::setWindow(UniversalTimeInterval startTimeInterval, UniversalTimeInterval durationTimeInterval)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	bool	performSeek = startTimeInterval != mInternals->mImplementation->mStartTimeInterval;
-
-	// Store
-	mInternals->mImplementation->mStartTimeInterval = startTimeInterval;
-	mInternals->mImplementation->mDurationTimeInterval = OV<UniversalTimeInterval>(durationTimeInterval);
-
-	// Check if need seek
-	if (performSeek) {
-		// Seek
-		startSeek();
-		seek(mInternals->mImplementation->mStartTimeInterval);
-		finishSeek();
-	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -724,48 +733,6 @@ void CAudioPlayer::startSeek()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Stay within the window
-	if ((timeInterval >= mInternals->mImplementation->mStartTimeInterval) &&
-			(!mInternals->mImplementation->mDurationTimeInterval.hasValue() ||
-					(timeInterval < ((mInternals->mImplementation->mStartTimeInterval +
-							*mInternals->mImplementation->mDurationTimeInterval))))) {
-		// Stop sending frames
-		mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-		while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
-			// Sleep
-			CThread::sleepFor(0.001);
-
-		// Reset Reader Thread
-		mInternals->mImplementation->mAudioPlayerBufferThread->stopReading();
-
-		// Reset buffer
-		mInternals->mImplementation->mQueue->reset();
-
-		// Reset the pipeline
-		CAudioDestination::reset();
-
-		// Reset stuffs
-		mInternals->mImplementation->mCurrentPlaybackTimeInterval = timeInterval;
-		mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
-
-		// Setup to play preview length frames
-		mInternals->mImplementation->mLastSeekTimeInterval = timeInterval;
-		mInternals->mImplementation->mAudioPlayerBufferThread->seek(timeInterval,
-					(UInt32) ((UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec *
-							CAudioPlayer::kPreviewDuration));
-
-		// Resume
-		mInternals->mImplementation->mAudioPlayerBufferThread->resume();
-
-		// Send frames
-		mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::finishSeek()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -775,31 +742,20 @@ void CAudioPlayer::finishSeek()
 		// Sleep
 		CThread::sleepFor(0.001);
 
-	// Reset Reader Thread
-	mInternals->mImplementation->mAudioPlayerBufferThread->stopReading();
+	// Pause Reader Thread
+	mInternals->mImplementation->mAudioPlayerBufferThread->pause();
 
 	// Reset buffer
 	mInternals->mImplementation->mQueue->reset();
 
-	// Setup to play frames
-	if (mInternals->mImplementation->mDurationTimeInterval.hasValue())
-		// Setup to play the rest of the frames in the window
-		mInternals->mImplementation->mAudioPlayerBufferThread->seek(mInternals->mImplementation->mLastSeekTimeInterval,
-				(UInt32) ((mInternals->mImplementation->mStartTimeInterval +
-						*mInternals->mImplementation->mDurationTimeInterval -
-						mInternals->mImplementation->mLastSeekTimeInterval) *
-						(UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec));
-	else
-		// Setup to play the rest of the frames
-		mInternals->mImplementation->mAudioPlayerBufferThread->seek(mInternals->mImplementation->mLastSeekTimeInterval,
-				~0);
+	// Seek to the last seek time interval
+	CAudioDestination::seek(mInternals->mImplementation->mLastSeekTimeInterval);
 
-	// Reset the pipeline
-	CAudioDestination::reset();
-
-	// Reset frame index
+	// Reset stuffs
 	mInternals->mImplementation->mCurrentPlaybackTimeInterval = mInternals->mImplementation->mLastSeekTimeInterval;
+
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
+	mInternals->mImplementation->mOnFillBufferFrameCount = ~0;
 
 	// Resume
 	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
@@ -815,5 +771,4 @@ void CAudioPlayer::finishSeek()
 //----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::setMaxAudioPlayers(UInt32 maxAudioPlayers)
 //----------------------------------------------------------------------------------------------------------------------
-{
-}
+{}

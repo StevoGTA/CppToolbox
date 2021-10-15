@@ -94,13 +94,12 @@ class CMediaFoundationServices {
 		static	TCIResult<IMFSample>	createSample(UInt32 size);
 		static	TCIResult<IMFSample>	createSample(const CData& data);
 		static	OI<SError>				resizeSample(IMFSample* sample, UInt32 size);
-		static	OI<SError>				load(IMFMediaBuffer* mediaBuffer, CPacketMediaReader& packetMediaReader);
+		static	OI<SError>				load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource);
 
 		static	OI<SError>				processOutput(IMFTransform* transform, IMFSample* outputSample,
 												ProcessOutputInfo& processOutputInfo);
 
-		static	TVResult<OV<UInt32> >	completeWrite(IMFSample* sample, UInt32 sampleByteOffset, UInt32 maxByteCount,
-												CAudioFrames& audioFrames,
+		static	OI<SError>				completeWrite(IMFSample* sample, UInt32 frameOffset, CAudioFrames& audioFrames,
 												const SAudioProcessingFormat& audioProcessingFormat);
 
 		static	OI<SError>				flush(IMFTransform* transform);

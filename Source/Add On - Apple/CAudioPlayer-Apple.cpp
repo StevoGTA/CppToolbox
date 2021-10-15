@@ -282,7 +282,6 @@ class CAudioPlayerInternals {
 												(UniversalTimeInterval) internals.mRenderProcPreviousFrameCount /
 														*internals.mSampleRate;
 
-										// Update
 										internals.mRenderProcFrameCount -= internals.mRenderProcPreviousFrameCount;
 										internals.mRenderProcPreviousFrameCount = 0;
 
@@ -707,7 +706,6 @@ void CAudioPlayer::finishSeek()
 
 	// Reset buffer
 	mInternals->mQueue->reset();
-
 
 	// Seek to the last seek time interval
 	CAudioDestination::seek(mInternals->mLastSeekTimeInterval);

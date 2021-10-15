@@ -24,9 +24,8 @@ static	SError	sSetupDidNotCompleteError(sErrorDomain, 1, CString(OSSTR("Setup di
 class CH264VideoCodecInternals {
 	public:
 										CH264VideoCodecInternals() :
-											mTimeScale(0),
-													mOutputSampleRequiredByteCount(0),
-													mCurrentFrameNumberBitCount(0), mCurrentPicOrderCountLSBBitCount(0),
+											mOutputSampleRequiredByteCount(0), mCurrentFrameNumberBitCount(0),
+													mCurrentPicOrderCountLSBBitCount(0),
 													mPicOrderCountMSBChangeThreshold(0),
 													mPicOrderCountMSB(0), mPreviousPicOrderCountLSB(0),
 													mLastIDRFrameTime(0), mNextFrameTime(0)
@@ -38,8 +37,9 @@ class CH264VideoCodecInternals {
 		static	TCIResult<IMFSample>	readInputSample(void* userData);
 		static	OI<SError>				noteFormatChanged(IMFMediaType* mediaType, void* userData);
 
-		OR<CPacketMediaReader>						mPacketMediaReader;
-		UInt32										mTimeScale;
+		OV<UInt32>									mTimeScale;
+		OI<SVideoProcessingFormat>					mVideoProcessingFormat;
+		OI<I<CCodec::DecodeInfo> >					mDecodeInfo;
 
 		OCI<IMFTransform>							mVideoDecoder;
 
@@ -69,11 +69,9 @@ TCIResult<IMFSample> CH264VideoCodecInternals::readInputSample(void* userData)
 	// Setup
 	CH264VideoCodecInternals&	internals = *((CH264VideoCodecInternals*) userData);
 
-	// Read next packet
-	TIResult<CPacketMediaReader::MediaPacketDataInfo>	mediaPacketDataInfo =
-																internals.mPacketMediaReader->
-																		readNextMediaPacketDataInfo();
-	ReturnValueIfResultError(mediaPacketDataInfo, TCIResult<IMFSample>(mediaPacketDataInfo.getError()));
+	// Get next packet
+	TIResult<CMediaPacketSource::DataInfo>	dataInfo = (*internals.mDecodeInfo)->getMediaPacketSource()->readNext();
+	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
 
 UInt8	naluUnitType;
 UInt8	sliceType;
@@ -81,10 +79,10 @@ UInt8	frameNum;
 UInt8	picOrderCntLSB;
 UInt8	deltaPicOrderCntBottom;
 
-const	CData&		data = mediaPacketDataInfo.getValue().getData();
+const	CData&		data = dataInfo.getValue().getData();
 		CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(data)), true);
 
-		UInt32		duration = mediaPacketDataInfo.getValue().getDuration();
+		UInt32		duration = dataInfo.getValue().getDuration();
 
 while (true) {
 	//
@@ -180,7 +178,7 @@ if (sliceType == 2) {
 	internals.mPreviousPicOrderCountLSB = picOrderCntLSB;
 }
 
-	HRESULT	result = sample.getInstance()->SetSampleTime(frameTime * 10000 / internals.mTimeScale);
+	HRESULT	result = sample.getInstance()->SetSampleTime(frameTime * 10000 / *internals.mTimeScale);
 	LogHRESULTIfFailed(result, "SetSampleTime");
 
 	result = sample.getInstance()->SetSampleDuration(duration);
@@ -269,15 +267,12 @@ CH264VideoCodec::~CH264VideoCodec()
 // MARK: CVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CH264VideoCodec::setupForDecode(const I<CMediaReader>& mediaReader, const I<CCodec::DecodeInfo>& decodeInfo,
-		CVideoFrame::Compatibility compatibility)
+void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
+		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	const	DecodeInfo&	h264DecodeInfo = *((DecodeInfo*) &*decodeInfo);
-
-	mInternals->mPacketMediaReader = OR<CPacketMediaReader>(*((CPacketMediaReader*) &*mediaReader));
-	mInternals->mTimeScale = h264DecodeInfo.getTimeScale();
 
 	// Create video decoder
 	TCIResult<IMFTransform>	videoDecoder = CMediaFoundationServices::createTransformForVideoDecode(MFVideoFormat_H264);
@@ -297,6 +292,10 @@ void CH264VideoCodec::setupForDecode(const I<CMediaReader>& mediaReader, const I
 	mInternals->mOutputSampleRequiredByteCount = outputStreamInfo.cbSize;
 
 	// Finish setup
+	mInternals->mTimeScale = OV<UInt32>(h264DecodeInfo.getTimeScale());
+	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
+	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
+
 	mInternals->mCurrentSPSPPSInfo = OI<DecodeInfo::SPSPPSInfo>(h264DecodeInfo.getSPSPPSInfo());
 
 	const	NALUInfo&					spsNALUInfo = mInternals->mCurrentSPSPPSInfo->getSPSNALUInfos().getFirst();
@@ -314,6 +313,18 @@ void CH264VideoCodec::setupForDecode(const I<CMediaReader>& mediaReader, const I
 
 	result = mInternals->mVideoDecoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
 	LogHRESULTIfFailed(result, "ProcessMessage to begin streaming");
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CH264VideoCodec::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Flush
+	CMediaFoundationServices::flush(*mInternals->mVideoDecoder);
+
+	// Seek
+	(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToPacket(
+			(UInt32) (timeInterval * mInternals->mVideoProcessingFormat->getFramerate()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -347,16 +358,4 @@ TIResult<CVideoFrame> CH264VideoCodec::decode()
 			CVideoFrame((UniversalTimeInterval) sampleTime / 10000.0, *sample.getInstance(),
 					mInternals->mOutputSampleDataFormatGUID, mInternals->mOutputSampleFrameSize,
 					mInternals->mOutputSampleViewRect));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CH264VideoCodec::decodeReset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	//// Reset
-	//if (mInternals->mDecompressionSessionRef != nil) {
-	//	// Invalidate and release
-	//	::VTDecompressionSessionWaitForAsynchronousFrames(mInternals->mDecompressionSessionRef);
-	//}
-	//mInternals->mNextFrameIndex = 0;
 }

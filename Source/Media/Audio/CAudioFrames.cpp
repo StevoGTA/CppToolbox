@@ -71,7 +71,7 @@ UInt32 CAudioFrames::getCurrentFrameCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::ReadInfo CAudioFrames::getSegmentsAsRead() const
+CAudioFrames::ReadInfo CAudioFrames::getReadInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -84,7 +84,7 @@ CAudioFrames::ReadInfo CAudioFrames::getSegmentsAsRead() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::WriteInfo CAudioFrames::getSegmentsAsWrite()
+CAudioFrames::WriteInfo CAudioFrames::getWriteInfo()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

@@ -17,10 +17,10 @@ class CAudioChannelMapperInternals {
 								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
-										CAudioFrames::ReadInfo	readInfo = sourceAudioFrames.getSegmentsAsRead();
+										CAudioFrames::ReadInfo	readInfo = sourceAudioFrames.getReadInfo();
 								const	SInt16*					sourcePtr = (const SInt16*) readInfo.getSegments()[0];
 
-										CAudioFrames::WriteInfo	writeInfo = destinationAudioFrames.getSegmentsAsWrite();
+										CAudioFrames::WriteInfo	writeInfo = destinationAudioFrames.getWriteInfo();
 										SInt16*					destinationPtr = (SInt16*) writeInfo.getSegments()[0];
 
 								// Perform

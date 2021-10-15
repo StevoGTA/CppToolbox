@@ -28,25 +28,28 @@ static	SError	sSetupDidNotCompleteError(sErrorDomain, 1, CString(OSSTR("Setup di
 
 class CAACAudioCodecInternals {
 	public:
-							CAACAudioCodecInternals(OSType codecID) : mCodecID(codecID), mNextPacketIndex(0) {}
+							CAACAudioCodecInternals(OSType codecID) :
+								mCodecID(codecID), mDecodeFramesToIgnore(0), mNextPacketIndex(0)
+								{}
 
 		static	OI<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
 								{
 									// Setup
 									CAACAudioCodecInternals&	internals = *((CAACAudioCodecInternals*) userData);
 
-									return CMediaFoundationServices::load(mediaBuffer, *internals.mPacketMediaReader);
+									return CMediaFoundationServices::load(mediaBuffer,
+											*(*internals.mDecodeInfo)->getMediaPacketSource());
 								}
 
 
 		OSType						mCodecID;
-		OR<CPacketMediaReader>		mPacketMediaReader;
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
 
 		OCI<IMFTransform>			mAudioDecoder;
+		UInt32						mDecodeFramesToIgnore;
 		OCI<IMFSample>				mInputSample;
 		OCI<IMFSample>				mOutputSample;
-		OV<UInt32>					mOutputSampleByteOffset;
 		UInt32						mNextPacketIndex;
 };
 
@@ -74,15 +77,15 @@ CAACAudioCodec::~CAACAudioCodec()
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		const I<CMediaReader>& mediaReader, const I<CAudioCodec::DecodeInfo>& decodeInfo)
+		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
 	// Store
-	mInternals->mPacketMediaReader = OR<CPacketMediaReader>(*((CPacketMediaReader*) &*mediaReader));
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
 
 	// Create audio decoder
 #pragma pack(push,1)
@@ -132,17 +135,32 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CAACAudioCodec::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Flush
+	mInternals->mAudioDecoder->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
+
+	// Seek
+	mInternals->mDecodeFramesToIgnore =
+			(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToDuration(
+					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
+	AssertFailIf(audioFrames.getAvailableFrameCount() < (1024 * 2));
+
 	if (!mInternals->mAudioDecoder.hasInstance() || !mInternals->mInputSample.hasInstance() ||
 			!mInternals->mOutputSample.hasInstance())
 		// Can't decode
 		return OI<SError>(sSetupDidNotCompleteError);
 
-	// Check if have byte offset
-	if (!mInternals->mOutputSampleByteOffset.hasValue()) {
+	// Fill audio frames as much as we can
+	while (audioFrames.getAvailableFrameCount() >= 1024) {
 		// Process output
 		OI<SError>	error =
 							CMediaFoundationServices::processOutput(*mInternals->mAudioDecoder,
@@ -152,27 +170,15 @@ OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
 											mInternals));
 		ReturnErrorIfError(error);
 
-		mInternals->mOutputSampleByteOffset = OV<UInt32>(0);
+		// Complete write
+		error =
+				CMediaFoundationServices::completeWrite(*mInternals->mOutputSample, mInternals->mDecodeFramesToIgnore,
+						audioFrames, *mInternals->mAudioProcessingFormat);
+		ReturnErrorIfError(error);
+
+		// Update
+		mInternals->mDecodeFramesToIgnore = 0;
 	}
 
-	// Complete write
-	TVResult<OV<UInt32> >	result =
-									CMediaFoundationServices::completeWrite(*mInternals->mOutputSample,
-											*mInternals->mOutputSampleByteOffset,
-											audioFrames.getAvailableFrameCount() *
-													mInternals->mAudioProcessingFormat->getBytesPerFrame(),
-											audioFrames, *mInternals->mAudioProcessingFormat);
-	ReturnErrorIfResultError(result);
-
-	// Update
-	mInternals->mOutputSampleByteOffset = result.getValue();
-
 	return OI<SError>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAACAudioCodec::decodeReset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mAudioDecoder->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
 }

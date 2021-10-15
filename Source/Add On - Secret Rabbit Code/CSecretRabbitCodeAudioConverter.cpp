@@ -20,9 +20,7 @@ class CSecretRabbitCodeAudioConverterInternals {
 	public:
 						CSecretRabbitCodeAudioConverterInternals(CAudioConverter& audioConverter) :
 								mAudioConverter(audioConverter),
-										mSRCState(nil), mSourceHasMoreToRead(true),
-										mSourceMediaPosition(SMediaPosition::fromStart(0.0)),
-										mSourcePercentConsumed(0.0)
+										mSRCState(nil), mSourceHasMoreToRead(true), mSourceTimeInterval(0.0)
 							{}
 						~CSecretRabbitCodeAudioConverterInternals()
 							{
@@ -35,45 +33,73 @@ class CSecretRabbitCodeAudioConverterInternals {
 								// Setup
 								CSecretRabbitCodeAudioConverterInternals&	internals =
 																					*((CSecretRabbitCodeAudioConverterInternals*)
-																							userData);
-								internals.mInputAudioFrames->reset();
+																						userData);
+								if (internals.mInputAudioFrames.hasInstance())
+									// Reset
+									internals.mInputAudioFrames->reset();
+								else {
+									// Setup
+									CAudioFrames::Requirements	requirements =
+																		internals.mAudioConverter
+																				.queryRequirements()
+																				.mAudioFramesRequirements;
+									UInt32						frameCountInterval =
+																		(requirements.mFrameCountInterval > 1) ?
+																				requirements.mFrameCountInterval : 1024;
+									UInt32						frameCount =
+																		requirements.getFrameCount(
+																				frameCountInterval * 10);
+									internals.mInputAudioFrames =
+											OI<CAudioFrames>(
+													new CAudioFrames(1,
+															internals.mInputAudioProcessingFormat->getBytesPerFrame(),
+															frameCount));
+									if (internals.mInputAudioProcessingFormat->getIsSignedInteger())
+										// Need to convert input audio frames to float
+										internals.mInputFloatAudioFrames =
+												OI<CAudioFrames>(
+														new CAudioFrames(1,
+																sizeof(Float32) *
+																		internals.mInputAudioProcessingFormat->
+																				getChannels(),
+																frameCount));
+								}
 
 								// Check if have more to read
+								CAudioFrames::ReadInfo	readInfo = internals.mInputAudioFrames->getReadInfo();
 								if (internals.mSourceHasMoreToRead) {
 									// Try to read
 									SAudioSourceStatus	audioSourceStatus =
-																internals.mAudioConverter.CAudioProcessor::perform(
-																		internals.mSourceMediaPosition,
+																internals.mAudioConverter.CAudioProcessor::performInto(
 																		*internals.mInputAudioFrames);
 									if (audioSourceStatus.isSuccess()) {
 										// Success
-										internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
-										internals.mSourcePercentConsumed = *audioSourceStatus.getPercentConsumed();
+										internals.mSourceTimeInterval = audioSourceStatus.getTimeInterval();
 
 										// Check if need to convert
 										if (internals.mInputAudioProcessingFormat->getIsSignedInteger()) {
 											// Convert
 											internals.mInputFloatAudioFrames->reset();
 
+											CAudioFrames::WriteInfo	writeInfo =
+																			internals.mInputFloatAudioFrames->
+																					getWriteInfo();
 											if (internals.mInputAudioProcessingFormat->getBits() == 16)
 												// Convert SInt16 => Float32
-												src_short_to_float_array(
-														(short*) internals.mInputAudioFrames->getSegmentsAsRead()[0],
-														(float*) internals.mInputFloatAudioFrames->getSegmentsAsWrite()[0],
+												src_short_to_float_array((short*) readInfo.getSegments()[0],
+														(float*) writeInfo.getSegments()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->getChannels());
 											else
 												// Convert SInt32 => Float32
-												src_int_to_float_array(
-														(int*) internals.mInputAudioFrames->getSegmentsAsRead()[0],
-														(float*) internals.mInputFloatAudioFrames->getSegmentsAsWrite()[0],
+												src_int_to_float_array((int*) readInfo.getSegments()[0],
+														(float*) writeInfo.getSegments()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->getChannels());
 										}
-									} else if (*audioSourceStatus.getError() == SError::mEndOfData) {
+									} else if (audioSourceStatus.getError() == SError::mEndOfData) {
 										// End of data
 										internals.mSourceHasMoreToRead = false;
-										internals.mSourceMediaPosition = SMediaPosition::fromCurrent();
 									} else
 										// Error
 										internals.mPerformError = audioSourceStatus.getError();
@@ -82,10 +108,10 @@ class CSecretRabbitCodeAudioConverterInternals {
 								// Prepare return info
 								if (internals.mInputFloatAudioFrames.hasInstance())
 									// Use converted float
-									*data = (float*) internals.mInputFloatAudioFrames->getSegmentsAsRead()[0];
+									*data = (float*) internals.mInputFloatAudioFrames->getWriteInfo().getSegments()[0];
 								else
 									// Use input float
-									*data = (float*) internals.mInputAudioFrames->getSegmentsAsRead()[0];
+									*data = (float*) readInfo.getSegments()[0];
 
 								return internals.mInputAudioFrames->getCurrentFrameCount();
 							}
@@ -98,8 +124,7 @@ class CSecretRabbitCodeAudioConverterInternals {
 		OI<CAudioFrames>			mInputFloatAudioFrames;
 		OI<SError>					mPerformError;
 		bool						mSourceHasMoreToRead;
-		SMediaPosition				mSourceMediaPosition;
-		Float32						mSourcePercentConsumed;
+		UniversalTimeInterval		mSourceTimeInterval;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -139,59 +164,38 @@ OI<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor
 				audioProcessingFormat.getChannels(), &error, mInternals);
 	ReturnErrorIfSRCError(error);
 
-	// Create Audio Frames(s)
-	mInternals->mInputAudioFrames = OI<CAudioFrames>(new CAudioFrames(1, audioProcessingFormat.getBytesPerFrame()));
-	if (audioProcessingFormat.getIsSignedInteger())
-		// Need to convert input audio frames to float
-		mInternals->mInputFloatAudioFrames =
-				OI<CAudioFrames>(new CAudioFrames(1, sizeof(Float32) * audioProcessingFormat.getChannels()));
-
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CSecretRabbitCodeAudioConverter::perform(const SMediaPosition& mediaPosition,
-		CAudioFrames& audioFrames)
+SAudioSourceStatus CSecretRabbitCodeAudioConverter::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Store
-	mInternals->mSourceMediaPosition = mediaPosition;
-
-	// Setup
-	if ((mediaPosition.getMode() != SMediaPosition::kFromCurrent) && (mInternals->mSourcePercentConsumed != 0.0)) {
-		// Reset
-		OI<SError>	error = reset();
-		if (error.hasInstance())
-			// Error
-			return SAudioSourceStatus(*error);
-	}
-
-	UInt32	frameCount = audioFrames.getAvailableFrameCount();
-
 	// Fill buffer
 	double	srcRatio =
 					mOutputAudioProcessingFormat->getSampleRate() /
 							mInternals->mInputAudioProcessingFormat->getSampleRate();
-	frameCount =
-			src_callback_read(mInternals->mSRCState, srcRatio, frameCount, (float*) audioFrames.getSegmentsAsWrite()[0]);
+	UInt32	frameCount =
+					src_callback_read(mInternals->mSRCState, srcRatio, audioFrames.getAvailableFrameCount(),
+							(float*) audioFrames.getWriteInfo().getSegments()[0]);
 	if (frameCount == 0) return SAudioSourceStatus(SError::mEndOfData);
 
 	// Update
 	audioFrames.completeWrite(frameCount);
 
-	return SAudioSourceStatus(mInternals->mSourcePercentConsumed);
+	return SAudioSourceStatus(mInternals->mSourceTimeInterval);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CSecretRabbitCodeAudioConverter::reset()
+void CSecretRabbitCodeAudioConverter::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Reset
-	int	error = src_reset(mInternals->mSRCState);
-	ReturnErrorIfSRCError(error);
-
+	// Update
 	mInternals->mSourceHasMoreToRead = true;
 
 	// Do super
-	return CAudioProcessor::reset();
+	CAudioProcessor::reset();
+
+	// Reset
+	src_reset(mInternals->mSRCState);
 }

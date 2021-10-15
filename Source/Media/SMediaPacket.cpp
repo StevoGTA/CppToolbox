@@ -60,7 +60,7 @@ UInt32 CSeekableUniformMediaPacketSource::seekToDuration(UInt32 duration)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::getNextPacket()
+TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNext()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can read next packet
@@ -152,7 +152,7 @@ void CSeekableVaryingMediaPacketSource::seekToPacket(UInt32 packetIndex)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::getNextPacket()
+TIResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::readNext()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can read next packet
@@ -179,20 +179,22 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::getNex
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::getMediaPackets(CData& data)
+TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::readNextInto(CData& data,
+		const OV<UInt32>& maxPacketCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add packets
-	UInt32					available = (UInt32) data.getSize();
+	UInt32					dataByteCountRemaining = (UInt32) data.getSize();
 	UInt8*					packetDataPtr = (UInt8*) data.getMutableBytePtr();
+	UInt32					packetCount = maxPacketCount.hasValue() ? *maxPacketCount : ~0;
 	TNArray<SMediaPacket>	mediaPackets;
-	while (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
+	while ((packetCount > 0) && (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount())) {
 		// Setup
 		SMediaPacketAndLocation&	mediaPacketAndLocation =
 											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
 
 		// Check if have space
-		if (mediaPacketAndLocation.mMediaPacket.mByteCount <= available) {
+		if (mediaPacketAndLocation.mMediaPacket.mByteCount <= dataByteCountRemaining) {
 			// Copy packet data
 			OI<SError>	error =
 								mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset,
@@ -206,10 +208,10 @@ TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::getMediaPacke
 			break;
 
 		// Update info
-		mediaPackets += mediaPacketAndLocation.mMediaPacket;
-
-		available -= mediaPacketAndLocation.mMediaPacket.mByteCount;
+		dataByteCountRemaining -= mediaPacketAndLocation.mMediaPacket.mByteCount;
 		packetDataPtr += mediaPacketAndLocation.mMediaPacket.mByteCount;
+		packetCount--;
+		mediaPackets += mediaPacketAndLocation.mMediaPacket;
 	}
 
 	return !mediaPackets.isEmpty() ?
