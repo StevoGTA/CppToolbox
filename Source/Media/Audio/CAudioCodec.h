@@ -9,19 +9,12 @@
 #include "CDataSource.h"
 #include "SAudioFormats.h"
 #include "SAudioSourceStatus.h"
-#include "SMediaPosition.h"
+#include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioCodec
 
 class CAudioCodec : public CCodec {
-	// Types
-	public:
-		typedef	UInt64					(*ComposeFrameCountProc)(const SAudioStorageFormat& audioStorageFormat,
-												UInt64 byteCount);
-		typedef	I<CCodec::DecodeInfo>	(*ComposeDecodeInfoProc)(const SAudioStorageFormat& audioStorageFormat,
-												UInt64 startByteOffset, UInt64 byteCount);
-
 	// Info
 	public:
 		struct Info {
@@ -100,10 +93,10 @@ class CAudioCodec : public CCodec {
 
 												// Instance methods
 		virtual	void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-														const I<CMediaReader>& mediaReader,
 														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
+		virtual	CAudioFrames::Requirements		getRequirements() const = 0;
+		virtual	void							seek(UniversalTimeInterval timeInterval) = 0;
 		virtual	OI<SError>						decode(CAudioFrames& audioFrames) = 0;
-		virtual	void							decodeReset() {}
 
 		virtual	TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const = 0;
 		virtual	void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat) = 0;
@@ -138,12 +131,14 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 	public:
 					// CAudioCodec methods
 		void		setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-							const I<CMediaReader>& mediaReader, const I<CCodec::DecodeInfo>& decodeInfo)
+							const I<CCodec::DecodeInfo>& decodeInfo)
+						{ AssertFailUnimplemented(); }
+		void		seek(UniversalTimeInterval timeInterval)
 						{ AssertFailUnimplemented(); }
 		OI<SError>	decode(CAudioFrames& audioFrames)
 						{ AssertFailUnimplemented(); return OI<SError>(SError::mUnimplemented); }
 
 	protected:
-							// Lifecycle methods
-							CEncodeOnlyAudioCodec() : CAudioCodec() {}
+					// Lifecycle methods
+					CEncodeOnlyAudioCodec() : CAudioCodec() {}
 };

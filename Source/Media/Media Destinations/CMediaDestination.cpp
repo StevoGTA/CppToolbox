@@ -40,18 +40,56 @@ CMediaDestination::~CMediaDestination()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
+UInt32 CMediaDestination::CMediaDestination::getAudioTrackCount() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mAudioProcessors.getKeyCount();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CMediaDestination::CMediaDestination::getVideoTrackCount() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mVideoProcessors.getKeyCount();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaDestination::setSourceWindow(UniversalTimeInterval startTimeInterval,
+		const OV<UniversalTimeInterval>& durationTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all audio tracks
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+		// Set window
+		(*mInternals->mAudioProcessors[i])->setSourceWindow(startTimeInterval, durationTimeInterval);
+
+	// Iterate all video tracks
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
+		// Seek
+		(*mInternals->mVideoProcessors[i])->setSourceWindow(startTimeInterval, durationTimeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaDestination::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all audio tracks
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+		// Seek
+		(*mInternals->mAudioProcessors[i])->seek(timeInterval);
+
+	// Iterate all video tracks
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
+		// Seek
+		(*mInternals->mVideoProcessors[i])->seek(timeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CMediaDestination::add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mAudioProcessors.set(trackIndex, audioProcessor);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UInt32 CMediaDestination::CMediaDestination::getAudioTrackCount() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mAudioProcessors.getKeyCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -67,13 +105,6 @@ void CMediaDestination::add(const I<CVideoProcessor>& videoProcessor, UInt32 tra
 {
 	// Store
 	mInternals->mVideoProcessors.set(trackIndex, videoProcessor);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UInt32 CMediaDestination::CMediaDestination::getVideoTrackCount() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mVideoProcessors.getKeyCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

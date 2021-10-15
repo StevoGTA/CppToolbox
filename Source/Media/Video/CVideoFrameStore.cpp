@@ -23,9 +23,9 @@ class CVideoFrameStoreThread : public CThread {
 						const CVideoFrameStore::Info& info) :
 					CThread(CString(OSSTR("Video Frame Store - ")) + identifier),
 							mVideoFrameStore(videoFrameStore), mInfo(info),
-							mResumeRequested(false), mStopFillingRequested(false),
+							mPauseRequested(false), mResumeRequested(false),
 							mShutdownRequested(false), mNotifiedFirstFrameReady(false), mReachedEnd(false),
-							mState(kStateStarting), mMediaPosition(SMediaPosition::fromStart(0.0))
+							mState(kStateStarting)
 					{
 						// Start
 						start();
@@ -39,30 +39,22 @@ class CVideoFrameStoreThread : public CThread {
 							switch (mState) {
 								case kStateStarting:
 									// Starting
-									if (mResumeRequested) {
-										// Start filling
-										mState = kStateFilling;
-										break;
-									} else {
-										// Wait for resume
-										mState = kStateWaiting;
-
-										// Fall through
-									}
+									mState = mResumeRequested ? kStateFilling : kStateWaiting;
+									break;
 
 								case kStateWaiting:
 									// Waiting
 									mSemaphore.waitFor();
 
 									// Check if stop filling requested
-									if (!mStopFillingRequested)
+									if (!mPauseRequested)
 										// Go for reading
 										mState = kStateFilling;
 									break;
 
 								case kStateFilling:
 									// Filling
-									if (mStopFillingRequested || !tryAddFrame())
+									if (mPauseRequested || !tryAddFrame())
 										// Go to waiting
 										mState = kStateWaiting;
 									break;
@@ -78,25 +70,22 @@ class CVideoFrameStoreThread : public CThread {
 							return false;
 
 						// Perform
-						CVideoProcessor::PerformResult	performResult = mVideoFrameStore.perform(mMediaPosition);
+						CVideoProcessor::PerformResult	performResult = mVideoFrameStore.perform();
 						if (!performResult.getVideoSourceStatus().isSuccess()) {
 							// Finished or error
 							mReachedEnd = true;
 							
-							if (*performResult.getVideoSourceStatus().getError() != SError::mEndOfData)
+							if (performResult.getVideoSourceStatus().getError() != SError::mEndOfData)
 								// Error
-								mInfo.error(mVideoFrameStore, *performResult.getVideoSourceStatus().getError());
+								mInfo.error(mVideoFrameStore, performResult.getVideoSourceStatus().getError());
 
 							return false;
 						}
 
 						// Store frame
-						const	CVideoFrame&	videoFrame = *performResult.getVideoFrame();
+						const	CVideoFrame&	videoFrame = performResult.getVideoFrame();
 						mVideoFrames.add(videoFrame);
 						mVideoFrames.sort(CVideoFrame::comparePresentationTimeInterval);
-
-						// Update media position
-						mMediaPosition = SMediaPosition::fromCurrent();
 
 						// CHeck if notified first frame is ready
 						if (!mNotifiedFirstFrameReady) {
@@ -113,13 +102,12 @@ class CVideoFrameStoreThread : public CThread {
 		CVideoFrameStore::Info		mInfo;
 		CSemaphore					mSemaphore;
 
+		bool						mPauseRequested;
 		bool						mResumeRequested;
-		bool						mStopFillingRequested;
 		bool						mShutdownRequested;
 		bool						mNotifiedFirstFrameReady;
 		bool						mReachedEnd;
 		State						mState;
-		SMediaPosition				mMediaPosition;
 		TNLockingArray<CVideoFrame>	mVideoFrames;
 };
 
@@ -172,13 +160,33 @@ CVideoFrameStore::~CVideoFrameStore()
 // MARK: CVideoProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CVideoFrameStore::reset()
+void CVideoFrameStore::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Seek
+	CVideoDestination::seek(timeInterval);
+
+	// Update
+	mInternals->mVideoFrameStoreThread.mPauseRequested = false;
+	mInternals->mVideoFrameStoreThread.mResumeRequested = true;
+	mInternals->mVideoFrameStoreThread.mNotifiedFirstFrameReady = false;
+	mInternals->mVideoFrameStoreThread.mReachedEnd = false;
+
+	mInternals->mVideoFrameStoreThread.mVideoFrames.removeAll();
+
+	// Signal
+	mInternals->mVideoFrameStoreThread.mSemaphore.signal();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CVideoFrameStore::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
 	mInternals->mVideoFrameStoreThread.mNotifiedFirstFrameReady = false;
 
-	return CVideoDestination::reset();
+	// Reset
+	CVideoDestination::reset();
 }
 
 // MARK: Instance methods
@@ -214,8 +222,8 @@ void CVideoFrameStore::resume()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
+	mInternals->mVideoFrameStoreThread.mPauseRequested = false;
 	mInternals->mVideoFrameStoreThread.mResumeRequested = true;
-	mInternals->mVideoFrameStoreThread.mStopFillingRequested = false;
 
 	// Signal
 	mInternals->mVideoFrameStoreThread.mSemaphore.signal();
@@ -226,7 +234,7 @@ void CVideoFrameStore::pause()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Request stop filling
-	mInternals->mVideoFrameStoreThread.mStopFillingRequested = true;
+	mInternals->mVideoFrameStoreThread.mPauseRequested = true;
 
 	// Wait until waiting
 	while (mInternals->mVideoFrameStoreThread.mState != CVideoFrameStoreThread::kStateWaiting)
@@ -238,12 +246,11 @@ void CVideoFrameStore::pause()
 void CVideoFrameStore::startSeek()
 //----------------------------------------------------------------------------------------------------------------------
 {
-}
+	// Update
+	mInternals->mVideoFrameStoreThread.mPauseRequested = true;
+	mInternals->mVideoFrameStoreThread.mResumeRequested = false;
 
-//----------------------------------------------------------------------------------------------------------------------
-void CVideoFrameStore::seek(UniversalTimeInterval timeInterval)
-//----------------------------------------------------------------------------------------------------------------------
-{
+	mInternals->mVideoFrameStoreThread.mVideoFrames.removeAll();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

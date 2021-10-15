@@ -19,7 +19,7 @@ class CMediaSourceRegistryInternals {
 	public:
 		CMediaSourceRegistryInternals() {}
 
-		TKeyConvertibleDictionary<OSType, SMediaSource::Info>	mMediaSourceInfo;
+		TKeyConvertibleDictionary<OSType, SMediaSource>	mMediaSources;
 };
 
 CMediaSourceRegistryInternals*	sMediaSourceRegistryInternals = nil;
@@ -43,7 +43,7 @@ CMediaSourceRegistry::CMediaSourceRegistry()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaSourceRegistry::registerMediaSource(const SMediaSource::Info& info)
+void CMediaSourceRegistry::registerMediaSource(const SMediaSource& mediaSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if initialized
@@ -52,14 +52,14 @@ void CMediaSourceRegistry::registerMediaSource(const SMediaSource::Info& info)
 		sMediaSourceRegistryInternals = new CMediaSourceRegistryInternals();
 
 	// Add info
-	sMediaSourceRegistryInternals->mMediaSourceInfo.set(info.getID(), info);
+	sMediaSourceRegistryInternals->mMediaSources.set(mediaSource.getID(), mediaSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const SMediaSource::Info& CMediaSourceRegistry::getMediaSourceInfo(OSType id) const
+const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return *sMediaSourceRegistryInternals->mMediaSourceInfo.get(id);
+	return *sMediaSourceRegistryInternals->mMediaSources.get(id);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -67,18 +67,19 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		const I<CSeekableDataSource>& seekableDataSource, const CString& extension) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSourceInfo.getKeys();
+	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
 	for (TIteratorS<CString> iterator = mediaSourceTypes.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Get info
-		SMediaSource::Info&	mediaSourceInfo = *sMediaSourceRegistryInternals->mMediaSourceInfo[iterator->getUInt32()];
+		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
 
 		// Check extensions
-		if (mediaSourceInfo.getExtensions().contains(extension)) {
+		if (mediaSource.getExtensions().contains(extension)) {
 			// Found by extension
-			TIResult<SMediaTracks>	mediaTracks = mediaSourceInfo.queryTracks(seekableDataSource);
-			if (mediaTracks.hasValue())
+			TIResult<CMediaTrackInfos>	mediaTrackInfos = mediaSource.queryTracks(seekableDataSource);
+			if (mediaTrackInfos.hasValue())
 				// Success
-				return TIResult<IdentifyInfo>(IdentifyInfo(mediaSourceInfo.getID(), mediaTracks.getValue()));
+				return TIResult<IdentifyInfo>(
+						IdentifyInfo(mediaSource.getID(), mediaTrackInfos.getValue().getMediaTracks()));
 		}
 	}
 

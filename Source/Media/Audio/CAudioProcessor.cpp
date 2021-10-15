@@ -53,21 +53,49 @@ OI<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CAudioProcessor::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+CAudioProcessor::Requirements CAudioProcessor::queryRequirements() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (*mInternals->mAudioProcessor)->perform(mediaPosition, audioFrames);
+	// Preflight
+	AssertFailIf(mInternals->mAudioProcessor == nil)
+
+	return (*mInternals->mAudioProcessor)->queryRequirements();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioProcessor::reset()
+void CAudioProcessor::setSourceWindow(UniversalTimeInterval startTimeInterval,
+		const OV<UniversalTimeInterval>& durationTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for instance
+	if (mInternals->mAudioProcessor != nil)
+		// Set source window
+		(*mInternals->mAudioProcessor)->setSourceWindow(startTimeInterval, durationTimeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioProcessor::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for instance
+	if (mInternals->mAudioProcessor != nil)
+		// Seek
+		(*mInternals->mAudioProcessor)->seek(timeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SAudioSourceStatus CAudioProcessor::performInto(CAudioFrames& audioFrames)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (*mInternals->mAudioProcessor)->performInto(audioFrames);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioProcessor::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
 	if (mInternals->mAudioProcessor != nil)
 		// Reset
-		return (*mInternals->mAudioProcessor)->reset();
-	else
-		// No Audio Processor
-		return OI<SError>();
+		(*mInternals->mAudioProcessor)->reset();
 }

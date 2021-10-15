@@ -60,7 +60,7 @@ CAudioFrames::~CAudioFrames()
 UInt32 CAudioFrames::getAvailableFrameCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAvailableFrameCount;
+	return mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -71,29 +71,32 @@ UInt32 CAudioFrames::getCurrentFrameCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<const void*> CAudioFrames::getSegmentsAsRead() const
+CAudioFrames::ReadInfo CAudioFrames::getSegmentsAsRead() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNumericArray<const void*>	segmentPtrs;
+	TNumericArray<const void*>	segments;
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
 		// Update
-		segmentPtrs += (void*) ((UInt8*) getBytePtr() + mInternals->mSegmentByteCount * i);
+		segments += (void*) ((UInt8*) getBytePtr() + mInternals->mSegmentByteCount * i);
 
-	return segmentPtrs;
+	return ReadInfo(mInternals->mCurrentFrameCount, segments);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<void*> CAudioFrames::getSegmentsAsWrite()
+CAudioFrames::WriteInfo CAudioFrames::getSegmentsAsWrite()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNumericArray<void*>	segmentPtrs;
+	TNumericArray<void*>	segments;
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
 		// Update
-		segmentPtrs += (void*) ((UInt8*) getMutableBytePtr() + mInternals->mSegmentByteCount * i);
+		segments +=
+				(void*) ((UInt8*) getMutableBytePtr() +
+						mInternals->mSegmentByteCount * i +
+						mInternals->mCurrentFrameCount * mInternals->mBytesPerFrame);
 
-	return segmentPtrs;
+	return WriteInfo(mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount, segments);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -101,23 +104,15 @@ void CAudioFrames::completeWrite(UInt32 frameCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check
-	AssertFailIf(frameCount > mInternals->mAvailableFrameCount);
+	AssertFailIf((mInternals->mCurrentFrameCount + frameCount) > mInternals->mAvailableFrameCount);
 
 	// Store
-	mInternals->mCurrentFrameCount = frameCount;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAudioFrames::reset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mCurrentFrameCount = 0;
+	mInternals->mCurrentFrameCount += frameCount;
 }
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioFrames::getAsRead(AudioBufferList& audioBufferList) const
+UInt32 CAudioFrames::getAsRead(AudioBufferList& audioBufferList) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -132,10 +127,12 @@ void CAudioFrames::getAsRead(AudioBufferList& audioBufferList) const
 		audioBufferList.mBuffers[i].mData = (void*) (buffer + mInternals->mSegmentByteCount * i);
 		audioBufferList.mBuffers[i].mDataByteSize = mInternals->mCurrentFrameCount * mInternals->mBytesPerFrame;
 	}
+
+	return mInternals->mCurrentFrameCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
+UInt32 CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -143,13 +140,39 @@ void CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
 
 	// Setup
 	UInt8*	buffer = (UInt8*) getMutableBytePtr();
+	UInt32	frameCount = mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount;
 
 	// Update AudioBufferList
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++) {
-		// Update this buffer
-		audioBufferList.mBuffers[i].mData = buffer + mInternals->mSegmentByteCount * i;
-		audioBufferList.mBuffers[i].mDataByteSize = mInternals->mAvailableFrameCount * mInternals->mBytesPerFrame;
+		// Setup this buffer
+		audioBufferList.mBuffers[i].mData =
+				buffer +
+						mInternals->mSegmentByteCount * i +
+						mInternals->mCurrentFrameCount * mInternals->mBytesPerFrame;
+		audioBufferList.mBuffers[i].mDataByteSize = frameCount * mInternals->mBytesPerFrame;
 	}
+
+	return frameCount;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::completeWrite(AudioBufferList& audioBufferList)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	completeWrite(audioBufferList.mBuffers[0].mDataByteSize / mInternals->mBytesPerFrame);
+}
 #endif
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::limit(UInt32 maxFrames)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mCurrentFrameCount = std::min<UInt32>(mInternals->mCurrentFrameCount, maxFrames);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::reset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mCurrentFrameCount = 0;
+}

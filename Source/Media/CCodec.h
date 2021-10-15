@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CDataSource.h"
-#include "CMediaReader.h"
+#include "SMediaPacket.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCodec
@@ -16,12 +16,19 @@ class CCodec {
 		class DecodeInfo {
 			// Methods
 			public:
-										// Lifecycle methods
-										DecodeInfo() {}
-				virtual					~DecodeInfo() {}
+												// Lifecycle methods
+												DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource) :
+													mMediaPacketSource(mediaPacketSource)
+													{}
+				virtual							~DecodeInfo() {}
 
-										// Instance methods
-				virtual	I<CMediaReader>	createMediaReader(const I<CSeekableDataSource>& seekableDataSource) const = 0;
+												// Instance methods
+						I<CMediaPacketSource>	getMediaPacketSource() const
+													{ return mMediaPacketSource; }
+
+			// Properties
+			private:
+				I<CMediaPacketSource>	mMediaPacketSource;\
 		};
 
 	// EncodeSettings

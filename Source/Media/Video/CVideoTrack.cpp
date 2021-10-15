@@ -9,14 +9,12 @@
 
 class CVideoTrackInternals : public TReferenceCountable<CVideoTrackInternals> {
 	public:
-		CVideoTrackInternals(UInt32 index, const SVideoStorageFormat& videoStorageFormat,
-				const I<CCodec::DecodeInfo>& decodeInfo) :
-			TReferenceCountable(), mIndex(index), mVideoStorageFormat(videoStorageFormat), mDecodeInfo(decodeInfo)
+		CVideoTrackInternals(UInt32 index, const SVideoStorageFormat& videoStorageFormat) :
+			TReferenceCountable(), mIndex(index), mVideoStorageFormat(videoStorageFormat)
 			{}
 
-		UInt32					mIndex;
-		SVideoStorageFormat		mVideoStorageFormat;
-		I<CCodec::DecodeInfo>	mDecodeInfo;
+		UInt32				mIndex;
+		SVideoStorageFormat	mVideoStorageFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -26,21 +24,20 @@ class CVideoTrackInternals : public TReferenceCountable<CVideoTrackInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoTrack::CVideoTrack(const Info& info, const SVideoStorageFormat& videoStorageFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack(info)
+CVideoTrack::CVideoTrack(const Info& info, const SVideoStorageFormat& videoStorageFormat) : CMediaTrack(info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CVideoTrackInternals(0, videoStorageFormat, decodeInfo);
+	mInternals = new CVideoTrackInternals(0, videoStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoTrack::CVideoTrack(UInt32 index, const Info& info, const SVideoStorageFormat& videoStorageFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack(info)
+CVideoTrack::CVideoTrack(UInt32 index, const Info& info, const SVideoStorageFormat& videoStorageFormat) :
+		CMediaTrack(info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CVideoTrackInternals(index, videoStorageFormat, decodeInfo);
+	mInternals = new CVideoTrackInternals(index, videoStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,11 +61,4 @@ const SVideoStorageFormat& CVideoTrack::getVideoStorageFormat() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mVideoStorageFormat;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const I<CCodec::DecodeInfo>& CVideoTrack::getDecodeInfo() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mDecodeInfo;
 }

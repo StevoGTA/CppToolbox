@@ -7,7 +7,7 @@
 #include "CAudioFrames.h"
 #include "SAudioFormats.h"
 #include "SAudioSourceStatus.h"
-#include "SMediaPosition.h"
+#include "TimeAndDate.h"
 #include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -15,6 +15,19 @@
 
 class CAudioProcessorInternals;
 class CAudioProcessor {
+	// Requirements
+	public:
+		struct Requirements {
+			// Lifecycle methods
+			Requirements(const CAudioFrames::Requirements& audioFramesRequirements) :
+					mAudioFramesRequirements(audioFramesRequirements)
+					{}
+			Requirements(const Requirements& other) : mAudioFramesRequirements(other.mAudioFramesRequirements) {}
+
+			// Properties
+			CAudioFrames::Requirements	mAudioFramesRequirements;
+		};
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -25,8 +38,15 @@ class CAudioProcessor {
 		virtual	OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
 
-		virtual	SAudioSourceStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
-		virtual	OI<SError>						reset();
+		virtual	Requirements					queryRequirements() const;
+
+		virtual	void							setSourceWindow(UniversalTimeInterval startTimeInterval,
+														const OV<UniversalTimeInterval>& durationTimeInterval);
+		virtual	void							seek(UniversalTimeInterval timeInterval);
+
+		virtual	SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
+
+		virtual	void							reset();
 
 												// Subclass methods
 		virtual	TArray<SAudioProcessingSetup>	getInputSetups() const = 0;
@@ -88,7 +108,7 @@ class CAudioChannelMapper : public CAudioProcessor {
 				OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
 
-				SAudioSourceStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
+				SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
 
 												// Subclass methods
 				TArray<SAudioProcessingSetup>	getInputSetups() const;

@@ -115,9 +115,6 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 		virtual	void					setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
 
-				void					setWindow(UniversalTimeInterval startTimeInterval,
-												UniversalTimeInterval durationTimeInterval);
-
 				UniversalTimeInterval	getCurrentPosition() const;
 
 		virtual	void					play();
@@ -125,10 +122,9 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 		virtual	bool					isPlaying() const;
 
 				void					startSeek();
-				void					seek(UniversalTimeInterval timeInterval);
 				void					finishSeek();
 
-		virtual	OI<SError>				reset();
+		virtual	void					reset();
 
 	// Properties
 	private:

@@ -346,16 +346,6 @@ void CMediaPlayer::setLoopCount(OV<UInt32> loopCount)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::setWindow(UniversalTimeInterval startTimeInterval, UniversalTimeInterval durationTimeInterval)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Iterate all audio tracks
-	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
-		// Set window
-		getAudioProcessor(i)->setWindow(startTimeInterval, durationTimeInterval);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 UniversalTimeInterval CMediaPlayer::getCurrentPosition() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -423,21 +413,6 @@ void CMediaPlayer::startSeek()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Iterate all audio tracks
-	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
-		// Seek
-		getAudioProcessor(i)->seek(timeInterval);
-
-	// Iterate all video tracks
-	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
-		// Seek
-		getVideoProcessor(i)->seek(timeInterval);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::finishSeek()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -453,26 +428,20 @@ void CMediaPlayer::finishSeek()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaPlayer::reset()
+void CMediaPlayer::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all audio tracks
-	for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Reset
-		OI<SError>	error = getAudioProcessor(i)->reset();
-		ReturnErrorIfError(error);
-	}
+		getAudioProcessor(i)->reset();
 
 	// Iterate all video tracks
-	for (UInt32 i = 0; i < getVideoTrackCount(); i++) {
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Reset
-		OI<SError>	error = getVideoProcessor(i)->reset();
-		ReturnErrorIfError(error);
-	}
+		getVideoProcessor(i)->reset();
 
 	// Update internals
 	mInternals->mCurrentPosition = 0.0;
 	mInternals->mEndOfDataCount = 0;
-
-	return OI<SError>();
 }

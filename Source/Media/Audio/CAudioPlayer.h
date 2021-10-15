@@ -63,7 +63,9 @@ class CAudioPlayer : public CAudioDestination {
 						OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 																const SAudioProcessingFormat& audioProcessingFormat);
 
-						OI<SError>						reset();
+						void							seek(UniversalTimeInterval timeInterval);
+
+						void							reset();
 
 														// CAudioDestination methods
 						void							setupComplete();
@@ -73,15 +75,11 @@ class CAudioPlayer : public CAudioDestination {
 
 						void							setGain(Float32 gain);
 
-						void							setWindow(UniversalTimeInterval startTimeInterval,
-																UniversalTimeInterval durationTimeInterval);
-
 						void							play();
 						void							pause();
 						bool							isPlaying() const;
 
 						void							startSeek();
-						void							seek(UniversalTimeInterval timeInterval);
 						void							finishSeek();
 
 														// Class methods
@@ -92,8 +90,6 @@ class CAudioPlayer : public CAudioDestination {
 
 	// Properties
 	private:
-		static	const	UniversalTimeInterval	kMinBufferDuration;
-		static	const	UniversalTimeInterval	kMaxBufferDuration;
 		static	const	UniversalTimeInterval	kPreviewDuration;
 
 						CAudioPlayerInternals*	mInternals;
@@ -119,11 +115,12 @@ class CAudioPlayerBufferThread : public CThread {
 		void	run();
 
 				// Instance methods
-		void	seek(UniversalTimeInterval timeInterval, UInt32 maxFrames);
+		void	pause();
 		void	resume();
+
 		void	noteQueueReadComplete();
 		bool	getDidReachEnd() const;
-		void	stopReading();
+
 		void	shutdown();
 
 	// Properties

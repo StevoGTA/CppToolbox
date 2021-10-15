@@ -16,8 +16,7 @@
 class CH264VideoCodecInternals {
 	public:
 						CH264VideoCodecInternals() :
-							mTimeScale(0),
-									mFormatDescriptionRef(nil), mDecompressionSessionRef(nil),
+							mFormatDescriptionRef(nil), mDecompressionSessionRef(nil),
 									mCurrentFrameNumberBitCount(0), mCurrentPicOrderCountLSBBitCount(0),
 									mPicOrderCountMSBChangeThreshold(0),
 									mPicOrderCountMSB(0), mPreviousPicOrderCountLSB(0), mLastIDRFrameTime(0),
@@ -45,8 +44,9 @@ class CH264VideoCodecInternals {
 								*((CVImageBufferRef*) sourceFrameUserData) = (CVBufferRef) ::CFRetain(imageBufferRef);
 							}
 
-		OR<CPacketMediaReader>		mPacketMediaReader;
-		UInt32						mTimeScale;
+		OV<UInt32>					mTimeScale;
+		OI<SVideoProcessingFormat>	mVideoProcessingFormat;
+		OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
 
 		CMFormatDescriptionRef		mFormatDescriptionRef;
 		VTDecompressionSessionRef	mDecompressionSessionRef;
@@ -81,8 +81,8 @@ CH264VideoCodec::~CH264VideoCodec()
 // MARK: CVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CH264VideoCodec::setupForDecode(const I<CMediaReader>& mediaReader, const I<CCodec::DecodeInfo>& decodeInfo,
-		CVideoFrame::Compatibility compatibility)
+void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
+		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -176,28 +176,38 @@ void CH264VideoCodec::setupForDecode(const I<CMediaReader>& mediaReader, const I
 	LogOSStatusIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
 
 	// Finish setup
-	mInternals->mPacketMediaReader = OR<CPacketMediaReader>(*((CPacketMediaReader*) &*mediaReader));
-	mInternals->mTimeScale = h264DecodeInfo.getTimeScale();
+	mInternals->mTimeScale = OV<UInt32>(h264DecodeInfo.getTimeScale());
+	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
+	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
 
 	CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
 															CData(parameterSetPointers[0],
-																	(CData::Size)
-																			parameterSetSizes[0],
-																	false));
+																	(CData::Size) parameterSetSizes[0], false));
 	mInternals->mCurrentFrameNumberBitCount = spsPayload.mFrameNumberBitCount;
 	mInternals->mCurrentPicOrderCountLSBBitCount = spsPayload.mPicOrderCountLSBBitCount;
 	mInternals->mPicOrderCountMSBChangeThreshold = 1 << (mInternals->mCurrentPicOrderCountLSBBitCount - 1);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CH264VideoCodec::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Reset
+	::VTDecompressionSessionWaitForAsynchronousFrames(mInternals->mDecompressionSessionRef);
+
+	// Seek
+	(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToPacket(
+			(UInt32) (timeInterval * mInternals->mVideoProcessingFormat->getFramerate()));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TIResult<CVideoFrame> CH264VideoCodec::decode()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Read next packet
-	TIResult<CPacketMediaReader::MediaPacketDataInfo>	mediaPacketDataInfo =
-																mInternals->mPacketMediaReader->
-																		readNextMediaPacketDataInfo();
-	ReturnValueIfResultError(mediaPacketDataInfo, TIResult<CVideoFrame>(mediaPacketDataInfo.getError()));
+	// Get next packet
+	TIResult<CMediaPacketSource::DataInfo>	dataInfo =
+													(*mInternals->mDecodeInfo)->getMediaPacketSource()->getNextPacket();
+	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
 
 //CLogServices::logMessage(
 //		CString("Packet ") + CString(mInternals->mNextFrameIndex) + CString(" (") + CString(data->getSize()) +
@@ -238,10 +248,10 @@ UInt8	frameNum;
 UInt8	picOrderCntLSB;
 UInt8	deltaPicOrderCntBottom;
 
-const	CData&		data = mediaPacketDataInfo.getValue().getData();
+const	CData&		data = dataInfo.getValue().getData();
 		CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(data)), true);
 
-		UInt32		duration = mediaPacketDataInfo.getValue().getDuration();
+		UInt32		duration = dataInfo.getValue().getDuration();
 
 while (true) {
 	//
@@ -314,7 +324,7 @@ while (true) {
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
 	CMSampleTimingInfo	sampleTimingInfo;
-	sampleTimingInfo.duration = ::CMTimeMake(duration, mInternals->mTimeScale);
+	sampleTimingInfo.duration = ::CMTimeMake(duration, *mInternals->mTimeScale);
 
 UInt64	frameTime;
 if (sliceType == 2) {
@@ -334,14 +344,12 @@ if (sliceType == 2) {
 		//
 		mInternals->mPicOrderCountMSB += 1 << mInternals->mCurrentPicOrderCountLSBBitCount;
 
-	frameTime =
-			mInternals->mLastIDRFrameTime +
-					(mInternals->mPicOrderCountMSB + picOrderCntLSB) / 2 * duration;
+	frameTime = mInternals->mLastIDRFrameTime + (mInternals->mPicOrderCountMSB + picOrderCntLSB) / 2 * duration;
 
 	mInternals->mPreviousPicOrderCountLSB = picOrderCntLSB;
 }
 
-sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(frameTime, mInternals->mTimeScale);
+sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(frameTime, *mInternals->mTimeScale);
 
 
 
@@ -350,7 +358,7 @@ sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(frameTime, mInternals->mTi
 //else
 //	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime + packetAndLocation.mPacket.mDuration, mInternals->mTimeScale);
 
-	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime, mInternals->mTimeScale);
+	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime, *mInternals->mTimeScale);
 
 	size_t				sampleSize = data.getSize();
 	CMSampleBufferRef	sampleBufferRef;
@@ -381,18 +389,4 @@ sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(frameTime, mInternals->mTi
 	::CFRelease(imageBufferRef);
 
 	return result;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CH264VideoCodec::decodeReset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Reset
-	if (mInternals->mDecompressionSessionRef != nil) {
-		// Invalidate and release
-		::VTDecompressionSessionWaitForAsynchronousFrames(mInternals->mDecompressionSessionRef);
-	}
-	if (mInternals->mPacketMediaReader.hasReference())
-		// Back to the begining
-		mInternals->mPacketMediaReader->set(0);
 }

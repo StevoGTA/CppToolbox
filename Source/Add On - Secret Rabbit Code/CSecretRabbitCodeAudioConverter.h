@@ -20,8 +20,8 @@ class CSecretRabbitCodeAudioConverter : public CAudioConverter {
 		OI<SError>			connectInput(const I<CAudioProcessor>& audioProcessor,
 									const SAudioProcessingFormat& audioProcessingFormat);
 
-		SAudioSourceStatus	perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
-		OI<SError>			reset();
+		SAudioSourceStatus	performInto(CAudioFrames& audioFrames);
+		void				reset();
 
 	// Properties
 	private:

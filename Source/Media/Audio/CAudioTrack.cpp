@@ -9,14 +9,12 @@
 
 class CAudioTrackInternals : public TReferenceCountable<CAudioTrackInternals> {
 	public:
-		CAudioTrackInternals(UInt32 index, const SAudioStorageFormat& audioStorageFormat,
-				const I<CCodec::DecodeInfo>& decodeInfo) :
-			TReferenceCountable(), mIndex(index), mAudioStorageFormat(audioStorageFormat), mDecodeInfo(decodeInfo)
+		CAudioTrackInternals(UInt32 index, const SAudioStorageFormat& audioStorageFormat) :
+			TReferenceCountable(), mIndex(index), mAudioStorageFormat(audioStorageFormat)
 			{}
 
-		UInt32					mIndex;
-		SAudioStorageFormat		mAudioStorageFormat;
-		I<CCodec::DecodeInfo>	mDecodeInfo;
+		UInt32				mIndex;
+		SAudioStorageFormat	mAudioStorageFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -26,21 +24,20 @@ class CAudioTrackInternals : public TReferenceCountable<CAudioTrackInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrack::CAudioTrack(const Info& info, const SAudioStorageFormat& audioStorageFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack(info)
+CAudioTrack::CAudioTrack(const Info& info, const SAudioStorageFormat& audioStorageFormat) : CMediaTrack(info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CAudioTrackInternals(0, audioStorageFormat, decodeInfo);
+	mInternals = new CAudioTrackInternals(0, audioStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioTrack::CAudioTrack(UInt32 index, const Info& info, const SAudioStorageFormat& audioStorageFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo) : CMediaTrack(info)
+CAudioTrack::CAudioTrack(UInt32 index, const Info& info, const SAudioStorageFormat& audioStorageFormat) :
+		CMediaTrack(info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CAudioTrackInternals(index, audioStorageFormat, decodeInfo);
+	mInternals = new CAudioTrackInternals(index, audioStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,13 +61,6 @@ const SAudioStorageFormat& CAudioTrack::getAudioStorageFormat() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAudioStorageFormat;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const I<CCodec::DecodeInfo>& CAudioTrack::getDecodeInfo() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mDecodeInfo;
 }
 
 // MARK: Class methods

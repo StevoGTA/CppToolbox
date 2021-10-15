@@ -5,6 +5,7 @@
 #pragma once
 
 #include "C2DGeometry.h"
+#include "CVideoFrame.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SVideoStorageFormat
@@ -28,4 +29,27 @@ struct SVideoStorageFormat {
 		OSType		mCodecID;
 		S2DSizeU16	mFrameSize;
 		Float32		mFramerate;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SVideoProcessingFormat
+
+struct SVideoProcessingFormat {
+
+									// Lifecycle methods
+									SVideoProcessingFormat(Float32 framerate,
+											CVideoFrame::Compatibility compatibility) :
+										mFramerate(framerate), mCompatibility(compatibility)
+										{}
+
+									// Instance methods
+		Float32						getFramerate() const
+										{ return mFramerate; }
+		CVideoFrame::Compatibility	getCompatibility() const
+										{ return mCompatibility; }
+
+	// Properties
+	private:
+		Float32						mFramerate;
+		CVideoFrame::Compatibility	mCompatibility;
 };

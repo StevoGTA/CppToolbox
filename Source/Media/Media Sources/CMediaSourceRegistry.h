@@ -11,40 +11,44 @@
 // MARK: SMediaSource
 
 struct SMediaSource {
-	// Info
-	public:
-		 struct Info {
-			// Procs
-			typedef	TIResult<SMediaTracks>	(*QueryTracksProc)(const I<CSeekableDataSource>& seekableDataSource);
+	// Types
+	enum Options {
+		kNone				= 0,
+		kComposeDecodeInfo	= 1 << 0,
+	};
 
-											// Lifecycle methods
-											Info(OSType id, const CString& name, const TArray<CString>& extensions,
-													QueryTracksProc queryTracksProc) :
-												mID(id), mName(name), mExtensions(extensions),
-														mQueryTracksProc(queryTracksProc)
-												{}
-											Info(const Info& other) :
-												mID(other.mID), mName(other.mName), mExtensions(other.mExtensions),
-														mQueryTracksProc(other.mQueryTracksProc)
-												{}
+	// Procs
+	typedef	TIResult<CMediaTrackInfos>	(*QueryTracksProc)(const I<CSeekableDataSource>& seekableDataSource,
+												Options options);
 
-											// Instance methods
-					OSType					getID() const
-												{ return mID; }
-			const	CString&				getName() const
-												{ return mName; }
-			const	TArray<CString>&		getExtensions() const
-												{ return mExtensions; }
-					TIResult<SMediaTracks>	queryTracks(const I<CSeekableDataSource>& seekableDataSource) const
-												{ return mQueryTracksProc(seekableDataSource); }
+										// Lifecycle methods
+										SMediaSource(OSType id, const CString& name, const TArray<CString>& extensions,
+												QueryTracksProc queryTracksProc) :
+											mID(id), mName(name), mExtensions(extensions),
+													mQueryTracksProc(queryTracksProc)
+											{}
+										SMediaSource(const SMediaSource& other) :
+											mID(other.mID), mName(other.mName), mExtensions(other.mExtensions),
+													mQueryTracksProc(other.mQueryTracksProc)
+											{}
 
-			// Properties
-			private:
-				OSType				mID;
-				CString				mName;
-				TNArray<CString>	mExtensions;
-				QueryTracksProc		mQueryTracksProc;
-		};
+										// Instance methods
+			OSType						getID() const
+											{ return mID; }
+	const	CString&					getName() const
+											{ return mName; }
+	const	TArray<CString>&			getExtensions() const
+											{ return mExtensions; }
+			TIResult<CMediaTrackInfos>	queryTracks(const I<CSeekableDataSource>& seekableDataSource,
+												Options options = kNone) const
+											{ return mQueryTracksProc(seekableDataSource, options); }
+
+	// Properties
+	private:
+		OSType				mID;
+		CString				mName;
+		TNArray<CString>	mExtensions;
+		QueryTracksProc		mQueryTracksProc;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,8 +81,8 @@ class CMediaSourceRegistry {
 	// Methods
 	public:
 										// Instance methods
-				void					registerMediaSource(const SMediaSource::Info& info);
-		const	SMediaSource::Info&		getMediaSourceInfo(OSType id) const;
+				void					registerMediaSource(const SMediaSource& mediaSource);
+		const	SMediaSource&			getMediaSource(OSType id) const;
 				TIResult<IdentifyInfo>	identify(const I<CSeekableDataSource>& seekableDataSource,
 												const CString& extension) const;
 

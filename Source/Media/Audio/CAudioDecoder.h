@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CAudioProcessor.h"
-#include "CCodec.h"
+#include "CAudioCodec.h"
 #include "CDataSource.h"
 #include "SAudioFormats.h"
 
@@ -18,8 +18,8 @@ class CAudioDecoder : public CAudioSource {
 	public:
 										// Lifecycle methods
 										CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
-												const I<CCodec::DecodeInfo>& codecDecodeInfo,
-												const I<CSeekableDataSource>& seekableDataSource);
+												const I<CAudioCodec>& audioCodec,
+												const I<CCodec::DecodeInfo>& codecDecodeInfo);
 										CAudioDecoder(const CAudioDecoder& other);
 										~CAudioDecoder();
 
@@ -27,8 +27,14 @@ class CAudioDecoder : public CAudioSource {
 		TArray<SAudioProcessingSetup>	getOutputSetups() const;
 		void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
 
-		SAudioSourceStatus				perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames);
-		OI<SError>						reset();
+		Requirements					queryRequirements() const;
+
+		void							setSourceWindow(UniversalTimeInterval startTimeInterval,
+												const OV<UniversalTimeInterval>& durationTimeInterval);
+		void							seek(UniversalTimeInterval timeInterval);
+
+		SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
+		void							reset();
 
 	// Properties
 	private:

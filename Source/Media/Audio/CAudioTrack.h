@@ -16,17 +16,14 @@ class CAudioTrack : public CMediaTrack {
 	public:
 												// Lifecycle methods
 												CAudioTrack(const Info& info,
-														const SAudioStorageFormat& audioStorageFormat,
-														const I<CCodec::DecodeInfo>& decodeInfo);
+														const SAudioStorageFormat& audioStorageFormat);
 												CAudioTrack(UInt32 index, const Info& info,
-														const SAudioStorageFormat& audioStorageFormat,
-														const I<CCodec::DecodeInfo>& decodeInfo);
+														const SAudioStorageFormat& audioStorageFormat);
 												CAudioTrack(const CAudioTrack& other);
 												~CAudioTrack();
 
 												// Instance methods
 				const	SAudioStorageFormat&	getAudioStorageFormat() const;
-				const	I<CCodec::DecodeInfo>&	getDecodeInfo() const;
 
 												// Class methods
 		static			Info					composeInfo(const SAudioStorageFormat& audioStorageFormat,

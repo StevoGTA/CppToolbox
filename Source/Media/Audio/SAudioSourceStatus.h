@@ -4,26 +4,31 @@
 
 #pragma once
 
-#include "SError.h"
+#include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SAudioSourceStatus
 
 struct SAudioSourceStatus {
-							// Lifecycle methods
-							SAudioSourceStatus(Float32 percentConsumed) : mPercentConsumed(percentConsumed) {}
-							SAudioSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
+										// Lifecycle methods
+										SAudioSourceStatus(UniversalTimeInterval timeInterval) :
+												mTimeInterval(timeInterval)
+												{}
+										SAudioSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
+										SAudioSourceStatus(const SAudioSourceStatus& other) :
+											mTimeInterval(other.mTimeInterval), mError(other.mError)
+											{}
 
-							// Instance methods
-				bool		isSuccess() const
-								{ return !mError.hasInstance(); }
-		const	OV<Float32>	getPercentConsumed() const
-								{ return mPercentConsumed; }
-		const	OI<SError>&	getError() const
-								{ return mError; }
+										// Instance methods
+				bool					isSuccess() const
+											{ return !mError.hasInstance(); }
+				UniversalTimeInterval	getTimeInterval() const
+											{ return *mTimeInterval; }
+		const	SError&					getError() const
+											{ return *mError; }
 
 	// Properties
 	private:
-		OV<Float32>	mPercentConsumed;
-		OI<SError>	mError;
+		OV<UniversalTimeInterval>	mTimeInterval;
+		OI<SError>					mError;
 };

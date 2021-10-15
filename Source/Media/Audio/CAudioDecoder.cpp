@@ -11,23 +11,28 @@
 
 class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals> {
 	public:
-		CAudioDecoderInternals(const SAudioStorageFormat& audioStorageFormat,
-				const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource) :
-			TReferenceCountable(),
-					mAudioStorageFormat(audioStorageFormat),
-					mAudioCodecInfo(CCodecRegistry::mShared.getAudioCodecInfo(mAudioStorageFormat.getCodecID())),
-					mCodecDecodeInfo(codecDecodeInfo), mSeekableDataSource(seekableDataSource),
-					mAudioCodec(mAudioCodecInfo.instantiate()),
-					mMediaReader(codecDecodeInfo->createMediaReader(seekableDataSource))
-			{}
+									CAudioDecoderInternals(const SAudioStorageFormat& audioStorageFormat,
+											const I<CAudioCodec>& audioCodec,
+											const I<CCodec::DecodeInfo>& codecDecodeInfo) :
+										TReferenceCountable(),
+												mAudioStorageFormat(audioStorageFormat), mAudioCodec(audioCodec),
+												mCodecDecodeInfo(codecDecodeInfo),
+												mStartTimeInterval(0.0), mCurrentTimeInterval(0.0)
+										{}
 
-				SAudioStorageFormat			mAudioStorageFormat;
-		const	CAudioCodec::Info&			mAudioCodecInfo;
-				I<CCodec::DecodeInfo>		mCodecDecodeInfo;
-				I<CSeekableDataSource>		mSeekableDataSource;
-				I<CAudioCodec>				mAudioCodec;
-				I<CMediaReader>				mMediaReader;
-				OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OV<UniversalTimeInterval>	getEndTimeInterval()
+										{ return mDurationTimeInterval.hasValue() ?
+												OV<UniversalTimeInterval>(mStartTimeInterval + *mDurationTimeInterval) :
+												OV<UniversalTimeInterval>(); }
+
+		SAudioStorageFormat			mAudioStorageFormat;
+		I<CAudioCodec>				mAudioCodec;
+		I<CCodec::DecodeInfo>		mCodecDecodeInfo;
+
+		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		UniversalTimeInterval		mStartTimeInterval;
+		OV<UniversalTimeInterval>	mDurationTimeInterval;
+		UniversalTimeInterval		mCurrentTimeInterval;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -37,11 +42,11 @@ class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioDecoder::CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
-		const I<CCodec::DecodeInfo>& codecDecodeInfo, const I<CSeekableDataSource>& seekableDataSource) : CAudioSource()
+CAudioDecoder::CAudioDecoder(const SAudioStorageFormat& audioStorageFormat, const I<CAudioCodec>& audioCodec,
+		const I<CCodec::DecodeInfo>& codecDecodeInfo) : CAudioSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioDecoderInternals(audioStorageFormat, codecDecodeInfo, seekableDataSource);
+	mInternals = new CAudioDecoderInternals(audioStorageFormat, audioCodec, codecDecodeInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,7 +69,8 @@ CAudioDecoder::~CAudioDecoder()
 TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAudioCodecInfo.getAudioProcessingSetups(mInternals->mAudioStorageFormat);
+	return CCodecRegistry::mShared.getAudioCodecInfo(mInternals->mAudioStorageFormat.getCodecID())
+			.getAudioProcessingSetups(mInternals->mAudioStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -73,43 +79,95 @@ void CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessin
 {
 	// Store
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-
+	
 	// Setup Audio Codec
-	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mMediaReader,
-			mInternals->mCodecDecodeInfo);
+	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mCodecDecodeInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CAudioDecoder::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+CAudioProcessor::Requirements CAudioDecoder::queryRequirements() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return Requirements(mInternals->mAudioCodec->getRequirements());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioDecoder::setSourceWindow(UniversalTimeInterval startTimeInterval,
+		const OV<UniversalTimeInterval>& durationTimeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	Float32		percentConsumed = mInternals->mMediaReader->getPercentConsumed();
-	OI<SError>	error;
+	bool	performSeek = startTimeInterval != mInternals->mStartTimeInterval;
 
-	// Update read position if needed
-	if (mediaPosition.getMode() != SMediaPosition::kFromCurrent) {
-		// Reset audio codec
-		mInternals->mAudioCodec->decodeReset();
+	// Store
+	mInternals->mStartTimeInterval = startTimeInterval;
+	mInternals->mDurationTimeInterval = OV<UniversalTimeInterval>(durationTimeInterval);
 
-		// Set media position
-		error = mInternals->mMediaReader->set(mediaPosition, *mInternals->mAudioProcessingFormat);
-		ReturnValueIfError(error, SAudioSourceStatus(*error));
-	}
-
-	// Decode
-	error = mInternals->mAudioCodec->decode(audioFrames);
-	ReturnValueIfError(error, SAudioSourceStatus(*error));
-
-	return SAudioSourceStatus(percentConsumed);
+	// Check if need seek
+	if (performSeek)
+		// Seek
+		seek(mInternals->mStartTimeInterval);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioDecoder::reset()
+void CAudioDecoder::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Reset audio codec
-	mInternals->mAudioCodec->decodeReset();
+	// Bound the given time
+	timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mStartTimeInterval);
+	if (mInternals->mDurationTimeInterval.hasValue())
+		timeInterval = std::min<UniversalTimeInterval>(timeInterval, *mInternals->getEndTimeInterval());
 
-	return OI<SError>();
+	// Update
+	mInternals->mCurrentTimeInterval = timeInterval;
+
+	// Inform codec
+	mInternals->mAudioCodec->seek(timeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SAudioSourceStatus CAudioDecoder::performInto(CAudioFrames& audioFrames)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt32	maxFrames;
+	if (mInternals->mDurationTimeInterval.hasValue()) {
+		// Have duration
+		UniversalTimeInterval	durationRemaining =
+										*mInternals->getEndTimeInterval() - mInternals->mCurrentTimeInterval;
+		if (durationRemaining <= 0.0)
+			// Already done
+			return SAudioSourceStatus(SError::mEndOfData);
+
+		// Calculate
+		maxFrames = (UInt32) (durationRemaining * mInternals->mAudioProcessingFormat->getSampleRate());
+	} else
+		// No duration
+		maxFrames = ~0;
+
+	// Setup
+	SAudioSourceStatus	audioSourceStatus(mInternals->mCurrentTimeInterval);
+
+	// Decode
+	OI<SError>	error = mInternals->mAudioCodec->decode(audioFrames);
+	ReturnValueIfError(error, SAudioSourceStatus(*error));
+
+	// Limit to max frames
+	audioFrames.limit(maxFrames);
+
+	// Update
+	mInternals->mCurrentTimeInterval +=
+			(UniversalTimeInterval) audioFrames.getCurrentFrameCount() /
+					mInternals->mAudioProcessingFormat->getSampleRate();
+
+	return audioSourceStatus;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioDecoder::reset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Seek
+	mInternals->mAudioCodec->seek(mInternals->mStartTimeInterval);
+	mInternals->mCurrentTimeInterval = mInternals->mStartTimeInterval;
 }

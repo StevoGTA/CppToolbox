@@ -10,20 +10,25 @@
 // MARK: SVideoSourceStatus
 
 struct SVideoSourceStatus {
-							// Lifecycle methods
-							SVideoSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
-							SVideoSourceStatus(Float32 percentConsumed) : mPercentConsumed(percentConsumed) {}
+										// Lifecycle methods
+										SVideoSourceStatus(UniversalTimeInterval timeInterval) :
+												mTimeInterval(timeInterval)
+												{}
+										SVideoSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
+										SVideoSourceStatus(const SVideoSourceStatus& other) :
+											mTimeInterval(other.mTimeInterval), mError(other.mError)
+											{}
 
-							// Instance methods
-				bool		isSuccess() const
-								{ return !mError.hasInstance(); }
-		const	OV<Float32>	getPercentConsumed() const
-								{ return mPercentConsumed; }
-		const	OI<SError>&	getError() const
-								{ return mError; }
+										// Instance methods
+				bool					isSuccess() const
+											{ return !mError.hasInstance(); }
+				UniversalTimeInterval	getTimeInterval() const
+											{ return *mTimeInterval; }
+		const	SError&					getError() const
+											{ return *mError; }
 
 	// Properties
 	private:
-		OV<Float32>	mPercentConsumed;
-		OI<SError>	mError;
+		OV<UniversalTimeInterval>	mTimeInterval;
+		OI<SError>					mError;
 };

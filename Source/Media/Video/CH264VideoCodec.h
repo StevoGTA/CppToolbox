@@ -141,7 +141,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 
 	// Decode info
 	public:
-		class DecodeInfo : public CPacketsDecodeInfo {
+		class DecodeInfo : public CCodec::DecodeInfo {
 			// SPSPPSInfo
 			public:
 				struct SPSPPSInfo {
@@ -187,9 +187,9 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 			// Methods
 			public:
 							// Lifecycle methods
-							DecodeInfo(const CData& configurationData, UInt32 timeScale,
-									const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
-								CPacketsDecodeInfo(mediaPacketAndLocations), mConfigurationData(configurationData),
+							DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource, const CData& configurationData,
+									UInt32 timeScale) :
+								CCodec::DecodeInfo(mediaPacketSource), mConfigurationData(configurationData),
 										mTimeScale(timeScale)
 								{}
 
@@ -267,11 +267,10 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 										~CH264VideoCodec();
 
 										// CVideoCodec methods
-				void					setupForDecode(const I<CMediaReader>& mediaReader,
-												const I<CCodec::DecodeInfo>& decodeInfo,
-												CVideoFrame::Compatibility compatibility);
+				void					setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
+												const I<CCodec::DecodeInfo>& decodeInfo);
+				void					seek(UniversalTimeInterval timeInterval);
 				TIResult<CVideoFrame>	decode();
-				void					decodeReset();
 
 										// Class methods
 		static	OI<SVideoStorageFormat>	composeStorageFormat(const S2DSizeU16& frameSize, Float32 framerate);

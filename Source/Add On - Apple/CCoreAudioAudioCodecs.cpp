@@ -16,8 +16,9 @@
 class CAACAudioCodecInternals {
 	public:
 							CAACAudioCodecInternals(OSType codecID) :
-									mCodecID(codecID),
-									mAudioConverterRef(nil), mInputPacketData((CData::Size) 10 * 1024),
+								mCodecID(codecID),
+									mAudioConverterRef(nil), mDecodeFramesToIgnore(0),
+									mInputPacketData((CData::Size) 10 * 1024),
 									mInputPacketDescriptionsData((CData::Size) 1 * 1024)
 								{}
 							~CAACAudioCodecInternals()
@@ -36,8 +37,9 @@ class CAACAudioCodecInternals {
 
 									// Read packets
 									TIResult<TArray<SMediaPacket> >	mediaPacketsResult =
-																			internals.mPacketMediaReader->
-																					readMediaPackets(
+																			(*internals.mDecodeInfo)->
+																					getMediaPacketSource()->
+																					getMediaPackets(
 																							internals.mInputPacketData);
 									ReturnValueIfResultError(mediaPacketsResult, -1);
 
@@ -78,13 +80,15 @@ class CAACAudioCodecInternals {
 									return noErr;
 								}
 
-		OSType					mCodecID;
-		OR<CPacketMediaReader>	mPacketMediaReader;
+		OSType						mCodecID;
+		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
 
-		AudioConverterRef		mAudioConverterRef;
-		CData					mInputPacketData;
-		CData					mInputPacketDescriptionsData;
-		OI<SError>				mFillBufferDataError;
+		AudioConverterRef			mAudioConverterRef;
+		UInt32						mDecodeFramesToIgnore;
+		CData						mInputPacketData;
+		CData						mInputPacketDescriptionsData;
+		OI<SError>					mFillBufferDataError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,14 +115,15 @@ CAACAudioCodec::~CAACAudioCodec()
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		const I<CMediaReader>& mediaReader, const I<CCodec::DecodeInfo>& decodeInfo)
+		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
 	// Store
-	mInternals->mPacketMediaReader = OR<CPacketMediaReader>(*((CPacketMediaReader*) &*mediaReader));
+	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
 
 	// Create Audio Converter
 	AudioStreamBasicDescription	sourceFormat = {0};
@@ -145,33 +150,56 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	AudioBufferList	audioBufferList;
-	audioBufferList.mNumberBuffers = 1;
-	audioFrames.getAsWrite(audioBufferList);
-
-	// Fill buffer
-	UInt32		frameCount = audioFrames.getAvailableFrameCount();
-	OSStatus	status =
-						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
-								CAACAudioCodecInternals::fillBufferData, mInternals, &frameCount, &audioBufferList,
-								nil);
-	if (status != noErr) return mInternals->mFillBufferDataError;
-	if (frameCount == 0) return OI<SError>(SError::mEndOfData);
-
-	// Update
-	audioFrames.completeWrite(frameCount);
-
-	return OI<SError>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAACAudioCodec::decodeReset()
+void CAACAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset audio converter
 	::AudioConverterReset(mInternals->mAudioConverterRef);
+
+	// Seek
+	mInternals->mDecodeFramesToIgnore =
+			(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToDuration(
+					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Preflight
+	AssertFailIf(audioFrames.getAvailableFrameCount() < (1024 * 2));
+
+	// Setup
+	AudioBufferList	audioBufferList;
+	audioBufferList.mNumberBuffers = 1;
+	audioBufferList.mBuffers[0].mNumberChannels = mInternals->mAudioProcessingFormat->getChannels();
+
+	// Check if have frames to ignore
+	OSStatus	status;
+	if (mInternals->mDecodeFramesToIgnore > 0) {
+		// Decode these frames, but throw away
+		audioFrames.getAsWrite(audioBufferList);
+		status =
+				::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
+						CAACAudioCodecInternals::fillBufferData, mInternals, &mInternals->mDecodeFramesToIgnore,
+						&audioBufferList, nil);
+		if (status != noErr) return mInternals->mFillBufferDataError;
+		if (mInternals->mDecodeFramesToIgnore == 0) return OI<SError>(SError::mEndOfData);
+
+		// Done ignoring
+		mInternals->mDecodeFramesToIgnore = 0;
+	}
+
+	// Fill buffer
+	UInt32	frameCount = audioFrames.getAsWrite(audioBufferList);
+	status =
+			::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, CAACAudioCodecInternals::fillBufferData,
+					mInternals, &frameCount, &audioBufferList, nil);
+	if (status != noErr) return mInternals->mFillBufferDataError;
+	if (frameCount == 0) return OI<SError>(SError::mEndOfData);
+
+	// Update
+	audioFrames.completeWrite(audioBufferList);
+
+	return OI<SError>();
 }

@@ -49,21 +49,39 @@ OI<SError> CVideoProcessor::connectInput(const I<CVideoProcessor>& videoProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoProcessor::PerformResult CVideoProcessor::perform(const SMediaPosition& mediaPosition)
+void CVideoProcessor::setSourceWindow(UniversalTimeInterval startTimeInterval,
+		const OV<UniversalTimeInterval>& durationTimeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (*mInternals->mVideoProcessor)->perform(mediaPosition);
+	// Check for instance
+	if (mInternals->mVideoProcessor != nil)
+		// Set source window
+		(*mInternals->mVideoProcessor)->setSourceWindow(startTimeInterval, durationTimeInterval);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CVideoProcessor::reset()
+void CVideoProcessor::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for instance
+	if (mInternals->mVideoProcessor != nil)
+		// Seek
+		(*mInternals->mVideoProcessor)->seek(timeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CVideoProcessor::PerformResult CVideoProcessor::perform()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (*mInternals->mVideoProcessor)->perform();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CVideoProcessor::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
 	if (mInternals->mVideoProcessor != nil)
 		// Reset
-		return (*mInternals->mVideoProcessor)->reset();
-	else
-		// No Video Processor
-		return OI<SError>();
+		(*mInternals->mVideoProcessor)->reset();
 }

@@ -14,6 +14,15 @@
 OSType	CAACAudioCodec::mAACLCID = MAKE_OSTYPE('m', 'p', '4', 'a');
 OSType	CAACAudioCodec::mAACLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
 
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::Requirements CAACAudioCodec::getRequirements() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CAudioFrames::Requirements(1024, 1024 * 2);
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------

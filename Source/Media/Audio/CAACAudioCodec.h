@@ -14,13 +14,13 @@ class CAACAudioCodecInternals;
 class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 	// Decode info
 	public:
-		class DecodeInfo : public CPacketsDecodeInfo {
+		class DecodeInfo : public CCodec::DecodeInfo {
 			// Methods
 			public:
 								// Lifecycle methods
-								DecodeInfo(const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations,
+								DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource,
 										const CData& magicCookie, UInt16 startCodes) :
-									CPacketsDecodeInfo(mediaPacketAndLocations), mMagicCookie(magicCookie),
+									CCodec::DecodeInfo(mediaPacketSource), mMagicCookie(magicCookie),
 											mStartCodes(startCodes)
 									{}
 
@@ -38,19 +38,19 @@ class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CAACAudioCodec(OSType codecID);
-										~CAACAudioCodec();
+											// Lifecycle methods
+											CAACAudioCodec(OSType codecID);
+											~CAACAudioCodec();
 
-										// CAudioCodec methods - Decoding
-				void					setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-												const I<CMediaReader>& mediaReader,
-												const I<CCodec::DecodeInfo>& decodeInfo);
-				OI<SError>				decode(CAudioFrames& audioFrames);
-				void					decodeReset();
+											// CAudioCodec methods - Decoding
+				void						setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+													const I<CCodec::DecodeInfo>& decodeInfo);
+				CAudioFrames::Requirements	getRequirements() const;
+				void						seek(UniversalTimeInterval timeInterval);
+				OI<SError>					decode(CAudioFrames& audioFrames);
 
-										// Class methods
-		static	OI<SAudioStorageFormat>	composeStorageFormat(UInt16 startCodes, UInt16 channels);
+											// Class methods
+		static	OI<SAudioStorageFormat>		composeStorageFormat(UInt16 startCodes, UInt16 channels);
 
 	// Properties
 	public:

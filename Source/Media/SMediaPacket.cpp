@@ -5,11 +5,91 @@
 #include "SMediaPacket.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CPacketMediaReaderInternals
+// MARK: CSeekableUniformMediaPacketSourceInternals
 
-class CPacketMediaReaderInternals {
+class CSeekableUniformMediaPacketSourceInternals {
 	public:
-		CPacketMediaReaderInternals(const I<CSeekableDataSource>& seekableDataSource,
+		CSeekableUniformMediaPacketSourceInternals(const I<CSeekableDataSource>& seekableDataSource,
+				UInt64 byteOffset, UInt64 byteCount, UInt32 bytesPerPacket, UInt32 durationPerPacket) :
+			mSeekableDataSource(seekableDataSource), mByteOffset(byteOffset),
+					mPacketCount((UInt32) (byteCount / (UInt64) bytesPerPacket)), mBytesPerPacket(bytesPerPacket),
+					mDurationPerPacket(durationPerPacket), mNextPacketIndex(0)
+			{}
+
+		I<CSeekableDataSource>	mSeekableDataSource;
+		UInt64					mByteOffset;
+		UInt32					mPacketCount;
+		UInt32					mBytesPerPacket;
+		UInt32					mDurationPerPacket;
+		UInt32					mNextPacketIndex;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSeekableUniformMediaPacketSource
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CSeekableUniformMediaPacketSource::CSeekableUniformMediaPacketSource(const I<CSeekableDataSource>& seekableDataSource,
+		UInt64 byteOffset, UInt64 byteCount, UInt32 bytesPerPacket, UInt32 durationPerPacket)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals =
+			new CSeekableUniformMediaPacketSourceInternals(seekableDataSource, byteOffset, byteCount, bytesPerPacket,
+					durationPerPacket);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CSeekableUniformMediaPacketSource::~CSeekableUniformMediaPacketSource()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	Delete(mInternals);
+}
+
+// MARK: CMediaPacketSource methods
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CSeekableUniformMediaPacketSource::seekToDuration(UInt32 duration)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Update
+	mInternals->mNextPacketIndex = duration / mInternals->mDurationPerPacket;
+
+	return duration % mInternals->mDurationPerPacket;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::getNextPacket()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if can read next packet
+	if (mInternals->mNextPacketIndex < mInternals->mPacketCount) {
+		// Copy packet data
+		CData		data((CData::Size) mInternals->mBytesPerPacket);
+		UInt64		byteOffset = mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
+		OI<SError>	error =
+							mInternals->mSeekableDataSource->readData(byteOffset, data.getMutableBytePtr(),
+									mInternals->mBytesPerPacket);
+		ReturnValueIfError(error, TIResult<CMediaPacketSource::DataInfo>(*error));
+
+		// Update
+		mInternals->mNextPacketIndex++;
+
+		return TIResult<CMediaPacketSource::DataInfo>(
+				CMediaPacketSource::DataInfo(data, mInternals->mDurationPerPacket));
+	} else
+		// End of data
+		return TIResult<CMediaPacketSource::DataInfo>(SError::mEndOfData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSeekableVaryingMediaPacketSourceInternals
+
+class CSeekableVaryingMediaPacketSourceInternals {
+	public:
+		CSeekableVaryingMediaPacketSourceInternals(const I<CSeekableDataSource>& seekableDataSource,
 				const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
 			mSeekableDataSource(seekableDataSource), mMediaPacketAndLocations(mediaPacketAndLocations),
 					mNextPacketIndex(0)
@@ -17,71 +97,89 @@ class CPacketMediaReaderInternals {
 
 		I<CSeekableDataSource>			mSeekableDataSource;
 		TArray<SMediaPacketAndLocation>	mMediaPacketAndLocations;
-
 		UInt32							mNextPacketIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CPacketMediaReader
+// MARK: - CSeekableVaryingMediaPacketSource
 
-// MARK: Properties
-
-SError	CPacketMediaReader::mBufferTooSmall(CString(OSSTR("CPacketMediaReader")), 1,
-				CString(OSSTR("Buffer too small")));
-
-// MARK: Lifecycle methods
-
+// Lifecycle methods
 //----------------------------------------------------------------------------------------------------------------------
-CPacketMediaReader::CPacketMediaReader(const I<CSeekableDataSource>& seekableDataSource,
-		const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) : CMediaReader()
+CSeekableVaryingMediaPacketSource::CSeekableVaryingMediaPacketSource(const I<CSeekableDataSource>& seekableDataSource,
+		const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CPacketMediaReaderInternals(seekableDataSource, mediaPacketAndLocations);
+	mInternals = new CSeekableVaryingMediaPacketSourceInternals(seekableDataSource, mediaPacketAndLocations);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CPacketMediaReader::~CPacketMediaReader()
+CSeekableVaryingMediaPacketSource::~CSeekableVaryingMediaPacketSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
 }
 
-// MARK: CMediaReader methods
+// MARK: CMediaPacketSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-Float32 CPacketMediaReader::getPercentConsumed() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return (Float32) mInternals->mNextPacketIndex / (Float32) mInternals->mMediaPacketAndLocations.getCount();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CPacketMediaReader::set(UInt64 frameIndex)
+UInt32 CSeekableVaryingMediaPacketSource::seekToDuration(UInt32 duration)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Find packet index
 	mInternals->mNextPacketIndex = 0;
 	for (TIteratorD<SMediaPacketAndLocation> iterator = mInternals->mMediaPacketAndLocations.getIterator();
 			iterator.hasValue(); iterator.advance()) {
-		// Setup
-		const	SMediaPacket& mediaPacket = iterator->mMediaPacket;
-		if (frameIndex > mediaPacket.mDuration) {
-			// Advance another packet
+		// Check if can advance past this packet
+		if (duration >= iterator->mMediaPacket.mDuration) {
+			// Advance
 			mInternals->mNextPacketIndex++;
-			frameIndex -= mediaPacket.mDuration;
+			duration -= iterator->mMediaPacket.mDuration;
 		} else
-			// Done
-			break;
+			// No
+			return duration;
 	}
 
-	return OI<SError>();
+	return 0;
 }
 
-// MARK: Instance methods
+//----------------------------------------------------------------------------------------------------------------------
+void CSeekableVaryingMediaPacketSource::seekToPacket(UInt32 packetIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mNextPacketIndex = packetIndex;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<SMediaPacket> > CPacketMediaReader::readMediaPackets(CData& data) const
+TIResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::getNextPacket()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if can read next packet
+	if (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
+		// Setup
+		SMediaPacketAndLocation&	mediaPacketAndLocation =
+											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
+
+		// Copy packet data
+		CData		data((CData::Size) mediaPacketAndLocation.mMediaPacket.mByteCount);
+		OI<SError>	error =
+							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset,
+									data.getMutableBytePtr(), mediaPacketAndLocation.mMediaPacket.mByteCount);
+		ReturnValueIfError(error, TIResult<CMediaPacketSource::DataInfo>(*error));
+
+		// Update
+		mInternals->mNextPacketIndex++;
+
+		return TIResult<CMediaPacketSource::DataInfo>(
+				CMediaPacketSource::DataInfo(data, mediaPacketAndLocation.mMediaPacket.mDuration));
+	} else
+		// End of data
+		return TIResult<CMediaPacketSource::DataInfo>(SError::mEndOfData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::getMediaPackets(CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add packets
@@ -115,57 +213,5 @@ TIResult<TArray<SMediaPacket> > CPacketMediaReader::readMediaPackets(CData& data
 	}
 
 	return !mediaPackets.isEmpty() ?
-			TIResult<TArray<SMediaPacket> >(mediaPackets) :
-			TIResult<TArray<SMediaPacket> >(SError::mEndOfData);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TIResult<CPacketMediaReader::MediaPacketDataInfo> CPacketMediaReader::readNextMediaPacketDataInfo() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if can read next packet
-	if (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
-		// Setup
-		SMediaPacketAndLocation&	mediaPacketAndLocation =
-											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
-
-		// Copy packet data
-		CData		data((CData::Size) mediaPacketAndLocation.mMediaPacket.mByteCount);
-		OI<SError>	error =
-							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset,
-									data.getMutableBytePtr(), mediaPacketAndLocation.mMediaPacket.mByteCount);
-		ReturnValueIfError(error, TIResult<MediaPacketDataInfo>(*error));
-
-		// Update
-		mInternals->mNextPacketIndex++;
-
-		return TIResult<MediaPacketDataInfo>(MediaPacketDataInfo(data, mediaPacketAndLocation.mMediaPacket.mDuration));
-	} else
-		// End of data
-		return TIResult<MediaPacketDataInfo>(SError::mEndOfData);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TVResult<UInt32> CPacketMediaReader::readNextMediaPacket(void* buffer) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if can read next packet
-	if (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
-		// Setup
-		SMediaPacketAndLocation&	mediaPacketAndLocation =
-											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
-
-		// Copy packet data
-		OI<SError>	error =
-							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset, buffer,
-									mediaPacketAndLocation.mMediaPacket.mByteCount);
-		ReturnValueIfError(error, TVResult<UInt32>(*error));
-
-		// Update
-		mInternals->mNextPacketIndex++;
-
-		return TVResult<UInt32>(mediaPacketAndLocation.mMediaPacket.mByteCount);
-	} else
-		// End of data
-		return TVResult<UInt32>(SError::mEndOfData);
+			TIResult<TArray<SMediaPacket> >(mediaPackets) : TIResult<TArray<SMediaPacket> >(SError::mEndOfData);
 }

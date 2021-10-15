@@ -48,7 +48,9 @@ class CVideoFrameStore : public CVideoDestination {
 							~CVideoFrameStore();
 
 							// CVideoProcessor methods
-				OI<SError>	reset();
+				void		seek(UniversalTimeInterval timeInterval);
+
+				void		reset();
 
 							// Instance methods
 				void		notePositionUpdated(UniversalTimeInterval position);
@@ -57,7 +59,6 @@ class CVideoFrameStore : public CVideoDestination {
 				void		pause();
 
 				void		startSeek();
-				void		seek(UniversalTimeInterval timeInterval);
 				void		finishSeek();
 
 	// Properties

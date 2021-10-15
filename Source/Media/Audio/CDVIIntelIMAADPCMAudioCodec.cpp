@@ -55,7 +55,7 @@ const	UInt32	kDVIIntelBytesPerPacketPerChannel =
 
 class CDVIIntelIMAADPCMAudioCodecInternals {
 	public:
-												CDVIIntelIMAADPCMAudioCodecInternals() {}
+												CDVIIntelIMAADPCMAudioCodecInternals() : mDecodeFramesToIgnore(0) {}
 
 				SInt16							sampleForDeltaCode(UInt8 deltaCode, SStateInfo& stateInfo)
 													{
@@ -93,8 +93,9 @@ class CDVIIntelIMAADPCMAudioCodecInternals {
 		static	I<CAudioCodec>					instantiate(OSType id)
 													{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
 
-		OR<CPacketMediaReader>		mPacketMediaReader;
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
+		UInt32						mDecodeFramesToIgnore;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -125,42 +126,63 @@ CDVIIntelIMAADPCMAudioCodec::~CDVIIntelIMAADPCMAudioCodec()
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		const I<CMediaReader>& mediaReader, const I<CCodec::DecodeInfo>& decodeInfo)
+		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	mInternals->mPacketMediaReader = OR<CPacketMediaReader>(*((CPacketMediaReader*) &*mediaReader));
+	// Store
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::Requirements CDVIIntelIMAADPCMAudioCodec::getRequirements() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CAudioFrames::Requirements(kDVIIntelFramesPerPacket, kDVIIntelFramesPerPacket * 2);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDVIIntelIMAADPCMAudioCodec::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Seek
+	mInternals->mDecodeFramesToIgnore =
+			(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToDuration(
+					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Preflight
+	AssertFailIf(audioFrames.getAvailableFrameCount() < (kDVIIntelFramesPerPacket * 2));
+
 	// Setup
 	UInt16	channels = mInternals->mAudioProcessingFormat->getChannels();
 
 	// Decode packets
-	SInt16*	bufferPtr = (SInt16*) (audioFrames.getSegmentsAsWrite())[0];
-	UInt32	availableFrameCount = audioFrames.getAvailableFrameCount();
-	UInt32	decodedFrameCount = 0;
-	while (availableFrameCount >= kDVIIntelFramesPerPacket) {
-		// Read next packet
-		TIResult<CPacketMediaReader::MediaPacketDataInfo>	mediaPacketDataInfo =
-																	mInternals->mPacketMediaReader->
-																			readNextMediaPacketDataInfo();
-		if (mediaPacketDataInfo.hasError()) {
+	CAudioFrames::WriteInfo	writeInfo = audioFrames.getSegmentsAsWrite();
+	UInt32					remainingFrames = writeInfo.getFrameCount();
+	SInt16*					bufferPtr = (SInt16*) writeInfo.getSegments()[0];
+	UInt32					decodedFrameCount = 0;
+	while (remainingFrames >= kDVIIntelFramesPerPacket) {
+		// Get next packet
+		TIResult<CMediaPacketSource::DataInfo>	dataInfo =
+														(*mInternals->mDecodeInfo)->getMediaPacketSource()->
+																getNextPacket();
+		if (dataInfo.hasError()) {
 			// Check situation
 			if (decodedFrameCount > 0)
 				// EOF, but have decoded frames
 				break;
 			else
 				// EOF, no decoded frames
-				return OI<SError>(mediaPacketDataInfo.getError());
+				return OI<SError>(dataInfo.getError());
 		}
 
 		// Decode packet
-		const	UInt8*	packetBufferPtr = (const UInt8*) mediaPacketDataInfo.getValue().getData().getBytePtr();
+		const	UInt8*	packetBufferPtr = (const UInt8*) dataInfo.getValue().getData().getBytePtr();
 
 		// Setup state infos by decoding packet headers
 		TBuffer<SStateInfo>	stateInfos(channels);
@@ -217,11 +239,10 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 		// Packet decoded
 		bufferPtr += kDVIIntelFramesPerPacket * channels;
 		decodedFrameCount += kDVIIntelFramesPerPacket;
-		availableFrameCount -= kDVIIntelFramesPerPacket;
+		remainingFrames -= kDVIIntelFramesPerPacket;
+		audioFrames.completeWrite(kDVIIntelFramesPerPacket);
+		mInternals->mDecodeFramesToIgnore = 0;
 	}
-
-	// Update
-	audioFrames.completeWrite(decodedFrameCount);
 
 	return OI<SError>();
 }
@@ -248,15 +269,16 @@ UInt64 CDVIIntelIMAADPCMAudioCodec::composeFrameCount(const SAudioStorageFormat&
 
 //----------------------------------------------------------------------------------------------------------------------
 I<CCodec::DecodeInfo> CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(const SAudioStorageFormat& audioStorageFormat,
-		UInt64 startByteOffset, UInt64 byteCount)
+		const I<CSeekableDataSource>& seekableDataSource, UInt64 startByteOffset, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	UInt32	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * audioStorageFormat.getChannels();
 
-	return I<CCodec::DecodeInfo>(
-			new CPacketsDecodeInfo(SMediaPacket(kDVIIntelFramesPerPacket, bytesPerPacket), startByteOffset,
-					(UInt32) byteCount / bytesPerPacket));
+	return I<DecodeInfo>(
+			new DecodeInfo(
+					new CSeekableUniformMediaPacketSource(seekableDataSource, startByteOffset, byteCount,
+							bytesPerPacket, kDVIIntelFramesPerPacket)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

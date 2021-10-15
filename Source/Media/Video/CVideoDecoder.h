@@ -17,15 +17,19 @@ class CVideoDecoder : public CVideoSource {
 	public:
 							// Lifecycle methods
 						CVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
+								const I<CVideoCodec>& videoCodec,
 								const I<CCodec::DecodeInfo>& codecDecodeInfo,
-								const I<CSeekableDataSource>& seekableDataSource,
-								CVideoFrame::Compatibility compatibility);
+								const SVideoProcessingFormat& videoProcessingFormat);
 						CVideoDecoder(const CVideoDecoder& other);
 						~CVideoDecoder();
 
 						// CVideoProcessor methods
-		PerformResult	perform(const SMediaPosition& mediaPosition);
-		OI<SError>		reset();
+		void			setSourceWindow(UniversalTimeInterval startTimeInterval,
+								const OV<UniversalTimeInterval>& durationTimeInterval);
+		void			seek(UniversalTimeInterval timeInterval);
+
+		PerformResult	perform();
+		void			reset();
 
 	// Properties
 	private:

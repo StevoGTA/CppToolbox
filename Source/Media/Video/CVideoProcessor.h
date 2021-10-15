@@ -4,10 +4,9 @@
 
 #pragma once
 
-#include "SError.h"
-#include "SMediaPosition.h"
 #include "CVideoFrame.h"
 #include "SVideoSourceStatus.h"
+#include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoProcessor
@@ -18,8 +17,9 @@ class CVideoProcessor {
 	public:
 		struct PerformResult {
 											// Lifecycle methods
-											PerformResult(Float32 percentConsumed, const CVideoFrame& videoFrame) :
-												mVideoSourceStatus(percentConsumed), mVideoFrame(videoFrame)
+											PerformResult(UniversalTimeInterval timeInterval,
+													const CVideoFrame& videoFrame) :
+												mVideoSourceStatus(timeInterval), mVideoFrame(videoFrame)
 												{}
 											PerformResult(const SError& error) : mVideoSourceStatus(error) {}
 											PerformResult(const PerformResult& other) :
@@ -30,8 +30,8 @@ class CVideoProcessor {
 											// Instance methods
 				const	SVideoSourceStatus&	getVideoSourceStatus() const
 												{ return mVideoSourceStatus; }
-				const	OI<CVideoFrame>&	getVideoFrame() const
-												{ return mVideoFrame; }
+				const	CVideoFrame&		getVideoFrame() const
+												{ return *mVideoFrame; }
 
 			private:
 				SVideoSourceStatus	mVideoSourceStatus;
@@ -47,8 +47,12 @@ class CVideoProcessor {
 								// Instance methods
 		virtual	OI<SError>		connectInput(const I<CVideoProcessor>& videoProcessor);
 
-		virtual	PerformResult	perform(const SMediaPosition& mediaPosition);
-		virtual	OI<SError>		reset();
+		virtual	void			setSourceWindow(UniversalTimeInterval startTimeInterval,
+										const OV<UniversalTimeInterval>& durationTimeInterval);
+		virtual	void			seek(UniversalTimeInterval timeInterval);
+
+		virtual	PerformResult	perform();
+		virtual	void			reset();
 
 	// Properties
 	private:

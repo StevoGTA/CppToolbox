@@ -4,6 +4,10 @@
 
 #include "CMediaEngine.h"
 
+#include "CAudioDecoder.h"
+#include "CCodecRegistry.h"
+#include "CVideoDecoder.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local types
 struct SAudioProcessingFormats {
@@ -54,6 +58,37 @@ static	SAudioProcessingFormats		sComposeAudioProcessingFormats(
 // MARK: - CMediaEngine
 
 // MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CAudioSource> CMediaEngine::getAudioSource(const CMediaTrackInfos::AudioTrackInfo& audioTrackInfo) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	CAudioTrack&			audioTrack = audioTrackInfo.mMediaTrack;
+	const	SAudioStorageFormat&	audioStorageFormat = audioTrack.getAudioStorageFormat();
+			I<CAudioCodec>			audioCodec(
+											CCodecRegistry::mShared.getAudioCodecInfo(audioStorageFormat.getCodecID())
+													.instantiate());
+
+	return I<CAudioSource>(new CAudioDecoder(audioStorageFormat, audioCodec, *audioTrackInfo.mDecodeInfo));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CVideoSource> CMediaEngine::getVideoSource(const CMediaTrackInfos::VideoTrackInfo& videoTrackInfo,
+		CVideoFrame::Compatibility compatibility) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	CVideoTrack&			videoTrack = videoTrackInfo.mMediaTrack;
+	const	SVideoStorageFormat&	videoStorageFormat = videoTrack.getVideoStorageFormat();
+			I<CVideoCodec>			videoCodec(
+											CCodecRegistry::mShared.getVideoCodecInfo(videoStorageFormat.getCodecID())
+													.instantiate());
+
+	return I<CVideoSource>(
+			new CVideoDecoder(videoStorageFormat, videoCodec, *videoTrackInfo.mDecodeInfo,
+					SVideoProcessingFormat(videoStorageFormat.getFramerate(), compatibility)));
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSource& audioSource,

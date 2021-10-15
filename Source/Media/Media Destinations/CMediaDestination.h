@@ -21,6 +21,11 @@ class CMediaDestination {
 				UInt32					getAudioTrackCount() const;
 				UInt32					getVideoTrackCount() const;
 
+		virtual	void					setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
+												const OV<UniversalTimeInterval>& durationTimeInterval =
+														OV<UniversalTimeInterval>());
+		virtual	void					seek(UniversalTimeInterval timeInterval);
+
 										// Subclass methods
 		virtual	void					setupComplete() = 0;
 

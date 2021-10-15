@@ -17,17 +17,21 @@ class CAudioChannelMapperInternals {
 								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
-								const	SInt16*	sourcePtr = (const SInt16*) (sourceAudioFrames.getSegmentsAsRead())[0];
-										SInt16*	destinationPtr =
-														(SInt16*) (destinationAudioFrames.getSegmentsAsWrite())[0];
+										CAudioFrames::ReadInfo	readInfo = sourceAudioFrames.getSegmentsAsRead();
+								const	SInt16*					sourcePtr = (const SInt16*) readInfo.getSegments()[0];
+
+										CAudioFrames::WriteInfo	writeInfo = destinationAudioFrames.getSegmentsAsWrite();
+										SInt16*					destinationPtr = (SInt16*) writeInfo.getSegments()[0];
 
 								// Perform
-								UInt32	frameCount = sourceAudioFrames.getCurrentFrameCount();
-								for (UInt32 i = 0; i < frameCount; i++) {
+								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
 									// Copy sample
 									(*destinationPtr++) = *sourcePtr;
 									(*destinationPtr++) = (*sourcePtr++);
 								}
+
+								// Complete
+								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
 							}
 
 		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
@@ -108,7 +112,7 @@ void CAudioChannelMapper::setOutputFormat(const SAudioProcessingFormat& audioPro
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CAudioChannelMapper::perform(const SMediaPosition& mediaPosition, CAudioFrames& audioFrames)
+SAudioSourceStatus CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -133,14 +137,13 @@ SAudioSourceStatus CAudioChannelMapper::perform(const SMediaPosition& mediaPosit
 		mInternals->mInputAudioFrames->reset();
 
 	// Read
-	SAudioSourceStatus	audioSourceStatus = CAudioProcessor::perform(mediaPosition, *mInternals->mInputAudioFrames);
+	SAudioSourceStatus	audioSourceStatus = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
 	if (!audioSourceStatus.isSuccess())
 		// Error
 		return audioSourceStatus;
 
 	// Perform
 	mInternals->mPerformProc(*mInternals->mInputAudioFrames, audioFrames);
-	audioFrames.completeWrite(mInternals->mInputAudioFrames->getCurrentFrameCount());
 
 	return audioSourceStatus;
 }

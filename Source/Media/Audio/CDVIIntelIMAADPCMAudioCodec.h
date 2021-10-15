@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CCodecRegistry.h"
+#include "SMediaPacket.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDVIIntelIMAADPCMAudioCodec
@@ -13,22 +14,24 @@ class CDVIIntelIMAADPCMAudioCodecInternals;
 class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 	// Methods
 	public:
-										// Lifecycle methods
-										CDVIIntelIMAADPCMAudioCodec();
-										~CDVIIntelIMAADPCMAudioCodec();
+											// Lifecycle methods
+											CDVIIntelIMAADPCMAudioCodec();
+											~CDVIIntelIMAADPCMAudioCodec();
 
-										// CAudioCodec methods - Decoding
-				void					setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-												const I<CMediaReader>& mediaReader,
-												const I<CCodec::DecodeInfo>& decodeInfo);
-				OI<SError>				decode(CAudioFrames& audioFrames);
+											// CAudioCodec methods - Decoding
+				void						setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+													const I<CCodec::DecodeInfo>& decodeInfo);
+				CAudioFrames::Requirements	getRequirements() const;
+				void						seek(UniversalTimeInterval timeInterval);
+				OI<SError>					decode(CAudioFrames& audioFrames);
 
-										// Class methods
-		static	SAudioStorageFormat		composeAudioStorageFormat(Float32 sampleRate, EAudioChannelMap channelMap);
-		static	UInt64					composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
-												UInt64 byteCount);
-		static	I<CCodec::DecodeInfo>	composeDecodeInfo(const SAudioStorageFormat& audioStorageFormat,
-												UInt64 startByteOffset, UInt64 byteCount);
+											// Class methods
+		static	SAudioStorageFormat			composeAudioStorageFormat(Float32 sampleRate, EAudioChannelMap channelMap);
+		static	UInt64						composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
+													UInt64 byteCount);
+		static	I<CCodec::DecodeInfo>		composeDecodeInfo(const SAudioStorageFormat& audioStorageFormat,
+													const I<CSeekableDataSource>& seekableDataSource,
+													UInt64 startByteOffset, UInt64 byteCount);
 
 	// Properties
 	public:
