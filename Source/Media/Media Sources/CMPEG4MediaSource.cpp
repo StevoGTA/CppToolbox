@@ -987,8 +987,6 @@ OI<SError> sAddMP4AAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 	return OI<SError>();
 }
 
-//#include "CLogServices.h"
-
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekableDataSource>& seekableDataSource,
 		SMediaSource::Options options, const SstsdDescription& stsdDescription, const CData& configurationData,
@@ -1001,18 +999,11 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 			UInt32					timeScale = mdhdAtomPayload.getTimeScale();
 			UniversalTimeInterval	duration =
 											(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
-													(UniversalTimeInterval) mdhdAtomPayload.getTimeScale();
+													(UniversalTimeInterval) timeScale;
 			Float32					framerate =
 											(Float32) ((UniversalTimeInterval) packetAndLocations.getCount() /
 													duration);
 			UInt64					byteCount = SMediaPacketAndLocation::getTotalByteCount(packetAndLocations);
-
-// TODO
-//	const	SstssAtomPayload&	stssAtomPayload = *((SstssAtomPayload*) stssAtomPayloadData->getBytePtr());
-//UInt32	keyframesCount = EndianU32_BtoN(stssAtomPayload.mKeyframesCount);
-//CLogServices::logMessage(CString("Keyframes count: ") + CString(keyframesCount));
-//for (UInt32 i = 0; i < keyframesCount; i++)
-//	CLogServices::logMessage(CString("    ") + CString(EndianU32_BtoN(stssAtomPayload.mKeyFrameIndexes[i])));
 
 	// Compose storage format
 	OI<SVideoStorageFormat>	videoStorageFormat =
@@ -1025,12 +1016,22 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 	CVideoTrack	videoTrack(CMediaTrack::Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration)),
 						*videoStorageFormat);
 	if (options & SMediaSource::kComposeDecodeInfo) {
-		// Requesting decode info
-		I<CMediaPacketSource>	mediaPacketSource(
-										new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations));
+		// Setup
+				I<CMediaPacketSource>	mediaPacketSource(
+												new CSeekableVaryingMediaPacketSource(seekableDataSource,
+														packetAndLocations));
+
+		const	SstssAtomPayload&		stssAtomPayload = *((SstssAtomPayload*) stssAtomPayloadData->getBytePtr());
+				UInt32					keyframesCount = EndianU32_BtoN(stssAtomPayload.mKeyframesCount);
+				TNumericArray<UInt32>	keyframeIndexes;
+		for (UInt32 i = 0; i < keyframesCount; i++)
+			// Add keyframe index
+			keyframeIndexes += EndianU32_BtoN(stssAtomPayload.mKeyFrameIndexes[i]) - 1;
+
+		// Compose decode info
 		I<CCodec::DecodeInfo>	decodeInfo(
 										new CH264VideoCodec::DecodeInfo(mediaPacketSource, configurationData,
-												timeScale));
+												timeScale, keyframeIndexes));
 
 		// Add video track
 		mediaTrackInfos.add(CMediaTrackInfos::VideoTrackInfo(videoTrack, decodeInfo));

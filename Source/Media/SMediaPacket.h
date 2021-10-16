@@ -79,6 +79,8 @@ class CMediaPacketSource {
 												// Instance methods
 		virtual	UInt32							seekToDuration(UInt32 duration) = 0;
 		virtual	void							seekToPacket(UInt32 packetIndex) = 0;
+				UInt32							seekToKeyframe(UInt32 initialFrameIndex,
+														const TNumericArray<UInt32>& keyframeIndexes);
 
 		virtual	TIResult<DataInfo>				readNext() = 0;
 		virtual	TIResult<TArray<SMediaPacket> >	readNextInto(CData& data,

@@ -242,7 +242,7 @@ class CAudioPlayerInternals {
 							CAudioPlayerInternals(CAudioPlayer& audioPlayer, const CString& identifier,
 									const CAudioPlayer::Info& info) :
 								mAudioPlayer(audioPlayer), mIdentifier(identifier), mInfo(info),
-										mIsPlaying(false),
+										mIsPlaying(false), mIsSeeking(false),
 										mCurrentPlaybackTimeInterval(0.0),
 										mLastSeekTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
@@ -285,9 +285,11 @@ class CAudioPlayerInternals {
 										internals.mRenderProcFrameCount -= internals.mRenderProcPreviousFrameCount;
 										internals.mRenderProcPreviousFrameCount = 0;
 
-										// Notify playback position updated
-										internals.mInfo.positionUpdated(internals.mAudioPlayer,
-												internals.mCurrentPlaybackTimeInterval);
+										// Check if seeking
+										if (!internals.mIsSeeking)
+											// Notify playback position updated
+											internals.mInfo.positionUpdated(internals.mAudioPlayer,
+													internals.mCurrentPlaybackTimeInterval);
 
 										// Notify queue read complete
 										internals.mAudioPlayerBufferThread->noteQueueReadComplete();
@@ -306,7 +308,8 @@ class CAudioPlayerInternals {
 																						frameCount *
 																								*internals.mBytesPerFrame;
 										if (readBufferInfo.hasBuffer() &&
-												(readBufferInfo.mByteCount >= requiredByteCount)) {
+												(readBufferInfo.mByteCount >= requiredByteCount) &&
+												(frameCount == inNumFrames)) {
 											// Can point to buffer
 											for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
 												// Prepare this buffer
@@ -341,12 +344,12 @@ class CAudioPlayerInternals {
 											}
 
 											// Check situation
-											if (requiredByteCount > 0) {
+											if (byteOffset < ioData->mBuffers[0].mDataByteSize) {
 												// Fill the rest with silence
 												for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
 													// Copy
 													::bzero((UInt8*) ioData->mBuffers[i].mData + byteOffset,
-															requiredByteCount);
+															ioData->mBuffers[i].mDataByteSize - byteOffset);
 
 												// Check if silence
 												if (internals.mRenderProcPreviousFrameCount == 0)
@@ -358,6 +361,10 @@ class CAudioPlayerInternals {
 														(internals.mRenderProcPreviousFrameCount == 0))
 													// Was recently started, but the reader thread doesn't yet have
 													//	frames queued.
+													internals.mRenderProcIsSendingFrames = true;
+												else if (requiredByteCount == 0)
+													// Fulfilled the requirements, but did not fill a buffer.  Must be
+													//	seeking
 													internals.mRenderProcIsSendingFrames = true;
 												else if (!internals.mAudioPlayerBufferThread->getDidReachEnd()) {
 													// Have a discontinuity in the queued frames
@@ -411,6 +418,7 @@ class CAudioPlayerInternals {
 		OV<UInt32>						mBytesPerFrame;
 
 		bool							mIsPlaying;
+		bool							mIsSeeking;
 		UniversalTimeInterval			mCurrentPlaybackTimeInterval;
 		UniversalTimeInterval			mLastSeekTimeInterval;
 		Float32							mGain;
@@ -536,7 +544,8 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	// Reset buffer
 	mInternals->mQueue->reset();
 
-	// Seek
+	// Reset and seek
+	CAudioDestination::reset();
 	CAudioDestination::seek(timeInterval);
 
 	// Reset stuffs
@@ -685,6 +694,7 @@ void CAudioPlayer::startSeek()
 	mInternals->mRenderProcShouldNotifyEndOfData = false;
 
 	// Setup
+	mInternals->mIsSeeking = true;
 	mInternals->mLastSeekTimeInterval = mInternals->mCurrentPlaybackTimeInterval;
 
 	// Start the engine if not already started
@@ -708,9 +718,11 @@ void CAudioPlayer::finishSeek()
 	mInternals->mQueue->reset();
 
 	// Seek to the last seek time interval
+	CAudioDestination::reset();
 	CAudioDestination::seek(mInternals->mLastSeekTimeInterval);
 
 	// Reset stuffs
+	mInternals->mIsSeeking = false;
 	mInternals->mCurrentPlaybackTimeInterval = mInternals->mLastSeekTimeInterval;
 
 	mInternals->mRenderProcFrameIndex = 0;

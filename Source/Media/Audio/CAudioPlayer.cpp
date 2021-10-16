@@ -195,7 +195,7 @@ void CAudioPlayerBufferThread::run()
 void CAudioPlayerBufferThread::pause()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Request stop filling
+	// Request pause
 	mInternals->mPauseRequested = true;
 
 	// Wait until waiting

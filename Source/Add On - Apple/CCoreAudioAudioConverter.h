@@ -21,6 +21,7 @@ class CCoreAudioAudioConverter : public CAudioConverter {
 									const SAudioProcessingFormat& audioProcessingFormat);
 
 		SAudioSourceStatus	performInto(CAudioFrames& audioFrames);
+
 		void				reset();
 
 	// Properties

@@ -52,6 +52,9 @@ class CVideoFrameStore : public CVideoDestination {
 
 				void		reset();
 
+							// CVideoDestination methods
+				void		setupComplete();
+
 							// Instance methods
 				void		notePositionUpdated(UniversalTimeInterval position);
 

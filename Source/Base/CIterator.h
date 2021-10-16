@@ -169,6 +169,9 @@ template <typename K, typename T> class TIteratorM : public CIterator {
 		T		getValue() const
 					{ return mMapProc(mCurrentRawValue); }
 
+		T		operator*() const
+					{ return mMapProc(mCurrentRawValue); }
+
 	// Properties
 	private:
 		AdvanceProc	mAdvanceProc;

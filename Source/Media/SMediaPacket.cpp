@@ -5,7 +5,36 @@
 #include "SMediaPacket.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSeekableUniformMediaPacketSourceInternals
+// MARK: CMediaPacketSource
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CMediaPacketSource::seekToKeyframe(UInt32 initialFrameIndex, const TNumericArray<UInt32>& keyframeIndexes)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate through keyframes to find target one
+	UInt32	packetIndex = 0;
+	for (TIteratorM<SNumberWrapper<UInt32>, UInt32> iterator = keyframeIndexes.getIterator(); iterator.hasValue();
+			iterator.advance()) {
+		// Check this keyframe
+		if (*iterator <= initialFrameIndex)
+			// Is the same or before initial frame index
+			packetIndex = *iterator;
+		else
+			// Is after initial frame index, done.
+			break;
+	}
+
+	// Seek to packet
+	seekToPacket(packetIndex);
+
+	return packetIndex;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CSeekableUniformMediaPacketSourceInternals
 
 class CSeekableUniformMediaPacketSourceInternals {
 	public:

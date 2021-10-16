@@ -105,6 +105,8 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 										~CMediaPlayer();
 
 										// CMediaDestination methods
+				void					seek(UniversalTimeInterval timeInterval);
+
 				void					setupComplete();
 
 										// Instance methods

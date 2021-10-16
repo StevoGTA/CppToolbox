@@ -75,6 +75,9 @@ class CVideoSource : public CVideoProcessor {
 class CVideoDestination : public CVideoProcessor {
 	// Methods
 	public:
-		// Lifecycle methods
-		CVideoDestination() : CVideoProcessor() {}
+						// Lifecycle methods
+						CVideoDestination() : CVideoProcessor() {}
+
+						// Instance methods
+		virtual	void	setupComplete() = 0;
 };

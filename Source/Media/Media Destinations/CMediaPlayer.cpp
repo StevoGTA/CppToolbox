@@ -237,7 +237,8 @@ TNArray<R<CMediaPlayerInternals> >	CMediaPlayerInternals::mActiveInternals;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaPlayer::CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info)
+CMediaPlayer::CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info) :
+		TMediaDestination<CAudioPlayer, CVideoFrameStore>()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -276,6 +277,20 @@ CMediaPlayer::~CMediaPlayer()
 // MARK: CMediaDestination methods
 
 //----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Do super
+	TMediaDestination<CAudioPlayer, CVideoFrameStore>::seek(timeInterval);
+
+	// Store
+	mInternals->mCurrentPosition = timeInterval;
+
+	// Call proc
+	mInternals->mInfo.audioPositionUpdated(timeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::setupComplete()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -283,6 +298,11 @@ void CMediaPlayer::setupComplete()
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Note setup is complete
 		getAudioProcessor(i)->setupComplete();
+
+	// Iterate all video tracks
+	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
+		// Note setup is complete
+		getVideoProcessor(i)->setupComplete();
 }
 
 // MARK: Instance methods
