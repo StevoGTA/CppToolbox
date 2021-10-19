@@ -10,14 +10,14 @@
 // MARK: CData_ZIPExtensions
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::Size> uncompressedDataSize)
+CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::ByteCount> uncompressedDataByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CData::ByteCount	sourceByteCount = data.getByteCount();
 	CData				decompressedData(
-								uncompressedDataSize.hasValue() ?
-										*uncompressedDataSize : sourceByteCount + sourceByteCount / 2);
+								uncompressedDataByteCount.hasValue() ?
+										*uncompressedDataByteCount : sourceByteCount + sourceByteCount / 2);
 
 	z_stream	strm;
 	strm.next_in = (Bytef*) data.getBytePtr();
@@ -39,7 +39,7 @@ CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::Size
 		
 		// We need more space?
 		if (strm.avail_out == 0)
-			decompressedData.increaseSizeBy(sourceByteCount / 2);
+			decompressedData.increaseByteCountBy(sourceByteCount / 2);
 	}
 	
 	if (zLibStatus == Z_STREAM_END)
@@ -50,7 +50,7 @@ CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::Size
 	if (zLibStatus != Z_OK)
 		return CData::mEmpty;
 
-	decompressedData.setSize((CData::Size) strm.total_out);
+	decompressedData.setByteCount((CData::ByteCount) strm.total_out);
 	
 	return decompressedData;
 }

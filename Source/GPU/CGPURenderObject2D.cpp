@@ -31,8 +31,8 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 					{
 						// Setup buffer
 						CData					vertexData(
-														(CData::Size) sizeof(SVertex2DMultitexture) * items.getCount() *
-																6);
+														(CData::ByteCount) sizeof(SVertex2DMultitexture) *
+																items.getCount() * 6);
 						SVertex2DMultitexture*	vertexInfoPtr = (SVertex2DMultitexture*) vertexData.getMutableBytePtr();
 						for (TIteratorD<CGPURenderObject2D::Item> iterator = items.getIterator(); iterator.hasValue();
 								iterator.advance()) {
