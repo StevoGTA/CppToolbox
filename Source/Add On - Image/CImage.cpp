@@ -177,10 +177,10 @@ OV<CImage::Type> CImage::getTypeFromData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	const	void*	bytePtr = data.getBytePtr();
-	if ((data.getSize() >= 8) && (EndianU32_BtoN(*((const UInt32*) ((const UInt8*) bytePtr + 6))) == 'JFIF'))
+	if ((data.getByteCount() >= 8) && (EndianU32_BtoN(*((const UInt32*) ((const UInt8*) bytePtr + 6))) == 'JFIF'))
 		// JPEG
 		return OV<Type>(kTypeJPEG);
-	else if ((data.getSize() >= 4) && (EndianU32_BtoN(*((const UInt32*) bytePtr)) == 0x89504E47))
+	else if ((data.getByteCount() >= 4) && (EndianU32_BtoN(*((const UInt32*) bytePtr)) == 0x89504E47))
 		// PNG
 		return OV<Type>(kTypePNG);
 	else
@@ -310,7 +310,7 @@ boolean sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr)
 		CData*				imageData = (CData*) sourceInfo->mUserInfo;
 
 		jpegInfoPtr->src->next_input_byte = (const JOCTET*) imageData->getBytePtr();
-		jpegInfoPtr->src->bytes_in_buffer = imageData->getSize();
+		jpegInfoPtr->src->bytes_in_buffer = imageData->getByteCount();
 
 		return TRUE;
 	}

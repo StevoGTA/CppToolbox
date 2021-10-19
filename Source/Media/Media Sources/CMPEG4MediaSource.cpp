@@ -545,7 +545,7 @@ struct SstsdAtomPayload {
 //};
 //
 //struct SalacAtom {
-//	UInt32				mSize;
+//	UInt32				mByteCount;
 //	OSType				mType;
 //	UInt32				mVersion;
 //
@@ -553,7 +553,7 @@ struct SstsdAtomPayload {
 //};
 //
 //struct SalacAtomWithChannelLayout {
-//	UInt32					mSize;
+//	UInt32					mByteCount;
 //	OSType					mType;
 //	UInt32					mVersion;
 //
@@ -975,7 +975,7 @@ OI<SError> sAddMP4AAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 		I<CCodec::DecodeInfo>	decodeInfo(
 										new CAACAudioCodec::DecodeInfo(mediaPacketSource,
 												CData((UInt8*) esdsAtomPayloadData.getBytePtr() + 4,
-														esdsAtomPayloadData.getSize() - 4),
+														esdsAtomPayloadData.getByteCount() - 4),
 												startCodes));
 
 		// Add audio track

@@ -503,19 +503,19 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataS
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64		dataSize = seekableDataSource->getSize();
+	UInt64		byteCount = seekableDataSource->getByteCount();
 	OI<SError>	error;
 
 	// Check size
-	if (dataSize < (sBinaryPListV10Header.getSize() + sizeof(SBinaryPListTrailer))) {
+	if (byteCount < (sBinaryPListV10Header.getByteCount() + sizeof(SBinaryPListTrailer))) {
 		// Too small to be a binary property list
 		LogErrorAndReturnValue(sUnknownFormatError, "checking data source size",
 				TIResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Validate header
-	CData	data(sBinaryPListV10Header.getSize());
-	error = seekableDataSource->readData(0, data.getMutableBytePtr(), sBinaryPListV10Header.getSize());
+	CData	data(sBinaryPListV10Header.getByteCount());
+	error = seekableDataSource->readData(0, data.getMutableBytePtr(), sBinaryPListV10Header.getByteCount());
 	LogIfErrorAndReturnValue(error, "reading header", TIResult<CDictionary>(*error));
 	if (data != sBinaryPListV10Header) {
 		// Header does not match
@@ -524,7 +524,7 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataS
 
 	// Validate trailer
 	SBinaryPListTrailer	trailer;
-	error = seekableDataSource->readData(dataSize - sizeof(SBinaryPListTrailer), &trailer, sizeof(SBinaryPListTrailer));
+	error = seekableDataSource->readData(byteCount - sizeof(SBinaryPListTrailer), &trailer, sizeof(SBinaryPListTrailer));
 	LogIfErrorAndReturnValue(error, "reading trailer", TIResult<CDictionary>(*error));
 
 	// Create CBPLReader

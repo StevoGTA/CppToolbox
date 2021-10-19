@@ -95,7 +95,7 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNe
 	// Check if can read next packet
 	if (mInternals->mNextPacketIndex < mInternals->mPacketCount) {
 		// Copy packet data
-		CData		data((CData::Size) mInternals->mBytesPerPacket);
+		CData		data((CData::ByteCount) mInternals->mBytesPerPacket);
 		UInt64		byteOffset = mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
 		OI<SError>	error =
 							mInternals->mSeekableDataSource->readData(byteOffset, data.getMutableBytePtr(),
@@ -191,7 +191,7 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::readNe
 											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
 
 		// Copy packet data
-		CData		data((CData::Size) mediaPacketAndLocation.mMediaPacket.mByteCount);
+		CData		data((CData::ByteCount) mediaPacketAndLocation.mMediaPacket.mByteCount);
 		OI<SError>	error =
 							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset,
 									data.getMutableBytePtr(), mediaPacketAndLocation.mMediaPacket.mByteCount);
@@ -213,7 +213,7 @@ TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::readNextInto(
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add packets
-	UInt32					dataByteCountRemaining = (UInt32) data.getSize();
+	UInt32					dataByteCountRemaining = (UInt32) data.getByteCount();
 	UInt8*					packetDataPtr = (UInt8*) data.getMutableBytePtr();
 	UInt32					packetCount = maxPacketCount.hasValue() ? *maxPacketCount : ~0;
 	TNArray<SMediaPacket>	mediaPackets;

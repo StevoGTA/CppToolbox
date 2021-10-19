@@ -18,8 +18,8 @@ class CAACAudioCodecInternals {
 							CAACAudioCodecInternals(OSType codecID) :
 								mCodecID(codecID),
 									mAudioConverterRef(nil), mDecodeFramesToIgnore(0),
-									mInputPacketData((CData::Size) 10 * 1024),
-									mInputPacketDescriptionsData((CData::Size) 1 * 1024)
+									mInputPacketData((CData::ByteCount) 10 * 1024),
+									mInputPacketDescriptionsData((CData::ByteCount) 1 * 1024)
 								{}
 							~CAACAudioCodecInternals()
 								{
@@ -51,12 +51,12 @@ class CAACAudioCodecInternals {
 									ioBufferList->mNumberBuffers = 1;
 									ioBufferList->mBuffers[0].mData = internals.mInputPacketData.getMutableBytePtr();
 									ioBufferList->mBuffers[0].mDataByteSize =
-											(UInt32) internals.mInputPacketData.getSize();
+											(UInt32) internals.mInputPacketData.getByteCount();
 
 									if ((*ioNumberDataPackets * sizeof(AudioStreamPacketDescription)) >
-											internals.mInputPacketDescriptionsData.getSize())
+											internals.mInputPacketDescriptionsData.getByteCount())
 										// Increase packet descriptions data size
-										internals.mInputPacketDescriptionsData.setSize(
+										internals.mInputPacketDescriptionsData.setByteCount(
 												*ioNumberDataPackets * sizeof(AudioStreamPacketDescription));
 
 									AudioStreamPacketDescription*	packetDescription =
@@ -144,7 +144,7 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 	// Set magic cookie
 	status =
 			::AudioConverterSetProperty(mInternals->mAudioConverterRef,
-					kAudioConverterDecompressionMagicCookie, (UInt32) aacDecodeInfo.getMagicCookie().getSize(),
+					kAudioConverterDecompressionMagicCookie, (UInt32) aacDecodeInfo.getMagicCookie().getByteCount(),
 					aacDecodeInfo.getMagicCookie().getBytePtr());
 	LogOSStatusIfFailed(status, OSSTR("AudioConverterSetProperty for magic cookie"));
 }

@@ -106,14 +106,14 @@ CFArrayRef CCoreFoundation::createArrayRefFrom(const TArray<CString>& array)
 CData CCoreFoundation::dataFrom(CFDataRef dataRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CData(::CFDataGetBytePtr(dataRef), (CData::Size) ::CFDataGetLength(dataRef));
+	return CData(::CFDataGetBytePtr(dataRef), (CData::ByteCount) ::CFDataGetLength(dataRef));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CFDataRef CCoreFoundation::createDataRefFrom(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getSize());
+	return ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getByteCount());
 }
 
 // MARK: Dictionary utilities

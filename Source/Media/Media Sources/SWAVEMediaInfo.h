@@ -12,13 +12,13 @@
 struct SWAVEFORMChunk32 {
 			// Methods
 	OSType	getID() const { return EndianU32_BtoN(mID); }
-	UInt32	getSize() const { return EndianU32_LtoN(mSize); }
+	UInt32	getByteCount() const { return EndianU32_LtoN(mByteCount); }
 	OSType	getFormType() const { return EndianU32_BtoN(mFormType); }
 
 	// Properties (in storage endian)
 	private:
 		OSType	mID;
-		UInt32	mSize;
+		UInt32	mByteCount;
 		OSType	mFormType;
 };
 
@@ -26,7 +26,7 @@ struct SWAVEFORMChunk32 {
 struct SWAVEFORMAT {
 			// Methods
 	OSType	getID() const { return EndianU32_BtoN(mID); }
-	UInt32	getSize() const { return EndianU32_LtoN(mSize); }
+	UInt32	getByteCount() const { return EndianU32_LtoN(mByteCount); }
 	UInt16	getFormatTag() const { return EndianU16_LtoN(mFormatTag); }
 	UInt16	getChannels() const { return EndianU16_LtoN(mChannels); }
 	UInt32	getSamplesPerSec() const { return EndianU32_LtoN(mSamplesPerSec); }
@@ -36,7 +36,7 @@ struct SWAVEFORMAT {
 	// Properties (in storage endian)
 	private:
 		OSType	mID;
-		UInt32	mSize;
+		UInt32	mByteCount;
 		UInt16	mFormatTag;
 		UInt16	mChannels;
 		UInt32	mSamplesPerSec;

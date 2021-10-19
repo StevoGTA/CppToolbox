@@ -86,7 +86,7 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(
 	if (userData.hasInstance()) {
 		result =
 				inputMediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
-						(UINT32) userData->getSize());
+						(UINT32) userData->getByteCount());
 		ReturnValueIfFailed(result, "SetBlob of MF_MT_USER_DATA for input",
 				TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 	}
@@ -242,7 +242,7 @@ TCIResult<IMFSample> CMediaFoundationServices::createSample(const CData& data)
 
 	// Create memory buffer
 	IMFMediaBuffer*	tempMediaBuffer;
-	result = MFCreateMemoryBuffer((DWORD) data.getSize(), &tempMediaBuffer);
+	result = MFCreateMemoryBuffer((DWORD) data.getByteCount(), &tempMediaBuffer);
 	ReturnValueIfFailed(result, "MFCreateMemoryBuffer", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 	CI<IMFMediaBuffer>	mediaBuffer(tempMediaBuffer);
 
@@ -257,10 +257,10 @@ TCIResult<IMFSample> CMediaFoundationServices::createSample(const CData& data)
 	ReturnValueIfFailed(result, "Lock for media buffer", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	// Copy data
-	::memcpy(bytePtr, data.getBytePtr(), data.getSize());
+	::memcpy(bytePtr, data.getBytePtr(), data.getByteCount());
 
 	// Set current length
-	result = tempMediaBuffer->SetCurrentLength((DWORD) data.getSize());
+	result = tempMediaBuffer->SetCurrentLength((DWORD) data.getByteCount());
 	ReturnValueIfFailed(result, "SetCurrentLength", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	// Unlock media buffer

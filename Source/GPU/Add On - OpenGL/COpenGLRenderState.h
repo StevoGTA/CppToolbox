@@ -42,7 +42,7 @@ class COpenGLIndexBufferInfo : COpenGLBufferInfo {
 						// Setup
 						glGenBuffers(1, &mIndexDataBuffer);
 						glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexDataBuffer);
-						glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.getSize(), (UInt8*) data.getBytePtr(),
+						glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.getByteCount(), (UInt8*) data.getBytePtr(),
 								GL_STATIC_DRAW);
 					}
 				~COpenGLIndexBufferInfo()
@@ -75,7 +75,7 @@ class COpenGLVertexBufferInfo : COpenGLBufferInfo {
 
 						glGenBuffers(1, &mVertexDataBuffer);
 						glBindBuffer(GL_ARRAY_BUFFER, mVertexDataBuffer);
-						glBufferData(GL_ARRAY_BUFFER, data.getSize(), (UInt8*) data.getBytePtr(), GL_STATIC_DRAW);
+						glBufferData(GL_ARRAY_BUFFER, data.getByteCount(), (UInt8*) data.getBytePtr(), GL_STATIC_DRAW);
 					}
 				~COpenGLVertexBufferInfo()
 					{

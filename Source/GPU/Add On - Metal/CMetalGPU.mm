@@ -174,7 +174,7 @@ SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
 	// Create buffer
 	id<MTLBuffer>	mtlBuffer =
 							[mInternals->mProcs.getDevice() newBufferWithBytes:data.getBytePtr()
-									length:data.getSize() options:MTLResourceStorageModeShared];
+									length:data.getByteCount() options:MTLResourceStorageModeShared];
 
 	return SGPUBuffer((void*) ::CFBridgingRetain(mtlBuffer));
 }
@@ -186,7 +186,7 @@ SGPUVertexBuffer CGPU::allocateVertexBuffer(UInt32 perVertexByteCount, const CDa
 	// Create buffer
 	id<MTLBuffer>	mtlBuffer =
 							[mInternals->mProcs.getDevice() newBufferWithBytes:data.getBytePtr()
-									length:data.getSize() options:MTLResourceStorageModeShared];
+									length:data.getByteCount() options:MTLResourceStorageModeShared];
 
 	return SGPUVertexBuffer(perVertexByteCount, (void*) ::CFBridgingRetain(mtlBuffer));
 }

@@ -22,10 +22,10 @@ class CUUIDInternals : public TReferenceCountable<CUUIDInternals> {
 		CUUIDInternals(const CData& data) : TReferenceCountable()
 			{
 				// Check if data is correct size
-				AssertFailIf(data.getSize() != 16);
+				AssertFailIf(data.getByteCount() != 16);
 
 				// Check data size
-				if (data.getSize() == 16)
+				if (data.getByteCount() == 16)
 					// Data is correct size
 					data.copyBytes(&mUUIDBytes);
 				else

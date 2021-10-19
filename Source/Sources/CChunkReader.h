@@ -14,17 +14,17 @@ class CChunkReader : public CByteReader {
 	public:
 		struct ChunkInfo {
 			// Methods
-			ChunkInfo(OSType id, UInt64 size, UInt64 thisChunkPos, UInt64 nextChunkPos) :
-				mID(id), mSize(size), mThisChunkPos(thisChunkPos), mNextChunkPos(nextChunkPos)
+			ChunkInfo(OSType id, UInt64 byteCount, UInt64 thisChunkPos, UInt64 nextChunkPos) :
+				mID(id), mByteCount(byteCount), mThisChunkPos(thisChunkPos), mNextChunkPos(nextChunkPos)
 				{}
 			ChunkInfo(const ChunkInfo& other) :
-				mID(other.mID), mSize(other.mSize), mThisChunkPos(other.mThisChunkPos),
+				mID(other.mID), mByteCount(other.mByteCount), mThisChunkPos(other.mThisChunkPos),
 						mNextChunkPos(other.mNextChunkPos)
 				{}
 
 			// Properties
 			OSType	mID;
-			UInt64	mSize;
+			UInt64	mByteCount;
 			UInt64	mThisChunkPos;
 			UInt64	mNextChunkPos;
 		};

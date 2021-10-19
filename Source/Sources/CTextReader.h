@@ -21,7 +21,7 @@ class CTextReader {
 							~CTextReader();
 
 							// Instance methods
-		UInt64				getSize() const;
+		UInt64				getByteCount() const;
 
 		TIResult<CString>	readStringToEOL();
 

@@ -14,7 +14,7 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 		CBitReaderInternals(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian) :
 			TReferenceCountable(),
 					mIsBigEndian(isBigEndian), mSeekableDataSource(seekableDataSource), mDataSourceOffset(0),
-					mSize(mSeekableDataSource->getSize()),
+					mByteCount(mSeekableDataSource->getByteCount()),
 					mCurrentByte(0), mCurrentByteBitsAvailable(0)
 			{}
 
@@ -36,12 +36,12 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 
 								case CBitReader::kPositionFromEnd:
 									// From end
-									mDataSourceOffset = mSize - newPos;
+									mDataSourceOffset = mByteCount - newPos;
 									break;
 							}
 
 							// Check
-							AssertFailIf(mDataSourceOffset > mSize);
+							AssertFailIf(mDataSourceOffset > mByteCount);
 
 							return OI<SError>();
 						}
@@ -53,7 +53,7 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 							mCurrentByteBitsAvailable = 0;
 
 							// Check if can perform read
-							if ((mDataSourceOffset + byteCount) > mSize)
+							if ((mDataSourceOffset + byteCount) > mByteCount)
 								// Can't read that many bytes
 								return OI<SError>(SError::mEndOfData);
 
@@ -96,7 +96,7 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 		bool					mIsBigEndian;
 		I<CSeekableDataSource>	mSeekableDataSource;
 		UInt64					mDataSourceOffset;
-		UInt64					mSize;
+		UInt64					mByteCount;
 
 		UInt8					mCurrentByte;
 		UInt8					mCurrentByteBitsAvailable;
@@ -132,10 +132,10 @@ CBitReader::~CBitReader()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CBitReader::getSize() const
+UInt64 CBitReader::getByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mSize;
+	return mInternals->mByteCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ OI<SError> CBitReader::readData(void* buffer, UInt64 byteCount) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CBitReader::readData(CData::Size byteCount) const
+TIResult<CData> CBitReader::readData(CData::ByteCount byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read

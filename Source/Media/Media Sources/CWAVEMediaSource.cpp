@@ -87,7 +87,8 @@ TIResult<CMediaTrackInfos> sQueryWAVETracksProc(const I<CSeekableDataSource>& se
 				// Data chunk
 				dataChunkStartByteOffset = chunkReader.getPos();
 				dataChunkByteCount =
-						std::min<SInt64>(chunkInfo.getValue().mSize, chunkReader.getSize() - dataChunkStartByteOffset);
+						std::min<SInt64>(chunkInfo.getValue().mByteCount,
+								chunkReader.getByteCount() - dataChunkStartByteOffset);
 				break;
 		}
 

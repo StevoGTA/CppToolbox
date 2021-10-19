@@ -326,14 +326,14 @@ CString::CString(const CData& data, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Ensure we have something to convert
-	if (data.getSize() > 0) {
+	if (data.getByteCount() > 0) {
 		// Setup
-		mString.resize(data.getSize());
+		mString.resize(data.getByteCount());
 
 		// Convert
 		int	count =
 					MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (char*) data.getBytePtr(),
-							(int) data.getSize(), &mString[0], (int) data.getSize());
+							(int) data.getByteCount(), &mString[0], (int) data.getByteCount());
 		AssertFailIf(count == 0);
 	}
 }

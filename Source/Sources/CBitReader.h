@@ -28,13 +28,13 @@ class CBitReader {
 							~CBitReader();
 
 							// Instance methods
-		UInt64				getSize() const;
+		UInt64				getByteCount() const;
 
 		UInt64				getPos() const;	// Will return next byte pos if bits still to read in current byte
 		OI<SError>			setPos(Position position, SInt64 newPos) const;	// kPositionFromCurrent of 0 advances to next byte boundary
 
 		OI<SError>			readData(void* buffer, UInt64 byteCount) const;
-		TIResult<CData>		readData(CData::Size byteCount) const;
+		TIResult<CData>		readData(CData::ByteCount byteCount) const;
 
 		TVResult<SInt8>		readSInt8() const;	// Will ignore bits remaining in the current byte
 		TVResult<SInt16>	readSInt16() const;	// Will ignore bits remaining in the current byte

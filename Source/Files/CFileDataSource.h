@@ -19,9 +19,9 @@ class CFileDataSource : public CSeekableDataSource {
 								~CFileDataSource();
 
 								// CSeekableDataSource methods
-		UInt64					getSize() const;
+		UInt64					getByteCount() const;
 
-		OI<SError>				readData(UInt64 position, void* buffer, CData::Size byteCount);
+		OI<SError>				readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
 
 								// Class methods
 		static	TIResult<CData>	readData(const CFile& file)
@@ -45,9 +45,9 @@ class CMappedFileDataSource : public CSeekableDataSource {
 					~CMappedFileDataSource();
 
 					// CSeekableDataSource methods
-		UInt64		getSize() const;
+		UInt64		getByteCount() const;
 
-		OI<SError>	readData(UInt64 position, void* buffer, CData::Size byteCount);
+		OI<SError>	readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
 
 	// Properties
 	private:

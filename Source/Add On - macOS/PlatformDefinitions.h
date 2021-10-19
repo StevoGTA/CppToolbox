@@ -13,6 +13,7 @@
 #endif
 
 #define TARGET_OS_MACOS	1
+#define TARGET_OS_WINDOWS 0
 
 #define	DEPRECATED	DEPRECATED_ATTRIBUTE
 #define force_inline __attribute__((always_inline))

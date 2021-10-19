@@ -32,7 +32,7 @@ class CFileWriter {
 
 		OI<SError>	write(const void* buffer, UInt64 byteCount) const;
 		OI<SError>	write(const CData& data) const
-						{ return write(data.getBytePtr(), data.getSize()); }
+						{ return write(data.getBytePtr(), data.getByteCount()); }
 		OI<SError>	write(const CString& string, CString::Encoding stringEncoding = CString::kEncodingTextDefault) const
 						{  return write(string.getData(stringEncoding)); }
 		OI<SError>	write(SInt8 value) const
@@ -54,7 +54,7 @@ class CFileWriter {
 
 		UInt64		getPos() const;
 		OI<SError>	setPos(Position position, SInt64 newPos) const;
-		OI<SError>	setSize(UInt64 newSize) const;
+		OI<SError>	setByteCount(UInt64 byteCount) const;
 
 		OI<SError>	flush() const;
 

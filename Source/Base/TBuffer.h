@@ -12,9 +12,9 @@
 template <typename T> struct TBuffer {
 			// Lifecycle methods
 			TBuffer(UInt32 count) :
-				mStorage((T*) ::calloc(count, sizeof(T))), mOwnsStorage(true), mSize(count * sizeof(T))
+				mStorage((T*) ::calloc(count, sizeof(T))), mOwnsStorage(true), mByteCount(count * sizeof(T))
 				{}
-			TBuffer(T* buffer, UInt32 size) : mStorage(buffer), mOwnsStorage(false), mSize(size) {}
+			TBuffer(T* buffer, UInt32 size) : mStorage(buffer), mOwnsStorage(false), mByteCount(size) {}
 			~TBuffer() { if (mOwnsStorage) ::free(mStorage); }
 
 			// Instamce methods
@@ -22,12 +22,12 @@ template <typename T> struct TBuffer {
 				{ return mStorage; }
 	T&		operator[](UInt32 index) const
 				{ return mStorage[index]; }
-	UInt32	getSize() const
-				{ return mSize; }
+	UInt32	getByteCount() const
+				{ return mByteCount; }
 
 	// Properties
 	private:
 		T*		mStorage;
 		bool	mOwnsStorage;
-		UInt32	mSize;
+		UInt32	mByteCount;
 };

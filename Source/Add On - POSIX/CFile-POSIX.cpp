@@ -52,7 +52,7 @@ OI<SError> CFile::rename(const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CFile::getSize() const
+UInt64 CFile::getByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get size
@@ -62,7 +62,7 @@ UInt64 CFile::getSize() const
 		return statInfo.st_size;
 	else
 		// Error
-		CFileReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), "getting size", 0);
+		CFileReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), "getting byte count", 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

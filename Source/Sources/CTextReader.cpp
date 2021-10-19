@@ -14,12 +14,13 @@ class CTextReaderInternals : public TReferenceCountable<CTextReaderInternals> {
 	public:
 		CTextReaderInternals(const I<CSeekableDataSource>& seekableDataSource) :
 			TReferenceCountable(),
-					mSeekableDataSource(seekableDataSource), mDataSourceOffset(0), mSize(mSeekableDataSource->getSize())
+					mSeekableDataSource(seekableDataSource), mDataSourceOffset(0),
+					mByteCount(mSeekableDataSource->getByteCount())
 			{}
 
 		I<CSeekableDataSource>	mSeekableDataSource;
 		UInt64					mDataSourceOffset;
-		UInt64					mSize;
+		UInt64					mByteCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -52,10 +53,10 @@ CTextReader::~CTextReader()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CTextReader::getSize() const
+UInt64 CTextReader::getByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mSize;
+	return mInternals->mByteCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -68,7 +69,7 @@ TIResult<CString> CTextReader::readStringToEOL()
 	bool	foundEnd = false;
 	while (!foundEnd) {
 		// First, read as much as we can
-		UInt64	bytesRead = std::min<UInt64>(1024, mInternals->mSize - mInternals->mDataSourceOffset);
+		UInt64	bytesRead = std::min<UInt64>(1024, mInternals->mByteCount - mInternals->mDataSourceOffset);
 		if (bytesRead == 0)
 			// EOF
 			return outString.isEmpty() ? TIResult<CString>(SError::mEndOfData) : TIResult<CString>(outString);

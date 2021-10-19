@@ -19,39 +19,40 @@ CData	CData::mZeroByte("", 1, false);
 
 class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 	public:
-						CDataInternals(CData::Size initialSize, const void* initialBuffer = nil,
+						CDataInternals(CData::ByteCount initialByteCount, const void* initialBuffer = nil,
 								bool copySourceData = true) :
-							TCopyOnWriteReferenceCountable(), mFreeOnDelete(copySourceData), mBufferSize(initialSize)
+							TCopyOnWriteReferenceCountable(),
+									mFreeOnDelete(copySourceData), mBufferByteCount(initialByteCount)
 							{
 								// Check for initial buffer
 								if (initialBuffer != nil) {
 									// Check free on delete
 									if (copySourceData) {
-										// mBufferSize 0, initialBuffer not nil, copySourceData true
-										// mBufferSize >0, initialBuffer not nil, copySourceData true
-										mBuffer = ::malloc(mBufferSize);
-										::memcpy(mBuffer, initialBuffer, mBufferSize);
+										// mBufferByteCount 0, initialBuffer not nil, copySourceData true
+										// mBufferByteCount >0, initialBuffer not nil, copySourceData true
+										mBuffer = ::malloc(mBufferByteCount);
+										::memcpy(mBuffer, initialBuffer, mBufferByteCount);
 									} else {
-										// mBufferSize 0, initialBuffer not nil, copySourceData false
-										// mBufferSize >0, initialBuffer not nil, copySourceData false
+										// mBufferByteCount 0, initialBuffer not nil, copySourceData false
+										// mBufferByteCount >0, initialBuffer not nil, copySourceData false
 										mBuffer = (void*) initialBuffer;
 									}
-								} else if (mBufferSize > 0)
-									// mBufferSize >0, initialBuffer nil
-									mBuffer = ::calloc(1, mBufferSize);
+								} else if (mBufferByteCount > 0)
+									// mBufferByteCount >0, initialBuffer nil
+									mBuffer = ::calloc(1, mBufferByteCount);
 								else
-									// mBufferSize 0, initialBuffer nil
+									// mBufferByteCount 0, initialBuffer nil
 									mBuffer = nil;
 							}
 						CDataInternals(const CDataInternals& other) :
 							TCopyOnWriteReferenceCountable(), mFreeOnDelete(true),
-									mBuffer((other.mBufferSize > 0) ? ::malloc(other.mBufferSize) : nil),
-									mBufferSize(other.mBufferSize)
+									mBuffer((other.mBufferByteCount > 0) ? ::malloc(other.mBufferByteCount) : nil),
+									mBufferByteCount(other.mBufferByteCount)
 							{
 								// Do we have any data
-								if (mBufferSize > 0)
+								if (mBufferByteCount > 0)
 									// Copy data
-									::memcpy(mBuffer, other.mBuffer, mBufferSize);
+									::memcpy(mBuffer, other.mBuffer, mBufferByteCount);
 							}
 						~CDataInternals()
 							{
@@ -61,21 +62,22 @@ class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 									::free(mBuffer);
 							}
 
-		CDataInternals*	setSize(CData::Size size)
+		CDataInternals*	setByteCount(CData::ByteCount byteCount)
 							{
 								// Prepare for write
 								CDataInternals*	dataInternals = prepareForWrite();
 
-								// Update size
-								dataInternals->mBufferSize = size;
-								dataInternals->mBuffer = ::realloc(dataInternals->mBuffer, dataInternals->mBufferSize);
+								// Update byte count
+								dataInternals->mBufferByteCount = byteCount;
+								dataInternals->mBuffer =
+										::realloc(dataInternals->mBuffer, dataInternals->mBufferByteCount);
 
 								return dataInternals;
 							}
 
-		bool		mFreeOnDelete;
-		void*		mBuffer;
-		CData::Size	mBufferSize;
+		bool				mFreeOnDelete;
+		void*				mBuffer;
+		CData::ByteCount	mBufferByteCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,11 +87,11 @@ class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CData::CData(Size initialSize)
+CData::CData(ByteCount initialByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDataInternals(initialSize);
+	mInternals = new CDataInternals(initialByteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -101,11 +103,11 @@ CData::CData(const CData& other)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData::CData(const void* buffer, Size bufferSize, bool copySourceData)
+CData::CData(const void* buffer, ByteCount bufferByteCount, bool copySourceData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDataInternals(bufferSize, buffer, copySourceData);
+	mInternals = new CDataInternals(bufferByteCount, buffer, copySourceData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -141,8 +143,8 @@ CData::CData(const CString& base64String)
 			CString::Length	last = (stringLength - (pad1 ? 1 : 0)) / 4 << 2;
 
 	// Setup internals
-	Size	dataSize = last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
-	mInternals = new CDataInternals(dataSize);
+	ByteCount	dataByteCount = last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
+	mInternals = new CDataInternals(dataByteCount);
 
 	// Convert
 	UInt8*	dataPtr = (UInt8*) mInternals->mBuffer;
@@ -195,26 +197,26 @@ CData::~CData()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CData::Size CData::getSize() const
+CData::ByteCount CData::getByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mBufferSize;
+	return mInternals->mBufferByteCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::setSize(Size size)
+void CData::setByteCount(ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Set size
-	mInternals = mInternals->setSize(size);
+	// Set byte count
+	mInternals = mInternals->setByteCount(byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::increaseSizeBy(Size size)
+void CData::increaseByteCountBy(ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Update size
-	mInternals = mInternals->setSize(mInternals->mBufferSize + size);
+	// Update byte count
+	mInternals = mInternals->setByteCount(mInternals->mBufferByteCount + byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -235,31 +237,31 @@ void* CData::getMutableBytePtr()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::copyBytes(void* destinationBuffer, ByteIndex startByte, OV<Size> count) const
+void CData::copyBytes(void* destinationBuffer, ByteIndex startByteIndex, OV<ByteCount> byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	Size	byteCount = count.hasValue() ? count.getValue() : getSize() - startByte;
+	ByteCount	byteCountUse = byteCount.hasValue() ? byteCount.getValue() : getByteCount() - startByteIndex;
 
 	// Parameter check
 	AssertNotNil(destinationBuffer);
 	if (destinationBuffer == nil)
 		return;
 
-	AssertFailIf((startByte + byteCount) > (ByteIndex) getSize());
-	if ((startByte + byteCount) > (ByteIndex) getSize())
+	AssertFailIf((startByteIndex + byteCountUse) > (ByteIndex) getByteCount());
+	if ((startByteIndex + byteCountUse) > (ByteIndex) getByteCount())
 		return;
 
 	// Copy
-	::memcpy(destinationBuffer, (UInt8*) mInternals->mBuffer + startByte, byteCount);
+	::memcpy(destinationBuffer, (UInt8*) mInternals->mBuffer + startByteIndex, byteCountUse);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::appendBytes(const void* buffer, Size bufferSize)
+void CData::appendBytes(const void* buffer, ByteCount bufferByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Punt if no actual data to append
-	if (bufferSize == 0)
+	if (bufferByteCount == 0)
 		return;
 
 	// Parameter check
@@ -268,15 +270,15 @@ void CData::appendBytes(const void* buffer, Size bufferSize)
 		return;
 
 	// Setup
-	Size	originalSize = mInternals->mBufferSize;
-	mInternals = mInternals->setSize(mInternals->mBufferSize + bufferSize);
+	ByteCount	originalByteCount = mInternals->mBufferByteCount;
+	mInternals = mInternals->setByteCount(mInternals->mBufferByteCount + bufferByteCount);
 
 	// Copy
-	::memcpy((UInt8*) mInternals->mBuffer + originalSize, buffer, bufferSize);
+	::memcpy((UInt8*) mInternals->mBuffer + originalByteCount, buffer, bufferByteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::replaceBytes(ByteIndex startByte, Size byteCount, const void* buffer, Size bufferSize)
+void CData::replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer, ByteCount bufferByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -284,34 +286,36 @@ void CData::replaceBytes(ByteIndex startByte, Size byteCount, const void* buffer
 	if (buffer == nil)
 		return;
 
-	AssertFailIf((startByte + byteCount) > getSize());
-	if ((startByte + byteCount) > getSize())
+	AssertFailIf((startByteIndex + byteCount) > getByteCount());
+	if ((startByteIndex + byteCount) > getByteCount())
 		return;
 
 	// Check what is happening
-	Size	resultSize = mInternals->mBufferSize - byteCount + bufferSize;
-	if (resultSize == mInternals->mBufferSize) {
-		// Overall size is staying the same
+	ByteCount	resultByteCount = mInternals->mBufferByteCount - byteCount + bufferByteCount;
+	if (resultByteCount == mInternals->mBufferByteCount) {
+		// Overall byte count is staying the same
 		mInternals = mInternals->prepareForWrite();
-		::memcpy((UInt8*) mInternals->mBuffer + startByte, buffer, bufferSize);
-	} else if (resultSize > mInternals->mBufferSize) {
-		// Overall size is increasing
-		// [0...startByte] stays the same
-		// [startByte...startByte+byteCount] becomes [startByte...startByte+bufferSize]
-		// [startByte+byteCount...end] stays the same
-		mInternals = mInternals->setSize(resultSize);
-		::memmove((UInt8*) mInternals->mBuffer + startByte + bufferSize,
-				(UInt8*) mInternals->mBuffer + startByte + byteCount, resultSize - startByte - bufferSize);
-		::memcpy((UInt8*) mInternals->mBuffer + startByte, buffer, bufferSize);
+		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, bufferByteCount);
+	} else if (resultByteCount > mInternals->mBufferByteCount) {
+		// Overall byte count is increasing
+		// [0...startByteIndex] stays the same
+		// [startByteIndex...startByteIndex+byteCount] becomes [startByteIndex...startByteIndex+bufferByteCount]
+		// [startByteIndex+byteCount...end] stays the same
+		mInternals = mInternals->setByteCount(resultByteCount);
+		::memmove((UInt8*) mInternals->mBuffer + startByteIndex + bufferByteCount,
+				(UInt8*) mInternals->mBuffer + startByteIndex + byteCount,
+				resultByteCount - startByteIndex - bufferByteCount);
+		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, bufferByteCount);
 	} else {
-		// Overall size is decreasing
-		// [0...startByte] stays the same
-		// [startByte...startByte+byteCount] becomes [startByte...startByte+bufferSize]
-		// [startByte+byteCount...end] stays the same
-		::memmove((UInt8*) mInternals->mBuffer + startByte + bufferSize,
-				(UInt8*) mInternals->mBuffer + startByte + byteCount, resultSize - startByte - bufferSize);
-		::memcpy((UInt8*) mInternals->mBuffer + startByte, buffer, bufferSize);
-		mInternals = mInternals->setSize(resultSize);
+		// Overall byte count is decreasing
+		// [0...startByteIndex] stays the same
+		// [startByteIndex...startByteIndex+byteCount] becomes [startByteIndex...startByteIndex+bufferByteCount]
+		// [startByteIndex+byteCount...end] stays the same
+		::memmove((UInt8*) mInternals->mBuffer + startByteIndex + bufferByteCount,
+				(UInt8*) mInternals->mBuffer + startByteIndex + byteCount,
+				resultByteCount - startByteIndex - bufferByteCount);
+		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, bufferByteCount);
+		mInternals = mInternals->setByteCount(resultByteCount);
 	}
 }
 
@@ -323,18 +327,18 @@ CString CData::getBase64String(bool prettyPrint) const
 	static	const	char*	sTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 	// Setup
-	Size			dataLength = mInternals->mBufferSize;
-	CString::Length	stringLength = (CString::Length) (dataLength + 2) / 3 * 4;	// 3 byte blocks to 4 characters
+	ByteCount		dataByteCount = mInternals->mBufferByteCount;
+	CString::Length	stringLength = (CString::Length) (dataByteCount + 2) / 3 * 4;	// 3 byte blocks to 4 characters
 	if (prettyPrint)
 		// Add for newlines
 		stringLength += (stringLength + 71) / 72; // line feeds
-	if (stringLength < dataLength)
+	if (stringLength < dataByteCount)
 		// Integer overflow
 		return CString::mEmpty;
 
 	// Convert
 	const	UInt8*			bytePtr = (UInt8*) mInternals->mBuffer;
-	const	UInt8*			endBytePtr = bytePtr + mInternals->mBufferSize;
+	const	UInt8*			endBytePtr = bytePtr + mInternals->mBufferByteCount;
 
 			TBuffer<char>	stringBuffer(stringLength);
 			char*			stringPtr = *stringBuffer;
@@ -406,8 +410,8 @@ bool CData::operator==(const CData& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compare
-	return (mInternals->mBufferSize == other.mInternals->mBufferSize) &&
-			(::memcmp(mInternals->mBuffer, other.mInternals->mBuffer, mInternals->mBufferSize) == 0);
+	return (mInternals->mBufferByteCount == other.mInternals->mBufferByteCount) &&
+			(::memcmp(mInternals->mBuffer, other.mInternals->mBuffer, mInternals->mBufferByteCount) == 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -415,10 +419,10 @@ CData CData::operator+(const CData& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create and setup data
-	CData	data(mInternals->mBufferSize + other.mInternals->mBufferSize);
-	::memcpy(data.mInternals->mBuffer, mInternals->mBuffer, mInternals->mBufferSize);
-	::memcpy((UInt8*) data.mInternals->mBuffer + mInternals->mBufferSize, other.mInternals->mBuffer,
-			other.mInternals->mBufferSize);
+	CData	data(mInternals->mBufferByteCount + other.mInternals->mBufferByteCount);
+	::memcpy(data.mInternals->mBuffer, mInternals->mBuffer, mInternals->mBufferByteCount);
+	::memcpy((UInt8*) data.mInternals->mBuffer + mInternals->mBufferByteCount, other.mInternals->mBuffer,
+			other.mInternals->mBufferByteCount);
 
 	return data;
 }

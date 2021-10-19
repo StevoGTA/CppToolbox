@@ -248,13 +248,13 @@ OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setSize(UInt64 newSize) const
+OI<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
 	if (mInternals->mFILE != nil) {
 		// FILE
-		if (::ftruncate(::fileno(mInternals->mFILE), newSize) == 0)
+		if (::ftruncate(::fileno(mInternals->mFILE), byteCount) == 0)
 			// Success
 			return OI<SError>();
 		else
@@ -262,7 +262,7 @@ OI<SError> CFileWriter::setSize(UInt64 newSize) const
 			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting size");
 	} else if (mInternals->mFD != -1) {
 		// file
-		if (::ftruncate(mInternals->mFD, newSize) == 0)
+		if (::ftruncate(mInternals->mFD, byteCount) == 0)
 			// Success
 			return OI<SError>();
 		else

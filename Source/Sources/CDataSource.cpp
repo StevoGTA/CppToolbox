@@ -23,10 +23,10 @@ TIResult<CData> CSeekableDataSource::readData()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CData	data((CData::Size) getSize());
+	CData	data((CData::ByteCount) getByteCount());
 
 	// Read
-	OI<SError>	error = readData(0, data.getMutableBytePtr(), getSize());
+	OI<SError>	error = readData(0, data.getMutableBytePtr(), getByteCount());
 	ReturnValueIfError(error, TIResult<CData>(*error));
 
 	return TIResult<CData>(data);
@@ -67,19 +67,19 @@ CDataDataSource::~CDataDataSource()
 // CDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CDataDataSource::getSize() const
+UInt64 CDataDataSource::getByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mData.getSize();
+	return mInternals->mData.getByteCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDataDataSource::readData(UInt64 position, void* buffer, CData::Size byteCount)
+OI<SError> CDataDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf((position + byteCount) > mInternals->mData.getSize());
-	if ((position + byteCount) > mInternals->mData.getSize())
+	AssertFailIf((position + byteCount) > mInternals->mData.getByteCount());
+	if ((position + byteCount) > mInternals->mData.getByteCount())
 		// Attempting to ready beyond end of data
 		return OI<SError>(SError::mEndOfData);
 

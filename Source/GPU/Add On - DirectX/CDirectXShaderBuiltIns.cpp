@@ -71,7 +71,7 @@ class CDirectXVertexShaderBasic : public CDirectXVertexShader {
 															};
 						HRESULT	result =
 										d3dDevice.CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc),
-												shaderData.getBytePtr(), shaderData.getSize(), &mInputLayout);
+												shaderData.getBytePtr(), shaderData.getByteCount(), &mInputLayout);
 						AssertFailIf(FAILED(result));
 
 						// Create constant buffer
@@ -143,7 +143,7 @@ class CDirectXVertexShaderClip : public CDirectXVertexShader {
 															};
 						HRESULT	result =
 										d3dDevice.CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc),
-												shaderData.getBytePtr(), shaderData.getSize(), &mInputLayout);
+												shaderData.getBytePtr(), shaderData.getByteCount(), &mInputLayout);
 						AssertFailIf(FAILED(result));
 
 						// Create constant buffer

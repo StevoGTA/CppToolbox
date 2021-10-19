@@ -39,7 +39,7 @@ CAudioFrames::CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByte
 
 //----------------------------------------------------------------------------------------------------------------------
 CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFrame, UInt32 frameCountPerSegment) :
-		CData((CData::Size) (segmentCount * frameCountPerSegment * bytesPerFrame))
+		CData((CData::ByteCount) (segmentCount * frameCountPerSegment * bytesPerFrame))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =

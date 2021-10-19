@@ -24,7 +24,7 @@ TIResult<CData> CChunkReader::readData(const ChunkInfo& chunkInfo) const
 	OI<SError>	error = setPos(kPositionFromBeginning, chunkInfo.mThisChunkPos);
 	ReturnValueIfError(error, TIResult<CData>(*error));
 
-	return CByteReader::readData(chunkInfo.mSize);
+	return CByteReader::readData(chunkInfo.mByteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

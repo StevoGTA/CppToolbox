@@ -22,25 +22,25 @@ TArray<CH264VideoCodec::NALUInfo> CH264VideoCodec::NALUInfo::getNALUInfos(const 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNArray<NALUInfo>	naluInfos;
+	TNArray<NALUInfo>			naluInfos;
 
-	const	UInt8*		bytePtr = (const UInt8*) data.getBytePtr();
-			UInt32		offset = 0;
-			CData::Size	bytesRemaining = data.getSize();
+	const	UInt8*				bytePtr = (const UInt8*) data.getBytePtr();
+			UInt32				offset = 0;
+			CData::ByteCount	bytesRemaining = data.getByteCount();
 	while (bytesRemaining > 0) {
 		// Get NALU size
-		CData::Size	size = EndianU32_BtoN(*((const UInt32*) bytePtr));
+		CData::ByteCount	byteCount = EndianU32_BtoN(*((const UInt32*) bytePtr));
 		bytePtr += sizeof(UInt32);
 		offset += sizeof(UInt32);
 		bytesRemaining -= sizeof(UInt32);
 
 		// Add NALU
-		naluInfos += NALUInfo(data, offset, size);
+		naluInfos += NALUInfo(data, offset, byteCount);
 
 		// Update
-		bytePtr += size;
-		offset += (UInt32) size;
-		bytesRemaining -= size;
+		bytePtr += byteCount;
+		offset += (UInt32) byteCount;
+		bytesRemaining -= byteCount;
 	}
 
 	return naluInfos;
@@ -56,15 +56,15 @@ CData CH264VideoCodec::NALUInfo::composeAnnexB(const TArray<NALUInfo>& spsNALUIn
 
 	// Add SPS
 	for (TIteratorD<NALUInfo> iterator = spsNALUInfos.getIterator(); iterator.hasValue(); iterator.advance())
-		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getSize(), false);
+		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getByteCount(), false);
 
 	// Add PPS
 	for (TIteratorD<NALUInfo> iterator = ppsNALUInfos.getIterator(); iterator.hasValue(); iterator.advance())
-		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getSize(), false);
+		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getByteCount(), false);
 
 	// Add NALUs
 	for (TIteratorD<NALUInfo> iterator = naluInfos.getIterator(); iterator.hasValue(); iterator.advance())
-		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getSize(), false);
+		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getByteCount(), false);
 
 	return data;
 }

@@ -100,12 +100,12 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 	for (CArray::ItemIndex i = 0; i < spsCount; i++) {
 		// Store
 		parameterSetPointers[i] = spsNALUInfos[i].getBytePtr();
-		parameterSetSizes[i] = spsNALUInfos[i].getSize();
+		parameterSetSizes[i] = spsNALUInfos[i].getByteCount();
 	}
 	for (CArray::ItemIndex i = 0; i < ppsCount; i++) {
 		// Store
 		parameterSetPointers[spsCount + i] = ppsNALUInfos[i].getBytePtr();
-		parameterSetSizes[spsCount + i] = ppsNALUInfos[i].getSize();
+		parameterSetSizes[spsCount + i] = ppsNALUInfos[i].getByteCount();
 	}
 
 	status =
@@ -182,7 +182,7 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 
 	CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
 															CData(parameterSetPointers[0],
-																	(CData::Size) parameterSetSizes[0], false));
+																	(CData::ByteCount) parameterSetSizes[0], false));
 	mInternals->mCurrentFrameNumberBitCount = spsPayload.mFrameNumberBitCount;
 	mInternals->mCurrentPicOrderCountLSBBitCount = spsPayload.mPicOrderCountLSBBitCount;
 	mInternals->mPicOrderCountMSBChangeThreshold = 1 << (mInternals->mCurrentPicOrderCountLSBBitCount - 1);
@@ -326,7 +326,7 @@ while (true) {
 	CMBlockBufferRef	blockBufferRef;
 	OSStatus	status =
 						::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) data.getBytePtr(),
-								data.getSize(), kCFAllocatorNull, nil, 0, data.getSize(), 0, &blockBufferRef);
+								data.getByteCount(), kCFAllocatorNull, nil, 0, data.getByteCount(), 0, &blockBufferRef);
 	LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMBlockBufferCreateWithMemoryBlock"),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
@@ -367,7 +367,7 @@ sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(frameTime, *mInternals->mT
 
 	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(mInternals->mNextFrameTime, *mInternals->mTimeScale);
 
-	size_t				sampleSize = data.getSize();
+	size_t				sampleSize = data.getByteCount();
 	CMSampleBufferRef	sampleBufferRef;
 	status =
 			::CMSampleBufferCreate(kCFAllocatorDefault, blockBufferRef, true, nil, nil,

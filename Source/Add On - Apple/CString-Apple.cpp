@@ -327,7 +327,7 @@ CString::CString(const TArray<CString>& components, const CString& separator) : 
 CString::CString(const CData& data, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFDataRef	dataRef = ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getSize());
+	CFDataRef	dataRef = ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getByteCount());
 	mStringRef =
 			::CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, dataRef,
 					sGetCFStringEncodingForCStringEncoding(encoding));
@@ -494,7 +494,7 @@ CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 								sGetCFStringEncodingForCStringEncoding(encoding), lossCharacter);
 	if (dataRef != nil) {
 		// Create data
-		CData	data(::CFDataGetBytePtr(dataRef), (CData::Size) ::CFDataGetLength(dataRef));
+		CData	data(::CFDataGetBytePtr(dataRef), (CData::ByteCount) ::CFDataGetLength(dataRef));
 		::CFRelease(dataRef);
 		
 		return data;

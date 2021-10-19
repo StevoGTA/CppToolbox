@@ -41,7 +41,7 @@ return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CFile::getSize() const
+UInt64 CFile::getByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Query info
@@ -52,11 +52,11 @@ UInt64 CFile::getSize() const
 	AssertFailIf(!result);
 
 	// Handle results
-	LARGE_INTEGER	size;
-	size.HighPart = fileAttributeData.nFileSizeHigh;
-	size.LowPart = fileAttributeData.nFileSizeLow;
+	LARGE_INTEGER	byteCount;
+	byteCount.HighPart = fileAttributeData.nFileSizeHigh;
+	byteCount.LowPart = fileAttributeData.nFileSizeLow;
 
-	return size.QuadPart;
+	return byteCount.QuadPart;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -34,9 +34,9 @@ class CSeekableDataSource : public CDataSource {
 				TIResult<CData>	readData();
 
 								// Instance methods
-		virtual	UInt64			getSize() const = 0;
+		virtual	UInt64			getByteCount() const = 0;
 
-		virtual	OI<SError>		readData(UInt64 position, void* buffer, CData::Size byteCount) = 0;
+		virtual	OI<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount) = 0;
 
 	// Properties
 	protected:
@@ -56,9 +56,9 @@ class CDataDataSource : public CSeekableDataSource {
 					~CDataDataSource();
 
 					// CSeekableDataSource methods
-		UInt64		getSize() const;
+		UInt64		getByteCount() const;
 
-		OI<SError>	readData(UInt64 position, void* buffer, CData::Size byteCount);
+		OI<SError>	readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
 
 	// Properties
 	private:

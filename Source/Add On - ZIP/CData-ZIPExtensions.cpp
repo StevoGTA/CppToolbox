@@ -14,12 +14,14 @@ CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::Size
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CData::Size	sourceSize = data.getSize();
-	CData		decompressedData(uncompressedDataSize.hasValue() ? *uncompressedDataSize : sourceSize + sourceSize / 2);
+	CData::ByteCount	sourceByteCount = data.getByteCount();
+	CData				decompressedData(
+								uncompressedDataSize.hasValue() ?
+										*uncompressedDataSize : sourceByteCount + sourceByteCount / 2);
 
 	z_stream	strm;
 	strm.next_in = (Bytef*) data.getBytePtr();
-	strm.avail_in = (uInt) sourceSize;
+	strm.avail_in = (uInt) sourceByteCount;
 	strm.total_out = 0;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
@@ -30,14 +32,14 @@ CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::Size
 	int	zLibStatus = Z_OK;
 	while (zLibStatus == Z_OK) {
 		strm.next_out = (Bytef*) decompressedData.getMutableBytePtr() + strm.total_out;
-		strm.avail_out = (uInt) (decompressedData.getSize() - strm.total_out);
+		strm.avail_out = (uInt) (decompressedData.getByteCount() - strm.total_out);
 
 		// Inflate another chunk.
 		zLibStatus = inflate(&strm, Z_SYNC_FLUSH);
 		
 		// We need more space?
 		if (strm.avail_out == 0)
-			decompressedData.increaseSizeBy(sourceSize / 2);
+			decompressedData.increaseSizeBy(sourceByteCount / 2);
 	}
 	
 	if (zLibStatus == Z_STREAM_END)
