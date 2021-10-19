@@ -120,7 +120,7 @@ return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setSize(UInt64 newSize) const
+OI<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();

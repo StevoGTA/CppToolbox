@@ -15,7 +15,7 @@
 class CFileDataSourceInternals {
 	public:
 		CFileDataSourceInternals(const CFile& file) :
-			mFile(file), mByteCount(file.getSize())
+			mFile(file), mByteCount(file.getByteCount())
 			{
 				// Open
 				CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
@@ -67,14 +67,14 @@ CFileDataSource::~CFileDataSource()
 // MARK: CSeekableDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CFileDataSource::getSize() const
+UInt64 CFileDataSource::getByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mByteCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::Size byteCount)
+OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
@@ -141,7 +141,7 @@ class CMappedFileDataSourceInternals {
 					mFileMappingHandle = CreateFileMapping(mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
 					if (mFileMappingHandle != NULL) {
 						// Limit to bytes remaining
-						byteCount = std::min<UInt64>(byteCount, mFile.getSize() - byteOffset);
+						byteCount = std::min<UInt64>(byteCount, mFile.getByteCount() - byteOffset);
 
 						// Create map
 						ULARGE_INTEGER	fileOffset;
@@ -212,7 +212,7 @@ CMappedFileDataSource::CMappedFileDataSource(const CFile& file, UInt64 byteOffse
 CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CSeekableDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMappedFileDataSourceInternals(file, 0, file.getSize());
+	mInternals = new CMappedFileDataSourceInternals(file, 0, file.getByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -225,14 +225,14 @@ CMappedFileDataSource::~CMappedFileDataSource()
 // MARK: CSeekableDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CMappedFileDataSource::getSize() const
+UInt64 CMappedFileDataSource::getByteCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mByteCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData::Size byteCount)
+OI<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error

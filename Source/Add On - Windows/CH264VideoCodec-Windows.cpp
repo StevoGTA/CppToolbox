@@ -299,7 +299,7 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 	mInternals->mCurrentSPSPPSInfo = OI<DecodeInfo::SPSPPSInfo>(h264DecodeInfo.getSPSPPSInfo());
 
 	const	NALUInfo&					spsNALUInfo = mInternals->mCurrentSPSPPSInfo->getSPSNALUInfos().getFirst();
-			SequenceParameterSetPayload	spsPayload(CData(spsNALUInfo.getBytePtr(), spsNALUInfo.getSize(), false));
+			SequenceParameterSetPayload	spsPayload(CData(spsNALUInfo.getBytePtr(), spsNALUInfo.getByteCount(), false));
 	mInternals->mCurrentFrameNumberBitCount = spsPayload.mFrameNumberBitCount;
 	mInternals->mCurrentPicOrderCountLSBBitCount = spsPayload.mPicOrderCountLSBBitCount;
 	mInternals->mPicOrderCountMSBChangeThreshold = 1 << (mInternals->mCurrentPicOrderCountLSBBitCount - 1);
