@@ -319,12 +319,20 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 void CH264VideoCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	const	DecodeInfo&	h264DecodeInfo = *((DecodeInfo*) &**mInternals->mDecodeInfo);
+
 	// Flush
 	CMediaFoundationServices::flush(*mInternals->mVideoDecoder);
 
 	// Seek
-	(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToPacket(
-			(UInt32) (timeInterval * mInternals->mVideoProcessingFormat->getFramerate()));
+	UInt32	frameIndex =
+					h264DecodeInfo.getMediaPacketSource()->seekToKeyframe(
+							(UInt32) (timeInterval * mInternals->mVideoProcessingFormat->getFramerate() + 0.5),
+							h264DecodeInfo.getKeyframeIndexes());
+	mInternals->mNextFrameTime =
+			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessingFormat->getFramerate() *
+					(UniversalTimeInterval) *mInternals->mTimeScale);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

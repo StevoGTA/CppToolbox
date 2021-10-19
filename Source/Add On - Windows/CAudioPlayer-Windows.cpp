@@ -49,7 +49,7 @@ class CAudioPlayerImplementation :
 									mPlayAsyncCallback(*this, onPlay), mPauseAsyncCallback(*this, onPause),
 									mBufferFrames(0), mDefaultPeriodInFrames(0), mFundamentalPeriodInFrames(0),
 									mMaxPeriodInFrames(0), mMinPeriodInFrames(0),  mMixFormat(nullptr),
-									mStartTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0),
+									mIsSeeking(false), mCurrentPlaybackTimeInterval(0.0),
 									mLastSeekTimeInterval(0.0),
 									mOnFillBufferShouldSendFrames(true), mOnFillBufferIsSendingFrames(false),
 									mOnFillBufferShouldNotifyEndOfData(false), mOnFillBufferPreviousFrameCount(0),
@@ -204,8 +204,10 @@ class CAudioPlayerImplementation :
 									mOnFillBufferFrameCount -= mOnFillBufferPreviousFrameCount;
 									mOnFillBufferPreviousFrameCount = 0;
 
-									// Notify playback position updated
-									mInfo.positionUpdated(mAudioPlayer, mCurrentPlaybackTimeInterval);
+									// Check if seeking
+									if (!mIsSeeking)
+										// Notify playback position updated
+										mInfo.positionUpdated(mAudioPlayer, mCurrentPlaybackTimeInterval);
 
 									// Notify queue read complete
 									mAudioPlayerBufferThread->noteQueueReadComplete();
@@ -235,10 +237,10 @@ class CAudioPlayerImplementation :
 																					frameCount *
 																							mMixFormat->nBlockAlign;
 
-									// Copy frames
+									// Try to copy as many bytes as possible
 									UInt32	byteOffset = 0;
 									while ((requiredByteCount > 0) && readBufferInfo.hasBuffer()) {
-										// Must copy
+										// Copy
 										UInt32	bytesToCopy =
 														std::min<UInt32>(requiredByteCount, readBufferInfo.mByteCount);
 										::memcpy(data + byteOffset, readBufferInfo.bufferAtIndex(0), bytesToCopy);
@@ -464,8 +466,7 @@ class CAudioPlayerImplementation :
 		UINT32											mMinPeriodInFrames;
 		WAVEFORMATEX*									mMixFormat;
 
-		UniversalTimeInterval							mStartTimeInterval;
-		OV<UniversalTimeInterval>						mDurationTimeInterval;
+		bool											mIsSeeking;
 		UniversalTimeInterval							mCurrentPlaybackTimeInterval;
 		UniversalTimeInterval							mLastSeekTimeInterval;
 
@@ -611,7 +612,8 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	// Reset buffer
 	mInternals->mImplementation->mQueue->reset();
 
-	// Seek
+	// Reset and seek
+	CAudioDestination::reset();
 	CAudioDestination::seek(timeInterval);
 
 	// Reset stuffs
@@ -726,6 +728,7 @@ void CAudioPlayer::startSeek()
 	mInternals->mImplementation->mOnFillBufferShouldNotifyEndOfData = false;
 
 	// Setup
+	mInternals->mImplementation->mIsSeeking = true;
 	mInternals->mImplementation->mLastSeekTimeInterval = mInternals->mImplementation->mCurrentPlaybackTimeInterval;
 
 	// Start
@@ -749,9 +752,11 @@ void CAudioPlayer::finishSeek()
 	mInternals->mImplementation->mQueue->reset();
 
 	// Seek to the last seek time interval
+	CAudioDestination::reset();
 	CAudioDestination::seek(mInternals->mImplementation->mLastSeekTimeInterval);
 
 	// Reset stuffs
+	mInternals->mImplementation->mIsSeeking = false;
 	mInternals->mImplementation->mCurrentPlaybackTimeInterval = mInternals->mImplementation->mLastSeekTimeInterval;
 
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
