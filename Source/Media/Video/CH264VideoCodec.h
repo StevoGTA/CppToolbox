@@ -22,7 +22,7 @@
 
 class CH264VideoCodecInternals;
 class CH264VideoCodec : public CDecodeOnlyVideoCodec {
-	// NALU
+	// NALUInfo
 	public:
 		// Network Abstraction Layer Unit Info
 		struct NALUInfo {
@@ -139,7 +139,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 			UInt8			mPicOrderCountLSBBitCount;
 		};
 
-	// Decode info
+	// DecodeInfo
 	public:
 		class DecodeInfo : public CCodec::DecodeInfo {
 			// SPSPPSInfo
@@ -272,6 +272,45 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 				CData					mConfigurationData;
 				UInt32					mTimeScale;
 				TNumericArray<UInt32>	mKeyframeIndexes;
+		};
+
+	// FrameTiming
+	public:
+		class FrameTiming {
+			// Times
+			public:
+				struct Times {
+					// Methods
+					Times(UInt64 decodeTime, UInt64 presentationTime) :
+						mDecodeTime(decodeTime), mPresentationTime(presentationTime)
+						{}
+
+					// Properties
+					UInt64	mDecodeTime;
+					UInt64	mPresentationTime;
+				};
+
+			// Methods
+			public:
+								// Lifecycle methods
+								FrameTiming(const CH264VideoCodec::SequenceParameterSetPayload& spsPayload);
+
+								// Instance methods
+				void			seek(UInt64 frameTime)
+									{ mNextFrameTime = frameTime; }
+				TIResult<Times>	updateFrom(const CMediaPacketSource::DataInfo& dataInfo);
+
+			// Properties
+			private:
+				UInt8	mCurrentFrameNumberBitCount;
+				UInt8	mCurrentPicOrderCountLSBBitCount;
+				UInt8	mPicOrderCountMSBChangeThreshold;
+
+				UInt64	mPicOrderCountMSB;
+				UInt64	mPreviousPicOrderCountLSB;
+				UInt64	mLastIDRFrameTime;
+				UInt64	mCurrentFrameTime;
+				UInt64	mNextFrameTime;
 		};
 
 	// Methods
