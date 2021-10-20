@@ -167,11 +167,11 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 		if ((picOrderCntLSB > mPreviousPicOrderCountLSB) &&
 				((picOrderCntLSB - mPreviousPicOrderCountLSB) > mPicOrderCountMSBChangeThreshold))
 			// Update
-			mPicOrderCountMSB -= 1 << mCurrentPicOrderCountLSBBitCount;
+			mPicOrderCountMSB -= (UInt64) 1 << mCurrentPicOrderCountLSBBitCount;
 		else if ((mPreviousPicOrderCountLSB > picOrderCntLSB) &&
 				((mPreviousPicOrderCountLSB - picOrderCntLSB) > mPicOrderCountMSBChangeThreshold))
 			// Update
-			mPicOrderCountMSB += 1 << mCurrentPicOrderCountLSBBitCount;
+			mPicOrderCountMSB += (UInt64) 1 << mCurrentPicOrderCountLSBBitCount;
 
 		// Update
 		mPreviousPicOrderCountLSB = picOrderCntLSB;

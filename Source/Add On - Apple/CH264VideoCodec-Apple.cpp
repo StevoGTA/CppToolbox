@@ -165,9 +165,8 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
 	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
 
-	CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
-															CData(parameterSetPointers[0],
-																	(CData::ByteCount) parameterSetSizes[0], false));
+	SequenceParameterSetPayload	spsPayload(
+										CData(parameterSetPointers[0], (CData::ByteCount) parameterSetSizes[0], false));
 	mInternals->mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
 }
 
@@ -199,24 +198,22 @@ TIResult<CVideoFrame> CH264VideoCodec::decode()
 	TIResult<CMediaPacketSource::DataInfo>	dataInfo = (*mInternals->mDecodeInfo)->getMediaPacketSource()->readNext();
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
 
-	const	CData&	data = dataInfo.getValue().getData();
-			UInt32	duration = dataInfo.getValue().getDuration();
-
 	// Update frame timing
 	TIResult<CH264VideoCodec::FrameTiming::Times>	times = mInternals->mFrameTiming->updateFrom(dataInfo.getValue());
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(times.getError()));
 
 	// Setup sample buffer
-	CMBlockBufferRef	blockBufferRef;
-	OSStatus			status =
-								::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) data.getBytePtr(),
-										data.getByteCount(), kCFAllocatorNull, nil, 0, data.getByteCount(), 0,
-										&blockBufferRef);
+	const	CData&				data = dataInfo.getValue().getData();
+			CMBlockBufferRef	blockBufferRef;
+			OSStatus			status =
+										::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
+												(void*) data.getBytePtr(), data.getByteCount(), kCFAllocatorNull, nil,
+												0, data.getByteCount(), 0, &blockBufferRef);
 	LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMBlockBufferCreateWithMemoryBlock"),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
 	CMSampleTimingInfo	sampleTimingInfo;
-	sampleTimingInfo.duration = ::CMTimeMake(duration, *mInternals->mTimeScale);
+	sampleTimingInfo.duration = ::CMTimeMake(dataInfo.getValue().getDuration(), *mInternals->mTimeScale);
 	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(times.getValue().mDecodeTime, *mInternals->mTimeScale);
 	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(times.getValue().mPresentationTime, *mInternals->mTimeScale);
 

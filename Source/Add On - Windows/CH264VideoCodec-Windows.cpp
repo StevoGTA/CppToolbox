@@ -24,11 +24,7 @@ static	SError	sSetupDidNotCompleteError(sErrorDomain, 1, CString(OSSTR("Setup di
 class CH264VideoCodecInternals {
 	public:
 										CH264VideoCodecInternals() :
-											mOutputSampleRequiredByteCount(0), mCurrentFrameNumberBitCount(0),
-													mCurrentPicOrderCountLSBBitCount(0),
-													mPicOrderCountMSBChangeThreshold(0),
-													mPicOrderCountMSB(0), mPreviousPicOrderCountLSB(0),
-													mLastIDRFrameTime(0), mNextFrameTime(0)
+											mOutputSampleRequiredByteCount(0)
 											{
 												// Finish setup
 												::memset(&mOutputSampleDataFormatGUID, 0, sizeof(GUID));
@@ -42,22 +38,14 @@ class CH264VideoCodecInternals {
 		OI<I<CCodec::DecodeInfo> >					mDecodeInfo;
 
 		OCI<IMFTransform>							mVideoDecoder;
+		OI<CH264VideoCodec::DecodeInfo::SPSPPSInfo>	mCurrentSPSPPSInfo;
+		OI<CH264VideoCodec::FrameTiming>			mFrameTiming;
 
 		DWORD										mOutputSampleRequiredByteCount;
 		GUID										mOutputSampleDataFormatGUID;
 		S2DSizeU16									mOutputSampleFrameSize;
 		S2DRectU16									mOutputSampleViewRect;
 		OCI<IMFSample>								mOutputSample;
-
-		OI<CH264VideoCodec::DecodeInfo::SPSPPSInfo>	mCurrentSPSPPSInfo;
-		UInt8										mCurrentFrameNumberBitCount;
-		UInt8										mCurrentPicOrderCountLSBBitCount;
-		UInt8										mPicOrderCountMSBChangeThreshold;
-
-		UInt64										mPicOrderCountMSB;
-		UInt64										mPreviousPicOrderCountLSB;
-		UInt64										mLastIDRFrameTime;
-		UInt64										mNextFrameTime;
 };
 
 // MARK: Class methods
@@ -73,81 +61,13 @@ TCIResult<IMFSample> CH264VideoCodecInternals::readInputSample(void* userData)
 	TIResult<CMediaPacketSource::DataInfo>	dataInfo = (*internals.mDecodeInfo)->getMediaPacketSource()->readNext();
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
 
-UInt8	naluUnitType;
-UInt8	sliceType;
-UInt8	frameNum;
-UInt8	picOrderCntLSB;
-UInt8	deltaPicOrderCntBottom;
-
-const	CData&		data = dataInfo.getValue().getData();
-		CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(data)), true);
-
-		UInt32		duration = dataInfo.getValue().getDuration();
-
-while (true) {
-	//
-	OV<UInt32>						size = bitReader.readUInt32().getValue();
-	UInt64							pos = bitReader.getPos();
-
-	OV<UInt8>						forbidden_zero_bit = bitReader.readUInt8(1).getValue();
-	OV<UInt8>						nal_ref_idc = bitReader.readUInt8(2).getValue();
-	OV<UInt8>						nal_unit_type = bitReader.readUInt8(5).getValue();
-	CH264VideoCodec::NALUInfo::Type	naluType = (CH264VideoCodec::NALUInfo::Type) *nal_unit_type;
-
-	if (naluType == CH264VideoCodec::NALUInfo::kTypeCodedSliceNonIDRPicture) {
-		// Coded Slice Non-IDR Picture
-		OV<UInt32>	first_mb_in_slice = bitReader.readUEColumbusCode().getValue();
-		OV<UInt32>	slice_type = bitReader.readUEColumbusCode().getValue();
-		OV<UInt32>	pic_parameter_set_id = bitReader.readUEColumbusCode().getValue();
-		OV<UInt8>	frame_num = bitReader.readUInt8(internals.mCurrentFrameNumberBitCount).getValue();
-		OV<UInt8>	pic_order_cnt_lsb = bitReader.readUInt8(internals.mCurrentPicOrderCountLSBBitCount).getValue();
-		OV<UInt32>	delta_pic_order_cnt_bottom = bitReader.readUEColumbusCode().getValue();
-
-		naluUnitType = *nal_unit_type;
-		sliceType = *slice_type;
-		frameNum = *frame_num;
-		picOrderCntLSB = *pic_order_cnt_lsb;
-		deltaPicOrderCntBottom = *delta_pic_order_cnt_bottom;
-		break;
-	} else if (naluType == CH264VideoCodec::NALUInfo::kTypeCodedSliceIDRPicture) {
-		// Coded Slice IDR Picture
-		OV<UInt32>	first_mb_in_slice = bitReader.readUEColumbusCode().getValue();
-		OV<UInt32>	slice_type = bitReader.readUEColumbusCode().getValue();
-		OV<UInt32>	pic_parameter_set_id = bitReader.readUEColumbusCode().getValue();
-		OV<UInt8>	frame_num = bitReader.readUInt8(internals.mCurrentFrameNumberBitCount).getValue();
-		OV<UInt32>	idr_pic_id = bitReader.readUEColumbusCode().getValue();
-		OV<UInt8>	pic_order_cnt_lsb = bitReader.readUInt8(internals.mCurrentPicOrderCountLSBBitCount).getValue();
-		OV<UInt32>	delta_pic_order_cnt_bottom = bitReader.readUEColumbusCode().getValue();
-
-		naluUnitType = *nal_unit_type;
-		sliceType = *slice_type;
-		frameNum = *frame_num;
-		picOrderCntLSB = *pic_order_cnt_lsb;
-		deltaPicOrderCntBottom = *delta_pic_order_cnt_bottom;
-		break;
-	} else if (naluType == CH264VideoCodec::NALUInfo::kTypeSupplementalEnhancementInformation) {
-		// SEI
-	} else {
-		// Unhandled
-		CLogServices::logMessage(CString("Unhandled NALU type: ") + CString(naluType));
-	}
-
-	// Next NALU
-	OI<SError>	error = bitReader.setPos(CBitReader::kPositionFromBeginning, pos + *size);
-}
-//CLogServices::logMessage(
-//		CString("Packet ") + CString(mInternals->mNextFrameIndex) + CString(" (") + CString(data->getSize()) +
-//				CString("), dts ") + CString((SInt32) mInternals->mNextFrameIndex * 100 - 100) +
-//				CString(", nal_unit_type: ") + CString(naluUnitType) +
-//				CString(", slice_type: ") + CString(sliceType) +
-//				CString(", frame_num: ") + CString(frameNum) +
-//				CString(", pic_order_cnt_lsb: ") + CString(picOrderCntLSB) +
-////				CString(", delta_pic_order_cnt_bottom: ") + CString(deltaPicOrderCntBottom) +
-//				CString::mEmpty
-//				);
+	// Update frame timing
+	TIResult<CH264VideoCodec::FrameTiming::Times>	times = internals.mFrameTiming->updateFrom(dataInfo.getValue());
+	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(times.getError()));
 
 	// Create input sample
-	TArray<CH264VideoCodec::NALUInfo>	naluInfos = CH264VideoCodec::NALUInfo::getNALUInfos(data);
+	TArray<CH264VideoCodec::NALUInfo>	naluInfos =
+												CH264VideoCodec::NALUInfo::getNALUInfos(dataInfo.getValue().getData());
 	CData								annexBData =
 												CH264VideoCodec::NALUInfo::composeAnnexB(
 														internals.mCurrentSPSPPSInfo->getSPSNALUInfos(),
@@ -155,37 +75,13 @@ while (true) {
 	TCIResult<IMFSample>				sample = CMediaFoundationServices::createSample(annexBData);
 	ReturnValueIfResultError(sample, sample);
 
-UInt64	frameTime;
-if (sliceType == 2) {
-	// IDR
-	frameTime = internals.mNextFrameTime;
-	internals.mPicOrderCountMSB = 0;
-	internals.mPreviousPicOrderCountLSB = 0;
-	internals.mLastIDRFrameTime = internals.mNextFrameTime;
-} else {
-	// Non-IDR
-	if ((picOrderCntLSB > internals.mPreviousPicOrderCountLSB) &&
-			((picOrderCntLSB - internals.mPreviousPicOrderCountLSB) > internals.mPicOrderCountMSBChangeThreshold))
-		//
-		internals.mPicOrderCountMSB -= (UInt64) 1 << internals.mCurrentPicOrderCountLSBBitCount;
-	else if ((internals.mPreviousPicOrderCountLSB > picOrderCntLSB) &&
-			((internals.mPreviousPicOrderCountLSB - picOrderCntLSB) > internals.mPicOrderCountMSBChangeThreshold))
-		//
-		internals.mPicOrderCountMSB += (UInt64) 1 << internals.mCurrentPicOrderCountLSBBitCount;
-
-	frameTime = internals.mLastIDRFrameTime + (internals.mPicOrderCountMSB + picOrderCntLSB) / 2 * duration;
-
-	internals.mPreviousPicOrderCountLSB = picOrderCntLSB;
-}
-
-	HRESULT	result = sample.getInstance()->SetSampleTime(frameTime * 10000 / *internals.mTimeScale);
+	HRESULT	result =
+					sample.getInstance()->SetSampleTime(
+							times.getValue().mPresentationTime * 10000 / *internals.mTimeScale);
 	LogHRESULTIfFailed(result, "SetSampleTime");
 
-	result = sample.getInstance()->SetSampleDuration(duration);
+	result = sample.getInstance()->SetSampleDuration(dataInfo.getValue().getDuration());
 	LogHRESULTIfFailed(result, "SetSampleDuration");
-
-	// Update
-	internals.mNextFrameTime += duration;
 
 	return sample;
 }
@@ -300,9 +196,7 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 
 	const	NALUInfo&					spsNALUInfo = mInternals->mCurrentSPSPPSInfo->getSPSNALUInfos().getFirst();
 			SequenceParameterSetPayload	spsPayload(CData(spsNALUInfo.getBytePtr(), spsNALUInfo.getByteCount(), false));
-	mInternals->mCurrentFrameNumberBitCount = spsPayload.mFrameNumberBitCount;
-	mInternals->mCurrentPicOrderCountLSBBitCount = spsPayload.mPicOrderCountLSBBitCount;
-	mInternals->mPicOrderCountMSBChangeThreshold = 1 << (mInternals->mCurrentPicOrderCountLSBBitCount - 1);
+	mInternals->mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
 
 	// Flush
 	OI<SError>	error = CMediaFoundationServices::flush(*mInternals->mVideoDecoder);
@@ -330,9 +224,10 @@ void CH264VideoCodec::seek(UniversalTimeInterval timeInterval)
 					h264DecodeInfo.getMediaPacketSource()->seekToKeyframe(
 							(UInt32) (timeInterval * mInternals->mVideoProcessingFormat->getFramerate() + 0.5),
 							h264DecodeInfo.getKeyframeIndexes());
-	mInternals->mNextFrameTime =
+	//mInternals->mNextFrameTime =
+	mInternals->mFrameTiming->seek(
 			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessingFormat->getFramerate() *
-					(UniversalTimeInterval) *mInternals->mTimeScale);
+					(UniversalTimeInterval) *mInternals->mTimeScale));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
