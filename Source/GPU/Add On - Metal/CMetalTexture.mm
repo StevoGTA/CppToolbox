@@ -6,6 +6,10 @@
 
 #include "CLogServices.h"
 
+#if TARGET_OS_MACOS
+	#define kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange '&8v0'
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMetalTextureInternals
 
@@ -68,7 +72,7 @@ mUsedPixelsSize(size),
 						break;
 
 					case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
-					case '&8v0':
+					case kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange:
 						// 420 YUV
 						pixelFormat = (planeIndex == 0) ? MTLPixelFormatR8Unorm : MTLPixelFormatRG8Unorm;
 						break;

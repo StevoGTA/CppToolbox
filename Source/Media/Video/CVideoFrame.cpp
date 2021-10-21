@@ -62,6 +62,9 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 // MARK: Lifecycle methods
 
 #if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if TARGET_OS_MACOS
+	#define kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange '&8v0'
+#endif
 //----------------------------------------------------------------------------------------------------------------------
 CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImageBufferRef imageBufferRef)
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,7 +80,7 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImage
 			break;
 
 		case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
-		case '&8v0':
+		case kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange:
 			// YCbCr
 			dataFormat = kDataFormatYCbCr;
 			break;
