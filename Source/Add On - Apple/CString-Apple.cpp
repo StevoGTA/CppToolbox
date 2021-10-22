@@ -784,14 +784,13 @@ CString CString::operator+(const CString& other) const
 // MARK: Utility methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::make(const char* format, va_list args)
+CString CString::make(OSStringType format, va_list args)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	formatStringRef = ::CFStringCreateWithCString(kCFAllocatorDefault, format, kCFStringEncodingMacRoman);
+	// Compose string
+	CFStringRef	stringRef = ::CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, nil, format, args);
 
-	CFStringRef	stringRef = ::CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, nil, formatStringRef, args);
-	::CFRelease(formatStringRef);
-
+	// Compose CString
 	CString		string(stringRef);
 	::CFRelease(stringRef);
 
