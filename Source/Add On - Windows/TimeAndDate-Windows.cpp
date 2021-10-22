@@ -45,31 +45,6 @@ void SUniversalTime::setCurrent(UniversalTime time)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString SUniversalTime::getCurrentTimeZoneName()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get time zone information
-	TIME_ZONE_INFORMATION	timeZoneInformation;
-	DWORD					result = GetTimeZoneInformation(&timeZoneInformation);
-
-	return CString(
-			(result == TIME_ZONE_ID_DAYLIGHT) ? timeZoneInformation.DaylightName : timeZoneInformation.StandardName);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UniversalTimeInterval SUniversalTime::getCurrentTimeZoneOffset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get time zone information
-	TIME_ZONE_INFORMATION	timeZoneInformation;
-	DWORD					result = GetTimeZoneInformation(&timeZoneInformation);
-
-	return (-timeZoneInformation.Bias -
-			((result == TIME_ZONE_ID_DAYLIGHT) ?
-					timeZoneInformation.DaylightBias : timeZoneInformation.StandardBias)) * 60;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SGregorianDate
 
@@ -115,4 +90,31 @@ UniversalTime SGregorianDate::getUniversalTime() const
 	__time64_t	time64 = _mktime64(&theTM);
 
 	return (UniversalTime) time64 + ::fmod(mSecond, 1) - kUniversalTimeInterval1970To2001;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CString SGregorianDate::getCurrentTimeZoneName()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get time zone information
+	TIME_ZONE_INFORMATION	timeZoneInformation;
+	DWORD					result = GetTimeZoneInformation(&timeZoneInformation);
+
+	return CString(
+			(result == TIME_ZONE_ID_DAYLIGHT) ? timeZoneInformation.DaylightName : timeZoneInformation.StandardName);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTimeInterval SGregorianDate::getCurrentTimeZoneOffset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get time zone information
+	TIME_ZONE_INFORMATION	timeZoneInformation;
+	DWORD					result = GetTimeZoneInformation(&timeZoneInformation);
+
+	return (-timeZoneInformation.Bias -
+			((result == TIME_ZONE_ID_DAYLIGHT) ?
+					timeZoneInformation.DaylightBias : timeZoneInformation.StandardBias)) * 60;
 }

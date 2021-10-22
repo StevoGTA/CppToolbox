@@ -10,6 +10,8 @@
 #include "SError.h"
 #include "TBuffer.h"
 
+#include <vector>
+
 #undef Delete
 #include <Windows.h>
 
@@ -654,11 +656,27 @@ CString CString::operator+(const CString& other) const
 // MARK: Utility methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::make(const char* format, va_list args)
+CString CString::make(OSStringType format, va_list args)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return CString::mEmpty;
+	// Setup
+	std::vector<TCHAR>::size_type	size = 256;
+	std::vector<TCHAR>				buffer;
+
+	// Try to write
+	do {
+		// Resize to given size
+		buffer.resize(size + 1);
+
+		// Try to write and get needed size
+		size = vswprintf_s(&buffer[0], buffer.size(), format, args);
+	} while ((size + 1) > buffer.size());
+
+	// Compose CString
+	CString	string;
+	string.mString = std::basic_string<TCHAR>(&buffer[0]);
+
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

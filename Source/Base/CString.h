@@ -334,8 +334,8 @@ class CString : public CHashable {
 										// Class methods
 		static			bool			compare(CString* const string1, CString* const string2, void* compareFlags);
 
-		static			CString			make(const char* format, ...);
-		static			CString			make(const char* format, va_list args);
+		static			CString			make(OSStringType format, ...);
+		static			CString			make(OSStringType format, va_list args);
 		static			bool			isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet);
 
 	protected:

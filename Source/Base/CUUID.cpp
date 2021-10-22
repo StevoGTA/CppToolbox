@@ -117,7 +117,7 @@ CUUID::~CUUID()
 CString CUUID::getHexString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CString::make("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+	return CString::make(OSSTR("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"),
 			mInternals->mUUIDBytes.mBytes[0], mInternals->mUUIDBytes.mBytes[1], mInternals->mUUIDBytes.mBytes[2],
 			mInternals->mUUIDBytes.mBytes[3], mInternals->mUUIDBytes.mBytes[4], mInternals->mUUIDBytes.mBytes[5],
 			mInternals->mUUIDBytes.mBytes[6], mInternals->mUUIDBytes.mBytes[7], mInternals->mUUIDBytes.mBytes[8],

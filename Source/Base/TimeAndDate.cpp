@@ -220,7 +220,7 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 {
 	// Check style
 	switch (stringStyle) {
-		case kStringStyleRFC339Extended:
+		case kStringStyleRFC339Extended: {
 			// RFC339 extended
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
 			//	2021-03-23T22:54:13.922-0700
@@ -228,8 +228,14 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 			char			offsetSign = (offset > 0) ? '+' : '-';
 			SInt32			offsetAbsolute = abs(offset);
 
-			return CString::make("%4u-%02u-%02uT%02u:%02u:%06.3f%c%02u%02u", mYear, mMonth, mDay, mHour, mMinute,
+			return CString::make(OSSTR("%4u-%02u-%02uT%02u:%02u:%06.3f%c%02u%02u"), mYear, mMonth, mDay, mHour, mMinute,
 					mSecond, offsetSign, offsetAbsolute / 60, offsetAbsolute % 60);
+		}
+
+#if TARGET_OS_WINDOWS
+		// Unnessary, but making the compiler happy
+		default:	return CString::mEmpty;
+#endif
 	}
 }
 
@@ -266,7 +272,7 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 {
 	// Check style
 	switch (stringStyle) {
-		case kStringStyleRFC339Extended:
+		case kStringStyleRFC339Extended: {
 			// RFC339 extended
 			// "yyyy-MM-dd'T'HH:mm:ss.SX"
 			// "yyyy-MM-dd'T'HH:mm:ss.SSX"
@@ -325,5 +331,11 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 																	timezoneOffsetMinutes * 60);
 			return OV<SGregorianDate>(
 					SGregorianDate(gregorianDate.getUniversalTime() - timezoneOffset + getCurrentTimeZoneOffset()));
+		}
+
+#if TARGET_OS_WINDOWS
+		// Unnessary, but making the compiler happy
+		default:	return OV<SGregorianDate>();
+#endif
 	}
 }

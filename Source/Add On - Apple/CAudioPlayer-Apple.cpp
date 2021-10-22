@@ -621,7 +621,7 @@ void CAudioPlayer::reset()
 	// Reset the pipeline
 	CAudioDestination::reset();
 
-	// Restart
+	// Reset
 	mInternals->mCurrentPlaybackTimeInterval = mInternals->mSourceWindowStartTimeInterval;
 
 	mInternals->mRenderProcFrameIndex = 0;

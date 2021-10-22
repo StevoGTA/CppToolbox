@@ -406,7 +406,7 @@ bool CString::compare(CString* const string1, CString* const string2, void* comp
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::make(const char* format, ...)
+CString CString::make(OSStringType format, ...)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
