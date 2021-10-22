@@ -114,7 +114,7 @@ void CLogFile::logMessage(const CString& string) const
 	// One at a time please
 	mInternals->mLock.lock();
 	mInternals->mFileWriter.write(
-			SGregorianDate().getString() + CString::mSpace + string + CString::mPlatformDefaultNewline);
+			SGregorianDate().getString() + CString(OSSTR(": ")) + string + CString::mPlatformDefaultNewline);
 	mInternals->mFileWriter.flush();
 	mInternals->mLock.unlock();
 }
@@ -207,7 +207,7 @@ void CLogServices::logMessage(const CString& string)
 			// Check if need to finish setup
 			if (!stringWithDate.hasInstance())
 				// Finish setup
-				stringWithDate = OI<CString>(SGregorianDate().getString() + CString::mSpace + string);
+				stringWithDate = OI<CString>(SGregorianDate().getString() + CString(OSSTR(": ")) + string);
 
 			// Call proc
 			iterator.getValue().callProc(*stringWithDate);
@@ -280,7 +280,7 @@ void CLogServices::logWarning(const CString& string)
 				dateString = SGregorianDate().getString();
 
 			// Call proc
-			iterator.getValue().callProc(*dateString + CString::mSpace + string);
+			iterator.getValue().callProc(*dateString + CString(OSSTR(": ")) + string);
 		}
 }
 
@@ -334,9 +334,8 @@ void CLogServices::logError(const CString& string)
 			   // Finish setup
 			   dateString = SGregorianDate().getString();
 
-
 			// Call proc
-			iterator.getValue().callProc(string);
+			iterator.getValue().callProc(*dateString + CString(OSSTR(": ")) + string);
 		}
 }
 

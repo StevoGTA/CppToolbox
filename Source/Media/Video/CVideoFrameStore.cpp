@@ -23,10 +23,10 @@ class CVideoFrameStoreThread : public CThread {
 						const CVideoFrameStore::Info& info) :
 					CThread(CString(OSSTR("Video Frame Store - ")) + identifier),
 							mVideoFrameStore(videoFrameStore), mInfo(info),
-							mPauseRequested(false), mResumeRequested(false),
-							mShutdownRequested(false), mCurrentPresentationTimeInterval(0.0),
-							mCurrentFrameUpdatedCalled(false), mIsSeeking(false), mReachedEnd(false),
-							mState(kStateStarting)
+							mState(kStateStarting), mPauseRequested(false), mResumeRequested(false),
+							mIsSeeking(false), mShutdownRequested(false), mCurrentFrameUpdatedCalled(false),
+							mReachedEnd(false), mCurrentPresentationTimeInterval(0.0)
+
 					{
 						// Start
 						start();
@@ -75,7 +75,8 @@ class CVideoFrameStoreThread : public CThread {
 						if (!performResult.getVideoSourceStatus().isSuccess()) {
 							// Finished or error
 							mReachedEnd = true;
-							
+
+							// Check error
 							if (performResult.getVideoSourceStatus().getError() != SError::mEndOfData)
 								// Error
 								mInfo.error(mVideoFrameStore, performResult.getVideoSourceStatus().getError());
@@ -159,10 +160,10 @@ class CVideoFrameStoreThread : public CThread {
 						// Signal
 						mSemaphore.signal();
 					}
-		void	reset()
+		void	seek(UniversalTimeInterval timeInterval)
 					{
 						// Reset
-						mCurrentPresentationTimeInterval = 0.0;
+						mCurrentPresentationTimeInterval = timeInterval;
 						mCurrentFrameUpdatedCalled = false;
 						mReachedEnd = false;
 						mVideoFrames.removeAll();
@@ -172,13 +173,14 @@ class CVideoFrameStoreThread : public CThread {
 						// Request shutdown
 						mShutdownRequested = true;
 
-						// Signal if waiting
-						mSemaphore.signal();
-
 						// Wait until is no lonnger running
-						while (getIsRunning())
+						while (getIsRunning()) {
+							// Signal
+							mSemaphore.signal();
+
 							// Sleep
 							CThread::sleepFor(0.001);
+						}
 					}
 
 	private:
@@ -186,14 +188,14 @@ class CVideoFrameStoreThread : public CThread {
 		CVideoFrameStore::Info		mInfo;
 		CSemaphore					mSemaphore;
 
+		State						mState;
 		bool						mPauseRequested;
 		bool						mResumeRequested;
-		bool						mShutdownRequested;
-		UniversalTimeInterval		mCurrentPresentationTimeInterval;
-		bool						mCurrentFrameUpdatedCalled;
 		bool						mIsSeeking;
+		bool						mShutdownRequested;
+		bool						mCurrentFrameUpdatedCalled;
 		bool						mReachedEnd;
-		State						mState;
+		UniversalTimeInterval		mCurrentPresentationTimeInterval;
 		TNLockingArray<CVideoFrame>	mVideoFrames;
 };
 
@@ -205,10 +207,11 @@ class CVideoFrameStoreInternals {
 	public:
 		CVideoFrameStoreInternals(CVideoFrameStore& videoFrameStore, const CString& identifier,
 				const CVideoFrameStore::Info& info) :
-			mVideoFrameStoreThread(videoFrameStore, identifier, info)
+			mVideoFrameStoreThread(videoFrameStore, identifier, info), mSourceWindowStartTimeInterval(0.0)
 			{}
 
 		CVideoFrameStoreThread	mVideoFrameStoreThread;
+		UniversalTimeInterval	mSourceWindowStartTimeInterval;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -238,6 +241,18 @@ CVideoFrameStore::~CVideoFrameStore()
 // MARK: CVideoProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
+void CVideoFrameStore::setSourceWindow(UniversalTimeInterval startTimeInterval,
+		const OV<UniversalTimeInterval>& durationTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mSourceWindowStartTimeInterval = startTimeInterval;
+
+	// Do super
+	CVideoDestination::setSourceWindow(startTimeInterval, durationTimeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CVideoFrameStore::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -245,13 +260,12 @@ void CVideoFrameStore::seek(UniversalTimeInterval timeInterval)
 	mInternals->mVideoFrameStoreThread.pause();
 
 	// Reset thread
-	mInternals->mVideoFrameStoreThread.reset();
+	mInternals->mVideoFrameStoreThread.seek(timeInterval);
 
 	// Seek
 	CVideoDestination::seek(timeInterval);
 
 	// Resume thread
-	mInternals->mVideoFrameStoreThread.updateCurrentPresentationTimeInterval(timeInterval);
 	mInternals->mVideoFrameStoreThread.resume();
 }
 
@@ -260,10 +274,13 @@ void CVideoFrameStore::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset thread
-	mInternals->mVideoFrameStoreThread.reset();
+	mInternals->mVideoFrameStoreThread.seek(mInternals->mSourceWindowStartTimeInterval);
 
 	// Reset
 	CVideoDestination::reset();
+
+	// Resume
+	mInternals->mVideoFrameStoreThread.resume();
 }
 
 // MARK: CVideoDestination methods

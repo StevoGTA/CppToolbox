@@ -36,9 +36,11 @@ class CMediaDestination {
 										// Instance methods
 				void					add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex);
 				OR<I<CAudioProcessor> >	getAudioProcessor(UInt32 trackIndex) const;
+				void					removeAllAudioProcessors();
 
 				void					add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex);
 				OR<I<CVideoProcessor> >	getVideoProcessor(UInt32 trackIndex) const;
+				void					removeAllVideoProcessors();
 
 	// Properties
 	private:

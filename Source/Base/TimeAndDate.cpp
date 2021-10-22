@@ -26,81 +26,6 @@ UniversalTime SUniversalTime::getDistantPast()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString SUniversalTime::getRFC339Extended(UniversalTime universalTime)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-	//	2021-03-23T22:54:13.922-0700
-	SGregorianDate	gregorianDate(universalTime);
-	SInt32			offset = (SInt32) (SUniversalTime::getCurrentTimeZoneOffset() / 60.0);
-	char			offsetSign = (offset > 0) ? '+' : '-';
-	SInt32			offsetAbsolute = abs(offset);
-
-	return CString::make("%4u-%02u-%02uT%02u:%02u:%06.3f%c%02u%02u", gregorianDate.mYear, gregorianDate.mMonth,
-			gregorianDate.mDay, gregorianDate.mHour, gregorianDate.mMinute, gregorianDate.mSecond,
-			offsetSign, offsetAbsolute / 60, offsetAbsolute % 60);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OV<UniversalTime> SUniversalTime::getFromRFC3339Extended(const CString& string)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// "yyyy-MM-dd'T'HH:mm:ss.SX"
-	// "yyyy-MM-dd'T'HH:mm:ss.SSX"
-	// "yyyy-MM-dd'T'HH:mm:ss.SSSX"
-	// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-	// "yyyy-MM-dd'T'HH:mm:ss.SSSSX"
-	// "yyyy-MM-dd'T'HH:mm:ss.SSSSSX"
-	// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSX"
-	// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSX"
-	// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
-	//	2021-03-23T22:54:13.922-0700
-
-	// Setup
-	CString::Length	length = string.getLength();
-	TBuffer<char>	buffer(length + 1);
-	string.get(*buffer, length + 1);
-
-	// Check for required characters
-	if ((buffer[4] != '-') || (buffer[7] != '-') || (buffer[10] != 'T') || (buffer[13] != ':') || (buffer[16] != ':'))
-		// Required characters not in their respective positions
-		return OV<UniversalTime>();
-
-	// Check for timezone offset sign
-	CString::Range	timezoneOffsetMinusRange = string.findSubString(CString(OSSTR("-")), 17);
-	CString::Range	timezoneOffsetPlusRange = string.findSubString(CString(OSSTR("+")), 17);
-	if (!timezoneOffsetMinusRange.isValid() && !timezoneOffsetPlusRange.isValid())
-		// Did not find timezone offset sign
-		return OV<UniversalTime>();
-
-	CString::CharIndex	timezoneOffsetSignCharIndex =
-								timezoneOffsetMinusRange.isValid() ?
-										timezoneOffsetMinusRange.mStart : timezoneOffsetPlusRange.mStart;
-
-	// Compose gregorian date
-	SGregorianDate	gregorianDate;
-	gregorianDate.mYear = string.getSubString(0, 4).getUInt32();
-	gregorianDate.mMonth = string.getSubString(5, 2).getUInt8();
-	gregorianDate.mDay = string.getSubString(8, 2).getUInt8();
-	gregorianDate.mHour = string.getSubString(11, 2).getUInt8();
-	gregorianDate.mMinute = string.getSubString(14, 2).getUInt8();
-	gregorianDate.mSecond = string.getSubString(17, timezoneOffsetSignCharIndex - 17).getFloat32();
-
-	// Compose timezone offset
-	SInt32					timezoneOffsetRaw = string.getSubString(timezoneOffsetSignCharIndex + 1).getSInt32();
-	SInt32					timezoneOffsetHours = timezoneOffsetRaw / 100;
-	SInt32					timezoneOffsetMinutes = timezoneOffsetRaw % 100;
-	UniversalTimeInterval	timezoneOffset =
-									timezoneOffsetMinusRange.isValid() ?
-											(UniversalTimeInterval)
-													(-timezoneOffsetHours * 60 * 60 - timezoneOffsetMinutes * 60) :
-											(UniversalTimeInterval)
-													(timezoneOffsetHours * 60 * 60 + timezoneOffsetMinutes * 60);
-
-	return gregorianDate.getUniversalTime() - timezoneOffset + SUniversalTime::getCurrentTimeZoneOffset();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SGregorianDate
 
@@ -145,7 +70,7 @@ CString		SGregorianDate::mPMString(OSSTR("pm"));
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeStringStyle) const
+CString SGregorianDate::getString(ComponentStyle dateComponentStyle, ComponentStyle timeComponentStyle) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose string
@@ -154,17 +79,17 @@ CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeS
 	CString		string;
 	UInt8		hour = (mHour == 0) ? 12 : ((mHour - 1) % 12 + 1);
 
-	switch (dateStringStyle) {
-		case kStringStyleNone:
+	switch (dateComponentStyle) {
+		case kComponentStyleNone:
 			// None
 			break;
 
-		case kStringStyleShort:
+		case kComponentStyleShort:
 			// Short - 1/1/1952
 			string = CString(mMonth) + CString(OSSTR("/")) + CString(mDay) + CString(OSSTR("/")) + CString(mYear);
 			break;
 
-		case kStringStyleMedium:
+		case kComponentStyleMedium:
 			// Medium - Jan 12, 1952
 			switch (mMonth) {
 				case 1:		month = &SGregorianDate::mJanString;	break;
@@ -185,7 +110,7 @@ CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeS
 			string = *month + CString(OSSTR(" ")) + CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
 			break;
 
-		case kStringStyleLong:
+		case kComponentStyleLong:
 			// Long - January 12, 1952
 			switch (mMonth) {
 				case 1:		month = &SGregorianDate::mJanuaryString;		break;
@@ -206,7 +131,7 @@ CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeS
 			string = *month + CString(OSSTR(" ")) + CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
 			break;
 
-		case kStringStyleFull:
+		case kComponentStyleFull:
 			// Full - Tuesday, April 12, 1952 AD
 			switch (mDayOfWeek) {
 				case 0:		day = &SGregorianDate::mSunString;	break;
@@ -241,12 +166,12 @@ CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeS
 			break;
 	}
 
-	switch (timeStringStyle) {
-		case kStringStyleNone:
+	switch (timeComponentStyle) {
+		case kComponentStyleNone:
 			// None
 			break;
 
-		case kStringStyleShort:
+		case kComponentStyleShort:
 			// Short - 3:30pm
 			if (!string.isEmpty())
 				string += CString(OSSTR(" "));
@@ -255,7 +180,7 @@ CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeS
 							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
-		case kStringStyleMedium:
+		case kComponentStyleMedium:
 			// Medium - 3:30pm
 			if (!string.isEmpty())
 				string += CString(OSSTR(" "));
@@ -264,7 +189,7 @@ CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeS
 							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
-		case kStringStyleLong:
+		case kComponentStyleLong:
 			// Long - 3:30:32pm
 			if (!string.isEmpty())
 				string += CString(OSSTR(" "));
@@ -274,7 +199,7 @@ CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeS
 							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
 			break;
 
-		case kStringStyleFull:
+		case kComponentStyleFull:
 			// Full - 3:30:32pm PST
 			if (!string.isEmpty())
 				string += CString(OSSTR(" "));
@@ -287,6 +212,25 @@ CString SGregorianDate::getString(StringStyle dateStringStyle, StringStyle timeS
 	}
 
 	return string;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString SGregorianDate::getString(StringStyle stringStyle) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check style
+	switch (stringStyle) {
+		case kStringStyleRFC339Extended:
+			// RFC339 extended
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+			//	2021-03-23T22:54:13.922-0700
+			SInt32			offset = (SInt32) (SGregorianDate::getCurrentTimeZoneOffset() / 60.0);
+			char			offsetSign = (offset > 0) ? '+' : '-';
+			SInt32			offsetAbsolute = abs(offset);
+
+			return CString::make("%4u-%02u-%02uT%02u:%02u:%06.3f%c%02u%02u", mYear, mMonth, mDay, mHour, mMinute,
+					mSecond, offsetSign, offsetAbsolute / 60, offsetAbsolute % 60);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -312,4 +256,74 @@ SGregorianDate& SGregorianDate::operator+=(const Units& units)
 	*this = SGregorianDate(newDate.getUniversalTime());
 
 	return *this;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle stringStyle)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check style
+	switch (stringStyle) {
+		case kStringStyleRFC339Extended:
+			// RFC339 extended
+			// "yyyy-MM-dd'T'HH:mm:ss.SX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
+			//	2021-03-23T22:54:13.922-0700
+
+			// Setup
+			CString::Length	length = string.getLength();
+			TBuffer<char>	buffer(length + 1);
+			string.get(*buffer, length + 1);
+
+			// Check for required characters
+			if ((buffer[4] != '-') || (buffer[7] != '-') || (buffer[10] != 'T') || (buffer[13] != ':') ||
+					(buffer[16] != ':'))
+				// Required characters not in their respective positions
+				return OV<SGregorianDate>();
+
+			// Check for timezone offset sign
+			CString::Range	timezoneOffsetMinusRange = string.findSubString(CString(OSSTR("-")), 17);
+			CString::Range	timezoneOffsetPlusRange = string.findSubString(CString(OSSTR("+")), 17);
+			if (!timezoneOffsetMinusRange.isValid() && !timezoneOffsetPlusRange.isValid())
+				// Did not find timezone offset sign
+				return OV<SGregorianDate>();
+
+			CString::CharIndex	timezoneOffsetSignCharIndex =
+										timezoneOffsetMinusRange.isValid() ?
+												timezoneOffsetMinusRange.mStart : timezoneOffsetPlusRange.mStart;
+
+			// Compose gregorian date
+			SGregorianDate	gregorianDate;
+			gregorianDate.mYear = string.getSubString(0, 4).getUInt32();
+			gregorianDate.mMonth = string.getSubString(5, 2).getUInt8();
+			gregorianDate.mDay = string.getSubString(8, 2).getUInt8();
+			gregorianDate.mHour = string.getSubString(11, 2).getUInt8();
+			gregorianDate.mMinute = string.getSubString(14, 2).getUInt8();
+			gregorianDate.mSecond = string.getSubString(17, timezoneOffsetSignCharIndex - 17).getFloat32();
+
+			// Compose timezone offset
+			SInt32					timezoneOffsetRaw =
+											string.getSubString(timezoneOffsetSignCharIndex + 1).getSInt32();
+			SInt32					timezoneOffsetHours = timezoneOffsetRaw / 100;
+			SInt32					timezoneOffsetMinutes = timezoneOffsetRaw % 100;
+			UniversalTimeInterval	timezoneOffset =
+											timezoneOffsetMinusRange.isValid() ?
+													(UniversalTimeInterval)
+															(-timezoneOffsetHours * 60 * 60 -
+																	timezoneOffsetMinutes * 60) :
+													(UniversalTimeInterval)
+															(timezoneOffsetHours * 60 * 60 +
+																	timezoneOffsetMinutes * 60);
+			return OV<SGregorianDate>(
+					SGregorianDate(gregorianDate.getUniversalTime() - timezoneOffset + getCurrentTimeZoneOffset()));
+	}
 }

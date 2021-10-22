@@ -100,6 +100,13 @@ OR<I<CAudioProcessor> > CMediaDestination::CMediaDestination::getAudioProcessor(
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CMediaDestination::removeAllAudioProcessors()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mAudioProcessors.removeAll();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CMediaDestination::add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -112,4 +119,11 @@ OR<I<CVideoProcessor> > CMediaDestination::CMediaDestination::getVideoProcessor(
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mVideoProcessors[trackIndex];
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaDestination::removeAllVideoProcessors()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->mVideoProcessors.removeAll();
 }

@@ -15,7 +15,8 @@ static	UniversalTimeInterval	sOffsetInterval = 0.0;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-CFDateFormatterStyle	sGetCFDateFormatterStyleForGregorianDateStringStyle(SGregorianDate::StringStyle stringStyle);
+CFDateFormatterStyle	sGetCFDateFormatterStyleForGregorianDateComponentStyle(
+								SGregorianDate::ComponentStyle componentStyle);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -37,41 +38,6 @@ void SUniversalTime::setCurrent(UniversalTime time)
 {
 	// CFAbsoluteTimeGetCurrent is relative to 1/1/2001
 	sOffsetInterval = time - (UniversalTime) ::CFAbsoluteTimeGetCurrent();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString SUniversalTime::getCurrentTimeZoneName()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	CFTimeZoneRef	timeZoneRef = ::CFTimeZoneCopyDefault();
-	CFLocaleRef		localeRef = ::CFLocaleCopyCurrent();
-	CFStringRef		stringRef =
-							::CFTimeZoneCopyLocalizedName(timeZoneRef,
-									::CFTimeZoneIsDaylightSavingTime(timeZoneRef, ::CFAbsoluteTimeGetCurrent()) ?
-											kCFTimeZoneNameStyleShortDaylightSaving :
-											kCFTimeZoneNameStyleShortStandard,
-									localeRef);
-	::CFRelease(timeZoneRef);
-	::CFRelease(localeRef);
-
-	// Compose string
-	CString	string(stringRef);
-	::CFRelease(stringRef);
-
-	return string;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UniversalTimeInterval SUniversalTime::getCurrentTimeZoneOffset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get offset
-	CFTimeZoneRef	timeZoneRef = ::CFTimeZoneCopyDefault();
-	CFTimeInterval	offset = ::CFTimeZoneGetSecondsFromGMT(timeZoneRef, ::CFAbsoluteTimeGetCurrent());
-	::CFRelease(timeZoneRef);
-
-	return offset;
 }
 
 #if TARGET_OS_MACOS
@@ -105,34 +71,6 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 	::CFRelease(calendarRef);
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-SGregorianDate::SGregorianDate(const CString& string, StringStyle dateStringStyle, StringStyle timeStringStyle)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Create date formatter
-	CFLocaleRef			localeRef = CFLocaleCopyCurrent();
-	CFDateFormatterRef	dateFormatterRef =
-								::CFDateFormatterCreate(kCFAllocatorDefault, localeRef,
-										sGetCFDateFormatterStyleForGregorianDateStringStyle(dateStringStyle),
-										sGetCFDateFormatterStyleForGregorianDateStringStyle(timeStringStyle));
-	::CFRelease(localeRef);
-
-	// Get time
-	CFAbsoluteTime	time = ::CFAbsoluteTimeGetCurrent();
-	CFStringRef		stringRef = CCoreFoundation::createStringRefFrom(string);
-	::CFDateFormatterGetAbsoluteTimeFromString(dateFormatterRef, stringRef, nil, &time);
-	::CFRelease(stringRef);
-	::CFRelease(dateFormatterRef);
-
-	// Convert to gregorian units
-	CFCalendarRef	calendarRef = ::CFCalendarCopyCurrent();
-	int				second;
-	::CFCalendarDecomposeAbsoluteTime(calendarRef, (CFAbsoluteTime) time, "yMdHmsE", &mYear, &mMonth, &mDay, &mHour,
-			&mMinute, &second, &mDayOfWeek);
-	mSecond = (Float32) second + time - floor(time);
-	::CFRelease(calendarRef);
-}
-
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -151,19 +89,94 @@ UniversalTime SGregorianDate::getUniversalTime() const
 	return time;
 }
 
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, ComponentStyle dateComponentStyle,
+		ComponentStyle timeComponentStyle)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create date formatter
+	CFLocaleRef			localeRef = CFLocaleCopyCurrent();
+	CFDateFormatterRef	dateFormatterRef =
+								::CFDateFormatterCreate(kCFAllocatorDefault, localeRef,
+										sGetCFDateFormatterStyleForGregorianDateComponentStyle(dateComponentStyle),
+										sGetCFDateFormatterStyleForGregorianDateComponentStyle(timeComponentStyle));
+	::CFRelease(localeRef);
+
+	// Get time
+	CFAbsoluteTime	time = ::CFAbsoluteTimeGetCurrent();
+	CFStringRef		stringRef = CCoreFoundation::createStringRefFrom(string);
+	::CFDateFormatterGetAbsoluteTimeFromString(dateFormatterRef, stringRef, nil, &time);
+	::CFRelease(stringRef);
+	::CFRelease(dateFormatterRef);
+
+	// Convert to gregorian units
+	CFCalendarRef	calendarRef = ::CFCalendarCopyCurrent();
+	UInt32			year;
+	UInt8			month;
+	UInt8			day;
+	UInt8			hour;
+	UInt8			minute;
+	int				second;
+	UInt8			dayOfWeek;
+	::CFCalendarDecomposeAbsoluteTime(calendarRef, (CFAbsoluteTime) time, "yMdHmsE", &year, &month, &day, &hour,
+			&minute, &second, &dayOfWeek);
+	::CFRelease(calendarRef);
+
+	return OV<SGregorianDate>(
+			SGregorianDate(year, month, day, hour, minute, (Float32) second + time - floor(time), dayOfWeek));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString SGregorianDate::getCurrentTimeZoneName()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFTimeZoneRef	timeZoneRef = ::CFTimeZoneCopyDefault();
+	CFLocaleRef		localeRef = ::CFLocaleCopyCurrent();
+	CFStringRef		stringRef =
+							::CFTimeZoneCopyLocalizedName(timeZoneRef,
+									::CFTimeZoneIsDaylightSavingTime(timeZoneRef, ::CFAbsoluteTimeGetCurrent()) ?
+											kCFTimeZoneNameStyleShortDaylightSaving :
+											kCFTimeZoneNameStyleShortStandard,
+									localeRef);
+	::CFRelease(timeZoneRef);
+	::CFRelease(localeRef);
+
+	// Compose string
+	CString	string(stringRef);
+	::CFRelease(stringRef);
+
+	return string;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTimeInterval SGregorianDate::getCurrentTimeZoneOffset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get offset
+	CFTimeZoneRef	timeZoneRef = ::CFTimeZoneCopyDefault();
+	CFTimeInterval	offset = ::CFTimeZoneGetSecondsFromGMT(timeZoneRef, ::CFAbsoluteTimeGetCurrent());
+	::CFRelease(timeZoneRef);
+
+	return offset;
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-CFDateFormatterStyle sGetCFDateFormatterStyleForGregorianDateStringStyle(SGregorianDate::StringStyle stringStyle)
+CFDateFormatterStyle sGetCFDateFormatterStyleForGregorianDateComponentStyle(
+		SGregorianDate::ComponentStyle componentStyle)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	switch (stringStyle) {
-		case SGregorianDate::kStringStyleShort:		return kCFDateFormatterShortStyle;
-		case SGregorianDate::kStringStyleMedium:	return kCFDateFormatterMediumStyle;
-		case SGregorianDate::kStringStyleLong:		return kCFDateFormatterLongStyle;
-		case SGregorianDate::kStringStyleFull:		return kCFDateFormatterFullStyle;
+	switch (componentStyle) {
+		case SGregorianDate::kComponentStyleShort:	return kCFDateFormatterShortStyle;
+		case SGregorianDate::kComponentStyleMedium:	return kCFDateFormatterMediumStyle;
+		case SGregorianDate::kComponentStyleLong:	return kCFDateFormatterLongStyle;
+		case SGregorianDate::kComponentStyleFull:	return kCFDateFormatterFullStyle;
 		default:									return kCFDateFormatterNoStyle;
 	}
 }

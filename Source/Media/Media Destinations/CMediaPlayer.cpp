@@ -90,7 +90,8 @@ class CMediaPlayerInternals {
 						CMediaPlayerInternals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
 								const CMediaPlayer::Info& info) :
 							mMediaPlayer(mediaPlayer), mMessageQueues(messageQueues), mInfo(info),
-									mCurrentPosition(0.0), mEndOfDataCount(0), mCurrentLoopCount(0)
+									mSourceWindowStartTimeInterval(0.0), mCurrentPosition(0.0), mEndOfDataCount(0),
+									mCurrentLoopCount(0)
 							{}
 
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
@@ -138,14 +139,6 @@ class CMediaPlayerInternals {
 
 								// One more at end
 								if (++internals.mEndOfDataCount == internals.mMediaPlayer.getAudioTrackCount()) {
-									// Reset
-									for (UInt32 i = 0; i < internals.mMediaPlayer.getAudioTrackCount(); i++)
-										// Reset
-										internals.mMediaPlayer.getAudioProcessor(i)->reset();
-									for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++)
-										// Reset
-										internals.mMediaPlayer.getVideoProcessor(i)->reset();
-
 									// All at the end
 									internals.mCurrentLoopCount++;
 
@@ -156,10 +149,17 @@ class CMediaPlayerInternals {
 										// Reset and go again
 										internals.mEndOfDataCount = 0;
 
-										// Start playback for all audio players
-										for (UInt32 i = 0; i < internals.mMediaPlayer.getAudioTrackCount(); i++)
-											// Play
+										// Reset and start playback again
+										for (UInt32 i = 0; i < internals.mMediaPlayer.getAudioTrackCount(); i++) {
+											// Reset and play
+											internals.mMediaPlayer.getAudioProcessor(i)->reset();
 											internals.mMediaPlayer.getAudioProcessor(i)->play();
+										}
+										for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++) {
+											// Reset and resume
+											internals.mMediaPlayer.getVideoProcessor(i)->reset();
+											internals.mMediaPlayer.getVideoProcessor(i)->resume();
+										}
 									} else {
 										// Finished
 										internals.mEndOfDataCount = 0;
@@ -216,14 +216,15 @@ class CMediaPlayerInternals {
 								internals.mInfo.videoError(errorMessage.mError);
 							}
 
-				CMediaPlayer&					mMediaPlayer;
-				CSRSWMessageQueues&				mMessageQueues;
-				CMediaPlayer::Info				mInfo;
+				CMediaPlayer&						mMediaPlayer;
+				CSRSWMessageQueues&					mMessageQueues;
+				CMediaPlayer::Info					mInfo;
 
-				UniversalTimeInterval			mCurrentPosition;
-				UInt32							mEndOfDataCount;
-				OV<UInt32>						mLoopCount;
-				UInt32							mCurrentLoopCount;
+				UniversalTimeInterval				mSourceWindowStartTimeInterval;
+				UniversalTimeInterval				mCurrentPosition;
+				UInt32								mEndOfDataCount;
+				OV<UInt32>							mLoopCount;
+				UInt32								mCurrentLoopCount;
 
 		static	TNArray<R<CMediaPlayerInternals> >	mActiveInternals;
 };
@@ -255,26 +256,38 @@ CMediaPlayer::~CMediaPlayer()
 	// Remove
 	CMediaPlayerInternals::mActiveInternals -= R<CMediaPlayerInternals>(*mInternals);
 
-	// Reset
-	reset();
-
 	// Cleanup
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
 		// Remove message queue
 		CMediaPlayerAudioPlayer&	audioPlayer = (CMediaPlayerAudioPlayer&) *getAudioProcessor(i);
 		mInternals->mMessageQueues.remove(audioPlayer.mMessageQueue);
 	}
+	removeAllAudioProcessors();
+
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++) {
 		// Remove message queue
 		CMediaPlayerVideoFrameStore&	videoFrameStore = (CMediaPlayerVideoFrameStore&) *getVideoProcessor(i);
 		mInternals->mMessageQueues.remove(videoFrameStore.mMessageQueue);
 	}
+	removeAllVideoProcessors();
 
 	// Cleanup
 	Delete(mInternals);
 }
 
 // MARK: CMediaDestination methods
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::setSourceWindow(UniversalTimeInterval startTimeInterval,
+		const OV<UniversalTimeInterval>& durationTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mSourceWindowStartTimeInterval = startTimeInterval;
+
+	// Do super
+	CMediaDestination::setSourceWindow(startTimeInterval, durationTimeInterval);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
@@ -462,6 +475,9 @@ void CMediaPlayer::reset()
 		getVideoProcessor(i)->reset();
 
 	// Update internals
-	mInternals->mCurrentPosition = 0.0;
+	mInternals->mCurrentPosition = mInternals->mSourceWindowStartTimeInterval;
 	mInternals->mEndOfDataCount = 0;
+
+	// Call proc
+	mInternals->mInfo.audioPositionUpdated(mInternals->mCurrentPosition);
 }

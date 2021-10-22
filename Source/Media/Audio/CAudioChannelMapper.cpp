@@ -13,6 +13,26 @@ class CAudioChannelMapperInternals {
 
 						CAudioChannelMapperInternals() : mPerformProc(nil) {}
 
+		static	void	performMonoToStereoFloat32Interleaved(const CAudioFrames& sourceAudioFrames,
+								CAudioFrames& destinationAudioFrames)
+							{
+								// Setup
+										CAudioFrames::ReadInfo	readInfo = sourceAudioFrames.getReadInfo();
+								const	Float32*				sourcePtr = (const Float32*) readInfo.getSegments()[0];
+
+										CAudioFrames::WriteInfo	writeInfo = destinationAudioFrames.getWriteInfo();
+										Float32*				destinationPtr = (Float32*) writeInfo.getSegments()[0];
+
+								// Perform
+								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
+									// Copy sample
+									(*destinationPtr++) = *sourcePtr;
+									(*destinationPtr++) = (*sourcePtr++);
+								}
+
+								// Complete
+								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
+							}
 		static	void	performMonoToStereoSInt16Interleaved(const CAudioFrames& sourceAudioFrames,
 								CAudioFrames& destinationAudioFrames)
 							{
@@ -81,7 +101,11 @@ OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 	if ((mInternals->mInputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_1_0) &&
 			(mInternals->mOutputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_2_0_Option1)) {
 		// Mono -> Stereo
-		if ((audioProcessingFormat.getBits() == 16) && audioProcessingFormat.getIsSignedInteger() &&
+		if ((audioProcessingFormat.getBits() == 32) && audioProcessingFormat.getIsFloat() &&
+				audioProcessingFormat.getIsInterleaved())
+			// Float32 interleaved
+			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereoFloat32Interleaved;
+		else if ((audioProcessingFormat.getBits() == 16) && audioProcessingFormat.getIsSignedInteger() &&
 				audioProcessingFormat.getIsInterleaved())
 			// SInt16 interleaved
 			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereoSInt16Interleaved;

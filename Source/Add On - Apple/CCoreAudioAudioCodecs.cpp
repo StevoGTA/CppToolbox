@@ -41,7 +41,20 @@ class CAACAudioCodecInternals {
 																					getMediaPacketSource()->
 																					readNextInto(
 																							internals.mInputPacketData);
-									ReturnValueIfResultError(mediaPacketsResult, -1);
+									if (mediaPacketsResult.hasError()) {
+										// Check error
+										if (mediaPacketsResult.getError() == SError::mEndOfData) {
+											// End of data
+											*ioNumberDataPackets = 0;
+
+											return noErr;
+										} else {
+											// Other error
+											internals.mFillBufferDataError = mediaPacketsResult.getError();
+
+											return -1;
+										}
+									}
 
 									// Prepare return info
 									const	TArray<SMediaPacket>&	mediaPackets = mediaPacketsResult.getValue();

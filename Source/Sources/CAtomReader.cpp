@@ -33,8 +33,7 @@ TIResult<CAtomReader::AtomInfo> CAtomReader::readAtomInfo() const
 		// Yes
 		TVResult<UInt64>	size64 = readUInt64();
 		ReturnValueIfResultError(size64, TIResult<CAtomReader::AtomInfo>(size64.getError()));
-
-		payloadSize = size64.getValue() - 12;
+		payloadSize = size64.getValue() - 16;
 	} else
 		// No
 		payloadSize = size32.getValue() - 8;

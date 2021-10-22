@@ -48,6 +48,8 @@ class CVideoFrameStore : public CVideoDestination {
 							~CVideoFrameStore();
 
 							// CVideoProcessor methods
+				void		setSourceWindow(UniversalTimeInterval startTimeInterval,
+									const OV<UniversalTimeInterval>& durationTimeInterval);
 				void		seek(UniversalTimeInterval timeInterval);
 
 				void		reset();

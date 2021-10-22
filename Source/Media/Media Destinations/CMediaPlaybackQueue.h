@@ -20,9 +20,6 @@ class CMediaPlaybackQueue {
 													Item() {}
 				virtual								~Item() {}
 
-				virtual	bool						hasVideo() const
-														{ return false; }
-
 				virtual	TIResult<I<CMediaPlayer> >	prepare() = 0;
 						void						cancel() {}
 		};

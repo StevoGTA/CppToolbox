@@ -105,6 +105,9 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 										~CMediaPlayer();
 
 										// CMediaDestination methods
+				void					setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
+												const OV<UniversalTimeInterval>& durationTimeInterval =
+														OV<UniversalTimeInterval>());
 				void					seek(UniversalTimeInterval timeInterval);
 
 				void					setupComplete();

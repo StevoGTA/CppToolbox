@@ -243,8 +243,8 @@ class CAudioPlayerInternals {
 									const CAudioPlayer::Info& info) :
 								mAudioPlayer(audioPlayer), mIdentifier(identifier), mInfo(info),
 										mIsPlaying(false), mIsSeeking(false),
-										mCurrentPlaybackTimeInterval(0.0),
-										mLastSeekTimeInterval(0.0), mGain(1.0),
+										mSourceWindowStartTimeInterval(0.0), mLastSeekTimeInterval(0.0),
+										mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false),
 										mRenderProcIsSendingFrames(false), mRenderProcShouldNotifyEndOfData(false),
 										mRenderProcPreviousReadByteCount(0), mRenderProcPreviousFrameCount(0),
@@ -419,8 +419,9 @@ class CAudioPlayerInternals {
 
 		bool							mIsPlaying;
 		bool							mIsSeeking;
-		UniversalTimeInterval			mCurrentPlaybackTimeInterval;
+		UniversalTimeInterval			mSourceWindowStartTimeInterval;
 		UniversalTimeInterval			mLastSeekTimeInterval;
+		UniversalTimeInterval			mCurrentPlaybackTimeInterval;
 		Float32							mGain;
 
 		bool							mRenderProcShouldSendFrames;
@@ -529,9 +530,32 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CAudioPlayer::setSourceWindow(UniversalTimeInterval startTimeInterval,
+		const OV<UniversalTimeInterval>& durationTimeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mSourceWindowStartTimeInterval = startTimeInterval;
+
+	// Do super
+	CAudioDestination::setSourceWindow(startTimeInterval, durationTimeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if have audio engine index
+	if (!mInternals->mAudioEngineIndex.hasValue()) {
+		// Add player
+		mInternals->mAudioEngineIndex =
+				CAudioEngine::mShared.addAudioPlayer(CAudioPlayerInternals::renderProc, mInternals);
+		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), mInternals->mGain);
+	}
+	if (!mInternals->mAudioEngineIndex.hasValue())
+		// No available slots
+		return;
+
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
 	while (mInternals->mRenderProcIsSendingFrames)
@@ -553,13 +577,19 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	mInternals->mLastSeekTimeInterval = timeInterval;
 
 	mInternals->mRenderProcFrameIndex = 0;
-	mInternals->mRenderProcFrameCount = (UInt32) (*mInternals->mSampleRate * CAudioPlayer::kPreviewDuration);
+	mInternals->mRenderProcFrameCount =
+			(mInternals->mIsSeeking || !mInternals->mIsPlaying) ?
+					(UInt32) (*mInternals->mSampleRate * CAudioPlayer::kPreviewDuration) :
+					~0;
 
 	// Resume
 	mInternals->mAudioPlayerBufferThread->resume();
 
 	// Send frames
 	mInternals->mRenderProcShouldSendFrames = true;
+
+	// Start the engine if not already started
+	CAudioEngine::mShared.play();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -591,7 +621,9 @@ void CAudioPlayer::reset()
 	// Reset the pipeline
 	CAudioDestination::reset();
 
-	// Reset
+	// Restart
+	mInternals->mCurrentPlaybackTimeInterval = mInternals->mSourceWindowStartTimeInterval;
+
 	mInternals->mRenderProcFrameIndex = 0;
 	mInternals->mRenderProcFrameCount = ~0;
 
@@ -651,6 +683,7 @@ void CAudioPlayer::play()
 	// Send frames
 	mInternals->mRenderProcShouldSendFrames = true;
 	mInternals->mRenderProcShouldNotifyEndOfData = true;
+	mInternals->mRenderProcFrameCount = ~0;
 
 	// Start the engine if not already started
 	CAudioEngine::mShared.play();

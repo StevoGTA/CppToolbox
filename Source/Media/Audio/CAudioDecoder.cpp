@@ -116,6 +116,7 @@ void CAudioDecoder::seek(UniversalTimeInterval timeInterval)
 	// Bound the given time
 	timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mStartTimeInterval);
 	if (mInternals->mDurationTimeInterval.hasValue())
+		// Limit to duration
 		timeInterval = std::min<UniversalTimeInterval>(timeInterval, *mInternals->getEndTimeInterval());
 
 	// Update

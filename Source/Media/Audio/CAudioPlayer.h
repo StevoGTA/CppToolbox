@@ -63,6 +63,8 @@ class CAudioPlayer : public CAudioDestination {
 						OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 																const SAudioProcessingFormat& audioProcessingFormat);
 
+						void							setSourceWindow(UniversalTimeInterval startTimeInterval,
+																const OV<UniversalTimeInterval>& durationTimeInterval);
 						void							seek(UniversalTimeInterval timeInterval);
 
 						void							reset();

@@ -31,33 +31,15 @@ const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
 // MARK: - SUniversalTime
 
 struct SUniversalTime {
-									// Class methods
-	static	UniversalTime			getCurrent();
-	static	UniversalTime			getDistantFuture();
-	static	UniversalTime			getDistantPast();
+							// Class methods
+	static	UniversalTime	getCurrent();
+	static	UniversalTime	getDistantFuture();
+	static	UniversalTime	getDistantPast();
 
-	static	CString					getISO8601(UniversalTime universalTime);
-	static	OV<UniversalTime>		getFromISO8601(const CString& string);
-	static	OV<UniversalTime>		getFromISO8601(const OR<CString>& string)
-										{ return (string.hasReference()) ?
-												getFromISO8601(*string) : OV<UniversalTime>(); }
-	static	CString					getRFC3339(UniversalTime universalTime);
-	static	OV<UniversalTime>		getFromRFC3339(const CString& string);
-	static	OV<UniversalTime>		getFromRFC3339(const OR<CString>& string)
-										{ return (string.hasReference()) ?
-												getFromRFC3339(*string) : OV<UniversalTime>(); }
-	static	CString					getRFC339Extended(UniversalTime universalTime);
-	static	OV<UniversalTime>		getFromRFC3339Extended(const CString& string);
-	static	OV<UniversalTime>		getFromRFC3339Extended(const OR<CString>& string)
-										{ return (string.hasReference()) ?
-												getFromRFC3339Extended(*string) : OV<UniversalTime>(); }
-	static	void					setCurrent(UniversalTime time);
-
-	static	CString					getCurrentTimeZoneName();
-	static	UniversalTimeInterval	getCurrentTimeZoneOffset();
+	static	void			setCurrent(UniversalTime time);
 
 #if TARGET_OS_MACOS
-	static	UniversalTime			get(const UTCDateTime& utcDateTime);
+	static	UniversalTime	get(const UTCDateTime& utcDateTime);
 #endif
 };
 
@@ -68,16 +50,41 @@ struct SGregorianDate {
 	// Enums
 	public:
 		// The exact formatted result for these styles depends on the locale and OS, but generally:
-		//		Short is completely numeric, such as "1/1/52" or "3:30pm"
-		//		Medium is longer, such as "Jan 12, 1952"
-		//		Long is longer, such as "January 12, 1952" or "3:30:32pm"
-		//		Full is pretty complete; e.g. "Tuesday, April 12, 1952 AD" or "3:30:42pm PST"
+		enum ComponentStyle {
+			// Do not process this component
+			kComponentStyleNone,
+
+			// Completely numeric, such as "1/1/52" or "3:30pm"
+			kComponentStyleShort,
+
+			// Longer, such as "Jan 12, 1952"
+			kComponentStyleMedium,
+
+			// Even longer, such as "January 12, 1952" or "3:30:32pm"
+			kComponentStyleLong,
+
+			// Pretty complete; e.g. "Tuesday, April 12, 1952 AD" or "3:30:42pm PST"
+			kComponentStyleFull,
+		};
+
 		enum StringStyle {
-			kStringStyleNone,
-			kStringStyleShort,
-			kStringStyleMedium,
-			kStringStyleLong,
-			kStringStyleFull,
+//			// TODO
+//			kStringStyleISO8601,
+
+//			// TODO
+//			kStringStyleRFC3339,
+
+			// "yyyy-MM-dd'T'HH:mm:ss.SX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSX"
+			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
+			//	2021-03-23T22:54:13.922-0700
+			kStringStyleRFC339Extended,
 		};
 
 	// Structs
@@ -97,23 +104,36 @@ struct SGregorianDate {
 			Float32	mSeconds;
 		};
 
-					// Lifecycle methods
-					SGregorianDate(UInt32 year, UInt8 month, UInt8 day, UInt8 hour, UInt8 minute, Float32 second,
-							UInt8 dayOfWeek = 0) :
-						mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute), mSecond(second),
-								mDayOfWeek(dayOfWeek)
-						{}
-					SGregorianDate(UniversalTime time = SUniversalTime::getCurrent());
-					SGregorianDate(const CString& string, StringStyle dateStringStyle = kStringStyleMedium,
-							StringStyle timeStringStyle = kStringStyleShort);
+									// Lifecycle methods
+									SGregorianDate(UInt32 year, UInt8 month, UInt8 day, UInt8 hour, UInt8 minute,
+											Float32 second, UInt8 dayOfWeek = 0) :
+										mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute),
+												mSecond(second), mDayOfWeek(dayOfWeek)
+										{}
+									SGregorianDate(UniversalTime time = SUniversalTime::getCurrent());
 
-					// Instance methods
-	UniversalTime	getUniversalTime() const;
-	CString			getString(StringStyle dateStringStyle = kStringStyleMedium,
-							StringStyle timeStringStyle = kStringStyleShort) const;
+									// Instance methods
+			UniversalTime			getUniversalTime() const;
 
-	SGregorianDate	operator+(const Units& units) const;
-	SGregorianDate&	operator+=(const Units& units);
+			CString					getString(ComponentStyle dateComponentStyle,
+											ComponentStyle timeComponentStyle) const;
+			CString					getString(StringStyle stringStyle = kStringStyleRFC339Extended) const;
+
+			SGregorianDate			operator+(const Units& units) const;
+			SGregorianDate&			operator+=(const Units& units);
+
+									// Class methods
+	static	OV<SGregorianDate>		getFrom(const CString& string, ComponentStyle dateComponentStyle,
+											ComponentStyle timeComponentStyle);
+	static	OV<SGregorianDate>		getFrom(const CString& string,
+											StringStyle stringStyle = kStringStyleRFC339Extended);
+	static	OV<SGregorianDate>		getFrom(const OR<CString>& string,
+											StringStyle stringStyle = kStringStyleRFC339Extended)
+										{ return (string.hasReference()) ?
+												getFrom(*string, stringStyle) : OV<SGregorianDate>(); }
+
+	static	CString					getCurrentTimeZoneName();
+	static	UniversalTimeInterval	getCurrentTimeZoneOffset();
 
 	// Properties
 			UInt32	mYear;		// i.e. 2010
