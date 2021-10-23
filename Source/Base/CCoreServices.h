@@ -19,7 +19,7 @@ class CCoreServices {
 		static			UInt64				getPhysicalMemoryByteCount();
 		static			UInt32				getPhysicalMemoryPageSize();
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 		static	const	SVersionInfo&		getCoreAudioVersion();
 #endif
 

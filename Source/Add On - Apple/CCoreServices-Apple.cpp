@@ -47,7 +47,7 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 	return *sVersionInfo;
 }
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
 const SVersionInfo& CCoreServices::getCoreAudioVersion()
 //----------------------------------------------------------------------------------------------------------------------

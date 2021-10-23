@@ -14,7 +14,7 @@ class CFilesystem {
 	// Types
 	public:
 		// Application Object (representing an Application on the target system)
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 		typedef	CFolder	Application;
 #endif
 
@@ -37,7 +37,7 @@ class CFilesystem {
 											//	Will replace destinationFile with sourceFile and remove sourceFile
 		static	OI<SError>					replace(const CFile& sourceFile, const CFile& destinationFile);
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 		static	OI<SError>					open(const TArray<CFile> files, const Application& application);
 		static	void						moveToTrash(const TArray<CFile> files, TMArray<CFile>& outUntrashedFiles);
 		static	OI<SError>					moveToTrash(const TArray<CFile> files);

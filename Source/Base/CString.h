@@ -10,11 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Native strings
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	#define OSStringType	CFStringRef
 	#define OSStringVar(s)	CFStringRef s
 	#define	OSSTR(s)		CFSTR(s)
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 	#define OSStringType	const TCHAR*
 	#define OSStringVar(s)	const TCHAR s[]
 	#define OSSTR(s)		_TEXT(s)
@@ -358,9 +358,9 @@ class CString : public CHashable {
 		static			CString		mPlatformDefaultNewline;
 		
 	private:
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 						CFStringRef					mStringRef;
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 						std::basic_string<TCHAR>	mString;
 #endif
 };

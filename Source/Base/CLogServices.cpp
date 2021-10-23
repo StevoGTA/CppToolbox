@@ -7,7 +7,7 @@
 #include "CFileWriter.h"
 #include "ConcurrencyPrimitives.h"
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 	#undef Delete
 	#include <Windows.h>
 #endif
@@ -386,7 +386,7 @@ void CLogServices::addLogErrorProc(LogProc logProc, void* userData)
 void sLogToConsoleOutput(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 	OutputDebugString((string + CString::mNewline).getOSString());
 #else
 	fprintf(stdout, "%s\n", *string.getCString());

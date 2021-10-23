@@ -110,7 +110,7 @@ CBitmap CImage::getBitmap() const
 			// PNG
 			return sDecodePNGData(mInternals->mData);
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 		default:
 			// Just to make compiler happy.  Will never get here.
 			return CBitmap();

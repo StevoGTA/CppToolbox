@@ -6,7 +6,7 @@
 
 #include "CLogServices.h"
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 	#define kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange '&8v0'
 #endif
 
@@ -41,10 +41,10 @@ mUsedPixelsSize(size),
 				textureDescriptor.pixelFormat = pixelFormat;
 				textureDescriptor.width = mTotalPixelsSize.mWidth;
 				textureDescriptor.height = mTotalPixelsSize.mHeight;
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 				textureDescriptor.storageMode = MTLStorageModeShared;
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 				textureDescriptor.storageMode = MTLStorageModeManaged;
 #endif
 				// Create texture

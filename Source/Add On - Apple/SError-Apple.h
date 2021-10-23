@@ -10,10 +10,10 @@
 		SError(CString((__bridge CFStringRef) e.domain), (SInt32) e.code,	\
 				CString((__bridge CFStringRef) e.localizedDescription))
 
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	#define SErrorFromOSStatus(status)	SError(CString(OSSTR("OSStatus")), status, CString(status))
 #endif
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 	extern SError SErrorFromOSStatus(OSStatus status);
 #endif

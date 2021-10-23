@@ -6,7 +6,7 @@
 
 #include "SError.h"
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 	#include <mfapi.h>
 #endif
 
@@ -15,14 +15,14 @@
 
 class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameInternals> {
 	public:
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		CVideoFrameInternals(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
 				CVideoFrame::DataFormat dataFormat, CVImageBufferRef imageBufferRef) :
 			mPresentationTimeInterval(presentationTimeInterval), mFrameSize(frameSize),
 					mViewRect(S2DPointU16(), frameSize), mDataFormat(dataFormat),
 					mImageBufferRef((CVImageBufferRef) ::CFRetain(imageBufferRef))
 			{}
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 		CVideoFrameInternals(UniversalTimeInterval presentationTimeInterval, CVideoFrame::DataFormat dataFormat,
 				const S2DSizeU16& frameSize, const S2DRectU16& viewRect, IMFSample* sample) :
 			mPresentationTimeInterval(presentationTimeInterval), mDataFormat(dataFormat), mFrameSize(frameSize),
@@ -34,10 +34,10 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 #endif
 		~CVideoFrameInternals()
 			{
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 				// Cleanup
 				::CFRelease(mImageBufferRef);
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 				// Cleanup
 				mSample->Release();
 #endif
@@ -48,9 +48,9 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 		S2DSizeU16				mFrameSize;
 		S2DRectU16				mViewRect;
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		CVImageBufferRef		mImageBufferRef;
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 		IMFSample*				mSample;
 #endif
 };
@@ -61,8 +61,8 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 
 // MARK: Lifecycle methods
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+#if defined(TARGET_OS_MACOS)
 	#define kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange '&8v0'
 #endif
 //----------------------------------------------------------------------------------------------------------------------
@@ -84,13 +84,19 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImage
 			// YCbCr
 			dataFormat = kDataFormatYCbCr;
 			break;
+
+		default:
+			// Other
+			AssertFailUnimplemented();
+			dataFormat = kDataFormatRGB;
+			break;
 	}
 
 	mInternals =
 			new CVideoFrameInternals(presentationTimeInterval, S2DSizeU16(frameSize.width, frameSize.height),
 					dataFormat, imageBufferRef);
 }
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
 CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, IMFSample* sample, const GUID& dataFormatGUID,
 		const S2DSizeU16& frameSize, const S2DRectU16& viewRect)
@@ -157,7 +163,7 @@ const S2DRectU16& CVideoFrame::getViewRect() const
 CColor::Primaries CVideoFrame::getColorPrimaries() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	CFStringRef	stringRef =
 						(CFStringRef) ::CVBufferGetAttachment(mInternals->mImageBufferRef,
 								kCVImageBufferColorPrimariesKey, nil);
@@ -196,7 +202,7 @@ CColor::Primaries CVideoFrame::getColorPrimaries() const
 CColor::YCbCrConversionMatrix CVideoFrame::getYCbCrConversionMatrix() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	CFStringRef	stringRef =
 						(CFStringRef) ::CVBufferGetAttachment(mInternals->mImageBufferRef, kCVImageBufferYCbCrMatrixKey,
 								nil);
@@ -223,7 +229,7 @@ CColor::YCbCrConversionMatrix CVideoFrame::getYCbCrConversionMatrix() const
 CColor::TransferFunction CVideoFrame::getColorTransferFunction() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	CFStringRef	stringRef =
 						(CFStringRef) ::CVBufferGetAttachment(mInternals->mImageBufferRef,
 								kCVImageBufferTransferFunctionKey, nil);
@@ -246,14 +252,14 @@ CColor::TransferFunction CVideoFrame::getColorTransferFunction() const
 #endif
 }
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 //----------------------------------------------------------------------------------------------------------------------
 CVImageBufferRef CVideoFrame::getImageBufferRef() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mImageBufferRef;
 }
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
 IMFSample* CVideoFrame::getSample() const
 //----------------------------------------------------------------------------------------------------------------------

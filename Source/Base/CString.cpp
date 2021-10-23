@@ -33,11 +33,11 @@ CString	CString::mNewline(OSSTR("\n"));
 CString	CString::mLinefeed(OSSTR("\r"));
 CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
-#elif TARGET_OS_LINUX
+#elif defined(TARGET_OS_LINUX)
 	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 	CString	CString::mPlatformDefaultNewline(OSSTR("\r\n"));
 #endif
 

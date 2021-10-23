@@ -148,7 +148,7 @@ CString CFilesystemPath::getLastComponentForDisplay() const
 				// POSIX - ":" => "/"
 				return lastComponent.replacingSubStrings(CString(OSSTR(":")), CString(OSSTR("/")));
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 			case kStyleHFS:
 				// HFS - "/" => ":"
 				return lastComponent.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR(":")));
@@ -181,7 +181,7 @@ CFilesystemPath CFilesystemPath::appendingComponent(const CString& component, St
 		return CFilesystemPath(
 				mInternals->mString + sPathSeparator(mInternals->mStyle) +
 						component.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR("\\"))));
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 	else if ((mInternals->mStyle == kStylePOSIX) && (style == kStyleHFS))
 		// Convert HFS => POSIX
 		return CFilesystemPath(
@@ -300,7 +300,7 @@ const CString& sPathSeparator(CFilesystemPath::Style style)
 	// Setup
 	static	CString	sPathSeparatorPOSIX(OSSTR("/"));
 	static	CString	sPathSeparatorWindows(OSSTR("\\"));
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 	static	CString	sPathSeparatorHFS(OSSTR(":"));
 #endif
 
@@ -308,11 +308,11 @@ const CString& sPathSeparator(CFilesystemPath::Style style)
 	switch (style) {
 		case CFilesystemPath::kStylePOSIX:		return sPathSeparatorPOSIX;
 		case CFilesystemPath::kStyleWindows:	return sPathSeparatorWindows;
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 		case CFilesystemPath::kStyleHFS:		return sPathSeparatorHFS;
 #endif
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 		default:
 			// Just to make compiler happy.  Will never get here.
 			return sPathSeparatorWindows;

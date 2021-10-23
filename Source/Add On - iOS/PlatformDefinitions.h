@@ -10,9 +10,11 @@
 	#include <algorithm>
 #endif
 
-#define TARGET_OS_IOS	1
-
 #include <CoreFoundation/CoreFoundation.h>
+
+#undef TARGET_OS_TVOS
+#undef TARGET_OS_WATCHOS
+#undef TARGET_OS_WINDOWS
 
 #define	DEPRECATED	DEPRECATED_ATTRIBUTE
 #define force_inline __attribute__((always_inline))

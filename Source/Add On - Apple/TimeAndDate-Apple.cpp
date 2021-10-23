@@ -40,7 +40,7 @@ void SUniversalTime::setCurrent(UniversalTime time)
 	sOffsetInterval = time - (UniversalTime) ::CFAbsoluteTimeGetCurrent();
 }
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
 UniversalTime SUniversalTime::get(const UTCDateTime& utcDateTime)
 //----------------------------------------------------------------------------------------------------------------------

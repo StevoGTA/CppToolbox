@@ -122,7 +122,7 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 					kCVPixelBufferMetalCompatibilityKey, kCFBooleanTrue);
 			break;
 
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		case CVideoFrame::kCompatibilityOpenGLES:
 			// OpenGLES
 			::CFDictionarySetValue(destinationImageBufferAttributes,
@@ -137,10 +137,11 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 			::CFDictionarySetValue(destinationImageBufferAttributes,
 					kCVPixelBufferOpenGLTextureCacheCompatibilityKey, kCFBooleanTrue);
 
-			OSType	pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+			OSType		pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+			CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &pixelFormat);
 			::CFDictionarySetValue(destinationImageBufferAttributes,
-					kCVPixelBufferPixelFormatTypeKey,
-					::CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &pixelFormat));
+					kCVPixelBufferPixelFormatTypeKey, numberRef);
+			::CFRelease(numberRef);
 			} break;
 #endif
 	}

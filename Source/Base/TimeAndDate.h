@@ -38,7 +38,7 @@ struct SUniversalTime {
 
 	static	void			setCurrent(UniversalTime time);
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 	static	UniversalTime	get(const UTCDateTime& utcDateTime);
 #endif
 };

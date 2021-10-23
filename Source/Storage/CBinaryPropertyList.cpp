@@ -353,7 +353,7 @@ CDictionary CBPLReader::readDictionary(UInt64 objectIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read marker
-	UInt64	count;
+	UInt64	count = 0;
 	readMarker(objectIndex, OR<UInt64>(count));
 
 	return CBPLDictionaryInfo::dictionaryWith(*this, (CDictionary::KeyCount) count);

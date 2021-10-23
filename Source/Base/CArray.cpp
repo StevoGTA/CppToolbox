@@ -533,14 +533,14 @@ CArray& CArray::sort(CompareProc compareProc, void* userData)
 	mInternals = mInternals->prepareForWrite();
 
 	// Sort
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	// BSD platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
 	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), &sortInfo, sSortProc);
-#elif TARGET_OS_LINUX
+#elif defined(TARGET_OS_LINUX)
 	// GLibc platforms
 	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), sSortProc, userData);
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 	// Windows platforms
 	SArraySortInfo	sortInfo = {compareProc, userData};
 	qsort_s((void*) mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), sSortProc, &sortInfo);

@@ -8,9 +8,9 @@
 #include "CColor.h"
 #include "TimeAndDate.h"
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	#include <CoreVideo/CoreVideo.h>
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 	#undef Delete
 	#include <mftransform.h>
 	#undef THIS
@@ -34,11 +34,11 @@ class CVideoFrame {
 	// Compatibility
 	public:
 		enum Compatibility {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 			kCompatibilityCGImage,
 			kCompatibilityMetal,
 			kCompatibilityOpenGLES,
-#elif TARGET_OS_MACOS
+#elif defined(TARGET_OS_MACOS)
 			kCompatibilityCGImage,
 			kCompatibilityMetal,
 			kCompatibilityOpenGL,
@@ -57,10 +57,10 @@ class CVideoFrame {
 	// Methods
 	public:
 														// Lifecycle methods
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 														CVideoFrame(UniversalTimeInterval presentationTimeInterval,
 																CVImageBufferRef imageBufferRef);
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 														CVideoFrame(UniversalTimeInterval presentationTimeInterval,
 																IMFSample* sample, const GUID& dataFormatGUID,
 																const S2DSizeU16& frameSize,
@@ -78,9 +78,9 @@ class CVideoFrame {
 						CColor::YCbCrConversionMatrix	getYCbCrConversionMatrix() const;
 						CColor::TransferFunction		getColorTransferFunction() const;
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 						CVImageBufferRef				getImageBufferRef() const;
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 						IMFSample*						getSample() const;
 #endif
 

@@ -20,16 +20,17 @@ class CFilesystemPath : public CHashable {
 			// Paths in the style "C:\Volume\Folder\Folder\"
 			kStyleWindows,
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 			// Deprecated paths in the style "Volume:Folder:Folder:"
 			kStyleHFS,
 #endif
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS || TARGET_OS_LINUX
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS) || \
+		defined(TARGET_OS_LINUX)
 			kStylePlatformDefault = kStylePOSIX,
 #endif
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 			kStylePlatformDefault = kStyleWindows,
 #endif
 		};

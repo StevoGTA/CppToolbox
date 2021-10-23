@@ -75,12 +75,12 @@ class CFile : CHashable {
 
 						CFile&				operator=(const CFile& other);
 
-#if TARGET_OS_MACOS || TARGET_OS_LINUX
+#if defined(TARGET_OS_MACOS) || defined(TARGET_OS_LINUX)
 						UInt16				getPermissions() const;
 						OI<SError>			setPermissions(UInt16 permissions) const;
 #endif
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 						bool				isAlias() const;
 
 						CString				getComment() const;

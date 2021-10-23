@@ -12,8 +12,10 @@
 	#include <algorithm>
 #endif
 
-#define TARGET_OS_MACOS	1
-#define TARGET_OS_WINDOWS 0
+#undef TARGET_OS_IOS
+#define TARGET_OS_MACOS		1
+#undef TARGET_OS_TVOS
+#undef TARGET_OS_WATCHOS
 
 #define	DEPRECATED	DEPRECATED_ATTRIBUTE
 #define force_inline __attribute__((always_inline))

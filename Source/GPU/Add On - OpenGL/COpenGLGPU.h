@@ -16,11 +16,11 @@ struct SGPUProcsInfo {
 	typedef	void				(*ReleaseContextProc)(void* userData);
 	typedef S2DSizeU16			(*GetSizeProc)(void* userData);
 	typedef	Float32				(*GetScaleProc)(void* userData);
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 	typedef	void*				(*GetRenderBufferStorageContextProc)(void* userData);
 	typedef	CVEAGLContext		(*GetContextProc)(void* userData);
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 	typedef	CGLContextObj		(*GetContextProc)(void* userData);
 	typedef	CGLPixelFormatObj	(*GetPixelFormatProc)(void* userData);
 #endif
@@ -29,22 +29,22 @@ struct SGPUProcsInfo {
 						SGPUProcsInfo(AcquireContextProc acquireContextProc,
 								TryAcquireContextProc tryAcquireContextProc, ReleaseContextProc releaseContextProc,
 								GetSizeProc getSizeProc, GetScaleProc getScaleProc,
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 								GetRenderBufferStorageContextProc getRenderBufferStorageContextProc,
 								GetContextProc getContextProc,
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 								GetContextProc getContextProc, GetPixelFormatProc getPixelFormatProc,
 #endif
 								void* userData) :
 							mAcquireContextProc(acquireContextProc), mTryAcquireContextProc(tryAcquireContextProc),
 									mReleaseContextProc(releaseContextProc), mGetSizeProc(getSizeProc),
 									mGetScaleProc(getScaleProc),
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 									mGetRenderBufferStorageContextProc(getRenderBufferStorageContextProc),
 									mGetContextProc(getContextProc),
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 									mGetContextProc(getContextProc), mGetPixelFormatProc(getPixelFormatProc),
 #endif
 									mUserData(userData)
@@ -54,11 +54,11 @@ struct SGPUProcsInfo {
 									mTryAcquireContextProc(other.mTryAcquireContextProc),
 									mReleaseContextProc(other.mReleaseContextProc), mGetSizeProc(other.mGetSizeProc),
 									mGetScaleProc(other.mGetScaleProc),
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 									mGetRenderBufferStorageContextProc(other.mGetRenderBufferStorageContextProc),
 									mGetContextProc(other.mGetContextProc),
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 									mGetContextProc(other.mGetContextProc),
 									mGetPixelFormatProc(other.mGetPixelFormatProc),
 #endif
@@ -76,13 +76,13 @@ struct SGPUProcsInfo {
 							{ return mGetSizeProc(mUserData); }
 	Float32				getScale() const
 							{ return mGetScaleProc(mUserData); }
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 	void*				getRenderBufferStorageContext() const
 								{ return mGetRenderBufferStorageContextProc(mUserData); }
 	CVEAGLContext		getContext() const
 							{ return mGetContextProc(mUserData); }
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 	CGLContextObj		getContext() const
 							{ return mGetContextProc(mUserData); }
 	CGLPixelFormatObj	getPixelFormat() const
@@ -96,11 +96,11 @@ struct SGPUProcsInfo {
 		ReleaseContextProc					mReleaseContextProc;
 		GetSizeProc							mGetSizeProc;
 		GetScaleProc						mGetScaleProc;
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 		GetRenderBufferStorageContextProc	mGetRenderBufferStorageContextProc;
 		GetContextProc						mGetContextProc;
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 		GetContextProc						mGetContextProc;
 		GetPixelFormatProc					mGetPixelFormatProc;
 #endif

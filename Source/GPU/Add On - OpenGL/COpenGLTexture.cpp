@@ -6,7 +6,7 @@
 
 #include "CLogServices.h"
 
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 	#include <OpenGLES/ES3/glext.h>
 #endif
 
@@ -63,7 +63,7 @@ mUsedPixelsSize(size),
 				glTexParameteri(mTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(mTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 		COpenGLTextureInternals(CVOpenGLESTextureCacheRef openGLTextureCacheRef, CVImageBufferRef imageBufferRef,
 				UInt32 planeIndex) :
 			TReferenceCountable(), mHasTransparency(false)
@@ -121,7 +121,7 @@ mUsedPixelsSize(size),
 									CString(result));
 			}
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 		COpenGLTextureInternals(CGLContextObj context, CVImageBufferRef imageBufferRef,
 				UInt32 planeIndex) :
 			TReferenceCountable()
@@ -176,7 +176,7 @@ mUsedPixelsSize(size),
 		~COpenGLTextureInternals()
 			{
 				// Cleanup
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 				if (mOpenGLTextureRef.hasValue())
 					// Release texture ref
 					::CFRelease(*mOpenGLTextureRef);
@@ -195,10 +195,10 @@ mUsedPixelsSize(size),
 		S2DSizeU16					mUsedPixelsSize;
 		S2DSizeU16					mTotalPixelsSize;
 		bool						mHasTransparency;
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 		OV<CVOpenGLESTextureRef>	mOpenGLTextureRef;
 #endif
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 		OV<IOSurfaceRef>			mIOSurfaceRef;
 #endif
 };
@@ -217,7 +217,7 @@ COpenGLTexture::COpenGLTexture(const CData& data, CGPUTexture::DataFormat dataFo
 	mInternals = new COpenGLTextureInternals(data, dataFormat, size);
 }
 
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 //----------------------------------------------------------------------------------------------------------------------
 COpenGLTexture::COpenGLTexture(CVOpenGLESTextureCacheRef openGLTextureCacheRef, CVImageBufferRef imageBufferRef,
 		UInt32 planeIndex) : CGPUTexture()
@@ -227,7 +227,7 @@ COpenGLTexture::COpenGLTexture(CVOpenGLESTextureCacheRef openGLTextureCacheRef, 
 }
 #endif
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
 COpenGLTexture::COpenGLTexture(CGLContextObj context, CVImageBufferRef imageBufferRef,
 		UInt32 planeIndex) : CGPUTexture()

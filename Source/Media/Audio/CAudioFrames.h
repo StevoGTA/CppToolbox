@@ -8,7 +8,7 @@
 #include "TBuffer.h"
 #include "TWrappers.h"
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	#include <CoreAudioTypes/CoreAudioTypes.h>
 #endif
 
@@ -117,7 +117,7 @@ class CAudioFrames : private CData {
 		WriteInfo	getWriteInfo();
 		void		completeWrite(UInt32 frameCount);
 
-#if TARGET_OS_IOS || TARGET_OS_MACOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 					// Apple methods
 		UInt32		getAsRead(AudioBufferList& audioBufferList) const;
 

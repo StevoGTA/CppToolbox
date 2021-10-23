@@ -42,7 +42,7 @@ class CFolder : CHashable {
 						CFolder				getChildFolder(const CString& name) const;
 						CFile				getFile(const CString& name) const;
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 						bool				isPackage() const;
 #endif
 
@@ -75,7 +75,7 @@ class CFolder : CHashable {
 											// Class methods
 		static	const	CFolder&			tempFolder();
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 		static	const	CFolder&			systemApplicationSupportFolder();
 		static	const	CFolder&			systemAudioPluginsFolder();
 		static	const	CFolder&			systemAudioPresetsFolder();
@@ -89,7 +89,7 @@ class CFolder : CHashable {
 		static	const	CFolder&			userLibraryFolder();
 		static	const	CFolder&			userLogsFolder();
 		static	const	CFolder&			userMusicFolder();
-#elif TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
 		static	const	CFolder&			currentFolder();
 #endif
 

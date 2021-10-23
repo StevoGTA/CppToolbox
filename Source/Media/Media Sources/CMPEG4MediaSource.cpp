@@ -26,7 +26,7 @@
 
 #pragma pack(push,1)
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 	#pragma warning(disable:4200)
 #endif
 
@@ -703,7 +703,7 @@ struct Sco64AtomPayload {
 //	UInt8	mData[];
 //};
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 	#pragma warning(default:4200)
 #endif
 

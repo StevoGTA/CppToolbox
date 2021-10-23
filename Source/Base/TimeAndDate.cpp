@@ -232,7 +232,7 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 					mSecond, offsetSign, offsetAbsolute / 60, offsetAbsolute % 60);
 		}
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 		// Unnessary, but making the compiler happy
 		default:	return CString::mEmpty;
 #endif
@@ -333,7 +333,7 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 					SGregorianDate(gregorianDate.getUniversalTime() - timezoneOffset + getCurrentTimeZoneOffset()));
 		}
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 		// Unnessary, but making the compiler happy
 		default:	return OV<SGregorianDate>();
 #endif

@@ -4,15 +4,15 @@
 
 #pragma once
 
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 	#include <OpenGLES/ES3/glext.h>
 #endif
 
-//#if TARGET_OS_LINUX
+//#if defined(TARGET_OS_LINUX)
 //	#include <GLES/gl.h>
 //#endif
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 	#include <OpenGL/gl3.h>
 #endif
 

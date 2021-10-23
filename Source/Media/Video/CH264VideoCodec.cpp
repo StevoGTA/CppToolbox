@@ -95,21 +95,18 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 {
 	// Setup
 	CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(dataInfo.getData())), true);
-	UInt8		naluUnitType;
 	UInt8		sliceType;
-	UInt8		frameNum;
 	UInt8		picOrderCntLSB;
-	UInt8		deltaPicOrderCntBottom;
 
 	// Iterate NALUs
 	while (true) {
 		// Get info
-		OV<UInt32>	size = bitReader.readUInt32().getValue();
-		UInt64		pos = bitReader.getPos();
+		OV<UInt32>		size = bitReader.readUInt32().getValue();
+		UInt64			pos = bitReader.getPos();
 
-		OV<UInt8>	forbidden_zero_bit = bitReader.readUInt8(1).getValue();	(void) forbidden_zero_bit;
-		OV<UInt8>	nal_ref_idc = bitReader.readUInt8(2).getValue();	(void) nal_ref_idc;
-		OV<UInt8>	nal_unit_type = bitReader.readUInt8(5).getValue();
+		OV<UInt8>		forbidden_zero_bit = bitReader.readUInt8(1).getValue();	(void) forbidden_zero_bit;
+		OV<UInt8>		nal_ref_idc = bitReader.readUInt8(2).getValue();	(void) nal_ref_idc;
+		OV<UInt8>		nal_unit_type = bitReader.readUInt8(5).getValue();
 		NALUInfo::Type	naluType = (NALUInfo::Type) *nal_unit_type;
 
 		// Check type
@@ -118,31 +115,23 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 			OV<UInt32>	first_mb_in_slice = bitReader.readUEColumbusCode().getValue();	(void) first_mb_in_slice;
 			OV<UInt32>	slice_type = bitReader.readUEColumbusCode().getValue();
 			OV<UInt32>	pic_parameter_set_id = bitReader.readUEColumbusCode().getValue();	(void) pic_parameter_set_id;
-			OV<UInt8>	frame_num = bitReader.readUInt8(mCurrentFrameNumberBitCount).getValue();
+			OV<UInt8>	frame_num = bitReader.readUInt8(mCurrentFrameNumberBitCount).getValue();	(void) frame_num;
 			OV<UInt8>	pic_order_cnt_lsb = bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount).getValue();
-			OV<UInt32>	delta_pic_order_cnt_bottom = bitReader.readUEColumbusCode().getValue();
 
-			naluUnitType = *nal_unit_type;
 			sliceType = *slice_type;
-			frameNum = *frame_num;
 			picOrderCntLSB = *pic_order_cnt_lsb;
-			deltaPicOrderCntBottom = *delta_pic_order_cnt_bottom;
 			break;
 		} else if (naluType == NALUInfo::kTypeCodedSliceIDRPicture) {
 			// Coded Slice IDR Picture
 			OV<UInt32>	first_mb_in_slice = bitReader.readUEColumbusCode().getValue();	(void) first_mb_in_slice;
 			OV<UInt32>	slice_type = bitReader.readUEColumbusCode().getValue();
 			OV<UInt32>	pic_parameter_set_id = bitReader.readUEColumbusCode().getValue();	(void) pic_parameter_set_id;
-			OV<UInt8>	frame_num = bitReader.readUInt8(mCurrentFrameNumberBitCount).getValue();
+			OV<UInt8>	frame_num = bitReader.readUInt8(mCurrentFrameNumberBitCount).getValue();	(void) frame_num;
 			OV<UInt32>	idr_pic_id = bitReader.readUEColumbusCode().getValue();	(void) idr_pic_id;
 			OV<UInt8>	pic_order_cnt_lsb = bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount).getValue();
-			OV<UInt32>	delta_pic_order_cnt_bottom = bitReader.readUEColumbusCode().getValue();
 
-			naluUnitType = *nal_unit_type;
 			sliceType = *slice_type;
-			frameNum = *frame_num;
 			picOrderCntLSB = *pic_order_cnt_lsb;
-			deltaPicOrderCntBottom = *delta_pic_order_cnt_bottom;
 			break;
 		} else if (naluType == NALUInfo::kTypeSupplementalEnhancementInformation) {
 			// SEI

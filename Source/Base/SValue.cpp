@@ -525,7 +525,7 @@ bool SValue::equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc) cons
 			return (opaqueEqualsProc != nil) ?
 					opaqueEqualsProc(mValue.mOpaque, other.mValue.mOpaque) : mValue.mOpaque == other.mValue.mOpaque;
 
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 		default:
 			// Just to make compiler happy.  Will never get here.
 			return false;

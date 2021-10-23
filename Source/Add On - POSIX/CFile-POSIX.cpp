@@ -114,7 +114,7 @@ OI<SError> CFile::setLocked(bool lockFile) const
 	return OI<SError>();
 }
 
-#if TARGET_OS_MACOS || TARGET_OS_LINUX
+#if defined(TARGET_OS_MACOS) || defined(TARGET_OS_LINUX)
 //----------------------------------------------------------------------------------------------------------------------
 UInt16 CFile::getPermissions() const
 //----------------------------------------------------------------------------------------------------------------------

@@ -7,7 +7,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 static	CString	sBasicVertexShaderString("#version 300 es			\
 			uniform			mat4    modelViewProjectionMatrix;		\
 																	\
@@ -290,7 +290,7 @@ static	CString	sYCbCrFragmentShaderString("#version 300 es														\
 				fragColor = vec4(rgb, opacity);																	\
 			}																									\
 		");
-#elif TARGET_OS_MACOS
+#elif defined(TARGET_OS_MACOS)
 static	CString	sBasicVertexShaderString("#version 330 core			\
 			uniform	mat4    modelViewProjectionMatrix;				\
 																	\
@@ -506,21 +506,21 @@ class COpenGLVertexShaderClip : public COpenGLVertexShader {
 				void			configureGL()
 									{
 										// Setup GL
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 										glEnable(GL_CLIP_DISTANCE0_APPLE);
 #endif
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 										glEnable(GL_CLIP_DISTANCE0);
 #endif
 									}
 				void			resetGL()
 									{
-#if TARGET_OS_IOS
+#if defined(TARGET_OS_IOS)
 										glDisable(GL_CLIP_DISTANCE0_APPLE);
 #endif
 
-#if TARGET_OS_MACOS
+#if defined(TARGET_OS_MACOS)
 										glDisable(GL_CLIP_DISTANCE0);
 #endif
 									}

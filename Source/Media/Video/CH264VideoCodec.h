@@ -169,7 +169,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 
 			// Configuration
 			private:
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 	#pragma warning(disable:4200)
 #endif
 				struct Configuration {
@@ -181,7 +181,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 					UInt8	mLengthCoded;
 					UInt8	mSPSPPSInfo[];
 				};
-#if TARGET_OS_WINDOWS
+#if defined(TARGET_OS_WINDOWS)
 	#pragma warning(default:4200)
 #endif
 

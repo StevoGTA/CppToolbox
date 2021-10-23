@@ -7,14 +7,14 @@
 #include "CLogServices.h"
 #include "CNotificationCenter.h"
 
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	#import <AVFoundation/AVFoundation.h>
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: NotificationObserver
 
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 @interface NotificationObserver : NSObject
 @end
 
@@ -62,7 +62,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local data
 
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 static	bool					sIsAudioSessionActive = false;
 static	NotificationObserver*	sNotificationObserver = [[NotificationObserver alloc] init];
 #endif
@@ -87,7 +87,7 @@ CAudioSession::CAudioSession()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup notifications
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	NSNotificationCenter*	notificationCenter = NSNotificationCenter.defaultCenter;
 	[notificationCenter addObserver:sNotificationObserver selector:@selector(handleInterruptionNotification:)
 			name:AVAudioSessionInterruptionNotification object:nil];
@@ -107,7 +107,7 @@ CAudioSession::~CAudioSession()
 void CAudioSession::activate()
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	// Activate
 	NSError*	error;
 	BOOL		result = [AVAudioSession.sharedInstance setActive:YES error:&error];
@@ -125,7 +125,7 @@ void CAudioSession::activate()
 void CAudioSession::deactivate()
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	// Deactivate
 	NSError*	error;
 	BOOL		result = [AVAudioSession.sharedInstance setActive:NO error:&error];
@@ -144,7 +144,7 @@ void CAudioSession::deactivate()
 bool CAudioSession::isActivated() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	return sIsAudioSessionActive;
 #else
 	return true;
@@ -155,7 +155,7 @@ bool CAudioSession::isActivated() const
 bool CAudioSession::inputIsAvailable() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	return AVAudioSession.sharedInstance.isInputAvailable;
 #else
 	return true;
@@ -166,7 +166,7 @@ bool CAudioSession::inputIsAvailable() const
 void CAudioSession::set(Category category)
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	// Convert category to AVAudioSessionCategory
 	NSString*	avAudioSessionCategory;
 	switch (category) {
@@ -205,7 +205,7 @@ void CAudioSession::set(Category category)
 void CAudioSession::set(OverrideRoute overrideRoute)
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	// Convert override route to AVAudioSessionOverrideRoute
 	NSUInteger	avAudioSessionOverrideRoute;
 	switch (overrideRoute) {
@@ -227,7 +227,7 @@ void CAudioSession::set(OverrideRoute overrideRoute)
 UniversalTimeInterval CAudioSession::getCurrentHardwareIOBufferDuration() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	return AVAudioSession.sharedInstance.IOBufferDuration;
 #else
 	return 0.25;
@@ -238,7 +238,7 @@ UniversalTimeInterval CAudioSession::getCurrentHardwareIOBufferDuration() const
 void CAudioSession::setPreferredHardwareIOBufferDuration(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	NSError*	error;
 	BOOL		result = [AVAudioSession.sharedInstance setPreferredIOBufferDuration:timeInterval error:&error];
 	if (!result)
@@ -252,7 +252,7 @@ void CAudioSession::setPreferredHardwareIOBufferDuration(UniversalTimeInterval t
 Float32 CAudioSession::getCurrentHardwareOutputVolume() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if TARGET_OS_IOS || TARGET_OS_TVOS || TARGET_OS_WATCHOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	return AVAudioSession.sharedInstance.outputVolume;
 #else
 	return 1.0; 
