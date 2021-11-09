@@ -44,6 +44,9 @@ class CData {
 
 				CString		getBase64String(bool prettyPrint = false) const;
 
+				CData		subData(ByteIndex byteIndex, const OV<ByteCount>& byteCount = OV<ByteCount>(),
+									bool copySourceData = true) const;
+
 				CData&		operator=(const CData& other);
 				bool		operator==(const CData& other) const;
 				bool		operator!=(const CData& other) const

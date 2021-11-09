@@ -389,6 +389,23 @@ CString CData::getBase64String(bool prettyPrint) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CData CData::subData(ByteIndex byteIndex, const OV<ByteCount>& byteCount, bool copySourceData) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertFailIf(byteIndex >= mInternals->mBufferByteCount);
+	if (byteIndex >= mInternals->mBufferByteCount)
+		return mEmpty;
+
+	AssertFailIf(byteCount.hasValue() && (byteIndex + *byteCount) >= mInternals->mBufferByteCount);
+	if (byteCount.hasValue() && (byteIndex + *byteCount) >= mInternals->mBufferByteCount)
+		return mEmpty;
+
+	return CData((UInt8*) mInternals->mBuffer + byteIndex,
+			byteCount.hasValue() ? *byteCount : mInternals->mBufferByteCount - byteIndex, copySourceData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CData& CData::operator=(const CData& other)
 //----------------------------------------------------------------------------------------------------------------------
 {

@@ -7,7 +7,199 @@
 #include "CCodecRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAACAudioCodec
+// MARK: Local data
+
+//enum EESDSDescriptorType {
+//	kESDSDescriptorTypeES 					= 0x03,
+//	kESDSDescriptorTypeDecoderConfig		= 0x04,
+//	kESDSDescriptorTypeDecoderSpecificInfo	= 0x05,
+//	kESDSDescriptorTypeSyncLayerConfig		= 0x06,
+//};
+
+struct SesdsDecoderSpecificDescriptor {
+			// Methods
+	CData	getStartCodes() const
+				{
+					// Check for minimal/extended
+					if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+						// Minimal
+						return CData(_.mMinimalInfo.mStartCodes, _.mMinimalInfo.mDescriptorLength);
+					else
+						// Extended
+						return CData(_.mExtendedInfo.mStartCodes, _.mExtendedInfo.mDescriptorLength);
+				}
+
+	// Properties (in storage endian)
+	private:
+		UInt8	mDescriptorType;					// 5
+		union {
+			struct MinimalInfo {
+				UInt8	mDescriptorLength;			// size of 5
+
+				UInt8	mStartCodes[];
+			} mMinimalInfo;
+			struct ExtendedInfo {
+				UInt8	mExtendedDescriptorType[3];
+				UInt8	mDescriptorLength;			// size of 5
+
+				UInt8	mStartCodes[];
+			} mExtendedInfo;
+		} _;
+};
+
+struct SesdsDecoderConfigDescriptor {
+											// Methods
+			UInt32							getLength() const
+												{
+													// Check for minimal/extended
+													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+														// Minimal
+														return _.mMinimalInfo.mDescriptorLength;
+													else
+														// Extended
+														return _.mExtendedInfo.mDescriptorLength;
+												}
+	const	SesdsDecoderSpecificDescriptor&	getDecoderSpecificDescriptor() const
+												{
+													// Check for minimal/extended
+													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+														// Minimal
+														return _.mMinimalInfo.mDecoderSpecificDescriptor;
+													else
+														// Extended
+														return _.mExtendedInfo.mDecoderSpecificDescriptor;
+												}
+
+	// Properties (in storage endian)
+	private:
+		UInt8							mDescriptorType;					// 4
+		union {
+			struct MinimalInfo {
+				UInt8							mDescriptorLength;			// size of 4 + 5
+
+				UInt8							mObjectTypeID;
+				UInt8							mStreamTypeAndFlags;
+				UInt8							mBufferSize[3];
+				UInt32							mMaximumBitrate;
+				UInt32							mAverageBitrate;
+				SesdsDecoderSpecificDescriptor	mDecoderSpecificDescriptor;
+			} mMinimalInfo;
+			struct ExtendedInfo {
+				UInt8							mExtendedDescriptorType[3];
+				UInt8							mDescriptorLength;			// size of 4 + 5
+
+				UInt8							mObjectTypeID;
+				UInt8							mStreamTypeAndFlags;
+				UInt8							mBufferSize[3];
+				UInt32							mMaximumBitrate;
+				UInt32							mAverageBitrate;
+				SesdsDecoderSpecificDescriptor	mDecoderSpecificDescriptor;
+			} mExtendedInfo;
+		} _;
+};
+
+struct SesdsSyncLayerDescriptor {
+			// Methods
+
+	// Properties (in storage endian)
+	private:
+		UInt8	mDescriptorType;					// 6
+		union {
+			struct MinimalInfo {
+				UInt8	mDescriptorLength;			// size of 6
+
+				UInt8	mSyncLayerValue;
+			} mMinimalInfo;
+			struct ExtendedInfo {
+				UInt8	mExtendedDescriptorType[3];
+				UInt8	mDescriptorLength;			// size of 6
+
+				UInt8	mSyncLayerValue;
+			} mExtendedInfo;
+		} _;
+};
+
+struct SesdsAtomPayload {
+											// Methods
+	const	SesdsDecoderConfigDescriptor&	getDecoderConfigDescriptor() const
+												{
+													// Check for minimal/extended
+													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+														// Minimal
+														return *((SesdsDecoderConfigDescriptor*)
+																&_.mMinimalInfo.mChildDescriptorData);
+													else
+														// Extended
+														return *((SesdsDecoderConfigDescriptor*)
+																&_.mExtendedInfo.mChildDescriptorData);
+												}
+	const	SesdsSyncLayerDescriptor&		getSyncLayerDescriptor() const
+												{
+													// Setup
+													UInt32	offset = getDecoderConfigDescriptor().getLength();
+
+													// Check for minimal/extended
+													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
+														// Minimal
+														return *((SesdsSyncLayerDescriptor*)
+																&_.mMinimalInfo.mChildDescriptorData[offset]);
+													else
+														// Extended
+														return *((SesdsSyncLayerDescriptor*)
+																&_.mExtendedInfo.mChildDescriptorData[offset]);
+												}
+
+	// Properties (in storage endian)
+	private:
+		UInt8	mVersion;							// 0
+		UInt8	mFlags[3];
+		UInt8	mDescriptorType;					// 3
+		union {
+			struct MinimalInfo {
+				UInt8	mDescriptorLength;			// size of 3 + 4 + 5 + 6
+
+				UInt16	mESID;
+				UInt8	mStreamPriority;
+				UInt8	mChildDescriptorData[];
+			} mMinimalInfo;
+
+			struct ExtendedInfo {
+				UInt8	mExtendedDescriptorType[3];
+				UInt8	mDescriptorLength;			// size of 3 + 4 + 5 + 6
+
+				UInt16	mESID;
+				UInt8	mStreamPriority;
+				UInt8	mChildDescriptorData[];
+			} mExtendedInfo;
+		} _;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAACAudioCodec::DecodeInfo
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CAACAudioCodec::DecodeInfo::DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource, const CData& configurationData) :
+		CCodec::DecodeInfo(mediaPacketSource)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	SesdsAtomPayload&				esdsAtomPayload = *((SesdsAtomPayload*) configurationData.getBytePtr());
+	const	SesdsDecoderConfigDescriptor&	esdsDecoderConfigDescriptor = esdsAtomPayload.getDecoderConfigDescriptor();
+	const	SesdsDecoderSpecificDescriptor&	esdsDecoderSpecificDescriptor =
+													esdsDecoderConfigDescriptor.getDecoderSpecificDescriptor();
+			CData							startCodesData = esdsDecoderSpecificDescriptor.getStartCodes();
+
+	// Store
+	mMagicCookie = CData((UInt8*) configurationData.getBytePtr() + 4, configurationData.getByteCount() - 4);
+	mStartCodes = EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAACAudioCodec
 
 // MARK: Properties
 
@@ -26,16 +218,38 @@ CAudioFrames::Requirements CAACAudioCodec::getRequirements() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SAudioStorageFormat> CAACAudioCodec::composeStorageFormat(UInt16 startCodes, UInt16 channels)
+OI<SAudioStorageFormat> CAACAudioCodec::composeStorageFormat(const CData& configurationData, UInt16 channels)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	const	SesdsAtomPayload&				esdsAtomPayload = *((SesdsAtomPayload*) configurationData.getBytePtr());
+	const	SesdsDecoderConfigDescriptor&	esdsDecoderConfigDescriptor = esdsAtomPayload.getDecoderConfigDescriptor();
+	const	SesdsDecoderSpecificDescriptor&	esdsDecoderSpecificDescriptor =
+													esdsDecoderConfigDescriptor.getDecoderSpecificDescriptor();
+			CData							startCodesData = esdsDecoderSpecificDescriptor.getStartCodes();
+			UInt16							startCodes = EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()));
+
 	// See https://wiki.multimedia.cx/index.php/MPEG-4_Audio
 	// Codec ID
 	OSType	codecID;
 	switch (startCodes >> 11) {
-		case 02:	codecID = CAACAudioCodec::mAACLCID;	break;
-		case 23:	codecID = CAACAudioCodec::mAACLDID;	break;
-		default:	return OI<SAudioStorageFormat>();
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 6:
+			// AAC variants
+			codecID = CAACAudioCodec::mAACLCID;
+			break;
+
+		case 23:
+			// AAC-LD
+			codecID = CAACAudioCodec::mAACLDID;
+			break;
+
+		default:
+			// Not yet supported
+			return OI<SAudioStorageFormat>();
 	}
 
 	Float32	sampleRate;

@@ -66,6 +66,7 @@ mUsedPixelsSize(size),
 				// Set pixel format
 				MTLPixelFormat	pixelFormat;
 				switch (formatType) {
+					case kCVPixelFormatType_32ARGB:
 					case kCVPixelFormatType_32BGRA:
 						// 32 BGRA
 						pixelFormat = MTLPixelFormatBGRA8Unorm;

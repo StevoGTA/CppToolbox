@@ -19,10 +19,7 @@ class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 			public:
 								// Lifecycle methods
 								DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource,
-										const CData& magicCookie, UInt16 startCodes) :
-									CCodec::DecodeInfo(mediaPacketSource), mMagicCookie(magicCookie),
-											mStartCodes(startCodes)
-									{}
+										const CData& configurationData);
 
 								// Instance methods
 				const	CData&	getMagicCookie() const
@@ -50,7 +47,7 @@ class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 				OI<SError>					decode(CAudioFrames& audioFrames);
 
 											// Class methods
-		static	OI<SAudioStorageFormat>		composeStorageFormat(UInt16 startCodes, UInt16 channels);
+		static	OI<SAudioStorageFormat>		composeStorageFormat(const CData& configurationData, UInt16 channels);
 
 	// Properties
 	public:

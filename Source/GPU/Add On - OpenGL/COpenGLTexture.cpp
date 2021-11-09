@@ -78,6 +78,7 @@ mUsedPixelsSize(size),
 				GLint	internalFormat;
 				GLint	format;
 				switch (formatType) {
+					case kCVPixelFormatType_32ARGB:
 					case kCVPixelFormatType_32BGRA:
 						// 32 BGRA
 						internalFormat = GL_RGBA;

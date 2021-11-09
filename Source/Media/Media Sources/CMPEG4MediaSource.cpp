@@ -30,7 +30,7 @@
 	#pragma warning(disable:4200)
 #endif
 
-//struct SftypAtomInfo {
+//struct SftypAtom {
 //	OSType	mMajorBrand;
 //	UInt32	mMajorBrandVersion;
 //	OSType	mCompatibleBrands[];
@@ -38,7 +38,8 @@
 
 struct ShdlrAtomPayload {
 			// Methods
-	OSType	getSubType() const { return EndianU32_BtoN(mSubType); }
+	OSType	getSubType() const
+				{ return EndianU32_BtoN(mSubType); }
 
 	// Properties (in storage endian)
 	private:
@@ -52,7 +53,7 @@ struct ShdlrAtomPayload {
 		SInt8	mComponentTypeName[];
 };
 
-//struct SmvhdAtomInfoV0 {
+//struct SmvhdAtomV0 {
 //	UInt8	mVersion;		// 0
 //	UInt8	mFlags[3];
 //
@@ -86,7 +87,7 @@ struct ShdlrAtomPayload {
 //	UInt32	mNextTrackID;
 //};
 //
-//struct SmvhdAtomInfoV1 {
+//struct SmvhdAtomV1 {
 //	UInt8	mVersion;	// 1
 //	UInt8	mFlags[3];
 //
@@ -259,7 +260,7 @@ struct SmdhdAtomPayload {
 		const	CData&	mData;
 };
 
-//struct SsmhdAtomInfo {
+//struct SsmhdAtom {
 //	UInt8	mVersion;								// 0
 //	UInt8	mFlags[3];
 //
@@ -267,188 +268,23 @@ struct SmdhdAtomPayload {
 //	UInt8	mReserved[2];
 //};
 //
-//struct SdrefAtomInfo {
+//struct SdrefAtom {
 //	UInt8	mVersion;								// 0
 //	UInt8	mFlags[3];
 //
 //	UInt32	mReferenceCount;
 //};
 //
-//struct SurlAtomInfo {
+//struct SurlAtom {
 //	UInt8	mVersion;								// 0
 //	UInt8	mFlags[3];
 //};
 
-//enum EESDSDescriptorType {
-//	kESDSDescriptorTypeES 					= 0x03,
-//	kESDSDescriptorTypeDecoderConfig		= 0x04,
-//	kESDSDescriptorTypeDecoderSpecificInfo	= 0x05,
-//	kESDSDescriptorTypeSyncLayerConfig		= 0x06,
-//};
-
-struct SesdsDecoderSpecificDescriptor {
-			// Methods
-	CData	getStartCodes() const
-				{
-					// Check for minimal/extended
-					if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
-						// Minimal
-						return CData(_.mMinimalInfo.mStartCodes, _.mMinimalInfo.mDescriptorLength);
-					else
-						// Extended
-						return CData(_.mExtendedInfo.mStartCodes, _.mExtendedInfo.mDescriptorLength);
-				}
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mDescriptorType;					// 5
-		union {
-			struct MinimalInfo {
-				UInt8	mDescriptorLength;			// size of 5
-
-				UInt8	mStartCodes[];
-			} mMinimalInfo;
-			struct ExtendedInfo {
-				UInt8	mExtendedDescriptorType[3];
-				UInt8	mDescriptorLength;			// size of 5
-
-				UInt8	mStartCodes[];
-			} mExtendedInfo;
-		} _;
-};
-
-struct SesdsDecoderConfigDescriptor {
-											// Methods
-			UInt32							getLength() const
-												{
-													// Check for minimal/extended
-													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
-														// Minimal
-														return _.mMinimalInfo.mDescriptorLength;
-													else
-														// Extended
-														return _.mExtendedInfo.mDescriptorLength;
-												}
-	const	SesdsDecoderSpecificDescriptor&	getDecoderSpecificDescriptor() const
-												{
-													// Check for minimal/extended
-													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
-														// Minimal
-														return _.mMinimalInfo.mDecoderSpecificDescriptor;
-													else
-														// Extended
-														return _.mExtendedInfo.mDecoderSpecificDescriptor;
-												}
-
-	// Properties (in storage endian)
-	private:
-		UInt8							mDescriptorType;					// 4
-		union {
-			struct MinimalInfo {
-				UInt8							mDescriptorLength;			// size of 4 + 5
-
-				UInt8							mObjectTypeID;
-				UInt8							mStreamTypeAndFlags;
-				UInt8							mBufferSize[3];
-				UInt32							mMaximumBitrate;
-				UInt32							mAverageBitrate;
-				SesdsDecoderSpecificDescriptor	mDecoderSpecificDescriptor;
-			} mMinimalInfo;
-			struct ExtendedInfo {
-				UInt8							mExtendedDescriptorType[3];
-				UInt8							mDescriptorLength;			// size of 4 + 5
-
-				UInt8							mObjectTypeID;
-				UInt8							mStreamTypeAndFlags;
-				UInt8							mBufferSize[3];
-				UInt32							mMaximumBitrate;
-				UInt32							mAverageBitrate;
-				SesdsDecoderSpecificDescriptor	mDecoderSpecificDescriptor;
-			} mExtendedInfo;
-		} _;
-};
-
-struct SesdsSyncLayerDescriptor {
-			// Methods
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mDescriptorType;					// 6
-		union {
-			struct MinimalInfo {
-				UInt8	mDescriptorLength;			// size of 6
-
-				UInt8	mSyncLayerValue;
-			} mMinimalInfo;
-			struct ExtendedInfo {
-				UInt8	mExtendedDescriptorType[3];
-				UInt8	mDescriptorLength;			// size of 6
-
-				UInt8	mSyncLayerValue;
-			} mExtendedInfo;
-		} _;
-};
-
-struct SesdsAtomPayload {
-											// Methods
-	const	SesdsDecoderConfigDescriptor&	getDecoderConfigDescriptor() const
-												{
-													// Check for minimal/extended
-													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
-														// Minimal
-														return *((SesdsDecoderConfigDescriptor*)
-																&_.mMinimalInfo.mChildDescriptorData);
-													else
-														// Extended
-														return *((SesdsDecoderConfigDescriptor*)
-																&_.mExtendedInfo.mChildDescriptorData);
-												}
-	const	SesdsSyncLayerDescriptor&		getSyncLayerDescriptor() const
-												{
-													// Setup
-													UInt32	offset = getDecoderConfigDescriptor().getLength();
-
-													// Check for minimal/extended
-													if (_.mExtendedInfo.mExtendedDescriptorType[0] != 0x80)
-														// Minimal
-														return *((SesdsSyncLayerDescriptor*)
-																&_.mMinimalInfo.mChildDescriptorData[offset]);
-													else
-														// Extended
-														return *((SesdsSyncLayerDescriptor*)
-																&_.mExtendedInfo.mChildDescriptorData[offset]);
-												}
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mVersion;							// 0
-		UInt8	mFlags[3];
-		UInt8	mDescriptorType;					// 3
-		union {
-			struct MinimalInfo {
-				UInt8	mDescriptorLength;			// size of 3 + 4 + 5 + 6
-
-				UInt16	mESID;
-				UInt8	mStreamPriority;
-				UInt8	mChildDescriptorData[];
-			} mMinimalInfo;
-
-			struct ExtendedInfo {
-				UInt8	mExtendedDescriptorType[3];
-				UInt8	mDescriptorLength;			// size of 3 + 4 + 5 + 6
-
-				UInt16	mESID;
-				UInt8	mStreamPriority;
-				UInt8	mChildDescriptorData[];
-			} mExtendedInfo;
-		} _;
-};
-
 // MP4A Audio Format (Sample Description detail)
 struct SMP4AAudioFormat {
 			// Methods
-	UInt16	getBits() const { return EndianU16_BtoN(mBits); }
-	UInt16	getChannels() const { return EndianU16_BtoN(mChannels); }
+	UInt16	getChannels() const
+				{ return EndianU16_BtoN(mChannels); }
 
 	// Properties (in storage endian)
 	private:
@@ -465,8 +301,10 @@ struct SMP4AAudioFormat {
 // h.264 Video Format (Sample Description detail)
 struct SH264VideoFormat {
 			// Methods
-	UInt16	getWidth() const { return EndianU16_BtoN(mWidth); }
-	UInt16	getHeight() const { return EndianU16_BtoN(mHeight); }
+	UInt16	getWidth() const
+				{ return EndianU16_BtoN(mWidth); }
+	UInt16	getHeight() const
+				{ return EndianU16_BtoN(mHeight); }
 
 	// Properties (in storage endian)
 	private:
@@ -491,10 +329,14 @@ struct SH264VideoFormat {
 // Sample Table Sample Description (general)
 struct SstsdDescription {
 			// Methods
-			OSType				getType() const { return EndianU32_BtoN(mType); }
-			SInt64				getFormatOffset() const { return 16; }
-	const	SMP4AAudioFormat&	getMP4AAudioFormat() const { return mFormat.mMP4AAudioFormat; }
-	const	SH264VideoFormat&	getH264VideoFormat() const { return mFormat.mH264VideoFormat; }
+			OSType				getType() const
+									{ return EndianU32_BtoN(mType); }
+			SInt64				getFormatOffset() const
+									{ return 16; }
+	const	SMP4AAudioFormat&	getMP4AAudioFormat() const
+									{ return mFormat.mMP4AAudioFormat; }
+	const	SH264VideoFormat&	getH264VideoFormat() const
+									{ return mFormat.mH264VideoFormat; }
 
 	// Properties (in storage endian)
 	private:
@@ -511,7 +353,8 @@ struct SstsdDescription {
 // Sample Table Sample Description Atom Payload
 struct SstsdAtomPayload {
 								// Methods
-	const	SstsdDescription&	getFirstDescription() const { return *((SstsdDescription*) mDescriptions); }
+	const	SstsdDescription&	getFirstDescription() const
+									{ return *((SstsdDescription*) mDescriptions); }
 
 	// Properties (in storage endian)
 	private:
@@ -577,8 +420,10 @@ struct SsttsAtomPayload {
 	// Structs
 	struct Chunk {
 				// Methods
-		UInt32	getPacketCount() const { return EndianU32_BtoN(mPacketCount); }
-		UInt32	getPacketDuration() const { return EndianU32_BtoN(mPacketDuration); }
+		UInt32	getPacketCount() const
+					{ return EndianU32_BtoN(mPacketCount); }
+		UInt32	getPacketDuration() const
+					{ return EndianU32_BtoN(mPacketDuration); }
 
 		// Properties (in storage endian)
 		private:
@@ -587,8 +432,10 @@ struct SsttsAtomPayload {
 	};
 
 					// Methods
-			UInt32	getChunkCount() const { return EndianU32_BtoN(mChunkCount); }
-	const	Chunk&	getChunk(UInt32 index) const { return mChunks[index]; }
+			UInt32	getChunkCount() const
+						{ return EndianU32_BtoN(mChunkCount); }
+	const	Chunk&	getChunk(UInt32 index) const
+						{ return mChunks[index]; }
 
 	// Properties (in storage endian)
 	private:
@@ -600,10 +447,14 @@ struct SsttsAtomPayload {
 
 // Sample Table Sync Sample Atom Payload
 struct SstssAtomPayload {
-	//
+	// Methods
+	UInt32	getKeyframesCount() const
+				{ return EndianU32_BtoN(mKeyframesCount); }
+	UInt32	getKeyframeIndex(UInt32 index) const
+				{ return EndianU32_BtoN(mKeyFrameIndexes[index]) - 1; }
 
 	// Properties
-//	private:
+	private:
 		UInt8	mVersion;
 		UInt8	mFlags[3];
 		UInt32	mKeyframesCount;
@@ -615,8 +466,10 @@ struct SstscAtomPayload {
 	// Structs
 	struct PacketGroupInfo {
 		// Methods
-		UInt32	getChunkStartIndex() const { return EndianU32_BtoN(mChunkStartIndex); }
-		UInt32	getPacketCount() const { return EndianU32_BtoN(mPacketCount); }
+		UInt32	getChunkStartIndex() const
+					{ return EndianU32_BtoN(mChunkStartIndex); }
+		UInt32	getPacketCount() const
+					{ return EndianU32_BtoN(mPacketCount); }
 
 		// Properties (in storage endian)
 		private:
@@ -626,8 +479,10 @@ struct SstscAtomPayload {
 	};
 
 								// Methods
-			UInt32				getPacketGroupInfoCount() const { return EndianU32_BtoN(mPacketGroupInfoCount); }
-	const	PacketGroupInfo&	getPacketGroupInfo(UInt32 index) const { return mPacketGroupInfos[index]; }
+			UInt32				getPacketGroupInfoCount() const
+									{ return EndianU32_BtoN(mPacketGroupInfoCount); }
+	const	PacketGroupInfo&	getPacketGroupInfo(UInt32 index) const
+									{ return mPacketGroupInfos[index]; }
 
 	// Properties (in storage endian)
 	private:
@@ -660,8 +515,10 @@ struct SstszAtomPayload {
 // Sample Table Chunk Offset Atom Payload
 struct SstcoAtomPayload {
 			// Methods
-	UInt32	getPacketGroupOffsetCount() const { return EndianU32_BtoN(mPacketGroupOffsetCount); }
-	UInt64	getPacketGroupOffset(UInt32 index) const { return EndianU32_BtoN(mPacketGroupOffsets[index]); }
+	UInt32	getPacketGroupOffsetCount() const
+				{ return EndianU32_BtoN(mPacketGroupOffsetCount); }
+	UInt64	getPacketGroupOffset(UInt32 index) const
+				{ return EndianU32_BtoN(mPacketGroupOffsets[index]); }
 
 	// Properties (in storage endian)
 	private:
@@ -676,8 +533,10 @@ struct SstcoAtomPayload {
 // sample table Chunk Offset 64 Atom Payload
 struct Sco64AtomPayload {
 			// Methods
-	UInt32	getPacketGroupOffsetCount() const { return EndianU32_BtoN(mPacketGroupOffsetCount); }
-	UInt64	getPacketGroupOffset(UInt32 index) const { return EndianU64_NtoB(mPacketGroupOffsets[index]); }
+	UInt32	getPacketGroupOffsetCount() const
+				{ return EndianU32_BtoN(mPacketGroupOffsetCount); }
+	UInt64	getPacketGroupOffset(UInt32 index) const
+				{ return EndianU64_NtoB(mPacketGroupOffsets[index]); }
 
 	// Properties (in storage endian)
 	private:
@@ -689,12 +548,12 @@ struct Sco64AtomPayload {
 		UInt64	mPacketGroupOffsets[];		// Offset to start of packet data from start of file
 };
 
-//struct SmetaAtomInfo {
+//struct SmetaAtom {
 //	UInt8	mVersion;
 //	UInt8	mFlags[3];
 //};
 //
-//struct SdataAtomInfo {
+//struct SdataAtom {
 //	UInt8	mVersion;
 //	UInt8	mFlags[3];
 //
@@ -713,18 +572,15 @@ static	CString	sErrorDomain(OSSTR("CMPEG4MediaSource"));
 static	SError	sNotAnMPEG4FileError(sErrorDomain, 1, CString(OSSTR("Not an MPEG-4 file")));
 static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported codec")));
 
-#define ReturnNotAnMPEG4FileIf(check)	{ if (check) return OI<SError>(sNotAnMPEG4FileError); }
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
 static	TIResult<CMediaTrackInfos>		sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource,
 												SMediaSource::Options options);
-static	OI<SError>						sAddMP4AAudioTrack(CMediaTrackInfos& mediaTrackInfos,
+static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
 												const I<CSeekableDataSource>& seekableDataSource,
 												SMediaSource::Options options,
-												const SstsdDescription& stsdDescription,
-												const CData& esdsAtomPayloadData,
+												const SstsdDescription& stsdDescription, const CData& configurationData,
 												const SmdhdAtomPayload& mdhdAtomPayload,
 												const TArray<SMediaPacketAndLocation>& packetAndLocations);
 static	OI<SError>						sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos,
@@ -762,82 +618,80 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 	OI<SError>	error;
 
 	// Read root atom
-	TIResult<CAtomReader::AtomInfo>	atomInfo = atomReader.readAtomInfo();
-	ReturnValueIfResultError(atomInfo, TIResult<CMediaTrackInfos>(atomInfo.getError()));
-	if (atomInfo.getValue().mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
+	TIResult<CAtomReader::Atom>	atom = atomReader.readAtom();
+	ReturnValueIfResultError(atom, TIResult<CMediaTrackInfos>(atom.getError()));
+	if (atom.getValue().mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
 		return TIResult<CMediaTrackInfos>(sNotAnMPEG4FileError);
 
 	// Find moov atom
-	while (atomInfo.getValue().mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
+	while (atom.getValue().mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
 		// Go to next atom
-		error = atomReader.seekToNextAtom(atomInfo.getValue());
+		error = atomReader.seekToNextAtom(atom.getValue());
 		ReturnValueIfError(error, TIResult<CMediaTrackInfos>(*error));
 
 		// Get atom
-		atomInfo = atomReader.readAtomInfo();
-		ReturnValueIfResultError(atomInfo, TIResult<CMediaTrackInfos>(atomInfo.getError()));
+		atom = atomReader.readAtom();
+		ReturnValueIfResultError(atom, TIResult<CMediaTrackInfos>(atom.getError()));
 	}
 
-	TIResult<CAtomReader::AtomGroup>	moovAtomGroup = atomReader.readAtomGroup(atomInfo.getValue());
-	ReturnValueIfResultError(moovAtomGroup, TIResult<CMediaTrackInfos>(moovAtomGroup.getError()));
+	TIResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(atom.getValue());
+	ReturnValueIfResultError(moovContainerAtom, TIResult<CMediaTrackInfos>(moovContainerAtom.getError()));
 
 	// Iterate moov atom
 	CMediaTrackInfos	mediaTrackInfos;
-	for (TIteratorD<CAtomReader::AtomInfo> moovIterator = moovAtomGroup.getValue().getIterator();
+	for (TIteratorD<CAtomReader::Atom> moovIterator = moovContainerAtom.getValue().getIterator();
 			moovIterator.hasValue(); moovIterator.advance()) {
 		// Check type
 		if (moovIterator->mType == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
 			// Track
-			TIResult<CAtomReader::AtomGroup>	trakAtomGroup = atomReader.readAtomGroup(*moovIterator);
-			if (trakAtomGroup.hasError()) continue;
+			TIResult<CAtomReader::ContainerAtom>	trakContainerAtom = atomReader.readContainerAtom(*moovIterator);
+			if (trakContainerAtom.hasError()) continue;
 
 //			//
-//			OR<CAtomReader::AtomInfo>	tkhdAtomInfo =
-//												trakAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('t', 'k', 'h', 'd'));
-//			if (!tkhdAtomInfo.hasReference()) continue;
-//			TIResult<CData>	tkhdAtomPayloadData = atomReader.readAtomPayload(*tkhdAtomInfo);
+//			OR<CAtomReader::Atom>	tkhdAtom = trakContainerAtom.getValue().getAtom(MAKE_OSTYPE('t', 'k', 'h', 'd'));
+//			if (!tkhdAtom.hasReference()) continue;
+//			TIResult<CData>	tkhdAtomPayloadData = atomReader.readAtomPayload(*tkhdAtom);
 //			if (error.hasInstance()) continue;
 //
 			// Media
-			TIResult<CAtomReader::AtomGroup>	mdiaAtomGroup =
-														atomReader.readAtomGroup(
-																trakAtomGroup.getValue().getAtomInfo(
-																		MAKE_OSTYPE('m', 'd', 'i', 'a')));
-			if (mdiaAtomGroup.hasError()) continue;
+			TIResult<CAtomReader::ContainerAtom>	mdiaContainerAtom =
+															atomReader.readContainerAtom(
+																	trakContainerAtom.getValue().getAtom(
+																			MAKE_OSTYPE('m', 'd', 'i', 'a')));
+			if (mdiaContainerAtom.hasError()) continue;
 
 			// Media header
 			TIResult<CData>	mdhdAtomPayloadData =
 									atomReader.readAtomPayload(
-											mdiaAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('m', 'd', 'h', 'd')));
+											mdiaContainerAtom.getValue().getAtom(MAKE_OSTYPE('m', 'd', 'h', 'd')));
 			if (mdhdAtomPayloadData.hasError()) continue;
 
 			// Handler
 			TIResult<CData>	hdlrAtomPayloadData =
 									atomReader.readAtomPayload(
-											mdiaAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('h', 'd', 'l', 'r')));
+											mdiaContainerAtom.getValue().getAtom(MAKE_OSTYPE('h', 'd', 'l', 'r')));
 			if (hdlrAtomPayloadData.hasError()) continue;
 			const	ShdlrAtomPayload&	hdlrAtomPayload =
 												*((ShdlrAtomPayload*) hdlrAtomPayloadData.getValue().getBytePtr());
 
 			// Media Information
-			TIResult<CAtomReader::AtomGroup>	minfAtomGroup =
-														atomReader.readAtomGroup(
-																mdiaAtomGroup.getValue().getAtomInfo(
-																		MAKE_OSTYPE('m', 'i', 'n', 'f')));
-			if (minfAtomGroup.hasError()) continue;
+			TIResult<CAtomReader::ContainerAtom>	minfContainerAtom =
+															atomReader.readContainerAtom(
+																	mdiaContainerAtom.getValue().getAtom(
+																			MAKE_OSTYPE('m', 'i', 'n', 'f')));
+			if (minfContainerAtom.hasError()) continue;
 
 			// Sample Table
-			TIResult<CAtomReader::AtomGroup>	stblAtomGroup =
-														atomReader.readAtomGroup(
-																minfAtomGroup.getValue().getAtomInfo(
-																		MAKE_OSTYPE('s', 't', 'b', 'l')));
-			if (stblAtomGroup.hasError()) continue;
+			TIResult<CAtomReader::ContainerAtom>	stblContainerAtom =
+															atomReader.readContainerAtom(
+																	minfContainerAtom.getValue().getAtom(
+																			MAKE_OSTYPE('s', 't', 'b', 'l')));
+			if (stblContainerAtom.hasError()) continue;
 
 			// Sample Table Sample Description
-			OR<CAtomReader::AtomInfo>	stsdAtomInfo =
-												stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'd'));
-			if (!stsdAtomInfo.hasReference()) continue;
-			TIResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtomInfo);
+			OR<CAtomReader::Atom>	stsdAtom = stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 's', 'd'));
+			if (!stsdAtom.hasReference()) continue;
+			TIResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
 			if (error.hasInstance()) continue;
 			const	SstsdAtomPayload&	stsdAtomPayload =
 												*((SstsdAtomPayload*) stsdAtomPayloadData.getValue().getBytePtr());
@@ -846,7 +700,7 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 			// Sample Table Time-to-Sample
 			TIResult<CData>	sttsAtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 't', 's')));
+											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 't', 's')));
 			if (sttsAtomPayloadData.hasError()) continue;
 			const	SsttsAtomPayload&	sttsAtomPayload =
 												*((SsttsAtomPayload*) sttsAtomPayloadData.getValue().getBytePtr());
@@ -854,7 +708,7 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 			// Sample Table Sample Blocks
 			TIResult<CData>	stscAtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'c')));
+											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 's', 'c')));
 			if (stscAtomPayloadData.hasError()) continue;
 			const	SstscAtomPayload&	stscAtomPayload =
 												*((SstscAtomPayload*) stscAtomPayloadData.getValue().getBytePtr());
@@ -862,7 +716,7 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 			// Sample Table Packet Sizes
 			TIResult<CData>	stszAtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 'z')));
+											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 's', 'z')));
 			if (stszAtomPayloadData.hasError()) continue;
 			const	SstszAtomPayload&	stszAtomPayload =
 												*((SstszAtomPayload*) stszAtomPayloadData.getValue().getBytePtr());
@@ -870,10 +724,10 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 			// Sample Table Block offsets
 			TIResult<CData>	stcoAtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 'c', 'o')));
+											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 'c', 'o')));
 			TIResult<CData>	co64AtomPayloadData =
 									atomReader.readAtomPayload(
-											stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('c', 'o', '6', '4')));
+											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
 			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
 			SstcoAtomPayload*	stcoAtomPayload =
 										stcoAtomPayloadData.hasValue() ?
@@ -886,17 +740,17 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
 				// Audio track
 				if (stsdDescription.getType() == MAKE_OSTYPE('m', 'p', '4', 'a')) {
-					// MPEG4 Audio
-					TIResult<CData>	esdsAtomPayloadData =
-											atomReader.readAtomPayload(*stsdAtomInfo,
+					// MPEG4 (AAC) Audio
+					TIResult<CData>	configurationData =
+											atomReader.readAtomPayload(*stsdAtom,
 													sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
 															sizeof(SMP4AAudioFormat));
-  					if (esdsAtomPayloadData.hasError()) continue;
+  					if (configurationData.hasError()) continue;
 
 					// Add audio track
   					error =
-							sAddMP4AAudioTrack(mediaTrackInfos, seekableDataSource, options, stsdDescription,
-									esdsAtomPayloadData.getValue(), SmdhdAtomPayload(mdhdAtomPayloadData.getValue()),
+							sAddAACAudioTrack(mediaTrackInfos, seekableDataSource, options, stsdDescription,
+									configurationData.getValue(), SmdhdAtomPayload(mdhdAtomPayloadData.getValue()),
 									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
 											stcoAtomPayload, co64AtomPayload));
 					ReturnValueIfError(error, TIResult<CMediaTrackInfos>(*error));
@@ -907,14 +761,14 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 				// Video track
 				TIResult<CData>	stssAtomPayloadData =
 										atomReader.readAtomPayload(
-												stblAtomGroup.getValue().getAtomInfo(MAKE_OSTYPE('s', 't', 's', 's')));
+												stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 's', 's')));
 				if (stssAtomPayloadData.hasError()) continue;
 
 				// Check type
 				if (stsdDescription.getType() == MAKE_OSTYPE('a', 'v', 'c', '1')) {
 					// h.264 Video
 					TIResult<CData>	h264ConfigurationAtomPayloadData =
-										atomReader.readAtomPayload(*stsdAtomInfo,
+										atomReader.readAtomPayload(*stsdAtom,
 												sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
 														sizeof(SH264VideoFormat));
 					if (h264ConfigurationAtomPayloadData.hasError()) continue;
@@ -939,23 +793,18 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> sAddMP4AAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekableDataSource>& seekableDataSource,
-		SMediaSource::Options options, const SstsdDescription& stsdDescription, const CData& esdsAtomPayloadData,
+OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekableDataSource>& seekableDataSource,
+		SMediaSource::Options options, const SstsdDescription& stsdDescription, const CData& configurationData,
 		const SmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SMP4AAudioFormat&				audioFormat = stsdDescription.getMP4AAudioFormat();
-	const	SesdsAtomPayload&				esdsAtomPayload = *((SesdsAtomPayload*) esdsAtomPayloadData.getBytePtr());
-	const	SesdsDecoderConfigDescriptor&	esdsDecoderConfigDescriptor = esdsAtomPayload.getDecoderConfigDescriptor();
-	const	SesdsDecoderSpecificDescriptor&	esdsDecoderSpecificDescriptor =
-													esdsDecoderConfigDescriptor.getDecoderSpecificDescriptor();
-			CData							startCodesData = esdsDecoderSpecificDescriptor.getStartCodes();
-			UInt16							startCodes = EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()));
+	const	SMP4AAudioFormat&	audioFormat = stsdDescription.getMP4AAudioFormat();
 
 	// Compose storage format
 	OI<SAudioStorageFormat>	audioStorageFormat =
-									CAACAudioCodec::composeStorageFormat(startCodes, audioFormat.getChannels());
+									CAACAudioCodec::composeStorageFormat(configurationData,
+											audioFormat.getChannels());
 	if (!audioStorageFormat.hasInstance())
 		return OI<SError>(sUnsupportedCodecError);
 
@@ -972,11 +821,7 @@ OI<SError> sAddMP4AAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 		// Requesting decode info
 		I<CMediaPacketSource>	mediaPacketSource(
 										new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations));
-		I<CCodec::DecodeInfo>	decodeInfo(
-										new CAACAudioCodec::DecodeInfo(mediaPacketSource,
-												CData((UInt8*) esdsAtomPayloadData.getBytePtr() + 4,
-														esdsAtomPayloadData.getByteCount() - 4),
-												startCodes));
+		I<CCodec::DecodeInfo>	decodeInfo(new CAACAudioCodec::DecodeInfo(mediaPacketSource, configurationData));
 
 		// Add audio track
 		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack, decodeInfo));
@@ -1022,11 +867,11 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 														packetAndLocations));
 
 		const	SstssAtomPayload&		stssAtomPayload = *((SstssAtomPayload*) stssAtomPayloadData->getBytePtr());
-				UInt32					keyframesCount = EndianU32_BtoN(stssAtomPayload.mKeyframesCount);
+				UInt32					keyframesCount = stssAtomPayload.getKeyframesCount();
 				TNumericArray<UInt32>	keyframeIndexes;
 		for (UInt32 i = 0; i < keyframesCount; i++)
 			// Add keyframe index
-			keyframeIndexes += EndianU32_BtoN(stssAtomPayload.mKeyFrameIndexes[i]) - 1;
+			keyframeIndexes += stssAtomPayload.getKeyframeIndex(i);
 
 		// Compose decode info
 		I<CCodec::DecodeInfo>	decodeInfo(
