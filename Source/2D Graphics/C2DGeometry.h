@@ -286,14 +286,15 @@ template <typename T> struct T2DRect {
 									// Width constrained
 									T	scaledHeight = widthFactor * (Float32) mSize.mHeight;
 
-									return T2DRect<T>(0, (rect.getHeight() - scaledHeight) / 2, rect.mSize.mWidth,
+									return T2DRect<T>(rect.mOrigin.mX,
+											rect.mOrigin.mY + (rect.getHeight() - scaledHeight) / 2, rect.mSize.mWidth,
 											scaledHeight);
 								} else {
 									// Height constrained
 									T	scaledWidth = heightFactor * (Float32) mSize.mWidth;
 
-									return T2DRect<T>((rect.getWidth() - scaledWidth) / 2, 0, scaledWidth,
-											rect.mSize.mHeight);
+									return T2DRect<T>(rect.mOrigin.mX + (rect.getWidth() - scaledWidth) / 2,
+											rect.mOrigin.mY, scaledWidth, rect.mSize.mHeight);
 								}
 							}
 
