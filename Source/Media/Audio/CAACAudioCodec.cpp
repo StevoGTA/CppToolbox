@@ -9,6 +9,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
+#pragma pack(push,1)
+
+#if defined(TARGET_OS_WINDOWS)
+	#pragma warning(disable:4200)
+#endif
+
 //enum EESDSDescriptorType {
 //	kESDSDescriptorTypeES 					= 0x03,
 //	kESDSDescriptorTypeDecoderConfig		= 0x04,
@@ -173,6 +179,12 @@ struct SesdsAtomPayload {
 			} mExtendedInfo;
 		} _;
 };
+
+#if defined(TARGET_OS_WINDOWS)
+	#pragma warning(default:4200)
+#endif
+
+#pragma pack(pop)
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
