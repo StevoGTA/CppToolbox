@@ -24,7 +24,7 @@ class CTimerInternals {
 
 					// Check repeats
 					if (!repeats) {
-						// Done
+						// Don
 						dispatch_source_cancel((__bridge dispatch_source_t) mDispatchSourceTimer);
 						mDispatchSourceTimer = nil;
 						mIsResumed = false;
