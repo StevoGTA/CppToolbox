@@ -61,12 +61,12 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 
 	// Store
 	mYear = theTM.tm_year + 1900;
-	mMonth = theTM.tm_mon + 1;
-	mDay = theTM.tm_mday;
-	mHour = theTM.tm_hour;
-	mMinute = theTM.tm_min;
+	mMonth = (UInt8) (theTM.tm_mon + 1);
+	mDay = (UInt8) theTM.tm_mday;
+	mHour = (UInt8) theTM.tm_hour;
+	mMinute = (UInt8) theTM.tm_min;
 	mSecond = (Float32) theTM.tm_sec + (Float32) ::fmod(time, 1);
-	mDayOfWeek = theTM.tm_wday;
+	mDayOfWeek = (UInt8) theTM.tm_wday;
 }
 
 // MARK: Instance methods

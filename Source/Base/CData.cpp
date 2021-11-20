@@ -143,7 +143,7 @@ CData::CData(const CString& base64String)
 			CString::Length	last = (stringLength - (pad1 ? 1 : 0)) / 4 << 2;
 
 	// Setup internals
-	ByteCount	dataByteCount = last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
+	ByteCount	dataByteCount = (ByteCount) last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
 	mInternals = new CDataInternals(dataByteCount);
 
 	// Convert
@@ -153,7 +153,7 @@ CData::CData(const CString& base64String)
 		UInt32	bytes =
 						(sMap[stringPtr[i]] << 18) | (sMap[stringPtr[i + 1]] << 12) | (sMap[stringPtr[i + 2]] << 6) |
 								sMap[stringPtr[i + 3]];
-		*dataPtr++ = bytes >> 16;
+		*dataPtr++ = (UInt8) (bytes >> 16);
 		*dataPtr++ = bytes >> 8 & 0xFF;
 		*dataPtr++ = bytes & 0xFF;
 	}
@@ -161,7 +161,7 @@ CData::CData(const CString& base64String)
 	if (pad1) {
 		// Have extra bytes
 		UInt32	bytes = (sMap[stringPtr[last]] << 18) | (sMap[stringPtr[last + 1]] << 12);
-		*dataPtr++ = bytes >> 16;
+		*dataPtr++ = (UInt8) (bytes >> 16);
 		if (pad2) {
 			// One more byte
 			bytes |= sMap[stringPtr[last + 2]] << 6;

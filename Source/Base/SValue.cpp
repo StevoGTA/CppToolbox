@@ -286,11 +286,11 @@ SInt16 SValue::getSInt16(SInt16 defaultValue) const
 	switch (mType) {
 		case kSInt8:	return mValue.mSInt8;
 		case kSInt16:	return mValue.mSInt16;
-		case kSInt32:	return mValue.mSInt32;
+		case kSInt32:	return (SInt16) mValue.mSInt32;
 		case kSInt64:	return (SInt16) mValue.mSInt64;
 		case kUInt8:	return mValue.mUInt8;
 		case kUInt16:	return mValue.mUInt16;
-		case kUInt32:	return mValue.mUInt32;
+		case kUInt32:	return (SInt16) mValue.mUInt32;
 		case kUInt64:	return (SInt16) mValue.mUInt64;
 		default:
 			// Cannot coerce value
@@ -374,11 +374,11 @@ UInt16 SValue::getUInt16(UInt16 defaultValue) const
 	switch (mType) {
 		case kSInt8:	return mValue.mSInt8;
 		case kSInt16:	return mValue.mSInt16;
-		case kSInt32:	return mValue.mSInt32;
+		case kSInt32:	return (UInt16) mValue.mSInt32;
 		case kSInt64:	return (UInt16) mValue.mSInt64;
 		case kUInt8:	return mValue.mUInt8;
 		case kUInt16:	return mValue.mUInt16;
-		case kUInt32:	return mValue.mUInt32;
+		case kUInt32:	return (UInt16) mValue.mUInt32;
 		case kUInt64:	return (UInt16) mValue.mUInt64;
 		default:
 			// Cannot coerce value

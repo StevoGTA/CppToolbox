@@ -4,20 +4,29 @@
 
 #include "CCoreServices.h"
 
-#include "CPlatform.h"
 #include "SError.h"
 
-#undef Delete
-#include <Windows.h>
-#define Delete(x)		{ delete x; x = nil; }
+#ifdef __cplusplus_winrt
+	// C++/CX
+	#include "CPlatform.h"
 
-using namespace Platform;
-using namespace Windows::ApplicationModel;
+	#undef Delete
+	#include <Windows.h>
+	#define Delete(x)		{ delete x; x = nil; }
+
+	using namespace Platform;
+	using namespace Windows::ApplicationModel;
+#elif CPPWINRT_VERSION
+	// C++/WinRT
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
-static	UInt32	sCountSetBits(ULONG_PTR bits);
+#ifdef __cplusplus_winrt
+	// C++/CX
+	static	UInt32	sCountSetBits(ULONG_PTR bits);
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -27,10 +36,12 @@ static	UInt32	sCountSetBits(ULONG_PTR bits);
 const SSystemVersionInfo& CCoreServices::getSystemVersion()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	static	SSystemVersionInfo*	sVersionInfo = nil;
-
 	if (sVersionInfo == nil) {
 		// Get info
+#ifdef __cplusplus_winrt
+		// C++/CX
 		Package^		package = Package::Current;
 		PackageId^		packageId = package->Id;
 		String^			displayName = package->DisplayName;
@@ -39,6 +50,7 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 		sVersionInfo =
 				new SSystemVersionInfo(CPlatform::stringFrom(displayName), (UInt8) packageVersion.Major,
 						(UInt8) packageVersion.Minor, (UInt8) packageVersion.Revision, packageVersion.Build);
+#endif
 	}
 
 	return *sVersionInfo;
@@ -48,9 +60,11 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 UInt32 CCoreServices::getTotalProcessorCoresCount()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	static	UInt32	sTotalProcessorCoresCount = 0;
-
 	if (sTotalProcessorCoresCount == 0) {
+#ifdef __cplusplus_winrt
+		// C++/CX
 		// Create buffer
 		SYSTEM_LOGICAL_PROCESSOR_INFORMATION*	buffer = NULL;
 		DWORD									size = 0;
@@ -73,6 +87,7 @@ UInt32 CCoreServices::getTotalProcessorCoresCount()
 
 		// Cleanup
 		free(buffer);
+#endif
 	}
 
 	return sTotalProcessorCoresCount;
@@ -124,13 +139,21 @@ UInt32 CCoreServices::getPhysicalMemoryPageSize()
 void CCoreServices::stopInDebugger(SInt32 code, OSStringVar(message))
 //----------------------------------------------------------------------------------------------------------------------
 {
+#ifdef __cplusplus_winrt
+	// C++/CX
 	throw Platform::Exception::CreateException(code, ref new String(message));
+#elif CPPWINRT_VERSION
+	// C++/WinRT
+	_ASSERT_EXPR(true, message);
+#endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
 
+#ifdef __cplusplus_winrt
+// C++/CX
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 sCountSetBits(ULONG_PTR bits)
 //----------------------------------------------------------------------------------------------------------------------
@@ -149,3 +172,4 @@ UInt32 sCountSetBits(ULONG_PTR bits)
 
 	return bitsSetCount;
 }
+#endif

@@ -105,7 +105,20 @@ CString::CString(const UTF32Char* chars, Length charsCount, Encoding encoding) :
 CString::CString(Float32 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Setup
+	mString.resize(100);
+
+	// Check field size
+	int	count;
+	if (fieldSize == 0)
+		count = _stprintf_s(&mString[0], 100, _TEXT("%0.*f"), digitsAfterDecimalPoint, value);
+	else
+		count =
+				_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%0*.*f") : _TEXT("%*.*f"), fieldSize,
+						digitsAfterDecimalPoint, value);
+
+	// Update
+	mString.resize(count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

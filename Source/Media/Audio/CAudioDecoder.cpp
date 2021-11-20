@@ -144,7 +144,7 @@ SAudioSourceStatus CAudioDecoder::performInto(CAudioFrames& audioFrames)
 		maxFrames = (UInt32) (durationRemaining * mInternals->mAudioProcessingFormat->getSampleRate());
 	} else
 		// No duration
-		maxFrames = ~0;
+		maxFrames = (UInt32) ~0;
 
 	// Setup
 	SAudioSourceStatus	audioSourceStatus(mInternals->mCurrentTimeInterval);

@@ -80,7 +80,7 @@ class CDVIIntelIMAADPCMAudioCodecInternals {
 														else if (stateInfo.mPreviousValue < -0x7FFF)
 															stateInfo.mPreviousValue = -0x7FFF;
 
-														return stateInfo.mPreviousValue;
+														return (SInt16) stateInfo.mPreviousValue;
 													}
 
 												// Class methods
@@ -194,7 +194,7 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 			stateInfos[channel].mIndex = packetHeader->mInitialIndex;
 
 			// Copy first sample
-			bufferPtr[channel] = stateInfos[channel].mPreviousValue;
+			bufferPtr[channel] = (SInt16) stateInfos[channel].mPreviousValue;
 		}
 
 		// Iterate sample blocks
@@ -236,7 +236,7 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 		}
 
 		// Packet decoded
-		bufferPtr += kDVIIntelFramesPerPacket * channels;
+		bufferPtr += kDVIIntelFramesPerPacket * (CData::ByteCount) channels;
 		decodedFrameCount += kDVIIntelFramesPerPacket;
 		remainingFrames -= kDVIIntelFramesPerPacket;
 		audioFrames.completeWrite(kDVIIntelFramesPerPacket);
@@ -261,7 +261,7 @@ UInt64 CDVIIntelIMAADPCMAudioCodec::composeFrameCount(const SAudioStorageFormat&
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * audioStorageFormat.getChannels();
+	UInt64	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * (UInt64) audioStorageFormat.getChannels();
 
 	return byteCount / bytesPerPacket * kDVIIntelFramesPerPacket;
 }

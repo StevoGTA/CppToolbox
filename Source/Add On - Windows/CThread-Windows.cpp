@@ -107,8 +107,8 @@ void CThread::start()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create thread
-	mInternals->mWindowsThreadHandle = CreateThread(NULL, 0, CThreadInternals::threadProc, mInternals, 0, NULL);
-	SetThreadDescription(mInternals->mWindowsThreadHandle, mInternals->mThreadName.getOSString());
+	mInternals->mWindowsThreadHandle = ::CreateThread(NULL, 0, CThreadInternals::threadProc, mInternals, 0, NULL);
+	::SetThreadDescription(mInternals->mWindowsThreadHandle, mInternals->mThreadName.getOSString());
 }
 
 // MARK: Class methods
@@ -117,12 +117,12 @@ void CThread::start()
 CThread::Ref CThread::getCurrentRef()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return GetCurrentThread();
+	return ::GetCurrentThread();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CThread::sleepFor(UniversalTimeInterval universalTimeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	Sleep((DWORD) (universalTimeInterval * 1000.0));
+	::Sleep((DWORD) (universalTimeInterval * 1000.0));
 }

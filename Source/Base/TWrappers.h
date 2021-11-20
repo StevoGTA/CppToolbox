@@ -273,7 +273,7 @@ template <typename T> struct OR {
 
 template <typename T> struct OV {
 			// Lifecycle methods
-			OV() : mHasValue(false) {}
+			OV() : mHasValue(false), mValue((T) 0) {}
 			OV(T value) : mHasValue(true), mValue(value) {}
 			OV(const OV& other) : mHasValue(other.mHasValue), mValue(other.mValue) {}
 
