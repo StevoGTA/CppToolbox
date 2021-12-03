@@ -104,7 +104,7 @@ const CString& CCoreServices::getProcessorInfo()
 		AssertFailUnimplemented();
 	}
 
-    return (sProcessorInfoString != nil) ? *sProcessorInfoString : CString::mEmpty;
+	return (sProcessorInfoString != nil) ? *sProcessorInfoString : CString::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
