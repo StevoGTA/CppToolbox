@@ -12,9 +12,7 @@
 #include "TResult-Windows.h"
 
 #undef Delete
-
 #include <mftransform.h>
-
 #define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------

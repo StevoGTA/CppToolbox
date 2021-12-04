@@ -8,6 +8,8 @@
 #include <Windows.h>
 #define Delete(x)		{ delete x; x = nil; }
 
+#include <winrt/Windows.Foundation.Collections.h>
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
@@ -106,4 +108,24 @@ OI<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 {
 	AssertFailUnimplemented();
 return OI<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SFoldersFiles CFilesystem::getFoldersFiles(const IVectorView<IStorageItem>& storageItems)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Compose folders and files
+	TNArray<CFolder>	folders;
+	TNArray<CFile>		files;
+	for (auto const& storageItem : storageItems) {
+		// Check if directory
+		if ((uint32_t) storageItem.Attributes() & (uint32_t) FileAttributes::Directory)
+			// Folder
+			folders += CFolder(CFilesystemPath(CString(storageItem.Path().data())));
+		else
+			// File
+			files += CFile(CFilesystemPath(CString(storageItem.Path().data())));
+	}
+
+	return SFoldersFiles(folders, files);
 }

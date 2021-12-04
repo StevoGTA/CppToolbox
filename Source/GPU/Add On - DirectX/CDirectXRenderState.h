@@ -7,6 +7,7 @@
 #undef Delete
 #include <d3d11_3.h>
 #include <DirectXMath.h>
+#define Delete(x)	{ delete x; x = nil; }
 
 using namespace DirectX;
 

@@ -7,6 +7,13 @@
 #include "SFoldersFiles.h"
 #include "TResult.h"
 
+#if defined(TARGET_OS_WINDOWS)
+	#include <winrt/Windows.Storage.h>
+
+	using namespace winrt::Windows::Foundation::Collections;
+	using namespace winrt::Windows::Storage;
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFilesystem
 
@@ -25,16 +32,16 @@ class CFilesystem {
 		static	TIResult<TArray<CFolder> >	getFolders(const CFolder& folder, bool deep = false);
 		static	TIResult<TArray<CFile> >	getFiles(const CFolder& folder, bool deep = false);
 
-											//	Will copy sourceFolder *into* destinationFolder
+											// Will copy sourceFolder *into* destinationFolder
 		static	OI<SError>					copy(const CFolder& sourceFolder, const CFolder& destinationFolder);
 
-											//	Will copy file *into* destinationFolder
+											// Will copy file *into* destinationFolder
 		static	OI<SError>					copy(const CFile& file, const CFolder& destinationFolder);
 
-											//	Will copy files *into* destinationFolder
+											// Will copy files *into* destinationFolder
 		static	OI<SError>					copy(const TArray<CFile> files, const CFolder& destinationFolder);
 
-											//	Will replace destinationFile with sourceFile and remove sourceFile
+											// Will replace destinationFile with sourceFile and remove sourceFile
 		static	OI<SError>					replace(const CFile& sourceFile, const CFile& destinationFile);
 
 #if defined(TARGET_OS_MACOS)
@@ -44,5 +51,8 @@ class CFilesystem {
 
 		static	OI<SError>					revealInFinder(const CFolder& folder);
 		static	OI<SError>					revealInFinder(const TArray<CFile> files);
+#endif
+#if defined(TARGET_OS_WINDOWS)
+		static	SFoldersFiles				getFoldersFiles(const IVectorView<IStorageItem>& storageItems);
 #endif
 };
