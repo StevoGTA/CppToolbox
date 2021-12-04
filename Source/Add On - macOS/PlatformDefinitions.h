@@ -16,6 +16,7 @@
 #define TARGET_OS_MACOS		1
 #undef TARGET_OS_TVOS
 #undef TARGET_OS_WATCHOS
+#undef TARGET_OS_WINDOWS
 
 #define	DEPRECATED	DEPRECATED_ATTRIBUTE
 #define force_inline __attribute__((always_inline))
