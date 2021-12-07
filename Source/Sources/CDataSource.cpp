@@ -84,7 +84,7 @@ OI<SError> CDataDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 		return OI<SError>(SError::mEndOfData);
 
 	// Copy bytes
-	::memcpy(buffer, (UInt8*) mInternals->mData.getBytePtr() + position, byteCount);
+	::memcpy(buffer, (UInt8*) mInternals->mData.getBytePtr() + position, (size_t) byteCount);
 
 	return OI<SError>();
 }

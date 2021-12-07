@@ -30,8 +30,8 @@ class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 									if (copySourceData) {
 										// mBufferByteCount 0, initialBuffer not nil, copySourceData true
 										// mBufferByteCount >0, initialBuffer not nil, copySourceData true
-										mBuffer = ::malloc(mBufferByteCount);
-										::memcpy(mBuffer, initialBuffer, mBufferByteCount);
+										mBuffer = ::malloc((size_t) mBufferByteCount);
+										::memcpy(mBuffer, initialBuffer, (size_t) mBufferByteCount);
 									} else {
 										// mBufferByteCount 0, initialBuffer not nil, copySourceData false
 										// mBufferByteCount >0, initialBuffer not nil, copySourceData false
@@ -39,20 +39,22 @@ class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 									}
 								} else if (mBufferByteCount > 0)
 									// mBufferByteCount >0, initialBuffer nil
-									mBuffer = ::calloc(1, mBufferByteCount);
+									mBuffer = ::calloc(1, (size_t) mBufferByteCount);
 								else
 									// mBufferByteCount 0, initialBuffer nil
 									mBuffer = nil;
 							}
 						CDataInternals(const CDataInternals& other) :
 							TCopyOnWriteReferenceCountable(), mFreeOnDelete(true),
-									mBuffer((other.mBufferByteCount > 0) ? ::malloc(other.mBufferByteCount) : nil),
+									mBuffer(
+											(other.mBufferByteCount > 0) ?
+													::malloc((size_t) other.mBufferByteCount) : nil),
 									mBufferByteCount(other.mBufferByteCount)
 							{
 								// Do we have any data
 								if (mBufferByteCount > 0)
 									// Copy data
-									::memcpy(mBuffer, other.mBuffer, mBufferByteCount);
+									::memcpy(mBuffer, other.mBuffer, (size_t) mBufferByteCount);
 							}
 						~CDataInternals()
 							{
@@ -70,7 +72,7 @@ class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
 								// Update byte count
 								dataInternals->mBufferByteCount = byteCount;
 								dataInternals->mBuffer =
-										::realloc(dataInternals->mBuffer, dataInternals->mBufferByteCount);
+										::realloc(dataInternals->mBuffer, (size_t) dataInternals->mBufferByteCount);
 
 								return dataInternals;
 							}
@@ -253,7 +255,7 @@ void CData::copyBytes(void* destinationBuffer, ByteIndex startByteIndex, OV<Byte
 		return;
 
 	// Copy
-	::memcpy(destinationBuffer, (UInt8*) mInternals->mBuffer + startByteIndex, byteCountUse);
+	::memcpy(destinationBuffer, (UInt8*) mInternals->mBuffer + startByteIndex, (size_t) byteCountUse);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -274,7 +276,7 @@ void CData::appendBytes(const void* buffer, ByteCount bufferByteCount)
 	mInternals = mInternals->setByteCount(mInternals->mBufferByteCount + bufferByteCount);
 
 	// Copy
-	::memcpy((UInt8*) mInternals->mBuffer + originalByteCount, buffer, bufferByteCount);
+	::memcpy((UInt8*) mInternals->mBuffer + originalByteCount, buffer, (size_t) bufferByteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -295,7 +297,7 @@ void CData::replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const vo
 	if (resultByteCount == mInternals->mBufferByteCount) {
 		// Overall byte count is staying the same
 		mInternals = mInternals->prepareForWrite();
-		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, bufferByteCount);
+		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, (size_t) bufferByteCount);
 	} else if (resultByteCount > mInternals->mBufferByteCount) {
 		// Overall byte count is increasing
 		// [0...startByteIndex] stays the same
@@ -304,8 +306,8 @@ void CData::replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const vo
 		mInternals = mInternals->setByteCount(resultByteCount);
 		::memmove((UInt8*) mInternals->mBuffer + startByteIndex + bufferByteCount,
 				(UInt8*) mInternals->mBuffer + startByteIndex + byteCount,
-				resultByteCount - startByteIndex - bufferByteCount);
-		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, bufferByteCount);
+				(size_t) (resultByteCount - startByteIndex - bufferByteCount));
+		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, (size_t) bufferByteCount);
 	} else {
 		// Overall byte count is decreasing
 		// [0...startByteIndex] stays the same
@@ -313,8 +315,8 @@ void CData::replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const vo
 		// [startByteIndex+byteCount...end] stays the same
 		::memmove((UInt8*) mInternals->mBuffer + startByteIndex + bufferByteCount,
 				(UInt8*) mInternals->mBuffer + startByteIndex + byteCount,
-				resultByteCount - startByteIndex - bufferByteCount);
-		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, bufferByteCount);
+				(size_t) (resultByteCount - startByteIndex - bufferByteCount));
+		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, (size_t) bufferByteCount);
 		mInternals = mInternals->setByteCount(resultByteCount);
 	}
 }
@@ -428,7 +430,7 @@ bool CData::operator==(const CData& other) const
 {
 	// Compare
 	return (mInternals->mBufferByteCount == other.mInternals->mBufferByteCount) &&
-			(::memcmp(mInternals->mBuffer, other.mInternals->mBuffer, mInternals->mBufferByteCount) == 0);
+			(::memcmp(mInternals->mBuffer, other.mInternals->mBuffer, (size_t) mInternals->mBufferByteCount) == 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -437,9 +439,9 @@ CData CData::operator+(const CData& other) const
 {
 	// Create and setup data
 	CData	data(mInternals->mBufferByteCount + other.mInternals->mBufferByteCount);
-	::memcpy(data.mInternals->mBuffer, mInternals->mBuffer, mInternals->mBufferByteCount);
+	::memcpy(data.mInternals->mBuffer, mInternals->mBuffer, (size_t) mInternals->mBufferByteCount);
 	::memcpy((UInt8*) data.mInternals->mBuffer + mInternals->mBufferByteCount, other.mInternals->mBuffer,
-			other.mInternals->mBufferByteCount);
+			(size_t) other.mInternals->mBufferByteCount);
 
 	return data;
 }

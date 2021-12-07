@@ -8,7 +8,9 @@
 #include <Windows.h>
 #define Delete(x)		{ delete x; x = nil; }
 
-#include <winrt/Windows.Foundation.Collections.h>
+#if CPPWINRT_VERSION
+	#include <winrt/Windows.Foundation.Collections.h>
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -110,6 +112,7 @@ OI<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 return OI<SError>();
 }
 
+#if CPPWINRT_VERSION
 //----------------------------------------------------------------------------------------------------------------------
 SFoldersFiles CFilesystem::getFoldersFiles(const IVectorView<IStorageItem>& storageItems)
 //----------------------------------------------------------------------------------------------------------------------
@@ -129,3 +132,4 @@ SFoldersFiles CFilesystem::getFoldersFiles(const IVectorView<IStorageItem>& stor
 
 	return SFoldersFiles(folders, files);
 }
+#endif

@@ -7,7 +7,7 @@
 #include "SFoldersFiles.h"
 #include "TResult.h"
 
-#if defined(TARGET_OS_WINDOWS)
+#if CPPWINRT_VERSION
 	#include <winrt/Windows.Storage.h>
 
 	using namespace winrt::Windows::Foundation::Collections;
@@ -52,7 +52,7 @@ class CFilesystem {
 		static	OI<SError>					revealInFinder(const CFolder& folder);
 		static	OI<SError>					revealInFinder(const TArray<CFile> files);
 #endif
-#if defined(TARGET_OS_WINDOWS)
+#if CPPWINRT_VERSION
 		static	SFoldersFiles				getFoldersFiles(const IVectorView<IStorageItem>& storageItems);
 #endif
 };

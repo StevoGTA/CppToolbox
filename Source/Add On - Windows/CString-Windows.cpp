@@ -343,7 +343,7 @@ CString::CString(const CData& data, Encoding encoding) : CHashable()
 	// Ensure we have something to convert
 	if (data.getByteCount() > 0) {
 		// Setup
-		mString.resize(data.getByteCount());
+		mString.resize((size_t) data.getByteCount());
 
 		// Convert
 		int	count =

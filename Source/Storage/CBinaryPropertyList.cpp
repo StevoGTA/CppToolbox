@@ -201,7 +201,7 @@ CBPLReader::CBPLReader(const I<CSeekableDataSource>& seekableDataSource, UInt8 o
 	mObjectOffsets = new UInt64[mTotalObjectCount];
 
 	mStrings = new CString*[mTotalObjectCount];
-	::memset(mStrings, 0, sizeof(CString*) * mTotalObjectCount);
+	::memset(mStrings, 0, sizeof(CString*) * (size_t) mTotalObjectCount);
 
 	SInt64	offsetPosition = objectOffsetTableOffset;
 	for (UInt64 i = 0; i < mTotalObjectCount; i++, offsetPosition += objectOffsetFieldSize) {
