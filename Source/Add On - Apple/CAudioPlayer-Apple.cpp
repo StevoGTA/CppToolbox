@@ -345,16 +345,16 @@ class CAudioPlayerInternals {
 
 											// Check situation
 											if (byteOffset < ioData->mBuffers[0].mDataByteSize) {
+												// Check if all silence
+												if (internals.mRenderProcPreviousFrameCount == 0)
+													// Buffer is entirely silence
+													*inActionFlags = kAudioUnitRenderAction_OutputIsSilence;
+
 												// Fill the rest with silence
 												for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
 													// Copy
 													::bzero((UInt8*) ioData->mBuffers[i].mData + byteOffset,
 															ioData->mBuffers[i].mDataByteSize - byteOffset);
-
-												// Check if silence
-												if (internals.mRenderProcPreviousFrameCount == 0)
-													// Buffer is entirely silence
-													*inActionFlags = kAudioUnitRenderAction_OutputIsSilence;
 
 												// Check situation
 												if ((internals.mRenderProcFrameIndex == 0) &&
@@ -396,10 +396,10 @@ class CAudioPlayerInternals {
 										}
 									} else {
 										// Not sending frames
+										*inActionFlags = kAudioUnitRenderAction_OutputIsSilence;
 										for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
 											// Clear
 											::bzero(ioData->mBuffers[i].mData, ioData->mBuffers[i].mDataByteSize);
-										*inActionFlags = kAudioUnitRenderAction_OutputIsSilence;
 
 										internals.mRenderProcIsSendingFrames = false;
 									}
@@ -579,8 +579,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	mInternals->mRenderProcFrameIndex = 0;
 	mInternals->mRenderProcFrameCount =
 			(mInternals->mIsSeeking || !mInternals->mIsPlaying) ?
-					(UInt32) (*mInternals->mSampleRate * CAudioPlayer::kPreviewDuration) :
-					~0;
+					(UInt32) (*mInternals->mSampleRate * CAudioPlayer::kPreviewDuration) : ~0;
 
 	// Resume
 	mInternals->mAudioPlayerBufferThread->resume();
