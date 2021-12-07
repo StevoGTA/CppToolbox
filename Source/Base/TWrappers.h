@@ -272,36 +272,35 @@ template <typename T> struct OR {
  */
 
 template <typename T> struct OV {
-			// Lifecycle methods
-			OV() : mHasValue(false), mValue((T) 0) {}
-			OV(T value) : mHasValue(true), mValue(value) {}
-			OV(const OV& other) : mHasValue(other.mHasValue), mValue(other.mValue) {}
+					// Lifecycle methods
+					OV() : mValue(nil) {}
+					OV(T value) : mValue(new T(value)) {}
+					OV(const OV& other) : mValue((other.mValue != nil) ? new T(*other.mValue) : nil) {}
 
-			// Instamce methods
-	bool	hasValue() const
-				{ return mHasValue; }
-	T		getValue() const
-				{ AssertFailIf(!mHasValue); return mValue; }
-	T		getValue(T defaultValue) const
-				{ return mHasValue ? mValue : defaultValue; }
-	void	setValue(T value)
-				{ mHasValue = true; mValue = value; }
-	void	removeValue()
-				{ mHasValue = false; }
+					// Instamce methods
+			bool	hasValue() const
+						{ return mValue != nil; }
+	const	T&		getValue() const
+						{ AssertFailIf(mValue == nil); return *mValue; }
+	const	T&		getValue(const T& defaultValue) const
+						{ return (mValue != nil) ? *mValue : defaultValue; }
+			void	setValue(T value)
+						{ if (mValue != nil) *mValue = value; else mValue = new T(value); }
+			void	removeValue()
+						{ mValue = nil; }
 
-	T		operator*() const
-				{ AssertFailIf(!mHasValue); return mValue; }
+	const	T&		operator*() const
+						{ AssertFailIf(mValue == nil); return *mValue; }
 
-	OV<T>&	operator=(T value)
-				{ mHasValue = true; mValue = value; return *this; }
+			OV<T>&	operator=(T value)
+						{ if (mValue != nil) *mValue = value; else mValue = new T(value); return *this; }
 
-	bool	operator==(const OV<T>& other) const
-				{ return (mHasValue == other.mHasValue) && (!mHasValue || (mValue == other.mValue)); }
-	bool	operator!=(const OV<T>& other) const
-				{ return (mHasValue != other.mHasValue) || (mHasValue && (mValue != other.mValue)); }
+			bool	operator==(const OV<T>& other) const
+						{ return (hasValue() == other.hasValue()) && (!hasValue() || (*mValue == *other.mValue)); }
+			bool	operator!=(const OV<T>& other) const
+						{ return (hasValue() != other.hasValue()) || (hasValue() && (*mValue != *other.mValue)); }
 
 	// Properties
 	private:
-		bool	mHasValue;
-		T		mValue;
+		T*	mValue;
 };
