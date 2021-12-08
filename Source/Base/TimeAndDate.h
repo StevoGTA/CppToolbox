@@ -120,7 +120,8 @@ struct SGregorianDate {
 			CString					getString(StringStyle stringStyle = kStringStyleRFC339Extended) const;
 
 			SGregorianDate			operator+(const Units& units) const;
-			SGregorianDate&			operator+=(const Units& units);
+			SGregorianDate&			operator+=(const Units& units)
+										{ *this = *this + units; return *this; }
 
 									// Class methods
 	static	OV<SGregorianDate>		getFrom(const CString& string, ComponentStyle dateComponentStyle,

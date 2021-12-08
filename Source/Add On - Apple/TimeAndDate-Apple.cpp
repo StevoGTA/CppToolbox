@@ -96,33 +96,18 @@ UniversalTime SGregorianDate::getUniversalTime() const
 SGregorianDate SGregorianDate::operator+(const Units& units) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	Float32	seconds = mSecond + units.mSeconds;
+
 	// Compose time
 	CFCalendarRef	calendarRef = ::CFCalendarCopyCurrent();
 	UniversalTime	time;
 	::CFCalendarComposeAbsoluteTime(calendarRef, &time, "yMdHms", mYear + units.mYears, mMonth + units.mMonths,
-			mDay + units.mDays, mHour + units.mHours, mMinute + units.mMinutes, mSecond + units.mSeconds);
-	time += mSecond - floor(mSecond + units.mSeconds);
+			mDay + units.mDays, mHour + units.mHours, mMinute + units.mMinutes, seconds);
+	time += mSecond - floor(seconds);
 	::CFRelease(calendarRef);
 
 	return SGregorianDate(time);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-SGregorianDate& SGregorianDate::operator+=(const Units& units)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Compose time
-	CFCalendarRef	calendarRef = ::CFCalendarCopyCurrent();
-	UniversalTime	time;
-	::CFCalendarComposeAbsoluteTime(calendarRef, &time, "yMdHms", mYear + units.mYears, mMonth + units.mMonths,
-			mDay + units.mDays, mHour + units.mHours, mMinute + units.mMinutes, mSecond + units.mSeconds);
-	time += mSecond - floor(mSecond + units.mSeconds);
-	::CFRelease(calendarRef);
-
-	// Update ourselves
-	*this = SGregorianDate(time);
-
-	return *this;
 }
 
 // MARK: Class methods

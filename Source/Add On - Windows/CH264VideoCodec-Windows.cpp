@@ -4,7 +4,6 @@
 
 #include "CH264VideoCodec.h"
 
-
 #include "CLogServices-Windows.h"
 #include "CMediaFoundationServices.h"
 #include "SError-Windows.h"
