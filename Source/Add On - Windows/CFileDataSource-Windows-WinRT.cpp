@@ -1,47 +1,57 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFileDataSource-Windows.cpp			©2019 Stevo Brock	All rights reserved.
+//	CFileDataSource-Windows-WinRT.cpp			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFileDataSource.h"
 
 #include "ConcurrencyPrimitives.h"
-#include "SError-Windows.h"
+#include "SError-Windows-WinRT.h"
 
-#undef THIS
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Storage.FileProperties.h>
+#include <winrt/Windows.Storage.Streams.h>
+
+using namespace winrt::Windows::Storage;
+using namespace winrt::Windows::Storage::Streams;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFileDataSourceInternals
 
 class CFileDataSourceInternals {
 	public:
-		CFileDataSourceInternals(const CFile& file) :
-			mFile(file), mByteCount(file.getByteCount())
+		CFileDataSourceInternals(const CFile& file) //:
+			//mFile(file), mByteCount(file.getByteCount())
 			{
-				// Open
-				CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
-				extendedParameters.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
-				extendedParameters.dwFileAttributes = FILE_ATTRIBUTE_READONLY;
-				extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS;
-				mFileHandle =
-						::CreateFile2(mFile.getFilesystemPath().getString().getOSString(), GENERIC_READ,
-								FILE_SHARE_READ, OPEN_EXISTING, &extendedParameters);
-				if (mFileHandle == NULL) {
-					// Unable to open
-					mError = OI<SError>(SErrorFromWindowsError(::GetLastError()));
+				// Catch errors
+				try {
+					// Setup
+					auto	storageFile =
+									StorageFile::GetFileFromPathAsync(
+													file.getFilesystemPath().getString().getOSString())
+											.get();
+					mByteCount = storageFile.GetBasicPropertiesAsync().get().Size();
+
+					//
+					mRandomAccessStream = storageFile.OpenReadAsync().get();
+					mByteCount = mRandomAccessStream.Size();
+
+				} catch (const hresult_error& exception) {
+					// Error
+					mError = OI<SError>(SErrorFromHRESULTError(exception));
 					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
 				}
 			}
 		~CFileDataSourceInternals()
 			{
-				::CloseHandle(mFileHandle);
+				//::CloseHandle(mFileHandle);
 			}
 
-		CFile		mFile;
-		UInt64		mByteCount;
-		CLock		mLock;
+		UInt64								mByteCount;
+		CLock								mLock;
 
-		HANDLE		mFileHandle;
-		OI<SError>	mError;
+		IRandomAccessStreamWithContentType	mRandomAccessStream;
+		OI<SError>							mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,26 +101,22 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 	// One at a time
 	mInternals->mLock.lock();
 
-	// Set position
-	LARGE_INTEGER	localPosition;
-	localPosition.QuadPart = position;
-
-	DWORD		newPositionLow =
-						::SetFilePointer(mInternals->mFileHandle, localPosition.LowPart, &localPosition.HighPart,
-								FILE_BEGIN);
+	// Catch errors
 	OI<SError>	error;
-	if (newPositionLow != INVALID_SET_FILE_POINTER) {
+	try {
+		// Set position
+		mInternals->mRandomAccessStream.Seek(position);
+
 		// Read
-		BOOL	result = ::ReadFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, NULL, NULL);
-		if (!result) {
-			// Error
-			error = OI<SError>(SErrorFromWindowsError(::GetLastError()));
-			CLogServices::logError(*error, "reading data buffered", __FILE__, __func__, __LINE__);
-		}
-	} else {
+		auto	result =
+						mInternals->mRandomAccessStream.ReadAsync(Buffer(byteCount), byteCount,
+										InputStreamOptions::ReadAhead)
+								.get();
+		::memcpy(buffer, result.data(), byteCount);
+	} catch (const hresult_error& exception) {
 		// Error
-		error = OI<SError>(SErrorFromWindowsError(::GetLastError()));
-		CLogServices::logError(*error, "setting position buffered", __FILE__, __func__, __LINE__);
+		error = OI<SError>(SErrorFromHRESULTError(exception));
+		CLogServices::logError(*error, "reading", __FILE__, __func__, __LINE__);
 	}
 
 	// Done
@@ -118,6 +124,8 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 
 	return error;
 }
+
+#if 0
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -128,70 +136,70 @@ class CMappedFileDataSourceInternals {
 		CMappedFileDataSourceInternals(const CFile& file, UInt64 byteOffset, UInt64 byteCount) :
 			mFile(file)
 			{
-				// Open
-				CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
-				extendedParameters.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
-				extendedParameters.dwFileAttributes = FILE_ATTRIBUTE_READONLY;
-				extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS;
-				mFileHandle =
-						::CreateFile2(mFile.getFilesystemPath().getString().getOSString(), GENERIC_READ,
-								FILE_SHARE_READ, OPEN_EXISTING, &extendedParameters);
-				if (mFileHandle != NULL) {
-					// Create file mapping
-					mFileMappingHandle = ::CreateFileMapping(mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
-					if (mFileMappingHandle != NULL) {
-						// Limit to bytes remaining
-						byteCount = std::min<UInt64>(byteCount, mFile.getByteCount() - byteOffset);
+				//// Open
+				//CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
+				//extendedParameters.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+				//extendedParameters.dwFileAttributes = FILE_ATTRIBUTE_READONLY;
+				//extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS;
+				//mFileHandle =
+				//		::CreateFile2(mFile.getFilesystemPath().getString().getOSString(), GENERIC_READ,
+				//				FILE_SHARE_READ, OPEN_EXISTING, &extendedParameters);
+				//if (mFileHandle != NULL) {
+				//	// Create file mapping
+				//	mFileMappingHandle = ::CreateFileMapping(mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
+				//	if (mFileMappingHandle != NULL) {
+				//		// Limit to bytes remaining
+				//		byteCount = std::min<UInt64>(byteCount, mFile.getByteCount() - byteOffset);
 
-						// Create map
-						ULARGE_INTEGER	fileOffset;
-						fileOffset.QuadPart = byteOffset;
+				//		// Create map
+				//		ULARGE_INTEGER	fileOffset;
+				//		fileOffset.QuadPart = byteOffset;
 
-						mBytePtr =
-								::MapViewOfFile(mFileMappingHandle, FILE_MAP_READ, fileOffset.HighPart,
-										fileOffset.LowPart, (SIZE_T) byteCount);
-						if (mBytePtr != NULL)
-							// Success
-							mByteCount = byteCount;
-						else {
-							// Failed
-							mByteCount = 0;
-							mError = OI<SError>(SErrorFromWindowsError(::GetLastError()));
-							CLogServices::logError(*mError, "creating file view", __FILE__, __func__, __LINE__);
-						}
-					} else {
-						// Error
-						mBytePtr = NULL;
-						mByteCount = 0;
-						mError = OI<SError>(SErrorFromWindowsError(::GetLastError()));
-						CLogServices::logError(*mError, "creating file mapping", __FILE__, __func__, __LINE__);
-					}
-				} else {
-					// Unable to open
-					mBytePtr = NULL;
-					mByteCount = 0;
-					mError = OI<SError>(SErrorFromWindowsError(::GetLastError()));
-					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
-				}
+				//		mBytePtr =
+				//				::MapViewOfFile(mFileMappingHandle, FILE_MAP_READ, fileOffset.HighPart,
+				//						fileOffset.LowPart, (SIZE_T) byteCount);
+				//		if (mBytePtr != NULL)
+				//			// Success
+				//			mByteCount = byteCount;
+				//		else {
+				//			// Failed
+				//			mByteCount = 0;
+				//			mError = OI<SError>(SErrorFromWindowsGetLastError());
+				//			CLogServices::logError(*mError, "creating file view", __FILE__, __func__, __LINE__);
+				//		}
+				//	} else {
+				//		// Error
+				//		mBytePtr = NULL;
+				//		mByteCount = 0;
+				//		mError = OI<SError>(SErrorFromWindowsGetLastError());
+				//		CLogServices::logError(*mError, "creating file mapping", __FILE__, __func__, __LINE__);
+				//	}
+				//} else {
+				//	// Unable to open
+				//	mBytePtr = NULL;
+				//	mByteCount = 0;
+				//	mError = OI<SError>(SErrorFromWindowsGetLastError());
+				//	CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
+				//}
 			}
 		~CMappedFileDataSourceInternals()
 			{
-				// Check if need to unmap
-				if (mBytePtr != nil)
-					// Clean up
-					::UnmapViewOfFile(mBytePtr);
+				//// Check if need to unmap
+				//if (mBytePtr != nil)
+				//	// Clean up
+				//	::UnmapViewOfFile(mBytePtr);
 
-				::CloseHandle(mFileMappingHandle);
-				::CloseHandle(mFileHandle);
+				//::CloseHandle(mFileMappingHandle);
+				//::CloseHandle(mFileHandle);
 			}
 
 		CFile		mFile;
 
-		HANDLE		mFileHandle;
-		HANDLE		mFileMappingHandle;
-		void*		mBytePtr;
+		//HANDLE		mFileHandle;
+		//HANDLE		mFileMappingHandle;
+		//void*		mBytePtr;
 		UInt64		mByteCount;
-		OI<SError>	mError;
+		//OI<SError>	mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -235,19 +243,21 @@ UInt64 CMappedFileDataSource::getByteCount() const
 OI<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check for error
-	if (mInternals->mError.hasInstance())
-		// Error
-		return mInternals->mError;
+	//// Check for error
+	//if (mInternals->mError.hasInstance())
+	//	// Error
+	//	return mInternals->mError;
 
-	// Preflight
-	AssertFailIf((position + byteCount) > mInternals->mByteCount);
-	if ((position + byteCount) > mInternals->mByteCount)
-		// Attempting to ready beyond end of data
-		return OI<SError>(SError::mEndOfData);
+	//// Preflight
+	//AssertFailIf((position + byteCount) > mInternals->mByteCount);
+	//if ((position + byteCount) > mInternals->mByteCount)
+	//	// Attempting to ready beyond end of data
+	//	return OI<SError>(SError::mEndOfData);
 
-	// Copy bytes
-	::memcpy(buffer, (UInt8*) mInternals->mBytePtr + position, (SIZE_T) byteCount);
+	//// Copy bytes
+	//::memcpy(buffer, (UInt8*) mInternals->mBytePtr + position, (SIZE_T) byteCount);
 
 	return OI<SError>();
 }
+
+#endif

@@ -16,7 +16,7 @@
 
 	using namespace Platform;
 	using namespace Windows::ApplicationModel;
-#elif CPPWINRT_VERSION
+#else
 	// C++/WinRT
 #endif
 
@@ -142,7 +142,7 @@ void CCoreServices::stopInDebugger(SInt32 code, OSStringVar(message))
 #ifdef __cplusplus_winrt
 	// C++/CX
 	throw Platform::Exception::CreateException(code, ref new String(message));
-#elif CPPWINRT_VERSION
+#else
 	// C++/WinRT
 	_ASSERT_EXPR(true, message);
 #endif

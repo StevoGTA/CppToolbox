@@ -5,7 +5,6 @@
 #include "SError-Windows.h"
 
 #undef Delete
-
 #include "comdef.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -29,4 +28,12 @@ SError SErrorFromWindowsError(DWORD error)
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, (sizeof(buffer) / sizeof(TCHAR)), NULL);
 
 	return SError(CString(OSSTR("Windows")), error, CString(buffer).replacingSubStrings(CString(OSSTR("\r\n"))));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SError SErrorFromWindowsGetLastError()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Return error
+	return SErrorFromWindowsError(::GetLastError());
 }

@@ -17,7 +17,7 @@
 #elif defined(TARGET_OS_WINDOWS)
 	#define OSStringType	const TCHAR*
 	#define OSStringVar(s)	const TCHAR s[]
-	#define OSSTR(s)		_TEXT(s)
+	#define OSSTR(s)		_T(s)
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -428,7 +428,7 @@ class CAudioPlayerImplementation :
 							{
 								// Error
 								mState = kError;
-								mError = OI<SError>(SErrorFromWindowsError(GetLastError()));
+								mError = OI<SError>(SErrorFromWindowsGetLastError()));
 								CLogServices::logError(
 										CString(method) + CString(OSSTR(" returned ")) + mError->getDescription());
 							}

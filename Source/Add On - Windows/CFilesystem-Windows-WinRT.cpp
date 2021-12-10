@@ -1,12 +1,16 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFilesystem-Windows.cpp			©2020 Stevo Brock	All rights reserved.
+//	CFilesystem-Windows-WinRT.cpp			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFilesystem.h"
 
-#undef Delete
-#include <Windows.h>
-#define Delete(x)		{ delete x; x = nil; }
+#include "SError-Windows-WinRT.h"
+
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Storage.h>
+
+using namespace winrt::Windows::Storage;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -58,38 +62,44 @@ return TIResult<TArray<CFolder> >(SError::mUnimplemented);
 TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFilesystemPath	filesystemPath = folder.getFilesystemPath();
+	// Catch errors
+	try {
+		// Setup
+		auto	storageFolder =
+						StorageFolder::GetFolderFromPathAsync(folder.getFilesystemPath().getString().getOSString())
+								.get();
 
-	// Find
-	WIN32_FIND_DATA	findData;
-	HANDLE			findHandle =
-							FindFirstFile(
-									filesystemPath.appendingComponent(CString(OSSTR("*"))).getString().getOSString(),
-									&findData);
-	TNArray<CFile>	files;
-	if (findHandle != INVALID_HANDLE_VALUE) {
-		//
-		do {
-			//
-			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				// Directory
-				//_stprintf_s(directory, MAX_PATH, TEXT("    %s    <DIR>\n"), findData.cFileName);
-				//OutputDebugString(directory);
-			} else {
-				// File
-				//LARGE_INTEGER	fileSize;
-				//fileSize.LowPart = findData.nFileSizeLow;
-				//fileSize.HighPart = findData.nFileSizeHigh;
-				//_stprintf_s(directory, MAX_PATH, TEXT("    %s    %lld bytes\n"), findData.cFileName, fileSize.QuadPart);
-				//OutputDebugString(directory);
-				files += CFile(filesystemPath.appendingComponent(CString(findData.cFileName)));
+		// Compose files
+		TNArray<CFile>	files;
+
+		// Check deep
+		if (deep) {
+			// Iterate folders
+			for (auto const& childStorageFolder : storageFolder.GetFoldersAsync().get()) {
+				// Get files for this folder
+				auto	result = getFiles(CFolder(CFilesystemPath(CString(childStorageFolder.Path().data()))));
+				if (result.hasValue())
+					// Success
+					files += result.getValue();
+				else
+					// Error
+					return TIResult<TArray<CFile> >(result.getError());
 			}
-		} while (FindNextFile(findHandle, &findData) != 0);
-	}
-	FindClose(findHandle);
+		}
 
-	return TIResult<TArray<CFile> >(files);
+		// Iterate files
+		for (auto const& storageFile : storageFolder.GetFilesAsync().get())
+			// Add file
+			files += CFile(CFilesystemPath(storageFile.Path().data()));
+
+		return TIResult<TArray<CFile> >(files);
+	} catch (const hresult_error& exception) {
+		// Error
+		SError	error = SErrorFromHRESULTError(exception);
+		CFilesystemReportErrorFileFolderX1(error, "getting files", folder);
+
+		return TIResult<TArray<CFile>>(error);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

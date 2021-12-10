@@ -8,13 +8,14 @@
 
 #undef Delete
 #include <Windows.h>
-#define Delete(x)		{ delete x; x = nil; }
+#define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Global methods
 
-SError SErrorFromHRESULT(HRESULT result);
-SError SErrorFromWindowsError(DWORD error);
+SError	SErrorFromHRESULT(HRESULT result);
+SError	SErrorFromWindowsError(DWORD error);
+SError	SErrorFromWindowsGetLastError();
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros

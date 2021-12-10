@@ -471,6 +471,11 @@ return CData::mEmpty;
 CString CString::getSubString(CharIndex startIndex, Length charCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if need to limit char count
+	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) mString.length())
+		// Limit char count
+		charCount = (Length) (mString.length() - startIndex);
+
 	// Setup
 	TBuffer<TCHAR>	buffer(charCount);
 	size_t			count = mString._Copy_s(*buffer, charCount, charCount, startIndex);
@@ -516,16 +521,36 @@ return Range(0, 0);
 CString CString::lowercased() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return CString::mEmpty;
+	// Setup
+	CString	string(*this);
+
+	_T("abc");
+
+	// Transform
+#if defined(_UNICODE)
+	std::transform(string.mString.begin(), string.mString.end(), string.mString.begin(), ::towlower);
+#else
+	std::transform(string.mString.begin(), string.mString.end(), string.mString.begin(), ::tolower);
+#endif
+
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString CString::uppercased() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return CString::mEmpty;
+	// Setup
+	CString	string(*this);
+
+	// Transform
+#if defined(_UNICODE)
+	std::transform(string.mString.begin(), string.mString.end(), string.mString.begin(), ::towupper);
+#else
+	std::transform(string.mString.begin(), string.mString.end(), string.mString.begin(), ::toupper);
+#endif
+
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
