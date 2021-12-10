@@ -44,6 +44,7 @@ CString::CString() : CHashable()
 CString::CString(const CString& other, OV<Length> length) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if length is specified
 	if (length.hasValue()) {
 		// Create limited copy
 		mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, other.mStringRef);
@@ -70,7 +71,7 @@ CString::CString(const char* chars, Length charsCount, Encoding encoding) : CHas
 	// Parameter check
 	AssertNotNil(chars);
 
-	// Setup
+	// Check situation
 	if (chars == nil)
 		// No initial string
 		mStringRef = CFSTR("");
@@ -104,7 +105,7 @@ CString::CString(const UTF16Char* chars, Length charsCount, Encoding encoding) :
 					(encoding == kEncodingUTF16LE);
 	AssertFailIf(!encodingIsValid);
 
-	// Setup
+	// Check situation
 	if ((chars == nil) || !encodingIsValid)
 		// Missing or invalid parameters
 		mStringRef = CFSTR("");
@@ -123,7 +124,7 @@ CString::CString(const UTF32Char* chars, Length charsCount, Encoding encoding) :
 	AssertNotNil(chars);
 	AssertFailIf((encoding != kEncodingUTF32BE) && (encoding != kEncodingUTF32LE));
 
-	// Setup
+	// Check situation
 	if ((chars == nil) || ((encoding != kEncodingUTF32BE) && (encoding != kEncodingUTF32LE)))
 		// Missing or invalid parameters
 		mStringRef = CFSTR("");
@@ -140,10 +141,12 @@ CString::CString(Float32 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 {
 	// Check field size
 	if (fieldSize == 0)
+		// No field size
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%0.*f"), (int) digitsAfterDecimalPoint,
 						(double) value);
 	else
+		// Have field size
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%0*.*f") : CFSTR("%*.*f"),
 						(int) fieldSize, (int) digitsAfterDecimalPoint, (double) value);
@@ -155,10 +158,12 @@ CString::CString(Float64 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 {
 	// Check field size
 	if (fieldSize == 0)
+		// No field size
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%0.*f"), (int) digitsAfterDecimalPoint,
 						value);
 	else
+		// Have field size
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%0*.*f") : CFSTR("%*.*f"),
 						(int) fieldSize, (int) digitsAfterDecimalPoint, value);
@@ -170,8 +175,10 @@ CString::CString(SInt8 value, UInt32 fieldSize, bool padWithZeros) : CHashable()
 {
 	// Check field size
 	if (fieldSize == 0)
+		// No field size
 		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%hi"), (short) value);
 	else
+		// Have field size
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*hi") : CFSTR("%*hi"),
 						(int) fieldSize, (short) value);
@@ -183,8 +190,10 @@ CString::CString(SInt16 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 {
 	// Check field size
 	if (fieldSize == 0)
+		// No field size
 		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%hi"), value);
 	else
+		// Have field size
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*hi") : CFSTR("%*hi"),
 						(int) fieldSize, value);
@@ -196,8 +205,10 @@ CString::CString(SInt32 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 {
 	// Check field size
 	if (fieldSize == 0)
+		// No field size
 		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%d"), (int) value);
 	else
+		// Have field size
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*d") : CFSTR("%*d"),
 						(int) fieldSize, (int) value);
@@ -209,8 +220,10 @@ CString::CString(SInt64 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 {
 	// Check field size
 	if (fieldSize == 0)
+		// No field size
 		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%qi"), value);
 	else
+		// Have field size
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*qi") : CFSTR("%*qi"),
 						(int) fieldSize, value);
@@ -220,14 +233,17 @@ CString::CString(SInt64 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 CString::CString(UInt8 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check field size
+	// Check situation
 	if (fieldSize == 0)
+		// No field size
 		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%hu"), (unsigned short) value);
 	else if (makeHex)
+		// Making hex
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
 						(int) fieldSize, (unsigned int) value);
 	else
+		// The rest
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*hu") : CFSTR("%*hu"),
 						(int) fieldSize, (unsigned short) value);
@@ -237,14 +253,17 @@ CString::CString(UInt8 value, UInt32 fieldSize, bool padWithZeros, bool makeHex)
 CString::CString(UInt16 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check field size
+	// Check situation
 	if (fieldSize == 0)
+		// No field size
 		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%hu"), value);
 	else if (makeHex)
+		// Making hex
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
 						(int) fieldSize, (unsigned int) value);
 	else
+		// The rest
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*hu") : CFSTR("%*hu"),
 						(int) fieldSize, value);
@@ -254,14 +273,17 @@ CString::CString(UInt16 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 CString::CString(UInt32 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check field size
+	// Check situation
 	if (fieldSize == 0)
+		// No field size
 		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%u"), (unsigned int) value);
 	else if (makeHex)
+		// Making hex
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%#.*x") : CFSTR("%#*x"),
 						(int) fieldSize, (unsigned int) value);
 	else
+		// The rest
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*u") : CFSTR("%*u"),
 						(int) fieldSize, (unsigned int) value);
@@ -271,14 +293,17 @@ CString::CString(UInt32 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 CString::CString(UInt64 value, UInt32 fieldSize, bool padWithZeros, bool makeHex) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check field size
+	// Check situation
 	if (fieldSize == 0)
+		// No field size
 		mStringRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nil, CFSTR("%qu"), value);
 	else if (makeHex)
+		// Making hex
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%#.*qx") : CFSTR("%#*qx"),
 						(int) fieldSize, value);
 	else
+		// The rest
 		mStringRef =
 				::CFStringCreateWithFormat(kCFAllocatorDefault, nil, padWithZeros ? CFSTR("%.*qu") : CFSTR("%*qu"),
 						(int) fieldSize, value);
@@ -288,6 +313,7 @@ CString::CString(UInt64 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	osType = EndianU32_NtoB(osType);
 	mStringRef =
 			::CFStringCreateWithFormat(kCFAllocatorDefault, nil, includeQuotes ? CFSTR("\'%4.4s\'") : CFSTR("%4.4s"),
@@ -327,12 +353,16 @@ CString::CString(const TArray<CString>& components, const CString& separator) : 
 CString::CString(const CData& data, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Create dataRef
 	CFDataRef	dataRef = ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getByteCount());
+
+	// Create stringRef
 	mStringRef =
 			::CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, dataRef,
 					sGetCFStringEncodingForCStringEncoding(encoding));
 	::CFRelease(dataRef);
 
+	// Check situation
 	if (mStringRef == nil) {
 		LogError(sCreateFailedError, "creating CFStringRef from external representation");
 		mStringRef = CFSTR("");
@@ -359,10 +389,13 @@ OSStringType CString::getOSString() const
 const CString::C CString::getCString(Encoding encoding) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFStringEncoding	stringEncoding = sGetCFStringEncodingForCStringEncoding(encoding);
 	Length				length =
 								(Length) ::CFStringGetMaximumSizeForEncoding(
 										::CFStringGetLength(mStringRef), stringEncoding) + 1;
+
+	// Get c string
 	C					c(length);
 	::CFStringGetCString(mStringRef, c.mBuffer, length, stringEncoding);
 
@@ -380,6 +413,7 @@ CString::Length CString::getLength() const
 CString::Length CString::getLength(Encoding encoding, SInt8 lossCharacter, bool forExternalStorageOrTransmission) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Get length
 	CFIndex	byteCount;
 	::CFStringGetBytes(mStringRef, CFRangeMake(0, ::CFStringGetLength(mStringRef)),
 			sGetCFStringEncodingForCStringEncoding(encoding), lossCharacter, forExternalStorageOrTransmission, nil, 0,
@@ -447,7 +481,9 @@ CString::Length CString::get(UTF16Char* buffer, Length bufferLen, Encoding encod
 	if ((encoding != kEncodingUTF16BE) && (encoding != kEncodingUTF16LE))
 		return 0;
 
+	// Check if limiting buffer length
 	if (bufferLen > getLength())
+		// Limit buffer length
 		bufferLen = getLength();
 	
 	return (Length) ::CFStringGetBytes(mStringRef, CFRangeMake(0, bufferLen),
@@ -459,10 +495,12 @@ CString::Length CString::get(UTF16Char* buffer, Length bufferLen, Encoding encod
 UTF32Char CString::getCharacterAtIndex(CharIndex index) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Parameter check
 	AssertFailIf(index > getLength());
 	if (index > getLength())
 		return 0;
-	
+
+	// Get character
 	UTF32Char	_char;
 	::CFStringGetBytes(mStringRef, CFRangeMake(index, 1),
 			sGetCFStringEncodingForCStringEncoding(kEncodingUTF32Native), 0, false, (UInt8*) &_char,
@@ -489,6 +527,7 @@ Float64 CString::getFloat64() const
 CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Compose dataRef
 	CFDataRef	dataRef =
 						::CFStringCreateExternalRepresentation(kCFAllocatorDefault, mStringRef,
 								sGetCFStringEncodingForCStringEncoding(encoding), lossCharacter);
@@ -510,9 +549,12 @@ CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 CString CString::getSubString(CharIndex startIndex, Length charCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if need to limit char count
 	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mStringRef))
+		// Limit char count
 		charCount = (Length) (::CFStringGetLength(mStringRef) - startIndex);
 
+	// Compose new string
 	CFStringRef	stringRef =
 						::CFStringCreateWithSubstring(kCFAllocatorDefault, mStringRef,
 								CFRangeMake(startIndex, charCount));
@@ -526,6 +568,7 @@ CString CString::getSubString(CharIndex startIndex, Length charCount) const
 CString CString::replacingSubStrings(const CString& subStringToReplace, const CString& replacementString) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Compose new string
 	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
 	::CFStringFindAndReplace(stringRef, subStringToReplace.mStringRef, replacementString.mStringRef,
 			::CFRangeMake(0, ::CFStringGetLength(mStringRef)), 0);
@@ -539,9 +582,12 @@ CString CString::replacingSubStrings(const CString& subStringToReplace, const CS
 CString CString::replacingCharacters(CharIndex startIndex, Length charCount, const CString& replacementString) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if need to limit char count
 	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mStringRef))
+		// Limit char count
 		charCount = (Length) (::CFStringGetLength(mStringRef) - startIndex);
 
+	// Compose new string
 	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
 	::CFStringReplace(stringRef, ::CFRangeMake(startIndex, charCount), replacementString.mStringRef);
 	CString	string(stringRef);
@@ -566,6 +612,7 @@ CString::Range CString::findSubString(const CString& subString, CharIndex startI
 CString CString::lowercased() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Compose new string
 	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
 	::CFStringLowercase(stringRef, nil);
 	CString	string(stringRef);
@@ -578,6 +625,7 @@ CString CString::lowercased() const
 CString CString::uppercased() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Compose new string
 	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
 	::CFStringUppercase(stringRef, nil);
 	CString	string(stringRef);
@@ -665,11 +713,13 @@ CString CString::getCommonPrefix(const CString& other) const
 	UniChar	characters2[length2];
 	::CFStringGetCharacters(other.mStringRef, CFRangeMake(0, length2), characters2);
 
+	// See if need to limit length
 	if (length2 > length1)
+		// Limit length
 		length1 = length2;
-	
+
+	// Create stringRef and copy characters that match
 	CFMutableStringRef	stringRef = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-	
 	for (CFIndex i = 0; i < length1; i++) {
 		if (characters1[i] == characters2[i])
 			::CFStringAppendCharacters(stringRef, &characters1[i], 1);
@@ -677,6 +727,7 @@ CString CString::getCommonPrefix(const CString& other) const
 			break;
 	}
 
+	// Convert to string
 	CString	string(stringRef);
 	::CFRelease(stringRef);
 
@@ -737,6 +788,7 @@ bool CString::hasSuffix(const CString& other) const
 bool CString::contains(const CString& other, CompareFlags compareFlags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Get range
 	CFRange	range = ::CFStringFind(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(compareFlags));
 
 	return range.location != kCFNotFound;
@@ -748,7 +800,10 @@ bool CString::contains(const CString& other, CompareFlags compareFlags) const
 CString& CString::operator=(const CString& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Bye bye to us
 	::CFRelease(mStringRef);
+
+	// Hello to new
 	mStringRef = (CFStringRef) ::CFRetain(other.mStringRef);
 
 	return *this;
@@ -762,7 +817,10 @@ CString& CString::operator+=(const CString& other)
 	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
 	::CFStringAppend(stringRef, other.mStringRef);
 
+	// Bye bye to us
 	::CFRelease(mStringRef);
+
+	// Hello to new
 	mStringRef = stringRef;
 
 	return *this;
@@ -772,9 +830,11 @@ CString& CString::operator+=(const CString& other)
 CString CString::operator+(const CString& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Compose new stringRef
 	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
 	::CFStringAppend(stringRef, other.mStringRef);
 
+	// Convert to string
 	CString	string(stringRef);
 	::CFRelease(stringRef);
 
@@ -787,11 +847,11 @@ CString CString::operator+(const CString& other) const
 CString CString::make(OSStringType format, va_list args)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Compose string
+	// Compose stringRef
 	CFStringRef	stringRef = ::CFStringCreateWithFormatAndArguments(kCFAllocatorDefault, nil, format, args);
 
-	// Compose CString
-	CString		string(stringRef);
+	// Convert to string
+	CString	string(stringRef);
 	::CFRelease(stringRef);
 
 	return string;
@@ -881,7 +941,6 @@ CFOptionFlags sGetCFOptionFlagsForCStringOptionFlags(CString::CompareFlags compa
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFOptionFlags	outFlags = 0;
-	
 	if (compareFlags & CString::kCompareFlagsCaseInsensitive)
 		outFlags |= kCFCompareCaseInsensitive;
 	if (compareFlags & CString::kCompareFlagsBackwards)

@@ -15,10 +15,10 @@
 class CFileDataSourceInternals {
 	public:
 		CFileDataSourceInternals(const CFile& file, bool buffered) :
-			mFile(file), mByteCount(mFile.getByteCount()), mFILE(nil), mFD(-1)
+			mByteCount(file.getByteCount()), mFILE(nil), mFD(-1)
 			{
 				// Setup
-				CString::C	path = mFile.getFilesystemPath().getString().getCString(CString::kEncodingUTF8);
+				CString::C	path = file.getFilesystemPath().getString().getCString(CString::kEncodingUTF8);
 
 				// Check buffered
 				if (buffered) {
@@ -48,7 +48,6 @@ class CFileDataSourceInternals {
 					::close(mFD);
 			}
 
-		CFile		mFile;
 		UInt64		mByteCount;
 		CLock		mLock;
 
@@ -152,15 +151,14 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 
 class CMappedFileDataSourceInternals {
 	public:
-		CMappedFileDataSourceInternals(const CFile& file, UInt64 byteOffset, UInt64 byteCount) :
-			mFile(file)
+		CMappedFileDataSourceInternals(const CFile& file, UInt64 byteOffset, UInt64 byteCount)
 			{
 				// Open
-				CString::C	path = mFile.getFilesystemPath().getString().getCString(CString::kEncodingUTF8);
+				CString::C	path = file.getFilesystemPath().getString().getCString(CString::kEncodingUTF8);
 				mFD = ::open(*path, O_RDONLY, 0);
 				if (mFD != -1) {
 					// Limit to bytes remaining
-					byteCount = std::min<UInt64>(byteCount, mFile.getByteCount() - byteOffset);
+					byteCount = std::min<UInt64>(byteCount, file.getByteCount() - byteOffset);
 
 					// Create map
 					void*	bytePtr =
@@ -193,8 +191,6 @@ class CMappedFileDataSourceInternals {
 				if (mFD != -1)
 					::close(mFD);
 			}
-
-		CFile		mFile;
 
 		SInt32		mFD;
 		void*		mBytePtr;
