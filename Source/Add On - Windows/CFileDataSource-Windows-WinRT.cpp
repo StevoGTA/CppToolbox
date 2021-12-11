@@ -109,7 +109,7 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 
 		// Read
 		auto	result =
-						mInternals->mRandomAccessStream.ReadAsync(Buffer(byteCount), byteCount,
+						mInternals->mRandomAccessStream.ReadAsync(Buffer((uint32_t) byteCount), (uint32_t) byteCount,
 										InputStreamOptions::ReadAhead)
 								.get();
 		::memcpy(buffer, result.data(), byteCount);
