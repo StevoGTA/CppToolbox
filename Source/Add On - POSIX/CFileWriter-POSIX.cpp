@@ -76,7 +76,6 @@ class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 						}
 
 		CFile	mFile;
-		UInt32	mReferenceCount;
 
 		bool	mRemoveIfNotClosed;
 		FILE*	mFILE;

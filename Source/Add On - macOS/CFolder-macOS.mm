@@ -27,7 +27,7 @@ bool CFolder::isPackage() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::tempFolder()
+const CFolder& CFolder::temp()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -40,7 +40,7 @@ const CFolder& CFolder::tempFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::systemApplicationSupportFolder()
+const CFolder& CFolder::systemApplicationSupport()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -57,7 +57,7 @@ const CFolder& CFolder::systemApplicationSupportFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::systemAudioPluginsFolder()
+const CFolder& CFolder::systemAudioPlugins()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -74,7 +74,7 @@ const CFolder& CFolder::systemAudioPluginsFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::systemAudioPresetsFolder()
+const CFolder& CFolder::systemAudioPresets()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -91,7 +91,7 @@ const CFolder& CFolder::systemAudioPresetsFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::systemFrameworksFolder()
+const CFolder& CFolder::systemFrameworks()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -112,7 +112,7 @@ const CFolder& CFolder::systemFrameworksFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::systemLibraryFolder()
+const CFolder& CFolder::systemLibrary()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -127,7 +127,7 @@ const CFolder& CFolder::systemLibraryFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::userApplicationSupportFolder()
+const CFolder& CFolder::userApplicationSupport()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -142,7 +142,7 @@ const CFolder& CFolder::userApplicationSupportFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::userAudioPluginsFolder()
+const CFolder& CFolder::userAudioPlugins()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -159,7 +159,7 @@ const CFolder& CFolder::userAudioPluginsFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::userAudioPresetsFolder()
+const CFolder& CFolder::userAudioPresets()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -176,7 +176,7 @@ const CFolder& CFolder::userAudioPresetsFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::userDesktopFolder()
+const CFolder& CFolder::userDesktop()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -191,7 +191,7 @@ const CFolder& CFolder::userDesktopFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::userHomeFolder()
+const CFolder& CFolder::userHome()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -206,7 +206,7 @@ const CFolder& CFolder::userHomeFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::userLibraryFolder()
+const CFolder& CFolder::userLibrary()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -221,7 +221,7 @@ const CFolder& CFolder::userLibraryFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::userLogsFolder()
+const CFolder& CFolder::userLogs()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
@@ -238,7 +238,7 @@ const CFolder& CFolder::userLogsFolder()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::userMusicFolder()
+const CFolder& CFolder::userMusic()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
