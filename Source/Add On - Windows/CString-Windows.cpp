@@ -463,8 +463,22 @@ Float64 CString::getFloat64() const
 CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return CData::mEmpty;
+	// Check length
+	int	length = (int) mString.length();
+	if (length > 0) {
+		// Setup
+		CData	data((CData::ByteCount) length * 4);
+
+		// Convert
+		int	count =
+					WideCharToMultiByte(sGetCodePageForCStringEncoding(encoding), 0, mString.c_str(), length,
+							(LPSTR) data.getMutableBytePtr(), length * 4, NULL, NULL);
+		data.setByteCount(count);
+
+		return data;
+	} else
+		// Empty
+		return CData::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -731,7 +745,6 @@ return false;
 void CString::init()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

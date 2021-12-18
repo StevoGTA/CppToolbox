@@ -10,6 +10,8 @@
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.FileProperties.h>
 
+#include <Windows.h>
+
 using namespace winrt::Windows::Storage;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -73,16 +75,45 @@ UInt64 CFile::getByteCount() const
 OI<SError> CFile::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OI<SError>();
+	// Catch errors
+	try {
+		// Setup
+		auto	storageFile = StorageFile::GetFileFromPathAsync(getFilesystemPath().getString().getOSString()).get();
+		storageFile.DeleteAsync().get();
+
+		return OI<SError>();
+	} catch (const hresult_error& exception) {
+		// Error
+		SError	error = SErrorFromHRESULTError(exception);
+		CFileReportError(error, "checking if exsists");
+
+		return OI<SError>(error);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CFile::doesExist() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return false;
+	// Catch errors
+	try {
+		// Setup
+		auto	storageFile = StorageFile::GetFileFromPathAsync(getFilesystemPath().getString().getOSString()).get();
+
+		return true;
+	} catch (const hresult_error& exception) {
+		// Check error
+		if (exception.code() == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+			// File not found
+			return false;
+		else {
+			// Error
+			SError	error = SErrorFromHRESULTError(exception);
+			CFileReportError(error, "checking if exsists");
+
+			return false;
+		}
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

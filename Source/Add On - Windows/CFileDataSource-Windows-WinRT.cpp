@@ -5,6 +5,11 @@
 #include "CFileDataSource.h"
 
 #include "ConcurrencyPrimitives.h"
+
+#undef Delete
+#include <Unknwn.h>
+#define Delete(x)	{ delete x; x = nil; }
+
 #include "SError-Windows-WinRT.h"
 
 #include <winrt/Windows.Foundation.h>
@@ -20,8 +25,7 @@ using namespace winrt::Windows::Storage::Streams;
 
 class CFileDataSourceInternals {
 	public:
-		CFileDataSourceInternals(const CFile& file) //:
-			//mFile(file), mByteCount(file.getByteCount())
+		CFileDataSourceInternals(const CFile& file)
 			{
 				// Catch errors
 				try {
@@ -32,19 +36,14 @@ class CFileDataSourceInternals {
 											.get();
 					mByteCount = storageFile.GetBasicPropertiesAsync().get().Size();
 
-					//
+					// Open
 					mRandomAccessStream = storageFile.OpenReadAsync().get();
 					mByteCount = mRandomAccessStream.Size();
-
 				} catch (const hresult_error& exception) {
 					// Error
 					mError = OI<SError>(SErrorFromHRESULTError(exception));
 					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
 				}
-			}
-		~CFileDataSourceInternals()
-			{
-				//::CloseHandle(mFileHandle);
 			}
 
 		UInt64								mByteCount;
@@ -108,11 +107,32 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 		mInternals->mRandomAccessStream.Seek(position);
 
 		// Read
+		struct __declspec(uuid("905a0fef-bc53-11df-8c49-001e4fc686da")) IBufferByteAccess : ::IUnknown {
+			virtual HRESULT __stdcall Buffer(void** value) = 0;
+		};
+
+		struct CFileDataSourceBuffer : implements<CFileDataSourceBuffer, IBuffer, IBufferByteAccess> {
+			// Methods
+								CFileDataSourceBuffer(const void* buffer, UInt64 byteCount) :
+									mBuffer(buffer), mByteCount(byteCount)
+									{}
+			uint32_t			Capacity() const { return (uint32_t) mByteCount; }
+			uint32_t			Length() const { return (uint32_t) mByteCount; }
+			void				Length(uint32_t length) {}
+
+			HRESULT	__stdcall	Buffer(void** value)
+									{ *value = (void*) mBuffer; return S_OK; }
+
+			// Properties
+			const	void*	mBuffer;
+					UInt64	mByteCount;
+		};
+
+		// Read
 		auto	result =
-						mInternals->mRandomAccessStream.ReadAsync(Buffer((uint32_t) byteCount), (uint32_t) byteCount,
-										InputStreamOptions::ReadAhead)
+						mInternals->mRandomAccessStream.ReadAsync(make<CFileDataSourceBuffer>(buffer, byteCount),
+										(uint32_t) byteCount, InputStreamOptions::ReadAhead)
 								.get();
-		::memcpy(buffer, result.data(), byteCount);
 	} catch (const hresult_error& exception) {
 		// Error
 		error = OI<SError>(SErrorFromHRESULTError(exception));

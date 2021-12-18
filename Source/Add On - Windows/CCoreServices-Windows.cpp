@@ -10,15 +10,18 @@
 	// C++/CX
 	#include "CPlatform.h"
 
-	#undef Delete
-	#include <Windows.h>
-	#define Delete(x)		{ delete x; x = nil; }
-
 	using namespace Platform;
 	using namespace Windows::ApplicationModel;
 #else
 	// C++/WinRT
+	#include <winrt/Windows.System.Diagnostics.h>
+
+	using namespace winrt::Windows::System::Diagnostics;
 #endif
+
+#undef Delete
+#include <Windows.h>
+#define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
@@ -33,78 +36,43 @@
 // MARK: CCoreServices methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const SSystemVersionInfo& CCoreServices::getSystemVersion()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	static	SSystemVersionInfo*	sVersionInfo = nil;
-	if (sVersionInfo == nil) {
-		// Get info
-#ifdef __cplusplus_winrt
-		// C++/CX
-		Package^		package = Package::Current;
-		PackageId^		packageId = package->Id;
-		String^			displayName = package->DisplayName;
-		PackageVersion	packageVersion = packageId->Version;
-
-		sVersionInfo =
-				new SSystemVersionInfo(CPlatform::stringFrom(displayName), (UInt8) packageVersion.Major,
-						(UInt8) packageVersion.Minor, (UInt8) packageVersion.Revision, packageVersion.Build);
-#endif
-	}
-
-	return *sVersionInfo;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 UInt32 CCoreServices::getTotalProcessorCoresCount()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	static	UInt32	sTotalProcessorCoresCount = 0;
 	if (sTotalProcessorCoresCount == 0) {
-#ifdef __cplusplus_winrt
-		// C++/CX
-		// Create buffer
-		SYSTEM_LOGICAL_PROCESSOR_INFORMATION*	buffer = NULL;
-		DWORD									size = 0;
-		GetLogicalProcessorInformation(buffer, &size);
-		buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION*) malloc(size);
+		//// Create buffer
+		//SYSTEM_LOGICAL_PROCESSOR_INFORMATION*	buffer = NULL;
+		//DWORD									size = 0;
+		//GetLogicalProcessorInformation(buffer, &size);
+		//buffer = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION*) malloc(size);
 
-		// Get info
-		if (GetLogicalProcessorInformation(buffer, &size) == 1) {
-			// Success
-			int										infoCount = size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
-			SYSTEM_LOGICAL_PROCESSOR_INFORMATION*	systemLogicalProcessorInformation = buffer;
-			for (int i = 0; i < infoCount; i++, systemLogicalProcessorInformation++) {
-				// Check relationship
-				if (systemLogicalProcessorInformation->Relationship == RelationProcessorCore) {
-					// Processor core
-					sTotalProcessorCoresCount += sCountSetBits(systemLogicalProcessorInformation->ProcessorMask);
-				}
-			}
-		}
+		//// Get info
+		//if (GetLogicalProcessorInformation(buffer, &size) == 1) {
+		//	// Success
+		//	int										infoCount = size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+		//	SYSTEM_LOGICAL_PROCESSOR_INFORMATION*	systemLogicalProcessorInformation = buffer;
+		//	for (int i = 0; i < infoCount; i++, systemLogicalProcessorInformation++) {
+		//		// Check relationship
+		//		if (systemLogicalProcessorInformation->Relationship == RelationProcessorCore) {
+		//			// Processor core
+		//			sTotalProcessorCoresCount += sCountSetBits(systemLogicalProcessorInformation->ProcessorMask);
+		//		}
+		//	}
+		//}
 
-		// Cleanup
-		free(buffer);
-#endif
+		//// Cleanup
+		//free(buffer);
+
+		SYSTEM_INFO	systemInfo;
+		::GetSystemInfo(&systemInfo);
+
+		sTotalProcessorCoresCount = systemInfo.dwNumberOfProcessors;
 	}
+
 
 	return sTotalProcessorCoresCount;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const CString& CCoreServices::getProcessorInfo()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	static	CString*	sProcessorInfoString = nil;
-
-	if (sProcessorInfoString == nil) {
-		// Get info
-		AssertFailUnimplemented();
-	}
-
-	return (sProcessorInfoString != nil) ? *sProcessorInfoString : CString::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -113,26 +81,15 @@ UInt64 CCoreServices::getPhysicalMemoryByteCount()
 {
 	static	int64_t	sPhysicalMemoryByteCount = 0;
 
-	if (sPhysicalMemoryByteCount == 0) {
+	if (sPhysicalMemoryByteCount == 0)
 		// Get info
-		AssertFailUnimplemented();
-	}
+#ifdef __cplusplus_winrt
+#else
+		sPhysicalMemoryByteCount =
+				SystemDiagnosticInfo::GetForCurrentSystem().MemoryUsage().GetReport().TotalPhysicalSizeInBytes();
+#endif
 
 	return sPhysicalMemoryByteCount;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UInt32 CCoreServices::getPhysicalMemoryPageSize()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	static	UInt32	sPhysicalMemoryPageSize = 0;
-
-	if (sPhysicalMemoryPageSize == 0) {
-		// Get info
-		AssertFailUnimplemented();
-	}
-
-	return sPhysicalMemoryPageSize;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

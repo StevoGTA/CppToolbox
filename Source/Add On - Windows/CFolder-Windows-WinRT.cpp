@@ -1,23 +1,23 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CFolder-Windows.cpp			©2020 Stevo Brock	All rights reserved.
+//	CFolder-Windows-WinRT.cpp			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CFolder.h"
 
-#undef Delete
-#include <Windows.h>
-#define Delete(x)		{ delete x; x = nil; }
+#include <winrt/Windows.Storage.h>
+
+using namespace winrt::Windows::Storage;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFolderReportErrorAndReturnError(error, message)									\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
-																							\
-					return OI<SError>(error);												\
-				}
+//#define	CFolderReportErrorAndReturnError(error, message)									\
+//				{																			\
+//					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
+//					logAsError(CString::mSpaceX4);											\
+//																							\
+//					return OI<SError>(error);												\
+//				}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,18 +64,27 @@ return false;
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const CFolder& CFolder::currentFolder()
+const CFolder& CFolder::local()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	static	CFolder*	sFolder = nil;
 
-	if (sFolder == nil) {
+	if (sFolder == nil)
 		// Setup
-		TCHAR	directory[MAX_PATH];
-		GetCurrentDirectory(MAX_PATH, directory);
+		sFolder = new CFolder(CFilesystemPath(CString(ApplicationData::Current().LocalFolder().Path().data())));
 
-		sFolder = new CFolder(CFilesystemPath(CString(directory)));
-	}
+	return *sFolder;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CFolder& CFolder::localCache()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CFolder*	sFolder = nil;
+
+	if (sFolder == nil)
+		// Setup
+		sFolder = new CFolder(CFilesystemPath(CString(ApplicationData::Current().LocalCacheFolder().Path().data())));
 
 	return *sFolder;
 }
