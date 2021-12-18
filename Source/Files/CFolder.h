@@ -73,22 +73,22 @@ class CFolder : CHashable {
 						CFolder&			operator=(const CFolder& other);
 
 											// Class methods
-		static	const	CFolder&			tempFolder();
+		static	const	CFolder&			temp();
 
 #if defined(TARGET_OS_MACOS)
-		static	const	CFolder&			systemApplicationSupportFolder();
-		static	const	CFolder&			systemAudioPluginsFolder();
-		static	const	CFolder&			systemAudioPresetsFolder();
-		static	const	CFolder&			systemFrameworksFolder();
-		static	const	CFolder&			systemLibraryFolder();
-		static	const	CFolder&			userApplicationSupportFolder();
-		static	const	CFolder&			userAudioPluginsFolder();
-		static	const	CFolder&			userAudioPresetsFolder();
-		static	const	CFolder&			userDesktopFolder();
-		static	const	CFolder&			userHomeFolder();
-		static	const	CFolder&			userLibraryFolder();
-		static	const	CFolder&			userLogsFolder();
-		static	const	CFolder&			userMusicFolder();
+		static	const	CFolder&			systemApplicationSupport();
+		static	const	CFolder&			systemAudioPlugins();
+		static	const	CFolder&			systemAudioPresets();
+		static	const	CFolder&			systemFrameworks();
+		static	const	CFolder&			systemLibrary();
+		static	const	CFolder&			userApplicationSupport();
+		static	const	CFolder&			userAudioPlugins();
+		static	const	CFolder&			userAudioPresets();
+		static	const	CFolder&			userDesktop();
+		static	const	CFolder&			userHome();
+		static	const	CFolder&			userLibrary();
+		static	const	CFolder&			userLogs();
+		static	const	CFolder&			userMusic();
 #elif defined(TARGET_OS_WINDOWS)
 		static	const	CFolder&			local();
 		static	const	CFolder&			localCache();

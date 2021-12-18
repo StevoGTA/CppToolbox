@@ -58,7 +58,7 @@ const SVersionInfo& CCoreServices::getCoreAudioVersion()
 		// Get info
 		CFURLRef	urlRef =
 							CCoreFoundation::createURLRefFrom(
-									CFolder::systemFrameworksFolder().getFilesystemPath()
+									CFolder::systemFrameworks().getFilesystemPath()
 											.appendingComponent(CString(OSSTR("CoreAudio.framework"))), true);
 		CFBundleRef	bundleRef = ::CFBundleCreate(kCFAllocatorDefault, urlRef);
 		::CFRelease(urlRef);
