@@ -15,11 +15,11 @@ class CLockInternals {
 public:
 	CLockInternals()
 		{
-			InitializeCriticalSection(&mCriticalSection);
+			::InitializeCriticalSection(&mCriticalSection);
 		}
 	~CLockInternals()
 		{
-			DeleteCriticalSection(&mCriticalSection);
+			::DeleteCriticalSection(&mCriticalSection);
 		}
 
 	CRITICAL_SECTION	mCriticalSection;
@@ -51,21 +51,21 @@ CLock::~CLock()
 bool CLock::tryLock() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TryEnterCriticalSection(&mInternals->mCriticalSection);
+	return ::TryEnterCriticalSection(&mInternals->mCriticalSection);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLock::lock() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	EnterCriticalSection(&mInternals->mCriticalSection);
+	::EnterCriticalSection(&mInternals->mCriticalSection);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CLock::unlock() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	LeaveCriticalSection(&mInternals->mCriticalSection);
+	::LeaveCriticalSection(&mInternals->mCriticalSection);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ class CReadPreferringLockInternals {
 public:
 	CReadPreferringLockInternals()
 		{
-			InitializeSRWLock(&mSRWLock);
+			::InitializeSRWLock(&mSRWLock);
 		}
 
 	SRWLOCK	mSRWLock;
@@ -108,28 +108,28 @@ CReadPreferringLock::~CReadPreferringLock()
 void CReadPreferringLock::lockForReading() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AcquireSRWLockShared(&mInternals->mSRWLock);
+	::AcquireSRWLockShared(&mInternals->mSRWLock);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CReadPreferringLock::unlockForReading() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	ReleaseSRWLockShared(&mInternals->mSRWLock);
+	::ReleaseSRWLockShared(&mInternals->mSRWLock);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CReadPreferringLock::lockForWriting() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AcquireSRWLockExclusive(&mInternals->mSRWLock);
+	::AcquireSRWLockExclusive(&mInternals->mSRWLock);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CReadPreferringLock::unlockForWriting() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	ReleaseSRWLockExclusive(&mInternals->mSRWLock);
+	::ReleaseSRWLockExclusive(&mInternals->mSRWLock);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ public:
 	CSemaphoreInternals() : mHandle(CreateEvent(NULL, false, false, TEXT(""))) {}
 	~CSemaphoreInternals()
 		{
-			CloseHandle(mHandle);
+			::CloseHandle(mHandle);
 		}
 
 	HANDLE	mHandle;
@@ -173,12 +173,12 @@ CSemaphore::~CSemaphore()
 void CSemaphore::signal() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	SetEvent(mInternals->mHandle);
+	::SetEvent(mInternals->mHandle);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CSemaphore::waitFor() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	WaitForSingleObject(mInternals->mHandle, INFINITE);
+	::WaitForSingleObject(mInternals->mHandle, INFINITE);
 }

@@ -57,7 +57,7 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 	// Setup
 			__time64_t	time64 = (__time64_t) (time + kUniversalTimeInterval1970To2001);
 	struct	tm			theTM;
-	_localtime64_s(&theTM, &time64);
+	::_localtime64_s(&theTM, &time64);
 
 	// Store
 	mYear = theTM.tm_year + 1900;
@@ -87,7 +87,7 @@ UniversalTime SGregorianDate::getUniversalTime() const
 	theTM.tm_wday = 0;
 	theTM.tm_isdst = -1;
 
-	__time64_t	time64 = _mktime64(&theTM);
+	__time64_t	time64 = ::_mktime64(&theTM);
 
 	return (UniversalTime) time64 + ::fmod(mSecond, 1) - kUniversalTimeInterval1970To2001;
 }
@@ -112,7 +112,7 @@ SGregorianDate SGregorianDate::operator+(const Units& units) const
 	theTM.tm_wday = 0;
 	theTM.tm_isdst = -1;
 
-	__time64_t	time64 = _mktime64(&theTM);
+	__time64_t	time64 = ::_mktime64(&theTM);
 
 	return SGregorianDate((UniversalTime) time64 + ::fmod(seconds, 1) - kUniversalTimeInterval1970To2001);
 }
@@ -125,7 +125,7 @@ CString SGregorianDate::getCurrentTimeZoneName()
 {
 	// Get time zone information
 	TIME_ZONE_INFORMATION	timeZoneInformation;
-	DWORD					result = GetTimeZoneInformation(&timeZoneInformation);
+	DWORD					result = ::GetTimeZoneInformation(&timeZoneInformation);
 
 	return CString(
 			(result == TIME_ZONE_ID_DAYLIGHT) ? timeZoneInformation.DaylightName : timeZoneInformation.StandardName);
@@ -137,7 +137,7 @@ UniversalTimeInterval SGregorianDate::getCurrentTimeZoneOffset()
 {
 	// Get time zone information
 	TIME_ZONE_INFORMATION	timeZoneInformation;
-	DWORD					result = GetTimeZoneInformation(&timeZoneInformation);
+	DWORD					result = ::GetTimeZoneInformation(&timeZoneInformation);
 	LONG					minutes =
 									-timeZoneInformation.Bias -
 											((result == TIME_ZONE_ID_DAYLIGHT) ?

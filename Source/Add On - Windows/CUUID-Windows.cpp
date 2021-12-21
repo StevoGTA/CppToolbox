@@ -13,7 +13,7 @@ CUUID::Bytes eCreateUUIDBytes()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CUUID::Bytes	bytes;
-	UuidCreate((UUID*) &bytes);
+	::UuidCreate((UUID*) &bytes);
 
 	return bytes;
 }

@@ -4,9 +4,7 @@
 
 #include "CString.h"
 
-//#include "CppToolboxAssert.h"
 #include "CData.h"
-//#include "CLogServices.h"
 #include "SError.h"
 #include "TBuffer.h"
 
@@ -75,7 +73,7 @@ CString::CString(const char* chars, Length charsCount, Encoding encoding) : CHas
 
 	// Convert
 	int	count =
-				MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, charsCount, &mString[0],
+				::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, charsCount, &mString[0],
 						charsCount);
 	AssertFailIf(count == 0);
 }
@@ -111,10 +109,10 @@ CString::CString(Float32 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
-		count = _stprintf_s(&mString[0], 100, _TEXT("%0.*f"), digitsAfterDecimalPoint, value);
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%0.*f"), digitsAfterDecimalPoint, value);
 	else
 		count =
-				_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%0*.*f") : _TEXT("%*.*f"), fieldSize,
+				::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%0*.*f") : _TEXT("%*.*f"), fieldSize,
 						digitsAfterDecimalPoint, value);
 
 	// Update
@@ -131,10 +129,10 @@ CString::CString(Float64 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
-		count = _stprintf_s(&mString[0], 100, _TEXT("%0.*f"), digitsAfterDecimalPoint, value);
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%0.*f"), digitsAfterDecimalPoint, value);
 	else
 		count =
-				_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%0*.*f") : _TEXT("%*.*f"), fieldSize,
+				::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%0*.*f") : _TEXT("%*.*f"), fieldSize,
 						digitsAfterDecimalPoint, value);
 
 	// Update
@@ -165,9 +163,9 @@ CString::CString(SInt32 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
-		count = _stprintf_s(&mString[0], 100, _TEXT("%ld"), value);
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%ld"), value);
 	else
-		count = _stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*ld") : _TEXT("%*ld"), fieldSize, value);
+		count = ::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*ld") : _TEXT("%*ld"), fieldSize, value);
 
 	// Update
 	mString.resize(count);
@@ -183,9 +181,9 @@ CString::CString(SInt64 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
-		count = _stprintf_s(&mString[0], 100, _TEXT("%lld"), value);
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%lld"), value);
 	else
-		count = _stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*lld") : _TEXT("%*lld"), fieldSize, value);
+		count = ::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*lld") : _TEXT("%*lld"), fieldSize, value);
 
 	// Update
 	mString.resize(count);
@@ -201,7 +199,7 @@ CString::CString(UInt8 value, UInt32 fieldSize, bool padWithZeros, bool makeHex)
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
-		count = _stprintf_s(&mString[0], 100, _TEXT("%u"), value);
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%u"), value);
 	else {
 		// Setup
 		TCHAR*	format;
@@ -210,7 +208,7 @@ CString::CString(UInt8 value, UInt32 fieldSize, bool padWithZeros, bool makeHex)
 		else
 			format = padWithZeros ? _TEXT("%.*u") : _TEXT("%*u");
 
-		count = _stprintf_s(&mString[0], 100, format, fieldSize, value);
+		count = ::_stprintf_s(&mString[0], 100, format, fieldSize, value);
 	}
 
 	// Update
@@ -227,7 +225,7 @@ CString::CString(UInt16 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
-		count = _stprintf_s(&mString[0], 100, _TEXT("%u"), value);
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%u"), value);
 	else {
 		// Setup
 		TCHAR*	format;
@@ -236,7 +234,7 @@ CString::CString(UInt16 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 		else
 			format = padWithZeros ? _TEXT("%.*u") : _TEXT("%*u");
 
-		count = _stprintf_s(&mString[0], 100, format, fieldSize, value);
+		count = ::_stprintf_s(&mString[0], 100, format, fieldSize, value);
 	}
 
 	// Update
@@ -253,7 +251,7 @@ CString::CString(UInt32 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
-		count = _stprintf_s(&mString[0], 100, _TEXT("%lu"), value);
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%lu"), value);
 	else {
 		// Setup
 		TCHAR*	format;
@@ -262,7 +260,7 @@ CString::CString(UInt32 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 		else
 			format = padWithZeros ? _TEXT("%.*lu") : _TEXT("%*lu");
 
-		count = _stprintf_s(&mString[0], 100, format, fieldSize, value);
+		count = ::_stprintf_s(&mString[0], 100, format, fieldSize, value);
 	}
 
 	// Update
@@ -279,7 +277,7 @@ CString::CString(UInt64 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
-		count = _stprintf_s(&mString[0], 100, _TEXT("%llu"), value);
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%llu"), value);
 	else {
 		// Setup
 		TCHAR*	format;
@@ -288,7 +286,7 @@ CString::CString(UInt64 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 		else
 			format = padWithZeros ? _TEXT("%.*llu") : _TEXT("%*llu");
 
-		count = _stprintf_s(&mString[0], 100, format, fieldSize, value);
+		count = ::_stprintf_s(&mString[0], 100, format, fieldSize, value);
 	}
 
 	// Update
@@ -303,7 +301,7 @@ CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 	osType = EndianU32_NtoB(osType);
 
 	mString.resize(4);
-	MultiByteToWideChar(sGetCodePageForCStringEncoding(kEncodingASCII), 0, (char*) &osType, 4, &mString[0], 4);
+	::MultiByteToWideChar(sGetCodePageForCStringEncoding(kEncodingASCII), 0, (char*) &osType, 4, &mString[0], 4);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -314,7 +312,7 @@ CString::CString(const void* pointer) : CHashable()
 	mString.resize(100);
 
 	// Check field size
-	int	count = _stprintf_s(&mString[0], 100, _TEXT("%p"), pointer);
+	int	count = ::_stprintf_s(&mString[0], 100, _TEXT("%p"), pointer);
 
 	// Update
 	mString.resize(count);
@@ -347,7 +345,7 @@ CString::CString(const CData& data, Encoding encoding) : CHashable()
 
 		// Convert
 		int	count =
-					MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (char*) data.getBytePtr(),
+					::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (char*) data.getBytePtr(),
 							(int) data.getByteCount(), &mString[0], (int) data.getByteCount());
 		AssertFailIf(count == 0);
 	}
@@ -379,8 +377,8 @@ const CString::C CString::getCString(Encoding encoding) const
 	if (length > 0) {
 		// Convert
 		int	count =
-					WideCharToMultiByte(sGetCodePageForCStringEncoding(encoding), 0, mString.c_str(), length, c.mBuffer,
-							length * 4, NULL, NULL);
+					::WideCharToMultiByte(sGetCodePageForCStringEncoding(encoding), 0, mString.c_str(), length,
+							c.mBuffer, length * 4, NULL, NULL);
 		c.mBuffer[count] = 0;
 	}
 
@@ -471,7 +469,7 @@ CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 
 		// Convert
 		int	count =
-					WideCharToMultiByte(sGetCodePageForCStringEncoding(encoding), 0, mString.c_str(), length,
+					::WideCharToMultiByte(sGetCodePageForCStringEncoding(encoding), 0, mString.c_str(), length,
 							(LPSTR) data.getMutableBytePtr(), length * 4, NULL, NULL);
 		data.setByteCount(count);
 
@@ -537,8 +535,6 @@ CString CString::lowercased() const
 {
 	// Setup
 	CString	string(*this);
-
-	_T("abc");
 
 	// Transform
 #if defined(_UNICODE)
@@ -721,7 +717,7 @@ CString CString::make(OSStringType format, va_list args)
 		buffer.resize(size + 1);
 
 		// Try to write and get needed size
-		size = vswprintf_s(&buffer[0], buffer.size(), format, args);
+		size = ::vswprintf_s(&buffer[0], buffer.size(), format, args);
 	} while ((size + 1) > buffer.size());
 
 	// Compose CString

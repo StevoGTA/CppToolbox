@@ -24,7 +24,7 @@ SError SErrorFromWindowsError(DWORD error)
 {
 	// Convert code to string
 	TCHAR	buffer[1024];
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, error,
+	::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, error,
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, (sizeof(buffer) / sizeof(TCHAR)), NULL);
 
 	return SError(CString(OSSTR("Windows")), error, CString(buffer).replacingSubStrings(CString(OSSTR("\r\n"))));

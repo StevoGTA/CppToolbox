@@ -65,9 +65,11 @@ UInt32 CCoreServices::getTotalProcessorCoresCount()
 		//// Cleanup
 		//free(buffer);
 
+		// Get sytem info
 		SYSTEM_INFO	systemInfo;
 		::GetSystemInfo(&systemInfo);
 
+		// Store info
 		sTotalProcessorCoresCount = systemInfo.dwNumberOfProcessors;
 	}
 

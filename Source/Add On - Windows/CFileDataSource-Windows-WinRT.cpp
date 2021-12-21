@@ -112,7 +112,7 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 		};
 
 		struct CFileDataSourceBuffer : implements<CFileDataSourceBuffer, IBuffer, IBufferByteAccess> {
-			// Methods
+								// Methods
 								CFileDataSourceBuffer(const void* buffer, UInt64 byteCount) :
 									mBuffer(buffer), mByteCount(byteCount)
 									{}
