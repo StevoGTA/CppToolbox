@@ -572,14 +572,14 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	CAudioDestination::reset();
 	CAudioDestination::seek(timeInterval);
 
-	// Reset stuffs
-	mInternals->mCurrentPlaybackTimeInterval = timeInterval;
+	// Update stuffs
+	mInternals->mIsSeeking = !mInternals->mIsPlaying;
 	mInternals->mLastSeekTimeInterval = timeInterval;
+	mInternals->mCurrentPlaybackTimeInterval = timeInterval;
 
 	mInternals->mRenderProcFrameIndex = 0;
 	mInternals->mRenderProcFrameCount =
-			(mInternals->mIsSeeking || !mInternals->mIsPlaying) ?
-					(UInt32) (*mInternals->mSampleRate * CAudioPlayer::kPreviewDuration) : ~0;
+			!mInternals->mIsPlaying ? (UInt32) (*mInternals->mSampleRate * CAudioPlayer::kPreviewDuration) : ~0;
 
 	// Resume
 	mInternals->mAudioPlayerBufferThread->resume();
@@ -589,6 +589,9 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 
 	// Start the engine if not already started
 	CAudioEngine::mShared.play();
+
+	// Notify playback position updated
+	mInternals->mInfo.positionUpdated(*this, timeInterval);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -678,6 +681,7 @@ void CAudioPlayer::play()
 
 	// We are now playing
 	mInternals->mIsPlaying = true;
+	mInternals->mIsSeeking = false;
 
 	// Send frames
 	mInternals->mRenderProcShouldSendFrames = true;
