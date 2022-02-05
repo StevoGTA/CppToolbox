@@ -5,7 +5,7 @@
 #include "CAACAudioCodec.h"
 
 #include "CByteReader.h"
-#include "CLogServices-Apple.h"
+#include "CLogServices.h"
 #include "SError-Apple.h"
 
 #include <AudioToolbox/AudioToolbox.h>
@@ -127,7 +127,7 @@ CAACAudioCodec::~CAACAudioCodec()
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+OI<SError> CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -152,14 +152,16 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 			audioProcessingFormat.getIsBigEndian(), !audioProcessingFormat.getIsInterleaved());
 
 	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
-	LogOSStatusIfFailed(status, OSSTR("AudioConverterNew"));
+	ReturnErrorIfFailed(status, OSSTR("AudioConverterNew"));
 
 	// Set magic cookie
 	status =
 			::AudioConverterSetProperty(mInternals->mAudioConverterRef,
 					kAudioConverterDecompressionMagicCookie, (UInt32) aacDecodeInfo.getMagicCookie().getByteCount(),
 					aacDecodeInfo.getMagicCookie().getBytePtr());
-	LogOSStatusIfFailed(status, OSSTR("AudioConverterSetProperty for magic cookie"));
+	ReturnErrorIfFailed(status, OSSTR("AudioConverterSetProperty for magic cookie"));
+
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

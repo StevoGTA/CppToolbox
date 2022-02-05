@@ -5,7 +5,8 @@
 #include "CH264VideoCodec.h"
 
 #include "CBitReader.h"
-#include "CLogServices-Apple.h"
+#include "CLogServices.h"
+#include "SError-Apple.h"
 
 #include <CoreMedia/CoreMedia.h>
 #include <VideoToolbox/VideoToolbox.h>
@@ -66,7 +67,7 @@ CH264VideoCodec::~CH264VideoCodec()
 // MARK: CVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
+OI<SError> CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
 		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -97,7 +98,7 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 			::CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, spsCount + ppsCount,
 					parameterSetPointers, parameterSetSizes, h264DecodeInfo.getNALUHeaderLengthSize(),
 					&mInternals->mFormatDescriptionRef);
-	LogOSStatusIfFailed(status, OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"));
+	ReturnErrorIfFailed(status, OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"));
 
 	// Setup Decompression Session
 	VTDecompressionOutputCallbackRecord	decompressionOutputCallbackRecord;
@@ -159,7 +160,7 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 					&decompressionOutputCallbackRecord, &mInternals->mDecompressionSessionRef);
 	::CFRelease(destinationImageBufferAttributes);
 	::CFRelease(videoDecoderSpecification);
-	LogOSStatusIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
+	ReturnErrorIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
 
 	// Finish setup
 	mInternals->mTimeScale = OV<UInt32>(h264DecodeInfo.getTimeScale());
@@ -169,6 +170,8 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 	SequenceParameterSetPayload	spsPayload(
 										CData(parameterSetPointers[0], (CData::ByteCount) parameterSetSizes[0], false));
 	mInternals->mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
+
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
