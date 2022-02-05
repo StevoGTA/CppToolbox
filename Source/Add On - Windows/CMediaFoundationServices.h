@@ -103,9 +103,11 @@ class CMediaFoundationServices {
 		static	TCIResult<IMFTransform>	createTransformForAudioDecoder(const GUID& guid,
 												const SAudioProcessingFormat& audioProcessingFormat,
 												const OI<CData>& userData = OI<CData>());
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 		static	TCIResult<IMFTransform>	createTransformForAudioResampler(
 												const SAudioProcessingFormat& inputAudioProcessingFormat,
 												const SAudioProcessingFormat& outputAudioProcessingFormat);
+#endif
 		static	TCIResult<IMFTransform>	createTransformForVideoDecode(const GUID& guid);
 		static	OI<SError>				setTransformInputOutputMediaTypes(IMFTransform* transform,
 												IMFMediaType* inputMediaType, IMFMediaType* outputMediaType);

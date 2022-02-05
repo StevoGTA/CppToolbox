@@ -7,15 +7,14 @@
 #include <mfapi.h>
 #include <Mferror.h>
 #include <strsafe.h>
-//#include <wmcodecdsp.h>
 
-EXTERN_C const CLSID CLSID_CResamplerMediaObject;
-static const PROPERTYKEY MFPKEY_WMRESAMP_FILTERQUALITY = { { 0xaf1adc73, 0xa210, 0x4b05, {0x96, 0x6e, 0x54, 0x91, 0xcf, 0xf4, 0x8b, 0x1d} }, 0x01 }; 
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+	EXTERN_C const CLSID CLSID_CResamplerMediaObject;
+	static const PROPERTYKEY MFPKEY_WMRESAMP_FILTERQUALITY = { { 0xaf1adc73, 0xa210, 0x4b05, {0x96, 0x6e, 0x54, 0x91, 0xcf, 0xf4, 0x8b, 0x1d} }, 0x01 }; 
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
-
-HRESULT LogMediaType(IMFMediaType *pType);
 
 LPCWSTR sGetGUIDNameConst(const GUID& guid);
 HRESULT sGetGUIDName(const GUID& guid, WCHAR **ppwsz);
@@ -159,84 +158,20 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioDecoder
 	ReturnValueIfFailed(result, "ActivateObject", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Setup input media type
-	//IMFMediaType*	mediaType;
-	//result = ::MFCreateMediaType(&mediaType);
-	//ReturnValueIfFailed(result, "MFCreateMediaType for input", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	//CI<IMFMediaType>	inputMediaType(mediaType);
-
-	//result = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-	//ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = inputMediaType->SetGUID(MF_MT_SUBTYPE, guid);
-	//ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = inputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
-	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_BITS_PER_SAMPLE for input",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = inputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) audioProcessingFormat.getSampleRate());
-	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for input",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = inputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioProcessingFormat.getChannels());
-	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for input",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//if (userData.hasInstance()) {
-	//	result =
-	//			inputMediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
-	//					(UINT32) userData->getByteCount());
-	//	ReturnValueIfFailed(result, "SetBlob of MF_MT_USER_DATA for input",
-	//			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	//}
 	TCIResult<IMFMediaType>	inputMediaType =
 									createMediaType(guid, 32, audioProcessingFormat.getSampleRate(),
 											audioProcessingFormat.getChannelMap(), OV<UInt32>(), OV<UInt32>(),
 											userData);
 	ReturnValueIfResultError(inputMediaType, TCIResult<IMFTransform>(inputMediaType.getError()));
 
-	//result = audioDecoder->SetInputType(0, *(inputMediaType.getInstance()), 0);
-	//ReturnValueIfFailed(result, "SetInputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
 	// Setup output media type
-	//result = ::MFCreateMediaType(&mediaType);
-	//ReturnValueIfFailed(result, "MFCreateMediaType for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	//CI<IMFMediaType>	outputMediaType(mediaType);
-
-	//result = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-	//ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = outputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
-	//ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = outputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
-	//ReturnValueIfFailed(result, "SetSetUINT32UID of MF_MT_AUDIO_BITS_PER_SAMPLE for output",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = outputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) audioProcessingFormat.getSampleRate());
-	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for output",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = outputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioProcessingFormat.getChannels());
-	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for output",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = outputMediaType->SetUINT32(MF_MT_AUDIO_PREFER_WAVEFORMATEX, 1);
-	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_PREFER_WAVEFORMATEX for output",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 	TCIResult<IMFMediaType>	outputMediaType =
 									createMediaType(MFAudioFormat_Float, 32, audioProcessingFormat.getSampleRate(),
 											audioProcessingFormat.getChannelMap(), OV<UInt32>(), OV<UInt32>(),
 											OI<CData>(), kCreateAudioMediaTypeOptionsPreferWAVEFORMATEX);
 	ReturnValueIfResultError(outputMediaType, TCIResult<IMFTransform>(outputMediaType.getError()));
 
-	//result = audioDecoder->SetOutputType(0, *(outputMediaType.getInstance()), 0);
-	//ReturnValueIfFailed(result, "SetOutputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
+	// Set input and output media types
 	OI<SError>	error =
 						setTransformInputOutputMediaTypes(*audioDecoder, *(inputMediaType.getInstance()),
 								*(outputMediaType.getInstance()));
@@ -245,6 +180,7 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioDecoder
 	return TCIResult<IMFTransform>(audioDecoder);
 }
 
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 //----------------------------------------------------------------------------------------------------------------------
 TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioResampler(
 		const SAudioProcessingFormat& inputAudioProcessingFormat,
@@ -273,15 +209,10 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioResampl
 
 	// Configure
 	PROPVARIANT	pv;
-	//result = propertyStore->GetValue(MFPKEY_WMRESAMP_FILTERQUALITY, &pv);
-
 	pv.vt = VT_I4;
 	pv.intVal = 60;
 	result = propertyStore->SetValue(MFPKEY_WMRESAMP_FILTERQUALITY, pv);
 	ReturnValueIfFailed(result, "Setting Filter Quality", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = mResamplerPropertyStore->Commit();
-	//processHRESULT(result, OSSTR("Committing property change"));
 
 	// Setup input media type
 	TCIResult<IMFMediaType>	inputMediaType = createMediaType(inputAudioProcessingFormat);
@@ -299,6 +230,7 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioResampl
 
 	return TCIResult<IMFTransform>(audioResampler);
 }
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 TCIResult<IMFTransform> CMediaFoundationServices::createTransformForVideoDecode(const GUID& guid)
