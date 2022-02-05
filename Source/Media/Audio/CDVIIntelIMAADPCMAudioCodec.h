@@ -19,7 +19,7 @@ class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 											~CDVIIntelIMAADPCMAudioCodec();
 
 											// CAudioCodec methods - Decoding
-				void						setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+				OI<SError>					setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 													const I<CCodec::DecodeInfo>& decodeInfo);
 				CAudioFrames::Requirements	getRequirements() const;
 				void						seek(UniversalTimeInterval timeInterval);

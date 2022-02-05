@@ -125,13 +125,15 @@ CDVIIntelIMAADPCMAudioCodec::~CDVIIntelIMAADPCMAudioCodec()
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+OI<SError> CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
+
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

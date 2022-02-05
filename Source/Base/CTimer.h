@@ -13,6 +13,8 @@ class CTimerInternals;
 class CTimer {
 	// Procs
 	public:
+		// On macOS, this proc will be called on the Main thread.
+		// On Windows, this proc will be called on a background thread.
 		typedef	void	(*Proc)(CTimer& timer, void* userData);
 
 	// Options:

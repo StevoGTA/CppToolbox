@@ -118,7 +118,7 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 			OV<UInt8>	frame_num = bitReader.readUInt8(mCurrentFrameNumberBitCount).getValue();	(void) frame_num;
 			OV<UInt8>	pic_order_cnt_lsb = bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount).getValue();
 
-			sliceType = *slice_type;
+			sliceType = (UInt8) *slice_type;
 			picOrderCntLSB = *pic_order_cnt_lsb;
 			break;
 		} else if (naluType == NALUInfo::kTypeCodedSliceIDRPicture) {
@@ -130,7 +130,7 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 			OV<UInt32>	idr_pic_id = bitReader.readUEColumbusCode().getValue();	(void) idr_pic_id;
 			OV<UInt8>	pic_order_cnt_lsb = bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount).getValue();
 
-			sliceType = *slice_type;
+			sliceType = (UInt8) *slice_type;
 			picOrderCntLSB = *pic_order_cnt_lsb;
 			break;
 		} else if (naluType == NALUInfo::kTypeSupplementalEnhancementInformation) {

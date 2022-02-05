@@ -15,13 +15,20 @@
 #include <mmdeviceapi.h>
 #include <wrl\implements.h>
 
-#pragma comment( lib, "mfuuid.lib" )
+using namespace Microsoft::WRL;
+
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	using namespace Windows::Media::Devices;
+#else
+	// C++/WinRT
+	#include <winrt/Windows.Media.Devices.h>
+	using namespace winrt::Windows::Media::Devices;
+#endif
 
 #define Delete(x)	{ delete x; x = nil; }
 
-using namespace Microsoft::WRL;
-using namespace Platform;
-using namespace Windows::Media::Devices;
+#pragma comment(lib, "mfuuid.lib")
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioPlayerImplementation
@@ -34,8 +41,7 @@ class CAudioPlayerImplementation :
 			kInitialized,
 			kPlaybackStarting,
 			kPlaying,
-			kPausing,
-			kPaused,
+			kResetting,
 
 			kError,
 		};
@@ -46,14 +52,14 @@ class CAudioPlayerImplementation :
 									mFinishSeekShouldPause(false), mAudioClient(nullptr), mAudioRenderClient(nullptr),
 									mFillBufferAsyncResult(nullptr), mSimpleAudioVolume(nullptr), mFillBufferKey(0),
 									mState(kInitializing), mFillBufferAsyncCallback(*this, onFillBuffer),
-									mPlayAsyncCallback(*this, onPlay), mPauseAsyncCallback(*this, onPause),
+									mPlayAsyncCallback(*this, onPlay), mResetAsyncCallback(*this, onReset),
 									mBufferFrames(0), mDefaultPeriodInFrames(0), mFundamentalPeriodInFrames(0),
 									mMaxPeriodInFrames(0), mMinPeriodInFrames(0),  mMixFormat(nullptr),
-									mIsSeeking(false), mSourceWindowStartTimeInterval(0.0), mLastSeekTimeInterval(0.0),
-									mCurrentPlaybackTimeInterval(0.0),
+									mIsPlaying(false), mIsSeeking(false), mSourceWindowStartTimeInterval(0.0),
+									mLastSeekTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0),
 									mOnFillBufferShouldSendFrames(true), mOnFillBufferIsSendingFrames(false),
 									mOnFillBufferShouldNotifyEndOfData(false), mOnFillBufferPreviousFrameCount(0),
-									mOnFillBufferFrameIndex(0), mOnFillBufferFrameCount(~0)
+									mOnFillBufferFrameIndex(0), mOnFillBufferFrameCount(~0U)
 							{
 								// Setup
 								HRESULT	result;
@@ -65,17 +71,24 @@ class CAudioPlayerImplementation :
 									processWindowsError(OSSTR("CreateEventEx() for sample ready event"));
 
 								// Startup Media Foundation
-								result = MFStartup(MF_VERSION, MFSTARTUP_LITE);
+								result = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
 								processHRESULT(result, OSSTR("MFStartup()"));
 
-								// Get Audio Render ID
-								String^	audioRenderID = MediaDevice::GetDefaultAudioRenderId(AudioDeviceRole::Default);
-
 								if (mState != kError) {
+									// Get Audio Render ID
+									auto	audioRenderID =
+													MediaDevice::GetDefaultAudioRenderId(AudioDeviceRole::Default);
+#if defined(__cplusplus_winrt)
+									// C++/CX
+									auto	audioRenderIDString = audioRenderID->Data();
+#else
+									// C++/WinRT
+									auto	audioRenderIDString = audioRenderID.data();
+#endif
 									// Activate Audio Interface
 									IActivateAudioInterfaceAsyncOperation*	activateAudioInterfaceAsyncOperation;
 									result =
-											ActivateAudioInterfaceAsync(audioRenderID->Data(), __uuidof(IAudioClient3),
+											ActivateAudioInterfaceAsync(audioRenderIDString, __uuidof(IAudioClient3),
 													nullptr, this, &activateAudioInterfaceAsyncOperation);
 									processHRESULT(result, OSSTR("ActivateAudioInterfaceAsync"));
 									if (activateAudioInterfaceAsyncOperation != nullptr)
@@ -227,7 +240,7 @@ class CAudioPlayerImplementation :
 								processHRESULT(result, OSSTR("GetBuffer()"));
 
 								// Check if should send frames
-								if ((mState == kPlaying) && mOnFillBufferShouldSendFrames) {
+								if (mOnFillBufferShouldSendFrames) {
 									// Sending frames
 									CSRSWBIPSegmentedQueue::ReadBufferInfo	readBufferInfo = mQueue->requestRead();
 									UInt32									frameCount =
@@ -315,7 +328,7 @@ class CAudioPlayerImplementation :
 				void	play()
 							{
 								// Check state
-								if ((mState != kInitialized) && (mState != kPaused))
+								if (mState != kInitialized)
 									return;
 
 								// Update state
@@ -357,37 +370,37 @@ class CAudioPlayerImplementation :
 
 								return S_OK;
 							}
-				void	pause()
+				void	reset()
 							{
 								// Check state
 								if (mState != kPlaying)
 									return;
 
 								// Update state
-								mState = kPausing;
+								mState = kResetting;
 
 								// Pause
 								HRESULT	result =
 												MFPutWorkItem2(MFASYNC_CALLBACK_QUEUE_MULTITHREADED, 0,
-														&mPauseAsyncCallback, nullptr);
-								processHRESULT(result, OSSTR("MFPutWaitingWorkItem() for PausePlayback"));
+														&mResetAsyncCallback, nullptr);
+								processHRESULT(result, OSSTR("MFPutWaitingWorkItem() for Reset"));
 
 								// Wait
-								while (mState == kPausing)
+								while (mState == kResetting)
 									// Sleep
 									CThread::sleepFor(0.001);
 							}
-				HRESULT	onPause(__RPC__in_opt IMFAsyncResult& asyncResult)
+				HRESULT	onReset(__RPC__in_opt IMFAsyncResult& asyncResult)
 							{
 								// Check state
-								if (mState != kPausing)
+								if (mState != kResetting)
 									return S_OK;
 
 								// Stop
 								HRESULT	result = mAudioClient->Stop();
 								if (SUCCEEDED(result))
 									// Success
-									mState = kPaused;
+									mState = kInitialized;
 								else
 									// Error
 									processHRESULT(result, OSSTR("Stop()"));
@@ -401,7 +414,7 @@ class CAudioPlayerImplementation :
 									return;
 
 								// Set gain
-								HRESULT	result = mSimpleAudioVolume->SetMasterVolume(gain, nullptr);
+								HRESULT	result = mSimpleAudioVolume->SetMasterVolume(std::min<Float32>(gain, 1.0), nullptr);
 								processHRESULT(result, OSSTR("SetMasterVolume()"));
 							}
 				void	shutdown()
@@ -428,7 +441,7 @@ class CAudioPlayerImplementation :
 							{
 								// Error
 								mState = kError;
-								mError = OI<SError>(SErrorFromWindowsGetLastError()));
+								mError = OI<SError>(SErrorFromWindowsGetLastError());
 								CLogServices::logError(
 										CString(method) + CString(OSSTR(" returned ")) + mError->getDescription());
 							}
@@ -437,9 +450,9 @@ class CAudioPlayerImplementation :
 								CAudioPlayerImplementation& implementation)
 							{ return implementation.onFillBuffer(asyncResult); }
 		static	HRESULT	onPlay(__RPC__in_opt IMFAsyncResult& asyncResult, CAudioPlayerImplementation& implementation)
-							{ return implementation.onPlay(asyncResult); } 
-		static	HRESULT	onPause(__RPC__in_opt IMFAsyncResult& asyncResult, CAudioPlayerImplementation& implementation)
-							{ return implementation.onPause(asyncResult); }
+							{ return implementation.onPlay(asyncResult); }
+		static	HRESULT	onReset(__RPC__in_opt IMFAsyncResult& asyncResult, CAudioPlayerImplementation& implementation)
+							{ return implementation.onReset(asyncResult); }
  
 		CAudioPlayer&									mAudioPlayer;
 		CString											mIdentifier;
@@ -458,7 +471,7 @@ class CAudioPlayerImplementation :
 		State											mState;
 		TMFAsyncCallback<CAudioPlayerImplementation>	mFillBufferAsyncCallback;
 		TMFAsyncCallback<CAudioPlayerImplementation>	mPlayAsyncCallback;
-		TMFAsyncCallback<CAudioPlayerImplementation>	mPauseAsyncCallback;
+		TMFAsyncCallback<CAudioPlayerImplementation>	mResetAsyncCallback;
 		UINT32											mBufferFrames;
 		UINT32											mDefaultPeriodInFrames;
 		UINT32											mFundamentalPeriodInFrames;
@@ -466,6 +479,7 @@ class CAudioPlayerImplementation :
 		UINT32											mMinPeriodInFrames;
 		WAVEFORMATEX*									mMixFormat;
 
+		bool											mIsPlaying;
 		bool											mIsSeeking;
 		UniversalTimeInterval							mSourceWindowStartTimeInterval;
 		UniversalTimeInterval							mLastSeekTimeInterval;
@@ -527,10 +541,13 @@ CAudioPlayer::~CAudioPlayer()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Stop sending frames
-	mInternals->mImplementation->pause();
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
 	while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
 		// Sleep
 		CThread::sleepFor(0.001);
+
+	// Reset
+	mInternals->mImplementation->reset();
 
 	// Stop threads
 	if (mInternals->mImplementation->mAudioPlayerBufferThread.hasInstance())
@@ -629,14 +646,14 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	CAudioDestination::reset();
 	CAudioDestination::seek(timeInterval);
 
-	// Reset stuffs
-	mInternals->mImplementation->mCurrentPlaybackTimeInterval = timeInterval;
+	// Update stuffs
+	mInternals->mImplementation->mIsSeeking = !mInternals->mImplementation->mIsPlaying;
 	mInternals->mImplementation->mLastSeekTimeInterval = timeInterval;
+	mInternals->mImplementation->mCurrentPlaybackTimeInterval = timeInterval;
 
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
 	mInternals->mImplementation->mOnFillBufferFrameCount =
-			(mInternals->mImplementation->mIsSeeking ||
-							(mInternals->mImplementation->mState != CAudioPlayerImplementation::kPlaying)) ?
+			!mInternals->mImplementation->mIsPlaying ?
 					(UInt32) ((UniversalTimeInterval) mInternals->mImplementation->mMixFormat->nSamplesPerSec *
 							CAudioPlayer::kPreviewDuration) :
 					~0;
@@ -646,6 +663,12 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 
 	// Send frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
+
+	// Play if not already playing
+	mInternals->mImplementation->play();
+
+	// Notify playback position updated
+	mInternals->mImplementation->mInfo.positionUpdated(*this, timeInterval);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -653,10 +676,16 @@ void CAudioPlayer::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Stop sending frames
-	mInternals->mImplementation->pause();
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
 	while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
 		// Sleep
 		CThread::sleepFor(0.001);
+
+	// Reset
+	mInternals->mImplementation->reset();
+
+	// No longer playing
+	mInternals->mImplementation->mIsPlaying = false;
 
 	// Pause Reader Thread
 	mInternals->mImplementation->mAudioPlayerBufferThread->pause();
@@ -672,7 +701,7 @@ void CAudioPlayer::reset()
 			mInternals->mImplementation->mSourceWindowStartTimeInterval;
 
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
-	mInternals->mImplementation->mOnFillBufferFrameCount = ~0;
+	mInternals->mImplementation->mOnFillBufferFrameCount = ~0U;
 
 	// Resume
 	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
@@ -712,10 +741,14 @@ void CAudioPlayer::play()
 		// Sleep
 		CThread::sleepFor(0.001);
 
+	// We are now playing
+	mInternals->mImplementation->mIsPlaying = true;
+	mInternals->mImplementation->mIsSeeking = false;
+
 	// Send frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
 	mInternals->mImplementation->mOnFillBufferShouldNotifyEndOfData = true;
-	mInternals->mImplementation->mOnFillBufferFrameCount = ~0;
+	mInternals->mImplementation->mOnFillBufferFrameCount = ~0U;
 
 	// Start
 	mInternals->mImplementation->play();
@@ -726,7 +759,7 @@ void CAudioPlayer::pause()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Pause
-	mInternals->mImplementation->pause();
+	mInternals->mImplementation->mIsPlaying = false;
 
 	// Don't send frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
@@ -736,7 +769,7 @@ void CAudioPlayer::pause()
 bool CAudioPlayer::isPlaying() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mImplementation->mState == CAudioPlayerImplementation::kPlaying;
+	return mInternals->mImplementation->mIsPlaying;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -780,14 +813,13 @@ void CAudioPlayer::finishSeek()
 	mInternals->mImplementation->mCurrentPlaybackTimeInterval = mInternals->mImplementation->mLastSeekTimeInterval;
 
 	mInternals->mImplementation->mOnFillBufferFrameIndex = 0;
-	mInternals->mImplementation->mOnFillBufferFrameCount = ~0;
+	mInternals->mImplementation->mOnFillBufferFrameCount = ~0U;
 
 	// Resume
 	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
 
 	// Begin sending frames again
-	mInternals->mImplementation->mOnFillBufferShouldSendFrames =
-			mInternals->mImplementation->mState == CAudioPlayerImplementation::kPlaying;
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = mInternals->mImplementation->mIsPlaying;
 	mInternals->mImplementation->mOnFillBufferShouldNotifyEndOfData = true;
 }
 

@@ -22,32 +22,32 @@ SError	SErrorFromWindowsGetLastError();
 
 #define	ReturnError(result, method)														\
 				{																		\
-					SError	error = SErrorFromHRESULT(result);							\
+					SError	_error = SErrorFromHRESULT(result);							\
 					CLogServices::logError(												\
 							CString(method) + CString(OSSTR(" returned ")) +			\
-									error.getDescription());							\
+									_error.getDescription());							\
 																						\
-					return OI<SError>(error);											\
+					return OI<SError>(_error);											\
 				}
 #define	ReturnErrorIfFailed(result, method)												\
 				{																		\
 					if (FAILED(result)) {												\
-						SError	error = SErrorFromHRESULT(result);						\
+						SError	_error = SErrorFromHRESULT(result);						\
 						CLogServices::logError(											\
 								CString(method) + CString(OSSTR(" returned ")) +		\
-										error.getDescription());						\
+										_error.getDescription());						\
 																						\
-						return OI<SError>(error);										\
+						return OI<SError>(_error);										\
 					}																	\
 				}
 #define	ReturnValueIfFailed(result, method, value)										\
 				{																		\
 					if (FAILED(result)) {												\
-						SError	error = SErrorFromHRESULT(result);						\
+						SError	_error = SErrorFromHRESULT(result);						\
 						CLogServices::logError(											\
 								CString(method) + CString(OSSTR(" returned ")) +		\
-										error.getDescription());						\
+										_error.getDescription());						\
 																						\
-						return value;										\
+						return value;													\
 					}																	\
 				}

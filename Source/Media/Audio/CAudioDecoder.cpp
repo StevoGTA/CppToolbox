@@ -74,14 +74,14 @@ TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+OI<SError> CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 	
 	// Setup Audio Codec
-	mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mCodecDecodeInfo);
+	return mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mCodecDecodeInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

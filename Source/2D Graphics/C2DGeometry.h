@@ -164,6 +164,7 @@ template <typename T> struct T2DSize {
 typedef	T2DSize<Float32>	S2DSizeF32;
 typedef T2DSize<SInt32>		S2DSizeS32;
 typedef	T2DSize<UInt16>		S2DSizeU16;
+typedef	T2DSize<UInt32>		S2DSizeU32;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - T2DVector

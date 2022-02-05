@@ -20,6 +20,7 @@ class CCoreAudioAudioConverterInternals {
 								{}
 							~CCoreAudioAudioConverterInternals()
 								{
+									// Cleanup
 									::free(mOutputAudioBufferList);
 									if (mAudioConverterRef != nil)
 										::AudioConverterDispose(mAudioConverterRef);
@@ -34,6 +35,7 @@ class CCoreAudioAudioConverterInternals {
 																				*((CCoreAudioAudioConverterInternals*)
 																						inUserData);
 
+									// Check situation
 									if (internals.mInputAudioFrames.hasInstance())
 										// Reset
 										internals.mInputAudioFrames->reset();

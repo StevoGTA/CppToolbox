@@ -47,7 +47,7 @@ class CVideoCodec : public CCodec {
 										~CVideoCodec() {}
 
 										// Instance methods
-		virtual	void					setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
+		virtual	OI<SError>				setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
 												const I<CCodec::DecodeInfo>& decodeInfo) = 0;
 		virtual	void					seek(UniversalTimeInterval timeInterval) = 0;
 		virtual	TIResult<CVideoFrame>	decode() = 0;

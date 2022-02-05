@@ -92,7 +92,7 @@ class CAudioCodec : public CCodec {
 												~CAudioCodec() {}
 
 												// Instance methods
-		virtual	void							setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+		virtual	OI<SError>						setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
 		virtual	CAudioFrames::Requirements		getRequirements() const = 0;
 		virtual	void							seek(UniversalTimeInterval timeInterval) = 0;
@@ -130,9 +130,9 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 	// Methods
 	public:
 					// CAudioCodec methods
-		void		setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+		OI<SError>	setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 							const I<CCodec::DecodeInfo>& decodeInfo)
-						{ AssertFailUnimplemented(); }
+						{ AssertFailUnimplemented(); return OI<SError>(SError::mUnimplemented); }
 		void		seek(UniversalTimeInterval timeInterval)
 						{ AssertFailUnimplemented(); }
 		OI<SError>	decode(CAudioFrames& audioFrames)

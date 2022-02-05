@@ -222,7 +222,9 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 												audioProcessorDestinationAudioProcessingSetups, audioProcessingFormat);
 	if (commonAudioProcessingFormat.hasInstance()) {
 		// Connect directly
-		audioProcessorSource->setOutputFormat(*commonAudioProcessingFormat);
+		OI<SError>	error = audioProcessorSource->setOutputFormat(*commonAudioProcessingFormat);
+		ReturnValueIfError(error, ConnectResult(*error));
+
 		audioProcessorDestination->connectInput(audioProcessorSource, *commonAudioProcessingFormat);
 
 		return *commonAudioProcessingFormat;

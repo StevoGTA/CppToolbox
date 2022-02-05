@@ -46,7 +46,7 @@ class CAACAudioCodecInternals {
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
 		OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
 
-		OCI<IMFTransform>			mAudioDecoder;
+		OCI<IMFTransform>			mAudioDecoderTransform;
 		UInt32						mDecodeFramesToIgnore;
 		OCI<IMFSample>				mInputSample;
 		OCI<IMFSample>				mOutputSample;
@@ -76,7 +76,7 @@ CAACAudioCodec::~CAACAudioCodec()
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
+OI<SError> CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -100,46 +100,46 @@ void CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessin
 #pragma pack(pop)
 	userData.mAudioSpecificConfig = EndianU16_NtoB(aacDecodeInfo.getStartCodes());
 
-	TCIResult<IMFTransform>	audioDecoder =
-									CMediaFoundationServices::createTransformForAudioDecode(MFAudioFormat_AAC,
+	TCIResult<IMFTransform>	audioDecoderTransform =
+									CMediaFoundationServices::createTransformForAudioDecoder(MFAudioFormat_AAC,
 											audioProcessingFormat,
 											OI<CData>(new CData(&userData, sizeof(UserData), false)));
-	if (audioDecoder.hasError())
-		return;
-	mInternals->mAudioDecoder = audioDecoder.getInstance();
+	if (audioDecoderTransform.hasError())
+		return OI<SError>(audioDecoderTransform.getError());
+	mInternals->mAudioDecoderTransform = audioDecoderTransform.getInstance();
 
 	// Create input sample
 	TCIResult<IMFSample>	sample = CMediaFoundationServices::createSample(10 * 1024);
-	if (sample.hasError())
-		return;
+	ReturnErrorIfResultError(sample);
 	mInternals->mInputSample = sample.getInstance();
 
 	// Create output sample
 	MFT_OUTPUT_STREAM_INFO	outputStreamInfo;
-	HRESULT					result = mInternals->mAudioDecoder->GetOutputStreamInfo(0, &outputStreamInfo);
-	if (FAILED(result)) {
-		// Failed
-		LogHRESULT(result, "GetOutputStreamInfo");
-
-		return;
-	}
+	HRESULT					result = mInternals->mAudioDecoderTransform->GetOutputStreamInfo(0, &outputStreamInfo);
+	ReturnErrorIfFailed(result, "GetOutputStreamInfo");
 
 	sample = CMediaFoundationServices::createSample(outputStreamInfo.cbSize);
-	if (sample.hasError())
-		return;
+	ReturnErrorIfResultError(sample);
 	mInternals->mOutputSample = sample.getInstance();
 
 	// Begin streaming!
-	result = mInternals->mAudioDecoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-	LogHRESULTIfFailed(result, "ProcessMessage to begin streaming");
+	result = mInternals->mAudioDecoderTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
+	ReturnErrorIfFailed(result, "ProcessMessage to begin streaming");
+
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAACAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Preflight
+	if (!mInternals->mAudioDecoderTransform.hasInstance())
+		// Can't seek
+		return;
+
 	// Flush
-	mInternals->mAudioDecoder->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
+	mInternals->mAudioDecoderTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
 
 	// Seek
 	mInternals->mDecodeFramesToIgnore =
@@ -154,7 +154,7 @@ OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
 	// Preflight
 	AssertFailIf(audioFrames.getAvailableFrameCount() < (1024 * 2));
 
-	if (!mInternals->mAudioDecoder.hasInstance() || !mInternals->mInputSample.hasInstance() ||
+	if (!mInternals->mAudioDecoderTransform.hasInstance() || !mInternals->mInputSample.hasInstance() ||
 			!mInternals->mOutputSample.hasInstance())
 		// Can't decode
 		return OI<SError>(sSetupDidNotCompleteError);
@@ -163,7 +163,7 @@ OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
 	while (audioFrames.getAvailableFrameCount() >= 1024) {
 		// Process output
 		OI<SError>	error =
-							CMediaFoundationServices::processOutput(*mInternals->mAudioDecoder,
+							CMediaFoundationServices::processOutput(*mInternals->mAudioDecoderTransform,
 									*mInternals->mOutputSample,
 									CMediaFoundationServices::ProcessOutputInfo(
 											CAACAudioCodecInternals::fillInputBuffer, mInternals->mInputSample,

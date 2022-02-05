@@ -4,11 +4,16 @@
 
 #pragma once
 
+#undef Delete
+
 #include <mfobjects.h>
+
+#define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TMFAsyncCallback
 
+#pragma warning(disable:6011)
 template <typename T> struct TMFAsyncCallback : public IMFAsyncCallback {
 	// Types
 	public:

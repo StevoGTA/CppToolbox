@@ -77,10 +77,10 @@ TCIResult<IMFSample> CH264VideoCodecInternals::readInputSample(void* userData)
 	HRESULT	result =
 					sample.getInstance()->SetSampleTime(
 							times.getValue().mPresentationTime * 10000 / *internals.mTimeScale);
-	LogHRESULTIfFailed(result, "SetSampleTime");
+	ReturnValueIfFailed(result, "SetSampleTime", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	result = sample.getInstance()->SetSampleDuration(dataInfo.getValue().getDuration());
-	LogHRESULTIfFailed(result, "SetSampleDuration");
+	ReturnValueIfFailed(result, "SetSampleDuration", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	return sample;
 }
@@ -101,7 +101,7 @@ OI<SError> CH264VideoCodecInternals::noteFormatChanged(IMFMediaType* mediaType, 
 	result = MFGetAttributeSize(mediaType, MF_MT_FRAME_SIZE, &width, &height);
 	ReturnErrorIfFailed(result,
 			"MFGetAttributeSize for frame size in CH264VideoCodecInternals::noteFormatChanged");
-	internals.mOutputSampleFrameSize = S2DSizeU16(width, height);
+	internals.mOutputSampleFrameSize = S2DSizeU16((UInt16) width, (UInt16) height);
 
 	// Try to get Geometric Aperture
 	MFVideoArea	videoArea;
@@ -162,7 +162,7 @@ CH264VideoCodec::~CH264VideoCodec()
 // MARK: CVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
+OI<SError> CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
 		const I<CCodec::DecodeInfo>& decodeInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -172,18 +172,14 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 	// Create video decoder
 	TCIResult<IMFTransform>	videoDecoder = CMediaFoundationServices::createTransformForVideoDecode(MFVideoFormat_H264);
 	if (videoDecoder.hasError())
-		return;
+		return OI<SError>(videoDecoder.getError());
 	mInternals->mVideoDecoder = videoDecoder.getInstance();
 
 	// Get output stream info
 	MFT_OUTPUT_STREAM_INFO	outputStreamInfo;
 	HRESULT					result = mInternals->mVideoDecoder->GetOutputStreamInfo(0, &outputStreamInfo);
-	if (FAILED(result)) {
-		// Failed
-		LogHRESULT(result, "GetOutputStreamInfo");
+	ReturnErrorIfFailed(result, "GetOutputStreamInfo");
 
-		return;
-	}
 	mInternals->mOutputSampleRequiredByteCount = outputStreamInfo.cbSize;
 
 	// Finish setup
@@ -199,13 +195,16 @@ void CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessi
 
 	// Flush
 	OI<SError>	error = CMediaFoundationServices::flush(*mInternals->mVideoDecoder);
+	ReturnErrorIfError(error);
 
 	// Begin streaming!
 	result = mInternals->mVideoDecoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-	LogHRESULTIfFailed(result, "ProcessMessage to begin streaming");
+	ReturnErrorIfFailed(result, "ProcessMessage to begin streaming");
 
 	result = mInternals->mVideoDecoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
-	LogHRESULTIfFailed(result, "ProcessMessage to begin streaming");
+	ReturnErrorIfFailed(result, "ProcessMessage to begin streaming");
+
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -52,7 +52,7 @@ class CAudioProcessor {
 		virtual	TArray<SAudioProcessingSetup>	getInputSetups() const = 0;
 
 		virtual	TArray<SAudioProcessingSetup>	getOutputSetups() const = 0;
-		virtual	void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+		virtual	OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 														= 0;
 
 	// Properties
@@ -87,8 +87,8 @@ class CAudioDestination : public CAudioProcessor {
 				TArray<SAudioProcessingSetup>	getOutputSetups() const
 													{ AssertFailUnimplemented();
 															return TNArray<SAudioProcessingSetup>(); }
-				void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-													{ AssertFailUnimplemented(); }
+				OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+													{ AssertFailUnimplemented(); return OI<SError>(); }
 
 												// Instance methods
 		virtual	void							setupComplete() = 0;
@@ -114,7 +114,7 @@ class CAudioChannelMapper : public CAudioProcessor {
 				TArray<SAudioProcessingSetup>	getInputSetups() const;
 
 				TArray<SAudioProcessingSetup>	getOutputSetups() const;
-				void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
+				OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
 
 												// Class methods
 		static	bool							canPerform(EAudioChannelMap fromAudioChannelMap,
@@ -138,9 +138,14 @@ class CAudioConverter : public CAudioProcessor {
 		TArray<SAudioProcessingSetup>	getOutputSetups() const
 											{ return TNArray<SAudioProcessingSetup>(
 													SAudioProcessingSetup::mUnspecified); }
-		void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-											{ mOutputAudioProcessingFormat =
-													OI<SAudioProcessingFormat>(audioProcessingFormat); }
+		OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+											{
+												// Store
+												mOutputAudioProcessingFormat =
+														OI<SAudioProcessingFormat>(audioProcessingFormat);
+
+												return OI<SError>();
+											}
 
 	protected:
 										// Lifecycle methods

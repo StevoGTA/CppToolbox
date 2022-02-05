@@ -46,10 +46,7 @@ OI<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcesso
 	// Store
 	mInternals->mAudioProcessor = new I<CAudioProcessor>(audioProcessor);
 
-	// Setup
-	audioProcessor->setOutputFormat(audioProcessingFormat);
-
-	return OI<SError>();
+	return audioProcessor->setOutputFormat(audioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

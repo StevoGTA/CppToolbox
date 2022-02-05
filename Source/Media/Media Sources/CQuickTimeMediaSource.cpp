@@ -271,7 +271,7 @@ struct SQTAudioSampleDescription {
 								switch (EndianU16_BtoN(mVersion)) {
 									case 0:		return EndianU16_BtoN(_.mV0.mChannels);
 									case 1:		return EndianU16_BtoN(_.mV1.mChannels);
-									case 2:		return EndianU32_BtoN(_.mV2.mChannels);
+									case 2:		return (UInt16) EndianU32_BtoN(_.mV2.mChannels);
 									default:	return 0;
 								}
 							}

@@ -298,9 +298,6 @@ void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
 
 	// Store
 	mInternals->mCurrentPosition = timeInterval;
-
-	// Call proc
-	mInternals->mInfo.audioPositionUpdated(timeInterval);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -114,10 +114,10 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 					mConstraintSet5Flag = bitReader.readUInt8(1).getValue();
 					mReserved2Bits = bitReader.readUInt8(2).getValue();
 					mLevel = bitReader.readUInt8().getValue();
-					mSPSID = bitReader.readUEColumbusCode().getValue();
-					mFrameNumberBitCount = bitReader.readUEColumbusCode().getValue() + 4;
-					mPicOrderCountType = bitReader.readUEColumbusCode().getValue();
-					mPicOrderCountLSBBitCount = bitReader.readUEColumbusCode().getValue() + 4;
+					mSPSID = (UInt8) bitReader.readUEColumbusCode().getValue();
+					mFrameNumberBitCount = (UInt8) bitReader.readUEColumbusCode().getValue() + 4;
+					mPicOrderCountType = (UInt8) bitReader.readUEColumbusCode().getValue();
+					mPicOrderCountLSBBitCount = (UInt8) bitReader.readUEColumbusCode().getValue() + 4;
 				}
 
 			// Properties
@@ -320,7 +320,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 										~CH264VideoCodec();
 
 										// CVideoCodec methods
-				void					setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
+				OI<SError>				setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
 												const I<CCodec::DecodeInfo>& decodeInfo);
 				void					seek(UniversalTimeInterval timeInterval);
 				TIResult<CVideoFrame>	decode();

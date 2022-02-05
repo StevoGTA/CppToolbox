@@ -129,10 +129,12 @@ TArray<SAudioProcessingSetup> CAudioChannelMapper::getOutputSetups() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioChannelMapper::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+OI<SError> CAudioChannelMapper::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mOutputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

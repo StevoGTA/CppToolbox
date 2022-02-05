@@ -7,19 +7,23 @@
 #include <mfapi.h>
 #include <Mferror.h>
 #include <strsafe.h>
+//#include <wmcodecdsp.h>
+
+EXTERN_C const CLSID CLSID_CResamplerMediaObject;
+static const PROPERTYKEY MFPKEY_WMRESAMP_FILTERQUALITY = { { 0xaf1adc73, 0xa210, 0x4b05, {0x96, 0x6e, 0x54, 0x91, 0xcf, 0xf4, 0x8b, 0x1d} }, 0x01 }; 
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
 HRESULT LogMediaType(IMFMediaType *pType);
 
-LPCWSTR GetGUIDNameConst(const GUID& guid);
-HRESULT GetGUIDName(const GUID& guid, WCHAR **ppwsz);
+LPCWSTR sGetGUIDNameConst(const GUID& guid);
+HRESULT sGetGUIDName(const GUID& guid, WCHAR **ppwsz);
 
-HRESULT LogAttributeValueByIndex(IMFAttributes *pAttr, UINT32 index);
-HRESULT SpecialCaseAttributeValue(GUID guid, const PROPVARIANT& var);
+HRESULT sLogAttributeValueByIndex(IMFAttributes *pAttr, UINT32 index);
+HRESULT sSpecialCaseAttributeValue(GUID guid, const PROPVARIANT& var);
 
-void DBGMSG(PCWSTR format, ...);
+void sDBGMSG(PCWSTR format, ...);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -28,7 +32,104 @@ void DBGMSG(PCWSTR format, ...);
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(const GUID& guid,
+TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& codecFormat, UInt8 bits,
+		Float32 sampleRate, EAudioChannelMap channelMap, const OV<UInt32>& bytesPerFrame,
+		const OV<UInt32>& bytesPerSecond, const OI<CData>& userData, CreateAudioMediaTypeOptions options)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup media type
+	IMFMediaType*	mediaType;
+	HRESULT			result = ::MFCreateMediaType(&mediaType);
+	ReturnValueIfFailed(result, "MFCreateMediaType", TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+	TCIResult<IMFMediaType>	mediaTypeResult(mediaType);
+
+	result = mediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE",
+			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+
+	result = mediaType->SetGUID(MF_MT_SUBTYPE, codecFormat);
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE",
+			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+
+	result = mediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, bits);
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_BITS_PER_SAMPLE",
+			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+
+	result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) sampleRate);
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND",
+			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+
+	result = mediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, AUDIOCHANNELMAP_CHANNELCOUNT(channelMap));
+	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS",
+			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+
+	if (bytesPerFrame.hasValue()) {
+		result = mediaType->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, *bytesPerFrame);
+		ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_BLOCK_ALIGNMENT",
+				TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+	}
+
+	if (bytesPerSecond.hasValue()) {
+		result = mediaType->SetUINT32(MF_MT_AUDIO_AVG_BYTES_PER_SECOND, *bytesPerSecond);
+		ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_AVG_BYTES_PER_SECOND",
+				TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+	}
+
+	////mediaType->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE);
+	if (options & kCreateAudioMediaTypeOptionsPreferWAVEFORMATEX) {
+		result = mediaType->SetUINT32(MF_MT_AUDIO_PREFER_WAVEFORMATEX, 1);
+		ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_PREFER_WAVEFORMATEX",
+				TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+	}
+
+	if (userData.hasInstance()) {
+		result =
+				mediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
+						(UINT32) userData->getByteCount());
+		ReturnValueIfFailed(result, "SetBlob of MF_MT_USER_DATA",
+				TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+	}
+
+	return mediaTypeResult;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const SAudioProcessingFormat& audioProcessingFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return createMediaType(audioProcessingFormat.getIsFloat() ? MFAudioFormat_Float : MFAudioFormat_PCM,
+			audioProcessingFormat.getBits(), audioProcessingFormat.getSampleRate(),
+			audioProcessingFormat.getChannelMap(), OV<UInt32>(audioProcessingFormat.getBytesPerFrame()),
+			OV<UInt32>(audioProcessingFormat.getBytesPerFrame() * (UInt32) audioProcessingFormat.getSampleRate()));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& videoFormat, const S2DSizeU32& frameSize)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup media type
+	IMFMediaType*	mediaType;
+	HRESULT			result = ::MFCreateMediaType(&mediaType);
+	ReturnValueIfFailed(result, "MFCreateMediaType", TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+	TCIResult<IMFMediaType>	mediaTypeResult(mediaType);
+
+	result = mediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
+			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+
+	result = mediaType->SetGUID(MF_MT_SUBTYPE, videoFormat);
+	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
+			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+
+	result = ::MFSetAttributeSize(mediaType, MF_MT_FRAME_SIZE, frameSize.mWidth, frameSize.mHeight);
+	ReturnValueIfFailed(result, "MFSetAttributeSize for input",
+			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
+
+	return mediaTypeResult;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioDecoder(const GUID& guid,
 		const SAudioProcessingFormat& audioProcessingFormat, const OI<CData>& userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -58,75 +159,145 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioDecode(
 	ReturnValueIfFailed(result, "ActivateObject", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Setup input media type
-	IMFMediaType*	mediaType;
-	result = ::MFCreateMediaType(&mediaType);
-	ReturnValueIfFailed(result, "MFCreateMediaType for input", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	CI<IMFMediaType>	inputMediaType(mediaType);
+	//IMFMediaType*	mediaType;
+	//result = ::MFCreateMediaType(&mediaType);
+	//ReturnValueIfFailed(result, "MFCreateMediaType for input", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//CI<IMFMediaType>	inputMediaType(mediaType);
 
-	result = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+	//ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = inputMediaType->SetGUID(MF_MT_SUBTYPE, guid);
-	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = inputMediaType->SetGUID(MF_MT_SUBTYPE, guid);
+	//ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = inputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
-	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_BITS_PER_SAMPLE for input",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = inputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
+	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_BITS_PER_SAMPLE for input",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = inputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) audioProcessingFormat.getSampleRate());
-	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for input",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = inputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) audioProcessingFormat.getSampleRate());
+	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for input",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = inputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioProcessingFormat.getChannels());
-	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for input",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = inputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioProcessingFormat.getChannels());
+	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for input",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	if (userData.hasInstance()) {
-		result =
-				inputMediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
-						(UINT32) userData->getByteCount());
-		ReturnValueIfFailed(result, "SetBlob of MF_MT_USER_DATA for input",
-				TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	}
+	//if (userData.hasInstance()) {
+	//	result =
+	//			inputMediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
+	//					(UINT32) userData->getByteCount());
+	//	ReturnValueIfFailed(result, "SetBlob of MF_MT_USER_DATA for input",
+	//			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//}
+	TCIResult<IMFMediaType>	inputMediaType =
+									createMediaType(guid, 32, audioProcessingFormat.getSampleRate(),
+											audioProcessingFormat.getChannelMap(), OV<UInt32>(), OV<UInt32>(),
+											userData);
+	ReturnValueIfResultError(inputMediaType, TCIResult<IMFTransform>(inputMediaType.getError()));
 
-	result = audioDecoder->SetInputType(0, *inputMediaType, 0);
-	ReturnValueIfFailed(result, "SetInputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = audioDecoder->SetInputType(0, *(inputMediaType.getInstance()), 0);
+	//ReturnValueIfFailed(result, "SetInputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Setup output media type
-	result = ::MFCreateMediaType(&mediaType);
-	ReturnValueIfFailed(result, "MFCreateMediaType for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	CI<IMFMediaType>	outputMediaType(mediaType);
+	//result = ::MFCreateMediaType(&mediaType);
+	//ReturnValueIfFailed(result, "MFCreateMediaType for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//CI<IMFMediaType>	outputMediaType(mediaType);
 
-	result = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+	//ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = outputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
-	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = outputMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_Float);
+	//ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = outputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
-	ReturnValueIfFailed(result, "SetSetUINT32UID of MF_MT_AUDIO_BITS_PER_SAMPLE for output",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = outputMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 32);
+	//ReturnValueIfFailed(result, "SetSetUINT32UID of MF_MT_AUDIO_BITS_PER_SAMPLE for output",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = outputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) audioProcessingFormat.getSampleRate());
-	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for output",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = outputMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) audioProcessingFormat.getSampleRate());
+	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND for output",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = outputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioProcessingFormat.getChannels());
-	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for output",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = outputMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioProcessingFormat.getChannels());
+	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS for output",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = outputMediaType->SetUINT32(MF_MT_AUDIO_PREFER_WAVEFORMATEX, 1);
-	ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_PREFER_WAVEFORMATEX for output",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = outputMediaType->SetUINT32(MF_MT_AUDIO_PREFER_WAVEFORMATEX, 1);
+	//ReturnValueIfFailed(result, "SetUINT32 of MF_MT_AUDIO_PREFER_WAVEFORMATEX for output",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	TCIResult<IMFMediaType>	outputMediaType =
+									createMediaType(MFAudioFormat_Float, 32, audioProcessingFormat.getSampleRate(),
+											audioProcessingFormat.getChannelMap(), OV<UInt32>(), OV<UInt32>(),
+											OI<CData>(), kCreateAudioMediaTypeOptionsPreferWAVEFORMATEX);
+	ReturnValueIfResultError(outputMediaType, TCIResult<IMFTransform>(outputMediaType.getError()));
 
-	result = audioDecoder->SetOutputType(0, *outputMediaType, 0);
-	ReturnValueIfFailed(result, "SetOutputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = audioDecoder->SetOutputType(0, *(outputMediaType.getInstance()), 0);
+	//ReturnValueIfFailed(result, "SetOutputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	OI<SError>	error =
+						setTransformInputOutputMediaTypes(*audioDecoder, *(inputMediaType.getInstance()),
+								*(outputMediaType.getInstance()));
+	ReturnValueIfError(error, TCIResult<IMFTransform>(*error));
 
 	return TCIResult<IMFTransform>(audioDecoder);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioResampler(
+		const SAudioProcessingFormat& inputAudioProcessingFormat,
+		const SAudioProcessingFormat& outputAudioProcessingFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	HRESULT	result;
+
+	// Create Resampler Unknown
+	IUnknown*	unknown;
+	result = CoCreateInstance(CLSID_CResamplerMediaObject, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&unknown));
+	ReturnValueIfFailed(result, "CoCreateInstance", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	// Query Transform
+	IMFTransform*	transform;
+	result = unknown->QueryInterface(IID_PPV_ARGS(&transform));
+	OCI<IMFTransform>	audioResampler(transform);
+	ReturnValueIfFailed(result, "Querying Resampler Transform", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	// Query Resampler Property Store
+	IPropertyStore*	propertyStore;
+	result = unknown->QueryInterface(IID_PPV_ARGS(&propertyStore));
+	OCI<IPropertyStore>	resamplerPropertyStore(propertyStore);
+	ReturnValueIfFailed(result, "Querying Resampler Property Store", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	// Configure
+	PROPVARIANT	pv;
+	//result = propertyStore->GetValue(MFPKEY_WMRESAMP_FILTERQUALITY, &pv);
+
+	pv.vt = VT_I4;
+	pv.intVal = 60;
+	result = propertyStore->SetValue(MFPKEY_WMRESAMP_FILTERQUALITY, pv);
+	ReturnValueIfFailed(result, "Setting Filter Quality", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	//result = mResamplerPropertyStore->Commit();
+	//processHRESULT(result, OSSTR("Committing property change"));
+
+	// Setup input media type
+	TCIResult<IMFMediaType>	inputMediaType = createMediaType(inputAudioProcessingFormat);
+	ReturnValueIfResultError(inputMediaType, TCIResult<IMFTransform>(inputMediaType.getError()));
+
+	// Setup output media type
+	TCIResult<IMFMediaType>	outputMediaType = createMediaType(outputAudioProcessingFormat);
+	ReturnValueIfResultError(outputMediaType, TCIResult<IMFTransform>(outputMediaType.getError()));
+
+	// Set input and output media types
+	OI<SError>	error =
+						setTransformInputOutputMediaTypes(*audioResampler, *(inputMediaType.getInstance()),
+								*(outputMediaType.getInstance()));
+	ReturnValueIfError(error, TCIResult<IMFTransform>(*error));
+
+	return TCIResult<IMFTransform>(audioResampler);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -159,46 +330,74 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForVideoDecode(
 	ReturnValueIfFailed(result, "ActivateObject", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Setup input media type
-	IMFMediaType*	mediaType;
-	result = ::MFCreateMediaType(&mediaType);
-	ReturnValueIfFailed(result, "MFCreateMediaType for input", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	CI<IMFMediaType>	inputMediaType(mediaType);
+	//IMFMediaType*	mediaType;
+	//result = ::MFCreateMediaType(&mediaType);
+	//ReturnValueIfFailed(result, "MFCreateMediaType for input", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//CI<IMFMediaType>	inputMediaType(mediaType);
 
-	result = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+	//ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = inputMediaType->SetGUID(MF_MT_SUBTYPE, guid);
-	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = inputMediaType->SetGUID(MF_MT_SUBTYPE, guid);
+	//ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = ::MFSetAttributeSize(*inputMediaType, MF_MT_FRAME_SIZE, 320, 480);
-	ReturnValueIfFailed(result, "MFSetAttributeSize for input",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = ::MFSetAttributeSize(*inputMediaType, MF_MT_FRAME_SIZE, 320, 480);
+	//ReturnValueIfFailed(result, "MFSetAttributeSize for input",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	TCIResult<IMFMediaType>	inputMediaType = createMediaType(guid, S2DSizeU32(320, 480));
+	ReturnValueIfResultError(inputMediaType, TCIResult<IMFTransform>(inputMediaType.getError()));
 
-	result = videoDecoder->SetInputType(0, *inputMediaType, 0);
-	ReturnValueIfFailed(result, "SetInputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = videoDecoder->SetInputType(0, *inputMediaType, 0);
+	//ReturnValueIfFailed(result, "SetInputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Setup output media type
-	result = ::MFCreateMediaType(&mediaType);
-	ReturnValueIfFailed(result, "MFCreateMediaType for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	CI<IMFMediaType>	outputMediaType(mediaType);
+	//result = ::MFCreateMediaType(&mediaType);
+	//ReturnValueIfFailed(result, "MFCreateMediaType for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//CI<IMFMediaType>	outputMediaType(mediaType);
 
-	result = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-	ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
+	//ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = outputMediaType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
-	ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output",
-			TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = outputMediaType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
+	//ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output",
+	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
-	result = ::MFSetAttributeSize(*outputMediaType, MF_MT_FRAME_SIZE, 320, 480);
-	ReturnValueIfFailed(result, "MFSetAttributeSize for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = ::MFSetAttributeSize(*outputMediaType, MF_MT_FRAME_SIZE, 320, 480);
+	//ReturnValueIfFailed(result, "MFSetAttributeSize for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	TCIResult<IMFMediaType>	outputMediaType = createMediaType(MFVideoFormat_NV12, S2DSizeU32(320, 480));
+	ReturnValueIfResultError(outputMediaType, TCIResult<IMFTransform>(outputMediaType.getError()));
 
-	result = videoDecoder->SetOutputType(0, *outputMediaType, 0);
-	ReturnValueIfFailed(result, "SetOutputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	//result = videoDecoder->SetOutputType(0, *outputMediaType, 0);
+	//ReturnValueIfFailed(result, "SetOutputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+
+	OI<SError>	error =
+						setTransformInputOutputMediaTypes(*videoDecoder, *(inputMediaType.getInstance()),
+								*(outputMediaType.getInstance()));
+	ReturnValueIfError(error, TCIResult<IMFTransform>(*error));
 
 	return TCIResult<IMFTransform>(videoDecoder);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CMediaFoundationServices::setTransformInputOutputMediaTypes(IMFTransform* transform,
+		IMFMediaType* inputMediaType, IMFMediaType* outputMediaType)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	HRESULT	result;
+
+	// Set input type
+	result = transform->SetInputType(0, inputMediaType, 0);
+	ReturnErrorIfFailed(result, "SetInputType");
+
+	// Set output type
+	result = transform->SetOutputType(0, outputMediaType, 0);
+	ReturnErrorIfFailed(result, "SetOutputType");
+
+	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -291,6 +490,46 @@ OI<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
+		UInt32 bytesPerFrame)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Lock media buffer
+	BYTE*	mediaBufferBytePtr;
+	DWORD	mediaBufferByteCount;
+	HRESULT	result = mediaBuffer->Lock(&mediaBufferBytePtr, &mediaBufferByteCount, NULL);
+	ReturnValueIfFailed(result, "Lock", SAudioSourceStatus(SErrorFromHRESULT(result)));
+
+	// Setup Audio Frames
+	CAudioFrames	audioFrames(mediaBufferBytePtr, 1, mediaBufferByteCount, mediaBufferByteCount / bytesPerFrame,
+							bytesPerFrame);
+
+	// Perform into
+	SAudioSourceStatus	audioSourceStatus = audioProcessor.CAudioProcessor::performInto(audioFrames);
+	if (!audioSourceStatus.isSuccess()) {
+		// Unlock
+		mediaBuffer->Unlock();
+
+		return audioSourceStatus;
+	}
+
+	// Update current length
+	result = mediaBuffer->SetCurrentLength(audioFrames.getCurrentFrameCount() * bytesPerFrame);
+	if (FAILED(result)) {
+		// Unlock
+		mediaBuffer->Unlock();
+
+		ReturnValueIfFailed(result, "SetCurrentLength", SAudioSourceStatus(SErrorFromHRESULT(result)));
+	}
+
+	// Unlock media buffer
+	result = mediaBuffer->Unlock();
+	ReturnValueIfFailed(result, "Unlock", SAudioSourceStatus(SErrorFromHRESULT(result)));
+
+	return audioSourceStatus;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -301,9 +540,8 @@ OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 	ReturnErrorIfFailed(result, "Lock");
 
 	// Read next media packet
-	TIResult<TArray<SMediaPacket> >	mediaPackets =
-											mediaPacketSource.readNextInto(
-													CData(mediaBufferBytePtr, mediaBufferByteCount, false), 1);
+	CData	data(mediaBufferBytePtr, mediaBufferByteCount, false);
+	TIResult<TArray<SMediaPacket> >	mediaPackets = mediaPacketSource.readNextInto(data, 1);
 	if (mediaPackets.hasError()) {
 		// Unlock
 		mediaBuffer->Unlock();
@@ -329,7 +567,7 @@ OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFSample* outputSample,
-		CMediaFoundationServices::ProcessOutputInfo& processOutputInfo)
+		const CMediaFoundationServices::ProcessOutputInfo& processOutputInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -421,14 +659,10 @@ OI<SError> CMediaFoundationServices::flush(IMFTransform* transform)
 	return OI<SError>();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
 
-// TODO: Cleanup these procs
-
+#if defined(DEBUG)
 //----------------------------------------------------------------------------------------------------------------------
-HRESULT LogMediaType(IMFMediaType* mediaType)
+OI<SError> CMediaFoundationServices::log(IMFMediaType* mediaType)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -437,24 +671,31 @@ HRESULT LogMediaType(IMFMediaType* mediaType)
 	// Get attribute count
 	UINT32	attributeCount;
 	result = mediaType->GetCount(&attributeCount);
-	if (FAILED(result)) return result;
+	ReturnErrorIfFailed(result, "GetCount()");
 
 	// Check attribute count
 	if (attributeCount > 0)
 		// Log attributes
 		for (UINT32 i = 0; i < attributeCount; i++) {
 			// Log attribute
-			result = LogAttributeValueByIndex(mediaType, i);
-			if (FAILED(result)) return result;
+			result = sLogAttributeValueByIndex(mediaType, i);
+			ReturnErrorIfFailed(result, "sLogAttributeValueByIndex()");
 		}
 	else
 		CLogServices::logMessage(OSSTR("Empty media type."));
 
-	return S_OK;
+	return OI<SError>();
 }
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
-HRESULT LogAttributeValueByIndex(IMFAttributes* pAttr, UINT32 index)
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local proc definitions
+
+// TODO: Cleanup these procs
+
+//----------------------------------------------------------------------------------------------------------------------
+HRESULT sLogAttributeValueByIndex(IMFAttributes* pAttr, UINT32 index)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -473,15 +714,15 @@ HRESULT LogAttributeValueByIndex(IMFAttributes* pAttr, UINT32 index)
 		goto done;
 	}
 
-	hr = GetGUIDName(guid, &pGuidName);
+	hr = sGetGUIDName(guid, &pGuidName);
 	if (FAILED(hr))
 	{
 		goto done;
 	}
 
-	DBGMSG(L"\t%s\t", pGuidName);
+	sDBGMSG(L"\t%s\t", pGuidName);
 
-	hr = SpecialCaseAttributeValue(guid, var);
+	hr = sSpecialCaseAttributeValue(guid, var);
 	if (FAILED(hr))
 	{
 		goto done;
@@ -491,45 +732,45 @@ HRESULT LogAttributeValueByIndex(IMFAttributes* pAttr, UINT32 index)
 		switch (var.vt)
 		{
 		case VT_UI4:
-			DBGMSG(L"%d", var.ulVal);
+			sDBGMSG(L"%d", var.ulVal);
 			break;
 
 		case VT_UI8:
-			DBGMSG(L"%I64d", var.uhVal);
+			sDBGMSG(L"%I64d", var.uhVal);
 			break;
 
 		case VT_R8:
-			DBGMSG(L"%f", var.dblVal);
+			sDBGMSG(L"%f", var.dblVal);
 			break;
 
 		case VT_CLSID:
-			hr = GetGUIDName(*var.puuid, &pGuidValName);
+			hr = sGetGUIDName(*var.puuid, &pGuidValName);
 			if (SUCCEEDED(hr))
 			{
-				DBGMSG(pGuidValName);
+				sDBGMSG(pGuidValName);
 			}
 			break;
 
 		case VT_LPWSTR:
-			DBGMSG(var.pwszVal);
+			sDBGMSG(var.pwszVal);
 			break;
 
 		case VT_VECTOR | VT_UI1:
-			DBGMSG(L"<<byte array>>");
+			sDBGMSG(L"<<byte array>>");
 			break;
 
 		case VT_UNKNOWN:
-			DBGMSG(L"IUnknown");
+			sDBGMSG(L"IUnknown");
 			break;
 
 		default:
-			DBGMSG(L"Unexpected attribute type (vt = %d)", var.vt);
+			sDBGMSG(L"Unexpected attribute type (vt = %d)", var.vt);
 			break;
 		}
 	}
 
 done:
-	DBGMSG(L"\n");
+	sDBGMSG(L"\n");
 	::CoTaskMemFree(pGuidName);
 	::CoTaskMemFree(pGuidValName);
 	::PropVariantClear(&var);
@@ -537,13 +778,13 @@ done:
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-HRESULT GetGUIDName(const GUID& guid, WCHAR **ppwsz)
+HRESULT sGetGUIDName(const GUID& guid, WCHAR **ppwsz)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	HRESULT hr = S_OK;
 	WCHAR *pName = NULL;
 
-	LPCWSTR pcwsz = GetGUIDNameConst(guid);
+	LPCWSTR pcwsz = sGetGUIDNameConst(guid);
 	if (pcwsz)
 	{
 		size_t cchLength = 0;
@@ -592,7 +833,7 @@ void LogUINT32AsUINT64(const PROPVARIANT& var)
 {
 	UINT32 uHigh = 0, uLow = 0;
 	::Unpack2UINT32AsUINT64(var.uhVal.QuadPart, &uHigh, &uLow);
-	DBGMSG(L"%d x %d", uHigh, uLow);
+	sDBGMSG(L"%d x %d", uHigh, uLow);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -613,13 +854,13 @@ HRESULT LogVideoArea(const PROPVARIANT& var)
 
 	MFVideoArea *pArea = (MFVideoArea*)var.caub.pElems;
 
-	DBGMSG(L"(%f,%f) (%d,%d)", OffsetToFloat(pArea->OffsetX), OffsetToFloat(pArea->OffsetY), 
+	sDBGMSG(L"(%f,%f) (%d,%d)", OffsetToFloat(pArea->OffsetX), OffsetToFloat(pArea->OffsetY), 
 		pArea->Area.cx, pArea->Area.cy);
 	return S_OK;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-HRESULT SpecialCaseAttributeValue(GUID guid, const PROPVARIANT& var)
+HRESULT sSpecialCaseAttributeValue(GUID guid, const PROPVARIANT& var)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if ((guid == MF_MT_FRAME_RATE) || (guid == MF_MT_FRAME_RATE_RANGE_MAX) ||
@@ -644,7 +885,7 @@ HRESULT SpecialCaseAttributeValue(GUID guid, const PROPVARIANT& var)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void DBGMSG(PCWSTR format, ...)
+void sDBGMSG(PCWSTR format, ...)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	va_list args;
@@ -663,7 +904,7 @@ void DBGMSG(PCWSTR format, ...)
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-LPCWSTR GetGUIDNameConst(const GUID& guid)
+LPCWSTR sGetGUIDNameConst(const GUID& guid)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	IF_EQUAL_RETURN(guid, MF_MT_MAJOR_TYPE);

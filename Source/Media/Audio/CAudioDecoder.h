@@ -25,7 +25,7 @@ class CAudioDecoder : public CAudioSource {
 
 										// CAudioProcessor methods
 		TArray<SAudioProcessingSetup>	getOutputSetups() const;
-		void							setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
+		OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
 
 		Requirements					queryRequirements() const;
 
