@@ -241,7 +241,7 @@ void CAudioPlayerBufferThread::shutdown()
 	mInternals->mShutdownRequested = true;
 
 	// Wait until is no lonnger running
-	while (getIsRunning()) {
+	while (isRunning()) {
 		// Signal
 		mInternals->mSemaphore.signal();
 

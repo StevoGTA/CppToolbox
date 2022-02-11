@@ -2,7 +2,7 @@
 //	CAudioChannelMapper.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CAudioProcessor.h"
+#include "CAudioChannelMapper.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioChannelMapperInternals
@@ -17,11 +17,11 @@ class CAudioChannelMapperInternals {
 								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
-										CAudioFrames::ReadInfo	readInfo = sourceAudioFrames.getReadInfo();
-								const	Float32*				sourcePtr = (const Float32*) readInfo.getSegments()[0];
+										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
+								const	Float32*			sourcePtr = (const Float32*) readInfo.getSegments()[0];
 
-										CAudioFrames::WriteInfo	writeInfo = destinationAudioFrames.getWriteInfo();
-										Float32*				destinationPtr = (Float32*) writeInfo.getSegments()[0];
+										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
+										Float32*			destinationPtr = (Float32*) writeInfo.getSegments()[0];
 
 								// Perform
 								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -37,11 +37,11 @@ class CAudioChannelMapperInternals {
 								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
-										CAudioFrames::ReadInfo	readInfo = sourceAudioFrames.getReadInfo();
-								const	SInt16*					sourcePtr = (const SInt16*) readInfo.getSegments()[0];
+										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
+								const	SInt16*				sourcePtr = (const SInt16*) readInfo.getSegments()[0];
 
-										CAudioFrames::WriteInfo	writeInfo = destinationAudioFrames.getWriteInfo();
-										SInt16*					destinationPtr = (SInt16*) writeInfo.getSegments()[0];
+										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
+										SInt16*				destinationPtr = (SInt16*) writeInfo.getSegments()[0];
 
 								// Perform
 								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -56,7 +56,6 @@ class CAudioChannelMapperInternals {
 
 		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
 		OI<CAudioFrames>			mInputAudioFrames;
-		OI<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
 		PerformProc					mPerformProc;
 };
 
@@ -67,7 +66,7 @@ class CAudioChannelMapperInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioChannelMapper::CAudioChannelMapper() : CAudioProcessor()
+CAudioChannelMapper::CAudioChannelMapper() : CBasicAudioProcessor()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CAudioChannelMapperInternals();
@@ -83,13 +82,6 @@ CAudioChannelMapper::~CAudioChannelMapper()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioChannelMapper::getInputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(*mInternals->mOutputAudioProcessingFormat));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
@@ -99,7 +91,7 @@ OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 
 	// Setup
 	if ((mInternals->mInputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_1_0) &&
-			(mInternals->mOutputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_2_0_Option1)) {
+			(mOutputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_2_0_Option1)) {
 		// Mono -> Stereo
 		if ((audioProcessingFormat.getBits() == 32) && audioProcessingFormat.getIsFloat() &&
 				audioProcessingFormat.getIsInterleaved())
@@ -126,15 +118,6 @@ TArray<SAudioProcessingSetup> CAudioChannelMapper::getOutputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup::mUnspecified);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioChannelMapper::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals->mOutputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-
-	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -55,36 +55,12 @@ class CAudioFrames : private CData {
 
 	// ReadInfo
 	public:
-		struct ReadInfo {
-												// Lifecycle methods
-												ReadInfo(UInt32 frameCount,
-														const TNumericArray<const void*>& segments) :
-													mFrameCount(frameCount), mSegments(segments)
-													{}
-												ReadInfo(const ReadInfo& other) :
-													mFrameCount(other.mFrameCount), mSegments(other.mSegments)
-													{}
-
-												// Instance methods
-					UInt32						getFrameCount() const
-													{ return mFrameCount; }
-			const	TNumericArray<const void*>	getSegments() const
-													{ return mSegments; }
-
-			// Properties
-			private:
-				UInt32						mFrameCount;
-				TNumericArray<const void*>	mSegments;
-		};
-
-	// WriteInfo
-	public:
-		struct WriteInfo {
+		struct Info {
 											// Lifecycle methods
-											WriteInfo(UInt32 frameCount, const TNumericArray<void*>& segments) :
+											Info(UInt32 frameCount, const TNumericArray<void*>& segments) :
 												mFrameCount(frameCount), mSegments(segments)
 												{}
-											WriteInfo(const WriteInfo& other) :
+											Info(const Info& other) :
 												mFrameCount(other.mFrameCount), mSegments(other.mSegments)
 												{}
 
@@ -102,32 +78,32 @@ class CAudioFrames : private CData {
 
 	// Methods
 	public:
-					// Lifecycle methods
-					CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
-							UInt32 bytesPerFrame);
-					CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFrame, UInt32 frameCountPerSegment);
-					~CAudioFrames();
+				// Lifecycle methods
+				CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
+						UInt32 bytesPerFrame);
+				CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFrame, UInt32 frameCountPerSegment);
+				~CAudioFrames();
 
-					// Instance methods
-		UInt32		getAvailableFrameCount() const;
-		UInt32		getCurrentFrameCount() const;
+				// Instance methods
+		UInt32	getAvailableFrameCount() const;
+		UInt32	getCurrentFrameCount() const;
 
-		ReadInfo	getReadInfo() const;
+		Info	getReadInfo() const;
 
-		WriteInfo	getWriteInfo();
-		void		completeWrite(UInt32 frameCount);
+		Info	getWriteInfo();
+		void	completeWrite(UInt32 frameCount);
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
-					// Apple methods
-		UInt32		getAsRead(AudioBufferList& audioBufferList) const;
+				// Apple methods
+		UInt32	getAsRead(AudioBufferList& audioBufferList) const;
 
-		UInt32		getAsWrite(AudioBufferList& audioBufferList);
-		void		completeWrite(AudioBufferList& audioBufferList);
+		UInt32	getAsWrite(AudioBufferList& audioBufferList);
+		void	completeWrite(AudioBufferList& audioBufferList);
 #endif
 
-		void		limit(UInt32 maxFrames);
+		void	limit(UInt32 maxFrames);
 
-		void		reset();
+		void	reset();
 
 	// Properties
 	private:

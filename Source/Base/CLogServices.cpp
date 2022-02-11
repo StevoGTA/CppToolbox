@@ -77,6 +77,9 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 
 								// Signal
 								mWriteSemaphore.signal();
+
+								// Wait
+								mWriteThread.waitUntilFinished();
 							}
 
 				void	queue(const CString& string)

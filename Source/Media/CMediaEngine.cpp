@@ -4,6 +4,7 @@
 
 #include "CMediaEngine.h"
 
+#include "CAudioChannelMapper.h"
 #include "CAudioDecoder.h"
 #include "CCodecRegistry.h"
 #include "CVideoDecoder.h"

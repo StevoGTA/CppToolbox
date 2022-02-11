@@ -71,20 +71,20 @@ UInt32 CAudioFrames::getCurrentFrameCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::ReadInfo CAudioFrames::getReadInfo() const
+CAudioFrames::Info CAudioFrames::getReadInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNumericArray<const void*>	segments;
+	TNumericArray<void*>	segments;
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
 		// Update
 		segments += (void*) ((UInt8*) getBytePtr() + mInternals->mSegmentByteCount * i);
 
-	return ReadInfo(mInternals->mCurrentFrameCount, segments);
+	return Info(mInternals->mCurrentFrameCount, segments);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::WriteInfo CAudioFrames::getWriteInfo()
+CAudioFrames::Info CAudioFrames::getWriteInfo()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -96,7 +96,7 @@ CAudioFrames::WriteInfo CAudioFrames::getWriteInfo()
 						mInternals->mSegmentByteCount * i +
 						mInternals->mCurrentFrameCount * mInternals->mBytesPerFrame);
 
-	return WriteInfo(mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount, segments);
+	return Info(mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount, segments);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -39,7 +39,9 @@ class CThread {
 						Ref		getRef() const;
 
 						void	start();
-						bool	getIsRunning() const;
+						bool	isRunning() const;
+						void	waitUntilFinished() const
+									{ while (isRunning()) sleepFor(0.001); }
 
 								// Class methods
 		static			Ref		getCurrentRef();

@@ -95,49 +95,16 @@ class CAudioDestination : public CAudioProcessor {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioChannelMapper
+// MARK: - CBasicAudioProcessor
 
-class CAudioChannelMapperInternals;
-class CAudioChannelMapper : public CAudioProcessor {
-	public:
-												// Lifecycle methods
-												CAudioChannelMapper();
-												~CAudioChannelMapper();
-
-												// Instance methods
-				OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-														const SAudioProcessingFormat& audioProcessingFormat);
-
-				SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
-
-												// Subclass methods
-				TArray<SAudioProcessingSetup>	getInputSetups() const;
-
-				TArray<SAudioProcessingSetup>	getOutputSetups() const;
-				OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
-
-												// Class methods
-		static	bool							canPerform(EAudioChannelMap fromAudioChannelMap,
-														EAudioChannelMap toAudioChannelMap);
-
-	// Properties
-	private:
-		CAudioChannelMapperInternals*	mInternals;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioConverter
-
-class CAudioConverter : public CAudioProcessor {
+class CBasicAudioProcessor : public CAudioProcessor {
+	// Methods
 	public:
 										// CAudioProcessor methods
 		TArray<SAudioProcessingSetup>	getInputSetups() const
 											{ return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(
 													*mOutputAudioProcessingFormat)); }
 
-		TArray<SAudioProcessingSetup>	getOutputSetups() const
-											{ return TNArray<SAudioProcessingSetup>(
-													SAudioProcessingSetup::mUnspecified); }
 		OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 											{
 												// Store
@@ -147,11 +114,23 @@ class CAudioConverter : public CAudioProcessor {
 												return OI<SError>();
 											}
 
-	protected:
-										// Lifecycle methods
-										CAudioConverter() {}
-
 	// Properties
 	protected:
 		OI<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioConverter
+
+class CAudioConverter : public CBasicAudioProcessor {
+	// Methods
+	public:
+										// CAudioProcessor methods
+		TArray<SAudioProcessingSetup>	getOutputSetups() const
+											{ return TNArray<SAudioProcessingSetup>(
+													SAudioProcessingSetup::mUnspecified); }
+
+	protected:
+										// Lifecycle methods
+										CAudioConverter() {}
 };

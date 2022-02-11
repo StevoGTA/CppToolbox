@@ -207,9 +207,7 @@ class CMediaPlaybackQueueInternals {
 				mThread.shutdown();
 
 				// Wait until is no lonnger running
-				while (mThread.getIsRunning())
-					// Sleep
-					CThread::sleepFor(0.001);
+				mThread.waitUntilFinished();
 			}
 
 		CMediaPlaybackQueueThread				mThread;
