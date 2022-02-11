@@ -65,6 +65,7 @@ class CLogFile {
 		const	CFile& getFile() const;
 
 				void	logMessage(const CString& string) const;
+				void	logMessages(const TArray<CString>& strings) const;
 				void	logWarning(const CString& warning, const CString& when, const char* file, const char* proc,
 								UInt32 line) const;
 				void	logWarning(const CString& string) const;
@@ -95,6 +96,7 @@ class CLogServices {
 		static	OI<CLogFile>&	getPrimaryLogFile();
 
 		static	void			logMessage(const CString& string);
+		static	void			logMessages(const TArray<CString>& strings);
 		static	void			logDebugMessage(const CString& string);
 		static	void			logWarning(const CString& warning, const CString& when, const char* file,
 										const char* proc, UInt32 line);

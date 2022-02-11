@@ -6,6 +6,8 @@
 
 #include "CFileWriter.h"
 #include "ConcurrencyPrimitives.h"
+#include "CThread.h"
+#include "TLockingArray.h"
 
 #if defined(TARGET_OS_WINDOWS)
 	#undef Delete
@@ -50,25 +52,87 @@ static	void	sLogToConsoleOutput(const CString& string);
 
 class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 	public:
-		CLogFileInternals(const CFile& file) :
-			TReferenceCountable(), mFile(file), mFileWriter(mFile)
-			{
-				// Check if exists
-				if (mFile.doesExist())
-					// Remove
-					mFile.remove();
+						CLogFileInternals(const CFile& file) :
+							TReferenceCountable(), mFile(file), mFileWriter(mFile),
+									mIsActive(true),
+									mWriteThread((CThread::ThreadProc) write, this, CString(OSSTR("CLogFile Writer")),
+											CThread::kOptionsAutoStart)
+							{
+								// Check if exists
+								if (mFile.doesExist())
+									// Remove
+									mFile.remove();
 
-				// Open
-				OI<SError>	error = mFileWriter.open();
-				if (error.hasInstance())
-					// Error
-					fprintf(stderr, "Unable to open log file at %s\n",
-							*mFile.getFilesystemPath().getString().getCString());
-			}
+								// Open
+								OI<SError>	error = mFileWriter.open();
+								if (error.hasInstance())
+									// Error
+									fprintf(stderr, "Unable to open log file at %s\n",
+											*mFile.getFilesystemPath().getString().getCString());
+							}
+						~CLogFileInternals()
+							{
+								// Stop writer thread
+								mIsActive = false;
 
-		CFile		mFile;
-		CFileWriter	mFileWriter;
-		CLock		mLock;
+								// Signal
+								mWriteSemaphore.signal();
+							}
+
+				void	queue(const CString& string)
+							{
+								// Add string
+								mStrings +=
+										SGregorianDate().getString() + CString(OSSTR(": ")) + string +
+												CString::mPlatformDefaultNewline;
+
+								// Signal
+								mWriteSemaphore.signal();
+							}
+				void	queue(const TArray<CString>& strings)
+							{
+								// Prepare strings
+								TNArray<CString>	stringsWithDates;
+								for (TIteratorD<CString> iterator = strings.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Add string with date
+									stringsWithDates +=
+											SGregorianDate().getString() + CString(OSSTR(": ")) + *iterator +
+													CString::mPlatformDefaultNewline;
+
+								// Add
+								mStrings += stringsWithDates;
+
+								// Signal
+								mWriteSemaphore.signal();
+							}
+
+		static	void	write(CThread& thread, CLogFileInternals* logFileInternals)
+							{
+								// While active
+								while (logFileInternals->mIsActive || !logFileInternals->mStrings.isEmpty()) {
+									// Check if have any strings
+									if (!logFileInternals->mStrings.isEmpty()) {
+										// Write any pending strings
+										while (!logFileInternals->mStrings.isEmpty())
+											// Write first
+											logFileInternals->mFileWriter.write(logFileInternals->mStrings.popFirst());
+
+										// Flush
+										logFileInternals->mFileWriter.flush();
+									} else
+										// Wait
+										logFileInternals->mWriteSemaphore.waitFor();
+								}
+							}
+
+		CFile					mFile;
+		CFileWriter				mFileWriter;
+
+		bool					mIsActive;
+		CThread					mWriteThread;
+		TNLockingArray<CString>	mStrings;
+		CSemaphore				mWriteSemaphore;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,12 +175,14 @@ const CFile& CLogFile::getFile() const
 void CLogFile::logMessage(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// One at a time please
-	mInternals->mLock.lock();
-	mInternals->mFileWriter.write(
-			SGregorianDate().getString() + CString(OSSTR(": ")) + string + CString::mPlatformDefaultNewline);
-	mInternals->mFileWriter.flush();
-	mInternals->mLock.unlock();
+	mInternals->queue(string);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CLogFile::logMessages(const TArray<CString>& strings) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->queue(strings);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -135,9 +201,12 @@ void CLogFile::logWarning(const CString& warning, const CString& when, const cha
 void CLogFile::logWarning(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	static	CString	special(OSSTR("*** WARNING ***"));
+
 	// Log
-	logMessage(CString(OSSTR("*** WARNING ***")));
-	logMessage(string);
+	CString	strings[] = { special, string };
+	mInternals->queue(TSArray<CString>(strings, 2));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -156,9 +225,12 @@ void CLogFile::logError(const CString& error, const CString& when, const char* f
 void CLogFile::logError(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	static	CString	special(OSSTR("*** ERROR ***"));
+
 	// Log
-	logMessage(CString(OSSTR("*** ERROR ***")));
-	logMessage(string);
+	CString	strings[] = { CString::mPlatformDefaultNewline, special, string, CString::mPlatformDefaultNewline };
+	mInternals->queue(TSArray<CString>(strings, 4));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -183,35 +255,66 @@ OI<CLogFile>& CLogServices::getPrimaryLogFile()
 void CLogServices::logMessage(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	OI<CString>	stringWithDate;
-
 	// Check if have primary log file
 	if (sPrimaryLogFile.hasInstance())
 		// Pass to primary log file
 		(*sPrimaryLogFile).logMessage(string);
+
+	// Setup
+	CString	stringWithDate = SGregorianDate().getString() + CString(OSSTR(": ")) + string;
+
+	// Check if passing to output/console
 #if defined(DEBUG)
 	// Pass to output/console
-	sLogToConsoleOutput(SGregorianDate().getString() + CString(OSSTR(": ")) + string);
+	sLogToConsoleOutput(stringWithDate);
 #else
-	else
+	if (!sPrimaryLogFile.hasInstance())
 		// Pass to output/console
-		sLogToConsoleOutput(SGregorianDate().getString() + CString(OSSTR(": ")) + string);
+		sLogToConsoleOutput(stringWithDate);
 #endif
 
 	// Check if have procs
 	if (sLogMessageProcInfos != nil)
 		// Call procs
 		for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos->getIterator(); iterator.hasValue();
-				iterator.advance()) {
-			// Check if need to finish setup
-			if (!stringWithDate.hasInstance())
-				// Finish setup
-				stringWithDate = OI<CString>(SGregorianDate().getString() + CString(OSSTR(": ")) + string);
-
+				iterator.advance())
 			// Call proc
-			iterator.getValue().callProc(*stringWithDate);
-		}
+			iterator.getValue().callProc(stringWithDate);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CLogServices::logMessages(const TArray<CString>& strings)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if have primary log file
+	if (sPrimaryLogFile.hasInstance())
+		// Pass to primary log file
+		(*sPrimaryLogFile).logMessages(strings);
+
+	// Setup
+	CString	stringsWithDates;
+	for (TIteratorD<CString> iterator = strings.getIterator(); iterator.hasValue();
+			iterator.advance(), stringsWithDates += CString::mPlatformDefaultNewline)
+		// Update strings with dates
+		stringsWithDates += SGregorianDate().getString() + CString(OSSTR(": ")) + *iterator;
+
+	// Check if passing to output/console
+#if defined(DEBUG)
+	// Pass to output/console
+	sLogToConsoleOutput(stringsWithDates);
+#else
+	if (!sPrimaryLogFile.hasInstance())
+		// Pass to output/console
+		sLogToConsoleOutput(stringsWithDates);
+#endif
+
+	// Check if have procs
+	if (sLogMessageProcInfos != nil)
+		// Call procs
+		for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos->getIterator(); iterator.hasValue();
+				iterator.advance())
+			// Call proc
+			iterator.getValue().callProc(stringsWithDates);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
