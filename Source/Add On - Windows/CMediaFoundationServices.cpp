@@ -563,9 +563,9 @@ OI<SError> CMediaFoundationServices::completeWrite(IMFSample* sample, UInt32 fra
 	ReturnErrorIfFailed(result, "Lock for outputSample");
 
 	// Copy bytes
-	UInt32					copyByteOffset = frameOffset * audioProcessingFormat.getBytesPerFrame();
-	UInt32					copyByteCount = mediaBufferByteCount - copyByteOffset;
-	CAudioFrames::WriteInfo	writeInfo = audioFrames.getWriteInfo();
+	UInt32				copyByteOffset = frameOffset * audioProcessingFormat.getBytesPerFrame();
+	UInt32				copyByteCount = mediaBufferByteCount - copyByteOffset;
+	CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
 	::memcpy(writeInfo.getSegments()[0], mediaBufferBytePtr + copyByteOffset, copyByteCount);
 
 	// Complete write
