@@ -14,12 +14,15 @@
 // See https://sourceforge.net/projects/libpng/files/
 #include "png.h"
 
+// See https://github.com/andrechen/yuv2rgb
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
 struct SJPEGErrorInfo : public jpeg_error_mgr {
 	// Properties
 	jmp_buf	mSetjmpBuffer;
+	char	mErrorMessage[JMSG_LENGTH_MAX];
 };
 
 struct SJPEGSourceInfo : public jpeg_source_mgr {
@@ -32,19 +35,26 @@ struct SPNGDecodeInfo {
 	const	UInt8*	mCurrentDataPtr;
 };
 
+static	CString	sErrorDomain(OSSTR("CImage"));
+static	SError	sErrorUnknownType(sErrorDomain, 1, CString(OSSTR("Unknown type")));
+static	SError	sErrorMissingSize(sErrorDomain, 2, CString(OSSTR("Missing size")));
+static	SError	sErrorUnableToDecode(sErrorDomain, 3, CString(OSSTR("Unable to decode")));
+
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	CBitmap	sDecodeJPEGData(const CData& data);
-static	void	sJPEGSourceInit(j_decompress_ptr jpegInfoPtr);
-static	void	sJPEGSourceTerminate(j_decompress_ptr jpegInfoPtr);
-static	boolean	sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr);
-static	void	sJPEGSkipInputData(j_decompress_ptr jpegInfoPtr, long byteCount);
-static	void	sJPEGErrorExit(j_common_ptr jpegInfoPtr);
+static	TIResult<CBitmap>	sDecodeJPEGData(const CData& data);
+static	void				sJPEGSourceInit(j_decompress_ptr jpegInfoPtr);
+static	void				sJPEGSourceTerminate(j_decompress_ptr jpegInfoPtr);
+static	boolean				sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr);
+static	void				sJPEGSkipInputData(j_decompress_ptr jpegInfoPtr, long byteCount);
+static	void				sJPEGErrorExit(j_common_ptr jpegInfoPtr);
 
-static	CBitmap	sDecodePNGData(const CData& data);
-static	void	sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t length);
+static	TIResult<CBitmap>	sDecodeNV12Data(const CData& data, const S2DSizeS32& size);
+
+static	TIResult<CBitmap>	sDecodePNGData(const CData& data);
+static	void				sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t length);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -52,12 +62,13 @@ static	void	sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t 
 
 class CImageInternals : public TReferenceCountable<CImageInternals> {
 	public:
-		CImageInternals(const CData& data, OV<CImage::Type> type) :
-			TReferenceCountable(), mData(data), mType(type)
+		CImageInternals(const CData& data, const OV<CImage::Type>& type, const OV<S2DSizeS32>& size) :
+			TReferenceCountable(), mData(data), mType(type), mSize(size)
 			{}
 
 		CData				mData;
 		OV<CImage::Type>	mType;
+		OV<S2DSizeS32>		mSize;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -67,11 +78,11 @@ class CImageInternals : public TReferenceCountable<CImageInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CImage::CImage(const CData& data, OV<Type> type)
+CImage::CImage(const CData& data, const OV<Type>& type, const OV<S2DSizeS32>& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CImageInternals(data, type);
+	mInternals = new CImageInternals(data, type, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,14 +102,16 @@ CImage::~CImage()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap CImage::getBitmap() const
+TIResult<CBitmap> CImage::getBitmap() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup/Validate image type
 	if (!mInternals->mType.hasValue())
 		// Determine from data
 		mInternals->mType = getTypeFromData(mInternals->mData);
-	AssertFailIf(!mInternals->mType.hasValue());
+	if (!mInternals->mType.hasValue())
+		// Unknown type
+		return TIResult<CBitmap>(sErrorUnknownType);
 
 	// Check image type
 	switch (*mInternals->mType) {
@@ -110,22 +123,23 @@ CBitmap CImage::getBitmap() const
 			// PNG
 			return sDecodePNGData(mInternals->mData);
 
+		case kTypeNV12:
+			// NV12
+			if (!mInternals->mSize.hasValue())
+				// Missing size
+				return TIResult<CBitmap>(sErrorMissingSize);
+
+			return sDecodeNV12Data(mInternals->mData, *mInternals->mSize);
+
 #if defined(TARGET_OS_WINDOWS)
 		default:
 			// Just to make compiler happy.  Will never get here.
-			return CBitmap();
+			return TIResult<CBitmap>(CBitmap());
 #endif
 	}
 }
 
 // MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CBitmap CImage::getBitmap(const CData& data)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return CImage(data).getBitmap();
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<CImage::Type> CImage::getTypeFromResourceName(const CString& resourceName)
@@ -189,26 +203,26 @@ OV<CImage::Type> CImage::getTypeFromData(const CData& data)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CImage::getDefaultFilenameExtension(Type type)
+OI<CString> CImage::getDefaultFilenameExtension(Type type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check image type
 	switch (type) {
-		case kTypeJPEG:	return CString(OSSTR(".jpg"));
-		case kTypePNG:	return CString(OSSTR(".png"));
-		default:		return CString::mEmpty;
+		case kTypeJPEG:	return OI<CString>(CString(OSSTR("jpg")));
+		case kTypePNG:	return OI<CString>(CString(OSSTR("png")));
+		default:		return OI<CString>();
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CImage::getMIMEType(Type type)
+OI<CString> CImage::getMIMEType(Type type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check image type
 	switch (type) {
-		case kTypeJPEG:	return CString(OSSTR("image/jpeg"));
-		case kTypePNG:	return CString(OSSTR("image/png"));
-		default:		return CString::mEmpty;
+		case kTypeJPEG:	return OI<CString>(CString(OSSTR("image/jpeg")));
+		case kTypePNG:	return OI<CString>(CString(OSSTR("image/png")));
+		default:		return OI<CString>();
 	}
 }
 
@@ -217,7 +231,7 @@ CString CImage::getMIMEType(Type type)
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap sDecodeJPEGData(const CData& data)
+TIResult<CBitmap> sDecodeJPEGData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Step 1: allocate and initialize JPEG decompression object
@@ -229,9 +243,10 @@ CBitmap sDecodeJPEGData(const CData& data)
 	// Establish setjmp return context
 	if (setjmp(jerr.mSetjmpBuffer)) {
 		// If we get here, the JPEG code has signaled an error.
+		SError	error(sErrorDomain, -1, CString(jerr.mErrorMessage));
 		jpeg_destroy_decompress(&jpegInfo);
 
-		return CBitmap();
+		return TIResult<CBitmap>(error);
 	}
 
 	// Initialize the decompression object
@@ -277,13 +292,14 @@ CBitmap sDecodeJPEGData(const CData& data)
 	// Step 8: Cleanup
 	jpeg_destroy_decompress(&jpegInfo);
 
-	return bitmap;
+	return TIResult<CBitmap>(bitmap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void sJPEGSourceInit(j_decompress_ptr jpegInfoPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Update
 	jpegInfoPtr->src->next_input_byte = nil;
 	jpegInfoPtr->src->bytes_in_buffer = 0;
 }
@@ -337,27 +353,127 @@ void sJPEGErrorExit(j_common_ptr jpegInfoPtr)
 {
 	SJPEGErrorInfo*	errorInfo = (SJPEGErrorInfo*) jpegInfoPtr->err;
 
-	// Display error message
-	(*jpegInfoPtr->err->output_message)(jpegInfoPtr);
+	// Capture error message
+	(*jpegInfoPtr->err->format_message)(jpegInfoPtr, errorInfo->mErrorMessage);
 
 	// Done
 	longjmp(errorInfo->mSetjmpBuffer, 1);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap sDecodePNGData(const CData& data)
+TIResult<CBitmap> sDecodeNV12Data(const CData& data, const S2DSizeS32& size)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Based on implementation by Andre Chen, see https://github.com/andrechen/yuv2rgb
+	// Width and height must be 2 or greater and even
+	if ((size.mWidth < 2) || ((size.mWidth & 1) != 0) || (size.mHeight < 2) || ((size.mHeight & 1) != 0))
+		// Failed
+		return TIResult<CBitmap>(sErrorUnableToDecode);
+
+	// Setup
+//    unsigned char const* y0 = yuv;
+//    unsigned char const* uv = yuv + (width*height);
+//    int const halfHeight = height>>1;
+//    int const halfWidth = width>>1;
+	const	UInt8*	y0Ptr = (UInt8*) data.getBytePtr();
+	const	UInt8*	uvPtr = y0Ptr + size.mWidth * size.mHeight;
+	const	SInt32	halfWidth = size.mWidth / 2;
+	const	SInt32	halfHeight = size.mHeight / 2;
+
+	CBitmap	bitmap(size, CBitmap::kFormatRGB888);
+	UInt16	bytesPerRow = bitmap.getBytesPerRow();
+//    unsigned char* dst0 = out;
+	UInt8*	rgb0Ptr = (UInt8*) bitmap.getPixelData().getMutableBytePtr();
+
+	// Loop vertially
+//    for (int h=0; h<halfHeight; ++h) {
+	for (SInt32 y = 0; y < halfHeight; y++, y0Ptr += size.mWidth * 2, rgb0Ptr += bytesPerRow * 2) {
+//        unsigned char const* y1 = y0+width;
+		// Setup
+		const	UInt8*	y1Ptr = y0Ptr += size.mWidth;
+//        unsigned char* dst1 = dst0 + width*trait::bytes_per_pixel;
+				UInt8*	rgb1Ptr = rgb0Ptr + bytesPerRow;
+//        for (int w=0; w<halfWidth; ++w) {
+		// Loop horizontally
+		for (SInt32 x = 0; x < halfWidth; x++) {
+//            // shift
+//		    int Y00, Y01, Y10, Y11;
+//            Y00 = (*y0++) - 16;  Y01 = (*y0++) - 16;
+//            Y10 = (*y1++) - 16;  Y11 = (*y1++) - 16;
+			// Get source ys
+			SInt32	y00 = (*y0Ptr++) - 16;
+			y00 = (y00 > 0) ? 298 * y00 : 0;
+
+			SInt32	y01 = (*y0Ptr++) - 16;
+			y01 = (y01 > 0) ? 298 * y01 : 0;
+
+			SInt32	y10 = (*y1Ptr++) - 16;
+			y10 = (y10 > 0) ? 298 * y10 : 0;
+
+			SInt32	y11 = (*y1Ptr++) - 16;
+			y11 = (y11 > 0) ? 298 * y11 : 0;
+
+//            // U,V or V,U? our trait will make the right call
+//		    int V, U;
+//            trait::loadvu(U, V, uv);
+			// Load U and V
+			SInt32	u = (*uvPtr++) - 128;
+			SInt32	v = (*uvPtr++) - 128;
+
+			// Calculate RGB adjustments
+			SInt32	dR = 128 + 409 * v;
+			SInt32	dG = 128 - 100 * u - 208 * v;
+			SInt32	dB = 128 + 516 * u;
+
+//            // 2x2 pixels result
+//            trait::store_pixel(dst0, Y00 + tR, Y00 + tG, Y00 + tB, alpha);
+//            trait::store_pixel(dst0, Y01 + tR, Y01 + tG, Y01 + tB, alpha);
+//            trait::store_pixel(dst1, Y10 + tR, Y10 + tG, Y10 + tB, alpha);
+//            trait::store_pixel(dst1, Y11 + tR, Y11 + tG, Y11 + tB, alpha);
+			// Store RGB
+			SInt32	r, g, b;
+
+			r = y00 + dR; g = y00 + dG; b = y00 + dB;
+			*rgb0Ptr++ = (r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0;
+			*rgb0Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
+			*rgb0Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
+
+			r = y01 + dR; g = y01 + dG; b = y01 + dB;
+			*rgb0Ptr++ = (r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0;
+			*rgb0Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
+			*rgb0Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
+
+			r = y10 + dR; g = y10 + dG; b = y10 + dB;
+			*rgb1Ptr++ = (r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0;
+			*rgb1Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
+			*rgb1Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
+
+			r = y11 + dR; g = y11 + dG; b = y11 + dB;
+			*rgb1Ptr++ = (r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0;
+			*rgb1Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
+			*rgb1Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
+        }
+//        y0 = y1;
+//        dst0 = dst1;
+    }
+
+	return TIResult<CBitmap>(bitmap);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<CBitmap> sDecodePNGData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	png_struct*	pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nil, nil, nil);
 	if (pngPtr == nil)
-		return CBitmap();
+		return TIResult<CBitmap>(sErrorUnableToDecode);
 
 	png_info*	pngInfoPtr = png_create_info_struct(pngPtr);
 	if (pngInfoPtr == nil) {
 		png_destroy_read_struct(&pngPtr, nil, nil);
 
-		return CBitmap();
+		return TIResult<CBitmap>(sErrorUnableToDecode);
 	}
 
 	// Set error handling
@@ -365,7 +481,7 @@ CBitmap sDecodePNGData(const CData& data)
 		// Error handling
 		png_destroy_read_struct(&pngPtr, &pngInfoPtr, nil);
 
-		return CBitmap();
+		return TIResult<CBitmap>(sErrorUnableToDecode);
 	}
 
 	// Initialize
@@ -490,7 +606,7 @@ CBitmap sDecodePNGData(const CData& data)
 	png_destroy_read_struct(&pngPtr, &pngInfoPtr, nil);
 	free(rowPointers);
 
-	return bitmap;
+	return TIResult<CBitmap>(bitmap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

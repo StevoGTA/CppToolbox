@@ -60,9 +60,10 @@ static	void	sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInter
 
 class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>{
 	public:
-		CBitmapInternals(const S2DSizeS32& size, CBitmap::Format format, const CData& pixelData, UInt16 bytesPerRow) :
+		CBitmapInternals(const S2DSizeS32& size, CBitmap::Format format, const CData& pixelData,
+				const OV<UInt16>& bytesPerRow) :
 			TCopyOnWriteReferenceCountable(),
-					mSize(size), mFormat(format), mBytesPerRow(bytesPerRow)
+					mSize(size), mFormat(format)
 			{
 				// Finish setup
 				switch (mFormat) {
@@ -82,10 +83,15 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 						break;
 				}
 
-				if (mBytesPerRow == 0)
-					// Set default bytes per row
-					mBytesPerRow = (mSize.mWidth * mBytesPerPixel) & 0xFFFFFFF0 + 0x0F;
-
+				if (bytesPerRow.hasValue())
+					// Have value
+					mBytesPerRow = *bytesPerRow;
+				else {
+					// Calculate and round up to a 16 byte boundary
+					mBytesPerRow = mSize.mWidth * mBytesPerPixel;
+					if ((mBytesPerRow % 0x0F) != 0)
+						mBytesPerRow += 0x10 - (mBytesPerRow % 0x0F);
+				}
 				mPixelData =
 						!pixelData.isEmpty() ? pixelData : CData((CData::ByteCount) (mBytesPerRow * mSize.mHeight));
 			}
@@ -109,7 +115,7 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const S2DSizeS32& size, Format format, UInt16 bytesPerRow)
+CBitmap::CBitmap(const S2DSizeS32& size, Format format, const OV<UInt16>& bytesPerRow)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check

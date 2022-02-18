@@ -102,7 +102,7 @@ class CBitmap {
 	public:
 									// Lifecycle methods
 									CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1), Format format = kFormatRGBA8888,
-											UInt16 bytesPerRow = 0);
+											const OV<UInt16>& bytesPerRow = OV<UInt16>());
 									CBitmap(const S2DSizeS32& size, Format format, const CData& pixelData,
 											UInt16 bytesPerRow);
 									CBitmap(const CBitmap& other, Format format);

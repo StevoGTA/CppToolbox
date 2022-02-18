@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CBitmap.h"
+#include "TResult.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CImage
@@ -16,26 +17,30 @@ class CImage {
 		enum Type {
 			kTypeJPEG	= MAKE_OSTYPE('J', 'P', 'E', 'G'),
 			kTypePNG	= MAKE_OSTYPE('P', 'N', 'G', ' '),
+			kTypeNV12	= MAKE_OSTYPE('N', 'V', '1', '2'),
 		};
 
 	// Methods
 	public:
-							// Lifecycle methods
-							CImage(const CData& data, OV<Type> type = OV<Type>());
-							CImage(const CImage& other);
-							~CImage();
+									// Lifecycle methods
+									CImage(const CData& data, const OV<Type>& type = OV<Type>(),
+											const OV<S2DSizeS32>& size = OV<S2DSizeS32>());
+									CImage(const CImage& other);
+									~CImage();
 
-							// Instance methods
-				CBitmap		getBitmap() const;
+									// Instance methods
+				TIResult<CBitmap>	getBitmap() const;
 
-							// Class methods
-		static	CBitmap		getBitmap(const CData& data);
+									// Class methods
+		static	TIResult<CBitmap>	getBitmap(const CData& data, const OV<Type>& type = OV<Type>(),
+											const OV<S2DSizeS32>& size = OV<S2DSizeS32>())
+										{ return CImage(data, type, size).getBitmap(); }
 
-		static	OV<Type>	getTypeFromResourceName(const CString& resourceName);
-		static	OV<Type>	getTypeFromMIMEType(const CString& MIMEType);
-		static	OV<Type>	getTypeFromData(const CData& data);
-		static	CString		getDefaultFilenameExtension(Type type);
-		static	CString		getMIMEType(Type type);
+		static	OV<Type>			getTypeFromResourceName(const CString& resourceName);
+		static	OV<Type>			getTypeFromMIMEType(const CString& MIMEType);
+		static	OV<Type>			getTypeFromData(const CData& data);
+		static	OI<CString>			getDefaultFilenameExtension(Type type);
+		static	OI<CString>			getMIMEType(Type type);
 
 	// Properties
 	private:
