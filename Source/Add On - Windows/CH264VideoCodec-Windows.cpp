@@ -170,7 +170,9 @@ OI<SError> CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoPr
 	const	DecodeInfo&	h264DecodeInfo = *((DecodeInfo*) &*decodeInfo);
 
 	// Create video decoder
-	TCIResult<IMFTransform>	videoDecoder = CMediaFoundationServices::createTransformForVideoDecode(MFVideoFormat_H264);
+	TCIResult<IMFTransform>	videoDecoder =
+									CMediaFoundationServices::createTransformForVideoDecode(MFVideoFormat_H264,
+											MFVideoFormat_NV12);
 	if (videoDecoder.hasError())
 		return OI<SError>(videoDecoder.getError());
 	mInternals->mVideoDecoder = videoDecoder.getInstance();

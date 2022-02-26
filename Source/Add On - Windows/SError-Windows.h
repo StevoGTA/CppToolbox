@@ -20,34 +20,37 @@ SError	SErrorFromWindowsGetLastError();
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define	ReturnError(result, method)														\
-				{																		\
-					SError	_error = SErrorFromHRESULT(result);							\
-					CLogServices::logError(												\
-							CString(method) + CString(OSSTR(" returned ")) +			\
-									_error.getDescription());							\
-																						\
-					return OI<SError>(_error);											\
+#define LogFailedHRESULT(result, method)																		\
+				{																						\
+					SError	_error = SErrorFromHRESULT(result);											\
+					CLogServices::logError(																\
+							CString(method) + CString(OSSTR(" returned ")) + _error.getDescription());	\
 				}
-#define	ReturnErrorIfFailed(result, method)												\
-				{																		\
-					if (FAILED(result)) {												\
-						SError	_error = SErrorFromHRESULT(result);						\
-						CLogServices::logError(											\
-								CString(method) + CString(OSSTR(" returned ")) +		\
-										_error.getDescription());						\
-																						\
-						return OI<SError>(_error);										\
-					}																	\
+#define	ReturnError(result, method)																		\
+				{																						\
+					SError	_error = SErrorFromHRESULT(result);											\
+					CLogServices::logError(																\
+							CString(method) + CString(OSSTR(" returned ")) + _error.getDescription());	\
+																										\
+					return OI<SError>(_error);															\
 				}
-#define	ReturnValueIfFailed(result, method, value)										\
-				{																		\
-					if (FAILED(result)) {												\
-						SError	_error = SErrorFromHRESULT(result);						\
-						CLogServices::logError(											\
-								CString(method) + CString(OSSTR(" returned ")) +		\
-										_error.getDescription());						\
-																						\
-						return value;													\
-					}																	\
+#define	ReturnErrorIfFailed(result, method)																	\
+				{																							\
+					if (FAILED(result)) {																	\
+						SError	_error = SErrorFromHRESULT(result);											\
+						CLogServices::logError(																\
+								CString(method) + CString(OSSTR(" returned ")) + _error.getDescription());	\
+																											\
+						return OI<SError>(_error);															\
+					}																						\
+				}
+#define	ReturnValueIfFailed(result, method, value)															\
+				{																							\
+					if (FAILED(result)) {																	\
+						SError	_error = SErrorFromHRESULT(result);											\
+						CLogServices::logError(																\
+								CString(method) + CString(OSSTR(" returned ")) + _error.getDescription());	\
+																											\
+						return value;																		\
+					}																						\
 				}

@@ -276,6 +276,7 @@ template <typename T> struct OV {
 					OV() : mValue(nil) {}
 					OV(T value) : mValue(new T(value)) {}
 					OV(const OV& other) : mValue((other.mValue != nil) ? new T(*other.mValue) : nil) {}
+					~OV() { Delete(mValue); }
 
 					// Instamce methods
 			bool	hasValue() const
@@ -286,14 +287,29 @@ template <typename T> struct OV {
 						{ return (mValue != nil) ? *mValue : defaultValue; }
 			void	setValue(T value)
 						{ if (mValue != nil) *mValue = value; else mValue = new T(value); }
+			void	setValue(const OV<T>& value)
+						{
+							// Check situation
+							if ((mValue != nil) && value.hasValue())
+								// Update value
+								*mValue = *value;
+							else if (mValue != nil) {
+								// No longer have a value
+								Delete(mValue);
+							} else
+								// Now have a value
+								mValue = new T(*value);
+						}
 			void	removeValue()
-						{ mValue = nil; }
+						{ Delete(mValue); }
 
 	const	T&		operator*() const
 						{ AssertFailIf(mValue == nil); return *mValue; }
 
 			OV<T>&	operator=(T value)
-						{ if (mValue != nil) *mValue = value; else mValue = new T(value); return *this; }
+						{ setValue(value); return *this; }
+			OV<T>&	operator=(const OV<T>& value)
+						{ setValue(value); return *this; }
 
 			bool	operator==(const OV<T>& other) const
 						{ return (hasValue() == other.hasValue()) && (!hasValue() || (*mValue == *other.mValue)); }

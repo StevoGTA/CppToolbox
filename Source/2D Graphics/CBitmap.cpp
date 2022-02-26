@@ -88,12 +88,12 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 					mBytesPerRow = *bytesPerRow;
 				else {
 					// Calculate and round up to a 16 byte boundary
-					mBytesPerRow = mSize.mWidth * mBytesPerPixel;
-					if ((mBytesPerRow % 0x0F) != 0)
+					mBytesPerRow = (UInt16) (mSize.mWidth * mBytesPerPixel);
+					if ((mBytesPerRow % 0x10) != 0)
 						mBytesPerRow += 0x10 - (mBytesPerRow % 0x0F);
 				}
 				mPixelData =
-						!pixelData.isEmpty() ? pixelData : CData((CData::ByteCount) (mBytesPerRow * mSize.mHeight));
+						!pixelData.isEmpty() ? pixelData : CData((CData::ByteCount) mBytesPerRow * mSize.mHeight);
 			}
 		CBitmapInternals(const CBitmapInternals& other) :
 			TCopyOnWriteReferenceCountable(),
@@ -104,8 +104,8 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 		CBitmap::Format	mFormat;
 		S2DSizeS32		mSize;
 		CData			mPixelData;
-		UInt32			mBytesPerPixel;
-		UInt32			mBytesPerRow;
+		UInt16			mBytesPerPixel;
+		UInt16			mBytesPerRow;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -779,7 +779,7 @@ void sConvertRGBA8888ToRGB565(const CBitmapInternals& sourceBitmapInternals,
 			UInt32	red = (((*srcPtr >> 0) & 0xFF) * 31 + 127) / 255;
 			UInt32	green = (((*srcPtr >> 8) & 0xFF) * 63 + 127) / 255;
 			UInt32	blue = (((*srcPtr >> 16) & 0xFF) * 31 + 127) / 255;
-			*dstPtr = (red << 11) | (green << 5) | blue;
+			*dstPtr = (UInt16) ((red << 11) | (green << 5) | blue);
 #else
 #if defined(__clang__)
 	#warning TODO - convertRGBA8888ToRGB565 for Big Endian
@@ -815,7 +815,7 @@ void sConvertRGBA8888ToRGBA4444(const CBitmapInternals& sourceBitmapInternals,
 			UInt32	green = (((*srcPtr >> 8) & 0xFF) * 15 + 127) / 255;
 			UInt32	blue = (((*srcPtr >> 16) & 0xFF) * 15 + 127) / 255;
 			UInt32	alpha = (((*srcPtr >> 24) & 0xFF) * 15 + 127) / 255;
-			*dstPtr = (red << 12) | (green << 8) | (blue << 4) | alpha;
+			*dstPtr = (UInt16) ((red << 12) | (green << 8) | (blue << 4) | alpha);
 #else
 #if defined(__clang__)
 	#warning TODO - convertRGBA8888ToRGBA4444 for Big Endian
@@ -851,7 +851,7 @@ void sConvertRGBA8888ToRGBA5551(const CBitmapInternals& sourceBitmapInternals,
 			UInt32	green = (((*srcPtr >> 8) & 0xFF) * 31 + 127) / 255;
 			UInt32	blue = (((*srcPtr >> 16) & 0xFF) * 31 + 127) / 255;
 			UInt32	alpha = (((*srcPtr >> 24) & 0xFF) * 1 + 127) / 255;
-			*dstPtr = (red << 11) | (green << 6) | (blue << 1) | alpha;
+			*dstPtr = (UInt16) ((red << 11) | (green << 6) | (blue << 1) | alpha);
 #else
 #if defined(__clang__)
 	#warning TODO - convertRGBA8888ToRGBA5551 for Big Endian

@@ -157,31 +157,40 @@ class CString : public CHashable {
 
 	// Structs
 	public:
-		struct C : SReferenceCountable {
-							// Lifecycle methods
-							C(Length length) : SReferenceCountable()
-								{
-									mBuffer = new char[std::max<Length>(length, 1)];
-									mBuffer[0] = 0;
-								}
-							C(const C& other) : SReferenceCountable(other), mBuffer(other.mBuffer) {}
-							~C()
-								{
-									// Check if last reference
-									if (removeReference() == 0)
-										// Last reference
-										DeleteArray(mBuffer);
-								}
+		struct C {
+					// Lifecycle methods
+					C(Length length)
+						{
+							mBuffer = new char[std::max<Length>(length, 1)];
+							mBuffer[0] = 0;
 
-							// Instance methods
-			const	char*	operator*() const
-								{ return mBuffer; }
+							mReferenceCount = new UInt32;
+							*mReferenceCount = 1;
+						}
+					C(const C& other) :
+						mBuffer(other.mBuffer), mReferenceCount(other.mReferenceCount)
+						{ (*mReferenceCount)++; }
+					~C()
+						{
+							// Check if last reference
+							if (--(*mReferenceCount) == 0) {
+								// Last reference
+								DeleteArray(mBuffer);
+								Delete(mReferenceCount);
+							}
+						}
 
-					void	hashInto(CHasher& hasher) const
-								{ hasher.add(mBuffer); }
+					// Instance methods
+			char*	operator*() const
+						{ return mBuffer; }
+
+			void	hashInto(CHasher& hasher) const
+						{ hasher.add(mBuffer); }
 
 			// Properties
-			char*	mBuffer;
+			private:
+				char*	mBuffer;
+				UInt32*	mReferenceCount;
 		};
 
 		struct Range {

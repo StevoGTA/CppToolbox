@@ -69,7 +69,7 @@ void CProgress::setMessage(const CString& message)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<Float32> CProgress::getValue() const
+const OV<Float32>& CProgress::getValue() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mValue;

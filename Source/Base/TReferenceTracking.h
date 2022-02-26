@@ -5,29 +5,7 @@
 #pragma once
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SReferenceCountable
-
-struct SReferenceCountable {
-	// Methods
-	public:
-				// Lifecycle methods
-				SReferenceCountable() : mReferenceCount(new UInt32)
-					{ *mReferenceCount = 1; }
-				SReferenceCountable(const SReferenceCountable& other) : mReferenceCount(other.mReferenceCount)
-					{ (*mReferenceCount)++; }
-
-	protected:
-				// Subclass methods
-		UInt32	removeReference()
-					{ return --(*mReferenceCount); }
-
-	// Properties
-	private:
-		UInt32*	mReferenceCount;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TReferenceCountable
+// MARK: TReferenceCountable
 
 template <typename T> class TReferenceCountable {
 	public:

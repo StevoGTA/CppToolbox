@@ -378,8 +378,8 @@ const CString::C CString::getCString(Encoding encoding) const
 		// Convert
 		int	count =
 					::WideCharToMultiByte(sGetCodePageForCStringEncoding(encoding), 0, mString.c_str(), length,
-							c.mBuffer, length * 4, NULL, NULL);
-		c.mBuffer[count] = 0;
+							*c, length * 4, NULL, NULL);
+		(*c)[count] = 0;
 	}
 
 	return c;

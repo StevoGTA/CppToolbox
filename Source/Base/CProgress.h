@@ -36,17 +36,17 @@ class CProgress {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									CProgress(const UpdateInfo& updateInfo);
-									CProgress(const CProgress& other);
-		virtual						~CProgress();
+										// Lifecycle methods
+										CProgress(const UpdateInfo& updateInfo);
+										CProgress(const CProgress& other);
+		virtual							~CProgress();
 
-									// Instance methods
-				const	CString&	getMessage() const;
-						void		setMessage(const CString& message);
+										// Instance methods
+				const	CString&		getMessage() const;
+						void			setMessage(const CString& message);
 
-						OV<Float32>	getValue() const;
-						void		setValue(OV<Float32> value);
+				const	OV<Float32>&	getValue() const;
+						void			setValue(OV<Float32> value);
 
 	// Properties
 	private:

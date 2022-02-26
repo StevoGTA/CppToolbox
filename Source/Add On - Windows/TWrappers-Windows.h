@@ -59,32 +59,37 @@ template <typename T> struct CI {
 
 template <typename T> struct OCI {
 			// Lifecycle methods
-			OCI() : mInstance(nullptr), mReferenceCount(nullptr) {}
-			OCI(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+			OCI(T* instance = nullptr) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
 			OCI(const OCI<T>& other) :
 				mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
 				{
-					// Check if have reference
-					if (mInstance != nullptr)
-						// Additional reference
-						(*mReferenceCount)++;
+					// One more reference
+					(*mReferenceCount)++;
 				}
 			~OCI()
 				{
-					// Check for instance
-					if ((mInstance != nullptr) && (--(*mReferenceCount) == 0)) {
+					// One less reference
+					if (--(*mReferenceCount) == 0) {
 						// All done
-						mInstance->Release();
+						if (mInstance != nullptr)
+							// Release instance
+							mInstance->Release();
+
+						// Cleanup
 						Delete(mReferenceCount);
 					}
 				}
 
 	OCI<T>&	operator=(const OCI<T>& other)
 				{
-					// Check for instance
-					if ((mInstance != nullptr) && (--(*mReferenceCount) == 0)) {
+					// One less reference
+					if (--(*mReferenceCount) == 0) {
 						// All done
-						mInstance->Release();
+						if (mInstance != nullptr)
+							// Release instance
+							mInstance->Release();
+
+						// Cleanup
 						Delete(mReferenceCount);
 					}
 
@@ -92,10 +97,8 @@ template <typename T> struct OCI {
 					mInstance = other.mInstance;
 					mReferenceCount = other.mReferenceCount;
 
-					// Note additional reference if have reference
-					if (mInstance != nullptr)
-						// Additional reference
-						(*mReferenceCount)++;
+					// One more reference
+					(*mReferenceCount)++;
 
 					return *this;
 				}

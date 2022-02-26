@@ -38,7 +38,6 @@ class CFileDataSourceInternals {
 									StorageFile::GetFileFromPathAsync(
 													file.getFilesystemPath().getString().getOSString())
 											.get();
-					//mByteCount = storageFile.GetBasicPropertiesAsync().get().Size();
 
 					// Open
 					mRandomAccessStream = storageFile.OpenReadAsync().get();

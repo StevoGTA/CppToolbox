@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "C2DGeometry.h"
 #include "CAudioProcessor.h"
+#include "CImage.h"
 #include "CLogServices.h"
+#include "CVideoFrame.h"
 #include "SMediaPacket.h"
 #include "SError-Windows.h"
 #include "TResult-Windows.h"
@@ -39,12 +40,12 @@ class CMediaFoundationServices {
 									ProcessOutputInfo(ReadInputSampleProc readInputSampleProc,
 											NoteFormatChangedProc noteFormatChangedProc, void* userData) :
 										mReadInputSampleProc(readInputSampleProc),
-												mFillInputBufferProc(NULL), mInputSample(NULL),
+												mFillInputBufferProc(NULL),
 												mNoteFormatChangedProc(noteFormatChangedProc),
 												mUserData(userData)
 										{}
 									ProcessOutputInfo(FillInputBufferProc fillInputBufferProc,
-											OCI<IMFSample> inputSample, void* userData) :
+											const OCI<IMFSample>& inputSample, void* userData) :
 										mReadInputSampleProc(NULL),
 												mFillInputBufferProc(fillInputBufferProc), mInputSample(inputSample),
 												mNoteFormatChangedProc(NULL),
@@ -69,7 +70,12 @@ class CMediaFoundationServices {
 												OI<SError>	error =
 																	mFillInputBufferProc(*mInputSample, mediaBuffer,
 																			mUserData);
-												ReturnValueIfError(error, TCIResult<IMFSample>(*error));
+												if (error.hasInstance()) {
+													// Cleanup
+													mediaBuffer->Release();
+
+													return TCIResult<IMFSample>(*error);
+												}
 
 												return TCIResult<IMFSample>(mInputSample);
 											}
@@ -108,7 +114,7 @@ class CMediaFoundationServices {
 												const SAudioProcessingFormat& inputAudioProcessingFormat,
 												const SAudioProcessingFormat& outputAudioProcessingFormat);
 #endif
-		static	TCIResult<IMFTransform>	createTransformForVideoDecode(const GUID& guid);
+		static	TCIResult<IMFTransform>	createTransformForVideoDecode(const GUID& inputGUID, const GUID& outputGUID);
 		static	OI<SError>				setTransformInputOutputMediaTypes(IMFTransform* transform,
 												IMFMediaType* inputMediaType, IMFMediaType* outputMediaType);
 
@@ -118,6 +124,7 @@ class CMediaFoundationServices {
 		static	SAudioSourceStatus		load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
 												UInt32 bytesPerFrame);
 		static	OI<SError>				load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource);
+		static	TIResult<CImage>		imageForVideoSample(const CVideoFrame& videoFrame);
 
 		static	OI<SError>				processOutput(IMFTransform* transform, IMFSample* outputSample,
 												const ProcessOutputInfo& processOutputInfo);

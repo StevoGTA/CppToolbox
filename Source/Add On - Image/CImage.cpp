@@ -275,7 +275,7 @@ TIResult<CBitmap> sDecodeJPEGData(const CData& data)
 
 	// Setup bitmap
 	CBitmap	bitmap(S2DSizeS32(jpegInfo.output_width, jpegInfo.output_height), CBitmap::kFormatRGB888,
-					jpegInfo.output_width * jpegInfo.output_components);
+					OV<UInt16>((UInt16) jpegInfo.output_width * (UInt16) jpegInfo.output_components));
 
 	// Step 6: Decompress the image
 	JSAMPLE*	bytePtr = (JSAMPLE*) bitmap.getPixelData().getMutableBytePtr();
@@ -375,24 +375,30 @@ TIResult<CBitmap> sDecodeNV12Data(const CData& data, const S2DSizeS32& size)
 //    unsigned char const* uv = yuv + (width*height);
 //    int const halfHeight = height>>1;
 //    int const halfWidth = width>>1;
-	const	UInt8*	y0Ptr = (UInt8*) data.getBytePtr();
-	const	UInt8*	uvPtr = y0Ptr + size.mWidth * size.mHeight;
+	//const	UInt8*	y0Ptr = (UInt8*) data.getBytePtr();
+	//const	UInt8*	uvPtr = y0Ptr + size.mWidth * size.mHeight;
 	const	SInt32	halfWidth = size.mWidth / 2;
 	const	SInt32	halfHeight = size.mHeight / 2;
 
 	CBitmap	bitmap(size, CBitmap::kFormatRGB888);
-	UInt16	bytesPerRow = bitmap.getBytesPerRow();
+	UInt8*	bitmapPixelDataPtr = (UInt8*) bitmap.getPixelData().getMutableBytePtr();
+	UInt16	bitmapBytesPerRow = bitmap.getBytesPerRow();
 //    unsigned char* dst0 = out;
-	UInt8*	rgb0Ptr = (UInt8*) bitmap.getPixelData().getMutableBytePtr();
+	//UInt8*	rgb0Ptr = (UInt8*) bitmap.getPixelData().getMutableBytePtr();
 
 	// Loop vertially
 //    for (int h=0; h<halfHeight; ++h) {
-	for (SInt32 y = 0; y < halfHeight; y++, y0Ptr += size.mWidth * 2, rgb0Ptr += bytesPerRow * 2) {
+	//for (SInt32 y = 0; y < halfHeight; y++, y0Ptr += size.mWidth, rgb0Ptr += bitmapBytesPerRow) {
+	const UInt8* y0Ptr = (UInt8*) data.getBytePtr();
+	const UInt8* y1Ptr = y0Ptr + size.mWidth;
+	const UInt8* uvPtr = y0Ptr + size.mWidth * size.mHeight;
+	for (SInt32 y = 0; y < halfHeight; y++, y0Ptr += size.mWidth, y1Ptr += size.mWidth) {
 //        unsigned char const* y1 = y0+width;
 		// Setup
-		const	UInt8*	y1Ptr = y0Ptr += size.mWidth;
+		//const	UInt8*	y1Ptr = y0Ptr + size.mWidth;
 //        unsigned char* dst1 = dst0 + width*trait::bytes_per_pixel;
-				UInt8*	rgb1Ptr = rgb0Ptr + bytesPerRow;
+				UInt8*	rgb0Ptr = bitmapPixelDataPtr + bitmapBytesPerRow * 2 * y;
+				UInt8*	rgb1Ptr = rgb0Ptr + bitmapBytesPerRow;
 //        for (int w=0; w<halfWidth; ++w) {
 		// Loop horizontally
 		for (SInt32 x = 0; x < halfWidth; x++) {

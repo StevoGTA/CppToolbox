@@ -706,6 +706,9 @@ TArray<I<CGPUTexture> > CGPU::registerTextures(const CVideoFrame& videoFrame)
 	mediaBuffer->Unlock();
 	mInternals->mD3DDeviceContextLock.unlock();
 
+	// Cleanup
+	mediaBuffer->Release();
+
 	return TNArray<I<CGPUTexture> >(I<CGPUTexture>(gpuTexture));
 }
 

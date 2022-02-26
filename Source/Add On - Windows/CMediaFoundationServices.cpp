@@ -233,14 +233,15 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForAudioResampl
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-TCIResult<IMFTransform> CMediaFoundationServices::createTransformForVideoDecode(const GUID& guid)
+TCIResult<IMFTransform> CMediaFoundationServices::createTransformForVideoDecode(const GUID& inputGUID,
+		const GUID& outputGUID)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	HRESULT	result;
 
 	// Enum Video Codecs to find Video Decoder
-	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Video, guid};
+	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Video, inputGUID};
 	IMFActivate**			activates;
 	UINT32					count;
 	result =
@@ -278,7 +279,7 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForVideoDecode(
 	//result = ::MFSetAttributeSize(*inputMediaType, MF_MT_FRAME_SIZE, 320, 480);
 	//ReturnValueIfFailed(result, "MFSetAttributeSize for input",
 	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	TCIResult<IMFMediaType>	inputMediaType = createMediaType(guid, S2DSizeU32(320, 480));
+	TCIResult<IMFMediaType>	inputMediaType = createMediaType(inputGUID, S2DSizeU32(320, 480));
 	ReturnValueIfResultError(inputMediaType, TCIResult<IMFTransform>(inputMediaType.getError()));
 
 	//result = videoDecoder->SetInputType(0, *inputMediaType, 0);
@@ -299,7 +300,9 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForVideoDecode(
 
 	//result = ::MFSetAttributeSize(*outputMediaType, MF_MT_FRAME_SIZE, 320, 480);
 	//ReturnValueIfFailed(result, "MFSetAttributeSize for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	TCIResult<IMFMediaType>	outputMediaType = createMediaType(MFVideoFormat_NV12, S2DSizeU32(320, 480));
+
+	//TCIResult<IMFMediaType>	outputMediaType = createMediaType(MFVideoFormat_NV12, S2DSizeU32(320, 480));
+	TCIResult<IMFMediaType>	outputMediaType = createMediaType(outputGUID, S2DSizeU32(320, 480));
 	ReturnValueIfResultError(outputMediaType, TCIResult<IMFTransform>(outputMediaType.getError()));
 
 	//result = videoDecoder->SetOutputType(0, *outputMediaType, 0);
@@ -498,6 +501,51 @@ OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TIResult<CImage> CMediaFoundationServices::imageForVideoSample(const CVideoFrame& videoFrame)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get 
+	IMFMediaBuffer*	mediaBuffer;
+	HRESULT			result = videoFrame.getSample()->GetBufferByIndex(0, &mediaBuffer);
+	ReturnValueIfFailed(result, "GetBufferByIndex for outputSample", TIResult<CImage>(SErrorFromHRESULT(result)));
+
+	BYTE*	mediaBufferBytePtr;
+	DWORD	mediaBufferByteCount;
+	result = mediaBuffer->Lock(&mediaBufferBytePtr, NULL, &mediaBufferByteCount);
+	if (FAILED(result)) {
+		// Failed
+		LogFailedHRESULT(result, "Lock for outputSample");
+
+		// Cleanup
+		mediaBuffer->Release();
+
+		return TIResult<CImage>(SErrorFromHRESULT(result));
+	}
+
+	// Create image
+	const	S2DSizeU16&	size = videoFrame.getFrameSize();
+			CImage		image(CData(mediaBufferBytePtr, mediaBufferByteCount), OV<CImage::Type>(CImage::kTypeNV12),
+								S2DSizeS32(size.mWidth, size.mHeight));
+
+	// Unlock
+	result = mediaBuffer->Unlock();
+	if (FAILED(result)) {
+		// Failed
+		LogFailedHRESULT(result, "Unlock for outputSample");
+
+		// Cleanup
+		mediaBuffer->Release();
+
+		return TIResult<CImage>(SErrorFromHRESULT(result));
+	}
+
+	// Cleanup
+	mediaBuffer->Release();
+
+	return TIResult<CImage>(image);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFSample* outputSample,
 		const CMediaFoundationServices::ProcessOutputInfo& processOutputInfo)
 //----------------------------------------------------------------------------------------------------------------------
@@ -560,7 +608,15 @@ OI<SError> CMediaFoundationServices::completeWrite(IMFSample* sample, UInt32 fra
 	BYTE*	mediaBufferBytePtr;
 	DWORD	mediaBufferByteCount;
 	result = mediaBuffer->Lock(&mediaBufferBytePtr, NULL, &mediaBufferByteCount);
-	ReturnErrorIfFailed(result, "Lock for outputSample");
+	if (FAILED(result)) {
+		// Failed
+		LogFailedHRESULT(result, "Lock for outputSample");
+
+		// Cleanup
+		mediaBuffer->Release();
+
+		return SErrorFromHRESULT(result);
+	}
 
 	// Copy bytes
 	UInt32				copyByteOffset = frameOffset * audioProcessingFormat.getBytesPerFrame();
@@ -573,10 +629,29 @@ OI<SError> CMediaFoundationServices::completeWrite(IMFSample* sample, UInt32 fra
 
 	// Reset buffer
 	result = mediaBuffer->SetCurrentLength(0);
-	ReturnErrorIfFailed(result, "SetCurrentLength");
+	if (FAILED(result)) {
+		// Failed
+		LogFailedHRESULT(result, "SetCurrentLength");
+
+		// Cleanup
+		mediaBuffer->Release();
+
+		return SErrorFromHRESULT(result);
+	}
 
 	result = mediaBuffer->Unlock();
-	ReturnErrorIfFailed(result, "Unlock for outputSample");
+	if (FAILED(result)) {
+		// Failed
+		LogFailedHRESULT(result, "Unlock for outputSample");
+
+		// Cleanup
+		mediaBuffer->Release();
+
+		return SErrorFromHRESULT(result);
+	}
+
+	// Cleanup
+	mediaBuffer->Release();
 
 	return OI<SError>();
 }
