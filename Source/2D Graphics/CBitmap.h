@@ -17,7 +17,7 @@ union SPixelDataRGBA4444 {
 		UInt16	mG : 4;
 		UInt16	mB : 4;
 		UInt16	mA : 4;
-	} mColor;
+	} mComponents;
 };
 
 union SPixelDataRGBA5551 {
@@ -27,7 +27,7 @@ union SPixelDataRGBA5551 {
 		UInt16	mG : 5;
 		UInt16	mB : 5;
 		UInt16	mA : 1;
-	} mColor;
+	} mComponents;
 };
 
 union SPixelDataRGB565 {
@@ -36,36 +36,33 @@ union SPixelDataRGB565 {
 		UInt16	mR : 5;
 		UInt16	mG : 6;
 		UInt16	mB : 5;
-	} mColor;
+	} mComponents;
 };
 
 union SPixelDataRGB888 {
-	UInt16	mRawData;
-	struct {
-		UInt16	mR : 8;
-		UInt16	mG : 8;
-		UInt16	mB : 8;
-	} mColor;
+	UInt8	mR;
+	UInt8	mG;
+	UInt8	mB;
 };
 
 union SPixelDataRGBA8888 {
-	UInt16	mRawData;
+	UInt32	mRawData;
 	struct {
-		UInt16	mR : 8;
-		UInt16	mG : 8;
-		UInt16	mB : 8;
-		UInt16	mA : 8;
-	} mColor;
+		UInt8	mR;
+		UInt8	mG;
+		UInt8	mB;
+		UInt8	mA;
+	} mComponents;
 };
 
 union SPixelDataARGB8888 {
 	UInt16	mRawData;
 	struct {
-		UInt16	mA : 8;
-		UInt16	mR : 8;
-		UInt16	mG : 8;
-		UInt16	mB : 8;
-	} mColor;
+		UInt8	mA;
+		UInt8	mR;
+		UInt8	mG;
+		UInt8	mB;
+	} mComponents;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
