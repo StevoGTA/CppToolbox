@@ -32,10 +32,6 @@ class CImage {
 				TIResult<CBitmap>	getBitmap() const;
 
 									// Class methods
-		static	TIResult<CBitmap>	getBitmap(const CData& data, const OV<Type>& type = OV<Type>(),
-											const OV<S2DSizeS32>& size = OV<S2DSizeS32>())
-										{ return CImage(data, type, size).getBitmap(); }
-
 		static	OV<Type>			getTypeFromResourceName(const CString& resourceName);
 		static	OV<Type>			getTypeFromMIMEType(const CString& MIMEType);
 		static	OV<Type>			getTypeFromData(const CData& data);

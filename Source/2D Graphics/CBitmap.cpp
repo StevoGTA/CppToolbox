@@ -60,8 +60,8 @@ static	void	sConvertARGB8888ToRGBA8888(const CBitmapInternals& sourceBitmapInter
 
 class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>{
 	public:
-		CBitmapInternals(const S2DSizeS32& size, CBitmap::Format format, const CData& pixelData,
-				const OV<UInt16>& bytesPerRow) :
+		CBitmapInternals(const S2DSizeS32& size, CBitmap::Format format, const CData& pixelData = CData::mEmpty,
+				const OV<UInt16>& bytesPerRow = OV<UInt16>()) :
 			TCopyOnWriteReferenceCountable(),
 					mSize(size), mFormat(format)
 			{
@@ -92,8 +92,7 @@ class CBitmapInternals : public TCopyOnWriteReferenceCountable<CBitmapInternals>
 					if ((mBytesPerRow % 0x10) != 0)
 						mBytesPerRow += 0x10 - (mBytesPerRow % 0x0F);
 				}
-				mPixelData =
-						!pixelData.isEmpty() ? pixelData : CData((CData::ByteCount) mBytesPerRow * mSize.mHeight);
+				mPixelData = !pixelData.isEmpty() ? pixelData : CData((CData::ByteCount) mBytesPerRow * mSize.mHeight);
 			}
 		CBitmapInternals(const CBitmapInternals& other) :
 			TCopyOnWriteReferenceCountable(),
@@ -139,7 +138,7 @@ CBitmap::CBitmap(const S2DSizeS32& size, Format format, const CData& pixelData, 
 	// Setup
 	mInternals =
 			new CBitmapInternals(S2DSizeS32(std::max(1, size.mWidth), std::max(1, size.mHeight)), format, pixelData,
-					bytesPerRow);
+					OV<UInt16>(bytesPerRow));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -147,7 +146,7 @@ CBitmap::CBitmap(const CBitmap& other, Format format)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CBitmapInternals(other.mInternals->mSize, format, CData::mEmpty, 0);
+	mInternals = new CBitmapInternals(other.mInternals->mSize, format);
 
 	// Convert
 	switch (other.mInternals->mFormat) {
@@ -322,7 +321,7 @@ CBitmap::CBitmap(const CBitmap& other, RotationOperation rotationOperation)
 			break;
 	}
 
-	mInternals = new CBitmapInternals(newSize, other.mInternals->mFormat, CData::mEmpty, 0);
+	mInternals = new CBitmapInternals(newSize, other.mInternals->mFormat);
 
 	// Rotate
 	// bytePtr = A * y + B * x + C
@@ -729,14 +728,14 @@ void sConvertRGB888ToRGBA8888(const CBitmapInternals& sourceBitmapInternals,
 	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
 		// Setup
 		const	UInt8*	srcPtr = (const UInt8*) (sourcePixelData + h * sourceBytesPerRow);
-				UInt32*	dstPtr = (UInt32*) (destinationPixelData + h * destinationBytesPerRow);
-		for (UInt32 w = 0; w < (UInt32) sourceBitmapInternals.mSize.mWidth; w++, dstPtr++) {
+				UInt8*	dstPtr = destinationPixelData + h * destinationBytesPerRow;
+		for (UInt32 w = 0; w < (UInt32) sourceBitmapInternals.mSize.mWidth; w++) {
 			// Convert color
 #if TARGET_RT_LITTLE_ENDIAN
-			UInt32	red = *(srcPtr++);
-			UInt32	green = *(srcPtr++);
-			UInt32	blue = *(srcPtr++);
-			*dstPtr = (red << 0) | (green << 8) | (blue << 16) | 0xFF000000;
+			*(dstPtr++) = (*srcPtr++);
+			*(dstPtr++) = (*srcPtr++);
+			*(dstPtr++) = (*srcPtr++);
+			*(dstPtr++) = 0xFF;
 #else
 #if defined(__clang__)
 	#warning TODO - convertRGB888ToRGBA8888 for Big Endian
@@ -752,7 +751,32 @@ void sConvertRGB888ToARGB8888(const CBitmapInternals& sourceBitmapInternals,
 		CBitmapInternals& destinationBitmapInternals)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Setup
+	const	UInt8*	sourcePixelData = (const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+			UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
+			UInt8*	destinationPixelData = (UInt8*) destinationBitmapInternals.mPixelData.getMutableBytePtr();
+			UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
+
+	// Loop on vertical
+	for (SInt32 h = 0; h < sourceBitmapInternals.mSize.mHeight; h++) {
+		// Setup
+		const	UInt8*	srcPtr = (const UInt8*) (sourcePixelData + h * sourceBytesPerRow);
+				UInt8*	dstPtr = destinationPixelData + h * destinationBytesPerRow;
+		for (UInt32 w = 0; w < (UInt32) sourceBitmapInternals.mSize.mWidth; w++) {
+			// Convert color
+#if TARGET_RT_LITTLE_ENDIAN
+			*(dstPtr++) = 0xFF;
+			*(dstPtr++) = (*srcPtr++);
+			*(dstPtr++) = (*srcPtr++);
+			*(dstPtr++) = (*srcPtr++);
+#else
+#if defined(__clang__)
+	#warning TODO - convertRGB888ToRGBA8888 for Big Endian
+#endif
+			AssertFailUnimplemented();
+#endif
+		}
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

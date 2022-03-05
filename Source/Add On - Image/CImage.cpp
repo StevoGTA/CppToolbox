@@ -371,41 +371,24 @@ TIResult<CBitmap> sDecodeNV12Data(const CData& data, const S2DSizeS32& size)
 		return TIResult<CBitmap>(sErrorUnableToDecode);
 
 	// Setup
-//    unsigned char const* y0 = yuv;
-//    unsigned char const* uv = yuv + (width*height);
-//    int const halfHeight = height>>1;
-//    int const halfWidth = width>>1;
-	//const	UInt8*	y0Ptr = (UInt8*) data.getBytePtr();
-	//const	UInt8*	uvPtr = y0Ptr + size.mWidth * size.mHeight;
 	const	SInt32	halfWidth = size.mWidth / 2;
 	const	SInt32	halfHeight = size.mHeight / 2;
 
 	CBitmap	bitmap(size, CBitmap::kFormatRGB888);
 	UInt8*	bitmapPixelDataPtr = (UInt8*) bitmap.getPixelData().getMutableBytePtr();
 	UInt16	bitmapBytesPerRow = bitmap.getBytesPerRow();
-//    unsigned char* dst0 = out;
-	//UInt8*	rgb0Ptr = (UInt8*) bitmap.getPixelData().getMutableBytePtr();
 
 	// Loop vertially
-//    for (int h=0; h<halfHeight; ++h) {
-	//for (SInt32 y = 0; y < halfHeight; y++, y0Ptr += size.mWidth, rgb0Ptr += bitmapBytesPerRow) {
 	const UInt8* y0Ptr = (UInt8*) data.getBytePtr();
 	const UInt8* y1Ptr = y0Ptr + size.mWidth;
 	const UInt8* uvPtr = y0Ptr + size.mWidth * size.mHeight;
 	for (SInt32 y = 0; y < halfHeight; y++, y0Ptr += size.mWidth, y1Ptr += size.mWidth) {
-//        unsigned char const* y1 = y0+width;
 		// Setup
-		//const	UInt8*	y1Ptr = y0Ptr + size.mWidth;
-//        unsigned char* dst1 = dst0 + width*trait::bytes_per_pixel;
-				UInt8*	rgb0Ptr = bitmapPixelDataPtr + bitmapBytesPerRow * 2 * y;
-				UInt8*	rgb1Ptr = rgb0Ptr + bitmapBytesPerRow;
-//        for (int w=0; w<halfWidth; ++w) {
+		UInt8*	rgb0Ptr = bitmapPixelDataPtr + bitmapBytesPerRow * 2 * y;
+		UInt8*	rgb1Ptr = rgb0Ptr + bitmapBytesPerRow;
+
 		// Loop horizontally
 		for (SInt32 x = 0; x < halfWidth; x++) {
-//            // shift
-//		    int Y00, Y01, Y10, Y11;
-//            Y00 = (*y0++) - 16;  Y01 = (*y0++) - 16;
-//            Y10 = (*y1++) - 16;  Y11 = (*y1++) - 16;
 			// Get source ys
 			SInt32	y00 = (*y0Ptr++) - 16;
 			y00 = (y00 > 0) ? 298 * y00 : 0;
@@ -419,23 +402,15 @@ TIResult<CBitmap> sDecodeNV12Data(const CData& data, const S2DSizeS32& size)
 			SInt32	y11 = (*y1Ptr++) - 16;
 			y11 = (y11 > 0) ? 298 * y11 : 0;
 
-//            // U,V or V,U? our trait will make the right call
-//		    int V, U;
-//            trait::loadvu(U, V, uv);
 			// Load U and V
-			SInt32	u = (*uvPtr++) - 128;
 			SInt32	v = (*uvPtr++) - 128;
+			SInt32	u = (*uvPtr++) - 128;
 
 			// Calculate RGB adjustments
 			SInt32	dR = 128 + 409 * v;
 			SInt32	dG = 128 - 100 * u - 208 * v;
 			SInt32	dB = 128 + 516 * u;
 
-//            // 2x2 pixels result
-//            trait::store_pixel(dst0, Y00 + tR, Y00 + tG, Y00 + tB, alpha);
-//            trait::store_pixel(dst0, Y01 + tR, Y01 + tG, Y01 + tB, alpha);
-//            trait::store_pixel(dst1, Y10 + tR, Y10 + tG, Y10 + tB, alpha);
-//            trait::store_pixel(dst1, Y11 + tR, Y11 + tG, Y11 + tB, alpha);
 			// Store RGB
 			SInt32	r, g, b;
 
@@ -459,8 +434,6 @@ TIResult<CBitmap> sDecodeNV12Data(const CData& data, const S2DSizeS32& size)
 			*rgb1Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
 			*rgb1Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
         }
-//        y0 = y1;
-//        dst0 = dst1;
     }
 
 	return TIResult<CBitmap>(bitmap);
