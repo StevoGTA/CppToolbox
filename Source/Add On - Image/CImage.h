@@ -30,6 +30,7 @@ class CImage {
 
 									// Instance methods
 				TIResult<CBitmap>	getBitmap() const;
+				OI<SError>			decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const;
 
 									// Class methods
 		static	OV<Type>			getTypeFromResourceName(const CString& resourceName);

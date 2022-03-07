@@ -161,6 +161,7 @@ class CString : public CHashable {
 					// Lifecycle methods
 					C(Length length)
 						{
+							// Setup
 							mBuffer = new char[std::max<Length>(length, 1)];
 							mBuffer[0] = 0;
 
@@ -172,9 +173,9 @@ class CString : public CHashable {
 						{ (*mReferenceCount)++; }
 					~C()
 						{
-							// Check if last reference
+							// Check if need to cleanup
 							if (--(*mReferenceCount) == 0) {
-								// Last reference
+								// Cleanup
 								DeleteArray(mBuffer);
 								Delete(mReferenceCount);
 							}

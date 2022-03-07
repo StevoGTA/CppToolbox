@@ -51,7 +51,8 @@ static	boolean				sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr);
 static	void				sJPEGSkipInputData(j_decompress_ptr jpegInfoPtr, long byteCount);
 static	void				sJPEGErrorExit(j_common_ptr jpegInfoPtr);
 
-static	TIResult<CBitmap>	sDecodeNV12Data(const CData& data, const S2DSizeS32& size);
+static	void				sDecodeNV12Data(const CData& data, const S2DSizeS32& size, CBitmap& bitmap,
+									const S2DRectS32& rect);
 
 static	TIResult<CBitmap>	sDecodePNGData(const CData& data);
 static	void				sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t length);
@@ -123,18 +124,75 @@ TIResult<CBitmap> CImage::getBitmap() const
 			// PNG
 			return sDecodePNGData(mInternals->mData);
 
-		case kTypeNV12:
+		case kTypeNV12: {
 			// NV12
 			if (!mInternals->mSize.hasValue())
 				// Missing size
 				return TIResult<CBitmap>(sErrorMissingSize);
+			else if (((*mInternals->mSize).mWidth < 2) || (((*mInternals->mSize).mWidth & 1) != 0) ||
+					((*mInternals->mSize).mHeight < 2) || (((*mInternals->mSize).mHeight & 1) != 0))
+				// Width and height must be 2 or greater and even
+				return TIResult<CBitmap>(sErrorUnableToDecode);
 
-			return sDecodeNV12Data(mInternals->mData, *mInternals->mSize);
+			// Setup
+			CBitmap	bitmap(*mInternals->mSize, CBitmap::kFormatRGB888);
+
+			// Decode
+			sDecodeNV12Data(mInternals->mData, *mInternals->mSize, bitmap,
+					S2DRectS32(0, 0, (*mInternals->mSize).mWidth, (*mInternals->mSize).mHeight));
+
+			return TIResult<CBitmap>(bitmap);
+		}
 
 #if defined(TARGET_OS_WINDOWS)
 		default:
 			// Just to make compiler happy.  Will never get here.
 			return TIResult<CBitmap>(CBitmap());
+#endif
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CImage::decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup/Validate image type
+	if (!mInternals->mType.hasValue())
+		// Determine from data
+		mInternals->mType = getTypeFromData(mInternals->mData);
+	if (!mInternals->mType.hasValue())
+		// Unknown type
+		return OI<SError>(sErrorUnknownType);
+
+	// Check image type
+	switch (*mInternals->mType) {
+		case kTypeJPEG:
+			// JPEG
+			AssertFailUnimplemented();
+
+			return OI<SError>(sErrorUnableToDecode);
+
+		case kTypePNG:
+			// PNG
+			AssertFailUnimplemented();
+
+			return OI<SError>(sErrorUnableToDecode);
+
+		case kTypeNV12:
+			// NV12
+			AssertFailIf(!mInternals->mSize.hasValue())
+			AssertFailIf((rect.getMaxX() > (*mInternals->mSize).mWidth) ||
+					(rect.getMaxY() > (*mInternals->mSize).mHeight))
+
+			// Decode
+			sDecodeNV12Data(mInternals->mData, *mInternals->mSize, bitmap, rect);
+
+			return OI<SError>();
+
+#if defined(TARGET_OS_WINDOWS)
+		default:
+			// Just to make compiler happy.  Will never get here.
+			return OI<SError>();
 #endif
 	}
 }
@@ -361,34 +419,41 @@ void sJPEGErrorExit(j_common_ptr jpegInfoPtr)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CBitmap> sDecodeNV12Data(const CData& data, const S2DSizeS32& size)
+void sDecodeNV12Data(const CData& data, const S2DSizeS32& size, CBitmap& bitmap, const S2DRectS32& rect)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Based on implementation by Andre Chen, see https://github.com/andrechen/yuv2rgb
-	// Width and height must be 2 or greater and even
-	if ((size.mWidth < 2) || ((size.mWidth & 1) != 0) || (size.mHeight < 2) || ((size.mHeight & 1) != 0))
-		// Failed
-		return TIResult<CBitmap>(sErrorUnableToDecode);
 
 	// Setup
-	const	SInt32	halfWidth = size.mWidth / 2;
-	const	SInt32	halfHeight = size.mHeight / 2;
-
-	CBitmap	bitmap(size, CBitmap::kFormatRGB888);
-	UInt8*	bitmapPixelDataPtr = (UInt8*) bitmap.getPixelData().getMutableBytePtr();
-	UInt16	bitmapBytesPerRow = bitmap.getBytesPerRow();
+	I<CBitmap::RowWriter>	rowWriter0 = bitmap.getRowWriter(0);
+	I<CBitmap::RowWriter>	rowWriter1 = bitmap.getRowWriter(1);
 
 	// Loop vertially
 	const UInt8* y0Ptr = (UInt8*) data.getBytePtr();
 	const UInt8* y1Ptr = y0Ptr + size.mWidth;
 	const UInt8* uvPtr = y0Ptr + size.mWidth * size.mHeight;
-	for (SInt32 y = 0; y < halfHeight; y++, y0Ptr += size.mWidth, y1Ptr += size.mWidth) {
+	for (SInt32 y = 0; y < size.mHeight; y += 2, y0Ptr += size.mWidth, y1Ptr += size.mWidth) {
 		// Setup
-		UInt8*	rgb0Ptr = bitmapPixelDataPtr + bitmapBytesPerRow * 2 * y;
-		UInt8*	rgb1Ptr = rgb0Ptr + bitmapBytesPerRow;
+		bool	writeRow0;
+		if ((y >= rect.getMinY() && (y < rect.getMaxY()))) {
+			// Do this y
+			rowWriter0 = bitmap.getRowWriter(y - rect.getMinY());
+			writeRow0 = true;
+		} else
+			// Skip this y
+			writeRow0 = false;
+
+		bool	writeRow1;
+		if (((y + 1) >= rect.getMinY() && ((y + 1) < rect.getMaxY()))) {
+			// Do this y
+			rowWriter1 = bitmap.getRowWriter((y + 1) - rect.getMinY());
+			writeRow1 = true;
+		} else
+			// Skip this y
+			writeRow1 = false;
 
 		// Loop horizontally
-		for (SInt32 x = 0; x < halfWidth; x++) {
+		for (SInt32 x = 0; x < size.mWidth; x += 2) {
 			// Get source ys
 			SInt32	y00 = (*y0Ptr++) - 16;
 			y00 = (y00 > 0) ? 298 * y00 : 0;
@@ -414,29 +479,43 @@ TIResult<CBitmap> sDecodeNV12Data(const CData& data, const S2DSizeS32& size)
 			// Store RGB
 			SInt32	r, g, b;
 
-			r = y00 + dR; g = y00 + dG; b = y00 + dB;
-			*rgb0Ptr++ = (r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0;
-			*rgb0Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
-			*rgb0Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
+			if (writeRow0 && (x >= rect.getMinX() && (x < rect.getMaxX()))) {
+				// Store this pixel
+				r = y00 + dR; g = y00 + dG; b = y00 + dB;
+				rowWriter0->write(
+						CBitmap::PixelDataRGB888((r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0,
+								(g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0,
+								(b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0));
+			}
 
-			r = y01 + dR; g = y01 + dG; b = y01 + dB;
-			*rgb0Ptr++ = (r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0;
-			*rgb0Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
-			*rgb0Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
+			if (writeRow0 && ((x + 1) >= rect.getMinX() && ((x + 1) < rect.getMaxX()))) {
+				// Store this pixel
+				r = y01 + dR; g = y01 + dG; b = y01 + dB;
+				rowWriter0->write(
+						CBitmap::PixelDataRGB888((r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0,
+								(g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0,
+								(b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0));
+			}
 
-			r = y10 + dR; g = y10 + dG; b = y10 + dB;
-			*rgb1Ptr++ = (r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0;
-			*rgb1Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
-			*rgb1Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
+			if (writeRow1 && (x >= rect.getMinX() && (x < rect.getMaxX()))) {
+				// Store this pixel
+				r = y10 + dR; g = y10 + dG; b = y10 + dB;
+				rowWriter1->write(
+						CBitmap::PixelDataRGB888((r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0,
+								(g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0,
+								(b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0));
+			}
 
-			r = y11 + dR; g = y11 + dG; b = y11 + dB;
-			*rgb1Ptr++ = (r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0;
-			*rgb1Ptr++ = (g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0;
-			*rgb1Ptr++ = (b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0;
+			if (writeRow1 && ((x + 1) >= rect.getMinX() && ((x + 1) < rect.getMaxX()))) {
+				// Store this pixel
+				r = y11 + dR; g = y11 + dG; b = y11 + dB;
+				rowWriter1->write(
+						CBitmap::PixelDataRGB888((r > 0) ? (r < 65535 ? (UInt8) (r >> 8) : 0xff) : 0,
+								(g > 0) ? (g < 65535 ? (UInt8) (g >> 8) : 0xff) : 0,
+								(b > 0) ? (b < 65535 ? (UInt8) (b >> 8) : 0xff) : 0));
+			}
         }
     }
-
-	return TIResult<CBitmap>(bitmap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

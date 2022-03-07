@@ -8,6 +8,29 @@
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: RowWriterRGBA8888
+
+class RowWriterRGBA8888 : public CBitmap::RowWriter {
+	public:
+				RowWriterRGBA8888(void* bytePtr) : RowWriter(), mPixelData((CBitmap::PixelDataRGBA8888*) bytePtr) {}
+
+		void	write(const CBitmap::PixelDataRGB888& pixelData)
+					{
+						// Store
+						mPixelData->mComponents.mR = pixelData.mR;
+						mPixelData->mComponents.mG = pixelData.mG;
+						mPixelData->mComponents.mB = pixelData.mB;
+						mPixelData->mComponents.mA = 0xFF;
+
+						// Update
+						mPixelData++;
+					}
+
+	private:
+		CBitmap::PixelDataRGBA8888*	mPixelData;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
 static	void	sConvertRGB565ToRGB888(const CBitmapInternals& sourceBitmapInternals,
@@ -473,6 +496,23 @@ UInt16 CBitmap::getBytesPerPixel() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+I<CBitmap::RowWriter> CBitmap::getRowWriter(SInt32 y) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Preflight
+	AssertFailIf(y >= mInternals->mSize.mHeight);
+
+	// Setup
+	void*	bytePtr = (UInt8*) mInternals->mPixelData.getBytePtr() + y * mInternals->mBytesPerRow;
+
+	// Check format
+	switch (mInternals->mFormat) {
+		case kFormatRGBA8888:	return I<RowWriter>(new RowWriterRGBA8888(bytePtr));
+		default:				AssertFailUnimplemented();	return I<RowWriter>(nil);
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -495,7 +535,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 	switch (mInternals->mFormat) {
 		case kFormatRGBA4444: {
 			// RGBA4444
-			SPixelDataRGBA4444*	pixelData = (SPixelDataRGBA4444*) pixelDataPtr;
+			PixelDataRGBA4444*	pixelData = (PixelDataRGBA4444*) pixelDataPtr;
 			pixelData->mComponents.mR = (UInt16) (color.getRed() * 15.0);
 			pixelData->mComponents.mG = (UInt16) (color.getGreen() * 15.0);
 			pixelData->mComponents.mB = (UInt16) (color.getBlue() * 15.0);
@@ -505,7 +545,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 
 		case kFormatRGBA5551: {
 			// RGBA5551
-			SPixelDataRGBA5551*	pixelData = (SPixelDataRGBA5551*) pixelDataPtr;
+			PixelDataRGBA5551*	pixelData = (PixelDataRGBA5551*) pixelDataPtr;
 			pixelData->mComponents.mR = (UInt16) (color.getRed() * 31.0);
 			pixelData->mComponents.mG = (UInt16) (color.getGreen() * 31.0);
 			pixelData->mComponents.mB = (UInt16) (color.getBlue() * 31.0);
@@ -515,7 +555,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 
 		case kFormatRGB565: {
 			// RGB565
-			SPixelDataRGB565*	pixelData = (SPixelDataRGB565*) pixelDataPtr;
+			PixelDataRGB565*	pixelData = (PixelDataRGB565*) pixelDataPtr;
 			pixelData->mComponents.mR = (UInt16) (color.getRed() * 31.0);
 			pixelData->mComponents.mG = (UInt16) (color.getGreen() * 63.0);
 			pixelData->mComponents.mB = (UInt16) (color.getBlue() * 31.0);
@@ -524,7 +564,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 
 		case kFormatRGB888: {
 			// RGB888
-			SPixelDataRGB888*	pixelData = (SPixelDataRGB888*) pixelDataPtr;
+			PixelDataRGB888*	pixelData = (PixelDataRGB888*) pixelDataPtr;
 			pixelData->mR = (UInt8) (color.getRed() * 255.0);
 			pixelData->mG = (UInt8) (color.getGreen() * 255.0);
 			pixelData->mB = (UInt8) (color.getBlue() * 255.0);
@@ -533,7 +573,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 
 		case kFormatRGBA8888: {
 			// RGBA8888
-			SPixelDataRGBA8888*	pixelData = (SPixelDataRGBA8888*) pixelDataPtr;
+			PixelDataRGBA8888*	pixelData = (PixelDataRGBA8888*) pixelDataPtr;
 			pixelData->mComponents.mR = (UInt8) (color.getRed() * 255.0);
 			pixelData->mComponents.mG = (UInt8) (color.getGreen() * 255.0);
 			pixelData->mComponents.mB = (UInt8) (color.getBlue() * 255.0);
@@ -543,7 +583,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 
 		case kFormatARGB8888: {
 			// ARGB8888
-			SPixelDataARGB8888*	pixelData = (SPixelDataARGB8888*) pixelDataPtr;
+			PixelDataARGB8888*	pixelData = (PixelDataARGB8888*) pixelDataPtr;
 			pixelData->mComponents.mA = (UInt8) (color.getAlpha() * 255.0);
 			pixelData->mComponents.mR = (UInt8) (color.getRed() * 255.0);
 			pixelData->mComponents.mG = (UInt8) (color.getGreen() * 255.0);

@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CData.h"
-#include "TBuffer.h"
 #include "TWrappers.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)

@@ -9,15 +9,31 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TBuffer
 
+// Need to make reference countable
+
 template <typename T> struct TBuffer {
 			// Lifecycle methods
-			TBuffer(UInt32 count) :
-				mStorage((T*) ::calloc(count, sizeof(T))), mOwnsStorage(true), mByteCount(count * sizeof(T))
-				{}
-			TBuffer(T* buffer, UInt32 size) : mStorage(buffer), mOwnsStorage(false), mByteCount(size) {}
-			~TBuffer() { if (mOwnsStorage) ::free(mStorage); }
+			TBuffer(UInt32 count)
+				{
+					// Setup
+					mStorage = new T[count];
+					mByteCount = count * sizeof(T);
 
-			// Instamce methods
+					mReferenceCount = new UInt32;
+					*mReferenceCount = 1;
+				}
+			TBuffer(T* buffer, UInt32 size) : mStorage(buffer), mByteCount(size), mReferenceCount(nil) {}
+			~TBuffer()
+				{
+					// Check if need to cleanup
+					if ((mReferenceCount != nil) && (--(*mReferenceCount) == 0)) {
+						// Cleanup
+						DeleteArray(mStorage);
+						Delete(mReferenceCount);
+					}
+				}
+
+			// Instance methods
 	T*		operator*() const
 				{ return mStorage; }
 	T&		operator[](UInt32 index) const
@@ -28,6 +44,6 @@ template <typename T> struct TBuffer {
 	// Properties
 	private:
 		T*		mStorage;
-		bool	mOwnsStorage;
 		UInt32	mByteCount;
+		UInt32*	mReferenceCount;
 };

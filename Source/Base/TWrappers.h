@@ -37,7 +37,7 @@ template <typename T> struct I {
 							// Check for instance
 							if (--(*mReferenceCount) == 0) {
 								// All done
-								mInstance->Release();
+								Delete(mInstance);
 								Delete(mReferenceCount);
 							}
 
