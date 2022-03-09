@@ -396,8 +396,8 @@ const CString::C CString::getCString(Encoding encoding) const
 										::CFStringGetLength(mStringRef), stringEncoding) + 1;
 
 	// Get c string
-	C					c(length);
-	::CFStringGetCString(mStringRef, c.mBuffer, length, stringEncoding);
+	C	c(length);
+	::CFStringGetCString(mStringRef, *c, length, stringEncoding);
 
 	return c;
 }
