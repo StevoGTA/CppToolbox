@@ -84,10 +84,13 @@ class CVideoFrameStoreThread : public CThread {
 							return false;
 						}
 
-						// Store frame
+						// Add frame
 						const	CVideoFrame&	videoFrame = performResult.getVideoFrame();
+
+						mVideoFramesLock.lock();
 						mVideoFrames.add(videoFrame);
 						mVideoFrames.sort(CVideoFrame::comparePresentationTimeInterval);
+						mVideoFramesLock.unlock();
 
 						// Update current frame
 						updateCurrentFrame();
@@ -106,39 +109,43 @@ class CVideoFrameStoreThread : public CThread {
 					{ mIsSeeking = isSeeking; }
 		void	updateCurrentFrame()
 					{
+						// Don't muck with this - we're busy...
+						mVideoFramesLock.lock();
+
 						// Check if have frames
-						if (mVideoFrames.isEmpty())
-							// Nothing to do
-							return;
+						if (!mVideoFrames.isEmpty()) {
+							// Setup
+							bool	framesUpdated = false;
 
-						// Setup
-						bool	framesUpdated = false;
+							// Dump frames before position
+							while ((mVideoFrames.getCount() > 1) &&
+									(mCurrentPresentationTimeInterval >= mVideoFrames[1].getPresentationTimeInterval())) {
+								// Dump first frame
+								mVideoFrames.removeAtIndex(0);
+								framesUpdated = true;
+							}
 
-						// Dump frames before position
-						while ((mVideoFrames.getCount() > 1) &&
-								(mCurrentPresentationTimeInterval >= mVideoFrames[1].getPresentationTimeInterval())) {
-							// Dump first frame
-							mVideoFrames.removeAtIndex(0);
-							framesUpdated = true;
+							// Check if need to update current frame
+							if (mIsSeeking && !mCurrentFrameUpdatedCalled && (mVideoFrames.getCount() >= 2) &&
+									(mCurrentPresentationTimeInterval < mVideoFrames[1].getPresentationTimeInterval())) {
+								// Notify
+								mInfo.currentFrameUpdated(mVideoFrameStore, mVideoFrames[0]);
+								mCurrentFrameUpdatedCalled = true;
+
+								// Trigger for more decoding
+								mSemaphore.signal();
+							} else if (!mCurrentFrameUpdatedCalled || framesUpdated) {
+								// Notify
+								mInfo.currentFrameUpdated(mVideoFrameStore, mVideoFrames[0]);
+								mCurrentFrameUpdatedCalled = true;
+
+								// Trigger for more decoding
+								mSemaphore.signal();
+							}
 						}
 
-						// Check if need to update current frame
-						if (mIsSeeking && !mCurrentFrameUpdatedCalled && (mVideoFrames.getCount() >= 2) &&
-								(mCurrentPresentationTimeInterval < mVideoFrames[1].getPresentationTimeInterval())) {
-							// Notify
-							mInfo.currentFrameUpdated(mVideoFrameStore, mVideoFrames[0]);
-							mCurrentFrameUpdatedCalled = true;
-
-							// Trigger for more decoding
-							mSemaphore.signal();
-						} else if (!mCurrentFrameUpdatedCalled || framesUpdated) {
-							// Notify
-							mInfo.currentFrameUpdated(mVideoFrameStore, mVideoFrames[0]);
-							mCurrentFrameUpdatedCalled = true;
-
-							// Trigger for more decoding
-							mSemaphore.signal();
-						}
+						// OK, done
+						mVideoFramesLock.unlock();
 					}
 		void	pause()
 					{
@@ -166,7 +173,10 @@ class CVideoFrameStoreThread : public CThread {
 						mCurrentPresentationTimeInterval = timeInterval;
 						mCurrentFrameUpdatedCalled = false;
 						mReachedEnd = false;
+
+						mVideoFramesLock.lock();
 						mVideoFrames.removeAll();
+						mVideoFramesLock.unlock();
 					}
 		void	shutdown()
 					{
@@ -196,7 +206,9 @@ class CVideoFrameStoreThread : public CThread {
 		bool						mCurrentFrameUpdatedCalled;
 		bool						mReachedEnd;
 		UniversalTimeInterval		mCurrentPresentationTimeInterval;
-		TNLockingArray<CVideoFrame>	mVideoFrames;
+
+		TNArray<CVideoFrame>		mVideoFrames;
+		CLock						mVideoFramesLock;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

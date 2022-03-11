@@ -109,15 +109,6 @@ OI<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 		return OI<SError>(resamplerTransform.getError());
 	mInternals->mResamplerTransform = resamplerTransform.getInstance();
 
-	// Create input sample
-	CAudioProcessor::Requirements	audioProcessorRequirements = audioProcessor->queryRequirements();
-	UInt32							byteCount =
-											audioProcessorRequirements.mAudioFramesRequirements.getFrameCount(1024) *
-													audioProcessingFormat.getBytesPerFrame();
-	TCIResult<IMFSample>			sample = CMediaFoundationServices::createSample(byteCount);
-	ReturnErrorIfResultError(sample);
-	mInternals->mInputSample = sample.getInstance();
-
 	// Begin streaming!
 	result = mInternals->mResamplerTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
 	ReturnErrorIfFailed(result, "ProcessMessage to begin streaming");
@@ -130,9 +121,21 @@ SAudioSourceStatus CMediaFoundationResampler::performInto(CAudioFrames& audioFra
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	if (!mInternals->mResamplerTransform.hasInstance() || !mInternals->mInputSample.hasInstance())
+	if (!mInternals->mResamplerTransform.hasInstance())
 		// Failed initialization
 		return SAudioSourceStatus(sSetupDidNotCompleteError);
+
+	// Check if need to create input sample
+	if (!mInternals->mInputSample.hasInstance()) {
+		// Create input sample
+		CAudioProcessor::Requirements	audioProcessorRequirements = queryRequirements();
+		UInt32							byteCount =
+												audioProcessorRequirements.mAudioFramesRequirements.getFrameCount(1024)
+														* mInternals->mInputAudioProcessingFormat->getBytesPerFrame();
+		TCIResult<IMFSample>			sample = CMediaFoundationServices::createSample(byteCount);
+		ReturnValueIfResultError(sample, SAudioSourceStatus(sample.getError()));
+		mInternals->mInputSample = sample.getInstance();
+	}
 
 	// Fill audio frames as much as we can
 	while (audioFrames.getCurrentFrameCount() < audioFrames.getAvailableFrameCount()) {
