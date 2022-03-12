@@ -60,7 +60,7 @@ class CAACAudioCodecInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAACAudioCodec::CAACAudioCodec(OSType codecID)
+CAACAudioCodec::CAACAudioCodec(OSType codecID) : CDecodeOnlyAudioCodec()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CAACAudioCodecInternals(codecID);

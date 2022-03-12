@@ -14,7 +14,7 @@ class CAACAudioCodecInternals;
 class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 	// Decode info
 	public:
-		class DecodeInfo : public CCodec::DecodeInfo {
+		class DecodeInfo : public CCodec::MediaPacketSourceDecodeInfo {
 			// Methods
 			public:
 								// Lifecycle methods
@@ -47,7 +47,10 @@ class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 				OI<SError>					decode(CAudioFrames& audioFrames);
 
 											// Class methods
-		static	OI<SAudioStorageFormat>		composeStorageFormat(const CData& configurationData, UInt16 channels);
+		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(const CData& configurationData, UInt16 channels);
+		static	I<CCodec::DecodeInfo>		composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
+													const TArray<SMediaPacketAndLocation>& packetAndLocations,
+													const CData& configurationData);
 
 	// Properties
 	public:

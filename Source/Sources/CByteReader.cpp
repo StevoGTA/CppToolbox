@@ -83,29 +83,39 @@ UInt64 CByteReader::getPos() const
 OI<SError> CByteReader::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check position
+	// Compose position
+	UInt64	dataSourceOffset;
 	switch (position) {
 		case kPositionFromBeginning:
 			// From beginning
-			mInternals->mCurrentDataSourceOffset = mInternals->mInitialDataSourceOffset + newPos;
+			dataSourceOffset = mInternals->mInitialDataSourceOffset + newPos;
 			break;
 
 		case kPositionFromCurrent:
 			// From current
-			mInternals->mCurrentDataSourceOffset += newPos;
+			dataSourceOffset = mInternals->mCurrentDataSourceOffset + newPos;
 			break;
 
 		case kPositionFromEnd:
 			// From end
-			mInternals->mCurrentDataSourceOffset =
-					mInternals->mInitialDataSourceOffset + mInternals->mByteCount - newPos;
+			dataSourceOffset = mInternals->mInitialDataSourceOffset + mInternals->mByteCount - newPos;
 			break;
 	}
 
 	// Check
-	AssertFailIf(mInternals->mCurrentDataSourceOffset < mInternals->mInitialDataSourceOffset);
-	AssertFailIf(mInternals->mCurrentDataSourceOffset >
+	AssertFailIf(dataSourceOffset < mInternals->mInitialDataSourceOffset);
+	if (dataSourceOffset < mInternals->mInitialDataSourceOffset)
+		// Before start
+		return OI<SError>(CSeekableDataSource::mSetPosBeforeStartError);
+
+	AssertFailIf(dataSourceOffset >
 			(mInternals->mInitialDataSourceOffset + mInternals->mByteCount));
+	if (dataSourceOffset > (mInternals->mInitialDataSourceOffset + mInternals->mByteCount))
+		// After end
+		return OI<SError>(CSeekableDataSource::mSetPosAfterEndError);
+
+	// All good
+	mInternals->mCurrentDataSourceOffset = dataSourceOffset;
 
 	return OI<SError>();
 }

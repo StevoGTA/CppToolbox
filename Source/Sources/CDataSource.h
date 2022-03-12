@@ -39,7 +39,7 @@ class CSeekableDataSource : public CDataSource {
 		virtual	OI<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount) = 0;
 
 	// Properties
-	protected:
+	public:
 		static	SError	mSetPosBeforeStartError;
 		static	SError	mSetPosAfterEndError;
 };

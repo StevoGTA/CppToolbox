@@ -30,13 +30,13 @@
 	#pragma warning(disable:4200)
 #endif
 
-//struct SftypAtom {
+//struct SMP4ftypAtom {
 //	OSType	mMajorBrand;
 //	UInt32	mMajorBrandVersion;
 //	OSType	mCompatibleBrands[];
 //};
 
-struct ShdlrAtomPayload {
+struct SMP4hdlrAtomPayload {
 			// Methods
 	OSType	getSubType() const
 				{ return EndianU32_BtoN(mSubType); }
@@ -53,7 +53,7 @@ struct ShdlrAtomPayload {
 		SInt8	mComponentTypeName[];
 };
 
-//struct SmvhdAtomV0 {
+//struct SMP4mvhdAtomV0 {
 //	UInt8	mVersion;		// 0
 //	UInt8	mFlags[3];
 //
@@ -87,7 +87,7 @@ struct ShdlrAtomPayload {
 //	UInt32	mNextTrackID;
 //};
 //
-//struct SmvhdAtomV1 {
+//struct SMP4mvhdAtomV1 {
 //	UInt8	mVersion;	// 1
 //	UInt8	mFlags[3];
 //
@@ -122,7 +122,7 @@ struct ShdlrAtomPayload {
 //};
 //
 
-//struct StkhdAtomPayload {
+//struct SMP4tkhdAtomPayload {
 //	// Structs
 //	struct Payload {
 //		UInt8	mVersion;
@@ -202,7 +202,7 @@ struct ShdlrAtomPayload {
 //		const	CData&	mData;
 //};
 
-struct SmdhdAtomPayload {
+struct SMP4mdhdAtomPayload {
 	// Structs
 	struct Payload {
 		UInt8	mVersion;
@@ -233,7 +233,7 @@ struct SmdhdAtomPayload {
 	};
 
 			// Lifecycle methods
-			SmdhdAtomPayload(const CData& data) : mData(data) {}
+			SMP4mdhdAtomPayload(const CData& data) : mData(data) {}
 
 			// Instance Methods
 	UInt32	getTimeScale() const
@@ -260,7 +260,7 @@ struct SmdhdAtomPayload {
 		const	CData&	mData;
 };
 
-//struct SsmhdAtom {
+//struct SMP4smhdAtom {
 //	UInt8	mVersion;								// 0
 //	UInt8	mFlags[3];
 //
@@ -268,14 +268,14 @@ struct SmdhdAtomPayload {
 //	UInt8	mReserved[2];
 //};
 //
-//struct SdrefAtom {
+//struct SMP4drefAtom {
 //	UInt8	mVersion;								// 0
 //	UInt8	mFlags[3];
 //
 //	UInt32	mReferenceCount;
 //};
 //
-//struct SurlAtom {
+//struct SMP4urlAtom {
 //	UInt8	mVersion;								// 0
 //	UInt8	mFlags[3];
 //};
@@ -327,7 +327,7 @@ struct SH264VideoFormat {
 };
 
 // Sample Table Sample Description (general)
-struct SstsdDescription {
+struct SMP4stsdDescription {
 			// Methods
 			OSType				getType() const
 									{ return EndianU32_BtoN(mType); }
@@ -351,10 +351,10 @@ struct SstsdDescription {
 };
 
 // Sample Table Sample Description Atom Payload
-struct SstsdAtomPayload {
-								// Methods
-	const	SstsdDescription&	getFirstDescription() const
-									{ return *((SstsdDescription*) mDescriptions); }
+struct SMP4stsdAtomPayload {
+									// Methods
+	const	SMP4stsdDescription&	getFirstDescription() const
+										{ return *((SMP4stsdDescription*) mDescriptions); }
 
 	// Properties (in storage endian)
 	private:
@@ -364,7 +364,7 @@ struct SstsdAtomPayload {
 		UInt8	mDescriptions[];
 };
 
-//struct SALACSpecificConfig {
+//struct SMP4ALACSpecificConfig {
 //	UInt32	mFrameLength;
 //	UInt8	mCompatibleVersion;
 //	UInt8	mBitDepth;
@@ -378,7 +378,7 @@ struct SstsdAtomPayload {
 //	UInt32	mSampleRate;
 //};
 //
-//struct SALACChannelLayoutInfo {
+//struct SMP4ALACChannelLayoutInfo {
 //	UInt32	mChannelLayoutInfoSize;
 //	UInt32	mChannelLayoutInfoID;
 //	UInt32	mVersionFlags;
@@ -387,7 +387,7 @@ struct SstsdAtomPayload {
 //	UInt32	mReserved2;
 //};
 //
-//struct SalacAtom {
+//struct SMP4alacAtom {
 //	UInt32				mByteCount;
 //	OSType				mType;
 //	UInt32				mVersion;
@@ -395,7 +395,7 @@ struct SstsdAtomPayload {
 //	SALACSpecificConfig	mALACSpecificConfig;
 //};
 //
-//struct SalacAtomWithChannelLayout {
+//struct SMP4alacAtomWithChannelLayout {
 //	UInt32					mByteCount;
 //	OSType					mType;
 //	UInt32					mVersion;
@@ -416,7 +416,7 @@ struct SstsdAtomPayload {
 */
 
 // Sample Table Time-to-Sample Atom Payload
-struct SsttsAtomPayload {
+struct SMP4sttsAtomPayload {
 	// Structs
 	struct Chunk {
 				// Methods
@@ -446,7 +446,7 @@ struct SsttsAtomPayload {
 };
 
 // Sample Table Sync Sample Atom Payload
-struct SstssAtomPayload {
+struct SMP4stssAtomPayload {
 	// Methods
 	UInt32	getKeyframesCount() const
 				{ return EndianU32_BtoN(mKeyframesCount); }
@@ -462,7 +462,7 @@ struct SstssAtomPayload {
 };
 
 // Sample Table Sample-to-Chunk Atom Payload
-struct SstscAtomPayload {
+struct SMP4stscAtomPayload {
 	// Structs
 	struct PacketGroupInfo {
 		// Methods
@@ -493,7 +493,7 @@ struct SstscAtomPayload {
 };
 
 // Sample Table Sample siZe Atom Payload
-struct SstszAtomPayload {
+struct SMP4stszAtomPayload {
 			// Methods
 	UInt32	getPacketByteCount(UInt32 index) const
 					{ return (mGlobalPacketByteCount != 0) ?
@@ -513,7 +513,7 @@ struct SstszAtomPayload {
 };
 
 // Sample Table Chunk Offset Atom Payload
-struct SstcoAtomPayload {
+struct SMP4stcoAtomPayload {
 			// Methods
 	UInt32	getPacketGroupOffsetCount() const
 				{ return EndianU32_BtoN(mPacketGroupOffsetCount); }
@@ -531,7 +531,7 @@ struct SstcoAtomPayload {
 };
 
 // sample table Chunk Offset 64 Atom Payload
-struct Sco64AtomPayload {
+struct SMP4co64AtomPayload {
 			// Methods
 	UInt32	getPacketGroupOffsetCount() const
 				{ return EndianU32_BtoN(mPacketGroupOffsetCount); }
@@ -548,12 +548,12 @@ struct Sco64AtomPayload {
 		UInt64	mPacketGroupOffsets[];		// Offset to start of packet data from start of file
 };
 
-//struct SmetaAtom {
+//struct SMP4metaAtom {
 //	UInt8	mVersion;
 //	UInt8	mFlags[3];
 //};
 //
-//struct SdataAtom {
+//struct SMP4dataAtom {
 //	UInt8	mVersion;
 //	UInt8	mFlags[3];
 //
@@ -580,21 +580,22 @@ static	TIResult<CMediaTrackInfos>		sQueryMPEG4TracksProc(const I<CSeekableDataSo
 static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
 												const I<CSeekableDataSource>& seekableDataSource,
 												SMediaSource::Options options,
-												const SstsdDescription& stsdDescription, const CData& configurationData,
-												const SmdhdAtomPayload& mdhdAtomPayload,
+												const SMP4stsdDescription& stsdDescription, const CData& configurationData,
+												const SMP4mdhdAtomPayload& mdhdAtomPayload,
 												const TArray<SMediaPacketAndLocation>& packetAndLocations);
 static	OI<SError>						sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos,
 												const I<CSeekableDataSource>& seekableDataSource,
 												SMediaSource::Options options,
-												const SstsdDescription& stsdDescription,
-												const CData& configurationData, const SmdhdAtomPayload& mdhdAtomPayload,
+												const SMP4stsdDescription& stsdDescription,
+												const CData& configurationData,
+												const SMP4mdhdAtomPayload& mdhdAtomPayload,
 												const TArray<SMediaPacketAndLocation>& packetAndLocations,
 												const OI<CData>& stssAtomPayloadData);
-static	TArray<SMediaPacketAndLocation>	sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
-													const SstscAtomPayload& stscAtomPayload,
-													const SstszAtomPayload& stszAtomPayload,
-													SstcoAtomPayload* stcoAtomPayload,
-													Sco64AtomPayload* co64AtomPayload);
+static	TArray<SMediaPacketAndLocation>	sComposePacketAndLocations(const SMP4sttsAtomPayload& sttsAtomPayload,
+													const SMP4stscAtomPayload& stscAtomPayload,
+													const SMP4stszAtomPayload& stszAtomPayload,
+													SMP4stcoAtomPayload* stcoAtomPayload,
+													SMP4co64AtomPayload* co64AtomPayload);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Register media source
@@ -671,8 +672,9 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 									atomReader.readAtomPayload(
 											mdiaContainerAtom.getValue().getAtom(MAKE_OSTYPE('h', 'd', 'l', 'r')));
 			if (hdlrAtomPayloadData.hasError()) continue;
-			const	ShdlrAtomPayload&	hdlrAtomPayload =
-												*((ShdlrAtomPayload*) hdlrAtomPayloadData.getValue().getBytePtr());
+			const	SMP4hdlrAtomPayload&	hdlrAtomPayload =
+													*((SMP4hdlrAtomPayload*)
+															hdlrAtomPayloadData.getValue().getBytePtr());
 
 			// Media Information
 			TIResult<CAtomReader::ContainerAtom>	minfContainerAtom =
@@ -693,33 +695,37 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 			if (!stsdAtom.hasReference()) continue;
 			TIResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
 			if (error.hasInstance()) continue;
-			const	SstsdAtomPayload&	stsdAtomPayload =
-												*((SstsdAtomPayload*) stsdAtomPayloadData.getValue().getBytePtr());
-			const	SstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
+			const	SMP4stsdAtomPayload&	stsdAtomPayload =
+													*((SMP4stsdAtomPayload*)
+															stsdAtomPayloadData.getValue().getBytePtr());
+			const	SMP4stsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
 
 			// Sample Table Time-to-Sample
 			TIResult<CData>	sttsAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 't', 's')));
 			if (sttsAtomPayloadData.hasError()) continue;
-			const	SsttsAtomPayload&	sttsAtomPayload =
-												*((SsttsAtomPayload*) sttsAtomPayloadData.getValue().getBytePtr());
+			const	SMP4sttsAtomPayload&	sttsAtomPayload =
+													*((SMP4sttsAtomPayload*)
+															sttsAtomPayloadData.getValue().getBytePtr());
 
 			// Sample Table Sample Blocks
 			TIResult<CData>	stscAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 's', 'c')));
 			if (stscAtomPayloadData.hasError()) continue;
-			const	SstscAtomPayload&	stscAtomPayload =
-												*((SstscAtomPayload*) stscAtomPayloadData.getValue().getBytePtr());
+			const	SMP4stscAtomPayload&	stscAtomPayload =
+													*((SMP4stscAtomPayload*)
+															stscAtomPayloadData.getValue().getBytePtr());
 
 			// Sample Table Packet Sizes
 			TIResult<CData>	stszAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('s', 't', 's', 'z')));
 			if (stszAtomPayloadData.hasError()) continue;
-			const	SstszAtomPayload&	stszAtomPayload =
-												*((SstszAtomPayload*) stszAtomPayloadData.getValue().getBytePtr());
+			const	SMP4stszAtomPayload&	stszAtomPayload =
+													*((SMP4stszAtomPayload*)
+															stszAtomPayloadData.getValue().getBytePtr());
 
 			// Sample Table Block offsets
 			TIResult<CData>	stcoAtomPayloadData =
@@ -729,12 +735,14 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 									atomReader.readAtomPayload(
 											stblContainerAtom.getValue().getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
 			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
-			SstcoAtomPayload*	stcoAtomPayload =
-										stcoAtomPayloadData.hasValue() ?
-												(SstcoAtomPayload*) stcoAtomPayloadData.getValue().getBytePtr() : nil;
-			Sco64AtomPayload*	co64AtomPayload =
-										co64AtomPayloadData.hasValue() ?
-												(Sco64AtomPayload*) co64AtomPayloadData.getValue().getBytePtr() : nil;
+			SMP4stcoAtomPayload*	stcoAtomPayload =
+											stcoAtomPayloadData.hasValue() ?
+													(SMP4stcoAtomPayload*) stcoAtomPayloadData.getValue().getBytePtr() :
+													nil;
+			SMP4co64AtomPayload*	co64AtomPayload =
+											co64AtomPayloadData.hasValue() ?
+													(SMP4co64AtomPayload*) co64AtomPayloadData.getValue().getBytePtr() :
+													nil;
 
 			// Check track type
 			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
@@ -743,14 +751,14 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 					// MPEG4 (AAC) Audio
 					TIResult<CData>	configurationData =
 											atomReader.readAtomPayload(*stsdAtom,
-													sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
+													sizeof(SMP4stsdAtomPayload) + stsdDescription.getFormatOffset() +
 															sizeof(SMP4AAudioFormat));
   					if (configurationData.hasError()) continue;
 
 					// Add audio track
   					error =
 							sAddAACAudioTrack(mediaTrackInfos, seekableDataSource, options, stsdDescription,
-									configurationData.getValue(), SmdhdAtomPayload(mdhdAtomPayloadData.getValue()),
+									configurationData.getValue(), SMP4mdhdAtomPayload(mdhdAtomPayloadData.getValue()),
 									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
 											stcoAtomPayload, co64AtomPayload));
 					ReturnValueIfError(error, TIResult<CMediaTrackInfos>(*error));
@@ -769,7 +777,7 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 					// h.264 Video
 					TIResult<CData>	h264ConfigurationAtomPayloadData =
 										atomReader.readAtomPayload(*stsdAtom,
-												sizeof(SstsdAtomPayload) + stsdDescription.getFormatOffset() +
+												sizeof(SMP4stsdAtomPayload) + stsdDescription.getFormatOffset() +
 														sizeof(SH264VideoFormat));
 					if (h264ConfigurationAtomPayloadData.hasError()) continue;
 
@@ -777,7 +785,7 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 					error =
 							sAddH264VideoTrack(mediaTrackInfos, seekableDataSource, options, stsdDescription,
 									h264ConfigurationAtomPayloadData.getValue(),
-									SmdhdAtomPayload(mdhdAtomPayloadData.getValue()),
+									SMP4mdhdAtomPayload(mdhdAtomPayloadData.getValue()),
 									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
 											stcoAtomPayload, co64AtomPayload),
 									stssAtomPayloadData.getValue());
@@ -794,8 +802,8 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekableDataSource>& seekableDataSource,
-		SMediaSource::Options options, const SstsdDescription& stsdDescription, const CData& configurationData,
-		const SmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations)
+		SMediaSource::Options options, const SMP4stsdDescription& stsdDescription, const CData& configurationData,
+		const SMP4mdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -803,7 +811,7 @@ OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekabl
 
 	// Compose storage format
 	OI<SAudioStorageFormat>	audioStorageFormat =
-									CAACAudioCodec::composeStorageFormat(configurationData,
+									CAACAudioCodec::composeAudioStorageFormat(configurationData,
 											audioFormat.getChannels());
 	if (!audioStorageFormat.hasInstance())
 		return OI<SError>(sUnsupportedCodecError);
@@ -817,16 +825,13 @@ OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekabl
 	// Add audio track
 	CAudioTrack	audioTrack(CMediaTrack::Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration)),
 						*audioStorageFormat);
-	if (options & SMediaSource::kComposeDecodeInfo) {
-		// Requesting decode info
-		I<CMediaPacketSource>	mediaPacketSource(
-										new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations));
-		I<CCodec::DecodeInfo>	decodeInfo(new CAACAudioCodec::DecodeInfo(mediaPacketSource, configurationData));
-
+	if (options & SMediaSource::kComposeDecodeInfo)
+		// Add audio track with decode info
+		mediaTrackInfos.add(
+				CMediaTrackInfos::AudioTrackInfo(audioTrack,
+						CAACAudioCodec::composeDecodeInfo(seekableDataSource, packetAndLocations, configurationData)));
+	else
 		// Add audio track
-		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack, decodeInfo));
-	} else
-		// Not requesting decode info
 		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack));
 
 	return OI<SError>();
@@ -834,8 +839,8 @@ OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekabl
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekableDataSource>& seekableDataSource,
-		SMediaSource::Options options, const SstsdDescription& stsdDescription, const CData& configurationData,
-		const SmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations,
+		SMediaSource::Options options, const SMP4stsdDescription& stsdDescription, const CData& configurationData,
+		const SMP4mdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations,
 		const OI<CData>& stssAtomPayloadData)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -852,7 +857,7 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 
 	// Compose storage format
 	OI<SVideoStorageFormat>	videoStorageFormat =
-									CH264VideoCodec::composeStorageFormat(
+									CH264VideoCodec::composeVideoStorageFormat(
 											S2DSizeU16(videoFormat.getWidth(), videoFormat.getHeight()), framerate);
 	if (!videoStorageFormat.hasInstance())
 		return OI<SError>(sUnsupportedCodecError);
@@ -862,35 +867,29 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 						*videoStorageFormat);
 	if (options & SMediaSource::kComposeDecodeInfo) {
 		// Setup
-				I<CMediaPacketSource>	mediaPacketSource(
-												new CSeekableVaryingMediaPacketSource(seekableDataSource,
-														packetAndLocations));
-
-		const	SstssAtomPayload&		stssAtomPayload = *((SstssAtomPayload*) stssAtomPayloadData->getBytePtr());
+		const	SMP4stssAtomPayload&	stssAtomPayload = *((SMP4stssAtomPayload*) stssAtomPayloadData->getBytePtr());
 				UInt32					keyframesCount = stssAtomPayload.getKeyframesCount();
 				TNumericArray<UInt32>	keyframeIndexes;
 		for (UInt32 i = 0; i < keyframesCount; i++)
 			// Add keyframe index
 			keyframeIndexes += stssAtomPayload.getKeyframeIndex(i);
 
-		// Compose decode info
-		I<CCodec::DecodeInfo>	decodeInfo(
-										new CH264VideoCodec::DecodeInfo(mediaPacketSource, configurationData,
-												timeScale, keyframeIndexes));
-
-		// Add video track
-		mediaTrackInfos.add(CMediaTrackInfos::VideoTrackInfo(videoTrack, decodeInfo));
+		// Add video track with decode info
+		mediaTrackInfos.add(
+				CMediaTrackInfos::VideoTrackInfo(videoTrack,
+						CH264VideoCodec::composeDecodeInfo(seekableDataSource, packetAndLocations, configurationData,
+								timeScale, keyframeIndexes)));
 	} else
-		// Not requesting decode info
+		// Add video track
 		mediaTrackInfos.add(CMediaTrackInfos::VideoTrackInfo(videoTrack));
 
 	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SMediaPacketAndLocation> sComposePacketAndLocations(const SsttsAtomPayload& sttsAtomPayload,
-		const SstscAtomPayload& stscAtomPayload, const SstszAtomPayload& stszAtomPayload,
-		SstcoAtomPayload* stcoAtomPayload, Sco64AtomPayload* co64AtomPayload)
+TArray<SMediaPacketAndLocation> sComposePacketAndLocations(const SMP4sttsAtomPayload& sttsAtomPayload,
+		const SMP4stscAtomPayload& stscAtomPayload, const SMP4stszAtomPayload& stszAtomPayload,
+		SMP4stcoAtomPayload* stcoAtomPayload, SMP4co64AtomPayload* co64AtomPayload)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -915,7 +914,7 @@ TArray<SMediaPacketAndLocation> sComposePacketAndLocations(const SsttsAtomPayloa
 	UInt32	sttsChunkCount = sttsAtomPayload.getChunkCount();
 	for (UInt32 sttsChunkIndex = 0; sttsChunkIndex < sttsChunkCount; sttsChunkIndex++) {
 		// Get packet info
-		const	SsttsAtomPayload::Chunk&	sttsChunk = sttsAtomPayload.getChunk(sttsChunkIndex);
+		const	SMP4sttsAtomPayload::Chunk&	sttsChunk = sttsAtomPayload.getChunk(sttsChunkIndex);
 				UInt32						sttsChunkPacketCount = sttsChunk.getPacketCount();
 				UInt32						sttsChunkPacketDuration = sttsChunk.getPacketDuration();
 

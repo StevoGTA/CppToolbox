@@ -22,26 +22,38 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 						{ return mDataSourceOffset; }
 		OI<SError>	setPos(CBitReader::Position position, SInt64 newPos)
 						{
-							// Check position
+							// Compose position
+							SInt64	dataSourceOffset;
 							switch (position) {
 								case CBitReader::kPositionFromBeginning:
 									// From beginning
-									mDataSourceOffset = newPos;
+									dataSourceOffset = newPos;
 									break;
 
 								case CBitReader::kPositionFromCurrent:
 									// From current
-									mDataSourceOffset += newPos;
+									dataSourceOffset = mDataSourceOffset + newPos;
 									break;
 
 								case CBitReader::kPositionFromEnd:
 									// From end
-									mDataSourceOffset = mByteCount - newPos;
+									dataSourceOffset = mByteCount - newPos;
 									break;
 							}
 
 							// Check
-							AssertFailIf(mDataSourceOffset > mByteCount);
+							AssertFailIf(dataSourceOffset < 0);
+							if (dataSourceOffset < 0)
+								// Before start
+								return OI<SError>(CSeekableDataSource::mSetPosBeforeStartError);
+
+							AssertFailIf((UInt64) dataSourceOffset > mByteCount);
+							if ((UInt64) dataSourceOffset > mByteCount)
+								// After end
+								return OI<SError>(CSeekableDataSource::mSetPosAfterEndError);
+
+							// All good
+							mDataSourceOffset = (UInt64) dataSourceOffset;
 
 							return OI<SError>();
 						}

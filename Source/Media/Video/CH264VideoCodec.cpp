@@ -187,14 +187,31 @@ OSType	CH264VideoCodec::mID = MAKE_OSTYPE('h', '2', '6', '4');
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SVideoStorageFormat> CH264VideoCodec::composeStorageFormat(const S2DSizeU16& frameSize, Float32 framerate)
+OI<SVideoStorageFormat> CH264VideoCodec::composeVideoStorageFormat(const S2DSizeU16& frameSize, Float32 framerate)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return OI<SVideoStorageFormat>(new SVideoStorageFormat(mID, frameSize, framerate));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local procs
+I<CCodec::DecodeInfo> CH264VideoCodec::composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
+		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
+		const TNumericArray<UInt32>& keyframeIndexes)
+//----------------------------------------------------------------------------------------------------------------------
+{
+				I<CMediaPacketSource>	mediaPacketSource(
+												new CSeekableVaryingMediaPacketSource(seekableDataSource,
+														packetAndLocations));
+	return I<CCodec::DecodeInfo>(
+			new CH264VideoCodec::DecodeInfo(
+					I<CMediaPacketSource>(
+							new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations)),
+					configurationData, timeScale, keyframeIndexes));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local procs
 
 static	I<CVideoCodec>	sInstantiate(OSType id)
 							{ return I<CVideoCodec>(new CH264VideoCodec()); }

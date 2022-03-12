@@ -198,8 +198,12 @@ void CH264VideoCodec::seek(UniversalTimeInterval timeInterval)
 TIResult<CVideoFrame> CH264VideoCodec::decode()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
+													(CCodec::MediaPacketSourceDecodeInfo&) (**mInternals->mDecodeInfo);
+
 	// Get next packet
-	TIResult<CMediaPacketSource::DataInfo>	dataInfo = (*mInternals->mDecodeInfo)->getMediaPacketSource()->readNext();
+	TIResult<CMediaPacketSource::DataInfo>	dataInfo = mediaPacketSourceDecodeInfo.getMediaPacketSource()->readNext();
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
 
 	// Update frame timing

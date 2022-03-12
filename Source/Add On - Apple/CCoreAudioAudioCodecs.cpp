@@ -36,8 +36,11 @@ class CAACAudioCodecInternals {
 									CAACAudioCodecInternals&	internals = *((CAACAudioCodecInternals*) inUserData);
 
 									// Read packets
+									CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
+																					(CCodec::MediaPacketSourceDecodeInfo&)
+																							(**internals.mDecodeInfo);
 									TIResult<TArray<SMediaPacket> >	mediaPacketsResult =
-																			(*internals.mDecodeInfo)->
+																			mediaPacketSourceDecodeInfo.
 																					getMediaPacketSource()->
 																					readNextInto(
 																							internals.mInputPacketData);
@@ -111,7 +114,7 @@ class CAACAudioCodecInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAACAudioCodec::CAACAudioCodec(OSType codecID)
+CAACAudioCodec::CAACAudioCodec(OSType codecID) : CDecodeOnlyAudioCodec()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CAACAudioCodecInternals(codecID);
@@ -168,12 +171,16 @@ OI<SError> CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioPro
 void CAACAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
+													(CCodec::MediaPacketSourceDecodeInfo&) (**mInternals->mDecodeInfo);
+
 	// Reset audio converter
 	::AudioConverterReset(mInternals->mAudioConverterRef);
 
 	// Seek
 	mInternals->mDecodeFramesToIgnore =
-			(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToDuration(
+			mediaPacketSourceDecodeInfo.getMediaPacketSource()->seekToDuration(
 					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
 }
 

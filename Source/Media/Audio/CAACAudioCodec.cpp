@@ -194,7 +194,7 @@ struct SesdsAtomPayload {
 
 //----------------------------------------------------------------------------------------------------------------------
 CAACAudioCodec::DecodeInfo::DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource, const CData& configurationData) :
-		CCodec::DecodeInfo(mediaPacketSource)
+		CCodec::MediaPacketSourceDecodeInfo(mediaPacketSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -230,7 +230,7 @@ CAudioFrames::Requirements CAACAudioCodec::getRequirements() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SAudioStorageFormat> CAACAudioCodec::composeStorageFormat(const CData& configurationData, UInt16 channels)
+OI<SAudioStorageFormat> CAACAudioCodec::composeAudioStorageFormat(const CData& configurationData, UInt16 channels)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -299,7 +299,21 @@ OI<SAudioStorageFormat> CAACAudioCodec::composeStorageFormat(const CData& config
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local procs
+I<CCodec::DecodeInfo> CAACAudioCodec::composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
+		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Return decode info
+	return I<CCodec::DecodeInfo>(
+			new CAACAudioCodec::DecodeInfo(
+					I<CMediaPacketSource>(
+							new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations)),
+					configurationData));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local procs
 
 static	TArray<SAudioProcessingSetup>	sGetAudioProcessingSetups(OSType id,
 												const SAudioStorageFormat& audioStorageFormat)

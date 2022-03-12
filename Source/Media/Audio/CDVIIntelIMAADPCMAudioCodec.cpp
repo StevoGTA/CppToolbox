@@ -55,43 +55,33 @@ const	UInt32	kDVIIntelBytesPerPacketPerChannel =
 
 class CDVIIntelIMAADPCMAudioCodecInternals {
 	public:
-												CDVIIntelIMAADPCMAudioCodecInternals() : mDecodeFramesToIgnore(0) {}
+				CDVIIntelIMAADPCMAudioCodecInternals() : mDecodeFramesToIgnore(0) {}
 
-				SInt16							sampleForDeltaCode(UInt8 deltaCode, SStateInfo& stateInfo)
-													{
-														// Setup
-														SInt32	step = sStepSizeTable[stateInfo.mIndex];
-														SInt32	diff = step >> 3;
-														if (deltaCode & 0x01) diff += (step >> 2);
-														if (deltaCode & 0x02) diff += (step >> 1);
-														if (deltaCode & 0x04) diff += step;
-														if (deltaCode & 0x08) diff = -diff;
+		SInt16	sampleForDeltaCode(UInt8 deltaCode, SStateInfo& stateInfo)
+					{
+						// Setup
+						SInt32	step = sStepSizeTable[stateInfo.mIndex];
+						SInt32	diff = step >> 3;
+						if (deltaCode & 0x01) diff += (step >> 2);
+						if (deltaCode & 0x02) diff += (step >> 1);
+						if (deltaCode & 0x04) diff += step;
+						if (deltaCode & 0x08) diff = -diff;
 
-														// Update
-														stateInfo.mIndex += sIndexAdjustTable[deltaCode];
-														if (stateInfo.mIndex > 88)
-															stateInfo.mIndex = 88;
-														else if (stateInfo.mIndex < 0)
-															stateInfo.mIndex = 0;
+						// Update
+						stateInfo.mIndex += sIndexAdjustTable[deltaCode];
+						if (stateInfo.mIndex > 88)
+							stateInfo.mIndex = 88;
+						else if (stateInfo.mIndex < 0)
+							stateInfo.mIndex = 0;
 
-														stateInfo.mPreviousValue += diff;
-														if (stateInfo.mPreviousValue > 0x7FFF)
-															stateInfo.mPreviousValue = 0x7FFF;
-														else if (stateInfo.mPreviousValue < -0x7FFF)
-															stateInfo.mPreviousValue = -0x7FFF;
+						stateInfo.mPreviousValue += diff;
+						if (stateInfo.mPreviousValue > 0x7FFF)
+							stateInfo.mPreviousValue = 0x7FFF;
+						else if (stateInfo.mPreviousValue < -0x7FFF)
+							stateInfo.mPreviousValue = -0x7FFF;
 
-														return (SInt16) stateInfo.mPreviousValue;
-													}
-
-												// Class methods
-		static	TArray<SAudioProcessingSetup>	getAudioProcessingSetups(OSType id,
-														const SAudioStorageFormat& audioStorageFormat)
-													{ return TNArray<SAudioProcessingSetup>(
-															SAudioProcessingSetup(*audioStorageFormat.getBits(),
-																	audioStorageFormat.getSampleRate(),
-																	audioStorageFormat.getChannelMap())); }
-		static	I<CAudioCodec>					instantiate(OSType id)
-													{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
+						return (SInt16) stateInfo.mPreviousValue;
+					}
 
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
 		OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
@@ -109,7 +99,7 @@ OSType	CDVIIntelIMAADPCMAudioCodec::mID = 0x6D730011;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDVIIntelIMAADPCMAudioCodec::CDVIIntelIMAADPCMAudioCodec()
+CDVIIntelIMAADPCMAudioCodec::CDVIIntelIMAADPCMAudioCodec() : CDecodeOnlyAudioCodec()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CDVIIntelIMAADPCMAudioCodecInternals();
@@ -147,9 +137,13 @@ CAudioFrames::Requirements CDVIIntelIMAADPCMAudioCodec::getRequirements() const
 void CDVIIntelIMAADPCMAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
+													(CCodec::MediaPacketSourceDecodeInfo&) (**mInternals->mDecodeInfo);
+
 	// Seek
 	mInternals->mDecodeFramesToIgnore =
-			(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToDuration(
+			mediaPacketSourceDecodeInfo.getMediaPacketSource()->seekToDuration(
 					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
 }
 
@@ -169,9 +163,14 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 	SInt16*				bufferPtr = (SInt16*) writeInfo.getSegments()[0];
 	UInt32				decodedFrameCount = 0;
 	while (remainingFrames >= kDVIIntelFramesPerPacket) {
+		// Setup
+		CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
+														(CCodec::MediaPacketSourceDecodeInfo&)
+																(**mInternals->mDecodeInfo);
+
 		// Get next packet
 		TIResult<CMediaPacketSource::DataInfo>	dataInfo =
-														(*mInternals->mDecodeInfo)->getMediaPacketSource()->readNext();
+														mediaPacketSourceDecodeInfo.getMediaPacketSource()->readNext();
 		if (dataInfo.hasError()) {
 			// Check situation
 			if (decodedFrameCount > 0)
@@ -251,11 +250,11 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioStorageFormat CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat(Float32 sampleRate,
+OI<SAudioStorageFormat> CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat(Float32 sampleRate,
 		EAudioChannelMap channelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return SAudioStorageFormat(mID, 16, sampleRate, channelMap);
+	return OI<SAudioStorageFormat>(new SAudioStorageFormat(mID, 16, sampleRate, channelMap));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -277,10 +276,25 @@ I<CCodec::DecodeInfo> CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(const SAudi
 	UInt32	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * audioStorageFormat.getChannels();
 
 	return I<DecodeInfo>(
-			new DecodeInfo(
+			new MediaPacketSourceDecodeInfo(
 					new CSeekableUniformMediaPacketSource(seekableDataSource, startByteOffset, byteCount,
 							bytesPerPacket, kDVIIntelFramesPerPacket)));
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local procs
+
+static	TArray<SAudioProcessingSetup>	sGetAudioProcessingSetups(OSType id,
+												const SAudioStorageFormat& audioStorageFormat)
+											{
+												return TNArray<SAudioProcessingSetup>(
+															SAudioProcessingSetup(*audioStorageFormat.getBits(),
+																	audioStorageFormat.getSampleRate(),
+																	audioStorageFormat.getChannelMap()));
+											}
+static	I<CAudioCodec>					sInstantiate(OSType id)
+											{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -288,5 +302,4 @@ I<CCodec::DecodeInfo> CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(const SAudi
 
 REGISTER_CODEC(DVIIntelIMA,
 		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString("DVI/Intel IMA ADPCM 4:1"),
-				CDVIIntelIMAADPCMAudioCodecInternals::getAudioProcessingSetups,
-				CDVIIntelIMAADPCMAudioCodecInternals::instantiate));
+				sGetAudioProcessingSetups, sInstantiate));

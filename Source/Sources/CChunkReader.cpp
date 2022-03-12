@@ -10,30 +10,9 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CChunkReader::seekToNextChunk(const ChunkInfo& chunkInfo) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return setPos(kPositionFromBeginning, chunkInfo.mNextChunkPos);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CChunkReader::readData(const ChunkInfo& chunkInfo) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Move to begining of chunk
-	OI<SError>	error = setPos(kPositionFromBeginning, chunkInfo.mThisChunkPos);
-	ReturnValueIfError(error, TIResult<CData>(*error));
-
-	return CByteReader::readData(chunkInfo.mByteCount);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	UInt64	pos = getPos();
-
 	// Read chunk header
 	OSType	id;
 	UInt64	size;
@@ -49,5 +28,29 @@ TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 		size = _size.getValue();
 	}
 
-	return TIResult<ChunkInfo>(ChunkInfo(id, size, pos, getPos() + size + (size % 1)));
+	return TIResult<ChunkInfo>(ChunkInfo(id, size, getPos(), getPos() + size + (size % 1)));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<CData> CChunkReader::readPayload(const ChunkInfo& chunkInfo) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Move to begining of chunk
+	OI<SError>	error = setPos(kPositionFromBeginning, chunkInfo.mThisChunkPos);
+	ReturnValueIfError(error, TIResult<CData>(*error));
+
+	return CByteReader::readData(chunkInfo.mByteCount);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CChunkReader::seekToNext(const ChunkInfo& chunkInfo) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check situation
+	if (chunkInfo.mNextChunkPos < getByteCount())
+		// Set pos
+		return setPos(kPositionFromBeginning, chunkInfo.mNextChunkPos);
+	else
+		// End of data
+		return OI<SError>(SError::mEndOfData);
 }

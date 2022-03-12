@@ -16,19 +16,31 @@ class CCodec {
 		class DecodeInfo {
 			// Methods
 			public:
-												// Lifecycle methods
-												DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource) :
-													mMediaPacketSource(mediaPacketSource)
-													{}
-				virtual							~DecodeInfo() {}
+						// Lifecycle methods
+				virtual	~DecodeInfo() {}
 
-												// Instance methods
-						I<CMediaPacketSource>	getMediaPacketSource() const
-													{ return mMediaPacketSource; }
+			protected:
+						// Lifecycle methods
+						DecodeInfo() {}
+		};
+
+	// MediaPacketSourceDecodeInfo
+	public:
+		class MediaPacketSourceDecodeInfo : public DecodeInfo {
+			// Methods
+			public:
+										// Lifecycle methods
+										MediaPacketSourceDecodeInfo(const I<CMediaPacketSource>& mediaPacketSource) :
+											DecodeInfo(), mMediaPacketSource(mediaPacketSource)
+											{}
+
+										// Instance methods
+				I<CMediaPacketSource>	getMediaPacketSource() const
+											{ return mMediaPacketSource; }
 
 			// Properties
 			private:
-				I<CMediaPacketSource>	mMediaPacketSource;\
+				I<CMediaPacketSource>	mMediaPacketSource;
 		};
 
 	// EncodeSettings

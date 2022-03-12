@@ -15,6 +15,61 @@
 // MARK: CAudioCodec
 
 class CAudioCodec : public CCodec {
+	// FrameSourceDecodeInfo
+	public:
+		class FrameSourceDecodeInfo : public DecodeInfo {
+			// Methods
+			public:
+										// Lifecycle methods
+										FrameSourceDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
+												UInt64 startByteOffset, UInt64 byteCount, UInt8 frameByteCount) :
+											DecodeInfo(), mSeekableDataSource(seekableDataSource),
+													mStartByteOffset(startByteOffset), mByteCount(byteCount),
+													mFrameByteCount(frameByteCount),
+													mCurrentPosition(mStartByteOffset)
+											{}
+
+										// Instance methods
+					UInt8				getFrameByteCount() const
+											{ return mFrameByteCount; }
+
+					void				seek(UInt64 frameIndex)
+											{ mCurrentPosition = mStartByteOffset + frameIndex * mFrameByteCount; }
+					TVResult<UInt32>	read(void* buffer, UInt32 frameCount)
+											{
+												// Check situation
+												frameCount =
+														std::min<UInt32>(frameCount,
+																(UInt32)
+																		(mStartByteOffset + mByteCount -
+																						mCurrentPosition) /
+																				mFrameByteCount);
+												if (frameCount > 0) {
+													// Read
+													OI<SError>	error =
+																		mSeekableDataSource->readData(mCurrentPosition,
+																				buffer, frameCount * mFrameByteCount);
+													ReturnValueIfError(error, TVResult<UInt32>(*error));
+
+													// Success
+													mCurrentPosition += frameCount * mFrameByteCount;
+
+													return TVResult<UInt32>(frameCount);
+												} else
+													// End of data
+													return TVResult<UInt32>(SError::mEndOfData);
+											}
+
+			// Properties
+			private:
+				I<CSeekableDataSource>	mSeekableDataSource;
+				UInt64					mStartByteOffset;
+				UInt64					mByteCount;
+				UInt8					mFrameByteCount;
+
+				UInt64					mCurrentPosition;
+		};
+
 	// Info
 	public:
 		struct Info {
