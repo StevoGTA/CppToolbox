@@ -39,6 +39,11 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 									// From end
 									dataSourceOffset = mByteCount - newPos;
 									break;
+
+#if defined(TARGET_OS_WINDOWS)
+								// Making the Windows compiler happy
+								default:	dataSourceOffset = 0;	break;
+#endif
 							}
 
 							// Check

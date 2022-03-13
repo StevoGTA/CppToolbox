@@ -171,6 +171,28 @@ void CAudioFrames::limit(UInt32 maxFrames)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::toggle8BitSignedUnsigned()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt8*				buffer = (UInt8*) getMutableBytePtr();
+	CData::ByteCount	byteCount = getByteCount();
+
+	// Do 8 byte chunks first
+	while (byteCount >= 8) {
+		// Do these 8 bytes
+		*((UInt64*) buffer) ^= 0x8080808080808080LL;
+		buffer += 8;
+		byteCount -= 8;
+	}
+
+	// Finish the last 1-7 bytes
+	while (byteCount-- > 0)
+		// Do this byte
+		*buffer++ ^= 0x80;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CAudioFrames::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {

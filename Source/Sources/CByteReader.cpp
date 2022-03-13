@@ -100,6 +100,11 @@ OI<SError> CByteReader::setPos(Position position, SInt64 newPos) const
 			// From end
 			dataSourceOffset = mInternals->mInitialDataSourceOffset + mInternals->mByteCount - newPos;
 			break;
+
+#if defined(TARGET_OS_WINDOWS)
+		// Making the Windows compiler happy
+		default:	dataSourceOffset = 0;	break;
+#endif
 	}
 
 	// Check

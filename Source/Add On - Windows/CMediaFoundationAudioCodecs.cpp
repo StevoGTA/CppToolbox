@@ -35,10 +35,15 @@ class CAACAudioCodecInternals {
 		static	OI<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
 								{
 									// Setup
-									CAACAudioCodecInternals&	internals = *((CAACAudioCodecInternals*) userData);
+									CAACAudioCodecInternals&				internals =
+																					*((CAACAudioCodecInternals*)
+																							userData);
+									CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
+																					(CCodec::MediaPacketSourceDecodeInfo&)
+																							(**internals.mDecodeInfo);
 
 									return CMediaFoundationServices::load(mediaBuffer,
-											*(*internals.mDecodeInfo)->getMediaPacketSource());
+											*mediaPacketSourceDecodeInfo.getMediaPacketSource());
 								}
 
 
@@ -142,8 +147,10 @@ void CAACAudioCodec::seek(UniversalTimeInterval timeInterval)
 	mInternals->mAudioDecoderTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
 
 	// Seek
+	CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
+													(CCodec::MediaPacketSourceDecodeInfo&) (**mInternals->mDecodeInfo);
 	mInternals->mDecodeFramesToIgnore =
-			(*mInternals->mDecodeInfo)->getMediaPacketSource()->seekToDuration(
+			mediaPacketSourceDecodeInfo.getMediaPacketSource()->seekToDuration(
 					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
 }
 

@@ -54,10 +54,11 @@ TCIResult<IMFSample> CH264VideoCodecInternals::readInputSample(void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CH264VideoCodecInternals&	internals = *((CH264VideoCodecInternals*) userData);
+			CH264VideoCodecInternals&		internals = *((CH264VideoCodecInternals*) userData);
+	const	CH264VideoCodec::DecodeInfo&	h264DecodeInfo = *((CH264VideoCodec::DecodeInfo*) &**internals.mDecodeInfo);
 
 	// Get next packet
-	TIResult<CMediaPacketSource::DataInfo>	dataInfo = (*internals.mDecodeInfo)->getMediaPacketSource()->readNext();
+	TIResult<CMediaPacketSource::DataInfo>	dataInfo = h264DecodeInfo.getMediaPacketSource()->readNext();
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
 
 	// Update frame timing

@@ -263,51 +263,14 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransformForVideoDecode(
 	ReturnValueIfFailed(result, "ActivateObject", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 
 	// Setup input media type
-	//IMFMediaType*	mediaType;
-	//result = ::MFCreateMediaType(&mediaType);
-	//ReturnValueIfFailed(result, "MFCreateMediaType for input", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	//CI<IMFMediaType>	inputMediaType(mediaType);
-
-	//result = inputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-	//ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for input",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = inputMediaType->SetGUID(MF_MT_SUBTYPE, guid);
-	//ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for input",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = ::MFSetAttributeSize(*inputMediaType, MF_MT_FRAME_SIZE, 320, 480);
-	//ReturnValueIfFailed(result, "MFSetAttributeSize for input",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
 	TCIResult<IMFMediaType>	inputMediaType = createMediaType(inputGUID, S2DSizeU32(320, 480));
 	ReturnValueIfResultError(inputMediaType, TCIResult<IMFTransform>(inputMediaType.getError()));
 
-	//result = videoDecoder->SetInputType(0, *inputMediaType, 0);
-	//ReturnValueIfFailed(result, "SetInputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
 	// Setup output media type
-	//result = ::MFCreateMediaType(&mediaType);
-	//ReturnValueIfFailed(result, "MFCreateMediaType for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-	//CI<IMFMediaType>	outputMediaType(mediaType);
-
-	//result = outputMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-	//ReturnValueIfFailed(result, "SetGUID of MF_MT_MAJOR_TYPE for output",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = outputMediaType->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_NV12);
-	//ReturnValueIfFailed(result, "SetGUID of MF_MT_SUBTYPE for output",
-	//		TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//result = ::MFSetAttributeSize(*outputMediaType, MF_MT_FRAME_SIZE, 320, 480);
-	//ReturnValueIfFailed(result, "MFSetAttributeSize for output", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
-	//TCIResult<IMFMediaType>	outputMediaType = createMediaType(MFVideoFormat_NV12, S2DSizeU32(320, 480));
 	TCIResult<IMFMediaType>	outputMediaType = createMediaType(outputGUID, S2DSizeU32(320, 480));
 	ReturnValueIfResultError(outputMediaType, TCIResult<IMFTransform>(outputMediaType.getError()));
 
-	//result = videoDecoder->SetOutputType(0, *outputMediaType, 0);
-	//ReturnValueIfFailed(result, "SetOutputType", TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
-
+	// Setup transform
 	OI<SError>	error =
 						setTransformInputOutputMediaTypes(*videoDecoder, *(inputMediaType.getInstance()),
 								*(outputMediaType.getInstance()));
@@ -426,7 +389,7 @@ OI<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size
 
 //----------------------------------------------------------------------------------------------------------------------
 SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
-		UInt32 bytesPerFrame)
+		UInt32 bytesPerFrame, bool perform8BitToggle)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Lock media buffer
@@ -447,6 +410,11 @@ SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, C
 
 		return audioSourceStatus;
 	}
+
+	// Check if need to perform 8 bit toggle
+	if (perform8BitToggle)
+		// Toggle 8 bit
+		audioFrames.toggle8BitSignedUnsigned();
 
 	// Update current length
 	result = mediaBuffer->SetCurrentLength(audioFrames.getCurrentFrameCount() * bytesPerFrame);

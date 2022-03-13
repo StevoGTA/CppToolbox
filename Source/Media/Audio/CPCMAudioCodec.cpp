@@ -71,7 +71,7 @@ void CPCMAudioCodec::seek(UniversalTimeInterval timeInterval)
 	DecodeInfo&	decodeInfo = (DecodeInfo&) (**mInternals->mDecodeInfo);
 
 	// Seek
-	decodeInfo.seek(timeInterval * mInternals->mAudioProcessingFormat->getSampleRate());
+	decodeInfo.seek((UInt64) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,27 +87,13 @@ OI<SError> CPCMAudioCodec::decode(CAudioFrames& audioFrames)
 	TVResult<UInt32>	frameCount = decodeInfo.read(buffer, writeInfo.getFrameCount());
 	ReturnErrorIfResultError(frameCount);
 
-	// Check if need to convert unsigned 8 bit samples to signed 8 bit samples
-	if ((mInternals->mAudioProcessingFormat->getBits() == 8) && decodeInfo.get8BitIsUnsigned()) {
-		// Convert
-		UInt32	byteCount = frameCount.getValue() * decodeInfo.getFrameByteCount();
-
-		// Do 8 byte chunks first
-		while (byteCount >= 8) {
-			// Do these 8 bytes
-			*((UInt64*) buffer) ^= 0x8080808080808080LL;
-			buffer += 8;
-			byteCount -= 8;
-		}
-
-		// Finish the last 1-7 bytes
-		while (byteCount-- > 0)
-			// Do this byte
-			*buffer++ ^= 0x80;
-	}
-
 	// Complete write
 	audioFrames.completeWrite(frameCount.getValue());
+
+	// Check if need to convert unsigned 8 bit samples to signed 8 bit samples
+	if ((mInternals->mAudioProcessingFormat->getBits() == 8) && decodeInfo.get8BitIsUnsigned())
+		// Toggle
+		audioFrames.toggle8BitSignedUnsigned();
 
 	return OI<SError>();
 }

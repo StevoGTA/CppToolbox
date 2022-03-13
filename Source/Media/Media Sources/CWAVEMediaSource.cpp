@@ -85,8 +85,8 @@ bool CDefaultWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, c
 				return false;
 
 			mInternals->mAudioStorageFormat =
-					CPCMAudioCodec::composeAudioStorageFormat(false, *sampleSize, waveFormat.getSamplesPerSecond(),
-							waveFormat.getChannels());
+					CPCMAudioCodec::composeAudioStorageFormat(false, (UInt8) *sampleSize,
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
 
 			return true;
 
@@ -96,8 +96,8 @@ bool CDefaultWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, c
 				return false;
 
 			mInternals->mAudioStorageFormat =
-					CPCMAudioCodec::composeAudioStorageFormat(true, *sampleSize, waveFormat.getSamplesPerSecond(),
-							waveFormat.getChannels());
+					CPCMAudioCodec::composeAudioStorageFormat(true, (UInt8) *sampleSize,
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
 
 			return true;
 
@@ -222,8 +222,9 @@ TIResult<CMediaTrackInfos> sQueryWAVETracksProc(const I<CSeekableDataSource>& se
 							(waveFormat.getAverageBytesPerSec() > 0))
 						// Use WAVEFORMAT
 						sampleSize =
-								OV<UInt16>(waveFormat.getAverageBytesPerSec() / waveFormat.getSamplesPerSecond() /
-										waveFormat.getChannels() * 8);
+								OV<UInt16>(
+										(UInt16) (waveFormat.getAverageBytesPerSec() / waveFormat.getSamplesPerSecond())
+												/ waveFormat.getChannels() * 8);
 
 					if (!waveMediaSourceImportTracker->note(waveFormat, sampleSize))
 						// Not supported
