@@ -10,7 +10,7 @@
 // MARK: Local data
 
 static	CString	sCMediaSourceRegistryErrorDomain(OSSTR("CMediaSourceRegistry"));
-static	SError	sUnknownExtension(sCMediaSourceRegistryErrorDomain, 1, CString(OSSTR("Unknown Extension")));
+static	SError	sIdentifyFailed(sCMediaSourceRegistryErrorDomain, 1, CString(OSSTR("Failed to identify")));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMediaSourceRegistryInternals
@@ -67,7 +67,11 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		const I<CSeekableDataSource>& seekableDataSource, const CString& extension, SMediaSource::Options options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
+	TSet<CString>	remainingMediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
+
+	// Iterate media source types to check file extension
 	for (TIteratorS<CString> iterator = mediaSourceTypes.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Get info
 		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
@@ -75,12 +79,48 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		// Check extensions
 		if (mediaSource.getExtensions().contains(extension)) {
 			// Found by extension
-			TIResult<CMediaTrackInfos>	mediaTrackInfos = mediaSource.queryTracks(seekableDataSource, options);
-			if (mediaTrackInfos.hasValue())
-				// Success
-				return TIResult<IdentifyInfo>(IdentifyInfo(mediaSource.getID(), mediaTrackInfos.getValue()));
+			SMediaSource::QueryTracksResult	queryTracksResult = mediaSource.queryTracks(seekableDataSource, options);
+			switch (queryTracksResult.getResult()) {
+				case SMediaSource::QueryTracksResult::kSuccess:
+					// Success
+					return TIResult<IdentifyInfo>(
+							IdentifyInfo(mediaSource.getID(), queryTracksResult.getMediaTrackInfos()));
+
+				case SMediaSource::QueryTracksResult::kSourceMatchButUnableToLoad:
+					// Matched source, but source unable to load
+					return TIResult<IdentifyInfo>(queryTracksResult.getError());
+
+				case SMediaSource::QueryTracksResult::kSourceMismatch:
+					// Not a matched source
+					remainingMediaSourceTypes.remove(*iterator);
+					break;
+			}
 		}
 	}
 
-	return TIResult<IdentifyInfo>(sUnknownExtension);
+	// Iterate media source types and just check
+	for (TIteratorS<CString> iterator = remainingMediaSourceTypes.getIterator(); iterator.hasValue();
+			iterator.advance()) {
+		// Get info
+		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
+
+		// Query tracks
+		SMediaSource::QueryTracksResult	queryTracksResult = mediaSource.queryTracks(seekableDataSource, options);
+		switch (queryTracksResult.getResult()) {
+			case SMediaSource::QueryTracksResult::kSuccess:
+				// Success
+				return TIResult<IdentifyInfo>(
+						IdentifyInfo(mediaSource.getID(), queryTracksResult.getMediaTrackInfos()));
+
+			case SMediaSource::QueryTracksResult::kSourceMatchButUnableToLoad:
+				// Matched source, but source unable to load
+				return TIResult<IdentifyInfo>(queryTracksResult.getError());
+
+			case SMediaSource::QueryTracksResult::kSourceMismatch:
+				// Not a matched source
+				break;
+		}
+	}
+
+	return TIResult<IdentifyInfo>(sIdentifyFailed);
 }

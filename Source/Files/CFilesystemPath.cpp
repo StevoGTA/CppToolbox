@@ -55,17 +55,15 @@ CFilesystemPath::~CFilesystemPath()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CFilesystemPath::getString(Style style) const
+CString CFilesystemPath::getString(Style style, const CString& wrapper) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if same path style
-	if (style == mInternals->mStyle)
-		// Same
-		return mInternals->mString;
-
-	return (style != mInternals->mStyle) ?
-			mInternals->mString.replacingSubStrings(sPathSeparator(mInternals->mStyle), sPathSeparator(style)) :
-			mInternals->mString;
+	return wrapper +
+			((style == mInternals->mStyle) ?
+					mInternals->mString :
+					mInternals->mString.replacingSubStrings(sPathSeparator(mInternals->mStyle),
+							sPathSeparator(style))) +
+			wrapper;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

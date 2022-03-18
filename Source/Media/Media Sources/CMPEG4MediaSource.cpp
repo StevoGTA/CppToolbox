@@ -569,13 +569,13 @@ struct SMP4co64AtomPayload {
 #pragma pack(pop)
 
 static	CString	sErrorDomain(OSSTR("CMPEG4MediaSource"));
-static	SError	sNotAnMPEG4FileError(sErrorDomain, 1, CString(OSSTR("Not an MPEG-4 file")));
-static	SError	sUnsupportedCodecError(sErrorDomain, 2, CString(OSSTR("Unsupported codec")));
+static	SInt32	kUnsupportedCodecCode = 1;
+static	SInt32	kUnsupportedCodecConfiguration = 2;
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	TIResult<CMediaTrackInfos>		sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource,
+static	SMediaSource::QueryTracksResult	sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource,
 												SMediaSource::Options options);
 static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
 												const I<CSeekableDataSource>& seekableDataSource,
@@ -610,7 +610,7 @@ REGISTER_MEDIA_SOURCE(mp4,
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource,
+SMediaSource::QueryTracksResult sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource,
 		SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -620,23 +620,23 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 
 	// Read root atom
 	TIResult<CAtomReader::Atom>	atom = atomReader.readAtom();
-	ReturnValueIfResultError(atom, TIResult<CMediaTrackInfos>(atom.getError()));
+	ReturnValueIfResultError(atom, SMediaSource::QueryTracksResult());
 	if (atom.getValue().mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
-		return TIResult<CMediaTrackInfos>(sNotAnMPEG4FileError);
+		return SMediaSource::QueryTracksResult();
 
 	// Find moov atom
 	while (atom.getValue().mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
 		// Go to next atom
 		error = atomReader.seekToNextAtom(atom.getValue());
-		ReturnValueIfError(error, TIResult<CMediaTrackInfos>(*error));
+		ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
 
 		// Get atom
 		atom = atomReader.readAtom();
-		ReturnValueIfResultError(atom, TIResult<CMediaTrackInfos>(atom.getError()));
+		ReturnValueIfResultError(atom, SMediaSource::QueryTracksResult(atom.getError()));
 	}
 
 	TIResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(atom.getValue());
-	ReturnValueIfResultError(moovContainerAtom, TIResult<CMediaTrackInfos>(moovContainerAtom.getError()));
+	ReturnValueIfResultError(moovContainerAtom, SMediaSource::QueryTracksResult(moovContainerAtom.getError()));
 
 	// Iterate moov atom
 	CMediaTrackInfos	mediaTrackInfos;
@@ -761,10 +761,13 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 									configurationData.getValue(), SMP4mdhdAtomPayload(mdhdAtomPayloadData.getValue()),
 									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
 											stcoAtomPayload, co64AtomPayload));
-					ReturnValueIfError(error, TIResult<CMediaTrackInfos>(*error));
+					ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
 				} else
-					// Unsupported codec
-					return TIResult<CMediaTrackInfos>(sUnsupportedCodecError);
+					// Unsupported audio codec
+					return SMediaSource::QueryTracksResult(
+							SError(sErrorDomain, kUnsupportedCodecCode,
+									CString(OSSTR("Unsupported audio codec: ")) +
+											CString(stsdDescription.getType(), true, true)));
 			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
 				// Video track
 				TIResult<CData>	stssAtomPayloadData =
@@ -789,15 +792,18 @@ TIResult<CMediaTrackInfos> sQueryMPEG4TracksProc(const I<CSeekableDataSource>& s
 									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
 											stcoAtomPayload, co64AtomPayload),
 									stssAtomPayloadData.getValue());
-					ReturnValueIfError(error, TIResult<CMediaTrackInfos>(*error));
+					ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
 				} else
-					// Unsupported codec
-					return TIResult<CMediaTrackInfos>(sUnsupportedCodecError);
+					// Unsupported video codec
+					return SMediaSource::QueryTracksResult(
+							SError(sErrorDomain, kUnsupportedCodecCode,
+									CString(OSSTR("Unsupported video codec: ")) +
+											CString(stsdDescription.getType(), true, true)));
 			}
 		}
 	}
 
-	return TIResult<CMediaTrackInfos>(mediaTrackInfos);
+	return SMediaSource::QueryTracksResult(mediaTrackInfos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -814,7 +820,11 @@ OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekabl
 									CAACAudioCodec::composeAudioStorageFormat(configurationData,
 											audioFormat.getChannels());
 	if (!audioStorageFormat.hasInstance())
-		return OI<SError>(sUnsupportedCodecError);
+		// Unsupported configuration
+		return OI<SError>(
+				SError(sErrorDomain, kUnsupportedCodecConfiguration,
+						CString(OSSTR("Unsupported ")) + CAACAudioCodec::mAACLCName +
+								CString(OSSTR(" codec configuration"))));
 
 	// Compose info
 	UniversalTimeInterval	duration =
@@ -860,7 +870,11 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 									CH264VideoCodec::composeVideoStorageFormat(
 											S2DSizeU16(videoFormat.getWidth(), videoFormat.getHeight()), framerate);
 	if (!videoStorageFormat.hasInstance())
-		return OI<SError>(sUnsupportedCodecError);
+		// Unsupported configuration
+		return OI<SError>(
+				SError(sErrorDomain, kUnsupportedCodecConfiguration,
+						CString(OSSTR("Unsupported ")) + CH264VideoCodec::mName +
+								CString(OSSTR(" codec configuration"))));
 
 	// Add video track
 	CVideoTrack	videoTrack(CMediaTrack::Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration)),

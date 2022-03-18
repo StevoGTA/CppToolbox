@@ -55,7 +55,10 @@ class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 	// Properties
 	public:
 		static	OSType						mAACLCID;
+		static	CString						mAACLCName;
+
 		static	OSType						mAACLDID;
+		static	CString						mAACLDName;
 
 	private:
 				CAACAudioCodecInternals*	mInternals;

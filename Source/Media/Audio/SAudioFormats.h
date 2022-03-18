@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "TWrappers.h"
+#include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: EAudioChannelMap
@@ -146,6 +146,23 @@ struct SAudioStorageFormat {
 							{ return mChannelMap; }
 	UInt8				getChannels() const
 							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
+	CString				getDescription() const
+							{
+								// Compose description
+								CString	description;
+
+								if (mBits.hasValue())
+									description += CString(*mBits) + CString(OSSTR(", "));
+								else
+									description += CString(OSSTR("n/a, "));
+
+								description += CString(mSampleRate, 0, 0) + CString(OSSTR("hz, "));
+								description +=
+										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap)) + CString(OSSTR(" (")) +
+												CString(mChannelMap, 4, true, true) + CString(OSSTR(")"));
+
+								return description;
+							}
 
 	// Properties
 	private:

@@ -23,6 +23,18 @@ struct SVideoStorageFormat {
 							{ return mFrameSize; }
 			Float32		getFramerate() const
 							{ return mFramerate; }
+			CString		getDescription() const
+							{
+								// Compose description
+								CString	description;
+
+								description +=
+										CString(mFrameSize.mWidth) + CString(OSSTR("x")) + CString(mFrameSize.mHeight);
+								description +=
+										CString(OSSTR(" at ")) + CString(mFramerate, 0, 3) + CString(OSSTR("fps"));
+
+								return description;
+							}
 
 	// Properties
 	private:

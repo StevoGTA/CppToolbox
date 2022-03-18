@@ -335,6 +335,7 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 	// Properties
 	public:
 		static	OSType						mID;
+		static	CString						mName;
 
 	private:
 				CH264VideoCodecInternals*	mInternals;

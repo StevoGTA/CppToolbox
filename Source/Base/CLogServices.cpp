@@ -44,6 +44,7 @@ static	TNArray<SLogProcInfo>*	sLogErrorProcInfos = nil;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
+static	CString	sStringWithDate(const CString& string);
 static	void	sLogToConsoleOutput(const CString& string);
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,26 +86,15 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 				void	queue(const CString& string)
 							{
 								// Add string
-								mStrings +=
-										SGregorianDate().getString() + CString(OSSTR(": ")) + string +
-												CString::mPlatformDefaultNewline;
+								mStrings += sStringWithDate(string) + CString::mPlatformDefaultNewline;
 
 								// Signal
 								mWriteSemaphore.signal();
 							}
 				void	queue(const TArray<CString>& strings)
 							{
-								// Prepare strings
-								TNArray<CString>	stringsWithDates;
-								for (TIteratorD<CString> iterator = strings.getIterator(); iterator.hasValue();
-										iterator.advance())
-									// Add string with date
-									stringsWithDates +=
-											SGregorianDate().getString() + CString(OSSTR(": ")) + *iterator +
-													CString::mPlatformDefaultNewline;
-
 								// Add
-								mStrings += stringsWithDates;
+								mStrings += TNArray<CString>(strings, (TNArray<CString>::MappingProc) sStringWithDate);
 
 								// Signal
 								mWriteSemaphore.signal();
@@ -264,7 +254,7 @@ void CLogServices::logMessage(const CString& string)
 		(*sPrimaryLogFile).logMessage(string);
 
 	// Setup
-	CString	stringWithDate = SGregorianDate().getString() + CString(OSSTR(": ")) + string;
+	CString	stringWithDate = sStringWithDate(string);
 
 	// Check if passing to output/console
 #if defined(DEBUG)
@@ -295,20 +285,17 @@ void CLogServices::logMessages(const TArray<CString>& strings)
 		(*sPrimaryLogFile).logMessages(strings);
 
 	// Setup
-	CString	stringsWithDates;
-	for (TIteratorD<CString> iterator = strings.getIterator(); iterator.hasValue();
-			iterator.advance(), stringsWithDates += CString::mPlatformDefaultNewline)
-		// Update strings with dates
-		stringsWithDates += SGregorianDate().getString() + CString(OSSTR(": ")) + *iterator;
+	TNArray<CString>	stringsWithDates(strings, (TNArray<CString>::MappingProc) sStringWithDate);
+	CString				stringsWithDatesString(stringsWithDates, CString::mPlatformDefaultNewline);
 
 	// Check if passing to output/console
 #if defined(DEBUG)
 	// Pass to output/console
-	sLogToConsoleOutput(stringsWithDates);
+	sLogToConsoleOutput(stringsWithDatesString);
 #else
 	if (!sPrimaryLogFile.hasInstance())
 		// Pass to output/console
-		sLogToConsoleOutput(stringsWithDates);
+		sLogToConsoleOutput(stringsWithDatesString);
 #endif
 
 	// Check if have procs
@@ -317,7 +304,7 @@ void CLogServices::logMessages(const TArray<CString>& strings)
 		for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos->getIterator(); iterator.hasValue();
 				iterator.advance())
 			// Call proc
-			iterator.getValue().callProc(stringsWithDates);
+			iterator.getValue().callProc(stringsWithDatesString);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -330,7 +317,7 @@ void CLogServices::logDebugMessage(const CString& string)
 
 #if defined(DEBUG)
 	// Pass to output/console
-	sLogToConsoleOutput(SGregorianDate().getString() + CString(OSSTR(": ")) + string);
+	sLogToConsoleOutput(sStringWithDate(string));
 #endif
 }
 
@@ -406,7 +393,7 @@ void CLogServices::logError(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	OI<CString>	dateString;
+	CString	dateString = SGregorianDate().getString();
 
 	// Check if have primary log file
 	if (sPrimaryLogFile.hasInstance())
@@ -414,18 +401,16 @@ void CLogServices::logError(const CString& string)
 		(*sPrimaryLogFile).logError(string);
 #if defined(DEBUG)
 	// Pass to output/console
-	dateString = SGregorianDate().getString();
 	sLogToConsoleOutput(CString::mEmpty);
-	sLogToConsoleOutput(*dateString + CString(OSSTR(": *** ERROR ***")));
-	sLogToConsoleOutput(*dateString + CString(OSSTR(": ")) + string);
+	sLogToConsoleOutput(dateString + CString(OSSTR(": *** ERROR ***")));
+	sLogToConsoleOutput(dateString + CString(OSSTR(": ")) + string);
 	sLogToConsoleOutput(CString::mEmpty);
 #else
 	else {
 		// Pass to output/console
-		dateString = SGregorianDate().getString();
 		sLogToConsoleOutput(CString::mEmpty);
-		sLogToConsoleOutput(*dateString + CString(OSSTR(": *** ERROR ***")));
-		sLogToConsoleOutput(*dateString + CString(OSSTR(": ")) + string);
+		sLogToConsoleOutput(dateString + CString(OSSTR(": *** ERROR ***")));
+		sLogToConsoleOutput(dateString + CString(OSSTR(": ")) + string);
 		sLogToConsoleOutput(CString::mEmpty);
 	}
 #endif
@@ -434,15 +419,9 @@ void CLogServices::logError(const CString& string)
 	if (sLogErrorProcInfos != nil)
 		// Call procs
 		for (TIteratorD<SLogProcInfo> iterator = sLogErrorProcInfos->getIterator(); iterator.hasValue();
-				iterator.advance()) {
-		   // Check if need to finish setup
-		   if (!dateString.hasInstance())
-			   // Finish setup
-			   dateString = SGregorianDate().getString();
-
+				iterator.advance())
 			// Call proc
-			iterator.getValue().callProc(*dateString + CString(OSSTR(": ")) + string);
-		}
+			iterator.getValue().callProc(dateString + CString(OSSTR(": ")) + string);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -487,6 +466,13 @@ void CLogServices::addLogErrorProc(LogProc logProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
+
+//----------------------------------------------------------------------------------------------------------------------
+CString	sStringWithDate(const CString& string)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return SGregorianDate().getString() + CString(OSSTR(": ")) + string;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void sLogToConsoleOutput(const CString& string)

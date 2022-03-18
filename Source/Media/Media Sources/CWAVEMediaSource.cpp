@@ -12,16 +12,15 @@
 // MARK: Local data
 
 static	CString	sErrorDomain(OSSTR("CWAVEMediaSource"));
-static	SError	sNotAWAVEFileError(sErrorDomain, 1, CString(OSSTR("Not a WAVE file")));
-static	SError	sInvalidWAVEFileError(sErrorDomain, 2, CString(OSSTR("Invalid WAVE file")));
-static	SError	sUnsupportedCodecError(sErrorDomain, 3, CString(OSSTR("Unsupported codec")));
+static	SError	sInvalidWAVEFileError(sErrorDomain, 1, CString(OSSTR("Invalid WAVE file")));
+static	SInt32	kUnsupportedCodecCode = 2;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	TIResult<CMediaTrackInfos>	sQueryWAVETracksProc(const I<CSeekableDataSource>& seekableDataSource,
-											SMediaSource::Options options);
+static	SMediaSource::QueryTracksResult	sQueryWAVETracksProc(const I<CSeekableDataSource>& seekableDataSource,
+												SMediaSource::Options options);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -175,7 +174,7 @@ I<CCodec::DecodeInfo> CDefaultWAVEMediaSourceImportTracker::composeDecodeInfo(
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CMediaTrackInfos> sQueryWAVETracksProc(const I<CSeekableDataSource>& seekableDataSource,
+SMediaSource::QueryTracksResult sQueryWAVETracksProc(const I<CSeekableDataSource>& seekableDataSource,
 		SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -187,10 +186,10 @@ TIResult<CMediaTrackInfos> sQueryWAVETracksProc(const I<CSeekableDataSource>& se
 	// Verify it's a WAVE Media Source
 	SWAVEFORMChunk32	formChunk32;
 	error = chunkReader.CByteReader::readData(&formChunk32, sizeof(SWAVEFORMChunk32));
-	ReturnValueIfError(error, TIResult<CMediaTrackInfos>(*error));
+	ReturnValueIfError(error, SMediaSource::QueryTracksResult());
 	if ((formChunk32.getID() != kWAVEFORMChunkID) || (formChunk32.getFormType() != kWAVEFORMType))
 		// Not a WAVE file
-		return TIResult<CMediaTrackInfos>(sNotAWAVEFileError);
+		return SMediaSource::QueryTracksResult();
 
 	// Process chunks
 	OV<UInt16>	sampleSize;
@@ -210,7 +209,7 @@ TIResult<CMediaTrackInfos> sQueryWAVETracksProc(const I<CSeekableDataSource>& se
 				case kWAVEFormatChunkID: {
 					// Format chunk
 					TIResult<CData>	readPayload = chunkReader.readPayload(chunkInfo.getValue());
-					ReturnValueIfResultError(readPayload, TIResult<CMediaTrackInfos>(readPayload.getError()));
+					ReturnValueIfResultError(readPayload, SMediaSource::QueryTracksResult(readPayload.getError()));
 
 					const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) readPayload.getValue().getBytePtr());
 
@@ -228,7 +227,10 @@ TIResult<CMediaTrackInfos> sQueryWAVETracksProc(const I<CSeekableDataSource>& se
 
 					if (!waveMediaSourceImportTracker->note(waveFormat, sampleSize))
 						// Not supported
-						return TIResult<CMediaTrackInfos>(sUnsupportedCodecError);
+						return SMediaSource::QueryTracksResult(
+								SError(sErrorDomain, kUnsupportedCodecCode,
+										CString(OSSTR("Unsupported codec: ")) +
+												CString(waveFormat.getFormatTag(), 4, true, true)));
 				} break;
 
 				case kWAVEDataChunkID:
@@ -258,7 +260,7 @@ TIResult<CMediaTrackInfos> sQueryWAVETracksProc(const I<CSeekableDataSource>& se
 	if (!dataChunkStartByteOffset.hasValue() || !dataChunkByteCount.hasValue() ||
 			!waveMediaSourceImportTracker->canFinalize())
 		// Can't finalize
-		return TIResult<CMediaTrackInfos>(sInvalidWAVEFileError);
+		return SMediaSource::QueryTracksResult(sInvalidWAVEFileError);
 
 	// Finalize setup
 	CAudioTrack			audioTrack = waveMediaSourceImportTracker->composeAudioTrack(*sampleSize, *dataChunkByteCount);
@@ -273,5 +275,5 @@ TIResult<CMediaTrackInfos> sQueryWAVETracksProc(const I<CSeekableDataSource>& se
 		// Not requesting decode info
 		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack));
 
-	return TIResult<CMediaTrackInfos>(mediaTrackInfos);
+	return SMediaSource::QueryTracksResult(mediaTrackInfos);
 }

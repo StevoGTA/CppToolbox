@@ -13,15 +13,15 @@ class CAudioChannelMapperInternals {
 
 						CAudioChannelMapperInternals() : mPerformProc(nil) {}
 
-		static	void	performMonoToStereoFloat32Interleaved(const CAudioFrames& sourceAudioFrames,
+		static	void	performMonoToStereo4ByteInterleaved(const CAudioFrames& sourceAudioFrames,
 								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
 										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
-								const	Float32*			sourcePtr = (const Float32*) readInfo.getSegments()[0];
+								const	UInt32*				sourcePtr = (const UInt32*) readInfo.getSegments()[0];
 
 										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
-										Float32*			destinationPtr = (Float32*) writeInfo.getSegments()[0];
+										UInt32*				destinationPtr = (UInt32*) writeInfo.getSegments()[0];
 
 								// Perform
 								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -33,15 +33,39 @@ class CAudioChannelMapperInternals {
 								// Complete
 								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
 							}
-		static	void	performMonoToStereoSInt32Interleaved(const CAudioFrames& sourceAudioFrames,
+		static	void	performMonoToStereo3ByteInterleaved(const CAudioFrames& sourceAudioFrames,
 								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
 										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
-								const	SInt32*				sourcePtr = (const SInt32*) readInfo.getSegments()[0];
+								const	UInt8*				sourcePtr = (const UInt8*) readInfo.getSegments()[0];
 
 										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
-										SInt32*				destinationPtr = (SInt32*) writeInfo.getSegments()[0];
+										UInt8*				destinationPtr = (UInt8*) writeInfo.getSegments()[0];
+
+								// Perform
+								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
+									// Copy sample
+									(*destinationPtr++) = *sourcePtr;
+									(*destinationPtr++) = *(sourcePtr + 1);
+									(*destinationPtr++) = *(sourcePtr + 2);
+									(*destinationPtr++) = (*sourcePtr++);
+									(*destinationPtr++) = (*sourcePtr++);
+									(*destinationPtr++) = (*sourcePtr++);
+								}
+
+								// Complete
+								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
+							}
+		static	void	performMonoToStereo2ByteInterleaved(const CAudioFrames& sourceAudioFrames,
+								CAudioFrames& destinationAudioFrames)
+							{
+								// Setup
+										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
+								const	UInt16*				sourcePtr = (const UInt16*) readInfo.getSegments()[0];
+
+										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
+										UInt16*				destinationPtr = (UInt16*) writeInfo.getSegments()[0];
 
 								// Perform
 								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -53,35 +77,15 @@ class CAudioChannelMapperInternals {
 								// Complete
 								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
 							}
-		static	void	performMonoToStereoSInt16Interleaved(const CAudioFrames& sourceAudioFrames,
+		static	void	performMonoToStereo1ByteInterleaved(const CAudioFrames& sourceAudioFrames,
 								CAudioFrames& destinationAudioFrames)
 							{
 								// Setup
 										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
-								const	SInt16*				sourcePtr = (const SInt16*) readInfo.getSegments()[0];
+								const	UInt8*				sourcePtr = (const UInt8*) readInfo.getSegments()[0];
 
 										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
-										SInt16*				destinationPtr = (SInt16*) writeInfo.getSegments()[0];
-
-								// Perform
-								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
-									// Copy sample
-									(*destinationPtr++) = *sourcePtr;
-									(*destinationPtr++) = (*sourcePtr++);
-								}
-
-								// Complete
-								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
-							}
-		static	void	performMonoToStereoSInt8Interleaved(const CAudioFrames& sourceAudioFrames,
-								CAudioFrames& destinationAudioFrames)
-							{
-								// Setup
-										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
-								const	SInt8*				sourcePtr = (const SInt8*) readInfo.getSegments()[0];
-
-										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
-										SInt8*				destinationPtr = (SInt8*) writeInfo.getSegments()[0];
+										UInt8*				destinationPtr = (UInt8*) writeInfo.getSegments()[0];
 
 								// Perform
 								for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -133,22 +137,18 @@ OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 	if ((mInternals->mInputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_1_0) &&
 			(mOutputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_2_0_Option1)) {
 		// Mono -> Stereo
-		if ((audioProcessingFormat.getBits() == 32) && audioProcessingFormat.getIsFloat() &&
-				audioProcessingFormat.getIsInterleaved())
-			// Float32 interleaved
-			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereoFloat32Interleaved;
-		else if ((audioProcessingFormat.getBits() == 32) && audioProcessingFormat.getIsSignedInteger() &&
-				audioProcessingFormat.getIsInterleaved())
-			// SInt32 interleaved
-			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereoSInt32Interleaved;
-		else if ((audioProcessingFormat.getBits() == 16) && audioProcessingFormat.getIsSignedInteger() &&
-				audioProcessingFormat.getIsInterleaved())
-			// SInt16 interleaved
-			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereoSInt16Interleaved;
-		else if ((audioProcessingFormat.getBits() == 8) && audioProcessingFormat.getIsSignedInteger() &&
-				audioProcessingFormat.getIsInterleaved())
-			// SInt16 interleaved
-			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereoSInt8Interleaved;
+		if ((audioProcessingFormat.getBits() == 32) && audioProcessingFormat.getIsInterleaved())
+			// 4 byte interleaved
+			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereo4ByteInterleaved;
+		else if ((audioProcessingFormat.getBits() == 24) && audioProcessingFormat.getIsInterleaved())
+			// 3 byte interleaved
+			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereo3ByteInterleaved;
+		else if ((audioProcessingFormat.getBits() == 16) && audioProcessingFormat.getIsInterleaved())
+			// 2 byte interleaved
+			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereo2ByteInterleaved;
+		else if ((audioProcessingFormat.getBits() == 8) && audioProcessingFormat.getIsInterleaved())
+			// 1 byte interleaved
+			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereo1ByteInterleaved;
 		else
 			// Unimplemented
 			AssertFailUnimplemented();

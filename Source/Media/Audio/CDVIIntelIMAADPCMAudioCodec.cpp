@@ -254,7 +254,7 @@ OI<SAudioStorageFormat> CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat(F
 		EAudioChannelMap channelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OI<SAudioStorageFormat>(new SAudioStorageFormat(mID, 16, sampleRate, channelMap));
+	return OI<SAudioStorageFormat>(new SAudioStorageFormat(mID, sampleRate, channelMap));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -289,7 +289,7 @@ static	TArray<SAudioProcessingSetup>	sGetAudioProcessingSetups(OSType id,
 												const SAudioStorageFormat& audioStorageFormat)
 											{
 												return TNArray<SAudioProcessingSetup>(
-															SAudioProcessingSetup(*audioStorageFormat.getBits(),
+															SAudioProcessingSetup(16,
 																	audioStorageFormat.getSampleRate(),
 																	audioStorageFormat.getChannelMap()));
 											}

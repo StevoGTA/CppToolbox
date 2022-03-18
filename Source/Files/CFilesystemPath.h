@@ -56,7 +56,8 @@ class CFilesystemPath : public CHashable {
 									{ getString().hashInto(hasher); }
 
 								// Instance methods
-				CString			getString(Style style = kStylePlatformDefault) const;
+				CString			getString(Style style = kStylePlatformDefault, const CString& wrapper = CString::mEmpty)
+										const;
 
 				CString			getExtension() const;
 

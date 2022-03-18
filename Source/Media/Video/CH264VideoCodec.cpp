@@ -183,6 +183,7 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 // MARK: Properties
 
 OSType	CH264VideoCodec::mID = MAKE_OSTYPE('h', '2', '6', '4');
+CString	CH264VideoCodec::mName("h.264");
 
 // MARK: Class methods
 
@@ -220,4 +221,4 @@ static	I<CVideoCodec>	sInstantiate(OSType id)
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare video codecs
 
-REGISTER_CODEC(h264, CVideoCodec::Info(CH264VideoCodec::mID, CString("h.264"), sInstantiate));
+REGISTER_CODEC(h264, CVideoCodec::Info(CH264VideoCodec::mID, CH264VideoCodec::mName, sInstantiate));
