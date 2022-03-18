@@ -521,6 +521,7 @@ class CAudioPlayerInternals {
 		CAudioPlayer&						mAudioPlayer;
 		CAudioPlayer::Info					mInfo;
 		ComPtr<CAudioPlayerImplementation>	mImplementation;
+		OI<SAudioProcessingFormat>			mAudioProcessingFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -593,6 +594,9 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Store
+	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	
 	// Wait until initialized
 	while (mInternals->mImplementation->mState == CAudioPlayerImplementation::kInitializing)
 		// Sleep
@@ -612,6 +616,20 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CAudioPlayer::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CAudioDestination::getSetupDescription(indent);
+
+	// Add our setup description
+	setupDescriptions += indent + CString(OSSTR("Audio Player"));
+	setupDescriptions += indent + CString("    ") + mInternals->mAudioProcessingFormat->getDescription();
+
+	return setupDescriptions;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

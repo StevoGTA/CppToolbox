@@ -119,6 +119,22 @@ OI<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CBasicAudioProcessor::getSetupDescription(indent);
+
+	// Add our setup description
+	setupDescriptions += indent + CString(OSSTR("Media Foundation Resampler"));
+	setupDescriptions +=
+			indent + CString(OSSTR("    From: ")) + mInternals->mInputAudioProcessingFormat->getDescription();
+	setupDescriptions += indent + CString(OSSTR("      To: ")) + mOutputAudioProcessingFormat->getDescription();
+
+	return setupDescriptions;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SAudioSourceStatus CMediaFoundationResampler::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {

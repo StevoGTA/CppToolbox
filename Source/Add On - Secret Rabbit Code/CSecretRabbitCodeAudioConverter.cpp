@@ -168,6 +168,22 @@ OI<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CBasicAudioProcessor::getSetupDescription(indent);
+
+	// Add our setup description
+	setupDescriptions += indent + CString(OSSTR("Secret Rabbit Code Audio Converter"));
+	setupDescriptions +=
+			indent + CString(OSSTR("    From: ")) + mInternals->mInputAudioProcessingFormat->getDescription();
+	setupDescriptions += indent + CString(OSSTR("      To: ")) + mOutputAudioProcessingFormat->getDescription();
+
+	return setupDescriptions;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SAudioSourceStatus CSecretRabbitCodeAudioConverter::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
