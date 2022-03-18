@@ -13,10 +13,11 @@ class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals
 	public:
 									CAudioDecoderInternals(const SAudioStorageFormat& audioStorageFormat,
 											const I<CAudioCodec>& audioCodec,
-											const I<CCodec::DecodeInfo>& codecDecodeInfo) :
+											const I<CCodec::DecodeInfo>& codecDecodeInfo,
+											const CString& identifier) :
 										TReferenceCountable(),
 												mAudioStorageFormat(audioStorageFormat), mAudioCodec(audioCodec),
-												mCodecDecodeInfo(codecDecodeInfo),
+												mCodecDecodeInfo(codecDecodeInfo), mIdentifier(identifier),
 												mStartTimeInterval(0.0), mCurrentTimeInterval(0.0)
 										{}
 
@@ -28,6 +29,7 @@ class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals
 		SAudioStorageFormat			mAudioStorageFormat;
 		I<CAudioCodec>				mAudioCodec;
 		I<CCodec::DecodeInfo>		mCodecDecodeInfo;
+		CString						mIdentifier;
 
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
 		UniversalTimeInterval		mStartTimeInterval;
@@ -43,10 +45,10 @@ class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals
 
 //----------------------------------------------------------------------------------------------------------------------
 CAudioDecoder::CAudioDecoder(const SAudioStorageFormat& audioStorageFormat, const I<CAudioCodec>& audioCodec,
-		const I<CCodec::DecodeInfo>& codecDecodeInfo) : CAudioSource()
+		const I<CCodec::DecodeInfo>& codecDecodeInfo, const CString& identifier) : CAudioSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioDecoderInternals(audioStorageFormat, audioCodec, codecDecodeInfo);
+	mInternals = new CAudioDecoderInternals(audioStorageFormat, audioCodec, codecDecodeInfo, identifier);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -66,22 +68,21 @@ CAudioDecoder::~CAudioDecoder()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
+TNArray<CString> CAudioDecoder::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CCodecRegistry::mShared.getAudioCodecInfo(mInternals->mAudioStorageFormat.getCodecID())
-			.getAudioProcessingSetups(mInternals->mAudioStorageFormat);
-}
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CAudioSource::getSetupDescription(indent);
 
-//----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Store
-	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-	
-	// Setup Audio Codec
-	return mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mCodecDecodeInfo);
+	// Add our setup description
+	setupDescriptions += indent + CString(OSSTR("Audio Decoder (")) + mInternals->mIdentifier + CString(OSSTR(")"));
+	setupDescriptions +=
+			indent + CString(OSSTR("    ")) +
+					CCodecRegistry::mShared.getAudioCodecInfo(mInternals->mAudioStorageFormat.getCodecID())
+							.getDecodeName() +
+					CString(OSSTR(", ")) + mInternals->mAudioStorageFormat.getDescription();
+
+	return setupDescriptions;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -171,4 +172,23 @@ void CAudioDecoder::reset()
 	// Seek
 	mInternals->mAudioCodec->seek(mInternals->mStartTimeInterval);
 	mInternals->mCurrentTimeInterval = mInternals->mStartTimeInterval;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CCodecRegistry::mShared.getAudioCodecInfo(mInternals->mAudioStorageFormat.getCodecID())
+			.getAudioProcessingSetups(mInternals->mAudioStorageFormat);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+
+	// Setup Audio Codec
+	return mInternals->mAudioCodec->setupForDecode(audioProcessingFormat, mInternals->mCodecDecodeInfo);
 }

@@ -414,6 +414,7 @@ class CAudioPlayerInternals {
 		OI<CAudioPlayerBufferThread>	mAudioPlayerBufferThread;
 		OI<CSRSWBIPSegmentedQueue>		mQueue;
 		OV<UInt32>						mAudioEngineIndex;
+		OI<SAudioProcessingFormat>		mAudioProcessingFormat;
 		OV<Float32>						mSampleRate;
 		OV<UInt32>						mBytesPerFrame;
 
@@ -473,34 +474,13 @@ CAudioPlayer::~CAudioPlayer()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioPlayer::getInputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup if necessary
-	static	SAudioProcessingSetup*	sAudioProcessingSetup = nil;
-	if (sAudioProcessingSetup == nil) {
-		// Compose SAudioProcessingSetup
-		AudioStreamBasicDescription	asbd = CAudioEngine::mShared.getInputFormat();
-		sAudioProcessingSetup =
-				new SAudioProcessingSetup(asbd.mBitsPerChannel, asbd.mSampleRate,
-						(EAudioChannelMap) asbd.mChannelsPerFrame,
-						((asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0) ?
-								SAudioProcessingSetup::SampleTypeOption::kSampleTypeFloat :
-								SAudioProcessingSetup::SampleTypeOption::kSampleTypeSignedInteger,
-						SAudioProcessingSetup::EndianOption::kEndianNative,
-						(asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) ?
-								SAudioProcessingSetup::InterleavedOption::kNonInterleaved :
-								SAudioProcessingSetup::InterleavedOption::kInterleaved);
-	}
-
-	return TNArray<SAudioProcessingSetup>(*sAudioProcessingSetup);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Store
+	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	
 	// Setup
 	UInt32	segmentCount;
 	mInternals->mSampleRate = OV<Float32>(audioProcessingFormat.getSampleRate());
@@ -527,6 +507,20 @@ OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CAudioPlayer::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CAudioDestination::getSetupDescription(indent);
+
+	// Add our setup description
+	setupDescriptions += indent + CString(OSSTR("Audio Player"));
+	setupDescriptions += indent + CString("    ") + mInternals->mAudioProcessingFormat->getDescription();
+
+	return setupDescriptions;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -631,6 +625,30 @@ void CAudioPlayer::reset()
 
 	// Resume
 	mInternals->mAudioPlayerBufferThread->resume();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CAudioPlayer::getInputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup if necessary
+	static	SAudioProcessingSetup*	sAudioProcessingSetup = nil;
+	if (sAudioProcessingSetup == nil) {
+		// Compose SAudioProcessingSetup
+		AudioStreamBasicDescription	asbd = CAudioEngine::mShared.getInputFormat();
+		sAudioProcessingSetup =
+				new SAudioProcessingSetup(asbd.mBitsPerChannel, asbd.mSampleRate,
+						(EAudioChannelMap) asbd.mChannelsPerFrame,
+						((asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0) ?
+								SAudioProcessingSetup::SampleTypeOption::kSampleTypeFloat :
+								SAudioProcessingSetup::SampleTypeOption::kSampleTypeSignedInteger,
+						SAudioProcessingSetup::EndianOption::kEndianNative,
+						(asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) ?
+								SAudioProcessingSetup::InterleavedOption::kNonInterleaved :
+								SAudioProcessingSetup::InterleavedOption::kInterleaved);
+	}
+
+	return TNArray<SAudioProcessingSetup>(*sAudioProcessingSetup);
 }
 
 // MARK: CAudioDestination methods

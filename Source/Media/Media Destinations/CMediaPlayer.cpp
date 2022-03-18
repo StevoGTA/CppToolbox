@@ -301,18 +301,12 @@ void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::setupComplete()
+const CString& CMediaPlayer::getName() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Iterate all audio tracks
-	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
-		// Note setup is complete
-		getAudioProcessor(i)->setupComplete();
+	static	CString	sName(OSSTR("Media Player"));
 
-	// Iterate all video tracks
-	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
-		// Note setup is complete
-		getVideoProcessor(i)->setupComplete();
+	return sName;
 }
 
 // MARK: Instance methods

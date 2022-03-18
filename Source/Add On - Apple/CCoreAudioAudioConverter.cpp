@@ -188,6 +188,22 @@ OI<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CCoreAudioAudioConverter::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CBasicAudioProcessor::getSetupDescription(indent);
+
+	// Add our setup description
+	setupDescriptions += indent + CString(OSSTR("CoreAudio Converter"));
+	setupDescriptions +=
+			indent + CString(OSSTR("    From: ")) + mInternals->mInputAudioProcessingFormat->getDescription();
+	setupDescriptions += indent + CString(OSSTR("      To: ")) + mOutputAudioProcessingFormat->getDescription();
+
+	return setupDescriptions;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SAudioSourceStatus CCoreAudioAudioConverter::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {

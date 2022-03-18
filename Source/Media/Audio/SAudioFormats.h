@@ -118,6 +118,8 @@ enum EAudioChannelMap : UInt16 {
 #define AUDIOCHANNELMAP_ISUNKNOWN(CHANNELMAP)		((CHANNELMAP & 0xFF00) == 0x0000)
 #define AUDIOCHANNELMAP_CHANNELCOUNT(CHANNELMAP)	(CHANNELMAP & 0x00FF)
 
+extern	const	CString	eChannelMapGetDescription(EAudioChannelMap channelMap);
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SAudioStorageFormat
 
@@ -159,7 +161,7 @@ struct SAudioStorageFormat {
 								description += CString(mSampleRate, 0, 0) + CString(OSSTR("hz, "));
 								description +=
 										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap)) + CString(OSSTR(" (")) +
-												CString(mChannelMap, 4, true, true) + CString(OSSTR(")"));
+												eChannelMapGetDescription(mChannelMap) + CString(OSSTR(")"));
 
 								return description;
 							}
@@ -230,6 +232,28 @@ struct SAudioProcessingFormat {
 							{ return mInterleaved; }
 	UInt32				getBytesPerFrame() const
 							{ return mBits / 8 * AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
+	CString				getDescription() const
+							{
+								// Compose description
+								CString	description;
+								description +=
+										CString(mBits) +
+												((mSampleType == kSampleTypeFloat) ?
+														CString(OSSTR(" (Float), ")) :
+														CString(OSSTR(" (Signed Integer), ")));
+								description += CString(mSampleRate, 0, 0) + CString(OSSTR("hz, "));
+								description +=
+										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap)) + CString(OSSTR(" (")) +
+												eChannelMapGetDescription(mChannelMap) + CString(OSSTR("), "));
+								description +=
+										(mEndian == kEndianBig) ?
+												CString(OSSTR("Big Endian, ")) : CString(OSSTR("Little Endian, "));
+								description +=
+										(mInterleaved == kInterleaved) ?
+												CString(OSSTR("Interleaved, ")) : CString(OSSTR("Non-Interleaved, "));
+
+								return description;
+							}
 
 	// Properties
 	private:

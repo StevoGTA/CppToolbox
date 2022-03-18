@@ -49,6 +49,13 @@ OI<SError> CVideoProcessor::connectInput(const I<CVideoProcessor>& videoProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CVideoProcessor::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (*mInternals->mVideoProcessor)->getSetupDescription(indent);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CVideoProcessor::setSourceWindow(UniversalTimeInterval startTimeInterval,
 		const OV<UniversalTimeInterval>& durationTimeInterval)
 //----------------------------------------------------------------------------------------------------------------------

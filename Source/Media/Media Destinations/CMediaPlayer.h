@@ -100,36 +100,36 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info);
-										~CMediaPlayer();
+												// Lifecycle methods
+												CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info);
+												~CMediaPlayer();
 
-										// CMediaDestination methods
-				void					setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
-												const OV<UniversalTimeInterval>& durationTimeInterval =
-														OV<UniversalTimeInterval>());
-				void					seek(UniversalTimeInterval timeInterval);
+												// CMediaDestination methods
+						void					setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
+														const OV<UniversalTimeInterval>& durationTimeInterval =
+																OV<UniversalTimeInterval>());
+						void					seek(UniversalTimeInterval timeInterval);
 
-				void					setupComplete();
+				const	CString&				getName() const;
 
-										// Instance methods
-		virtual	I<CAudioPlayer>			newAudioPlayer(const CString& identifier, UInt32 trackIndex);
-		virtual	void					setAudioGain(Float32 audioGain);
+												// Instance methods
+		virtual			I<CAudioPlayer>			newAudioPlayer(const CString& identifier, UInt32 trackIndex);
+		virtual			void					setAudioGain(Float32 audioGain);
 
-		virtual	I<CVideoFrameStore>		newVideoFrameStore(const CString& identifier, UInt32 trackIndex);
+		virtual			I<CVideoFrameStore>		newVideoFrameStore(const CString& identifier, UInt32 trackIndex);
 
-		virtual	void					setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
+		virtual			void					setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
 
-				UniversalTimeInterval	getCurrentPosition() const;
+						UniversalTimeInterval	getCurrentPosition() const;
 
-		virtual	void					play();
-		virtual	void					pause();
-		virtual	bool					isPlaying() const;
+		virtual			void					play();
+		virtual			void					pause();
+		virtual			bool					isPlaying() const;
 
-				void					startSeek();
-				void					finishSeek();
+						void					startSeek();
+						void					finishSeek();
 
-		virtual	void					reset();
+		virtual			void					reset();
 
 	// Properties
 	private:

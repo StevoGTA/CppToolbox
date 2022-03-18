@@ -253,6 +253,19 @@ CVideoFrameStore::~CVideoFrameStore()
 // MARK: CVideoProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CVideoFrameStore::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CVideoDestination::getSetupDescription(indent);
+
+	// Add our setup description
+	setupDescriptions += indent + CString(OSSTR("Video Frame Store"));
+
+	return setupDescriptions;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CVideoFrameStore::setSourceWindow(UniversalTimeInterval startTimeInterval,
 		const OV<UniversalTimeInterval>& durationTimeInterval)
 //----------------------------------------------------------------------------------------------------------------------

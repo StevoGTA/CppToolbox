@@ -12,15 +12,17 @@
 class CVideoDecoderInternals : public TReferenceCountable<CVideoDecoderInternals> {
 	public:
 		CVideoDecoderInternals(const SVideoStorageFormat& videoStorageFormat, const I<CVideoCodec>& videoCodec,
-				const I<CCodec::DecodeInfo>& codecDecodeInfo) :
+				const I<CCodec::DecodeInfo>& codecDecodeInfo, const CString& identifier) :
 			TReferenceCountable(),
 					mVideoStorageFormat(videoStorageFormat), mVideoCodec(videoCodec), mCodecDecodeInfo(codecDecodeInfo),
+					mIdentifier(identifier),
 					mStartTimeInterval(0.0), mCurrentTimeInterval(0.0)
 			{}
 
 		SVideoStorageFormat			mVideoStorageFormat;
 		I<CVideoCodec>				mVideoCodec;
 		I<CCodec::DecodeInfo>		mCodecDecodeInfo;
+		CString						mIdentifier;
 
 		OI<SVideoProcessingFormat>	mVideoProcessingFormat;
 		UniversalTimeInterval		mStartTimeInterval;
@@ -36,12 +38,12 @@ class CVideoDecoderInternals : public TReferenceCountable<CVideoDecoderInternals
 
 //----------------------------------------------------------------------------------------------------------------------
 CVideoDecoder::CVideoDecoder(const SVideoStorageFormat& videoStorageFormat, const I<CVideoCodec>& videoCodec,
-		const I<CCodec::DecodeInfo>& codecDecodeInfo, const SVideoProcessingFormat& videoProcessingFormat) :
-		CVideoSource()
+		const I<CCodec::DecodeInfo>& codecDecodeInfo, const SVideoProcessingFormat& videoProcessingFormat,
+		const CString& identifier) : CVideoSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CVideoDecoderInternals(videoStorageFormat, videoCodec, codecDecodeInfo);
+	mInternals = new CVideoDecoderInternals(videoStorageFormat, videoCodec, codecDecodeInfo, identifier);
 
 	// Store
 	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
@@ -65,6 +67,24 @@ CVideoDecoder::~CVideoDecoder()
 }
 
 // MARK: CVideoProcessor methods
+
+//----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CVideoDecoder::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CVideoSource::getSetupDescription(indent);
+
+	// Add our setup description
+	setupDescriptions += indent + CString(OSSTR("Video Decoder (")) + mInternals->mIdentifier + CString(OSSTR(")"));
+	setupDescriptions +=
+			indent + CString(OSSTR("    ")) +
+					CCodecRegistry::mShared.getVideoCodecInfo(mInternals->mVideoStorageFormat.getCodecID())
+							.getDecodeName() +
+					CString(OSSTR(", ")) + mInternals->mVideoStorageFormat.getDescription();
+
+	return setupDescriptions;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CVideoDecoder::setSourceWindow(UniversalTimeInterval startTimeInterval,

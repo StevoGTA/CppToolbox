@@ -43,28 +43,30 @@ class CVideoFrameStore : public CVideoDestination {
 
 	// Methods
 	public:
-							// Lifecycle methods
-							CVideoFrameStore(const CString& identifier, const Info& info);
-							~CVideoFrameStore();
+									// Lifecycle methods
+									CVideoFrameStore(const CString& identifier, const Info& info);
+									~CVideoFrameStore();
 
-							// CVideoProcessor methods
-				void		setSourceWindow(UniversalTimeInterval startTimeInterval,
-									const OV<UniversalTimeInterval>& durationTimeInterval);
-				void		seek(UniversalTimeInterval timeInterval);
+									// CVideoProcessor methods
+				TNArray<CString>	getSetupDescription(const CString& indent);
 
-				void		reset();
+				void				setSourceWindow(UniversalTimeInterval startTimeInterval,
+											const OV<UniversalTimeInterval>& durationTimeInterval);
+				void				seek(UniversalTimeInterval timeInterval);
 
-							// CVideoDestination methods
-				void		setupComplete();
+				void				reset();
 
-							// Instance methods
-				void		notePositionUpdated(UniversalTimeInterval position);
+									// CVideoDestination methods
+				void				setupComplete();
 
-				void		resume();
-				void		pause();
+									// Instance methods
+				void				notePositionUpdated(UniversalTimeInterval position);
 
-				void		startSeek();
-				void		finishSeek();
+				void				resume();
+				void				pause();
+
+				void				startSeek();
+				void				finishSeek();
 
 	// Properties
 	private:

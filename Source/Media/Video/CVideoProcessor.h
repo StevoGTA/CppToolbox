@@ -40,19 +40,20 @@ class CVideoProcessor {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								CVideoProcessor();
-		virtual					~CVideoProcessor();
+									// Lifecycle methods
+									CVideoProcessor();
+		virtual						~CVideoProcessor();
 
-								// Instance methods
-		virtual	OI<SError>		connectInput(const I<CVideoProcessor>& videoProcessor);
+									// Instance methods
+		virtual	OI<SError>			connectInput(const I<CVideoProcessor>& videoProcessor);
+		virtual	TNArray<CString>	getSetupDescription(const CString& indent);
 
-		virtual	void			setSourceWindow(UniversalTimeInterval startTimeInterval,
-										const OV<UniversalTimeInterval>& durationTimeInterval);
-		virtual	void			seek(UniversalTimeInterval timeInterval);
+		virtual	void				setSourceWindow(UniversalTimeInterval startTimeInterval,
+											const OV<UniversalTimeInterval>& durationTimeInterval);
+		virtual	void				seek(UniversalTimeInterval timeInterval);
 
-		virtual	PerformResult	perform();
-		virtual	void			reset();
+		virtual	PerformResult		perform();
+		virtual	void				reset();
 
 	// Properties
 	private:
@@ -65,8 +66,12 @@ class CVideoProcessor {
 class CVideoSource : public CVideoProcessor {
 	// Methods
 	public:
-		// Lifecycle methods
-		CVideoSource() : CVideoProcessor() {}
+							// Lifecycle methods
+							CVideoSource() : CVideoProcessor() {}
+
+							// CVideoProcessor methods
+		TNArray<CString>	getSetupDescription(const CString& indent)
+									{ return TNArray<CString>(); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

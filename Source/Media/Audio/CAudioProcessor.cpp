@@ -50,6 +50,13 @@ OI<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNArray<CString> CAudioProcessor::getSetupDescription(const CString& indent)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (*mInternals->mAudioProcessor)->getSetupDescription(indent);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CAudioProcessor::Requirements CAudioProcessor::queryRequirements() const
 //----------------------------------------------------------------------------------------------------------------------
 {

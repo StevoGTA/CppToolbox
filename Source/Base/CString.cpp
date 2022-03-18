@@ -23,6 +23,7 @@ const	UInt64	kDisplayAsGiBThreshHold = 1024 * 1024 * 1024;
 
 CString	CString::mEmpty;
 
+CString	CString::mColon(OSSTR(":"));
 CString	CString::mComma(OSSTR(","));
 CString	CString::mDoubleQuotes(OSSTR("\""));
 CString	CString::mPeriod(OSSTR("."));

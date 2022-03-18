@@ -19,6 +19,7 @@ class CCoreAudioAudioConverter : public CAudioConverter {
 							// CAudioProcessor methods
 		OI<SError>			connectInput(const I<CAudioProcessor>& audioProcessor,
 									const SAudioProcessingFormat& audioProcessingFormat);
+		TNArray<CString>	getSetupDescription(const CString& indent);
 
 		SAudioSourceStatus	performInto(CAudioFrames& audioFrames);
 

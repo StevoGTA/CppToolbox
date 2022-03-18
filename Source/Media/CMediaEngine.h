@@ -44,7 +44,8 @@ class CMediaEngine {
 		virtual							~CMediaEngine() {}
 
 										// Instance methods
-				I<CAudioSource>			getAudioSource(const CMediaTrackInfos::AudioTrackInfo& audioTrackInfo) const;
+				I<CAudioSource>			getAudioSource(const CMediaTrackInfos::AudioTrackInfo& audioTrackInfo,
+												const CString& identifier) const;
 				SAudioProcessingFormat	composeAudioProcessingFormat(const CAudioSource& audioSource,
 												const CAudioDestination& audioDestination,
 												const OV<Float32>& processingSampleRate = OV<Float32>()) const;
@@ -53,7 +54,8 @@ class CMediaEngine {
 												const SAudioProcessingFormat& audioProcessingFormat) const;
 
 				I<CVideoSource>			getVideoSource(const CMediaTrackInfos::VideoTrackInfo& videoTrackInfo,
-												CVideoFrame::Compatibility compatibility) const;
+												CVideoFrame::Compatibility compatibility, const CString& identifier)
+												const;
 
 	protected:
 										// Subclass methods

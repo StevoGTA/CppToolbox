@@ -19,13 +19,13 @@ class CAudioDecoder : public CAudioSource {
 										// Lifecycle methods
 										CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
 												const I<CAudioCodec>& audioCodec,
-												const I<CCodec::DecodeInfo>& codecDecodeInfo);
+												const I<CCodec::DecodeInfo>& codecDecodeInfo,
+												const CString& identifier);
 										CAudioDecoder(const CAudioDecoder& other);
 										~CAudioDecoder();
 
 										// CAudioProcessor methods
-		TArray<SAudioProcessingSetup>	getOutputSetups() const;
-		OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
+		TNArray<CString>				getSetupDescription(const CString& indent);
 
 		Requirements					queryRequirements() const;
 
@@ -34,7 +34,11 @@ class CAudioDecoder : public CAudioSource {
 		void							seek(UniversalTimeInterval timeInterval);
 
 		SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
+
 		void							reset();
+
+		TArray<SAudioProcessingSetup>	getOutputSetups() const;
+		OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
 
 	// Properties
 	private:

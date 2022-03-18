@@ -356,6 +356,7 @@ class CString : public CHashable {
 	public:
 		static			CString		mEmpty;
 
+		static			CString		mColon;
 		static			CString		mComma;
 		static			CString		mDoubleQuotes;
 		static			CString		mPeriod;

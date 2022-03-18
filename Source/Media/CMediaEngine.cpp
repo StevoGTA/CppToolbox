@@ -61,7 +61,8 @@ static	SAudioProcessingFormats		sComposeAudioProcessingFormats(
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CAudioSource> CMediaEngine::getAudioSource(const CMediaTrackInfos::AudioTrackInfo& audioTrackInfo) const
+I<CAudioSource> CMediaEngine::getAudioSource(const CMediaTrackInfos::AudioTrackInfo& audioTrackInfo,
+		const CString& identifier) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -71,12 +72,12 @@ I<CAudioSource> CMediaEngine::getAudioSource(const CMediaTrackInfos::AudioTrackI
 											CCodecRegistry::mShared.getAudioCodecInfo(audioStorageFormat.getCodecID())
 													.instantiate());
 
-	return I<CAudioSource>(new CAudioDecoder(audioStorageFormat, audioCodec, *audioTrackInfo.mDecodeInfo));
+	return I<CAudioSource>(new CAudioDecoder(audioStorageFormat, audioCodec, *audioTrackInfo.mDecodeInfo, identifier));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 I<CVideoSource> CMediaEngine::getVideoSource(const CMediaTrackInfos::VideoTrackInfo& videoTrackInfo,
-		CVideoFrame::Compatibility compatibility) const
+		CVideoFrame::Compatibility compatibility, const CString& identifier) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -88,7 +89,7 @@ I<CVideoSource> CMediaEngine::getVideoSource(const CMediaTrackInfos::VideoTrackI
 
 	return I<CVideoSource>(
 			new CVideoDecoder(videoStorageFormat, videoCodec, *videoTrackInfo.mDecodeInfo,
-					SVideoProcessingFormat(videoStorageFormat.getFramerate(), compatibility)));
+					SVideoProcessingFormat(videoStorageFormat.getFramerate(), compatibility), identifier));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

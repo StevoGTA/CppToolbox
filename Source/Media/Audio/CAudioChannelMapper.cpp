@@ -123,7 +123,7 @@ CAudioChannelMapper::~CAudioChannelMapper()
 	Delete(mInternals);
 }
 
-// MARK: Instance methods
+// MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProcessor,
@@ -162,10 +162,19 @@ OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioChannelMapper::getOutputSetups() const
+TNArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup::mUnspecified);
+	// Get upstream setup descriptions
+	TNArray<CString>	setupDescriptions = CBasicAudioProcessor::getSetupDescription(indent);
+
+	// Add our setup description
+	setupDescriptions +=
+			indent + CString(OSSTR("Channel Mapper from ")) +
+					eChannelMapGetDescription(mInternals->mInputAudioProcessingFormat->getChannelMap()) +
+					CString(OSSTR(" to ")) + eChannelMapGetDescription(mOutputAudioProcessingFormat->getChannelMap());
+
+	return setupDescriptions;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -204,6 +213,15 @@ SAudioSourceStatus CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
 
 	return audioSourceStatus;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CAudioChannelMapper::getOutputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup::mUnspecified);
+}
+
+// MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CAudioChannelMapper::canPerform(EAudioChannelMap fromAudioChannelMap, EAudioChannelMap toAudioChannelMap)

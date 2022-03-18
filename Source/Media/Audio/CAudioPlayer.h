@@ -59,15 +59,17 @@ class CAudioPlayer : public CAudioDestination {
 														~CAudioPlayer();
 
 														// CAudioProcessor methods
-						TArray<SAudioProcessingSetup>	getInputSetups() const;
 						OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 																const SAudioProcessingFormat& audioProcessingFormat);
+						TNArray<CString>				getSetupDescription(const CString& indent);
 
 						void							setSourceWindow(UniversalTimeInterval startTimeInterval,
 																const OV<UniversalTimeInterval>& durationTimeInterval);
 						void							seek(UniversalTimeInterval timeInterval);
 
 						void							reset();
+
+						TArray<SAudioProcessingSetup>	getInputSetups() const;
 
 														// CAudioDestination methods
 						void							setupComplete();

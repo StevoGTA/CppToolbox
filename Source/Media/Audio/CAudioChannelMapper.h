@@ -17,13 +17,13 @@ class CAudioChannelMapper : public CBasicAudioProcessor {
 												CAudioChannelMapper();
 												~CAudioChannelMapper();
 
-												// Instance methods
+												// CAudioProcessor methods
 				OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
+				TNArray<CString>				getSetupDescription(const CString& indent);
 
 				SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
 
-												// Subclass methods
 				TArray<SAudioProcessingSetup>	getOutputSetups() const;
 
 												// Class methods
