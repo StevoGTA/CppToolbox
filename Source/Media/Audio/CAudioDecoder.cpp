@@ -151,7 +151,7 @@ SAudioSourceStatus CAudioDecoder::performInto(CAudioFrames& audioFrames)
 	SAudioSourceStatus	audioSourceStatus(mInternals->mCurrentTimeInterval);
 
 	// Decode
-	OI<SError>	error = mInternals->mAudioCodec->decode(audioFrames);
+	OI<SError>	error = mInternals->mAudioCodec->decodeInto(audioFrames);
 	ReturnValueIfError(error, SAudioSourceStatus(*error));
 
 	// Limit to max frames

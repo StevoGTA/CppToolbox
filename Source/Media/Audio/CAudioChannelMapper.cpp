@@ -171,8 +171,12 @@ TNArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
 	// Add our setup description
 	setupDescriptions +=
 			indent + CString(OSSTR("Channel Mapper from ")) +
-					eChannelMapGetDescription(mInternals->mInputAudioProcessingFormat->getChannelMap()) +
-					CString(OSSTR(" to ")) + eChannelMapGetDescription(mOutputAudioProcessingFormat->getChannelMap());
+					CString::mDoubleQuotes +
+							eChannelMapGetDescription(mInternals->mInputAudioProcessingFormat->getChannelMap()) +
+							CString::mDoubleQuotes +
+					CString(OSSTR(" to ")) +
+					CString::mDoubleQuotes + eChannelMapGetDescription(mOutputAudioProcessingFormat->getChannelMap()) +
+							CString::mDoubleQuotes;
 
 	return setupDescriptions;
 }

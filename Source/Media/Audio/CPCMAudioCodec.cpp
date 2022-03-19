@@ -56,14 +56,6 @@ OI<SError> CPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioPro
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::Requirements CPCMAudioCodec::getRequirements() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Return requirements
-	return CAudioFrames::Requirements(1, 1);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CPCMAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -75,20 +67,14 @@ void CPCMAudioCodec::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CPCMAudioCodec::decode(CAudioFrames& audioFrames)
+OI<SError> CPCMAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	DecodeInfo&	decodeInfo = (DecodeInfo&) (**mInternals->mDecodeInfo);
 
 	// Read
-	CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
-	UInt8*				buffer = (UInt8*) writeInfo.getSegments()[0];
-	TVResult<UInt32>	frameCount = decodeInfo.read(buffer, writeInfo.getFrameCount());
-	ReturnErrorIfResultError(frameCount);
-
-	// Complete write
-	audioFrames.completeWrite(frameCount.getValue());
+	decodeInfo.readInto(audioFrames);
 
 	// Check if need to convert unsigned 8 bit samples to signed 8 bit samples
 	if ((mInternals->mAudioProcessingFormat->getBits() == 8) && decodeInfo.get8BitIsUnsigned())
@@ -106,8 +92,8 @@ OI<SAudioStorageFormat> CPCMAudioCodec::composeAudioStorageFormat(bool isFloat, 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Return audio storage format
-	return OI<SAudioStorageFormat>(new SAudioStorageFormat(isFloat ? mFloatID : mIntegerID, bits, sampleRate,
-			channelMap));
+	return OI<SAudioStorageFormat>(
+			new SAudioStorageFormat(isFloat ? mFloatID : mIntegerID, bits, sampleRate, channelMap));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -125,8 +111,9 @@ I<CCodec::DecodeInfo> CPCMAudioCodec::composeDecodeInfo(const SAudioStorageForma
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Return decode info
-	return I<CCodec::DecodeInfo>(new DecodeInfo(seekableDataSource, startByteOffset, byteCount,
-			*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels(), _8BitIsUnsigned));
+	return I<CCodec::DecodeInfo>(
+			new DecodeInfo(seekableDataSource, startByteOffset, byteCount,
+					*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels(), _8BitIsUnsigned));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -153,9 +140,9 @@ static	I<CAudioCodec>					sInstantiate(OSType id)
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
-REGISTER_CODEC(PCMFloat,
-		CAudioCodec::Info(CPCMAudioCodec::mFloatID, CString("None (Floating Point)"),
+REGISTER_CODEC(pcmFloat,
+		CAudioCodec::Info(CPCMAudioCodec::mFloatID, CString(OSSTR("None (Floating Point)")),
 				sGetAudioProcessingSetups, sInstantiate));
-REGISTER_CODEC(PCMInteger,
-		CAudioCodec::Info(CPCMAudioCodec::mIntegerID, CString("None (Integer)"),
+REGISTER_CODEC(pcmInteger,
+		CAudioCodec::Info(CPCMAudioCodec::mIntegerID, CString(OSSTR("None (Integer)")),
 				sGetAudioProcessingSetups, sInstantiate));

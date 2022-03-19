@@ -148,7 +148,7 @@ void CDVIIntelIMAADPCMAudioCodec::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDVIIntelIMAADPCMAudioCodec::decode(CAudioFrames& audioFrames)
+OI<SError> CDVIIntelIMAADPCMAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -300,6 +300,6 @@ static	I<CAudioCodec>					sInstantiate(OSType id)
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
-REGISTER_CODEC(DVIIntelIMA,
-		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString("DVI/Intel IMA ADPCM 4:1"),
+REGISTER_CODEC(dviIntelIMA,
+		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString(OSSTR("DVI/Intel IMA ADPCM 4:1")),
 				sGetAudioProcessingSetups, sInstantiate));

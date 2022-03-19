@@ -185,7 +185,7 @@ void CAACAudioCodec::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAACAudioCodec::decode(CAudioFrames& audioFrames)
+OI<SError> CAACAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight

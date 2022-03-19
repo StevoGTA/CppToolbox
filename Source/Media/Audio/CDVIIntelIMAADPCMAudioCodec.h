@@ -23,7 +23,7 @@ class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
 													const I<CCodec::DecodeInfo>& decodeInfo);
 				CAudioFrames::Requirements	getRequirements() const;
 				void						seek(UniversalTimeInterval timeInterval);
-				OI<SError>					decode(CAudioFrames& audioFrames);
+				OI<SError>					decodeInto(CAudioFrames& audioFrames);
 
 											// Class methods
 		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate, EAudioChannelMap channelMap);

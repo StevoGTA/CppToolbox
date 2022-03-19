@@ -61,6 +61,7 @@ template <typename T> struct TVResult {
 
 #define ReturnIfResultError(result)				{ if (result.hasError()) return; }
 #define ReturnErrorIfResultError(result)		{ if (result.hasError()) return OI<SError>(result.getError()); }
+#define ReturnResultIfResultError(result)		{ if (result.hasError()) return result; }
 #define	ReturnValueIfResultError(result, value)	{ if (result.hasError()) return value; }
 
 #define LogIfResultError(result, when)																\

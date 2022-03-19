@@ -41,9 +41,10 @@ class CPCMAudioCodec : public CDecodeOnlyAudioCodec {
 											// CAudioCodec methods - Decoding
 				OI<SError>					setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
 													const I<CCodec::DecodeInfo>& decodeInfo);
-				CAudioFrames::Requirements	getRequirements() const;
+				CAudioFrames::Requirements	getRequirements() const
+												{ return CAudioFrames::Requirements(1, 1); }
 				void						seek(UniversalTimeInterval timeInterval);
-				OI<SError>					decode(CAudioFrames& audioFrames);
+				OI<SError>					decodeInto(CAudioFrames& audioFrames);
 
 											// Class methods
 		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,

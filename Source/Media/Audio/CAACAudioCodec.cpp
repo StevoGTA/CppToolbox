@@ -216,10 +216,10 @@ CAACAudioCodec::DecodeInfo::DecodeInfo(const I<CMediaPacketSource>& mediaPacketS
 // MARK: Properties
 
 OSType	CAACAudioCodec::mAACLCID = MAKE_OSTYPE('m', 'p', '4', 'a');
-CString	CAACAudioCodec::mAACLCName("AAC Low Complexity");
+CString	CAACAudioCodec::mAACLCName(OSSTR("AAC Low Complexity"));
 
 OSType	CAACAudioCodec::mAACLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
-CString	CAACAudioCodec::mAACLDName("AAC Low Delay");
+CString	CAACAudioCodec::mAACLDName(OSSTR("AAC Low Delay"));
 
 // MARK: Instance methods
 
@@ -333,9 +333,9 @@ static	I<CAudioCodec>					sInstantiate(OSType id)
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
-REGISTER_CODEC(AACLC,
+REGISTER_CODEC(aacLC,
 		CAudioCodec::Info(CAACAudioCodec::mAACLCID, CAACAudioCodec::mAACLCName, sGetAudioProcessingSetups,
 				sInstantiate));
-REGISTER_CODEC(AACLD,
+REGISTER_CODEC(aacLD,
 		CAudioCodec::Info(CAACAudioCodec::mAACLDID, CAACAudioCodec::mAACLDName, sGetAudioProcessingSetups,
 				sInstantiate));

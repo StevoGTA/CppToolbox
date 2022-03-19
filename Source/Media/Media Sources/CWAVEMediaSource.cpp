@@ -2,179 +2,26 @@
 //	CWAVEMediaSource.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CChunkReader.h"
-#include "CDVIIntelIMAADPCMAudioCodec.h"
-#include "CMediaSourceRegistry.h"
-#include "CPCMAudioCodec.h"
 #include "CWAVEMediaSource.h"
 
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
+#include "CDVIIntelIMAADPCMAudioCodec.h"
+#include "CPCMAudioCodec.h"
 
-static	CString	sErrorDomain(OSSTR("CWAVEMediaSource"));
-static	SError	sInvalidWAVEFileError(sErrorDomain, 1, CString(OSSTR("Invalid WAVE file")));
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: Errors
+
+CString	CWAVEMediaSource::mErrorDomain(OSSTR("CWAVEMediaSource"));
+static	SError	sInvalidWAVEFileError(CWAVEMediaSource::mErrorDomain, 1, CString(OSSTR("Invalid WAVE file")));
 static	SInt32	kUnsupportedCodecCode = 2;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
+// MARK: - CWAVEMediaSource
 
-static	SMediaSource::QueryTracksResult	sQueryWAVETracksProc(const I<CSeekableDataSource>& seekableDataSource,
-												SMediaSource::Options options);
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Register media source
-
-CString	sWAVEExtensions[] = { CString(OSSTR("wav")) };
-
-REGISTER_MEDIA_SOURCE(wave,
-		SMediaSource(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")),
-				TSArray<CString>(sWAVEExtensions, 1), sQueryWAVETracksProc));
+// MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDefaultWAVEMediaSourceImportTrackerInternals
-
-class CDefaultWAVEMediaSourceImportTrackerInternals {
-	public:
-		CDefaultWAVEMediaSourceImportTrackerInternals() {}
-
-		OV<UInt16>				mFormatTag;
-		OI<SAudioStorageFormat>	mAudioStorageFormat;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDefaultWAVEMediaSourceImportTracker
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CDefaultWAVEMediaSourceImportTracker::CDefaultWAVEMediaSourceImportTracker() : CWAVEMediaSourceImportTracker()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CDefaultWAVEMediaSourceImportTrackerInternals();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CDefaultWAVEMediaSourceImportTracker::~CDefaultWAVEMediaSourceImportTracker()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
-
-// MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-bool CDefaultWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Store
-	mInternals->mFormatTag = OV<UInt16>(waveFormat.getFormatTag());
-
-	// Check format tag
-	switch (waveFormat.getFormatTag()) {
-		case 0x0000:	// Illegal/Unknown
-			return false;
-
-		case 0x0001:	// Integer PCM
-			if (!sampleSize.hasValue() || (*sampleSize > 32))
-				// Nope
-				return false;
-
-			mInternals->mAudioStorageFormat =
-					CPCMAudioCodec::composeAudioStorageFormat(false, (UInt8) *sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
-
-			return true;
-
-		case 0x0003:	// IEEE Float
-			if (!sampleSize.hasValue() || (*sampleSize > 32))
-				// Nope
-				return false;
-
-			mInternals->mAudioStorageFormat =
-					CPCMAudioCodec::composeAudioStorageFormat(true, (UInt8) *sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
-
-			return true;
-
-		case 0x0011:	// DVI/Intel ADPCM
-			mInternals->mAudioStorageFormat =
-					CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat((Float32) waveFormat.getSamplesPerSecond(),
-							AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels()));
-			return true;
-
-		default:
-			// Not supported
-			return false;
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-bool CDefaultWAVEMediaSourceImportTracker::canFinalize() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mAudioStorageFormat.hasInstance();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CAudioTrack CDefaultWAVEMediaSourceImportTracker::composeAudioTrack(UInt16 sampleSize, UInt64 dataChunkByteCount)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check format tag
-	UInt64	frameCount;
-	switch (*mInternals->mFormatTag) {
-		case 0x0001:	// Integer PCM
-		case 0x0003:	// IEEE Float
-			frameCount = CPCMAudioCodec::composeFrameCount(*mInternals->mAudioStorageFormat, dataChunkByteCount);
-			break;
-
-		case 0x0011:	// DVI/Intel ADPCM
-			frameCount =
-					CDVIIntelIMAADPCMAudioCodec::composeFrameCount(*mInternals->mAudioStorageFormat,
-							dataChunkByteCount);
-			break;
-
-		default:		// Not possible
-			AssertFail();
-			frameCount = 0;
-			break;
-	}
-
-	return CAudioTrack(CAudioTrack::composeInfo(*mInternals->mAudioStorageFormat, frameCount, dataChunkByteCount),
-			*mInternals->mAudioStorageFormat);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-I<CCodec::DecodeInfo> CDefaultWAVEMediaSourceImportTracker::composeDecodeInfo(
-		const I<CSeekableDataSource>& seekableDataSource, UInt64 dataChunkStartByteOffset, UInt64 dataChunkByteCount)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check format tag
-	switch (*mInternals->mFormatTag) {
-		case 0x0001:	// Integer PCM
-		case 0x0003:	// IEEE Float
-			return CPCMAudioCodec::composeDecodeInfo(*mInternals->mAudioStorageFormat, seekableDataSource,
-					dataChunkStartByteOffset, dataChunkByteCount, true);
-
-		case 0x0011:	// DVI/Intel ADPCM
-			return CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(*mInternals->mAudioStorageFormat, seekableDataSource,
-					dataChunkStartByteOffset, dataChunkByteCount);
-
-		default:		// Not possible
-			AssertFail();
-			return I<CCodec::DecodeInfo>(nil);
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-
-//----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult sQueryWAVETracksProc(const I<CSeekableDataSource>& seekableDataSource,
+SMediaSource::QueryTracksResult CWAVEMediaSource::queryTracks(const I<CSeekableDataSource>& seekableDataSource,
 		SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -228,7 +75,7 @@ SMediaSource::QueryTracksResult sQueryWAVETracksProc(const I<CSeekableDataSource
 					if (!waveMediaSourceImportTracker->note(waveFormat, sampleSize))
 						// Not supported
 						return SMediaSource::QueryTracksResult(
-								SError(sErrorDomain, kUnsupportedCodecCode,
+								SError(mErrorDomain, kUnsupportedCodecCode,
 										CString(OSSTR("Unsupported codec: ")) +
 												CString(waveFormat.getFormatTag(), 4, true, true)));
 				} break;
@@ -276,4 +123,141 @@ SMediaSource::QueryTracksResult sQueryWAVETracksProc(const I<CSeekableDataSource
 		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack));
 
 	return SMediaSource::QueryTracksResult(mediaTrackInfos);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CWAVEMediaSourceImportTrackerInternals
+
+class CWAVEMediaSourceImportTrackerInternals {
+	public:
+		CWAVEMediaSourceImportTrackerInternals() {}
+
+		OV<UInt16>				mFormatTag;
+		OI<SAudioStorageFormat>	mAudioStorageFormat;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CWAVEMediaSourceImportTracker
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CWAVEMediaSourceImportTracker::CWAVEMediaSourceImportTracker()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new CWAVEMediaSourceImportTrackerInternals();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CWAVEMediaSourceImportTracker::~CWAVEMediaSourceImportTracker()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	Delete(mInternals);
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mFormatTag = OV<UInt16>(waveFormat.getFormatTag());
+
+	// Check format tag
+	switch (waveFormat.getFormatTag()) {
+		case 0x0000:	// Illegal/Unknown
+			return false;
+
+		case 0x0001:	// Integer PCM
+			if (!sampleSize.hasValue() || (*sampleSize > 32))
+				// Nope
+				return false;
+
+			mInternals->mAudioStorageFormat =
+					CPCMAudioCodec::composeAudioStorageFormat(false, (UInt8) *sampleSize,
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
+
+			return true;
+
+		case 0x0003:	// IEEE Float
+			if (!sampleSize.hasValue() || (*sampleSize > 32))
+				// Nope
+				return false;
+
+			mInternals->mAudioStorageFormat =
+					CPCMAudioCodec::composeAudioStorageFormat(true, (UInt8) *sampleSize,
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
+
+			return true;
+
+		case 0x0011:	// DVI/Intel ADPCM
+			mInternals->mAudioStorageFormat =
+					CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat((Float32) waveFormat.getSamplesPerSecond(),
+							AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels()));
+			return true;
+
+		default:
+			// Not supported
+			return false;
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CWAVEMediaSourceImportTracker::canFinalize() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mAudioStorageFormat.hasInstance();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioTrack CWAVEMediaSourceImportTracker::composeAudioTrack(UInt16 sampleSize, UInt64 dataChunkByteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check format tag
+	UInt64	frameCount;
+	switch (*mInternals->mFormatTag) {
+		case 0x0001:	// Integer PCM
+		case 0x0003:	// IEEE Float
+			frameCount = CPCMAudioCodec::composeFrameCount(*mInternals->mAudioStorageFormat, dataChunkByteCount);
+			break;
+
+		case 0x0011:	// DVI/Intel ADPCM
+			frameCount =
+					CDVIIntelIMAADPCMAudioCodec::composeFrameCount(*mInternals->mAudioStorageFormat,
+							dataChunkByteCount);
+			break;
+
+		default:		// Not possible
+			AssertFail();
+			frameCount = 0;
+			break;
+	}
+
+	return CAudioTrack(CAudioTrack::composeInfo(*mInternals->mAudioStorageFormat, frameCount, dataChunkByteCount),
+			*mInternals->mAudioStorageFormat);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CCodec::DecodeInfo> CWAVEMediaSourceImportTracker::composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
+		UInt64 dataChunkStartByteOffset, UInt64 dataChunkByteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check format tag
+	switch (*mInternals->mFormatTag) {
+		case 0x0001:	// Integer PCM
+		case 0x0003:	// IEEE Float
+			return CPCMAudioCodec::composeDecodeInfo(*mInternals->mAudioStorageFormat, seekableDataSource,
+					dataChunkStartByteOffset, dataChunkByteCount, true);
+
+		case 0x0011:	// DVI/Intel ADPCM
+			return CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(*mInternals->mAudioStorageFormat, seekableDataSource,
+					dataChunkStartByteOffset, dataChunkByteCount);
+
+		default:		// Not possible
+			AssertFail();
+			return I<CCodec::DecodeInfo>(nil);
+	}
 }

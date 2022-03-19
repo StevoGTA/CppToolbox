@@ -6,53 +6,47 @@
 
 #include "CAudioTrack.h"
 #include "CChunkReader.h"
+#include "CMediaSourceRegistry.h"
 #include "SWAVEInfo.h"
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CWAVEMediaSource
+class CWAVEMediaSource {
+	// Methods
+	public:
+												// Class methods
+		static	SMediaSource::QueryTracksResult	queryTracks(const I<CSeekableDataSource>& seekableDataSource,
+														SMediaSource::Options options);
+
+	// Properties
+	public:
+		static	CString	mErrorDomain;
+};
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CWAVEMediaSourceImportTracker
 
+class CWAVEMediaSourceImportTrackerInternals;
 class CWAVEMediaSourceImportTracker {
 	// Methods
 	public:
 													// Lifecycle methods
-													CWAVEMediaSourceImportTracker() {}
-		virtual										~CWAVEMediaSourceImportTracker() {}
+													CWAVEMediaSourceImportTracker();
+		virtual										~CWAVEMediaSourceImportTracker();
 
 													// Instance methods
-		virtual	bool								note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize)
-															= 0;
+		virtual	bool								note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize);
 		virtual	void								note(const CChunkReader::ChunkInfo& chunkInfo) {}
 
-		virtual	bool								canFinalize() const = 0;
-		virtual	CAudioTrack							composeAudioTrack(UInt16 sampleSize, UInt64 dataChunkByteCount) = 0;
+		virtual	bool								canFinalize() const;
+		virtual	CAudioTrack							composeAudioTrack(UInt16 sampleSize, UInt64 dataChunkByteCount);
 		virtual	I<CCodec::DecodeInfo>				composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
-															UInt64 dataChunkStartByteOffset,
-															UInt64 dataChunkByteCount) = 0;
+															UInt64 dataChunkStartByteOffset, UInt64 dataChunkByteCount);
 
 													// Class methods
 		static	I<CWAVEMediaSourceImportTracker>	instantiate();
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDefaultWAVEMediaSourceImportTracker
-
-class CDefaultWAVEMediaSourceImportTrackerInternals;
-class CDefaultWAVEMediaSourceImportTracker : public CWAVEMediaSourceImportTracker {
-	// Methods
-	public:
-								// Lifecycle methods
-								CDefaultWAVEMediaSourceImportTracker();
-								~CDefaultWAVEMediaSourceImportTracker();
-
-								// Instance methods
-		bool					note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize);
-
-		bool					canFinalize() const;
-		CAudioTrack				composeAudioTrack(UInt16 sampleSize, UInt64 dataChunkByteCount);
-		I<CCodec::DecodeInfo>	composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
-										UInt64 dataChunkStartByteOffset, UInt64 dataChunkByteCount);
 
 	// Properties
 	private:
-		CDefaultWAVEMediaSourceImportTrackerInternals*	mInternals;
+		CWAVEMediaSourceImportTrackerInternals*	mInternals;
 };

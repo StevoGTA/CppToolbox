@@ -35,7 +35,7 @@ class CAudioCodec : public CCodec {
 
 					void				seek(UInt64 frameIndex)
 											{ mCurrentPosition = mStartByteOffset + frameIndex * mFrameByteCount; }
-					TVResult<UInt32>	read(void* buffer, UInt32 frameCount)
+					TVResult<UInt32>	readInto(void* buffer, UInt32 frameCount)
 											{
 												// Check situation
 												frameCount =
@@ -59,6 +59,23 @@ class CAudioCodec : public CCodec {
 													// End of data
 													return TVResult<UInt32>(SError::mEndOfData);
 											}
+					TVResult<UInt32>	readInto(CAudioFrames& audioFrames)
+											{
+												// Read
+												CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
+												UInt8*				buffer = (UInt8*) writeInfo.getSegments()[0];
+												TVResult<UInt32>	frameCount =
+																			readInto(buffer, writeInfo.getFrameCount());
+												ReturnResultIfResultError(frameCount);
+
+												// Complete write
+												audioFrames.completeWrite(frameCount.getValue());
+
+												return frameCount;
+											}
+					TVResult<UInt32>	readInto(CData& data)
+											{ return readInto(data.getMutableBytePtr(),
+													(UInt32) data.getByteCount() / mFrameByteCount); }
 
 			// Properties
 			private:
@@ -151,7 +168,7 @@ class CAudioCodec : public CCodec {
 														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
 		virtual	CAudioFrames::Requirements		getRequirements() const = 0;
 		virtual	void							seek(UniversalTimeInterval timeInterval) = 0;
-		virtual	OI<SError>						decode(CAudioFrames& audioFrames) = 0;
+		virtual	OI<SError>						decodeInto(CAudioFrames& audioFrames) = 0;
 
 		virtual	TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const = 0;
 		virtual	void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat) = 0;
@@ -190,7 +207,7 @@ class CEncodeOnlyAudioCodec : public CAudioCodec {
 						{ AssertFailUnimplemented(); return OI<SError>(SError::mUnimplemented); }
 		void		seek(UniversalTimeInterval timeInterval)
 						{ AssertFailUnimplemented(); }
-		OI<SError>	decode(CAudioFrames& audioFrames)
+		OI<SError>	decodeInto(CAudioFrames& audioFrames)
 						{ AssertFailUnimplemented(); return OI<SError>(SError::mUnimplemented); }
 
 	protected:
