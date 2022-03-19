@@ -74,7 +74,8 @@ OI<SError> CPCMAudioCodec::decodeInto(CAudioFrames& audioFrames)
 	DecodeInfo&	decodeInfo = (DecodeInfo&) (**mInternals->mDecodeInfo);
 
 	// Read
-	decodeInfo.readInto(audioFrames);
+	TVResult<UInt32>	frameCount = decodeInfo.readInto(audioFrames);
+	ReturnErrorIfResultError(frameCount);
 
 	// Check if need to convert unsigned 8 bit samples to signed 8 bit samples
 	if ((mInternals->mAudioProcessingFormat->getBits() == 8) && decodeInfo.get8BitIsUnsigned())
