@@ -5,7 +5,34 @@
 #include "CChunkReader.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CChunkReader
+// MARK: CChunkReaderInternals
+
+class CChunkReaderInternals {
+	public:
+		CChunkReaderInternals()
+			{}
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CChunkReader
+
+// MARK:  Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CChunkReader::CChunkReader(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian) :
+		CByteReader(seekableDataSource, isBigEndian)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new CChunkReaderInternals();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CChunkReader::~CChunkReader()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	Delete(mInternals);
+}
 
 // MARK: Instance methods
 
@@ -36,10 +63,10 @@ TIResult<CData> CChunkReader::readPayload(const ChunkInfo& chunkInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to begining of chunk
-	OI<SError>	error = setPos(kPositionFromBeginning, chunkInfo.mThisChunkPos);
+	OI<SError>	error = setPos(kPositionFromBeginning, chunkInfo.getThisChunkPos());
 	ReturnValueIfError(error, TIResult<CData>(*error));
 
-	return CByteReader::readData(chunkInfo.mByteCount);
+	return CByteReader::readData(chunkInfo.getByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -47,9 +74,9 @@ OI<SError> CChunkReader::seekToNext(const ChunkInfo& chunkInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check situation
-	if (chunkInfo.mNextChunkPos < getByteCount())
+	if (chunkInfo.getNextChunkPos() < getByteCount())
 		// Set pos
-		return setPos(kPositionFromBeginning, chunkInfo.mNextChunkPos);
+		return setPos(kPositionFromBeginning, chunkInfo.getNextChunkPos());
 	else
 		// End of data
 		return OI<SError>(SError::mEndOfData);

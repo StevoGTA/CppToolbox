@@ -35,18 +35,25 @@ class CWAVEMediaSourceImportTracker {
 		virtual										~CWAVEMediaSourceImportTracker();
 
 													// Instance methods
-		virtual	bool								note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize);
-		virtual	void								note(const CChunkReader::ChunkInfo& chunkInfo) {}
+		virtual	OI<CChunkReader>					setup(const I<CSeekableDataSource>& seekableDataSource);
+
+		virtual	bool								note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
+															const CData& chunkPayload);
+		virtual	void								note(const CChunkReader::ChunkInfo& chunkInfo,
+															CChunkReader& chunkReader);
 
 		virtual	bool								canFinalize() const;
-		virtual	CAudioTrack							composeAudioTrack(UInt16 sampleSize, UInt64 dataChunkByteCount);
-		virtual	I<CCodec::DecodeInfo>				composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
-															UInt64 dataChunkStartByteOffset, UInt64 dataChunkByteCount);
+		virtual	CAudioTrack							composeAudioTrack(UInt16 sampleSize);
+		virtual	I<CCodec::DecodeInfo>				composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource);
 
 													// Class methods
 		static	I<CWAVEMediaSourceImportTracker>	instantiate();
 
 	// Properties
+	protected:
+		OV<UInt64>								mDataChunkByteCount;
+		OV<UInt64>								mDataChunkStartByteOffset;
+
 	private:
 		CWAVEMediaSourceImportTrackerInternals*	mInternals;
 };

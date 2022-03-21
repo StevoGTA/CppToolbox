@@ -9,7 +9,9 @@
 
 const	OSType	kWAVEFORMChunkID = MAKE_OSTYPE('R', 'I', 'F', 'F');
 const	OSType	kWAVEFORMType = MAKE_OSTYPE('W', 'A', 'V', 'E');
+
 const	OSType	kWAVEFormatChunkID = MAKE_OSTYPE('f', 'm', 't', ' ');
+
 const	OSType	kWAVEDataChunkID = MAKE_OSTYPE('d', 'a', 't', 'a');
 
 //----------------------------------------------------------------------------------------------------------------------

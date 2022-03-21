@@ -38,12 +38,12 @@ class CAudioCodec : public CCodec {
 					TVResult<UInt32>	readInto(void* buffer, UInt32 frameCount)
 											{
 												// Check situation
-												frameCount =
-														std::min<UInt32>(frameCount,
-																(UInt32)
-																		(mStartByteOffset + mByteCount -
-																						mCurrentPosition) /
-																				mFrameByteCount);
+												UInt64	framesRemaining =
+																(mStartByteOffset + mByteCount - mCurrentPosition) /
+																		mFrameByteCount;
+												if (framesRemaining < frameCount)
+													// Limit frame count to what is left
+													frameCount = (UInt32) framesRemaining;
 												if (frameCount > 0) {
 													// Read
 													OI<SError>	error =
