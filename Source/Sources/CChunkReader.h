@@ -19,13 +19,17 @@ class CChunkReader : public CByteReader {
 							ChunkInfo(OSType id, UInt64 byteCount, UInt64 thisChunkPos, UInt64 nextChunkPos) :
 								mID(id), mByteCount(byteCount), mThisChunkPos(thisChunkPos), mNextChunkPos(nextChunkPos)
 								{}
+							ChunkInfo(OSType id, const ChunkInfo& other) :
+								mID(id), mByteCount(other.mByteCount), mThisChunkPos(other.mThisChunkPos),
+										mNextChunkPos(other.mNextChunkPos)
+								{}
 							ChunkInfo(const CUUID& uuid, UInt64 byteCount, UInt64 thisChunkPos, UInt64 nextChunkPos) :
 								mUUID(uuid), mByteCount(byteCount), mThisChunkPos(thisChunkPos),
 										mNextChunkPos(nextChunkPos)
 								{}
 							ChunkInfo(const ChunkInfo& other) :
-								mID(other.mID), mByteCount(other.mByteCount), mThisChunkPos(other.mThisChunkPos),
-										mNextChunkPos(other.mNextChunkPos)
+								mID(other.mID), mUUID(other.mUUID), mByteCount(other.mByteCount),
+										mThisChunkPos(other.mThisChunkPos), mNextChunkPos(other.mNextChunkPos)
 								{}
 
 							// Instance methods
@@ -45,10 +49,18 @@ class CChunkReader : public CByteReader {
 				UInt64		mNextChunkPos;
 		};
 
+	// Format
+	public:
+		enum Format {
+			kFormat32BitBigEndian,
+			kFormat32BitLittleEndian,
+			kFormat64BitLittleEndian,
+		};
+
 	// Methods
 	public:
 							// Lifecycle methods
-							CChunkReader(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian);
+							CChunkReader(const I<CSeekableDataSource>& seekableDataSource, Format format);
 							~CChunkReader();
 
 							// Instance methods

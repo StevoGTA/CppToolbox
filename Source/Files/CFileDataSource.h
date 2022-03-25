@@ -22,6 +22,14 @@ class CFileDataSource : public CSeekableDataSource {
 		UInt64					getByteCount() const;
 
 		OI<SError>				readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
+		TIResult<CData>			readData(UInt64 position, CData::ByteCount byteCount)
+									{
+										// Read data
+										CData		data(byteCount);
+										OI<SError>	error = readData(position, data.getMutableBytePtr(), byteCount);
+
+										return !error.hasInstance() ? TIResult<CData>(data) : TIResult<CData>(*error);
+									}
 
 								// Class methods
 		static	TIResult<CData>	readData(const CFile& file)
@@ -39,15 +47,16 @@ class CMappedFileDataSourceInternals;
 class CMappedFileDataSource : public CSeekableDataSource {
 	// Methods
 	public:
-					// Lifecycle methods
-					CMappedFileDataSource(const CFile& file, UInt64 byteOffset, UInt64 byteCount);
-					CMappedFileDataSource(const CFile& file);
-					~CMappedFileDataSource();
+						// Lifecycle methods
+						CMappedFileDataSource(const CFile& file, UInt64 byteOffset, UInt64 byteCount);
+						CMappedFileDataSource(const CFile& file);
+						~CMappedFileDataSource();
 
-					// CSeekableDataSource methods
-		UInt64		getByteCount() const;
+						// CSeekableDataSource methods
+		UInt64			getByteCount() const;
 
-		OI<SError>	readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
+		OI<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
+		TIResult<CData>	readData(UInt64 position, CData::ByteCount byteCount);
 
 	// Properties
 	private:

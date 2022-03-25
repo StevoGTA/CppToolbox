@@ -20,9 +20,9 @@ const	OSType	kWAVEDataChunkID = MAKE_OSTYPE('d', 'a', 't', 'a');
 #pragma pack(push,1)
 struct SWAVEFORMChunk32 {
 			// Lifecycle methods
-			SWAVEFORMChunk32(OSType id = 0, UInt32 byteCount = 0, OSType formType = 0) :
-				mID(EndianU32_NtoB(id)), mByteCount(EndianU32_NtoL(byteCount)), mFormType(EndianU32_NtoB(formType))
-				{}
+//			SWAVEFORMChunk32(OSType id = 0, UInt32 byteCount = 0, OSType formType = 0) :
+//				mID(EndianU32_NtoB(id)), mByteCount(EndianU32_NtoL(byteCount)), mFormType(EndianU32_NtoB(formType))
+//				{}
 
 			// Instance methods
 	OSType	getID() const { return EndianU32_BtoN(mID); }

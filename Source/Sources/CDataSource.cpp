@@ -88,3 +88,16 @@ OI<SError> CDataDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 
 	return OI<SError>();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<CData> CDataDataSource::readData(UInt64 position, CData::ByteCount byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Preflight
+	AssertFailIf((position + byteCount) > mInternals->mData.getByteCount());
+	if ((position + byteCount) > mInternals->mData.getByteCount())
+		// Attempting to ready beyond end of data
+		return TIResult<CData>(SError::mEndOfData);
+
+	return TIResult<CData>(CData((UInt8*) mInternals->mData.getBytePtr() + position, byteCount, false));
+}

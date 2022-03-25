@@ -255,3 +255,21 @@ OI<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData:
 
 	return OI<SError>();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<CData> CMappedFileDataSource::readData(UInt64 position, CData::ByteCount byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for error
+	if (mInternals->mError.hasInstance())
+		// Error
+		return TIResult<CData>(*mInternals->mError);
+
+	// Preflight
+	AssertFailIf((position + byteCount) > mInternals->mByteCount);
+	if ((position + byteCount) > mInternals->mByteCount)
+		// Attempting to ready beyond end of data
+		return TIResult<CData>(SError::mEndOfData);
+
+	return TIResult<CData>(CData((UInt8*) mInternals->mBytePtr + position, byteCount, false));
+}

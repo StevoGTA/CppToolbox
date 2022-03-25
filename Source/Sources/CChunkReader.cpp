@@ -9,8 +9,9 @@
 
 class CChunkReaderInternals {
 	public:
-		CChunkReaderInternals()
-			{}
+		CChunkReaderInternals(CChunkReader::Format format) : mFormat(format) {}
+
+		CChunkReader::Format	mFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -20,11 +21,11 @@ class CChunkReaderInternals {
 // MARK:  Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CChunkReader::CChunkReader(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian) :
-		CByteReader(seekableDataSource, isBigEndian)
+CChunkReader::CChunkReader(const I<CSeekableDataSource>& seekableDataSource, Format format) :
+		CByteReader(seekableDataSource, format == kFormat32BitBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CChunkReaderInternals();
+	mInternals = new CChunkReaderInternals(format);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -40,22 +41,43 @@ CChunkReader::~CChunkReader()
 TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Read chunk header
-	OSType	id;
-	UInt64	size;
-	if (true) {
-		// Read 32-bit header
-		TVResult<OSType>	_id = readOSType();
-		ReturnValueIfResultError(_id, TIResult<CChunkReader::ChunkInfo>(_id.getError()));
+	// Check format
+	switch (mInternals->mFormat) {
+		case kFormat32BitBigEndian:
+		case kFormat32BitLittleEndian: {
+			// Read 32-bit header
+			TVResult<OSType>	id = readOSType();
+			ReturnValueIfResultError(id, TIResult<CChunkReader::ChunkInfo>(id.getError()));
 
-		TVResult<UInt32>	_size = readUInt32();
-		ReturnValueIfResultError(_size, TIResult<CChunkReader::ChunkInfo>(_size.getError()));
+			TVResult<UInt32>	_size = readUInt32();
+			ReturnValueIfResultError(_size, TIResult<CChunkReader::ChunkInfo>(_size.getError()));
+			UInt32				size = _size.getValue();
 
-		id = _id.getValue();
-		size = _size.getValue();
+			UInt64				nextChunkPos = getPos() + size;
+			if ((nextChunkPos % 1) != 0)
+				// Align
+				nextChunkPos += 1;
+
+			return TIResult<ChunkInfo>(ChunkInfo(id.getValue(), size, getPos(), nextChunkPos));
+			}
+
+		case kFormat64BitLittleEndian: {
+			// Read 64-bit header
+			TIResult<CUUID>	uuid = readUUID();
+			ReturnValueIfResultError(uuid, TIResult<CChunkReader::ChunkInfo>(uuid.getError()));
+
+			TVResult<UInt64>	_size = readUInt64();
+			ReturnValueIfResultError(_size, TIResult<CChunkReader::ChunkInfo>(_size.getError()));
+			UInt64				size = _size.getValue() - sizeof(CUUID::Bytes) - sizeof(UInt64);
+
+			UInt64				nextChunkPos = getPos() + size;
+			if ((nextChunkPos % 8) != 0)
+				// Align
+				nextChunkPos += 7 - (nextChunkPos % 8);
+
+			return TIResult<ChunkInfo>(ChunkInfo(uuid.getValue(), size, getPos(), nextChunkPos));
+			}
 	}
-
-	return TIResult<ChunkInfo>(ChunkInfo(id, size, getPos(), getPos() + size + (size % 1)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -37,25 +37,16 @@ class CUUIDInternals : public TReferenceCountable<CUUIDInternals> {
 				// Check length
 				if (string.getLength() == 36) {
 					// Hex string
-					mUUIDBytes.mBytes[0] = string.getSubString(0, 2).getUInt8(16);
-					mUUIDBytes.mBytes[1] = string.getSubString(2, 2).getUInt8(16);
-					mUUIDBytes.mBytes[2] = string.getSubString(4, 2).getUInt8(16);
-					mUUIDBytes.mBytes[3] = string.getSubString(6, 2).getUInt8(16);
-					mUUIDBytes.mBytes[4] = string.getSubString(9, 2).getUInt8(16);
-					mUUIDBytes.mBytes[5] = string.getSubString(11, 2).getUInt8(16);
-					mUUIDBytes.mBytes[6] = string.getSubString(14, 2).getUInt8(16);
-					mUUIDBytes.mBytes[7] = string.getSubString(16, 2).getUInt8(16);
-					mUUIDBytes.mBytes[8] = string.getSubString(19, 2).getUInt8(16);
-					mUUIDBytes.mBytes[9] = string.getSubString(21, 2).getUInt8(16);
-					mUUIDBytes.mBytes[10] = string.getSubString(24, 2).getUInt8(16);
-					mUUIDBytes.mBytes[11] = string.getSubString(26, 2).getUInt8(16);
-					mUUIDBytes.mBytes[12] = string.getSubString(28, 2).getUInt8(16);
-					mUUIDBytes.mBytes[13] = string.getSubString(30, 2).getUInt8(16);
-					mUUIDBytes.mBytes[14] = string.getSubString(32, 2).getUInt8(16);
-					mUUIDBytes.mBytes[15] = string.getSubString(34, 2).getUInt8(16);
+					//	Note only version 1 strings are supported currently
+					*((UInt32*) &mUUIDBytes.mBytes[0]) = EndianU32_NtoB(string.getSubString(0, 8).getUInt32(16));
+					*((UInt16*) &mUUIDBytes.mBytes[4]) = EndianU16_NtoB(string.getSubString(9, 4).getUInt16(16));
+					*((UInt16*) &mUUIDBytes.mBytes[6]) = EndianU16_NtoB(string.getSubString(14, 4).getUInt16(16));
+					*((UInt16*) &mUUIDBytes.mBytes[8]) = EndianU16_NtoB(string.getSubString(19, 4).getUInt16(16));
+					*((UInt32*) &mUUIDBytes.mBytes[10]) = EndianU32_NtoB(string.getSubString(24, 8).getUInt32(16));
+					*((UInt16*) &mUUIDBytes.mBytes[14]) = EndianU16_NtoB(string.getSubString(32, 4).getUInt16(16));
 				} else
 					// Unknown
-					mUUIDBytes = eCreateUUIDBytes();
+					::memcpy(&mUUIDBytes, "-Unknown Format-", 16);
 			}
 
 		CUUID::Bytes	mUUIDBytes;

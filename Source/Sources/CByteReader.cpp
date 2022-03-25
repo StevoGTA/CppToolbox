@@ -266,3 +266,15 @@ TVResult<OSType> CByteReader::readOSType() const
 
 	return TVResult<OSType>(EndianU32_BtoN(value));
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+TIResult<CUUID> CByteReader::readUUID() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read
+	CUUID::Bytes	uuidBytes;
+	OI<SError>		error = readData(&uuidBytes, sizeof(CUUID::Bytes));
+	ReturnValueIfError(error, TIResult<CUUID>(*error));
+
+	return TIResult<CUUID>(CUUID(uuidBytes));
+}

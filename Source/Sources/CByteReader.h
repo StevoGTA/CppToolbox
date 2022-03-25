@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "CData.h"
 #include "CDataSource.h"
+#include "CUUID.h"
 #include "TResult.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -48,6 +48,7 @@ class CByteReader {
 		TVResult<UInt32>	readUInt32() const;
 		TVResult<UInt64>	readUInt64() const;
 		TVResult<OSType>	readOSType() const;
+		TIResult<CUUID>		readUUID() const;
 
 	// Properties
 	private:

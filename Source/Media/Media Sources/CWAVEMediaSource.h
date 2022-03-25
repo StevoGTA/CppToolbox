@@ -37,17 +37,21 @@ class CWAVEMediaSourceImportTracker {
 													// Instance methods
 		virtual	OI<CChunkReader>					setup(const I<CSeekableDataSource>& seekableDataSource);
 
+		virtual	OI<SError>							note(const CChunkReader::ChunkInfo& chunkInfo,
+															CChunkReader& chunkReader);
 		virtual	bool								note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
 															const CData& chunkPayload);
-		virtual	void								note(const CChunkReader::ChunkInfo& chunkInfo,
-															CChunkReader& chunkReader);
 
 		virtual	bool								canFinalize() const;
-		virtual	CAudioTrack							composeAudioTrack(UInt16 sampleSize);
+		virtual	CAudioTrack							composeAudioTrack();
 		virtual	I<CCodec::DecodeInfo>				composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource);
 
 													// Class methods
 		static	I<CWAVEMediaSourceImportTracker>	instantiate();
+
+	protected:
+													// Subclass methods
+		virtual	CAudioTrack							composeAudioTrack(UInt16 sampleSize);
 
 	// Properties
 	protected:
