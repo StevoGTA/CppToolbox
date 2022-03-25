@@ -77,6 +77,11 @@ TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 
 			return TIResult<ChunkInfo>(ChunkInfo(uuid.getValue(), size, getPos(), nextChunkPos));
 			}
+
+#if defined(TARGET_OS_WINDOWS)
+		default:
+			return TIResult<CChunkReader::ChunkInfo>(SError::mUnimplemented);
+#endif
 	}
 }
 

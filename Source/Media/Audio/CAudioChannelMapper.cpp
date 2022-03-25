@@ -10,13 +10,13 @@
 class CAudioChannelMapperInternals {
 	public:
 		typedef	void	(*PerformProc)(const CAudioFrames& sourceAudioFrames, CAudioFrames& destinationAudioFrames,
-								UInt8 sourceBytesPerFrame, UInt8 destinationBytesPerFrame);
+								UInt32 sourceBytesPerFrame, UInt32 destinationBytesPerFrame);
 
 						CAudioChannelMapperInternals() : mPerformProc(nil) {}
 
 		static	void	performCopyCommon(const CAudioFrames& sourceAudioFrames,
-								CAudioFrames& destinationAudioFrames, UInt8 sourceBytesPerFrame,
-								UInt8 destinationBytesPerFrame)
+								CAudioFrames& destinationAudioFrames, UInt32 sourceBytesPerFrame,
+								UInt32 destinationBytesPerFrame)
 							{
 								// Setup
 										CAudioFrames::Info		readInfo = sourceAudioFrames.getReadInfo();
@@ -45,13 +45,13 @@ class CAudioChannelMapperInternals {
 								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
 							}
 		static	void	performSilenceExtra(const CAudioFrames& sourceAudioFrames,
-								CAudioFrames& destinationAudioFrames, UInt8 sourceBytesPerFrame,
-								UInt8 destinationBytesPerFrame)
+								CAudioFrames& destinationAudioFrames, UInt32 sourceBytesPerFrame,
+								UInt32 destinationBytesPerFrame)
 							{
 							}
 
 		static	void	performMonoToStereo(const CAudioFrames& sourceAudioFrames, CAudioFrames& destinationAudioFrames,
-								UInt8 sourceBytesPerFrame, UInt8 destinationBytesPerFrame)
+								UInt32 sourceBytesPerFrame, UInt32 destinationBytesPerFrame)
 							{
 								// Setup
 										CAudioFrames::Info		readInfo = sourceAudioFrames.getReadInfo();
