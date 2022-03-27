@@ -55,8 +55,8 @@ class CWAVEMediaSourceImportTracker {
 
 	// Properties
 	protected:
-		OV<UInt64>								mDataChunkByteCount;
 		OV<UInt64>								mDataChunkStartByteOffset;
+		OV<UInt64>								mDataChunkByteCount;
 
 	private:
 		CWAVEMediaSourceImportTrackerInternals*	mInternals;

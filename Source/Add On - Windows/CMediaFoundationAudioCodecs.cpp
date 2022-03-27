@@ -93,7 +93,8 @@ OI<SError> CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioPro
 	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
 
 	// Create audio decoder
-#pragma pack(push,1)
+#pragma pack(push, 1)
+
 	struct UserData {
 		WORD	mPayloadType;
 		WORD	mAudioProfileLevelIndication;
@@ -102,7 +103,9 @@ OI<SError> CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioPro
 		DWORD	mReserved2;
 		WORD	mAudioSpecificConfig;
 	} userData = {0};
+
 #pragma pack(pop)
+
 	userData.mAudioSpecificConfig = EndianU16_NtoB(aacDecodeInfo.getStartCodes());
 
 	TCIResult<IMFTransform>	audioDecoderTransform =

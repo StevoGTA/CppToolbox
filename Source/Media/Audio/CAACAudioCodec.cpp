@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
 
 #if defined(TARGET_OS_WINDOWS)
 	#pragma warning(disable:4200)
@@ -221,7 +221,17 @@ CString	CAACAudioCodec::mAACLCName(OSSTR("AAC Low Complexity"));
 OSType	CAACAudioCodec::mAACLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
 CString	CAACAudioCodec::mAACLDName(OSSTR("AAC Low Delay"));
 
-// MARK: Instance methods
+// MARK: CAudioCodec methods - Decoding
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CAACAudioCodec::getDecodeAudioProcessingSetups(
+		const SAudioStorageFormat& audioStorageFormat, const I<CCodec::DecodeInfo>& decodeInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<SAudioProcessingSetup>(
+			SAudioProcessingSetup(32, audioStorageFormat.getSampleRate(), audioStorageFormat.getChannelMap(),
+					SAudioProcessingSetup::kSampleTypeFloat));
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 CAudioFrames::Requirements CAACAudioCodec::getRequirements() const
@@ -318,24 +328,14 @@ I<CCodec::DecodeInfo> CAACAudioCodec::composeDecodeInfo(const I<CSeekableDataSou
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local procs
 
-static	TArray<SAudioProcessingSetup>	sGetAudioProcessingSetups(OSType id,
-												const SAudioStorageFormat& audioStorageFormat)
-											{
-												return TNArray<SAudioProcessingSetup>(
-														SAudioProcessingSetup(32, audioStorageFormat.getSampleRate(),
-																audioStorageFormat.getChannelMap(),
-																SAudioProcessingSetup::kSampleTypeFloat));
-											}
-static	I<CAudioCodec>					sInstantiate(OSType id)
-											{ return I<CAudioCodec>(new CAACAudioCodec(id)); }
+static	I<CAudioCodec>	sInstantiate(OSType id)
+								{ return I<CAudioCodec>(new CAACAudioCodec(id)); }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
 REGISTER_CODEC(aacLC,
-		CAudioCodec::Info(CAACAudioCodec::mAACLCID, CAACAudioCodec::mAACLCName, sGetAudioProcessingSetups,
-				sInstantiate));
+		CAudioCodec::Info(CAACAudioCodec::mAACLCID, CAACAudioCodec::mAACLCName, sInstantiate));
 REGISTER_CODEC(aacLD,
-		CAudioCodec::Info(CAACAudioCodec::mAACLDID, CAACAudioCodec::mAACLDName, sGetAudioProcessingSetups,
-				sInstantiate));
+		CAudioCodec::Info(CAACAudioCodec::mAACLDID, CAACAudioCodec::mAACLDName, sInstantiate));

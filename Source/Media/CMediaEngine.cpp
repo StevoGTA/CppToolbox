@@ -43,7 +43,7 @@ struct SAudioProcessingFormats {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local proc declarations
+// MARK: - Local proc declarations
 
 static	OI<SAudioProcessingFormat>	sDetermineCommonAudioProcessingFormat(
 											const TArray<SAudioProcessingSetup>& sourceAudioProcessingSetups,

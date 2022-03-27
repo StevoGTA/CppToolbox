@@ -129,53 +129,6 @@ OI<CChunkReader> CWAVEMediaSourceImportTracker::setup(const I<CSeekableDataSourc
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
-		const CData& chunkPayload)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Store
-	mInternals->mFormatTag = OV<UInt16>(waveFormat.getFormatTag());
-
-	// Check format tag
-	switch (waveFormat.getFormatTag()) {
-		case 0x0000:	// Illegal/Unknown
-			return false;
-
-		case 0x0001:	// Integer PCM
-			if (!sampleSize.hasValue() || (*sampleSize > 32))
-				// Nope
-				return false;
-
-			mInternals->mAudioStorageFormat =
-					CPCMAudioCodec::composeAudioStorageFormat(false, (UInt8) *sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
-
-			return true;
-
-		case 0x0003:	// IEEE Float
-			if (!sampleSize.hasValue() || (*sampleSize > 32))
-				// Nope
-				return false;
-
-			mInternals->mAudioStorageFormat =
-					CPCMAudioCodec::composeAudioStorageFormat(true, (UInt8) *sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
-
-			return true;
-
-		case 0x0011:	// DVI/Intel ADPCM
-			mInternals->mAudioStorageFormat =
-					CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat((Float32) waveFormat.getSamplesPerSecond(),
-							AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels()));
-			return true;
-
-		default:
-			// Not supported
-			return false;
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 OI<SError> CWAVEMediaSourceImportTracker::note(const CChunkReader::ChunkInfo& chunkInfo, CChunkReader& chunkReader)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -226,11 +179,58 @@ OI<SError> CWAVEMediaSourceImportTracker::note(const CChunkReader::ChunkInfo& ch
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+bool CWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
+		const CData& chunkPayload)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mFormatTag = OV<UInt16>(waveFormat.getFormatTag());
+
+	// Check format tag
+	switch (waveFormat.getFormatTag()) {
+		case 0x0000:	// Illegal/Unknown
+			return false;
+
+		case 0x0001:	// Integer PCM
+			if (!sampleSize.hasValue() || (*sampleSize > 32))
+				// Nope
+				return false;
+
+			mInternals->mAudioStorageFormat =
+					CPCMAudioCodec::composeAudioStorageFormat(false, (UInt8) *sampleSize,
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
+
+			return true;
+
+		case 0x0003:	// IEEE Float
+			if (!sampleSize.hasValue() || (*sampleSize > 32))
+				// Nope
+				return false;
+
+			mInternals->mAudioStorageFormat =
+					CPCMAudioCodec::composeAudioStorageFormat(true, (UInt8) *sampleSize,
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
+
+			return true;
+
+		case 0x0011:	// DVI/Intel ADPCM
+			mInternals->mAudioStorageFormat =
+					CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat((Float32) waveFormat.getSamplesPerSecond(),
+							AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels()));
+			return true;
+
+		default:
+			// Not supported
+			return false;
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 bool CWAVEMediaSourceImportTracker::canFinalize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mDataChunkStartByteOffset.hasValue() && mDataChunkByteCount.hasValue() &&
-			mInternals->mAudioStorageFormat.hasInstance();
+	return mInternals->mAudioStorageFormat.hasInstance() && mDataChunkStartByteOffset.hasValue() &&
+			mDataChunkByteCount.hasValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -249,7 +249,10 @@ I<CCodec::DecodeInfo> CWAVEMediaSourceImportTracker::composeDecodeInfo(const I<C
 		case 0x0001:	// Integer PCM
 		case 0x0003:	// IEEE Float
 			return CPCMAudioCodec::composeDecodeInfo(*mInternals->mAudioStorageFormat, seekableDataSource,
-					*mDataChunkStartByteOffset, *mDataChunkByteCount, true);
+					*mDataChunkStartByteOffset, *mDataChunkByteCount,
+					(*mInternals->mAudioStorageFormat->getBits() > 8) ?
+							CPCMAudioCodec::DecodeInfo::kFormatLittleEndian :
+							CPCMAudioCodec::DecodeInfo::kFormat8BitUnsigned);
 
 		case 0x0011:	// DVI/Intel ADPCM
 			return CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(*mInternals->mAudioStorageFormat, seekableDataSource,

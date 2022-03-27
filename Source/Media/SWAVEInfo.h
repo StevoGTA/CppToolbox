@@ -17,7 +17,8 @@ const	OSType	kWAVEDataChunkID = MAKE_OSTYPE('d', 'a', 't', 'a');
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SWAVEFORMChunk32
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
+
 struct SWAVEFORMChunk32 {
 			// Lifecycle methods
 //			SWAVEFORMChunk32(OSType id = 0, UInt32 byteCount = 0, OSType formType = 0) :
@@ -35,13 +36,15 @@ struct SWAVEFORMChunk32 {
 		UInt32	mByteCount;
 		OSType	mFormType;
 };
+
 #pragma pack(pop)
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SWAVEFORMAT
 
 // From http://msdn.microsoft.com/en-us/library/windows/desktop/dd757712(v=vs.85).aspx
-#pragma pack(push,1)
+#pragma pack(push, 1)
+
 struct SWAVEFORMAT {
 			// Lifecycle methods
 			SWAVEFORMAT(UInt16 formatTag, UInt16 channels, UInt32 samplesPerSecond, UInt32 averageBytesPerSecond,
@@ -67,13 +70,15 @@ struct SWAVEFORMAT {
 		UInt32	mAverageBytesPerSecond;
 		UInt16	mBlockAlign;
 };
+
 #pragma pack(pop)
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SWAVEFORMATEX
 
 // From http://msdn.microsoft.com/en-us/library/windows/desktop/dd757712(v=vs.85).aspx
-#pragma pack(push,1)
+#pragma pack(push, 1)
+
 struct SWAVEFORMATEX {
 			// Methods
 	UInt16	getFormatTag() const { return EndianU16_LtoN(mFormatTag); }
@@ -94,4 +99,5 @@ struct SWAVEFORMATEX {
 		UInt16	mBitsPerSample;
 		UInt16	mAdditionalInfoByteCount;
 };
+
 #pragma pack(pop)

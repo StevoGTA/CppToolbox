@@ -24,7 +24,7 @@
 
 */
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
 
 #if defined(TARGET_OS_WINDOWS)
 	#pragma warning(disable:4200)

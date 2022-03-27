@@ -30,19 +30,19 @@ static	const	SInt16	sIndexAdjustTable[] = {
 	 2,	 4,	 6,	 8	// -4 - -7, increase the step size
 };
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
+
 struct SStateInfo {
 	SInt16	mIndex;
 	SInt32	mPreviousValue;
 };
-#pragma pack(pop)
 
-#pragma pack(push,1)
 struct SDVIIntelPacketHeader {
 	SInt16	mInitialSample;
 	UInt8	mInitialIndex;
 	UInt8	mZero;
 };
+
 #pragma pack(pop)
 
 const	UInt32	kDVIIntelFramesPerPacket = 505;
@@ -113,6 +113,15 @@ CDVIIntelIMAADPCMAudioCodec::~CDVIIntelIMAADPCMAudioCodec()
 }
 
 // MARK: CAudioCodec methods - Decoding
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CDVIIntelIMAADPCMAudioCodec::getDecodeAudioProcessingSetups(
+		const SAudioStorageFormat& audioStorageFormat, const I<CCodec::DecodeInfo>& decodeInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<SAudioProcessingSetup>(
+				SAudioProcessingSetup(16, audioStorageFormat.getSampleRate(), audioStorageFormat.getChannelMap()));
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
@@ -285,21 +294,12 @@ I<CCodec::DecodeInfo> CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(const SAudi
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local procs
 
-static	TArray<SAudioProcessingSetup>	sGetAudioProcessingSetups(OSType id,
-												const SAudioStorageFormat& audioStorageFormat)
-											{
-												return TNArray<SAudioProcessingSetup>(
-															SAudioProcessingSetup(16,
-																	audioStorageFormat.getSampleRate(),
-																	audioStorageFormat.getChannelMap()));
-											}
-static	I<CAudioCodec>					sInstantiate(OSType id)
-											{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
+static	I<CAudioCodec>	sInstantiate(OSType id)
+								{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
 REGISTER_CODEC(dviIntelIMA,
-		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString(OSSTR("DVI/Intel IMA ADPCM 4:1")),
-				sGetAudioProcessingSetups, sInstantiate));
+		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString(OSSTR("DVI/Intel IMA ADPCM 4:1")), sInstantiate));

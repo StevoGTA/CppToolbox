@@ -178,8 +178,8 @@ void CAudioDecoder::reset()
 TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CCodecRegistry::mShared.getAudioCodecInfo(mInternals->mAudioStorageFormat.getCodecID())
-			.getAudioProcessingSetups(mInternals->mAudioStorageFormat);
+	return mInternals->mAudioCodec->getDecodeAudioProcessingSetups(mInternals->mAudioStorageFormat,
+			mInternals->mCodecDecodeInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
