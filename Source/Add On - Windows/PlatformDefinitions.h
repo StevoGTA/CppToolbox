@@ -30,6 +30,9 @@
 #define _Nullable
 #define __nonnull(x)
 
+#define Endian16_Swap(value)	_byteswap_ushort(value);
+#define Endian32_Swap(value)	_byteswap_ulong(value);
+
 #define EndianS16_BtoN(value)	((SInt16) _byteswap_ushort(value))
 #define EndianS16_NtoB(value)	((SInt16) _byteswap_ushort(value))
 #define EndianU16_BtoN(value)	((UInt16) _byteswap_ushort(value))

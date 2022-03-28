@@ -122,7 +122,7 @@ class CMediaFoundationServices {
 		static	TCIResult<IMFSample>	createSample(const CData& data);
 		static	OI<SError>				resizeSample(IMFSample* sample, UInt32 size);
 		static	SAudioSourceStatus		load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
-												UInt32 bytesPerFrame, bool perform8BitToggle);
+												const SAudioProcessingFormat& audioProcessingFormat);
 		static	OI<SError>				load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource);
 		static	TIResult<CImage>		imageForVideoSample(const CVideoFrame& videoFrame);
 

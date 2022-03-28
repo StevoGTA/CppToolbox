@@ -47,11 +47,9 @@ class CMediaFoundationResamplerInternals {
 									SAudioSourceStatus	audioSourceStatus =
 																CMediaFoundationServices::load(mediaBuffer,
 																		internals.mAudioConverter,
-																		internals.mInputAudioProcessingFormat->
-																				getBytesPerFrame(),
-																		internals.mInputAudioProcessingFormat->getBits()
-																				== 8);
+																		*internals.mInputAudioProcessingFormat);
 									if (!audioSourceStatus.isSuccess())
+										// Error
 										return OI<SError>(audioSourceStatus.getError());
 
 									// Store

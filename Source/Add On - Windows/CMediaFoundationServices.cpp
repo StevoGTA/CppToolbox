@@ -389,9 +389,12 @@ OI<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size
 
 //----------------------------------------------------------------------------------------------------------------------
 SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
-		UInt32 bytesPerFrame, bool perform8BitToggle)
+		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	UInt32	bytesPerFrame = audioProcessingFormat.getBytesPerFrame();
+
 	// Lock media buffer
 	BYTE*	mediaBufferBytePtr;
 	DWORD	mediaBufferByteCount;
@@ -411,10 +414,13 @@ SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, C
 		return audioSourceStatus;
 	}
 
-	// Check if need to perform 8 bit toggle
-	if (perform8BitToggle)
+	// Check if need to transmogrify audio frames
+	if (audioProcessingFormat.getBits() == 8)
 		// Toggle 8 bit
 		audioFrames.toggle8BitSignedUnsigned();
+	else if (audioProcessingFormat.getIsBigEndian())
+		// Toggle endianness
+		audioFrames.toggleEndianness(audioProcessingFormat.getBits());
 
 	// Update current length
 	result = mediaBuffer->SetCurrentLength(audioFrames.getCurrentFrameCount() * bytesPerFrame);
