@@ -171,6 +171,48 @@ void CAudioFrames::limit(UInt32 maxFrames)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::toggleEndianness(UInt8 bits)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CData::ByteCount	byteCount = getByteCount();
+
+	// Check bits
+	switch (bits) {
+		case 16: {
+			// 16 bits
+			UInt16*	buffer = (UInt16*) getMutableBytePtr();
+			for (UInt32 i = 0; i < byteCount / sizeof(UInt16); i++, buffer++)
+				// Swap
+				*buffer = Endian16_Swap(*buffer);
+			} break;
+
+		case 24: {
+			// 24 bits
+			UInt8*	buffer = (UInt8*) getMutableBytePtr();
+			for (UInt32 i = 0; i < byteCount / 3; i++, buffer += 3) {
+				// Swap 24 bits
+				UInt8	temp = *buffer;
+				*buffer = *(buffer + 2);
+				*(buffer + 2) = temp;
+			}
+			} break;
+
+		case 32: {
+			// 32 bits
+			UInt32*	buffer = (UInt32*) getMutableBytePtr();
+			for (UInt32 i = 0; i < byteCount / sizeof(UInt32); i++, buffer++)
+				// Swap
+				*buffer = Endian32_Swap(*buffer);
+			} break;
+
+		default:
+			// Huh?
+			AssertFailUnimplemented()
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CAudioFrames::toggle8BitSignedUnsigned()
 //----------------------------------------------------------------------------------------------------------------------
 {

@@ -102,6 +102,7 @@ class CAudioFrames : private CData {
 
 		void	limit(UInt32 maxFrames);
 
+		void	toggleEndianness(UInt8 bits);
 		void	toggle8BitSignedUnsigned();
 
 		void	reset();
