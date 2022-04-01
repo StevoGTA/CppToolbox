@@ -195,30 +195,7 @@ OI<SVideoStorageFormat> CH264VideoCodec::composeVideoStorageFormat(const S2DSize
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CCodec::DecodeInfo> CH264VideoCodec::composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
-		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
-		const TNumericArray<UInt32>& keyframeIndexes)
-//----------------------------------------------------------------------------------------------------------------------
-{
-				I<CMediaPacketSource>	mediaPacketSource(
-												new CSeekableVaryingMediaPacketSource(seekableDataSource,
-														packetAndLocations));
-	return I<CCodec::DecodeInfo>(
-			new CH264VideoCodec::DecodeInfo(
-					I<CMediaPacketSource>(
-							new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations)),
-					configurationData, timeScale, keyframeIndexes));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local procs
-
-static	I<CVideoCodec>	sInstantiate(OSType id)
-							{ return I<CVideoCodec>(new CH264VideoCodec()); }
-
-//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare video codecs
 
-REGISTER_CODEC(h264, CVideoCodec::Info(CH264VideoCodec::mID, CH264VideoCodec::mName, sInstantiate));
+REGISTER_CODEC(h264, CVideoCodec::Info(CH264VideoCodec::mID, CH264VideoCodec::mName));

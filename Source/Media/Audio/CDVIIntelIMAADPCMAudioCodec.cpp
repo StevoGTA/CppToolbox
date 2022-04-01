@@ -4,6 +4,7 @@
 
 #include "CDVIIntelIMAADPCMAudioCodec.h"
 
+#include "CCodecRegistry.h"
 #include "SMediaPacket.h"
 #include "TBuffer.h"
 
@@ -51,12 +52,27 @@ const	UInt32	kDVIIntelBytesPerPacketPerChannel =
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDVIIntelIMAADPCMAudioCodecInternals
+// MARK: - CDVIIntelIMAADPCMDecodeAudioCodec
 
-class CDVIIntelIMAADPCMAudioCodecInternals {
+class CDVIIntelIMAADPCMDecodeAudioCodec : public CDecodeAudioCodec {
 	public:
-				CDVIIntelIMAADPCMAudioCodecInternals() : mDecodeFramesToIgnore(0) {}
+										// Lifecycle methods
+										CDVIIntelIMAADPCMDecodeAudioCodec(
+												const I<CMediaPacketSource>& mediaPacketSource) :
+											mMediaPacketSourceDecodeInfo(mediaPacketSource),
+													mDecodeFramesToIgnore(0)
+											{}
 
+										// CAudioCodec methods - Decoding
+		TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat);
+		OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat);
+		CAudioFrames::Requirements		getRequirements() const
+											{ return CAudioFrames::Requirements(kDVIIntelFramesPerPacket,
+													kDVIIntelFramesPerPacket * 2); }
+		void							seek(UniversalTimeInterval timeInterval);
+		OI<SError>						decodeInto(CAudioFrames& audioFrames);
+
+										// Private methods
 		SInt16	sampleForDeltaCode(UInt8 deltaCode, SStateInfo& stateInfo)
 					{
 						// Setup
@@ -83,40 +99,18 @@ class CDVIIntelIMAADPCMAudioCodecInternals {
 						return (SInt16) stateInfo.mPreviousValue;
 					}
 
-		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
-		OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
-		UInt32						mDecodeFramesToIgnore;
+	private:
+		CCodec::MediaPacketSourceDecodeInfo	mMediaPacketSourceDecodeInfo;
+
+		OI<SAudioProcessingFormat>			mAudioProcessingFormat;
+		UInt32								mDecodeFramesToIgnore;
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDVIIntelIMAADPCMAudioCodec
-
-// MARK: Properties
-
-OSType	CDVIIntelIMAADPCMAudioCodec::mID = 0x6D730011;
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CDVIIntelIMAADPCMAudioCodec::CDVIIntelIMAADPCMAudioCodec() : CDecodeOnlyAudioCodec()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CDVIIntelIMAADPCMAudioCodecInternals();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CDVIIntelIMAADPCMAudioCodec::~CDVIIntelIMAADPCMAudioCodec()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
 
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CDVIIntelIMAADPCMAudioCodec::getDecodeAudioProcessingSetups(
-		const SAudioStorageFormat& audioStorageFormat, const I<CCodec::DecodeInfo>& decodeInfo)
+TArray<SAudioProcessingSetup> CDVIIntelIMAADPCMDecodeAudioCodec::getAudioProcessingSetups(
+		const SAudioStorageFormat& audioStorageFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return TNArray<SAudioProcessingSetup>(
@@ -124,47 +118,34 @@ TArray<SAudioProcessingSetup> CDVIIntelIMAADPCMAudioCodec::getDecodeAudioProcess
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDVIIntelIMAADPCMAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo)
+OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
+	mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 
 	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::Requirements CDVIIntelIMAADPCMAudioCodec::getRequirements() const
+void CDVIIntelIMAADPCMDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CAudioFrames::Requirements(kDVIIntelFramesPerPacket, kDVIIntelFramesPerPacket * 2);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CDVIIntelIMAADPCMAudioCodec::seek(UniversalTimeInterval timeInterval)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
-													(CCodec::MediaPacketSourceDecodeInfo&) (**mInternals->mDecodeInfo);
-
 	// Seek
-	mInternals->mDecodeFramesToIgnore =
-			mediaPacketSourceDecodeInfo.getMediaPacketSource()->seekToDuration(
-					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
+	mDecodeFramesToIgnore =
+			mMediaPacketSourceDecodeInfo.getMediaPacketSource()->seekToDuration(
+					(UInt32) (timeInterval * mAudioProcessingFormat->getSampleRate()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDVIIntelIMAADPCMAudioCodec::decodeInto(CAudioFrames& audioFrames)
+OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
 	AssertFailIf(audioFrames.getAvailableFrameCount() < (kDVIIntelFramesPerPacket * 2));
 
 	// Setup
-	UInt16	channels = mInternals->mAudioProcessingFormat->getChannels();
+	UInt16	channels = mAudioProcessingFormat->getChannels();
 
 	// Decode packets
 	CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
@@ -172,14 +153,9 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decodeInto(CAudioFrames& audioFrames)
 	SInt16*				bufferPtr = (SInt16*) writeInfo.getSegments()[0];
 	UInt32				decodedFrameCount = 0;
 	while (remainingFrames >= kDVIIntelFramesPerPacket) {
-		// Setup
-		CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
-														(CCodec::MediaPacketSourceDecodeInfo&)
-																(**mInternals->mDecodeInfo);
-
 		// Get next packet
 		TIResult<CMediaPacketSource::DataInfo>	dataInfo =
-														mediaPacketSourceDecodeInfo.getMediaPacketSource()->readNext();
+														mMediaPacketSourceDecodeInfo.getMediaPacketSource()->readNext();
 		if (dataInfo.hasError()) {
 			// Check situation
 			if (decodedFrameCount > 0)
@@ -221,27 +197,27 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decodeInto(CAudioFrames& audioFrames)
 
 				// Decode 4 bytes / 8 samples
 				UInt8	deltaCodes = *(packetBufferPtr++);
-				*decodedSamplePtr = mInternals->sampleForDeltaCode(deltaCodes & 0x0f, stateInfo);
+				*decodedSamplePtr = sampleForDeltaCode(deltaCodes & 0x0f, stateInfo);
 				decodedSamplePtr += channels;
-				*decodedSamplePtr = mInternals->sampleForDeltaCode(deltaCodes >> 4, stateInfo);
-				decodedSamplePtr += channels;
-
-				deltaCodes = *(packetBufferPtr++);
-				*decodedSamplePtr = mInternals->sampleForDeltaCode(deltaCodes & 0x0f, stateInfo);
-				decodedSamplePtr += channels;
-				*decodedSamplePtr = mInternals->sampleForDeltaCode(deltaCodes >> 4, stateInfo);
+				*decodedSamplePtr = sampleForDeltaCode(deltaCodes >> 4, stateInfo);
 				decodedSamplePtr += channels;
 
 				deltaCodes = *(packetBufferPtr++);
-				*decodedSamplePtr = mInternals->sampleForDeltaCode(deltaCodes & 0x0f, stateInfo);
+				*decodedSamplePtr = sampleForDeltaCode(deltaCodes & 0x0f, stateInfo);
 				decodedSamplePtr += channels;
-				*decodedSamplePtr = mInternals->sampleForDeltaCode(deltaCodes >> 4, stateInfo);
+				*decodedSamplePtr = sampleForDeltaCode(deltaCodes >> 4, stateInfo);
 				decodedSamplePtr += channels;
 
 				deltaCodes = *(packetBufferPtr++);
-				*decodedSamplePtr = mInternals->sampleForDeltaCode(deltaCodes & 0x0f, stateInfo);
+				*decodedSamplePtr = sampleForDeltaCode(deltaCodes & 0x0f, stateInfo);
 				decodedSamplePtr += channels;
-				*decodedSamplePtr = mInternals->sampleForDeltaCode(deltaCodes >> 4, stateInfo);
+				*decodedSamplePtr = sampleForDeltaCode(deltaCodes >> 4, stateInfo);
+				decodedSamplePtr += channels;
+
+				deltaCodes = *(packetBufferPtr++);
+				*decodedSamplePtr = sampleForDeltaCode(deltaCodes & 0x0f, stateInfo);
+				decodedSamplePtr += channels;
+				*decodedSamplePtr = sampleForDeltaCode(deltaCodes >> 4, stateInfo);
 			}
 		}
 
@@ -250,11 +226,19 @@ OI<SError> CDVIIntelIMAADPCMAudioCodec::decodeInto(CAudioFrames& audioFrames)
 		decodedFrameCount += kDVIIntelFramesPerPacket;
 		remainingFrames -= kDVIIntelFramesPerPacket;
 		audioFrames.completeWrite(kDVIIntelFramesPerPacket);
-		mInternals->mDecodeFramesToIgnore = 0;
+		mDecodeFramesToIgnore = 0;
 	}
 
 	return OI<SError>();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDVIIntelIMAADPCMAudioCodec
+
+// MARK: Properties
+
+OSType	CDVIIntelIMAADPCMAudioCodec::mID = 0x6D730011;
 
 // MARK: Class methods
 
@@ -277,29 +261,22 @@ UInt64 CDVIIntelIMAADPCMAudioCodec::composeFrameCount(const SAudioStorageFormat&
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CCodec::DecodeInfo> CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(const SAudioStorageFormat& audioStorageFormat,
+I<CDecodeAudioCodec> CDVIIntelIMAADPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
 		const I<CSeekableDataSource>& seekableDataSource, UInt64 startByteOffset, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	UInt32	bytesPerPacket = kDVIIntelBytesPerPacketPerChannel * audioStorageFormat.getChannels();
 
-	return I<DecodeInfo>(
-			new MediaPacketSourceDecodeInfo(
+	return I<CDecodeAudioCodec>(
+			new CDVIIntelIMAADPCMDecodeAudioCodec(
 					new CSeekableUniformMediaPacketSource(seekableDataSource, startByteOffset, byteCount,
 							bytesPerPacket, kDVIIntelFramesPerPacket)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local procs
-
-static	I<CAudioCodec>	sInstantiate(OSType id)
-								{ return I<CAudioCodec>(new CDVIIntelIMAADPCMAudioCodec()); }
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
 REGISTER_CODEC(dviIntelIMA,
-		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString(OSSTR("DVI/Intel IMA ADPCM 4:1")), sInstantiate));
+		CAudioCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString(OSSTR("DVI/Intel IMA ADPCM 4:1"))));

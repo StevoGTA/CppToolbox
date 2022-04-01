@@ -59,11 +59,11 @@ SMediaSource::QueryTracksResult CWAVEMediaSource::queryTracks(const I<CSeekableD
 	// Finalize setup
 	CAudioTrack			audioTrack = waveMediaSourceImportTracker->composeAudioTrack();
 	CMediaTrackInfos	mediaTrackInfos;
-	if (options & SMediaSource::kComposeDecodeInfo)
+	if (options & SMediaSource::kCreateDecoders)
 		// Requesting decode info
 		mediaTrackInfos.add(
 				CMediaTrackInfos::AudioTrackInfo(audioTrack,
-						waveMediaSourceImportTracker->composeDecodeInfo(seekableDataSource)));
+						waveMediaSourceImportTracker->createAudioCodec(seekableDataSource)));
 	else
 		// Not requesting decode info
 		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack));
@@ -241,26 +241,25 @@ CAudioTrack CWAVEMediaSourceImportTracker::composeAudioTrack()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CCodec::DecodeInfo> CWAVEMediaSourceImportTracker::composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource)
+I<CDecodeAudioCodec> CWAVEMediaSourceImportTracker::createAudioCodec(const I<CSeekableDataSource>& seekableDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check format tag
 	switch (*mInternals->mFormatTag) {
 		case 0x0001:	// Integer PCM
 		case 0x0003:	// IEEE Float
-			return CPCMAudioCodec::composeDecodeInfo(*mInternals->mAudioStorageFormat, seekableDataSource,
+			return CPCMAudioCodec::create(*mInternals->mAudioStorageFormat, seekableDataSource,
 					*mDataChunkStartByteOffset, *mDataChunkByteCount,
 					(*mInternals->mAudioStorageFormat->getBits() > 8) ?
-							CPCMAudioCodec::DecodeInfo::kFormatLittleEndian :
-							CPCMAudioCodec::DecodeInfo::kFormat8BitUnsigned);
+							CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitUnsigned);
 
 		case 0x0011:	// DVI/Intel ADPCM
-			return CDVIIntelIMAADPCMAudioCodec::composeDecodeInfo(*mInternals->mAudioStorageFormat, seekableDataSource,
+			return CDVIIntelIMAADPCMAudioCodec::create(*mInternals->mAudioStorageFormat, seekableDataSource,
 					*mDataChunkStartByteOffset, *mDataChunkByteCount);
 
 		default:		// Not possible
 			AssertFail();
-			return I<CCodec::DecodeInfo>(nil);
+			return I<CDecodeAudioCodec>(nil);
 	}
 }
 

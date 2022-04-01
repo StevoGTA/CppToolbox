@@ -221,25 +221,6 @@ CString	CAACAudioCodec::mAACLCName(OSSTR("AAC Low Complexity"));
 OSType	CAACAudioCodec::mAACLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
 CString	CAACAudioCodec::mAACLDName(OSSTR("AAC Low Delay"));
 
-// MARK: CAudioCodec methods - Decoding
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAACAudioCodec::getDecodeAudioProcessingSetups(
-		const SAudioStorageFormat& audioStorageFormat, const I<CCodec::DecodeInfo>& decodeInfo)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return TNArray<SAudioProcessingSetup>(
-			SAudioProcessingSetup(32, audioStorageFormat.getSampleRate(), audioStorageFormat.getChannelMap(),
-					SAudioProcessingSetup::kSampleTypeFloat));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::Requirements CAACAudioCodec::getRequirements() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return CAudioFrames::Requirements(1024, 1024 * 2);
-}
-
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -312,30 +293,8 @@ OI<SAudioStorageFormat> CAACAudioCodec::composeAudioStorageFormat(const CData& c
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CCodec::DecodeInfo> CAACAudioCodec::composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
-		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Return decode info
-	return I<CCodec::DecodeInfo>(
-			new CAACAudioCodec::DecodeInfo(
-					I<CMediaPacketSource>(
-							new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations)),
-					configurationData));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local procs
-
-static	I<CAudioCodec>	sInstantiate(OSType id)
-								{ return I<CAudioCodec>(new CAACAudioCodec(id)); }
-
-//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
-REGISTER_CODEC(aacLC,
-		CAudioCodec::Info(CAACAudioCodec::mAACLCID, CAACAudioCodec::mAACLCName, sInstantiate));
-REGISTER_CODEC(aacLD,
-		CAudioCodec::Info(CAACAudioCodec::mAACLDID, CAACAudioCodec::mAACLDName, sInstantiate));
+REGISTER_CODEC(aacLC, CAudioCodec::Info(CAACAudioCodec::mAACLCID, CAACAudioCodec::mAACLCName));
+REGISTER_CODEC(aacLD, CAudioCodec::Info(CAACAudioCodec::mAACLDID, CAACAudioCodec::mAACLDName));

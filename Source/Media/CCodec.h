@@ -60,6 +60,9 @@ class CCodec {
 	// Methods
 	public:
 				// Lifecycle methods
-				CCodec() {}
 		virtual	~CCodec() {}
+
+	protected:
+				// Lifecycle methods
+				CCodec() {}
 };

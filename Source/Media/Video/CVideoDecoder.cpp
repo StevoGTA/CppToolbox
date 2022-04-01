@@ -11,17 +11,15 @@
 
 class CVideoDecoderInternals : public TReferenceCountable<CVideoDecoderInternals> {
 	public:
-		CVideoDecoderInternals(const SVideoStorageFormat& videoStorageFormat, const I<CVideoCodec>& videoCodec,
-				const I<CCodec::DecodeInfo>& codecDecodeInfo, const CString& identifier) :
+		CVideoDecoderInternals(const SVideoStorageFormat& videoStorageFormat, const I<CDecodeVideoCodec>& videoCodec,
+				const CString& identifier) :
 			TReferenceCountable(),
-					mVideoStorageFormat(videoStorageFormat), mVideoCodec(videoCodec), mCodecDecodeInfo(codecDecodeInfo),
-					mIdentifier(identifier),
+					mVideoStorageFormat(videoStorageFormat), mVideoCodec(videoCodec), mIdentifier(identifier),
 					mStartTimeInterval(0.0), mCurrentTimeInterval(0.0)
 			{}
 
 		SVideoStorageFormat			mVideoStorageFormat;
-		I<CVideoCodec>				mVideoCodec;
-		I<CCodec::DecodeInfo>		mCodecDecodeInfo;
+		I<CDecodeVideoCodec>		mVideoCodec;
 		CString						mIdentifier;
 
 		OI<SVideoProcessingFormat>	mVideoProcessingFormat;
@@ -37,19 +35,18 @@ class CVideoDecoderInternals : public TReferenceCountable<CVideoDecoderInternals
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoDecoder::CVideoDecoder(const SVideoStorageFormat& videoStorageFormat, const I<CVideoCodec>& videoCodec,
-		const I<CCodec::DecodeInfo>& codecDecodeInfo, const SVideoProcessingFormat& videoProcessingFormat,
-		const CString& identifier) : CVideoSource()
+CVideoDecoder::CVideoDecoder(const SVideoStorageFormat& videoStorageFormat, const I<CDecodeVideoCodec>& videoCodec,
+		const SVideoProcessingFormat& videoProcessingFormat, const CString& identifier) : CVideoSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CVideoDecoderInternals(videoStorageFormat, videoCodec, codecDecodeInfo, identifier);
+	mInternals = new CVideoDecoderInternals(videoStorageFormat, videoCodec, identifier);
 
 	// Store
 	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
 
 	// Setup Video Codec
-	mInternals->mVideoCodec->setupForDecode(videoProcessingFormat, mInternals->mCodecDecodeInfo);
+	mInternals->mVideoCodec->setup(videoProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

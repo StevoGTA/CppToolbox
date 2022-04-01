@@ -10,23 +10,23 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TMediaTrackInfo
 
-template <typename T> struct TMediaTrackInfo {
+template <typename T, typename U> struct TMediaTrackInfo {
 				// Lifecycle methods
-				TMediaTrackInfo<T>(const T& mediaTrack, const I<CCodec::DecodeInfo>& decodeInfo) :
-					mMediaTrack(mediaTrack), mDecodeInfo(OI<I<CCodec::DecodeInfo> >(decodeInfo))
+				TMediaTrackInfo<T, U>(const T& mediaTrack, const OI<I<U> >& codec) :
+					mMediaTrack(mediaTrack), mCodec(codec)
 					{}
 				TMediaTrackInfo<T>(const T& mediaTrack) : mMediaTrack(mediaTrack) {}
-				TMediaTrackInfo<T>(const TMediaTrackInfo<T>& other) :
-					mMediaTrack(other.mMediaTrack), mDecodeInfo(other.mDecodeInfo)
+				TMediaTrackInfo<T, U>(const TMediaTrackInfo<T, U>& other) :
+					mMediaTrack(other.mMediaTrack), mCodec(other.mCodec)
 					{}
 
 				// Class methods
-	static	T	getMediaTrack(TMediaTrackInfo<T>* mediaTrackInfo)
+	static	T	getMediaTrack(TMediaTrackInfo<T, U>* mediaTrackInfo)
 					{ return mediaTrackInfo->mMediaTrack; }
 
 	// Properties
-	T							mMediaTrack;
-	OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
+	T			mMediaTrack;
+	OI<I<U> >	mCodec;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,8 +51,8 @@ struct SMediaTracks {
 class CMediaTrackInfos {
 	// Types
 	public:
-		typedef	TMediaTrackInfo<CAudioTrack>	AudioTrackInfo;
-		typedef	TMediaTrackInfo<CVideoTrack>	VideoTrackInfo;
+		typedef	TMediaTrackInfo<CAudioTrack, CDecodeAudioCodec>	AudioTrackInfo;
+		typedef	TMediaTrackInfo<CVideoTrack, CDecodeVideoCodec>	VideoTrackInfo;
 
 	// Methods
 	public:

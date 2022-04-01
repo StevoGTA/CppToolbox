@@ -65,14 +65,8 @@ I<CAudioSource> CMediaEngine::getAudioSource(const CMediaTrackInfos::AudioTrackI
 		const CString& identifier) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	const	CAudioTrack&			audioTrack = audioTrackInfo.mMediaTrack;
-	const	SAudioStorageFormat&	audioStorageFormat = audioTrack.getAudioStorageFormat();
-			I<CAudioCodec>			audioCodec(
-											CCodecRegistry::mShared.getAudioCodecInfo(audioStorageFormat.getCodecID())
-													.instantiate());
-
-	return I<CAudioSource>(new CAudioDecoder(audioStorageFormat, audioCodec, *audioTrackInfo.mDecodeInfo, identifier));
+	return I<CAudioSource>(
+			new CAudioDecoder(audioTrackInfo.mMediaTrack.getAudioStorageFormat(), *audioTrackInfo.mCodec, identifier));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -81,14 +75,10 @@ I<CVideoSource> CMediaEngine::getVideoSource(const CMediaTrackInfos::VideoTrackI
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	CVideoTrack&			videoTrack = videoTrackInfo.mMediaTrack;
-	const	SVideoStorageFormat&	videoStorageFormat = videoTrack.getVideoStorageFormat();
-			I<CVideoCodec>			videoCodec(
-											CCodecRegistry::mShared.getVideoCodecInfo(videoStorageFormat.getCodecID())
-													.instantiate());
+	const	SVideoStorageFormat&	videoStorageFormat = videoTrackInfo.mMediaTrack.getVideoStorageFormat();
 
 	return I<CVideoSource>(
-			new CVideoDecoder(videoStorageFormat, videoCodec, *videoTrackInfo.mDecodeInfo,
+			new CVideoDecoder(videoStorageFormat, *videoTrackInfo.mCodec,
 					SVideoProcessingFormat(videoStorageFormat.getFramerate(), compatibility), identifier));
 }
 

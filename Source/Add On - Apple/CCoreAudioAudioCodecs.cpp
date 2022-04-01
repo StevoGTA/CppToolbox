@@ -11,94 +11,46 @@
 #include <AudioToolbox/AudioToolbox.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAACAudioCodecInternals
+// MARK: CAACDecodeAudioCodec
 
-class CAACAudioCodecInternals {
+class CAACDecodeAudioCodec : public CDecodeAudioCodec {
 	public:
-							CAACAudioCodecInternals(OSType codecID) :
-								mCodecID(codecID),
-									mAudioConverterRef(nil), mDecodeFramesToIgnore(0),
-									mInputPacketData((CData::ByteCount) 10 * 1024),
-									mInputPacketDescriptionsData((CData::ByteCount) 1 * 1024)
-								{}
-							~CAACAudioCodecInternals()
-								{
-									// Cleanup
-									if (mAudioConverterRef != nil)
-										::AudioConverterDispose(mAudioConverterRef);
-								}
+												// Lifecycle methods
+												CAACDecodeAudioCodec(OSType codecID,
+														const I<CMediaPacketSource>& mediaPacketSource,
+														const CData& configurationData) :
+													mCodecID(codecID),
+														mDecodeInfo(mediaPacketSource, configurationData),
+														mAudioConverterRef(nil), mDecodeFramesToIgnore(0),
+														mInputPacketData((CData::ByteCount) 10 * 1024),
+														mInputPacketDescriptionsData((CData::ByteCount) 1 * 1024)
+													{}
+												~CAACDecodeAudioCodec()
+													{
+														// Cleanup
+														if (mAudioConverterRef != nil)
+															::AudioConverterDispose(mAudioConverterRef);
+													}
 
-		static	OSStatus	fillBufferData(AudioConverterRef inAudioConverter, UInt32* ioNumberDataPackets,
-									AudioBufferList* ioBufferList,
-									AudioStreamPacketDescription** outDataPacketDescription, void* inUserData)
-								{
-									// Setup
-									CAACAudioCodecInternals&	internals = *((CAACAudioCodecInternals*) inUserData);
+												// CAudioCodec methods - Decoding
+				TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat);
+				OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat);
+				CAudioFrames::Requirements		getRequirements() const
+													{ return CAudioFrames::Requirements(1024, 1024 * 2); }
+				void							seek(UniversalTimeInterval timeInterval);
+				OI<SError>						decodeInto(CAudioFrames& audioFrames);
 
-									// Read packets
-									CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
-																					(CCodec::MediaPacketSourceDecodeInfo&)
-																							(**internals.mDecodeInfo);
-									TIResult<TArray<SMediaPacket> >	mediaPacketsResult =
-																			mediaPacketSourceDecodeInfo.
-																					getMediaPacketSource()->
-																					readNextInto(
-																							internals.mInputPacketData);
-									if (mediaPacketsResult.hasError()) {
-										// Check error
-										if (mediaPacketsResult.getError() == SError::mEndOfData) {
-											// End of data
-											*ioNumberDataPackets = 0;
+												// Class methods
+		static	OSStatus						fillBufferData(AudioConverterRef inAudioConverter,
+														UInt32* ioNumberDataPackets, AudioBufferList* ioBufferList,
+														AudioStreamPacketDescription** outDataPacketDescription,
+														void* inUserData);
 
-											return noErr;
-										} else {
-											// Other error
-											internals.mFillBufferDataError = mediaPacketsResult.getError();
-
-											return -1;
-										}
-									}
-
-									// Prepare return info
-									const	TArray<SMediaPacket>&	mediaPackets = mediaPacketsResult.getValue();
-
-									*ioNumberDataPackets = mediaPackets.getCount();
-
-									ioBufferList->mNumberBuffers = 1;
-									ioBufferList->mBuffers[0].mData = internals.mInputPacketData.getMutableBytePtr();
-									ioBufferList->mBuffers[0].mDataByteSize =
-											(UInt32) internals.mInputPacketData.getByteCount();
-
-									if ((*ioNumberDataPackets * sizeof(AudioStreamPacketDescription)) >
-											internals.mInputPacketDescriptionsData.getByteCount())
-										// Increase packet descriptions data size
-										internals.mInputPacketDescriptionsData.setByteCount(
-												*ioNumberDataPackets * sizeof(AudioStreamPacketDescription));
-
-									AudioStreamPacketDescription*	packetDescription =
-																			(AudioStreamPacketDescription*)
-																					internals
-																							.mInputPacketDescriptionsData
-																							.getMutableBytePtr();
-									*outDataPacketDescription = packetDescription;
-
-									SInt64	offset = 0;
-									for (TIteratorD<SMediaPacket> iterator = mediaPackets.getIterator();
-											iterator.hasValue(); iterator.advance(), packetDescription++) {
-										// Update
-										packetDescription->mStartOffset = offset;
-										packetDescription->mVariableFramesInPacket = iterator->mDuration;
-										packetDescription->mDataByteSize = iterator->mByteCount;
-
-										offset += iterator->mByteCount;
-									}
-
-									return noErr;
-								}
-
+	private:
 		OSType						mCodecID;
+		CAACAudioCodec::DecodeInfo	mDecodeInfo;
+
 		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
-		OI<I<CCodec::DecodeInfo> >	mDecodeInfo;
 
 		AudioConverterRef			mAudioConverterRef;
 		UInt32						mDecodeFramesToIgnore;
@@ -107,85 +59,64 @@ class CAACAudioCodecInternals {
 		OI<SError>					mFillBufferDataError;
 };
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAACAudioCodec
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CAACAudioCodec::CAACAudioCodec(OSType codecID) : CDecodeOnlyAudioCodec()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CAACAudioCodecInternals(codecID);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CAACAudioCodec::~CAACAudioCodec()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
-
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAACAudioCodec::setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo)
+TArray<SAudioProcessingSetup> CAACDecodeAudioCodec::getAudioProcessingSetups(
+		const SAudioStorageFormat& audioStorageFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	const	DecodeInfo&	aacDecodeInfo = *((DecodeInfo*) &*decodeInfo);
+	return TNArray<SAudioProcessingSetup>(
+			SAudioProcessingSetup(32, audioStorageFormat.getSampleRate(), audioStorageFormat.getChannelMap(),
+					SAudioProcessingSetup::kSampleTypeFloat));
+}
 
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CAACDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
 	// Store
-	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
-	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
+	mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Create Audio Converter
 	AudioStreamBasicDescription	sourceFormat = {0};
-	sourceFormat.mFormatID = (mInternals->mCodecID == mAACLCID) ? kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
+	sourceFormat.mFormatID = (mCodecID == CAACAudioCodec::mAACLCID) ? kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
 	sourceFormat.mFormatFlags = 0;
 	sourceFormat.mSampleRate = audioProcessingFormat.getSampleRate();
 	sourceFormat.mChannelsPerFrame = audioProcessingFormat.getChannels();
 
 	AudioStreamBasicDescription	destinationFormat;
-	FillOutASBDForLPCM(destinationFormat, audioProcessingFormat.getSampleRate(),
-			audioProcessingFormat.getChannels(), audioProcessingFormat.getBits(),
-			audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(),
+	FillOutASBDForLPCM(destinationFormat, audioProcessingFormat.getSampleRate(), audioProcessingFormat.getChannels(),
+			audioProcessingFormat.getBits(), audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(),
 			audioProcessingFormat.getIsBigEndian(), !audioProcessingFormat.getIsInterleaved());
 
-	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
+	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mAudioConverterRef);
 	ReturnErrorIfFailed(status, OSSTR("AudioConverterNew"));
 
 	// Set magic cookie
 	status =
-			::AudioConverterSetProperty(mInternals->mAudioConverterRef,
-					kAudioConverterDecompressionMagicCookie, (UInt32) aacDecodeInfo.getMagicCookie().getByteCount(),
-					aacDecodeInfo.getMagicCookie().getBytePtr());
+			::AudioConverterSetProperty(mAudioConverterRef, kAudioConverterDecompressionMagicCookie,
+					(UInt32) mDecodeInfo.getMagicCookie().getByteCount(), mDecodeInfo.getMagicCookie().getBytePtr());
 	ReturnErrorIfFailed(status, OSSTR("AudioConverterSetProperty for magic cookie"));
 
 	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAACAudioCodec::seek(UniversalTimeInterval timeInterval)
+void CAACDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
-													(CCodec::MediaPacketSourceDecodeInfo&) (**mInternals->mDecodeInfo);
-
 	// Reset audio converter
-	::AudioConverterReset(mInternals->mAudioConverterRef);
+	::AudioConverterReset(mAudioConverterRef);
 
 	// Seek
-	mInternals->mDecodeFramesToIgnore =
-			mediaPacketSourceDecodeInfo.getMediaPacketSource()->seekToDuration(
-					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
+	mDecodeFramesToIgnore =
+			mDecodeInfo.getMediaPacketSource()->seekToDuration(
+					(UInt32) (timeInterval * mAudioProcessingFormat->getSampleRate()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAACAudioCodec::decodeInto(CAudioFrames& audioFrames)
+OI<SError> CAACDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -194,34 +125,115 @@ OI<SError> CAACAudioCodec::decodeInto(CAudioFrames& audioFrames)
 	// Setup
 	AudioBufferList	audioBufferList;
 	audioBufferList.mNumberBuffers = 1;
-	audioBufferList.mBuffers[0].mNumberChannels = mInternals->mAudioProcessingFormat->getChannels();
+	audioBufferList.mBuffers[0].mNumberChannels = mAudioProcessingFormat->getChannels();
 
 	// Check if have frames to ignore
 	OSStatus	status;
-	if (mInternals->mDecodeFramesToIgnore > 0) {
+	if (mDecodeFramesToIgnore > 0) {
 		// Decode these frames, but throw away
 		audioFrames.getAsWrite(audioBufferList);
 		status =
-				::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
-						CAACAudioCodecInternals::fillBufferData, mInternals, &mInternals->mDecodeFramesToIgnore,
+				::AudioConverterFillComplexBuffer(mAudioConverterRef, fillBufferData, this, &mDecodeFramesToIgnore,
 						&audioBufferList, nil);
-		if (status != noErr) return mInternals->mFillBufferDataError;
-		if (mInternals->mDecodeFramesToIgnore == 0) return OI<SError>(SError::mEndOfData);
+		if (status != noErr) return mFillBufferDataError;
+		if (mDecodeFramesToIgnore == 0) return OI<SError>(SError::mEndOfData);
 
 		// Done ignoring
-		mInternals->mDecodeFramesToIgnore = 0;
+		mDecodeFramesToIgnore = 0;
 	}
 
 	// Fill buffer
 	UInt32	frameCount = audioFrames.getAsWrite(audioBufferList);
 	status =
-			::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, CAACAudioCodecInternals::fillBufferData,
-					mInternals, &frameCount, &audioBufferList, nil);
-	if (status != noErr) return mInternals->mFillBufferDataError;
+			::AudioConverterFillComplexBuffer(mAudioConverterRef, fillBufferData, this, &frameCount, &audioBufferList,
+					nil);
+	if (status != noErr) return mFillBufferDataError;
 	if (frameCount == 0) return OI<SError>(SError::mEndOfData);
 
 	// Update
 	audioFrames.completeWrite(audioBufferList);
 
 	return OI<SError>();
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+OSStatus CAACDecodeAudioCodec::fillBufferData(AudioConverterRef inAudioConverter, UInt32* ioNumberDataPackets,
+		AudioBufferList* ioBufferList, AudioStreamPacketDescription** outDataPacketDescription, void* inUserData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CAACDecodeAudioCodec&	audioCodec = *((CAACDecodeAudioCodec*) inUserData);
+
+	// Read packets
+	TIResult<TArray<SMediaPacket> >	mediaPacketsResult =
+											audioCodec.mDecodeInfo.
+													getMediaPacketSource()->readNextInto(audioCodec.mInputPacketData);
+	if (mediaPacketsResult.hasError()) {
+		// Check error
+		if (mediaPacketsResult.getError() == SError::mEndOfData) {
+			// End of data
+			*ioNumberDataPackets = 0;
+
+			return noErr;
+		} else {
+			// Other error
+			audioCodec.mFillBufferDataError = mediaPacketsResult.getError();
+
+			return -1;
+		}
+	}
+
+	// Prepare return info
+	const	TArray<SMediaPacket>&	mediaPackets = mediaPacketsResult.getValue();
+
+	*ioNumberDataPackets = mediaPackets.getCount();
+
+	ioBufferList->mNumberBuffers = 1;
+	ioBufferList->mBuffers[0].mData = audioCodec.mInputPacketData.getMutableBytePtr();
+	ioBufferList->mBuffers[0].mDataByteSize = (UInt32) audioCodec.mInputPacketData.getByteCount();
+
+	if ((*ioNumberDataPackets * sizeof(AudioStreamPacketDescription)) >
+			audioCodec.mInputPacketDescriptionsData.getByteCount())
+		// Increase packet descriptions data size
+		audioCodec.mInputPacketDescriptionsData.setByteCount(
+				*ioNumberDataPackets * sizeof(AudioStreamPacketDescription));
+
+	AudioStreamPacketDescription*	packetDescription =
+											(AudioStreamPacketDescription*)
+													audioCodec.mInputPacketDescriptionsData.getMutableBytePtr();
+	*outDataPacketDescription = packetDescription;
+
+	SInt64	offset = 0;
+	for (TIteratorD<SMediaPacket> iterator = mediaPackets.getIterator(); iterator.hasValue(); iterator.advance(),
+			packetDescription++) {
+		// Update
+		packetDescription->mStartOffset = offset;
+		packetDescription->mVariableFramesInPacket = iterator->mDuration;
+		packetDescription->mDataByteSize = iterator->mByteCount;
+
+		offset += iterator->mByteCount;
+	}
+
+	return noErr;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAACAudioCodec
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CDecodeAudioCodec> CAACAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
+		const I<CSeekableDataSource>& seekableDataSource, const TArray<SMediaPacketAndLocation>& packetAndLocations,
+		const CData& configurationData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return I<CDecodeAudioCodec>(
+			new CAACDecodeAudioCodec(audioStorageFormat.getCodecID(),
+					I<CMediaPacketSource>(
+							new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations)),
+					configurationData));
 }

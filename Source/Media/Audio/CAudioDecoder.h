@@ -6,8 +6,6 @@
 
 #include "CAudioProcessor.h"
 #include "CAudioCodec.h"
-#include "CDataSource.h"
-#include "SAudioFormats.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioDecoder
@@ -18,9 +16,7 @@ class CAudioDecoder : public CAudioSource {
 	public:
 										// Lifecycle methods
 										CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
-												const I<CAudioCodec>& audioCodec,
-												const I<CCodec::DecodeInfo>& codecDecodeInfo,
-												const CString& identifier);
+												const I<CDecodeAudioCodec>& audioCodec, const CString& identifier);
 										CAudioDecoder(const CAudioDecoder& other);
 										~CAudioDecoder();
 

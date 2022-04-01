@@ -20,8 +20,7 @@
 		https://chromium.googlesource.com/chromium/src/media/+/refs/heads/main/video/h264_poc.cc
 */
 
-class CH264VideoCodecInternals;
-class CH264VideoCodec : public CDecodeOnlyVideoCodec {
+class CH264VideoCodec {
 	// NALUInfo
 	public:
 		// Network Abstraction Layer Unit Info
@@ -315,28 +314,15 @@ class CH264VideoCodec : public CDecodeOnlyVideoCodec {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CH264VideoCodec();
-										~CH264VideoCodec();
-
-										// CVideoCodec methods
-				OI<SError>				setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
-												const I<CCodec::DecodeInfo>& decodeInfo);
-				void					seek(UniversalTimeInterval timeInterval);
-				TIResult<CVideoFrame>	decode();
-
 										// Class methods
 		static	OI<SVideoStorageFormat>	composeVideoStorageFormat(const S2DSizeU16& frameSize, Float32 framerate);
-		static	I<CCodec::DecodeInfo>	composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
+		static	I<CDecodeVideoCodec>	create(const I<CSeekableDataSource>& seekableDataSource,
 												const TArray<SMediaPacketAndLocation>& packetAndLocations,
 												const CData& configurationData, UInt32 timeScale,
 												const TNumericArray<UInt32>& keyframeIndexes);
 
 	// Properties
 	public:
-		static	OSType						mID;
-		static	CString						mName;
-
-	private:
-				CH264VideoCodecInternals*	mInternals;
+		static	OSType	mID;
+		static	CString	mName;
 };

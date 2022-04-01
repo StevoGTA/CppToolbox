@@ -10,8 +10,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAACAudioCodec
 
-class CAACAudioCodecInternals;
-class CAACAudioCodec : public CDecodeOnlyAudioCodec {
+class CAACAudioCodec {
 	// Decode info
 	public:
 		class DecodeInfo : public CCodec::MediaPacketSourceDecodeInfo {
@@ -35,35 +34,18 @@ class CAACAudioCodec : public CDecodeOnlyAudioCodec {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CAACAudioCodec(OSType codecID);
-												~CAACAudioCodec();
-
-												// CAudioCodec methods - Decoding
-				TArray<SAudioProcessingSetup>	getDecodeAudioProcessingSetups(
-														const SAudioStorageFormat& audioStorageFormat,
-														const I<CCodec::DecodeInfo>& decodeInfo);
-				OI<SError>						setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-														const I<CCodec::DecodeInfo>& decodeInfo);
-				CAudioFrames::Requirements		getRequirements() const;
-				void							seek(UniversalTimeInterval timeInterval);
-				OI<SError>						decodeInto(CAudioFrames& audioFrames);
-
-												// Class methods
-		static	OI<SAudioStorageFormat>			composeAudioStorageFormat(const CData& configurationData,
-														UInt16 channels);
-		static	I<CCodec::DecodeInfo>			composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
-														const TArray<SMediaPacketAndLocation>& packetAndLocations,
-														const CData& configurationData);
+										// Class methods
+		static	OI<SAudioStorageFormat>	composeAudioStorageFormat(const CData& configurationData, UInt16 channels);
+		static	I<CDecodeAudioCodec>	create(const SAudioStorageFormat& audioStorageFormat,
+												const I<CSeekableDataSource>& seekableDataSource,
+												const TArray<SMediaPacketAndLocation>& packetAndLocations,
+												const CData& configurationData);
 
 	// Properties
 	public:
-		static	OSType						mAACLCID;
-		static	CString						mAACLCName;
+		static	OSType	mAACLCID;
+		static	CString	mAACLCName;
 
-		static	OSType						mAACLDID;
-		static	CString						mAACLDName;
-
-	private:
-				CAACAudioCodecInternals*	mInternals;
+		static	OSType	mAACLDID;
+		static	CString	mAACLDName;
 };

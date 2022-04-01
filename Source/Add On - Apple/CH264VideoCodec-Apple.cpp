@@ -12,68 +12,66 @@
 #include <VideoToolbox/VideoToolbox.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CH264VideoCodecInternals
+// MARK: CH264DecodeVideoCodec
 
-class CH264VideoCodecInternals {
+class CH264DecodeVideoCodec : public CDecodeVideoCodec {
 	public:
-						CH264VideoCodecInternals() : mFormatDescriptionRef(nil), mDecompressionSessionRef(nil) {}
-						~CH264VideoCodecInternals()
-							{
-								// Cleanup
-								if (mFormatDescriptionRef != nil)
-									// Release
-									::CFRelease(mFormatDescriptionRef);
+										// Lifecycle methods
+										CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaPacketSource,
+												const CData& configurationData, UInt32 timeScale,
+												const TNumericArray<UInt32>& keyframeIndexes) :
+											mDecodeInfo(mediaPacketSource, configurationData, timeScale,
+															keyframeIndexes),
+													mFormatDescriptionRef(nil), mDecompressionSessionRef(nil)
+											{}
+										~CH264DecodeVideoCodec()
+											{
+												// Cleanup
+												if (mFormatDescriptionRef != nil)
+													// Release
+													::CFRelease(mFormatDescriptionRef);
 
-								if (mDecompressionSessionRef != nil) {
-									// Invalidate and release
-									::VTDecompressionSessionWaitForAsynchronousFrames(mDecompressionSessionRef);
-									::VTDecompressionSessionInvalidate(mDecompressionSessionRef);
-									::CFRelease(mDecompressionSessionRef);
-								}
-							}
+												if (mDecompressionSessionRef != nil) {
+													// Invalidate and release
+													::VTDecompressionSessionWaitForAsynchronousFrames(
+															mDecompressionSessionRef);
+													::VTDecompressionSessionInvalidate(mDecompressionSessionRef);
+													::CFRelease(mDecompressionSessionRef);
+												}
+											}
 
-		static	void	decompressionOutputCallback(void* decompressionOutputUserData, void* sourceFrameUserData,
-								OSStatus status, VTDecodeInfoFlags decodeInfoFlags, CVImageBufferRef imageBufferRef,
-								CMTime presentationTime, CMTime presentationDuration)
-							{ *((CVImageBufferRef*) sourceFrameUserData) = (CVBufferRef) ::CFRetain(imageBufferRef); }
+										// CVideoCodec methods
+				OI<SError>				setup(const SVideoProcessingFormat& videoProcessingFormat);
+				void					seek(UniversalTimeInterval timeInterval);
+				TIResult<CVideoFrame>	decode();
+
+										// Class methods
+		static	void					decompressionOutputCallback(void* decompressionOutputUserData,
+												void* sourceFrameUserData, OSStatus status,
+												VTDecodeInfoFlags decodeInfoFlags, CVImageBufferRef imageBufferRef,
+												CMTime presentationTime, CMTime presentationDuration)
+											{ *((CVImageBufferRef*) sourceFrameUserData) =
+													(CVBufferRef) ::CFRetain(imageBufferRef); }
+
+	private:
+		CH264VideoCodec::DecodeInfo			mDecodeInfo;
 
 		OV<UInt32>							mTimeScale;
 		OI<SVideoProcessingFormat>			mVideoProcessingFormat;
-		OI<I<CCodec::DecodeInfo> >			mDecodeInfo;
 
 		CMFormatDescriptionRef				mFormatDescriptionRef;
 		VTDecompressionSessionRef			mDecompressionSessionRef;
 		OI<CH264VideoCodec::FrameTiming>	mFrameTiming;
 };
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CH264VideoCodec
-
-//----------------------------------------------------------------------------------------------------------------------
-CH264VideoCodec::CH264VideoCodec() : CDecodeOnlyVideoCodec()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CH264VideoCodecInternals();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CH264VideoCodec::~CH264VideoCodec()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	Delete(mInternals);
-}
-
 // MARK: CVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoProcessingFormat,
-		const I<CCodec::DecodeInfo>& decodeInfo)
+OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	DecodeInfo&								h264DecodeInfo = *((DecodeInfo*) &*decodeInfo);
-			CH264VideoCodec::DecodeInfo::SPSPPSInfo	spsppsInfo = h264DecodeInfo.getSPSPPSInfo();
+			CH264VideoCodec::DecodeInfo::SPSPPSInfo	spsppsInfo = mDecodeInfo.getSPSPPSInfo();
 	const	TArray<CH264VideoCodec::NALUInfo>		spsNALUInfos = spsppsInfo.getSPSNALUInfos();
 	const	TArray<CH264VideoCodec::NALUInfo>		ppsNALUInfos = spsppsInfo.getPPSNALUInfos();
 			OSStatus								status;
@@ -96,15 +94,14 @@ OI<SError> CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoPr
 
 	status =
 			::CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, spsCount + ppsCount,
-					parameterSetPointers, parameterSetSizes, h264DecodeInfo.getNALUHeaderLengthSize(),
-					&mInternals->mFormatDescriptionRef);
+					parameterSetPointers, parameterSetSizes, mDecodeInfo.getNALUHeaderLengthSize(),
+					&mFormatDescriptionRef);
 	ReturnErrorIfFailed(status, OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"));
 
 	// Setup Decompression Session
 	VTDecompressionOutputCallbackRecord	decompressionOutputCallbackRecord;
-	decompressionOutputCallbackRecord.decompressionOutputCallback =
-			CH264VideoCodecInternals::decompressionOutputCallback;
-	decompressionOutputCallbackRecord.decompressionOutputRefCon = mInternals;
+	decompressionOutputCallbackRecord.decompressionOutputCallback = decompressionOutputCallback;
+	decompressionOutputCallbackRecord.decompressionOutputRefCon = this;
 
 	CFMutableDictionaryRef	destinationImageBufferAttributes =
 									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
@@ -113,21 +110,21 @@ OI<SError> CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoPr
 	switch (videoProcessingFormat.getCompatibility()) {
 		case CVideoFrame::kCompatibilityCGImage:
 			// CGImage
-			::CFDictionarySetValue(destinationImageBufferAttributes,
-					kCVPixelBufferCGImageCompatibilityKey, kCFBooleanTrue);
+			::CFDictionarySetValue(destinationImageBufferAttributes, kCVPixelBufferCGImageCompatibilityKey,
+					kCFBooleanTrue);
 			break;
 
 		case CVideoFrame::kCompatibilityMetal:
 			// Metal
-			::CFDictionarySetValue(destinationImageBufferAttributes,
-					kCVPixelBufferMetalCompatibilityKey, kCFBooleanTrue);
+			::CFDictionarySetValue(destinationImageBufferAttributes, kCVPixelBufferMetalCompatibilityKey,
+					kCFBooleanTrue);
 			break;
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		case CVideoFrame::kCompatibilityOpenGLES:
 			// OpenGLES
-			::CFDictionarySetValue(destinationImageBufferAttributes,
-					kCVPixelBufferOpenGLESCompatibilityKey, kCFBooleanTrue);
+			::CFDictionarySetValue(destinationImageBufferAttributes, kCVPixelBufferOpenGLESCompatibilityKey,
+					kCFBooleanTrue);
 			break;
 
 #else
@@ -155,59 +152,51 @@ OI<SError> CH264VideoCodec::setupForDecode(const SVideoProcessingFormat& videoPr
 			kCFBooleanTrue);
 
 	status =
-			::VTDecompressionSessionCreate(kCFAllocatorDefault, mInternals->mFormatDescriptionRef,
-					videoDecoderSpecification, destinationImageBufferAttributes,
-					&decompressionOutputCallbackRecord, &mInternals->mDecompressionSessionRef);
+			::VTDecompressionSessionCreate(kCFAllocatorDefault, mFormatDescriptionRef, videoDecoderSpecification,
+					destinationImageBufferAttributes, &decompressionOutputCallbackRecord, &mDecompressionSessionRef);
 	::CFRelease(destinationImageBufferAttributes);
 	::CFRelease(videoDecoderSpecification);
 	ReturnErrorIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
 
 	// Finish setup
-	mInternals->mTimeScale = OV<UInt32>(h264DecodeInfo.getTimeScale());
-	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
-	mInternals->mDecodeInfo = OI<I<CCodec::DecodeInfo> >(decodeInfo);
+	mTimeScale = OV<UInt32>(mDecodeInfo.getTimeScale());
+	mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
 
-	SequenceParameterSetPayload	spsPayload(
-										CData(parameterSetPointers[0], (CData::ByteCount) parameterSetSizes[0], false));
-	mInternals->mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
+	CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
+															CData(parameterSetPointers[0],
+																	(CData::ByteCount) parameterSetSizes[0], false));
+	mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
 
 	return OI<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CH264VideoCodec::seek(UniversalTimeInterval timeInterval)
+void CH264DecodeVideoCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	const	DecodeInfo&	h264DecodeInfo = *((DecodeInfo*) &**mInternals->mDecodeInfo);
-
 	// Reset
-	::VTDecompressionSessionWaitForAsynchronousFrames(mInternals->mDecompressionSessionRef);
+	::VTDecompressionSessionWaitForAsynchronousFrames(mDecompressionSessionRef);
 
 	// Seek
 	UInt32	frameIndex =
-					h264DecodeInfo.getMediaPacketSource()->seekToKeyframe(
-							(UInt32) (timeInterval * mInternals->mVideoProcessingFormat->getFramerate() + 0.5),
-							h264DecodeInfo.getKeyframeIndexes());
-	mInternals->mFrameTiming->seek(
-			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessingFormat->getFramerate() *
-					(UniversalTimeInterval) *mInternals->mTimeScale));
+					mDecodeInfo.getMediaPacketSource()->seekToKeyframe(
+							(UInt32) (timeInterval * mVideoProcessingFormat->getFramerate() + 0.5),
+							mDecodeInfo.getKeyframeIndexes());
+	mFrameTiming->seek(
+			(UInt64) ((UniversalTimeInterval) frameIndex / mVideoProcessingFormat->getFramerate() *
+					(UniversalTimeInterval) *mTimeScale));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CVideoFrame> CH264VideoCodec::decode()
+TIResult<CVideoFrame> CH264DecodeVideoCodec::decode()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CCodec::MediaPacketSourceDecodeInfo&	mediaPacketSourceDecodeInfo =
-													(CCodec::MediaPacketSourceDecodeInfo&) (**mInternals->mDecodeInfo);
-
 	// Get next packet
-	TIResult<CMediaPacketSource::DataInfo>	dataInfo = mediaPacketSourceDecodeInfo.getMediaPacketSource()->readNext();
+	TIResult<CMediaPacketSource::DataInfo>	dataInfo = mDecodeInfo.getMediaPacketSource()->readNext();
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
 
 	// Update frame timing
-	TIResult<CH264VideoCodec::FrameTiming::Times>	times = mInternals->mFrameTiming->updateFrom(dataInfo.getValue());
+	TIResult<CH264VideoCodec::FrameTiming::Times>	times = mFrameTiming->updateFrom(dataInfo.getValue());
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(times.getError()));
 
 	// Setup sample buffer
@@ -221,15 +210,15 @@ TIResult<CVideoFrame> CH264VideoCodec::decode()
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
 	CMSampleTimingInfo	sampleTimingInfo;
-	sampleTimingInfo.duration = ::CMTimeMake(dataInfo.getValue().getDuration(), *mInternals->mTimeScale);
-	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(times.getValue().mDecodeTime, *mInternals->mTimeScale);
-	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(times.getValue().mPresentationTime, *mInternals->mTimeScale);
+	sampleTimingInfo.duration = ::CMTimeMake(dataInfo.getValue().getDuration(), *mTimeScale);
+	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(times.getValue().mDecodeTime, *mTimeScale);
+	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(times.getValue().mPresentationTime, *mTimeScale);
 
 	size_t				sampleSize = data.getByteCount();
 	CMSampleBufferRef	sampleBufferRef;
 	status =
-			::CMSampleBufferCreate(kCFAllocatorDefault, blockBufferRef, true, nil, nil,
-					mInternals->mFormatDescriptionRef, 1, 1, &sampleTimingInfo, 1, &sampleSize, &sampleBufferRef);
+			::CMSampleBufferCreate(kCFAllocatorDefault, blockBufferRef, true, nil, nil, mFormatDescriptionRef, 1, 1,
+					&sampleTimingInfo, 1, &sampleSize, &sampleBufferRef);
 	::CFRelease(blockBufferRef);
 	LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMSampleBufferCreate"),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
@@ -238,8 +227,8 @@ TIResult<CVideoFrame> CH264VideoCodec::decode()
 	CVImageBufferRef	imageBufferRef;
 	VTDecodeInfoFlags	decodeInfoFlags;
 	status =
-			::VTDecompressionSessionDecodeFrame(mInternals->mDecompressionSessionRef, sampleBufferRef, 0,
-					&imageBufferRef, &decodeInfoFlags);
+			::VTDecompressionSessionDecodeFrame(mDecompressionSessionRef, sampleBufferRef, 0, &imageBufferRef,
+					&decodeInfoFlags);
 	::CFRelease(sampleBufferRef);
 	LogOSStatusIfFailedAndReturnValue(status, OSSTR("VTDecompressionSessionDecodeFrame"),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
@@ -251,4 +240,23 @@ TIResult<CVideoFrame> CH264VideoCodec::decode()
 	::CFRelease(imageBufferRef);
 
 	return result;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CH264VideoCodec
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CDecodeVideoCodec> CH264VideoCodec::create(const I<CSeekableDataSource>& seekableDataSource,
+		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
+		const TNumericArray<UInt32>& keyframeIndexes)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return I<CDecodeVideoCodec>(
+			new CH264DecodeVideoCodec(
+					I<CMediaPacketSource>(
+							new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations)),
+					configurationData, timeScale, keyframeIndexes));
 }

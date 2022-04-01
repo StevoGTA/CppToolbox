@@ -44,7 +44,7 @@ class CWAVEMediaSourceImportTracker {
 
 		virtual	bool								canFinalize() const;
 		virtual	CAudioTrack							composeAudioTrack();
-		virtual	I<CCodec::DecodeInfo>				composeDecodeInfo(const I<CSeekableDataSource>& seekableDataSource);
+		virtual	I<CDecodeAudioCodec>				createAudioCodec(const I<CSeekableDataSource>& seekableDataSource);
 
 													// Class methods
 		static	I<CWAVEMediaSourceImportTracker>	instantiate();

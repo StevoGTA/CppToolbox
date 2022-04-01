@@ -835,11 +835,12 @@ OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekabl
 	// Add audio track
 	CAudioTrack	audioTrack(CMediaTrack::Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration)),
 						*audioStorageFormat);
-	if (options & SMediaSource::kComposeDecodeInfo)
+	if (options & SMediaSource::kCreateDecoders)
 		// Add audio track with decode info
 		mediaTrackInfos.add(
 				CMediaTrackInfos::AudioTrackInfo(audioTrack,
-						CAACAudioCodec::composeDecodeInfo(seekableDataSource, packetAndLocations, configurationData)));
+						CAACAudioCodec::create(*audioStorageFormat, seekableDataSource, packetAndLocations,
+								configurationData)));
 	else
 		// Add audio track
 		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack));
@@ -879,7 +880,7 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 	// Add video track
 	CVideoTrack	videoTrack(CMediaTrack::Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration)),
 						*videoStorageFormat);
-	if (options & SMediaSource::kComposeDecodeInfo) {
+	if (options & SMediaSource::kCreateDecoders) {
 		// Setup
 		const	SMP4stssAtomPayload&	stssAtomPayload = *((SMP4stssAtomPayload*) stssAtomPayloadData->getBytePtr());
 				UInt32					keyframesCount = stssAtomPayload.getKeyframesCount();
@@ -891,8 +892,8 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 		// Add video track with decode info
 		mediaTrackInfos.add(
 				CMediaTrackInfos::VideoTrackInfo(videoTrack,
-						CH264VideoCodec::composeDecodeInfo(seekableDataSource, packetAndLocations, configurationData,
-								timeScale, keyframeIndexes)));
+						CH264VideoCodec::create(seekableDataSource, packetAndLocations, configurationData, timeScale,
+								keyframeIndexes)));
 	} else
 		// Add video track
 		mediaTrackInfos.add(CMediaTrackInfos::VideoTrackInfo(videoTrack));

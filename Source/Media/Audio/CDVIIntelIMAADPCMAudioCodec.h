@@ -4,43 +4,23 @@
 
 #pragma once
 
-#include "CCodecRegistry.h"
-#include "SMediaPacket.h"
+#include "CAudioCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDVIIntelIMAADPCMAudioCodec
 
-class CDVIIntelIMAADPCMAudioCodecInternals;
-class CDVIIntelIMAADPCMAudioCodec : public CDecodeOnlyAudioCodec {
+class CDVIIntelIMAADPCMAudioCodec {
 	// Methods
 	public:
-												// Lifecycle methods
-												CDVIIntelIMAADPCMAudioCodec();
-												~CDVIIntelIMAADPCMAudioCodec();
-
-												// CAudioCodec methods - Decoding
-				TArray<SAudioProcessingSetup>	getDecodeAudioProcessingSetups(
-														const SAudioStorageFormat& audioStorageFormat,
-														const I<CCodec::DecodeInfo>& decodeInfo);
-				OI<SError>						setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-														const I<CCodec::DecodeInfo>& decodeInfo);
-				CAudioFrames::Requirements		getRequirements() const;
-				void							seek(UniversalTimeInterval timeInterval);
-				OI<SError>						decodeInto(CAudioFrames& audioFrames);
-
-												// Class methods
-		static	OI<SAudioStorageFormat>			composeAudioStorageFormat(Float32 sampleRate,
-														EAudioChannelMap channelMap);
-		static	UInt64							composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
-														UInt64 byteCount);
-		static	I<CCodec::DecodeInfo>			composeDecodeInfo(const SAudioStorageFormat& audioStorageFormat,
-														const I<CSeekableDataSource>& seekableDataSource,
-														UInt64 startByteOffset, UInt64 byteCount);
+										// Class methods
+		static	OI<SAudioStorageFormat>	composeAudioStorageFormat(Float32 sampleRate, EAudioChannelMap channelMap);
+		static	UInt64					composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
+												UInt64 byteCount);
+		static	I<CDecodeAudioCodec>	create(const SAudioStorageFormat& audioStorageFormat,
+												const I<CSeekableDataSource>& seekableDataSource,
+												UInt64 startByteOffset, UInt64 byteCount);
 
 	// Properties
 	public:
-		static	OSType									mID;
-
-	private:
-				CDVIIntelIMAADPCMAudioCodecInternals*	mInternals;
+		static	OSType	mID;
 };

@@ -13,8 +13,8 @@
 struct SMediaSource {
 	// Types
 	enum Options {
-		kNone				= 0,
-		kComposeDecodeInfo	= 1 << 0,
+		kNone			= 0,
+		kCreateDecoders	= 1 << 0,
 	};
 
 	// QueryTracksResult
@@ -74,8 +74,7 @@ struct SMediaSource {
 									{ return mName; }
 	const	TArray<CString>&	getExtensions() const
 									{ return mExtensions; }
-			QueryTracksResult	queryTracks(const I<CSeekableDataSource>& seekableDataSource, Options options = kNone)
-										const
+			QueryTracksResult	queryTracks(const I<CSeekableDataSource>& seekableDataSource, Options options) const
 									{ return mQueryTracksProc(seekableDataSource, options); }
 
 	// Properties

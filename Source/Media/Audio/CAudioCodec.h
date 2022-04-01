@@ -15,6 +15,55 @@
 // MARK: CAudioCodec
 
 class CAudioCodec : public CCodec {
+	// Info
+	public:
+		struct Info {
+								// Lifecycle methods
+								Info(OSType id, const CString& name) : mID(id), mDecodeName(name), mEncodeName(name) {}
+								Info(OSType id, const CString& name, const EncodeSettings& encodeSettings) :
+									mID(id), mDecodeName(name), mEncodeName(name),
+											mEncodeSettings(OI<EncodeSettings>(encodeSettings))
+									{}
+								Info(OSType id, const CString& decodeName, const CString& encodeName,
+										const EncodeSettings& encodeSettings) :
+									mID(id), mDecodeName(decodeName), mEncodeName(encodeName),
+											mEncodeSettings(OI<EncodeSettings>(encodeSettings))
+									{}
+								Info(const Info& other) :
+									mID(other.mID), mDecodeName(other.mDecodeName), mEncodeName(other.mEncodeName),
+											mEncodeSettings(other.mEncodeSettings)
+									{}
+
+								// Instance methods
+					OSType		getID() const
+									{ return mID; }
+			const	CString&	getDecodeName() const
+									{ return mDecodeName; }
+			const	CString&	getEncodeName() const
+									{ return mEncodeName; }
+
+			// Properties
+			private:
+				OSType				mID;
+				CString				mDecodeName;
+				CString				mEncodeName;
+				OI<EncodeSettings>	mEncodeSettings;
+		};
+
+	// Methods
+	public:
+		// Lifecycle methods
+		~CAudioCodec() {}
+
+	protected:
+		// Lifecycle methods
+		CAudioCodec() : CCodec() {}
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CDecodeAudioCodec
+
+class CDecodeAudioCodec : public CAudioCodec {
 	// FrameSourceDecodeInfo
 	public:
 		class FrameSourceDecodeInfo : public DecodeInfo {
@@ -87,112 +136,32 @@ class CAudioCodec : public CCodec {
 				UInt64					mCurrentPosition;
 		};
 
-	// Info
-	public:
-		struct Info {
-			// Procs
-			typedef	I<CAudioCodec>	(*InstantiateProc)(OSType id);
-
-									// Lifecycle methods
-									Info(OSType id, const CString& name, InstantiateProc instantiateProc) :
-										mID(id), mDecodeName(name), mEncodeName(name), mInstantiateProc(instantiateProc)
-										{}
-									Info(OSType id, const CString& name, const EncodeSettings& encodeSettings,
-											InstantiateProc instantiateProc) :
-										mID(id), mDecodeName(name), mEncodeName(name),
-												mEncodeSettings(OI<EncodeSettings>(encodeSettings)),
-												mInstantiateProc(instantiateProc)
-										{}
-									Info(OSType id, const CString& decodeName, const CString& encodeName,
-											const EncodeSettings& encodeSettings, InstantiateProc instantiateProc) :
-										mID(id), mDecodeName(decodeName), mEncodeName(encodeName),
-												mEncodeSettings(OI<EncodeSettings>(encodeSettings)),
-												mInstantiateProc(instantiateProc)
-										{}
-									Info(const Info& other) :
-										mID(other.mID), mDecodeName(other.mDecodeName), mEncodeName(other.mEncodeName),
-												mEncodeSettings(other.mEncodeSettings),
-												mInstantiateProc(other.mInstantiateProc)
-										{}
-
-									// Instance methods
-			OSType					getID() const
-										{ return mID; }
-			const	CString&		getDecodeName() const
-										{ return mDecodeName; }
-			const	CString&		getEncodeName() const
-										{ return mEncodeName; }
-					I<CAudioCodec>	instantiate() const
-										{ return mInstantiateProc(mID); }
-
-			// Properties
-			private:
-				OSType				mID;
-				CString				mDecodeName;
-				CString				mEncodeName;
-				OI<EncodeSettings>	mEncodeSettings;
-				InstantiateProc		mInstantiateProc;
-		};
-
 	// Methods
 	public:
-												// Lifecycle methods
-												~CAudioCodec() {}
-
 												// Instance methods
-		virtual	TArray<SAudioProcessingSetup>	getDecodeAudioProcessingSetups(
-														const SAudioStorageFormat& audioStorageFormat,
-														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
-		virtual	OI<SError>						setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-														const I<CCodec::DecodeInfo>& decodeInfo) = 0;
+		virtual	TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat)
+														= 0;
+		virtual	OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat) = 0;
 		virtual	CAudioFrames::Requirements		getRequirements() const = 0;
 		virtual	void							seek(UniversalTimeInterval timeInterval) = 0;
 		virtual	OI<SError>						decodeInto(CAudioFrames& audioFrames) = 0;
 
-		virtual	TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const = 0;
-		virtual	void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat) = 0;
+	protected:
+												// Lifecycle methods
+												CDecodeAudioCodec() : CAudioCodec() {}
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CEncodeAudioCodec
+
+class CEncodeAudioCodec : public CAudioCodec {
+	// Methods
+	public:
+												// Instance methods
+		virtual	TArray<SAudioProcessingSetup>	getAudioProcessingSetups() const = 0;
+		virtual	void							setup(const SAudioProcessingFormat& audioProcessingFormat) = 0;
 
 	protected:
 												// Lifecycle methods
-												CAudioCodec() : CCodec() {}
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDecodeOnlyAudioCodec
-
-class CDecodeOnlyAudioCodec : public CAudioCodec {
-	// Methods
-	public:
-										// CAudioCodec methods
-		TArray<SAudioProcessingSetup>	getEncodeAudioProcessingSetups() const
-											{ AssertFailUnimplemented(); return TNArray<SAudioProcessingSetup>(); }
-		void							setupForEncode(const SAudioProcessingFormat& audioProcessingFormat)
-											{ AssertFailUnimplemented(); }
-
-	protected:
-										// Lifecycle methods
-										CDecodeOnlyAudioCodec() : CAudioCodec() {}
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CEncodeOnlyAudioCodec
-
-class CEncodeOnlyAudioCodec : public CAudioCodec {
-	// Methods
-	public:
-										// CAudioCodec methods
-		TArray<SAudioProcessingSetup>	getDecodeAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat,
-												const I<CCodec::DecodeInfo>& decodeInfo)
-											{ AssertFailUnimplemented(); return TNArray<SAudioProcessingSetup>(); }
-		OI<SError>						setupForDecode(const SAudioProcessingFormat& audioProcessingFormat,
-												const I<CCodec::DecodeInfo>& decodeInfo)
-											{ AssertFailUnimplemented(); return OI<SError>(SError::mUnimplemented); }
-		void							seek(UniversalTimeInterval timeInterval)
-											{ AssertFailUnimplemented(); }
-		OI<SError>						decodeInto(CAudioFrames& audioFrames)
-											{ AssertFailUnimplemented(); return OI<SError>(SError::mUnimplemented); }
-
-	protected:
-					// Lifecycle methods
-					CEncodeOnlyAudioCodec() : CAudioCodec() {}
+												CEncodeAudioCodec() : CAudioCodec() {}
 };
