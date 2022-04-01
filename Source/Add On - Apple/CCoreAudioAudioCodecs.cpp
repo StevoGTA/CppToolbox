@@ -20,10 +20,10 @@ class CAACDecodeAudioCodec : public CDecodeAudioCodec {
 														const I<CMediaPacketSource>& mediaPacketSource,
 														const CData& configurationData) :
 													mCodecID(codecID),
-														mDecodeInfo(mediaPacketSource, configurationData),
-														mAudioConverterRef(nil), mDecodeFramesToIgnore(0),
-														mInputPacketData((CData::ByteCount) 10 * 1024),
-														mInputPacketDescriptionsData((CData::ByteCount) 1 * 1024)
+															mDecodeInfo(mediaPacketSource, configurationData),
+															mAudioConverterRef(nil), mDecodeFramesToIgnore(0),
+															mInputPacketData((CData::ByteCount) 10 * 1024),
+															mInputPacketDescriptionsData((CData::ByteCount) 1 * 1024)
 													{}
 												~CAACDecodeAudioCodec()
 													{

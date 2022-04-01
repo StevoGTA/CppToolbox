@@ -15,7 +15,7 @@ template <typename T, typename U> struct TMediaTrackInfo {
 				TMediaTrackInfo<T, U>(const T& mediaTrack, const OI<I<U> >& codec) :
 					mMediaTrack(mediaTrack), mCodec(codec)
 					{}
-				TMediaTrackInfo<T>(const T& mediaTrack) : mMediaTrack(mediaTrack) {}
+				TMediaTrackInfo<T, U>(const T& mediaTrack) : mMediaTrack(mediaTrack) {}
 				TMediaTrackInfo<T, U>(const TMediaTrackInfo<T, U>& other) :
 					mMediaTrack(other.mMediaTrack), mCodec(other.mCodec)
 					{}
