@@ -4,7 +4,7 @@
 
 #include "CWAVEMediaSource.h"
 
-#include "CDVIIntelIMAADPCMAudioCodec.h"
+#include "CIMAADPCMAudioCodec.h"
 #include "CPCMAudioCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -81,6 +81,7 @@ class CWAVEMediaSourceImportTrackerInternals {
 
 		OV<UInt16>				mFormatTag;
 		OV<UInt16>				mSampleSize;
+		OV<UInt16>				mBlockAlign;
 		OI<SAudioStorageFormat>	mAudioStorageFormat;
 };
 
@@ -144,13 +145,16 @@ OI<SError> CWAVEMediaSourceImportTracker::note(const CChunkReader::ChunkInfo& ch
 				// Have WAVEFORMATEX
 				const	SWAVEFORMATEX&	waveFormatEx = *((SWAVEFORMATEX*) readPayload.getValue().getBytePtr());
 				mInternals->mSampleSize = OV<UInt16>(waveFormatEx.getBitsPerSample());
+				mInternals->mBlockAlign = OV<UInt16>(waveFormatEx.getBlockAlign());
 			} else if ((waveFormat.getChannels() > 0) && (waveFormat.getSamplesPerSecond() > 0) &&
-					(waveFormat.getAverageBytesPerSec() > 0))
+					(waveFormat.getAverageBytesPerSec() > 0)) {
 				// Use WAVEFORMAT
 				mInternals->mSampleSize =
 						OV<UInt16>(
 								(UInt16) (waveFormat.getAverageBytesPerSec() / waveFormat.getSamplesPerSecond())
 										/ waveFormat.getChannels() * 8);
+				mInternals->mBlockAlign = OV<UInt16>(waveFormat.getBlockAlign());
+			}
 
 			if (note(waveFormat, mInternals->mSampleSize, readPayload.getValue()))
 				// Success
@@ -255,7 +259,7 @@ I<CDecodeAudioCodec> CWAVEMediaSourceImportTracker::createAudioCodec(const I<CSe
 
 		case 0x0011:	// DVI/Intel ADPCM
 			return CDVIIntelIMAADPCMAudioCodec::create(*mInternals->mAudioStorageFormat, seekableDataSource,
-					*mDataChunkStartByteOffset, *mDataChunkByteCount);
+					*mDataChunkStartByteOffset, *mDataChunkByteCount, *mInternals->mBlockAlign);
 
 		default:		// Not possible
 			AssertFail();
@@ -280,7 +284,7 @@ CAudioTrack CWAVEMediaSourceImportTracker::composeAudioTrack(UInt16 sampleSize)
 		case 0x0011:	// DVI/Intel ADPCM
 			frameCount =
 					CDVIIntelIMAADPCMAudioCodec::composeFrameCount(*mInternals->mAudioStorageFormat,
-							*mDataChunkByteCount);
+							*mDataChunkByteCount, *mInternals->mBlockAlign);
 			break;
 
 		default:		// Not possible

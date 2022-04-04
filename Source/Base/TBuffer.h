@@ -38,6 +38,8 @@ template <typename T> struct TBuffer {
 				{ return mStorage; }
 	T&		operator[](UInt32 index) const
 				{ return mStorage[index]; }
+	UInt32	getCount() const
+				{ return mByteCount / sizeof(T); }
 	UInt32	getByteCount() const
 				{ return mByteCount; }
 
