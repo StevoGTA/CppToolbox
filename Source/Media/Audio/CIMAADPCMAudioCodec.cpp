@@ -74,7 +74,7 @@ class CIMAADPCMDecoderInternals {
 							stateInfo.mSample = -0x7FFF;
 
 						// Store sample
-						*samplePtr = stateInfo.mSample;
+						*samplePtr = (SInt16) stateInfo.mSample;
 					}
 
 		SInt16*				mFramePtr;
@@ -116,12 +116,12 @@ void CIMAADPCMDecoder::emitSamplesFromState()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt8	channels = mInternals->mStateInfos.getCount();
+	UInt8	channels = (UInt8) mInternals->mStateInfos.getCount();
 
 	// Iterate channels
 	for (UInt8 channel = 0; channel < channels; channel++)
 		// Emit sample
-		*mInternals->mFramePtr++ = mInternals->mStateInfos[channel].mSample;
+		*mInternals->mFramePtr++ = (SInt16) mInternals->mStateInfos[channel].mSample;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ void CIMAADPCMDecoder::decodeInterleaved(const UInt8* packetPtr, UInt32 channelH
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt8	channels = mInternals->mStateInfos.getCount();
+	UInt8	channels = (UInt8) mInternals->mStateInfos.getCount();
 
 	// Iterate groups
 	for (UInt32 groupIndex = 0; groupIndex < groupCount; groupIndex++) {
@@ -167,7 +167,7 @@ void CIMAADPCMDecoder::decodeNoninterleaved(const UInt8* packetPtr, UInt32 chann
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt8	channels = mInternals->mStateInfos.getCount();
+	UInt8	channels = (UInt8) mInternals->mStateInfos.getCount();
 
 	// Iterate channels
 	for (UInt8 channel = 0; channel < channels; channel++) {
@@ -308,7 +308,7 @@ OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 
 		// Setup IMA/ADPCM decoder
 		CIMAADPCMDecoder	imaADCPMDecoder(bufferPtr, channels);
-		for (UInt16 channel = 0; channel < channels; channel++) {
+		for (UInt8 channel = 0; channel < channels; channel++) {
 			// Get info
 			const	SDVIIntelChannelHeader&	channelHeader = ((SDVIIntelChannelHeader*) packetPtr)[channel];
 
