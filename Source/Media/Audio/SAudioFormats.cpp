@@ -92,6 +92,10 @@ const CString eChannelMapGetDescription(EAudioChannelMap channelMap)
 
 		// 10 Channels
 		case kAudioChannelMap_10_0_Unknown:	return CString(OSSTR("Unknown 10 channel"));
+
+#if defined(TARGET_OS_WINDOWS)
+		default:							return CString::mEmpty;
+#endif
 	}
 }
 

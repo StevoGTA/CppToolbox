@@ -108,9 +108,11 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, IMFSamp
 	if (dataFormatGUID == MFVideoFormat_NV12)
 		// YCbCr
 		dataFormat = kDataFormatYCbCr;
-	else
+	else {
 		// Unknown
 		AssertFailUnimplemented();
+		dataFormat = kDataFormatYCbCr;
+	}
 
 	mInternals = new CVideoFrameInternals(presentationTimeInterval, dataFormat, frameSize, viewRect, sample);
 }
