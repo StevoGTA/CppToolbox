@@ -11,6 +11,22 @@ static	NSString*	sStringFor(const CString& string);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - CString
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CString& localizationGroup, const CString& localizationKey)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mStringRef =
+			(CFStringRef) ::CFBridgingRetain([[NSBundle mainBundle] localizedStringForKey:sStringFor(localizationKey)
+					value:sStringFor(localizationKey) table:sStringFor(localizationGroup)]);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - NSString extension
 
 @implementation NSString (Cpp)

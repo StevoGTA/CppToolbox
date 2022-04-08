@@ -52,3 +52,24 @@ class CProgress {
 	private:
 		CProgressInternals*	mInternals;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CItemsProgress
+
+class CItemsProgressInternals;
+class CItemsProgress : public CProgress {
+	// Methods
+	public:
+				// Lifecycle methods
+				CItemsProgress(const UpdateInfo& updateInfo, const OV<UInt32>& initialTotalItemsCount = OV<UInt32>());
+				CItemsProgress(const CItemsProgress& other);
+				~CItemsProgress();
+
+				// Instance methods
+		void	addTotalItemsCount(UInt32 itemsCount);
+		void	addCompletedItemsCount(UInt32 itemsCount);
+
+	// Properties
+	private:
+		CItemsProgressInternals*	mInternals;
+};

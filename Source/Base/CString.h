@@ -245,6 +245,8 @@ class CString : public CHashable {
 
 										CString(const CData& data, Encoding encoding = kEncodingTextDefault);
 
+										CString(const CString& localizationGroup, const CString& localizationKey);
+
 										~CString();
 
 										// CEquatable methods
