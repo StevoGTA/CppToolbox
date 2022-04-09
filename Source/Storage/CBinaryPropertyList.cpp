@@ -230,7 +230,7 @@ CBPLReader::CBPLReader(const I<CSeekableDataSource>& seekableDataSource, UInt8 o
 
 		// Create string
 		mStrings[i] =
-				new CString(dataResult.getValue(),
+				new CString(*dataResult,
 						(marker == kMarkerTypeStringASCII) ? CString::kEncodingASCII : CString::kEncodingUTF16BE);
 	}
 }
@@ -313,7 +313,7 @@ UInt64 CBPLReader::readCount(const char* errorWhen)
 	LogIfErrorAndReturnValue(mError, errorWhen, 0);
 
 	UInt8	fieldSize;
-	switch (countMarker.getValue()) {
+	switch (*countMarker) {
 		case kMarkerTypeInteger1Byte:	fieldSize = 1;	break;
 		case kMarkerTypeInteger2Bytes:	fieldSize = 2;	break;
 		case kMarkerTypeInteger4Bytes:	fieldSize = 4;	break;

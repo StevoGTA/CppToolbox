@@ -289,7 +289,7 @@ TIResult<CDictionary> sReadDictionary(const SInt8*& charPtr)
 			// Check if got value
 			if (valueResult.hasValue())
 				// Store
-				dictionary.set(keyResult.getValue(), valueResult.getValue());
+				dictionary.set(*keyResult, *valueResult);
 
 			// Skip whitespace
 			sSkipWhitespace(charPtr);
@@ -366,7 +366,7 @@ TIResult<SValue> sReadValue(const SInt8*& charPtr)
 		// Skip whitespace
 		sSkipWhitespace(charPtr);
 
-		return TIResult<SValue>(SValue(result.getValue()));
+		return TIResult<SValue>(SValue(*result));
 	} else if (*charPtr == '{') {
 		// Dictionary
 		TIResult<CDictionary>	result = sReadDictionary(charPtr);
@@ -375,7 +375,7 @@ TIResult<SValue> sReadValue(const SInt8*& charPtr)
 		// Skip whitespace
 		sSkipWhitespace(charPtr);
 
-		return TIResult<SValue>(SValue(result.getValue()));
+		return TIResult<SValue>(SValue(*result));
 	} else if (*charPtr == '[') {
 		// Array
 		charPtr++;
@@ -390,7 +390,7 @@ TIResult<SValue> sReadValue(const SInt8*& charPtr)
 				// Read dictionary
 				TIResult<CDictionary>	result = sReadDictionary(charPtr);
 				ReturnValueIfResultError(result, TIResult<SValue>(result.getError()));
-				array += result.getValue();
+				array += *result;
 
 				// Skip whitespace
 				sSkipWhitespace(charPtr);
@@ -421,7 +421,7 @@ TIResult<SValue> sReadValue(const SInt8*& charPtr)
 				// Read string
 				TIResult<CString>	result = sReadString(charPtr);
 				ReturnValueIfResultError(result, TIResult<SValue>(result.getError()));
-				array += result.getValue();
+				array += *result;
 
 				// Skip whitespace
 				sSkipWhitespace(charPtr);

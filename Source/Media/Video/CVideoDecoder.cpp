@@ -134,7 +134,7 @@ CVideoProcessor::PerformResult CVideoDecoder::perform()
 	// Update
 	currentTimeInterval += 1.0 / mInternals->mVideoProcessingFormat->getFramerate();
 
-	return PerformResult(currentTimeInterval, videoFrame.getValue());
+	return PerformResult(currentTimeInterval, *videoFrame);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

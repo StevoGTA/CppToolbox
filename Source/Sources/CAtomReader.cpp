@@ -29,16 +29,16 @@ TIResult<CAtomReader::Atom> CAtomReader::readAtom() const
 
 	// Do we need to read byte count as UInt64?
 	UInt64	payloadByteCount;
-	if (byteCount32.getValue() == 1) {
+	if (*byteCount32 == 1) {
 		// Yes
 		TVResult<UInt64>	byteCount64 = readUInt64();
 		ReturnValueIfResultError(byteCount64, TIResult<CAtomReader::Atom>(byteCount64.getError()));
-		payloadByteCount = byteCount64.getValue() - 16;
+		payloadByteCount = *byteCount64 - 16;
 	} else
 		// No
-		payloadByteCount = byteCount32.getValue() - 8;
+		payloadByteCount = *byteCount32 - 8;
 
-	return TIResult<Atom>(Atom(type.getValue(), getPos(), payloadByteCount));
+	return TIResult<Atom>(Atom(*type, getPos(), payloadByteCount));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ TIResult<CData> CAtomReader::readAtomPayload(const Atom& atom, SInt64 offset) co
 	TIResult<Atom>	childAtom = readAtom(atom, offset);
 	ReturnValueIfResultError(childAtom, TIResult<CData>(childAtom.getError()));
 
-	return readAtomPayload(childAtom.getValue());
+	return readAtomPayload(*childAtom);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -97,10 +97,10 @@ TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const Atom& 
 		ReturnValueIfResultError(childAtom, TIResult<ContainerAtom>(childAtom.getError()));
 
 		// Add to array
-		atoms += childAtom.getValue();
+		atoms += *childAtom;
 
 		// Seek
-		error = seekToNextAtom(childAtom.getValue());
+		error = seekToNextAtom(*childAtom);
 		ReturnValueIfError(error, TIResult<ContainerAtom>(*error));
 	}
 

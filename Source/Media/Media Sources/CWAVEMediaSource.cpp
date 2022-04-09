@@ -42,10 +42,10 @@ SMediaSource::QueryTracksResult CWAVEMediaSource::queryTracks(const I<CSeekableD
 			break;
 
 		// Note chunk
-		waveMediaSourceImportTracker->note(chunkInfo.getValue(), *chunkReader);
+		waveMediaSourceImportTracker->note(*chunkInfo, *chunkReader);
 
 		// Seek to next chunk
-		error = chunkReader->seekToNext(chunkInfo.getValue());
+		error = chunkReader->seekToNext(*chunkInfo);
 		if (error.hasInstance())
 			// Done reading chunks
 			break;
@@ -117,7 +117,7 @@ OI<CChunkReader> CWAVEMediaSourceImportTracker::setup(const I<CSeekableDataSourc
 	TIResult<CData>	data = seekableDataSource->readData(0, sizeof(SWAVEFORMChunk32));
 	ReturnValueIfResultError(data, OI<CChunkReader>());
 
-	const	SWAVEFORMChunk32&	formChunk32 = *((SWAVEFORMChunk32*) data.getValue().getBytePtr());
+	const	SWAVEFORMChunk32&	formChunk32 = *((SWAVEFORMChunk32*) data->getBytePtr());
 	if ((formChunk32.getID() == kWAVEFORMChunkID) && (formChunk32.getFormType() == kWAVEFORMType)) {
 		// Success
 		OI<CChunkReader>	chunkReader(new CChunkReader(seekableDataSource, CChunkReader::kFormat32BitLittleEndian));
@@ -140,10 +140,10 @@ OI<SError> CWAVEMediaSourceImportTracker::note(const CChunkReader::ChunkInfo& ch
 			TIResult<CData>	readPayload = chunkReader.readPayload(chunkInfo);
 			ReturnErrorIfResultError(readPayload);
 
-			const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) readPayload.getValue().getBytePtr());
-			if (readPayload.getValue().getByteCount() >= sizeof(SWAVEFORMATEX)) {
+			const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) readPayload->getBytePtr());
+			if (readPayload->getByteCount() >= sizeof(SWAVEFORMATEX)) {
 				// Have WAVEFORMATEX
-				const	SWAVEFORMATEX&	waveFormatEx = *((SWAVEFORMATEX*) readPayload.getValue().getBytePtr());
+				const	SWAVEFORMATEX&	waveFormatEx = *((SWAVEFORMATEX*) readPayload->getBytePtr());
 				mInternals->mSampleSize = OV<UInt16>(waveFormatEx.getBitsPerSample());
 				mInternals->mBlockAlign = OV<UInt16>(waveFormatEx.getBlockAlign());
 			} else if ((waveFormat.getChannels() > 0) && (waveFormat.getSamplesPerSecond() > 0) &&
@@ -156,7 +156,7 @@ OI<SError> CWAVEMediaSourceImportTracker::note(const CChunkReader::ChunkInfo& ch
 				mInternals->mBlockAlign = OV<UInt16>(waveFormat.getBlockAlign());
 			}
 
-			if (note(waveFormat, mInternals->mSampleSize, readPayload.getValue()))
+			if (note(waveFormat, mInternals->mSampleSize, *readPayload))
 				// Success
 				return OI<SError>();
 			else

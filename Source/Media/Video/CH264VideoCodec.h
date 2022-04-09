@@ -101,22 +101,22 @@ class CH264VideoCodec {
 					CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(data)), true);
 
 					// Decode
-					mForbiddenZero = bitReader.readUInt8(1).getValue();
-					mNALRef = bitReader.readUInt8(2).getValue();
-					mNALUnitType = (NALUInfo::Type) bitReader.readUInt8(5).getValue();
-					mProfile = bitReader.readUInt8().getValue();
-					mConstraintSet0Flag = bitReader.readUInt8(1).getValue();
-					mConstraintSet1Flag = bitReader.readUInt8(1).getValue();
-					mConstraintSet2Flag = bitReader.readUInt8(1).getValue();
-					mConstraintSet3Flag = bitReader.readUInt8(1).getValue();
-					mConstraintSet4Flag = bitReader.readUInt8(1).getValue();
-					mConstraintSet5Flag = bitReader.readUInt8(1).getValue();
-					mReserved2Bits = bitReader.readUInt8(2).getValue();
-					mLevel = bitReader.readUInt8().getValue();
-					mSPSID = (UInt8) bitReader.readUEColumbusCode().getValue();
-					mFrameNumberBitCount = (UInt8) bitReader.readUEColumbusCode().getValue() + 4;
-					mPicOrderCountType = (UInt8) bitReader.readUEColumbusCode().getValue();
-					mPicOrderCountLSBBitCount = (UInt8) bitReader.readUEColumbusCode().getValue() + 4;
+					mForbiddenZero = *bitReader.readUInt8(1);
+					mNALRef = *bitReader.readUInt8(2);
+					mNALUnitType = (NALUInfo::Type) *bitReader.readUInt8(5);
+					mProfile = *bitReader.readUInt8();
+					mConstraintSet0Flag = *bitReader.readUInt8(1);
+					mConstraintSet1Flag = *bitReader.readUInt8(1);
+					mConstraintSet2Flag = *bitReader.readUInt8(1);
+					mConstraintSet3Flag = *bitReader.readUInt8(1);
+					mConstraintSet4Flag = *bitReader.readUInt8(1);
+					mConstraintSet5Flag = *bitReader.readUInt8(1);
+					mReserved2Bits = *bitReader.readUInt8(2);
+					mLevel = *bitReader.readUInt8();
+					mSPSID = (UInt8) *bitReader.readUEColumbusCode();
+					mFrameNumberBitCount = (UInt8) *bitReader.readUEColumbusCode() + 4;
+					mPicOrderCountType = (UInt8) *bitReader.readUEColumbusCode();
+					mPicOrderCountLSBBitCount = (UInt8) *bitReader.readUEColumbusCode() + 4;
 				}
 
 			// Properties

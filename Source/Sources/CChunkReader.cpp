@@ -51,14 +51,14 @@ TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 
 			TVResult<UInt32>	_size = readUInt32();
 			ReturnValueIfResultError(_size, TIResult<CChunkReader::ChunkInfo>(_size.getError()));
-			UInt32				size = _size.getValue();
+			UInt32				size = *_size;
 
 			UInt64				nextChunkPos = getPos() + size;
 			if ((nextChunkPos % 1) != 0)
 				// Align
 				nextChunkPos += 1;
 
-			return TIResult<ChunkInfo>(ChunkInfo(id.getValue(), size, getPos(), nextChunkPos));
+			return TIResult<ChunkInfo>(ChunkInfo(*id, size, getPos(), nextChunkPos));
 			}
 
 		case kFormat64BitLittleEndian: {
@@ -68,14 +68,14 @@ TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 
 			TVResult<UInt64>	_size = readUInt64();
 			ReturnValueIfResultError(_size, TIResult<CChunkReader::ChunkInfo>(_size.getError()));
-			UInt64				size = _size.getValue() - sizeof(CUUID::Bytes) - sizeof(UInt64);
+			UInt64				size = *_size - sizeof(CUUID::Bytes) - sizeof(UInt64);
 
 			UInt64				nextChunkPos = getPos() + size;
 			if ((nextChunkPos % 8) != 0)
 				// Align
 				nextChunkPos += 7 - (nextChunkPos % 8);
 
-			return TIResult<ChunkInfo>(ChunkInfo(uuid.getValue(), size, getPos(), nextChunkPos));
+			return TIResult<ChunkInfo>(ChunkInfo(*uuid, size, getPos(), nextChunkPos));
 			}
 
 #if defined(TARGET_OS_WINDOWS)

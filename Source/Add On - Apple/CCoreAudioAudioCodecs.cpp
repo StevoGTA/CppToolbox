@@ -186,7 +186,7 @@ OSStatus CAACDecodeAudioCodec::fillBufferData(AudioConverterRef inAudioConverter
 	}
 
 	// Prepare return info
-	const	TArray<SMediaPacket>&	mediaPackets = mediaPacketsResult.getValue();
+	const	TArray<SMediaPacket>&	mediaPackets = *mediaPacketsResult;
 
 	*ioNumberDataPackets = mediaPackets.getCount();
 

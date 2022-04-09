@@ -304,7 +304,7 @@ OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 		}
 
 		// Decode packet
-		const	UInt8*	packetPtr = (const UInt8*) dataInfo.getValue().getData().getBytePtr();
+		const	UInt8*	packetPtr = (const UInt8*) dataInfo->getData().getBytePtr();
 
 		// Setup IMA/ADPCM decoder
 		CIMAADPCMDecoder	imaADCPMDecoder(bufferPtr, channels);

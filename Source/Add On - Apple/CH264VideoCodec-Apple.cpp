@@ -196,11 +196,11 @@ TIResult<CVideoFrame> CH264DecodeVideoCodec::decode()
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
 
 	// Update frame timing
-	TIResult<CH264VideoCodec::FrameTiming::Times>	times = mFrameTiming->updateFrom(dataInfo.getValue());
+	TIResult<CH264VideoCodec::FrameTiming::Times>	times = mFrameTiming->updateFrom(*dataInfo);
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(times.getError()));
 
 	// Setup sample buffer
-	const	CData&				data = dataInfo.getValue().getData();
+	const	CData&				data = dataInfo->getData();
 			CMBlockBufferRef	blockBufferRef;
 			OSStatus			status =
 										::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
@@ -210,9 +210,9 @@ TIResult<CVideoFrame> CH264DecodeVideoCodec::decode()
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
 	CMSampleTimingInfo	sampleTimingInfo;
-	sampleTimingInfo.duration = ::CMTimeMake(dataInfo.getValue().getDuration(), *mTimeScale);
-	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(times.getValue().mDecodeTime, *mTimeScale);
-	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(times.getValue().mPresentationTime, *mTimeScale);
+	sampleTimingInfo.duration = ::CMTimeMake(dataInfo->getDuration(), *mTimeScale);
+	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(times->mDecodeTime, *mTimeScale);
+	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(times->mPresentationTime, *mTimeScale);
 
 	size_t				sampleSize = data.getByteCount();
 	CMSampleBufferRef	sampleBufferRef;

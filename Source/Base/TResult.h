@@ -29,6 +29,8 @@ template <typename T> struct TIResult {
 
 	const	T&		operator*() const
 						{ AssertFailIf(!mValue.hasInstance()); return *mValue; }
+	const	T*		operator->() const
+						{ AssertFailIf(!mValue.hasInstance()); return &(*mValue); }
 
 	private:
 		OI<T>		mValue;

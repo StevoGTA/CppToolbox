@@ -68,7 +68,7 @@ OI<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destina
 	ReturnValueIfResultError(foldersFilesResult, OI<SError>(foldersFilesResult.getError()));
 
 	// Create folders in destination folder
-	const	SFoldersFiles&	foldersFiles = foldersFilesResult.getValue();
+	const	SFoldersFiles&	foldersFiles = *foldersFilesResult;
 	const	TArray<CFolder>	folders = foldersFiles.getFolders();
 	for (CArray::ItemIndex i = 0; i < folders.getCount(); i++) {
 		// Create folder

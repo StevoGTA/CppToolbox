@@ -101,34 +101,34 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 	// Iterate NALUs
 	while (true) {
 		// Get info
-		OV<UInt32>		size = bitReader.readUInt32().getValue();
+		OV<UInt32>		size = *bitReader.readUInt32();
 		UInt64			pos = bitReader.getPos();
 
-		OV<UInt8>		forbidden_zero_bit = bitReader.readUInt8(1).getValue();	(void) forbidden_zero_bit;
-		OV<UInt8>		nal_ref_idc = bitReader.readUInt8(2).getValue();	(void) nal_ref_idc;
-		OV<UInt8>		nal_unit_type = bitReader.readUInt8(5).getValue();
+		OV<UInt8>		forbidden_zero_bit = *bitReader.readUInt8(1);	(void) forbidden_zero_bit;
+		OV<UInt8>		nal_ref_idc = *bitReader.readUInt8(2);	(void) nal_ref_idc;
+		OV<UInt8>		nal_unit_type = *bitReader.readUInt8(5);
 		NALUInfo::Type	naluType = (NALUInfo::Type) *nal_unit_type;
 
 		// Check type
 		if (naluType == NALUInfo::kTypeCodedSliceNonIDRPicture) {
 			// Coded Slice Non-IDR Picture
-			OV<UInt32>	first_mb_in_slice = bitReader.readUEColumbusCode().getValue();	(void) first_mb_in_slice;
-			OV<UInt32>	slice_type = bitReader.readUEColumbusCode().getValue();
-			OV<UInt32>	pic_parameter_set_id = bitReader.readUEColumbusCode().getValue();	(void) pic_parameter_set_id;
-			OV<UInt8>	frame_num = bitReader.readUInt8(mCurrentFrameNumberBitCount).getValue();	(void) frame_num;
-			OV<UInt8>	pic_order_cnt_lsb = bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount).getValue();
+			OV<UInt32>	first_mb_in_slice = *bitReader.readUEColumbusCode();	(void) first_mb_in_slice;
+			OV<UInt32>	slice_type = *bitReader.readUEColumbusCode();
+			OV<UInt32>	pic_parameter_set_id = *bitReader.readUEColumbusCode();	(void) pic_parameter_set_id;
+			OV<UInt8>	frame_num = *bitReader.readUInt8(mCurrentFrameNumberBitCount);	(void) frame_num;
+			OV<UInt8>	pic_order_cnt_lsb = *bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount);
 
 			sliceType = (UInt8) *slice_type;
 			picOrderCntLSB = *pic_order_cnt_lsb;
 			break;
 		} else if (naluType == NALUInfo::kTypeCodedSliceIDRPicture) {
 			// Coded Slice IDR Picture
-			OV<UInt32>	first_mb_in_slice = bitReader.readUEColumbusCode().getValue();	(void) first_mb_in_slice;
-			OV<UInt32>	slice_type = bitReader.readUEColumbusCode().getValue();
-			OV<UInt32>	pic_parameter_set_id = bitReader.readUEColumbusCode().getValue();	(void) pic_parameter_set_id;
-			OV<UInt8>	frame_num = bitReader.readUInt8(mCurrentFrameNumberBitCount).getValue();	(void) frame_num;
-			OV<UInt32>	idr_pic_id = bitReader.readUEColumbusCode().getValue();	(void) idr_pic_id;
-			OV<UInt8>	pic_order_cnt_lsb = bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount).getValue();
+			OV<UInt32>	first_mb_in_slice = *bitReader.readUEColumbusCode();	(void) first_mb_in_slice;
+			OV<UInt32>	slice_type = *bitReader.readUEColumbusCode();
+			OV<UInt32>	pic_parameter_set_id = *bitReader.readUEColumbusCode();	(void) pic_parameter_set_id;
+			OV<UInt8>	frame_num = *bitReader.readUInt8(mCurrentFrameNumberBitCount);	(void) frame_num;
+			OV<UInt32>	idr_pic_id = *bitReader.readUEColumbusCode();	(void) idr_pic_id;
+			OV<UInt8>	pic_order_cnt_lsb = *bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount);
 
 			sliceType = (UInt8) *slice_type;
 			picOrderCntLSB = *pic_order_cnt_lsb;

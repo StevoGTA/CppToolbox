@@ -118,7 +118,7 @@ class CDecodeAudioCodec : public CAudioCodec {
 												ReturnResultIfResultError(frameCount);
 
 												// Complete write
-												audioFrames.completeWrite(frameCount.getValue());
+												audioFrames.completeWrite(*frameCount);
 
 												return frameCount;
 											}
