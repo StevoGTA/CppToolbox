@@ -24,6 +24,7 @@ class CFilesystem {
 		static	TIResult<SFoldersFiles>		getFoldersFiles(const CFolder& folder, bool deep = false);
 		static	TIResult<TArray<CFolder> >	getFolders(const CFolder& folder, bool deep = false);
 		static	TIResult<TArray<CFile> >	getFiles(const CFolder& folder, bool deep = false);
+		static	OI<CFile>					getResourceFork(const CFile& file);
 
 											// Will copy sourceFolder *into* destinationFolder
 		static	OI<SError>					copy(const CFolder& sourceFolder, const CFolder& destinationFolder);

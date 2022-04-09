@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CAppleResourceManager.h"
 #include "CDataSource.h"
 #include "SMediaTracks.h"
 
@@ -55,7 +56,8 @@ struct SMediaSource {
 	};
 
 	// Procs
-	typedef	QueryTracksResult	(*QueryTracksProc)(const I<CSeekableDataSource>& seekableDataSource, Options options);
+	typedef	QueryTracksResult	(*QueryTracksProc)(const I<CSeekableDataSource>& seekableDataSource,
+										const OR<const CAppleResourceManager>& appleResourceManager, Options options);
 
 								// Lifecycle methods
 								SMediaSource(OSType id, const CString& name, const TArray<CString>& extensions,
@@ -74,8 +76,10 @@ struct SMediaSource {
 									{ return mName; }
 	const	TArray<CString>&	getExtensions() const
 									{ return mExtensions; }
-			QueryTracksResult	queryTracks(const I<CSeekableDataSource>& seekableDataSource, Options options) const
-									{ return mQueryTracksProc(seekableDataSource, options); }
+			QueryTracksResult	queryTracks(const I<CSeekableDataSource>& seekableDataSource,
+										const OR<const CAppleResourceManager>& appleResourceManager, Options options)
+										const
+									{ return mQueryTracksProc(seekableDataSource, appleResourceManager, options); }
 
 	// Properties
 	private:
@@ -119,6 +123,7 @@ class CMediaSourceRegistry {
 		const	SMediaSource&			getMediaSource(OSType id) const;
 				TIResult<IdentifyInfo>	identify(const I<CSeekableDataSource>& seekableDataSource,
 												const CString& extension,
+												const OR<const CAppleResourceManager>& appleResourceManager,
 												SMediaSource::Options options = SMediaSource::kNone) const;
 
 	private:

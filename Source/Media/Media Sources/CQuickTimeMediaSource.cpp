@@ -619,7 +619,8 @@ static	SInt32	kUnsupportedCodecConfiguration = 2;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	SMediaSource::QueryTracksResult	sQueryQuickTimeTracksProc(const I<CSeekableDataSource>& seekableDataSource,
+static	SMediaSource::QueryTracksResult	sQueryTracksProc(const I<CSeekableDataSource>& seekableDataSource,
+												const OR<const CAppleResourceManager>& appleResourceManager,
 												SMediaSource::Options options);
 static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
 												const I<CSeekableDataSource>& seekableDataSource,
@@ -648,14 +649,14 @@ CString	sQuickTimeExtensions[] = { CString(OSSTR("mov")) };
 
 REGISTER_MEDIA_SOURCE(quicktime,
 		SMediaSource(MAKE_OSTYPE('M', 'o', 'o', 'V'), CString(OSSTR("QuickTime")),
-				TSArray<CString>(sQuickTimeExtensions, 1), sQueryQuickTimeTracksProc));
+				TSArray<CString>(sQuickTimeExtensions, 1), sQueryTracksProc));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult sQueryQuickTimeTracksProc(const I<CSeekableDataSource>& seekableDataSource,
-		SMediaSource::Options options)
+SMediaSource::QueryTracksResult sQueryTracksProc(const I<CSeekableDataSource>& seekableDataSource,
+		const OR<const CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

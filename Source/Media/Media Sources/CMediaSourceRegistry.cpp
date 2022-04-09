@@ -64,7 +64,8 @@ const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 
 //----------------------------------------------------------------------------------------------------------------------
 TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
-		const I<CSeekableDataSource>& seekableDataSource, const CString& extension, SMediaSource::Options options) const
+		const I<CSeekableDataSource>& seekableDataSource, const CString& extension,
+		const OR<const CAppleResourceManager>& appleResourceManager, SMediaSource::Options options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -79,7 +80,9 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		// Check extensions
 		if (mediaSource.getExtensions().contains(extension)) {
 			// Found by extension
-			SMediaSource::QueryTracksResult	queryTracksResult = mediaSource.queryTracks(seekableDataSource, options);
+			SMediaSource::QueryTracksResult	queryTracksResult =
+													mediaSource.queryTracks(seekableDataSource, appleResourceManager,
+															options);
 			switch (queryTracksResult.getResult()) {
 				case SMediaSource::QueryTracksResult::kSuccess:
 					// Success
@@ -105,7 +108,9 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
 
 		// Query tracks
-		SMediaSource::QueryTracksResult	queryTracksResult = mediaSource.queryTracks(seekableDataSource, options);
+		SMediaSource::QueryTracksResult	queryTracksResult =
+												mediaSource.queryTracks(seekableDataSource, appleResourceManager,
+														options);
 		switch (queryTracksResult.getResult()) {
 			case SMediaSource::QueryTracksResult::kSuccess:
 				// Success

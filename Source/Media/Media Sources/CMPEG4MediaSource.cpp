@@ -575,7 +575,8 @@ static	SInt32	kUnsupportedCodecConfiguration = 2;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	SMediaSource::QueryTracksResult	sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource,
+static	SMediaSource::QueryTracksResult	sQueryTracksProc(const I<CSeekableDataSource>& seekableDataSource,
+												const OR<const CAppleResourceManager>& appleResourceManager,
 												SMediaSource::Options options);
 static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
 												const I<CSeekableDataSource>& seekableDataSource,
@@ -604,14 +605,14 @@ CString	sMPEG4Extensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), CSt
 
 REGISTER_MEDIA_SOURCE(mp4,
 		SMediaSource(MAKE_OSTYPE('m', 'p', '4', '*'), CString(OSSTR("MPEG 4")),
-				TSArray<CString>(sMPEG4Extensions, 3), sQueryMPEG4TracksProc));
+				TSArray<CString>(sMPEG4Extensions, 3), sQueryTracksProc));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult sQueryMPEG4TracksProc(const I<CSeekableDataSource>& seekableDataSource,
-		SMediaSource::Options options)
+SMediaSource::QueryTracksResult sQueryTracksProc(const I<CSeekableDataSource>& seekableDataSource,
+		const OR<const CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

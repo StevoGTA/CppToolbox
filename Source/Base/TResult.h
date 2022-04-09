@@ -12,6 +12,7 @@
 template <typename T> struct TIResult {
 					// Lifecycle Methods
 					TIResult(const T& value) : mValue(OI<T>(value)) {}
+					TIResult(const OI<T>& value) : mValue(value) {}
 					TIResult(const SError& error) : mError(OI<SError>(error)) {}
 					TIResult(const TIResult& other) : mValue(other.mValue), mError(other.mError) {}
 
@@ -19,12 +20,15 @@ template <typename T> struct TIResult {
 			bool	hasValue() const
 						{ return mValue.hasInstance(); }
 	const	T&		getValue() const
-						{ return *mValue; }
+						{ AssertFailIf(!mValue.hasInstance()); return *mValue; }
 
 			bool	hasError() const
 						{ return mError.hasInstance(); }
 	const	SError&	getError() const
-						{ return *mError; }
+						{ AssertFailIf(!mError.hasInstance()); return *mError; }
+
+	const	T&		operator*() const
+						{ AssertFailIf(!mValue.hasInstance()); return *mValue; }
 
 	private:
 		OI<T>		mValue;
@@ -49,7 +53,10 @@ template <typename T> struct TVResult {
 			bool	hasError() const
 						{ return mError.hasInstance(); }
 	const	SError&	getError() const
-						{ return *mError; }
+						{ AssertFailIf(!mError.hasInstance()); return *mError; }
+
+	const	T&		operator*() const
+						{ AssertFailIf(!mValue.hasValue()); return *mValue; }
 
 	private:
 		OV<T>		mValue;

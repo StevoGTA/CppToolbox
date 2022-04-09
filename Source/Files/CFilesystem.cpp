@@ -22,6 +22,34 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
+OI<CFile> CFilesystem::getResourceFork(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	CFilesystemPath&	filesystemPath = file.getFilesystemPath();
+
+	// Try {file}/..namedfork/rsrc
+	CFile	file1(
+					filesystemPath
+							.appendingComponent(CString(OSSTR("..namedfork")))
+							.appendingComponent(CString(OSSTR("rsrc"))));
+	if (file1.doesExist())
+		// Success
+		return OI<CFile>(file1);
+
+	// Try {file}../._{filename}
+	CFile	file2(
+					filesystemPath
+							.deletingLastComponent()
+							.appendingComponent(CString(OSSTR("._")) + filesystemPath.getLastComponent()));
+	if (file2.doesExist())
+		// Success
+		return OI<CFile>(file2);
+
+	return OI<CFile>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OI<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {

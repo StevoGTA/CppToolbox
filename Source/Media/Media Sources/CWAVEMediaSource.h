@@ -16,6 +16,7 @@ class CWAVEMediaSource {
 	public:
 												// Class methods
 		static	SMediaSource::QueryTracksResult	queryTracks(const I<CSeekableDataSource>& seekableDataSource,
+														const OR<const CAppleResourceManager>& appleResourceManager,
 														SMediaSource::Options options);
 
 	// Properties

@@ -237,30 +237,6 @@ CFilesystemPath CFilesystemPath::appendingExtension(const CString& extension) co
 	return CFilesystemPath(mInternals->mString + CString::mPeriod + extension);
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-CFilesystemPath CFilesystemPath::getForResourceFork() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get components
-	TArray<CString>		components = getComponents();
-	CArray::ItemCount	componentsCount = components.getCount();
-
-	// Check components count
-	if (componentsCount == 0)
-		// Empty
-		return CFilesystemPath(CString::mEmpty);
-
-	// Check if already have resource fork info
-	if ((components.getCount() > 2) && (components[componentsCount - 2] == CString(OSSTR("..namedfork"))) &&
-			(components[componentsCount - 1] == CString(OSSTR("rsrc"))))
-		// Already setup
-		return *this;
-	else
-		// Update
-		return CFilesystemPath(mInternals->mString + sPathSeparator(mInternals->mStyle) +
-				CString(OSSTR("..namedfork")) + sPathSeparator(mInternals->mStyle) + CString(OSSTR("rsrc")));
-}
-
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
