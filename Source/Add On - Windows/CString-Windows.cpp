@@ -752,7 +752,7 @@ UINT sGetCodePageForCStringEncoding(CString::Encoding encoding)
 {
 	switch (encoding) {
 		case CString::kEncodingASCII:		return 20127;
-		//case kStringEncodingMacRoman:	return kCFStringEncodingMacRoman;
+		case CString::kEncodingMacRoman:	return CP_MACCP;
 		case CString::kEncodingUTF8:		return CP_UTF8;
 		//case kStringEncodingISOLatin:	return kCFStringEncodingISOLatin1;
 		//case kStringEncodingUnicode:	return kCFStringEncodingUnicode;

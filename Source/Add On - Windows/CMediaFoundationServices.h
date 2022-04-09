@@ -81,7 +81,9 @@ class CMediaFoundationServices {
 											}
 										}
 			OI<SError>				noteFormatChanged(IMFMediaType* mediaType) const
-										{ return mNoteFormatChangedProc(mediaType, mUserData); }
+										{ return (mNoteFormatChangedProc != NULL) ?
+												mNoteFormatChangedProc(mediaType, mUserData) : OI<SError>(); }
+
 			// Properties
 			private:
 				ReadInputSampleProc		mReadInputSampleProc;

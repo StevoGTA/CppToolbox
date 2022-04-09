@@ -103,7 +103,7 @@ bool CFile::doesExist() const
 		return true;
 	} catch (const hresult_error& exception) {
 		// Check error
-		if (exception.code() == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
+		if ((exception.code() == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) || (exception.code() == E_INVALIDARG))
 			// File not found
 			return false;
 		else {
