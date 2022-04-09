@@ -459,7 +459,7 @@ OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 	}
 
 	// Update current length
-	result = mediaBuffer->SetCurrentLength((DWORD) mediaPackets.getValue()[0].mByteCount);
+	result = mediaBuffer->SetCurrentLength((DWORD) (*mediaPackets)[0].mByteCount);
 	if (FAILED(result)) {
 		// Unlock
 		mediaBuffer->Unlock();

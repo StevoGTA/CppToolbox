@@ -80,7 +80,7 @@ TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 				auto	result = getFiles(CFolder(CFilesystemPath(CString(childStorageFolder.Path().data()))));
 				if (result.hasValue())
 					// Success
-					files += result.getValue();
+					files += *result;
 				else
 					// Error
 					return TIResult<TArray<CFile> >(result.getError());

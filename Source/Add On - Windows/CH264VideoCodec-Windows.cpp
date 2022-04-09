@@ -168,12 +168,11 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(void* userData)
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
 
 	// Update frame timing
-	TIResult<CH264VideoCodec::FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(dataInfo.getValue());
+	TIResult<CH264VideoCodec::FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(*dataInfo);
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(times.getError()));
 
 	// Create input sample
-	TArray<CH264VideoCodec::NALUInfo>	naluInfos =
-												CH264VideoCodec::NALUInfo::getNALUInfos(dataInfo.getValue().getData());
+	TArray<CH264VideoCodec::NALUInfo>	naluInfos = CH264VideoCodec::NALUInfo::getNALUInfos(dataInfo->getData());
 	CData								annexBData =
 												CH264VideoCodec::NALUInfo::composeAnnexB(
 														videoCodec.mCurrentSPSPPSInfo->getSPSNALUInfos(),
@@ -181,12 +180,10 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(void* userData)
 	TCIResult<IMFSample>				sample = CMediaFoundationServices::createSample(annexBData);
 	ReturnValueIfResultError(sample, sample);
 
-	HRESULT	result =
-					sample.getInstance()->SetSampleTime(
-							times.getValue().mPresentationTime * 10000 / *videoCodec.mTimeScale);
+	HRESULT	result = sample.getInstance()->SetSampleTime(times->mPresentationTime * 10000 / *videoCodec.mTimeScale);
 	ReturnValueIfFailed(result, "SetSampleTime", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
-	result = sample.getInstance()->SetSampleDuration(dataInfo.getValue().getDuration());
+	result = sample.getInstance()->SetSampleDuration(dataInfo->getDuration());
 	ReturnValueIfFailed(result, "SetSampleDuration", TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	return sample;
