@@ -78,7 +78,7 @@ TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 			for (auto const& childStorageFolder : storageFolder.GetFoldersAsync().get()) {
 				// Get files for this folder
 				auto	result = getFiles(CFolder(CFilesystemPath(CString(childStorageFolder.Path().data()))));
-				if (result.hasValue())
+				if (result.hasInstance())
 					// Success
 					files += *result;
 				else
