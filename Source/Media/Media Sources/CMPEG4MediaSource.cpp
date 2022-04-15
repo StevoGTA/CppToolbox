@@ -576,7 +576,7 @@ static	SInt32	kUnsupportedCodecConfiguration = 2;
 // MARK: - Local proc declarations
 
 static	SMediaSource::QueryTracksResult	sQueryTracksProc(const I<CSeekableDataSource>& seekableDataSource,
-												const OR<const CAppleResourceManager>& appleResourceManager,
+												const OI<CAppleResourceManager>& appleResourceManager,
 												SMediaSource::Options options);
 static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
 												const I<CSeekableDataSource>& seekableDataSource,
@@ -612,7 +612,7 @@ REGISTER_MEDIA_SOURCE(mp4,
 
 //----------------------------------------------------------------------------------------------------------------------
 SMediaSource::QueryTracksResult sQueryTracksProc(const I<CSeekableDataSource>& seekableDataSource,
-		const OR<const CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
+		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -732,13 +732,13 @@ SMediaSource::QueryTracksResult sQueryTracksProc(const I<CSeekableDataSource>& s
 			TIResult<CData>	co64AtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
-			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
+			if (!stcoAtomPayloadData.hasInstance() && !co64AtomPayloadData.hasInstance()) continue;
 			SMP4stcoAtomPayload*	stcoAtomPayload =
-											stcoAtomPayloadData.hasValue() ?
+											stcoAtomPayloadData.hasInstance() ?
 													(SMP4stcoAtomPayload*) stcoAtomPayloadData->getBytePtr() :
 													nil;
 			SMP4co64AtomPayload*	co64AtomPayload =
-											co64AtomPayloadData.hasValue() ?
+											co64AtomPayloadData.hasInstance() ?
 													(SMP4co64AtomPayload*) co64AtomPayloadData->getBytePtr() :
 													nil;
 

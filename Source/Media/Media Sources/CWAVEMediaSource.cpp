@@ -22,7 +22,7 @@ static	SInt32	kUnsupportedCodecCode = 2;
 
 //----------------------------------------------------------------------------------------------------------------------
 SMediaSource::QueryTracksResult CWAVEMediaSource::queryTracks(const I<CSeekableDataSource>& seekableDataSource,
-		const OR<const CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
+		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

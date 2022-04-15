@@ -38,6 +38,13 @@ class CAppleResourceManagerInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local data
+
+static	CString	sErrorDomain(OSSTR("CAppleResourceManager"));
+static	SError	sInvalidResourceData(sErrorDomain, 1, CString(OSSTR("Invalid Resource Data")));
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAppleResourceManager
 
 // MARK: Lifecycle methods
@@ -293,7 +300,11 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CSeekableDat
 	CByteReader	byteReader(seekableDataSource, true);
 	OI<SError>	error;
 
-	// Read file header
+	// Read header
+	if (byteReader.getByteCount() < (sizeof(UInt32) * 4))
+		// Not big enough to read header
+		return TIResult<CAppleResourceManager>(sInvalidResourceData);
+
 	TVResult<UInt32>	resourceDataOffset = byteReader.readUInt32();
 	ReturnValueIfResultError(resourceDataOffset, TIResult<CAppleResourceManager>(resourceDataOffset.getError()));
 
@@ -303,8 +314,13 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CSeekableDat
 	TVResult<UInt32>	resourceDataByteCount = byteReader.readUInt32();
 	ReturnValueIfResultError(resourceDataByteCount, TIResult<CAppleResourceManager>(resourceDataByteCount.getError()));
 
-	TVResult<UInt32>	resourceMapSize = byteReader.readUInt32();
-	ReturnValueIfResultError(resourceMapSize, TIResult<CAppleResourceManager>(resourceMapSize.getError()));
+	TVResult<UInt32>	resourceMapByteCount = byteReader.readUInt32();
+	ReturnValueIfResultError(resourceMapByteCount, TIResult<CAppleResourceManager>(resourceMapByteCount.getError()));
+
+	if ((byteReader.getByteCount() < (*resourceDataOffset + *resourceDataByteCount)) ||
+			(byteReader.getByteCount() < (*resourceMapOffset + *resourceMapByteCount)))
+		// Not big enough to read contents
+		return TIResult<CAppleResourceManager>(sInvalidResourceData);
 
 	// Read type list
 	error =

@@ -287,7 +287,7 @@ TIResult<CDictionary> sReadDictionary(const SInt8*& charPtr)
 			ReturnValueIfResultError(valueResult, TIResult<CDictionary>(valueResult.getError()));
 
 			// Check if got value
-			if (valueResult.hasValue())
+			if (valueResult.hasInstance())
 				// Store
 				dictionary.set(*keyResult, *valueResult);
 

@@ -11,16 +11,18 @@
 
 template <typename T> struct TIResult {
 					// Lifecycle Methods
-					TIResult(const T& value) : mValue(OI<T>(value)) {}
-					TIResult(const OI<T>& value) : mValue(value) {}
+					TIResult(const T& instance) : mInstance(OI<T>(instance)) {}
+					TIResult(const OI<T>& instance) : mInstance(instance) {}
 					TIResult(const SError& error) : mError(OI<SError>(error)) {}
-					TIResult(const TIResult& other) : mValue(other.mValue), mError(other.mError) {}
+					TIResult(const TIResult& other) : mInstance(other.mInstance), mError(other.mError) {}
 
 					// Instance Methods
-			bool	hasValue() const
-						{ return mValue.hasInstance(); }
-	const	T&		getValue() const
-						{ AssertFailIf(!mValue.hasInstance()); return *mValue; }
+			bool	hasInstance() const
+						{ return mInstance.hasInstance(); }
+	const	OI<T>	getOptionalInstance() const
+						{ return mInstance; }
+	const	T&		getInstance() const
+						{ AssertFailIf(!mInstance.hasInstance()); return *mInstance; }
 
 			bool	hasError() const
 						{ return mError.hasInstance(); }
@@ -28,12 +30,12 @@ template <typename T> struct TIResult {
 						{ AssertFailIf(!mError.hasInstance()); return *mError; }
 
 	const	T&		operator*() const
-						{ AssertFailIf(!mValue.hasInstance()); return *mValue; }
+						{ AssertFailIf(!mInstance.hasInstance()); return *mInstance; }
 	const	T*		operator->() const
-						{ AssertFailIf(!mValue.hasInstance()); return &(*mValue); }
+						{ AssertFailIf(!mInstance.hasInstance()); return &(*mInstance); }
 
 	private:
-		OI<T>		mValue;
+		OI<T>		mInstance;
 		OI<SError>	mError;
 };
 

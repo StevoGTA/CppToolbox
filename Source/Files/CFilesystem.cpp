@@ -22,31 +22,41 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CFile> CFilesystem::getResourceFork(const CFile& file)
+OI<CFile> CFilesystem::getDotUnderscoreFile(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	const	CFilesystemPath&	filesystemPath = file.getFilesystemPath();
-
-	// Try {file}/..namedfork/rsrc
-	CFile	file1(
-					filesystemPath
-							.appendingComponent(CString(OSSTR("..namedfork")))
-							.appendingComponent(CString(OSSTR("rsrc"))));
-	if (file1.doesExist())
-		// Success
-		return OI<CFile>(file1);
-
+#if defined(TARGET_OS_MACOS)
+	// macOS doesn't need to access the ._ file
+	return OI<CFile>();
+#else
 	// Try {file}../._{filename}
-	CFile	file2(
+	const	CFilesystemPath&	filesystemPath = file.getFilesystemPath();
+	CFile	dotUnderscoreFile(
 					filesystemPath
 							.deletingLastComponent()
 							.appendingComponent(CString(OSSTR("._")) + filesystemPath.getLastComponent()));
-	if (file2.doesExist())
-		// Success
-		return OI<CFile>(file2);
 
+	return dotUnderscoreFile.doesExist() ? OI<CFile>(dotUnderscoreFile) : OI<CFile>();
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<CFile> CFilesystem::getResourceFork(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+#if defined(TARGET_OS_MACOS)
+	// Try {file}/..namedfork/rsrc
+	const	CFilesystemPath&	filesystemPath = file.getFilesystemPath();
+	CFile	resourceFork(
+					filesystemPath
+							.appendingComponent(CString(OSSTR("..namedfork")))
+							.appendingComponent(CString(OSSTR("rsrc"))));
+
+	return resourceFork.doesExist() ? OI<CFile>(resourceFork) : OI<CFile>();
+#else
+	// Unsupported
 	return OI<CFile>();
+#endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------

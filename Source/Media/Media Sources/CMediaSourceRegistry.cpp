@@ -65,7 +65,7 @@ const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 //----------------------------------------------------------------------------------------------------------------------
 TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		const I<CSeekableDataSource>& seekableDataSource, const CString& extension,
-		const OR<const CAppleResourceManager>& appleResourceManager, SMediaSource::Options options) const
+		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
