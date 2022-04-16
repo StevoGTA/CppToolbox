@@ -39,8 +39,8 @@ class CDotUnderscoreReaderInternals {
 
 struct SDotUnderscoreHeader {
 			// Methods
-	UInt32	getMagic() const { return EndianU32_BtoL(mMagic); }
-	UInt16	getVersion() const { return EndianU16_BtoL(mVersion); }
+	UInt32	getMagic() const { return EndianU32_BtoN(mMagic); }
+	UInt16	getVersion() const { return EndianU16_BtoN(mVersion); }
 
 	// Properties (in storage endian)
 	private:
@@ -66,7 +66,7 @@ struct SDotUnderscoreMystery {
 
 struct SDotUnderscoreATTR {
 			// Methods
-	UInt32	getResourceForkOffset() const { return EndianU32_BtoL(mResourceForkOffset); }
+	UInt32	getResourceForkOffset() const { return EndianU32_BtoN(mResourceForkOffset); }
 
 	// Properties (in storage endian)
 	private:
