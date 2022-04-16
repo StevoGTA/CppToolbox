@@ -94,7 +94,7 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(dataInfo.getData())), true);
+	CBitReader	bitReader(I<CRandomAccessDataSource>(new CDataDataSource(dataInfo.getData())), true);
 	UInt8		sliceType;
 	UInt8		picOrderCntLSB;
 

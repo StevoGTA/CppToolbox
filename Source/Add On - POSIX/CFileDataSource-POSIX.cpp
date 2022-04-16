@@ -63,7 +63,7 @@ class CFileDataSourceInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CFileDataSource::CFileDataSource(const CFile& file, bool buffered) : CSeekableDataSource()
+CFileDataSource::CFileDataSource(const CFile& file, bool buffered) : CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CFileDataSourceInternals(file, buffered);
@@ -76,7 +76,7 @@ CFileDataSource::~CFileDataSource()
 	Delete(mInternals);
 }
 
-// MARK: CSeekableDataSource methods
+// MARK: CRandomAccessDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt64 CFileDataSource::getByteCount() const
@@ -206,14 +206,14 @@ class CMappedFileDataSourceInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 CMappedFileDataSource::CMappedFileDataSource(const CFile& file, UInt64 byteOffset, UInt64 byteCount) :
-		CSeekableDataSource()
+		CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CMappedFileDataSourceInternals(file, byteOffset, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CSeekableDataSource()
+CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CMappedFileDataSourceInternals(file, 0, file.getByteCount());
@@ -226,7 +226,7 @@ CMappedFileDataSource::~CMappedFileDataSource()
 	Delete(mInternals);
 }
 
-// MARK: CSeekableDataSource methods
+// MARK: CRandomAccessDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt64 CMappedFileDataSource::getByteCount() const

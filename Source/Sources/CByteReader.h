@@ -24,9 +24,9 @@ class CByteReader {
 	// Methods
 	public:
 							// Lifecycle methods
-							CByteReader(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian);
-							CByteReader(const I<CSeekableDataSource>& seekableDataSource, UInt64 offset, UInt64 size,
-									bool isBigEndian);
+							CByteReader(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian);
+							CByteReader(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 offset,
+									UInt64 size, bool isBigEndian);
 							CByteReader(const CByteReader& other);
 							~CByteReader();
 

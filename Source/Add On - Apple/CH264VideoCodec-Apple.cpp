@@ -249,7 +249,7 @@ TIResult<CVideoFrame> CH264DecodeVideoCodec::decode()
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CDecodeVideoCodec> CH264VideoCodec::create(const I<CSeekableDataSource>& seekableDataSource,
+I<CDecodeVideoCodec> CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
 		const TNumericArray<UInt32>& keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
@@ -257,6 +257,6 @@ I<CDecodeVideoCodec> CH264VideoCodec::create(const I<CSeekableDataSource>& seeka
 	return I<CDecodeVideoCodec>(
 			new CH264DecodeVideoCodec(
 					I<CMediaPacketSource>(
-							new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations)),
+							new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
 					configurationData, timeScale, keyframeIndexes));
 }

@@ -98,7 +98,7 @@ class CH264VideoCodec {
 			SequenceParameterSetPayload(const CData& data)
 				{
 					// Setup
-					CBitReader	bitReader(I<CSeekableDataSource>(new CDataDataSource(data)), true);
+					CBitReader	bitReader(I<CRandomAccessDataSource>(new CDataDataSource(data)), true);
 
 					// Decode
 					mForbiddenZero = *bitReader.readUInt8(1);
@@ -316,7 +316,7 @@ class CH264VideoCodec {
 	public:
 										// Class methods
 		static	OI<SVideoStorageFormat>	composeVideoStorageFormat(const S2DSizeU16& frameSize, Float32 framerate);
-		static	I<CDecodeVideoCodec>	create(const I<CSeekableDataSource>& seekableDataSource,
+		static	I<CDecodeVideoCodec>	create(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const TArray<SMediaPacketAndLocation>& packetAndLocations,
 												const CData& configurationData, UInt32 timeScale,
 												const TNumericArray<UInt32>& keyframeIndexes);

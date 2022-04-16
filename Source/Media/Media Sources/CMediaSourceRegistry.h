@@ -56,7 +56,7 @@ struct SMediaSource {
 	};
 
 	// Procs
-	typedef	QueryTracksResult	(*QueryTracksProc)(const I<CSeekableDataSource>& seekableDataSource,
+	typedef	QueryTracksResult	(*QueryTracksProc)(const I<CRandomAccessDataSource>& randomAccessDataSource,
 										const OI<CAppleResourceManager>& appleResourceManager, Options options);
 
 								// Lifecycle methods
@@ -76,9 +76,9 @@ struct SMediaSource {
 									{ return mName; }
 	const	TArray<CString>&	getExtensions() const
 									{ return mExtensions; }
-			QueryTracksResult	queryTracks(const I<CSeekableDataSource>& seekableDataSource,
+			QueryTracksResult	queryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
 										const OI<CAppleResourceManager>& appleResourceManager, Options options) const
-									{ return mQueryTracksProc(seekableDataSource, appleResourceManager, options); }
+									{ return mQueryTracksProc(randomAccessDataSource, appleResourceManager, options); }
 
 	// Properties
 	private:
@@ -120,7 +120,7 @@ class CMediaSourceRegistry {
 										// Instance methods
 				void					registerMediaSource(const SMediaSource& mediaSource);
 		const	SMediaSource&			getMediaSource(OSType id) const;
-				TIResult<IdentifyInfo>	identify(const I<CSeekableDataSource>& seekableDataSource,
+				TIResult<IdentifyInfo>	identify(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const CString& extension,
 												const OI<CAppleResourceManager>& appleResourceManager,
 												SMediaSource::Options options = SMediaSource::kNone) const;

@@ -293,11 +293,11 @@ OI<SError> CAppleResourceManager::write()
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CSeekableDataSource>& seekableDataSource)
+TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CByteReader	byteReader(seekableDataSource, true);
+	CByteReader	byteReader(randomAccessDataSource, true);
 	OI<SError>	error;
 
 	// Read header

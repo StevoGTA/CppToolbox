@@ -64,7 +64,7 @@ const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 
 //----------------------------------------------------------------------------------------------------------------------
 TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
-		const I<CSeekableDataSource>& seekableDataSource, const CString& extension,
+		const I<CRandomAccessDataSource>& randomAccessDataSource, const CString& extension,
 		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -81,8 +81,8 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		if (mediaSource.getExtensions().contains(extension)) {
 			// Found by extension
 			SMediaSource::QueryTracksResult	queryTracksResult =
-													mediaSource.queryTracks(seekableDataSource, appleResourceManager,
-															options);
+													mediaSource.queryTracks(randomAccessDataSource,
+															appleResourceManager, options);
 			switch (queryTracksResult.getResult()) {
 				case SMediaSource::QueryTracksResult::kSuccess:
 					// Success
@@ -109,7 +109,7 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 
 		// Query tracks
 		SMediaSource::QueryTracksResult	queryTracksResult =
-												mediaSource.queryTracks(seekableDataSource, appleResourceManager,
+												mediaSource.queryTracks(randomAccessDataSource, appleResourceManager,
 														options);
 		switch (queryTracksResult.getResult()) {
 			case SMediaSource::QueryTracksResult::kSuccess:

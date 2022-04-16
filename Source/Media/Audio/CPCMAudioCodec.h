@@ -31,7 +31,7 @@ class CPCMAudioCodec {
 		static	UInt64					composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
 												UInt64 byteCount);
 		static	I<CDecodeAudioCodec>	create(const SAudioStorageFormat& audioStorageFormat,
-												const I<CSeekableDataSource>& seekableDataSource,
+												const I<CRandomAccessDataSource>& randomAccessDataSource,
 												UInt64 startByteOffset, UInt64 byteCount, Format format);
 
 	// Properties

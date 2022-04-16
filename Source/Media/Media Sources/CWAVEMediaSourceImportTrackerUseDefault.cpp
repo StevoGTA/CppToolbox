@@ -20,8 +20,8 @@ I<CWAVEMediaSourceImportTracker> CWAVEMediaSourceImportTracker::instantiate()
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Register media source
 
-CString	sWAVEExtensions[] = { CString(OSSTR("wav")) };
+static	CString	sExtensions[] = { CString(OSSTR("wav")) };
 
 REGISTER_MEDIA_SOURCE(wave,
-		SMediaSource(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")), TSArray<CString>(sWAVEExtensions, 1),
+		SMediaSource(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")), TSArray<CString>(sExtensions, 1),
 				CWAVEMediaSource::queryTracks));

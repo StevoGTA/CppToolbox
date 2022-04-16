@@ -21,8 +21,8 @@ class CChunkReaderInternals {
 // MARK:  Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CChunkReader::CChunkReader(const I<CSeekableDataSource>& seekableDataSource, Format format) :
-		CByteReader(seekableDataSource, format == kFormat32BitBigEndian)
+CChunkReader::CChunkReader(const I<CRandomAccessDataSource>& randomAccessDataSource, Format format) :
+		CByteReader(randomAccessDataSource, format == kFormat32BitBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CChunkReaderInternals(format);

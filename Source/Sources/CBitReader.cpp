@@ -11,10 +11,10 @@
 
 class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 	public:
-		CBitReaderInternals(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian) :
+		CBitReaderInternals(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian) :
 			TReferenceCountable(),
-					mIsBigEndian(isBigEndian), mSeekableDataSource(seekableDataSource), mDataSourceOffset(0),
-					mByteCount(mSeekableDataSource->getByteCount()),
+					mIsBigEndian(isBigEndian), mRandomAccessDataSource(randomAccessDataSource), mDataSourceOffset(0),
+					mByteCount(mRandomAccessDataSource->getByteCount()),
 					mCurrentByte(0), mCurrentByteBitsAvailable(0)
 			{}
 
@@ -50,12 +50,12 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 							AssertFailIf(dataSourceOffset < 0);
 							if (dataSourceOffset < 0)
 								// Before start
-								return OI<SError>(CSeekableDataSource::mSetPosBeforeStartError);
+								return OI<SError>(CRandomAccessDataSource::mSetPosBeforeStartError);
 
 							AssertFailIf((UInt64) dataSourceOffset > mByteCount);
 							if ((UInt64) dataSourceOffset > mByteCount)
 								// After end
-								return OI<SError>(CSeekableDataSource::mSetPosAfterEndError);
+								return OI<SError>(CRandomAccessDataSource::mSetPosAfterEndError);
 
 							// All good
 							mDataSourceOffset = (UInt64) dataSourceOffset;
@@ -75,7 +75,7 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 								return OI<SError>(SError::mEndOfData);
 
 							// Read
-							OI<SError>	error = mSeekableDataSource->readData(mDataSourceOffset, buffer, byteCount);
+							OI<SError>	error = mRandomAccessDataSource->readData(mDataSourceOffset, buffer, byteCount);
 							ReturnErrorIfError(error);
 
 							// Update
@@ -110,13 +110,13 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 							return value;
 						}
 
-		bool					mIsBigEndian;
-		I<CSeekableDataSource>	mSeekableDataSource;
-		UInt64					mDataSourceOffset;
-		UInt64					mByteCount;
+		bool						mIsBigEndian;
+		I<CRandomAccessDataSource>	mRandomAccessDataSource;
+		UInt64						mDataSourceOffset;
+		UInt64						mByteCount;
 
-		UInt8					mCurrentByte;
-		UInt8					mCurrentByteBitsAvailable;
+		UInt8						mCurrentByte;
+		UInt8						mCurrentByteBitsAvailable;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -126,10 +126,10 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitReader::CBitReader(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian)
+CBitReader::CBitReader(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CBitReaderInternals(seekableDataSource, isBigEndian);
+	mInternals = new CBitReaderInternals(randomAccessDataSource, isBigEndian);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

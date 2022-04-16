@@ -11,18 +11,18 @@
 
 class CByteReaderInternals : public TReferenceCountable<CByteReaderInternals> {
 	public:
-		CByteReaderInternals(const I<CSeekableDataSource>& seekableDataSource, UInt64 dataSourceOffset,
+		CByteReaderInternals(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 dataSourceOffset,
 				UInt64 byteCount, bool isBigEndian) :
 			TReferenceCountable(), mIsBigEndian(isBigEndian),
-					mSeekableDataSource(seekableDataSource), mInitialDataSourceOffset(dataSourceOffset),
+					mRandomAccessDataSource(randomAccessDataSource), mInitialDataSourceOffset(dataSourceOffset),
 					mCurrentDataSourceOffset(dataSourceOffset), mByteCount(byteCount)
 			{}
 
-		bool					mIsBigEndian;
-		I<CSeekableDataSource>	mSeekableDataSource;
-		UInt64					mInitialDataSourceOffset;
-		UInt64					mCurrentDataSourceOffset;
-		UInt64					mByteCount;
+		bool						mIsBigEndian;
+		I<CRandomAccessDataSource>	mRandomAccessDataSource;
+		UInt64						mInitialDataSourceOffset;
+		UInt64						mCurrentDataSourceOffset;
+		UInt64						mByteCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,21 +32,23 @@ class CByteReaderInternals : public TReferenceCountable<CByteReaderInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CByteReader::CByteReader(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian)
+CByteReader::CByteReader(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CByteReaderInternals(seekableDataSource, 0, seekableDataSource->getByteCount(), isBigEndian);
+	mInternals =
+			new CByteReaderInternals(randomAccessDataSource, 0, randomAccessDataSource->getByteCount(), isBigEndian);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CByteReader::CByteReader(const I<CSeekableDataSource>& seekableDataSource, UInt64 offset, UInt64 size, bool isBigEndian)
+CByteReader::CByteReader(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 offset, UInt64 size,
+		bool isBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf((offset + size) > seekableDataSource->getByteCount());
+	AssertFailIf((offset + size) > randomAccessDataSource->getByteCount());
 
 	// Setup
-	mInternals = new CByteReaderInternals(seekableDataSource, offset, size, isBigEndian);
+	mInternals = new CByteReaderInternals(randomAccessDataSource, offset, size, isBigEndian);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,13 +113,13 @@ OI<SError> CByteReader::setPos(Position position, SInt64 newPos) const
 	AssertFailIf(dataSourceOffset < mInternals->mInitialDataSourceOffset);
 	if (dataSourceOffset < mInternals->mInitialDataSourceOffset)
 		// Before start
-		return OI<SError>(CSeekableDataSource::mSetPosBeforeStartError);
+		return OI<SError>(CRandomAccessDataSource::mSetPosBeforeStartError);
 
 	AssertFailIf(dataSourceOffset >
 			(mInternals->mInitialDataSourceOffset + mInternals->mByteCount));
 	if (dataSourceOffset > (mInternals->mInitialDataSourceOffset + mInternals->mByteCount))
 		// After end
-		return OI<SError>(CSeekableDataSource::mSetPosAfterEndError);
+		return OI<SError>(CRandomAccessDataSource::mSetPosAfterEndError);
 
 	// All good
 	mInternals->mCurrentDataSourceOffset = dataSourceOffset;
@@ -137,7 +139,7 @@ OI<SError> CByteReader::readData(void* buffer, UInt64 byteCount) const
 
 	// Read
 	OI<SError>	error =
-						mInternals->mSeekableDataSource->readData(mInternals->mCurrentDataSourceOffset, buffer,
+						mInternals->mRandomAccessDataSource->readData(mInternals->mCurrentDataSourceOffset, buffer,
 								byteCount);
 	ReturnErrorIfError(error);
 

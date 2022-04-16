@@ -21,13 +21,13 @@ static	SInt32	kUnsupportedCodecCode = 2;
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult CWAVEMediaSource::queryTracks(const I<CSeekableDataSource>& seekableDataSource,
+SMediaSource::QueryTracksResult CWAVEMediaSource::queryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	I<CWAVEMediaSourceImportTracker>	waveMediaSourceImportTracker = CWAVEMediaSourceImportTracker::instantiate();
-	OI<CChunkReader>					chunkReader = waveMediaSourceImportTracker->setup(seekableDataSource);
+	OI<CChunkReader>					chunkReader = waveMediaSourceImportTracker->setup(randomAccessDataSource);
 	if (!chunkReader.hasInstance())
 		// Not a WAVE file
 		return SMediaSource::QueryTracksResult();
@@ -63,7 +63,7 @@ SMediaSource::QueryTracksResult CWAVEMediaSource::queryTracks(const I<CSeekableD
 		// Requesting decode info
 		mediaTrackInfos.add(
 				CMediaTrackInfos::AudioTrackInfo(audioTrack,
-						waveMediaSourceImportTracker->createAudioCodec(seekableDataSource)));
+						waveMediaSourceImportTracker->createAudioCodec(randomAccessDataSource)));
 	else
 		// Not requesting decode info
 		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack));
@@ -108,19 +108,20 @@ CWAVEMediaSourceImportTracker::~CWAVEMediaSourceImportTracker()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CChunkReader> CWAVEMediaSourceImportTracker::setup(const I<CSeekableDataSource>& seekableDataSource)
+OI<CChunkReader> CWAVEMediaSourceImportTracker::setup(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify it's a WAVE Media Source
-	if (!seekableDataSource->canReadData(0, sizeof(SWAVEFORMChunk32)))
+	if (!randomAccessDataSource->canReadData(0, sizeof(SWAVEFORMChunk32)))
 		return OI<CChunkReader>();
-	TIResult<CData>	data = seekableDataSource->readData(0, sizeof(SWAVEFORMChunk32));
+	TIResult<CData>	data = randomAccessDataSource->readData(0, sizeof(SWAVEFORMChunk32));
 	ReturnValueIfResultError(data, OI<CChunkReader>());
 
 	const	SWAVEFORMChunk32&	formChunk32 = *((SWAVEFORMChunk32*) data->getBytePtr());
 	if ((formChunk32.getID() == kWAVEFORMChunkID) && (formChunk32.getFormType() == kWAVEFORMType)) {
 		// Success
-		OI<CChunkReader>	chunkReader(new CChunkReader(seekableDataSource, CChunkReader::kFormat32BitLittleEndian));
+		OI<CChunkReader>	chunkReader(
+									new CChunkReader(randomAccessDataSource, CChunkReader::kFormat32BitLittleEndian));
 		chunkReader->setPos(CByteReader::kPositionFromBeginning, sizeof(SWAVEFORMChunk32));
 
 		return chunkReader;
@@ -245,20 +246,21 @@ CAudioTrack CWAVEMediaSourceImportTracker::composeAudioTrack()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CDecodeAudioCodec> CWAVEMediaSourceImportTracker::createAudioCodec(const I<CSeekableDataSource>& seekableDataSource)
+I<CDecodeAudioCodec> CWAVEMediaSourceImportTracker::createAudioCodec(
+		const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check format tag
 	switch (*mInternals->mFormatTag) {
 		case 0x0001:	// Integer PCM
 		case 0x0003:	// IEEE Float
-			return CPCMAudioCodec::create(*mInternals->mAudioStorageFormat, seekableDataSource,
+			return CPCMAudioCodec::create(*mInternals->mAudioStorageFormat, randomAccessDataSource,
 					*mDataChunkStartByteOffset, *mDataChunkByteCount,
 					(*mInternals->mAudioStorageFormat->getBits() > 8) ?
 							CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitUnsigned);
 
 		case 0x0011:	// DVI/Intel ADPCM
-			return CDVIIntelIMAADPCMAudioCodec::create(*mInternals->mAudioStorageFormat, seekableDataSource,
+			return CDVIIntelIMAADPCMAudioCodec::create(*mInternals->mAudioStorageFormat, randomAccessDataSource,
 					*mDataChunkStartByteOffset, *mDataChunkByteCount, *mInternals->mBlockAlign);
 
 		default:		// Not possible

@@ -12,15 +12,15 @@
 
 class CTextReaderInternals : public TReferenceCountable<CTextReaderInternals> {
 	public:
-		CTextReaderInternals(const I<CSeekableDataSource>& seekableDataSource) :
+		CTextReaderInternals(const I<CRandomAccessDataSource>& randomAccessDataSource) :
 			TReferenceCountable(),
-					mSeekableDataSource(seekableDataSource), mDataSourceOffset(0),
-					mByteCount(mSeekableDataSource->getByteCount())
+					mRandomAccessDataSource(randomAccessDataSource), mDataSourceOffset(0),
+					mByteCount(mRandomAccessDataSource->getByteCount())
 			{}
 
-		I<CSeekableDataSource>	mSeekableDataSource;
-		UInt64					mDataSourceOffset;
-		UInt64					mByteCount;
+		I<CRandomAccessDataSource>	mRandomAccessDataSource;
+		UInt64						mDataSourceOffset;
+		UInt64						mByteCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -30,10 +30,10 @@ class CTextReaderInternals : public TReferenceCountable<CTextReaderInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CTextReader::CTextReader(const I<CSeekableDataSource>& seekableDataSource)
+CTextReader::CTextReader(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CTextReaderInternals(seekableDataSource);
+	mInternals = new CTextReaderInternals(randomAccessDataSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ TIResult<CString> CTextReader::readStringToEOL()
 		// Read
 		TBuffer<char>	buffer((UInt32) bytesRead + 1);
 		OI<SError>		error =
-								mInternals->mSeekableDataSource->readData(mInternals->mDataSourceOffset, *buffer,
+								mInternals->mRandomAccessDataSource->readData(mInternals->mDataSourceOffset, *buffer,
 										bytesRead);
 		ReturnValueIfError(error, TIResult<CString>(*error));
 

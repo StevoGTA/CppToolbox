@@ -53,7 +53,7 @@ static	SError	sUnknownFormatError(sErrorDomain, 1, CString(OSSTR("Unknown format
 class CBPLReader : public TReferenceCountable<CBPLReader> {
 	public:
 					// Lifecycle methods
-					CBPLReader(const I<CSeekableDataSource>& seekableDataSource, UInt8 objectOffsetFieldSize,
+					CBPLReader(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt8 objectOffsetFieldSize,
 							UInt8 objectIndexFieldSize, UInt64 totalObjectCount, UInt64 objectOffsetTableOffset);
 					~CBPLReader();
 
@@ -191,9 +191,9 @@ class CBPLDictionaryInfo {
 // MARK: - CBPLReader definition
 
 //----------------------------------------------------------------------------------------------------------------------
-CBPLReader::CBPLReader(const I<CSeekableDataSource>& seekableDataSource, UInt8 objectOffsetFieldSize,
+CBPLReader::CBPLReader(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt8 objectOffsetFieldSize,
 		UInt8 objectIndexFieldSize, UInt64 totalObjectCount, UInt64 objectOffsetTableOffset) :
-	TReferenceCountable(), mByteReader(seekableDataSource, true), mObjectIndexFieldSize(objectIndexFieldSize),
+	TReferenceCountable(), mByteReader(randomAccessDataSource, true), mObjectIndexFieldSize(objectIndexFieldSize),
 			mTotalObjectCount(totalObjectCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -499,11 +499,11 @@ AssertFailUnimplemented();
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataSource>& seekableDataSource)
+TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64		byteCount = seekableDataSource->getByteCount();
+	UInt64		byteCount = randomAccessDataSource->getByteCount();
 	OI<SError>	error;
 
 	// Check size
@@ -515,7 +515,7 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataS
 
 	// Validate header
 	CData	data(sBinaryPListV10Header.getByteCount());
-	error = seekableDataSource->readData(0, data.getMutableBytePtr(), sBinaryPListV10Header.getByteCount());
+	error = randomAccessDataSource->readData(0, data.getMutableBytePtr(), sBinaryPListV10Header.getByteCount());
 	LogIfErrorAndReturnValue(error, "reading header", TIResult<CDictionary>(*error));
 	if (data != sBinaryPListV10Header) {
 		// Header does not match
@@ -524,7 +524,9 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataS
 
 	// Validate trailer
 	SBinaryPListTrailer	trailer;
-	error = seekableDataSource->readData(byteCount - sizeof(SBinaryPListTrailer), &trailer, sizeof(SBinaryPListTrailer));
+	error =
+			randomAccessDataSource->readData(byteCount - sizeof(SBinaryPListTrailer), &trailer,
+					sizeof(SBinaryPListTrailer));
 	LogIfErrorAndReturnValue(error, "reading trailer", TIResult<CDictionary>(*error));
 
 	// Create CBPLReader
@@ -534,7 +536,7 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CSeekableDataS
 	UInt64		topObjectIndex = EndianU64_BtoN(trailer.mTopObjectIndex);
 	UInt64		objectOffsetTableOffset = EndianU64_BtoN(trailer.mObjectOffsetTableOffset);
 	CBPLReader*	bplReader =
-						new CBPLReader(seekableDataSource, objectOffsetFieldSize, objectIndexFieldSize,
+						new CBPLReader(randomAccessDataSource, objectOffsetFieldSize, objectIndexFieldSize,
 								totalObjectCount, objectOffsetTableOffset);
 
 	// Get top level object

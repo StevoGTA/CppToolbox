@@ -15,7 +15,7 @@ class CWAVEMediaSource {
 	// Methods
 	public:
 												// Class methods
-		static	SMediaSource::QueryTracksResult	queryTracks(const I<CSeekableDataSource>& seekableDataSource,
+		static	SMediaSource::QueryTracksResult	queryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
 														const OI<CAppleResourceManager>& appleResourceManager,
 														SMediaSource::Options options);
 
@@ -36,7 +36,7 @@ class CWAVEMediaSourceImportTracker {
 		virtual										~CWAVEMediaSourceImportTracker();
 
 													// Instance methods
-		virtual	OI<CChunkReader>					setup(const I<CSeekableDataSource>& seekableDataSource);
+		virtual	OI<CChunkReader>					setup(const I<CRandomAccessDataSource>& randomAccessDataSource);
 
 		virtual	OI<SError>							note(const CChunkReader::ChunkInfo& chunkInfo,
 															CChunkReader& chunkReader);
@@ -45,7 +45,8 @@ class CWAVEMediaSourceImportTracker {
 
 		virtual	bool								canFinalize() const;
 		virtual	CAudioTrack							composeAudioTrack();
-		virtual	I<CDecodeAudioCodec>				createAudioCodec(const I<CSeekableDataSource>& seekableDataSource);
+		virtual	I<CDecodeAudioCodec>				createAudioCodec(
+															const I<CRandomAccessDataSource>& randomAccessDataSource);
 
 													// Class methods
 		static	I<CWAVEMediaSourceImportTracker>	instantiate();

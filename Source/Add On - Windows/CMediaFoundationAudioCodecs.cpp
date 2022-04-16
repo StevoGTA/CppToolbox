@@ -193,13 +193,13 @@ OI<SError> CAACDecodeAudioCodec::fillInputBuffer(IMFSample* sample, IMFMediaBuff
 
 //----------------------------------------------------------------------------------------------------------------------
 I<CDecodeAudioCodec> CAACAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
-		const I<CSeekableDataSource>& seekableDataSource, const TArray<SMediaPacketAndLocation>& packetAndLocations,
-		const CData& configurationData)
+		const I<CRandomAccessDataSource>& randomAccessDataSource,
+		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return I<CDecodeAudioCodec>(
 			new CAACDecodeAudioCodec(audioStorageFormat.getCodecID(),
 					I<CMediaPacketSource>(
-							new CSeekableVaryingMediaPacketSource(seekableDataSource, packetAndLocations)),
+							new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
 					configurationData));
 }

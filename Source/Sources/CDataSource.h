@@ -22,13 +22,13 @@ class CDataSource {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSeekableDataSource
+// MARK: - CRandomAccessDataSource
 
-class CSeekableDataSource : public CDataSource {
+class CRandomAccessDataSource : public CDataSource {
 	// Methods
 	public:
 								// Lifecycle methods
-								CSeekableDataSource() : CDataSource() {}
+								CRandomAccessDataSource() : CDataSource() {}
 
 								// CDataSource methods
 				TIResult<CData>	readData();
@@ -52,14 +52,14 @@ class CSeekableDataSource : public CDataSource {
 // MARK: - CDataDataSource
 
 class CDataDataSourceInternals;
-class CDataDataSource : public CSeekableDataSource {
+class CDataDataSource : public CRandomAccessDataSource {
 	// Methods
 	public:
 						// Lifecycle methods
 						CDataDataSource(const CData& data);
 						~CDataDataSource();
 
-						// CSeekableDataSource methods
+						// CRandomAccessDataSource methods
 		UInt64			getByteCount() const;
 
 		OI<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
@@ -71,13 +71,13 @@ class CDataDataSource : public CSeekableDataSource {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CStreamableDataSource
+// MARK: - CStreamingDataSource
 
-class CStreamableDataSource : public CDataSource {
+class CStreamingDataSource : public CDataSource {
 	// Methods
 	public:
 								// Lifecycle methods
-								CStreamableDataSource() : CDataSource() {}
+								CStreamingDataSource() : CDataSource() {}
 
 								// CDataSource methods
 				TIResult<CData>	readData();

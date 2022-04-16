@@ -50,8 +50,8 @@ class CAtomReader : public CByteReader {
 	// Methods
 	public:
 								// Lifecycle methods
-								CAtomReader(const I<CSeekableDataSource>& seekableDataSource) :
-									CByteReader(seekableDataSource, true)
+								CAtomReader(const I<CRandomAccessDataSource>& randomAccessDataSource) :
+									CByteReader(randomAccessDataSource, true)
 									{}
 
 								// Instance methods

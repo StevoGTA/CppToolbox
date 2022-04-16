@@ -44,7 +44,7 @@ class CDVIIntelIMAADPCMAudioCodec {
 		static	UInt64					composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
 												UInt64 byteCount, UInt16 blockAlign);
 		static	I<CDecodeAudioCodec>	create(const SAudioStorageFormat& audioStorageFormat,
-												const I<CSeekableDataSource>& seekableDataSource,
+												const I<CRandomAccessDataSource>& randomAccessDataSource,
 												UInt64 startByteOffset, UInt64 byteCount, UInt16 blockAlign);
 
 	// Properties

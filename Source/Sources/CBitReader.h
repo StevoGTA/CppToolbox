@@ -23,7 +23,7 @@ class CBitReader {
 	// Methods
 	public:
 							// Lifecycle methods
-							CBitReader(const I<CSeekableDataSource>& seekableDataSource, bool isBigEndian);
+							CBitReader(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian);
 							CBitReader(const CBitReader& other);
 							~CBitReader();
 

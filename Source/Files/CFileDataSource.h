@@ -11,14 +11,14 @@
 // MARK: CFileDataSource
 
 class CFileDataSourceInternals;
-class CFileDataSource : public CSeekableDataSource {
+class CFileDataSource : public CRandomAccessDataSource {
 	// Methods
 	public:
 								// Lifecycle methods
 								CFileDataSource(const CFile& file, bool buffered = false);
 								~CFileDataSource();
 
-								// CSeekableDataSource methods
+								// CRandomAccessDataSource methods
 		UInt64					getByteCount() const;
 
 		OI<SError>				readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
@@ -33,7 +33,7 @@ class CFileDataSource : public CSeekableDataSource {
 
 								// Class methods
 		static	TIResult<CData>	readData(const CFile& file)
-									{ return CFileDataSource(file).CSeekableDataSource::readData(); }
+									{ return CFileDataSource(file).CRandomAccessDataSource::readData(); }
 
 	// Properties
 	private:
@@ -44,7 +44,7 @@ class CFileDataSource : public CSeekableDataSource {
 // MARK: - CMappedFileDataSource
 
 class CMappedFileDataSourceInternals;
-class CMappedFileDataSource : public CSeekableDataSource {
+class CMappedFileDataSource : public CRandomAccessDataSource {
 	// Methods
 	public:
 						// Lifecycle methods
@@ -52,7 +52,7 @@ class CMappedFileDataSource : public CSeekableDataSource {
 						CMappedFileDataSource(const CFile& file);
 						~CMappedFileDataSource();
 
-						// CSeekableDataSource methods
+						// CRandomAccessDataSource methods
 		UInt64			getByteCount() const;
 
 		OI<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount);

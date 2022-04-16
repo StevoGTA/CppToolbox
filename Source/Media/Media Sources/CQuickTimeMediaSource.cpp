@@ -619,18 +619,18 @@ static	SInt32	kUnsupportedCodecConfiguration = 2;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	SMediaSource::QueryTracksResult	sQueryTracksProc(const I<CSeekableDataSource>& seekableDataSource,
+static	SMediaSource::QueryTracksResult	sQueryTracksProc(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const OI<CAppleResourceManager>& appleResourceManager,
 												SMediaSource::Options options);
 static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
-												const I<CSeekableDataSource>& seekableDataSource,
+												const I<CRandomAccessDataSource>& randomAccessDataSource,
 												SMediaSource::Options options,
 												const SQTAudioSampleDescription& audioSampleDescription,
 												const CData& esdsAtomPayloadData,
 												const SQTmdhdAtomPayload& mdhdAtomPayload,
 												const TArray<SMediaPacketAndLocation>& packetAndLocations);
 static	OI<SError>						sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos,
-												const I<CSeekableDataSource>& seekableDataSource,
+												const I<CRandomAccessDataSource>& randomAccessDataSource,
 												SMediaSource::Options options,
 												const SQTVideoSampleDescription& videoSampleDescription,
 												const CData& configurationData,
@@ -645,22 +645,22 @@ static	TArray<SMediaPacketAndLocation>	sComposePacketAndLocations(const SQTsttsA
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Register media source
 
-CString	sQuickTimeExtensions[] = { CString(OSSTR("mov")) };
+static	CString	sExtensions[] = { CString(OSSTR("mov")) };
 
 REGISTER_MEDIA_SOURCE(quicktime,
-		SMediaSource(MAKE_OSTYPE('M', 'o', 'o', 'V'), CString(OSSTR("QuickTime")),
-				TSArray<CString>(sQuickTimeExtensions, 1), sQueryTracksProc));
+		SMediaSource(MAKE_OSTYPE('M', 'o', 'o', 'V'), CString(OSSTR("QuickTime")), TSArray<CString>(sExtensions, 1),
+				sQueryTracksProc));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult sQueryTracksProc(const I<CSeekableDataSource>& seekableDataSource,
+SMediaSource::QueryTracksResult sQueryTracksProc(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CAtomReader	atomReader(seekableDataSource);
+	CAtomReader	atomReader(randomAccessDataSource);
 	OI<SError>	error;
 
 	// Read root atom
@@ -815,7 +815,7 @@ SMediaSource::QueryTracksResult sQueryTracksProc(const I<CSeekableDataSource>& s
 					if (esdsAtomPayload.hasError()) continue;
 
   					error =
-							sAddAACAudioTrack(mediaTrackInfos, seekableDataSource, options, audioSampleDescription,
+							sAddAACAudioTrack(mediaTrackInfos, randomAccessDataSource, options, audioSampleDescription,
 									*esdsAtomPayload, SQTmdhdAtomPayload(*mdhdAtomPayloadData),
 									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
 											stcoAtomPayload));
@@ -859,7 +859,7 @@ SMediaSource::QueryTracksResult sQueryTracksProc(const I<CSeekableDataSource>& s
 
 					// Add video track
 					error =
-							sAddH264VideoTrack(mediaTrackInfos, seekableDataSource, options, videoSampleDescription,
+							sAddH264VideoTrack(mediaTrackInfos, randomAccessDataSource, options, videoSampleDescription,
 									*avcCAtomPayload, SQTmdhdAtomPayload(*mdhdAtomPayloadData),
 									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
 											stcoAtomPayload),
@@ -879,10 +879,10 @@ SMediaSource::QueryTracksResult sQueryTracksProc(const I<CSeekableDataSource>& s
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekableDataSource>& seekableDataSource,
-		SMediaSource::Options options, const SQTAudioSampleDescription& audioSampleDescription,
-		const CData& configurationData, const SQTmdhdAtomPayload& mdhdAtomPayload,
-		const TArray<SMediaPacketAndLocation>& packetAndLocations)
+OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
+		const I<CRandomAccessDataSource>& randomAccessDataSource, SMediaSource::Options options,
+		const SQTAudioSampleDescription& audioSampleDescription, const CData& configurationData,
+		const SQTmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose storage format
@@ -909,7 +909,7 @@ OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekabl
 		// Add audio track with decode info
 		mediaTrackInfos.add(
 				CMediaTrackInfos::AudioTrackInfo(audioTrack,
-						CAACAudioCodec::create(*audioStorageFormat, seekableDataSource, packetAndLocations,
+						CAACAudioCodec::create(*audioStorageFormat, randomAccessDataSource, packetAndLocations,
 								configurationData)));
 	else
 		// Add audio track
@@ -919,10 +919,11 @@ OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekabl
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekableDataSource>& seekableDataSource,
-		SMediaSource::Options options, const SQTVideoSampleDescription& videoSampleDescription,
-		const CData& configurationData, const SQTmdhdAtomPayload& mdhdAtomPayload,
-		const TArray<SMediaPacketAndLocation>& packetAndLocations, const OI<CData>& stssAtomPayloadData)
+OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos,
+		const I<CRandomAccessDataSource>& randomAccessDataSource, SMediaSource::Options options,
+		const SQTVideoSampleDescription& videoSampleDescription, const CData& configurationData,
+		const SQTmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations,
+		const OI<CData>& stssAtomPayloadData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -961,8 +962,8 @@ OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos, const I<CSeekab
 		// Add video track with decode info
 		mediaTrackInfos.add(
 				CMediaTrackInfos::VideoTrackInfo(videoTrack,
-						CH264VideoCodec::create(seekableDataSource, packetAndLocations, configurationData, timeScale,
-								keyframeIndexes)));
+						CH264VideoCodec::create(randomAccessDataSource, packetAndLocations, configurationData,
+								timeScale, keyframeIndexes)));
 	} else
 		// Add video track
 		mediaTrackInfos.add(CMediaTrackInfos::VideoTrackInfo(videoTrack));

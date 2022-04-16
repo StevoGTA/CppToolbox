@@ -22,7 +22,7 @@ class CDotUnderscoreReader {
 				OR<CData>						getResourceFork() const;
 
 												// Class methods
-		static	TIResult<CDotUnderscoreReader>	from(const I<CSeekableDataSource>& seekableDataSource);
+		static	TIResult<CDotUnderscoreReader>	from(const I<CRandomAccessDataSource>& randomAccessDataSource);
 
 	private:
 												// Lifecycle methods

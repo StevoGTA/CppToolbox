@@ -38,19 +38,19 @@ UInt32 CMediaPacketSource::seekToKeyframe(UInt32 initialFrameIndex, const TNumer
 
 class CSeekableUniformMediaPacketSourceInternals {
 	public:
-		CSeekableUniformMediaPacketSourceInternals(const I<CSeekableDataSource>& seekableDataSource,
+		CSeekableUniformMediaPacketSourceInternals(const I<CRandomAccessDataSource>& randomAccessDataSource,
 				UInt64 byteOffset, UInt64 byteCount, UInt32 bytesPerPacket, UInt32 durationPerPacket) :
-			mSeekableDataSource(seekableDataSource), mByteOffset(byteOffset),
+			mRandomAccessDataSource(randomAccessDataSource), mByteOffset(byteOffset),
 					mPacketCount((UInt32) (byteCount / (UInt64) bytesPerPacket)), mBytesPerPacket(bytesPerPacket),
 					mDurationPerPacket(durationPerPacket), mNextPacketIndex(0)
 			{}
 
-		I<CSeekableDataSource>	mSeekableDataSource;
-		UInt64					mByteOffset;
-		UInt32					mPacketCount;
-		UInt32					mBytesPerPacket;
-		UInt32					mDurationPerPacket;
-		UInt32					mNextPacketIndex;
+		I<CRandomAccessDataSource>	mRandomAccessDataSource;
+		UInt64						mByteOffset;
+		UInt32						mPacketCount;
+		UInt32						mBytesPerPacket;
+		UInt32						mDurationPerPacket;
+		UInt32						mNextPacketIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -60,13 +60,14 @@ class CSeekableUniformMediaPacketSourceInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CSeekableUniformMediaPacketSource::CSeekableUniformMediaPacketSource(const I<CSeekableDataSource>& seekableDataSource,
-		UInt64 byteOffset, UInt64 byteCount, UInt32 bytesPerPacket, UInt32 durationPerPacket)
+CSeekableUniformMediaPacketSource::CSeekableUniformMediaPacketSource(
+		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 byteOffset, UInt64 byteCount,
+		UInt32 bytesPerPacket, UInt32 durationPerPacket)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CSeekableUniformMediaPacketSourceInternals(seekableDataSource, byteOffset, byteCount, bytesPerPacket,
-					durationPerPacket);
+			new CSeekableUniformMediaPacketSourceInternals(randomAccessDataSource, byteOffset, byteCount,
+					bytesPerPacket, durationPerPacket);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -98,7 +99,7 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNe
 		CData		data((CData::ByteCount) mInternals->mBytesPerPacket);
 		UInt64		byteOffset = mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
 		OI<SError>	error =
-							mInternals->mSeekableDataSource->readData(byteOffset, data.getMutableBytePtr(),
+							mInternals->mRandomAccessDataSource->readData(byteOffset, data.getMutableBytePtr(),
 									mInternals->mBytesPerPacket);
 		ReturnValueIfError(error, TIResult<CMediaPacketSource::DataInfo>(*error));
 
@@ -118,13 +119,13 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNe
 
 class CSeekableVaryingMediaPacketSourceInternals {
 	public:
-		CSeekableVaryingMediaPacketSourceInternals(const I<CSeekableDataSource>& seekableDataSource,
+		CSeekableVaryingMediaPacketSourceInternals(const I<CRandomAccessDataSource>& randomAccessDataSource,
 				const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
-			mSeekableDataSource(seekableDataSource), mMediaPacketAndLocations(mediaPacketAndLocations),
+			mRandomAccessDataSource(randomAccessDataSource), mMediaPacketAndLocations(mediaPacketAndLocations),
 					mNextPacketIndex(0)
 			{}
 
-		I<CSeekableDataSource>			mSeekableDataSource;
+		I<CRandomAccessDataSource>		mRandomAccessDataSource;
 		TArray<SMediaPacketAndLocation>	mMediaPacketAndLocations;
 		UInt32							mNextPacketIndex;
 };
@@ -135,11 +136,12 @@ class CSeekableVaryingMediaPacketSourceInternals {
 
 // Lifecycle methods
 //----------------------------------------------------------------------------------------------------------------------
-CSeekableVaryingMediaPacketSource::CSeekableVaryingMediaPacketSource(const I<CSeekableDataSource>& seekableDataSource,
+CSeekableVaryingMediaPacketSource::CSeekableVaryingMediaPacketSource(
+		const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSeekableVaryingMediaPacketSourceInternals(seekableDataSource, mediaPacketAndLocations);
+	mInternals = new CSeekableVaryingMediaPacketSourceInternals(randomAccessDataSource, mediaPacketAndLocations);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -193,7 +195,7 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::readNe
 		// Copy packet data
 		CData		data((CData::ByteCount) mediaPacketAndLocation.mMediaPacket.mByteCount);
 		OI<SError>	error =
-							mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset,
+							mInternals->mRandomAccessDataSource->readData(mediaPacketAndLocation.mByteOffset,
 									data.getMutableBytePtr(), mediaPacketAndLocation.mMediaPacket.mByteCount);
 		ReturnValueIfError(error, TIResult<CMediaPacketSource::DataInfo>(*error));
 
@@ -226,7 +228,7 @@ TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::readNextInto(
 		if (mediaPacketAndLocation.mMediaPacket.mByteCount <= dataByteCountRemaining) {
 			// Copy packet data
 			OI<SError>	error =
-								mInternals->mSeekableDataSource->readData(mediaPacketAndLocation.mByteOffset,
+								mInternals->mRandomAccessDataSource->readData(mediaPacketAndLocation.mByteOffset,
 										packetDataPtr, mediaPacketAndLocation.mMediaPacket.mByteCount);
 			ReturnValueIfError(error, TIResult<TArray<SMediaPacket> >(*error));
 

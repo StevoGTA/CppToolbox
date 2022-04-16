@@ -366,7 +366,8 @@ UInt64 CDVIIntelIMAADPCMAudioCodec::composeFrameCount(const SAudioStorageFormat&
 
 //----------------------------------------------------------------------------------------------------------------------
 I<CDecodeAudioCodec> CDVIIntelIMAADPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
-		const I<CSeekableDataSource>& seekableDataSource, UInt64 startByteOffset, UInt64 byteCount, UInt16 blockAlign)
+		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 startByteOffset, UInt64 byteCount,
+		UInt16 blockAlign)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -376,7 +377,7 @@ I<CDecodeAudioCodec> CDVIIntelIMAADPCMAudioCodec::create(const SAudioStorageForm
 
 	return I<CDecodeAudioCodec>(
 			new CDVIIntelIMAADPCMDecodeAudioCodec(framesPerPacket,
-					new CSeekableUniformMediaPacketSource(seekableDataSource, startByteOffset, byteCount,
+					new CSeekableUniformMediaPacketSource(randomAccessDataSource, startByteOffset, byteCount,
 							blockAlign, framesPerPacket)));
 }
 

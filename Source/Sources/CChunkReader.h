@@ -60,7 +60,7 @@ class CChunkReader : public CByteReader {
 	// Methods
 	public:
 							// Lifecycle methods
-							CChunkReader(const I<CSeekableDataSource>& seekableDataSource, Format format);
+							CChunkReader(const I<CRandomAccessDataSource>& randomAccessDataSource, Format format);
 							~CChunkReader();
 
 							// Instance methods

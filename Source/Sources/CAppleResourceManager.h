@@ -30,7 +30,7 @@ class CAppleResourceManager {
 //				OI<SError>						write();
 
 												// Class methods
-		static	TIResult<CAppleResourceManager>	from(const I<CSeekableDataSource>& seekableDataSource);
+		static	TIResult<CAppleResourceManager>	from(const I<CRandomAccessDataSource>& randomAccessDataSource);
 
 	private:
 												// Lifecycle methods

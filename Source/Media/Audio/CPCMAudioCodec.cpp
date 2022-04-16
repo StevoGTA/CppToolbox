@@ -12,10 +12,10 @@
 class CPCMDecodeAudioCodec : public CDecodeAudioCodec {
 	public:
 										// Lifecycle methods
-										CPCMDecodeAudioCodec(const I<CSeekableDataSource>& seekableDataSource,
+										CPCMDecodeAudioCodec(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												UInt64 startByteOffset, UInt64 byteCount, UInt8 frameByteCount,
 												CPCMAudioCodec::Format format) :
-											mFrameSourceDecodeInfo(seekableDataSource, startByteOffset, byteCount,
+											mFrameSourceDecodeInfo(randomAccessDataSource, startByteOffset, byteCount,
 															frameByteCount),
 													mFormat(format)
 											{}
@@ -117,12 +117,12 @@ UInt64 CPCMAudioCodec::composeFrameCount(const SAudioStorageFormat& audioStorage
 
 //----------------------------------------------------------------------------------------------------------------------
 I<CDecodeAudioCodec> CPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
-		const I<CSeekableDataSource>& seekableDataSource, UInt64 startByteOffset, UInt64 byteCount,
+		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 startByteOffset, UInt64 byteCount,
 		Format format)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return I<CDecodeAudioCodec>(
-			new CPCMDecodeAudioCodec(seekableDataSource, startByteOffset, byteCount,
+			new CPCMDecodeAudioCodec(randomAccessDataSource, startByteOffset, byteCount,
 					*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels(), format));
 }
 

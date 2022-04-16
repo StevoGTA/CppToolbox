@@ -120,11 +120,11 @@ OR<CData> CDotUnderscoreReader::getResourceFork() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CDotUnderscoreReader> CDotUnderscoreReader::from(const I<CSeekableDataSource>& seekableDataSource)
+TIResult<CDotUnderscoreReader> CDotUnderscoreReader::from(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CByteReader	byteReader(seekableDataSource, true);
+	CByteReader	byteReader(randomAccessDataSource, true);
 	OI<SError>	error;
 
 	// Read header

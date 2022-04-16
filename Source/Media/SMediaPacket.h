@@ -100,7 +100,7 @@ class CSeekableUniformMediaPacketSource : public CMediaPacketSource {
 	public:
 												// Lifecycle methods
 												CSeekableUniformMediaPacketSource(
-														const I<CSeekableDataSource>& seekableDataSource,
+														const I<CRandomAccessDataSource>& randomAccessDataSource,
 														UInt64 byteOffset, UInt64 byteCount, UInt32 bytesPerPacket,
 														UInt32 durationPerPacket);
 												~CSeekableUniformMediaPacketSource();
@@ -133,7 +133,7 @@ class CSeekableVaryingMediaPacketSource : public CMediaPacketSource {
 	public:
 												// Lifecycle methods
 												CSeekableVaryingMediaPacketSource(
-														const I<CSeekableDataSource>& seekableDataSource,
+														const I<CRandomAccessDataSource>& randomAccessDataSource,
 														const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations);
 												~CSeekableVaryingMediaPacketSource();
 

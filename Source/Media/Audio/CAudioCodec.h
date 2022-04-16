@@ -70,9 +70,9 @@ class CDecodeAudioCodec : public CAudioCodec {
 			// Methods
 			public:
 										// Lifecycle methods
-										FrameSourceDecodeInfo(const I<CSeekableDataSource>& seekableDataSource,
+										FrameSourceDecodeInfo(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												UInt64 startByteOffset, UInt64 byteCount, UInt8 frameByteCount) :
-											DecodeInfo(), mSeekableDataSource(seekableDataSource),
+											DecodeInfo(), mRandomAccessDataSource(randomAccessDataSource),
 													mStartByteOffset(startByteOffset), mByteCount(byteCount),
 													mFrameByteCount(frameByteCount),
 													mCurrentPosition(mStartByteOffset)
@@ -96,8 +96,9 @@ class CDecodeAudioCodec : public CAudioCodec {
 												if (frameCount > 0) {
 													// Read
 													OI<SError>	error =
-																		mSeekableDataSource->readData(mCurrentPosition,
-																				buffer, frameCount * mFrameByteCount);
+																		mRandomAccessDataSource->readData(
+																				mCurrentPosition, buffer,
+																				frameCount * mFrameByteCount);
 													ReturnValueIfError(error, TVResult<UInt32>(*error));
 
 													// Success
@@ -128,12 +129,12 @@ class CDecodeAudioCodec : public CAudioCodec {
 
 			// Properties
 			private:
-				I<CSeekableDataSource>	mSeekableDataSource;
-				UInt64					mStartByteOffset;
-				UInt64					mByteCount;
-				UInt8					mFrameByteCount;
+				I<CRandomAccessDataSource>	mRandomAccessDataSource;
+				UInt64						mStartByteOffset;
+				UInt64						mByteCount;
+				UInt8						mFrameByteCount;
 
-				UInt64					mCurrentPosition;
+				UInt64						mCurrentPosition;
 		};
 
 	// Methods

@@ -7,19 +7,19 @@
 #include "CData.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSeekableDataSource
+// MARK: CRandomAccessDataSource
 
 // MARK: Properties
 
-SError	CSeekableDataSource::mSetPosBeforeStartError(CString(OSSTR("CDataSource")), 1,
+SError	CRandomAccessDataSource::mSetPosBeforeStartError(CString(OSSTR("CDataSource")), 1,
 				CString(OSSTR("Data source set position before start")));
-SError	CSeekableDataSource::mSetPosAfterEndError(CString(OSSTR("CDataSource")), 2,
+SError	CRandomAccessDataSource::mSetPosAfterEndError(CString(OSSTR("CDataSource")), 2,
 				CString(OSSTR("Data source set position after end")));
 
 // MARK: CDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CSeekableDataSource::readData()
+TIResult<CData> CRandomAccessDataSource::readData()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
