@@ -61,6 +61,8 @@ template <typename T> struct TVResult {
 
 	const	T&		operator*() const
 						{ AssertFailIf(!mValue.hasValue()); return *mValue; }
+	const	T*		operator->() const
+						{ AssertFailIf(!mValue.hasValue()); return &(*mValue); }
 
 	private:
 		OV<T>		mValue;

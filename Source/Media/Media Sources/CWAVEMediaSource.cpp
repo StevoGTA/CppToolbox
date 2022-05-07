@@ -79,10 +79,8 @@ class CWAVEMediaSourceImportTrackerInternals {
 	public:
 		CWAVEMediaSourceImportTrackerInternals() {}
 
-		OV<UInt16>				mFormatTag;
-		OV<UInt16>				mSampleSize;
-		OV<UInt16>				mBlockAlign;
-		OI<SAudioStorageFormat>	mAudioStorageFormat;
+		OV<UInt16>	mSampleSize;
+		OV<UInt16>	mBlockAlign;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -152,17 +150,17 @@ OI<SError> CWAVEMediaSourceImportTracker::note(const CChunkReader::ChunkInfo& ch
 				// Use WAVEFORMAT
 				mInternals->mSampleSize =
 						OV<UInt16>(
-								(UInt16) (waveFormat.getAverageBytesPerSec() / waveFormat.getSamplesPerSecond())
-										/ waveFormat.getChannels() * 8);
+								(UInt16) (waveFormat.getAverageBytesPerSec() / waveFormat.getSamplesPerSecond()) /
+										waveFormat.getChannels() * 8);
 				mInternals->mBlockAlign = OV<UInt16>(waveFormat.getBlockAlign());
 			}
 
-			if (note(waveFormat, mInternals->mSampleSize, *readPayload))
-				// Success
-				return OI<SError>();
-			else
-				// Not supported
-				return OI<SError>(
+			// Note
+			note(waveFormat, mInternals->mSampleSize, *readPayload);
+
+			return mAudioStorageFormat.hasInstance() ?
+					OI<SError>() :
+					OI<SError>(
 						SError(CWAVEMediaSource::mErrorDomain, kUnsupportedCodecCode,
 								CString(OSSTR("Unsupported codec: ")) +
 										CString(waveFormat.getFormatTag(), 4, true, true)));
@@ -184,49 +182,50 @@ OI<SError> CWAVEMediaSourceImportTracker::note(const CChunkReader::ChunkInfo& ch
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
+void CWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
 		const CData& chunkPayload)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mFormatTag = OV<UInt16>(waveFormat.getFormatTag());
+	mFormatTag = OV<UInt16>(waveFormat.getFormatTag());
 
 	// Check format tag
 	switch (waveFormat.getFormatTag()) {
 		case 0x0000:	// Illegal/Unknown
-			return false;
+			return;
 
 		case 0x0001:	// Integer PCM
 			if (!sampleSize.hasValue() || (*sampleSize > 32))
 				// Nope
-				return false;
+				return;
 
-			mInternals->mAudioStorageFormat =
+			mAudioStorageFormat =
 					CPCMAudioCodec::composeAudioStorageFormat(false, (UInt8) *sampleSize,
 							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
 
-			return true;
+			return;
 
 		case 0x0003:	// IEEE Float
 			if (!sampleSize.hasValue() || (*sampleSize > 32))
 				// Nope
-				return false;
+				return;
 
-			mInternals->mAudioStorageFormat =
+			mAudioStorageFormat =
 					CPCMAudioCodec::composeAudioStorageFormat(true, (UInt8) *sampleSize,
 							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
 
-			return true;
+			return;
 
 		case 0x0011:	// DVI/Intel ADPCM
-			mInternals->mAudioStorageFormat =
+			mAudioStorageFormat =
 					CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat((Float32) waveFormat.getSamplesPerSecond(),
 							AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels()));
-			return true;
+
+			return;
 
 		default:
 			// Not supported
-			return false;
+			return;
 	}
 }
 
@@ -234,8 +233,7 @@ bool CWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, const OV
 bool CWAVEMediaSourceImportTracker::canFinalize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAudioStorageFormat.hasInstance() && mDataChunkStartByteOffset.hasValue() &&
-			mDataChunkByteCount.hasValue();
+	return mAudioStorageFormat.hasInstance() && mDataChunkStartByteOffset.hasValue() && mDataChunkByteCount.hasValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -251,16 +249,16 @@ I<CDecodeAudioCodec> CWAVEMediaSourceImportTracker::createAudioCodec(
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check format tag
-	switch (*mInternals->mFormatTag) {
+	switch (*mFormatTag) {
 		case 0x0001:	// Integer PCM
 		case 0x0003:	// IEEE Float
-			return CPCMAudioCodec::create(*mInternals->mAudioStorageFormat, randomAccessDataSource,
-					*mDataChunkStartByteOffset, *mDataChunkByteCount,
-					(*mInternals->mAudioStorageFormat->getBits() > 8) ?
+			return CPCMAudioCodec::create(*mAudioStorageFormat, randomAccessDataSource, *mDataChunkStartByteOffset,
+					*mDataChunkByteCount,
+					(*mAudioStorageFormat->getBits() > 8) ?
 							CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitUnsigned);
 
 		case 0x0011:	// DVI/Intel ADPCM
-			return CDVIIntelIMAADPCMAudioCodec::create(*mInternals->mAudioStorageFormat, randomAccessDataSource,
+			return CDVIIntelIMAADPCMAudioCodec::create(*mAudioStorageFormat, randomAccessDataSource,
 					*mDataChunkStartByteOffset, *mDataChunkByteCount, *mInternals->mBlockAlign);
 
 		default:		// Not possible
@@ -277,16 +275,16 @@ CAudioTrack CWAVEMediaSourceImportTracker::composeAudioTrack(UInt16 sampleSize)
 {
 	// Check format tag
 	UInt64	frameCount;
-	switch (*mInternals->mFormatTag) {
+	switch (*mFormatTag) {
 		case 0x0001:	// Integer PCM
 		case 0x0003:	// IEEE Float
-			frameCount = CPCMAudioCodec::composeFrameCount(*mInternals->mAudioStorageFormat, *mDataChunkByteCount);
+			frameCount = CPCMAudioCodec::composeFrameCount(*mAudioStorageFormat, *mDataChunkByteCount);
 			break;
 
 		case 0x0011:	// DVI/Intel ADPCM
 			frameCount =
-					CDVIIntelIMAADPCMAudioCodec::composeFrameCount(*mInternals->mAudioStorageFormat,
-							*mDataChunkByteCount, *mInternals->mBlockAlign);
+					CDVIIntelIMAADPCMAudioCodec::composeFrameCount(*mAudioStorageFormat, *mDataChunkByteCount,
+							*mInternals->mBlockAlign);
 			break;
 
 		default:		// Not possible
@@ -295,6 +293,6 @@ CAudioTrack CWAVEMediaSourceImportTracker::composeAudioTrack(UInt16 sampleSize)
 			break;
 	}
 
-	return CAudioTrack(CAudioTrack::composeInfo(*mInternals->mAudioStorageFormat, frameCount, *mDataChunkByteCount),
-			*mInternals->mAudioStorageFormat);
+	return CAudioTrack(CAudioTrack::composeInfo(*mAudioStorageFormat, frameCount, *mDataChunkByteCount),
+			*mAudioStorageFormat);
 }

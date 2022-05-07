@@ -40,7 +40,7 @@ class CWAVEMediaSourceImportTracker {
 
 		virtual	OI<SError>							note(const CChunkReader::ChunkInfo& chunkInfo,
 															CChunkReader& chunkReader);
-		virtual	bool								note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
+		virtual	void								note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
 															const CData& chunkPayload);
 
 		virtual	bool								canFinalize() const;
@@ -59,6 +59,8 @@ class CWAVEMediaSourceImportTracker {
 	protected:
 		OV<UInt64>								mDataChunkStartByteOffset;
 		OV<UInt64>								mDataChunkByteCount;
+		OV<UInt16>								mFormatTag;
+		OI<SAudioStorageFormat>					mAudioStorageFormat;
 
 	private:
 		CWAVEMediaSourceImportTrackerInternals*	mInternals;
