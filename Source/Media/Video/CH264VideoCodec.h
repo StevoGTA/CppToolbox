@@ -255,11 +255,11 @@ class CH264VideoCodec {
 														return SPSPPSInfo(spsNALUInfos, ppsNALUInfos);
 													}
 
-						UInt32					getTimeScale() const
-													{ return mTimeScale; }
+				//		UInt32					getTimeScale() const
+				//									{ return mTimeScale; }
 
-				const	TNumericArray<UInt32>&	getKeyframeIndexes() const
-													{ return mKeyframeIndexes; }
+				//const	TNumericArray<UInt32>&	getKeyframeIndexes() const
+				//									{ return mKeyframeIndexes; }
 
 			private:
 												// Private methods

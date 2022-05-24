@@ -7,10 +7,114 @@
 #include "CCodecRegistry.h"
 #include "CLogServices.h"
 
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+#elif defined(TARGET_OS_WINDOWS)
+	#include "CMediaFoundationServices.h"
+	#include "CMediaFoundationVideoCodec.h"
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
 static	CData	sAnnexBMarker(CString(OSSTR("AAAAAQ==")));
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CH264DecodeVideoCodec
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+class CH264DecodeVideoCodec : public CCoreAudioDecodeAudioCodec {
+#elif defined(TARGET_OS_WINDOWS)
+class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
+#endif
+	public:
+										CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaPacketSource,
+												const CData& configurationData, UInt32 timeScale,
+												const TNumericArray<UInt32>& keyframeIndexes);
+
+					OI<SError>			setup(const SVideoProcessingFormat& videoProcessingFormat);
+
+				const	GUID&			getGUID() const
+											{ return MFVideoFormat_H264; }
+						void			seek(UInt64 frameTime)
+											{ mFrameTiming->seek(frameTime); }
+
+		static	TCIResult<IMFSample>	readInputSample(
+												CMediaFoundationDecodeVideoCodec& mediaFoundationDecodeVideoCodec);
+
+		CH264VideoCodec::DecodeInfo					mDecodeInfo;
+
+		OI<CH264VideoCodec::DecodeInfo::SPSPPSInfo>	mCurrentSPSPPSInfo;
+		OI<CH264VideoCodec::FrameTiming>			mFrameTiming;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+CH264DecodeVideoCodec::CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaPacketSource,
+		const CData& configurationData, UInt32 timeScale, const TNumericArray<UInt32>& keyframeIndexes) :
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+#elif defined(TARGET_OS_WINDOWS)
+		CMediaFoundationDecodeVideoCodec(CH264VideoCodec::mID, mediaPacketSource, timeScale, keyframeIndexes,
+				readInputSample),
+#endif
+		mDecodeInfo(mediaPacketSource, configurationData, timeScale, keyframeIndexes)
+//----------------------------------------------------------------------------------------------------------------------
+{
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Do super
+	OI<SError>	error = CMediaFoundationDecodeVideoCodec::setup(videoProcessingFormat);
+	ReturnErrorIfError(error);
+
+	// Finish setup
+	mCurrentSPSPPSInfo = OI<CH264VideoCodec::DecodeInfo::SPSPPSInfo>(mDecodeInfo.getSPSPPSInfo());
+
+	const	CH264VideoCodec::NALUInfo&						spsNALUInfo =
+																	mCurrentSPSPPSInfo->getSPSNALUInfos().getFirst();
+			CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
+																	CData(spsNALUInfo.getBytePtr(),
+																			spsNALUInfo.getByteCount(), false));
+	mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
+
+	return OI<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
+		CMediaFoundationDecodeVideoCodec& mediaFoundationDecodeVideoCodec)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CH264DecodeVideoCodec&	videoCodec = (CH264DecodeVideoCodec&) mediaFoundationDecodeVideoCodec;
+
+	// Get next packet
+	TIResult<CMediaPacketSource::DataInfo>	dataInfo = videoCodec.mDecodeInfo.getMediaPacketSource()->readNext();
+	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
+
+	// Update frame timing
+	TIResult<CH264VideoCodec::FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(*dataInfo);
+	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(times.getError()));
+
+	// Create input sample
+	TArray<CH264VideoCodec::NALUInfo>	naluInfos = CH264VideoCodec::NALUInfo::getNALUInfos(dataInfo->getData());
+	CData								annexBData =
+												CH264VideoCodec::NALUInfo::composeAnnexB(
+														videoCodec.mCurrentSPSPPSInfo->getSPSNALUInfos(),
+														videoCodec.mCurrentSPSPPSInfo->getPPSNALUInfos(), naluInfos);
+	TCIResult<IMFSample>				sample = CMediaFoundationServices::createSample(annexBData);
+	ReturnValueIfResultError(sample, sample);
+
+	HRESULT	result = sample.getInstance()->SetSampleTime(times->mPresentationTime * 10000 / videoCodec.getTimeScale());
+	ReturnValueIfFailed(result, OSSTR("SetSampleTime"), TCIResult<IMFSample>(SErrorFromHRESULT(result)));
+
+	result = sample.getInstance()->SetSampleDuration(dataInfo->getDuration());
+	ReturnValueIfFailed(result, OSSTR("SetSampleDuration"), TCIResult<IMFSample>(SErrorFromHRESULT(result)));
+
+	return sample;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -192,6 +296,19 @@ OI<SVideoStorageFormat> CH264VideoCodec::composeVideoStorageFormat(const S2DSize
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return OI<SVideoStorageFormat>(new SVideoStorageFormat(mID, frameSize, framerate));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CDecodeVideoCodec> CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
+		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
+		const TNumericArray<UInt32>& keyframeIndexes)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return I<CDecodeVideoCodec>(
+			new CH264DecodeVideoCodec(
+					I<CMediaPacketSource>(
+							new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
+					configurationData, timeScale, keyframeIndexes));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

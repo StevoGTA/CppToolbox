@@ -63,7 +63,7 @@ class CMediaFoundationServices {
 												IMFMediaBuffer*	mediaBuffer;
 												HRESULT			result =
 																		mInputSample->GetBufferByIndex(0, &mediaBuffer);
-												ReturnValueIfFailed(result, "GetBufferByIndex for inputSample",
+												ReturnValueIfFailed(result, OSSTR("GetBufferByIndex for inputSample"),
 														TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 												// Call proc
@@ -106,19 +106,6 @@ class CMediaFoundationServices {
 												const OI<CData>& userData = OI<CData>(),
 												CreateAudioMediaTypeOptions options = kCreateAudioMediaTypeOptionsNone);
 		static	TCIResult<IMFMediaType>	createMediaType(const SAudioProcessingFormat& audioProcessingFormat);
-		static	TCIResult<IMFMediaType>	createMediaType(const GUID& videoFormat, const S2DSizeU32& frameSize);
-
-		static	TCIResult<IMFTransform>	createTransformForAudioDecoder(const GUID& guid,
-												const SAudioProcessingFormat& audioProcessingFormat,
-												const OI<CData>& userData = OI<CData>());
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
-		static	TCIResult<IMFTransform>	createTransformForAudioResampler(
-												const SAudioProcessingFormat& inputAudioProcessingFormat,
-												const SAudioProcessingFormat& outputAudioProcessingFormat);
-#endif
-		static	TCIResult<IMFTransform>	createTransformForVideoDecode(const GUID& inputGUID, const GUID& outputGUID);
-		static	OI<SError>				setTransformInputOutputMediaTypes(IMFTransform* transform,
-												IMFMediaType* inputMediaType, IMFMediaType* outputMediaType);
 
 		static	TCIResult<IMFSample>	createSample(UInt32 size);
 		static	TCIResult<IMFSample>	createSample(const CData& data);
@@ -131,7 +118,7 @@ class CMediaFoundationServices {
 		static	OI<SError>				processOutput(IMFTransform* transform, IMFSample* outputSample,
 												const ProcessOutputInfo& processOutputInfo);
 
-		static	OI<SError>				completeWrite(IMFSample* sample, UInt32 frameOffset, CAudioFrames& audioFrames,
+		static	TVResult<UInt32>		completeWrite(IMFSample* sample, UInt32 frameOffset, CAudioFrames& audioFrames,
 												const SAudioProcessingFormat& audioProcessingFormat);
 
 		static	OI<SError>				flush(IMFTransform* transform);

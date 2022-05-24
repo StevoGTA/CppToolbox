@@ -18,6 +18,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
+EXTERN_C const CLSID CLSID_CResamplerMediaObject;
+static const PROPERTYKEY MFPKEY_WMRESAMP_FILTERQUALITY = { { 0xaf1adc73, 0xa210, 0x4b05, {0x96, 0x6e, 0x54, 0x91, 0xcf, 0xf4, 0x8b, 0x1d} }, 0x01 }; 
+
 static	CString	sErrorDomain(OSSTR("CMediaFoundationResampler"));
 static	SError	sSetupDidNotCompleteError(sErrorDomain, 1, CString(OSSTR("Setup did not complete")));
 
@@ -102,16 +105,49 @@ OI<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 	mInternals->mInputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Setup transform
-	TCIResult<IMFTransform>	resamplerTransform =
-									CMediaFoundationServices::createTransformForAudioResampler(audioProcessingFormat,
-											*mOutputAudioProcessingFormat);
-	if (resamplerTransform.hasError())
-		return OI<SError>(resamplerTransform.getError());
-	mInternals->mResamplerTransform = resamplerTransform.getInstance();
+	IUnknown*	unknown;
+	result = CoCreateInstance(CLSID_CResamplerMediaObject, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&unknown));
+	ReturnErrorIfFailed(result, OSSTR("CoCreateInstance"));
+
+	// Query Transform
+	IMFTransform*	transform;
+	result = unknown->QueryInterface(IID_PPV_ARGS(&transform));
+	OCI<IMFTransform>	audioResampler(transform);
+	ReturnErrorIfFailed(result, OSSTR("Querying Resampler Transform"));
+
+	// Query Resampler Property Store
+	IPropertyStore*	propertyStore;
+	result = unknown->QueryInterface(IID_PPV_ARGS(&propertyStore));
+	OCI<IPropertyStore>	resamplerPropertyStore(propertyStore);
+	ReturnErrorIfFailed(result, OSSTR("Querying Resampler Property Store"));
+
+	// Configure
+	PROPVARIANT	pv;
+	pv.vt = VT_I4;
+	pv.intVal = 60;
+	result = propertyStore->SetValue(MFPKEY_WMRESAMP_FILTERQUALITY, pv);
+	ReturnErrorIfFailed(result, OSSTR("Setting Filter Quality"));
+
+	// Setup input media type
+	TCIResult<IMFMediaType>	inputMediaType = CMediaFoundationServices::createMediaType(audioProcessingFormat);
+	ReturnErrorIfResultError(inputMediaType);
+
+	result = transform->SetInputType(0, *(inputMediaType.getInstance()), 0);
+	ReturnErrorIfFailed(result, OSSTR("SetInputType"));
+
+	// Setup output media type
+	TCIResult<IMFMediaType>	outputMediaType = CMediaFoundationServices::createMediaType(*mOutputAudioProcessingFormat);
+	ReturnErrorIfResultError(outputMediaType);
+
+	result = transform->SetOutputType(0, *(outputMediaType.getInstance()), 0);
+	ReturnErrorIfFailed(result, OSSTR("SetOutputType"));
+
+	// Store
+	mInternals->mResamplerTransform = audioResampler;
 
 	// Begin streaming!
 	result = mInternals->mResamplerTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-	ReturnErrorIfFailed(result, "ProcessMessage to begin streaming");
+	ReturnErrorIfFailed(result, OSSTR("ProcessMessage to begin streaming"));
 
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
 }
@@ -172,10 +208,10 @@ SAudioSourceStatus CMediaFoundationResampler::performInto(CAudioFrames& audioFra
 		ReturnValueIfError(error, SAudioSourceStatus(*error));
 
 		// Complete write
-		error =
-				CMediaFoundationServices::completeWrite(*sample.getInstance(), 0, audioFrames,
-						*mOutputAudioProcessingFormat);
-		ReturnValueIfError(error, SAudioSourceStatus(*error));
+		TVResult<UInt32>	result =
+									CMediaFoundationServices::completeWrite(*sample.getInstance(), 0, audioFrames,
+											*mOutputAudioProcessingFormat);
+		ReturnValueIfResultError(result, SAudioSourceStatus(result.getError()));
 	}
 
 	return SAudioSourceStatus(mInternals->mSourceTimeInterval);

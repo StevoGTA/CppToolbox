@@ -28,6 +28,11 @@ template <typename T> struct TCIResult {
 	const	SError&	getError() const
 						{ return *mError; }
 
+	const	T&		operator*() const
+						{ AssertFailIf(!mInstance.hasInstance()); return *mInstance; }
+	const	T*		operator->() const
+						{ AssertFailIf(!mInstance.hasInstance()); return &(*mInstance); }
+
 	private:
 		OCI<T>		mInstance;
 		OI<SError>	mError;

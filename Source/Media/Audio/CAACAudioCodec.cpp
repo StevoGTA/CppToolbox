@@ -6,6 +6,12 @@
 
 #include "CCodecRegistry.h"
 
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+	#include "CCoreAudioAudioCodec.h"
+#elif defined(TARGET_OS_WINDOWS)
+	#include "CMediaFoundationAudioCodec.h"
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
@@ -188,6 +194,99 @@ struct SesdsAtomPayload {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAACDecodeAudioCodec
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+class CAACDecodeAudioCodec : public CCoreAudioDecodeAudioCodec {
+#elif defined(TARGET_OS_WINDOWS)
+class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
+#endif
+	public:
+												// Lifecycle methods
+												CAACDecodeAudioCodec(OSType codecID,
+														const I<CMediaPacketSource>& mediaPacketSource,
+														const CData& configurationData) :
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+													CCoreAudioDecodeAudioCodec(codecID, mediaPacketSource),
+															mDecodeInfo(mediaPacketSource, configurationData)
+#elif defined(TARGET_OS_WINDOWS)
+													CMediaFoundationDecodeAudioCodec(codecID, mediaPacketSource),
+															mDecodeInfo(mediaPacketSource, configurationData)
+#endif
+													{}
+
+												// CDecodeAudioCodec methods
+				TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat)
+													{
+														return TNArray<SAudioProcessingSetup>(
+																SAudioProcessingSetup(32,
+																		audioStorageFormat.getSampleRate(),
+																		audioStorageFormat.getChannelMap(),
+																		SAudioProcessingSetup::kSampleTypeFloat));
+													}
+				CAudioFrames::Requirements		getRequirements() const
+													{ return CAudioFrames::Requirements(1024, 1024 * 2); }
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+												// CCoreAudioDecodeAudioCodec methods
+				AudioStreamBasicDescription		getSourceASBD(OSType codecID,
+														const SAudioProcessingFormat& audioProcessingFormat)
+													{
+														AudioStreamBasicDescription	asbd = {0};
+														asbd.mFormatID =
+																(codecID == CAACAudioCodec::mAACLCID) ?
+																		kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
+														asbd.mFormatFlags = 0;
+														asbd.mSampleRate = audioProcessingFormat.getSampleRate();
+														asbd.mChannelsPerFrame = audioProcessingFormat.getChannels();
+
+														return asbd;
+													}
+				OI<SError>						setMagicCookie(AudioConverterRef audioConverterRef)
+													{
+														OSStatus	status =
+																			::AudioConverterSetProperty(
+																					audioConverterRef,
+																					kAudioConverterDecompressionMagicCookie,
+																					(UInt32)
+																							mDecodeInfo.getMagicCookie()
+																									.getByteCount(),
+																					mDecodeInfo.getMagicCookie()
+																								.getBytePtr());
+														ReturnErrorIfFailed(status,
+																OSSTR("AudioConverterSetProperty for magic cookie"));
+
+														return OI<SError>();
+													}
+#elif defined(TARGET_OS_WINDOWS)
+												// CMediaFoundationDecodeAudioCodec methods
+		const	GUID&							getGUID() const
+													{ return MFAudioFormat_AAC; }
+				OI<CData>						getUserData() const
+													{
+														#pragma pack(push, 1)
+															struct UserData {
+																WORD	mPayloadType;
+																WORD	mAudioProfileLevelIndication;
+																WORD	mStructType;
+																WORD	mReserved1;
+																DWORD	mReserved2;
+																WORD	mAudioSpecificConfig;
+															} userData = {0};
+														#pragma pack(pop)
+															userData.mAudioSpecificConfig =
+																	EndianU16_NtoB(mDecodeInfo.getStartCodes());
+
+														return OI<CData>(new CData(&userData, sizeof(UserData)));
+													}
+#endif
+
+	private:
+		CAACAudioCodec::DecodeInfo	mDecodeInfo;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAACAudioCodec::DecodeInfo
 
 // MARK: Lifecycle methods
@@ -290,6 +389,19 @@ OI<SAudioStorageFormat> CAACAudioCodec::composeAudioStorageFormat(const CData& c
 	}
 
 	return OI<SAudioStorageFormat>(new SAudioStorageFormat(codecID, sampleRate, channelMap));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CDecodeAudioCodec> CAACAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
+		const I<CRandomAccessDataSource>& randomAccessDataSource,
+		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return I<CDecodeAudioCodec>(
+			new CAACDecodeAudioCodec(audioStorageFormat.getCodecID(),
+					I<CMediaPacketSource>(
+							new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
+					configurationData));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

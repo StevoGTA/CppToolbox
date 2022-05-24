@@ -79,7 +79,9 @@ I<CVideoSource> CMediaEngine::getVideoSource(const CMediaTrackInfos::VideoTrackI
 
 	return I<CVideoSource>(
 			new CVideoDecoder(videoStorageFormat, *videoTrackInfo.mCodec,
-					SVideoProcessingFormat(videoStorageFormat.getFramerate(), compatibility), identifier));
+					SVideoProcessingFormat(videoStorageFormat.getFrameSize(), videoStorageFormat.getFramerate(),
+							compatibility),
+					identifier));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
