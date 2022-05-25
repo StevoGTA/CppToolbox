@@ -8,6 +8,8 @@
 #include "CLogServices.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+	#include "CCoreMediaVideoCodec.h"
+	#include "SError-Apple.h"
 #elif defined(TARGET_OS_WINDOWS)
 	#include "CMediaFoundationServices.h"
 	#include "CMediaFoundationVideoCodec.h"
@@ -23,24 +25,37 @@ static	CData	sAnnexBMarker(CString(OSSTR("AAAAAQ==")));
 // MARK: - CH264DecodeVideoCodec
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-class CH264DecodeVideoCodec : public CCoreAudioDecodeAudioCodec {
+class CH264DecodeVideoCodec : public CCoreMediaDecodeVideoCodec {
 #elif defined(TARGET_OS_WINDOWS)
 class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 #endif
 	public:
-										CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaPacketSource,
-												const CData& configurationData, UInt32 timeScale,
-												const TNumericArray<UInt32>& keyframeIndexes);
+															CH264DecodeVideoCodec(
+																	const I<CMediaPacketSource>& mediaPacketSource,
+																	const CData& configurationData, UInt32 timeScale,
+																	const TNumericArray<UInt32>& keyframeIndexes);
 
-					OI<SError>			setup(const SVideoProcessingFormat& videoProcessingFormat);
+						void								seek(UInt64 frameTime)
+																{ mFrameTiming->seek(frameTime); }
 
-				const	GUID&			getGUID() const
-											{ return MFVideoFormat_H264; }
-						void			seek(UInt64 frameTime)
-											{ mFrameTiming->seek(frameTime); }
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+						TVResult<CMFormatDescriptionRef>	composeFormatDescription();
+						TVResult<CMSampleTimingInfo>		composeSampleTimingInfo(
+																	const CMediaPacketSource::DataInfo& dataInfo,
+																	UInt32 timeScale);
+#elif defined(TARGET_OS_WINDOWS)
+						OI<SError>							setup(const SVideoProcessingFormat& videoProcessingFormat);
 
-		static	TCIResult<IMFSample>	readInputSample(
-												CMediaFoundationDecodeVideoCodec& mediaFoundationDecodeVideoCodec);
+				const	GUID&								getGUID() const
+																{ return MFVideoFormat_H264; }
+#endif
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+#elif defined(TARGET_OS_WINDOWS)
+		static			TCIResult<IMFSample>				readInputSample(
+																	CMediaFoundationDecodeVideoCodec&
+																			mediaFoundationDecodeVideoCodec);
+#endif
 
 		CH264VideoCodec::DecodeInfo					mDecodeInfo;
 
@@ -52,6 +67,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 CH264DecodeVideoCodec::CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaPacketSource,
 		const CData& configurationData, UInt32 timeScale, const TNumericArray<UInt32>& keyframeIndexes) :
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+		CCoreMediaDecodeVideoCodec(CH264VideoCodec::mID, mediaPacketSource, timeScale, keyframeIndexes),
 #elif defined(TARGET_OS_WINDOWS)
 		CMediaFoundationDecodeVideoCodec(CH264VideoCodec::mID, mediaPacketSource, timeScale, keyframeIndexes,
 				readInputSample),
@@ -61,6 +77,69 @@ CH264DecodeVideoCodec::CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaP
 {
 }
 
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CMFormatDescriptionRef> CH264DecodeVideoCodec::composeFormatDescription()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+			CH264VideoCodec::DecodeInfo::SPSPPSInfo	spsppsInfo = mDecodeInfo.getSPSPPSInfo();
+	const	TArray<CH264VideoCodec::NALUInfo>		spsNALUInfos = spsppsInfo.getSPSNALUInfos();
+	const	TArray<CH264VideoCodec::NALUInfo>		ppsNALUInfos = spsppsInfo.getPPSNALUInfos();
+			OSStatus								status;
+
+	// Setup format description
+			CArray::ItemCount	spsCount = spsNALUInfos.getCount();
+			CArray::ItemCount	ppsCount = ppsNALUInfos.getCount();
+	const	uint8_t*			parameterSetPointers[spsCount + ppsCount];
+			size_t				parameterSetSizes[spsCount + ppsCount];
+	for (CArray::ItemIndex i = 0; i < spsCount; i++) {
+		// Store
+		parameterSetPointers[i] = spsNALUInfos[i].getBytePtr();
+		parameterSetSizes[i] = spsNALUInfos[i].getByteCount();
+	}
+	for (CArray::ItemIndex i = 0; i < ppsCount; i++) {
+		// Store
+		parameterSetPointers[spsCount + i] = ppsNALUInfos[i].getBytePtr();
+		parameterSetSizes[spsCount + i] = ppsNALUInfos[i].getByteCount();
+	}
+
+	CMFormatDescriptionRef	formatDescriptionRef;
+	status =
+			::CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, spsCount + ppsCount,
+					parameterSetPointers, parameterSetSizes, mDecodeInfo.getNALUHeaderLengthSize(),
+					&formatDescriptionRef);
+	ReturnValueIfFailed(status, OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"),
+			TVResult<CMFormatDescriptionRef>(SErrorFromOSStatus(status)));
+
+	// Finish setup
+	CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
+															CData(parameterSetPointers[0],
+																	(CData::ByteCount) parameterSetSizes[0], false));
+	mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
+
+	return TVResult<CMFormatDescriptionRef>(formatDescriptionRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CMSampleTimingInfo> CH264DecodeVideoCodec::composeSampleTimingInfo(
+		const CMediaPacketSource::DataInfo& dataInfo, UInt32 timeScale)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Update frame timing
+	TIResult<CH264VideoCodec::FrameTiming::Times>	times = mFrameTiming->updateFrom(dataInfo);
+	ReturnValueIfResultError(times, TVResult<CMSampleTimingInfo>(times.getError()));
+
+	// Compose sample timing info
+	CMSampleTimingInfo	sampleTimingInfo;
+	sampleTimingInfo.duration = ::CMTimeMake(dataInfo.getDuration(), timeScale);
+	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(times->mDecodeTime, timeScale);
+	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(times->mPresentationTime, timeScale);
+
+	return TVResult<CMSampleTimingInfo>(sampleTimingInfo);
+}
+
+#elif defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
@@ -81,7 +160,10 @@ OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProce
 
 	return OI<SError>();
 }
+#endif
 
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+#elif defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
 TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 		CMediaFoundationDecodeVideoCodec& mediaFoundationDecodeVideoCodec)
@@ -115,6 +197,7 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 
 	return sample;
 }
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

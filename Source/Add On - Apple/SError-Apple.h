@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CLogServices.h"
 #include "SError.h"
 
 #define SErrorFromNSError(e)												\

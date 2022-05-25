@@ -8,6 +8,7 @@
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
 	#include "CCoreAudioAudioCodec.h"
+	#include "SError-Apple.h"
 #elif defined(TARGET_OS_WINDOWS)
 	#include "CMediaFoundationAudioCodec.h"
 #endif

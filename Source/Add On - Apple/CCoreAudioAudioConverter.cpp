@@ -4,7 +4,6 @@
 
 #include "CCoreAudioAudioConverter.h"
 
-#include "CLogServices.h"
 #include "SError-Apple.h"
 
 #include <AudioToolbox/AudioToolbox.h>
