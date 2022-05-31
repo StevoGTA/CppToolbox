@@ -33,7 +33,7 @@ class CMediaFoundationDecodeAudioCodec : public CDecodeAudioCodec {
 											const I<CMediaPacketSource>& mediaPacketSource);
 
 									// Subclass methods
-		virtual	const	GUID&		getGUID() const = 0;
+		virtual	const	GUID&		getGUID(OSType codecID) const = 0;
 		virtual			OI<CData>	getUserData() const
 										{ return OI<CData>(); }
 

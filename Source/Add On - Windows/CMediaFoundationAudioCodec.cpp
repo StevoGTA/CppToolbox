@@ -77,7 +77,7 @@ OI<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat&
 {
 	// Setup
 			CAudioFrames::Requirements	requirements = getRequirements();
-	const	GUID&						guid = getGUID();
+	const	GUID&						guid = getGUID(mInternals->mCodecID);
 			HRESULT						result;
 
 	// Store
