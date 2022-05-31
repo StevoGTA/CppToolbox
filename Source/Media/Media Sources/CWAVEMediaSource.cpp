@@ -52,7 +52,7 @@ SMediaSource::QueryTracksResult CWAVEMediaSource::queryTracks(const I<CRandomAcc
 	}
 
 	// Check results
-	if (!waveMediaSourceImportTracker->canFinalize())
+	if (!waveMediaSourceImportTracker->canFinalize(randomAccessDataSource))
 		// Can't finalize
 		return SMediaSource::QueryTracksResult(sInvalidWAVEFileError);
 
@@ -230,7 +230,7 @@ void CWAVEMediaSourceImportTracker::note(const SWAVEFORMAT& waveFormat, const OV
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CWAVEMediaSourceImportTracker::canFinalize() const
+bool CWAVEMediaSourceImportTracker::canFinalize(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mAudioStorageFormat.hasInstance() && mDataChunkStartByteOffset.hasValue() && mDataChunkByteCount.hasValue();

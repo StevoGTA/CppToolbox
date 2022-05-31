@@ -43,7 +43,8 @@ class CWAVEMediaSourceImportTracker {
 		virtual	void								note(const SWAVEFORMAT& waveFormat, const OV<UInt16>& sampleSize,
 															const CData& chunkPayload);
 
-		virtual	bool								canFinalize() const;
+		virtual	bool								canFinalize(
+															const I<CRandomAccessDataSource>& randomAccessDataSource);
 		virtual	CAudioTrack							composeAudioTrack();
 		virtual	I<CDecodeAudioCodec>				createAudioCodec(
 															const I<CRandomAccessDataSource>& randomAccessDataSource);

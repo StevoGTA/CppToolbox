@@ -305,6 +305,8 @@ template <typename T> struct OV {
 
 	const	T&		operator*() const
 						{ AssertFailIf(mValue == nil); return *mValue; }
+			T*		operator->() const
+						{ AssertFailIf(mValue == nil); return mValue; }
 
 			OV<T>&	operator=(T value)
 						{ setValue(value); return *this; }
