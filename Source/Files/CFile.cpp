@@ -33,13 +33,13 @@ class CFileInternals : public TCopyOnWriteReferenceCountable<CFileInternals> {
 
 // MARK: Properties
 
-SError	CFile::mDoesNotExistError(sErrorDomain, 1, CString(OSSTR("Does Not Exist")));
-SError	CFile::mIsOpenError(sErrorDomain, 2, CString(OSSTR("Is Open")));
-SError	CFile::mNotOpenError(sErrorDomain, 3, CString(OSSTR("Is Not Open")));
-SError	CFile::mNotFoundError(sErrorDomain, 4, CString(OSSTR("Is Not Found")));
-SError	CFile::mUnableToRevealInFinderError(sErrorDomain, 5, CString(OSSTR("Unable to reveal in Finder")));
-SError	CFile::mUnableToReadError(sErrorDomain, 6, CString(OSSTR("Unable to read")));
-SError	CFile::mUnableToWriteError(sErrorDomain, 7, CString(OSSTR("Unable to write")));
+const	SError	CFile::mDoesNotExistError(sErrorDomain, 1, CString(OSSTR("Does Not Exist")));
+const	SError	CFile::mIsOpenError(sErrorDomain, 2, CString(OSSTR("Is Open")));
+const	SError	CFile::mNotOpenError(sErrorDomain, 3, CString(OSSTR("Is Not Open")));
+const	SError	CFile::mNotFoundError(sErrorDomain, 4, CString(OSSTR("Is Not Found")));
+const	SError	CFile::mUnableToRevealInFinderError(sErrorDomain, 5, CString(OSSTR("Unable to reveal in Finder")));
+const	SError	CFile::mUnableToReadError(sErrorDomain, 6, CString(OSSTR("Unable to read")));
+const	SError	CFile::mUnableToWriteError(sErrorDomain, 7, CString(OSSTR("Unable to write")));
 
 // MARK: Lifecycle methods
 

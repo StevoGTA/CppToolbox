@@ -21,7 +21,7 @@ class CWAVEMediaSource {
 
 	// Properties
 	public:
-		static	CString	mErrorDomain;
+		static	const	CString	mErrorDomain;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

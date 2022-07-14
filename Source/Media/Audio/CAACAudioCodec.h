@@ -43,9 +43,9 @@ class CAACAudioCodec {
 
 	// Properties
 	public:
-		static	OSType	mAACLCID;
-		static	CString	mAACLCName;
+		static	const	OSType	mAACLCID;
+		static	const	CString	mAACLCName;
 
-		static	OSType	mAACLDID;
-		static	CString	mAACLDName;
+		static	const	OSType	mAACLDID;
+		static	const	CString	mAACLDName;
 };

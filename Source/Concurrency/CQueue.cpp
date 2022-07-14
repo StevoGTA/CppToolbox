@@ -349,7 +349,7 @@ void CSRSWBIPSegmentedQueue::reset()
 
 // MARK: Properties
 
-OSType	CSRSWMessageQueue::ProcMessage::mType = MAKE_OSTYPE('P', 'r', 'o', 'c');
+const	OSType	CSRSWMessageQueue::ProcMessage::mType = MAKE_OSTYPE('P', 'r', 'o', 'c');
 
 // MARK: Lifecycle methods
 

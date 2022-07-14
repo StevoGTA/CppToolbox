@@ -7,6 +7,7 @@
 #include "CAudioFrames.h"
 #include "SAudioFormats.h"
 #include "SAudioSourceStatus.h"
+#include "SError.h"
 #include "TimeAndDate.h"
 #include "TWrappers.h"
 

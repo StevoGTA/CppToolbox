@@ -100,9 +100,9 @@ class CFolder : CHashable {
 
 	// Properties
 	public:
-		static	SError				mDoesNotExistError;
-		static	SError				mAlreadyExistsError;
+		static	const	SError				mDoesNotExistError;
+		static	const	SError				mAlreadyExistsError;
 
 	private:
-				CFolderInternals*	mInternals;
+						CFolderInternals*	mInternals;
 };

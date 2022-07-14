@@ -49,5 +49,5 @@ class CDVIIntelIMAADPCMAudioCodec {
 
 	// Properties
 	public:
-		static	OSType	mID;
+		static	const	OSType	mID;
 };

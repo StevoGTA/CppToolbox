@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CSet.h"
+#include "CString.h"
 #include "SValue.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -200,10 +201,10 @@ class CDictionary : public CEquatable {
 
 	// Properties
 	public:
-		static	CDictionary				mEmpty;
+		static	const	CDictionary				mEmpty;
 
 	private:
-				CDictionaryInternals*	mInternals;
+						CDictionaryInternals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

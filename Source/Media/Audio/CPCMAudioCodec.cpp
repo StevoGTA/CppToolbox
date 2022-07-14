@@ -92,8 +92,8 @@ OI<SError> CPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 
 // MARK: Properties
 
-OSType	CPCMAudioCodec::mFloatID = MAKE_OSTYPE('f', 'P', 'C', 'M');
-OSType	CPCMAudioCodec::mIntegerID = MAKE_OSTYPE('N', 'O', 'N', 'E');
+const	OSType	CPCMAudioCodec::mFloatID = MAKE_OSTYPE('f', 'P', 'C', 'M');
+const	OSType	CPCMAudioCodec::mIntegerID = MAKE_OSTYPE('N', 'O', 'N', 'E');
 
 // MARK: Class methods
 

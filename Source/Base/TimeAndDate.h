@@ -145,39 +145,39 @@ struct SGregorianDate {
 			Float32	mSecond;	// 0 - 59.9
 			UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
 
-	static	CString	mJanString;
-	static	CString	mFebString;
-	static	CString	mMarString;
-	static	CString	mAprString;
-	static	CString	mMayString;
-	static	CString	mJunString;
-	static	CString	mJulString;
-	static	CString	mAugString;
-	static	CString	mSepString;
-	static	CString	mOctString;
-	static	CString	mNovString;
-	static	CString	mDecString;
+	static	const	CString	mJanString;
+	static	const	CString	mFebString;
+	static	const	CString	mMarString;
+	static	const	CString	mAprString;
+	static	const	CString	mMayString;
+	static	const	CString	mJunString;
+	static	const	CString	mJulString;
+	static	const	CString	mAugString;
+	static	const	CString	mSepString;
+	static	const	CString	mOctString;
+	static	const	CString	mNovString;
+	static	const	CString	mDecString;
 
-	static	CString	mJanuaryString;
-	static	CString	mFebruaryString;
-	static	CString	mMarchString;
-	static	CString	mAprilString;
-	static	CString	mJuneString;
-	static	CString	mJulyString;
-	static	CString	mAugustString;
-	static	CString	mSeptemberString;
-	static	CString	mOctoberString;
-	static	CString	mNovemberString;
-	static	CString	mDecemberString;
+	static	const	CString	mJanuaryString;
+	static	const	CString	mFebruaryString;
+	static	const	CString	mMarchString;
+	static	const	CString	mAprilString;
+	static	const	CString	mJuneString;
+	static	const	CString	mJulyString;
+	static	const	CString	mAugustString;
+	static	const	CString	mSeptemberString;
+	static	const	CString	mOctoberString;
+	static	const	CString	mNovemberString;
+	static	const	CString	mDecemberString;
 
-	static	CString	mSunString;
-	static	CString	mMonString;
-	static	CString	mTueString;
-	static	CString	mWedString;
-	static	CString	mThuString;
-	static	CString	mFriString;
-	static	CString	mSatString;
+	static	const	CString	mSunString;
+	static	const	CString	mMonString;
+	static	const	CString	mTueString;
+	static	const	CString	mWedString;
+	static	const	CString	mThuString;
+	static	const	CString	mFriString;
+	static	const	CString	mSatString;
 
-	static	CString	mAMString;
-	static	CString	mPMString;
+	static	const	CString	mAMString;
+	static	const	CString	mPMString;
 };

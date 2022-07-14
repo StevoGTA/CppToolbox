@@ -66,11 +66,11 @@ template <typename T> struct T3DPoint {
 							}
 
 	// Properties
-			T			mX;
-			T			mY;
-			T			mZ;
+					T			mX;
+					T			mY;
+					T			mZ;
 
-	static	T3DPoint<T>	mZero;
+	static	const	T3DPoint<T>	mZero;
 };
 
 typedef	T3DPoint<Float32>	S3DPointF32;

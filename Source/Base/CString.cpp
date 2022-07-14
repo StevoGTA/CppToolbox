@@ -21,26 +21,26 @@ const	UInt64	kDisplayAsGiBThreshHold = 1024 * 1024 * 1024;
 
 // MARK: Properties
 
-CString	CString::mEmpty;
+const	CString	CString::mEmpty;
 
-CString	CString::mColon(OSSTR(":"));
-CString	CString::mComma(OSSTR(","));
-CString	CString::mDoubleQuotes(OSSTR("\""));
-CString	CString::mPeriod(OSSTR("."));
-CString	CString::mSpace(OSSTR(" "));
-CString	CString::mSpaceX4(OSSTR("    "));
-CString	CString::mTab(OSSTR("\t"));
+const	CString	CString::mColon(OSSTR(":"));
+const	CString	CString::mComma(OSSTR(","));
+const	CString	CString::mDoubleQuotes(OSSTR("\""));
+const	CString	CString::mPeriod(OSSTR("."));
+const	CString	CString::mSpace(OSSTR(" "));
+const	CString	CString::mSpaceX4(OSSTR("    "));
+const	CString	CString::mTab(OSSTR("\t"));
 
-CString	CString::mNewline(OSSTR("\n"));
-CString	CString::mLinefeed(OSSTR("\r"));
-CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
+const	CString	CString::mNewline(OSSTR("\n"));
+const	CString	CString::mLinefeed(OSSTR("\r"));
+const	CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
-	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
+	const	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
 #elif defined(TARGET_OS_LINUX)
-	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
+	const	CString	CString::mPlatformDefaultNewline(OSSTR("\n"));
 #elif defined(TARGET_OS_WINDOWS)
-	CString	CString::mPlatformDefaultNewline(OSSTR("\r\n"));
+	const	CString	CString::mPlatformDefaultNewline(OSSTR("\r\n"));
 #endif
 
 // MARK: Lifecycle methods

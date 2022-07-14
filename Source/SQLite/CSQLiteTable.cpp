@@ -225,7 +225,7 @@ CSQLiteTableColumn	CSQLiteTableInternals::mCountAllTableColumn(CString(OSSTR("CO
 
 // MARK: Properties
 
-CSQLiteTableColumn	CSQLiteTable::mSelectAllTableColumn(CString(OSSTR("*")), CSQLiteTableColumn::kInteger);
+const	CSQLiteTableColumn	CSQLiteTable::mSelectAllTableColumn(CString(OSSTR("*")), CSQLiteTableColumn::kInteger);
 
 // MARK: Lifecycle methods
 

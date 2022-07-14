@@ -249,10 +249,10 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 						{ mProc(*this, mUserData); }
 
 			// Properties
-			static	OSType	mType;
+			static	const	OSType	mType;
 
-					Proc	mProc;
-					void*	mUserData;
+							Proc	mProc;
+							void*	mUserData;
 		};
 
 	// Methods

@@ -23,7 +23,7 @@ class CLock {
 		void	unlock() const;
 
 	// Properties
-	public:
+	private:
 		CLockInternals*	mInternals;
 };
 
@@ -45,7 +45,7 @@ class CReadPreferringLock {
 		void	unlockForWriting() const;
 
 	// Properties
-	public:
+	private:
 		CReadPreferringLockInternals*	mInternals;
 };
 
@@ -66,7 +66,7 @@ class CSemaphore {
 		void	timedWaitFor(UniversalTimeInterval maxWaitTimeInterval) const;
 
 	// Properties
-	public:
+	private:
 		CSemaphoreInternals*	mInternals;
 };
 
@@ -86,6 +86,6 @@ class CSharedResource {
 		void	release() const;
 
 	// Properties
-	public:
+	private:
 		CSharedResourceInternals*	mInternals;
 };

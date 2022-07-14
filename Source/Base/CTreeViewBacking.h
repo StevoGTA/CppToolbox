@@ -95,8 +95,8 @@ class CTreeViewBacking {
 
 	// Properties
 	public:
-		static	CString						mRootViewItemID;
+		static	const	CString						mRootViewItemID;
 
 	private:
-				CTreeViewBackingInternals*	mInternals;
+						CTreeViewBackingInternals*	mInternals;
 };

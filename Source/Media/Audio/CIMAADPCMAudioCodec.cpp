@@ -339,7 +339,7 @@ OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 
 // MARK: Properties
 
-OSType	CDVIIntelIMAADPCMAudioCodec::mID = 0x6D730011;
+const	OSType	CDVIIntelIMAADPCMAudioCodec::mID = 0x6D730011;
 
 // MARK: Class methods
 

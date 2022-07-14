@@ -31,41 +31,41 @@ UniversalTime SUniversalTime::getDistantPast()
 
 // MARK: Properties
 
-CString		SGregorianDate::mJanString(OSSTR("Jan"));
-CString		SGregorianDate::mFebString(OSSTR("Feb"));
-CString		SGregorianDate::mMarString(OSSTR("Mar"));
-CString		SGregorianDate::mAprString(OSSTR("Apr"));
-CString		SGregorianDate::mMayString(OSSTR("May"));
-CString		SGregorianDate::mJunString(OSSTR("Jun"));
-CString		SGregorianDate::mJulString(OSSTR("Jul"));
-CString		SGregorianDate::mAugString(OSSTR("Aug"));
-CString		SGregorianDate::mSepString(OSSTR("Sep"));
-CString		SGregorianDate::mOctString(OSSTR("Oct"));
-CString		SGregorianDate::mNovString(OSSTR("Nov"));
-CString		SGregorianDate::mDecString(OSSTR("Dec"));
+const	CString		SGregorianDate::mJanString(OSSTR("Jan"));
+const	CString		SGregorianDate::mFebString(OSSTR("Feb"));
+const	CString		SGregorianDate::mMarString(OSSTR("Mar"));
+const	CString		SGregorianDate::mAprString(OSSTR("Apr"));
+const	CString		SGregorianDate::mMayString(OSSTR("May"));
+const	CString		SGregorianDate::mJunString(OSSTR("Jun"));
+const	CString		SGregorianDate::mJulString(OSSTR("Jul"));
+const	CString		SGregorianDate::mAugString(OSSTR("Aug"));
+const	CString		SGregorianDate::mSepString(OSSTR("Sep"));
+const	CString		SGregorianDate::mOctString(OSSTR("Oct"));
+const	CString		SGregorianDate::mNovString(OSSTR("Nov"));
+const	CString		SGregorianDate::mDecString(OSSTR("Dec"));
 
-CString		SGregorianDate::mJanuaryString(OSSTR("January"));
-CString		SGregorianDate::mFebruaryString(OSSTR("February"));
-CString		SGregorianDate::mMarchString(OSSTR("March"));
-CString		SGregorianDate::mAprilString(OSSTR("April"));
-CString		SGregorianDate::mJuneString(OSSTR("June"));
-CString		SGregorianDate::mJulyString(OSSTR("July"));
-CString		SGregorianDate::mAugustString(OSSTR("August"));
-CString		SGregorianDate::mSeptemberString(OSSTR("September"));
-CString		SGregorianDate::mOctoberString(OSSTR("October"));
-CString		SGregorianDate::mNovemberString(OSSTR("November"));
-CString		SGregorianDate::mDecemberString(OSSTR("December"));
+const	CString		SGregorianDate::mJanuaryString(OSSTR("January"));
+const	CString		SGregorianDate::mFebruaryString(OSSTR("February"));
+const	CString		SGregorianDate::mMarchString(OSSTR("March"));
+const	CString		SGregorianDate::mAprilString(OSSTR("April"));
+const	CString		SGregorianDate::mJuneString(OSSTR("June"));
+const	CString		SGregorianDate::mJulyString(OSSTR("July"));
+const	CString		SGregorianDate::mAugustString(OSSTR("August"));
+const	CString		SGregorianDate::mSeptemberString(OSSTR("September"));
+const	CString		SGregorianDate::mOctoberString(OSSTR("October"));
+const	CString		SGregorianDate::mNovemberString(OSSTR("November"));
+const	CString		SGregorianDate::mDecemberString(OSSTR("December"));
 
-CString		SGregorianDate::mSunString(OSSTR("Sunday"));
-CString		SGregorianDate::mMonString(OSSTR("Monday"));
-CString		SGregorianDate::mTueString(OSSTR("Tuesday"));
-CString		SGregorianDate::mWedString(OSSTR("Wednesday"));
-CString		SGregorianDate::mThuString(OSSTR("Thursday"));
-CString		SGregorianDate::mFriString(OSSTR("Friday"));
-CString		SGregorianDate::mSatString(OSSTR("Saturday"));
+const	CString		SGregorianDate::mSunString(OSSTR("Sunday"));
+const	CString		SGregorianDate::mMonString(OSSTR("Monday"));
+const	CString		SGregorianDate::mTueString(OSSTR("Tuesday"));
+const	CString		SGregorianDate::mWedString(OSSTR("Wednesday"));
+const	CString		SGregorianDate::mThuString(OSSTR("Thursday"));
+const	CString		SGregorianDate::mFriString(OSSTR("Friday"));
+const	CString		SGregorianDate::mSatString(OSSTR("Saturday"));
 
-CString		SGregorianDate::mAMString(OSSTR("am"));
-CString		SGregorianDate::mPMString(OSSTR("pm"));
+const	CString		SGregorianDate::mAMString(OSSTR("am"));
+const	CString		SGregorianDate::mPMString(OSSTR("pm"));
 
 // MARK: Instance methods
 
@@ -74,10 +74,10 @@ CString SGregorianDate::getString(ComponentStyle dateComponentStyle, ComponentSt
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose string
-	CString*	day;
-	CString*	month;
-	CString		string;
-	UInt8		hour = (mHour == 0) ? 12 : ((mHour - 1) % 12 + 1);
+	const	CString*	day;
+	const	CString*	month;
+			CString		string;
+			UInt8		hour = (mHour == 0) ? 12 : ((mHour - 1) % 12 + 1);
 
 	switch (dateComponentStyle) {
 		case kComponentStyleNone:

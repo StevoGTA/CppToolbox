@@ -11,7 +11,7 @@
 
 // MARK: Properties
 
-SValue	SValue::mEmpty;
+const	SValue	SValue::mEmpty;
 
 // MARK: Lifecycle methods
 

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CData.h"
+#include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Overview
@@ -55,8 +56,8 @@ class CUUID : public CHashable {
 
 	// Properties
 	public:
-		static	CUUID			mZero;
+		static	const	CUUID			mZero;
 
 	private:
-				CUUIDInternals*	mInternals;
+						CUUIDInternals*	mInternals;
 };

@@ -11,10 +11,10 @@
 
 // MARK: Properties
 
-SError	CRandomAccessDataSource::mSetPosBeforeStartError(CString(OSSTR("CDataSource")), 1,
-				CString(OSSTR("Data source set position before start")));
-SError	CRandomAccessDataSource::mSetPosAfterEndError(CString(OSSTR("CDataSource")), 2,
-				CString(OSSTR("Data source set position after end")));
+const	SError	CRandomAccessDataSource::mSetPosBeforeStartError(CString(OSSTR("CDataSource")), 1,
+						CString(OSSTR("Data source set position before start")));
+const	SError	CRandomAccessDataSource::mSetPosAfterEndError(CString(OSSTR("CDataSource")), 2,
+						CString(OSSTR("Data source set position after end")));
 
 // MARK: CDataSource methods
 

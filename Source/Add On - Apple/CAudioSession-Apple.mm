@@ -73,12 +73,12 @@ static	NotificationObserver*	sNotificationObserver = [[NotificationObserver allo
 
 // MARK: Properties
 
-CAudioSession					CAudioSession::mShared;
-CImmediateNotificationCenter	CAudioSession::mNotificationCenter;
+		CAudioSession					CAudioSession::mShared;
+		CImmediateNotificationCenter	CAudioSession::mNotificationCenter;
 
-CString CAudioSession::mInterruptionDidBeginNotificationName(OSSTR("CAudioSession - Interruption Did Begin"));
-CString CAudioSession::mInterruptionDidEndNotificationName(OSSTR("CAudioSession - Interruption Did End"));
-CString	CAudioSession::mInterruptionDidEndPlaybackShouldContinue(OSSTR("playbackShouldContinue"));
+const	CString CAudioSession::mInterruptionDidBeginNotificationName(OSSTR("CAudioSession - Interruption Did Begin"));
+const	CString CAudioSession::mInterruptionDidEndNotificationName(OSSTR("CAudioSession - Interruption Did End"));
+const	CString	CAudioSession::mInterruptionDidEndPlaybackShouldContinue(OSSTR("playbackShouldContinue"));
 
 // MARK: Lifecycle methods
 

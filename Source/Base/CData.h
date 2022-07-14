@@ -4,10 +4,12 @@
 
 #pragma once
 
-#include "SError.h"
+#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CData
+
+class CString;
 
 class CDataInternals;
 class CData {
@@ -57,9 +59,9 @@ class CData {
 
 	// Properties
 	public:
-		static	CData			mEmpty;
-		static	CData			mZeroByte;
+		static	const	CData			mEmpty;
+		static	const	CData			mZeroByte;
 
 	private:
-				CDataInternals*	mInternals;
+						CDataInternals*	mInternals;
 };

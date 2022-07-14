@@ -35,8 +35,8 @@ class CFolderInternals : public TCopyOnWriteReferenceCountable<CFolderInternals>
 
 // MARK: Properties
 
-SError CFolder::mDoesNotExistError(sErrorDomain, 1, CString(OSSTR("Folder Does Not Exist")));
-SError CFolder::mAlreadyExistsError(sErrorDomain, 2, CString(OSSTR("Folder Already Exists")));
+const	SError CFolder::mDoesNotExistError(sErrorDomain, 1, CString(OSSTR("Folder Does Not Exist")));
+const	SError CFolder::mAlreadyExistsError(sErrorDomain, 2, CString(OSSTR("Folder Already Exists")));
 
 // MARK: Lifecycle methods
 

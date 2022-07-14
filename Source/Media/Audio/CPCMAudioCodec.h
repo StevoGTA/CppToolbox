@@ -36,6 +36,6 @@ class CPCMAudioCodec {
 
 	// Properties
 	public:
-		static	OSType	mFloatID;
-		static	OSType	mIntegerID;
+		static	const	OSType	mFloatID;
+		static	const	OSType	mIntegerID;
 };

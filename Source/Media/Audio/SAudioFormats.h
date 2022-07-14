@@ -297,12 +297,12 @@ struct SAudioProcessingSetup {
 
 		// Properties
 		public:
-			static	BitsInfo	mUnspecified;
-			static	BitsInfo	mUnchanged;
+			static	const	BitsInfo	mUnspecified;
+			static	const	BitsInfo	mUnchanged;
 
 		private:
-					Option		mOption;
-					OV<UInt8>	mValue;
+							Option		mOption;
+							OV<UInt8>	mValue;
 	};
 
 	struct SampleRateInfo {
@@ -332,12 +332,12 @@ struct SAudioProcessingSetup {
 
 		// Properties
 		public:
-			static	SampleRateInfo	mUnspecified;
-			static	SampleRateInfo	mUnchanged;
+			static	const	SampleRateInfo	mUnspecified;
+			static	const	SampleRateInfo	mUnchanged;
 
 		private:
-					Option			mOption;
-					OV<Float32>		mValue;
+							Option			mOption;
+							OV<Float32>		mValue;
 	};
 
 	struct ChannelMapInfo {
@@ -369,12 +369,12 @@ struct SAudioProcessingSetup {
 
 		// Properties
 		public:
-			static	ChannelMapInfo			mUnspecified;
-			static	ChannelMapInfo			mUnchanged;
+			static	const	ChannelMapInfo			mUnspecified;
+			static	const	ChannelMapInfo			mUnchanged;
 
 		private:
-					Option					mOption;
-					OV<EAudioChannelMap>	mValue;
+							Option					mOption;
+							OV<EAudioChannelMap>	mValue;
 	};
 
 	enum SampleTypeOption {
@@ -453,13 +453,13 @@ struct SAudioProcessingSetup {
 
 	// Properties
 	public:
-		static	SAudioProcessingSetup	mUnspecified;
+		static	const	SAudioProcessingSetup	mUnspecified;
 
 	private:
-				BitsInfo				mBitsInfo;
-				SampleRateInfo			mSampleRateInfo;
-				ChannelMapInfo			mChannelMapInfo;
-				SampleTypeOption		mSampleTypeOption;
-				EndianOption			mEndianOption;
-				InterleavedOption		mInterleavedOption;
+						BitsInfo				mBitsInfo;
+						SampleRateInfo			mSampleRateInfo;
+						ChannelMapInfo			mChannelMapInfo;
+						SampleTypeOption		mSampleTypeOption;
+						EndianOption			mEndianOption;
+						InterleavedOption		mInterleavedOption;
 };

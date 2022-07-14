@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CData.h"
-#include "SError.h"
+#include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SValue
@@ -106,47 +106,47 @@ struct SValue {
 
 	// Properties
 	public:
-		static	SValue	mEmpty;
+		static	const	SValue	mEmpty;
 		
 	private:
-				Type	mType;
-				union ValueValue {
-					// Lifecycle methods
-					ValueValue(TArray<CDictionary>* value) : mArrayOfDictionaries(value) {}
-					ValueValue(TArray<CString>* value) : mArrayOfStrings(value) {}
-					ValueValue(bool value) : mBool(value) {}
-					ValueValue(CData* value) : mData(value) {}
-					ValueValue(CDictionary* value) : mDictionary(value) {}
-					ValueValue(CString* value) : mString(value) {}
-					ValueValue(Float32 value) : mFloat32(value) {}
-					ValueValue(Float64 value) : mFloat64(value) {}
-					ValueValue(SInt8 value) : mSInt8(value) {}
-					ValueValue(SInt16 value) : mSInt16(value) {}
-					ValueValue(SInt32 value) : mSInt32(value) {}
-					ValueValue(SInt64 value) : mSInt64(value) {}
-					ValueValue(UInt8 value) : mUInt8(value) {}
-					ValueValue(UInt16 value) : mUInt16(value) {}
-					ValueValue(UInt32 value) : mUInt32(value) {}
-					ValueValue(UInt64 value) : mUInt64(value) {}
-					ValueValue(Opaque value) : mOpaque(value) {}
+						Type	mType;
+						union ValueValue {
+							// Lifecycle methods
+							ValueValue(TArray<CDictionary>* value) : mArrayOfDictionaries(value) {}
+							ValueValue(TArray<CString>* value) : mArrayOfStrings(value) {}
+							ValueValue(bool value) : mBool(value) {}
+							ValueValue(CData* value) : mData(value) {}
+							ValueValue(CDictionary* value) : mDictionary(value) {}
+							ValueValue(CString* value) : mString(value) {}
+							ValueValue(Float32 value) : mFloat32(value) {}
+							ValueValue(Float64 value) : mFloat64(value) {}
+							ValueValue(SInt8 value) : mSInt8(value) {}
+							ValueValue(SInt16 value) : mSInt16(value) {}
+							ValueValue(SInt32 value) : mSInt32(value) {}
+							ValueValue(SInt64 value) : mSInt64(value) {}
+							ValueValue(UInt8 value) : mUInt8(value) {}
+							ValueValue(UInt16 value) : mUInt16(value) {}
+							ValueValue(UInt32 value) : mUInt32(value) {}
+							ValueValue(UInt64 value) : mUInt64(value) {}
+							ValueValue(Opaque value) : mOpaque(value) {}
 
-					// Properties
-					TArray<CDictionary>*	mArrayOfDictionaries;
-					TArray<CString>*		mArrayOfStrings;
-					bool					mBool;
-					CData*					mData;
-					CDictionary*			mDictionary;
-					CString*				mString;
-					Float32					mFloat32;
-					Float64					mFloat64;
-					SInt8					mSInt8;
-					SInt16					mSInt16;
-					SInt32					mSInt32;
-					SInt64					mSInt64;
-					UInt8					mUInt8;
-					UInt16					mUInt16;
-					UInt32					mUInt32;
-					UInt64					mUInt64;
-					Opaque					mOpaque;
-				}	mValue;
+							// Properties
+							TArray<CDictionary>*	mArrayOfDictionaries;
+							TArray<CString>*		mArrayOfStrings;
+							bool					mBool;
+							CData*					mData;
+							CDictionary*			mDictionary;
+							CString*				mString;
+							Float32					mFloat32;
+							Float64					mFloat64;
+							SInt8					mSInt8;
+							SInt16					mSInt16;
+							SInt32					mSInt32;
+							SInt64					mSInt64;
+							UInt8					mUInt8;
+							UInt16					mUInt16;
+							UInt32					mUInt32;
+							UInt64					mUInt64;
+							Opaque					mOpaque;
+						}	mValue;
 };

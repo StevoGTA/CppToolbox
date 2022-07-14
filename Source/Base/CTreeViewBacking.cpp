@@ -166,7 +166,7 @@ class CTreeViewBackingInternals {
 
 // MARK: Properties
 
-CString	CTreeViewBacking::mRootViewItemID(OSSTR("ROOT"));
+ const	CString	CTreeViewBacking::mRootViewItemID(OSSTR("ROOT"));
 
 // MARK: Lifecycle methods
 

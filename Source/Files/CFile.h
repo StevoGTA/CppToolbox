@@ -93,14 +93,14 @@ class CFile : CHashable {
 
 	// Properties
 	public:
-		static	SError			mDoesNotExistError;
-		static	SError			mIsOpenError;
-		static	SError			mNotOpenError;
-		static	SError			mNotFoundError;
-		static	SError			mUnableToRevealInFinderError;
-		static	SError			mUnableToReadError;
-		static	SError			mUnableToWriteError;
+		static	const	SError			mDoesNotExistError;
+		static	const	SError			mIsOpenError;
+		static	const	SError			mNotOpenError;
+		static	const	SError			mNotFoundError;
+		static	const	SError			mUnableToRevealInFinderError;
+		static	const	SError			mUnableToReadError;
+		static	const	SError			mUnableToWriteError;
 
 	private:
-				CFileInternals*	mInternals;
+						CFileInternals*	mInternals;
 };

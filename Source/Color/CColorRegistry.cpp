@@ -319,11 +319,11 @@ class CColorRegistryInternals {
 
 // MARK: Notifications
 
-CString CColorRegistry::mColorChangedNotificationName(OSSTR("colorRegistryColorChangedNotification"));
+const	CString CColorRegistry::mColorChangedNotificationName(OSSTR("colorRegistryColorChangedNotification"));
 
-CString	CColorRegistry::mGroupIDKey(OSSTR("groupID"));
-CString	CColorRegistry::mColorIDKey(OSSTR("colorID"));
-CString	CColorRegistry::mColorKey(OSSTR("color"));
+const	CString	CColorRegistry::mGroupIDKey(OSSTR("groupID"));
+const	CString	CColorRegistry::mColorIDKey(OSSTR("colorID"));
+const	CString	CColorRegistry::mColorKey(OSSTR("color"));
 
 
 // MARK: Lifecycle methods

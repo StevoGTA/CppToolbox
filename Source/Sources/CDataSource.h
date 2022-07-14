@@ -44,8 +44,8 @@ class CRandomAccessDataSource : public CDataSource {
 
 	// Properties
 	public:
-		static	SError	mSetPosBeforeStartError;
-		static	SError	mSetPosAfterEndError;
+		static	const	SError	mSetPosBeforeStartError;
+		static	const	SError	mSetPosAfterEndError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

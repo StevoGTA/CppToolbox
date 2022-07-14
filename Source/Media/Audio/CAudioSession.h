@@ -55,14 +55,14 @@ class CAudioSession {
 
 	// Properties
 	public:
-		static	CAudioSession					mShared;
-		static	CImmediateNotificationCenter	mNotificationCenter;
+		static			CAudioSession					mShared;
+		static			CImmediateNotificationCenter	mNotificationCenter;
 
 		/*
 			Sent when the the audio session is interrupted
 				senderRef is CAudioSession
 		*/
-		static	CString			mInterruptionDidBeginNotificationName;
+		static	const	CString			mInterruptionDidBeginNotificationName;
 
 		/*
 			Sent when the audio session interruption is complete
@@ -70,8 +70,8 @@ class CAudioSession {
 				info has the following keys;
 					mInterruptionDidEndPlaybackShouldContinue	// bool
 		*/
-		static	CString			mInterruptionDidEndNotificationName;
-		static	CString			mInterruptionDidEndPlaybackShouldContinue;
+		static	const	CString			mInterruptionDidEndNotificationName;
+		static	const	CString			mInterruptionDidEndPlaybackShouldContinue;
 
 //		/*
 //			Sent when the requested property has changed
@@ -80,7 +80,7 @@ class CAudioSession {
 //					mPropertyDidChangePropertyName
 //					mPropertyDidChangePropertyValue
 //		*/
-//		static	CString			mPropertyDidChangeNotificationName;
-//		static	CString			mPropertyDidChangePropertyName;		// OSType
-//		static	CString			mPropertyDidChangePropertyValue;	// CData
+//		static	const	CString			mPropertyDidChangeNotificationName;
+//		static	const	CString			mPropertyDidChangePropertyName;		// OSType
+//		static	const	CString			mPropertyDidChangePropertyValue;	// CData
 };

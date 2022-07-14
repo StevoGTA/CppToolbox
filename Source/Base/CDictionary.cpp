@@ -546,7 +546,7 @@ class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryIn
 
 // MARK: Properties
 
-CDictionary	CDictionary::mEmpty;
+const	CDictionary	CDictionary::mEmpty;
 
 // MARK: Lifecycle methods
 

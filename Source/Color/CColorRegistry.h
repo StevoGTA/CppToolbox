@@ -89,11 +89,11 @@ class CColorRegistry {
 					mColorIDKey
 					mColorKey
 		*/
-		static	CString mColorChangedNotificationName;
+		static	const	CString mColorChangedNotificationName;
 
-		static	CString	mGroupIDKey;	// OSType
-		static	CString	mColorIDKey;	// OSType
-		static	CString	mColorKey;		// CColor*
+		static	const	CString	mGroupIDKey;	// OSType
+		static	const	CString	mColorIDKey;	// OSType
+		static	const	CString	mColorKey;		// CColor*
 
 	// Methods
 	public:

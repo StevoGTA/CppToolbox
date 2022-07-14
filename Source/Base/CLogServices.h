@@ -74,7 +74,7 @@ class CLogFile {
 				void	logError(const CString& string) const;
 				void	logError(const SError& error, const CString& message, const char* file, const char* proc,
 								UInt32 line)
-							{ logError(error.getDescription(), message, file, proc, line); }
+							{ logError(error.getDefaultDescription(), message, file, proc, line); }
 
 	// Properties
 	private:
@@ -106,7 +106,7 @@ class CLogServices {
 		static	void			logError(const CString& string);
 		static	void			logError(const SError& error, const CString& message, const char* file,
 										const char* proc, UInt32 line)
-									{ logError(error.getDescription(), message, file, proc, line); }
+									{ logError(error.getDefaultDescription(), message, file, proc, line); }
 
 		static	void			addLogMessageProc(LogProc logProc, void* userData = nil);
 		static	void			addLogWarningProc(LogProc logProc, void* userData = nil);

@@ -99,9 +99,9 @@ class CSQLiteTableColumn : public CEquatable {
 
 	// Properties
 	public:
-		static	const	CSQLiteTableColumn	mRowID;
-		static	const	CSQLiteTableColumn	mAll;
+		static	const	CSQLiteTableColumn				mRowID;
+		static	const	CSQLiteTableColumn				mAll;
 
 	private:
-		CSQLiteTableColumnInternals*	mInternals;
+						CSQLiteTableColumnInternals*	mInternals;
 };

@@ -56,7 +56,7 @@ class CUUIDInternals : public TReferenceCountable<CUUIDInternals> {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CUUID
 
-CUUID	CUUID::mZero(CString(OSSTR("00000000-0000-0000-0000-000000000000")));
+const	CUUID	CUUID::mZero(CString(OSSTR("00000000-0000-0000-0000-000000000000")));
 
 // MARK: Lifecycle methods
 

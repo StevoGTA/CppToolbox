@@ -323,6 +323,6 @@ class CH264VideoCodec {
 
 	// Properties
 	public:
-		static	OSType	mID;
-		static	CString	mName;
+		static	const	OSType	mID;
+		static	const	CString	mName;
 };

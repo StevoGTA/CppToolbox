@@ -24,6 +24,7 @@
 // MARK: - CString
 
 class CData;
+class CDictionary;
 
 class CString : public CHashable {
 	// Enums
@@ -245,6 +246,8 @@ class CString : public CHashable {
 
 										CString(const CData& data, Encoding encoding = kEncodingTextDefault);
 
+										CString(const CString& localizationGroup, const CString& localizationKey,
+												const CDictionary& localizationInfo);
 										CString(const CString& localizationGroup, const CString& localizationKey);
 
 										~CString();
@@ -356,20 +359,20 @@ class CString : public CHashable {
 
 	// Properties
 	public:
-		static			CString		mEmpty;
+		static	const	CString		mEmpty;
 
-		static			CString		mColon;
-		static			CString		mComma;
-		static			CString		mDoubleQuotes;
-		static			CString		mPeriod;
-		static			CString		mSpace;
-		static			CString		mSpaceX4;
-		static			CString		mTab;
+		static	const	CString		mColon;
+		static	const	CString		mComma;
+		static	const	CString		mDoubleQuotes;
+		static	const	CString		mPeriod;
+		static	const	CString		mSpace;
+		static	const	CString		mSpaceX4;
+		static	const	CString		mTab;
 
-		static			CString		mNewline;
-		static			CString		mLinefeed;
-		static			CString		mNewlineLinefeed;
-		static			CString		mPlatformDefaultNewline;
+		static	const	CString		mNewline;
+		static	const	CString		mLinefeed;
+		static	const	CString		mNewlineLinefeed;
+		static	const	CString		mPlatformDefaultNewline;
 		
 	private:
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)

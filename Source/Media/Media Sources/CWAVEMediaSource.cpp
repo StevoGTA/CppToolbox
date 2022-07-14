@@ -10,13 +10,17 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Errors
 
-CString	CWAVEMediaSource::mErrorDomain(OSSTR("CWAVEMediaSource"));
-static	SError	sInvalidWAVEFileError(CWAVEMediaSource::mErrorDomain, 1, CString(OSSTR("Invalid WAVE file")));
+static	CString	sErrorDomain(OSSTR("CWAVEMediaSource"));
+static	SError	sInvalidWAVEFileError(sErrorDomain, 1, CString(OSSTR("Invalid WAVE file")));
 static	SInt32	kUnsupportedCodecCode = 2;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CWAVEMediaSource
+
+// MARK: Properties
+
+const	CString	CWAVEMediaSource::mErrorDomain = sErrorDomain;
 
 // MARK: Class methods
 

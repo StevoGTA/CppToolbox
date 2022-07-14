@@ -9,5 +9,5 @@
 
 // MARK: Properties
 
-SError	SError::mUnimplemented(CString(OSSTR("SError")), 1, CString(OSSTR("Unimplemented")));
-SError	SError::mEndOfData(CString(OSSTR("SError")), 2, CString(OSSTR("End of Data")));
+const	SError	SError::mUnimplemented(CString(OSSTR("SError")), 1, CString(OSSTR("Unimplemented")));
+const	SError	SError::mEndOfData(CString(OSSTR("SError")), 2, CString(OSSTR("End of Data")));

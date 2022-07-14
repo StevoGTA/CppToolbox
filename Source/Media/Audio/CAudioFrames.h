@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CArray.h"
 #include "CData.h"
 #include "TWrappers.h"
 

@@ -171,8 +171,8 @@ class CSQLiteTable {
 
 	// Properties
 	public:
-		static	CSQLiteTableColumn		mSelectAllTableColumn;
+		static	const	CSQLiteTableColumn		mSelectAllTableColumn;
 
 	private:
-				CSQLiteTableInternals*	mInternals;
+						CSQLiteTableInternals*	mInternals;
 };

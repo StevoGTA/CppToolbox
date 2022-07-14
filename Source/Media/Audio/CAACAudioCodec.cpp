@@ -315,11 +315,11 @@ CAACAudioCodec::DecodeInfo::DecodeInfo(const I<CMediaPacketSource>& mediaPacketS
 
 // MARK: Properties
 
-OSType	CAACAudioCodec::mAACLCID = MAKE_OSTYPE('m', 'p', '4', 'a');
-CString	CAACAudioCodec::mAACLCName(OSSTR("AAC Low Complexity"));
+const	OSType	CAACAudioCodec::mAACLCID = MAKE_OSTYPE('m', 'p', '4', 'a');
+const	CString	CAACAudioCodec::mAACLCName(OSSTR("AAC Low Complexity"));
 
-OSType	CAACAudioCodec::mAACLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
-CString	CAACAudioCodec::mAACLDName(OSSTR("AAC Low Delay"));
+const	OSType	CAACAudioCodec::mAACLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
+const	CString	CAACAudioCodec::mAACLDName(OSSTR("AAC Low Delay"));
 
 // MARK: Class methods
 
