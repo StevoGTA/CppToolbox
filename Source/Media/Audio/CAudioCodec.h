@@ -137,6 +137,64 @@ class CDecodeAudioCodec : public CAudioCodec {
 				UInt64						mCurrentPosition;
 		};
 
+	// SourceFramesInfo
+	public:
+		class SourceFramesInfo {
+			// Methods
+			public:
+
+														// Lifecycle methods
+														SourceFramesInfo(
+																const SAudioStorageFormat& audioStorageFormat,
+																UInt64 frameCount) :
+															mAudioStorageFormat(audioStorageFormat),
+																	mFrameCount(frameCount)
+															{}
+														SourceFramesInfo(const SourceFramesInfo& other) :
+															mAudioStorageFormat(other.mAudioStorageFormat),
+																	mFrameCount(other.mFrameCount)
+															{}
+				virtual									~SourceFramesInfo() {}
+
+														// Instance methods
+						const	SAudioStorageFormat&	getAudioStorageFormat() const
+															{ return mAudioStorageFormat; }
+								UInt64					getFrameCount() const
+															{ return mFrameCount; }
+				virtual			I<CDecodeAudioCodec>	getDecodeAudioCodec() const = 0;
+
+			// Properties
+			protected:
+				SAudioStorageFormat	mAudioStorageFormat;
+				UInt64				mFrameCount;
+		};
+
+	// PacketSourceFramesInfo
+	public:
+		class PacketSourceFramesInfo : public SourceFramesInfo {
+			// Methods
+			public:
+
+				// Lifecycle methods
+				PacketSourceFramesInfo(const SAudioStorageFormat& audioStorageFormat, UInt64 frameCount,
+						const I<CRandomAccessDataSource>& randomAccessDataSource,
+						const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
+					SourceFramesInfo(audioStorageFormat, frameCount),
+							mRandomAccessDataSource(randomAccessDataSource),
+							mMediaPacketAndLocations(mediaPacketAndLocations)
+					{}
+				PacketSourceFramesInfo(const PacketSourceFramesInfo& other) :
+					SourceFramesInfo(other),
+							mRandomAccessDataSource(other.mRandomAccessDataSource),
+							mMediaPacketAndLocations(other.mMediaPacketAndLocations)
+					{}
+
+			// Properties
+			protected:
+				I<CRandomAccessDataSource>		mRandomAccessDataSource;
+				TArray<SMediaPacketAndLocation>	mMediaPacketAndLocations;
+		};
+
 	// Methods
 	public:
 												// Instance methods

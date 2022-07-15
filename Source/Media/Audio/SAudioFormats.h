@@ -230,6 +230,8 @@ struct SAudioProcessingFormat {
 							{ return mInterleaved == kInterleaved; }
 	Interleaved			getInterleaved() const
 							{ return mInterleaved; }
+	UInt32				getBytesPerSample() const
+							{ return mBits / 8; }
 	UInt32				getBytesPerFrame() const
 							{ return mBits / 8 * AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
 	CString				getDescription() const

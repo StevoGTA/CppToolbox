@@ -67,7 +67,7 @@ class CAudioFrames : private CData {
 											// Instance methods
 					UInt32					getFrameCount() const
 												{ return mFrameCount; }
-			const	TNumericArray<void*>	getSegments() const
+			const	TNumericArray<void*>&	getSegments() const
 												{ return mSegments; }
 
 			// Properties
