@@ -189,14 +189,17 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumericArray<void*>& 
 	} else if (sampleBuffersCount == 1) {
 		// Non-interleaved and Interleaved coming in
 		AssertFailUnimplemented();
-															//for (UInt32 c = 0; c < segments.getCount(); c++)
-															//	// Copy samples
-															//	::memcpy(segments[c], sampleBuffers[c],
-															//			frameCount * sizeof(Float32));
 	} else {
 		// Non-interleaved and Non-interleaved coming in
 		AssertFailIf(mInternals->mSegmentCount != sampleBuffersCount);
-		AssertFailUnimplemented();
+
+		for (UInt32 sampleBufferIndex = 0; sampleBufferIndex < sampleBuffersCount; sampleBufferIndex++)
+			// Copy samples
+			::memcpy(
+					(UInt8*) getMutableBytePtr() + mInternals->mSegmentByteCount * sampleBufferIndex +
+							mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment,
+					sampleBufferPtrs[sampleBufferIndex],
+					frameCount * mInternals->mBytesPerFramePerSegment);
 	}
 
 	// Update
@@ -218,7 +221,8 @@ UInt32 CAudioFrames::getAsRead(AudioBufferList& audioBufferList) const
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++) {
 		// Update this buffer
 		audioBufferList.mBuffers[i].mData = (void*) (buffer + mInternals->mSegmentByteCount * i);
-		audioBufferList.mBuffers[i].mDataByteSize = mInternals->mCurrentFrameCount * mInternals->mBytesPerFrame;
+		audioBufferList.mBuffers[i].mDataByteSize =
+				mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment;
 	}
 
 	return mInternals->mCurrentFrameCount;
@@ -241,8 +245,8 @@ UInt32 CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
 		audioBufferList.mBuffers[i].mData =
 				buffer +
 						mInternals->mSegmentByteCount * i +
-						mInternals->mCurrentFrameCount * mInternals->mBytesPerFrame;
-		audioBufferList.mBuffers[i].mDataByteSize = frameCount * mInternals->mBytesPerFrame;
+						mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment;
+		audioBufferList.mBuffers[i].mDataByteSize = frameCount * mInternals->mBytesPerFramePerSegment;
 	}
 
 	return frameCount;
@@ -252,7 +256,7 @@ UInt32 CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
 void CAudioFrames::completeWrite(AudioBufferList& audioBufferList)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	completeWrite(audioBufferList.mBuffers[0].mDataByteSize / mInternals->mBytesPerFrame);
+	completeWrite(audioBufferList.mBuffers[0].mDataByteSize / mInternals->mBytesPerFramePerSegment);
 }
 #endif
 
