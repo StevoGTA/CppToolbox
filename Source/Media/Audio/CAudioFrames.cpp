@@ -122,10 +122,11 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumericArray<void*>& 
 	CArray::ItemCount	sampleBuffersCount = sampleBufferPtrs.getCount();
 
 	// Check what to do
-	if ((mInternals->mSegmentCount == 1) && (sampleBuffersCount == 1)) {
+	if ((mInternals->mSegmentCount == 1) && (sampleBuffersCount == 1))
 		// Interleaved and Interleaved coming in
-		AssertFailUnimplemented();
-	} else if (mInternals->mSegmentCount == 1) {
+		::memcpy((UInt8*) getMutableBytePtr() + mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment,
+				sampleBufferPtrs[0], frameCount * mInternals->mBytesPerFramePerSegment);
+	else if (mInternals->mSegmentCount == 1) {
 		// Interleaved and Non-interleaved coming in
 		UInt8*	destinationStartPtr =
 						(UInt8*) getMutableBytePtr() +

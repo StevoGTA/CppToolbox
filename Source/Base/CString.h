@@ -342,6 +342,8 @@ class CString : public CHashable {
 						bool			contains(const CString& other, CompareFlags compareFlags = kCompareFlagsDefault)
 												const;
 												
+						bool			operator==(const CString& other) const
+											{ return equals(other); }
 						CString&		operator=(const CString& other);
 						CString&		operator+=(const CString& other);
 						CString			operator+(const CString& other) const;
