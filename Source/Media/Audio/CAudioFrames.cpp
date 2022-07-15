@@ -12,16 +12,16 @@
 class CAudioFramesInternals {
 	public:
 		CAudioFramesInternals(UInt32 segmentCount, UInt32 segmentByteCount, UInt32 availableFrameCount,
-				UInt32 bytesPerFrame) :
+				UInt32 bytesPerFramePerSegment) :
 			mSegmentCount(segmentCount), mSegmentByteCount(segmentByteCount), mAvailableFrameCount(availableFrameCount),
-					mCurrentFrameCount(0), mBytesPerFrame(bytesPerFrame)
+					mCurrentFrameCount(0), mBytesPerFramePerSegment(bytesPerFramePerSegment)
 			{}
 
 		UInt32	mSegmentCount;
 		UInt32	mSegmentByteCount;
 		UInt32	mAvailableFrameCount;
 		UInt32	mCurrentFrameCount;
-		UInt32	mBytesPerFrame;
+		UInt32	mBytesPerFramePerSegment;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,21 +32,20 @@ class CAudioFramesInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 CAudioFrames::CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
-		UInt32 bytesPerFrame) : CData(buffer, segmentCount * segmentByteCount, false)
+		UInt32 bytesPerFramePerSegment) : CData(buffer, segmentCount * segmentByteCount, false)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals =
-			new CAudioFramesInternals(segmentCount, segmentByteCount, frameCount, bytesPerFrame);
+	mInternals = new CAudioFramesInternals(segmentCount, segmentByteCount, frameCount, bytesPerFramePerSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFrame, UInt32 frameCountPerSegment) :
-		CData((CData::ByteCount) (segmentCount * frameCountPerSegment * bytesPerFrame))
+CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment) :
+		CData((CData::ByteCount) (segmentCount * frameCountPerSegment * bytesPerFramePerSegment))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CAudioFramesInternals(segmentCount, frameCountPerSegment * bytesPerFrame, frameCountPerSegment,
-					bytesPerFrame);
+			new CAudioFramesInternals(segmentCount, frameCountPerSegment * bytesPerFramePerSegment,
+					frameCountPerSegment, bytesPerFramePerSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -96,7 +95,7 @@ CAudioFrames::Info CAudioFrames::getWriteInfo()
 		segments +=
 				(void*) ((UInt8*) getMutableBytePtr() +
 						mInternals->mSegmentByteCount * i +
-						mInternals->mCurrentFrameCount * mInternals->mBytesPerFrame);
+						mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment);
 
 	return Info(mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount, segments);
 }
@@ -108,7 +107,99 @@ void CAudioFrames::completeWrite(UInt32 frameCount)
 	// Check
 	AssertFailIf((mInternals->mCurrentFrameCount + frameCount) > mInternals->mAvailableFrameCount);
 
-	// Store
+	// Update
+	mInternals->mCurrentFrameCount += frameCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::completeWrite(UInt32 frameCount, const TNumericArray<void*>& sampleBufferPtrs)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check
+	AssertFailIf((mInternals->mCurrentFrameCount + frameCount) > mInternals->mAvailableFrameCount);
+
+	// Setup
+	CArray::ItemCount	sampleBuffersCount = sampleBufferPtrs.getCount();
+
+	// Check what to do
+	if ((mInternals->mSegmentCount == 1) && (sampleBuffersCount == 1)) {
+		// Interleaved and Interleaved coming in
+		AssertFailUnimplemented();
+	} else if (mInternals->mSegmentCount == 1) {
+		// Interleaved and Non-interleaved coming in
+		UInt8*	destinationStartPtr =
+						(UInt8*) getMutableBytePtr() +
+								mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment;
+		for (UInt32 sampleBufferIndex = 0; sampleBufferIndex < sampleBuffersCount; sampleBufferIndex++) {
+			// Check bytes per sample
+			switch (mInternals->mBytesPerFramePerSegment / sampleBuffersCount) {
+				case 8: {
+					// 8 bytes per sample
+					const	UInt64*	sourcePtr = (UInt64*) sampleBufferPtrs[sampleBufferIndex];
+							UInt64*	destinationPtr = (UInt64*) destinationStartPtr + sampleBufferIndex;
+					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
+							destinationPtr += sampleBuffersCount)
+						// Copy sample
+						*destinationPtr = (*sourcePtr++);
+					} break;
+
+				case 4: {
+					// 4 bytes per sample
+					const	UInt32*	sourcePtr = (UInt32*) sampleBufferPtrs[sampleBufferIndex];
+							UInt32*	destinationPtr = (UInt32*) destinationStartPtr + sampleBufferIndex;
+					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
+							destinationPtr += sampleBuffersCount)
+						// Copy sample
+						*destinationPtr = (*sourcePtr++);
+					} break;
+
+				case 3: {
+					// 3 bytes per sample
+					const	UInt8*	sourcePtr = (UInt8*) sampleBufferPtrs[sampleBufferIndex];
+							UInt8*	destinationPtr = destinationStartPtr + sampleBufferIndex;
+					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
+							destinationPtr += sampleBuffersCount * 3) {
+						// Copy sample
+						*destinationPtr = (*sourcePtr++);
+						*(destinationPtr + 1) = (*sourcePtr++);
+						*(destinationPtr + 2) = (*sourcePtr++);
+					} } break;
+
+				case 2: {
+					// 2 bytes per sample
+					const	UInt16*	sourcePtr = (UInt16*) sampleBufferPtrs[sampleBufferIndex];
+							UInt16*	destinationPtr = (UInt16*) destinationStartPtr + sampleBufferIndex;
+					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
+							destinationPtr += sampleBuffersCount)
+						// Copy sample
+						*destinationPtr = (*sourcePtr++);
+					} break;
+
+				case 1: {
+					// 1 byte per sample
+					const	UInt8*	sourcePtr = (UInt8*) sampleBufferPtrs[sampleBufferIndex];
+							UInt8*	destinationPtr = destinationStartPtr + sampleBufferIndex;
+					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
+							destinationPtr += sampleBuffersCount)
+						// Copy sample
+						*destinationPtr = (*sourcePtr++);
+					} break;
+			}
+		}
+	} else if (sampleBuffersCount == 1) {
+		// Non-interleaved and Interleaved coming in
+		AssertFailUnimplemented();
+															//for (UInt32 c = 0; c < segments.getCount(); c++)
+															//	// Copy samples
+															//	::memcpy(segments[c], sampleBuffers[c],
+															//			frameCount * sizeof(Float32));
+	} else {
+		// Non-interleaved and Non-interleaved coming in
+		AssertFailIf(mInternals->mSegmentCount != sampleBuffersCount);
+		AssertFailUnimplemented();
+	}
+
+	// Update
 	mInternals->mCurrentFrameCount += frameCount;
 }
 

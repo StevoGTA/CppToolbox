@@ -80,8 +80,8 @@ class CAudioFrames : private CData {
 	public:
 				// Lifecycle methods
 				CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
-						UInt32 bytesPerFrame);
-				CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFrame, UInt32 frameCountPerSegment);
+						UInt32 bytesPerFramePerSegment);
+				CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment);
 				~CAudioFrames();
 
 				// Instance methods
@@ -92,6 +92,7 @@ class CAudioFrames : private CData {
 
 		Info	getWriteInfo();
 		void	completeWrite(UInt32 frameCount);
+		void	completeWrite(UInt32 frameCount, const TNumericArray<void*>& sampleBufferPtrs);
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 				// Apple methods

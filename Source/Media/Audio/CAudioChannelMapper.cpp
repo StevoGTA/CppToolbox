@@ -51,7 +51,7 @@ class CAudioChannelMapperInternals {
 							}
 
 		static	void	performMonoToStereo(const CAudioFrames& sourceAudioFrames, CAudioFrames& destinationAudioFrames,
-								UInt32 sourceBytesPerFrame, UInt32 destinationBytesPerFrame)
+								UInt32 sourceBytesPerSample, UInt32 destinationBytesPerSample)
 							{
 								// Setup
 										CAudioFrames::Info		readInfo = sourceAudioFrames.getReadInfo();
@@ -63,9 +63,20 @@ class CAudioChannelMapperInternals {
 								// Check interleaved
 								if (readInfoSegments.getCount() == 1) {
 									// Interleaved
-									switch (sourceBytesPerFrame) {
+									switch (sourceBytesPerSample) {
+										case 8: {
+											// 8 bytes per sample
+											const	UInt64*	sourcePtr = (const UInt64*) readInfoSegments[0];
+													UInt64*	destinationPtr = (UInt64*) writeInfoSegments[0];
+											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
+												// Copy sample
+												(*destinationPtr++) = *sourcePtr;
+												(*destinationPtr++) = (*sourcePtr++);
+											}
+											} break;
+
 										case 4: {
-											// 4 bytes per frame
+											// 4 bytes per sample
 											const	UInt32*	sourcePtr = (const UInt32*) readInfoSegments[0];
 													UInt32*	destinationPtr = (UInt32*) writeInfoSegments[0];
 											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -76,7 +87,7 @@ class CAudioChannelMapperInternals {
 											} break;
 
 										case 3: {
-											// 3 bytes per frame
+											// 3 bytes per sample
 											const	UInt8*	sourcePtr = (const UInt8*) readInfoSegments[0];
 													UInt8*	destinationPtr = (UInt8*) writeInfoSegments[0];
 											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -91,7 +102,7 @@ class CAudioChannelMapperInternals {
 											} break;
 
 										case 2: {
-											// 2 bytes per frame
+											// 2 bytes per sample
 											const	UInt16*	sourcePtr = (const UInt16*) readInfoSegments[0];
 													UInt16*	destinationPtr = (UInt16*) writeInfoSegments[0];
 
@@ -104,7 +115,7 @@ class CAudioChannelMapperInternals {
 											} break;
 
 										case 1: {
-											// 1 byte per frame
+											// 1 byte per sample
 											const	UInt8*	sourcePtr = (const UInt8*) readInfoSegments[0];
 													UInt8*	destinationPtr = (UInt8*) writeInfoSegments[0];
 											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -162,8 +173,9 @@ OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 	if ((mInternals->mInputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_1_0) &&
 			(mOutputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_2_0_Option1)) {
 		// Mono -> Stereo
-		if ((audioProcessingFormat.getBits() == 32) || (audioProcessingFormat.getBits() == 24) ||
-				(audioProcessingFormat.getBits() == 16) || (audioProcessingFormat.getBits() == 8))
+		if ((audioProcessingFormat.getBits() == 64) || (audioProcessingFormat.getBits() == 32) ||
+				(audioProcessingFormat.getBits() == 24) || (audioProcessingFormat.getBits() == 16) ||
+				(audioProcessingFormat.getBits() == 8))
 			// Supported bits
 			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereo;
 		else
@@ -260,5 +272,4 @@ bool CAudioChannelMapper::canPerform(EAudioChannelMap fromAudioChannelMap, EAudi
 			// Stereo -> Mono
 			((fromAudioChannelMap == EAudioChannelMap::kAudioChannelMap_2_0_Option1) &&
 					(toAudioChannelMap == EAudioChannelMap::kAudioChannelMap_1_0));
-
 }

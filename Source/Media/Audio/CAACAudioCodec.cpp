@@ -261,7 +261,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 													}
 #elif defined(TARGET_OS_WINDOWS)
 												// CMediaFoundationDecodeAudioCodec methods
-		const	GUID&							getGUID() const
+		const	GUID&							getGUID(OSType codecID) const
 													{ return MFAudioFormat_AAC; }
 				OI<CData>						getUserData() const
 													{

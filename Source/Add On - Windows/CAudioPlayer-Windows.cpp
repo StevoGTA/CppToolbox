@@ -434,7 +434,8 @@ class CAudioPlayerImplementation :
 									mState = kError;
 									mError = OI<SError>(SErrorFromHRESULT(result));
 									CLogServices::logError(
-											CString(method) + CString(OSSTR(" returned ")) + mError->getDescription());
+											CString(method) + CString(OSSTR(" returned ")) +
+													mError->getDefaultDescription());
 								}
 							}
 				void	processWindowsError(OSStringType method)
@@ -443,7 +444,8 @@ class CAudioPlayerImplementation :
 								mState = kError;
 								mError = OI<SError>(SErrorFromWindowsGetLastError());
 								CLogServices::logError(
-										CString(method) + CString(OSSTR(" returned ")) + mError->getDescription());
+										CString(method) + CString(OSSTR(" returned ")) +
+												mError->getDefaultDescription());
 							}
 
 		static	HRESULT	onFillBuffer(__RPC__in_opt IMFAsyncResult& asyncResult,

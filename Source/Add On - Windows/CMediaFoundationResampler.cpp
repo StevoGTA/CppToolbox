@@ -13,7 +13,7 @@
 
 #define Delete(x)	{ delete x; x = nil; }
 
-#pragma comment( lib, "wmcodecdspuuid" )
+#pragma comment(lib, "wmcodecdspuuid")
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
