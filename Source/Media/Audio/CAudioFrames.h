@@ -91,6 +91,8 @@ class CAudioFrames : private CData {
 		Info	getReadInfo() const;
 
 		Info	getWriteInfo();
+		void	completeWrite(const CAudioFrames& other)
+					{ completeWrite(other.getCurrentFrameCount(), other.getReadInfo().getSegments()); }
 		void	completeWrite(UInt32 frameCount);
 		void	completeWrite(UInt32 frameCount, const TNumericArray<void*>& sampleBufferPtrs);
 

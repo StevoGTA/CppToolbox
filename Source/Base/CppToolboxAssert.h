@@ -31,10 +31,10 @@ extern	SError	AsserNonNilValueError;
 	#define	AssertNotNil(value)			{ if ((value) == nil) AssertFailWith(AssertNilValueError); }
 	#define	AssertNil(value)			{ if ((value) != nil) AssertFailWith(AsserNonNilValueError); }
 #else
-	#define AssertFail()
-	#define AssertFailUnimplemented()
-	#define	AssertFailWith(error)
-	#define	AssertFailIf(cond)
-	#define	AssertNotNil(value)
-	#define	AssertNil(value)
+	#define AssertFail()				{}
+	#define AssertFailUnimplemented()	{}
+	#define	AssertFailWith(error)		{}
+	#define	AssertFailIf(cond)			{}
+	#define	AssertNotNil(value)			{}
+	#define	AssertNil(value)			{}
 #endif
