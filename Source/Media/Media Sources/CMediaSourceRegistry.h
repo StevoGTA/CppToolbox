@@ -137,9 +137,9 @@ class CMediaSourceRegistry {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define REGISTER_MEDIA_SOURCE(mediaSourceCodedName, info)													\
-	class mediaSourceCodedName##Registerer {																\
-		public:																								\
-			mediaSourceCodedName##Registerer() { CMediaSourceRegistry::mShared.registerMediaSource(info); }	\
-	};																										\
-	static	mediaSourceCodedName##Registerer _##mediaSourceCodedName##Registerer
+#define REGISTER_MEDIA_SOURCE(mediaSourceCodedName, info)																\
+	class mediaSourceCodedName##MediaSourceRegisterer {																	\
+		public:																											\
+			mediaSourceCodedName##MediaSourceRegisterer() { CMediaSourceRegistry::mShared.registerMediaSource(info); }	\
+	};																													\
+	static	mediaSourceCodedName##MediaSourceRegisterer _##mediaSourceCodedName##MediaSourceRegisterer

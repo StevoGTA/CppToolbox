@@ -32,9 +32,9 @@ class CCodecRegistry {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define REGISTER_CODEC(codecCodedName, info)												\
-	class codecCodedName##Registerer {														\
-		public:																				\
-			codecCodedName##Registerer() { CCodecRegistry::mShared.registerCodec(info); }	\
-	};																						\
-	static	codecCodedName##Registerer _##codecCodedName##Registerer
+#define REGISTER_CODEC(codecCodedName, info)													\
+	class codecCodedName##CodecRegisterer {														\
+		public:																					\
+			codecCodedName##CodecRegisterer() { CCodecRegistry::mShared.registerCodec(info); }	\
+	};																							\
+	static	codecCodedName##CodecRegisterer _##codecCodedName##CodecRegisterer
