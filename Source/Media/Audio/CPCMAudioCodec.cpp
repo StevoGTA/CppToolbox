@@ -114,14 +114,15 @@ UInt64 CPCMAudioCodec::composeFrameCount(const SAudioStorageFormat& audioStorage
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CDecodeAudioCodec> CPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
+OI<I<CDecodeAudioCodec> > CPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 startByteOffset, UInt64 byteCount,
 		Format format)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CDecodeAudioCodec>(
-			new CPCMDecodeAudioCodec(randomAccessDataSource, startByteOffset, byteCount,
-					*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels(), format));
+	return OI<I<CDecodeAudioCodec> >(
+			I<CDecodeAudioCodec>(
+					new CPCMDecodeAudioCodec(randomAccessDataSource, startByteOffset, byteCount,
+							*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels(), format)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

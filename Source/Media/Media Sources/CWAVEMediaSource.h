@@ -46,7 +46,7 @@ class CWAVEMediaSourceImportTracker {
 		virtual	bool								canFinalize(
 															const I<CRandomAccessDataSource>& randomAccessDataSource);
 		virtual	CAudioTrack							composeAudioTrack();
-		virtual	I<CDecodeAudioCodec>				createAudioCodec(
+		virtual	OI<I<CDecodeAudioCodec> >			createAudioCodec(
 															const I<CRandomAccessDataSource>& randomAccessDataSource);
 
 													// Class methods

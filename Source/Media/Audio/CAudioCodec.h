@@ -143,25 +143,25 @@ class CDecodeAudioCodec : public CAudioCodec {
 			// Methods
 			public:
 
-														// Lifecycle methods
-														SourceFramesInfo(
-																const SAudioStorageFormat& audioStorageFormat,
-																UInt64 frameCount) :
-															mAudioStorageFormat(audioStorageFormat),
-																	mFrameCount(frameCount)
-															{}
-														SourceFramesInfo(const SourceFramesInfo& other) :
-															mAudioStorageFormat(other.mAudioStorageFormat),
-																	mFrameCount(other.mFrameCount)
-															{}
-				virtual									~SourceFramesInfo() {}
+															// Lifecycle methods
+															SourceFramesInfo(
+																	const SAudioStorageFormat& audioStorageFormat,
+																	UInt64 frameCount) :
+																mAudioStorageFormat(audioStorageFormat),
+																		mFrameCount(frameCount)
+																{}
+															SourceFramesInfo(const SourceFramesInfo& other) :
+																mAudioStorageFormat(other.mAudioStorageFormat),
+																		mFrameCount(other.mFrameCount)
+																{}
+				virtual										~SourceFramesInfo() {}
 
-														// Instance methods
-						const	SAudioStorageFormat&	getAudioStorageFormat() const
-															{ return mAudioStorageFormat; }
-								UInt64					getFrameCount() const
-															{ return mFrameCount; }
-				virtual			I<CDecodeAudioCodec>	getDecodeAudioCodec() const = 0;
+															// Instance methods
+						const	SAudioStorageFormat&		getAudioStorageFormat() const
+																{ return mAudioStorageFormat; }
+								UInt64						getFrameCount() const
+																{ return mFrameCount; }
+				virtual			OI<I<CDecodeAudioCodec> >	getDecodeAudioCodec() const = 0;
 
 			// Properties
 			protected:

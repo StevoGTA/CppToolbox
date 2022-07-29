@@ -382,16 +382,17 @@ OI<SVideoStorageFormat> CH264VideoCodec::composeVideoStorageFormat(const S2DSize
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CDecodeVideoCodec> CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
+OI<I<CDecodeVideoCodec> > CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
 		const TNumericArray<UInt32>& keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CDecodeVideoCodec>(
-			new CH264DecodeVideoCodec(
-					I<CMediaPacketSource>(
-							new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
-					configurationData, timeScale, keyframeIndexes));
+	return OI<I<CDecodeVideoCodec> >(
+			I<CDecodeVideoCodec>(
+					new CH264DecodeVideoCodec(
+							I<CMediaPacketSource>(
+									new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
+							configurationData, timeScale, keyframeIndexes)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

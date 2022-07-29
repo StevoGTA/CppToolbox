@@ -114,6 +114,44 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNe
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TIResult<TArray<SMediaPacket> > CSeekableUniformMediaPacketSource::readNextInto(CData& data,
+		const OV<UInt32>& maxPacketCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Add packets
+	UInt32					dataByteCountRemaining = (UInt32) data.getByteCount();
+	UInt8*					packetDataPtr = (UInt8*) data.getMutableBytePtr();
+	UInt32					packetCount = maxPacketCount.hasValue() ? *maxPacketCount : ~0;
+	TNArray<SMediaPacket>	mediaPackets;
+	while ((packetCount > 0) && (mInternals->mNextPacketIndex < mInternals->mPacketCount)) {
+		// Check if have space
+		if (mInternals->mBytesPerPacket <= dataByteCountRemaining) {
+			// Copy packet data
+			UInt64		byteOffset =
+								mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
+			OI<SError>	error =
+								mInternals->mRandomAccessDataSource->readData(byteOffset, packetDataPtr,
+											mInternals->mBytesPerPacket);
+			ReturnValueIfError(error, TIResult<TArray<SMediaPacket> >(*error));
+
+			// Update
+			mInternals->mNextPacketIndex++;
+
+			// Update info
+			dataByteCountRemaining -= mInternals->mBytesPerPacket;
+			packetDataPtr += mInternals->mBytesPerPacket;
+			packetCount--;
+			mediaPackets += SMediaPacket(mInternals->mDurationPerPacket, mInternals->mBytesPerPacket);
+		} else
+			// No more space
+			break;
+	}
+
+	return !mediaPackets.isEmpty() ?
+			TIResult<TArray<SMediaPacket> >(mediaPackets) : TIResult<TArray<SMediaPacket> >(SError::mEndOfData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSeekableVaryingMediaPacketSourceInternals
 
@@ -234,15 +272,15 @@ TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::readNextInto(
 
 			// Update
 			mInternals->mNextPacketIndex++;
+
+			// Update info
+			dataByteCountRemaining -= mediaPacketAndLocation.mMediaPacket.mByteCount;
+			packetDataPtr += mediaPacketAndLocation.mMediaPacket.mByteCount;
+			packetCount--;
+			mediaPackets += mediaPacketAndLocation.mMediaPacket;
 		} else
 			// No more space
 			break;
-
-		// Update info
-		dataByteCountRemaining -= mediaPacketAndLocation.mMediaPacket.mByteCount;
-		packetDataPtr += mediaPacketAndLocation.mMediaPacket.mByteCount;
-		packetCount--;
-		mediaPackets += mediaPacketAndLocation.mMediaPacket;
 	}
 
 	return !mediaPackets.isEmpty() ?

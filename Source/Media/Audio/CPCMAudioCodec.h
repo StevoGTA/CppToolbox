@@ -21,18 +21,18 @@ class CPCMAudioCodec {
 
 	// Methods
 	public:
-										// Class methods
-		static	OI<SAudioStorageFormat>	composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
-												EAudioChannelMap channelMap);
-		static	OI<SAudioStorageFormat>	composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
-												UInt8 channels)
-											{ return composeAudioStorageFormat(isFloat, bits, sampleRate,
-													AUDIOCHANNELMAP_FORUNKNOWN(channels)); }
-		static	UInt64					composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
-												UInt64 byteCount);
-		static	I<CDecodeAudioCodec>	create(const SAudioStorageFormat& audioStorageFormat,
-												const I<CRandomAccessDataSource>& randomAccessDataSource,
-												UInt64 startByteOffset, UInt64 byteCount, Format format);
+											// Class methods
+		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
+													EAudioChannelMap channelMap);
+		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
+													UInt8 channels)
+												{ return composeAudioStorageFormat(isFloat, bits, sampleRate,
+														AUDIOCHANNELMAP_FORUNKNOWN(channels)); }
+		static	UInt64						composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
+													UInt64 byteCount);
+		static	OI<I<CDecodeAudioCodec> >	create(const SAudioStorageFormat& audioStorageFormat,
+													const I<CRandomAccessDataSource>& randomAccessDataSource,
+													UInt64 startByteOffset, UInt64 byteCount, Format format);
 
 	// Properties
 	public:

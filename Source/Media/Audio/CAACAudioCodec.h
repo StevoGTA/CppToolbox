@@ -34,12 +34,12 @@ class CAACAudioCodec {
 
 	// Methods
 	public:
-										// Class methods
-		static	OI<SAudioStorageFormat>	composeAudioStorageFormat(const CData& configurationData, UInt16 channels);
-		static	I<CDecodeAudioCodec>	create(const SAudioStorageFormat& audioStorageFormat,
-												const I<CRandomAccessDataSource>& randomAccessDataSource,
-												const TArray<SMediaPacketAndLocation>& packetAndLocations,
-												const CData& configurationData);
+											// Class methods
+		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(const CData& configurationData, UInt16 channels);
+		static	OI<I<CDecodeAudioCodec> >	create(const SAudioStorageFormat& audioStorageFormat,
+													const I<CRandomAccessDataSource>& randomAccessDataSource,
+													const TArray<SMediaPacketAndLocation>& packetAndLocations,
+													const CData& configurationData);
 
 	// Properties
 	public:

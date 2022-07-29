@@ -59,11 +59,6 @@ class CCoreAudioDecodeAudioCodecInternals {
 
 									*ioNumberDataPackets = mediaPackets.getCount();
 
-									ioBufferList->mNumberBuffers = 1;
-									ioBufferList->mBuffers[0].mData = internals.mInputPacketData.getMutableBytePtr();
-									ioBufferList->mBuffers[0].mDataByteSize =
-											(UInt32) internals.mInputPacketData.getByteCount();
-
 									if ((*ioNumberDataPackets * sizeof(AudioStreamPacketDescription)) >
 											internals.mInputPacketDescriptionsData.getByteCount())
 										// Increase packet descriptions data size
@@ -87,6 +82,10 @@ class CCoreAudioDecodeAudioCodecInternals {
 
 										offset += iterator->mByteCount;
 									}
+
+									ioBufferList->mNumberBuffers = 1;
+									ioBufferList->mBuffers[0].mData = internals.mInputPacketData.getMutableBytePtr();
+									ioBufferList->mBuffers[0].mDataByteSize = (UInt32) offset;
 
 									return noErr;
 								}

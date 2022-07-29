@@ -248,7 +248,7 @@ CAudioTrack CWAVEMediaSourceImportTracker::composeAudioTrack()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CDecodeAudioCodec> CWAVEMediaSourceImportTracker::createAudioCodec(
+OI<I<CDecodeAudioCodec> > CWAVEMediaSourceImportTracker::createAudioCodec(
 		const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -267,7 +267,7 @@ I<CDecodeAudioCodec> CWAVEMediaSourceImportTracker::createAudioCodec(
 
 		default:		// Not possible
 			AssertFail();
-			return I<CDecodeAudioCodec>(nil);
+			return OI<I<CDecodeAudioCodec> >();
 	}
 }
 

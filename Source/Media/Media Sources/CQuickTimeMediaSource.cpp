@@ -369,7 +369,7 @@ struct SQTVideoSampleDescription {
 
 // Sample Table Sample Description (general)
 struct SQTstsdDescription {
-			// Instance Methods
+			// Methods
 			OSType						getType() const
 											{ return EndianU32_BtoN(mType); }
 	const	SQTAudioSampleDescription&	getAudioSampleDescription() const

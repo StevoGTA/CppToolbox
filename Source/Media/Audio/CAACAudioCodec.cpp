@@ -392,16 +392,17 @@ OI<SAudioStorageFormat> CAACAudioCodec::composeAudioStorageFormat(const CData& c
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CDecodeAudioCodec> CAACAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
+OI<I<CDecodeAudioCodec> > CAACAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
 		const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CDecodeAudioCodec>(
-			new CAACDecodeAudioCodec(audioStorageFormat.getCodecID(),
-					I<CMediaPacketSource>(
-							new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
-					configurationData));
+	return OI<I<CDecodeAudioCodec> >(
+			I<CDecodeAudioCodec>(
+					new CAACDecodeAudioCodec(audioStorageFormat.getCodecID(),
+							I<CMediaPacketSource>(
+									new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
+							configurationData)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -112,12 +112,7 @@ class CSeekableUniformMediaPacketSource : public CMediaPacketSource {
 
 		TIResult<CMediaPacketSource::DataInfo>	readNext();
 		TIResult<TArray<SMediaPacket> >			readNextInto(CData& data,
-														const OV<UInt32>& maxPacketCount = OV<UInt32>())
-													{
-														AssertFailUnimplemented();
-
-														return TIResult<TArray<SMediaPacket> >(AssertFailedError);
-													}
+														const OV<UInt32>& maxPacketCount = OV<UInt32>());
 
 	// Properties
 	private:
