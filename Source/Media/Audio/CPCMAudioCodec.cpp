@@ -23,8 +23,6 @@ class CPCMDecodeAudioCodec : public CDecodeAudioCodec {
 										// CAudioCodec methods - Decoding
 		TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat);
 		OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat);
-		CAudioFrames::Requirements		getRequirements() const
-											{ return CAudioFrames::Requirements(1, 1); }
 		void							seek(UniversalTimeInterval timeInterval);
 		OI<SError>						decodeInto(CAudioFrames& audioFrames);
 

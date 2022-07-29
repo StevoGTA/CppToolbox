@@ -200,8 +200,10 @@ class CDecodeAudioCodec : public CAudioCodec {
 												// Instance methods
 		virtual	TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat)
 														= 0;
-		virtual	OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat) = 0;
-		virtual	CAudioFrames::Requirements		getRequirements() const = 0;
+		virtual	OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat)
+													{ return OI<SError>(); }
+		virtual	CAudioFrames::Requirements		getRequirements() const
+													{ return CAudioFrames::Requirements(1, 1); }
 		virtual	void							seek(UniversalTimeInterval timeInterval) = 0;
 		virtual	OI<SError>						decodeInto(CAudioFrames& audioFrames) = 0;
 

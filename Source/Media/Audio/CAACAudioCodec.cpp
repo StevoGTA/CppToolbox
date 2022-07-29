@@ -237,7 +237,6 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 														asbd.mFormatID =
 																(codecID == CAACAudioCodec::mAACLCID) ?
 																		kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
-														asbd.mFormatFlags = 0;
 														asbd.mSampleRate = audioProcessingFormat.getSampleRate();
 														asbd.mChannelsPerFrame = audioProcessingFormat.getChannels();
 

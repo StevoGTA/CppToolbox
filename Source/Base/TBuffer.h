@@ -42,6 +42,8 @@ template <typename T> struct TBuffer {
 				{ return mByteCount / sizeof(T); }
 	UInt32	getByteCount() const
 				{ return mByteCount; }
+	void	clear() const
+				{ ::memset(mStorage, mByteCount, 0); }
 
 	// Properties
 	private:
