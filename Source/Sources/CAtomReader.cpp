@@ -91,10 +91,15 @@ TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const Atom& 
 
 	// Read Atom
 	TNArray<Atom>	atoms;
-	while (getPos() - (atom.mPayloadPos + atom.mPayloadByteCount)) {
+	while (getPos() < (atom.mPayloadPos + atom.mPayloadByteCount)) {
 		// Get atom info
 		TIResult<Atom>	childAtom = readAtom();
 		ReturnValueIfResultError(childAtom, TIResult<ContainerAtom>(childAtom.getError()));
+
+		// Check for terminator atom
+		if ((childAtom->mType == 0) || (childAtom->mPayloadByteCount == 0))
+			// Done
+			break;
 
 		// Add to array
 		atoms += *childAtom;
