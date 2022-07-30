@@ -65,4 +65,8 @@ class CCodec {
 	protected:
 				// Lifecycle methods
 				CCodec() {}
+
+	// Properties
+	public:
+		static	const	SError	mErrorUnsupported;
 };

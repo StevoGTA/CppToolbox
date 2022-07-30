@@ -4,8 +4,9 @@
 
 #include "CAACAudioCodec.h"
 #include "CAtomReader.h"
-#include "CMediaSourceRegistry.h"
 #include "CH264VideoCodec.h"
+#include "CMediaSourceRegistry.h"
+#include "CPCMAudioCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
@@ -265,6 +266,26 @@ struct SQTmdhdAtomPayload {
 // Audio Sample Description
 struct SQTAudioSampleDescription {
 						// Methods
+	UInt16				getBits() const
+							{
+								// Check version
+								switch (EndianU16_BtoN(mVersion)) {
+									case 0:		return EndianU16_BtoN(_.mV0.mBits);
+									case 1:		return EndianU16_BtoN(_.mV1.mBits);
+									case 2:		return (UInt16) EndianU32_BtoN(_.mV2.mConstBitsPerChannel);
+									default:	return 0;
+								}
+							}
+	Float32				getSampleRate() const
+							{
+								// Check version
+								switch (EndianU16_BtoN(mVersion)) {
+									case 0:		return ((Float32) EndianU32_BtoN(_.mV0.mSampleRate)) / 65536.0;
+									case 1:		return ((Float32) EndianU32_BtoN(_.mV1.mSampleRate)) / 65536.0;
+									case 2:		return (Float32) EndianF64_BtoN(_.mV2.mSampleRate);
+									default:	return 0;
+								}
+							}
 	UInt16				getChannels() const
 							{
 								// Check version
@@ -622,21 +643,25 @@ static	SInt32	kUnsupportedCodecConfiguration = 2;
 static	SMediaSource::QueryTracksResult	sQueryTracksProc(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const OI<CAppleResourceManager>& appleResourceManager,
 												SMediaSource::Options options);
-static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
-												const I<CRandomAccessDataSource>& randomAccessDataSource,
-												SMediaSource::Options options,
+static	OI<SError>						sAddPCMAudioTrack(CMediaTrackInfos& mediaTrackInfos, OSType formatType,
 												const SQTAudioSampleDescription& audioSampleDescription,
-												const CData& esdsAtomPayloadData,
+												const CAtomReader::Atom& mdatAtom, SMediaSource::Options options,
+												const I<CRandomAccessDataSource>& randomAccessDataSource);
+static	OI<SError>						sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
+												const SQTAudioSampleDescription& audioSampleDescription,
+												const CData& configurationData,
 												const SQTmdhdAtomPayload& mdhdAtomPayload,
-												const TArray<SMediaPacketAndLocation>& packetAndLocations);
-static	OI<SError>						sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos,
-												const I<CRandomAccessDataSource>& randomAccessDataSource,
+												const TArray<SMediaPacketAndLocation>& packetAndLocations,
 												SMediaSource::Options options,
+												const I<CRandomAccessDataSource>& randomAccessDataSource);
+static	OI<SError>						sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos,
 												const SQTVideoSampleDescription& videoSampleDescription,
 												const CData& configurationData,
 												const SQTmdhdAtomPayload& mdhdAtomPayload,
 												const TArray<SMediaPacketAndLocation>& packetAndLocations,
-												const OI<CData>& stssAtomPayloadData);
+												const OI<CData>& stssAtomPayloadData,
+												SMediaSource::Options options,
+												const I<CRandomAccessDataSource>& randomAccessDataSource);
 static	TArray<SMediaPacketAndLocation>	sComposePacketAndLocations(const SQTsttsAtomPayload& sttsAtomPayload,
 													const SQTstscAtomPayload& stscAtomPayload,
 													const SQTstszAtomPayload& stszAtomPayload,
@@ -663,24 +688,35 @@ SMediaSource::QueryTracksResult sQueryTracksProc(const I<CRandomAccessDataSource
 	CAtomReader	atomReader(randomAccessDataSource);
 	OI<SError>	error;
 
-	// Read root atom
-	TIResult<CAtomReader::Atom>	atom = atomReader.readAtom();
-	ReturnValueIfResultError(atom, SMediaSource::QueryTracksResult());
-	if (atom->mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
-		return SMediaSource::QueryTracksResult();
+	// Find core atoms
+	OV<CAtomReader::Atom>	moovAtom;
+	OV<CAtomReader::Atom>	mdatAtom;
 
-	// Find moov atom
-	while (atom->mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
+	while (true) {
+		// Read next atom
+		TIResult<CAtomReader::Atom>	atom = atomReader.readAtom();
+		if (atom.hasError())
+			break;
+
+		// Check atom type
+		if (atom->mType == MAKE_OSTYPE('m', 'o', 'o', 'v'))
+			// moov
+			moovAtom = OV<CAtomReader::Atom>(*atom);
+		else if (atom->mType == MAKE_OSTYPE('m', 'd', 'a', 't'))
+			// mdat
+			mdatAtom = OV<CAtomReader::Atom>(*atom);
+
 		// Go to next atom
 		error = atomReader.seekToNextAtom(*atom);
-		ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
-
-		// Get atom
-		atom = atomReader.readAtom();
-		ReturnValueIfResultError(atom, SMediaSource::QueryTracksResult(atom.getError()));
+		if (error.hasInstance())
+			break;
 	}
 
-	TIResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*atom);
+	if (!moovAtom.hasValue() || !mdatAtom.hasValue())
+		// Didn't find core atoms
+		ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
+
+	TIResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*moovAtom);
 	ReturnValueIfResultError(moovContainerAtom, SMediaSource::QueryTracksResult(moovContainerAtom.getError()));
 
 	// Iterate moov atom
@@ -793,39 +829,112 @@ SMediaSource::QueryTracksResult sQueryTracksProc(const I<CRandomAccessDataSource
 																			mByteCountWithoutSampleDescriptions +
 																	audioSampleDescription
 																			.getCodecConfigurationDataByteOffset();
+
+				// Check format
+				switch (stsdDescription.getType()) {
+					case MAKE_OSTYPE('i', 'n', '2', '4'):
+					case MAKE_OSTYPE('i', 'n', '3', '2'):
+					case MAKE_OSTYPE('N', 'O', 'N', 'E'):
+					case MAKE_OSTYPE('t', 'w', 'o', 's'):
+					case MAKE_OSTYPE('s', 'o', 'w', 't'):
+					case MAKE_OSTYPE('r', 'a', 'w', ' '):
+					case MAKE_OSTYPE('f', 'l', '3', '2'):
+					case MAKE_OSTYPE('F', 'L', '3', '2'):
+					case MAKE_OSTYPE('f', 'l', '6', '4'): {
+						// PCM
+						error =
+								sAddPCMAudioTrack(mediaTrackInfos, stsdDescription.getType(), audioSampleDescription,
+										*mdatAtom, options, randomAccessDataSource);
+						ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
+						} break;
+
+//					case MAKE_OSTYPE('a', 'l', 'a', 'w'):
+//						// ALaw
+//						audioStorageFormat =
+//								CG711AudioCodec::composeALawAudioStorageFormat(
+//										audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+//						break;
+//
+//					case MAKE_OSTYPE('u', 'l', 'a', 'w'):
+//						// µLaw
+//						audioStorageFormat =
+//								CG711AudioCodec::composeMuLawAudioStorageFormat(
+//										audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+//						break;
+//
+//					case MAKE_OSTYPE('i', 'm', 'a', '4'):
+//						// IMA
+//						audioStorageFormat =
+//								CAppleIMAADPCMAudioCodec::composeAudioStorageFormat(
+//										audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+//						break;
+//
+////						case MAKE_OSTYPE('f', 'l', '6', '4'):
+////							break;
+//
+//					case MAKE_OSTYPE('M', 'A', 'C', '3'):
+//						// MACE 3:1
+//						audioStorageFormat =
+//								CMACEAudioCodec::compose3To1AudioStorageFormat(
+//										audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+//						break;
+//
+//					case MAKE_OSTYPE('M', 'A', 'C', '6'):
+//						// MACE 6:1
+//						audioStorageFormat =
+//								CMACEAudioCodec::compose6To1AudioStorageFormat(
+//										audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+//						break;
+//
+//					case MAKE_OSTYPE('Q', 'D', 'M', '2'):
+//						// QDesign Music 2
+//						audioStorageFormat =
+//								CLegacyAudioCodecs::composeQDesignMusic2AudioStorageFormat(
+//										audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+//						break;
+//
+//					case MAKE_OSTYPE('Q', 'c', 'l', 'p'):
+//						// Qualcomm Purevoice™
+//						audioStorageFormat =
+//								CLegacyAudioCodecs::composeQualcommPurevoiceAudioStorageFormat(
+//										audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+//						break;
+
+					case MAKE_OSTYPE('m', 'p', '4', 'a'): {
+						// MPEG4 (AAC) Audio
 						TIResult<CAtomReader::Atom>	decompressionParamAtom =
-															atomReader.readAtom(stsdAtom.getReference(),
+															atomReader.readAtom(*stsdAtom,
 																	codecConfigurationDataByteOffset);
+						if (decompressionParamAtom.hasError()) continue;
 
-				// Check track type
-				if (stsdDescription.getType() == MAKE_OSTYPE('m', 'p', '4', 'a')) {
-					// MPEG4 (AAC) Audio
-					if (decompressionParamAtom.hasError()) continue;
+						TIResult<CAtomReader::ContainerAtom>	decompressionParamContainerAtom =
+																		atomReader.readContainerAtom(
+																				*decompressionParamAtom);
+						if (decompressionParamContainerAtom.hasError()) continue;
 
-					TIResult<CAtomReader::ContainerAtom>	decompressionParamContainerAtom =
-																	atomReader.readContainerAtom(
-																			*decompressionParamAtom);
-					if (decompressionParamContainerAtom.hasError()) continue;
+						OR<CAtomReader::Atom>	esdsAtom = decompressionParamContainerAtom->getAtom(
+																		MAKE_OSTYPE('e', 's', 'd', 's'));
+						if (!esdsAtom.hasReference()) continue;
 
-					OR<CAtomReader::Atom>	esdsAtom = decompressionParamContainerAtom->getAtom(
-																	MAKE_OSTYPE('e', 's', 'd', 's'));
-					if (!esdsAtom.hasReference()) continue;
+						TIResult<CData>	esdsAtomPayload = atomReader.readAtomPayload(*esdsAtom);
+						if (esdsAtomPayload.hasError()) continue;
 
-					TIResult<CData>	esdsAtomPayload = atomReader.readAtomPayload(*esdsAtom);
-					if (esdsAtomPayload.hasError()) continue;
+						error =
+								sAddAACAudioTrack(mediaTrackInfos, audioSampleDescription, *esdsAtomPayload,
+										SQTmdhdAtomPayload(*mdhdAtomPayloadData),
+										sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
+												stcoAtomPayload),
+										options, randomAccessDataSource);
+						ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
+						} break;
 
-  					error =
-							sAddAACAudioTrack(mediaTrackInfos, randomAccessDataSource, options, audioSampleDescription,
-									*esdsAtomPayload, SQTmdhdAtomPayload(*mdhdAtomPayloadData),
-									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
-											stcoAtomPayload));
-					ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
-				} else
-					// Unsupported audio codec
-					return SMediaSource::QueryTracksResult(
-							SError(sErrorDomain, kUnsupportedCodecCode,
-									CString(OSSTR("Unsupported audio codec: ")) +
-											CString(stsdDescription.getType(), true, true)));
+					default:
+						// Unsupported audio codec
+						return SMediaSource::QueryTracksResult(
+								SError(sErrorDomain, kUnsupportedCodecCode,
+										CString(OSSTR("Unsupported audio codec: ")) +
+												CString(stsdDescription.getType(), true, true)));
+				}
 			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
 				// Video track
 				const	SQTVideoSampleDescription&	videoSampleDescription =
@@ -859,11 +968,11 @@ SMediaSource::QueryTracksResult sQueryTracksProc(const I<CRandomAccessDataSource
 
 					// Add video track
 					error =
-							sAddH264VideoTrack(mediaTrackInfos, randomAccessDataSource, options, videoSampleDescription,
-									*avcCAtomPayload, SQTmdhdAtomPayload(*mdhdAtomPayloadData),
+							sAddH264VideoTrack(mediaTrackInfos, videoSampleDescription, *avcCAtomPayload,
+									SQTmdhdAtomPayload(*mdhdAtomPayloadData),
 									sComposePacketAndLocations(sttsAtomPayload, stscAtomPayload, stszAtomPayload,
 											stcoAtomPayload),
-									*stssAtomPayloadData);
+									*stssAtomPayloadData, options, randomAccessDataSource);
 					ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
 				} else
 					// Unsupported video codec
@@ -879,10 +988,117 @@ SMediaSource::QueryTracksResult sQueryTracksProc(const I<CRandomAccessDataSource
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
-		const I<CRandomAccessDataSource>& randomAccessDataSource, SMediaSource::Options options,
-		const SQTAudioSampleDescription& audioSampleDescription, const CData& configurationData,
-		const SQTmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations)
+OI<SError> sAddPCMAudioTrack(CMediaTrackInfos& mediaTrackInfos, OSType formatType,
+		const SQTAudioSampleDescription& audioSampleDescription, const CAtomReader::Atom& mdatAtom,
+		SMediaSource::Options options, const I<CRandomAccessDataSource>& randomAccessDataSource)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	OI<SAudioStorageFormat>		audioStorageFormat;
+	OV<CPCMAudioCodec::Format>	pcmAudioCodecFormat;
+	switch (formatType) {
+		case MAKE_OSTYPE('N', 'O', 'N', 'E'):
+		case MAKE_OSTYPE('t', 'w', 'o', 's'):
+			// None / Integer
+			if (audioSampleDescription.getBits() <= 32) {
+				// All good
+				audioStorageFormat =
+						CPCMAudioCodec::composeAudioStorageFormat(false, audioSampleDescription.getBits(),
+								audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+				pcmAudioCodecFormat =
+						OV<CPCMAudioCodec::Format>(
+								(audioSampleDescription.getBits() > 8) ?
+										CPCMAudioCodec::kFormatBigEndian : CPCMAudioCodec::kFormat8BitSigned);
+			} else
+				// Don't know what to do with sample size greater than 32 bits
+				return OI<SError>(CCodec::mErrorUnsupported);
+			break;
+
+		case MAKE_OSTYPE('s', 'o', 'w', 't'):
+			// None / Integer
+			if (audioSampleDescription.getBits() <= 32) {
+				// All good
+				audioStorageFormat =
+						CPCMAudioCodec::composeAudioStorageFormat(false, audioSampleDescription.getBits(),
+								audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+				pcmAudioCodecFormat =
+						OV<CPCMAudioCodec::Format>(
+								(audioSampleDescription.getBits() > 8) ?
+										CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitSigned);
+			} else
+				// Don't know what to do with sample size greater than 32 bits
+				return OI<SError>(CCodec::mErrorUnsupported);
+			break;
+
+		case MAKE_OSTYPE('r', 'a', 'w', ' '):
+			// None / Integer
+			if (audioSampleDescription.getBits() <= 32) {
+				// All good
+				audioStorageFormat =
+						CPCMAudioCodec::composeAudioStorageFormat(false, audioSampleDescription.getBits(),
+								audioSampleDescription.getSampleRate(), audioSampleDescription.getChannels());
+				pcmAudioCodecFormat =
+						OV<CPCMAudioCodec::Format>(
+								(audioSampleDescription.getBits() > 8) ?
+										CPCMAudioCodec::kFormatBigEndian : CPCMAudioCodec::kFormat8BitUnsigned);
+			} else
+				// Don't know what to do with sample size greater than 32 bits
+				return OI<SError>(CCodec::mErrorUnsupported);
+			break;
+
+		case MAKE_OSTYPE('i', 'n', '2', '4'):
+			// 24-bit Integer
+			audioStorageFormat =
+					CPCMAudioCodec::composeAudioStorageFormat(false, 24, audioSampleDescription.getSampleRate(),
+							audioSampleDescription.getChannels());
+			pcmAudioCodecFormat = OV<CPCMAudioCodec::Format>(CPCMAudioCodec::kFormatBigEndian);
+			break;
+
+		case MAKE_OSTYPE('i', 'n', '3', '2'):
+			// 32-bit Integer
+			audioStorageFormat =
+					CPCMAudioCodec::composeAudioStorageFormat(false, 32, audioSampleDescription.getSampleRate(),
+							audioSampleDescription.getChannels());
+			pcmAudioCodecFormat = OV<CPCMAudioCodec::Format>(CPCMAudioCodec::kFormatBigEndian);
+			break;
+
+		case MAKE_OSTYPE('f', 'l', '3', '2'):
+		case MAKE_OSTYPE('F', 'L', '3', '2'):
+			// None / Floating Point
+			audioStorageFormat =
+					CPCMAudioCodec::composeAudioStorageFormat(true, 32, audioSampleDescription.getSampleRate(),
+							audioSampleDescription.getChannels());
+			pcmAudioCodecFormat = OV<CPCMAudioCodec::Format>(CPCMAudioCodec::kFormatBigEndian);
+			break;
+
+		default:
+			// Huh
+			return OI<SError>(CCodec::mErrorUnsupported);
+	}
+
+	UInt64	frameCount = CPCMAudioCodec::composeFrameCount(*audioStorageFormat, mdatAtom.mPayloadByteCount);
+
+	// Add audio track
+	CAudioTrack	audioTrack(CAudioTrack::composeInfo(*audioStorageFormat, frameCount, mdatAtom.mPayloadByteCount),
+						*audioStorageFormat);
+	if (options & SMediaSource::kCreateDecoders)
+		// Add audio track with decode info
+		mediaTrackInfos.add(
+				CMediaTrackInfos::AudioTrackInfo(audioTrack,
+						CPCMAudioCodec::create(*audioStorageFormat, randomAccessDataSource,
+								mdatAtom.mPayloadPos, mdatAtom.mPayloadByteCount, *pcmAudioCodecFormat)));
+	else
+		// Add audio track
+		mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack));
+
+	return OI<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos, const SQTAudioSampleDescription& audioSampleDescription,
+		const CData& configurationData, const SQTmdhdAtomPayload& mdhdAtomPayload,
+		const TArray<SMediaPacketAndLocation>& packetAndLocations, SMediaSource::Options options,
+		const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose storage format
@@ -920,10 +1136,10 @@ OI<SError> sAddAACAudioTrack(CMediaTrackInfos& mediaTrackInfos,
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SError> sAddH264VideoTrack(CMediaTrackInfos& mediaTrackInfos,
-		const I<CRandomAccessDataSource>& randomAccessDataSource, SMediaSource::Options options,
 		const SQTVideoSampleDescription& videoSampleDescription, const CData& configurationData,
 		const SQTmdhdAtomPayload& mdhdAtomPayload, const TArray<SMediaPacketAndLocation>& packetAndLocations,
-		const OI<CData>& stssAtomPayloadData)
+		const OI<CData>& stssAtomPayloadData, SMediaSource::Options options,
+		const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
