@@ -280,8 +280,8 @@ struct SQTAudioSampleDescription {
 							{
 								// Check version
 								switch (EndianU16_BtoN(mVersion)) {
-									case 0:		return ((Float32) EndianU32_BtoN(_.mV0.mSampleRate)) / 65536.0;
-									case 1:		return ((Float32) EndianU32_BtoN(_.mV1.mSampleRate)) / 65536.0;
+									case 0:		return ((Float32) EndianU32_BtoN(_.mV0.mSampleRate)) / 65536.0F;
+									case 1:		return ((Float32) EndianU32_BtoN(_.mV1.mSampleRate)) / 65536.0F;
 									case 2:		return (Float32) EndianF64_BtoN(_.mV2.mSampleRate);
 									default:	return 0;
 								}
@@ -1235,7 +1235,7 @@ Float32 CQuickTimeMediaFile::getSampleRate(const Internals& internals) const
 UInt8 CQuickTimeMediaFile::getChannels(const Internals& internals) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return internals.getAudioSampleDescription().getChannels();
+	return (UInt8) internals.getAudioSampleDescription().getChannels();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1268,9 +1268,9 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SQTAudioSampleDescription		audioSampleDescription = internals.getAudioSampleDescription();
+	const	SQTAudioSampleDescription&		audioSampleDescription = internals.getAudioSampleDescription();
 			Float32							sampleRate = audioSampleDescription.getSampleRate();
-			UInt16							channels = audioSampleDescription.getChannels();
+			UInt8							channels = (UInt8) audioSampleDescription.getChannels();
 			UInt32							bytesPerFrame = bits / 8 * channels;
 			TArray<SMediaPacketAndLocation>	mediaPacketAndLocations =
 													quickTimeMediaFile.composePacketAndLocations(internals,
