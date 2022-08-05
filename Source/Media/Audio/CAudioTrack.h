@@ -26,13 +26,14 @@ class CAudioTrack : public CMediaTrack {
 				const	SAudioStorageFormat&	getAudioStorageFormat() const;
 
 												// Class methods
+		static			Info					composeInfo(UniversalTimeInterval duration,
+														const SAudioStorageFormat& audioStorageFormat,
+														UInt32 bytesPerFrame);
+		static			Info					composeInfo(UniversalTimeInterval duration,
+														const SAudioStorageFormat& audioStorageFormat,
+														UInt32 framesPerPacket, UInt32 bytesPerPacket);
 		static			Info					composeInfo(const SAudioStorageFormat& audioStorageFormat,
 														UInt64 frameCount, UInt64 byteCount);
-		static			Info					composeInfo(const SAudioStorageFormat& audioStorageFormat,
-														UniversalTimeInterval duration, UInt32 bytesPerFrame);
-		static			Info					composeInfo(const SAudioStorageFormat& audioStorageFormat,
-														UniversalTimeInterval duration, UInt32 framesPerPacket,
-														UInt32 bytesPerPacket);
 		static			Float32					getDBFromValue(Float32 value)
 													{ return (Float32) (20.0 * log10(value)); }
 		static			Float32					getValueFromDB(Float32 db)

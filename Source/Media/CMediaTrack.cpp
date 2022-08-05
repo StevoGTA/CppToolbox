@@ -55,3 +55,12 @@ const CMediaTrack::Info& CMediaTrack::getInfo() const
 {
 	return mInternals->mInfo;
 }
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CMediaTrack::Info CMediaTrack::composeInfo(UniversalTimeInterval duration, UInt64 byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return Info(duration, (UInt32) ((Float32) byteCount * 8 / (Float32) duration));
+}

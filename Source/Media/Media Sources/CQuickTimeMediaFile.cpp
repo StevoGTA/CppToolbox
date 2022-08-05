@@ -634,8 +634,6 @@ struct SQTstcoAtomPayload {
 #pragma pack(pop)
 
 static	CString	sErrorDomain(OSSTR("CQuickTimeMediaSource"));
-//static	SInt32	kUnsupportedCodecCode = 1;
-//static	SInt32	kUnsupportedCodecConfiguration = 2;
 static	SError	sUnsupportedCodecConfigurationError(sErrorDomain, 1, CString(OSSTR("Unsupported codec configuration")));
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -716,19 +714,17 @@ struct CQuickTimeMediaFile::Internals {
 
 			UInt32						getPacketGroupOffsetCount() const
 											{
-												return
-//														(stcoAtomPayload != nil) ?
-																mSTCOAtomPayload->getPacketGroupOffsetCount();
-//																co64AtomPayload->getPacketGroupOffsetCount();
+//												return (mSTCOAtomPayload != nil) ?
+//														mSTCOAtomPayload->getPacketGroupOffsetCount() :
+//														mCO64AtomPayload->getPacketGroupOffsetCount();
+												return mSTCOAtomPayload->getPacketGroupOffsetCount();
 											}
 			UInt64						getPacketGroupOffset(UInt32 stcoBlockOffsetIndex) const
 											{
-												return
-//														(stcoAtomPayload != nil) ?
-																mSTCOAtomPayload->getPacketGroupOffset(
-																		stcoBlockOffsetIndex);
-//																co64AtomPayload->getPacketGroupOffset(
-//																		stcoBlockOffsetIndex);
+//												return (mSTCOAtomPayload != nil) ?
+//														mSTCOAtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex) :
+//														mCO64AtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex);
+												return mSTCOAtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex);
 											}
 
 	const	CAtomReader&				mAtomReader;
@@ -924,11 +920,9 @@ TArray<SMediaPacketAndLocation> CQuickTimeMediaFile::composePacketAndLocations(c
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SQTsttsAtomPayload&					sttsAtomPayload = internals.mSTTSAtomPayload;
-	const	SQTstscAtomPayload& 				stscAtomPayload = internals.mSTSCAtomPayload;
-	const	SQTstszAtomPayload& 				stszAtomPayload = internals.mSTSZAtomPayload;
-
-			TNArray<SMediaPacketAndLocation>	packetAndLocations;
+	const	SQTsttsAtomPayload&	sttsAtomPayload = internals.mSTTSAtomPayload;
+	const	SQTstscAtomPayload&	stscAtomPayload = internals.mSTSCAtomPayload;
+	const	SQTstszAtomPayload&	stszAtomPayload = internals.mSTSZAtomPayload;
 
 	// Construct info
 	UInt32	stszPacketByteCountIndex = 0;
@@ -943,8 +937,9 @@ TArray<SMediaPacketAndLocation> CQuickTimeMediaFile::composePacketAndLocations(c
 	UInt64	currentByteOffset = internals.getPacketGroupOffset(stcoBlockOffsetIndex);
 
 	// Iterate all stts entries
-	UInt32	sttsChunkCount = sttsAtomPayload.getChunkCount();
-	UInt32	currentFrameIndex = 0;
+	UInt32								sttsChunkCount = sttsAtomPayload.getChunkCount();
+	UInt32								currentFrameIndex = 0;
+	TNArray<SMediaPacketAndLocation>	packetAndLocations;
 	for (UInt32 sttsChunkIndex = 0; sttsChunkIndex < sttsChunkCount; sttsChunkIndex++) {
 		// Get packet info
 		const	SQTsttsAtomPayload::Chunk&	sttsChunk = sttsAtomPayload.getChunk(sttsChunkIndex);
@@ -1119,10 +1114,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 													SMediaPacketAndLocation::getTotalByteCount(mediaPacketAndLocations);
 
 			// Add audio track
-			CAudioTrack	audioTrack(
-								CMediaTrack::Info(duration,
-										(UInt32) (((UniversalTimeInterval) byteCount * 8) / duration)),
-								*audioStorageFormat);
+			CAudioTrack	audioTrack(CMediaTrack::composeInfo(duration, byteCount), *audioStorageFormat);
 			if (options & SMediaSource::kCreateDecoders)
 				// Add audio track with decode info
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
@@ -1186,10 +1178,7 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 				return TVResult<CMediaTrackInfos::VideoTrackInfo>(sUnsupportedCodecConfigurationError);
 
 			// Add video track
-			CVideoTrack	videoTrack(
-								CMediaTrack::Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) /
-										duration)),
-								*videoStorageFormat);
+			CVideoTrack	videoTrack(CMediaTrack::composeInfo(duration, byteCount), *videoStorageFormat);
 			if (options & SMediaSource::kCreateDecoders) {
 				// Setup
 				TIResult<CData>	stssAtomPayloadData =
@@ -1281,7 +1270,7 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 	UInt64					frameCount = mediaPacketAndLocations.getCount();
 
 	// Compose audio track
-	CAudioTrack	audioTrack(CAudioTrack::composeInfo(*audioStorageFormat, duration, bytesPerFrame),
+	CAudioTrack	audioTrack(CAudioTrack::composeInfo(duration, *audioStorageFormat, bytesPerFrame),
 						*audioStorageFormat);
 	if (options & SMediaSource::kCreateDecoders)
 		// Add audio track with decode info

@@ -66,34 +66,30 @@ const SAudioStorageFormat& CAudioTrack::getAudioStorageFormat() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaTrack::Info CAudioTrack::composeInfo(const SAudioStorageFormat& audioStorageFormat, UInt64 frameCount,
-		UInt64 byteCount)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	UniversalTimeInterval	duration =
-									(UniversalTimeInterval) frameCount /
-											(UniversalTimeInterval) audioStorageFormat.getSampleRate();
-
-	return Info(duration, (UInt32) (((UniversalTimeInterval) byteCount * 8) / duration));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CMediaTrack::Info CAudioTrack::composeInfo(const SAudioStorageFormat& audioStorageFormat,
-		UniversalTimeInterval duration, UInt32 bytesPerFrame)
+CMediaTrack::Info CAudioTrack::composeInfo(UniversalTimeInterval duration,
+		const SAudioStorageFormat& audioStorageFormat, UInt32 bytesPerFrame)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return Info(duration, (UInt32) (audioStorageFormat.getSampleRate() * (Float32) bytesPerFrame * 8.0F));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaTrack::Info CAudioTrack::composeInfo(const SAudioStorageFormat& audioStorageFormat,
-		UniversalTimeInterval duration, UInt32 framesPerPacket, UInt32 bytesPerPacket)
+CMediaTrack::Info CAudioTrack::composeInfo(UniversalTimeInterval duration,
+		const SAudioStorageFormat& audioStorageFormat, UInt32 framesPerPacket, UInt32 bytesPerPacket)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return Info(duration,
 			(UInt32)
 					(audioStorageFormat.getSampleRate() / (Float32) framesPerPacket * (Float32) bytesPerPacket * 8.0F));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CMediaTrack::Info CAudioTrack::composeInfo(const SAudioStorageFormat& audioStorageFormat, UInt64 frameCount,
+		UInt64 byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CMediaTrack::composeInfo(
+			(UniversalTimeInterval) frameCount / (UniversalTimeInterval) audioStorageFormat.getSampleRate(), byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

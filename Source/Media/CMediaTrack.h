@@ -42,6 +42,9 @@ class CMediaTrack {
 								// Instance methods
 				const	Info&	getInfo() const;
 
+								// Class methods
+		static			Info	composeInfo(UniversalTimeInterval duration, UInt64 byteCount);
+
 	// Properties
 	private:
 		CMediaTrackInternals*	mInternals;
