@@ -79,6 +79,24 @@ CMediaTrack::Info CAudioTrack::composeInfo(const SAudioStorageFormat& audioStora
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CMediaTrack::Info CAudioTrack::composeInfo(const SAudioStorageFormat& audioStorageFormat,
+		UniversalTimeInterval duration, UInt32 bytesPerFrame)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return Info(duration, (UInt32) (audioStorageFormat.getSampleRate() * (Float32) bytesPerFrame * 8.0F));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CMediaTrack::Info CAudioTrack::composeInfo(const SAudioStorageFormat& audioStorageFormat,
+		UniversalTimeInterval duration, UInt32 framesPerPacket, UInt32 bytesPerPacket)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return Info(duration,
+			(UInt32)
+					(audioStorageFormat.getSampleRate() / (Float32) framesPerPacket * (Float32) bytesPerPacket * 8.0F));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CString CAudioTrack::getStringFromDB(Float32 db, Float32 muteDB)
 //----------------------------------------------------------------------------------------------------------------------
 {

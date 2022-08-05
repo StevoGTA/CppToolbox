@@ -82,6 +82,33 @@ TIResult<CData> CAtomReader::readAtomPayload(const Atom& atom, SInt64 offset) co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read Atoms
+	TNArray<Atom>	atoms;
+	while (getPos() < getByteCount()) {
+		// Get atom info
+		TIResult<Atom>	childAtom = readAtom();
+		ReturnValueIfResultError(childAtom, TIResult<ContainerAtom>(childAtom.getError()));
+
+		// Check for terminator atom
+		if ((childAtom->mType == 0) || (childAtom->mPayloadByteCount == 0))
+			// Done
+			break;
+
+		// Add to array
+		atoms += *childAtom;
+
+		// Seek
+		OI<SError>	error = seekToNextAtom(*childAtom);
+		ReturnValueIfError(error, TIResult<ContainerAtom>(*error));
+	}
+
+	return TIResult<ContainerAtom>(ContainerAtom(atoms));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const Atom& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -89,7 +116,7 @@ TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const Atom& 
 	OI<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos);
 	ReturnValueIfError(error, TIResult<ContainerAtom>(*error));
 
-	// Read Atom
+	// Read Atoms
 	TNArray<Atom>	atoms;
 	while (getPos() < (atom.mPayloadPos + atom.mPayloadByteCount)) {
 		// Get atom info

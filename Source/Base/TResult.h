@@ -50,7 +50,7 @@ template <typename T> struct TVResult {
 
 					// Instance Methods
 			bool	hasValue() const
-						{ return mValue.hasInstance(); }
+						{ return mValue.hasValue(); }
 	const	T		getValue() const
 						{ return *mValue; }
 

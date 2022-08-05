@@ -60,6 +60,7 @@ class CAtomReader : public CByteReader {
 		TIResult<CData>			readAtomPayload(const Atom& atom) const;
 		TIResult<CData>			readAtomPayload(const OR<Atom>& atom) const;
 		TIResult<CData>			readAtomPayload(const Atom& atom, SInt64 offset) const;
+		TIResult<ContainerAtom>	readContainerAtom() const;
 		TIResult<ContainerAtom>	readContainerAtom(const Atom& atom) const;
 		TIResult<ContainerAtom>	readContainerAtom(const OR<Atom>& atom) const;
 		OI<SError>				seekToNextAtom(const Atom& atom) const;
