@@ -11,38 +11,6 @@
 // MARK: CCodec
 
 class CCodec {
-	// DecodeInfo
-	public:
-		class DecodeInfo {
-			// Methods
-			public:
-						// Lifecycle methods
-				virtual	~DecodeInfo() {}
-
-			protected:
-						// Lifecycle methods
-						DecodeInfo() {}
-		};
-
-	// MediaPacketSourceDecodeInfo
-	public:
-		class MediaPacketSourceDecodeInfo : public DecodeInfo {
-			// Methods
-			public:
-										// Lifecycle methods
-										MediaPacketSourceDecodeInfo(const I<CMediaPacketSource>& mediaPacketSource) :
-											DecodeInfo(), mMediaPacketSource(mediaPacketSource)
-											{}
-
-										// Instance methods
-				I<CMediaPacketSource>	getMediaPacketSource() const
-											{ return mMediaPacketSource; }
-
-			// Properties
-			private:
-				I<CMediaPacketSource>	mMediaPacketSource;
-		};
-
 	// EncodeSettings
 	public:
 		class EncodeSettings {
@@ -59,14 +27,14 @@ class CCodec {
 
 	// Methods
 	public:
-				// Lifecycle methods
-		virtual	~CCodec() {}
+						// Lifecycle methods
+		virtual			~CCodec() {}
+
+						// Class methods
+		static	SError	unsupportedError(const CString& codecDescriptor);
+		static	SError	unsupportedConfigurationError(const CString& codecDescriptor);
 
 	protected:
-				// Lifecycle methods
-				CCodec() {}
-
-	// Properties
-	public:
-		static	const	SError	mErrorUnsupported;
+						// Lifecycle methods
+						CCodec() {}
 };

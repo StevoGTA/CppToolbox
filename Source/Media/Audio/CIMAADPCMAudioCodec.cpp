@@ -221,8 +221,7 @@ class CDVIIntelIMAADPCMDecodeAudioCodec : public CDecodeAudioCodec {
 										// Lifecycle methods
 										CDVIIntelIMAADPCMDecodeAudioCodec(UInt32 framesPerPacket,
 												const I<CMediaPacketSource>& mediaPacketSource) :
-											mFramesPerPacket(framesPerPacket),
-													mMediaPacketSourceDecodeInfo(mediaPacketSource),
+											mFramesPerPacket(framesPerPacket), mMediaPacketSource(mediaPacketSource),
 													mDecodeFramesToIgnore(0)
 											{}
 
@@ -237,7 +236,7 @@ class CDVIIntelIMAADPCMDecodeAudioCodec : public CDecodeAudioCodec {
 
 	private:
 		UInt32								mFramesPerPacket;
-		CCodec::MediaPacketSourceDecodeInfo	mMediaPacketSourceDecodeInfo;
+		I<CMediaPacketSource>				mMediaPacketSource;
 
 		OI<SAudioProcessingFormat>			mAudioProcessingFormat;
 		UInt32								mDecodeFramesToIgnore;
@@ -251,7 +250,7 @@ TArray<SAudioProcessingSetup> CDVIIntelIMAADPCMDecodeAudioCodec::getAudioProcess
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return TNArray<SAudioProcessingSetup>(
-				SAudioProcessingSetup(16, audioStorageFormat.getSampleRate(), audioStorageFormat.getChannelMap()));
+				SAudioProcessingSetup(16, audioStorageFormat.getSampleRate(), audioStorageFormat.getAudioChannelMap()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -270,8 +269,7 @@ void CDVIIntelIMAADPCMDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 {
 	// Seek
 	mDecodeFramesToIgnore =
-			mMediaPacketSourceDecodeInfo.getMediaPacketSource()->seekToDuration(
-					(UInt32) (timeInterval * mAudioProcessingFormat->getSampleRate()));
+			mMediaPacketSource->seekToDuration((UInt32) (timeInterval * mAudioProcessingFormat->getSampleRate()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -291,8 +289,7 @@ OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 	UInt32				decodedFrameCount = 0;
 	while (remainingFrames >= mFramesPerPacket) {
 		// Get next packet
-		TIResult<CMediaPacketSource::DataInfo>	dataInfo =
-														mMediaPacketSourceDecodeInfo.getMediaPacketSource()->readNext();
+		TIResult<CMediaPacketSource::DataInfo>	dataInfo = mMediaPacketSource->readNext();
 		if (dataInfo.hasError()) {
 			// Check situation
 			if (decodedFrameCount > 0)
@@ -345,10 +342,10 @@ const	OSType	CDVIIntelIMAADPCMAudioCodec::mID = 0x6D730011;
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SAudioStorageFormat> CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat(Float32 sampleRate,
-		EAudioChannelMap channelMap)
+		EAudioChannelMap audioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OI<SAudioStorageFormat>(new SAudioStorageFormat(mID, sampleRate, channelMap));
+	return OI<SAudioStorageFormat>(new SAudioStorageFormat(mID, sampleRate, audioChannelMap));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

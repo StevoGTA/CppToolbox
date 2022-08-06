@@ -42,7 +42,7 @@ TArray<SAudioProcessingSetup> CPCMDecodeAudioCodec::getAudioProcessingSetups(
 {
 	return TNArray<SAudioProcessingSetup>(
 				SAudioProcessingSetup(*audioStorageFormat.getBits(), audioStorageFormat.getSampleRate(),
-						audioStorageFormat.getChannelMap(),
+						audioStorageFormat.getAudioChannelMap(),
 						(audioStorageFormat.getCodecID() == CPCMAudioCodec::mFloatID) ?
 								SAudioProcessingSetup::kSampleTypeFloat :
 								SAudioProcessingSetup::kSampleTypeSignedInteger,
@@ -97,12 +97,12 @@ const	OSType	CPCMAudioCodec::mIntegerID = MAKE_OSTYPE('N', 'O', 'N', 'E');
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<SAudioStorageFormat> CPCMAudioCodec::composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
-		EAudioChannelMap channelMap)
+		EAudioChannelMap audioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Return audio storage format
 	return OI<SAudioStorageFormat>(
-			new SAudioStorageFormat(isFloat ? mFloatID : mIntegerID, bits, sampleRate, channelMap));
+			new SAudioStorageFormat(isFloat ? mFloatID : mIntegerID, bits, sampleRate, audioChannelMap));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

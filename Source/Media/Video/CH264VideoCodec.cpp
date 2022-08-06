@@ -50,8 +50,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 																{ return MFVideoFormat_H264; }
 #endif
 
-#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-#elif defined(TARGET_OS_WINDOWS)
+#if defined(TARGET_OS_WINDOWS)
 		static			TCIResult<IMFSample>				readInputSample(
 																	CMediaFoundationDecodeVideoCodec&
 																			mediaFoundationDecodeVideoCodec);
@@ -162,8 +161,7 @@ OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProce
 }
 #endif
 
-#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-#elif defined(TARGET_OS_WINDOWS)
+#if defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
 TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 		CMediaFoundationDecodeVideoCodec& mediaFoundationDecodeVideoCodec)

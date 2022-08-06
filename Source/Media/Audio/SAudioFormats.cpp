@@ -8,11 +8,11 @@
 // MARK: Channel map methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const CString eChannelMapGetDescription(EAudioChannelMap channelMap)
+const CString eChannelMapGetDescription(EAudioChannelMap audioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check channel map
-	switch (channelMap) {
+	switch (audioChannelMap) {
 		// 1 Channel
 		case kAudioChannelMap_1_0:			return CString(OSSTR("C"));
 

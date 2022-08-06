@@ -66,13 +66,13 @@ class CAudioCodec : public CCodec {
 class CDecodeAudioCodec : public CAudioCodec {
 	// FrameSourceDecodeInfo
 	public:
-		class FrameSourceDecodeInfo : public DecodeInfo {
+		class FrameSourceDecodeInfo {
 			// Methods
 			public:
 										// Lifecycle methods
 										FrameSourceDecodeInfo(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												UInt64 startByteOffset, UInt64 byteCount, UInt8 frameByteCount) :
-											DecodeInfo(), mRandomAccessDataSource(randomAccessDataSource),
+											mRandomAccessDataSource(randomAccessDataSource),
 													mStartByteOffset(startByteOffset), mByteCount(byteCount),
 													mFrameByteCount(frameByteCount),
 													mCurrentPosition(mStartByteOffset)

@@ -170,8 +170,8 @@ OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 	mInternals->mInputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Setup
-	if ((mInternals->mInputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_1_0) &&
-			(mOutputAudioProcessingFormat->getChannelMap() == kAudioChannelMap_2_0_Option1)) {
+	if ((mInternals->mInputAudioProcessingFormat->getAudioChannelMap() == kAudioChannelMap_1_0) &&
+			(mOutputAudioProcessingFormat->getAudioChannelMap() == kAudioChannelMap_2_0_Option1)) {
 		// Mono -> Stereo
 		if ((audioProcessingFormat.getBits() == 64) || (audioProcessingFormat.getBits() == 32) ||
 				(audioProcessingFormat.getBits() == 24) || (audioProcessingFormat.getBits() == 16) ||
@@ -203,10 +203,11 @@ TNArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
 	setupDescriptions +=
 			indent + CString(OSSTR("Channel Mapper from ")) +
 					CString::mDoubleQuotes +
-							eChannelMapGetDescription(mInternals->mInputAudioProcessingFormat->getChannelMap()) +
+							eChannelMapGetDescription(mInternals->mInputAudioProcessingFormat->getAudioChannelMap()) +
 							CString::mDoubleQuotes +
 					CString(OSSTR(" to ")) +
-					CString::mDoubleQuotes + eChannelMapGetDescription(mOutputAudioProcessingFormat->getChannelMap()) +
+					CString::mDoubleQuotes +
+							eChannelMapGetDescription(mOutputAudioProcessingFormat->getAudioChannelMap()) +
 							CString::mDoubleQuotes;
 
 	return setupDescriptions;

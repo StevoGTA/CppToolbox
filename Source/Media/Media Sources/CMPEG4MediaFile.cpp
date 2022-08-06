@@ -568,9 +568,6 @@ struct SMP4co64AtomPayload {
 
 #pragma pack(pop)
 
-static	CString	sErrorDomain(OSSTR("CMPEG4MediaSource"));
-static	SError	sUnsupportedCodecConfigurationError(sErrorDomain, 1, CString(OSSTR("Unsupported codec configuration")));
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
@@ -895,12 +892,18 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 					TVResult<CMediaTrackInfos::AudioTrackInfo>(configurationData.getError()))
 
 			// Compose storage format
-			OI<SAudioStorageFormat>	audioStorageFormat =
-											CAACAudioCodec::composeAudioStorageFormat(*configurationData,
+			OV<CAACAudioCodec::Info>	info =
+												CAACAudioCodec::composeInfo(*configurationData,
 														audioFormat.getChannels());
+			if (!info.hasValue())
+				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
+
+			OI<SAudioStorageFormat>	audioStorageFormat = CAACAudioCodec::composeAudioStorageFormat(*info);
 			if (!audioStorageFormat.hasInstance())
 				// Unsupported configuration
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(sUnsupportedCodecConfigurationError);
+				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 			// Compose info
 			TArray<SMediaPacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
@@ -913,8 +916,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 				// Add audio track with decode info
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
 						CMediaTrackInfos::AudioTrackInfo(audioTrack,
-								CAACAudioCodec::create(*audioStorageFormat, randomAccessDataSource,
-										mediaPacketAndLocations, *configurationData)));
+								CAACAudioCodec::create(*info, randomAccessDataSource, mediaPacketAndLocations)));
 			else
 				// Add audio track
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(CMediaTrackInfos::AudioTrackInfo(audioTrack));
@@ -922,7 +924,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 
 		default:
 			// Unsupported audio codec
-			return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::mErrorUnsupported);
+			return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::unsupportedError(CString(type, true)));
 	}
 }
 
@@ -966,7 +968,8 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInf
 													framerate);
 			if (!videoStorageFormat.hasInstance())
 				// Unsupported configuration
-				return TVResult<CMediaTrackInfos::VideoTrackInfo>(sUnsupportedCodecConfigurationError);
+				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 			// Add video track
 			CVideoTrack	videoTrack(CMediaTrack::composeInfo(duration, byteCount), *videoStorageFormat);
@@ -992,7 +995,7 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInf
 
 		default:
 			// Unsupported video codec
-			return TVResult<CMediaTrackInfos::VideoTrackInfo>(CCodec::mErrorUnsupported);
+			return TVResult<CMediaTrackInfos::VideoTrackInfo>(CCodec::unsupportedError(CString(type, true)));
 	}
 }
 

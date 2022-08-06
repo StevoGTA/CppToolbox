@@ -37,7 +37,8 @@ class CDVIIntelIMAADPCMAudioCodec {
 	// Methods
 	public:
 											// Class methods
-		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate, EAudioChannelMap channelMap);
+		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate,
+													EAudioChannelMap audioChannelMap);
 		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate, UInt8 channels)
 												{ return composeAudioStorageFormat(sampleRate,
 														AUDIOCHANNELMAP_FORUNKNOWN(channels)); }

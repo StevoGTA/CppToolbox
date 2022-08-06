@@ -633,9 +633,6 @@ struct SQTstcoAtomPayload {
 
 #pragma pack(pop)
 
-static	CString	sErrorDomain(OSSTR("CQuickTimeMediaSource"));
-static	SError	sUnsupportedCodecConfigurationError(sErrorDomain, 1, CString(OSSTR("Unsupported codec configuration")));
-
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
@@ -1027,7 +1024,8 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 								duration, internals));
 			} else
 				// Don't know what to do with sample size greater than 32 bits
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::mErrorUnsupported);
+				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 		case MAKE_OSTYPE('s', 'o', 'w', 't'):
 			// None / Integer, Little Endian
@@ -1041,7 +1039,8 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 								duration, internals));
 			} else
 				// Don't know what to do with sample size greater than 32 bits
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::mErrorUnsupported);
+				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 		case MAKE_OSTYPE('r', 'a', 'w', ' '):
 			// None / Integer
@@ -1055,7 +1054,8 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 								duration, internals));
 			} else
 				// Don't know what to do with sample size greater than 32 bits
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::mErrorUnsupported);
+				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 		case MAKE_OSTYPE('i', 'n', '2', '4'):
 			// 24-bit Integer
@@ -1082,31 +1082,37 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 			// MPEG4 (AAC) Audio
 			TIResult<CData>	decompressionData = internals.getAudioDecompressionData();
 			ReturnValueIfResultError(decompressionData,
-					TVResult<CMediaTrackInfos::AudioTrackInfo>(decompressionData.getError()));
+					TVResult<CMediaTrackInfos::AudioTrackInfo>(
+							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			CAtomReader	decompressionAtomReader(I<CRandomAccessDataSource>(new CDataDataSource(*decompressionData)));
 
 			TIResult<CAtomReader::ContainerAtom>	decompressionParamContainerAtom =
 															decompressionAtomReader.readContainerAtom();
 			ReturnValueIfResultError(decompressionParamContainerAtom,
-					TVResult<CMediaTrackInfos::AudioTrackInfo>(decompressionParamContainerAtom.getError()));
+					TVResult<CMediaTrackInfos::AudioTrackInfo>(
+							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			OR<CAtomReader::Atom>	esdsAtom = decompressionParamContainerAtom->getAtom(
 															MAKE_OSTYPE('e', 's', 'd', 's'));
 			if (!esdsAtom.hasReference())
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(sUnsupportedCodecConfigurationError);
+				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 			TIResult<CData>	esdsAtomPayload = decompressionAtomReader.readAtomPayload(*esdsAtom);
 			ReturnValueIfResultError(esdsAtomPayload,
-					TVResult<CMediaTrackInfos::AudioTrackInfo>(esdsAtomPayload.getError()));
+					TVResult<CMediaTrackInfos::AudioTrackInfo>(
+							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			// Compose storage format
-			OI<SAudioStorageFormat>	audioStorageFormat =
-											CAACAudioCodec::composeAudioStorageFormat(*esdsAtomPayload,
-													audioSampleDescription.getChannels());
-			if (!audioStorageFormat.hasInstance())
-				// Unsupported configuration
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(sUnsupportedCodecConfigurationError);
+			OV<CAACAudioCodec::Info>	info =
+												CAACAudioCodec::composeInfo(*esdsAtomPayload,
+														audioSampleDescription.getChannels());
+			if (!info.hasValue())
+				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
+
+			SAudioStorageFormat	audioStorageFormat = CAACAudioCodec::composeAudioStorageFormat(*info);
 
 			// Compose info
 			TArray<SMediaPacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
@@ -1114,21 +1120,20 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 													SMediaPacketAndLocation::getTotalByteCount(mediaPacketAndLocations);
 
 			// Add audio track
-			CAudioTrack	audioTrack(CMediaTrack::composeInfo(duration, byteCount), *audioStorageFormat);
+			CAudioTrack	audioTrack(CMediaTrack::composeInfo(duration, byteCount), audioStorageFormat);
 			if (options & SMediaSource::kCreateDecoders)
 				// Add audio track with decode info
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
 						CMediaTrackInfos::AudioTrackInfo(audioTrack,
-								CAACAudioCodec::create(*audioStorageFormat, randomAccessDataSource,
-										mediaPacketAndLocations, *esdsAtomPayload)));
+								CAACAudioCodec::create(*info, randomAccessDataSource, mediaPacketAndLocations)));
 			else
 				// Add audio track
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(CMediaTrackInfos::AudioTrackInfo(audioTrack));
-			} break;
+			}
 
 		default:
 			// Unsupported audio codec
-			return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::mErrorUnsupported);
+			return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::unsupportedError(CString(type, true)));
 	}
 }
 
@@ -1175,7 +1180,8 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 															videoSampleDescription.getHeight()), framerate);
 			if (!videoStorageFormat.hasInstance())
 				// Unsupported configuration
-				return TVResult<CMediaTrackInfos::VideoTrackInfo>(sUnsupportedCodecConfigurationError);
+				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
+						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 			// Add video track
 			CVideoTrack	videoTrack(CMediaTrack::composeInfo(duration, byteCount), *videoStorageFormat);
@@ -1207,7 +1213,7 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 
 		default:
 			// Unsupported video codec
-			return TVResult<CMediaTrackInfos::VideoTrackInfo>(CCodec::mErrorUnsupported);
+			return TVResult<CMediaTrackInfos::VideoTrackInfo>(CCodec::unsupportedError(CString(type, true)));
 	}
 }
 

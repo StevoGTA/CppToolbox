@@ -204,15 +204,14 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 #endif
 	public:
 												// Lifecycle methods
-												CAACDecodeAudioCodec(OSType codecID,
-														const I<CMediaPacketSource>& mediaPacketSource,
-														const CData& configurationData) :
+												CAACDecodeAudioCodec(const CAACAudioCodec::Info& info,
+														const I<CMediaPacketSource>& mediaPacketSource) :
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-													CCoreAudioDecodeAudioCodec(codecID, mediaPacketSource),
-															mDecodeInfo(mediaPacketSource, configurationData)
+													CCoreAudioDecodeAudioCodec(info.getCodecID(), mediaPacketSource),
+															mInfo(info)
 #elif defined(TARGET_OS_WINDOWS)
 													CMediaFoundationDecodeAudioCodec(codecID, mediaPacketSource),
-															mDecodeInfo(mediaPacketSource, configurationData)
+															mInfo(info)
 #endif
 													{}
 
@@ -222,7 +221,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 														return TNArray<SAudioProcessingSetup>(
 																SAudioProcessingSetup(32,
 																		audioStorageFormat.getSampleRate(),
-																		audioStorageFormat.getChannelMap(),
+																		audioStorageFormat.getAudioChannelMap(),
 																		SAudioProcessingSetup::kSampleTypeFloat));
 													}
 				CAudioFrames::Requirements		getRequirements() const
@@ -249,10 +248,10 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 																					audioConverterRef,
 																					kAudioConverterDecompressionMagicCookie,
 																					(UInt32)
-																							mDecodeInfo.getMagicCookie()
+																							mInfo.getMagicCookie()
 																									.getByteCount(),
-																					mDecodeInfo.getMagicCookie()
-																								.getBytePtr());
+																					mInfo.getMagicCookie()
+																							.getBytePtr());
 														ReturnErrorIfFailed(status,
 																OSSTR("AudioConverterSetProperty for magic cookie"));
 
@@ -274,39 +273,16 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 																WORD	mAudioSpecificConfig;
 															} userData = {0};
 														#pragma pack(pop)
-															userData.mAudioSpecificConfig =
-																	EndianU16_NtoB(mDecodeInfo.getStartCodes());
+														userData.mAudioSpecificConfig =
+																EndianU16_NtoB(mInfo.getStartCodes());
 
 														return OI<CData>(new CData(&userData, sizeof(UserData)));
 													}
 #endif
 
 	private:
-		CAACAudioCodec::DecodeInfo	mDecodeInfo;
+		CAACAudioCodec::Info	mInfo;
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAACAudioCodec::DecodeInfo
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CAACAudioCodec::DecodeInfo::DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource, const CData& configurationData) :
-		CCodec::MediaPacketSourceDecodeInfo(mediaPacketSource)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	const	SesdsAtomPayload&				esdsAtomPayload = *((SesdsAtomPayload*) configurationData.getBytePtr());
-	const	SesdsDecoderConfigDescriptor&	esdsDecoderConfigDescriptor = esdsAtomPayload.getDecoderConfigDescriptor();
-	const	SesdsDecoderSpecificDescriptor&	esdsDecoderSpecificDescriptor =
-													esdsDecoderConfigDescriptor.getDecoderSpecificDescriptor();
-			CData							startCodesData = esdsDecoderSpecificDescriptor.getStartCodes();
-
-	// Store
-	mMagicCookie = CData((UInt8*) configurationData.getBytePtr() + 4, configurationData.getByteCount() - 4);
-	mStartCodes = EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()));
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -323,7 +299,7 @@ const	CString	CAACAudioCodec::mAACLDName(OSSTR("AAC Low Delay"));
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SAudioStorageFormat> CAACAudioCodec::composeAudioStorageFormat(const CData& configurationData, UInt16 channels)
+OV<CAACAudioCodec::Info> CAACAudioCodec::composeInfo(const CData& configurationData, UInt16 channels)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -354,7 +330,7 @@ OI<SAudioStorageFormat> CAACAudioCodec::composeAudioStorageFormat(const CData& c
 
 		default:
 			// Not yet supported
-			return OI<SAudioStorageFormat>();
+			return OV<Info>();
 	}
 
 	Float32	sampleRate;
@@ -372,37 +348,47 @@ OI<SAudioStorageFormat> CAACAudioCodec::composeAudioStorageFormat(const CData& c
 		case 10:	sampleRate = 11025.0;	break;
 		case 11:	sampleRate = 8000.0;	break;
 		case 12:	sampleRate = 7350.0;	break;
-		default:	return OI<SAudioStorageFormat>();
+		default:	return OV<Info>();
 	}
 
-	EAudioChannelMap	channelMap;
+	EAudioChannelMap	audioChannelMap;
 	switch ((startCodes & 0x0078) >> 3) {
-		case 0:		channelMap = AUDIOCHANNELMAP_FORUNKNOWN(channels);	break;
-		case 1:		channelMap = kAudioChannelMap_1_0;					break;
-		case 2:		channelMap = kAudioChannelMap_2_0_Option1;			break;
-		case 3:		channelMap = kAudioChannelMap_3_0_Option2;			break;
-		case 4:		channelMap = kAudioChannelMap_4_0_Option3;			break;
-		case 5:		channelMap = kAudioChannelMap_5_0_Option4;			break;
-		case 6:		channelMap = kAudioChannelMap_5_1_Option4;			break;
-		case 7:		channelMap = kAudioChannelMap_7_1_Option2;			break;
-		default:	return OI<SAudioStorageFormat>();
+		case 0:		audioChannelMap = AUDIOCHANNELMAP_FORUNKNOWN(channels);	break;
+		case 1:		audioChannelMap = kAudioChannelMap_1_0;					break;
+		case 2:		audioChannelMap = kAudioChannelMap_2_0_Option1;			break;
+		case 3:		audioChannelMap = kAudioChannelMap_3_0_Option2;			break;
+		case 4:		audioChannelMap = kAudioChannelMap_4_0_Option3;			break;
+		case 5:		audioChannelMap = kAudioChannelMap_5_0_Option4;			break;
+		case 6:		audioChannelMap = kAudioChannelMap_5_1_Option4;			break;
+		case 7:		audioChannelMap = kAudioChannelMap_7_1_Option2;			break;
+		default:	return OV<Info>();
 	}
 
-	return OI<SAudioStorageFormat>(new SAudioStorageFormat(codecID, sampleRate, channelMap));
+	return OV<Info>(
+			Info(codecID, sampleRate, audioChannelMap,
+					CData((UInt8*) configurationData.getBytePtr() + 4, configurationData.getByteCount() - 4),
+					EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<I<CDecodeAudioCodec> > CAACAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
+SAudioStorageFormat CAACAudioCodec::composeAudioStorageFormat(const Info& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return SAudioStorageFormat(info.getCodecID(), info.getSampleRate(), info.getAudioChannelMap());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<I<CDecodeAudioCodec> > CAACAudioCodec::create(const Info& info,
 		const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData)
+		const TArray<SMediaPacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return OI<I<CDecodeAudioCodec> >(
 			I<CDecodeAudioCodec>(
-					new CAACDecodeAudioCodec(audioStorageFormat.getCodecID(),
+					new CAACDecodeAudioCodec(info,
 							I<CMediaPacketSource>(
-									new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
-							configurationData)));
+									new CSeekableVaryingMediaPacketSource(randomAccessDataSource,
+											packetAndLocations)))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

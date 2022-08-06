@@ -140,7 +140,7 @@ class CH264VideoCodec {
 
 	// DecodeInfo
 	public:
-		class DecodeInfo : public CCodec::MediaPacketSourceDecodeInfo {
+		class DecodeInfo {
 			// SPSPPSInfo
 			public:
 				struct SPSPPSInfo {
@@ -186,85 +186,75 @@ class CH264VideoCodec {
 
 			// Methods
 			public:
-												// Lifecycle methods
-												DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource,
-														const CData& configurationData, UInt32 timeScale,
-														const TNumericArray<UInt32>& keyframeIndexes) :
-													CCodec::MediaPacketSourceDecodeInfo(mediaPacketSource),
-															mConfigurationData(configurationData),
-															mTimeScale(timeScale), mKeyframeIndexes(keyframeIndexes)
-													{}
+									// Lifecycle methods
+									DecodeInfo(const I<CMediaPacketSource>& mediaPacketSource,
+											const CData& configurationData, UInt32 timeScale,
+											const TNumericArray<UInt32>& keyframeIndexes) :
+												mConfigurationData(configurationData),
+												mTimeScale(timeScale), mKeyframeIndexes(keyframeIndexes)
+										{}
 
-												// Instance methods
-						UInt32					getNALUHeaderLengthSize() const
-													{
-														// Setup
-														const	Configuration&	configuration =
-																						*((Configuration*)
-																								mConfigurationData
-																										.getBytePtr());
+									// Instance methods
+						UInt32		getNALUHeaderLengthSize() const
+										{
+											// Setup
+											const	Configuration&	configuration =
+																			*((Configuration*)
+																					mConfigurationData.getBytePtr());
 
-														return (configuration.mLengthCoded & ~0xFC) + 1;
+											return (configuration.mLengthCoded & ~0xFC) + 1;
 
-													}
-						SPSPPSInfo				getSPSPPSInfo() const
-													{
-														// Setup
-														const	Configuration&		configuration =
-																							*((Configuration*)
-																									mConfigurationData
-																											.getBytePtr());
-														const	UInt8*				bytePtr =
-																							&configuration
-																									.mSPSPPSInfo[0];
-																UInt32				offset = sizeof(Configuration);
+										}
+						SPSPPSInfo	getSPSPPSInfo() const
+										{
+											// Setup
+											const	Configuration&		configuration =
+																				*((Configuration*)
+																						mConfigurationData
+																								.getBytePtr());
+											const	UInt8*				bytePtr =
+																				&configuration
+																						.mSPSPPSInfo[0];
+													UInt32				offset = sizeof(Configuration);
 
-																TNArray<NALUInfo>	spsNALUInfos;
-																TNArray<NALUInfo>	ppsNALUInfos;
+													TNArray<NALUInfo>	spsNALUInfos;
+													TNArray<NALUInfo>	ppsNALUInfos;
 
-														// Compose SPS NALUInfos
-														UInt32	count = *bytePtr & 0x1F;
-														bytePtr++;
-														offset++;
-														for (UInt32 i = 0; i < count; i++) {
-															// Add SPS NALUInfo
-															UInt16	byteCount = getByteCount(bytePtr);
-															spsNALUInfos +=
-																	NALUInfo(mConfigurationData, offset + 2, byteCount);
+											// Compose SPS NALUInfos
+											UInt32	count = *bytePtr & 0x1F;
+											bytePtr++;
+											offset++;
+											for (UInt32 i = 0; i < count; i++) {
+												// Add SPS NALUInfo
+												UInt16	byteCount = getByteCount(bytePtr);
+												spsNALUInfos += NALUInfo(mConfigurationData, offset + 2, byteCount);
 
-															// Update
-															bytePtr += 2 + byteCount;
-															offset += 2 + byteCount;
-														}
+												// Update
+												bytePtr += 2 + byteCount;
+												offset += 2 + byteCount;
+											}
 
-														// Compose PPS NALUInfos
-														count = *bytePtr;
-														bytePtr++;
-														offset++;
-														for (UInt32 i = 0; i < count; i++) {
-															// Add PPS NALUInfo
-															UInt16	byteCount = getByteCount(bytePtr);
-															ppsNALUInfos +=
-																	NALUInfo(mConfigurationData, offset + 2, byteCount);
+											// Compose PPS NALUInfos
+											count = *bytePtr;
+											bytePtr++;
+											offset++;
+											for (UInt32 i = 0; i < count; i++) {
+												// Add PPS NALUInfo
+												UInt16	byteCount = getByteCount(bytePtr);
+												ppsNALUInfos += NALUInfo(mConfigurationData, offset + 2, byteCount);
 
-															// Update
-															bytePtr += 2 + byteCount;
-															offset += 2 + byteCount;
-														}
+												// Update
+												bytePtr += 2 + byteCount;
+												offset += 2 + byteCount;
+											}
 
-														return SPSPPSInfo(spsNALUInfos, ppsNALUInfos);
-													}
-
-				//		UInt32					getTimeScale() const
-				//									{ return mTimeScale; }
-
-				//const	TNumericArray<UInt32>&	getKeyframeIndexes() const
-				//									{ return mKeyframeIndexes; }
+											return SPSPPSInfo(spsNALUInfos, ppsNALUInfos);
+										}
 
 			private:
-												// Private methods
-						UInt16					getByteCount(const UInt8* ptr) const
-													{ return (*ptr << 8) | *(ptr + 1); }
+									// Private methods
+						UInt16		getByteCount(const UInt8* ptr) const
+										{ return (*ptr << 8) | *(ptr + 1); }
 
 			// Properties
 			private:

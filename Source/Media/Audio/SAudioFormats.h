@@ -118,7 +118,7 @@ enum EAudioChannelMap : UInt16 {
 #define AUDIOCHANNELMAP_ISUNKNOWN(CHANNELMAP)		((CHANNELMAP & 0xFF00) == 0x0000)
 #define AUDIOCHANNELMAP_CHANNELCOUNT(CHANNELMAP)	(CHANNELMAP & 0x00FF)
 
-extern	const	CString	eChannelMapGetDescription(EAudioChannelMap channelMap);
+extern	const	CString	eChannelMapGetDescription(EAudioChannelMap audioChannelMap);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SAudioStorageFormat
@@ -126,15 +126,16 @@ extern	const	CString	eChannelMapGetDescription(EAudioChannelMap channelMap);
 struct SAudioStorageFormat {
 						// Lifecycle methods
 						SAudioStorageFormat(OSType codecID, UInt8 bits, Float32 sampleRate,
-								EAudioChannelMap channelMap) :
-							mCodecID(codecID), mBits(OV<UInt8>(bits)), mSampleRate(sampleRate), mChannelMap(channelMap)
+								EAudioChannelMap audioChannelMap) :
+							mCodecID(codecID), mBits(OV<UInt8>(bits)), mSampleRate(sampleRate),
+									mAudioChannelMap(audioChannelMap)
 							{}
-						SAudioStorageFormat(OSType codecID, Float32 sampleRate, EAudioChannelMap channelMap) :
-							mCodecID(codecID), mSampleRate(sampleRate), mChannelMap(channelMap)
+						SAudioStorageFormat(OSType codecID, Float32 sampleRate, EAudioChannelMap audioChannelMap) :
+							mCodecID(codecID), mSampleRate(sampleRate), mAudioChannelMap(audioChannelMap)
 							{}
 						SAudioStorageFormat(const SAudioStorageFormat& other) :
 							mCodecID(other.mCodecID), mBits(other.mBits), mSampleRate(other.mSampleRate),
-									mChannelMap(other.mChannelMap)
+									mAudioChannelMap(other.mAudioChannelMap)
 							{}
 
 						// Instance methods
@@ -144,10 +145,10 @@ struct SAudioStorageFormat {
 							{ return mBits; }
 	Float32				getSampleRate() const
 							{ return mSampleRate; }
-	EAudioChannelMap	getChannelMap() const
-							{ return mChannelMap; }
+	EAudioChannelMap	getAudioChannelMap() const
+							{ return mAudioChannelMap; }
 	UInt8				getChannels() const
-							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
+							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap); }
 	CString				getDescription() const
 							{
 								// Compose description
@@ -160,18 +161,18 @@ struct SAudioStorageFormat {
 
 								description += CString(mSampleRate, 0, 0) + CString(OSSTR("hz, "));
 								description +=
-										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap)) + CString(OSSTR(" (")) +
-												eChannelMapGetDescription(mChannelMap) + CString(OSSTR(")"));
+										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap)) + CString(OSSTR(" (")) +
+												eChannelMapGetDescription(mAudioChannelMap) + CString(OSSTR(")"));
 
 								return description;
 							}
 
 	// Properties
 	private:
-		OSType				mCodecID;		// All stored audio must be in some format
-		OV<UInt8>			mBits;			// Some stored audio does not have an inherent bits
-		Float32				mSampleRate;	// All stored audio has a sample rate
-		EAudioChannelMap	mChannelMap;	// All stored audio has a channel map
+		OSType				mCodecID;			// All stored audio must be in some format
+		OV<UInt8>			mBits;				// Some stored audio does not have an inherent bits
+		Float32				mSampleRate;		// All stored audio has a sample rate
+		EAudioChannelMap	mAudioChannelMap;	// All stored audio has a channel map
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -200,10 +201,10 @@ struct SAudioProcessingFormat {
 	};
 
 						// Lifecycle methods
-						SAudioProcessingFormat(UInt8 bits, Float32 sampleRate, EAudioChannelMap channelMap,
+						SAudioProcessingFormat(UInt8 bits, Float32 sampleRate, EAudioChannelMap audioChannelMap,
 								SampleType sampleType = kSampleTypeSignedInteger, Endian endian = kEndianNative,
 								Interleaved interleaved = kInterleaved) :
-							mBits(bits), mSampleRate(sampleRate), mChannelMap(channelMap), mSampleType(sampleType),
+							mBits(bits), mSampleRate(sampleRate), mAudioChannelMap(audioChannelMap), mSampleType(sampleType),
 									mEndian(endian), mInterleaved(interleaved)
 							{}
 
@@ -212,10 +213,10 @@ struct SAudioProcessingFormat {
 							{ return mBits; }
 	Float32				getSampleRate() const
 							{ return mSampleRate; }
-	EAudioChannelMap	getChannelMap() const
-							{ return mChannelMap; }
+	EAudioChannelMap	getAudioChannelMap() const
+							{ return mAudioChannelMap; }
 	UInt8				getChannels() const
-							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
+							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap); }
 	bool				getIsFloat() const
 							{ return mSampleType == kSampleTypeFloat; }
 	bool				getIsSignedInteger() const
@@ -233,7 +234,7 @@ struct SAudioProcessingFormat {
 	UInt32				getBytesPerSample() const
 							{ return mBits / 8; }
 	UInt32				getBytesPerFrame() const
-							{ return mBits / 8 * AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap); }
+							{ return mBits / 8 * AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap); }
 	CString				getDescription() const
 							{
 								// Compose description
@@ -245,8 +246,8 @@ struct SAudioProcessingFormat {
 														CString(OSSTR(" (Signed Integer), ")));
 								description += CString(mSampleRate, 0, 0) + CString(OSSTR("hz, "));
 								description +=
-										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mChannelMap)) + CString(OSSTR(" (")) +
-												eChannelMapGetDescription(mChannelMap) + CString(OSSTR("), "));
+										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap)) + CString(OSSTR(" (")) +
+												eChannelMapGetDescription(mAudioChannelMap) + CString(OSSTR("), "));
 								description +=
 										(mEndian == kEndianBig) ?
 												CString(OSSTR("Big Endian, ")) : CString(OSSTR("Little Endian, "));
@@ -261,7 +262,7 @@ struct SAudioProcessingFormat {
 	private:
 		UInt8				mBits;
 		Float32				mSampleRate;
-		EAudioChannelMap	mChannelMap;
+		EAudioChannelMap	mAudioChannelMap;
 		SampleType			mSampleType;
 		Endian				mEndian;
 		Interleaved			mInterleaved;
@@ -421,7 +422,7 @@ struct SAudioProcessingSetup {
 								SAudioProcessingSetup(const SAudioProcessingFormat& audioProcessingFormat) :
 									mBitsInfo(audioProcessingFormat.getBits()),
 											mSampleRateInfo(audioProcessingFormat.getSampleRate()),
-											mChannelMapInfo(audioProcessingFormat.getChannelMap()),
+											mChannelMapInfo(audioProcessingFormat.getAudioChannelMap()),
 											mSampleTypeOption(
 													audioProcessingFormat.getIsFloat() ?
 															kSampleTypeFloat : kSampleTypeSignedInteger),

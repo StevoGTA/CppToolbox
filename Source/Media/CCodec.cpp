@@ -5,10 +5,26 @@
 #include "CCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CCodec
-
-// MARK: Properties
+// MARK: Local data
 
 static	CString	sErrorDomain(OSSTR("CCodec"));
 
-const	SError	CCodec::mErrorUnsupported(sErrorDomain, 1, CString(OSSTR("Unsupported codec")));
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CCodec
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+SError CCodec::unsupportedError(const CString& codecDescriptor)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return SError(sErrorDomain, 1, CString(OSSTR("Unsupported codec of type ")) + codecDescriptor);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SError CCodec::unsupportedConfigurationError(const CString& codecDescriptor)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return SError(sErrorDomain, 2, CString(OSSTR("Unsupported codec configuration for type ")) + codecDescriptor);
+}

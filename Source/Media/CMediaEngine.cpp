@@ -25,9 +25,9 @@ struct SAudioProcessingFormats {
 	bool	doSampleRatesMatch() const
 				{ return mSourceAudioProcessingFormat.getSampleRate() ==
 						mDestinationAudioProcessingFormat.getSampleRate(); }
-	bool	doChannelMapsMatch() const
-				{ return mSourceAudioProcessingFormat.getChannelMap() ==
-						mDestinationAudioProcessingFormat.getChannelMap(); }
+	bool	doAudioChannelMapsMatch() const
+				{ return mSourceAudioProcessingFormat.getAudioChannelMap() ==
+						mDestinationAudioProcessingFormat.getAudioChannelMap(); }
 	bool	doSampleTypesMatch() const
 				{ return mSourceAudioProcessingFormat.getSampleType() ==
 						mDestinationAudioProcessingFormat.getSampleType(); }
@@ -144,25 +144,25 @@ SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSo
 	// Compose channel map
 	EAudioChannelMap	audioSourceChannelMap =
 								audioSourceFirstAudioProcessingSetup.getChannelMapInfo().getValue();
-	EAudioChannelMap	channelMap;
+	EAudioChannelMap	audioChannelMap;
 	if (audioDestinationFirstAudioProcessingSetup.getChannelMapInfo().getOption() ==
 			SAudioProcessingSetup::ChannelMapInfo::kUnchanged)
 		// Use first source setup
-		channelMap = audioSourceChannelMap;
+		audioChannelMap = audioSourceChannelMap;
 	else {
 		// Setup
-		EAudioChannelMap	destinationChannelMap =
+		EAudioChannelMap	destinationAudioChannelMap =
 									audioDestinationFirstAudioProcessingSetup.getChannelMapInfo().getValue();
-		if (AUDIOCHANNELMAP_ISUNKNOWN(audioSourceChannelMap) || AUDIOCHANNELMAP_ISUNKNOWN(destinationChannelMap) ||
-				(audioSourceChannelMap == destinationChannelMap) ||
-				CAudioChannelMapper::canPerform(audioSourceChannelMap, destinationChannelMap))
+		if (AUDIOCHANNELMAP_ISUNKNOWN(audioSourceChannelMap) || AUDIOCHANNELMAP_ISUNKNOWN(destinationAudioChannelMap) ||
+				(audioSourceChannelMap == destinationAudioChannelMap) ||
+				CAudioChannelMapper::canPerform(audioSourceChannelMap, destinationAudioChannelMap))
 			// Use source
-			channelMap = audioSourceChannelMap;
+			audioChannelMap = audioSourceChannelMap;
 		else {
 			// Both audio source and destination have a specific channel map, they are not the same, and we currently
 			//	have no way to map
 			AssertFailUnimplemented();
-			channelMap = audioSourceChannelMap;
+			audioChannelMap = audioSourceChannelMap;
 		}
 	}
 
@@ -197,7 +197,7 @@ SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSo
 														SAudioProcessingFormat::kInterleaved :
 														SAudioProcessingFormat::kNonInterleaved;
 
-	return SAudioProcessingFormat(bits, sampleRate, channelMap, sampleType, endian, interleaved);
+	return SAudioProcessingFormat(bits, sampleRate, audioChannelMap, sampleType, endian, interleaved);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -233,14 +233,15 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 										!audioProcessingFormats.doBitsMatch() ||
 												!audioProcessingFormats.doSampleRatesMatch() ||
 												!audioProcessingFormats.doInterleavedsMatch();
-		bool					requiresChannelMapper = !audioProcessingFormats.doChannelMapsMatch();
+		bool					requiresChannelMapper = !audioProcessingFormats.doAudioChannelMapsMatch();
 		OI<SError>				error;
 		if (requiresConverter && requiresChannelMapper) {
 			// Requires converter and channel mapper
 			SAudioProcessingFormat	intermediateAudioProcessingFormat(
 											audioProcessingFormats.mSourceAudioProcessingFormat.getBits(),
 											audioProcessingFormats.mSourceAudioProcessingFormat.getSampleRate(),
-											audioProcessingFormats.mDestinationAudioProcessingFormat.getChannelMap(),
+											audioProcessingFormats.mDestinationAudioProcessingFormat
+													.getAudioChannelMap(),
 											audioProcessingFormats.mSourceAudioProcessingFormat.getSampleType(),
 											audioProcessingFormats.mSourceAudioProcessingFormat.getEndian(),
 											audioProcessingFormats.mSourceAudioProcessingFormat.getInterleaved());
@@ -387,35 +388,36 @@ OI<SAudioProcessingFormat> sDetermineCommonAudioProcessingFormat(
 				continue;
 
 			// Check channel map
-			EAudioChannelMap	channelMap;
+			EAudioChannelMap	audioChannelMap;
 			if (!sourceChannelMapInfo.isSpecified() && !destinationChannelMapInfo.isSpecified())
 				// Neither source nor destination are specified, use processing channel map
-				channelMap = audioProcessingFormat.getChannelMap();
+				audioChannelMap = audioProcessingFormat.getAudioChannelMap();
 			else if (!sourceChannelMapInfo.isSpecified())
 				// Source is not specified, use destination channel map
-				channelMap = destinationChannelMapInfo.getValue();
+				audioChannelMap = destinationChannelMapInfo.getValue();
 			else if (!destinationChannelMapInfo.isSpecified())
 				// Destination is not specifiefd, use source channel map
-				channelMap = sourceChannelMapInfo.getValue();
+				audioChannelMap = sourceChannelMapInfo.getValue();
 			else {
 				// Setup
-				EAudioChannelMap	sourceChannelMap = sourceChannelMapInfo.getValue();
-				EAudioChannelMap	destinationChannelMap = destinationChannelMapInfo.getValue();
-				if (AUDIOCHANNELMAP_CHANNELCOUNT(sourceChannelMap) ==
-						AUDIOCHANNELMAP_CHANNELCOUNT(destinationChannelMap)) {
+				EAudioChannelMap	sourceAudioChannelMap = sourceChannelMapInfo.getValue();
+				EAudioChannelMap	destinationAudioChannelMap = destinationChannelMapInfo.getValue();
+				if (AUDIOCHANNELMAP_CHANNELCOUNT(sourceAudioChannelMap) ==
+						AUDIOCHANNELMAP_CHANNELCOUNT(destinationAudioChannelMap)) {
 					// Channel counts match
-					if (AUDIOCHANNELMAP_ISUNKNOWN(sourceChannelMap) && AUDIOCHANNELMAP_ISUNKNOWN(destinationChannelMap))
+					if (AUDIOCHANNELMAP_ISUNKNOWN(sourceAudioChannelMap) &&
+							AUDIOCHANNELMAP_ISUNKNOWN(destinationAudioChannelMap))
 						// No channel map
-						channelMap = sourceChannelMap;
-					else if (AUDIOCHANNELMAP_ISUNKNOWN(sourceChannelMap))
+						audioChannelMap = sourceAudioChannelMap;
+					else if (AUDIOCHANNELMAP_ISUNKNOWN(sourceAudioChannelMap))
 						// No source channel map
-						channelMap = destinationChannelMap;
-					else if (AUDIOCHANNELMAP_ISUNKNOWN(destinationChannelMap))
+						audioChannelMap = destinationAudioChannelMap;
+					else if (AUDIOCHANNELMAP_ISUNKNOWN(destinationAudioChannelMap))
 						// No destination channel map
-						channelMap = sourceChannelMap;
-					else if (sourceChannelMap == destinationChannelMap)
+						audioChannelMap = sourceAudioChannelMap;
+					else if (sourceAudioChannelMap == destinationAudioChannelMap)
 						// Channel maps match
-						channelMap = sourceChannelMap;
+						audioChannelMap = sourceAudioChannelMap;
 					else
 						// Channel maps do not match
 						continue;
@@ -482,7 +484,7 @@ OI<SAudioProcessingFormat> sDetermineCommonAudioProcessingFormat(
 				continue;
 
 			// We can connect directly
-			return OI<SAudioProcessingFormat>(new SAudioProcessingFormat(bits, sampleRate, channelMap,
+			return OI<SAudioProcessingFormat>(new SAudioProcessingFormat(bits, sampleRate, audioChannelMap,
 					isFloat ?
 							SAudioProcessingFormat::kSampleTypeFloat : SAudioProcessingFormat::kSampleTypeSignedInteger,
 					isBigEndian ? SAudioProcessingFormat::kEndianBig : SAudioProcessingFormat::kEndianLittle,
@@ -560,20 +562,20 @@ SAudioProcessingFormats sComposeAudioProcessingFormats(const SAudioProcessingSet
 	}
 
 	// Setup channel map
-	EAudioChannelMap	sourceChannelMap, destinationChannelMap;
+	EAudioChannelMap	sourceAudioChannelMap, destinationAudioChannelMap;
 	if (!sourceChannelMapInfo.isSpecified() && !destinationChannelMapInfo.isSpecified())
 		// Neither source nor destination is specified, use processing channel map
-		sourceChannelMap = destinationChannelMap = audioProcessingFormat.getChannelMap();
+		sourceAudioChannelMap = destinationAudioChannelMap = audioProcessingFormat.getAudioChannelMap();
 	else if (!sourceChannelMapInfo.isSpecified())
 		// Source is not specified, use destination channel map
-		sourceChannelMap = destinationChannelMap = destinationChannelMapInfo.getValue();
+		sourceAudioChannelMap = destinationAudioChannelMap = destinationChannelMapInfo.getValue();
 	else if (!destinationChannelMapInfo.isSpecified())
 		// Destination is not specified, use source channel map
-		sourceChannelMap = destinationChannelMap = sourceChannelMapInfo.getValue();
+		sourceAudioChannelMap = destinationAudioChannelMap = sourceChannelMapInfo.getValue();
 	else {
 		// Both are specified
-		sourceChannelMap = sourceChannelMapInfo.getValue();
-		destinationChannelMap = destinationChannelMapInfo.getValue();
+		sourceAudioChannelMap = sourceChannelMapInfo.getValue();
+		destinationAudioChannelMap = destinationChannelMapInfo.getValue();
 	}
 
 	// Setup sample type
@@ -633,13 +635,13 @@ SAudioProcessingFormats sComposeAudioProcessingFormats(const SAudioProcessingSet
 	}
 
 	return SAudioProcessingFormats(
-			SAudioProcessingFormat(sourceBits, sourceSampleRate, sourceChannelMap,
+			SAudioProcessingFormat(sourceBits, sourceSampleRate, sourceAudioChannelMap,
 					sourceIsFloat ?
 							SAudioProcessingFormat::kSampleTypeFloat : SAudioProcessingFormat::kSampleTypeSignedInteger,
 					sourceIsBigEndian ? SAudioProcessingFormat::kEndianBig : SAudioProcessingFormat::kEndianLittle,
 					sourceIsInterleaved ?
 							SAudioProcessingFormat::kInterleaved : SAudioProcessingFormat::kNonInterleaved),
-			SAudioProcessingFormat(destinationBits, destinationSampleRate, destinationChannelMap,
+			SAudioProcessingFormat(destinationBits, destinationSampleRate, destinationAudioChannelMap,
 					destinationIsFloat ?
 							SAudioProcessingFormat::kSampleTypeFloat : SAudioProcessingFormat::kSampleTypeSignedInteger,
 					destinationIsBigEndian ? SAudioProcessingFormat::kEndianBig : SAudioProcessingFormat::kEndianLittle,

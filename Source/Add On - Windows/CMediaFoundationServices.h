@@ -100,7 +100,7 @@ class CMediaFoundationServices {
 	public:
 										// Class methods
 		static	TCIResult<IMFMediaType>	createMediaType(const GUID& codecFormat, UInt8 bits, Float32 sampleRate,
-												EAudioChannelMap channelMap,
+												EAudioChannelMap audioChannelMap,
 												const OV<UInt32>& bytesPerFrame = OV<UInt32>(),
 												const OV<UInt32>& bytesPerSecond = OV<UInt32>(),
 												const OI<CData>& userData = OI<CData>(),

@@ -23,7 +23,7 @@ class CPCMAudioCodec {
 	public:
 											// Class methods
 		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
-													EAudioChannelMap channelMap);
+													EAudioChannelMap audioChannelMap);
 		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
 													UInt8 channels)
 												{ return composeAudioStorageFormat(isFloat, bits, sampleRate,

@@ -35,7 +35,7 @@ void sDBGMSG(PCWSTR format, ...);
 
 //----------------------------------------------------------------------------------------------------------------------
 TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& codecFormat, UInt8 bits,
-		Float32 sampleRate, EAudioChannelMap channelMap, const OV<UInt32>& bytesPerFrame,
+		Float32 sampleRate, EAudioChannelMap audioChannelMap, const OV<UInt32>& bytesPerFrame,
 		const OV<UInt32>& bytesPerSecond, const OI<CData>& userData, CreateAudioMediaTypeOptions options)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -61,7 +61,7 @@ TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& co
 	ReturnValueIfFailed(result, OSSTR("SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND"),
 			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
 
-	result = mediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, AUDIOCHANNELMAP_CHANNELCOUNT(channelMap));
+	result = mediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, AUDIOCHANNELMAP_CHANNELCOUNT(audioChannelMap));
 	ReturnValueIfFailed(result, OSSTR("SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS"),
 			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
 
@@ -101,7 +101,7 @@ TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const SAudioPr
 {
 	return createMediaType(audioProcessingFormat.getIsFloat() ? MFAudioFormat_Float : MFAudioFormat_PCM,
 			audioProcessingFormat.getBits(), audioProcessingFormat.getSampleRate(),
-			audioProcessingFormat.getChannelMap(), OV<UInt32>(audioProcessingFormat.getBytesPerFrame()),
+			audioProcessingFormat.getAudioChannelMap(), OV<UInt32>(audioProcessingFormat.getBytesPerFrame()),
 			OV<UInt32>(audioProcessingFormat.getBytesPerFrame() * (UInt32) audioProcessingFormat.getSampleRate()));
 }
 
