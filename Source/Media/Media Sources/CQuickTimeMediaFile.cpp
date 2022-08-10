@@ -302,7 +302,7 @@ struct SQTAudioSampleDescription {
 								switch (EndianU16_BtoN(mVersion)) {
 									case 0:		return sizeof(mVersion) + sizeof(_.mV0);
 									case 1:		return sizeof(mVersion) + sizeof(_.mV1);
-									case 2:		return EndianU32_BtoN(_.mV2.mSizeOfStructOnly);
+									case 2:		return sizeof(mVersion) + sizeof(_.mV2);
 									default:	return 0;
 								}
 							}
@@ -345,7 +345,7 @@ struct SQTAudioSampleDescription {
 				UInt16			mAlways16;				// 16
 				UInt16			mAlwaysFFFE;			// 0xFFFE
 				UInt16			mAlways0;				// 0
-				UInt16			mAlways00010000;		// 00010000
+				UInt32			mAlways00010000;		// 00010000
 				UInt32			mSizeOfStructOnly;		// Offset to Atoms
 				StoredFloat64	mSampleRate;
 				UInt32			mChannels;
@@ -677,7 +677,7 @@ struct CQuickTimeMediaFile::Internals {
 
 			TIResult<CData>				getAudioDecompressionData() const
 											{
-												//
+												// Setup
 												CData::ByteIndex			codecConfigurationDataByteOffset =
 																					sizeof(SQTstsdAtomPayload) +
 																							SQTstsdDescription::
@@ -876,6 +876,7 @@ SMediaSource::QueryTracksResult CQuickTimeMediaFile::queryTracks(
 //										co64AtomPayloadData.hasValue() ?
 //												(Sco64AtomPayload*) co64AtomPayloadData->getBytePtr() : nil;
 
+			// Internals
 			Internals	internals(atomReader, *stsdAtom, *stblContainerAtom, stsdDescription, sttsAtomPayload,
 								stscAtomPayload, stszAtomPayload, stcoAtomPayload);
 
