@@ -71,17 +71,6 @@ TIResult<CData> CAtomReader::readAtomPayload(const OR<Atom>& atom) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CAtomReader::readAtomPayload(const Atom& atom, SInt64 offset) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Retrieve child Atom
-	TIResult<Atom>	childAtom = readAtom(atom, offset);
-	ReturnValueIfResultError(childAtom, TIResult<CData>(childAtom.getError()));
-
-	return readAtomPayload(*childAtom);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom() const
 //----------------------------------------------------------------------------------------------------------------------
 {

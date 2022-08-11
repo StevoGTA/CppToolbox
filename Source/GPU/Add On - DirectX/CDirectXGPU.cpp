@@ -834,8 +834,8 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 	XMStoreFloat4x4(&mInternals->mViewMatrix2D, DirectX::XMMatrixIdentity());
 	mInternals->mProjectionMatrix2D =
 			XMFLOAT4X4(
-					2.0F / size2D.mWidth, 0.0, 0.0, -1.0,
-					0.0, -2.0F / size2D.mHeight, 0.0, 1.0,
+					2.0f / size2D.mWidth, 0.0, 0.0, -1.0,
+					0.0, -2.0f / size2D.mHeight, 0.0, 1.0,
 					0.0, 0.0, 0.5, 0.0,
 					0.0, 0.0, 0.0, 1.0);
 

@@ -549,9 +549,17 @@ struct CMPEG4MediaFile::Internals {
 											mSTCOAtomPayload(stcoAtomPayload), mCO64AtomPayload(co64AtomPayload)
 									{}
 
-			TIResult<CData>		getDecompressionData(SInt64 sampleDescriptionByteCount) const
-									{ return mAtomReader.readAtomPayload(mSTSDAtom,
-											sizeof(SMP4stsdAtomPayload) + sampleDescriptionByteCount); }
+			TIResult<CData>		getDecompressionData(SInt64 offset) const
+									{
+										// Read atom
+										TIResult<CAtomReader::Atom>	atom =
+																			mAtomReader.readAtom(mSTSDAtom,
+																					sizeof(SMP4stsdAtomPayload) +
+																							offset);
+										ReturnValueIfResultError(atom, TIResult<CData>(atom.getError()));
+
+										return mAtomReader.readAtomPayload(*atom);
+									}
 
 			UInt32				getPacketGroupOffsetCount() const
 									{
@@ -954,11 +962,10 @@ const void* CMPEG4MediaFile::getSampleDescription(const Internals& internals) co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CMPEG4MediaFile::getDecompressionData(const Internals& internals, SInt64 sampleDescriptionByteCount)
-		const
+TIResult<CData> CMPEG4MediaFile::getDecompressionData(const Internals& internals, SInt64 offset) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return internals.getDecompressionData(sampleDescriptionByteCount);
+	return internals.getDecompressionData(offset);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

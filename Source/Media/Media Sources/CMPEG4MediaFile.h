@@ -56,5 +56,5 @@ class CMPEG4MediaFile {
 				const	void*										getSampleDescription(const Internals& internals)
 																			const;
 						TIResult<CData>								getDecompressionData(const Internals& internals,
-																			SInt64 sampleDescriptionByteCount) const;
+																			SInt64 offset) const;
 };

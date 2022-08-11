@@ -280,8 +280,8 @@ struct SQTAudioSampleDescription {
 							{
 								// Check version
 								switch (EndianU16_BtoN(mVersion)) {
-									case 0:		return ((Float32) EndianU32_BtoN(_.mV0.mSampleRate)) / 65536.0F;
-									case 1:		return ((Float32) EndianU32_BtoN(_.mV1.mSampleRate)) / 65536.0F;
+									case 0:		return ((Float32) EndianU32_BtoN(_.mV0.mSampleRate)) / 65536.0f;
+									case 1:		return ((Float32) EndianU32_BtoN(_.mV1.mSampleRate)) / 65536.0f;
 									case 2:		return (Float32) EndianF64_BtoN(_.mV2.mSampleRate);
 									default:	return 0;
 								}

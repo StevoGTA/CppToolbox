@@ -70,7 +70,7 @@ CMediaTrack::Info CAudioTrack::composeInfo(UniversalTimeInterval duration,
 		const SAudioStorageFormat& audioStorageFormat, UInt32 bytesPerFrame)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return Info(duration, (UInt32) (audioStorageFormat.getSampleRate() * (Float32) bytesPerFrame * 8.0F));
+	return Info(duration, (UInt32) (audioStorageFormat.getSampleRate() * (Float32) bytesPerFrame * 8.0f));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ CMediaTrack::Info CAudioTrack::composeInfo(UniversalTimeInterval duration,
 {
 	return Info(duration,
 			(UInt32)
-					(audioStorageFormat.getSampleRate() / (Float32) framesPerPacket * (Float32) bytesPerPacket * 8.0F));
+					(audioStorageFormat.getSampleRate() / (Float32) framesPerPacket * (Float32) bytesPerPacket * 8.0f));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

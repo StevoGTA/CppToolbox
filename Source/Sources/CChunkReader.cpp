@@ -86,14 +86,15 @@ TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CChunkReader::readPayload(const ChunkInfo& chunkInfo) const
+TIResult<CData> CChunkReader::readPayload(const ChunkInfo& chunkInfo, const OV<UInt64>& byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to begining of chunk
 	OI<SError>	error = setPos(kPositionFromBeginning, chunkInfo.getThisChunkPos());
 	ReturnValueIfError(error, TIResult<CData>(*error));
 
-	return CByteReader::readData(chunkInfo.getByteCount());
+	return CByteReader::readData(
+			byteCount.hasValue() ? std::min<UInt64>(*byteCount, chunkInfo.getByteCount()) : chunkInfo.getByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

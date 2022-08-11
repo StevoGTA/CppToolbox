@@ -159,7 +159,7 @@ struct SAudioStorageFormat {
 								else
 									description += CString(OSSTR("n/a, "));
 
-								description += CString(mSampleRate, 0, 0) + CString(OSSTR("hz, "));
+								description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
 								description +=
 										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap)) + CString(OSSTR(" (")) +
 												eChannelMapGetDescription(mAudioChannelMap) + CString(OSSTR(")"));
@@ -244,7 +244,7 @@ struct SAudioProcessingFormat {
 												((mSampleType == kSampleTypeFloat) ?
 														CString(OSSTR(" (Float), ")) :
 														CString(OSSTR(" (Signed Integer), ")));
-								description += CString(mSampleRate, 0, 0) + CString(OSSTR("hz, "));
+								description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
 								description +=
 										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap)) + CString(OSSTR(" (")) +
 												eChannelMapGetDescription(mAudioChannelMap) + CString(OSSTR("), "));

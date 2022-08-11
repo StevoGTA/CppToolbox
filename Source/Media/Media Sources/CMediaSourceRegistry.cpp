@@ -69,6 +69,7 @@ TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
+	CString			extensionUse = extension.lowercased();
 	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
 	TSet<CString>	remainingMediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
 
@@ -78,7 +79,7 @@ TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
 
 		// Check extensions
-		if (mediaSource.getExtensions().contains(extension)) {
+		if (mediaSource.getExtensions().contains(extensionUse)) {
 			// Found by extension
 			SMediaSource::ImportResult	importResult =
 												mediaSource.import(randomAccessDataSource, appleResourceManager,

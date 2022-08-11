@@ -65,7 +65,7 @@ class CChunkReader : public CByteReader {
 
 							// Instance methods
 		TIResult<ChunkInfo>	readChunkInfo() const;
-		TIResult<CData>		readPayload(const ChunkInfo& chunkInfo) const;
+		TIResult<CData>		readPayload(const ChunkInfo& chunkInfo, const OV<UInt64>& byteCount = OV<UInt64>()) const;
 		OI<SError>			seekToNext(const ChunkInfo& chunkInfo) const;
 
 	// Properties
