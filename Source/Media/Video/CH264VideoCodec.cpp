@@ -16,9 +16,199 @@
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
+// MARK: Notes
 
-static	CData	sAnnexBMarker(CString(OSSTR("AAAAAQ==")));
+/*
+	Helpful references:
+		https://stackoverflow.com/questions/29525000/how-to-use-videotoolbox-to-decompress-h-264-video-stream
+		https://stackoverflow.com/questions/24884827/possible-locations-for-sequence-picture-parameter-sets-for-h-264-stream/24890903#24890903
+
+		https://chromium.googlesource.com/chromium/src/media/+/refs/heads/main/video/h264_poc.cc
+*/
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local data
+
+// Network Abstraction Layer Unit Info
+struct SH264NALUInfo {
+
+	// Type
+	enum Type {
+		kTypeUnspecified1,											// 0, Non-VCL
+		kTypeCodedSliceNonIDRPicture,								// 1, VCL
+		kTypeCodedSliceDataPartitionA,								// 2, VCL
+		kTypeCodedSliceDataPartitionB,								// 3, VCL
+		kTypeCodedSliceDataPartitionC,								// 4, VCL
+		kTypeCodedSliceIDRPicture,									// 5, VCL
+		kTypeSupplementalEnhancementInformation,					// 6, (SEI) Non-VCL
+		kTypeSequenceParameterSet,									// 7, (SPS) Non-VCL
+		kTypePictureParameterSet,									// 8, (PPS) Non-VCL
+		kTypeAccessUnitDelimiter,									// 9, Non-VCL
+		kTypeEndOfSequence,											// 10, Non-VCL
+		kTypeEndOfStream,											// 11, Non-VCL
+		kTypeFillerData,											// 12, Non-VCL
+		kTypeSequenceParameterSetExtension,							// 13, Non-VCL
+		kTypePrefixNALU,											// 14, Non-VCL
+		kTypeSubsetSequenceParameterSet,							// 15, Non-VCL
+		kTypeDepthParameterSet,										// 16, Non-VCL
+		kTypeReserved1,												// 17, Non-VCL
+		kTypeReserved2,												// 18, Non-VCL
+		kTypeCodedSliceAuxiliaryCodedPictureWithoutPartitioning,	// 19, Non-VCL
+		kTypeCodedSliceExtension,									// 20, Non-VCL
+		kTypeCodedSliceExtensionDepthViewingComponents,				// 21, Non-VCL
+		kTypeReserved3,												// 22, Non-VCL
+		kTypeReserved4,												// 23, Non-VCL
+		kTypeUnspecified2,											// 24, Non-VCL
+		kTypeUnspecified3,											// 25, Non-VCL
+		kTypeUnspecified4,											// 26, Non-VCL
+		kTypeUnspecified5,											// 27, Non-VCL
+		kTypeUnspecified6,											// 28, Non-VCL
+		kTypeUnspecified7,											// 29, Non-VCL
+		kTypeUnspecified8,											// 30, Non-VCL
+		kTypeUnspecified9,											// 31, Non-VCL
+	};
+
+											// Lifecycle methods
+											SH264NALUInfo(const CData& data, UInt32 offset,
+													CData::ByteCount byteCount) :
+												mData(data), mOffset(offset), mByteCount(byteCount)
+												{}
+											SH264NALUInfo(const SH264NALUInfo& other) :
+												mData(other.mData), mOffset(other.mOffset), mByteCount(other.mByteCount)
+												{}
+
+											// Instance methods
+					Type					getType() const
+												{ return (Type) (*((const UInt8*) getBytePtr()) & 0x1F); }
+			const	UInt8*					getBytePtr() const
+												{ return (UInt8*) mData.getBytePtr() + mOffset; }
+					CData::ByteCount		getByteCount() const
+												{ return mByteCount; }
+
+											// Class methods
+	static			TArray<SH264NALUInfo>	getNALUInfos(const CData& data)
+												{
+													// Setup
+													TNArray<SH264NALUInfo>		naluInfos;
+
+													const	UInt8*				bytePtr =
+																						(const UInt8*)
+																								data.getBytePtr();
+															UInt32				offset = 0;
+															CData::ByteCount	bytesRemaining = data.getByteCount();
+													while (bytesRemaining > 0) {
+														// Get NALU size
+														CData::ByteCount	byteCount =
+																					EndianU32_BtoN(
+																							*((const UInt32*) bytePtr));
+														bytePtr += sizeof(UInt32);
+														offset += sizeof(UInt32);
+														bytesRemaining -= sizeof(UInt32);
+
+														// Add NALU
+														naluInfos += SH264NALUInfo(data, offset, byteCount);
+
+														// Update
+														bytePtr += byteCount;
+														offset += (UInt32) byteCount;
+														bytesRemaining -= byteCount;
+													}
+
+													return naluInfos;
+												}
+	static			CData					composeAnnexB(const TArray<SH264NALUInfo>& spsNALUInfos,
+													const TArray<SH264NALUInfo>& ppsNALUInfos,
+													const TArray<SH264NALUInfo>& naluInfos)
+												{
+													// Setup
+													CData	data;
+
+													// Add SPS
+													for (TIteratorD<SH264NALUInfo> iterator =
+																	spsNALUInfos.getIterator();
+															iterator.hasValue(); iterator.advance())
+														data +=
+																mAnnexBMarker +
+																		CData(iterator->getBytePtr(),
+																				iterator->getByteCount(), false);
+
+													// Add PPS
+													for (TIteratorD<SH264NALUInfo> iterator =
+																	ppsNALUInfos.getIterator();
+															iterator.hasValue(); iterator.advance())
+														data +=
+																mAnnexBMarker +
+																		CData(iterator->getBytePtr(),
+																				iterator->getByteCount(), false);
+
+													// Add NALUs
+													for (TIteratorD<SH264NALUInfo> iterator = naluInfos.getIterator();
+															iterator.hasValue(); iterator.advance())
+														data +=
+																mAnnexBMarker +
+																		CData(iterator->getBytePtr(),
+																				iterator->getByteCount(), false);
+
+													return data;
+												}
+
+	// Properties
+	private:
+				CData				mData;
+				UInt32				mOffset;
+				CData::ByteCount	mByteCount;
+
+		static	CData				mAnnexBMarker;
+
+};
+CData	SH264NALUInfo::mAnnexBMarker(CString(OSSTR("AAAAAQ==")));
+
+// SH264SequenceParameterSetPayload
+struct SH264SequenceParameterSetPayload {
+	// Lifecycle methods
+	SH264SequenceParameterSetPayload(const CData& data)
+		{
+			// Setup
+			CBitReader	bitReader(I<CRandomAccessDataSource>(new CDataDataSource(data)), true);
+
+			// Decode
+			mForbiddenZero = *bitReader.readUInt8(1);
+			mNALRef = *bitReader.readUInt8(2);
+			mNALUnitType = (SH264NALUInfo::Type) *bitReader.readUInt8(5);
+			mProfile = *bitReader.readUInt8();
+			mConstraintSet0Flag = *bitReader.readUInt8(1);
+			mConstraintSet1Flag = *bitReader.readUInt8(1);
+			mConstraintSet2Flag = *bitReader.readUInt8(1);
+			mConstraintSet3Flag = *bitReader.readUInt8(1);
+			mConstraintSet4Flag = *bitReader.readUInt8(1);
+			mConstraintSet5Flag = *bitReader.readUInt8(1);
+			mReserved2Bits = *bitReader.readUInt8(2);
+			mLevel = *bitReader.readUInt8();
+			mSPSID = (UInt8) *bitReader.readUEColumbusCode();
+			mFrameNumberBitCount = (UInt8) *bitReader.readUEColumbusCode() + 4;
+			mPicOrderCountType = (UInt8) *bitReader.readUEColumbusCode();
+			mPicOrderCountLSBBitCount = (UInt8) *bitReader.readUEColumbusCode() + 4;
+		}
+
+	// Properties
+	UInt8				mForbiddenZero;
+	UInt8				mNALRef;
+	SH264NALUInfo::Type	mNALUnitType;
+	UInt8				mProfile;
+	UInt8				mConstraintSet0Flag : 1;
+	UInt8				mConstraintSet1Flag : 1;
+	UInt8				mConstraintSet2Flag : 1;
+	UInt8				mConstraintSet3Flag : 1;
+	UInt8				mConstraintSet4Flag : 1;
+	UInt8				mConstraintSet5Flag : 1;
+	UInt8				mReserved2Bits : 2;
+	UInt8				mLevel;
+	UInt8				mSPSID;
+	UInt8				mFrameNumberBitCount;
+	UInt8				mPicOrderCountType;
+	UInt8				mPicOrderCountLSBBitCount;
+};
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -29,6 +219,96 @@ class CH264DecodeVideoCodec : public CCoreMediaDecodeVideoCodec {
 #elif defined(TARGET_OS_WINDOWS)
 class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 #endif
+	// SPSPPSInfo
+	public:
+		struct SPSPPSInfo {
+											// Lifecycle methods
+											SPSPPSInfo(const TArray<SH264NALUInfo>& spsNALUInfos,
+													const TArray<SH264NALUInfo>& ppsNALUInfos) :
+												mSPSNALUInfos(spsNALUInfos), mPPSNALUInfos(ppsNALUInfos)
+												{}
+											SPSPPSInfo(const SPSPPSInfo& other) :
+												mSPSNALUInfos(other.mSPSNALUInfos),
+														mPPSNALUInfos(other.mPPSNALUInfos)
+												{}
+
+											// Instance methods
+			const	TArray<SH264NALUInfo>&	getSPSNALUInfos() const
+												{ return mSPSNALUInfos; }
+			const	TArray<SH264NALUInfo>&	getPPSNALUInfos() const
+												{ return mPPSNALUInfos; }
+
+			// Properties
+			private:
+				TArray<SH264NALUInfo>	mSPSNALUInfos;
+				TArray<SH264NALUInfo>	mPPSNALUInfos;
+		};
+
+	// Configuration
+	private:
+#if defined(TARGET_OS_WINDOWS)
+	#pragma warning(disable:4200)
+#endif
+		struct Configuration {
+			// Properties
+			UInt8	mVersion;
+			UInt8	mProfile;
+			UInt8	mProfileCompatibility;
+			UInt8	mLevel;
+			UInt8	mLengthCoded;
+			UInt8	mSPSPPSInfo[];
+		};
+#if defined(TARGET_OS_WINDOWS)
+	#pragma warning(default:4200)
+#endif
+
+	// FrameTiming
+	public:
+		class FrameTiming {
+			// Times
+			public:
+				struct Times {
+					// Methods
+					Times(UInt64 decodeTime, UInt64 presentationTime) :
+						mDecodeTime(decodeTime), mPresentationTime(presentationTime)
+						{}
+
+					// Properties
+					UInt64	mDecodeTime;
+					UInt64	mPresentationTime;
+				};
+
+			// Methods
+			public:
+								// Lifecycle methods
+								FrameTiming(const SH264SequenceParameterSetPayload& spsPayload) :
+									mCurrentFrameNumberBitCount(spsPayload.mFrameNumberBitCount),
+											mCurrentPicOrderCountLSBBitCount(spsPayload.mPicOrderCountLSBBitCount),
+											mPicOrderCountMSBChangeThreshold(
+													1 << (mCurrentPicOrderCountLSBBitCount - 1)),
+											mPicOrderCountMSB(0), mPreviousPicOrderCountLSB(0), mLastIDRFrameTime(0),
+													mCurrentFrameTime(0), mNextFrameTime(0)
+									{}
+
+								// Instance methods
+				void			seek(UInt64 frameTime)
+									{ mNextFrameTime = frameTime; }
+				TIResult<Times>	updateFrom(const CMediaPacketSource::DataInfo& dataInfo);
+
+			// Properties
+			private:
+				UInt8	mCurrentFrameNumberBitCount;
+				UInt8	mCurrentPicOrderCountLSBBitCount;
+				UInt8	mPicOrderCountMSBChangeThreshold;
+
+				UInt64	mPicOrderCountMSB;
+				UInt64	mPreviousPicOrderCountLSB;
+				UInt64	mLastIDRFrameTime;
+				UInt64	mCurrentFrameTime;
+				UInt64	mNextFrameTime;
+		};
+
+	// Methods
 	public:
 															CH264DecodeVideoCodec(
 																	const I<CMediaPacketSource>& mediaPacketSource,
@@ -37,6 +317,11 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 
 						void								seek(UInt64 frameTime)
 																{ mFrameTiming->seek(frameTime); }
+
+						SPSPPSInfo							getSPSPPSInfo() const;
+						UInt16								getByteCount(const UInt8* ptr) const
+																{ return (*ptr << 8) | *(ptr + 1); }
+						UInt32								getNALUHeaderLengthSize() const;
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
 						TVResult<CMFormatDescriptionRef>	composeFormatDescription();
@@ -56,11 +341,13 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 																			mediaFoundationDecodeVideoCodec);
 #endif
 
-		CH264VideoCodec::DecodeInfo					mDecodeInfo;
-		I<CMediaPacketSource>						mMediaPacketSource;
+		I<CMediaPacketSource>	mMediaPacketSource;
+		CData					mConfigurationData;
+		UInt32					mTimeScale;
+		TNumericArray<UInt32>	mKeyframeIndexes;
 
-		OI<CH264VideoCodec::DecodeInfo::SPSPPSInfo>	mCurrentSPSPPSInfo;
-		OI<CH264VideoCodec::FrameTiming>			mFrameTiming;
+		OI<SPSPPSInfo>			mCurrentSPSPPSInfo;
+		OI<FrameTiming>			mFrameTiming;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,10 +359,63 @@ CH264DecodeVideoCodec::CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaP
 		CMediaFoundationDecodeVideoCodec(CH264VideoCodec::mID, mediaPacketSource, timeScale, keyframeIndexes,
 				readInputSample),
 #endif
-		mDecodeInfo(mediaPacketSource, configurationData, timeScale, keyframeIndexes),
-		mMediaPacketSource(mediaPacketSource)
+		mMediaPacketSource(mediaPacketSource), mConfigurationData(configurationData), mTimeScale(timeScale),
+				mKeyframeIndexes(keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
 {
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CH264DecodeVideoCodec::SPSPPSInfo CH264DecodeVideoCodec::getSPSPPSInfo() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	Configuration&			configuration = *((Configuration*) mConfigurationData.getBytePtr());
+	const	UInt8*					bytePtr = &configuration.mSPSPPSInfo[0];
+			UInt32					offset = sizeof(Configuration);
+
+			TNArray<SH264NALUInfo>	spsNALUInfos;
+			TNArray<SH264NALUInfo>	ppsNALUInfos;
+
+	// Compose SPS NALUInfos
+	UInt32	count = *bytePtr & 0x1F;
+	bytePtr++;
+	offset++;
+	for (UInt32 i = 0; i < count; i++) {
+		// Add SPS NALUInfo
+		UInt16	byteCount = getByteCount(bytePtr);
+		spsNALUInfos += SH264NALUInfo(mConfigurationData, offset + 2, byteCount);
+
+		// Update
+		bytePtr += 2 + byteCount;
+		offset += 2 + byteCount;
+	}
+
+	// Compose PPS NALUInfos
+	count = *bytePtr;
+	bytePtr++;
+	offset++;
+	for (UInt32 i = 0; i < count; i++) {
+		// Add PPS NALUInfo
+		UInt16	byteCount = getByteCount(bytePtr);
+		ppsNALUInfos += SH264NALUInfo(mConfigurationData, offset + 2, byteCount);
+
+		// Update
+		bytePtr += 2 + byteCount;
+		offset += 2 + byteCount;
+	}
+
+	return SPSPPSInfo(spsNALUInfos, ppsNALUInfos);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CH264DecodeVideoCodec::getNALUHeaderLengthSize() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	Configuration&	configuration = *((Configuration*) mConfigurationData.getBytePtr());
+
+	return (configuration.mLengthCoded & ~0xFC) + 1;
 }
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
@@ -84,10 +424,10 @@ TVResult<CMFormatDescriptionRef> CH264DecodeVideoCodec::composeFormatDescription
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-			CH264VideoCodec::DecodeInfo::SPSPPSInfo	spsppsInfo = mDecodeInfo.getSPSPPSInfo();
-	const	TArray<CH264VideoCodec::NALUInfo>		spsNALUInfos = spsppsInfo.getSPSNALUInfos();
-	const	TArray<CH264VideoCodec::NALUInfo>		ppsNALUInfos = spsppsInfo.getPPSNALUInfos();
-			OSStatus								status;
+			SPSPPSInfo				spsppsInfo = getSPSPPSInfo();
+	const	TArray<SH264NALUInfo>	spsNALUInfos = spsppsInfo.getSPSNALUInfos();
+	const	TArray<SH264NALUInfo>	ppsNALUInfos = spsppsInfo.getPPSNALUInfos();
+			OSStatus				status;
 
 	// Setup format description
 			CArray::ItemCount	spsCount = spsNALUInfos.getCount();
@@ -108,16 +448,16 @@ TVResult<CMFormatDescriptionRef> CH264DecodeVideoCodec::composeFormatDescription
 	CMFormatDescriptionRef	formatDescriptionRef;
 	status =
 			::CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, spsCount + ppsCount,
-					parameterSetPointers, parameterSetSizes, mDecodeInfo.getNALUHeaderLengthSize(),
+					parameterSetPointers, parameterSetSizes, getNALUHeaderLengthSize(),
 					&formatDescriptionRef);
 	ReturnValueIfFailed(status, OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"),
 			TVResult<CMFormatDescriptionRef>(SErrorFromOSStatus(status)));
 
 	// Finish setup
-	CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
-															CData(parameterSetPointers[0],
-																	(CData::ByteCount) parameterSetSizes[0], false));
-	mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
+	SH264SequenceParameterSetPayload	spsPayload(
+												CData(parameterSetPointers[0], (CData::ByteCount) parameterSetSizes[0],
+														false));
+	mFrameTiming = OI<FrameTiming>(new FrameTiming(spsPayload));
 
 	return TVResult<CMFormatDescriptionRef>(formatDescriptionRef);
 }
@@ -128,7 +468,7 @@ TVResult<CMSampleTimingInfo> CH264DecodeVideoCodec::composeSampleTimingInfo(
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update frame timing
-	TIResult<CH264VideoCodec::FrameTiming::Times>	times = mFrameTiming->updateFrom(dataInfo);
+	TIResult<FrameTiming::Times>	times = mFrameTiming->updateFrom(dataInfo);
 	ReturnValueIfResultError(times, TVResult<CMSampleTimingInfo>(times.getError()));
 
 	// Compose sample timing info
@@ -150,14 +490,13 @@ OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProce
 	ReturnErrorIfError(error);
 
 	// Finish setup
-	mCurrentSPSPPSInfo = OI<CH264VideoCodec::DecodeInfo::SPSPPSInfo>(mDecodeInfo.getSPSPPSInfo());
+	mCurrentSPSPPSInfo = OI<SPSPPSInfo>(mDecodeInfo.getSPSPPSInfo());
 
-	const	CH264VideoCodec::NALUInfo&						spsNALUInfo =
-																	mCurrentSPSPPSInfo->getSPSNALUInfos().getFirst();
-			CH264VideoCodec::SequenceParameterSetPayload	spsPayload(
-																	CData(spsNALUInfo.getBytePtr(),
-																			spsNALUInfo.getByteCount(), false));
-	mFrameTiming = OI<CH264VideoCodec::FrameTiming>(new CH264VideoCodec::FrameTiming(spsPayload));
+	const	SH264NALUInfo&						spsNALUInfo = mCurrentSPSPPSInfo->getSPSNALUInfos().getFirst();
+			SH264SequenceParameterSetPayload	spsPayload(
+														CData(spsNALUInfo.getBytePtr(), spsNALUInfo.getByteCount(),
+																false));
+	mFrameTiming = OI<FrameTiming>(new FrameTiming(spsPayload));
 
 	return OI<SError>();
 }
@@ -177,15 +516,15 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
 
 	// Update frame timing
-	TIResult<CH264VideoCodec::FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(*dataInfo);
+	TIResult<FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(*dataInfo);
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(times.getError()));
 
 	// Create input sample
-	TArray<CH264VideoCodec::NALUInfo>	naluInfos = CH264VideoCodec::NALUInfo::getNALUInfos(dataInfo->getData());
-	CData								annexBData =
-												CH264VideoCodec::NALUInfo::composeAnnexB(
-														videoCodec.mCurrentSPSPPSInfo->getSPSNALUInfos(),
-														videoCodec.mCurrentSPSPPSInfo->getPPSNALUInfos(), naluInfos);
+	TArray<SH264NALUInfo>	naluInfos = SH264NALUInfo::getNALUInfos(dataInfo->getData());
+	CData					annexBData =
+									SH264NALUInfo::composeAnnexB(
+											videoCodec.mCurrentSPSPPSInfo->getSPSNALUInfos(),
+											videoCodec.mCurrentSPSPPSInfo->getPPSNALUInfos(), naluInfos);
 	TCIResult<IMFSample>				sample = CMediaFoundationServices::createSample(annexBData);
 	ReturnValueIfResultError(sample, sample);
 
@@ -199,84 +538,10 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 }
 #endif
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CH264VideoCodec::NALUInfo
-
-// MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-TArray<CH264VideoCodec::NALUInfo> CH264VideoCodec::NALUInfo::getNALUInfos(const CData& data)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	TNArray<NALUInfo>			naluInfos;
-
-	const	UInt8*				bytePtr = (const UInt8*) data.getBytePtr();
-			UInt32				offset = 0;
-			CData::ByteCount	bytesRemaining = data.getByteCount();
-	while (bytesRemaining > 0) {
-		// Get NALU size
-		CData::ByteCount	byteCount = EndianU32_BtoN(*((const UInt32*) bytePtr));
-		bytePtr += sizeof(UInt32);
-		offset += sizeof(UInt32);
-		bytesRemaining -= sizeof(UInt32);
-
-		// Add NALU
-		naluInfos += NALUInfo(data, offset, byteCount);
-
-		// Update
-		bytePtr += byteCount;
-		offset += (UInt32) byteCount;
-		bytesRemaining -= byteCount;
-	}
-
-	return naluInfos;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CData CH264VideoCodec::NALUInfo::composeAnnexB(const TArray<NALUInfo>& spsNALUInfos,
-		const TArray<NALUInfo>& ppsNALUInfos, const TArray<NALUInfo>& naluInfos)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	CData	data;
-
-	// Add SPS
-	for (TIteratorD<NALUInfo> iterator = spsNALUInfos.getIterator(); iterator.hasValue(); iterator.advance())
-		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getByteCount(), false);
-
-	// Add PPS
-	for (TIteratorD<NALUInfo> iterator = ppsNALUInfos.getIterator(); iterator.hasValue(); iterator.advance())
-		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getByteCount(), false);
-
-	// Add NALUs
-	for (TIteratorD<NALUInfo> iterator = naluInfos.getIterator(); iterator.hasValue(); iterator.advance())
-		data += sAnnexBMarker + CData(iterator->getBytePtr(), iterator->getByteCount(), false);
-
-	return data;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CH264VideoCodec::FrameTiming
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CH264VideoCodec::FrameTiming::FrameTiming(const CH264VideoCodec::SequenceParameterSetPayload& spsPayload) :
-		mCurrentFrameNumberBitCount(spsPayload.mFrameNumberBitCount),
-				mCurrentPicOrderCountLSBBitCount(spsPayload.mPicOrderCountLSBBitCount),
-				mPicOrderCountMSBChangeThreshold(1 << (mCurrentPicOrderCountLSBBitCount - 1)), mPicOrderCountMSB(0),
-				mPreviousPicOrderCountLSB(0), mLastIDRFrameTime(0), mCurrentFrameTime(0), mNextFrameTime(0)
-//----------------------------------------------------------------------------------------------------------------------
-{
-}
-
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::updateFrom(
+TIResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::FrameTiming::updateFrom(
 		const CMediaPacketSource::DataInfo& dataInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -288,16 +553,16 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 	// Iterate NALUs
 	while (true) {
 		// Get info
-		OV<UInt32>		size = *bitReader.readUInt32();
-		UInt64			pos = bitReader.getPos();
+		OV<UInt32>			size = *bitReader.readUInt32();
+		UInt64				pos = bitReader.getPos();
 
-		OV<UInt8>		forbidden_zero_bit = *bitReader.readUInt8(1);	(void) forbidden_zero_bit;
-		OV<UInt8>		nal_ref_idc = *bitReader.readUInt8(2);	(void) nal_ref_idc;
-		OV<UInt8>		nal_unit_type = *bitReader.readUInt8(5);
-		NALUInfo::Type	naluType = (NALUInfo::Type) *nal_unit_type;
+		OV<UInt8>			forbidden_zero_bit = *bitReader.readUInt8(1);	(void) forbidden_zero_bit;
+		OV<UInt8>			nal_ref_idc = *bitReader.readUInt8(2);	(void) nal_ref_idc;
+		OV<UInt8>			nal_unit_type = *bitReader.readUInt8(5);
+		SH264NALUInfo::Type	naluType = (SH264NALUInfo::Type) *nal_unit_type;
 
 		// Check type
-		if (naluType == NALUInfo::kTypeCodedSliceNonIDRPicture) {
+		if (naluType == SH264NALUInfo::kTypeCodedSliceNonIDRPicture) {
 			// Coded Slice Non-IDR Picture
 			OV<UInt32>	first_mb_in_slice = *bitReader.readUEColumbusCode();	(void) first_mb_in_slice;
 			OV<UInt32>	slice_type = *bitReader.readUEColumbusCode();
@@ -308,7 +573,7 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 			sliceType = (UInt8) *slice_type;
 			picOrderCntLSB = *pic_order_cnt_lsb;
 			break;
-		} else if (naluType == NALUInfo::kTypeCodedSliceIDRPicture) {
+		} else if (naluType == SH264NALUInfo::kTypeCodedSliceIDRPicture) {
 			// Coded Slice IDR Picture
 			OV<UInt32>	first_mb_in_slice = *bitReader.readUEColumbusCode();	(void) first_mb_in_slice;
 			OV<UInt32>	slice_type = *bitReader.readUEColumbusCode();
@@ -320,7 +585,7 @@ TIResult<CH264VideoCodec::FrameTiming::Times> CH264VideoCodec::FrameTiming::upda
 			sliceType = (UInt8) *slice_type;
 			picOrderCntLSB = *pic_order_cnt_lsb;
 			break;
-		} else if (naluType == NALUInfo::kTypeSupplementalEnhancementInformation) {
+		} else if (naluType == SH264NALUInfo::kTypeSupplementalEnhancementInformation) {
 			// SEI
 		} else
 			// Unhandled
