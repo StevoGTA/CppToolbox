@@ -490,7 +490,7 @@ OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProce
 	ReturnErrorIfError(error);
 
 	// Finish setup
-	mCurrentSPSPPSInfo = OI<SPSPPSInfo>(mDecodeInfo.getSPSPPSInfo());
+	mCurrentSPSPPSInfo = OI<SPSPPSInfo>(getSPSPPSInfo());
 
 	const	SH264NALUInfo&						spsNALUInfo = mCurrentSPSPPSInfo->getSPSNALUInfos().getFirst();
 			SH264SequenceParameterSetPayload	spsPayload(
