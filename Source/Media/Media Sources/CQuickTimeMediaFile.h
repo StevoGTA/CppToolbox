@@ -21,7 +21,7 @@ class CQuickTimeMediaFile {
 		virtual												~CQuickTimeMediaFile() {}
 
 															// Instance methods
-				SMediaSource::QueryTracksResult				queryTracks(
+				SMediaSource::ImportResult					import(
 																	const I<CRandomAccessDataSource>&
 																			randomAccessDataSource,
 																	const OI<CAppleResourceManager>&

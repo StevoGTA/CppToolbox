@@ -21,7 +21,7 @@ class CMPEG4MediaFile {
 		virtual														~CMPEG4MediaFile() {}
 
 																	// Instance methods
-						SMediaSource::QueryTracksResult				queryTracks(
+						SMediaSource::ImportResult					import(
 																			const I<CRandomAccessDataSource>&
 																					randomAccessDataSource,
 																			const OI<CAppleResourceManager>&

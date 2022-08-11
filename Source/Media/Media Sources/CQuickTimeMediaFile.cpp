@@ -637,9 +637,6 @@ struct SQTstcoAtomPayload {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	SMediaSource::QueryTracksResult		sQueryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
-													const OI<CAppleResourceManager>& appleResourceManager,
-													SMediaSource::Options options);
 static	CMediaTrackInfos::AudioTrackInfo	sComposePCMAudioTrackInfo(const CQuickTimeMediaFile& quickTimeMediaFile,
 													const I<CRandomAccessDataSource>& randomAccessDataSource,
 													SMediaSource::Options options, bool isFloat, UInt8 bits,
@@ -737,9 +734,8 @@ struct CQuickTimeMediaFile::Internals {
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult CQuickTimeMediaFile::queryTracks(
-		const I<CRandomAccessDataSource>& randomAccessDataSource, const OI<CAppleResourceManager>& appleResourceManager,
-		SMediaSource::Options options)
+SMediaSource::ImportResult CQuickTimeMediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
+		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -772,10 +768,10 @@ SMediaSource::QueryTracksResult CQuickTimeMediaFile::queryTracks(
 
 	if (!moovAtom.hasValue() || !mdatAtom.hasValue())
 		// Didn't find core atoms
-		ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
+		ReturnValueIfError(error, SMediaSource::ImportResult(*error));
 
 	TIResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*moovAtom);
-	ReturnValueIfResultError(moovContainerAtom, SMediaSource::QueryTracksResult(moovContainerAtom.getError()));
+	ReturnValueIfResultError(moovContainerAtom, SMediaSource::ImportResult(moovContainerAtom.getError()));
 
 	// Iterate moov atom
 	CMediaTrackInfos	mediaTrackInfos;
@@ -892,7 +888,7 @@ SMediaSource::QueryTracksResult CQuickTimeMediaFile::queryTracks(
 					mediaTrackInfos.add(*audioTrackInfo);
 				else
 					// Error
-					return SMediaSource::QueryTracksResult(audioTrackInfo.getError());
+					return SMediaSource::ImportResult(audioTrackInfo.getError());
 			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
 				// Video track
 				TVResult<CMediaTrackInfos::VideoTrackInfo>	videoTrackInfo =
@@ -904,12 +900,12 @@ SMediaSource::QueryTracksResult CQuickTimeMediaFile::queryTracks(
 					mediaTrackInfos.add(*videoTrackInfo);
 				else
 					// Error
-					return SMediaSource::QueryTracksResult(videoTrackInfo.getError());
+					return SMediaSource::ImportResult(videoTrackInfo.getError());
 			}
 		}
 	}
 
-	return SMediaSource::QueryTracksResult(mediaTrackInfos);
+	return SMediaSource::ImportResult(mediaTrackInfos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1246,14 +1242,11 @@ TIResult<CData> CQuickTimeMediaFile::getAudioDecompressionData(const Internals& 
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult sQueryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
+static SMediaSource::ImportResult sImport(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create
-	I<CQuickTimeMediaFile>	quickTimeMediaFile = CQuickTimeMediaFile::create();
-
-	return quickTimeMediaFile->queryTracks(randomAccessDataSource, appleResourceManager, options);
+	return CQuickTimeMediaFile::create()->import(randomAccessDataSource, appleResourceManager, options);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1298,4 +1291,4 @@ static	CString	sExtensions[] = { CString(OSSTR("mov")) };
 
 REGISTER_MEDIA_SOURCE(quicktime,
 		SMediaSource(MAKE_OSTYPE('M', 'o', 'o', 'V'), CString(OSSTR("QuickTime")), TSArray<CString>(sExtensions, 1),
-				sQueryTracks));
+				sImport));

@@ -1,19 +1,19 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CWAVEMediaSourceImportTrackerUseDefault.cpp			©2022 Stevo Brock		All rights reserved.
+//	CWAVEMediaFileUseDefault.h			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CWAVEMediaSource.h"
+#include "WAVEMediaFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CWAVEMediaSourceImportTracker
+// MARK: CWAVEMediaFile
 
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CWAVEMediaSourceImportTracker> CWAVEMediaSourceImportTracker::instantiate()
+I<CWAVEMediaFile> CWAVEMediaFile::create()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CWAVEMediaSourceImportTracker>(new CDefaultWAVEMediaSourceImportTracker());
+	return I<CWAVEMediaFile>(new CWAVEMediaFile());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -24,4 +24,4 @@ static	CString	sExtensions[] = { CString(OSSTR("wav")) };
 
 REGISTER_MEDIA_SOURCE(wave,
 		SMediaSource(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")), TSArray<CString>(sExtensions, 1),
-				CWAVEMediaSource::queryTracks));
+				CWAVEMediaFile::import));

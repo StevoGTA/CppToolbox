@@ -529,13 +529,6 @@ struct SMP4co64AtomPayload {
 #pragma pack(pop)
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	SMediaSource::QueryTracksResult		sQueryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
-													const OI<CAppleResourceManager>& appleResourceManager,
-													SMediaSource::Options options);
-
-//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMPEG4MediaFile
 
@@ -587,7 +580,7 @@ struct CMPEG4MediaFile::Internals {
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult CMPEG4MediaFile::queryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
+SMediaSource::ImportResult CMPEG4MediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -597,23 +590,23 @@ SMediaSource::QueryTracksResult CMPEG4MediaFile::queryTracks(const I<CRandomAcce
 
 	// Read root atom
 	TIResult<CAtomReader::Atom>	atom = atomReader.readAtom();
-	ReturnValueIfResultError(atom, SMediaSource::QueryTracksResult());
+	ReturnValueIfResultError(atom, SMediaSource::ImportResult());
 	if (atom->mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
-		return SMediaSource::QueryTracksResult();
+		return SMediaSource::ImportResult();
 
 	// Find moov atom
 	while (atom->mType != MAKE_OSTYPE('m', 'o', 'o', 'v')) {
 		// Go to next atom
 		error = atomReader.seekToNextAtom(*atom);
-		ReturnValueIfError(error, SMediaSource::QueryTracksResult(*error));
+		ReturnValueIfError(error, SMediaSource::ImportResult(*error));
 
 		// Get atom
 		atom = atomReader.readAtom();
-		ReturnValueIfResultError(atom, SMediaSource::QueryTracksResult(atom.getError()));
+		ReturnValueIfResultError(atom, SMediaSource::ImportResult(atom.getError()));
 	}
 
 	TIResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*atom);
-	ReturnValueIfResultError(moovContainerAtom, SMediaSource::QueryTracksResult(moovContainerAtom.getError()));
+	ReturnValueIfResultError(moovContainerAtom, SMediaSource::ImportResult(moovContainerAtom.getError()));
 
 	// Iterate moov atom
 	CMediaTrackInfos	mediaTrackInfos;
@@ -734,7 +727,7 @@ SMediaSource::QueryTracksResult CMPEG4MediaFile::queryTracks(const I<CRandomAcce
 					mediaTrackInfos.add(*audioTrackInfo);
 				else
 					// Error
-					return SMediaSource::QueryTracksResult(audioTrackInfo.getError());
+					return SMediaSource::ImportResult(audioTrackInfo.getError());
 			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
 				// Video track
 				TVResult<CMediaTrackInfos::VideoTrackInfo>	videoTrackInfo =
@@ -746,12 +739,12 @@ SMediaSource::QueryTracksResult CMPEG4MediaFile::queryTracks(const I<CRandomAcce
 					mediaTrackInfos.add(*videoTrackInfo);
 				else
 					// Error
-					return SMediaSource::QueryTracksResult(videoTrackInfo.getError());
+					return SMediaSource::ImportResult(videoTrackInfo.getError());
 			}
 		}
 	}
 
-	return SMediaSource::QueryTracksResult(mediaTrackInfos);
+	return SMediaSource::ImportResult(mediaTrackInfos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -973,14 +966,11 @@ TIResult<CData> CMPEG4MediaFile::getDecompressionData(const Internals& internals
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::QueryTracksResult sQueryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
+static SMediaSource::ImportResult sImport(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create
-	I<CMPEG4MediaFile>	mpeg4MediaFile = CMPEG4MediaFile::create();
-
-	return mpeg4MediaFile->queryTracks(randomAccessDataSource, appleResourceManager, options);
+	return CMPEG4MediaFile::create()->import(randomAccessDataSource, appleResourceManager, options);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -991,4 +981,4 @@ static	CString	sExtensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), C
 
 REGISTER_MEDIA_SOURCE(mp4,
 		SMediaSource(MAKE_OSTYPE('m', 'p', '4', '*'), CString(OSSTR("MPEG 4")),
-				TSArray<CString>(sExtensions, 3), sQueryTracks));
+				TSArray<CString>(sExtensions, 3), sImport));

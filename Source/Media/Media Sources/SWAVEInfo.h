@@ -84,7 +84,7 @@ struct SWAVEFORMATEX {
 	UInt16	getFormatTag() const { return EndianU16_LtoN(mFormatTag); }
 	UInt16	getChannels() const { return EndianU16_LtoN(mChannels); }
 	UInt32	getSamplesPerSec() const { return EndianU32_LtoN(mSamplesPerSec); }
-	UInt32	getAvgBytesPerSec() const { return EndianU32_LtoN(mAvgBytesPerSec); }
+	UInt32	getAverageBytesPerSec() const { return EndianU32_LtoN(mAverageBytesPerSecond); }
 	UInt16	getBlockAlign() const { return EndianU16_LtoN(mBlockAlign); }
 	UInt16	getBitsPerSample() const { return EndianU16_LtoN(mBitsPerSample); }
 	UInt16	getAdditionalInfoByteCount() const { return EndianU16_LtoN(mAdditionalInfoByteCount); }
@@ -94,7 +94,7 @@ struct SWAVEFORMATEX {
 		UInt16	mFormatTag;
 		UInt16	mChannels;
 		UInt32	mSamplesPerSec;
-		UInt32	mAvgBytesPerSec;
+		UInt32	mAverageBytesPerSecond;
 		UInt16	mBlockAlign;
 		UInt16	mBitsPerSample;
 		UInt16	mAdditionalInfoByteCount;

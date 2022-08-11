@@ -18,8 +18,8 @@ struct SMediaSource {
 		kCreateDecoders	= 1 << 0,
 	};
 
-	// QueryTracksResult
-	struct QueryTracksResult {
+	// ImportResult
+	struct ImportResult {
 		// Result
 		enum Result {
 			kSuccess,
@@ -28,14 +28,14 @@ struct SMediaSource {
 		};
 
 									// Lifecycle methods
-									QueryTracksResult(const CMediaTrackInfos& mediaTrackInfos) :
+									ImportResult(const CMediaTrackInfos& mediaTrackInfos) :
 										mResult(kSuccess), mMediaTrackInfos(mediaTrackInfos)
 										{}
-									QueryTracksResult(const SError& error) :
+									ImportResult(const SError& error) :
 										mResult(kSourceMatchButUnableToLoad), mError(error)
 										{}
-									QueryTracksResult() : mResult(kSourceMismatch) {}
-									QueryTracksResult(const QueryTracksResult& other) :
+									ImportResult() : mResult(kSourceMismatch) {}
+									ImportResult(const ImportResult& other) :
 										mResult(other.mResult), mMediaTrackInfos(other.mMediaTrackInfos),
 												mError(other.mError)
 										{}
@@ -56,17 +56,17 @@ struct SMediaSource {
 	};
 
 	// Procs
-	typedef	QueryTracksResult	(*QueryTracksProc)(const I<CRandomAccessDataSource>& randomAccessDataSource,
+	typedef	ImportResult		(*ImportProc)(const I<CRandomAccessDataSource>& randomAccessDataSource,
 										const OI<CAppleResourceManager>& appleResourceManager, Options options);
 
 								// Lifecycle methods
 								SMediaSource(OSType id, const CString& name, const TArray<CString>& extensions,
-										QueryTracksProc queryTracksProc) :
-									mID(id), mName(name), mExtensions(extensions), mQueryTracksProc(queryTracksProc)
+										ImportProc importProc) :
+									mID(id), mName(name), mExtensions(extensions), mImportProc(importProc)
 									{}
 								SMediaSource(const SMediaSource& other) :
 									mID(other.mID), mName(other.mName), mExtensions(other.mExtensions),
-											mQueryTracksProc(other.mQueryTracksProc)
+											mImportProc(other.mImportProc)
 									{}
 
 								// Instance methods
@@ -76,16 +76,16 @@ struct SMediaSource {
 									{ return mName; }
 	const	TArray<CString>&	getExtensions() const
 									{ return mExtensions; }
-			QueryTracksResult	queryTracks(const I<CRandomAccessDataSource>& randomAccessDataSource,
+			ImportResult		import(const I<CRandomAccessDataSource>& randomAccessDataSource,
 										const OI<CAppleResourceManager>& appleResourceManager, Options options) const
-									{ return mQueryTracksProc(randomAccessDataSource, appleResourceManager, options); }
+									{ return mImportProc(randomAccessDataSource, appleResourceManager, options); }
 
 	// Properties
 	private:
 		OSType				mID;
 		CString				mName;
 		TNArray<CString>	mExtensions;
-		QueryTracksProc		mQueryTracksProc;
+		ImportProc			mImportProc;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,12 +94,12 @@ struct SMediaSource {
 class CMediaSourceRegistry {
 	// IdentifyInfo
 	public:
-		struct IdentifyInfo {
+		struct ImportResult {
 										// Lifecycle methods
-										IdentifyInfo(OSType id, const CMediaTrackInfos& mediaTrackInfos) :
+										ImportResult(OSType id, const CMediaTrackInfos& mediaTrackInfos) :
 											mID(id), mMediaTrackInfos(mediaTrackInfos)
 											{}
-										IdentifyInfo(const IdentifyInfo& other) :
+										ImportResult(const ImportResult& other) :
 											mID(other.mID), mMediaTrackInfos(other.mMediaTrackInfos)
 											{}
 
@@ -120,7 +120,7 @@ class CMediaSourceRegistry {
 										// Instance methods
 				void					registerMediaSource(const SMediaSource& mediaSource);
 		const	SMediaSource&			getMediaSource(OSType id) const;
-				TIResult<IdentifyInfo>	identify(const I<CRandomAccessDataSource>& randomAccessDataSource,
+				TIResult<ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const CString& extension,
 												const OI<CAppleResourceManager>& appleResourceManager,
 												SMediaSource::Options options = SMediaSource::kNone) const;

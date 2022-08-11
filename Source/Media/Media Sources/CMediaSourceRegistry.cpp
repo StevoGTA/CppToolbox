@@ -10,7 +10,7 @@
 // MARK: Local data
 
 static	CString	sCMediaSourceRegistryErrorDomain(OSSTR("CMediaSourceRegistry"));
-static	SError	sIdentifyFailed(sCMediaSourceRegistryErrorDomain, 1, CString(OSSTR("Failed to identify")));
+static	SError	sImportFailed(sCMediaSourceRegistryErrorDomain, 1, CString(OSSTR("Failed to import")));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMediaSourceRegistryInternals
@@ -63,7 +63,7 @@ const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
+TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, const CString& extension,
 		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options) const
 //----------------------------------------------------------------------------------------------------------------------
@@ -80,20 +80,20 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		// Check extensions
 		if (mediaSource.getExtensions().contains(extension)) {
 			// Found by extension
-			SMediaSource::QueryTracksResult	queryTracksResult =
-													mediaSource.queryTracks(randomAccessDataSource,
-															appleResourceManager, options);
-			switch (queryTracksResult.getResult()) {
-				case SMediaSource::QueryTracksResult::kSuccess:
+			SMediaSource::ImportResult	importResult =
+												mediaSource.import(randomAccessDataSource, appleResourceManager,
+														options);
+			switch (importResult.getResult()) {
+				case SMediaSource::ImportResult::kSuccess:
 					// Success
-					return TIResult<IdentifyInfo>(
-							IdentifyInfo(mediaSource.getID(), queryTracksResult.getMediaTrackInfos()));
+					return TIResult<ImportResult>(
+							ImportResult(mediaSource.getID(), importResult.getMediaTrackInfos()));
 
-				case SMediaSource::QueryTracksResult::kSourceMatchButUnableToLoad:
+				case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
 					// Matched source, but source unable to load
-					return TIResult<IdentifyInfo>(queryTracksResult.getError());
+					return TIResult<ImportResult>(importResult.getError());
 
-				case SMediaSource::QueryTracksResult::kSourceMismatch:
+				case SMediaSource::ImportResult::kSourceMismatch:
 					// Not a matched source
 					remainingMediaSourceTypes.remove(*iterator);
 					break;
@@ -108,24 +108,23 @@ TIResult<CMediaSourceRegistry::IdentifyInfo> CMediaSourceRegistry::identify(
 		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
 
 		// Query tracks
-		SMediaSource::QueryTracksResult	queryTracksResult =
-												mediaSource.queryTracks(randomAccessDataSource, appleResourceManager,
-														options);
-		switch (queryTracksResult.getResult()) {
-			case SMediaSource::QueryTracksResult::kSuccess:
+		SMediaSource::ImportResult	importResult =
+											mediaSource.import(randomAccessDataSource, appleResourceManager, options);
+		switch (importResult.getResult()) {
+			case SMediaSource::ImportResult::kSuccess:
 				// Success
-				return TIResult<IdentifyInfo>(
-						IdentifyInfo(mediaSource.getID(), queryTracksResult.getMediaTrackInfos()));
+				return TIResult<ImportResult>(
+						ImportResult(mediaSource.getID(), importResult.getMediaTrackInfos()));
 
-			case SMediaSource::QueryTracksResult::kSourceMatchButUnableToLoad:
+			case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
 				// Matched source, but source unable to load
-				return TIResult<IdentifyInfo>(queryTracksResult.getError());
+				return TIResult<ImportResult>(importResult.getError());
 
-			case SMediaSource::QueryTracksResult::kSourceMismatch:
+			case SMediaSource::ImportResult::kSourceMismatch:
 				// Not a matched source
 				break;
 		}
 	}
 
-	return TIResult<IdentifyInfo>(sIdentifyFailed);
+	return TIResult<ImportResult>(sImportFailed);
 }
