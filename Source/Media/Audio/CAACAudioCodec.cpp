@@ -210,7 +210,8 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 													CCoreAudioDecodeAudioCodec(info.getCodecID(), mediaPacketSource),
 															mInfo(info)
 #elif defined(TARGET_OS_WINDOWS)
-													CMediaFoundationDecodeAudioCodec(codecID, mediaPacketSource),
+													CMediaFoundationDecodeAudioCodec(info.getCodecID(),
+																	mediaPacketSource),
 															mInfo(info)
 #endif
 													{}

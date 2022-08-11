@@ -57,6 +57,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 #endif
 
 		CH264VideoCodec::DecodeInfo					mDecodeInfo;
+		I<CMediaPacketSource>						mMediaPacketSource;
 
 		OI<CH264VideoCodec::DecodeInfo::SPSPPSInfo>	mCurrentSPSPPSInfo;
 		OI<CH264VideoCodec::FrameTiming>			mFrameTiming;
@@ -71,7 +72,8 @@ CH264DecodeVideoCodec::CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaP
 		CMediaFoundationDecodeVideoCodec(CH264VideoCodec::mID, mediaPacketSource, timeScale, keyframeIndexes,
 				readInputSample),
 #endif
-		mDecodeInfo(mediaPacketSource, configurationData, timeScale, keyframeIndexes)
+		mDecodeInfo(mediaPacketSource, configurationData, timeScale, keyframeIndexes),
+		mMediaPacketSource(mediaPacketSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 }
@@ -171,7 +173,7 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 	CH264DecodeVideoCodec&	videoCodec = (CH264DecodeVideoCodec&) mediaFoundationDecodeVideoCodec;
 
 	// Get next packet
-	TIResult<CMediaPacketSource::DataInfo>	dataInfo = videoCodec.mDecodeInfo.getMediaPacketSource()->readNext();
+	TIResult<CMediaPacketSource::DataInfo>	dataInfo = videoCodec.mMediaPacketSource->readNext();
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
 
 	// Update frame timing

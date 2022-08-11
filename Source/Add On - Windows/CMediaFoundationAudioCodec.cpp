@@ -109,7 +109,7 @@ OI<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat&
 	TCIResult<IMFMediaType>	inputMediaType =
 									CMediaFoundationServices::createMediaType(guid, 32,
 											audioProcessingFormat.getSampleRate(),
-											audioProcessingFormat.getChannelMap(), OV<UInt32>(), OV<UInt32>(),
+											audioProcessingFormat.getAudioChannelMap(), OV<UInt32>(), OV<UInt32>(),
 											getUserData());
 	ReturnErrorIfResultError(inputMediaType);
 
