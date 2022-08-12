@@ -268,6 +268,25 @@ class CAudioPlayerImplementation :
 										readBufferInfo = mQueue->requestRead();
 									}
 
+									// Check if have frames
+									if (mOnFillBufferPreviousFrameCount > 0) {
+										// Iterate channels
+										for (UInt32 channelIndex = 0; channelIndex < mMixFormat->nChannels;
+												channelIndex++) {
+											// Setup
+											Float32		gain =
+																(channelIndex < mChannelGains.getCount()) ?
+																		mChannelGains[channelIndex] : mGain;
+											Float32*	samplePtr = (Float32*) data + channelIndex;
+
+											// Iterate samples
+											for (UInt32 sampleIndex = 0; sampleIndex < mOnFillBufferPreviousFrameCount;
+													sampleIndex++, samplePtr += mMixFormat->nChannels)
+												// Apply gain
+												*samplePtr *= gain;
+										}
+									}
+
 									// Commit frames
 									result = mAudioRenderClient->ReleaseBuffer(mOnFillBufferPreviousFrameCount, 0);
 									processHRESULT(result, OSSTR("ReleaseBuffer()"));
@@ -407,18 +426,6 @@ class CAudioPlayerImplementation :
 
 								return S_OK;
 							}
-//				void	setGain(Float32 gain)
-//							{
-//								// Check state
-//								if (mState == kError)
-//									return;
-//
-//								// Set gain
-//								HRESULT	result =
-//												mSimpleAudioVolume->SetMasterVolume(std::min<Float32>(gain, 1.0),
-//														nullptr);
-//								processHRESULT(result, OSSTR("SetMasterVolume()"));
-//							}
 				void	shutdown()
 							{
 								// Cleanup
@@ -488,6 +495,8 @@ class CAudioPlayerImplementation :
 		UniversalTimeInterval							mSourceWindowStartTimeInterval;
 		UniversalTimeInterval							mLastSeekTimeInterval;
 		UniversalTimeInterval							mCurrentPlaybackTimeInterval;
+		Float32											mGain;
+		TNumericArray<Float32>							mChannelGains;
 
 		bool											mOnFillBufferShouldSendFrames;
 		bool											mOnFillBufferIsSendingFrames;
@@ -751,7 +760,15 @@ const CString& CAudioPlayer::getIdentifier() const
 void CAudioPlayer::setGain(Float32 gain)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mImplementation->setGain(gain);
+	mInternals->mImplementation->mGain = gain;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioPlayer::setGain(const TNumericArray<Float32>& channelGains)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mImplementation->mChannelGains = channelGains;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -400,10 +400,10 @@ class CAudioPlayerInternals {
 											for (UInt32 channelIndex = 0; channelIndex < ioData->mNumberBuffers;
 													channelIndex++) {
 												// Setup
-												Float32	gain =
-																(channelIndex < internals.mChannelGains.getCount()) ?
-																		internals.mChannelGains[channelIndex] :
-																		internals.mGain;
+												Float32		gain =
+																	(channelIndex < internals.mChannelGains.getCount()) ?
+																			internals.mChannelGains[channelIndex] :
+																			internals.mGain;
 												Float32*	samplePtr = (Float32*) ioData->mBuffers[channelIndex].mData;
 
 												// Apply
