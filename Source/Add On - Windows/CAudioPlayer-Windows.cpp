@@ -407,16 +407,18 @@ class CAudioPlayerImplementation :
 
 								return S_OK;
 							}
-				void	setGain(Float32 gain)
-							{
-								// Check state
-								if (mState == kError)
-									return;
-
-								// Set gain
-								HRESULT	result = mSimpleAudioVolume->SetMasterVolume(std::min<Float32>(gain, 1.0), nullptr);
-								processHRESULT(result, OSSTR("SetMasterVolume()"));
-							}
+//				void	setGain(Float32 gain)
+//							{
+//								// Check state
+//								if (mState == kError)
+//									return;
+//
+//								// Set gain
+//								HRESULT	result =
+//												mSimpleAudioVolume->SetMasterVolume(std::min<Float32>(gain, 1.0),
+//														nullptr);
+//								processHRESULT(result, OSSTR("SetMasterVolume()"));
+//							}
 				void	shutdown()
 							{
 								// Cleanup

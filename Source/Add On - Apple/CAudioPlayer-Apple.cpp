@@ -351,8 +351,8 @@ class CAudioPlayerInternals {
 
 												// Fill the rest with silence
 												for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
-													// Copy
-													::bzero((UInt8*) ioData->mBuffers[i].mData + byteOffset,
+													// Clear
+													::memset((UInt8*) ioData->mBuffers[i].mData + byteOffset, 0,
 															ioData->mBuffers[i].mDataByteSize - byteOffset);
 
 												// Check situation
@@ -393,12 +393,31 @@ class CAudioPlayerInternals {
 												// Update
 												internals.mRenderProcIsSendingFrames = true;
 										}
+
+										// Check if have frames
+										if (internals.mRenderProcPreviousFrameCount > 0) {
+											// Iterate channels
+											for (UInt32 channelIndex = 0; channelIndex < ioData->mNumberBuffers;
+													channelIndex++) {
+												// Setup
+												Float32	gain =
+																(channelIndex < internals.mChannelGains.getCount()) ?
+																		internals.mChannelGains[channelIndex] :
+																		internals.mGain;
+												Float32*	samplePtr = (Float32*) ioData->mBuffers[channelIndex].mData;
+
+												// Apply
+												for (UInt32 sampleIndex = 0;
+														sampleIndex < internals.mRenderProcPreviousFrameCount;
+														sampleIndex++, *(samplePtr++) *= gain) ;
+											}
+										}
 									} else {
 										// Not sending frames
 										*inActionFlags = kAudioUnitRenderAction_OutputIsSilence;
 										for (UInt32 i = 0; i < ioData->mNumberBuffers; i++)
 											// Clear
-											::bzero(ioData->mBuffers[i].mData, ioData->mBuffers[i].mDataByteSize);
+											::memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
 
 										internals.mRenderProcIsSendingFrames = false;
 									}
@@ -423,6 +442,7 @@ class CAudioPlayerInternals {
 		UniversalTimeInterval			mLastSeekTimeInterval;
 		UniversalTimeInterval			mCurrentPlaybackTimeInterval;
 		Float32							mGain;
+		TNumericArray<Float32>			mChannelGains;
 
 		bool							mRenderProcShouldSendFrames;
 		bool							mRenderProcIsSendingFrames;
@@ -543,7 +563,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 		// Add player
 		mInternals->mAudioEngineIndex =
 				CAudioEngine::mShared.addAudioPlayer(CAudioPlayerInternals::renderProc, mInternals);
-		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), mInternals->mGain);
+		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), 1.0);
 	}
 	if (!mInternals->mAudioEngineIndex.hasValue())
 		// No available slots
@@ -674,11 +694,14 @@ void CAudioPlayer::setGain(Float32 gain)
 {
 	// Store
 	mInternals->mGain = gain;
+}
 
-	// Check if attached
-	if (mInternals->mAudioEngineIndex.hasValue())
-		// Set gain
-		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), gain);
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioPlayer::setGain(const TNumericArray<Float32>& channelGains)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mChannelGains = channelGains;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -690,7 +713,7 @@ void CAudioPlayer::play()
 		// Add player
 		mInternals->mAudioEngineIndex =
 				CAudioEngine::mShared.addAudioPlayer(CAudioPlayerInternals::renderProc, mInternals);
-		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), mInternals->mGain);
+		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), 1.0);
 	}
 	if (!mInternals->mAudioEngineIndex.hasValue())
 		// No available slots
@@ -736,7 +759,7 @@ void CAudioPlayer::startSeek()
 		// Add player
 		mInternals->mAudioEngineIndex =
 				CAudioEngine::mShared.addAudioPlayer(CAudioPlayerInternals::renderProc, mInternals);
-		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), mInternals->mGain);
+		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), 1.0);
 	}
 	if (!mInternals->mAudioEngineIndex.hasValue())
 		// No available slots
