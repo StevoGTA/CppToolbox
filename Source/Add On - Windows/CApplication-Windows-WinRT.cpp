@@ -5,6 +5,7 @@
 #include "CApplication.h"
 
 #include <winrt/Windows.ApplicationModel.h>
+#include <winrt/Windows.Storage.h>
 
 using namespace winrt::Windows::ApplicationModel;
 
@@ -60,4 +61,19 @@ const CString& CApplication::getProductNameAndVersion()
 		sProductNameStringAndVersion = new CString(getProductName() + CString(" ") + getVersion().getString());
 
 	return *sProductNameStringAndVersion;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CFolder& CApplication::getFolder()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static	CFolder*	sFolder = nil;
+
+	// Check if have already set up
+	if (sFolder == nil)
+		// Setup
+		sFolder = new CFolder(CFilesystemPath(CString(Package::Current().InstalledLocation().Path().data())));
+
+	return *sFolder;
 }

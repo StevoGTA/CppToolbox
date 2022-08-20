@@ -6,6 +6,10 @@
 
 #include "SVersionInfo.h"
 
+#if defined(TARGET_OS_WINDOWS)
+	#include "CFolder.h"
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CApplication
 
@@ -18,5 +22,9 @@ class CApplication {
 		static	const	CString&		getProductNameAndVersion();
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		static	const	CString&		getCopyright();
+#endif
+
+#if defined(TARGET_OS_WINDOWS)
+		static	const	CFolder&		getFolder();
 #endif
 };

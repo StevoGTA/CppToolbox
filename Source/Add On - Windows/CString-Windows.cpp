@@ -14,6 +14,12 @@
 #include <Windows.h>
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: Local data
+
+static	CDictionary	sLocalizationInfo;
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
  static	UINT	sGetCodePageForCStringEncoding(CString::Encoding encoding);
@@ -349,6 +355,16 @@ CString::CString(const CData& data, Encoding encoding) : CHashable()
 							(int) data.getByteCount(), &mString[0], (int) data.getByteCount());
 		AssertFailIf(count == 0);
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CString& localizationGroup, const CString& localizationKey)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Retrieve from info
+	mString =
+			sLocalizationInfo.getString(localizationGroup + CString::mPeriod + localizationKey, localizationKey)
+					.mString;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -733,6 +749,21 @@ bool CString::isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet)
 {
 	AssertFailUnimplemented();
 return false;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CString::setupLocalization(const CData& stringsFileData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate lines
+	TArray<CString>	lines = CString(stringsFileData).components(CString::mNewline);
+	for (TIteratorD<CString> iterator = lines.getIterator(); iterator.hasValue(); iterator.advance()) {
+		// Process line
+		TArray<CString>	components = iterator->components(CString::mDoubleQuotes);
+		if (components.getCount() == 5)
+			// Have a localization line
+			sLocalizationInfo.set(components[1], components[3]);
+	}
 }
 
 // MARK: Internal methods
