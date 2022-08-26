@@ -759,10 +759,12 @@ void CString::setupLocalization(const CData& stringsFileData)
 	TArray<CString>	lines = CString(stringsFileData).components(CString::mNewline);
 	for (TIteratorD<CString> iterator = lines.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Process line
-		TArray<CString>	components = iterator->components(CString::mDoubleQuotes);
-		if (components.getCount() == 5)
+		TArray<CString>	components = iterator->components(CString(OSSTR(" = ")));
+		if (components.getCount() == 2)
 			// Have a localization line
-			sLocalizationInfo.set(components[1], components[3]);
+			sLocalizationInfo.set(components[0].getSubString(1, components[0].getLength() - 2),
+					components[1].getSubString(1, components[1].getLength() - 4)
+							.replacingSubStrings(CString(OSSTR("\\\"")), CString::mDoubleQuotes));
 	}
 }
 
