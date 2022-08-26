@@ -161,12 +161,16 @@ CMediaFoundationDecodeVideoCodec::~CMediaFoundationDecodeVideoCodec()
 OI<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Get and check GUID
+	OR<const GUID>	guid = getGUID();
+	if (!guid.hasReference())
+		return OI<SError>(CCodec::unsupportedError(CString(mInternals->mCodecID, true)));
+
 	// Setup
-	const	GUID&	guid = getGUID();
-			HRESULT	result;
+	HRESULT	result;
 
 	// Enum Video Codecs to find Video Decoder
-	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Video, guid};
+	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Video, *guid};
 	IMFActivate**			activates;
 	UINT32					count;
 	result =
@@ -196,7 +200,7 @@ OI<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat&
 	result = mediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
 	ReturnErrorIfFailed(result, OSSTR("SetGUID of MF_MT_MAJOR_TYPE for input"));
 
-	result = mediaType->SetGUID(MF_MT_SUBTYPE, guid);
+	result = mediaType->SetGUID(MF_MT_SUBTYPE, *guid);
 	ReturnErrorIfFailed(result, OSSTR("SetGUID of MF_MT_SUBTYPE for input"));
 
 	const	S2DSizeU16	frameSize = videoProcessingFormat.getFrameSize();

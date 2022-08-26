@@ -44,8 +44,8 @@ class CMediaFoundationDecodeVideoCodec : public CDecodeVideoCodec {
 												ReadInputSampleProc readInputSampleProc);
 
 										// Subclass methods
-		virtual	const	GUID&			getGUID() const = 0;
-		virtual			void			seek(UInt64 frameTime) {}
+		virtual	OR<const GUID>			getGUID() const = 0;
+		virtual	void					seek(UInt64 frameTime) {}
 
 	// Properties
 	private:

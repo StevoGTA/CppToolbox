@@ -310,35 +310,35 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 
 	// Methods
 	public:
-															CH264DecodeVideoCodec(
-																	const I<CMediaPacketSource>& mediaPacketSource,
-																	const CData& configurationData, UInt32 timeScale,
-																	const TNumericArray<UInt32>& keyframeIndexes);
+													CH264DecodeVideoCodec(
+															const I<CMediaPacketSource>& mediaPacketSource,
+															const CData& configurationData, UInt32 timeScale,
+															const TNumericArray<UInt32>& keyframeIndexes);
 
-						void								seek(UInt64 frameTime)
-																{ mFrameTiming->seek(frameTime); }
+				void								seek(UInt64 frameTime)
+														{ mFrameTiming->seek(frameTime); }
 
-						SPSPPSInfo							getSPSPPSInfo() const;
-						UInt16								getByteCount(const UInt8* ptr) const
-																{ return (*ptr << 8) | *(ptr + 1); }
-						UInt32								getNALUHeaderLengthSize() const;
+				SPSPPSInfo							getSPSPPSInfo() const;
+				UInt16								getByteCount(const UInt8* ptr) const
+														{ return (*ptr << 8) | *(ptr + 1); }
+				UInt32								getNALUHeaderLengthSize() const;
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-						TVResult<CMFormatDescriptionRef>	composeFormatDescription();
-						TVResult<CMSampleTimingInfo>		composeSampleTimingInfo(
-																	const CMediaPacketSource::DataInfo& dataInfo,
-																	UInt32 timeScale);
+				TVResult<CMFormatDescriptionRef>	composeFormatDescription();
+				TVResult<CMSampleTimingInfo>		composeSampleTimingInfo(
+															const CMediaPacketSource::DataInfo& dataInfo,
+															UInt32 timeScale);
 #elif defined(TARGET_OS_WINDOWS)
-						OI<SError>							setup(const SVideoProcessingFormat& videoProcessingFormat);
+				OI<SError>							setup(const SVideoProcessingFormat& videoProcessingFormat);
 
-				const	GUID&								getGUID() const
-																{ return MFVideoFormat_H264; }
+				OR<const GUID>						getGUID() const
+														{ return OR<const GUID>(MFVideoFormat_H264); }
 #endif
 
 #if defined(TARGET_OS_WINDOWS)
-		static			TCIResult<IMFSample>				readInputSample(
-																	CMediaFoundationDecodeVideoCodec&
-																			mediaFoundationDecodeVideoCodec);
+		static	TCIResult<IMFSample>				readInputSample(
+															CMediaFoundationDecodeVideoCodec&
+																	mediaFoundationDecodeVideoCodec);
 #endif
 
 		I<CMediaPacketSource>	mMediaPacketSource;

@@ -75,16 +75,20 @@ CMediaFoundationDecodeAudioCodec::~CMediaFoundationDecodeAudioCodec()
 OI<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Get and check GUID
+	OR<const GUID>	guid = getGUID(mInternals->mCodecID);
+	if (!guid.hasReference())
+		return OI<SError>(CCodec::unsupportedError(CString(mInternals->mCodecID, true)));
+
 	// Setup
-			CAudioFrames::Requirements	requirements = getRequirements();
-	const	GUID&						guid = getGUID(mInternals->mCodecID);
-			HRESULT						result;
+	CAudioFrames::Requirements	requirements = getRequirements();
+	HRESULT						result;
 
 	// Store
 	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Enum Audio Codecs to find Audio Decoder
-	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Audio, guid};
+	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Audio, *guid};
 	IMFActivate**			activates;
 	UINT32					count;
 	result =
@@ -107,7 +111,7 @@ OI<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat&
 
 	// Setup input media type
 	TCIResult<IMFMediaType>	inputMediaType =
-									CMediaFoundationServices::createMediaType(guid, 32,
+									CMediaFoundationServices::createMediaType(*guid, 32,
 											audioProcessingFormat.getSampleRate(),
 											audioProcessingFormat.getAudioChannelMap(), OV<UInt32>(), OV<UInt32>(),
 											getUserData());

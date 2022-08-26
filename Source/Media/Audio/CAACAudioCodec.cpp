@@ -203,82 +203,77 @@ class CAACDecodeAudioCodec : public CCoreAudioDecodeAudioCodec {
 class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 #endif
 	public:
-												// Lifecycle methods
-												CAACDecodeAudioCodec(const CAACAudioCodec::Info& info,
-														const I<CMediaPacketSource>& mediaPacketSource) :
+										// Lifecycle methods
+										CAACDecodeAudioCodec(const CAACAudioCodec::Info& info,
+												const I<CMediaPacketSource>& mediaPacketSource) :
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-													CCoreAudioDecodeAudioCodec(info.getCodecID(), mediaPacketSource),
-															mInfo(info)
+											CCoreAudioDecodeAudioCodec(info.getCodecID(), mediaPacketSource),
+													mInfo(info)
 #elif defined(TARGET_OS_WINDOWS)
-													CMediaFoundationDecodeAudioCodec(info.getCodecID(),
-																	mediaPacketSource),
-															mInfo(info)
+											CMediaFoundationDecodeAudioCodec(info.getCodecID(), mediaPacketSource),
+													mInfo(info)
 #endif
-													{}
+											{}
 
-												// CDecodeAudioCodec methods
-				TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat)
-													{
-														return TNArray<SAudioProcessingSetup>(
-																SAudioProcessingSetup(32,
-																		audioStorageFormat.getSampleRate(),
-																		audioStorageFormat.getAudioChannelMap(),
-																		SAudioProcessingSetup::kSampleTypeFloat));
-													}
-				CAudioFrames::Requirements		getRequirements() const
-													{ return CAudioFrames::Requirements(1024, 1024 * 2); }
+										// CDecodeAudioCodec methods
+		TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat)
+											{
+												return TNArray<SAudioProcessingSetup>(
+														SAudioProcessingSetup(32, audioStorageFormat.getSampleRate(),
+																audioStorageFormat.getAudioChannelMap(),
+																SAudioProcessingSetup::kSampleTypeFloat));
+											}
+		CAudioFrames::Requirements		getRequirements() const
+											{ return CAudioFrames::Requirements(1024, 1024 * 2); }
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-												// CCoreAudioDecodeAudioCodec methods
-				AudioStreamBasicDescription		getSourceASBD(OSType codecID,
-														const SAudioProcessingFormat& audioProcessingFormat)
-													{
-														AudioStreamBasicDescription	asbd = {0};
-														asbd.mFormatID =
-																(codecID == CAACAudioCodec::mAACLCID) ?
-																		kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
-														asbd.mSampleRate = audioProcessingFormat.getSampleRate();
-														asbd.mChannelsPerFrame = audioProcessingFormat.getChannels();
+										// CCoreAudioDecodeAudioCodec methods
+		AudioStreamBasicDescription		getSourceASBD(OSType codecID,
+												const SAudioProcessingFormat& audioProcessingFormat)
+											{
+												AudioStreamBasicDescription	asbd = {0};
+												asbd.mFormatID =
+														(codecID == CAACAudioCodec::mAACLCID) ?
+																kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
+												asbd.mSampleRate = audioProcessingFormat.getSampleRate();
+												asbd.mChannelsPerFrame = audioProcessingFormat.getChannels();
 
-														return asbd;
-													}
-				OI<SError>						setMagicCookie(AudioConverterRef audioConverterRef)
-													{
-														OSStatus	status =
-																			::AudioConverterSetProperty(
-																					audioConverterRef,
-																					kAudioConverterDecompressionMagicCookie,
-																					(UInt32)
-																							mInfo.getMagicCookie()
-																									.getByteCount(),
+												return asbd;
+											}
+		OI<SError>						setMagicCookie(AudioConverterRef audioConverterRef)
+											{
+												OSStatus	status =
+																	::AudioConverterSetProperty(audioConverterRef,
+																			kAudioConverterDecompressionMagicCookie,
+																			(UInt32)
 																					mInfo.getMagicCookie()
-																							.getBytePtr());
-														ReturnErrorIfFailed(status,
-																OSSTR("AudioConverterSetProperty for magic cookie"));
+																							.getByteCount(),
+																			mInfo.getMagicCookie().getBytePtr());
+												ReturnErrorIfFailed(status,
+														OSSTR("AudioConverterSetProperty for magic cookie"));
 
-														return OI<SError>();
-													}
+												return OI<SError>();
+											}
 #elif defined(TARGET_OS_WINDOWS)
-												// CMediaFoundationDecodeAudioCodec methods
-		const	GUID&							getGUID(OSType codecID) const
-													{ return MFAudioFormat_AAC; }
-				OI<CData>						getUserData() const
-													{
-														#pragma pack(push, 1)
-															struct UserData {
-																WORD	mPayloadType;
-																WORD	mAudioProfileLevelIndication;
-																WORD	mStructType;
-																WORD	mReserved1;
-																DWORD	mReserved2;
-																WORD	mAudioSpecificConfig;
-															} userData = {0};
-														#pragma pack(pop)
-														userData.mAudioSpecificConfig =
-																EndianU16_NtoB(mInfo.getStartCodes());
+										// CMediaFoundationDecodeAudioCodec methods
+		OR<const GUID>					getGUID(OSType codecID) const
+											{ return OR<const GUID>(MFAudioFormat_AAC); }
+		OI<CData>						getUserData() const
+											{
+												#pragma pack(push, 1)
+													struct UserData {
+														WORD	mPayloadType;
+														WORD	mAudioProfileLevelIndication;
+														WORD	mStructType;
+														WORD	mReserved1;
+														DWORD	mReserved2;
+														WORD	mAudioSpecificConfig;
+													} userData = {0};
+												#pragma pack(pop)
+												userData.mAudioSpecificConfig = EndianU16_NtoB(mInfo.getStartCodes());
 
-														return OI<CData>(new CData(&userData, sizeof(UserData)));
-													}
+												return OI<CData>(new CData(&userData, sizeof(UserData)));
+											}
 #endif
 
 	private:
