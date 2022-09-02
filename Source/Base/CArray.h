@@ -208,6 +208,9 @@ template <typename T> class TSArray : public TArray<T> {
 		TSArray(const T& item, CArray::ItemCount repeatCount = 1) :
 			TArray<T>(nil, nil)
 			{ for (CArray::ItemIndex i = 0; i < repeatCount; i++) CArray::add(&item); }
+		TSArray(const T& item1, const T& item2) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); }
 		TSArray(const T items[], CArray::ItemCount itemCount) :
 			TArray<T>(nil, nil)
 			{ for (CArray::ItemIndex i = 0; i < itemCount; CArray::add(&items[i++])) ; }
