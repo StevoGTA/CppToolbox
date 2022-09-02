@@ -58,15 +58,16 @@ class CMediaPlaybackQueue {
 
 	// Methods
 	public:
-				// Lifecycle methods
-				CMediaPlaybackQueue(CSRSWMessageQueues& messageQueues, const Info& info);
-				~CMediaPlaybackQueue();
+									// Lifecycle methods
+									CMediaPlaybackQueue(CSRSWMessageQueues& messageQueues, const Info& info);
+									~CMediaPlaybackQueue();
 
-				// Instance methods
-		void	set(const TArray<I<Item> >& items);
-		bool	prepareFirst();
-		bool	preparePrevious();
-		bool	prepareNext();
+									// Instance methods
+		const	TArray<I<Item> >&	getItems() const;
+				void				set(const TArray<I<Item> >& items);
+				bool				prepareFirst();
+				bool				preparePrevious();
+				bool				prepareNext();
 
 	// Properties
 	private:
