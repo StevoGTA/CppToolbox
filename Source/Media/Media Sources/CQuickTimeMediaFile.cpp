@@ -1156,8 +1156,15 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 			do {
 				// Read
 				avcCAtom = atomReader.readAtom();
+
+				// Check if have instance
+				if (avcCAtom.hasInstance())
+					// Seek to next atom
+					atomReader.seekToNextAtom(*avcCAtom);
 			} while (!avcCAtom.hasError() && (avcCAtom->mType != MAKE_OSTYPE('a', 'v', 'c', 'C')));
-			ReturnValueIfResultError(avcCAtom, TVResult<CMediaTrackInfos::VideoTrackInfo>(avcCAtom.getError()));
+			ReturnValueIfResultError(avcCAtom,
+					TVResult<CMediaTrackInfos::VideoTrackInfo>(
+							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			TIResult<CData>	avcCAtomPayload = atomReader.readAtomPayload(*avcCAtom);
 			ReturnValueIfResultError(avcCAtomPayload,
