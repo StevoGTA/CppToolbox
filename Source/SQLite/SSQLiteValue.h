@@ -88,7 +88,7 @@ struct SSQLiteValue {
 
 											return sqliteValues;
 										}
-	static	TMArray<SSQLiteValue>	valuesFrom(const TNumericArray<SInt64>& values)
+	static	TMArray<SSQLiteValue>	valuesFrom(const TNumberArray<SInt64>& values)
 										{
 											// Convert array
 											TNArray<SSQLiteValue>	sqliteValues;

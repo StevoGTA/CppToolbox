@@ -496,7 +496,7 @@ class CAudioPlayerImplementation :
 		UniversalTimeInterval							mLastSeekTimeInterval;
 		UniversalTimeInterval							mCurrentPlaybackTimeInterval;
 		Float32											mGain;
-		TNumericArray<Float32>							mChannelGains;
+		TNumberArray<Float32>							mChannelGains;
 
 		bool											mOnFillBufferShouldSendFrames;
 		bool											mOnFillBufferIsSendingFrames;
@@ -764,7 +764,7 @@ void CAudioPlayer::setGain(Float32 gain)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::setGain(const TNumericArray<Float32>& channelGains)
+void CAudioPlayer::setGain(const TNumberArray<Float32>& channelGains)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store

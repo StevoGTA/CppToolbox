@@ -89,6 +89,13 @@ CString::CString(const char* chars, Length charsCount, Encoding encoding) : CHas
 				::CFStringCreateWithCString(kCFAllocatorDefault, buffer,
 						sGetCFStringEncodingForCStringEncoding(encoding));
 	}
+
+	// Validate we have something
+	if (mStringRef == nil) {
+		// Have something
+		LogError(sCreateFailedError, "creating CFStringRef from C string");
+		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,6 +121,13 @@ CString::CString(const UTF16Char* chars, Length charsCount, Encoding encoding) :
 		mStringRef =
 				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars,
 						charsCount * sizeof(UTF16Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
+
+	// Validate we have something
+	if (mStringRef == nil) {
+		// Have something
+		LogError(sCreateFailedError, "creating CFStringRef from bytes");
+		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -133,6 +147,13 @@ CString::CString(const UTF32Char* chars, Length charsCount, Encoding encoding) :
 		mStringRef =
 				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars,
 						charsCount * sizeof(UTF32Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
+
+	// Validate we have something
+	if (mStringRef == nil) {
+		// Have something
+		LogError(sCreateFailedError, "creating CFStringRef from bytes");
+		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -362,10 +383,11 @@ CString::CString(const CData& data, Encoding encoding) : CHashable()
 					sGetCFStringEncodingForCStringEncoding(encoding));
 	::CFRelease(dataRef);
 
-	// Check situation
+	// Validate we have something
 	if (mStringRef == nil) {
+		// Have something
 		LogError(sCreateFailedError, "creating CFStringRef from external representation");
-		mStringRef = CFSTR("");
+		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
 	}
 }
 

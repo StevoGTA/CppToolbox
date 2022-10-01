@@ -164,14 +164,14 @@ TArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
+TNumberArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref);
 
 	// Check if have array
-	TNumericArray<OSType>	array;
+	TNumberArray<OSType>	array;
 	if (arrayRef != nil) {
 		// Iterate all items
 		for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++) {
@@ -369,7 +369,7 @@ void CPreferences::set(const Pref& pref, const TArray<CDictionary>& array)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const Pref& pref, const TNumericArray<OSType>& array)
+void CPreferences::set(const Pref& pref, const TNumberArray<OSType>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

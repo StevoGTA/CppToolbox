@@ -27,7 +27,7 @@ class CCoreMediaDecodeVideoCodec : public CDecodeVideoCodec {
 													// Lifecycle methods
 													CCoreMediaDecodeVideoCodec(OSType codecID,
 														const I<CMediaPacketSource>& mediaPacketSource,
-														UInt32 timeScale, const TNumericArray<UInt32>& keyframeIndexes);
+														UInt32 timeScale, const TNumberArray<UInt32>& keyframeIndexes);
 
 													// Subclass methods
 		virtual			void						seek(UInt64 frameTime) {}

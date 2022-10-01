@@ -68,11 +68,11 @@ return TNArray<CDictionary>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumericArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
+TNumberArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return TNumericArray<OSType>();
+return TNumberArray<OSType>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -176,7 +176,7 @@ void CPreferences::set(const Pref& pref, const TArray<CDictionary>& array)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const Pref& pref, const TNumericArray<OSType>& array)
+void CPreferences::set(const Pref& pref, const TNumberArray<OSType>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();

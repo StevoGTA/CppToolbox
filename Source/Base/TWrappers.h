@@ -296,7 +296,7 @@ template <typename T> struct OV {
 							else if (mValue != nil) {
 								// No longer have a value
 								Delete(mValue);
-							} else
+							} else if (value.hasValue())
 								// Now have a value
 								mValue = new T(*value);
 						}

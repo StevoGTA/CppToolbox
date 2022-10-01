@@ -29,6 +29,13 @@ class CHasherInternals {
 							// Update value
 							mValue = (mValue * kA) ^ ((UInt32) string[0] * kB);
 					}
+		void	add(const UInt8* bytePtr, const UInt32 byteCount)
+					{
+						// Iterate all bytes
+						for (UInt32 i = 0; i < byteCount; i++)
+							// Update value
+							mValue = (mValue * kA) ^ ((UInt32) bytePtr[i] * kB);
+					}
 
 		UInt32	mValue;
 };
@@ -60,6 +67,13 @@ void CHasher::add(const char* string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->add(string);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CHasher::add(const UInt8* bytePtr, const UInt32 byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->add(bytePtr, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

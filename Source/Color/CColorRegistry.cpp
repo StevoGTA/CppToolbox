@@ -18,7 +18,7 @@ class CColorGroupInternals : public TReferenceCountable<CColorGroupInternals> {
 
 		OSType					mID;
 		UInt32					mDisplayIndex;
-		TNumericArray<OSType>	mColorIDs;
+		TNumberArray<OSType>	mColorIDs;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ void CColorGroup::registerColor(OSType id)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TNumericArray<OSType>& CColorGroup::getColorIDs() const
+const TNumberArray<OSType>& CColorGroup::getColorIDs() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mColorIDs;
@@ -461,7 +461,7 @@ void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 		// Get info
 		CColorGroup&			colorGroup = colorGroups[i];
 		OSType					colorGroupID = colorGroup.getID();
-		TNumericArray<OSType>	colorIDs = colorGroup.getColorIDs();
+		TNumberArray<OSType>	colorIDs = colorGroup.getColorIDs();
 
 		// Setup
 		info.set(mGroupIDKey, colorGroupID);

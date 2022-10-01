@@ -21,12 +21,12 @@ class CMPEG4MediaFile {
 		virtual														~CMPEG4MediaFile() {}
 
 																	// Instance methods
-						SMediaSource::ImportResult					import(
+						I<SMediaSource::ImportResult>				import(
 																			const I<CRandomAccessDataSource>&
 																					randomAccessDataSource,
 																			const OI<CAppleResourceManager>&
 																					appleResourceManager,
-																			SMediaSource::Options options);
+																			UInt32 options);
 						TArray<SMediaPacketAndLocation>				composePacketAndLocations(
 																			const Internals& internals) const;
 
@@ -41,13 +41,13 @@ class CMPEG4MediaFile {
 		virtual			TVResult<CMediaTrackInfos::AudioTrackInfo>	composeAudioTrackInfo(
 																			const I<CRandomAccessDataSource>&
 																					randomAccessDataSource,
-																			SMediaSource::Options options, OSType type,
+																			UInt32 options, OSType type,
 																			UniversalTimeInterval duration,
 																			const Internals& internals);
 		virtual			TVResult<CMediaTrackInfos::VideoTrackInfo>	composeVideoTrackInfo(
 																			const I<CRandomAccessDataSource>&
 																					randomAccessDataSource,
-																			SMediaSource::Options options, OSType type,
+																			UInt32 options, OSType type,
 																			UInt32 timeScale,
 																			UniversalTimeInterval duration,
 																			const Internals& internals);

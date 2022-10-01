@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "PlatformDefinitions.h"
+#include "CHashing.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Byte swapping
@@ -79,15 +79,30 @@ static	inline	force_inline	Float64 EndianF64_LtoN(StoredFloat64 value) {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - SNumberWrapper
+// MARK: - TNumber
 
-template <typename T> struct SNumberWrapper {
-	// Lifecycle methods
-	SNumberWrapper(T value) : mValue(value) {}
-	SNumberWrapper(const SNumberWrapper& other) : mValue(other.mValue) {}
+template <typename T> class TNumber : public CHashable {
+	// Methods
+	public:
+				// Lifecycle methods
+				TNumber(T value) : mValue(value) {}
+				TNumber(const TNumber<T>& other) : mValue(other.mValue) {}
+
+				// CEquatable methods
+		bool	operator==(const CEquatable& other) const
+					{ return mValue == ((const TNumber<T>&) other).mValue; }
+
+				// CHashable methods
+		void	hashInto(CHasher& hasher) const
+					{ hasher.add((const UInt8*) &mValue, sizeof(T)); }
+
+				// Instance methods
+		T		operator*() const
+					{ return mValue; }
 
 	// Properties
-	T	mValue;
+	private:
+		T	mValue;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -27,7 +27,7 @@ class CColorGroup {
 						UInt32					getDisplayIndex() const;
 
 						void					registerColor(OSType id);
-				const	TNumericArray<OSType>&	getColorIDs() const;
+				const	TNumberArray<OSType>&	getColorIDs() const;
 
 												// Class methods
 		static			bool					compareDisplayIndexes(const CColorGroup& colorGroup1,

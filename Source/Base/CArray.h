@@ -427,83 +427,81 @@ template <typename T> class TCArray : public TMArray<T> {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TNumericArray
+// MARK: - TNumberArray
 
-template <typename T> class TNumericArray : public CArray {
+template <typename T> class TNumberArray : public CArray {
 	// Types
 	public:
 		typedef	T	(*MappingProc)(CArray::ItemRef item);
 
 	// Methods
 	public:
-													// Lifecycle methods
-													TNumericArray(ItemCount initialCapacity = 0) :
-														CArray(initialCapacity, (CArray::CopyProc) copy, dispose)
-														{}
-													TNumericArray(T value, ItemCount count = 1) :
-														CArray(count, (CArray::CopyProc) copy, dispose)
-														{
-															// Loop requested times
-															for (ItemIndex i = 0; i < count; i++)
-																// Add
-																CArray::add(new SNumberWrapper<T>(value));
-														}
-													TNumericArray(const CArray& array, MappingProc mappingProc) :
-														CArray(0, (CArray::CopyProc) copy, dispose)
-														{
-															ItemCount	count = array.getCount();
-															for (ItemIndex i = 0; i < count; i++)
-																CArray::add(mappingProc(array.getItemAt(i)));
-														}
-													TNumericArray(const TNumericArray<T>& array) : CArray(array) {}
+											// Lifecycle methods
+											TNumberArray(ItemCount initialCapacity = 0) :
+												CArray(initialCapacity, (CArray::CopyProc) copy, dispose)
+												{}
+											TNumberArray(T value, ItemCount count = 1) :
+												CArray(count, (CArray::CopyProc) copy, dispose)
+												{
+													// Loop requested times
+													for (ItemIndex i = 0; i < count; i++)
+														// Add
+														CArray::add(new TNumber<T>(value));
+												}
+											TNumberArray(const CArray& array, MappingProc mappingProc) :
+												CArray(0, (CArray::CopyProc) copy, dispose)
+												{
+													ItemCount	count = array.getCount();
+													for (ItemIndex i = 0; i < count; i++)
+														CArray::add(mappingProc(array.getItemAt(i)));
+												}
+											TNumberArray(const TNumberArray<T>& array) : CArray(array) {}
 
-													// CArray methods
-				TNumericArray<T>&					add(T value)
-														{ CArray::add(new SNumberWrapper<T>(value)); return *this; }
-				TNumericArray<T>&					addFrom(const TNumericArray<T>& array)
-														{
-															// Iterate all
-															ItemCount	count = array.getCount();
-															for (ItemIndex i = 0; i < count; i++)
-																// Add
-																CArray::add(CArray::copy(array.getItemAt(i)));
+											// CArray methods
+				TNumberArray<T>&			add(T value)
+												{ CArray::add(new TNumber<T>(value)); return *this; }
+				TNumberArray<T>&			addFrom(const TNumberArray<T>& array)
+												{
+													// Iterate all
+													ItemCount	count = array.getCount();
+													for (ItemIndex i = 0; i < count; i++)
+														// Add
+														CArray::add(CArray::copy(array.getItemAt(i)));
 
-															return *this;
-														}
+													return *this;
+												}
 
-				T									getAt(ItemIndex index) const
-														{ return ((SNumberWrapper<T>*) getItemAt(index))->mValue; }
+				T							getAt(ItemIndex index) const
+												{ return ((TNumber<T>*) getItemAt(index))->mValue; }
 
-				TIteratorM<SNumberWrapper<T>, T>	getIterator() const
-														{
-															TIteratorS<ItemRef> iterator = CArray::getIterator();
+				TIteratorM<TNumber<T>, T>	getIterator() const
+												{
+													TIteratorS<ItemRef> iterator = CArray::getIterator();
 
-															return TIteratorM<SNumberWrapper<T>, T>(
-																	(TIteratorM<SNumberWrapper<T>, T>*) &iterator,
-																	getValueForRawValue);
-														}
+													return TIteratorM<TNumber<T>, T>(
+															(TIteratorM<TNumber<T>, T>*) &iterator,
+															getValueForRawValue);
+												}
 
-													// Instance methods
-				T									operator[] (ItemIndex index) const
-														{ return ((SNumberWrapper<T>*) getItemAt(index))->mValue; }
-				TNumericArray<T>&					operator+=(T value)
-														{ CArray::add(new SNumberWrapper<T>(value)); return *this; }
+											// Instance methods
+				T							operator[] (ItemIndex index) const
+												{ return **((TNumber<T>*) getItemAt(index)); }
+				TNumberArray<T>&			operator+=(T value)
+												{ CArray::add(new TNumber<T>(value)); return *this; }
 
-													// Class methods
-		static	T									getValue(ItemRef itemRef)
-														{ return ((SNumberWrapper<T>*) itemRef)->mValue; }
+											// Class methods
+		static	T							getValue(ItemRef itemRef)
+												{ return ((TNumber<T>*) itemRef)->mValue; }
 
 	private:
-													// Class methods
-		static	SNumberWrapper<T>*					copy(ItemRef itemRef)
-														{ return new SNumberWrapper<T>(
-																*((SNumberWrapper<T>*) itemRef)); }
-		static	void								dispose(ItemRef itemRef)
-														{
-															SNumberWrapper<T>*	numberWrapper =
-																						(SNumberWrapper<T>*) itemRef;
-															Delete(numberWrapper);
-														}
-		static	T									getValueForRawValue(SNumberWrapper<T>** rawValue)
-														{ return (*rawValue)->mValue; }
+											// Class methods
+		static	TNumber<T>*					copy(ItemRef itemRef)
+												{ return new TNumber<T>(*((TNumber<T>*) itemRef)); }
+		static	void						dispose(ItemRef itemRef)
+												{
+													TNumber<T>*	numberWrapper = (TNumber<T>*) itemRef;
+													Delete(numberWrapper);
+												}
+		static	T							getValueForRawValue(TNumber<T>** rawValue)
+												{ return ***rawValue; }
 };

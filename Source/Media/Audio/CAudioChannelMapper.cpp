@@ -19,11 +19,11 @@ class CAudioChannelMapperInternals {
 								UInt32 destinationBytesPerFrame)
 							{
 								// Setup
-										CAudioFrames::Info		readInfo = sourceAudioFrames.getReadInfo();
-								const	TNumericArray<void*>	readInfoSegments = readInfo.getSegments();
+										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
+								const	TNumberArray<void*>	readInfoSegments = readInfo.getSegments();
 
-										CAudioFrames::Info		writeInfo = destinationAudioFrames.getWriteInfo();
-								const	TNumericArray<void*>	writeInfoSegments = writeInfo.getSegments();
+										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
+								const	TNumberArray<void*>	writeInfoSegments = writeInfo.getSegments();
 
 								// Check interleaved
 								if (readInfoSegments.getCount() == 1) {
@@ -54,11 +54,11 @@ class CAudioChannelMapperInternals {
 								UInt32 sourceBytesPerSample, UInt32 destinationBytesPerSample)
 							{
 								// Setup
-										CAudioFrames::Info		readInfo = sourceAudioFrames.getReadInfo();
-								const	TNumericArray<void*>	readInfoSegments = readInfo.getSegments();
+										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
+								const	TNumberArray<void*>	readInfoSegments = readInfo.getSegments();
 
-										CAudioFrames::Info		writeInfo = destinationAudioFrames.getWriteInfo();
-								const	TNumericArray<void*>	writeInfoSegments = writeInfo.getSegments();
+										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
+								const	TNumberArray<void*>	writeInfoSegments = writeInfo.getSegments();
 
 								// Check interleaved
 								if (readInfoSegments.getCount() == 1) {

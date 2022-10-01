@@ -20,7 +20,7 @@ class CH264VideoCodec {
 		static	OI<I<CDecodeVideoCodec> >	create(const I<CRandomAccessDataSource>& randomAccessDataSource,
 													const TArray<SMediaPacketAndLocation>& packetAndLocations,
 													const CData& configurationData, UInt32 timeScale,
-													const TNumericArray<UInt32>& keyframeIndexes);
+													const TNumberArray<UInt32>& keyframeIndexes);
 
 	// Properties
 	public:

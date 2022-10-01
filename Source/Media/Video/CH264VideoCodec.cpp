@@ -313,7 +313,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 													CH264DecodeVideoCodec(
 															const I<CMediaPacketSource>& mediaPacketSource,
 															const CData& configurationData, UInt32 timeScale,
-															const TNumericArray<UInt32>& keyframeIndexes);
+															const TNumberArray<UInt32>& keyframeIndexes);
 
 				void								seek(UInt64 frameTime)
 														{ mFrameTiming->seek(frameTime); }
@@ -344,7 +344,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 		I<CMediaPacketSource>	mMediaPacketSource;
 		CData					mConfigurationData;
 		UInt32					mTimeScale;
-		TNumericArray<UInt32>	mKeyframeIndexes;
+		TNumberArray<UInt32>	mKeyframeIndexes;
 
 		OI<SPSPPSInfo>			mCurrentSPSPPSInfo;
 		OI<FrameTiming>			mFrameTiming;
@@ -352,7 +352,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 
 //----------------------------------------------------------------------------------------------------------------------
 CH264DecodeVideoCodec::CH264DecodeVideoCodec(const I<CMediaPacketSource>& mediaPacketSource,
-		const CData& configurationData, UInt32 timeScale, const TNumericArray<UInt32>& keyframeIndexes) :
+		const CData& configurationData, UInt32 timeScale, const TNumberArray<UInt32>& keyframeIndexes) :
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
 		CCoreMediaDecodeVideoCodec(CH264VideoCodec::mID, mediaPacketSource, timeScale, keyframeIndexes),
 #elif defined(TARGET_OS_WINDOWS)
@@ -649,7 +649,7 @@ OI<SVideoStorageFormat> CH264VideoCodec::composeVideoStorageFormat(const S2DSize
 //----------------------------------------------------------------------------------------------------------------------
 OI<I<CDecodeVideoCodec> > CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
-		const TNumericArray<UInt32>& keyframeIndexes)
+		const TNumberArray<UInt32>& keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return OI<I<CDecodeVideoCodec> >(

@@ -15,7 +15,7 @@ class CCoreMediaDecodeVideoCodecInternals {
 	public:
 						CCoreMediaDecodeVideoCodecInternals(OSType codecID,
 								const I<CMediaPacketSource>& mediaPacketSource, UInt32 timeScale,
-								const TNumericArray<UInt32>& keyframeIndexes) :
+								const TNumberArray<UInt32>& keyframeIndexes) :
 							mCodecID(codecID), mMediaPacketSource(mediaPacketSource), mTimeScale(timeScale),
 									mKeyframeIndexes(keyframeIndexes),
 									mFormatDescriptionRef(nil), mDecompressionSessionRef(nil)
@@ -44,7 +44,7 @@ class CCoreMediaDecodeVideoCodecInternals {
 		OSType						mCodecID;
 		I<CMediaPacketSource>		mMediaPacketSource;
 		UInt32						mTimeScale;
-		TNumericArray<UInt32>		mKeyframeIndexes;
+		TNumberArray<UInt32>		mKeyframeIndexes;
 
 		OI<SVideoProcessingFormat>	mVideoProcessingFormat;
 
@@ -60,7 +60,7 @@ class CCoreMediaDecodeVideoCodecInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 CCoreMediaDecodeVideoCodec::CCoreMediaDecodeVideoCodec(OSType codecID, const I<CMediaPacketSource>& mediaPacketSource,
-		UInt32 timeScale, const TNumericArray<UInt32>& keyframeIndexes)
+		UInt32 timeScale, const TNumberArray<UInt32>& keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CCoreMediaDecodeVideoCodecInternals(codecID, mediaPacketSource, timeScale, keyframeIndexes);

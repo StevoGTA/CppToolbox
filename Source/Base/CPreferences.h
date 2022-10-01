@@ -130,7 +130,7 @@ class CPreferences {
 
 		TArray<CData>			getDataArray(const Pref& pref);
 		TArray<CDictionary>		getDictionaryArray(const Pref& pref);
-		TNumericArray<OSType>	getOSTypeArray(const Pref& pref);
+		TNumberArray<OSType>	getOSTypeArray(const Pref& pref);
 		CData					getData(const Pref& pref);
 		CDictionary				getDictionary(const Pref& pref);
 		CString					getString(const StringPref& pref);
@@ -143,7 +143,7 @@ class CPreferences {
 
 		void					set(const Pref& pref, const TArray<CData>& array);
 		void					set(const Pref& pref, const TArray<CDictionary>& array);
-		void					set(const Pref& pref, const TNumericArray<OSType>& array);
+		void					set(const Pref& pref, const TNumberArray<OSType>& array);
 		void					set(const Pref& pref, const CData& data);
 		void					set(const Pref& pref, const CDictionary& dictionary);
 		void					set(const StringPref& pref, const CString& string);

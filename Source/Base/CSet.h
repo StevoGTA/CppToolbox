@@ -182,3 +182,20 @@ template <typename T> class TSet : public CSet {
 		TSet<T>&		operator-=(const TSet<T>& other)
 							{ return removeFrom(other); }
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNumberSet
+
+template <typename T> class TNumberSet : public TSet<TNumber<T> > {
+	// Methods
+	public:
+						// Instance methods
+		bool			contains(T value) const
+							{ return TSet<TNumber<T> >::contains(TNumber<T>(value)); }
+
+		TNumberSet<T>&	add(T value)
+							{ TSet<TNumber<T> >::add(new TNumber<T>(value)); return *this; }
+
+		TNumberSet<T>&	operator+=(T value)
+							{ return add(value); }
+};

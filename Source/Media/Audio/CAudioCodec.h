@@ -137,24 +137,24 @@ class CDecodeAudioCodec : public CAudioCodec {
 				UInt64						mCurrentPosition;
 		};
 
-	// SourceFramesInfo
+	// SourceInfo
 	public:
-		class SourceFramesInfo {
+		class SourceInfo {
 			// Methods
 			public:
 
 															// Lifecycle methods
-															SourceFramesInfo(
+															SourceInfo(
 																	const SAudioStorageFormat& audioStorageFormat,
 																	UInt64 frameCount) :
 																mAudioStorageFormat(audioStorageFormat),
 																		mFrameCount(frameCount)
 																{}
-															SourceFramesInfo(const SourceFramesInfo& other) :
+															SourceInfo(const SourceInfo& other) :
 																mAudioStorageFormat(other.mAudioStorageFormat),
 																		mFrameCount(other.mFrameCount)
 																{}
-				virtual										~SourceFramesInfo() {}
+				virtual										~SourceInfo() {}
 
 															// Instance methods
 						const	SAudioStorageFormat&		getAudioStorageFormat() const
@@ -169,22 +169,22 @@ class CDecodeAudioCodec : public CAudioCodec {
 				UInt64				mFrameCount;
 		};
 
-	// PacketSourceFramesInfo
+	// PacketSourceInfo
 	public:
-		class PacketSourceFramesInfo : public SourceFramesInfo {
+		class PacketSourceInfo : public SourceInfo {
 			// Methods
 			public:
 
 				// Lifecycle methods
-				PacketSourceFramesInfo(const SAudioStorageFormat& audioStorageFormat, UInt64 frameCount,
+				PacketSourceInfo(const SAudioStorageFormat& audioStorageFormat, UInt64 frameCount,
 						const I<CRandomAccessDataSource>& randomAccessDataSource,
 						const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
-					SourceFramesInfo(audioStorageFormat, frameCount),
+					SourceInfo(audioStorageFormat, frameCount),
 							mRandomAccessDataSource(randomAccessDataSource),
 							mMediaPacketAndLocations(mediaPacketAndLocations)
 					{}
-				PacketSourceFramesInfo(const PacketSourceFramesInfo& other) :
-					SourceFramesInfo(other),
+				PacketSourceInfo(const PacketSourceInfo& other) :
+					SourceInfo(other),
 							mRandomAccessDataSource(other.mRandomAccessDataSource),
 							mMediaPacketAndLocations(other.mMediaPacketAndLocations)
 					{}

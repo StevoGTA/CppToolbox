@@ -57,7 +57,7 @@ class CAudioFrames : private CData {
 	public:
 		struct Info {
 											// Lifecycle methods
-											Info(UInt32 frameCount, const TNumericArray<void*>& segments) :
+											Info(UInt32 frameCount, const TNumberArray<void*>& segments) :
 												mFrameCount(frameCount), mSegments(segments)
 												{}
 											Info(const Info& other) :
@@ -67,13 +67,13 @@ class CAudioFrames : private CData {
 											// Instance methods
 					UInt32					getFrameCount() const
 												{ return mFrameCount; }
-			const	TNumericArray<void*>&	getSegments() const
+			const	TNumberArray<void*>&	getSegments() const
 												{ return mSegments; }
 
 			// Properties
 			private:
-				UInt32					mFrameCount;
-				TNumericArray<void*>	mSegments;
+				UInt32				mFrameCount;
+				TNumberArray<void*>	mSegments;
 		};
 
 	// Methods
@@ -94,7 +94,7 @@ class CAudioFrames : private CData {
 		void	completeWrite(const CAudioFrames& other)
 					{ completeWrite(other.getCurrentFrameCount(), other.getReadInfo().getSegments()); }
 		void	completeWrite(UInt32 frameCount);
-		void	completeWrite(UInt32 frameCount, const TNumericArray<void*>& sampleBufferPtrs);
+		void	completeWrite(UInt32 frameCount, const TNumberArray<void*>& sampleBufferPtrs);
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 				// Apple methods

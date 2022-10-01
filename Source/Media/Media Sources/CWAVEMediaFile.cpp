@@ -41,14 +41,15 @@ OI<CChunkReader> CWAVEMediaFile::createChunkReader(const I<CRandomAccessDataSour
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::ImportResult CWAVEMediaFile::import(CChunkReader& chunkReader,
+I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 		const CChunkReader::ChunkInfo& formatChunkInfo, const CChunkReader::ChunkInfo& dataChunkInfo,
-		const TArray<CChunkReader::ChunkInfo>& otherChunkInfos, SMediaSource::Options options) const
+		const TArray<CChunkReader::ChunkInfo>& otherChunkInfos, UInt32 options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Process Format chunk
 	TIResult<CData>	payload = chunkReader.readPayload(formatChunkInfo);
-	ReturnValueIfResultError(payload, SMediaSource::ImportResult(payload.getError()));
+	ReturnValueIfResultError(payload,
+			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(payload.getError())));
 
 	const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) payload->getBytePtr());
 			UInt16			sampleSize;
@@ -64,8 +65,9 @@ SMediaSource::ImportResult CWAVEMediaFile::import(CChunkReader& chunkReader,
 						waveFormat.getChannels() * 8;
 	else
 		// ???
-		return SMediaSource::ImportResult(
-				CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true)));
+		return I<SMediaSource::ImportResult>(
+				new SMediaSource::ImportResult(
+						CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true))));
 
 	// Process Data chunk
 	UInt64	dataChunkByteCount =
@@ -78,20 +80,23 @@ SMediaSource::ImportResult CWAVEMediaFile::import(CChunkReader& chunkReader,
 	UInt64						frameCount;
 	switch (waveFormat.getFormatTag()) {
 		case 0x0000:	// Illegal/Unknown
-			return SMediaSource::ImportResult(
-					CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true)));
+			return I<SMediaSource::ImportResult>(
+					new SMediaSource::ImportResult(
+							CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true))));
 
 		case 0x0001:	// Integer PCM
 			if (sampleSize > 32)
 				// Nope
-				return SMediaSource::ImportResult(
-						CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true)));
+				return I<SMediaSource::ImportResult>(
+						new SMediaSource::ImportResult(
+								CCodec::unsupportedConfigurationError(
+										CString(waveFormat.getFormatTag(), 4, true, true))));
 
 			audioStorageFormat =
 					CPCMAudioCodec::composeAudioStorageFormat(false, (UInt8) sampleSize,
 							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
 			frameCount = CPCMAudioCodec::composeFrameCount(*audioStorageFormat, dataChunkByteCount);
-			if (options & SMediaSource::kCreateDecoders)
+			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Create
 				decodeAudioCodec =
 						CPCMAudioCodec::create(*audioStorageFormat, chunkReader.getRandomAccessDataSource(),
@@ -103,14 +108,16 @@ SMediaSource::ImportResult CWAVEMediaFile::import(CChunkReader& chunkReader,
 		case 0x0003:	// IEEE Float
 			if (sampleSize > 32)
 				// Nope
-				return SMediaSource::ImportResult(
-						CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true)));
+				return I<SMediaSource::ImportResult>(
+						new SMediaSource::ImportResult(
+								CCodec::unsupportedConfigurationError(
+										CString(waveFormat.getFormatTag(), 4, true, true))));
 
 			audioStorageFormat =
 					CPCMAudioCodec::composeAudioStorageFormat(true, (UInt8) sampleSize,
 							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
 			frameCount = CPCMAudioCodec::composeFrameCount(*audioStorageFormat, dataChunkByteCount);
-			if (options & SMediaSource::kCreateDecoders)
+			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Create
 				decodeAudioCodec =
 						CPCMAudioCodec::create(*audioStorageFormat, chunkReader.getRandomAccessDataSource(),
@@ -126,7 +133,7 @@ SMediaSource::ImportResult CWAVEMediaFile::import(CChunkReader& chunkReader,
 			frameCount =
 					CDVIIntelIMAADPCMAudioCodec::composeFrameCount(*audioStorageFormat, dataChunkByteCount,
 							waveFormat.getBlockAlign());
-			if (options & SMediaSource::kCreateDecoders)
+			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Create
 				decodeAudioCodec =
 						CDVIIntelIMAADPCMAudioCodec::create(*audioStorageFormat,
@@ -136,8 +143,9 @@ SMediaSource::ImportResult CWAVEMediaFile::import(CChunkReader& chunkReader,
 
 		default:
 			// Not supported
-			return SMediaSource::ImportResult(
-					CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true)));
+			return I<SMediaSource::ImportResult>(
+					new SMediaSource::ImportResult(
+							CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true))));
 	}
 
 	// Finalize
@@ -146,14 +154,14 @@ SMediaSource::ImportResult CWAVEMediaFile::import(CChunkReader& chunkReader,
 	CMediaTrackInfos	mediaTrackInfos;
 	mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack, decodeAudioCodec));
 
-	return SMediaSource::ImportResult(mediaTrackInfos);
+	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mediaTrackInfos));
 }
 
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SMediaSource::ImportResult CWAVEMediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options)
+I<SMediaSource::ImportResult> CWAVEMediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
+		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -161,7 +169,7 @@ SMediaSource::ImportResult CWAVEMediaFile::import(const I<CRandomAccessDataSourc
 	OI<CChunkReader>	chunkReader = waveMediaFile->createChunkReader(randomAccessDataSource);
 	if (!chunkReader.hasInstance())
 		// Not a WAVE file
-		return SMediaSource::ImportResult();
+		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult());
 
 	// Process chunks
 	OI<SError>	error;
@@ -196,7 +204,7 @@ SMediaSource::ImportResult CWAVEMediaFile::import(const I<CRandomAccessDataSourc
 	// Check results
 	if (!formatChunkInfo.hasValue() || !dataChunkInfo.hasValue())
 		// Did not get requisite format chunk or data chunk
-		return SMediaSource::ImportResult(mInvalidWAVEFileError);
+		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mInvalidWAVEFileError));
 
 	return waveMediaFile->import(*chunkReader, *formatChunkInfo, *dataChunkInfo, otherChunkInfos, options);
 }

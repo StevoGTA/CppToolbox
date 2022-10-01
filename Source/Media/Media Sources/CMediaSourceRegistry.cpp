@@ -65,7 +65,7 @@ const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 //----------------------------------------------------------------------------------------------------------------------
 TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, const CString& extension,
-		const OI<CAppleResourceManager>& appleResourceManager, SMediaSource::Options options) const
+		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -81,18 +81,18 @@ TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		// Check extensions
 		if (mediaSource.getExtensions().contains(extensionUse)) {
 			// Found by extension
-			SMediaSource::ImportResult	importResult =
-												mediaSource.import(randomAccessDataSource, appleResourceManager,
-														options);
-			switch (importResult.getResult()) {
+			I<SMediaSource::ImportResult>	importResult =
+													mediaSource.import(randomAccessDataSource, appleResourceManager,
+															options);
+			switch (importResult->getResult()) {
 				case SMediaSource::ImportResult::kSuccess:
 					// Success
 					return TIResult<ImportResult>(
-							ImportResult(mediaSource.getID(), importResult.getMediaTrackInfos()));
+							ImportResult(mediaSource.getID(), importResult));
 
 				case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
 					// Matched source, but source unable to load
-					return TIResult<ImportResult>(importResult.getError());
+					return TIResult<ImportResult>(importResult->getError());
 
 				case SMediaSource::ImportResult::kSourceMismatch:
 					// Not a matched source
@@ -109,17 +109,17 @@ TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
 
 		// Query tracks
-		SMediaSource::ImportResult	importResult =
-											mediaSource.import(randomAccessDataSource, appleResourceManager, options);
-		switch (importResult.getResult()) {
+		I<SMediaSource::ImportResult>	importResult =
+												mediaSource.import(randomAccessDataSource, appleResourceManager,
+														options);
+		switch (importResult->getResult()) {
 			case SMediaSource::ImportResult::kSuccess:
 				// Success
-				return TIResult<ImportResult>(
-						ImportResult(mediaSource.getID(), importResult.getMediaTrackInfos()));
+				return TIResult<ImportResult>(ImportResult(mediaSource.getID(), importResult));
 
 			case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
 				// Matched source, but source unable to load
-				return TIResult<ImportResult>(importResult.getError());
+				return TIResult<ImportResult>(importResult->getError());
 
 			case SMediaSource::ImportResult::kSourceMismatch:
 				// Not a matched source

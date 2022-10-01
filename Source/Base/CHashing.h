@@ -35,6 +35,7 @@ class CHasher {
 
 						// Instance methods
 				void	add(const char* string);
+				void	add(const UInt8* bytePtr, const UInt32 byteCount);
 
 				UInt32	getValue() const;
 

@@ -14,18 +14,24 @@
 struct SMediaSource {
 	// Types
 	enum Options {
-		kNone			= 0,
-		kCreateDecoders	= 1 << 0,
+		kOptionsNone			= 0,
+		kOptionsCreateDecoders	= 1 << 1,
+
+		kOptionsLast = kOptionsCreateDecoders,
 	};
 
 	// ImportResult
-	struct ImportResult {
+	class ImportResult {
 		// Result
-		enum Result {
-			kSuccess,
-			kSourceMatchButUnableToLoad,
-			kSourceMismatch,
-		};
+		public:
+			enum Result {
+				kSuccess,
+				kSourceMatchButUnableToLoad,
+				kSourceMismatch,
+			};
+
+		// Methods:
+		public:
 
 									// Lifecycle methods
 									ImportResult(const CMediaTrackInfos& mediaTrackInfos) :
@@ -35,10 +41,6 @@ struct SMediaSource {
 										mResult(kSourceMatchButUnableToLoad), mError(error)
 										{}
 									ImportResult() : mResult(kSourceMismatch) {}
-									ImportResult(const ImportResult& other) :
-										mResult(other.mResult), mMediaTrackInfos(other.mMediaTrackInfos),
-												mError(other.mError)
-										{}
 
 									// Instance methods
 		const	Result				getResult() const
@@ -56,8 +58,8 @@ struct SMediaSource {
 	};
 
 	// Procs
-	typedef	ImportResult		(*ImportProc)(const I<CRandomAccessDataSource>& randomAccessDataSource,
-										const OI<CAppleResourceManager>& appleResourceManager, Options options);
+	typedef	I<ImportResult>		(*ImportProc)(const I<CRandomAccessDataSource>& randomAccessDataSource,
+										const OI<CAppleResourceManager>& appleResourceManager, UInt32 options);
 
 								// Lifecycle methods
 								SMediaSource(OSType id, const CString& name, const TArray<CString>& extensions,
@@ -76,8 +78,8 @@ struct SMediaSource {
 									{ return mName; }
 	const	TArray<CString>&	getExtensions() const
 									{ return mExtensions; }
-			ImportResult		import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-										const OI<CAppleResourceManager>& appleResourceManager, Options options) const
+			I<ImportResult>		import(const I<CRandomAccessDataSource>& randomAccessDataSource,
+										const OI<CAppleResourceManager>& appleResourceManager, UInt32 options) const
 									{ return mImportProc(randomAccessDataSource, appleResourceManager, options); }
 
 	// Properties
@@ -95,24 +97,27 @@ class CMediaSourceRegistry {
 	// IdentifyInfo
 	public:
 		struct ImportResult {
-										// Lifecycle methods
-										ImportResult(OSType id, const CMediaTrackInfos& mediaTrackInfos) :
-											mID(id), mMediaTrackInfos(mediaTrackInfos)
-											{}
-										ImportResult(const ImportResult& other) :
-											mID(other.mID), mMediaTrackInfos(other.mMediaTrackInfos)
-											{}
+													// Lifecycle methods
+													ImportResult(OSType id,
+															const I<SMediaSource::ImportResult>&
+																	mediaSourceImportResult) :
+														mID(id), mMediaSourceImportResult(mediaSourceImportResult)
+														{}
+													ImportResult(const ImportResult& other) :
+														mID(other.mID),
+																mMediaSourceImportResult(other.mMediaSourceImportResult)
+														{}
 
-										// Instance methods
-					OSType				getID() const
-											{ return mID; }
-			const	CMediaTrackInfos&	getMediaTrackInfos() const
-											{ return mMediaTrackInfos; }
+													// Instance methods
+					OSType							getID() const
+														{ return mID; }
+			const	I<SMediaSource::ImportResult>&	getMediaSourceImportResult() const
+														{ return mMediaSourceImportResult; }
 
 			// Properties
 			private:
-				OSType				mID;
-				CMediaTrackInfos	mMediaTrackInfos;
+				OSType							mID;
+				I<SMediaSource::ImportResult>	mMediaSourceImportResult;
 		};
 
 	// Methods
@@ -123,7 +128,7 @@ class CMediaSourceRegistry {
 				TIResult<ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const CString& extension,
 												const OI<CAppleResourceManager>& appleResourceManager,
-												SMediaSource::Options options = SMediaSource::kNone) const;
+												UInt32 options = SMediaSource::kOptionsNone) const;
 
 	private:
 										// Lifecycle methods

@@ -139,5 +139,11 @@ TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const OR<Ato
 OI<SError> CAtomReader::seekToNextAtom(const Atom& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return setPos(kPositionFromBeginning, atom.mPayloadPos + atom.mPayloadByteCount);
+	// Check if can set pos
+	if ((atom.mPayloadPos + atom.mPayloadByteCount) < getByteCount())
+		// Set pos
+		return setPos(kPositionFromBeginning, atom.mPayloadPos + atom.mPayloadByteCount);
+	else
+		// Nope
+		return OI<SError>(SError::mEndOfData);
 }

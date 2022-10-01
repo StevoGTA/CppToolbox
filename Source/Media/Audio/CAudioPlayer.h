@@ -79,7 +79,7 @@ class CAudioPlayer : public CAudioDestination {
 
 														// gain applies to any channel not referenced by channelGains
 						void							setGain(Float32 gain);
-						void							setGain(const TNumericArray<Float32>& channelGains);
+						void							setGain(const TNumberArray<Float32>& channelGains);
 
 						void							play();
 						void							pause();

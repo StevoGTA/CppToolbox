@@ -10,12 +10,12 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CMediaPacketSource::seekToKeyframe(UInt32 initialFrameIndex, const TNumericArray<UInt32>& keyframeIndexes)
+UInt32 CMediaPacketSource::seekToKeyframe(UInt32 initialFrameIndex, const TNumberArray<UInt32>& keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate through keyframes to find target one
 	UInt32	packetIndex = 0;
-	for (TIteratorM<SNumberWrapper<UInt32>, UInt32> iterator = keyframeIndexes.getIterator(); iterator.hasValue();
+	for (TIteratorM<TNumber<UInt32>, UInt32> iterator = keyframeIndexes.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Check this keyframe
 		if (*iterator <= initialFrameIndex)

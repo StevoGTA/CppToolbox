@@ -26,6 +26,7 @@ const	CString	CString::mEmpty;
 const	CString	CString::mColon(OSSTR(":"));
 const	CString	CString::mComma(OSSTR(","));
 const	CString	CString::mDoubleQuotes(OSSTR("\""));
+const	CString	CString::mEqualSign(OSSTR("="));
 const	CString	CString::mPeriod(OSSTR("."));
 const	CString	CString::mSpace(OSSTR(" "));
 const	CString	CString::mSpaceX4(OSSTR("    "));
