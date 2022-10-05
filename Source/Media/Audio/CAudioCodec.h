@@ -98,11 +98,12 @@ class CDecodeAudioCodec : public CAudioCodec {
 													OI<SError>	error =
 																		mRandomAccessDataSource->readData(
 																				mCurrentPosition, buffer,
-																				frameCount * mFrameByteCount);
+																				(UInt64) frameCount *
+																						(UInt64) mFrameByteCount);
 													ReturnValueIfError(error, TVResult<UInt32>(*error));
 
 													// Success
-													mCurrentPosition += frameCount * mFrameByteCount;
+													mCurrentPosition += (UInt64) frameCount * (UInt64) mFrameByteCount;
 
 													return TVResult<UInt32>(frameCount);
 												} else

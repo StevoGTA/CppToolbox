@@ -24,7 +24,7 @@ class CMediaFoundationDecodeVideoCodecInternals {
 										CMediaFoundationDecodeVideoCodecInternals(
 												CMediaFoundationDecodeVideoCodec& mediaFoundationDecodeVideoCodec,
 												OSType codecID, const I<CMediaPacketSource>& mediaPacketSource,
-												UInt32 timeScale, const TNumericArray<UInt32>& keyframeIndexes,
+												UInt32 timeScale, const TNumberArray<UInt32>& keyframeIndexes,
 												CMediaFoundationDecodeVideoCodec::ReadInputSampleProc
 														readInputSampleProc);
 
@@ -35,7 +35,7 @@ class CMediaFoundationDecodeVideoCodecInternals {
 		OSType													mCodecID;
 		I<CMediaPacketSource>									mMediaPacketSource;
 		UInt32													mTimeScale;
-		TNumericArray<UInt32>									mKeyframeIndexes;
+		TNumberArray<UInt32>									mKeyframeIndexes;
 		CMediaFoundationDecodeVideoCodec::ReadInputSampleProc	mReadInputSampleProc;
 
 		OI<SVideoProcessingFormat>								mVideoProcessingFormat;
@@ -53,7 +53,7 @@ class CMediaFoundationDecodeVideoCodecInternals {
 CMediaFoundationDecodeVideoCodecInternals::CMediaFoundationDecodeVideoCodecInternals(
 		CMediaFoundationDecodeVideoCodec& mediaFoundationDecodeVideoCodec, OSType codecID,
 		const I<CMediaPacketSource>& mediaPacketSource, UInt32 timeScale,
-		const TNumericArray<UInt32>& keyframeIndexes,
+		const TNumberArray<UInt32>& keyframeIndexes,
 		CMediaFoundationDecodeVideoCodec::ReadInputSampleProc readInputSampleProc) :
 				mMediaFoundationDecodeVideoCodec(mediaFoundationDecodeVideoCodec), mCodecID(codecID),
 				mMediaPacketSource(mediaPacketSource), mTimeScale(timeScale), mKeyframeIndexes(keyframeIndexes),
@@ -139,7 +139,7 @@ OI<SError> CMediaFoundationDecodeVideoCodecInternals::noteFormatChanged(IMFMedia
 
 //----------------------------------------------------------------------------------------------------------------------
 CMediaFoundationDecodeVideoCodec::CMediaFoundationDecodeVideoCodec(OSType codecID,
-		const I<CMediaPacketSource>& mediaPacketSource, UInt32 timeScale, const TNumericArray<UInt32>& keyframeIndexes,
+		const I<CMediaPacketSource>& mediaPacketSource, UInt32 timeScale, const TNumberArray<UInt32>& keyframeIndexes,
 		ReadInputSampleProc readInputSampleProc)
 //----------------------------------------------------------------------------------------------------------------------
 {

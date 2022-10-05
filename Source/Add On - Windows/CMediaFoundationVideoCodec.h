@@ -40,7 +40,7 @@ class CMediaFoundationDecodeVideoCodec : public CDecodeVideoCodec {
 										// Lifecycle methods
 										CMediaFoundationDecodeVideoCodec(OSType codecID,
 												const I<CMediaPacketSource>& mediaPacketSource, UInt32 timeScale,
-												const TNumericArray<UInt32>& keyframeIndexes,
+												const TNumberArray<UInt32>& keyframeIndexes,
 												ReadInputSampleProc readInputSampleProc);
 
 										// Subclass methods
