@@ -39,13 +39,13 @@ CVideoProcessor::~CVideoProcessor()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CVideoProcessor::connectInput(const I<CVideoProcessor>& videoProcessor)
+OV<SError> CVideoProcessor::connectInput(const I<CVideoProcessor>& videoProcessor)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mVideoProcessor = new I<CVideoProcessor>(videoProcessor);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

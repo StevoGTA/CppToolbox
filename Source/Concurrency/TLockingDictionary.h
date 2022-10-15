@@ -13,7 +13,7 @@
 template <typename T> class TNLockingDictionary : public CDictionary {
 	// Procs
 	public:
-		typedef	OI<T>	(*UpdateProc)(const OR<T>& currentValue, void* userData);
+		typedef	OV<T>	(*UpdateProc)(const OR<T>& currentValue, void* userData);
 	
 	// Methods
 	public:
@@ -44,12 +44,12 @@ template <typename T> class TNLockingDictionary : public CDictionary {
 										// Update
 										mLock.lockForWriting();
 										OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
-										OI<T>	updatedValue =
+										OV<T>	updatedValue =
 														updateProc(
 																opaque.hasValue() ?
 																		OR<T>(*((T*) opaque.getValue())) : OR<T>(),
 																userData);
-										if (updatedValue.hasInstance())
+										if (updatedValue.hasValue())
 											// Store
 											CDictionary::set(key, new T(*updatedValue));
 										else

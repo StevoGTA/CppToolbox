@@ -134,7 +134,7 @@ class CAudioChannelMapperInternals {
 								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
 							}
 
-		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
+		OV<SAudioProcessingFormat>	mInputAudioProcessingFormat;
 		OI<CAudioFrames>			mInputAudioFrames;
 		PerformProc					mPerformProc;
 };
@@ -162,12 +162,12 @@ CAudioChannelMapper::~CAudioChannelMapper()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProcessor,
+OV<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mInputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mInputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Setup
 	if ((mInternals->mInputAudioProcessingFormat->getAudioChannelMap() == kAudioChannelMap_1_0) &&

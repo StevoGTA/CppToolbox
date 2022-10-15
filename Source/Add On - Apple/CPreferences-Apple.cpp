@@ -38,7 +38,7 @@ class CPreferencesInternals {
 							typeRef = ::CFPreferencesCopyAppValue(pref.mKeyString, mApplicationID);
 
 							// Did we get it?
-							if ((typeRef == nil) && mAlternatePreferencesReference.hasInstance()) {
+							if ((typeRef == nil) && mAlternatePreferencesReference.hasValue()) {
 								// Try to get from old prefs file
 								CFStringRef	alternateApplicationIDStringRef =
 													CCoreFoundation::createStringRefFrom(
@@ -71,7 +71,7 @@ class CPreferencesInternals {
 						}
 
 		CFStringRef					mApplicationID;
-		OI<CPreferences::Reference>	mAlternatePreferencesReference;
+		OV<CPreferences::Reference>	mAlternatePreferencesReference;
 		UInt32						mDelayWriteCount;
 };
 
@@ -518,5 +518,5 @@ void CPreferences::endGroupSet()
 void CPreferences::setAlternate(const Reference& reference)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mAlternatePreferencesReference = OI<Reference>(reference);
+	mInternals->mAlternatePreferencesReference = OV<Reference>(reference);
 }

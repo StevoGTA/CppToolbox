@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "SError.h"
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -14,14 +15,14 @@ struct SAudioSourceStatus {
 										SAudioSourceStatus(UniversalTimeInterval timeInterval) :
 												mTimeInterval(timeInterval)
 												{}
-										SAudioSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
+										SAudioSourceStatus(const SError& error) : mError(OV<SError>(error)) {}
 										SAudioSourceStatus(const SAudioSourceStatus& other) :
 											mTimeInterval(other.mTimeInterval), mError(other.mError)
 											{}
 
 										// Instance methods
 				bool					isSuccess() const
-											{ return !mError.hasInstance(); }
+											{ return !mError.hasValue(); }
 				UniversalTimeInterval	getTimeInterval() const
 											{ return *mTimeInterval; }
 		const	SError&					getError() const
@@ -30,5 +31,5 @@ struct SAudioSourceStatus {
 	// Properties
 	private:
 		OV<UniversalTimeInterval>	mTimeInterval;
-		OI<SError>					mError;
+		OV<SError>					mError;
 };

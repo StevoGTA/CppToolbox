@@ -43,9 +43,39 @@ class CChunkReader : public CByteReader {
 			// Properties
 			private:
 				OV<OSType>	mID;
-				OI<CUUID>	mUUID;
+				OV<CUUID>	mUUID;
 				UInt64		mByteCount;
 				UInt64		mThisChunkPos;
+				UInt64		mNextChunkPos;
+		};
+
+	// Chunk
+	public:
+		struct Chunk {
+							// Lifecycle methods
+							Chunk(OSType id, const CData& payloadData, UInt64 nextChunkPos) :
+								mID(id), mPayloadData(payloadData), mNextChunkPos(nextChunkPos)
+								{}
+							Chunk(const CUUID& uuid, const CData& payloadData, UInt64 nextChunkPos) :
+								mUUID(uuid), mPayloadData(payloadData), mNextChunkPos(nextChunkPos)
+								{}
+							Chunk(const Chunk& other) :
+								mID(other.mID), mUUID(other.mUUID), mPayloadData(other.mPayloadData),
+										mNextChunkPos(other.mNextChunkPos)
+								{}
+
+							// Instance methods
+					bool	hasID() const { return mID.hasValue(); }
+					OSType	getID() const { return *mID; }
+			const	CUUID&	getUUID() const { return *mUUID; }
+			const	CData&	getPayloadData() const { return mPayloadData; }
+					UInt64	getNextChunkPos() const { return mNextChunkPos; }
+
+			// Properties
+			private:
+				OV<OSType>	mID;
+				OV<CUUID>	mUUID;
+				CData		mPayloadData;
 				UInt64		mNextChunkPos;
 		};
 
@@ -64,9 +94,11 @@ class CChunkReader : public CByteReader {
 							~CChunkReader();
 
 							// Instance methods
-		TIResult<ChunkInfo>	readChunkInfo() const;
-		TIResult<CData>		readPayload(const ChunkInfo& chunkInfo, const OV<UInt64>& byteCount = OV<UInt64>()) const;
-		OI<SError>			seekToNext(const ChunkInfo& chunkInfo) const;
+		TVResult<ChunkInfo>	readChunkInfo() const;
+		TVResult<Chunk>		readChunk() const;
+		TVResult<CData>		readPayload(const ChunkInfo& chunkInfo, const OV<UInt64>& byteCount = OV<UInt64>()) const;
+		OV<SError>			seekToNext(const ChunkInfo& chunkInfo) const;
+		OV<SError>			seekToNext(const Chunk& chunk) const;
 
 	// Properties
 	private:

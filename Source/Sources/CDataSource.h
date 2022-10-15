@@ -18,7 +18,7 @@ class CDataSource {
 		virtual					~CDataSource() {}
 
 								// Instance methods
-		virtual	TIResult<CData>	readData() = 0;
+		virtual	TVResult<CData>	readData() = 0;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ class CRandomAccessDataSource : public CDataSource {
 								CRandomAccessDataSource() : CDataSource() {}
 
 								// CDataSource methods
-				TIResult<CData>	readData();
+				TVResult<CData>	readData();
 
 								// Instance methods
 		virtual	UInt64			getByteCount() const = 0;
@@ -39,8 +39,8 @@ class CRandomAccessDataSource : public CDataSource {
 				bool			canReadData(UInt64 position, CData::ByteCount byteCount)
 									{ return (position + byteCount) <= getByteCount(); }
 
-		virtual	OI<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount) = 0;
-		virtual	TIResult<CData>	readData(UInt64 position, CData::ByteCount byteCount) = 0;
+		virtual	OV<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount) = 0;
+		virtual	TVResult<CData>	readData(UInt64 position, CData::ByteCount byteCount) = 0;
 
 	// Properties
 	public:
@@ -62,8 +62,8 @@ class CDataDataSource : public CRandomAccessDataSource {
 						// CRandomAccessDataSource methods
 		UInt64			getByteCount() const;
 
-		OI<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
-		TIResult<CData>	readData(UInt64 position, CData::ByteCount byteCount);
+		OV<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
+		TVResult<CData>	readData(UInt64 position, CData::ByteCount byteCount);
 
 	// Properties
 	private:
@@ -80,7 +80,7 @@ class CStreamingDataSource : public CDataSource {
 								CStreamingDataSource() : CDataSource() {}
 
 								// CDataSource methods
-				TIResult<CData>	readData();
+				TVResult<CData>	readData();
 
 								// Instance methods
 

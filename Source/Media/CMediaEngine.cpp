@@ -45,7 +45,7 @@ struct SAudioProcessingFormats {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	OI<SAudioProcessingFormat>	sDetermineCommonAudioProcessingFormat(
+static	OV<SAudioProcessingFormat>	sDetermineCommonAudioProcessingFormat(
 											const TArray<SAudioProcessingSetup>& sourceAudioProcessingSetups,
 											const TArray<SAudioProcessingSetup>& destinationAudioProcessingSetups,
 											const SAudioProcessingFormat& audioProcessingFormat);
@@ -211,12 +211,12 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 											audioProcessorDestination->getInputSetups();
 
 	// Determine if can connect directly
-	OI<SAudioProcessingFormat>	commonAudioProcessingFormat =
+	OV<SAudioProcessingFormat>	commonAudioProcessingFormat =
 										sDetermineCommonAudioProcessingFormat(audioProcessorSourceAudioProcessingSetups,
 												audioProcessorDestinationAudioProcessingSetups, audioProcessingFormat);
-	if (commonAudioProcessingFormat.hasInstance()) {
+	if (commonAudioProcessingFormat.hasValue()) {
 		// Connect directly
-		OI<SError>	error = audioProcessorSource->setOutputFormat(*commonAudioProcessingFormat);
+		OV<SError>	error = audioProcessorSource->setOutputFormat(*commonAudioProcessingFormat);
 		ReturnValueIfError(error, ConnectResult(*error));
 
 		audioProcessorDestination->connectInput(audioProcessorSource, *commonAudioProcessingFormat);
@@ -234,7 +234,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 												!audioProcessingFormats.doSampleRatesMatch() ||
 												!audioProcessingFormats.doInterleavedsMatch();
 		bool					requiresChannelMapper = !audioProcessingFormats.doAudioChannelMapsMatch();
-		OI<SError>				error;
+		OV<SError>				error;
 		if (requiresConverter && requiresChannelMapper) {
 			// Requires converter and channel mapper
 			SAudioProcessingFormat	intermediateAudioProcessingFormat(
@@ -254,17 +254,17 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 			error =
 					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioConverter,
 							audioProcessingFormats.mDestinationAudioProcessingFormat);
-			if (error.hasInstance()) return ConnectResult(*error);
+			if (error.hasValue()) return ConnectResult(*error);
 
 			error =
 					audioConverter->connectInput((I<CAudioProcessor>&) audioChannelMapper,
 							intermediateAudioProcessingFormat);
-			if (error.hasInstance()) return ConnectResult(*error);
+			if (error.hasValue()) return ConnectResult(*error);
 
 			error =
 					audioChannelMapper->connectInput(audioProcessorSource,
 							audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasInstance()) return ConnectResult(*error);
+			if (error.hasValue()) return ConnectResult(*error);
 		} else if (requiresConverter) {
 			// Requires converter
 			I<CAudioConverter>	audioConverter = createAudioConverter();
@@ -273,12 +273,12 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 			error =
 					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioConverter,
 							audioProcessingFormats.mDestinationAudioProcessingFormat);
-			if (error.hasInstance()) return ConnectResult(*error);
+			if (error.hasValue()) return ConnectResult(*error);
 
 			error =
 					audioConverter->connectInput(audioProcessorSource,
 							audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasInstance()) return ConnectResult(*error);
+			if (error.hasValue()) return ConnectResult(*error);
 		} else {
 			// Requires channel mapper
 			I<CAudioChannelMapper>	audioChannelMapper(new CAudioChannelMapper());
@@ -287,12 +287,12 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 			error =
 					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioChannelMapper,
 							audioProcessingFormats.mDestinationAudioProcessingFormat);
-			if (error.hasInstance()) return ConnectResult(*error);
+			if (error.hasValue()) return ConnectResult(*error);
 
 			error =
 					audioChannelMapper->connectInput(audioProcessorSource,
 							audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasInstance()) return ConnectResult(*error);
+			if (error.hasValue()) return ConnectResult(*error);
 		}
 
 		return audioProcessingFormats.mSourceAudioProcessingFormat;
@@ -304,7 +304,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SAudioProcessingFormat> sDetermineCommonAudioProcessingFormat(
+OV<SAudioProcessingFormat> sDetermineCommonAudioProcessingFormat(
 		const TArray<SAudioProcessingSetup>& sourceAudioProcessingSetups,
 		const TArray<SAudioProcessingSetup>& destinationAudioProcessingSetups,
 		const SAudioProcessingFormat& audioProcessingFormat)
@@ -484,7 +484,7 @@ OI<SAudioProcessingFormat> sDetermineCommonAudioProcessingFormat(
 				continue;
 
 			// We can connect directly
-			return OI<SAudioProcessingFormat>(new SAudioProcessingFormat(bits, sampleRate, audioChannelMap,
+			return OV<SAudioProcessingFormat>(SAudioProcessingFormat(bits, sampleRate, audioChannelMap,
 					isFloat ?
 							SAudioProcessingFormat::kSampleTypeFloat : SAudioProcessingFormat::kSampleTypeSignedInteger,
 					isBigEndian ? SAudioProcessingFormat::kEndianBig : SAudioProcessingFormat::kEndianLittle,
@@ -492,7 +492,7 @@ OI<SAudioProcessingFormat> sDetermineCommonAudioProcessingFormat(
 		}
 	}
 
-	return OI<SAudioProcessingFormat>();
+	return OV<SAudioProcessingFormat>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

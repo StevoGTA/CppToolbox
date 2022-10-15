@@ -19,17 +19,17 @@ const	SError	CRandomAccessDataSource::mSetPosAfterEndError(CString(OSSTR("CDataS
 // MARK: CDataSource methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CRandomAccessDataSource::readData()
+TVResult<CData> CRandomAccessDataSource::readData()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CData	data((CData::ByteCount) getByteCount());
 
 	// Read
-	OI<SError>	error = readData(0, data.getMutableBytePtr(), getByteCount());
-	ReturnValueIfError(error, TIResult<CData>(*error));
+	OV<SError>	error = readData(0, data.getMutableBytePtr(), getByteCount());
+	ReturnValueIfError(error, TVResult<CData>(*error));
 
-	return TIResult<CData>(data);
+	return TVResult<CData>(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,30 +74,30 @@ UInt64 CDataDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDataDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
+OV<SError> CDataDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
 	AssertFailIf((position + byteCount) > mInternals->mData.getByteCount());
 	if ((position + byteCount) > mInternals->mData.getByteCount())
 		// Attempting to ready beyond end of data
-		return OI<SError>(SError::mEndOfData);
+		return OV<SError>(SError::mEndOfData);
 
 	// Copy bytes
 	::memcpy(buffer, (UInt8*) mInternals->mData.getBytePtr() + position, (size_t) byteCount);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CDataDataSource::readData(UInt64 position, CData::ByteCount byteCount)
+TVResult<CData> CDataDataSource::readData(UInt64 position, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
 	AssertFailIf((position + byteCount) > mInternals->mData.getByteCount());
 	if ((position + byteCount) > mInternals->mData.getByteCount())
 		// Attempting to ready beyond end of data
-		return TIResult<CData>(SError::mEndOfData);
+		return TVResult<CData>(SError::mEndOfData);
 
-	return TIResult<CData>(CData((UInt8*) mInternals->mData.getBytePtr() + position, byteCount, false));
+	return TVResult<CData>(CData((UInt8*) mInternals->mData.getBytePtr() + position, byteCount, false));
 }

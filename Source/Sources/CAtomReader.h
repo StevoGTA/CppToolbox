@@ -32,16 +32,17 @@ class CAtomReader : public CByteReader {
 		struct ContainerAtom {
 										// Lifecycle methods
 										ContainerAtom(const TArray<Atom>& atoms) : mAtoms(atoms) {}
+										ContainerAtom(const ContainerAtom& other) : mAtoms(other.mAtoms) {}
 
 										// Instance methods
 					TIteratorD<Atom>	getIterator() const
 											{ return mAtoms.getIterator(); }
 					OR<Atom>			getAtom(OSType type) const
-											{ return mAtoms.getFirst(compareType, &type); }
+											{ return mAtoms.getFirst((TArray<Atom>::IsMatchProc) compareType, &type); }
 
 										// Class methods
-			static	bool				compareType(const Atom& atom, void* type)
-											{ return atom.mType == *((OSType*) type); }
+			static	bool				compareType(const Atom& atom, OSType* type)
+											{ return atom.mType == *type; }
 
 			// Properties
 			TArray<Atom>	mAtoms;
@@ -55,13 +56,13 @@ class CAtomReader : public CByteReader {
 									{}
 
 								// Instance methods
-		TIResult<Atom>			readAtom() const;
-		TIResult<Atom>			readAtom(const Atom& atom, SInt64 offset) const;
-		TIResult<CData>			readAtomPayload(const Atom& atom) const;
-		TIResult<CData>			readAtomPayload(const OR<Atom>& atom) const;
-		TIResult<ContainerAtom>	readContainerAtom() const;
-		TIResult<ContainerAtom>	readContainerAtom(const Atom& atom) const;
-		TIResult<ContainerAtom>	readContainerAtom(const OR<Atom>& atom) const;
-		OI<SError>				seekToNextAtom(const Atom& atom) const;
+		TVResult<Atom>			readAtom() const;
+		TVResult<Atom>			readAtom(const Atom& atom, SInt64 offset) const;
+		TVResult<CData>			readAtomPayload(const Atom& atom) const;
+		TVResult<CData>			readAtomPayload(const OR<Atom>& atom) const;
+		TVResult<ContainerAtom>	readContainerAtom() const;
+		TVResult<ContainerAtom>	readContainerAtom(const Atom& atom) const;
+		TVResult<ContainerAtom>	readContainerAtom(const OR<Atom>& atom) const;
+		OV<SError>				seekToNextAtom(const Atom& atom) const;
 };
 

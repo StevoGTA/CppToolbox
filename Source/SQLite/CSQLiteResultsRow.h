@@ -35,8 +35,8 @@ class CSQLiteResultsRow {
 							return value.hasValue() ? OV<UInt32>((UInt32) *value) : OV<UInt32>();
 						}
 		OV<Float64>	getFloat64(const CSQLiteTableColumn& tableColumn) const;
-		OI<CString>	getString(const CSQLiteTableColumn& tableColumn) const;
-		OI<CData>	getData(const CSQLiteTableColumn& tableColumn) const;
+		OV<CString>	getString(const CSQLiteTableColumn& tableColumn) const;
+		OV<CData>	getData(const CSQLiteTableColumn& tableColumn) const;
 
 	// Properties
 	private:

@@ -441,7 +441,7 @@ class CAudioPlayerImplementation :
 								if (FAILED(result)) {
 									// Error
 									mState = kError;
-									mError = OI<SError>(SErrorFromHRESULT(result));
+									mError = OV<SError>(SErrorFromHRESULT(result));
 									CLogServices::logError(
 											CString(method) + CString(OSSTR(" returned ")) +
 													mError->getDefaultDescription());
@@ -451,7 +451,7 @@ class CAudioPlayerImplementation :
 							{
 								// Error
 								mState = kError;
-								mError = OI<SError>(SErrorFromWindowsGetLastError());
+								mError = OV<SError>(SErrorFromWindowsGetLastError());
 								CLogServices::logError(
 										CString(method) + CString(OSSTR(" returned ")) +
 												mError->getDefaultDescription());
@@ -478,7 +478,7 @@ class CAudioPlayerImplementation :
 		MFWORKITEM_KEY									mFillBufferKey;
 		OI<CAudioPlayerBufferThread>					mAudioPlayerBufferThread;
 		OI<CSRSWBIPSegmentedQueue>						mQueue;
-		OI<SError>										mError;
+		OV<SError>										mError;
 		State											mState;
 		TMFAsyncCallback<CAudioPlayerImplementation>	mFillBufferAsyncCallback;
 		TMFAsyncCallback<CAudioPlayerImplementation>	mPlayAsyncCallback;
@@ -534,7 +534,7 @@ class CAudioPlayerInternals {
 		CAudioPlayer&						mAudioPlayer;
 		CAudioPlayer::Info					mInfo;
 		ComPtr<CAudioPlayerImplementation>	mImplementation;
-		OI<SAudioProcessingFormat>			mAudioProcessingFormat;
+		OV<SAudioProcessingFormat>			mAudioProcessingFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -603,12 +603,12 @@ TArray<SAudioProcessingSetup> CAudioPlayer::getInputSetups() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
+OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 	
 	// Wait until initialized
 	while (mInternals->mImplementation->mState == CAudioPlayerImplementation::kInitializing)

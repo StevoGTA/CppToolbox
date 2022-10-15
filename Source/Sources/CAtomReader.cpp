@@ -16,70 +16,70 @@ static	SError	sNoAtomError(sAtomMediaReaderErrorDomain, 1, CString(OSSTR("No Ato
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CAtomReader::Atom> CAtomReader::readAtom() const
+TVResult<CAtomReader::Atom> CAtomReader::readAtom() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read byte count as UInt32
 	TVResult<UInt32>	byteCount32 = readUInt32();
-	ReturnValueIfResultError(byteCount32, TIResult<CAtomReader::Atom>(byteCount32.getError()));
+	ReturnValueIfResultError(byteCount32, TVResult<CAtomReader::Atom>(byteCount32.getError()));
 
 	// Read type as OSType
 	TVResult<OSType>	type = readOSType();
-	ReturnValueIfResultError(type, TIResult<CAtomReader::Atom>(type.getError()));
+	ReturnValueIfResultError(type, TVResult<CAtomReader::Atom>(type.getError()));
 
 	// Do we need to read byte count as UInt64?
 	UInt64	payloadByteCount;
 	if (*byteCount32 == 1) {
 		// Yes
 		TVResult<UInt64>	byteCount64 = readUInt64();
-		ReturnValueIfResultError(byteCount64, TIResult<CAtomReader::Atom>(byteCount64.getError()));
+		ReturnValueIfResultError(byteCount64, TVResult<CAtomReader::Atom>(byteCount64.getError()));
 		payloadByteCount = *byteCount64 - 16;
 	} else
 		// No
 		payloadByteCount = *byteCount32 - 8;
 
-	return TIResult<Atom>(Atom(*type, getPos(), payloadByteCount));
+	return TVResult<Atom>(Atom(*type, getPos(), payloadByteCount));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CAtomReader::Atom> CAtomReader::readAtom(const Atom& atom, SInt64 offset) const
+TVResult<CAtomReader::Atom> CAtomReader::readAtom(const Atom& atom, SInt64 offset) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	OI<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos + offset);
-	ReturnValueIfError(error, TIResult<CAtomReader::Atom>(*error));
+	OV<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos + offset);
+	ReturnValueIfError(error, TVResult<CAtomReader::Atom>(*error));
 
 	return readAtom();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CAtomReader::readAtomPayload(const Atom& atom) const
+TVResult<CData> CAtomReader::readAtomPayload(const Atom& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	OI<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos);
-	ReturnValueIfError(error, TIResult<CData>(*error));
+	OV<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos);
+	ReturnValueIfError(error, TVResult<CData>(*error));
 
 	return readData(atom.mPayloadByteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CAtomReader::readAtomPayload(const OR<Atom>& atom) const
+TVResult<CData> CAtomReader::readAtomPayload(const OR<Atom>& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return atom.hasReference() ? readAtomPayload(*atom) : TIResult<CData>(sNoAtomError);
+	return atom.hasReference() ? readAtomPayload(*atom) : TVResult<CData>(sNoAtomError);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom() const
+TVResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read Atoms
 	TNArray<Atom>	atoms;
 	while (getPos() < getByteCount()) {
 		// Get atom info
-		TIResult<Atom>	childAtom = readAtom();
-		ReturnValueIfResultError(childAtom, TIResult<ContainerAtom>(childAtom.getError()));
+		TVResult<Atom>	childAtom = readAtom();
+		ReturnValueIfResultError(childAtom, TVResult<ContainerAtom>(childAtom.getError()));
 
 		// Check for terminator atom
 		if ((childAtom->mType == 0) || (childAtom->mPayloadByteCount == 0))
@@ -90,27 +90,27 @@ TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom() const
 		atoms += *childAtom;
 
 		// Seek
-		OI<SError>	error = seekToNextAtom(*childAtom);
-		ReturnValueIfError(error, TIResult<ContainerAtom>(*error));
+		OV<SError>	error = seekToNextAtom(*childAtom);
+		ReturnValueIfError(error, TVResult<ContainerAtom>(*error));
 	}
 
-	return TIResult<ContainerAtom>(ContainerAtom(atoms));
+	return TVResult<ContainerAtom>(ContainerAtom(atoms));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const Atom& atom) const
+TVResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const Atom& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	OI<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos);
-	ReturnValueIfError(error, TIResult<ContainerAtom>(*error));
+	OV<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos);
+	ReturnValueIfError(error, TVResult<ContainerAtom>(*error));
 
 	// Read Atoms
 	TNArray<Atom>	atoms;
 	while (getPos() < (atom.mPayloadPos + atom.mPayloadByteCount)) {
 		// Get atom info
-		TIResult<Atom>	childAtom = readAtom();
-		ReturnValueIfResultError(childAtom, TIResult<ContainerAtom>(childAtom.getError()));
+		TVResult<Atom>	childAtom = readAtom();
+		ReturnValueIfResultError(childAtom, TVResult<ContainerAtom>(childAtom.getError()));
 
 		// Check for terminator atom
 		if ((childAtom->mType == 0) || (childAtom->mPayloadByteCount == 0))
@@ -122,28 +122,28 @@ TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const Atom& 
 
 		// Seek
 		error = seekToNextAtom(*childAtom);
-		ReturnValueIfError(error, TIResult<ContainerAtom>(*error));
+		ReturnValueIfError(error, TVResult<ContainerAtom>(*error));
 	}
 
-	return TIResult<ContainerAtom>(ContainerAtom(atoms));
+	return TVResult<ContainerAtom>(ContainerAtom(atoms));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const OR<Atom>& atom) const
+TVResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const OR<Atom>& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return atom.hasReference() ? readContainerAtom(*atom) : TIResult<ContainerAtom>(sNoAtomError);
+	return atom.hasReference() ? readContainerAtom(*atom) : TVResult<ContainerAtom>(sNoAtomError);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAtomReader::seekToNextAtom(const Atom& atom) const
+OV<SError> CAtomReader::seekToNextAtom(const Atom& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can set pos
-	if ((atom.mPayloadPos + atom.mPayloadByteCount) < getByteCount())
+	if ((atom.mPayloadPos + atom.mPayloadByteCount) <= getByteCount())
 		// Set pos
 		return setPos(kPositionFromBeginning, atom.mPayloadPos + atom.mPayloadByteCount);
 	else
 		// Nope
-		return OI<SError>(SError::mEndOfData);
+		return OV<SError>(SError::mEndOfData);
 }

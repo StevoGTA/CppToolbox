@@ -14,11 +14,11 @@
 
 class CAppleResource {
 	public:
-		CAppleResource(UInt16 id, const OI<CString>& name, const CData& data) : mID(id), mName(name), mData(data) {}
+		CAppleResource(UInt16 id, const OV<CString>& name, const CData& data) : mID(id), mName(name), mData(data) {}
 		CAppleResource(const CAppleResource& other) : mID(other.mID), mName(other.mName), mData(other.mData) {}
 
 	UInt16		mID;
-	OI<CString>	mName;
+	OV<CString>	mName;
 	CData		mData;
 };
 
@@ -87,17 +87,17 @@ OR<CData> CAppleResourceManager::get(OSType resourceType, UInt16 resourceID) con
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CString> CAppleResourceManager::getPascalString(OSType resourceType, UInt16 resourceID) const
+OV<CString> CAppleResourceManager::getPascalString(OSType resourceType, UInt16 resourceID) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get data
 	OR<CData>	data = get(resourceType, resourceID);
 
 	return data.hasReference() ?
-			OI<CString>(
-					new CString((const char*) data->getBytePtr() + 1, (CString::Length) (data->getByteCount() - 1),
+			OV<CString>(
+					CString((const char*) data->getBytePtr() + 1, (CString::Length) (data->getByteCount() - 1),
 							CString::kEncodingMacRoman)) :
-			OI<CString>();
+			OV<CString>();
 }
 
 #if 0
@@ -151,7 +151,7 @@ void CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, const CS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAppleResourceManager::write()
+OV<SError> CAppleResourceManager::write()
 //----------------------------------------------------------------------------------------------------------------------
 {
 //	// Setup
@@ -285,7 +285,7 @@ OI<SError> CAppleResourceManager::write()
 //	error = mInternals->mFile.write(nameListData);
 //	ReturnErrorIfError(error);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 #endif
@@ -298,7 +298,7 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAcces
 {
 	// Setup
 	CByteReader	byteReader(randomAccessDataSource, true);
-	OI<SError>	error;
+	OV<SError>	error;
 
 	// Read header
 	if (byteReader.getByteCount() < (sizeof(UInt32) * 4))
@@ -399,10 +399,10 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAcces
 			TVResult<UInt32>	dataLength = byteReader.readUInt32();
 			ReturnValueIfResultError(dataLength, TIResult<CAppleResourceManager>(dataLength.getError()));
 
-			TIResult<CData>	resourceData = byteReader.readData(*dataLength);
+			TVResult<CData>	resourceData = byteReader.readData(*dataLength);
 			ReturnValueIfResultError(resourceData, TIResult<CAppleResourceManager>(resourceData.getError()));
 
-			OI<CString>	name;
+			OV<CString>	name;
 			if (*nameOffset != -1) {
 				// Seek to name
 				error =
@@ -416,11 +416,11 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAcces
 				// Check if actually have any bytes for name
 				if (*nameByteCount > 0) {
 					// Read name data
-					TIResult<CData>	nameData = byteReader.readData(*nameByteCount);
+					TVResult<CData>	nameData = byteReader.readData(*nameByteCount);
 					ReturnValueIfResultError(nameData, TIResult<CAppleResourceManager>(nameData.getError()));
 
 					// Store name
-					name = OI<CString>(new CString(*nameData, CString::kEncodingMacRoman));
+					name = OV<CString>(CString(*nameData, CString::kEncodingMacRoman));
 				}
 			}
 

@@ -16,5 +16,5 @@ class CBinaryPropertyList {
 	// Methods
 	public:
 										// Class methods
-		static	TIResult<CDictionary>	dictionaryFrom(const I<CRandomAccessDataSource>& randomAccessDataSource);
+		static	TVResult<CDictionary>	dictionaryFrom(const I<CRandomAccessDataSource>& randomAccessDataSource);
 };

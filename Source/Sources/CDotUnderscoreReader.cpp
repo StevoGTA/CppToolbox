@@ -23,12 +23,12 @@ class CDotUnderscoreAttribute {
 class CDotUnderscoreReaderInternals {
 	public:
 		CDotUnderscoreReaderInternals(const TNDictionary<TNArray<CDotUnderscoreAttribute> >& attributeMap,
-				const OI<CData>& resourceFork) :
+				const OV<CData>& resourceFork) :
 			mAttributeMap(attributeMap), mResourceFork(resourceFork)
 			{}
 
 		TNDictionary<TNArray<CDotUnderscoreAttribute> >	mAttributeMap;
-		OI<CData>										mResourceFork;
+		OV<CData>										mResourceFork;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ static	SError	sInvalidData(sErrorDomain, 1, CString(OSSTR("Invalid Data")));
 
 //----------------------------------------------------------------------------------------------------------------------
 CDotUnderscoreReader::CDotUnderscoreReader(const TNDictionary<TNArray<CDotUnderscoreAttribute> >& attributeMap,
-		const OI<CData>& resourceFork)
+		const OV<CData>& resourceFork)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -114,7 +114,7 @@ CDotUnderscoreReader::~CDotUnderscoreReader()
 OR<CData> CDotUnderscoreReader::getResourceFork() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mResourceFork.hasInstance() ? OR<CData>(*mInternals->mResourceFork) : OR<CData>();
+	return mInternals->mResourceFork.hasValue() ? OR<CData>((CData&) *mInternals->mResourceFork) : OR<CData>();
 }
 
 // MARK: Class methods
@@ -125,14 +125,14 @@ TIResult<CDotUnderscoreReader> CDotUnderscoreReader::from(const I<CRandomAccessD
 {
 	// Setup
 	CByteReader	byteReader(randomAccessDataSource, true);
-	OI<SError>	error;
+	OV<SError>	error;
 
 	// Read header
 	if (byteReader.getByteCount() < sizeof(SDotUnderscoreHeader))
 		// Not big enough to read header
 		return TIResult<CDotUnderscoreReader>(sInvalidData);
 
-	TIResult<CData>		data = byteReader.readData(sizeof(SDotUnderscoreHeader));
+	TVResult<CData>		data = byteReader.readData(sizeof(SDotUnderscoreHeader));
 	ReturnValueIfResultError(data, TIResult<CDotUnderscoreReader>(data.getError()));
 
 	const	SDotUnderscoreHeader&	header = *((const SDotUnderscoreHeader*) data->getBytePtr());
@@ -162,5 +162,5 @@ TIResult<CDotUnderscoreReader> CDotUnderscoreReader::from(const I<CRandomAccessD
 	ReturnValueIfResultError(data, TIResult<CDotUnderscoreReader>(data.getError()));
 
 	return TIResult<CDotUnderscoreReader>(
-			OI<CDotUnderscoreReader>(new CDotUnderscoreReader(attributeMap, OI<CData>(*data))));
+			OI<CDotUnderscoreReader>(new CDotUnderscoreReader(attributeMap, OV<CData>(*data))));
 }

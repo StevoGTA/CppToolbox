@@ -12,7 +12,7 @@
 
 template <typename T, typename U> struct TMediaTrackInfo {
 				// Lifecycle methods
-				TMediaTrackInfo<T, U>(const T& mediaTrack, const OI<I<U> >& codec) :
+				TMediaTrackInfo<T, U>(const T& mediaTrack, const OV<I<U> >& codec) :
 					mMediaTrack(mediaTrack), mCodec(codec)
 					{}
 				TMediaTrackInfo<T, U>(const T& mediaTrack) : mMediaTrack(mediaTrack) {}
@@ -26,7 +26,7 @@ template <typename T, typename U> struct TMediaTrackInfo {
 
 	// Properties
 	T			mMediaTrack;
-	OI<I<U> >	mCodec;
+	OV<I<U> >	mCodec;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

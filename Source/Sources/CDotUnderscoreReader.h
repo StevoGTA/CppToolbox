@@ -29,7 +29,7 @@ class CDotUnderscoreReader {
 												CDotUnderscoreReader(
 														const TNDictionary<TNArray<CDotUnderscoreAttribute> >&
 																attributeMap,
-														const OI<CData>& resourceFork);
+														const OV<CData>& resourceFork);
 
 	// Properties
 	private:

@@ -22,7 +22,7 @@
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
-					return OI<SError>(error);														\
+					return OV<SError>(error);														\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
+TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -62,18 +62,18 @@ TIResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 	// Check results
 	if (nsError == nil)
 		// Have urls
-		return TIResult<SFoldersFiles>([NSURL foldersFilesFor:urls]);
+		return TVResult<SFoldersFiles>([NSURL foldersFilesFor:urls]);
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportErrorFileFolderX1(sError, "getting folders and files", folder);
 
-		return TIResult<SFoldersFiles>(sError);
+		return TVResult<SFoldersFiles>(sError);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool deep)
+TVResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -103,18 +103,18 @@ TIResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool d
 	// Check results
 	if (nsError == nil)
 		// Have urls
-		return TIResult<TArray<CFolder> >([NSURL foldersFor:urls]);
+		return TVResult<TArray<CFolder> >([NSURL foldersFor:urls]);
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportErrorFileFolderX1(sError, "getting folders", folder);
 
-		return TIResult<TArray<CFolder> >(sError);
+		return TVResult<TArray<CFolder> >(sError);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
+TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -144,18 +144,18 @@ TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 	// Check results
 	if (nsError == nil)
 		// Have urls
-		return TIResult<TArray<CFile> >([NSURL filesFor:urls]);
+		return TVResult<TArray<CFile> >([NSURL filesFor:urls]);
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportErrorFileFolderX1(sError, "getting files", folder);
 
-		return TIResult<TArray<CFile> >(sError);
+		return TVResult<TArray<CFile> >(sError);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
+OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -171,7 +171,7 @@ OI<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 	if ([[NSFileManager defaultManager] replaceItemAtURL:destinationURL withItemAtURL:sourceURL backupItemName:nil
 			options:0 resultingItemURL:nil error:&error])
 		// Success
-		return OI<SError>();
+		return OV<SError>();
 	else
 		// Error
 		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), "replacing file", sourceFile,

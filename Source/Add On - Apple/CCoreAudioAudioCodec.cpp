@@ -36,7 +36,7 @@ class CCoreAudioDecodeAudioCodecInternals {
 																							inUserData);
 
 									// Read packets
-									TIResult<TArray<SMediaPacket> >	mediaPacketsResult =
+									TVResult<TArray<SMediaPacket> >	mediaPacketsResult =
 																			internals.mMediaPacketSource->readNextInto(
 																					internals.mInputPacketData);
 									if (mediaPacketsResult.hasError()) {
@@ -93,13 +93,13 @@ class CCoreAudioDecodeAudioCodecInternals {
 		OSType						mCodecID;
 		I<CMediaPacketSource>		mMediaPacketSource;
 
-		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OV<SAudioProcessingFormat>	mAudioProcessingFormat;
 
 		AudioConverterRef			mAudioConverterRef;
 		UInt32						mDecodeFramesToIgnore;
 		CData						mInputPacketData;
 		CData						mInputPacketDescriptionsData;
-		OI<SError>					mFillBufferDataError;
+		OV<SError>					mFillBufferDataError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -125,11 +125,11 @@ CCoreAudioDecodeAudioCodec::~CCoreAudioDecodeAudioCodec()
 // MARK: CDecodeAudioCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CCoreAudioDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
+OV<SError> CCoreAudioDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Create Audio Converter
 	AudioStreamBasicDescription	sourceABSD = getSourceASBD(mInternals->mCodecID, audioProcessingFormat);
@@ -143,10 +143,10 @@ OI<SError> CCoreAudioDecodeAudioCodec::setup(const SAudioProcessingFormat& audio
 	ReturnErrorIfFailed(status, OSSTR("AudioConverterNew"));
 
 	// Set magic cookie
-	OI<SError>	error = setMagicCookie(mInternals->mAudioConverterRef);
+	OV<SError>	error = setMagicCookie(mInternals->mAudioConverterRef);
 	ReturnErrorIfError(error);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ void CCoreAudioDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
+OV<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -184,7 +184,7 @@ OI<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 						CCoreAudioDecodeAudioCodecInternals::fillBufferData, mInternals,
 						&mInternals->mDecodeFramesToIgnore, &audioBufferList, nil);
 		if (status != noErr) return mInternals->mFillBufferDataError;
-		if (mInternals->mDecodeFramesToIgnore == 0) return OI<SError>(SError::mEndOfData);
+		if (mInternals->mDecodeFramesToIgnore == 0) return OV<SError>(SError::mEndOfData);
 
 		// Done ignoring
 		mInternals->mDecodeFramesToIgnore = 0;
@@ -197,10 +197,10 @@ OI<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 					CCoreAudioDecodeAudioCodecInternals::fillBufferData, mInternals, &frameCount, &audioBufferList,
 					nil);
 	if (status != noErr) return mInternals->mFillBufferDataError;
-	if (frameCount == 0) return OI<SError>(SError::mEndOfData);
+	if (frameCount == 0) return OV<SError>(SError::mEndOfData);
 
 	// Update
 	audioFrames.completeWrite(audioBufferList);
 
-	return OI<SError>();
+	return OV<SError>();
 }

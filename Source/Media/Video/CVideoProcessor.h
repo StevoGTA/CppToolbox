@@ -45,7 +45,7 @@ class CVideoProcessor {
 		virtual						~CVideoProcessor();
 
 									// Instance methods
-		virtual	OI<SError>			connectInput(const I<CVideoProcessor>& videoProcessor);
+		virtual	OV<SError>			connectInput(const I<CVideoProcessor>& videoProcessor);
 		virtual	TNArray<CString>	getSetupDescription(const CString& indent);
 
 		virtual	void				setSourceWindow(UniversalTimeInterval startTimeInterval,

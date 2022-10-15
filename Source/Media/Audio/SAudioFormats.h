@@ -208,8 +208,13 @@ struct SAudioProcessingFormat {
 						SAudioProcessingFormat(UInt8 bits, Float32 sampleRate, EAudioChannelMap audioChannelMap,
 								SampleType sampleType = kSampleTypeSignedInteger, Endian endian = kEndianNative,
 								Interleaved interleaved = kInterleaved) :
-							mBits(bits), mSampleRate(sampleRate), mAudioChannelMap(audioChannelMap), mSampleType(sampleType),
-									mEndian(endian), mInterleaved(interleaved)
+							mBits(bits), mSampleRate(sampleRate), mAudioChannelMap(audioChannelMap),
+									mSampleType(sampleType), mEndian(endian), mInterleaved(interleaved)
+							{}
+						SAudioProcessingFormat(const SAudioProcessingFormat& other) :
+							mBits(other.mBits), mSampleRate(other.mSampleRate),
+									mAudioChannelMap(other.mAudioChannelMap), mSampleType(other.mSampleType),
+									mEndian(other.mEndian), mInterleaved(other.mInterleaved)
 							{}
 
 						// Instance methods

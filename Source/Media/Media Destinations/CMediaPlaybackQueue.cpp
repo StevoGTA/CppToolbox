@@ -29,10 +29,10 @@ class CMediaPlaybackQueuePrepareThread : public CThread {
 		struct CompletedMessage : public CSRSWMessageQueue::ProcMessage {
 					// Lifecycle Methods
 					CompletedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item,
-							const TIResult<I<CMediaPlayer> >& mediaPlayer) :
+							const TVResult<I<CMediaPlayer> >& mediaPlayer) :
 						CSRSWMessageQueue::ProcMessage(sizeof(CompletedMessage), proc, userData),
 								mItem(new I<CMediaPlaybackQueue::Item>(item)),
-								mMediaPlayer(new TIResult<I<CMediaPlayer> >(mediaPlayer))
+								mMediaPlayer(new TVResult<I<CMediaPlayer> >(mediaPlayer))
 						{}
 
 					// Instance methods
@@ -44,7 +44,7 @@ class CMediaPlaybackQueuePrepareThread : public CThread {
 
 			// Properties
 			I<CMediaPlaybackQueue::Item>*	mItem;
-			TIResult<I<CMediaPlayer> >*		mMediaPlayer;
+			TVResult<I<CMediaPlayer> >*		mMediaPlayer;
 		};
 
 						CMediaPlaybackQueuePrepareThread(CSRSWMessageQueues& messageQueues,
@@ -79,7 +79,7 @@ class CMediaPlaybackQueuePrepareThread : public CThread {
 										mMessageQueue.submit(StartedMessage(handleStarted, this, *item));
 
 										// Prepare
-										TIResult<I<CMediaPlayer> >	mediaPlayer = (*item)->prepare();
+										TVResult<I<CMediaPlayer> >	mediaPlayer = (*item)->prepare();
 
 										// Check cancelled
 										if (!mCancelled) {

@@ -432,7 +432,7 @@ class CAudioPlayerInternals {
 		OI<CAudioPlayerBufferThread>	mAudioPlayerBufferThread;
 		OI<CSRSWBIPSegmentedQueue>		mQueue;
 		OV<UInt32>						mAudioEngineIndex;
-		OI<SAudioProcessingFormat>		mAudioProcessingFormat;
+		OV<SAudioProcessingFormat>		mAudioProcessingFormat;
 		OV<Float32>						mSampleRate;
 		OV<UInt32>						mBytesPerFrame;
 
@@ -493,12 +493,12 @@ CAudioPlayer::~CAudioPlayer()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
+OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 	
 	// Setup
 	UInt32	segmentCount;

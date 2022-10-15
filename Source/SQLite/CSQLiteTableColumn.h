@@ -68,7 +68,7 @@ class CSQLiteTableColumn : public CEquatable {
 	public:
 											// Lifecycle methods
 											CSQLiteTableColumn(const CString& name, Kind kind, Options options = kNone,
-													OI<SSQLiteValue> defaultValue = nil);
+													OV<SSQLiteValue> defaultValue = OV<SSQLiteValue>());
 											CSQLiteTableColumn(const CSQLiteTableColumn& other);
 											~CSQLiteTableColumn();
 
@@ -80,7 +80,7 @@ class CSQLiteTableColumn : public CEquatable {
 				const	CString&			getName() const;
 						Kind				getKind() const;
 						Options				getOptions() const;
-						OI<SSQLiteValue>	getDefaultValue() const;
+						OV<SSQLiteValue>	getDefaultValue() const;
 
 											// Class methods
 		static	bool						isInteger(Kind kind)

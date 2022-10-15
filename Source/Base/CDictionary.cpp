@@ -921,11 +921,11 @@ void CDictionary::set(const CString& key, const SValue& value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDictionary::set(const CString& key, const OI<SValue>& value)
+void CDictionary::set(const CString& key, const OV<SValue>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for value
-	if (value.hasInstance())
+	if (value.hasValue())
 		// Have value
 		mInternals = (CDictionaryInternals*) mInternals->set(key, *value);
 	else

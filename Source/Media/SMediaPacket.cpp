@@ -90,7 +90,7 @@ UInt32 CSeekableUniformMediaPacketSource::seekToDuration(UInt32 duration)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNext()
+TVResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNext()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can read next packet
@@ -98,23 +98,23 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNe
 		// Copy packet data
 		CData		data((CData::ByteCount) mInternals->mBytesPerPacket);
 		UInt64		byteOffset = mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
-		OI<SError>	error =
+		OV<SError>	error =
 							mInternals->mRandomAccessDataSource->readData(byteOffset, data.getMutableBytePtr(),
 									mInternals->mBytesPerPacket);
-		ReturnValueIfError(error, TIResult<CMediaPacketSource::DataInfo>(*error));
+		ReturnValueIfError(error, TVResult<CMediaPacketSource::DataInfo>(*error));
 
 		// Update
 		mInternals->mNextPacketIndex++;
 
-		return TIResult<CMediaPacketSource::DataInfo>(
+		return TVResult<CMediaPacketSource::DataInfo>(
 				CMediaPacketSource::DataInfo(data, mInternals->mDurationPerPacket));
 	} else
 		// End of data
-		return TIResult<CMediaPacketSource::DataInfo>(SError::mEndOfData);
+		return TVResult<CMediaPacketSource::DataInfo>(SError::mEndOfData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<SMediaPacket> > CSeekableUniformMediaPacketSource::readNextInto(CData& data,
+TVResult<TArray<SMediaPacket> > CSeekableUniformMediaPacketSource::readNextInto(CData& data,
 		const OV<UInt32>& maxPacketCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -129,10 +129,10 @@ TIResult<TArray<SMediaPacket> > CSeekableUniformMediaPacketSource::readNextInto(
 			// Copy packet data
 			UInt64		byteOffset =
 								mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
-			OI<SError>	error =
+			OV<SError>	error =
 								mInternals->mRandomAccessDataSource->readData(byteOffset, packetDataPtr,
 											mInternals->mBytesPerPacket);
-			ReturnValueIfError(error, TIResult<TArray<SMediaPacket> >(*error));
+			ReturnValueIfError(error, TVResult<TArray<SMediaPacket> >(*error));
 
 			// Update
 			mInternals->mNextPacketIndex++;
@@ -148,7 +148,7 @@ TIResult<TArray<SMediaPacket> > CSeekableUniformMediaPacketSource::readNextInto(
 	}
 
 	return !mediaPackets.isEmpty() ?
-			TIResult<TArray<SMediaPacket> >(mediaPackets) : TIResult<TArray<SMediaPacket> >(SError::mEndOfData);
+			TVResult<TArray<SMediaPacket> >(mediaPackets) : TVResult<TArray<SMediaPacket> >(SError::mEndOfData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -221,7 +221,7 @@ void CSeekableVaryingMediaPacketSource::seekToPacket(UInt32 packetIndex)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::readNext()
+TVResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::readNext()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can read next packet
@@ -232,23 +232,23 @@ TIResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::readNe
 
 		// Copy packet data
 		CData		data((CData::ByteCount) mediaPacketAndLocation.mMediaPacket.mByteCount);
-		OI<SError>	error =
+		OV<SError>	error =
 							mInternals->mRandomAccessDataSource->readData(mediaPacketAndLocation.mByteOffset,
 									data.getMutableBytePtr(), mediaPacketAndLocation.mMediaPacket.mByteCount);
-		ReturnValueIfError(error, TIResult<CMediaPacketSource::DataInfo>(*error));
+		ReturnValueIfError(error, TVResult<CMediaPacketSource::DataInfo>(*error));
 
 		// Update
 		mInternals->mNextPacketIndex++;
 
-		return TIResult<CMediaPacketSource::DataInfo>(
+		return TVResult<CMediaPacketSource::DataInfo>(
 				CMediaPacketSource::DataInfo(data, mediaPacketAndLocation.mMediaPacket.mDuration));
 	} else
 		// End of data
-		return TIResult<CMediaPacketSource::DataInfo>(SError::mEndOfData);
+		return TVResult<CMediaPacketSource::DataInfo>(SError::mEndOfData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::readNextInto(CData& data,
+TVResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::readNextInto(CData& data,
 		const OV<UInt32>& maxPacketCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -265,10 +265,10 @@ TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::readNextInto(
 		// Check if have space
 		if (mediaPacketAndLocation.mMediaPacket.mByteCount <= dataByteCountRemaining) {
 			// Copy packet data
-			OI<SError>	error =
+			OV<SError>	error =
 								mInternals->mRandomAccessDataSource->readData(mediaPacketAndLocation.mByteOffset,
 										packetDataPtr, mediaPacketAndLocation.mMediaPacket.mByteCount);
-			ReturnValueIfError(error, TIResult<TArray<SMediaPacket> >(*error));
+			ReturnValueIfError(error, TVResult<TArray<SMediaPacket> >(*error));
 
 			// Update
 			mInternals->mNextPacketIndex++;
@@ -284,5 +284,5 @@ TIResult<TArray<SMediaPacket> > CSeekableVaryingMediaPacketSource::readNextInto(
 	}
 
 	return !mediaPackets.isEmpty() ?
-			TIResult<TArray<SMediaPacket> >(mediaPackets) : TIResult<TArray<SMediaPacket> >(SError::mEndOfData);
+			TVResult<TArray<SMediaPacket> >(mediaPackets) : TVResult<TArray<SMediaPacket> >(SError::mEndOfData);
 }

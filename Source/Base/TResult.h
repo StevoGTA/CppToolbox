@@ -13,7 +13,7 @@ template <typename T> struct TIResult {
 					// Lifecycle Methods
 					TIResult(const T& instance) : mInstance(OI<T>(instance)) {}
 					TIResult(const OI<T>& instance) : mInstance(instance) {}
-					TIResult(const SError& error) : mError(OI<SError>(error)) {}
+					TIResult(const SError& error) : mError(OV<SError>(error)) {}
 					TIResult(const TIResult& other) : mInstance(other.mInstance), mError(other.mError) {}
 
 					// Instance Methods
@@ -25,9 +25,9 @@ template <typename T> struct TIResult {
 						{ AssertFailIf(!mInstance.hasInstance()); return *mInstance; }
 
 			bool	hasError() const
-						{ return mError.hasInstance(); }
+						{ return mError.hasValue(); }
 	const	SError&	getError() const
-						{ AssertFailIf(!mError.hasInstance()); return *mError; }
+						{ AssertFailIf(!mError.hasValue()); return *mError; }
 
 	const	T&		operator*() const
 						{ AssertFailIf(!mInstance.hasInstance()); return *mInstance; }
@@ -36,7 +36,7 @@ template <typename T> struct TIResult {
 
 	private:
 		OI<T>		mInstance;
-		OI<SError>	mError;
+		OV<SError>	mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ template <typename T> struct TIResult {
 template <typename T> struct TVResult {
 					// Lifecycle Methods
 					TVResult(const T value) : mValue(OV<T>(value)) {}
-					TVResult(const SError& error) : mError(OI<SError>(error)) {}
+					TVResult(const SError& error) : mError(OV<SError>(error)) {}
 					TVResult(const TVResult& other) : mValue(other.mValue), mError(other.mError) {}
 
 					// Instance Methods
@@ -55,9 +55,9 @@ template <typename T> struct TVResult {
 						{ return *mValue; }
 
 			bool	hasError() const
-						{ return mError.hasInstance(); }
+						{ return mError.hasValue(); }
 	const	SError&	getError() const
-						{ AssertFailIf(!mError.hasInstance()); return *mError; }
+						{ AssertFailIf(!mError.hasValue()); return *mError; }
 
 	const	T&		operator*() const
 						{ AssertFailIf(!mValue.hasValue()); return *mValue; }
@@ -66,14 +66,14 @@ template <typename T> struct TVResult {
 
 	private:
 		OV<T>		mValue;
-		OI<SError>	mError;
+		OV<SError>	mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
 #define ReturnIfResultError(result)				{ if (result.hasError()) return; }
-#define ReturnErrorIfResultError(result)		{ if (result.hasError()) return OI<SError>(result.getError()); }
+#define ReturnErrorIfResultError(result)		{ if (result.hasError()) return OV<SError>(result.getError()); }
 #define ReturnResultIfResultError(result)		{ if (result.hasError()) return result; }
 #define	ReturnValueIfResultError(result, value)	{ if (result.hasError()) return value; }
 

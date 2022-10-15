@@ -15,6 +15,9 @@ struct SVideoStorageFormat {
 						SVideoStorageFormat(OSType codecID, const S2DSizeU16& frameSize, Float32 framerate) :
 							mCodecID(codecID), mFrameSize(frameSize), mFramerate(framerate)
 							{}
+						SVideoStorageFormat(const SVideoStorageFormat& other) :
+							mCodecID(other.mCodecID), mFrameSize(other.mFrameSize), mFramerate(other.mFramerate)
+							{}
 
 						// Instance methods
 			OSType		getCodecID() const

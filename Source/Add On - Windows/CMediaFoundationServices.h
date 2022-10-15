@@ -32,9 +32,9 @@ class CMediaFoundationServices {
 		struct ProcessOutputInfo {
 			// Procs
 			typedef TCIResult<IMFSample>	(*ReadInputSampleProc)(void* userData);
-			typedef	OI<SError>				(*FillInputBufferProc)(IMFSample* sample, IMFMediaBuffer* mediaBuffer,
+			typedef	OV<SError>				(*FillInputBufferProc)(IMFSample* sample, IMFMediaBuffer* mediaBuffer,
 													void* userData);
-			typedef	OI<SError>				(*NoteFormatChangedProc)(IMFMediaType* mediaType, void* userData);
+			typedef	OV<SError>				(*NoteFormatChangedProc)(IMFMediaType* mediaType, void* userData);
 
 									// Methods
 									ProcessOutputInfo(ReadInputSampleProc readInputSampleProc,
@@ -67,7 +67,7 @@ class CMediaFoundationServices {
 														TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 												// Call proc
-												OI<SError>	error =
+												OV<SError>	error =
 																	mFillInputBufferProc(*mInputSample, mediaBuffer,
 																			mUserData);
 												if (error.hasInstance()) {
@@ -80,9 +80,9 @@ class CMediaFoundationServices {
 												return TCIResult<IMFSample>(mInputSample);
 											}
 										}
-			OI<SError>				noteFormatChanged(IMFMediaType* mediaType) const
+			OV<SError>				noteFormatChanged(IMFMediaType* mediaType) const
 										{ return (mNoteFormatChangedProc != NULL) ?
-												mNoteFormatChangedProc(mediaType, mUserData) : OI<SError>(); }
+												mNoteFormatChangedProc(mediaType, mUserData) : OV<SError>(); }
 
 			// Properties
 			private:
@@ -103,27 +103,27 @@ class CMediaFoundationServices {
 												EAudioChannelMap audioChannelMap,
 												const OV<UInt32>& bytesPerFrame = OV<UInt32>(),
 												const OV<UInt32>& bytesPerSecond = OV<UInt32>(),
-												const OI<CData>& userData = OI<CData>(),
+												const OV<CData>& userData = OV<CData>(),
 												CreateAudioMediaTypeOptions options = kCreateAudioMediaTypeOptionsNone);
 		static	TCIResult<IMFMediaType>	createMediaType(const SAudioProcessingFormat& audioProcessingFormat);
 
 		static	TCIResult<IMFSample>	createSample(UInt32 size);
 		static	TCIResult<IMFSample>	createSample(const CData& data);
-		static	OI<SError>				resizeSample(IMFSample* sample, UInt32 size);
+		static	OV<SError>				resizeSample(IMFSample* sample, UInt32 size);
 		static	SAudioSourceStatus		load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
 												const SAudioProcessingFormat& audioProcessingFormat);
-		static	OI<SError>				load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource);
-		static	TIResult<CImage>		imageForVideoSample(const CVideoFrame& videoFrame);
+		static	OV<SError>				load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource);
+		static	TVResult<CImage>		imageForVideoSample(const CVideoFrame& videoFrame);
 
-		static	OI<SError>				processOutput(IMFTransform* transform, IMFSample* outputSample,
+		static	OV<SError>				processOutput(IMFTransform* transform, IMFSample* outputSample,
 												const ProcessOutputInfo& processOutputInfo);
 
 		static	TVResult<UInt32>		completeWrite(IMFSample* sample, UInt32 frameOffset, CAudioFrames& audioFrames,
 												const SAudioProcessingFormat& audioProcessingFormat);
 
-		static	OI<SError>				flush(IMFTransform* transform);
+		static	OV<SError>				flush(IMFTransform* transform);
 
 #if defined(DEBUG)
-		static	OI<SError>				log(IMFMediaType* mediaType);
+		static	OV<SError>				log(IMFMediaType* mediaType);
 #endif
 };

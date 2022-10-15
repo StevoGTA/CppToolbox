@@ -106,12 +106,12 @@ class CCoreAudioAudioConverterInternals {
 								}
 
 		CAudioConverter&			mAudioConverter;
-		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
+		OV<SAudioProcessingFormat>	mInputAudioProcessingFormat;
 
 		AudioBufferList*			mOutputAudioBufferList;
 		AudioConverterRef			mAudioConverterRef;
 		OI<CAudioFrames>			mInputAudioFrames;
-		OI<SError>					mFillBufferDataError;
+		OV<SError>					mFillBufferDataError;
 		bool						mSourceHasMoreToRead;
 		UniversalTimeInterval		mSourceTimeInterval;
 };
@@ -139,12 +139,12 @@ CCoreAudioAudioConverter::~CCoreAudioAudioConverter()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
+OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mInputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mInputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Setup
 	AudioStreamBasicDescription	sourceFormat;

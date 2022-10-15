@@ -22,15 +22,15 @@ class CPCMDecodeAudioCodec : public CDecodeAudioCodec {
 
 										// CAudioCodec methods - Decoding
 		TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat);
-		OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat);
+		OV<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat);
 		void							seek(UniversalTimeInterval timeInterval);
-		OI<SError>						decodeInto(CAudioFrames& audioFrames);
+		OV<SError>						decodeInto(CAudioFrames& audioFrames);
 
 	private:
 		FrameSourceDecodeInfo		mFrameSourceDecodeInfo;
 		CPCMAudioCodec::Format		mFormat;
 
-		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OV<SAudioProcessingFormat>	mAudioProcessingFormat;
 };
 
 // MARK: CAudioCodec methods - Decoding
@@ -51,13 +51,13 @@ TArray<SAudioProcessingSetup> CPCMDecodeAudioCodec::getAudioProcessingSetups(
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CPCMDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
+OV<SError> CPCMDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ void CPCMDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
+OV<SError> CPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
@@ -81,7 +81,7 @@ OI<SError> CPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 		// Toggle
 		audioFrames.toggle8BitSignedUnsigned();
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -96,13 +96,13 @@ const	OSType	CPCMAudioCodec::mIntegerID = MAKE_OSTYPE('N', 'O', 'N', 'E');
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SAudioStorageFormat> CPCMAudioCodec::composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
+OV<SAudioStorageFormat> CPCMAudioCodec::composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
 		EAudioChannelMap audioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Return audio storage format
-	return OI<SAudioStorageFormat>(
-			new SAudioStorageFormat(isFloat ? mFloatID : mIntegerID, bits, sampleRate, audioChannelMap));
+	return OV<SAudioStorageFormat>(
+			SAudioStorageFormat(isFloat ? mFloatID : mIntegerID, bits, sampleRate, audioChannelMap));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,12 +114,12 @@ UInt64 CPCMAudioCodec::composeFrameCount(const SAudioStorageFormat& audioStorage
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<I<CDecodeAudioCodec> > CPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
+OV<I<CDecodeAudioCodec> > CPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 startByteOffset, UInt64 byteCount,
 		Format format)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OI<I<CDecodeAudioCodec> >(
+	return OV<I<CDecodeAudioCodec> >(
 			I<CDecodeAudioCodec>(
 					new CPCMDecodeAudioCodec(randomAccessDataSource, startByteOffset, byteCount,
 							*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels(), format)));

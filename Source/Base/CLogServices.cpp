@@ -35,7 +35,7 @@ struct SLogProcInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	OI<CLogFile>			sPrimaryLogFile;
+static	OV<CLogFile>			sPrimaryLogFile;
 static	TNArray<SLogProcInfo>*	sLogMessageProcInfos = nil;
 static	TNArray<SLogProcInfo>*	sLogWarningProcInfos = nil;
 static	TNArray<SLogProcInfo>*	sLogErrorProcInfos = nil;
@@ -65,8 +65,8 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 									mFile.remove();
 
 								// Open
-								OI<SError>	error = mFileWriter.open();
-								if (error.hasInstance())
+								OV<SError>	error = mFileWriter.open();
+								if (error.hasValue())
 									// Error
 									fprintf(stderr, "Unable to open log file at %s\n",
 											*mFile.getFilesystemPath().getString().getCString());
@@ -234,11 +234,11 @@ void CLogFile::logError(const CString& string) const
 void CLogServices::setPrimaryLogFile(const CLogFile& logFile)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	sPrimaryLogFile = OI<CLogFile>(logFile);
+	sPrimaryLogFile = OV<CLogFile>(logFile);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CLogFile>& CLogServices::getPrimaryLogFile()
+OV<CLogFile>& CLogServices::getPrimaryLogFile()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return sPrimaryLogFile;
@@ -249,7 +249,7 @@ void CLogServices::logMessage(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if have primary log file
-	if (sPrimaryLogFile.hasInstance())
+	if (sPrimaryLogFile.hasValue())
 		// Pass to primary log file
 		(*sPrimaryLogFile).logMessage(string);
 
@@ -261,7 +261,7 @@ void CLogServices::logMessage(const CString& string)
 	// Pass to output/console
 	sLogToConsoleOutput(stringWithDate);
 #else
-	if (!sPrimaryLogFile.hasInstance())
+	if (!sPrimaryLogFile.hasValue())
 		// Pass to output/console
 		sLogToConsoleOutput(stringWithDate);
 #endif
@@ -280,7 +280,7 @@ void CLogServices::logMessages(const TArray<CString>& strings)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if have primary log file
-	if (sPrimaryLogFile.hasInstance())
+	if (sPrimaryLogFile.hasValue())
 		// Pass to primary log file
 		(*sPrimaryLogFile).logMessages(strings);
 
@@ -293,7 +293,7 @@ void CLogServices::logMessages(const TArray<CString>& strings)
 	// Pass to output/console
 	sLogToConsoleOutput(stringsWithDatesString);
 #else
-	if (!sPrimaryLogFile.hasInstance())
+	if (!sPrimaryLogFile.hasValue())
 		// Pass to output/console
 		sLogToConsoleOutput(stringsWithDatesString);
 #endif
@@ -311,7 +311,7 @@ void CLogServices::logMessages(const TArray<CString>& strings)
 void CLogServices::logDebugMessage(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (sPrimaryLogFile.hasInstance())
+	if (sPrimaryLogFile.hasValue())
 		// Pass to primary log file
 		(*sPrimaryLogFile).logMessage(string);
 
@@ -338,10 +338,10 @@ void CLogServices::logWarning(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	OI<CString>	dateString;
+	OV<CString>	dateString;
 
 	// Check if have primary log file
-	if (sPrimaryLogFile.hasInstance())
+	if (sPrimaryLogFile.hasValue())
 		// Pass to primary log file
 		(*sPrimaryLogFile).logWarning(string);
 #if defined(DEBUG)
@@ -368,7 +368,7 @@ void CLogServices::logWarning(const CString& string)
 		for (TIteratorD<SLogProcInfo> iterator = sLogWarningProcInfos->getIterator(); iterator.hasValue();
 				iterator.advance()) {
 			// Check if need to finish setup
-			if (!dateString.hasInstance())
+			if (!dateString.hasValue())
 				// Finish setup
 				dateString = SGregorianDate().getString();
 
@@ -396,7 +396,7 @@ void CLogServices::logError(const CString& string)
 	CString	dateString = SGregorianDate().getString();
 
 	// Check if have primary log file
-	if (sPrimaryLogFile.hasInstance())
+	if (sPrimaryLogFile.hasValue())
 		// Pass to primary log file
 		(*sPrimaryLogFile).logError(string);
 #if defined(DEBUG)

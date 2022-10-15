@@ -66,7 +66,7 @@ void CDirectXVertexShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& 
 	// Finish setup if needed
 	if (mInternals->mShader == NULL) {
 		// Load data
-		TIResult<CData>	data = CFileDataSource::readData(CFile(mInternals->mFilesystemPath));
+		TVResult<CData>	data = CFileDataSource::readData(CFile(mInternals->mFilesystemPath));
 		AssertFailIf(data.hasError());
 
 		// Create Vertex Shader
@@ -151,7 +151,7 @@ void CDirectXPixelShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d
 	// Finish setup if needed
 	if (mInternals->mShader == NULL) {
 		// Load data
-		TIResult<CData>	data = CFileDataSource::readData(CFile(mInternals->mFilesystemPath));
+		TVResult<CData>	data = CFileDataSource::readData(CFile(mInternals->mFilesystemPath));
 		AssertFailIf(data.hasError());
 
 		// Create Pixel Shader

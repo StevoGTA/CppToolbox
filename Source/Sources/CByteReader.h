@@ -36,10 +36,10 @@ class CByteReader {
 		UInt64								getByteCount() const;
 
 		UInt64								getPos() const;
-		OI<SError>							setPos(Position position, SInt64 newPos) const;
+		OV<SError>							setPos(Position position, SInt64 newPos) const;
 
-		OI<SError>							readData(void* buffer, UInt64 byteCount) const;
-		TIResult<CData>						readData(CData::ByteCount byteCount) const;
+		OV<SError>							readData(void* buffer, UInt64 byteCount) const;
+		TVResult<CData>						readData(CData::ByteCount byteCount) const;
 
 		TVResult<SInt8>						readSInt8() const;
 		TVResult<SInt16>					readSInt16() const;
@@ -50,7 +50,7 @@ class CByteReader {
 		TVResult<UInt32>					readUInt32() const;
 		TVResult<UInt64>					readUInt64() const;
 		TVResult<OSType>					readOSType() const;
-		TIResult<CUUID>						readUUID() const;
+		TVResult<CUUID>						readUUID() const;
 
 	// Properties
 	private:

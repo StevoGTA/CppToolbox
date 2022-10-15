@@ -47,7 +47,7 @@ class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 								mFile.remove();
 						}
 
-		OI<SError>	write(const void* buffer, UInt64 byteCount)
+		OV<SError>	write(const void* buffer, UInt64 byteCount)
 						{
 							// Check open mode
 							if (mFILE != nil) {
@@ -55,24 +55,24 @@ class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 								size_t	bytesWritten = ::fwrite(buffer, 1, (size_t) byteCount, mFILE);
 
 								return (bytesWritten == byteCount) ?
-										OI<SError>() : OI<SError>(CFile::mUnableToWriteError);
+										OV<SError>() : OV<SError>(CFile::mUnableToWriteError);
 							} else if (mFD != -1) {
 								// Write to file
 								ssize_t	bytes = ::write(mFD, buffer, (size_t) byteCount);
 
-								return (bytes != -1) ? OI<SError>() : SErrorFromPOSIXerror(errno);
+								return (bytes != -1) ? OV<SError>() : SErrorFromPOSIXerror(errno);
 							} else
 								// Not open
-								return OI<SError>(CFile::mNotOpenError);
+								return OV<SError>(CFile::mNotOpenError);
 						}
-		OI<SError>	close()
+		OV<SError>	close()
 						{
 							if (mFILE != nil)
 								::fclose(mFILE);
 							if (mFD != -1)
 								::close(mFD);
 
-							return OI<SError>();
+							return OV<SError>();
 						}
 
 		CFile	mFile;
@@ -112,7 +112,7 @@ CFileWriter::~CFileWriter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
+OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -135,7 +135,7 @@ OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 
 			if (mInternals->mFILE != nil)
 				// Success
-				return OI<SError>();
+				return OV<SError>();
 			else
 				// Unable to open
 				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
@@ -158,7 +158,7 @@ OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 							S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 			if (mInternals->mFD != -1)
 				// Success
-				return OI<SError>();
+				return OV<SError>();
 			else
 				// Unable to open
 				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
@@ -169,13 +169,13 @@ OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
+OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	OI<SError>	error = mInternals->write(buffer, byteCount);
-	if (!error.hasInstance())
+	OV<SError>	error = mInternals->write(buffer, byteCount);
+	if (!error.hasValue())
 		// Success
-		return OI<SError>();
+		return OV<SError>();
 	else
 		// Error
 		CFileWriterReportErrorAndReturnError(*error, "writing");
@@ -204,7 +204,7 @@ UInt64 CFileWriter::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
+OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
@@ -221,7 +221,7 @@ OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 		off_t	offset = ::fseeko(mInternals->mFILE, newPos, posMode);
 		if (offset != -1)
 			// Success
-			return OI<SError>();
+			return OV<SError>();
 		else
 			// Error
 			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting position");
@@ -238,7 +238,7 @@ OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 		off_t	offset = ::lseek(mInternals->mFD, newPos, posMode);
 		if (offset != -1)
 			// Success
-			return OI<SError>();
+			return OV<SError>();
 		else
 			// Error
 			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting position");
@@ -248,7 +248,7 @@ OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setByteCount(UInt64 byteCount) const
+OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
@@ -256,7 +256,7 @@ OI<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 		// FILE
 		if (::ftruncate(::fileno(mInternals->mFILE), byteCount) == 0)
 			// Success
-			return OI<SError>();
+			return OV<SError>();
 		else
 			// Error
 			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting size");
@@ -264,7 +264,7 @@ OI<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 		// file
 		if (::ftruncate(mInternals->mFD, byteCount) == 0)
 			// Success
-			return OI<SError>();
+			return OV<SError>();
 		else
 			// Error
 			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting size");
@@ -274,7 +274,7 @@ OI<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::flush() const
+OV<SError> CFileWriter::flush() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
@@ -282,7 +282,7 @@ OI<SError> CFileWriter::flush() const
 		// FILE
 		if (::fflush(mInternals->mFILE) == 0)
 			// Success
-			return OI<SError>();
+			return OV<SError>();
 		else
 			// Error
 			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "flushing");
@@ -290,7 +290,7 @@ OI<SError> CFileWriter::flush() const
 		// file
 		if (::fsync(mInternals->mFD) == 0)
 			// Success
-			return OI<SError>();
+			return OV<SError>();
 		else
 			// Error
 			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "flushing");
@@ -300,7 +300,7 @@ OI<SError> CFileWriter::flush() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::close() const
+OV<SError> CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->close();

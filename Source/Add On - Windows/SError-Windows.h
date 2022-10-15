@@ -32,7 +32,7 @@ SError	SErrorFromWindowsGetLastError();
 					CLogServices::logError(																		\
 							CString(method) + CString(OSSTR(" returned ")) + _error.getDefaultDescription());	\
 																												\
-					return OI<SError>(_error);																	\
+					return OV<SError>(_error);																	\
 				}
 #define	ReturnErrorIfFailed(result, method)																			\
 				{																									\
@@ -41,7 +41,7 @@ SError	SErrorFromWindowsGetLastError();
 						CLogServices::logError(																		\
 								CString(method) + CString(OSSTR(" returned ")) + _error.getDefaultDescription());	\
 																													\
-						return OI<SError>(_error);																	\
+						return OV<SError>(_error);																	\
 					}																								\
 				}
 #define	ReturnValueIfFailed(result, method, value)																	\

@@ -46,7 +46,7 @@ class CCoreMediaDecodeVideoCodecInternals {
 		UInt32						mTimeScale;
 		TNumberArray<UInt32>		mKeyframeIndexes;
 
-		OI<SVideoProcessingFormat>	mVideoProcessingFormat;
+		OV<SVideoProcessingFormat>	mVideoProcessingFormat;
 
 		CMFormatDescriptionRef		mFormatDescriptionRef;
 		VTDecompressionSessionRef	mDecompressionSessionRef;
@@ -76,7 +76,7 @@ CCoreMediaDecodeVideoCodec::~CCoreMediaDecodeVideoCodec()
 // MARK: CDecodeVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CCoreMediaDecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
+OV<SError> CCoreMediaDecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose format description
@@ -147,9 +147,9 @@ OI<SError> CCoreMediaDecodeVideoCodec::setup(const SVideoProcessingFormat& video
 	ReturnErrorIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
 
 	// Finish setup
-	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
+	mInternals->mVideoProcessingFormat = OV<SVideoProcessingFormat>(videoProcessingFormat);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get next packet
-	TIResult<CMediaPacketSource::DataInfo>	dataInfo = mInternals->mMediaPacketSource->readNext();
+	TVResult<CMediaPacketSource::DataInfo>	dataInfo = mInternals->mMediaPacketSource->readNext();
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
 
 	// Compose sample timing info

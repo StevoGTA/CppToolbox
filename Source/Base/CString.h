@@ -197,7 +197,7 @@ class CString : public CHashable {
 
 		struct Range {
 					// Lifecycle methods
-					Range(CharIndex start, Length length = ~0) : mStart(start), mLength(length) {}
+					Range(CharIndex start, Length length) : mStart(start), mLength(length) {}
 
 					// Instance methods
 			bool	isValid() const
@@ -214,11 +214,12 @@ class CString : public CHashable {
 										CString();
 										CString(const CString& other, OV<Length> length = OV<Length>());
 										CString(OSStringVar(initialString), OV<Length> length = OV<Length>());
-										CString(const char* chars, Length charsCount = ~0,
+										CString(const char* chars, Length length,
 												Encoding encoding = kEncodingTextDefault);
-										CString(const UTF16Char* chars, Length charsCount,
+										CString(const char* chars, Encoding encoding = kEncodingTextDefault);
+										CString(const UTF16Char* chars, Length length,
 												Encoding encoding = kEncodingUTF16Native);
-										CString(const UTF32Char* chars, Length charsCount,
+										CString(const UTF32Char* chars, Length length,
 												Encoding encoding = kEncodingUTF32Native);
 
 										CString(Float32 value, UInt32 fieldSize = 0,
@@ -312,14 +313,14 @@ class CString : public CHashable {
 						CData			getData(Encoding encoding = kEncodingTextDefault, SInt8 lossCharacter = '\0')
 												const;
 						
-						CString			getSubString(CharIndex startIndex, Length charCount = ~0) const;
+						CString			getSubString(CharIndex startIndex, OV<Length> length = OV<Length>()) const;
 						CString			replacingSubStrings(const CString& subStringToReplace,
 												const CString& replacementString = CString::mEmpty) const;
-						CString			replacingCharacters(CharIndex startIndex = 0, Length charCount = ~0,
+						CString			replacingCharacters(CharIndex startIndex = 0, OV<Length> length = OV<Length>(),
 												const CString& replacementString = CString::mEmpty) const;
 
 						Range			findSubString(const CString& subString, CharIndex startIndex = 0,
-												Length charCount = ~0) const;
+												OV<Length> length = OV<Length>()) const;
 						
 						CString			lowercased() const;
 						CString			uppercased() const;

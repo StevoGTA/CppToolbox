@@ -20,7 +20,7 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 
 		UInt64		getPos()
 						{ return mDataSourceOffset; }
-		OI<SError>	setPos(CBitReader::Position position, SInt64 newPos)
+		OV<SError>	setPos(CBitReader::Position position, SInt64 newPos)
 						{
 							// Compose position
 							SInt64	dataSourceOffset;
@@ -50,20 +50,20 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 							AssertFailIf(dataSourceOffset < 0);
 							if (dataSourceOffset < 0)
 								// Before start
-								return OI<SError>(CRandomAccessDataSource::mSetPosBeforeStartError);
+								return OV<SError>(CRandomAccessDataSource::mSetPosBeforeStartError);
 
 							AssertFailIf((UInt64) dataSourceOffset > mByteCount);
 							if ((UInt64) dataSourceOffset > mByteCount)
 								// After end
-								return OI<SError>(CRandomAccessDataSource::mSetPosAfterEndError);
+								return OV<SError>(CRandomAccessDataSource::mSetPosAfterEndError);
 
 							// All good
 							mDataSourceOffset = (UInt64) dataSourceOffset;
 
-							return OI<SError>();
+							return OV<SError>();
 						}
 
-		OI<SError>	readData(void* buffer, UInt64 byteCount)
+		OV<SError>	readData(void* buffer, UInt64 byteCount)
 						{
 							// Reset bit reading
 							mCurrentByte = 0;
@@ -72,30 +72,30 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 							// Check if can perform read
 							if ((mDataSourceOffset + byteCount) > mByteCount)
 								// Can't read that many bytes
-								return OI<SError>(SError::mEndOfData);
+								return OV<SError>(SError::mEndOfData);
 
 							// Read
-							OI<SError>	error = mRandomAccessDataSource->readData(mDataSourceOffset, buffer, byteCount);
+							OV<SError>	error = mRandomAccessDataSource->readData(mDataSourceOffset, buffer, byteCount);
 							ReturnErrorIfError(error);
 
 							// Update
 							mDataSourceOffset += byteCount;
 
-							return OI<SError>();
+							return OV<SError>();
 						}
 
-		OI<SError>	reloadCurrentByte()
+		OV<SError>	reloadCurrentByte()
 						{
 							// Check if need to reload current byte
 							if (mCurrentByteBitsAvailable == 0) {
 								// Read next byte
-								OI<SError>	error = readData(&mCurrentByte, 1);
+								OV<SError>	error = readData(&mCurrentByte, 1);
 								ReturnErrorIfError(error);
 
 								mCurrentByteBitsAvailable = 8;
 							}
 
-							return OI<SError>();
+							return OV<SError>();
 						}
 		UInt8		readBits(UInt8 bitCount)
 						{
@@ -163,29 +163,29 @@ UInt64 CBitReader::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CBitReader::setPos(Position position, SInt64 newPos) const
+OV<SError> CBitReader::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->setPos(position, newPos);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CBitReader::readData(void* buffer, UInt64 byteCount) const
+OV<SError> CBitReader::readData(void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->readData(buffer, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CBitReader::readData(CData::ByteCount byteCount) const
+TVResult<CData> CBitReader::readData(CData::ByteCount byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
 	CData		data(byteCount);
-	OI<SError>	error = mInternals->readData(data.getMutableBytePtr(), byteCount);
-	ReturnValueIfError(error, TIResult<CData>(*error));
+	OV<SError>	error = mInternals->readData(data.getMutableBytePtr(), byteCount);
+	ReturnValueIfError(error, TVResult<CData>(*error));
 
-	return TIResult<CData>(data);
+	return TVResult<CData>(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -194,7 +194,7 @@ TVResult<SInt8> CBitReader::readSInt8() const
 {
 	// Read
 	SInt8		value;
-	OI<SError>	error = mInternals->readData(&value, sizeof(SInt8));
+	OV<SError>	error = mInternals->readData(&value, sizeof(SInt8));
 	ReturnValueIfError(error, TVResult<SInt8>(*error));
 
 	return TVResult<SInt8>(value);
@@ -206,7 +206,7 @@ TVResult<SInt16> CBitReader::readSInt16() const
 {
 	// Read
 	SInt16		value;
-	OI<SError>	error = mInternals->readData(&value, sizeof(SInt16));
+	OV<SError>	error = mInternals->readData(&value, sizeof(SInt16));
 	ReturnValueIfError(error, TVResult<SInt16>(*error));
 
 	return TVResult<SInt16>(mInternals->mIsBigEndian ? EndianS16_BtoN(value) : EndianS16_LtoN(value));
@@ -218,7 +218,7 @@ TVResult<SInt32> CBitReader::readSInt32() const
 {
 	// Read
 	SInt32		value;
-	OI<SError>	error = mInternals->readData(&value, sizeof(SInt32));
+	OV<SError>	error = mInternals->readData(&value, sizeof(SInt32));
 	ReturnValueIfError(error, TVResult<SInt32>(*error));
 
 	return TVResult<SInt32>(mInternals->mIsBigEndian ? EndianS32_BtoN(value) : EndianS32_LtoN(value));
@@ -230,7 +230,7 @@ TVResult<SInt64> CBitReader::readSInt64() const
 {
 	// Read
 	SInt64		value;
-	OI<SError>	error = mInternals->readData(&value, sizeof(SInt64));
+	OV<SError>	error = mInternals->readData(&value, sizeof(SInt64));
 	ReturnValueIfError(error, TVResult<SInt64>(*error));
 
 	return TVResult<SInt64>(mInternals->mIsBigEndian ? EndianS64_BtoN(value) : EndianS64_LtoN(value));
@@ -242,7 +242,7 @@ TVResult<UInt8> CBitReader::readUInt8() const
 {
 	// Read
 	UInt8		value;
-	OI<SError>	error = mInternals->readData(&value, sizeof(UInt8));
+	OV<SError>	error = mInternals->readData(&value, sizeof(UInt8));
 	ReturnValueIfError(error, TVResult<UInt8>(*error));
 
 	return TVResult<UInt8>(value);
@@ -259,7 +259,7 @@ TVResult<UInt8> CBitReader::readUInt8(UInt8 bitCount) const
 	UInt8	value = 0;
 	while (bitCount > 0) {
 		// Reload current byte
-		OI<SError>	error = mInternals->reloadCurrentByte();
+		OV<SError>	error = mInternals->reloadCurrentByte();
 		ReturnValueIfError(error, TVResult<UInt8>(*error));
 
 		// Process
@@ -279,7 +279,7 @@ TVResult<UInt16> CBitReader::readUInt16() const
 {
 	// Read
 	UInt16		value;
-	OI<SError>	error = mInternals->readData(&value, sizeof(UInt16));
+	OV<SError>	error = mInternals->readData(&value, sizeof(UInt16));
 	ReturnValueIfError(error, TVResult<UInt16>(*error));
 
 	return TVResult<UInt16>(mInternals->mIsBigEndian ? EndianU16_BtoN(value) : EndianU16_LtoN(value));
@@ -291,7 +291,7 @@ TVResult<UInt32> CBitReader::readUInt32() const
 {
 	// Read
 	UInt32		value;
-	OI<SError>	error = mInternals->readData(&value, sizeof(UInt32));
+	OV<SError>	error = mInternals->readData(&value, sizeof(UInt32));
 	ReturnValueIfError(error, TVResult<UInt32>(*error));
 
 	return TVResult<UInt32>(mInternals->mIsBigEndian ? EndianU32_BtoN(value) : EndianU32_LtoN(value));
@@ -308,7 +308,7 @@ TVResult<UInt32> CBitReader::readUInt32(UInt8 bitCount) const
 	UInt32	value = 0;
 	while (bitCount > 0) {
 		// Reload current byte
-		OI<SError>	error = mInternals->reloadCurrentByte();
+		OV<SError>	error = mInternals->reloadCurrentByte();
 		ReturnValueIfError(error, TVResult<UInt32>(*error));
 
 		// Process
@@ -328,7 +328,7 @@ TVResult<UInt64> CBitReader::readUInt64() const
 {
 	// Read
 	UInt64		value;
-	OI<SError>	error = mInternals->readData(&value, sizeof(UInt64));
+	OV<SError>	error = mInternals->readData(&value, sizeof(UInt64));
 	ReturnValueIfError(error, TVResult<UInt64>(*error));
 
 	return TVResult<UInt64>(mInternals->mIsBigEndian ? EndianU64_BtoN(value) : EndianU64_LtoN(value));
@@ -342,7 +342,7 @@ TVResult<UInt32> CBitReader::readUEColumbusCode() const
 	SInt8	leadingZeroBits = -1;
 	for (UInt8 b = 0; !b; leadingZeroBits++) {
 		// Reload current byte
-		OI<SError>	error = mInternals->reloadCurrentByte();
+		OV<SError>	error = mInternals->reloadCurrentByte();
 		ReturnValueIfError(error, TVResult<UInt32>(*error));
 
 		// Read bit

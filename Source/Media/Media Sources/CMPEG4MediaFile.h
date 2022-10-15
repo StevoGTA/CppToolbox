@@ -21,7 +21,7 @@ class CMPEG4MediaFile {
 		virtual														~CMPEG4MediaFile() {}
 
 																	// Instance methods
-						I<SMediaSource::ImportResult>				import(
+		virtual			I<SMediaSource::ImportResult>				import(
 																			const I<CRandomAccessDataSource>&
 																					randomAccessDataSource,
 																			const OI<CAppleResourceManager>&
@@ -51,10 +51,12 @@ class CMPEG4MediaFile {
 																			UInt32 timeScale,
 																			UniversalTimeInterval duration,
 																			const Internals& internals);
+		virtual			void										process(const CAtomReader& atomReader,
+																			const CAtomReader::Atom& atom) {}
 
 																	// Subclass methods
 				const	void*										getSampleDescription(const Internals& internals)
 																			const;
-						TIResult<CData>								getDecompressionData(const Internals& internals,
+						TVResult<CData>								getDecompressionData(const Internals& internals,
 																			SInt64 offset) const;
 };

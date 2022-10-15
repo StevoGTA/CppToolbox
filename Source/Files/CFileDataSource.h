@@ -21,18 +21,18 @@ class CFileDataSource : public CRandomAccessDataSource {
 								// CRandomAccessDataSource methods
 		UInt64					getByteCount() const;
 
-		OI<SError>				readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
-		TIResult<CData>			readData(UInt64 position, CData::ByteCount byteCount)
+		OV<SError>				readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
+		TVResult<CData>			readData(UInt64 position, CData::ByteCount byteCount)
 									{
 										// Read data
 										CData		data(byteCount);
-										OI<SError>	error = readData(position, data.getMutableBytePtr(), byteCount);
+										OV<SError>	error = readData(position, data.getMutableBytePtr(), byteCount);
 
-										return !error.hasInstance() ? TIResult<CData>(data) : TIResult<CData>(*error);
+										return !error.hasValue() ? TVResult<CData>(data) : TVResult<CData>(*error);
 									}
 
 								// Class methods
-		static	TIResult<CData>	readData(const CFile& file)
+		static	TVResult<CData>	readData(const CFile& file)
 									{ return CFileDataSource(file).CRandomAccessDataSource::readData(); }
 
 	// Properties
@@ -55,8 +55,8 @@ class CMappedFileDataSource : public CRandomAccessDataSource {
 						// CRandomAccessDataSource methods
 		UInt64			getByteCount() const;
 
-		OI<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
-		TIResult<CData>	readData(UInt64 position, CData::ByteCount byteCount);
+		OV<SError>		readData(UInt64 position, void* buffer, CData::ByteCount byteCount);
+		TVResult<CData>	readData(UInt64 position, CData::ByteCount byteCount);
 
 	// Properties
 	private:

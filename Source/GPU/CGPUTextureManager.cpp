@@ -56,7 +56,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 								SGPUTextureManagerInfo& gpuTextureManagerInfo) :
 							TReferenceCountable(),
 									mReference(CString::mEmpty), mGPUTextureManagerInfo(gpuTextureManagerInfo),
-									mGPUTexture(OI<I<CGPUTexture> >(gpuTexture))
+									mGPUTexture(OV<I<CGPUTexture> >(gpuTexture))
 							{}
 		virtual			~CGPUTextureReferenceInternals()
 							{
@@ -83,7 +83,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 
 		CString					mReference;
 		SGPUTextureManagerInfo&	mGPUTextureManagerInfo;
-		OI<I<CGPUTexture> >		mGPUTexture;
+		OV<I<CGPUTexture> >		mGPUTexture;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 							{
 								// Register texture
 								mGPUTexture =
-										OI<I<CGPUTexture> >(
+										OV<I<CGPUTexture> >(
 												mGPUTextureManagerInfo.mGPU.registerTexture(mGPUTextureDataInfo->mData,
 														mGPUTextureDataInfo->mDataFormat, mGPUTextureDataInfo->mSize));
 							}
@@ -354,7 +354,7 @@ class CDataGPUTextureReferenceInternals : public CGPULoadableTextureReferenceInt
 						// Is loading continuing
 						if (isLoadingContinuing()) {
 							// Read data
-							TIResult<CData>	dataResult = mDataSource->readData();
+							TVResult<CData>	dataResult = mDataSource->readData();
 							LogIfResultErrorAndReturn(dataResult, "reading data from data provider");
 
 							textureData = dataResult.getValue();

@@ -36,7 +36,7 @@ void sDBGMSG(PCWSTR format, ...);
 //----------------------------------------------------------------------------------------------------------------------
 TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& codecFormat, UInt8 bits,
 		Float32 sampleRate, EAudioChannelMap audioChannelMap, const OV<UInt32>& bytesPerFrame,
-		const OV<UInt32>& bytesPerSecond, const OI<CData>& userData, CreateAudioMediaTypeOptions options)
+		const OV<UInt32>& bytesPerSecond, const OV<CData>& userData, CreateAudioMediaTypeOptions options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup media type
@@ -175,7 +175,7 @@ TCIResult<IMFSample> CMediaFoundationServices::createSample(const CData& data)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size)
+OV<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove existing memory buffer
@@ -191,7 +191,7 @@ OI<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size
 	result = sample->AddBuffer(*mediaBuffer);
 	ReturnErrorIfFailed(result, OSSTR("AddBuffer in CH264VideoCodecInternals::noteFormatChanged"));
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, C
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource)
+OV<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Lock media buffer
@@ -257,12 +257,12 @@ OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 
 	// Read next media packet
 	CData	data(mediaBufferBytePtr, mediaBufferByteCount, false);
-	TIResult<TArray<SMediaPacket> >	mediaPackets = mediaPacketSource.readNextInto(data, 1);
+	TVResult<TArray<SMediaPacket> >	mediaPackets = mediaPacketSource.readNextInto(data, 1);
 	if (mediaPackets.hasError()) {
 		// Unlock
 		mediaBuffer->Unlock();
 
-		return OI<SError>(mediaPackets.getError());
+		return OV<SError>(mediaPackets.getError());
 	}
 
 	// Update current length
@@ -278,18 +278,18 @@ OI<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 	result = mediaBuffer->Unlock();
 	ReturnErrorIfFailed(result, OSSTR("Unlock"));
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CImage> CMediaFoundationServices::imageForVideoSample(const CVideoFrame& videoFrame)
+TVResult<CImage> CMediaFoundationServices::imageForVideoSample(const CVideoFrame& videoFrame)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get 
 	IMFMediaBuffer*	mediaBuffer;
 	HRESULT			result = videoFrame.getSample()->GetBufferByIndex(0, &mediaBuffer);
 	ReturnValueIfFailed(result, OSSTR("GetBufferByIndex for outputSample"),
-			TIResult<CImage>(SErrorFromHRESULT(result)));
+			TVResult<CImage>(SErrorFromHRESULT(result)));
 
 	BYTE*	mediaBufferBytePtr;
 	DWORD	mediaBufferByteCount;
@@ -301,7 +301,7 @@ TIResult<CImage> CMediaFoundationServices::imageForVideoSample(const CVideoFrame
 		// Cleanup
 		mediaBuffer->Release();
 
-		return TIResult<CImage>(SErrorFromHRESULT(result));
+		return TVResult<CImage>(SErrorFromHRESULT(result));
 	}
 
 	// Create image
@@ -318,17 +318,17 @@ TIResult<CImage> CMediaFoundationServices::imageForVideoSample(const CVideoFrame
 		// Cleanup
 		mediaBuffer->Release();
 
-		return TIResult<CImage>(SErrorFromHRESULT(result));
+		return TVResult<CImage>(SErrorFromHRESULT(result));
 	}
 
 	// Cleanup
 	mediaBuffer->Release();
 
-	return TIResult<CImage>(image);
+	return TVResult<CImage>(image);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFSample* outputSample,
+OV<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFSample* outputSample,
 		const CMediaFoundationServices::ProcessOutputInfo& processOutputInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -343,7 +343,7 @@ OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFS
 		result = transform->ProcessOutput(0, 1, &outputDataBuffer, &status);
 		if (result == S_OK)
 			// Success
-			return OI<SError>();
+			return OV<SError>();
 		else if (result == MF_E_TRANSFORM_STREAM_CHANGE) {
 			// Input stream format change
 			if (outputDataBuffer.dwStatus == MFT_OUTPUT_DATA_BUFFER_FORMAT_CHANGE) {
@@ -353,7 +353,7 @@ OI<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFS
 				ReturnErrorIfFailed(result, OSSTR("GetOutputAvailableType for format change"));
 
 				// Call proc
-				OI<SError>	error = processOutputInfo.noteFormatChanged(mediaType);
+				OV<SError>	error = processOutputInfo.noteFormatChanged(mediaType);
 				ReturnErrorIfError(error);
 
 				// Set output type
@@ -444,19 +444,19 @@ TVResult<UInt32> CMediaFoundationServices::completeWrite(IMFSample* sample, UInt
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::flush(IMFTransform* transform)
+OV<SError> CMediaFoundationServices::flush(IMFTransform* transform)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	HRESULT	result = transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
 	ReturnErrorIfFailed(result, OSSTR("ProcessMessage MFT_MESSAGE_COMMAND_FLUSH"));
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 
 #if defined(DEBUG)
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationServices::log(IMFMediaType* mediaType)
+OV<SError> CMediaFoundationServices::log(IMFMediaType* mediaType)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -478,7 +478,7 @@ OI<SError> CMediaFoundationServices::log(IMFMediaType* mediaType)
 	else
 		CLogServices::logMessage(OSSTR("Empty media type."));
 
-	return OI<SError>();
+	return OV<SError>();
 }
 #endif
 

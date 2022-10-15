@@ -22,12 +22,12 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CFile> CFilesystem::getDotUnderscoreFile(const CFile& file)
+OV<CFile> CFilesystem::getDotUnderscoreFile(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
 #if defined(TARGET_OS_MACOS)
 	// macOS doesn't need to access the ._ file
-	return OI<CFile>();
+	return OV<CFile>();
 #else
 	// Try {file}../._{filename}
 	const	CFilesystemPath&	filesystemPath = file.getFilesystemPath();
@@ -36,12 +36,12 @@ OI<CFile> CFilesystem::getDotUnderscoreFile(const CFile& file)
 							.deletingLastComponent()
 							.appendingComponent(CString(OSSTR("._")) + filesystemPath.getLastComponent()));
 
-	return dotUnderscoreFile.doesExist() ? OI<CFile>(dotUnderscoreFile) : OI<CFile>();
+	return dotUnderscoreFile.doesExist() ? OV<CFile>(dotUnderscoreFile) : OV<CFile>();
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CFile> CFilesystem::getResourceFork(const CFile& file)
+OV<CFile> CFilesystem::getResourceFork(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
 #if defined(TARGET_OS_MACOS)
@@ -52,15 +52,15 @@ OI<CFile> CFilesystem::getResourceFork(const CFile& file)
 							.appendingComponent(CString(OSSTR("..namedfork")))
 							.appendingComponent(CString(OSSTR("rsrc"))));
 
-	return resourceFork.doesExist() ? OI<CFile>(resourceFork) : OI<CFile>();
+	return resourceFork.doesExist() ? OV<CFile>(resourceFork) : OV<CFile>();
 #else
 	// Unsupported
-	return OI<CFile>();
+	return OV<CFile>();
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destinationFolder)
+OV<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -74,8 +74,8 @@ OI<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destina
 				destinationFolder);
 
 	// Get contents of source folder
-	TIResult<SFoldersFiles>	foldersFilesResult = getFoldersFiles(sourceFolder, true);
-	ReturnValueIfResultError(foldersFilesResult, OI<SError>(foldersFilesResult.getError()));
+	TVResult<SFoldersFiles>	foldersFilesResult = getFoldersFiles(sourceFolder, true);
+	ReturnValueIfResultError(foldersFilesResult, OV<SError>(foldersFilesResult.getError()));
 
 	// Create folders in destination folder
 	const	SFoldersFiles&	foldersFiles = *foldersFilesResult;
@@ -83,27 +83,27 @@ OI<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destina
 	for (CArray::ItemIndex i = 0; i < folders.getCount(); i++) {
 		// Create folder
 		CFolder		folder(destinationFolder.getFilesystemPath().appendingComponent(folders[i].getName()));
-		OI<SError>	error = folder.create();
+		OV<SError>	error = folder.create();
 		ReturnErrorIfError(error);
 	}
 
 	// Copy files
-	OI<SError>	error = copy(foldersFiles.getFiles(), destinationFolder);
+	OV<SError>	error = copy(foldersFiles.getFiles(), destinationFolder);
 	ReturnErrorIfError(error);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::copy(const TArray<CFile> files, const CFolder& destinationFolder)
+OV<SError> CFilesystem::copy(const TArray<CFile> files, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate files
 	for (CArray::ItemIndex i = 0; i < files.getCount(); i++) {
 		// Copy this file
-		OI<SError>	error = copy(files[i], destinationFolder);
+		OV<SError>	error = copy(files[i], destinationFolder);
 		ReturnErrorIfError(error);
 	}
 
-	return OI<SError>();
+	return OV<SError>();
 }

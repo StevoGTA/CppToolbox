@@ -37,14 +37,14 @@ class CDVIIntelIMAADPCMAudioCodec {
 	// Methods
 	public:
 											// Class methods
-		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate,
+		static	OV<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate,
 													EAudioChannelMap audioChannelMap);
-		static	OI<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate, UInt8 channels)
+		static	OV<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate, UInt8 channels)
 												{ return composeAudioStorageFormat(sampleRate,
 														AUDIOCHANNELMAP_FORUNKNOWN(channels)); }
 		static	UInt64						composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
 													UInt64 byteCount, UInt16 blockAlign);
-		static	OI<I<CDecodeAudioCodec> >	create(const SAudioStorageFormat& audioStorageFormat,
+		static	OV<I<CDecodeAudioCodec> >	create(const SAudioStorageFormat& audioStorageFormat,
 													const I<CRandomAccessDataSource>& randomAccessDataSource,
 													UInt64 startByteOffset, UInt64 byteCount, UInt16 blockAlign);
 

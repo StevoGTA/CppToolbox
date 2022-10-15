@@ -71,7 +71,7 @@ class CBPLReader : public TReferenceCountable<CBPLReader> {
 
 		// Properties
 		CByteReader	mByteReader;
-		OI<SError>	mError;
+		OV<SError>	mError;
 
 		UInt8		mObjectIndexFieldSize;
 		UInt64		mTotalObjectCount;
@@ -211,7 +211,7 @@ CBPLReader::CBPLReader(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		// Read info
 		UInt64	count;
 		UInt8	marker = readMarker(i, OR<UInt64>(count));
-		if (mError.hasInstance())
+		if (mError.hasValue())
 			// Error
 			continue;
 
@@ -221,10 +221,10 @@ CBPLReader::CBPLReader(const I<CRandomAccessDataSource>& randomAccessDataSource,
 			continue;
 
 		// Get string content
-		TIResult<CData>	dataResult = mByteReader.readData(count);
+		TVResult<CData>	dataResult = mByteReader.readData(count);
 		if (dataResult.hasError()) {
 			// Error
-			mError = OI<SError>(dataResult.getError());
+			mError = OV<SError>(dataResult.getError());
 			continue;
 		}
 
@@ -309,7 +309,7 @@ UInt64 CBPLReader::readCount(const char* errorWhen)
 {
 	// Get count marker
 	TVResult<UInt8>	countMarker = mByteReader.readUInt8();
-	if (countMarker.hasError()) mError = OI<SError>(countMarker.getError());
+	if (countMarker.hasError()) mError = OV<SError>(countMarker.getError());
 	LogIfErrorAndReturnValue(mError, errorWhen, 0);
 
 	UInt8	fieldSize;
@@ -499,27 +499,27 @@ AssertFailUnimplemented();
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessDataSource>& randomAccessDataSource)
+TVResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	UInt64		byteCount = randomAccessDataSource->getByteCount();
-	OI<SError>	error;
+	OV<SError>	error;
 
 	// Check size
 	if (byteCount < (sBinaryPListV10Header.getByteCount() + sizeof(SBinaryPListTrailer))) {
 		// Too small to be a binary property list
 		LogErrorAndReturnValue(sUnknownFormatError, "checking data source size",
-				TIResult<CDictionary>(sUnknownFormatError));
+				TVResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Validate header
 	CData	data(sBinaryPListV10Header.getByteCount());
 	error = randomAccessDataSource->readData(0, data.getMutableBytePtr(), sBinaryPListV10Header.getByteCount());
-	LogIfErrorAndReturnValue(error, "reading header", TIResult<CDictionary>(*error));
+	LogIfErrorAndReturnValue(error, "reading header", TVResult<CDictionary>(*error));
 	if (data != sBinaryPListV10Header) {
 		// Header does not match
-		LogErrorAndReturnValue(sUnknownFormatError, "validating header", TIResult<CDictionary>(sUnknownFormatError));
+		LogErrorAndReturnValue(sUnknownFormatError, "validating header", TVResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Validate trailer
@@ -527,7 +527,7 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessD
 	error =
 			randomAccessDataSource->readData(byteCount - sizeof(SBinaryPListTrailer), &trailer,
 					sizeof(SBinaryPListTrailer));
-	LogIfErrorAndReturnValue(error, "reading trailer", TIResult<CDictionary>(*error));
+	LogIfErrorAndReturnValue(error, "reading trailer", TVResult<CDictionary>(*error));
 
 	// Create CBPLReader
 	UInt8		objectOffsetFieldSize = trailer.mObjectOffsetFieldSize;
@@ -546,7 +546,7 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessD
 		// Top object is not a dictionary
 		Delete(bplReader);
 		LogErrorAndReturnValue(sUnknownFormatError, "top object is not a dictionary",
-				TIResult<CDictionary>(sUnknownFormatError));
+				TVResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Create dictionary
@@ -555,5 +555,5 @@ TIResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessD
 	// Remove reference
 	bplReader->removeReference();
 
-	return TIResult<CDictionary>(dictionary);
+	return TVResult<CDictionary>(dictionary);
 }

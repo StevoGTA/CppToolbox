@@ -20,7 +20,7 @@ class CMediaPlaybackQueue {
 													Item() {}
 				virtual								~Item() {}
 
-				virtual	TIResult<I<CMediaPlayer> >	prepare() = 0;
+				virtual	TVResult<I<CMediaPlayer> >	prepare() = 0;
 						void						cancel() {}
 		};
 
@@ -30,7 +30,7 @@ class CMediaPlaybackQueue {
 			// Types
 			typedef	void	(*ItemPrepareStartedProc)(const I<Item>& item, void* userData);
 			typedef	void	(*ItemPrepareCompletedProc)(const I<Item>& item,
-									const TIResult<I<CMediaPlayer> >& mediaPlayer, void* userData);
+									const TVResult<I<CMediaPlayer> >& mediaPlayer, void* userData);
 
 					// Lifecycle methods
 					Info(ItemPrepareStartedProc itemPrepareStartedProc,
@@ -46,7 +46,7 @@ class CMediaPlaybackQueue {
 					// Instance methods
 			void	itemPrepareStarted(const I<Item>& item)
 						{ mItemPrepareStartedProc(item, mUserData); }
-			void	itemPrepareCompleted(const I<Item>& item, const TIResult<I<CMediaPlayer> >& mediaPlayer)
+			void	itemPrepareCompleted(const I<Item>& item, const TVResult<I<CMediaPlayer> >& mediaPlayer)
 						{ mItemPrepareCompletedProc(item, mediaPlayer, mUserData); }
 
 			// Properties

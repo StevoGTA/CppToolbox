@@ -672,7 +672,7 @@ struct CQuickTimeMediaFile::Internals {
 	const	SQTVideoSampleDescription&	getVideoSampleDescription() const
 											{ return mSTSDDescription.getVideoSampleDescription(); }
 
-			TIResult<CData>				getAudioDecompressionData() const
+			TVResult<CData>				getAudioDecompressionData() const
 											{
 												// Setup
 												CData::ByteIndex			codecConfigurationDataByteOffset =
@@ -681,15 +681,15 @@ struct CQuickTimeMediaFile::Internals {
 																									mByteCountWithoutSampleDescriptions +
 																							getAudioSampleDescription()
 																									.getCodecConfigurationDataByteOffset();
-												TIResult<CAtomReader::Atom>	decompressionParamAtom =
+												TVResult<CAtomReader::Atom>	decompressionParamAtom =
 																					mAtomReader.readAtom(mSTSDAtom,
 																							codecConfigurationDataByteOffset);
 												ReturnValueIfResultError(decompressionParamAtom,
-														TIResult<CData>(decompressionParamAtom.getError()));
+														TVResult<CData>(decompressionParamAtom.getError()));
 
 												return mAtomReader.readAtomPayload(*decompressionParamAtom);
 											}
-			TIResult<CData>				getVideoDecompressionData() const
+			TVResult<CData>				getVideoDecompressionData() const
 											{
 												// Setup
 												CData::ByteIndex	codecConfigurationDataByteOffset =
@@ -699,10 +699,10 @@ struct CQuickTimeMediaFile::Internals {
 																					sizeof(SQTVideoSampleDescription);
 
 												// Read atom payload
-												TIResult<CData>	payload = mAtomReader.readAtomPayload(mSTSDAtom);
+												TVResult<CData>	payload = mAtomReader.readAtomPayload(mSTSDAtom);
 												ReturnResultIfResultError(payload);
 
-												return TIResult<CData>(
+												return TVResult<CData>(
 														payload->subData(codecConfigurationDataByteOffset));
 											}
 
@@ -740,7 +740,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 {
 	// Setup
 	CAtomReader	atomReader(randomAccessDataSource);
-	OI<SError>	error;
+	OV<SError>	error;
 
 	// Find core atoms
 	OV<CAtomReader::Atom>	moovAtom;
@@ -748,7 +748,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 
 	while (true) {
 		// Read next atom
-		TIResult<CAtomReader::Atom>	atom = atomReader.readAtom();
+		TVResult<CAtomReader::Atom>	atom = atomReader.readAtom();
 		if (atom.hasError())
 			break;
 
@@ -762,15 +762,19 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 
 		// Go to next atom
 		error = atomReader.seekToNextAtom(*atom);
-		if (error.hasInstance())
+		if (error.hasValue())
 			break;
 	}
 
-	if (!moovAtom.hasValue() || !mdatAtom.hasValue())
+	if (!moovAtom.hasValue() || !mdatAtom.hasValue()) {
 		// Didn't find core atoms
-		ReturnValueIfError(error, I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(*error)));
+		if (error.hasValue())
+			return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(*error));
+		else
+			return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult());
+	}
 
-	TIResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*moovAtom);
+	TVResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*moovAtom);
 	ReturnValueIfResultError(moovContainerAtom,
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(moovContainerAtom.getError())));
 
@@ -781,18 +785,18 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 		// Check type
 		if (moovIterator->mType == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
 			// Track
-			TIResult<CAtomReader::ContainerAtom>	trakContainerAtom = atomReader.readContainerAtom(*moovIterator);
+			TVResult<CAtomReader::ContainerAtom>	trakContainerAtom = atomReader.readContainerAtom(*moovIterator);
 			if (trakContainerAtom.hasError()) continue;
 
 			// Media
-			TIResult<CAtomReader::ContainerAtom>	mdiaContainerAtom =
+			TVResult<CAtomReader::ContainerAtom>	mdiaContainerAtom =
 															atomReader.readContainerAtom(
 																	trakContainerAtom->getAtom(
 																			MAKE_OSTYPE('m', 'd', 'i', 'a')));
 			if (mdiaContainerAtom.hasError()) continue;
 
 			// Media header
-			TIResult<CData>	mdhdAtomPayloadData =
+			TVResult<CData>	mdhdAtomPayloadData =
 									atomReader.readAtomPayload(
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('m', 'd', 'h', 'd')));
 			if (mdhdAtomPayloadData.hasError()) continue;
@@ -804,7 +808,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 													(UniversalTimeInterval) timeScale;
 
 			// Handler
-			TIResult<CData>	hdlrAtomPayloadData =
+			TVResult<CData>	hdlrAtomPayloadData =
 									atomReader.readAtomPayload(
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('h', 'd', 'l', 'r')));
 			if (hdlrAtomPayloadData.hasError()) continue;
@@ -812,14 +816,14 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 												*((SQThdlrAtomPayload*) hdlrAtomPayloadData->getBytePtr());
 
 			// Media Information
-			TIResult<CAtomReader::ContainerAtom>	minfContainerAtom =
+			TVResult<CAtomReader::ContainerAtom>	minfContainerAtom =
 															atomReader.readContainerAtom(
 																	mdiaContainerAtom->getAtom(
 																			MAKE_OSTYPE('m', 'i', 'n', 'f')));
 			if (minfContainerAtom.hasError()) continue;
 
 			// Sample Table
-			TIResult<CAtomReader::ContainerAtom>	stblContainerAtom =
+			TVResult<CAtomReader::ContainerAtom>	stblContainerAtom =
 															atomReader.readContainerAtom(
 																	minfContainerAtom->getAtom(
 																			MAKE_OSTYPE('s', 't', 'b', 'l')));
@@ -828,14 +832,14 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 			// Sample Table Sample Description
 			OR<CAtomReader::Atom>	stsdAtom = stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'd'));
 			if (!stsdAtom.hasReference()) continue;
-			TIResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
-			if (error.hasInstance()) continue;
+			TVResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
+			if (error.hasValue()) continue;
 			const	SQTstsdAtomPayload&	stsdAtomPayload =
 												*((SQTstsdAtomPayload*) stsdAtomPayloadData->getBytePtr());
 			const	SQTstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
 
 			// Sample Table Time-to-Sample
-			TIResult<CData>	sttsAtomPayloadData =
+			TVResult<CData>	sttsAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 't', 's')));
 			if (sttsAtomPayloadData.hasError()) continue;
@@ -843,7 +847,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 												*((SQTsttsAtomPayload*) sttsAtomPayloadData->getBytePtr());
 
 			// Sample Table Sample Blocks
-			TIResult<CData>	stscAtomPayloadData =
+			TVResult<CData>	stscAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'c')));
 			if (stscAtomPayloadData.hasError()) continue;
@@ -851,7 +855,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 												*((SQTstscAtomPayload*) stscAtomPayloadData->getBytePtr());
 
 			// Sample Table Packet Sizes
-			TIResult<CData>	stszAtomPayloadData =
+			TVResult<CData>	stszAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'z')));
 			if (stszAtomPayloadData.hasError()) continue;
@@ -859,15 +863,15 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 												*((SQTstszAtomPayload*) stszAtomPayloadData->getBytePtr());
 
 			// Sample Table Block offsets
-			TIResult<CData>	stcoAtomPayloadData =
+			TVResult<CData>	stcoAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 'c', 'o')));
-			TIResult<CData>	co64AtomPayloadData =
+			TVResult<CData>	co64AtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
-			if (!stcoAtomPayloadData.hasInstance() && !co64AtomPayloadData.hasInstance()) continue;
+			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
 			SQTstcoAtomPayload*	stcoAtomPayload =
-										stcoAtomPayloadData.hasInstance() ?
+										stcoAtomPayloadData.hasValue() ?
 												(SQTstcoAtomPayload*) stcoAtomPayloadData->getBytePtr() : nil;
 //			Sco64AtomPayload*	co64AtomPayload =
 //										co64AtomPayloadData.hasValue() ?
@@ -1078,14 +1082,14 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 
 		case MAKE_OSTYPE('m', 'p', '4', 'a'): {
 			// MPEG4 (AAC) Audio
-			TIResult<CData>	decompressionData = internals.getAudioDecompressionData();
+			TVResult<CData>	decompressionData = internals.getAudioDecompressionData();
 			ReturnValueIfResultError(decompressionData,
 					TVResult<CMediaTrackInfos::AudioTrackInfo>(
 							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			CAtomReader	decompressionAtomReader(I<CRandomAccessDataSource>(new CDataDataSource(*decompressionData)));
 
-			TIResult<CAtomReader::ContainerAtom>	decompressionParamContainerAtom =
+			TVResult<CAtomReader::ContainerAtom>	decompressionParamContainerAtom =
 															decompressionAtomReader.readContainerAtom();
 			ReturnValueIfResultError(decompressionParamContainerAtom,
 					TVResult<CMediaTrackInfos::AudioTrackInfo>(
@@ -1097,7 +1101,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
-			TIResult<CData>	esdsAtomPayload = decompressionAtomReader.readAtomPayload(*esdsAtom);
+			TVResult<CData>	esdsAtomPayload = decompressionAtomReader.readAtomPayload(*esdsAtom);
 			ReturnValueIfResultError(esdsAtomPayload,
 					TVResult<CMediaTrackInfos::AudioTrackInfo>(
 							CCodec::unsupportedConfigurationError(CString(type, true))));
@@ -1148,18 +1152,18 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 	switch (type) {
 		case MAKE_OSTYPE('a', 'v', 'c', '1'): {
 			// h.264 Video
-			TIResult<CData>	decompressionData = internals.getVideoDecompressionData();
+			TVResult<CData>	decompressionData = internals.getVideoDecompressionData();
 			ReturnValueIfResultError(decompressionData,
 					TVResult<CMediaTrackInfos::VideoTrackInfo>(decompressionData.getError()));
 
 			CAtomReader					atomReader(I<CRandomAccessDataSource>(new CDataDataSource(*decompressionData)));
-			TIResult<CAtomReader::Atom>	avcCAtom(SError::mEndOfData);
+			TVResult<CAtomReader::Atom>	avcCAtom(SError::mEndOfData);
 			do {
 				// Read
 				avcCAtom = atomReader.readAtom();
 
 				// Check if have instance
-				if (avcCAtom.hasInstance())
+				if (avcCAtom.hasValue())
 					// Seek to next atom
 					atomReader.seekToNextAtom(*avcCAtom);
 			} while (!avcCAtom.hasError() && (avcCAtom->mType != MAKE_OSTYPE('a', 'v', 'c', 'C')));
@@ -1167,7 +1171,7 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 					TVResult<CMediaTrackInfos::VideoTrackInfo>(
 							CCodec::unsupportedConfigurationError(CString(type, true))));
 
-			TIResult<CData>	avcCAtomPayload = atomReader.readAtomPayload(*avcCAtom);
+			TVResult<CData>	avcCAtomPayload = atomReader.readAtomPayload(*avcCAtom);
 			ReturnValueIfResultError(avcCAtomPayload,
 					TVResult<CMediaTrackInfos::VideoTrackInfo>(avcCAtomPayload.getError()));
 
@@ -1179,11 +1183,11 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 													SMediaPacketAndLocation::getTotalByteCount(mediaPacketAndLocations);
 
 			// Compose storage format
-			OI<SVideoStorageFormat>	videoStorageFormat =
+			OV<SVideoStorageFormat>	videoStorageFormat =
 											CH264VideoCodec::composeVideoStorageFormat(
 													S2DSizeU16(videoSampleDescription.getWidth(),
 															videoSampleDescription.getHeight()), framerate);
-			if (!videoStorageFormat.hasInstance())
+			if (!videoStorageFormat.hasValue())
 				// Unsupported configuration
 				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
@@ -1192,7 +1196,7 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 			CVideoTrack	videoTrack(CMediaTrack::composeInfo(duration, byteCount), *videoStorageFormat);
 			if (options & SMediaSource::kOptionsCreateDecoders) {
 				// Setup
-				TIResult<CData>	stssAtomPayloadData =
+				TVResult<CData>	stssAtomPayloadData =
 										internals.mAtomReader.readAtomPayload(
 												internals.mSTBLContainerAtom.getAtom(MAKE_OSTYPE('s', 't', 's', 's')));
 				ReturnValueIfResultError(stssAtomPayloadData,
@@ -1239,7 +1243,7 @@ UInt8 CQuickTimeMediaFile::getChannels(const Internals& internals) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CQuickTimeMediaFile::getAudioDecompressionData(const Internals& internals) const
+TVResult<CData> CQuickTimeMediaFile::getAudioDecompressionData(const Internals& internals) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return internals.getAudioDecompressionData();
@@ -1272,7 +1276,7 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 													quickTimeMediaFile.composePacketAndLocations(internals,
 															OV<UInt32>(1), OV<UInt32>(bytesPerFrame));
 
-	OI<SAudioStorageFormat>	audioStorageFormat =
+	OV<SAudioStorageFormat>	audioStorageFormat =
 									CPCMAudioCodec::composeAudioStorageFormat(isFloat, bits, sampleRate, channels);
 	UInt64					frameCount = mediaPacketAndLocations.getCount();
 

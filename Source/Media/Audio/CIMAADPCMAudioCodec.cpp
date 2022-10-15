@@ -227,18 +227,18 @@ class CDVIIntelIMAADPCMDecodeAudioCodec : public CDecodeAudioCodec {
 
 										// CAudioCodec methods - Decoding
 		TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat);
-		OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat);
+		OV<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat);
 		CAudioFrames::Requirements		getRequirements() const
 											{ return CAudioFrames::Requirements(mFramesPerPacket,
 													mFramesPerPacket * 2); }
 		void							seek(UniversalTimeInterval timeInterval);
-		OI<SError>						decodeInto(CAudioFrames& audioFrames);
+		OV<SError>						decodeInto(CAudioFrames& audioFrames);
 
 	private:
 		UInt32								mFramesPerPacket;
 		I<CMediaPacketSource>				mMediaPacketSource;
 
-		OI<SAudioProcessingFormat>			mAudioProcessingFormat;
+		OV<SAudioProcessingFormat>			mAudioProcessingFormat;
 		UInt32								mDecodeFramesToIgnore;
 };
 
@@ -254,13 +254,13 @@ TArray<SAudioProcessingSetup> CDVIIntelIMAADPCMDecodeAudioCodec::getAudioProcess
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
+OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -273,7 +273,7 @@ void CDVIIntelIMAADPCMDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
+OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -289,7 +289,7 @@ OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 	UInt32				decodedFrameCount = 0;
 	while (remainingFrames >= mFramesPerPacket) {
 		// Get next packet
-		TIResult<CMediaPacketSource::DataInfo>	dataInfo = mMediaPacketSource->readNext();
+		TVResult<CMediaPacketSource::DataInfo>	dataInfo = mMediaPacketSource->readNext();
 		if (dataInfo.hasError()) {
 			// Check situation
 			if (decodedFrameCount > 0)
@@ -297,7 +297,7 @@ OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 				break;
 			else
 				// EOF, no decoded frames
-				return OI<SError>(dataInfo.getError());
+				return OV<SError>(dataInfo.getError());
 		}
 
 		// Decode packet
@@ -327,7 +327,7 @@ OI<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 		mDecodeFramesToIgnore = 0;
 	}
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -341,11 +341,11 @@ const	OSType	CDVIIntelIMAADPCMAudioCodec::mID = 0x6D730011;
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SAudioStorageFormat> CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat(Float32 sampleRate,
+OV<SAudioStorageFormat> CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat(Float32 sampleRate,
 		EAudioChannelMap audioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OI<SAudioStorageFormat>(new SAudioStorageFormat(mID, sampleRate, audioChannelMap));
+	return OV<SAudioStorageFormat>(SAudioStorageFormat(mID, sampleRate, audioChannelMap));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -362,7 +362,7 @@ UInt64 CDVIIntelIMAADPCMAudioCodec::composeFrameCount(const SAudioStorageFormat&
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<I<CDecodeAudioCodec> > CDVIIntelIMAADPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
+OV<I<CDecodeAudioCodec> > CDVIIntelIMAADPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 startByteOffset, UInt64 byteCount,
 		UInt16 blockAlign)
 //----------------------------------------------------------------------------------------------------------------------
@@ -372,7 +372,7 @@ OI<I<CDecodeAudioCodec> > CDVIIntelIMAADPCMAudioCodec::create(const SAudioStorag
 					((UInt32) blockAlign / (UInt32) audioStorageFormat.getChannels() - sizeof(SDVIIntelChannelHeader)) *
 							2 + 1;
 
-	return OI<I<CDecodeAudioCodec> >(
+	return OV<I<CDecodeAudioCodec> >(
 			I<CDecodeAudioCodec>(
 					new CDVIIntelIMAADPCMDecodeAudioCodec(framesPerPacket,
 							new CSeekableUniformMediaPacketSource(randomAccessDataSource, startByteOffset, byteCount,

@@ -19,13 +19,13 @@
 
 #define LogIfError(error, when)															\
 			{																			\
-				if (error.hasInstance())												\
+				if (error.hasValue())													\
 					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
 			}
 
 #define	LogIfErrorAndReturn(error, when)												\
 			{																			\
-				if (error.hasInstance()) {												\
+				if (error.hasValue()) {													\
 					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
 					return;																\
 				}																		\
@@ -33,7 +33,7 @@
 
 #define LogIfErrorAndReturnError(error, when)											\
 			{																			\
-				if (error.hasInstance()) {												\
+				if (error.hasValue()) {													\
 					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
 					return error;														\
 				}																		\
@@ -41,7 +41,7 @@
 
 #define	LogIfErrorAndReturnValue(error, when, value)									\
 			{																			\
-				if (error.hasInstance()) {												\
+				if (error.hasValue()) {													\
 					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
 					return value;														\
 				}																		\
@@ -93,7 +93,7 @@ class CLogServices {
 	public:
 								// Class methods
 		static	void			setPrimaryLogFile(const CLogFile& logFile);
-		static	OI<CLogFile>&	getPrimaryLogFile();
+		static	OV<CLogFile>&	getPrimaryLogFile();
 
 		static	void			logMessage(const CString& string);
 		static	void			logMessages(const TArray<CString>& strings);

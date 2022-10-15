@@ -28,37 +28,37 @@ class CFileWriter {
 					~CFileWriter();
 
 					// Instance methods
-		OI<SError>	open(bool append = false, bool buffered = false, bool removeIfNotClosed = false) const;
+		OV<SError>	open(bool append = false, bool buffered = false, bool removeIfNotClosed = false) const;
 
-		OI<SError>	write(const void* buffer, UInt64 byteCount) const;
-		OI<SError>	write(const CData& data) const
+		OV<SError>	write(const void* buffer, UInt64 byteCount) const;
+		OV<SError>	write(const CData& data) const
 						{ return write(data.getBytePtr(), data.getByteCount()); }
-		OI<SError>	write(const CString& string, CString::Encoding stringEncoding = CString::kEncodingTextDefault) const
+		OV<SError>	write(const CString& string, CString::Encoding stringEncoding = CString::kEncodingTextDefault) const
 						{  return write(string.getData(stringEncoding)); }
-		OI<SError>	write(SInt8 value) const
+		OV<SError>	write(SInt8 value) const
 						{ return write(&value, sizeof(SInt8)); }
-		OI<SError>	write(SInt16 value) const
+		OV<SError>	write(SInt16 value) const
 						{ return write(&value, sizeof(SInt16)); }
-		OI<SError>	write(SInt32 value) const
+		OV<SError>	write(SInt32 value) const
 						{ return write(&value, sizeof(SInt32)); }
-		OI<SError>	write(SInt64 value) const
+		OV<SError>	write(SInt64 value) const
 						{ return write(&value, sizeof(SInt64)); }
-		OI<SError>	write(UInt8 value) const
+		OV<SError>	write(UInt8 value) const
 						{ return write(&value, sizeof(UInt8)); }
-		OI<SError>	write(UInt16 value) const
+		OV<SError>	write(UInt16 value) const
 						{ return write(&value, sizeof(UInt16)); }
-		OI<SError>	write(UInt32 value) const
+		OV<SError>	write(UInt32 value) const
 						{ return write(&value, sizeof(UInt32)); }
-		OI<SError>	write(UInt64 value) const
+		OV<SError>	write(UInt64 value) const
 						{ return write(&value, sizeof(UInt64)); }
 
 		UInt64		getPos() const;
-		OI<SError>	setPos(Position position, SInt64 newPos) const;
-		OI<SError>	setByteCount(UInt64 byteCount) const;
+		OV<SError>	setPos(Position position, SInt64 newPos) const;
+		OV<SError>	setByteCount(UInt64 byteCount) const;
 
-		OI<SError>	flush() const;
+		OV<SError>	flush() const;
 
-		OI<SError>	close() const;
+		OV<SError>	close() const;
 
 	// Properties
 	private:

@@ -33,18 +33,18 @@ class CFile : CHashable {
 						CString				getName() const;
 						CString				getNameDeletingExtension() const;
 						CString				getNameForDisplay() const;
-						OI<SError>			rename(const CString& string);
+						OV<SError>			rename(const CString& string);
 
 						UInt64				getByteCount() const;
 
-						OI<SError>			remove() const;
+						OV<SError>			remove() const;
 						bool				doesExist() const;
 
 						CFolder				getFolder() const;
 						bool				isHidden() const;
 
 						bool				getLocked() const;
-						OI<SError>			setLocked(bool lockFile) const;
+						OV<SError>			setLocked(bool lockFile) const;
 
 						UniversalTime		getCreationDate() const;
 						UniversalTime		getModificationDate() const;
@@ -77,14 +77,14 @@ class CFile : CHashable {
 
 #if defined(TARGET_OS_MACOS) || defined(TARGET_OS_LINUX)
 						UInt16				getPermissions() const;
-						OI<SError>			setPermissions(UInt16 permissions) const;
+						OV<SError>			setPermissions(UInt16 permissions) const;
 #endif
 
 #if defined(TARGET_OS_MACOS)
 						bool				isAlias() const;
 
 						CString				getComment() const;
-						OI<SError>			setComment(const CString& string) const;
+						OV<SError>			setComment(const CString& string) const;
 #endif
 
 	private:

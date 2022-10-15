@@ -46,7 +46,7 @@
 							CString(method) + CString(OSSTR(" returned ")) +		\
 									error.getDefaultDescription());					\
 																					\
-					return OI<SError>(error);										\
+					return OV<SError>(error);										\
 				}
 #define	ReturnValueIfFailed(status, method, value)									\
 				if (status != noErr) {												\

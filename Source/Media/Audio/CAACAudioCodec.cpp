@@ -240,7 +240,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 
 												return asbd;
 											}
-		OI<SError>						setMagicCookie(AudioConverterRef audioConverterRef)
+		OV<SError>						setMagicCookie(AudioConverterRef audioConverterRef)
 											{
 												OSStatus	status =
 																	::AudioConverterSetProperty(audioConverterRef,
@@ -252,13 +252,13 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 												ReturnErrorIfFailed(status,
 														OSSTR("AudioConverterSetProperty for magic cookie"));
 
-												return OI<SError>();
+												return OV<SError>();
 											}
 #elif defined(TARGET_OS_WINDOWS)
 										// CMediaFoundationDecodeAudioCodec methods
 		OR<const GUID>					getGUID(OSType codecID) const
 											{ return OR<const GUID>(MFAudioFormat_AAC); }
-		OI<CData>						getUserData() const
+		OV<CData>						getUserData() const
 											{
 												#pragma pack(push, 1)
 													struct UserData {
@@ -272,7 +272,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 												#pragma pack(pop)
 												userData.mAudioSpecificConfig = EndianU16_NtoB(mInfo.getStartCodes());
 
-												return OI<CData>(new CData(&userData, sizeof(UserData)));
+												return OV<CData>(CData(&userData, sizeof(UserData)));
 											}
 #endif
 
@@ -374,12 +374,12 @@ SAudioStorageFormat CAACAudioCodec::composeAudioStorageFormat(const Info& info)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<I<CDecodeAudioCodec> > CAACAudioCodec::create(const Info& info,
+OV<I<CDecodeAudioCodec> > CAACAudioCodec::create(const Info& info,
 		const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const TArray<SMediaPacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OI<I<CDecodeAudioCodec> >(
+	return OV<I<CDecodeAudioCodec> >(
 			I<CDecodeAudioCodec>(
 					new CAACDecodeAudioCodec(info,
 							I<CMediaPacketSource>(

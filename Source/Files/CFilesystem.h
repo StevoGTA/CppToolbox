@@ -21,30 +21,30 @@ class CFilesystem {
 	// Methods
 	public:
 											// Class methods
-		static	TIResult<SFoldersFiles>		getFoldersFiles(const CFolder& folder, bool deep = false);
-		static	TIResult<TArray<CFolder> >	getFolders(const CFolder& folder, bool deep = false);
-		static	TIResult<TArray<CFile> >	getFiles(const CFolder& folder, bool deep = false);
-		static	OI<CFile>					getDotUnderscoreFile(const CFile& file);
-		static	OI<CFile>					getResourceFork(const CFile& file);
+		static	TVResult<SFoldersFiles>		getFoldersFiles(const CFolder& folder, bool deep = false);
+		static	TVResult<TArray<CFolder> >	getFolders(const CFolder& folder, bool deep = false);
+		static	TVResult<TArray<CFile> >	getFiles(const CFolder& folder, bool deep = false);
+		static	OV<CFile>					getDotUnderscoreFile(const CFile& file);
+		static	OV<CFile>					getResourceFork(const CFile& file);
 
 											// Will copy sourceFolder *into* destinationFolder
-		static	OI<SError>					copy(const CFolder& sourceFolder, const CFolder& destinationFolder);
+		static	OV<SError>					copy(const CFolder& sourceFolder, const CFolder& destinationFolder);
 
 											// Will copy file *into* destinationFolder
-		static	OI<SError>					copy(const CFile& file, const CFolder& destinationFolder);
+		static	OV<SError>					copy(const CFile& file, const CFolder& destinationFolder);
 
 											// Will copy files *into* destinationFolder
-		static	OI<SError>					copy(const TArray<CFile> files, const CFolder& destinationFolder);
+		static	OV<SError>					copy(const TArray<CFile> files, const CFolder& destinationFolder);
 
 											// Will replace destinationFile with sourceFile and remove sourceFile
-		static	OI<SError>					replace(const CFile& sourceFile, const CFile& destinationFile);
+		static	OV<SError>					replace(const CFile& sourceFile, const CFile& destinationFile);
 
 #if defined(TARGET_OS_MACOS)
-		static	OI<SError>					open(const TArray<CFile> files, const Application& application);
+		static	OV<SError>					open(const TArray<CFile> files, const Application& application);
 		static	void						moveToTrash(const TArray<CFile> files, TMArray<CFile>& outUntrashedFiles);
-		static	OI<SError>					moveToTrash(const TArray<CFile> files);
+		static	OV<SError>					moveToTrash(const TArray<CFile> files);
 
-		static	OI<SError>					revealInFinder(const CFolder& folder);
-		static	OI<SError>					revealInFinder(const TArray<CFile> files);
+		static	OV<SError>					revealInFinder(const CFolder& folder);
+		static	OV<SError>					revealInFinder(const TArray<CFile> files);
 #endif
 };

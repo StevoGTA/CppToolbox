@@ -39,7 +39,7 @@ CAudioProcessor::~CAudioProcessor()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcessor,
+OV<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {

@@ -34,7 +34,7 @@ class CAudioDecoder : public CAudioSource {
 		void							reset();
 
 		TArray<SAudioProcessingSetup>	getOutputSetups() const;
-		OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
+		OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
 
 	// Properties
 	private:

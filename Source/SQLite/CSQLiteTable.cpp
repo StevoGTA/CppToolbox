@@ -79,7 +79,7 @@ class CSQLiteTableInternals : public TReferenceCountable<CSQLiteTableInternals> 
 										if (tableColumn.getOptions() & CSQLiteTableColumn::kCheck)
 											string += CString(OSSTR(" CHECK"));
 
-										if (tableColumn.getDefaultValue().hasInstance())
+										if (tableColumn.getDefaultValue().hasValue())
 											// Default
 											string +=
 													CString(OSSTR(" DEFAULT (")) +

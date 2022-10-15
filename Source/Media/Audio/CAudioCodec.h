@@ -22,12 +22,12 @@ class CAudioCodec : public CCodec {
 								Info(OSType id, const CString& name) : mID(id), mDecodeName(name), mEncodeName(name) {}
 								Info(OSType id, const CString& name, const EncodeSettings& encodeSettings) :
 									mID(id), mDecodeName(name), mEncodeName(name),
-											mEncodeSettings(OI<EncodeSettings>(encodeSettings))
+											mEncodeSettings(OV<EncodeSettings>(encodeSettings))
 									{}
 								Info(OSType id, const CString& decodeName, const CString& encodeName,
 										const EncodeSettings& encodeSettings) :
 									mID(id), mDecodeName(decodeName), mEncodeName(encodeName),
-											mEncodeSettings(OI<EncodeSettings>(encodeSettings))
+											mEncodeSettings(OV<EncodeSettings>(encodeSettings))
 									{}
 								Info(const Info& other) :
 									mID(other.mID), mDecodeName(other.mDecodeName), mEncodeName(other.mEncodeName),
@@ -47,7 +47,7 @@ class CAudioCodec : public CCodec {
 				OSType				mID;
 				CString				mDecodeName;
 				CString				mEncodeName;
-				OI<EncodeSettings>	mEncodeSettings;
+				OV<EncodeSettings>	mEncodeSettings;
 		};
 
 	// Methods
@@ -95,7 +95,7 @@ class CDecodeAudioCodec : public CAudioCodec {
 													frameCount = (UInt32) framesRemaining;
 												if (frameCount > 0) {
 													// Read
-													OI<SError>	error =
+													OV<SError>	error =
 																		mRandomAccessDataSource->readData(
 																				mCurrentPosition, buffer,
 																				(UInt64) frameCount *
@@ -162,7 +162,7 @@ class CDecodeAudioCodec : public CAudioCodec {
 																{ return mAudioStorageFormat; }
 								UInt64						getFrameCount() const
 																{ return mFrameCount; }
-				virtual			OI<I<CDecodeAudioCodec> >	getDecodeAudioCodec() const = 0;
+				virtual			OV<I<CDecodeAudioCodec> >	getDecodeAudioCodec() const = 0;
 
 			// Properties
 			protected:
@@ -201,12 +201,12 @@ class CDecodeAudioCodec : public CAudioCodec {
 												// Instance methods
 		virtual	TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat)
 														= 0;
-		virtual	OI<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat)
-													{ return OI<SError>(); }
+		virtual	OV<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat)
+													{ return OV<SError>(); }
 		virtual	CAudioFrames::Requirements		getRequirements() const
 													{ return CAudioFrames::Requirements(1, 1); }
 		virtual	void							seek(UniversalTimeInterval timeInterval) = 0;
-		virtual	OI<SError>						decodeInto(CAudioFrames& audioFrames) = 0;
+		virtual	OV<SError>						decodeInto(CAudioFrames& audioFrames) = 0;
 
 	protected:
 												// Lifecycle methods

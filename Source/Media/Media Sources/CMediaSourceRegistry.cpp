@@ -63,7 +63,7 @@ const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
+TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, const CString& extension,
 		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options) const
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,12 +87,11 @@ TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 			switch (importResult->getResult()) {
 				case SMediaSource::ImportResult::kSuccess:
 					// Success
-					return TIResult<ImportResult>(
-							ImportResult(mediaSource.getID(), importResult));
+					return TVResult<ImportResult>(ImportResult(mediaSource.getID(), importResult));
 
 				case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
 					// Matched source, but source unable to load
-					return TIResult<ImportResult>(importResult->getError());
+					return TVResult<ImportResult>(importResult->getError());
 
 				case SMediaSource::ImportResult::kSourceMismatch:
 					// Not a matched source
@@ -115,11 +114,11 @@ TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		switch (importResult->getResult()) {
 			case SMediaSource::ImportResult::kSuccess:
 				// Success
-				return TIResult<ImportResult>(ImportResult(mediaSource.getID(), importResult));
+				return TVResult<ImportResult>(ImportResult(mediaSource.getID(), importResult));
 
 			case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
 				// Matched source, but source unable to load
-				return TIResult<ImportResult>(importResult->getError());
+				return TVResult<ImportResult>(importResult->getError());
 
 			case SMediaSource::ImportResult::kSourceMismatch:
 				// Not a matched source
@@ -127,5 +126,5 @@ TIResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		}
 	}
 
-	return TIResult<ImportResult>(sImportFailed);
+	return TVResult<ImportResult>(sImportFailed);
 }

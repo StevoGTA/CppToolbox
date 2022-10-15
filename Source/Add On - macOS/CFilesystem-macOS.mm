@@ -23,7 +23,7 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 																									\
-					return OI<SError>(error);														\
+					return OV<SError>(error);														\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
@@ -31,7 +31,7 @@
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
-					return OI<SError>(error);														\
+					return OV<SError>(error);														\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -41,7 +41,7 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
+OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -52,8 +52,8 @@ OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
 	if (destinationFile.doesExist()) {
 		// Destination file already exists
-		OI<SError>	error = destinationFile.remove();
-		if (error.hasInstance())
+		OV<SError>	error = destinationFile.remove();
+		if (error.hasValue())
 			CFilesystemReportErrorFileFolderX1AndReturnError(*error, "removing destination file", destinationFile);
 	}
 
@@ -72,7 +72,7 @@ OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 			// Read comment, write to dest
 			destinationFile.setComment(string);
 
-		return OI<SError>();
+		return OV<SError>();
 	} else
 		// Error
 		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), "copying file", file,
@@ -80,7 +80,7 @@ OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::open(const TArray<CFile> files, const Application& application)
+OV<SError> CFilesystem::open(const TArray<CFile> files, const Application& application)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -99,7 +99,7 @@ OI<SError> CFilesystem::open(const TArray<CFile> files, const Application& appli
 	if ([[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:applicationURL options:0 configuration:@{}
 			error:&error])
 		// Success
-		return OI<SError>();
+		return OV<SError>();
 	else
 		// Error
 		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "opening files with",
@@ -128,11 +128,11 @@ void CFilesystem::moveToTrash(const TArray<CFile> files, TMArray<CFile>& outUntr
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::moveToTrash(const TArray<CFile> files)
+OV<SError> CFilesystem::moveToTrash(const TArray<CFile> files)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	OI<SError>	sError;
+	OV<SError>	sError;
 
 	// Iterate files
 	for (CArray::ItemIndex i = 0; i < files.getCount(); i++) {
@@ -152,7 +152,7 @@ OI<SError> CFilesystem::moveToTrash(const TArray<CFile> files)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::revealInFinder(const CFolder& folder)
+OV<SError> CFilesystem::revealInFinder(const CFolder& folder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
@@ -160,14 +160,14 @@ OI<SError> CFilesystem::revealInFinder(const CFolder& folder)
 
 	// Reveal in Finder
 	if ([[NSWorkspace sharedWorkspace] openURL:url])
-		return OI<SError>();
+		return OV<SError>();
 	else
 		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mUnableToRevealInFinderError, "revealing in Finder",
 				folder);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::revealInFinder(const TArray<CFile> files)
+OV<SError> CFilesystem::revealInFinder(const TArray<CFile> files)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -181,5 +181,5 @@ OI<SError> CFilesystem::revealInFinder(const TArray<CFile> files)
 	// Reveal in Finder
 	[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:urls];
 
-	return OI<SError>();
+	return OV<SError>();
 }

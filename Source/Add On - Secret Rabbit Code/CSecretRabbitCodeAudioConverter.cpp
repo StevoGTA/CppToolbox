@@ -10,7 +10,7 @@
 // MARK: Local data
 
 #define SErrorFromSRC(error)			SError(CString(OSSTR("SRC")), error, CString(src_strerror(error)))
-#define ReturnErrorIfSRCError(error)	if (error != 0) return OI<SError>(SErrorFromSRC(error));
+#define ReturnErrorIfSRCError(error)	if (error != 0) return OV<SError>(SErrorFromSRC(error));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -117,12 +117,12 @@ class CSecretRabbitCodeAudioConverterInternals {
 							}
 
 		CAudioConverter&			mAudioConverter;
-		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
+		OV<SAudioProcessingFormat>	mInputAudioProcessingFormat;
 
 		SRC_STATE*					mSRCState;
 		OI<CAudioFrames>			mInputAudioFrames;
 		OI<CAudioFrames>			mInputFloatAudioFrames;
-		OI<SError>					mPerformError;
+		OV<SError>					mPerformError;
 		bool						mSourceHasMoreToRead;
 		UniversalTimeInterval		mSourceTimeInterval;
 };
@@ -150,12 +150,12 @@ CSecretRabbitCodeAudioConverter::~CSecretRabbitCodeAudioConverter()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
+OV<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
 	const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mInputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mInputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Create Secret Rabbit Code
 	int	error;

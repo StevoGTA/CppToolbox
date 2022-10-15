@@ -86,7 +86,7 @@ OV<Float64> CSQLiteResultsRow::getFloat64(const CSQLiteTableColumn& tableColumn)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CString> CSQLiteResultsRow::getString(const CSQLiteTableColumn& tableColumn) const
+OV<CString> CSQLiteResultsRow::getString(const CSQLiteTableColumn& tableColumn) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -99,11 +99,11 @@ OI<CString> CSQLiteResultsRow::getString(const CSQLiteTableColumn& tableColumn) 
 	// Get value
 	const	unsigned	char*	text = sqlite3_column_text(mInternals->mStatement, index);
 
-	return (text != nil) ? OI<CString>(new CString((const char*) text)) : OI<CString>();
+	return (text != nil) ? OV<CString>(CString((const char*) text)) : OV<CString>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CData> CSQLiteResultsRow::getData(const CSQLiteTableColumn& tableColumn) const
+OV<CData> CSQLiteResultsRow::getData(const CSQLiteTableColumn& tableColumn) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -117,5 +117,5 @@ OI<CData> CSQLiteResultsRow::getData(const CSQLiteTableColumn& tableColumn) cons
 	const	void*	blob = sqlite3_column_blob(mInternals->mStatement, index);
 
 	return (blob != nil) ?
-			OI<CData>(new CData(blob, sqlite3_column_bytes(mInternals->mStatement, index))) : OI<CData>();
+			OV<CData>(CData(blob, sqlite3_column_bytes(mInternals->mStatement, index))) : OV<CData>();
 }

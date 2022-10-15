@@ -17,7 +17,7 @@ class CCoreAudioAudioConverter : public CAudioConverter {
 							~CCoreAudioAudioConverter();
 
 							// CAudioProcessor methods
-		OI<SError>			connectInput(const I<CAudioProcessor>& audioProcessor,
+		OV<SError>			connectInput(const I<CAudioProcessor>& audioProcessor,
 									const SAudioProcessingFormat& audioProcessingFormat);
 		TNArray<CString>	getSetupDescription(const CString& indent);
 

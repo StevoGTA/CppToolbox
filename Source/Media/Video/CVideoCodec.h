@@ -43,7 +43,7 @@ class CDecodeVideoCodec : public CVideoCodec {
 	// Methods
 	public:
 										// Instance methods
-		virtual	OI<SError>				setup(const SVideoProcessingFormat& videoProcessingFormat) = 0;
+		virtual	OV<SError>				setup(const SVideoProcessingFormat& videoProcessingFormat) = 0;
 		virtual	void					seek(UniversalTimeInterval timeInterval) = 0;
 		virtual	TIResult<CVideoFrame>	decode() = 0;
 

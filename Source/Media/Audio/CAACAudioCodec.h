@@ -55,7 +55,7 @@ class CAACAudioCodec {
 											// Class methods
 		static	OV<Info>					composeInfo(const CData& configurationData, UInt16 channels);
 		static	SAudioStorageFormat			composeAudioStorageFormat(const Info& info);
-		static	OI<I<CDecodeAudioCodec> >	create(const Info& info,
+		static	OV<I<CDecodeAudioCodec> >	create(const Info& info,
 													const I<CRandomAccessDataSource>& randomAccessDataSource,
 													const TArray<SMediaPacketAndLocation>& packetAndLocations);
 

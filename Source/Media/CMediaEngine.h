@@ -19,22 +19,22 @@ class CMediaEngine {
 												// Lifecycle methods
 												ConnectResult(const SAudioProcessingFormat& audioProcessingFormat) :
 													mAudioProcessingFormat(
-															OI<SAudioProcessingFormat>(audioProcessingFormat))
+															OV<SAudioProcessingFormat>(audioProcessingFormat))
 													{}
-												ConnectResult(const SError& error) : mError(OI<SError>(error)) {}
+												ConnectResult(const SError& error) : mError(OV<SError>(error)) {}
 
 												// Instance methods
 					bool						isSuccess() const
-													{ return !mError.hasInstance(); }
-			const	OI<SAudioProcessingFormat>&	getAudioProcessingFormat() const
+													{ return !mError.hasValue(); }
+			const	OV<SAudioProcessingFormat>&	getAudioProcessingFormat() const
 													{ return mAudioProcessingFormat; }
-			const	OI<SError>&					getError() const
+			const	OV<SError>&					getError() const
 													{ return mError; }
 
 			// Properties
 			private:
-				OI<SAudioProcessingFormat>	mAudioProcessingFormat;
-				OI<SError>					mError;
+				OV<SAudioProcessingFormat>	mAudioProcessingFormat;
+				OV<SError>					mError;
 		};
 
 	// Methods

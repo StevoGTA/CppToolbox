@@ -31,10 +31,10 @@ class CFolder : CHashable {
 				const	CFilesystemPath&	getFilesystemPath() const;
 
 						CString				getName() const;
-						OI<SError>			rename(const CString& string);
+						OV<SError>			rename(const CString& string);
 
-						OI<SError>			create() const;
-						OI<SError>			remove() const;
+						OV<SError>			create() const;
+						OV<SError>			remove() const;
 						bool				doesExist() const;
 
 						CFolder				getParentFolder() const;

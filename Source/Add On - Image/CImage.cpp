@@ -44,7 +44,7 @@ static	SError	sErrorUnableToDecode(sErrorDomain, 3, CString(OSSTR("Unable to dec
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	TIResult<CBitmap>	sDecodeJPEGData(const CData& data);
+static	TVResult<CBitmap>	sDecodeJPEGData(const CData& data);
 static	void				sJPEGSourceInit(j_decompress_ptr jpegInfoPtr);
 static	void				sJPEGSourceTerminate(j_decompress_ptr jpegInfoPtr);
 static	boolean				sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr);
@@ -54,7 +54,7 @@ static	void				sJPEGErrorExit(j_common_ptr jpegInfoPtr);
 static	void				sDecodeNV12Data(const CData& data, const S2DSizeS32& size, CBitmap& bitmap,
 									const S2DRectS32& rect);
 
-static	TIResult<CBitmap>	sDecodePNGData(const CData& data);
+static	TVResult<CBitmap>	sDecodePNGData(const CData& data);
 static	void				sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t length);
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ CImage::~CImage()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CBitmap> CImage::getBitmap() const
+TVResult<CBitmap> CImage::getBitmap() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup/Validate image type
@@ -112,7 +112,7 @@ TIResult<CBitmap> CImage::getBitmap() const
 		mInternals->mType = getTypeFromData(mInternals->mData);
 	if (!mInternals->mType.hasValue())
 		// Unknown type
-		return TIResult<CBitmap>(sErrorUnknownType);
+		return TVResult<CBitmap>(sErrorUnknownType);
 
 	// Check image type
 	switch (*mInternals->mType) {
@@ -128,11 +128,11 @@ TIResult<CBitmap> CImage::getBitmap() const
 			// NV12
 			if (!mInternals->mSize.hasValue())
 				// Missing size
-				return TIResult<CBitmap>(sErrorMissingSize);
+				return TVResult<CBitmap>(sErrorMissingSize);
 			else if (((*mInternals->mSize).mWidth < 2) || (((*mInternals->mSize).mWidth & 1) != 0) ||
 					((*mInternals->mSize).mHeight < 2) || (((*mInternals->mSize).mHeight & 1) != 0))
 				// Width and height must be 2 or greater and even
-				return TIResult<CBitmap>(sErrorUnableToDecode);
+				return TVResult<CBitmap>(sErrorUnableToDecode);
 
 			// Setup
 			CBitmap	bitmap(*mInternals->mSize, CBitmap::kFormatRGB888);
@@ -141,19 +141,19 @@ TIResult<CBitmap> CImage::getBitmap() const
 			sDecodeNV12Data(mInternals->mData, *mInternals->mSize, bitmap,
 					S2DRectS32(0, 0, (*mInternals->mSize).mWidth, (*mInternals->mSize).mHeight));
 
-			return TIResult<CBitmap>(bitmap);
+			return TVResult<CBitmap>(bitmap);
 		}
 
 #if defined(TARGET_OS_WINDOWS)
 		default:
 			// Just to make compiler happy.  Will never get here.
-			return TIResult<CBitmap>(CBitmap());
+			return TVResult<CBitmap>(CBitmap());
 #endif
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CImage::decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const
+OV<SError> CImage::decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup/Validate image type
@@ -162,7 +162,7 @@ OI<SError> CImage::decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const
 		mInternals->mType = getTypeFromData(mInternals->mData);
 	if (!mInternals->mType.hasValue())
 		// Unknown type
-		return OI<SError>(sErrorUnknownType);
+		return OV<SError>(sErrorUnknownType);
 
 	// Check image type
 	switch (*mInternals->mType) {
@@ -170,13 +170,13 @@ OI<SError> CImage::decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const
 			// JPEG
 			AssertFailUnimplemented();
 
-			return OI<SError>(sErrorUnableToDecode);
+			return OV<SError>(sErrorUnableToDecode);
 
 		case kTypePNG:
 			// PNG
 			AssertFailUnimplemented();
 
-			return OI<SError>(sErrorUnableToDecode);
+			return OV<SError>(sErrorUnableToDecode);
 
 		case kTypeNV12:
 			// NV12
@@ -187,12 +187,12 @@ OI<SError> CImage::decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const
 			// Decode
 			sDecodeNV12Data(mInternals->mData, *mInternals->mSize, bitmap, rect);
 
-			return OI<SError>();
+			return OV<SError>();
 
 #if defined(TARGET_OS_WINDOWS)
 		default:
 			// Just to make compiler happy.  Will never get here.
-			return OI<SError>();
+			return OV<SError>();
 #endif
 	}
 }
@@ -261,26 +261,26 @@ OV<CImage::Type> CImage::getTypeFromData(const CData& data)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CString> CImage::getDefaultFilenameExtension(Type type)
+OV<CString> CImage::getDefaultFilenameExtension(Type type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check image type
 	switch (type) {
-		case kTypeJPEG:	return OI<CString>(CString(OSSTR("jpg")));
-		case kTypePNG:	return OI<CString>(CString(OSSTR("png")));
-		default:		return OI<CString>();
+		case kTypeJPEG:	return OV<CString>(CString(OSSTR("jpg")));
+		case kTypePNG:	return OV<CString>(CString(OSSTR("png")));
+		default:		return OV<CString>();
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CString> CImage::getMIMEType(Type type)
+OV<CString> CImage::getMIMEType(Type type)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check image type
 	switch (type) {
-		case kTypeJPEG:	return OI<CString>(CString(OSSTR("image/jpeg")));
-		case kTypePNG:	return OI<CString>(CString(OSSTR("image/png")));
-		default:		return OI<CString>();
+		case kTypeJPEG:	return OV<CString>(CString(OSSTR("image/jpeg")));
+		case kTypePNG:	return OV<CString>(CString(OSSTR("image/png")));
+		default:		return OV<CString>();
 	}
 }
 
@@ -289,7 +289,7 @@ OI<CString> CImage::getMIMEType(Type type)
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CBitmap> sDecodeJPEGData(const CData& data)
+TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Step 1: allocate and initialize JPEG decompression object
@@ -304,7 +304,7 @@ TIResult<CBitmap> sDecodeJPEGData(const CData& data)
 		SError	error(sErrorDomain, -1, CString(jerr.mErrorMessage));
 		jpeg_destroy_decompress(&jpegInfo);
 
-		return TIResult<CBitmap>(error);
+		return TVResult<CBitmap>(error);
 	}
 
 	// Initialize the decompression object
@@ -350,7 +350,7 @@ TIResult<CBitmap> sDecodeJPEGData(const CData& data)
 	// Step 8: Cleanup
 	jpeg_destroy_decompress(&jpegInfo);
 
-	return TIResult<CBitmap>(bitmap);
+	return TVResult<CBitmap>(bitmap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -519,19 +519,19 @@ void sDecodeNV12Data(const CData& data, const S2DSizeS32& size, CBitmap& bitmap,
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CBitmap> sDecodePNGData(const CData& data)
+TVResult<CBitmap> sDecodePNGData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	png_struct*	pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nil, nil, nil);
 	if (pngPtr == nil)
-		return TIResult<CBitmap>(sErrorUnableToDecode);
+		return TVResult<CBitmap>(sErrorUnableToDecode);
 
 	png_info*	pngInfoPtr = png_create_info_struct(pngPtr);
 	if (pngInfoPtr == nil) {
 		png_destroy_read_struct(&pngPtr, nil, nil);
 
-		return TIResult<CBitmap>(sErrorUnableToDecode);
+		return TVResult<CBitmap>(sErrorUnableToDecode);
 	}
 
 	// Set error handling
@@ -539,7 +539,7 @@ TIResult<CBitmap> sDecodePNGData(const CData& data)
 		// Error handling
 		png_destroy_read_struct(&pngPtr, &pngInfoPtr, nil);
 
-		return TIResult<CBitmap>(sErrorUnableToDecode);
+		return TVResult<CBitmap>(sErrorUnableToDecode);
 	}
 
 	// Initialize
@@ -664,7 +664,7 @@ TIResult<CBitmap> sDecodePNGData(const CData& data)
 	png_destroy_read_struct(&pngPtr, &pngInfoPtr, nil);
 	free(rowPointers);
 
-	return TIResult<CBitmap>(bitmap);
+	return TVResult<CBitmap>(bitmap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

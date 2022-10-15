@@ -182,7 +182,7 @@ class CDictionary : public CEquatable {
 						void					set(const CString& key, UInt64 value);
 						void					set(const CString& key, SValue::Opaque value);
 						void					set(const CString& key, const SValue& value);
-						void					set(const CString& key, const OI<SValue>& value);
+						void					set(const CString& key, const OV<SValue>& value);
 						void					set(const CString& key, const OR<SValue>& value);
 
 						void					remove(const CString& key);
@@ -262,7 +262,7 @@ template <typename T> class TNDictionary : public TDictionary<T> {
 						// Instance methods
 				void	set(const CString& key, const T& item)
 							{ CDictionary::set(key, new T(item)); }
-				void	set(const CString& key, const OI<T>& item)
+				void	set(const CString& key, const OV<T>& item)
 							{
 								// Check for instance
 								if (item.hasInstance())

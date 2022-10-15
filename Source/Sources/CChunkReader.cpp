@@ -38,7 +38,7 @@ CChunkReader::~CChunkReader()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
+TVResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check format
@@ -47,58 +47,112 @@ TIResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 		case kFormat32BitLittleEndian: {
 			// Read 32-bit header
 			TVResult<OSType>	id = readOSType();
-			ReturnValueIfResultError(id, TIResult<CChunkReader::ChunkInfo>(id.getError()));
+			ReturnValueIfResultError(id, TVResult<CChunkReader::ChunkInfo>(id.getError()));
 
-			TVResult<UInt32>	_size = readUInt32();
-			ReturnValueIfResultError(_size, TIResult<CChunkReader::ChunkInfo>(_size.getError()));
-			UInt32				size = *_size;
+			TVResult<UInt32>	_byteCount = readUInt32();
+			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::ChunkInfo>(_byteCount.getError()));
+			UInt32	byteCount = *_byteCount;
 
-			UInt64				nextChunkPos = getPos() + size;
-			if ((nextChunkPos % 1) != 0)
+			UInt64	nextChunkPos = getPos() + byteCount;
+			if ((nextChunkPos & 1) != 0)
 				// Align
 				nextChunkPos += 1;
 
-			return TIResult<ChunkInfo>(ChunkInfo(*id, size, getPos(), nextChunkPos));
+			return TVResult<ChunkInfo>(ChunkInfo(*id, byteCount, getPos(), nextChunkPos));
 			}
 
 		case kFormat64BitLittleEndian: {
 			// Read 64-bit header
-			TIResult<CUUID>	uuid = readUUID();
-			ReturnValueIfResultError(uuid, TIResult<CChunkReader::ChunkInfo>(uuid.getError()));
+			TVResult<CUUID>	uuid = readUUID();
+			ReturnValueIfResultError(uuid, TVResult<CChunkReader::ChunkInfo>(uuid.getError()));
 
-			TVResult<UInt64>	_size = readUInt64();
-			ReturnValueIfResultError(_size, TIResult<CChunkReader::ChunkInfo>(_size.getError()));
-			UInt64				size = *_size - sizeof(CUUID::Bytes) - sizeof(UInt64);
+			TVResult<UInt64>	_byteCount = readUInt64();
+			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::ChunkInfo>(_byteCount.getError()));
+			UInt64	byteCount = *_byteCount - sizeof(CUUID::Bytes) - sizeof(UInt64);
 
-			UInt64				nextChunkPos = getPos() + size;
-			if ((nextChunkPos % 8) != 0)
+			UInt64	nextChunkPos = getPos() + byteCount;
+			if ((nextChunkPos & 7) != 0)
 				// Align
-				nextChunkPos += 7 - (nextChunkPos % 8);
+				nextChunkPos += 7 - (nextChunkPos & 7);
 
-			return TIResult<ChunkInfo>(ChunkInfo(*uuid, size, getPos(), nextChunkPos));
+			return TVResult<ChunkInfo>(ChunkInfo(*uuid, byteCount, getPos(), nextChunkPos));
 			}
 
 #if defined(TARGET_OS_WINDOWS)
 		default:
-			return TIResult<CChunkReader::ChunkInfo>(SError::mUnimplemented);
+			return TVResult<CChunkReader::ChunkInfo>(SError::mUnimplemented);
 #endif
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CChunkReader::readPayload(const ChunkInfo& chunkInfo, const OV<UInt64>& byteCount) const
+TVResult<CChunkReader::Chunk> CChunkReader::readChunk() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check format
+	switch (mInternals->mFormat) {
+		case kFormat32BitBigEndian:
+		case kFormat32BitLittleEndian: {
+			// Read 32-bit header
+			TVResult<OSType>	id = readOSType();
+			ReturnValueIfResultError(id, TVResult<CChunkReader::Chunk>(id.getError()));
+
+			TVResult<UInt32>	_byteCount = readUInt32();
+			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+			UInt32	byteCount = *_byteCount;
+
+			UInt64	nextChunkPos = getPos() + byteCount;
+			if ((nextChunkPos & 1) != 0)
+				// Align
+				nextChunkPos += 1;
+
+			TVResult<CData>	data = CByteReader::readData(byteCount);
+			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+
+			return TVResult<Chunk>(Chunk(*id, *data, nextChunkPos));
+			}
+
+		case kFormat64BitLittleEndian: {
+			// Read 64-bit header
+			TVResult<CUUID>	uuid = readUUID();
+			ReturnValueIfResultError(uuid, TVResult<CChunkReader::Chunk>(uuid.getError()));
+
+			TVResult<UInt64>	_byteCount = readUInt64();
+			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+			UInt64	byteCount = *_byteCount - sizeof(CUUID::Bytes) - sizeof(UInt64);
+
+			UInt64	nextChunkPos = getPos() + byteCount;
+			if ((nextChunkPos & 8) != 0)
+				// Align
+				nextChunkPos += 7 - (nextChunkPos & 8);
+
+			TVResult<CData>	data = CByteReader::readData(byteCount);
+			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+
+			return TVResult<Chunk>(Chunk(*uuid, *data, nextChunkPos));
+			}
+
+#if defined(TARGET_OS_WINDOWS)
+		default:
+			return TVResult<CChunkReader::Chunk>(SError::mUnimplemented);
+#endif
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> CChunkReader::readPayload(const ChunkInfo& chunkInfo, const OV<UInt64>& byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to begining of chunk
-	OI<SError>	error = setPos(kPositionFromBeginning, chunkInfo.getThisChunkPos());
-	ReturnValueIfError(error, TIResult<CData>(*error));
+	OV<SError>	error = setPos(kPositionFromBeginning, chunkInfo.getThisChunkPos());
+	ReturnValueIfError(error, TVResult<CData>(*error));
 
 	return CByteReader::readData(
 			byteCount.hasValue() ? std::min<UInt64>(*byteCount, chunkInfo.getByteCount()) : chunkInfo.getByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CChunkReader::seekToNext(const ChunkInfo& chunkInfo) const
+OV<SError> CChunkReader::seekToNext(const ChunkInfo& chunkInfo) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check situation
@@ -107,5 +161,18 @@ OI<SError> CChunkReader::seekToNext(const ChunkInfo& chunkInfo) const
 		return setPos(kPositionFromBeginning, chunkInfo.getNextChunkPos());
 	else
 		// End of data
-		return OI<SError>(SError::mEndOfData);
+		return OV<SError>(SError::mEndOfData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CChunkReader::seekToNext(const Chunk& chunk) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check situation
+	if (chunk.getNextChunkPos() < getByteCount())
+		// Set pos
+		return setPos(kPositionFromBeginning, chunk.getNextChunkPos());
+	else
+		// End of data
+		return OV<SError>(SError::mEndOfData);
 }

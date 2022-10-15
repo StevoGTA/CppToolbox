@@ -63,9 +63,9 @@ class CAudioPlayerBufferThreadInternals {
 		bool	tryFill()
 					{
 						// Setup
-						if (!mRequirements.hasInstance())
+						if (!mRequirements.hasValue())
 							// Query
-							mRequirements = OI<CAudioProcessor::Requirements>(mAudioPlayer.queryRequirements());
+							mRequirements = OV<CAudioProcessor::Requirements>(mAudioPlayer.queryRequirements());
 
 						// Request write
 						UInt32									framesToRequest =
@@ -113,7 +113,7 @@ class CAudioPlayerBufferThreadInternals {
 		UInt32								mBytesPerFrame;
 		UInt32								mMaxOutputFrames;
 		void*								mProcsUserData;
-		OI<CAudioProcessor::Requirements>	mRequirements;
+		OV<CAudioProcessor::Requirements>	mRequirements;
 
 		bool								mPauseRequested;
 		bool								mResumeRequested;

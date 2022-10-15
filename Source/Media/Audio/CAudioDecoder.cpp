@@ -28,7 +28,7 @@ class CAudioDecoderInternals : public TReferenceCountable<CAudioDecoderInternals
 		I<CDecodeAudioCodec>		mAudioCodec;
 		CString						mIdentifier;
 
-		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OV<SAudioProcessingFormat>	mAudioProcessingFormat;
 		UniversalTimeInterval		mStartTimeInterval;
 		OV<UniversalTimeInterval>	mDurationTimeInterval;
 		UniversalTimeInterval		mCurrentTimeInterval;
@@ -148,7 +148,7 @@ SAudioSourceStatus CAudioDecoder::performInto(CAudioFrames& audioFrames)
 	SAudioSourceStatus	audioSourceStatus(mInternals->mCurrentTimeInterval);
 
 	// Decode
-	OI<SError>	error = mInternals->mAudioCodec->decodeInto(audioFrames);
+	OV<SError>	error = mInternals->mAudioCodec->decodeInto(audioFrames);
 	ReturnValueIfError(error, SAudioSourceStatus(*error));
 
 	// Limit to max frames
@@ -179,11 +179,11 @@ TArray<SAudioProcessingSetup> CAudioDecoder::getOutputSetups() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+OV<SError> CAudioDecoder::setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 
 	// Setup Audio Codec
 	return mInternals->mAudioCodec->setup(audioProcessingFormat);

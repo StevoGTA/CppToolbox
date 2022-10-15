@@ -65,7 +65,7 @@ CString::CString(const OSStringVar(initialString), OV<Length> length) : CHashabl
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char* chars, Length charsCount, Encoding encoding) : CHashable()
+CString::CString(const char* chars, Length length, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -75,16 +75,11 @@ CString::CString(const char* chars, Length charsCount, Encoding encoding) : CHas
 	if (chars == nil)
 		// No initial string
 		mStringRef = CFSTR("");
-	else if (charsCount == (Length) ~0)
-		// Use entire string
-		mStringRef =
-				::CFStringCreateWithCString(kCFAllocatorDefault, chars,
-						sGetCFStringEncodingForCStringEncoding(encoding));
 	else {
 		// Use only the length specified
-		char	buffer[charsCount + 1];
-		::memmove(buffer, chars, charsCount);
-		buffer[charsCount] = 0;
+		char	buffer[length + 1];
+		::memmove(buffer, chars, length);
+		buffer[length] = 0;
 		mStringRef =
 				::CFStringCreateWithCString(kCFAllocatorDefault, buffer,
 						sGetCFStringEncodingForCStringEncoding(encoding));
@@ -99,7 +94,32 @@ CString::CString(const char* chars, Length charsCount, Encoding encoding) : CHas
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF16Char* chars, Length charsCount, Encoding encoding) : CHashable()
+CString::CString(const char* chars, Encoding encoding) : CHashable()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertNotNil(chars);
+
+	// Check situation
+	if (chars == nil)
+		// No initial string
+		mStringRef = CFSTR("");
+	else
+		// Use entire string
+		mStringRef =
+				::CFStringCreateWithCString(kCFAllocatorDefault, chars,
+						sGetCFStringEncodingForCStringEncoding(encoding));
+
+	// Validate we have something
+	if (mStringRef == nil) {
+		// Have something
+		LogError(sCreateFailedError, "creating CFStringRef from C string");
+		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const UTF16Char* chars, Length length, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -119,8 +139,8 @@ CString::CString(const UTF16Char* chars, Length charsCount, Encoding encoding) :
 	else
 		// Create string
 		mStringRef =
-				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars,
-						charsCount * sizeof(UTF16Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
+				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars, length * sizeof(UTF16Char),
+						sGetCFStringEncodingForCStringEncoding(encoding), false);
 
 	// Validate we have something
 	if (mStringRef == nil) {
@@ -131,7 +151,7 @@ CString::CString(const UTF16Char* chars, Length charsCount, Encoding encoding) :
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF32Char* chars, Length charsCount, Encoding encoding) : CHashable()
+CString::CString(const UTF32Char* chars, Length length, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -145,8 +165,8 @@ CString::CString(const UTF32Char* chars, Length charsCount, Encoding encoding) :
 	else
 		// Create string
 		mStringRef =
-				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars,
-						charsCount * sizeof(UTF32Char), sGetCFStringEncodingForCStringEncoding(encoding), false);
+				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars, length * sizeof(UTF32Char),
+						sGetCFStringEncodingForCStringEncoding(encoding), false);
 
 	// Validate we have something
 	if (mStringRef == nil) {
@@ -568,18 +588,22 @@ CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::getSubString(CharIndex startIndex, Length charCount) const
+CString CString::getSubString(CharIndex startIndex, OV<Length> length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if need to limit char count
-	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mStringRef))
-		// Limit char count
-		charCount = (Length) (::CFStringGetLength(mStringRef) - startIndex);
+	// Check if need to limit length
+	CFIndex	lengthUse;
+	if (length.hasValue() && ((startIndex + *length) <= ::CFStringGetLength(mStringRef)))
+		// Use requested
+		lengthUse = *length;
+	else
+		// Limit to remainder of string
+		lengthUse = ::CFStringGetLength(mStringRef) - startIndex;
 
 	// Compose new string
 	CFStringRef	stringRef =
 						::CFStringCreateWithSubstring(kCFAllocatorDefault, mStringRef,
-								CFRangeMake(startIndex, charCount));
+								::CFRangeMake(startIndex, lengthUse));
 	CString	string(stringRef);
 	::CFRelease(stringRef);
 	
@@ -601,17 +625,21 @@ CString CString::replacingSubStrings(const CString& subStringToReplace, const CS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::replacingCharacters(CharIndex startIndex, Length charCount, const CString& replacementString) const
+CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, const CString& replacementString) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if need to limit char count
-	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) ::CFStringGetLength(mStringRef))
-		// Limit char count
-		charCount = (Length) (::CFStringGetLength(mStringRef) - startIndex);
+	// Check if need to limit length
+	CFIndex	lengthUse;
+	if (length.hasValue() && ((startIndex + *length) <= ::CFStringGetLength(mStringRef)))
+		// Use requested
+		lengthUse = *length;
+	else
+		// Limit to remainder of string
+		lengthUse = ::CFStringGetLength(mStringRef) - startIndex;
 
 	// Compose new string
 	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
-	::CFStringReplace(stringRef, ::CFRangeMake(startIndex, charCount), replacementString.mStringRef);
+	::CFStringReplace(stringRef, ::CFRangeMake(startIndex, lengthUse), replacementString.mStringRef);
 	CString	string(stringRef);
 	::CFRelease(stringRef);
 
@@ -619,13 +647,21 @@ CString CString::replacingCharacters(CharIndex startIndex, Length charCount, con
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::Range CString::findSubString(const CString& subString, CharIndex startIndex, Length charCount) const
+CString::Range CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFIndex	length = std::min<CFIndex>(charCount, ::CFStringGetLength(mStringRef) - startIndex);
+	// Check if need to limit length
+	CFIndex	lengthUse;
+	if (length.hasValue() && ((startIndex + *length) <= ::CFStringGetLength(mStringRef)))
+		// Use requested
+		lengthUse = *length;
+	else
+		// Limit to remainder of string
+		lengthUse = ::CFStringGetLength(mStringRef) - startIndex;
+
+	// Find
 	CFRange	range = {0, 0};
-	::CFStringFindWithOptions(mStringRef, subString.mStringRef, CFRangeMake(startIndex, length), 0, &range);
+	::CFStringFindWithOptions(mStringRef, subString.mStringRef, CFRangeMake(startIndex, lengthUse), 0, &range);
 
 	return Range((CharIndex) range.location, (Length) range.length);
 }

@@ -26,7 +26,7 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFolder::rename(const CString& string)
+OV<SError> CFolder::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose new filesystem path
@@ -38,31 +38,31 @@ OI<SError> CFolder::rename(const CString& string)
 		// Success
 		update(filesystemPath);
 
-		return OI<SError>();
+		return OV<SError>();
 	} else
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "renaming");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFolder::create() const
+OV<SError> CFolder::create() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if (::mkdir(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8), 0777) == 0)
 		// Success
-		return OI<SError>();
+		return OV<SError>();
 	else
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "creating");
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFolder::remove() const
+OV<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if (::unlink(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8)) == 0)
 		// Success
-		return OI<SError>();
+		return OV<SError>();
 	else
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "removing");

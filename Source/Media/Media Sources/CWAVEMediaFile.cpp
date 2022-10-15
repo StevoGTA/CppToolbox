@@ -24,7 +24,7 @@ OI<CChunkReader> CWAVEMediaFile::createChunkReader(const I<CRandomAccessDataSour
 	// Verify it's a WAVE Media Source
 	if (!randomAccessDataSource->canReadData(0, sizeof(SWAVEFORMChunk32)))
 		return OI<CChunkReader>();
-	TIResult<CData>	data = randomAccessDataSource->readData(0, sizeof(SWAVEFORMChunk32));
+	TVResult<CData>	data = randomAccessDataSource->readData(0, sizeof(SWAVEFORMChunk32));
 	ReturnValueIfResultError(data, OI<CChunkReader>());
 
 	const	SWAVEFORMChunk32&	formChunk32 = *((SWAVEFORMChunk32*) data->getBytePtr());
@@ -47,7 +47,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Process Format chunk
-	TIResult<CData>	payload = chunkReader.readPayload(formatChunkInfo);
+	TVResult<CData>	payload = chunkReader.readPayload(formatChunkInfo);
 	ReturnValueIfResultError(payload,
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(payload.getError())));
 
@@ -75,8 +75,8 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 							chunkReader.getByteCount() - dataChunkInfo.getThisChunkPos());
 
 	// Process by format tag
-	OI<SAudioStorageFormat>		audioStorageFormat;
-	OI<I<CDecodeAudioCodec> >	decodeAudioCodec;
+	OV<SAudioStorageFormat>		audioStorageFormat;
+	OV<I<CDecodeAudioCodec> >	decodeAudioCodec;
 	UInt64						frameCount;
 	switch (waveFormat.getFormatTag()) {
 		case 0x0000:	// Illegal/Unknown
@@ -172,31 +172,34 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const I<CRandomAccessDataSo
 		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult());
 
 	// Process chunks
-	OI<SError>	error;
+	OV<SError>	error;
 	OV<CChunkReader::ChunkInfo>			formatChunkInfo;
 	OV<CChunkReader::ChunkInfo>			dataChunkInfo;
 	TNArray<CChunkReader::ChunkInfo>	otherChunkInfos;
 	while (true) {
 		// Read next chunk info
-		TIResult<CChunkReader::ChunkInfo>	chunkInfo = chunkReader->readChunkInfo();
+		TVResult<CChunkReader::ChunkInfo>	chunkInfo = chunkReader->readChunkInfo();
 		if (chunkInfo.hasError())
 			// Done reading chunks
 			break;
 
-		// Check chunk type
-		if (waveMediaFile->isFormatChunk(*chunkInfo))
-			// Format chunk
-			formatChunkInfo = OV<CChunkReader::ChunkInfo>(*chunkInfo);
-		else if (waveMediaFile->isDataChunk(*chunkInfo))
-			// Data chunk
-			dataChunkInfo = OV<CChunkReader::ChunkInfo>(*chunkInfo);
-		else
-			// Other chunk
-			otherChunkInfos += *chunkInfo;
+		// Check if have payload
+		if (chunkInfo->getByteCount() > 0) {
+			// Check chunk type
+			if (waveMediaFile->isFormatChunk(*chunkInfo))
+				// Format chunk
+				formatChunkInfo = OV<CChunkReader::ChunkInfo>(*chunkInfo);
+			else if (waveMediaFile->isDataChunk(*chunkInfo))
+				// Data chunk
+				dataChunkInfo = OV<CChunkReader::ChunkInfo>(*chunkInfo);
+			else
+				// Other chunk
+				otherChunkInfos += *chunkInfo;
+		}
 
 		// Seek to next chunk
 		error = chunkReader->seekToNext(*chunkInfo);
-		if (error.hasInstance())
+		if (error.hasValue())
 			// Done reading chunks
 			break;
 	}

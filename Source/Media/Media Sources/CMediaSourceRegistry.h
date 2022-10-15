@@ -53,8 +53,8 @@ struct SMediaSource {
 		// Properties
 		private:
 			Result					mResult;
-			OI<CMediaTrackInfos>	mMediaTrackInfos;
-			OI<SError>				mError;
+			OV<CMediaTrackInfos>	mMediaTrackInfos;
+			OV<SError>				mError;
 	};
 
 	// Procs
@@ -125,7 +125,7 @@ class CMediaSourceRegistry {
 										// Instance methods
 				void					registerMediaSource(const SMediaSource& mediaSource);
 		const	SMediaSource&			getMediaSource(OSType id) const;
-				TIResult<ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
+				TVResult<ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const CString& extension,
 												const OI<CAppleResourceManager>& appleResourceManager,
 												UInt32 options = SMediaSource::kOptionsNone) const;

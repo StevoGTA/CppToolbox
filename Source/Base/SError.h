@@ -57,6 +57,6 @@ struct SError {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define ReturnIfError(error)				{ if (error.hasInstance()) return; }
-#define ReturnErrorIfError(error)			{ if (error.hasInstance()) return error; }
-#define	ReturnValueIfError(error, value)	{ if (error.hasInstance()) return value; }
+#define ReturnIfError(error)				{ if (error.hasValue()) return; }
+#define ReturnErrorIfError(error)			{ if (error.hasValue()) return error; }
+#define	ReturnValueIfError(error, value)	{ if (error.hasValue()) return value; }

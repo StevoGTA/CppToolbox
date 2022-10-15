@@ -19,9 +19,9 @@ class CCoreAudioDecodeAudioCodec : public CDecodeAudioCodec {
 											~CCoreAudioDecodeAudioCodec();
 
 											// CDecodeAudioCodec methods
-				OI<SError>					setup(const SAudioProcessingFormat& audioProcessingFormat);
+				OV<SError>					setup(const SAudioProcessingFormat& audioProcessingFormat);
 				void						seek(UniversalTimeInterval timeInterval);
-				OI<SError>					decodeInto(CAudioFrames& audioFrames);
+				OV<SError>					decodeInto(CAudioFrames& audioFrames);
 
 	protected:
 											// Lifecycle methods
@@ -31,8 +31,8 @@ class CCoreAudioDecodeAudioCodec : public CDecodeAudioCodec {
 											// Subclass methods
 		virtual	AudioStreamBasicDescription	getSourceASBD(OSType codecID,
 													const SAudioProcessingFormat& audioProcessingFormat) = 0;
-		virtual	OI<SError>					setMagicCookie(AudioConverterRef audioConverterRef)
-												{ return OI<SError>(); }
+		virtual	OV<SError>					setMagicCookie(AudioConverterRef audioConverterRef)
+												{ return OV<SError>(); }
 
 	// Properties
 	private:

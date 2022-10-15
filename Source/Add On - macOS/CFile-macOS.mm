@@ -130,7 +130,7 @@ CString CFile::getComment() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFile::setComment(const CString& string) const
+OV<SError> CFile::setComment(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -151,12 +151,12 @@ OI<SError> CFile::setComment(const CString& string) const
 	NSDictionary*	errorInfo;
 	if ([appleScript executeAndReturnError:&errorInfo] != nil)
 		// Success
-		return OI<SError>();
+		return OV<SError>();
 	else {
 		// Error
 		NSLog(@"Error when setting file comment: %@", errorInfo);
 
-		return OI<SError>(
+		return OV<SError>(
 				SError(CString(OSSTR("NSAppleScript")),
 						((NSNumber*) errorInfo[NSAppleScriptErrorNumber]).intValue,
 						CString((__bridge CFStringRef) errorInfo[NSAppleScriptErrorMessage])));

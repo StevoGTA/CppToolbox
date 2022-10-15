@@ -23,7 +23,7 @@ class CTextReader {
 							// Instance methods
 		UInt64				getByteCount() const;
 
-		TIResult<CString>	readStringToEOL();
+		TVResult<CString>	readStringToEOL();
 
 	// Properties
 	private:

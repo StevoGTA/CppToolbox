@@ -36,7 +36,7 @@ class CAudioProcessor {
 		virtual									~CAudioProcessor();
 
 												// Instance methods
-		virtual	OI<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
+		virtual	OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
 		virtual	TNArray<CString>				getSetupDescription(const CString& indent);
 
@@ -54,7 +54,7 @@ class CAudioProcessor {
 		virtual	TArray<SAudioProcessingSetup>	getInputSetups() const = 0;
 
 		virtual	TArray<SAudioProcessingSetup>	getOutputSetups() const = 0;
-		virtual	OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+		virtual	OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 														= 0;
 
 	// Properties
@@ -92,8 +92,8 @@ class CAudioDestination : public CAudioProcessor {
 				TArray<SAudioProcessingSetup>	getOutputSetups() const
 													{ AssertFailUnimplemented();
 															return TNArray<SAudioProcessingSetup>(); }
-				OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-													{ AssertFailUnimplemented(); return OI<SError>(); }
+				OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+													{ AssertFailUnimplemented(); return OV<SError>(); }
 
 												// Instance methods
 		virtual	void							setupComplete() = 0;
@@ -110,18 +110,18 @@ class CBasicAudioProcessor : public CAudioProcessor {
 											{ return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(
 													*mOutputAudioProcessingFormat)); }
 
-		OI<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+		OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
 											{
 												// Store
 												mOutputAudioProcessingFormat =
-														OI<SAudioProcessingFormat>(audioProcessingFormat);
+														OV<SAudioProcessingFormat>(audioProcessingFormat);
 
-												return OI<SError>();
+												return OV<SError>();
 											}
 
 	// Properties
 	protected:
-		OI<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
+		OV<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

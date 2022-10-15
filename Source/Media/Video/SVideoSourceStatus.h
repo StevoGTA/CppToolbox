@@ -14,14 +14,14 @@ struct SVideoSourceStatus {
 										SVideoSourceStatus(UniversalTimeInterval timeInterval) :
 												mTimeInterval(timeInterval)
 												{}
-										SVideoSourceStatus(const SError& error) : mError(OI<SError>(error)) {}
+										SVideoSourceStatus(const SError& error) : mError(OV<SError>(error)) {}
 										SVideoSourceStatus(const SVideoSourceStatus& other) :
 											mTimeInterval(other.mTimeInterval), mError(other.mError)
 											{}
 
 										// Instance methods
 				bool					isSuccess() const
-											{ return !mError.hasInstance(); }
+											{ return !mError.hasValue(); }
 				UniversalTimeInterval	getTimeInterval() const
 											{ return *mTimeInterval; }
 		const	SError&					getError() const
@@ -30,5 +30,5 @@ struct SVideoSourceStatus {
 	// Properties
 	private:
 		OV<UniversalTimeInterval>	mTimeInterval;
-		OI<SError>					mError;
+		OV<SError>					mError;
 };

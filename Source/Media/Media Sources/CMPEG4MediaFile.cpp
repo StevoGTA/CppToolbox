@@ -549,14 +549,14 @@ struct CMPEG4MediaFile::Internals {
 											mSTCOAtomPayload(stcoAtomPayload), mCO64AtomPayload(co64AtomPayload)
 									{}
 
-			TIResult<CData>		getDecompressionData(SInt64 offset) const
+			TVResult<CData>		getDecompressionData(SInt64 offset) const
 									{
 										// Read atom
-										TIResult<CAtomReader::Atom>	atom =
+										TVResult<CAtomReader::Atom>	atom =
 																			mAtomReader.readAtom(mSTSDAtom,
 																					sizeof(SMP4stsdAtomPayload) +
 																							offset);
-										ReturnValueIfResultError(atom, TIResult<CData>(atom.getError()));
+										ReturnValueIfResultError(atom, TVResult<CData>(atom.getError()));
 
 										return mAtomReader.readAtomPayload(*atom);
 									}
@@ -594,10 +594,10 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 {
 	// Setup
 	CAtomReader	atomReader(randomAccessDataSource);
-	OI<SError>	error;
+	OV<SError>	error;
 
 	// Read root atom
-	TIResult<CAtomReader::Atom>	atom = atomReader.readAtom();
+	TVResult<CAtomReader::Atom>	atom = atomReader.readAtom();
 	ReturnValueIfResultError(atom, I<SMediaSource::ImportResult>(new SMediaSource::ImportResult()));
 	if (atom->mType != MAKE_OSTYPE('f', 't', 'y', 'p'))
 		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult());
@@ -613,7 +613,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 		ReturnValueIfResultError(atom, I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(atom.getError())));
 	}
 
-	TIResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*atom);
+	TVResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*atom);
 	ReturnValueIfResultError(moovContainerAtom,
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(moovContainerAtom.getError())));
 
@@ -624,18 +624,18 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 		// Check type
 		if (moovIterator->mType == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
 			// Track
-			TIResult<CAtomReader::ContainerAtom>	trakContainerAtom = atomReader.readContainerAtom(*moovIterator);
+			TVResult<CAtomReader::ContainerAtom>	trakContainerAtom = atomReader.readContainerAtom(*moovIterator);
 			if (trakContainerAtom.hasError()) continue;
 
 			// Media
-			TIResult<CAtomReader::ContainerAtom>	mdiaContainerAtom =
+			TVResult<CAtomReader::ContainerAtom>	mdiaContainerAtom =
 															atomReader.readContainerAtom(
 																	trakContainerAtom->getAtom(
 																			MAKE_OSTYPE('m', 'd', 'i', 'a')));
 			if (mdiaContainerAtom.hasError()) continue;
 
 			// Media header
-			TIResult<CData>	mdhdAtomPayloadData =
+			TVResult<CData>	mdhdAtomPayloadData =
 									atomReader.readAtomPayload(
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('m', 'd', 'h', 'd')));
 			if (mdhdAtomPayloadData.hasError()) continue;
@@ -647,7 +647,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 													(UniversalTimeInterval) timeScale;
 
 			// Handler
-			TIResult<CData>	hdlrAtomPayloadData =
+			TVResult<CData>	hdlrAtomPayloadData =
 									atomReader.readAtomPayload(
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('h', 'd', 'l', 'r')));
 			if (hdlrAtomPayloadData.hasError()) continue;
@@ -655,14 +655,14 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 													*((SMP4hdlrAtomPayload*) hdlrAtomPayloadData->getBytePtr());
 
 			// Media Information
-			TIResult<CAtomReader::ContainerAtom>	minfContainerAtom =
+			TVResult<CAtomReader::ContainerAtom>	minfContainerAtom =
 															atomReader.readContainerAtom(
 																	mdiaContainerAtom->getAtom(
 																			MAKE_OSTYPE('m', 'i', 'n', 'f')));
 			if (minfContainerAtom.hasError()) continue;
 
 			// Sample Table
-			TIResult<CAtomReader::ContainerAtom>	stblContainerAtom =
+			TVResult<CAtomReader::ContainerAtom>	stblContainerAtom =
 															atomReader.readContainerAtom(
 																	minfContainerAtom->getAtom(
 																			MAKE_OSTYPE('s', 't', 'b', 'l')));
@@ -671,14 +671,14 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 			// Sample Table Sample Description
 			OR<CAtomReader::Atom>	stsdAtom = stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'd'));
 			if (!stsdAtom.hasReference()) continue;
-			TIResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
-			if (error.hasInstance()) continue;
+			TVResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
+			if (error.hasValue()) continue;
 			const	SMP4stsdAtomPayload&	stsdAtomPayload =
 													*((SMP4stsdAtomPayload*) stsdAtomPayloadData->getBytePtr());
 			const	SMP4stsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
 
 			// Sample Table Time-to-Sample
-			TIResult<CData>	sttsAtomPayloadData =
+			TVResult<CData>	sttsAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 't', 's')));
 			if (sttsAtomPayloadData.hasError()) continue;
@@ -687,7 +687,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 															sttsAtomPayloadData->getBytePtr());
 
 			// Sample Table Sample Blocks
-			TIResult<CData>	stscAtomPayloadData =
+			TVResult<CData>	stscAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'c')));
 			if (stscAtomPayloadData.hasError()) continue;
@@ -696,7 +696,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 															stscAtomPayloadData->getBytePtr());
 
 			// Sample Table Packet Sizes
-			TIResult<CData>	stszAtomPayloadData =
+			TVResult<CData>	stszAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'z')));
 			if (stszAtomPayloadData.hasError()) continue;
@@ -704,19 +704,19 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 													*((SMP4stszAtomPayload*) stszAtomPayloadData->getBytePtr());
 
 			// Sample Table Block offsets
-			TIResult<CData>	stcoAtomPayloadData =
+			TVResult<CData>	stcoAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 'c', 'o')));
-			TIResult<CData>	co64AtomPayloadData =
+			TVResult<CData>	co64AtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
-			if (!stcoAtomPayloadData.hasInstance() && !co64AtomPayloadData.hasInstance()) continue;
+			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
 			SMP4stcoAtomPayload*	stcoAtomPayload =
-											stcoAtomPayloadData.hasInstance() ?
+											stcoAtomPayloadData.hasValue() ?
 													(SMP4stcoAtomPayload*) stcoAtomPayloadData->getBytePtr() :
 													nil;
 			SMP4co64AtomPayload*	co64AtomPayload =
-											co64AtomPayloadData.hasInstance() ?
+											co64AtomPayloadData.hasValue() ?
 													(SMP4co64AtomPayload*) co64AtomPayloadData->getBytePtr() :
 													nil;
 
@@ -750,7 +750,9 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 					// Error
 					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrackInfo.getError()));
 			}
-		}
+		} else
+			// Pass to any subclass
+			process(atomReader, *moovIterator);
 	}
 
 	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mediaTrackInfos));
@@ -843,7 +845,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 														*((SMP4stsdMP4ADescription*) &internals.mSTSDDescription);
 
 			// Get configuration data
-			TIResult<CData>	configurationData = internals.getDecompressionData(sizeof(SMP4stsdMP4ADescription));
+			TVResult<CData>	configurationData = internals.getDecompressionData(sizeof(SMP4stsdMP4ADescription));
 			ReturnValueIfResultError(configurationData,
 					TVResult<CMediaTrackInfos::AudioTrackInfo>(configurationData.getError()))
 
@@ -855,8 +857,8 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
-			OI<SAudioStorageFormat>	audioStorageFormat = CAACAudioCodec::composeAudioStorageFormat(*info);
-			if (!audioStorageFormat.hasInstance())
+			OV<SAudioStorageFormat>	audioStorageFormat = CAACAudioCodec::composeAudioStorageFormat(*info);
+			if (!audioStorageFormat.hasValue())
 				// Unsupported configuration
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
@@ -899,14 +901,14 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInf
 
 
 			// Get configuration data
-			TIResult<CData>	stssAtomPayloadData =
+			TVResult<CData>	stssAtomPayloadData =
 									internals.mAtomReader.readAtomPayload(
 											internals.mSTBLContainerAtom.getAtom(MAKE_OSTYPE('s', 't', 's', 's')));
 			ReturnValueIfResultError(stssAtomPayloadData,
 					TVResult<CMediaTrackInfos::VideoTrackInfo>(stssAtomPayloadData.getError()));
 
 			// Get configuration data
-			TIResult<CData>	configurationData = internals.getDecompressionData(sizeof(SMP4stsdH264Description));
+			TVResult<CData>	configurationData = internals.getDecompressionData(sizeof(SMP4stsdH264Description));
 			ReturnValueIfResultError(configurationData,
 					TVResult<CMediaTrackInfos::VideoTrackInfo>(configurationData.getError()))
 
@@ -918,11 +920,11 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInf
 													SMediaPacketAndLocation::getTotalByteCount(mediaPacketAndLocations);
 
 			// Compose storage format
-			OI<SVideoStorageFormat>	videoStorageFormat =
+			OV<SVideoStorageFormat>	videoStorageFormat =
 											CH264VideoCodec::composeVideoStorageFormat(
 													S2DSizeU16(h264Description.getWidth(), h264Description.getHeight()),
 													framerate);
-			if (!videoStorageFormat.hasInstance())
+			if (!videoStorageFormat.hasValue())
 				// Unsupported configuration
 				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
@@ -963,7 +965,7 @@ const void* CMPEG4MediaFile::getSampleDescription(const Internals& internals) co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CMPEG4MediaFile::getDecompressionData(const Internals& internals, SInt64 offset) const
+TVResult<CData> CMPEG4MediaFile::getDecompressionData(const Internals& internals, SInt64 offset) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return internals.getDecompressionData(offset);

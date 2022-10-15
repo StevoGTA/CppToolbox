@@ -10,14 +10,14 @@
 class CSQLiteTableColumnInternals : public TReferenceCountable<CSQLiteTableColumnInternals> {
 	public:
 		CSQLiteTableColumnInternals(const CString& name, CSQLiteTableColumn::Kind kind,
-				CSQLiteTableColumn::Options options, OI<SSQLiteValue> defaultValue = nil) :
+				CSQLiteTableColumn::Options options, OV<SSQLiteValue> defaultValue = OV<SSQLiteValue>()) :
 			mName(name), mKind(kind), mOptions(options), mDefaultValue(defaultValue)
 			{}
 
 		CString						mName;
 		CSQLiteTableColumn::Kind	mKind;
 		CSQLiteTableColumn::Options	mOptions;
-		OI<SSQLiteValue>			mDefaultValue;
+		OV<SSQLiteValue>			mDefaultValue;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ const	CSQLiteTableColumn	CSQLiteTableColumn::mAll(CString(OSSTR("*")), kInteger)
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CSQLiteTableColumn::CSQLiteTableColumn(const CString& name, Kind kind, Options options, OI<SSQLiteValue> defaultValue)
+CSQLiteTableColumn::CSQLiteTableColumn(const CString& name, Kind kind, Options options, OV<SSQLiteValue> defaultValue)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new CSQLiteTableColumnInternals(name, kind, options, defaultValue);
@@ -76,7 +76,7 @@ CSQLiteTableColumn::Options CSQLiteTableColumn::getOptions() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SSQLiteValue> CSQLiteTableColumn::getDefaultValue() const
+OV<SSQLiteValue> CSQLiteTableColumn::getDefaultValue() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mDefaultValue;
@@ -89,7 +89,7 @@ CSQLiteTableColumn CSQLiteTableColumn::dateISO8601FractionalSecondsAutoSet(const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return CSQLiteTableColumn(name, kDateISO8601FractionalSecondsAutoSet, kNotNull,
-			OI<SSQLiteValue>(CString(OSSTR("strftime('%Y-%m-%dT%H:%M:%f', 'now', 'localtime')"))));
+			OV<SSQLiteValue>(CString(OSSTR("strftime('%Y-%m-%dT%H:%M:%f', 'now', 'localtime')"))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -97,5 +97,5 @@ CSQLiteTableColumn CSQLiteTableColumn::dateISO8601FractionalSecondsAutoUpdate(co
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return CSQLiteTableColumn(name, kDateISO8601FractionalSecondsAutoUpdate, kNotNull,
-			OI<SSQLiteValue>(CString(OSSTR("strftime('%Y-%m-%dT%H:%M:%f', 'now', 'localtime')"))));
+			OV<SSQLiteValue>(CString(OSSTR("strftime('%Y-%m-%dT%H:%M:%f', 'now', 'localtime')"))));
 }

@@ -29,15 +29,15 @@ class CImage {
 									~CImage();
 
 									// Instance methods
-				TIResult<CBitmap>	getBitmap() const;
-				OI<SError>			decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const;
+				TVResult<CBitmap>	getBitmap() const;
+				OV<SError>			decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const;
 
 									// Class methods
 		static	OV<Type>			getTypeFromResourceName(const CString& resourceName);
 		static	OV<Type>			getTypeFromMIMEType(const CString& MIMEType);
 		static	OV<Type>			getTypeFromData(const CData& data);
-		static	OI<CString>			getDefaultFilenameExtension(Type type);
-		static	OI<CString>			getMIMEType(Type type);
+		static	OV<CString>			getDefaultFilenameExtension(Type type);
+		static	OV<CString>			getMIMEType(Type type);
 
 	// Properties
 	private:

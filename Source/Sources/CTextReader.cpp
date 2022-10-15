@@ -60,7 +60,7 @@ UInt64 CTextReader::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CString> CTextReader::readStringToEOL()
+TVResult<CString> CTextReader::readStringToEOL()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -72,14 +72,14 @@ TIResult<CString> CTextReader::readStringToEOL()
 		UInt64	bytesRead = std::min<UInt64>(1024, mInternals->mByteCount - mInternals->mDataSourceOffset);
 		if (bytesRead == 0)
 			// EOF
-			return outString.isEmpty() ? TIResult<CString>(SError::mEndOfData) : TIResult<CString>(outString);
+			return outString.isEmpty() ? TVResult<CString>(SError::mEndOfData) : TVResult<CString>(outString);
 
 		// Read
 		TBuffer<char>	buffer((UInt32) bytesRead + 1);
-		OI<SError>		error =
+		OV<SError>		error =
 								mInternals->mRandomAccessDataSource->readData(mInternals->mDataSourceOffset, *buffer,
 										bytesRead);
-		ReturnValueIfError(error, TIResult<CString>(*error));
+		ReturnValueIfError(error, TVResult<CString>(*error));
 
 		mInternals->mDataSourceOffset += bytesRead;
 
@@ -123,5 +123,5 @@ TIResult<CString> CTextReader::readStringToEOL()
 			foundEnd = true;
 	}
 
-	return TIResult<CString>(outString);
+	return TVResult<CString>(outString);
 }

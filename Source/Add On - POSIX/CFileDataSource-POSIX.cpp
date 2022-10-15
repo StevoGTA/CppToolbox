@@ -27,7 +27,7 @@ class CFileDataSourceInternals {
 
 					if (mFILE == nil) {
 						// Unable to open
-						mError = OI<SError>(SErrorFromPOSIXerror(errno));
+						mError = OV<SError>(SErrorFromPOSIXerror(errno));
 						CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
 					}
 				} else {
@@ -35,7 +35,7 @@ class CFileDataSourceInternals {
 					mFD = ::open(*path, O_RDONLY, 0);
 					if (mFD == -1) {
 						// Unable to open
-						mError = OI<SError>(SErrorFromPOSIXerror(errno));
+						mError = OV<SError>(SErrorFromPOSIXerror(errno));
 						CLogServices::logError(*mError, "opening non-buffered", __FILE__, __func__, __LINE__);
 					}
 				}
@@ -53,7 +53,7 @@ class CFileDataSourceInternals {
 
 		FILE*		mFILE;
 		SInt32		mFD;
-		OI<SError>	mError;
+		OV<SError>	mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -86,11 +86,11 @@ UInt64 CFileDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
+OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
-	if (mInternals->mError.hasInstance())
+	if (mInternals->mError.hasValue())
 		// Error
 		return mInternals->mError;
 
@@ -98,13 +98,13 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 	AssertFailIf((position + byteCount) > mInternals->mByteCount);
 	if ((position + byteCount) > mInternals->mByteCount)
 		// Attempting to ready beyond end of data
-		return OI<SError>(SError::mEndOfData);
+		return OV<SError>(SError::mEndOfData);
 
 	// One at a time
 	mInternals->mLock.lock();
 
 	// Check mode
-	OI<SError>	error;
+	OV<SError>	error;
 	if (mInternals->mFILE != nil) {
 		// FILE
 		off_t	offset = ::fseeko(mInternals->mFILE, position, SEEK_SET);
@@ -113,12 +113,12 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 			ssize_t	bytesRead = ::fread(buffer, 1, (size_t) byteCount, mInternals->mFILE);
 			if (bytesRead != (ssize_t) byteCount) {
 				// Error
-				error = OI<SError>(SErrorFromPOSIXerror(errno));
+				error = OV<SError>(SErrorFromPOSIXerror(errno));
 				CLogServices::logError(*error, "reading data buffered", __FILE__, __func__, __LINE__);
 			}
 		} else {
 			// Error
-			error = OI<SError>(SErrorFromPOSIXerror(errno));
+			error = OV<SError>(SErrorFromPOSIXerror(errno));
 			CLogServices::logError(*error, "setting position buffered", __FILE__, __func__, __LINE__);
 		}
 	} else {
@@ -129,12 +129,12 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 			ssize_t bytesRead = ::read(mInternals->mFD, buffer, (size_t) byteCount);
 			if (bytesRead == -1) {
 				// Error
-				error = OI<SError>(SErrorFromPOSIXerror(errno));
+				error = OV<SError>(SErrorFromPOSIXerror(errno));
 				CLogServices::logError(*error, "reading data non-buffered", __FILE__, __func__, __LINE__);
 			}
 		} else {
 			// Error
-			error = OI<SError>(SErrorFromPOSIXerror(errno));
+			error = OV<SError>(SErrorFromPOSIXerror(errno));
 			CLogServices::logError(*error, "setting non-position buffered", __FILE__, __func__, __LINE__);
 		}
 	}
@@ -173,14 +173,14 @@ class CMappedFileDataSourceInternals {
 						// Failed
 						mBytePtr = nil;
 						mByteCount = 0;
-						mError = OI<SError>(SErrorFromPOSIXerror(errno));
+						mError = OV<SError>(SErrorFromPOSIXerror(errno));
 						CLogServices::logError(*mError, "mapping data", __FILE__, __func__, __LINE__);
 					}
 				} else {
 					// Unable to open
 					mBytePtr = nil;
 					mByteCount = 0;
-					mError = OI<SError>(SErrorFromPOSIXerror(errno));
+					mError = OV<SError>(SErrorFromPOSIXerror(errno));
 					CLogServices::logError(*mError, "opening", __FILE__, __func__, __LINE__);
 				}
 			}
@@ -195,7 +195,7 @@ class CMappedFileDataSourceInternals {
 		SInt32		mFD;
 		void*		mBytePtr;
 		UInt64		mByteCount;
-		OI<SError>	mError;
+		OV<SError>	mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -236,11 +236,11 @@ UInt64 CMappedFileDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
+OV<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
-	if (mInternals->mError.hasInstance())
+	if (mInternals->mError.hasValue())
 		// Error
 		return mInternals->mError;
 
@@ -248,28 +248,28 @@ OI<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData:
 	AssertFailIf((position + byteCount) > mInternals->mByteCount);
 	if ((position + byteCount) > mInternals->mByteCount)
 		// Attempting to ready beyond end of data
-		return OI<SError>(SError::mEndOfData);
+		return OV<SError>(SError::mEndOfData);
 
 	// Copy bytes
 	::memcpy(buffer, (UInt8*) mInternals->mBytePtr + position, byteCount);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CData> CMappedFileDataSource::readData(UInt64 position, CData::ByteCount byteCount)
+TVResult<CData> CMappedFileDataSource::readData(UInt64 position, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
-	if (mInternals->mError.hasInstance())
+	if (mInternals->mError.hasValue())
 		// Error
-		return TIResult<CData>(*mInternals->mError);
+		return TVResult<CData>(*mInternals->mError);
 
 	// Preflight
 	AssertFailIf((position + byteCount) > mInternals->mByteCount);
 	if ((position + byteCount) > mInternals->mByteCount)
 		// Attempting to ready beyond end of data
-		return TIResult<CData>(SError::mEndOfData);
+		return TVResult<CData>(SError::mEndOfData);
 
-	return TIResult<CData>(CData((UInt8*) mInternals->mBytePtr + position, byteCount, false));
+	return TVResult<CData>(CData((UInt8*) mInternals->mBytePtr + position, byteCount, false));
 }

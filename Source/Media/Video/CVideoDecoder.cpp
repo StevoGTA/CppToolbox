@@ -22,7 +22,7 @@ class CVideoDecoderInternals : public TReferenceCountable<CVideoDecoderInternals
 		I<CDecodeVideoCodec>		mVideoCodec;
 		CString						mIdentifier;
 
-		OI<SVideoProcessingFormat>	mVideoProcessingFormat;
+		OV<SVideoProcessingFormat>	mVideoProcessingFormat;
 		UniversalTimeInterval		mStartTimeInterval;
 		OV<UniversalTimeInterval>	mDurationTimeInterval;
 		UniversalTimeInterval		mCurrentTimeInterval;
@@ -43,7 +43,7 @@ CVideoDecoder::CVideoDecoder(const SVideoStorageFormat& videoStorageFormat, cons
 	mInternals = new CVideoDecoderInternals(videoStorageFormat, videoCodec, identifier);
 
 	// Store
-	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
+	mInternals->mVideoProcessingFormat = OV<SVideoProcessingFormat>(videoProcessingFormat);
 
 	// Setup Video Codec
 	mInternals->mVideoCodec->setup(videoProcessingFormat);

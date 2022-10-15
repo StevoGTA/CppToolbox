@@ -7,8 +7,28 @@
 #include "CppToolboxAssert.h"
 #include "TReferenceTracking.h"
 
+/*
+	// Top-level definitions
+
+	An "Instance" is a classic C++ instance - something created with "new".  The significance here is that the instance
+		needs to be maintained as it is passed around.  IOW it is likely a subclass that cannot be re-created as it is
+		not passed around how to do so.
+
+	A "Value" is any POD or object that can be exactly duplicated via new(*other).
+
+	A "Reference" is typically used to pass a "reference" to an object - "Instance" or "Value" where it is desired to
+		access the original object without re-creating or copying it.
+
+	For objects that are reference counted, it is up to the implementation as to whether these should be "Instances" or
+		"Values".  The concept is likely driven by "reference" vs "value" semantics.  If it is desired to pass around an
+		object such that multiple holders can affect its state, use "Instance" for "reference" semantics.  However, if
+		it is desired to pass around an immutable object, feel free to use "Value" for "value" semantics.
+*/
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: I (Instance)
+//	An Instance is something that needs to be maintained as it is passed around.  It cannot be copied as it is not
+//	possible to know exactly how it is to be copied
 
 template <typename T> struct I {
 					// Lifecycle methods
@@ -68,11 +88,11 @@ template <typename T> struct I {
 /*
 	Examples:
 
-	OI<CString>	optionalString1
+	OV<CString>	optionalString1
 	optionalString1.hasInstance();	// false
 	optionalString1.getObject();	// Assert fail
 
-	OI<CString>	optionalString2(new CString(OSSTR("Hello World!")));
+	OV<CString>	optionalString2(CString(OSSTR("Hello World!")));
 	optionalString2.hasInstance();	// true
 	optionalString2.getObject();	// CString&
 	*optionalString2;				// CString&
@@ -80,12 +100,12 @@ template <typename T> struct I {
 
 
 
-	OI<CString>	string1;						// No instance
-	OI<CString>	string2(CString(OSSTR("abc")));	// Instance
+	OV<CString>	string1;						// No instance
+	OV<CString>	string2(CString(OSSTR("abc")));	// Instance
 
-	OI<CString>	string3 = string1;
+	OV<CString>	string3 = string1;
 
-	OI<CString>	string4 = procThatReturnsString();
+	OV<CString>	string4 = procThatReturnsString();
 
 	string3.hasInstance();	// true
 	string3.getObject();	// CString&

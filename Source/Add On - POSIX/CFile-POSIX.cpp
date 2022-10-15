@@ -33,7 +33,7 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFile::rename(const CString& string)
+OV<SError> CFile::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose new filesystem path
@@ -45,7 +45,7 @@ OI<SError> CFile::rename(const CString& string)
 		// Success
 		update(filesystemPath);
 
-		return OI<SError>();
+		return OV<SError>();
 	} else
 		// Error
 		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "renaming file");
@@ -66,13 +66,13 @@ UInt64 CFile::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFile::remove() const
+OV<SError> CFile::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove
 	if (::unlink(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8)) == 0)
 		// Success
-		return OI<SError>();
+		return OV<SError>();
 	else
 		// Error
 		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "removing file");
@@ -96,7 +96,7 @@ bool CFile::getLocked() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFile::setLocked(bool lockFile) const
+OV<SError> CFile::setLocked(bool lockFile) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get flags
@@ -111,7 +111,7 @@ OI<SError> CFile::setLocked(bool lockFile) const
 		// Error
 		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting locked");
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 #if defined(TARGET_OS_MACOS) || defined(TARGET_OS_LINUX)
@@ -126,13 +126,13 @@ UInt16 CFile::getPermissions() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFile::setPermissions(UInt16 permissions) const
+OV<SError> CFile::setPermissions(UInt16 permissions) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set permissions
 	if (::chmod(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8), permissions) == 0)
 		// Succes
-		return OI<SError>();
+		return OV<SError>();
 	else
 		// Error
 		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting permissions");

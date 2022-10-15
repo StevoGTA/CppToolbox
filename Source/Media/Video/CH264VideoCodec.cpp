@@ -272,6 +272,9 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 					Times(UInt64 decodeTime, UInt64 presentationTime) :
 						mDecodeTime(decodeTime), mPresentationTime(presentationTime)
 						{}
+					Times(const Times& other) :
+						mDecodeTime(other.mDecodeTime), mPresentationTime(other.mPresentationTime)
+						{}
 
 					// Properties
 					UInt64	mDecodeTime;
@@ -293,7 +296,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 								// Instance methods
 				void			seek(UInt64 frameTime)
 									{ mNextFrameTime = frameTime; }
-				TIResult<Times>	updateFrom(const CMediaPacketSource::DataInfo& dataInfo);
+				TVResult<Times>	updateFrom(const CMediaPacketSource::DataInfo& dataInfo);
 
 			// Properties
 			private:
@@ -329,7 +332,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 															const CMediaPacketSource::DataInfo& dataInfo,
 															UInt32 timeScale);
 #elif defined(TARGET_OS_WINDOWS)
-				OI<SError>							setup(const SVideoProcessingFormat& videoProcessingFormat);
+				OV<SError>							setup(const SVideoProcessingFormat& videoProcessingFormat);
 
 				OR<const GUID>						getGUID() const
 														{ return OR<const GUID>(MFVideoFormat_H264); }
@@ -346,7 +349,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 		UInt32					mTimeScale;
 		TNumberArray<UInt32>	mKeyframeIndexes;
 
-		OI<SPSPPSInfo>			mCurrentSPSPPSInfo;
+		OV<SPSPPSInfo>			mCurrentSPSPPSInfo;
 		OI<FrameTiming>			mFrameTiming;
 };
 
@@ -468,7 +471,7 @@ TVResult<CMSampleTimingInfo> CH264DecodeVideoCodec::composeSampleTimingInfo(
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update frame timing
-	TIResult<FrameTiming::Times>	times = mFrameTiming->updateFrom(dataInfo);
+	TVResult<FrameTiming::Times>	times = mFrameTiming->updateFrom(dataInfo);
 	ReturnValueIfResultError(times, TVResult<CMSampleTimingInfo>(times.getError()));
 
 	// Compose sample timing info
@@ -482,15 +485,15 @@ TVResult<CMSampleTimingInfo> CH264DecodeVideoCodec::composeSampleTimingInfo(
 
 #elif defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
+OV<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Do super
-	OI<SError>	error = CMediaFoundationDecodeVideoCodec::setup(videoProcessingFormat);
+	OV<SError>	error = CMediaFoundationDecodeVideoCodec::setup(videoProcessingFormat);
 	ReturnErrorIfError(error);
 
 	// Finish setup
-	mCurrentSPSPPSInfo = OI<SPSPPSInfo>(getSPSPPSInfo());
+	mCurrentSPSPPSInfo = OV<SPSPPSInfo>(getSPSPPSInfo());
 
 	const	SH264NALUInfo&						spsNALUInfo = mCurrentSPSPPSInfo->getSPSNALUInfos().getFirst();
 			SH264SequenceParameterSetPayload	spsPayload(
@@ -498,7 +501,7 @@ OI<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProce
 																false));
 	mFrameTiming = OI<FrameTiming>(new FrameTiming(spsPayload));
 
-	return OI<SError>();
+	return OV<SError>();
 }
 #endif
 
@@ -512,11 +515,11 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 	CH264DecodeVideoCodec&	videoCodec = (CH264DecodeVideoCodec&) mediaFoundationDecodeVideoCodec;
 
 	// Get next packet
-	TIResult<CMediaPacketSource::DataInfo>	dataInfo = videoCodec.mMediaPacketSource->readNext();
+	TVResult<CMediaPacketSource::DataInfo>	dataInfo = videoCodec.mMediaPacketSource->readNext();
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
 
 	// Update frame timing
-	TIResult<FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(*dataInfo);
+	TVResult<FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(*dataInfo);
 	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(times.getError()));
 
 	// Create input sample
@@ -541,7 +544,7 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::FrameTiming::updateFrom(
+TVResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::FrameTiming::updateFrom(
 		const CMediaPacketSource::DataInfo& dataInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -592,8 +595,8 @@ TIResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::Frame
 			CLogServices::logMessage(CString("Unhandled NALU type: ") + CString(naluType));
 
 		// Next NALU
-		OI<SError>	error = bitReader.setPos(CBitReader::kPositionFromBeginning, pos + *size);
-		LogIfErrorAndReturnValue(error, "reading next NALU", TIResult<Times>(*error));
+		OV<SError>	error = bitReader.setPos(CBitReader::kPositionFromBeginning, pos + *size);
+		LogIfErrorAndReturnValue(error, "reading next NALU", TVResult<Times>(*error));
 	}
 
 	// Handle results
@@ -620,7 +623,7 @@ TIResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::Frame
 	}
 
 	// Compose results
-	TIResult<Times>	times = TIResult<Times>(Times(mNextFrameTime, mCurrentFrameTime));
+	TVResult<Times>	times = TVResult<Times>(Times(mNextFrameTime, mCurrentFrameTime));
 
 	// Update
 	mNextFrameTime += dataInfo.getDuration();
@@ -640,19 +643,19 @@ const	CString	CH264VideoCodec::mName(OSSTR("h.264"));
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SVideoStorageFormat> CH264VideoCodec::composeVideoStorageFormat(const S2DSizeU16& frameSize, Float32 framerate)
+OV<SVideoStorageFormat> CH264VideoCodec::composeVideoStorageFormat(const S2DSizeU16& frameSize, Float32 framerate)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OI<SVideoStorageFormat>(new SVideoStorageFormat(mID, frameSize, framerate));
+	return OV<SVideoStorageFormat>(SVideoStorageFormat(mID, frameSize, framerate));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<I<CDecodeVideoCodec> > CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
+OV<I<CDecodeVideoCodec> > CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
 		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
 		const TNumberArray<UInt32>& keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OI<I<CDecodeVideoCodec> >(
+	return OV<I<CDecodeVideoCodec> >(
 			I<CDecodeVideoCodec>(
 					new CH264DecodeVideoCodec(
 							I<CMediaPacketSource>(
