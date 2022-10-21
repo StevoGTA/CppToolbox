@@ -27,7 +27,7 @@ class CFileDataSourceInternals {
 								FILE_SHARE_READ, OPEN_EXISTING, &extendedParameters);
 				if (mFileHandle == INVALID_HANDLE_VALUE) {
 					// Unable to open
-					mError = OI<SError>(SErrorFromWindowsGetLastError());
+					mError = OV<SError>(SErrorFromWindowsGetLastError());
 					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
 				}
 			}
@@ -40,7 +40,7 @@ class CFileDataSourceInternals {
 		CLock		mLock;
 
 		HANDLE		mFileHandle;
-		OI<SError>	mError;
+		OV<SError>	mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ UInt64 CFileDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
+OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
@@ -85,7 +85,7 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 	AssertFailIf((position + byteCount) > mInternals->mByteCount);
 	if ((position + byteCount) > mInternals->mByteCount)
 		// Attempting to ready beyond end of data
-		return OI<SError>(SError::mEndOfData);
+		return OV<SError>(SError::mEndOfData);
 
 	// One at a time
 	mInternals->mLock.lock();
@@ -97,18 +97,18 @@ OI<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 	DWORD		newPositionLow =
 						::SetFilePointer(mInternals->mFileHandle, localPosition.LowPart, &localPosition.HighPart,
 								FILE_BEGIN);
-	OI<SError>	error;
+	OV<SError>	error;
 	if (newPositionLow != INVALID_SET_FILE_POINTER) {
 		// Read
 		BOOL	result = ::ReadFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, NULL, NULL);
 		if (!result) {
 			// Error
-			error = OI<SError>(SErrorFromWindowsGetLastError());
+			error = OV<SError>(SErrorFromWindowsGetLastError());
 			CLogServices::logError(*error, "reading data buffered", __FILE__, __func__, __LINE__);
 		}
 	} else {
 		// Error
-		error = OI<SError>(SErrorFromWindowsGetLastError());
+		error = OV<SError>(SErrorFromWindowsGetLastError());
 		CLogServices::logError(*error, "setting position buffered", __FILE__, __func__, __LINE__);
 	}
 
@@ -154,21 +154,21 @@ class CMappedFileDataSourceInternals {
 						else {
 							// Failed
 							mByteCount = 0;
-							mError = OI<SError>(SErrorFromWindowsGetLastError());
+							mError = OV<SError>(SErrorFromWindowsGetLastError());
 							CLogServices::logError(*mError, "creating file view", __FILE__, __func__, __LINE__);
 						}
 					} else {
 						// Error
 						mBytePtr = NULL;
 						mByteCount = 0;
-						mError = OI<SError>(SErrorFromWindowsGetLastError());
+						mError = OV<SError>(SErrorFromWindowsGetLastError());
 						CLogServices::logError(*mError, "creating file mapping", __FILE__, __func__, __LINE__);
 					}
 				} else {
 					// Unable to open
 					mBytePtr = NULL;
 					mByteCount = 0;
-					mError = OI<SError>(SErrorFromWindowsGetLastError());
+					mError = OV<SError>(SErrorFromWindowsGetLastError());
 					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
 				}
 			}
@@ -187,7 +187,7 @@ class CMappedFileDataSourceInternals {
 		HANDLE		mFileMappingHandle;
 		void*		mBytePtr;
 		UInt64		mByteCount;
-		OI<SError>	mError;
+		OV<SError>	mError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ UInt64 CMappedFileDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
+OV<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
@@ -240,10 +240,10 @@ OI<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData:
 	AssertFailIf((position + byteCount) > mInternals->mByteCount);
 	if ((position + byteCount) > mInternals->mByteCount)
 		// Attempting to ready beyond end of data
-		return OI<SError>(SError::mEndOfData);
+		return OV<SError>(SError::mEndOfData);
 
 	// Copy bytes
 	::memcpy(buffer, (UInt8*) mInternals->mBytePtr + position, (SIZE_T) byteCount);
 
-	return OI<SError>();
+	return OV<SError>();
 }

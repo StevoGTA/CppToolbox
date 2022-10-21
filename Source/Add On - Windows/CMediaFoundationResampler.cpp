@@ -39,7 +39,7 @@ class CMediaFoundationResamplerInternals {
 									MFShutdown();
 								}
 
-		static	OI<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
+		static	OV<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
 								{
 									// Setup
 									CMediaFoundationResamplerInternals&	internals =
@@ -53,12 +53,12 @@ class CMediaFoundationResamplerInternals {
 																		*internals.mInputAudioProcessingFormat);
 									if (!audioSourceStatus.isSuccess())
 										// Error
-										return OI<SError>(audioSourceStatus.getError());
+										return OV<SError>(audioSourceStatus.getError());
 
 									// Store
 									internals.mSourceTimeInterval = audioSourceStatus.getTimeInterval();
 
-									return OI<SError>();
+									return OV<SError>();
 								}
 
 		CAudioConverter&			mAudioConverter;
@@ -93,7 +93,7 @@ CMediaFoundationResampler::~CMediaFoundationResampler()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& audioProcessor,
+OV<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& audioProcessor,
 	const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -199,7 +199,7 @@ SAudioSourceStatus CMediaFoundationResampler::performInto(CAudioFrames& audioFra
 		ReturnValueIfResultError(sample, SAudioSourceStatus(sample.getError()));
 
 		// Process output
-		OI<SError>	error =
+		OV<SError>	error =
 							CMediaFoundationServices::processOutput(*mInternals->mResamplerTransform,
 									*sample.getInstance(),
 									CMediaFoundationServices::ProcessOutputInfo(

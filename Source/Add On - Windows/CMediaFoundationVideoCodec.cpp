@@ -29,7 +29,7 @@ class CMediaFoundationDecodeVideoCodecInternals {
 														readInputSampleProc);
 
 		static	TCIResult<IMFSample>	readInputSample(void* userData);
-		static	OI<SError>				noteFormatChanged(IMFMediaType* mediaType, void* userData);
+		static	OV<SError>				noteFormatChanged(IMFMediaType* mediaType, void* userData);
 
 		CMediaFoundationDecodeVideoCodec&						mMediaFoundationDecodeVideoCodec;
 		OSType													mCodecID;
@@ -76,7 +76,7 @@ TCIResult<IMFSample> CMediaFoundationDecodeVideoCodecInternals::readInputSample(
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationDecodeVideoCodecInternals::noteFormatChanged(IMFMediaType* mediaType, void* userData)
+OV<SError> CMediaFoundationDecodeVideoCodecInternals::noteFormatChanged(IMFMediaType* mediaType, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -123,12 +123,12 @@ OI<SError> CMediaFoundationDecodeVideoCodecInternals::noteFormatChanged(IMFMedia
 	internals.mOutputSampleRequiredByteCount = outputStreamInfo.cbSize;
 
 	// Resize current sample
-	OI<SError>	error =
+	OV<SError>	error =
 						CMediaFoundationServices::resizeSample(*internals.mOutputSample,
 								internals.mOutputSampleRequiredByteCount);
 	ReturnErrorIfError(error);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -158,13 +158,13 @@ CMediaFoundationDecodeVideoCodec::~CMediaFoundationDecodeVideoCodec()
 // MARK: CDecodeVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
+OV<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get and check GUID
 	OR<const GUID>	guid = getGUID();
 	if (!guid.hasReference())
-		return OI<SError>(CCodec::unsupportedError(CString(mInternals->mCodecID, true)));
+		return OV<SError>(CCodec::unsupportedError(CString(mInternals->mCodecID, true)));
 
 	// Setup
 	HRESULT	result;
@@ -217,7 +217,7 @@ OI<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat&
 		result = transform->GetOutputAvailableType(0, index, &mediaType);
 		if (result != S_OK)
 			// No matching output media types
-			return OI<SError>(sNoMatchingOutputMediaTypes);
+			return OV<SError>(sNoMatchingOutputMediaTypes);
 
 		// Get info
 		GUID	codecSubType;
@@ -252,7 +252,7 @@ OI<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat&
 	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
 
 	// Flush
-	OI<SError>	error = CMediaFoundationServices::flush(*mInternals->mVideoDecoder);
+	OV<SError>	error = CMediaFoundationServices::flush(*mInternals->mVideoDecoder);
 	ReturnErrorIfError(error);
 
 	// Begin streaming!
@@ -262,7 +262,7 @@ OI<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat&
 	result = mInternals->mVideoDecoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
 	ReturnErrorIfFailed(result, OSSTR("ProcessMessage to begin streaming"));
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -297,7 +297,7 @@ TIResult<CVideoFrame> CMediaFoundationDecodeVideoCodec::decode()
 	mInternals->mOutputSample = sample.getInstance();
 
 	// Process output
-	OI<SError>	error =
+	OV<SError>	error =
 						CMediaFoundationServices::processOutput(*mInternals->mVideoDecoder, *mInternals->mOutputSample,
 								CMediaFoundationServices::ProcessOutputInfo(
 										CMediaFoundationDecodeVideoCodecInternals::readInputSample,

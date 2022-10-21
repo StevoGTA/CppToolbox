@@ -25,7 +25,7 @@ using namespace winrt::Windows::Storage::Streams;
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 					mInternals->mFile.logAsError(CString::mSpaceX4);						\
 																							\
-					return OI<SError>(error);												\
+					return OV<SError>(error);												\
 				}
 #define	CFileWriterReportErrorAndReturnValue(error, message, value)							\
 				{																			\
@@ -58,14 +58,14 @@ class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 								mFile.remove();
 						}
 
-		OI<SError>	close()
+		OV<SError>	close()
 						{
 							// Close
 							mRandomAccessStream.Close();
 							mRandomAccessStream = IRandomAccessStream(nullptr);
 							mIsOpen = false;
 
-							return OI<SError>();
+							return OV<SError>();
 						}
 
 		CFile				mFile;
@@ -105,7 +105,7 @@ CFileWriter::~CFileWriter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
+OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -129,24 +129,24 @@ OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 			// Now open
 			mInternals->mIsOpen = true;
 		
-			return OI<SError>();
+			return OV<SError>();
 		} catch (const hresult_error& exception) {
 			// Error
 			SError	error = SErrorFromHRESULTError(exception);
 			CLogServices::logError(error, "opening", __FILE__, __func__, __LINE__);
 
-			return OI<SError>(error);
+			return OV<SError>(error);
 		}
 	} else {
 		// Already open
 		mInternals->mRandomAccessStream.Seek(0);
 
-		return OI<SError>();
+		return OV<SError>();
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
+OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Catch errors
@@ -174,13 +174,13 @@ OI<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 		};
 		mInternals->mRandomAccessStream.WriteAsync(make<CFileWriterBuffer>(buffer, byteCount)).get();
 
-		return OI<SError>();
+		return OV<SError>();
 	} catch (const hresult_error& exception) {
 		// Error
 		SError	error = SErrorFromHRESULTError(exception);
 		CLogServices::logError(error, "writing", __FILE__, __func__, __LINE__);
 
-		return OI<SError>(error);
+		return OV<SError>(error);
 	}
 }
 
@@ -192,7 +192,7 @@ UInt64 CFileWriter::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
+OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check position
@@ -213,31 +213,31 @@ OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 			break;
 	}
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setByteCount(UInt64 byteCount) const
+OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set size
 	mInternals->mRandomAccessStream.Size(byteCount);
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::flush() const
+OV<SError> CFileWriter::flush() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Flush
 	mInternals->mRandomAccessStream.FlushAsync().get();
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::close() const
+OV<SError> CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->close();

@@ -63,24 +63,38 @@ CString::CString(OSStringVar(initialString), OV<Length> length) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char* chars, Length charsCount, Encoding encoding) : CHashable()
+CString::CString(const char* chars, Length length, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
 	AssertNotNil(chars);
 
-	// Check if have size
-	if (charsCount == ~0)
-		// Count chars
-		charsCount = (Length) ::strlen(chars);
+	// Create string
+	mString.resize(length);
+
+	// Check length
+	if (length > 0) {
+		// Convert
+		int	count = ::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, length, &mString[0], length);
+		AssertFailIf(count == 0);
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const char* chars, Encoding encoding) : CHashable()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertNotNil(chars);
+
+	// Setup
+	Length	length = (Length) ::strlen(chars);
 
 	// Create string
-	mString.resize(charsCount);
+	mString.resize(length);
 
 	// Convert
-	int	count =
-				::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, charsCount, &mString[0],
-						charsCount);
+	int	count = ::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, length, &mString[0], length);
 	AssertFailIf(count == 0);
 }
 
@@ -496,17 +510,21 @@ CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::getSubString(CharIndex startIndex, Length charCount) const
+CString CString::getSubString(CharIndex startIndex, OV<Length> length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if need to limit char count
-	if (((UInt64) startIndex + (UInt64) charCount) > (UInt64) mString.length())
-		// Limit char count
-		charCount = (Length) (mString.length() - startIndex);
+	// Check if need to limit length
+	size_t	lengthUse;
+	if (length.hasValue() && (((size_t) startIndex + (size_t) *length) <= mString.length()))
+		// Use requested
+		lengthUse = *length;
+	else
+		// Limit to remainder of string
+		lengthUse = mString.length() - startIndex;
 
 	// Setup
-	TBuffer<TCHAR>	buffer(charCount);
-	size_t			count = mString._Copy_s(*buffer, charCount, charCount, startIndex);
+	TBuffer<TCHAR>	buffer((UInt32) lengthUse);
+	size_t			count = mString._Copy_s(*buffer, lengthUse, lengthUse, startIndex);
 
 	return CString(*buffer, OV<Length>((Length) count));
 }
@@ -530,7 +548,7 @@ CString CString::replacingSubStrings(const CString& subStringToReplace, const CS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::replacingCharacters(CharIndex startIndex, Length charCount, const CString& replacementString) const
+CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, const CString& replacementString) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
@@ -538,7 +556,7 @@ return CString::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::Range CString::findSubString(const CString& subString, CharIndex startIndex, Length charCount) const
+CString::Range CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
@@ -787,15 +805,15 @@ UINT sGetCodePageForCStringEncoding(CString::Encoding encoding)
 		case CString::kEncodingASCII:		return 20127;
 		case CString::kEncodingMacRoman:	return CP_MACCP;
 		case CString::kEncodingUTF8:		return CP_UTF8;
-		//case kStringEncodingISOLatin:	return kCFStringEncodingISOLatin1;
+		case CString::kEncodingISOLatin:	return 1252;
 		//case kStringEncodingUnicode:	return kCFStringEncodingUnicode;
 
-		//case kStringEncodingUTF16:		return kCFStringEncodingUTF16;
-		//case kStringEncodingUTF16BE:	return kCFStringEncodingUTF16BE;
-		//case kStringEncodingUTF16LE:	return kCFStringEncodingUTF16LE;
-		//case kStringEncodingUTF32:		return kCFStringEncodingUTF32;
-		//case kStringEncodingUTF32BE:	return kCFStringEncodingUTF32BE;
-		//case kStringEncodingUTF32LE:	return kCFStringEncodingUTF32LE;
+		//case CString::kEncodingUTF16:		return kCFStringEncodingUTF16;
+		case CString::kEncodingUTF16BE:		return 1201;
+		case CString::kEncodingUTF16LE:		return 1200;
+		//case CString::kEncodingUTF32:		return kCFStringEncodingUTF32;
+		case CString::kEncodingUTF32BE:		return 12001;
+		case CString::kEncodingUTF32LE:		return 12000;
 
 		default:
 			AssertFailUnimplemented();

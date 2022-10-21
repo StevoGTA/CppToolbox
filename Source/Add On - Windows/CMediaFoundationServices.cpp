@@ -84,7 +84,7 @@ TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& co
 				TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
 	}
 
-	if (userData.hasInstance()) {
+	if (userData.hasValue()) {
 		result =
 				mediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
 						(UINT32) userData->getByteCount());

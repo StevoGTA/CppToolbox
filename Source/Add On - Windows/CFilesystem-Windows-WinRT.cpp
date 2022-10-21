@@ -25,7 +25,7 @@ using namespace winrt::Windows::Storage;
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 																									\
-					return OI<SError>(error);														\
+					return OV<SError>(error);														\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
@@ -33,7 +33,7 @@ using namespace winrt::Windows::Storage;
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
-					return OI<SError>(error);														\
+					return OV<SError>(error);														\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -43,23 +43,23 @@ using namespace winrt::Windows::Storage;
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
+TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return TIResult<SFoldersFiles>(SError::mUnimplemented);
+return TVResult<SFoldersFiles>(SError::mUnimplemented);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool deep)
+TVResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return TIResult<TArray<CFolder> >(SError::mUnimplemented);
+return TVResult<TArray<CFolder> >(SError::mUnimplemented);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
+TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Catch errors
@@ -78,12 +78,12 @@ TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 			for (auto const& childStorageFolder : storageFolder.GetFoldersAsync().get()) {
 				// Get files for this folder
 				auto	result = getFiles(CFolder(CFilesystemPath(CString(childStorageFolder.Path().data()))));
-				if (result.hasInstance())
+				if (result.hasValue())
 					// Success
 					files += *result;
 				else
 					// Error
-					return TIResult<TArray<CFile> >(result.getError());
+					return TVResult<TArray<CFile> >(result.getError());
 			}
 		}
 
@@ -92,28 +92,28 @@ TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 			// Add file
 			files += CFile(CFilesystemPath(storageFile.Path().data()));
 
-		return TIResult<TArray<CFile> >(files);
+		return TVResult<TArray<CFile> >(files);
 	} catch (const hresult_error& exception) {
 		// Error
 		SError	error = SErrorFromHRESULTError(exception);
 		CFilesystemReportErrorFileFolderX1(error, "getting files", folder);
 
-		return TIResult<TArray<CFile>>(error);
+		return TVResult<TArray<CFile>>(error);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
+OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
+OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }

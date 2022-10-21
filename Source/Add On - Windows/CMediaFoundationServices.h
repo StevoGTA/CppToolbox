@@ -70,7 +70,7 @@ class CMediaFoundationServices {
 												OV<SError>	error =
 																	mFillInputBufferProc(*mInputSample, mediaBuffer,
 																			mUserData);
-												if (error.hasInstance()) {
+												if (error.hasValue()) {
 													// Cleanup
 													mediaBuffer->Release();
 

@@ -19,7 +19,7 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 																									\
-					return OI<SError>(error);														\
+					return OV<SError>(error);														\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
@@ -27,7 +27,7 @@
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
-					return OI<SError>(error);														\
+					return OV<SError>(error);														\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,17 +94,17 @@ TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
+OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
+OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }

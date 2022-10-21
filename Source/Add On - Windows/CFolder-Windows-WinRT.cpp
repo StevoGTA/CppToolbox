@@ -16,7 +16,7 @@ using namespace winrt::Windows::Storage;
 //					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 //					logAsError(CString::mSpaceX4);											\
 //																							\
-//					return OI<SError>(error);												\
+//					return OV<SError>(error);												\
 //				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ using namespace winrt::Windows::Storage;
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFolder::rename(const CString& string)
+OV<SError> CFolder::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose new filesystem path
@@ -34,23 +34,23 @@ OI<SError> CFolder::rename(const CString& string)
 
 	// Rename
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFolder::create() const
+OV<SError> CFolder::create() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFolder::remove() const
+OV<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

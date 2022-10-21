@@ -23,9 +23,9 @@ class CMediaFoundationDecodeAudioCodec : public CDecodeAudioCodec {
 								~CMediaFoundationDecodeAudioCodec();
 
 								// CDecodeAudioCodec methods
-				OI<SError>		setup(const SAudioProcessingFormat& audioProcessingFormat);
+				OV<SError>		setup(const SAudioProcessingFormat& audioProcessingFormat);
 				void			seek(UniversalTimeInterval timeInterval);
-				OI<SError>		decodeInto(CAudioFrames& audioFrames);
+				OV<SError>		decodeInto(CAudioFrames& audioFrames);
 
 	protected:
 								// Lifecycle methods
@@ -34,8 +34,8 @@ class CMediaFoundationDecodeAudioCodec : public CDecodeAudioCodec {
 
 								// Subclass methods
 		virtual	OR<const GUID>	getGUID(OSType codecID) const = 0;
-		virtual	OI<CData>		getUserData() const
-									{ return OI<CData>(); }
+		virtual	OV<CData>		getUserData() const
+									{ return OV<CData>(); }
 
 	// Properties
 	private:

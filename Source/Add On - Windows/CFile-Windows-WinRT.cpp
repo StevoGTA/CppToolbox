@@ -27,14 +27,14 @@ using namespace winrt::Windows::Storage;
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 					logAsError(CString::mSpaceX4);											\
 																							\
-					return OI<SError>(error);												\
+					return OV<SError>(error);												\
 				}
 #define	CFileReportErrorAndReturnValue(error, message, value)								\
 				{																			\
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 					logAsError(CString::mSpaceX4);											\
 																							\
-					return OI<SError>(value);												\
+					return OV<SError>(value);												\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -44,11 +44,11 @@ using namespace winrt::Windows::Storage;
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFile::rename(const CString& string)
+OV<SError> CFile::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ UInt64 CFile::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFile::remove() const
+OV<SError> CFile::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Catch errors
@@ -81,13 +81,13 @@ OI<SError> CFile::remove() const
 		auto	storageFile = StorageFile::GetFileFromPathAsync(getFilesystemPath().getString().getOSString()).get();
 		storageFile.DeleteAsync().get();
 
-		return OI<SError>();
+		return OV<SError>();
 	} catch (const hresult_error& exception) {
 		// Error
 		SError	error = SErrorFromHRESULTError(exception);
 		CFileReportError(error, "checking if exsists");
 
-		return OI<SError>(error);
+		return OV<SError>(error);
 	}
 }
 
@@ -132,9 +132,9 @@ return false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFile::setLocked(bool lockFile) const
+OV<SError> CFile::setLocked(bool lockFile) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }

@@ -586,7 +586,7 @@ TArray<SAudioProcessingSetup> CAudioPlayer::getInputSetups() const
 			// Sleep
 			CThread::sleepFor(0.001);
 
-		if (!mInternals->mImplementation->mError.hasInstance()) {
+		if (!mInternals->mImplementation->mError.hasValue()) {
 			// Compose SAudioProcessingSetup
 			WAVEFORMATEX&	format = *mInternals->mImplementation->mMixFormat;
 			sAudioProcessingSetup =

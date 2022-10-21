@@ -27,7 +27,7 @@ class CMediaFoundationDecodeAudioCodecInternals {
 										mDecodeFramesToIgnore(0)
 								{}
 
-		static	OI<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
+		static	OV<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
 								{
 									// Setup
 									CMediaFoundationDecodeAudioCodecInternals&	internals =
@@ -72,13 +72,13 @@ CMediaFoundationDecodeAudioCodec::~CMediaFoundationDecodeAudioCodec()
 // MARK: CDecodeAudioCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
+OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get and check GUID
 	OR<const GUID>	guid = getGUID(mInternals->mCodecID);
 	if (!guid.hasReference())
-		return OI<SError>(CCodec::unsupportedError(CString(mInternals->mCodecID, true)));
+		return OV<SError>(CCodec::unsupportedError(CString(mInternals->mCodecID, true)));
 
 	// Setup
 	CAudioFrames::Requirements	requirements = getRequirements();
@@ -129,7 +129,7 @@ OI<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat&
 		result = transform->GetOutputAvailableType(0, index, &mediaType);
 		if (result != S_OK)
 			// No matching output media types
-			return OI<SError>(sNoMatchingOutputMediaTypes);
+			return OV<SError>(sNoMatchingOutputMediaTypes);
 
 		// Get info
 		GUID	codecSubType;
@@ -183,7 +183,7 @@ OI<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat&
 	result = mInternals->mAudioDecoderTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
 	ReturnErrorIfFailed(result, OSSTR("ProcessMessage to begin streaming"));
 
-	return OI<SError>();
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -205,7 +205,7 @@ void CMediaFoundationDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
+OV<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -217,12 +217,12 @@ OI<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrame
 	if (!mInternals->mAudioDecoderTransform.hasInstance() || !mInternals->mInputSample.hasInstance() ||
 			!mInternals->mOutputSample.hasInstance())
 		// Can't decode
-		return OI<SError>(sSetupDidNotCompleteError);
+		return OV<SError>(sSetupDidNotCompleteError);
 
 	// Fill audio frames as much as we can
 	while (audioFrames.getAvailableFrameCount() >= requirements.mFrameCountInterval) {
 		// Process output
-		OI<SError>	error =
+		OV<SError>	error =
 							CMediaFoundationServices::processOutput(*mInternals->mAudioDecoderTransform,
 									*mInternals->mOutputSample,
 									CMediaFoundationServices::ProcessOutputInfo(
@@ -242,5 +242,5 @@ OI<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrame
 				(*result < mInternals->mDecodeFramesToIgnore) ? mInternals->mDecodeFramesToIgnore - *result : 0;
 	}
 
-	return OI<SError>();
+	return OV<SError>();
 }

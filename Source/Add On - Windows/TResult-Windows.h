@@ -14,7 +14,7 @@ template <typename T> struct TCIResult {
 					// Lifecycle Methods
 					TCIResult(T* instance) : mInstance(OCI<T>(instance)) {}
 					TCIResult(const OCI<T>& instance) : mInstance(instance) {}
-					TCIResult(const SError& error) : mError(OI<SError>(error)) {}
+					TCIResult(const SError& error) : mError(OV<SError>(error)) {}
 					TCIResult(const TCIResult& other) : mInstance(other.mInstance), mError(other.mError) {}
 
 					// Instance Methods
@@ -24,7 +24,7 @@ template <typename T> struct TCIResult {
 						{ return mInstance; }
 
 			bool	hasError() const
-						{ return mError.hasInstance(); }
+						{ return mError.hasValue(); }
 	const	SError&	getError() const
 						{ return *mError; }
 
@@ -35,5 +35,5 @@ template <typename T> struct TCIResult {
 
 	private:
 		OCI<T>		mInstance;
-		OI<SError>	mError;
+		OV<SError>	mError;
 };

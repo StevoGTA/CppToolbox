@@ -12,7 +12,7 @@
 					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
 					mInternals->mFile.logAsError(CString::mSpaceX4);						\
 																							\
-					return OI<SError>(error);												\
+					return OV<SError>(error);												\
 				}
 #define	CFileWriterReportErrorAndReturnValue(error, message, value)							\
 				{																			\
@@ -34,15 +34,15 @@ public:
 				~CFileWriterInternals()
 					{}
 
-	OI<SError>	write(const void* buffer, UInt64 byteCount)
+	OV<SError>	write(const void* buffer, UInt64 byteCount)
 					{
 						AssertFailUnimplemented();
-						return OI<SError>();
+						return OV<SError>();
 					}
-	OI<SError>	close()
+	OV<SError>	close()
 					{
 						AssertFailUnimplemented();
-						return OI<SError>();
+						return OV<SError>();
 					}
 
 	CFile	mFile;
@@ -81,21 +81,21 @@ CFileWriter::~CFileWriter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
+OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mRemoveIfNotClosed = removeIfNotClosed;
 
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
+OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	OI<SError>	error = mInternals->write(buffer, byteCount);
+	OV<SError>	error = mInternals->write(buffer, byteCount);
 	if (!error.hasInstance())
 		// Error
 		CFileWriterReportErrorAndReturnError(*error, "writing");
@@ -112,31 +112,31 @@ return 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
+OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::setByteCount(UInt64 byteCount) const
+OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::flush() const
+OV<SError> CFileWriter::flush() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return OI<SError>();
+return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<SError> CFileWriter::close() const
+OV<SError> CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->close();
