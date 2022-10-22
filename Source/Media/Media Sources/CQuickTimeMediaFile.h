@@ -45,13 +45,16 @@ class CQuickTimeMediaFile {
 																			randomAccessDataSource,
 																	UInt32 options, OSType type,
 																	UniversalTimeInterval duration,
+																	const OV<CData>& metaAtomPayloadData,
 																	const Internals& internals);
 		virtual	TVResult<CMediaTrackInfos::VideoTrackInfo>	composeVideoTrackInfo(
 																	const I<CRandomAccessDataSource>&
 																			randomAccessDataSource,
 																	UInt32 options, OSType type,
 																	UInt32 timeScale, UniversalTimeInterval duration,
+																	const OV<CData>& metaAtomPayloadData,
 																	const Internals& internals);
+		virtual	void										processFileMetadata(const CData& metaAtomPayloadData) {}
 
 															// Subclass methods
 				Float32										getSampleRate(const Internals& internals) const;

@@ -881,13 +881,27 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 			Internals	internals(atomReader, *stsdAtom, *stblContainerAtom, stsdDescription, sttsAtomPayload,
 								stscAtomPayload, stszAtomPayload, stcoAtomPayload);
 
+			// Metadata
+			OR<CAtomReader::Atom>	metaAtom = trakContainerAtom->getAtom(MAKE_OSTYPE('m', 'e', 't', 'a'));
+			if (!metaAtom.hasReference())
+				metaAtom = mdiaContainerAtom->getAtom(MAKE_OSTYPE('m', 'e', 't', 'a'));
+
+			OV<CData>	metaAtomPayloadData;
+			if (metaAtom.hasReference()) {
+				// Read payload
+				TVResult<CData>	atomPayloadData = atomReader.readAtomPayload(metaAtom);
+				if (atomPayloadData.hasValue())
+					// Success
+					metaAtomPayloadData = OV<CData>(*atomPayloadData);
+			}
+
 			// Check track type
 			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
 				// Audio track
 				TVResult<CMediaTrackInfos::AudioTrackInfo>	audioTrackInfo =
 																	composeAudioTrackInfo(randomAccessDataSource,
 																			options, stsdDescription.getType(),
-																			duration, internals);
+																			duration, metaAtomPayloadData, internals);
 				if (audioTrackInfo.hasValue())
 					// Success
 					mediaTrackInfos.add(*audioTrackInfo);
@@ -899,7 +913,8 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 				TVResult<CMediaTrackInfos::VideoTrackInfo>	videoTrackInfo =
 																	composeVideoTrackInfo(randomAccessDataSource,
 																			options, stsdDescription.getType(),
-																			timeScale, duration, internals);
+																			timeScale, duration, metaAtomPayloadData,
+																			internals);
 				if (videoTrackInfo.hasValue())
 					// Success
 					mediaTrackInfos.add(*videoTrackInfo);
@@ -907,6 +922,12 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 					// Error
 					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrackInfo.getError()));
 			}
+		} else if (moovIterator->mType == MAKE_OSTYPE('m', 'e', 't', 'a')) {
+			// Process file metadata
+			TVResult<CData>	metaAtomPayload = atomReader.readAtomPayload(*moovIterator);
+			if (metaAtomPayload.hasValue())
+				// Process file metadata
+				processFileMetadata(*metaAtomPayload);
 		}
 	}
 
@@ -1005,7 +1026,7 @@ TArray<SMediaPacketAndLocation> CQuickTimeMediaFile::composePacketAndLocations(c
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrackInfo(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, OSType type,
-		UniversalTimeInterval duration, const Internals& internals)
+		UniversalTimeInterval duration, const OV<CData>& metaAtomPayloadData, const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -1142,7 +1163,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrackInfo(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, OSType type, UInt32 timeScale,
-		UniversalTimeInterval duration, const Internals& internals)
+		UniversalTimeInterval duration, const OV<CData>& metaAtomPayloadData, const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
