@@ -793,7 +793,7 @@ CString CString::getCommonPrefix(const CString& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CString::components(const CString& separator) const
+TArray<CString> CString::components(const CString& separator, bool includeEmptyComponents) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -803,8 +803,15 @@ TArray<CString> CString::components(const CString& separator) const
 	CFArrayRef	arrayRef =
 						::CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, mStringRef, separator.mStringRef);
 
-	for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++)
-		array += CString((CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i));
+	for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++) {
+		// Get string
+		CFStringRef	stringRef = (CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i);
+
+		// Check if empty
+		if (includeEmptyComponents || (::CFStringGetLength(stringRef) > 0))
+			// Add
+			array += CString(stringRef);
+	}
 	::CFRelease(arrayRef);
 	
 	return array;

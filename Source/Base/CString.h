@@ -331,7 +331,7 @@ class CString : public CHashable {
 						bool			isValidEmailAddress() const;
 						CString			getCommonPrefix(const CString& other) const;
 					
-						TArray<CString>	components(const CString& separator) const;
+						TArray<CString>	components(const CString& separator, bool includeEmptyComponents = true) const;
 						TArray<CString>	componentsRespectingQuotes(const CString& separator) const;
 
 						bool			compareTo(const CString& other,
