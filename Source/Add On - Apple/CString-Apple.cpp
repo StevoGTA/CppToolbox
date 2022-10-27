@@ -658,7 +658,7 @@ CString CString::getCommonPrefix(const CString& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CString::breakUp(const CString& delimiterString) const
+TArray<CString> CString::breakUp(const CString& delimiterString, bool includeEmptyStrings) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -669,8 +669,15 @@ TArray<CString> CString::breakUp(const CString& delimiterString) const
 						::CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, mStringRef,
 								delimiterString.mStringRef);
 
-	for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++)
-		array += CString((CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i));
+	for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++) {
+		// Get string
+		CFStringRef	stringRef = (CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i);
+
+		// Check length
+		if (::CFStringGetLength(stringRef) > 0)
+			// Add
+			array += CString(stringRef);
+	}
 	::CFRelease(arrayRef);
 	
 	return array;

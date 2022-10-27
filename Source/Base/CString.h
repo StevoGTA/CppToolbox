@@ -324,7 +324,7 @@ class CString : public CHashable {
 						bool			isValidEmailAddress() const;
 						CString			getCommonPrefix(const CString& other) const;
 					
-						TArray<CString>	breakUp(const CString& delimiterString) const;
+						TArray<CString>	breakUp(const CString& delimiterString, bool includeEmptyStrings = true) const;
 						TArray<CString>	breakUpRespectingQuotes(const CString& delimiterString) const;
 
 						ECompareResult	compareTo(const CString& other,
