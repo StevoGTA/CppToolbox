@@ -674,7 +674,7 @@ TArray<CString> CString::breakUp(const CString& delimiterString, bool includeEmp
 		CFStringRef	stringRef = (CFStringRef) ::CFArrayGetValueAtIndex(arrayRef, i);
 
 		// Check length
-		if (::CFStringGetLength(stringRef) > 0)
+		if (includeEmptyStrings || (::CFStringGetLength(stringRef) > 0))
 			// Add
 			array += CString(stringRef);
 	}
