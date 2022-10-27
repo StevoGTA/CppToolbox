@@ -4,6 +4,9 @@
 
 #include "CFilesystem.h"
 
+#include "CDotUnderscoreReader.h"
+#include "CFileDataSource.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
@@ -57,6 +60,50 @@ OV<CFile> CFilesystem::getResourceFork(const CFile& file)
 	// Unsupported
 	return OV<CFile>();
 #endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OI<CAppleResourceManager> CFilesystem::getAppleResourceManager(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Try resource file
+	OV<CFile>	resourceFile = getResourceFork(file);
+	if (resourceFile.hasValue() && (resourceFile->getByteCount() > 0)) {
+		// Try creating Apple Resource Manager
+		TIResult<CAppleResourceManager>	appleResourceManager =
+												CAppleResourceManager::from(
+														I<CRandomAccessDataSource>(
+																new CMappedFileDataSource(*resourceFile)));
+		if (appleResourceManager.hasInstance())
+			// Success
+			return OI<CAppleResourceManager>(*appleResourceManager);
+	}
+
+	// Try ._ file
+	OV<CFile>	dotUnderscoreFile = getDotUnderscoreFile(file);
+	if (dotUnderscoreFile.hasValue()) {
+		// Was able to load ._ file
+		TIResult<CDotUnderscoreReader>	dotUnderscoreReader =
+												CDotUnderscoreReader::from(
+														I<CRandomAccessDataSource>(
+																new CMappedFileDataSource(*dotUnderscoreFile)));
+		if (dotUnderscoreReader.hasInstance()) {
+			// Get resource fork
+			OR<CData>	resourceFork = dotUnderscoreReader->getResourceFork();
+			if (resourceFork.hasReference()) {
+				// Try creating Apple Resource Manager
+				TIResult<CAppleResourceManager>	appleResourceManager =
+														CAppleResourceManager::from(
+																I<CRandomAccessDataSource>(
+																		new CDataDataSource(*resourceFork)));
+				if (appleResourceManager.hasInstance())
+					// Success
+					return OI<CAppleResourceManager>(*appleResourceManager);
+			}
+		}
+	}
+
+	return OI<CAppleResourceManager>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

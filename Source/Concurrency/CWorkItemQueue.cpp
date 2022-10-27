@@ -21,15 +21,9 @@
 
 struct SWorkItemInfo : public CEquatable {
 			// Lifecycle methods
-			SWorkItemInfo(CWorkItemQueueInternals& owningWorkItemQueueInternals, CWorkItem& workItem,
+			SWorkItemInfo(CWorkItemQueueInternals& owningWorkItemQueueInternals, const I<CWorkItem>& workItem,
 					CWorkItem::Priority priority) :
 				mOwningWorkItemQueueInternals(owningWorkItemQueueInternals), mWorkItem(workItem), mPriority(priority),
-						mIndex(SWorkItemInfo::mNextIndex++)
-				{}
-			SWorkItemInfo(CWorkItemQueueInternals& owningWorkItemQueueInternals, CProcWorkItem::Proc proc,
-					void* userData, CWorkItem::Priority priority) :
-				mOwningWorkItemQueueInternals(owningWorkItemQueueInternals),
-						mProcWorkItem(new CProcWorkItem(proc, userData)), mPriority(priority),
 						mIndex(SWorkItemInfo::mNextIndex++)
 				{}
 
@@ -39,30 +33,13 @@ struct SWorkItemInfo : public CEquatable {
 
 			// Instance methods
 	void	transitionTo(CWorkItem::State state)
-				{
-					// Check what we have
-					if (mWorkItem.hasReference())
-						// Work item
-						mWorkItem->transitionTo(state);
-					else
-						// Proc work item
-						mProcWorkItem->transitionTo(state);
-				}
+				{ mWorkItem->transitionTo(state); }
 	void	perform()
-				{
-					// Check what we have
-					if (mWorkItem.hasReference())
-						// Work item
-						mWorkItem->perform();
-					else
-						// Proc work item
-						mProcWorkItem->perform();
-				}
+				{ mWorkItem->perform(); }
 
 	// Properties
 			CWorkItemQueueInternals&	mOwningWorkItemQueueInternals;
-			OR<CWorkItem>				mWorkItem;
-			OI<CProcWorkItem>			mProcWorkItem;
+			I<CWorkItem>				mWorkItem;
 			CWorkItem::Priority			mPriority;
 			UInt32						mIndex;
 
@@ -167,25 +144,13 @@ class CWorkItemQueueInternals {
 												}
 											}
 
-				void					add(CWorkItem& workItem, CWorkItem::Priority priority)
+				void					add(const I<CWorkItem>& workItem, CWorkItem::Priority priority)
 											{
 												// Add
 												mWorkItemInfosLock.lock();
 												mIdleWorkItemInfos +=
 														I<SWorkItemInfo>(new SWorkItemInfo(*this, workItem, priority));
 												mWorkItemInfosLock.unlock();
-											}
-				CWorkItem&				add(CProcWorkItem::Proc proc, void* userData, CWorkItem::Priority priority)
-											{
-												// Add
-												mWorkItemInfosLock.lock();
-												mIdleWorkItemInfos +=
-														I<SWorkItemInfo>(
-																new SWorkItemInfo(*this, proc, userData, priority));
-												CWorkItem&	workItem = *mIdleWorkItemInfos.getLast()->mProcWorkItem;
-												mWorkItemInfosLock.unlock();
-
-												return workItem;
 											}
 
 				void					pause()
@@ -439,7 +404,7 @@ CWorkItemQueue& CWorkItemQueue::main()
 	if (sMainWorkItemQueue == nil) {
 		// Create main work item queue
 		sCreatingMainWorkItemQueue = true;
-		sMainWorkItemQueue = new CWorkItemQueue(CCoreServices::getTotalProcessorCoresCount() - 1);
+		sMainWorkItemQueue = new CWorkItemQueue(-1);
 		sCreatingMainWorkItemQueue = false;
 	}
 
@@ -449,13 +414,26 @@ CWorkItemQueue& CWorkItemQueue::main()
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CWorkItemQueue::CWorkItemQueue(UInt32 maximumConcurrentWorkItems)
+CWorkItemQueue::CWorkItemQueue(SInt32 maximumConcurrentWorkItems)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	UInt32	totalProcessorCoresCount = CCoreServices::getTotalProcessorCoresCount();
+	UInt32	desiredMaximumConcurrentWorkItems;
+	if (maximumConcurrentWorkItems > 0)
+		// Requesting desired concurrency
+		desiredMaximumConcurrentWorkItems = std::min<UInt32>(maximumConcurrentWorkItems, totalProcessorCoresCount);
+	else if (maximumConcurrentWorkItems < 0)
+		// Requesting up to certain capacity
+		desiredMaximumConcurrentWorkItems = std::max<SInt32>(totalProcessorCoresCount - maximumConcurrentWorkItems, 1);
+	else
+		// Didn't request anything.  Weird.
+		desiredMaximumConcurrentWorkItems = 1;
+	
 	// Check if creating main work item queue
 	if (sCreatingMainWorkItemQueue) {
 		// Main work item queue
-		mInternals = new CWorkItemQueueInternals(maximumConcurrentWorkItems);
+		mInternals = new CWorkItemQueueInternals(desiredMaximumConcurrentWorkItems);
 		CWorkItemQueueInternals::mMainWorkItemQueueInternals = OR<CWorkItemQueueInternals>(*mInternals);
 	} else
 		// Other Work Item Queue
@@ -483,7 +461,7 @@ CWorkItemQueue::~CWorkItemQueue()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CWorkItemQueue::add(CWorkItem& workItem, CWorkItem::Priority priority)
+void CWorkItemQueue::add(const I<CWorkItem>& workItem, CWorkItem::Priority priority)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add
@@ -491,19 +469,6 @@ void CWorkItemQueue::add(CWorkItem& workItem, CWorkItem::Priority priority)
 
 	// Process work items
 	CWorkItemQueueInternals::processWorkItems();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CWorkItem& CWorkItemQueue::add(CProcWorkItem::Proc proc, void* userData, CWorkItem::Priority priority)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Add
-	CWorkItem&	workItem = mInternals->add(proc, userData, priority);
-
-	// Process work items
-	CWorkItemQueueInternals::processWorkItems();
-
-	return workItem;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

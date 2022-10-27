@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CWorkItem.h"
-#include "PlatformDefinitions.h"
+#include "TWrappers.h"
 
 /*!
 	The Basics:
@@ -72,15 +72,35 @@ class CWorkItemQueue {
 	// Methods
 	public:
 								// Lifecycle methods
-								CWorkItemQueue(UInt32 maximumConcurrentWorkItems = ~0);
+								CWorkItemQueue(SInt32 maximumConcurrentWorkItems = ~0);	// Positive numbers indicate
+																						//	desired concurrency.  i.e.
+																						//	2 means max concurrency of
+																						//	2.
+																						// Negative numbers indicate
+																						//	processor cores to not
+																						//	request.  i.e. -2 means max
+																						//	concurrency of total
+																						//	processor cores - 2.
+																						// 0 results in a max
+																						//	concurrency of 1.
 								CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue,
 										UInt32 maximumConcurrentWorkItems = ~0);
 		virtual					~CWorkItemQueue();
 		
 								// Instance methods
-				void			add(CWorkItem& workItem, CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
-				CWorkItem&		add(CProcWorkItem::Proc proc, void* userData,
+				void			add(const I<CWorkItem>& workItem,
 										CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
+				I<CWorkItem>	add(CProcWorkItem::Proc proc, void* userData,
+										CWorkItem::Priority priority = CWorkItem::kPriorityNormal)
+									{
+										// Setup
+										I<CWorkItem>	workItem(new CProcWorkItem(proc, userData));
+
+										// Add
+										add(workItem, priority);
+
+										return workItem;
+									}
 
 				void			cancel(CWorkItem& workItem);
 

@@ -4,7 +4,7 @@
 
 #include "CWorkItem.h"
 
-#include "PlatformDefinitions.h"
+#include "ConcurrencyPrimitives.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CWorkItemInternals
@@ -14,6 +14,7 @@ class CWorkItemInternals {
 		CWorkItemInternals() : mState(CWorkItem::kStateWaiting) {}
  
 		CWorkItem::State	mState;
+		CLock				mStateLock;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -50,12 +51,23 @@ void CWorkItem::transitionTo(State state)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update state
-	mInternals->mState = state;
+	bool	didChangeState;
+	mInternals->mStateLock.lock();
+	if ((mInternals->mState == kStateWaiting) || (mInternals->mState == kStateActive)) {
+		// Transition to new state
+		mInternals->mState = state;
+		didChangeState = true;
+	} else
+		// Ignore - already in final state
+		didChangeState = false;
+	mInternals->mStateLock.unlock();
 
-	// Check state
-	switch (mInternals->mState) {
-		case kStateCompleted:	completed();	break;
-		case kStateCancelled:	cancelled();	break;
-		default:								break;
-	}
+	// Check if did change state
+	if (didChangeState)
+		// Check state
+		switch (mInternals->mState) {
+			case kStateCompleted:	completed();	break;
+			case kStateCancelled:	cancelled();	break;
+			default:								break;
+		}
 }
