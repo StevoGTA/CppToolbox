@@ -472,7 +472,7 @@ CWorkItemQueue::CWorkItemQueue(SInt32 maximumConcurrentWorkItems)
 		desiredMaximumConcurrentWorkItems = std::min<UInt32>(maximumConcurrentWorkItems, totalProcessorCoresCount);
 	else if (maximumConcurrentWorkItems < 0)
 		// Requesting up to certain capacity
-		desiredMaximumConcurrentWorkItems = std::max<SInt32>(totalProcessorCoresCount - maximumConcurrentWorkItems, 1);
+		desiredMaximumConcurrentWorkItems = std::max<SInt32>(totalProcessorCoresCount + maximumConcurrentWorkItems, 1);
 	else
 		// Didn't request anything.  Weird.
 		desiredMaximumConcurrentWorkItems = 1;
