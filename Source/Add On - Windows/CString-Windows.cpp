@@ -75,7 +75,8 @@ CString::CString(const char* chars, Length length, Encoding encoding) : CHashabl
 	// Check length
 	if (length > 0) {
 		// Convert
-		int	count = ::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, length, &mString[0], length);
+		int	count =
+				::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, length, &mString[0], length);
 		AssertFailIf(count == 0);
 	}
 }
@@ -93,9 +94,13 @@ CString::CString(const char* chars, Encoding encoding) : CHashable()
 	// Create string
 	mString.resize(length);
 
-	// Convert
-	int	count = ::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, length, &mString[0], length);
-	AssertFailIf(count == 0);
+	// Check length
+	if (length > 0) {
+		// Convert
+		int	count =
+				::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, length, &mString[0], length);
+		AssertFailIf(count == 0);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -630,7 +635,7 @@ return CString::mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CString::components(const CString& delimiterString) const
+TArray<CString> CString::components(const CString& delimiterString, bool includeEmptyComponents) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -640,8 +645,10 @@ TArray<CString> CString::components(const CString& delimiterString) const
 	size_t	startOffset = 0;
 	size_t	endOffset = mString.find(delimiterString.mString.c_str(), startOffset);
 	while (endOffset != std::basic_string<TCHAR>::npos) {
-		// Add to array
-		array += CString(mString.substr(startOffset, endOffset - startOffset).c_str());
+		// Check if adding
+		if (includeEmptyComponents || (endOffset > startOffset))
+			// Add to array
+			array += CString(mString.substr(startOffset, endOffset - startOffset).c_str());
 
 		// Find next
 		startOffset = endOffset + delimiterString.mString.length();

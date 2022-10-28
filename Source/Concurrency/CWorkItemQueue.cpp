@@ -485,7 +485,7 @@ CWorkItemQueue::CWorkItemQueue(SInt32 maximumConcurrentWorkItems)
 	} else
 		// Other Work Item Queue
 		mInternals =
-				new CWorkItemQueueInternals(maximumConcurrentWorkItems,
+				new CWorkItemQueueInternals(desiredMaximumConcurrentWorkItems,
 						OR<CWorkItemQueueInternals>(*main().mInternals));
 }
 

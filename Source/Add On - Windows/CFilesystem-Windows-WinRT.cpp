@@ -46,8 +46,33 @@ using namespace winrt::Windows::Storage;
 TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return TVResult<SFoldersFiles>(SError::mUnimplemented);
+	// Catch errors
+	try {
+		// Setup
+		auto	storageFolder =
+						StorageFolder::GetFolderFromPathAsync(folder.getFilesystemPath().getString().getOSString())
+								.get();
+
+		// Get folders
+		TNArray<CFolder>	folders;
+		for (auto const& childStorageFolder : storageFolder.GetFoldersAsync().get())
+			// Add folder
+			folders += CFolder(CFilesystemPath(childStorageFolder.Path().data()));
+
+		// Get files
+		TNArray<CFile>	files;
+		for (auto const& storageFile : storageFolder.GetFilesAsync().get())
+			// Add file
+			files += CFile(CFilesystemPath(storageFile.Path().data()));
+
+		return TVResult<SFoldersFiles>(SFoldersFiles(folders, files));
+	} catch (const hresult_error& exception) {
+		// Error
+		SError	error = SErrorFromHRESULTError(exception);
+		CFilesystemReportErrorFileFolderX1(error, "getting files", folder);
+
+		return TVResult<SFoldersFiles>(error);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -98,7 +123,7 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 		SError	error = SErrorFromHRESULTError(exception);
 		CFilesystemReportErrorFileFolderX1(error, "getting files", folder);
 
-		return TVResult<TArray<CFile>>(error);
+		return TVResult<TArray<CFile> >(error);
 	}
 }
 
