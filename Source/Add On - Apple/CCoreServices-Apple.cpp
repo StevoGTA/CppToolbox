@@ -27,14 +27,14 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 		char	line[256];
 
 		::fgets(line, sizeof(line), file);
-		CString	productName = CString(line).components(CString::mTab)[1].removingLeadingAndTrailingWhitespace();
+		CString	productName = CString(line).components(CString::mTab, false)[1].removingLeadingAndTrailingWhitespace();
 
 		::fgets(line, sizeof(line), file);
 		TArray<CString>	components =
-								CString(line).components(CString::mTab)[1].components(CString::mPeriod);
+								CString(line).components(CString::mTab, false)[1].components(CString::mPeriod);
 
 		::fgets(line, sizeof(line), file);
-		CString	buildVersion = CString(line).components(CString::mTab)[1].removingLeadingAndTrailingWhitespace();
+		CString	buildVersion = CString(line).components(CString::mTab, false)[1].removingLeadingAndTrailingWhitespace();
 
 		sVersionInfo =
 				new SSystemVersionInfo(productName, components[0].getUInt32(), components[1].getUInt32(),
