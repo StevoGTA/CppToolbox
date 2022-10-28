@@ -59,7 +59,8 @@ struct SMediaSource {
 
 	// Procs
 	typedef	I<ImportResult>		(*ImportProc)(const I<CRandomAccessDataSource>& randomAccessDataSource,
-										const OI<CAppleResourceManager>& appleResourceManager, UInt32 options);
+										const OI<CAppleResourceManager>& appleResourceManager,
+										TNArray<CString>& messages, UInt32 options);
 
 								// Lifecycle methods
 								SMediaSource(OSType id, const CString& name, const TArray<CString>& extensions,
@@ -79,8 +80,10 @@ struct SMediaSource {
 	const	TArray<CString>&	getExtensions() const
 									{ return mExtensions; }
 			I<ImportResult>		import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-										const OI<CAppleResourceManager>& appleResourceManager, UInt32 options) const
-									{ return mImportProc(randomAccessDataSource, appleResourceManager, options); }
+										const OI<CAppleResourceManager>& appleResourceManager,
+										TNArray<CString>& messages, UInt32 options) const
+									{ return mImportProc(randomAccessDataSource, appleResourceManager, messages,
+											options); }
 
 	// Properties
 	private:
@@ -128,7 +131,8 @@ class CMediaSourceRegistry {
 				TVResult<ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const CString& extension,
 												const OI<CAppleResourceManager>& appleResourceManager,
-												UInt32 options = SMediaSource::kOptionsNone) const;
+												TNArray<CString>& messages, UInt32 options = SMediaSource::kOptionsNone)
+												const;
 
 	private:
 										// Lifecycle methods

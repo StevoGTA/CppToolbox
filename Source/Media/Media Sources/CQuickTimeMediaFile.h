@@ -26,7 +26,7 @@ class CQuickTimeMediaFile {
 																			randomAccessDataSource,
 																	const OI<CAppleResourceManager>&
 																			appleResourceManager,
-																	UInt32 options);
+																	TNArray<CString>& messages, UInt32 options);
 				TArray<SMediaPacketAndLocation>				composePacketAndLocations(const Internals& internals,
 																	const OV<UInt32>& framesPerPacket = OV<UInt32>(),
 																	const OV<UInt32>& bytesPerPacket = OV<UInt32>())

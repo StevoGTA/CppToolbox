@@ -43,7 +43,7 @@ OI<CChunkReader> CWAVEMediaFile::createChunkReader(const I<CRandomAccessDataSour
 //----------------------------------------------------------------------------------------------------------------------
 I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 		const CChunkReader::ChunkInfo& formatChunkInfo, const CChunkReader::ChunkInfo& dataChunkInfo,
-		const TArray<CChunkReader::ChunkInfo>& otherChunkInfos, UInt32 options) const
+		const TArray<CChunkReader::ChunkInfo>& otherChunkInfos, TNArray<CString>& messages, UInt32 options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Process Format chunk
@@ -161,7 +161,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 
 //----------------------------------------------------------------------------------------------------------------------
 I<SMediaSource::ImportResult> CWAVEMediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options)
+		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -209,5 +209,5 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const I<CRandomAccessDataSo
 		// Did not get requisite format chunk or data chunk
 		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mInvalidWAVEFileError));
 
-	return waveMediaFile->import(*chunkReader, *formatChunkInfo, *dataChunkInfo, otherChunkInfos, options);
+	return waveMediaFile->import(*chunkReader, *formatChunkInfo, *dataChunkInfo, otherChunkInfos, messages, options);
 }

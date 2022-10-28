@@ -94,7 +94,7 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 				void	queue(const TArray<CString>& strings)
 							{
 								// Add
-								mStrings += TNArray<CString>(strings, (TNArray<CString>::MappingProc) sStringWithDate);
+								mStrings += TNArray<CString>(strings, (TNArray<CString>::MapProc) sStringWithDate);
 
 								// Signal
 								mWriteSemaphore.signal();
@@ -285,7 +285,7 @@ void CLogServices::logMessages(const TArray<CString>& strings)
 		(*sPrimaryLogFile).logMessages(strings);
 
 	// Setup
-	TNArray<CString>	stringsWithDates(strings, (TNArray<CString>::MappingProc) sStringWithDate);
+	TNArray<CString>	stringsWithDates(strings, (TNArray<CString>::MapProc) sStringWithDate);
 	CString				stringsWithDatesString(stringsWithDates, CString::mPlatformDefaultNewline);
 
 	// Check if passing to output/console

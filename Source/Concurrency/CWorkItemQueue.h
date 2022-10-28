@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CSet.h"
 #include "CWorkItem.h"
 #include "TWrappers.h"
 
@@ -103,6 +104,9 @@ class CWorkItemQueue {
 									}
 
 				void			cancel(CWorkItem& workItem);
+				void			cancel(const TSet<CString>& workItemIDs);
+				void			cancelAll(const TSet<CString>& workItemReferences);
+				void			cancelAll();
 
 				void			pause();
 				void			resume();

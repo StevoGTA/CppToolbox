@@ -79,10 +79,10 @@ class CMediaTrackInfos {
 										{
 											return SMediaTracks(
 													TNArray<CAudioTrack>(mAudioTrackInfos,
-															(TNArray<CAudioTrack>::MappingProc)
+															(TNArray<CAudioTrack>::MapProc)
 																	AudioTrackInfo::getMediaTrack),
 													TNArray<CVideoTrack>(mVideoTrackInfos,
-															(TNArray<CVideoTrack>::MappingProc)
+															(TNArray<CVideoTrack>::MapProc)
 																	VideoTrackInfo::getMediaTrack));
 										}
 			UniversalTimeInterval	getDuration() const

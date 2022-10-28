@@ -589,7 +589,7 @@ struct CMPEG4MediaFile::Internals {
 
 //----------------------------------------------------------------------------------------------------------------------
 I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options)
+		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -977,10 +977,10 @@ TVResult<CData> CMPEG4MediaFile::getDecompressionData(const Internals& internals
 
 //----------------------------------------------------------------------------------------------------------------------
 static I<SMediaSource::ImportResult> sImport(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options)
+		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CMPEG4MediaFile::create()->import(randomAccessDataSource, appleResourceManager, options);
+	return CMPEG4MediaFile::create()->import(randomAccessDataSource, appleResourceManager, messages, options);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

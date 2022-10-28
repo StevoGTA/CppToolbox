@@ -55,6 +55,13 @@ class CProgress {
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CItemsProgress
+/*
+	Always has a completed items count.
+	Once there is a total items count, the CProgress value will be set to the ratio.
+
+	If you want to indicate an indeterminate state, delay setting total items count until you are ready for actual,
+		determinate progress.
+ */
 
 class CItemsProgressInternals;
 class CItemsProgress : public CProgress {

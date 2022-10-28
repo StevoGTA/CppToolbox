@@ -76,7 +76,7 @@ OI<CAppleResourceManager> CFilesystem::getAppleResourceManager(const CFile& file
 																new CMappedFileDataSource(*resourceFile)));
 		if (appleResourceManager.hasInstance())
 			// Success
-			return OI<CAppleResourceManager>(*appleResourceManager);
+			return appleResourceManager.getOptionalInstance();
 	}
 
 	// Try ._ file
@@ -98,7 +98,7 @@ OI<CAppleResourceManager> CFilesystem::getAppleResourceManager(const CFile& file
 																		new CDataDataSource(*resourceFork)));
 				if (appleResourceManager.hasInstance())
 					// Success
-					return OI<CAppleResourceManager>(*appleResourceManager);
+					return appleResourceManager.getOptionalInstance();
 			}
 		}
 	}

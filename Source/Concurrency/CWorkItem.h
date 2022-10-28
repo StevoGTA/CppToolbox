@@ -4,11 +4,13 @@
 
 #pragma once
 
+#include "CUUID.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CWorkItem
 
 class CWorkItemInternals;
-class CWorkItem {
+class CWorkItem : public CHashable {
 	// Enums
 	public:
 		enum Priority {
@@ -24,33 +26,51 @@ class CWorkItem {
 			kStateCancelled,
 		};
 
+	// Types
+	typedef	void	(*CompletedProc)(void* userData);
+	typedef	void	(*CancelledProc)(void* userData);
+
 	// Methods
 	public:
-						// Lifecycle methods
-						CWorkItem();
-		virtual			~CWorkItem();
+										// Lifecycle methods
+										CWorkItem(const CString& id = CUUID().getBase64String(),
+												const OV<CString>& reference = OV<CString>(),
+												CompletedProc completedProc = nil, CancelledProc cancelledProc = nil,
+												void* userData = nil);
+		virtual							~CWorkItem();
 
-						// Instance methods
-				State	getState() const;
-				bool	isWaiting() const
-							{ return getState() == kStateWaiting; }
-				bool	isActive() const
-							{ return getState() == kStateActive; }
-				bool	isCompleted() const
-							{ return getState() == kStateCompleted; }
-				bool	isCancelled() const
-							{ return getState() == kStateCancelled; }
+										// CEquatable methods
+						bool			operator==(const CEquatable& other) const
+											{ return getID() == ((const CWorkItem&) other).getID(); }
 
-						// Subclass methods
-		virtual	void	perform() = 0;
+										// CHashable methods
+						void			hashInto(CHasher& hasher) const
+											{ getID().hashInto(hasher); }
 
-						// Internal-use only methods
-				void	transitionTo(State state);
+										// Instance methods
+				const	CString&		getID() const;
+				const	OV<CString>&	getReference() const;
+
+						State			getState() const;
+						bool			isWaiting() const
+											{ return getState() == kStateWaiting; }
+						bool			isActive() const
+											{ return getState() == kStateActive; }
+						bool			isCompleted() const
+											{ return getState() == kStateCompleted; }
+						bool			isCancelled() const
+											{ return getState() == kStateCancelled; }
+
+										// Subclass methods
+		virtual			void			perform() = 0;
+
+										// Internal-use only methods
+						void			transitionTo(State state);
 
 	protected:
-						// Subclass methods
-		virtual	void	completed() const {}
-		virtual	void	cancelled() const {}
+										// Subclass methods
+		virtual			void			completed() const {}
+		virtual			void			cancelled() const {}
 
 	// Properties
 	private:

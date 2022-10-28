@@ -7,65 +7,163 @@
 #include "ConcurrencyPrimitives.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: TLockingValue
+// MARK: SLockingBoolean
 
-template <typename T> class TLockingValue : public CArray {
+struct SLockingBoolean {
 	// Methods
 	public:
-					// Lifecycle methods
-					TLockingValue(T initialValue) : mValueInternal(initialValue) {}
+				// Lifecycle methods
+				SLockingBoolean(bool initialValue = false) : mValueInternal(initialValue) {}
 
-					// Instance methods
-		void		set(T value)
-						{
-							// Lock
-							mLock.lockForWriting();
+				// Instance methods
+		void	set(bool value)
+					{
+						// Lock
+						mLock.lockForWriting();
 
-							// Update value
-							mValueInternal = value;
+						// Update value
+						mValueInternal = value;
 
-							// Check if have semaphore
-							if (mSemaphore.hasInstance())
-								// Signal
-								mSemaphore->signal();
+						// Check if have semaphore
+						if (mSemaphore.hasInstance())
+							// Signal
+							mSemaphore->signal();
 
-							// Unlock
-							mLock.unlockForWriting();
-						}
+						// Unlock
+						mLock.unlockForWriting();
+					}
 
-		void		wait(T value)
-						{
-							// Setup
-							mSemaphore = OI<CSemaphore>(new CSemaphore());
+		void	wait(bool value = true)
+					{
+						// Setup
+						mSemaphore = OI<CSemaphore>(new CSemaphore());
 
-							// Check value
-							while (**this != value)
-								// Wait
-								mSemaphore->waitFor();
+						// Check value
+						while (**this != value)
+							// Wait
+							mSemaphore->waitFor();
 
-							// Cleanup
-							mSemaphore = OI<CSemaphore>();
-						}
+						// Cleanup
+						mSemaphore = OI<CSemaphore>();
+					}
 
-			T		operator*()
-						{
-							// Setup
-							T value;
+		bool	operator*()
+					{
+						// Setup
+						bool value;
 
-							// Lock
-							mLock.lockForReading();
+						// Lock
+						mLock.lockForReading();
 
-							// Copy value
-							value = mValueInternal;
+						// Copy value
+						value = mValueInternal;
 
-							// Unlock
-							mLock.unlockForReading();
+						// Unlock
+						mLock.unlockForReading();
 
-							return value;
-						}
-			void	operator=(T value)
-						{ set(value); }
+						return value;
+					}
+		void	operator=(bool value)
+					{ set(value); }
 
+	// Properties
+	private:
+		CReadPreferringLock	mLock;
+		bool				mValueInternal;
+		OI<CSemaphore>		mSemaphore;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TLockingNumeric
+
+template <typename T> struct TLockingNumeric {
+	// Methods
+	public:
+				// Lifecycle methods
+				TLockingNumeric(T initialValue = 0) : mValueInternal(initialValue) {}
+
+				// Instance methods
+		void	set(T value)
+					{
+						// Lock
+						mLock.lockForWriting();
+
+						// Update value
+						mValueInternal = value;
+
+						// Check if have semaphore
+						if (mSemaphore.hasInstance())
+							// Signal
+							mSemaphore->signal();
+
+						// Unlock
+						mLock.unlockForWriting();
+					}
+		void	add(T value)
+					{
+						// Lock
+						mLock.lockForWriting();
+
+						// Update value
+						mValueInternal += value;
+
+						// Check if have semaphore
+						if (mSemaphore.hasInstance())
+							// Signal
+							mSemaphore->signal();
+
+						// Unlock
+						mLock.unlockForWriting();
+					}
+		void	subtract(T value)
+					{
+						// Lock
+						mLock.lockForWriting();
+
+						// Update value
+						mValueInternal -= value;
+
+						// Check if have semaphore
+						if (mSemaphore.hasInstance())
+							// Signal
+							mSemaphore->signal();
+
+						// Unlock
+						mLock.unlockForWriting();
+					}
+
+		void	wait(T value = 0)
+					{
+						// Setup
+						mSemaphore = OI<CSemaphore>(new CSemaphore());
+
+						// Check value
+						while (**this != value)
+							// Wait
+							mSemaphore->waitFor();
+
+						// Cleanup
+						mSemaphore = OI<CSemaphore>();
+					}
+
+		T		operator*()
+					{
+						// Setup
+						T value;
+
+						// Lock
+						mLock.lockForReading();
+
+						// Copy value
+						value = mValueInternal;
+
+						// Unlock
+						mLock.unlockForReading();
+
+						return value;
+					}
+		void	operator=(T value)
+					{ set(value); }
 
 	// Properties
 	private:

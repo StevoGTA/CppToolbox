@@ -65,7 +65,7 @@ const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, const CString& extension,
-		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options) const
+		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -83,7 +83,7 @@ TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 			// Found by extension
 			I<SMediaSource::ImportResult>	importResult =
 													mediaSource.import(randomAccessDataSource, appleResourceManager,
-															options);
+															messages, options);
 			switch (importResult->getResult()) {
 				case SMediaSource::ImportResult::kSuccess:
 					// Success
@@ -110,7 +110,7 @@ TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		// Query tracks
 		I<SMediaSource::ImportResult>	importResult =
 												mediaSource.import(randomAccessDataSource, appleResourceManager,
-														options);
+														messages, options);
 		switch (importResult->getResult()) {
 			case SMediaSource::ImportResult::kSuccess:
 				// Success

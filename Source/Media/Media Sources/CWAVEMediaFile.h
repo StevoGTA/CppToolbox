@@ -21,7 +21,7 @@ class CWAVEMediaFile {
 		static	I<CWAVEMediaFile>				create();
 		static	I<SMediaSource::ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
 														const OI<CAppleResourceManager>& appleResourceManager,
-														UInt32 options);
+														TNArray<CString>& messages, UInt32 options);
 
 	protected:
 												// Lifecycle methods
@@ -38,7 +38,7 @@ class CWAVEMediaFile {
 														const CChunkReader::ChunkInfo& formatChunkInfo,
 														const CChunkReader::ChunkInfo& dataChunkInfo,
 														const TArray<CChunkReader::ChunkInfo>& otherChunkInfos,
-														UInt32 options) const;
+														TNArray<CString>& messages, UInt32 options) const;
 
 	// Properties
 	protected:

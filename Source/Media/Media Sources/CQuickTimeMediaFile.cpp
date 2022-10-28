@@ -735,7 +735,7 @@ struct CQuickTimeMediaFile::Internals {
 
 //----------------------------------------------------------------------------------------------------------------------
 I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options)
+		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -1276,10 +1276,10 @@ TVResult<CData> CQuickTimeMediaFile::getAudioDecompressionData(const Internals& 
 
 //----------------------------------------------------------------------------------------------------------------------
 static I<SMediaSource::ImportResult> sImport(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, UInt32 options)
+		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CQuickTimeMediaFile::create()->import(randomAccessDataSource, appleResourceManager, options);
+	return CQuickTimeMediaFile::create()->import(randomAccessDataSource, appleResourceManager, messages, options);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -26,7 +26,7 @@ class CMPEG4MediaFile {
 																					randomAccessDataSource,
 																			const OI<CAppleResourceManager>&
 																					appleResourceManager,
-																			UInt32 options);
+																			TNArray<CString>& messages, UInt32 options);
 						TArray<SMediaPacketAndLocation>				composePacketAndLocations(
 																			const Internals& internals) const;
 

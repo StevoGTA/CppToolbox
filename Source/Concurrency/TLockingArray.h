@@ -10,201 +10,174 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TNLockingArray
 
-template <typename T> class TNLockingArray : public CArray {
+template <typename T> class TNLockingArray : public TNArray<T> {
 	// Methods
 	public:
-												// Lifecycle methods
-												TNLockingArray(CArray::ItemCount initialCapacity = 0) :
-													CArray(initialCapacity, (CArray::CopyProc) copy, dispose)
-													{}
-												TNLockingArray(const T& item) :
-													CArray(0, (CArray::CopyProc) copy, dispose)
-													{ CArray::add(new T(item), false); }
-												TNLockingArray(const TArray<T>& array) : CArray(array) {}
+								// Lifecycle methods
+								TNLockingArray() : TNArray<T>() {}
+								TNLockingArray(const T& item) : TNArray<T>(item) {}
+								TNLockingArray(const TArray<T>& array) : TNArray<T>(array) {}
 
-												// CArray methods
-						CArray::ItemCount		getCount() const
-													{
-														// Query under lock
-														mLock.lockForReading();
-														CArray::ItemCount	count = CArray::getCount();
-														mLock.unlockForReading();
+								// CArray methods
+		CArray::ItemCount		getCount() const
+									{
+										// Query under lock
+										mLock.lockForReading();
+										CArray::ItemCount	count = CArray::getCount();
+										mLock.unlockForReading();
 
-														return count;
-													}
+										return count;
+									}
 
-						TNLockingArray<T>&		add(const T& item)
-													{
-														// Add under lock
-														mLock.lockForWriting();
-														CArray::add(new T(item));
-														mLock.unlockForWriting();
+		TNLockingArray<T>&		add(const T& item)
+									{
+										// Add under lock
+										mLock.lockForWriting();
+										TNArray<T>::add(item);
+										mLock.unlockForWriting();
 
-														return *this;
-													}
-						TNLockingArray<T>&		addFrom(const TArray<T>& array)
-													{
-														// Add all under lock
-														mLock.lockForWriting();
-														for (CArray::ItemIndex i = 0; i < array.getCount(); i++)
-															// Add
-															CArray::add(new T(array[i]));
-														mLock.unlockForWriting();
+										return *this;
+									}
+		TNLockingArray<T>&		addFrom(const TArray<T>& array)
+									{
+										// Add all under lock
+										mLock.lockForWriting();
+										TNArray<T>::addFrom(array);
+										mLock.unlockForWriting();
 
-														return *this;
-													}
+										return *this;
+									}
 
-						bool					contains(const T& item) const
-													{
-														// Check under lock
-														mLock.lockForReading();
-														bool	contains = getIndexOf(item).hasValue();
-														mLock.unlockForReading();
+		bool					contains(const T& item) const
+									{
+										// Check under lock
+										mLock.lockForReading();
+										bool	contains = TNArray<T>::contains(item);
+										mLock.unlockForReading();
 
-														return contains;
+										return contains;
+									}
 
-													}
+		T&						getAt(CArray::ItemIndex index) const
+									{
+										// Get under lock
+										mLock.lockForReading();
+										T&	item = TNArray<T>::getAt(index);
+										mLock.unlockForReading();
 
-				const	T&						getAt(CArray::ItemIndex index) const
-													{
-														// Get under lock
-														mLock.lockForReading();
-														const	T&	item = *((T*) getItemAt(index));
-														mLock.unlockForReading();
+										return item;
+									}
+		T&						getFirst() const
+									{
+										// Get under lock
+										mLock.lockForReading();
+										T&	item = TNArray<T>::getFirst();
+										mLock.unlockForReading();
 
-														return item;
-													}
-				const	T&						getFirst() const
-													{
-														// Get under lock
-														mLock.lockForReading();
-														const	T&	item = *((T*) CArray::getFirst());
-														mLock.unlockForReading();
+										return item;
+									}
+		T&						getLast() const
+									{
+										// Get under lock
+										mLock.lockForReading();
+										T&	item = TNArray<T>::getLast();
+										mLock.unlockForReading();
 
-														return item;
-													}
-				const	T&						getLast() const
-													{
-														// Get under lock
-														mLock.lockForReading();
-														const	T&	item = *((T*) CArray::getLast());
-														mLock.unlockForReading();
+										return item;
+									}
+		OV<CArray::ItemIndex>	getIndexOf(const T& item) const
+									{
+										// Query under lock
+										mLock.lockForReading();
+										OV<CArray::ItemIndex>	index = TNArray<T>::getIndexOf(item);
+										mLock.unlockForReading();
 
-														return item;
-													}
-						OV<CArray::ItemIndex>	getIndexOf(const T& item) const
-													{
-														// Query under lock
-														mLock.lockForReading();
-														OV<CArray::ItemIndex>	index;
-														for (CArray::ItemIndex i = 0; i < getCount(); i++) {
-															// Check if same
-															if (item == getAt(i))
-																// Match
-																index = i;
-																break;
-														}
-														mLock.unlockForReading();
+										return index;
+									}
 
-														return index;
-													}
+		TNLockingArray<T>&		insertAtIndex(const T& item, CArray::ItemIndex itemIndex)
+									{
+										// Insert under lock
+										mLock.lockForWriting();
+										TNArray<T>::insertAtIndex(new T(item), itemIndex);
+										mLock.unlockForWriting();
 
-						TNLockingArray<T>&		insertAtIndex(const T& item, CArray::ItemIndex itemIndex)
-													{
-														// Insert under lock
-														mLock.lockForWriting();
-														CArray::insertAtIndex(new T(item), itemIndex);
-														mLock.unlockForWriting();
+										return *this;
+									}
 
-														return *this;
-													}
+		TNLockingArray<T>&		remove(const T& item)
+									{
+										// Remove under lock
+										mLock.lockForWriting();
+										TNArray<T>::remove(item);
+										mLock.unlockForWriting();
 
-						TNLockingArray<T>&		remove(const T& item)
-													{
-														// Remove under lock
-														mLock.lockForWriting();
-														OV<CArray::ItemIndex>	index = getIndexOf(item);
-														if (index.hasValue())
-															// Remove
-															removeAtIndex(index);
-														mLock.unlockForWriting();
+										return *this;
+									}
+		TNLockingArray<T>&		removeFrom(const TArray<T>& array)
+									{
+										// Remove under lock
+										mLock.lockForWriting();
+										TNArray<T>::removeFrom(array);
+										mLock.unlockForWriting();
 
-														return *this;
-													}
-						TNLockingArray<T>&		removeFrom(const TArray<T>& array)
-													{
-														// Remove under lock
-														mLock.lockForWriting();
-														for (CArray::ItemIndex i = 0; i < array.getCount(); i++)
-															// Remove
-															remove(array[i]);
-														mLock.unlockForWriting();
+										return *this;
+									}
+		TNLockingArray<T>&		removeAtIndex(CArray::ItemIndex itemIndex)
+									{
+										// Remove under lock
+										mLock.lockForWriting();
+										TNArray<T>::removeAtIndex(itemIndex);
+										mLock.unlockForWriting();
 
-														return *this;
-													}
-						TNLockingArray<T>&		removeAtIndex(CArray::ItemIndex itemIndex)
-													{
-														// Remove under lock
-														mLock.lockForWriting();
-														CArray::removeAtIndex(itemIndex);
-														mLock.unlockForWriting();
+										return *this;
+									}
+		TNLockingArray<T>&		removeAll()
+									{
+										// Remove under lock
+										mLock.lockForWriting();
+										TNArray<T>::removeAll();
+										mLock.unlockForWriting();
 
-														return *this;
-													}
-						TNLockingArray<T>&		removeAll()
-													{
-														// Remove under lock
-														mLock.lockForWriting();
-														CArray::removeAll();
-														mLock.unlockForWriting();
+										return *this;
+									}
 
-														return *this;
-													}
+		T						popFirst()
+									{
+										// Perform under lock
+										mLock.lockForWriting();
+										T	item = TNArray<T>::popFirst();
+										mLock.unlockForWriting();
 
-				const	T						popFirst()
-													{
-														// Perform under lock
-														mLock.lockForWriting();
-														T	item = *((T*) CArray::getFirst());
-														CArray::removeAtIndex(0);
-														mLock.unlockForWriting();
+										return item;
+									}
 
-														return item;
-													}
+		TNLockingArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData),
+										void* userData = nil)
+									{
+										// Perform under lock
+										mLock.lockForWriting();
+										TNArray<T>::sort((CArray::CompareProc) compareProc, userData);
+										mLock.unlockForWriting();
 
-						TNLockingArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData),
-														void* userData = nil)
-													{
-														// Perform under lock
-														mLock.lockForWriting();
-														CArray::sort((CompareProc) compareProc, userData);
-														mLock.unlockForWriting();
+										return *this;
+									}
 
-														return *this;
-													}
-
-												// Instance methods
-				const	T&						operator[] (CArray::ItemIndex index) const
-													{ return *((T*) getItemAt(index)); }
-						TNLockingArray<T>&		operator+=(const T& item)
-													{ return add(item); }
-						TNLockingArray<T>&		operator+=(const TArray<T>& other)
-													{ return addFrom(other); }
-						TNLockingArray<T>&		operator+=(const TNLockingArray<T>& other)
-													{ return addFrom(other); }
-						TNLockingArray<T>&		operator-=(const T& item)
-													{ return remove(item); }
-						TNLockingArray<T>&		operator-=(const TArray<T>& other)
-													{ return removeFrom(other); }
-						TNLockingArray<T>&		operator-=(const TNLockingArray<T>& other)
-													{ return removeFrom(other); }
-
-	private:
-												// Class methods
-		static	T*								copy(CArray::ItemRef itemRef)
-													{ return new T(*((T*) itemRef)); }
-		static	void							dispose(CArray::ItemRef itemRef)
-													{ T* t = (T*) itemRef; Delete(t); }
+								// Instance methods
+		T&						operator[] (CArray::ItemIndex index) const
+									{ return getAt(index); }
+		TNLockingArray<T>&		operator+=(const T& item)
+									{ return add(item); }
+		TNLockingArray<T>&		operator+=(const TArray<T>& other)
+									{ return addFrom(other); }
+		TNLockingArray<T>&		operator+=(const TNLockingArray<T>& other)
+									{ return addFrom(other); }
+		TNLockingArray<T>&		operator-=(const T& item)
+									{ return remove(item); }
+		TNLockingArray<T>&		operator-=(const TArray<T>& other)
+									{ return removeFrom(other); }
+		TNLockingArray<T>&		operator-=(const TNLockingArray<T>& other)
+									{ return removeFrom(other); }
 
 	// Properties
 	private:

@@ -11,10 +11,21 @@
 
 class CWorkItemInternals {
 	public:
-		CWorkItemInternals() : mState(CWorkItem::kStateWaiting) {}
- 
-		CWorkItem::State	mState;
-		CLock				mStateLock;
+		CWorkItemInternals(const CString& id, const OV<CString>& reference, CWorkItem::CompletedProc completedProc,
+				CWorkItem::CancelledProc cancelledProc, void* userData) :
+			mID(id), mReference(reference), mCompletedProc(completedProc), mCancelledProc(cancelledProc),
+					mUserData(userData),
+					mState(CWorkItem::kStateWaiting)
+			{}
+
+ 		CString						mID;
+ 		OV<CString>					mReference;
+ 		CWorkItem::CompletedProc	mCompletedProc;
+ 		CWorkItem::CancelledProc	mCancelledProc;
+ 		void*						mUserData;
+
+		CWorkItem::State			mState;
+		CLock						mStateLock;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -24,10 +35,11 @@ class CWorkItemInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CWorkItem::CWorkItem()
+CWorkItem::CWorkItem(const CString& id, const OV<CString>& reference, CompletedProc completedProc,
+		CancelledProc cancelledProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CWorkItemInternals();
+	mInternals = new CWorkItemInternals(id, reference, completedProc, cancelledProc, userData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -38,6 +50,20 @@ CWorkItem::~CWorkItem()
 }
 
 // MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+const CString& CWorkItem::getID() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mID;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const OV<CString>& CWorkItem::getReference() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mReference;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 CWorkItem::State CWorkItem::getState() const
@@ -66,8 +92,27 @@ void CWorkItem::transitionTo(State state)
 	if (didChangeState)
 		// Check state
 		switch (mInternals->mState) {
-			case kStateCompleted:	completed();	break;
-			case kStateCancelled:	cancelled();	break;
-			default:								break;
+			case kStateCompleted:
+				// Completed
+				if (mInternals->mCompletedProc != nil)
+					// Call proc
+					mInternals->mCompletedProc(mInternals->mUserData);
+				else
+					// Call subclass
+					completed();
+				break;
+
+			case kStateCancelled:
+				// Cancelled
+				if (mInternals->mCancelledProc != nil)
+					// Call proc
+					mInternals->mCancelledProc(mInternals->mUserData);
+				else
+					// Call subclass
+					cancelled();
+				break;
+
+			default:
+				break;
 		}
 }

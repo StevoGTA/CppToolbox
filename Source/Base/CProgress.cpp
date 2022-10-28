@@ -165,7 +165,7 @@ void CItemsProgress::addCompletedItemsCount(UInt32 itemsCount)
 	// Update
 	mInternals->mCompletedItemsCount += itemsCount;
 
-	// Check if have total items (no idea why not!)
+	// Check if have total items
 	if (mInternals->mTotalItemsCount.hasValue())
 		// Update value
 		setValue(OV<Float32>((Float32) mInternals->mCompletedItemsCount / (Float32) *mInternals->mTotalItemsCount));

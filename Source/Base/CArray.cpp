@@ -470,23 +470,6 @@ CArray& CArray::removeAtIndex(ItemIndex itemIndex)
 	return *this;
 }
 
-////----------------------------------------------------------------------------------------------------------------------
-//CArray& CArray::removeFrom(const CArray& other)
-////----------------------------------------------------------------------------------------------------------------------
-//{
-//	// Iterate all in the other
-//	for (ItemIndex otherItemIndex = 0; otherItemIndex < other.mInternals->mCount; otherItemIndex++) {
-//		// Check if other item is in local storage
-//		ItemRef			otherItemRef = other.mInternals->mItemRefs[otherItemIndex];
-//		OV<ItemIndex>	itemIndex = getIndexOf(otherItemRef);
-//		if (itemIndex.hasValue())
-//			// Remove
-//			mInternals = mInternals->removeAtIndex(*itemIndex, true);
-//	}
-//
-//	return *this;
-//}
-
 //----------------------------------------------------------------------------------------------------------------------
 CArray& CArray::removeAll()
 //----------------------------------------------------------------------------------------------------------------------
@@ -566,7 +549,7 @@ CArray CArray::sorted(CompareProc compareProc, void* userData) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CArray CArray::filtered(IsIncludedProc isIncludedProc, void* userData) const
+CArray CArray::filtered(IsMatchProc isMatchProc, void* userData) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -575,7 +558,7 @@ CArray CArray::filtered(IsIncludedProc isIncludedProc, void* userData) const
 	// Iterate all item refs
 	for (ItemIndex i = 0; i < mInternals->mCount; i++) {
 		// Call proc
-		if (isIncludedProc(mInternals->mItemRefs[i], userData))
+		if (isMatchProc(mInternals->mItemRefs[i], userData))
 			// Included
 			array.add(mInternals->mItemRefs[i]);
 	}
