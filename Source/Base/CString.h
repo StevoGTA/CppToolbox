@@ -350,7 +350,7 @@ class CString : public CHashable {
 						CString			operator+(const CString& other) const;
 												
 										// Class methods
-		static			bool			compare(CString* const string1, CString* const string2, void* compareFlags);
+		static			bool			compare(const CString& string1, const CString& string2, void* compareFlags);
 
 		static			CString			make(OSStringType format, ...);
 		static			CString			make(OSStringType format, va_list args);
@@ -372,10 +372,12 @@ class CString : public CHashable {
 		static	const	CString		mComma;
 		static	const	CString		mDoubleQuotes;
 		static	const	CString		mEqualSign;
+		static	const	CString		mHyphen;
 		static	const	CString		mPeriod;
 		static	const	CString		mSpace;
 		static	const	CString		mSpaceX4;
 		static	const	CString		mTab;
+		static	const	CString		mUnderscore;
 
 		static	const	CString		mNewline;
 		static	const	CString		mLinefeed;

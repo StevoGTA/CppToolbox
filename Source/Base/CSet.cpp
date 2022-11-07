@@ -15,9 +15,6 @@ struct SSetItemInfo {
 			SSetItemInfo(UInt32 hashValue, const CHashable& hashable) :
 				mHashValue(hashValue), mHashable(hashable), mNextItemInfo(nil)
 				{}
-			SSetItemInfo(const SSetItemInfo& other) :
-				mHashValue(other.mHashValue), mHashable(other.mHashable), mNextItemInfo(nil)
-				{}
 
 			// Instance methods
 	bool	doesMatch(UInt32 hashValue, const CHashable& hashable)
@@ -67,9 +64,10 @@ struct CSetIteratorInfo : public CIterator::Info {
 
 class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 	public:
-										CSetInternals(bool ownsItems) :
+										CSetInternals(CSet::CopyProc copyProc, CSet::DisposeProc disposeProc) :
 											TCopyOnWriteReferenceCountable(),
-													mOwnsItems(ownsItems), mCount(0), mReference(0), mItemInfosCount(16)
+													mCopyProc(copyProc), mDisposeProc(disposeProc),
+													mCount(0), mReference(0), mItemInfosCount(16)
 											{
 												mItemInfos =
 														(SSetItemInfo**)
@@ -77,12 +75,10 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 											}
 										CSetInternals(const CSetInternals& other) :
 											TCopyOnWriteReferenceCountable(),
-													mOwnsItems(other.mOwnsItems), mCount(other.mCount), mReference(0),
+													mCopyProc(other.mCopyProc), mDisposeProc(other.mDisposeProc),
+													mReference(0),
 													mItemInfosCount(other.mItemInfosCount)
 											{
-												// Ensure we do not own items
-												AssertFailIf(mOwnsItems && (mCount > 0));
-
 												// Finish setup
 												mItemInfos =
 														(SSetItemInfo**)
@@ -94,17 +90,22 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 													SSetItemInfo*	setInternalsItemInfo = nil;
 
 													while (itemInfo != nil) {
+														// Clone
+														SSetItemInfo*	setItemInfo =
+																				new SSetItemInfo(itemInfo->mHashValue,
+																						(mCopyProc != nil) ?
+																								*mCopyProc(itemInfo->mHashable) :
+																								itemInfo->mHashable);
+
 														// Check for first in the linked list
 														if (setInternalsItemInfo == nil) {
 															// First in this linked list
-															mItemInfos[i] = new SSetItemInfo(*itemInfo);
+															mItemInfos[i] = setItemInfo;
 															setInternalsItemInfo = mItemInfos[i];
 														} else {
 															// Next one in this linked list
-															setInternalsItemInfo->mNextItemInfo =
-																	new SSetItemInfo(*itemInfo);
-															setInternalsItemInfo =
-																	setInternalsItemInfo->mNextItemInfo;
+															setInternalsItemInfo->mNextItemInfo = setItemInfo;
+															setInternalsItemInfo = setInternalsItemInfo->mNextItemInfo;
 														}
 													}
 												}
@@ -116,7 +117,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 													// Check if have an item info
 													if (mItemInfos[i] != nil)
 														// Remove this chain
-														remove(mItemInfos[i], mOwnsItems);
+														remove(mItemInfos[i]);
 												}
 
 												::free(mItemInfos);
@@ -128,8 +129,13 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 												CSetInternals*	setInternals = prepareForWrite();
 
 												// Setup
-												UInt32	hashValue = CHasher::getValueForHashable(hashable);
-												UInt32	index = hashValue & (setInternals->mItemInfosCount - 1);
+												UInt32			hashValue = CHasher::getValueForHashable(hashable);
+												UInt32			index = hashValue & (setInternals->mItemInfosCount - 1);
+												SSetItemInfo*	setItemInfo =
+																		new SSetItemInfo(hashValue,
+																				(mCopyProc != nil) ?
+																						*mCopyProc(hashable) :
+																						hashable);
 
 												// Find
 												SSetItemInfo*	previousItemInfo = nil;
@@ -146,20 +152,14 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 													// Did not find
 													if (previousItemInfo == nil)
 														// First one
-														setInternals->mItemInfos[index] =
-																new SSetItemInfo(hashValue, hashable);
+														setInternals->mItemInfos[index] = setItemInfo;
 													else
 														// Add to the end
-														previousItemInfo->mNextItemInfo =
-																new SSetItemInfo(hashValue, hashable);
+														previousItemInfo->mNextItemInfo = setItemInfo;
 
 													// Update info
 													setInternals->mCount++;
 													setInternals->mReference++;
-												} else if (setInternals->mOwnsItems) {
-													// Did not add
-													const	CHashable*	tempHashable = &hashable;
-													Delete(tempHashable);
 												}
 
 												return setInternals;
@@ -209,12 +209,10 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 														previousItemInfo->mNextItemInfo =
 																currentItemInfo->mNextItemInfo;
 
-													// Check if owns item
-													if (setInternals->mOwnsItems) {
+													// Check if have dispose proc
+													if (mDisposeProc != nil)
 														// Dispose
-														const	CHashable*	tempHashable = &currentItemInfo->mHashable;
-														Delete(tempHashable);
-													}
+														mDisposeProc(currentItemInfo->mHashable);
 
 													// Cleanup this one
 													Delete(currentItemInfo);
@@ -236,7 +234,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 													// Check if have an item info
 													if (setInternals->mItemInfos[i] != nil) {
 														// Remove this chain
-														remove(setInternals->mItemInfos[i], mOwnsItems);
+														remove(setInternals->mItemInfos[i]);
 
 														// Clear
 														setInternals->mItemInfos[i] = nil;
@@ -249,19 +247,17 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 
 												return setInternals;
 											}
-				void					remove(SSetItemInfo* itemInfo, bool ownsItems)
+				void					remove(SSetItemInfo* itemInfo)
 											{
 												// Check for next item info
 												if (itemInfo->mNextItemInfo != nil)
 													// Remove the next item info
-													remove(itemInfo->mNextItemInfo, ownsItems);
+													remove(itemInfo->mNextItemInfo);
 
-												// Check if owns item
-												if (ownsItems) {
+												// Check if have dispose proc
+												if (mDisposeProc != nil)
 													// Dispose
-													const	CHashable*	hashable = &itemInfo->mHashable;
-													Delete(hashable);
-												}
+													mDisposeProc(itemInfo->mHashable);
 
 												// Cleanup this one
 												Delete(itemInfo);
@@ -287,7 +283,8 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 																	&mItemInfos[iteratorInfo->mCurrentIndex]->mHashable;
 												}
 
-												return TIteratorS<CHashable>(firstValue, iteratorAdvance, *iteratorInfo);
+												return TIteratorS<CHashable>(firstValue, iteratorAdvance,
+														*iteratorInfo);
 											}
 
 		static	void*					iteratorAdvance(CIterator::Info& iteratorInfo)
@@ -328,12 +325,14 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 														(void*) &setIteratorInfo.mCurrentItemInfo->mHashable : nil;
 											}
 
-		bool			mOwnsItems;
-		CSet::ItemCount	mCount;
-		UInt32			mReference;
+		CSet::CopyProc		mCopyProc;
+		CSet::DisposeProc	mDisposeProc;
 
-		SSetItemInfo**	mItemInfos;
-		UInt32			mItemInfosCount;
+		CSet::ItemCount		mCount;
+		UInt32				mReference;
+
+		SSetItemInfo**		mItemInfos;
+		UInt32				mItemInfosCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -343,11 +342,11 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CSet::CSet(bool ownsItems)
+CSet::CSet(CopyProc copyProc, DisposeProc disposeProc)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CSetInternals(ownsItems);
+	mInternals = new CSetInternals(copyProc, disposeProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -369,11 +368,18 @@ CSet::~CSet()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CSet& CSet::add(const CHashable* hashable)
+CHashable& CSet::copy(const CHashable& hashable) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return (mInternals->mCopyProc != nil) ? *mInternals->mCopyProc(hashable) : (CHashable&) hashable;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CSet& CSet::insert(const CHashable& hashable)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add hashable
-	mInternals = mInternals->insert(*hashable);
+	mInternals = mInternals->insert(hashable);
 
 	return *this;
 }

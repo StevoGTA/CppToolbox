@@ -343,19 +343,20 @@ CColorRegistry::CColorRegistry(CNotificationCenter& notificationCenter, const CP
 	mInternals = new CColorRegistryInternals(notificationCenter, OI<CPreferences::Pref>(pref));
 
 	// Load from prefs
-	CDictionary	info = CPreferences::mDefault.getDictionary(pref);
+	OV<CDictionary>	info = CPreferences::mDefault.getDictionary(pref);
+	if (info.hasValue()) {
+		// Color sets
+		TArray<CDictionary>	colorSetInfos = info->getArrayOfDictionaries(CString(OSSTR("presets")));
+		for (CArray::ItemIndex i = 0; i < colorSetInfos.getCount(); i++)
+			// Add to color sets
+			mInternals->mColorSets += CColorSet(colorSetInfos[i]);
 
-	// Color sets
-	TArray<CDictionary>	colorSetInfos = info.getArrayOfDictionaries(CString(OSSTR("presets")));
-	for (CArray::ItemIndex i = 0; i < colorSetInfos.getCount(); i++)
-		// Add to color sets
-		mInternals->mColorSets += CColorSet(colorSetInfos[i]);
-
-	// Current color set
-	CDictionary	currentColorSetInfo = info.getDictionary(CString(OSSTR("currentColorSet")));
-	if (!currentColorSetInfo.isEmpty())
-		// Setup current color set
-		mInternals->mCurrentColorSet = OI<CColorSet>(CColorSet(currentColorSetInfo));
+		// Current color set
+		CDictionary	currentColorSetInfo = info->getDictionary(CString(OSSTR("currentColorSet")));
+		if (!currentColorSetInfo.isEmpty())
+			// Setup current color set
+			mInternals->mCurrentColorSet = OI<CColorSet>(CColorSet(currentColorSetInfo));
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

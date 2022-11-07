@@ -120,46 +120,46 @@ class CPreferences {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								CPreferences();
-								CPreferences(const Reference& reference);
-								~CPreferences();
+									// Lifecycle methods
+									CPreferences();
+									CPreferences(const Reference& reference);
+									~CPreferences();
 
-								// Instance methods
-		bool					hasValue(const Pref& pref);
+									// Instance methods
+		bool						hasValue(const Pref& pref);
 
-		TArray<CData>			getDataArray(const Pref& pref);
-		TArray<CDictionary>		getDictionaryArray(const Pref& pref);
-		TNumberArray<OSType>	getOSTypeArray(const Pref& pref);
-		CData					getData(const Pref& pref);
-		CDictionary				getDictionary(const Pref& pref);
-		CString					getString(const StringPref& pref);
-		Float32					getFloat32(const Float32Pref& pref);
-		Float64					getFloat64(const Float64Pref& pref);
-		SInt32					getSInt32(const SInt32Pref& pref);
-		UInt32					getUInt32(const UInt32Pref& pref);
-		UInt64					getUInt64(const UInt64Pref& pref);
-		UniversalTimeInterval	getUniversalTimeInterval(const UniversalTimeIntervalPref& pref);
+		OV<TArray<CData> >			getDataArray(const Pref& pref);
+		OV<TArray<CDictionary> >	getDictionaryArray(const Pref& pref);
+		OV<TNumberArray<OSType> >	getOSTypeArray(const Pref& pref);
+		OV<CData>					getData(const Pref& pref);
+		OV<CDictionary>				getDictionary(const Pref& pref);
+		CString						getString(const StringPref& pref);
+		Float32						getFloat32(const Float32Pref& pref);
+		Float64						getFloat64(const Float64Pref& pref);
+		SInt32						getSInt32(const SInt32Pref& pref);
+		UInt32						getUInt32(const UInt32Pref& pref);
+		UInt64						getUInt64(const UInt64Pref& pref);
+		UniversalTimeInterval		getUniversalTimeInterval(const UniversalTimeIntervalPref& pref);
 
-		void					set(const Pref& pref, const TArray<CData>& array);
-		void					set(const Pref& pref, const TArray<CDictionary>& array);
-		void					set(const Pref& pref, const TNumberArray<OSType>& array);
-		void					set(const Pref& pref, const CData& data);
-		void					set(const Pref& pref, const CDictionary& dictionary);
-		void					set(const StringPref& pref, const CString& string);
-		void					set(const Float32Pref& pref, Float32 value);
-		void					set(const Float64Pref& pref, Float64 value);
-		void					set(const SInt32Pref& pref, SInt32 value);
-		void					set(const UInt32Pref& pref, UInt32 value);
-		void					set(const UInt64Pref& pref, UInt64 value);
-		void					set(const UniversalTimeIntervalPref& pref, UniversalTimeInterval value);
+		void						set(const Pref& pref, const TArray<CData>& array);
+		void						set(const Pref& pref, const TArray<CDictionary>& array);
+		void						set(const Pref& pref, const TNumberArray<OSType>& array);
+		void						set(const Pref& pref, const CData& data);
+		void						set(const Pref& pref, const CDictionary& dictionary);
+		void						set(const StringPref& pref, const CString& string);
+		void						set(const Float32Pref& pref, Float32 value);
+		void						set(const Float64Pref& pref, Float64 value);
+		void						set(const SInt32Pref& pref, SInt32 value);
+		void						set(const UInt32Pref& pref, UInt32 value);
+		void						set(const UInt64Pref& pref, UInt64 value);
+		void						set(const UniversalTimeIntervalPref& pref, UniversalTimeInterval value);
 
-		void					remove(const Pref& pref);
+		void						remove(const Pref& pref);
 		
-		void					beginGroupSet();
-		void					endGroupSet();
+		void						beginGroupSet();
+		void						endGroupSet();
 
-		void					setAlternate(const Reference& reference);
+		void						setAlternate(const Reference& reference);
 
 	// Properties
 	public:

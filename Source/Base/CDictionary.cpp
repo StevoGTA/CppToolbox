@@ -102,8 +102,8 @@ class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictio
 	public:
 												// Lifecycle methods
 												CStandardDictionaryInternals(SValue::OpaqueCopyProc opaqueCopyProc,
-														SValue::OpaqueDisposeProc opaqueDisposeProc,
-														SValue::OpaqueEqualsProc opaqueEqualsProc);
+														SValue::OpaqueEqualsProc opaqueEqualsProc,
+														SValue::OpaqueDisposeProc opaqueDisposeProc);
 												CStandardDictionaryInternals(const CStandardDictionaryInternals& other);
 												~CStandardDictionaryInternals();
 
@@ -130,8 +130,8 @@ class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictio
 		static	void*							iteratorAdvance(IteratorInfo& iteratorInfo);
 
 		SValue::OpaqueCopyProc		mOpaqueCopyProc;
-		SValue::OpaqueDisposeProc	mOpaqueDisposeProc;
 		SValue::OpaqueEqualsProc	mOpaqueEqualsProc;
+		SValue::OpaqueDisposeProc	mOpaqueDisposeProc;
 
 		CDictionary::KeyCount		mCount;
 		SDictionaryItemInfo**		mItemInfos;
@@ -143,9 +143,9 @@ class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictio
 
 //----------------------------------------------------------------------------------------------------------------------
 CStandardDictionaryInternals::CStandardDictionaryInternals(SValue::OpaqueCopyProc opaqueCopyProc,
-		SValue::OpaqueDisposeProc opaqueDisposeProc, SValue::OpaqueEqualsProc opaqueEqualsProc) :
+		SValue::OpaqueEqualsProc opaqueEqualsProc, SValue::OpaqueDisposeProc opaqueDisposeProc) :
 	TDictionaryInternals(),
-			mOpaqueCopyProc(opaqueCopyProc), mOpaqueDisposeProc(opaqueDisposeProc), mOpaqueEqualsProc(opaqueEqualsProc),
+			mOpaqueCopyProc(opaqueCopyProc), mOpaqueEqualsProc(opaqueEqualsProc), mOpaqueDisposeProc(opaqueDisposeProc),
 			mCount(0), mItemInfosCount(16), mReference(0)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -156,8 +156,8 @@ CStandardDictionaryInternals::CStandardDictionaryInternals(SValue::OpaqueCopyPro
 //----------------------------------------------------------------------------------------------------------------------
 CStandardDictionaryInternals::CStandardDictionaryInternals(const CStandardDictionaryInternals& other) :
 	TDictionaryInternals(other),
-			mOpaqueCopyProc(other.mOpaqueCopyProc), mOpaqueDisposeProc(other.mOpaqueDisposeProc),
-			mOpaqueEqualsProc(other.mOpaqueEqualsProc),
+			mOpaqueCopyProc(other.mOpaqueCopyProc), mOpaqueEqualsProc(other.mOpaqueEqualsProc),
+					mOpaqueDisposeProc(other.mOpaqueDisposeProc),
 			mCount(other.mCount), mItemInfosCount(other.mItemInfosCount), mReference(0)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -481,7 +481,7 @@ class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryIn
 				CDictionaryInternals*			remove(const CString& key)
 													{
 														// Remove key
-														mProcs.removeKeys(TSet<CString>(key));
+														mProcs.removeKeys(TNSet<CString>(key));
 
 														return (CDictionaryInternals*) this;
 													}
@@ -551,14 +551,14 @@ const	CDictionary	CDictionary::mEmpty;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary::CDictionary(SValue::OpaqueCopyProc opaqueCopyProc, SValue::OpaqueDisposeProc opaqueDisposeProc,
-		SValue::OpaqueEqualsProc opaqueEqualsProc) : CEquatable()
+CDictionary::CDictionary(SValue::OpaqueCopyProc opaqueCopyProc, SValue::OpaqueEqualsProc opaqueEqualsProc,
+		SValue::OpaqueDisposeProc opaqueDisposeProc) : CEquatable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	mInternals =
-			(CDictionaryInternals*) new CStandardDictionaryInternals(opaqueCopyProc, opaqueDisposeProc,
-					opaqueEqualsProc);
+			(CDictionaryInternals*)
+					new CStandardDictionaryInternals(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -599,12 +599,12 @@ TSet<CString> CDictionary::getKeys() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TSet<CString>	keys;
+	TNSet<CString>	keys;
 
 	// Iterate all items
 	for (TIteratorS<Item> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance())
 		// Add key
-		keys.add(iterator.getValue().mKey);
+		keys.insert(iterator->mKey);
 
 	return keys;
 }
@@ -959,7 +959,7 @@ void CDictionary::remove(const TArray<CString>& keys)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove
-	mInternals = (CDictionaryInternals*) mInternals->remove(TSet<CString>(keys));
+	mInternals = (CDictionaryInternals*) mInternals->remove(TNSet<CString>(keys));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1038,7 +1038,7 @@ CDictionary& CDictionary::operator+=(const CDictionary& other)
 	// Iterate all items
 	for (TIteratorS<Item> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance())
 		// Set this value
-		mInternals->set(iterator.getValue().mKey, iterator.getValue().mValue);
+		mInternals->set(iterator->mKey, iterator->mValue);
 
 	return *this;
 }

@@ -119,25 +119,25 @@ template <typename T> class TNumberArray : public CArray {
 														// Add
 														CArray::add(new TNumber<T>(value));
 												}
-											TNumberArray(const CArray& array, MapProc mapProc) :
+											TNumberArray(const CArray& other, MapProc mapProc) :
 												CArray(0, (CArray::CopyProc) copy, dispose)
 												{
-													ItemCount	count = array.getCount();
+													ItemCount	count = other.getCount();
 													for (ItemIndex i = 0; i < count; i++)
-														CArray::add(mapProc(array.getItemAt(i)));
+														CArray::add(mapProc(other.getItemAt(i)));
 												}
-											TNumberArray(const TNumberArray<T>& array) : CArray(array) {}
+											TNumberArray(const TNumberArray<T>& other) : CArray(other) {}
 
 											// CArray methods
 				TNumberArray<T>&			add(T value)
 												{ CArray::add(new TNumber<T>(value)); return *this; }
-				TNumberArray<T>&			addFrom(const TNumberArray<T>& array)
+				TNumberArray<T>&			addFrom(const TNumberArray<T>& other)
 												{
 													// Iterate all
-													ItemCount	count = array.getCount();
+													ItemCount	count = other.getCount();
 													for (ItemIndex i = 0; i < count; i++)
 														// Add
-														CArray::add(CArray::copy(array.getItemAt(i)));
+														CArray::add(CArray::copy(other.getItemAt(i)));
 
 													return *this;
 												}
@@ -192,7 +192,7 @@ template <typename T> class TArray : public CArray {
 	// Methods
 	public:
 								// Lifecycle methods
-								TArray(const TArray<T>& array) : CArray(array) {}
+								TArray(const TArray<T>& other) : CArray(other) {}
 
 								// CArray methods
 		bool					contains(const T& item) const
@@ -280,7 +280,7 @@ template <typename T> class TArray : public CArray {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TSArray (Static CArray)
+// MARK: - TSArray (Static TArray)
 
 template <typename T> class TSArray : public TArray<T> {
 	// Methods
@@ -306,13 +306,13 @@ template <typename T> class TMArray : public TArray<T> {
 						// CArray methods
 		TMArray<T>&		add(const T& item)
 							{ CArray::add(CArray::copy(&item)); return *this; }
-		TMArray<T>&		addFrom(const TArray<T>& array)
+		TMArray<T>&		addFrom(const TArray<T>& other)
 							{
 								// Iterate all
-								ItemCount	count = array.getCount();
+								ItemCount	count = other.getCount();
 								for (CArray::ItemIndex i = 0; i < count; i++)
 									// Add
-									CArray::add(CArray::copy(array.getItemAt(i)));
+									CArray::add(CArray::copy(other.getItemAt(i)));
 
 								return *this;
 							}
@@ -330,13 +330,13 @@ template <typename T> class TMArray : public TArray<T> {
 
 								return *this;
 							}
-		TMArray<T>&		removeFrom(const TArray<T>& array)
+		TMArray<T>&		removeFrom(const TArray<T>& other)
 							{
 								// Iterate all
-								ItemCount	count = array.getCount();
+								ItemCount	count = other.getCount();
 								for (CArray::ItemIndex i = 0; i < count; i++)
 									// Remove
-									remove(array[i]);
+									remove(other[i]);
 
 								return *this;
 							}
@@ -402,7 +402,7 @@ template <typename T> class TMArray : public TArray<T> {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TNArray (TArray where copy happens through new T())
+// MARK: - TNArray (TMArray where copy happens through new T())
 
 template <typename T> class TNArray : public TMArray<T> {
 	// Types
@@ -421,17 +421,17 @@ template <typename T> class TNArray : public TMArray<T> {
 												// Add
 												TMArray<T>::add(item);
 										}
-									TNArray(const TArray<T>& array) :
+									TNArray(const TArray<T>& other) :
 										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
-										{ TMArray<T>::addFrom(array); }
-									TNArray(const CArray& array, MapProc mapProc) :
+										{ TMArray<T>::addFrom(other); }
+									TNArray(const CArray& other, MapProc mapProc) :
 										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
 										{
 											// Iterate all items
-											ItemCount	count = array.getCount();
+											ItemCount	count = other.getCount();
 											for (CArray::ItemIndex i = 0; i < count; i++)
 												// Add mapped item
-												TMArray<T>::add(mapProc(array.getItemAt(i)));
+												TMArray<T>::add(mapProc(other.getItemAt(i)));
 										}
 
 									// Instance methods
@@ -451,29 +451,29 @@ template <typename T> class TNArray : public TMArray<T> {
 										}
 
 									// Class methods
-		static	TArray<TArray<T> >	asChunksFrom(const TArray<T>& array, ItemCount chunkSize)
+		static	TArray<TArray<T> >	asChunksFrom(const TArray<T>& other, ItemCount chunkSize)
 										{
 											// Setup
 											TNArray<TArray<T> >	chunks;
-											ItemCount			count = array.getCount();
+											ItemCount			count = other.getCount();
 
 											// Iterate all values
 											TNArray<T>	chunk;
 											for (CArray::ItemIndex i = 0; i < count; i++) {
-												// Add value to chunk array
-												chunk += array.getAt(i);
+												// Add value to chunk
+												chunk += other.getAt(i);
 
-												// Check chunk array size
-												if (array.getCount() == chunkSize) {
-													// At max, add to arrays and reset
-													chunks += array;
+												// Check chunk item count
+												if (chunk.getCount() == chunkSize) {
+													// At max, add to chunks and reset
+													chunks += chunk;
 													chunk = TNArray<T>();
 												}
 											}
 
 											// Check if have any remaining
-											if (!array.isEmpty())
-												// Add to arrays
+											if (!chunk.isEmpty())
+												// Add to chunks
 												chunks += chunk;
 
 											return chunks;
@@ -488,7 +488,7 @@ template <typename T> class TNArray : public TMArray<T> {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TCArray (TArray where copy happens through itemRef->copy())
+// MARK: - TCArray (TMArray where copy happens through T->copy())
 
 template <typename T> class TCArray : public TMArray<T> {
 	// Methods

@@ -990,5 +990,5 @@ static I<SMediaSource::ImportResult> sImport(const I<CRandomAccessDataSource>& r
 static	CString	sExtensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), CString(OSSTR("mp4")) };
 
 REGISTER_MEDIA_SOURCE(mp4,
-		SMediaSource(MAKE_OSTYPE('m', 'p', '4', '*'), CString(OSSTR("MPEG 4")),
-				TSArray<CString>(sExtensions, 3), sImport));
+		SMediaSource(MAKE_OSTYPE('m', 'p', '4', '*'), CString(OSSTR("MPEG 4")), TSSet<CString>(sExtensions, 3),
+				sImport));

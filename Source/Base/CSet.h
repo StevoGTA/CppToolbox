@@ -18,7 +18,9 @@ class CSet {
 
 	// Procs
 	public:
-		typedef	void	(*ApplyProc)(CHashable& hashable, void* userData);
+		typedef	void		(*ApplyProc)(CHashable& hashable, void* userData);
+		typedef	CHashable*	(*CopyProc)(const CHashable& hashable);
+		typedef	void		(*DisposeProc)(const CHashable& hashable);
 
 	// Methods
 	public:
@@ -34,11 +36,13 @@ class CSet {
 
 	protected:
 										// Lifecycle methods
-										CSet(bool ownsItems = false);
+										CSet(CopyProc copyProc = nil, DisposeProc disposeProc = nil);
 										CSet(const CSet& other);
 
 										// Instance methods
-				CSet&					add(const CHashable* hashable);
+				CHashable&				copy(const CHashable& hashable) const;
+
+				CSet&					insert(const CHashable& hashable);
 
 				CSet&					remove(const CHashable& hashable);
 				CSet&					removeAll();
@@ -55,83 +59,29 @@ class CSet {
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TSet
+//	TSets are used when passing a set across an API boundary.  Because object lifetime management is tricky in
+//		C++, the TSet handles it all internally.  TSets are not to be instantiated directly, but instead to be
+//		done through either TNSet or TCSet.  Objects in the TSet need to be reference counted to ensure proper
+//		lifetime management.
 
 template <typename T> class TSet : public CSet {
-	// Procs
+	// Types
 	public:
 		typedef	bool	(*IsIncludedProc)(const T& item, void* userData);
 
 	// Methods
 	public:
 						// Lifecycle methods
-						TSet() : CSet(true) {}
-						TSet(const T& item) :
-							CSet(true)
-							{ CSet::add(new T(item)); }
-						TSet(const TArray<T>& array) :
-							CSet(true)
-							{
-								// Iterate all
-								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
-										iterator.advance())
-									// Add
-									CSet::add(new T(*iterator));
-							}
-						TSet(const CArray& array, T (mappingProc)(CArray::ItemRef item)) :
-							CSet(true)
-							{
-								// Iterate all items
-								ItemCount	count = array.getCount();
-								for (CArray::ItemIndex i = 0; i < count; i++)
-									// Add mapped item
-									this->add(mappingProc(array.getItemAt(i)));
-							}
 						TSet(const TSet<T>& other) : CSet(other) {}
-						TSet(const TSet<T>& other, IsIncludedProc isIncludedProc, void* userData) :
-							CSet(true)
-							{
-								// Iterate all items
-								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-										iterator.advance()) {
-									// Call proc
-									if (isIncludedProc(*iterator, userData))
-										// Add
-										CSet::add(new T(*iterator));
-								}
-							}
 
 						// Instance methods
-		TSet<T>&		add(const T& item)
-							{ CSet::add(new T(item)); return *this; }
-		TSet<T>&		add(const T* item)
-							{ CSet::add(new T(*item)); return *this; }
-		TSet<T>&		addFrom(const TArray<T>& array)
-							{
-								// Iterate all
-								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
-										iterator.advance())
-									// Add
-									CSet::add(new T(*iterator));
-
-								return *this;
-							}
-		TSet<T>&		addFrom(const TSet<T>& other)
-							{
-								// Iterate all
-								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-										iterator.advance())
-									// Add
-									CSet::add(new T(*iterator));
-
-								return *this;
-							}
 		bool			intersects(const TSet<T>& other) const
 							{
 								// Iterate values
 								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
 										iterator.advance()) {
 									// Check if have value
-									if (contains(*iterator))
+									if (CSet::contains(*iterator))
 										// Has value
 										return true;
 								}
@@ -139,63 +89,171 @@ template <typename T> class TSet : public CSet {
 								return false;
 							}
 
-		TSet<T>&		remove(const T item)
-							{ CSet::remove(item); return *this; }
-		TSet<T>&		removeFrom(const TArray<T>& array)
-							{
-								// Iterate all
-								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
-										iterator.advance())
-									// Add
-									CSet::remove(T(*iterator));
-
-								return *this;
-							}
-		TSet<T>&		removeFrom(const TSet<T>& other)
-							{
-								// Iterate all
-								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-										iterator.advance())
-									// Add
-									CSet::remove(T(*iterator));
-
-								return *this;
-							}
-		TSet<T>&		removeAll()
-							{ CSet::removeAll(); return *this; }
-
-		TSet<T>&		apply(void (proc)(const T item, void* userData), void* userData = nil)
-							{ CSet::apply((ApplyProc) proc, userData); return *this; }
-
 		TIteratorS<T>	getIterator() const
 							{ TIteratorS<CHashable> iterator = CSet::getIterator();
 									return TIteratorS<T>((TIteratorS<T>*) &iterator); }
 
-		TSet<T>&		operator=(const TSet<T>& other)
+	protected:
+						// Lifecycle methods
+						TSet(CopyProc copyProc, DisposeProc disposeProc) : CSet(copyProc, disposeProc) {}
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TSSet (Static TSet)
+
+template <typename T> class TSSet : public TSet<T> {
+	// Methods
+	public:
+		// Lifecycle methods
+		TSSet(const T& item) : TSet<T>(nil, nil) { CSet::insert(item); }
+		TSSet(const T items[], CArray::ItemCount itemCount) :
+			TSet<T>(nil, nil)
+			{ for (CArray::ItemIndex i = 0; i < itemCount; CSet::insert(items[i++])) ; }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TMSet (TSet which can be modified)
+
+template <typename T> class TMSet : public TSet<T> {
+	// Methods
+	public:
+						// CSet methods
+		TMSet<T>&		insert(const T& item)
+							{ CSet::insert(item); return *this; }
+		TMSet<T>&		remove(const T item)
+							{ CSet::remove(item); return *this; }
+		TMSet<T>&		removeAll()
+							{ CSet::removeAll(); return *this; }
+
+						// Instance methods
+		TMSet<T>&		insertFrom(const TArray<T>& array)
+							{
+								// Iterate all
+								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Insert
+									CSet::insert(*iterator);
+
+								return *this;
+							}
+		TMSet<T>&		insertFrom(const TSet<T>& other)
+							{
+								// Iterate all
+								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Insert
+									CSet::insert(*iterator);
+
+								return *this;
+							}
+		TMSet<T>&		removeFrom(const TArray<T>& array)
+							{
+								// Iterate all
+								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Remove
+									CSet::remove(T(*iterator));
+
+								return *this;
+							}
+		TMSet<T>&		removeFrom(const TSet<T>& other)
+							{
+								// Iterate all
+								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Remove
+									CSet::remove(T(*iterator));
+
+								return *this;
+							}
+
+//		TMSet<T>&		apply(void (proc)(const T item, void* userData), void* userData = nil)
+//							{ CSet::apply((ApplyProc) proc, userData); return *this; }
+
+		TMSet<T>&		operator=(const TSet<T>& other)
 							{ CSet::operator=(other); return *this; }
-		TSet<T>&		operator+=(const T* item)
-							{ return add(item); }
-		TSet<T>&		operator+=(const TSet<T>& other)
-							{ return addFrom(other); }
-		TSet<T>&		operator-=(const T item)
+		TMSet<T>&		operator+=(const T& item)
+							{ return insert(item); }
+		TMSet<T>&		operator+=(const TSet<T>& other)
+							{ return insertFrom(other); }
+		TMSet<T>&		operator-=(const T& item)
 							{ return remove(item); }
-		TSet<T>&		operator-=(const TSet<T>& other)
+		TMSet<T>&		operator-=(const TSet<T>& other)
 							{ return removeFrom(other); }
+
+	protected:
+						// Lifecycle methods
+						TMSet(CSet::CopyProc copyProc, CSet::DisposeProc disposeProc) :
+							TSet<T>(copyProc, disposeProc)
+							{}
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNSet (TArray where copy happens through new T())
+
+template <typename T> class TNSet : public TMSet<T> {
+	// Methods
+	public:
+						// Lifecycle methods
+						TNSet() : TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose) {}
+						TNSet(const T& item) :
+							TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+							{ CSet::insert(item); }
+						TNSet(const TArray<T>& array) :
+							TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+							{
+								// Iterate all
+								for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
+										iterator.advance())
+									// Insert
+									CSet::insert(*iterator);
+							}
+						TNSet(const CArray& array, T (mappingProc)(CArray::ItemRef item)) :
+							TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+							{
+								// Iterate all items
+								ItemCount	count = array.getCount();
+								for (CArray::ItemIndex i = 0; i < count; i++)
+									// Insert mapped item
+									this->insert(mappingProc(array.getItemAt(i)));
+							}
+						TNSet(const TSet<T>& other) :
+							TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+							{ TNSet<T>::insertFrom(other); }
+						TNSet(const TSet<T>& other, typename TSet<T>::IsIncludedProc isIncludedProc, void* userData) :
+							TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+							{
+								// Iterate all items
+								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
+										iterator.advance()) {
+									// Call proc
+									if (isIncludedProc(*iterator, userData))
+										// Insert
+										CSet::insert(*iterator);
+								}
+							}
+
+	private:
+						// Class methods
+		static	T*		copy(const CHashable& hashable)
+							{ return new T(*((T*) &hashable)); }
+		static	void	dispose(const CHashable& hashable)
+							{ T* t = (T*) &hashable; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TNumberSet
 
-template <typename T> class TNumberSet : public TSet<TNumber<T> > {
+template <typename T> class TNumberSet : public TNSet<TNumber<T> > {
 	// Methods
 	public:
 						// Instance methods
 		bool			contains(T value) const
-							{ return TSet<TNumber<T> >::contains(TNumber<T>(value)); }
+							{ return TNSet<TNumber<T> >::contains(TNumber<T>(value)); }
 
-		TNumberSet<T>&	add(T value)
-							{ TSet<TNumber<T> >::add(new TNumber<T>(value)); return *this; }
+		TNumberSet<T>&	insert(T value)
+							{ TNSet<TNumber<T> >::insert(TNumber<T>(value)); return *this; }
 
 		TNumberSet<T>&	operator+=(T value)
-							{ return add(value); }
+							{ return insert(value); }
 };

@@ -62,35 +62,34 @@ struct SMediaSource {
 										const OI<CAppleResourceManager>& appleResourceManager,
 										TNArray<CString>& messages, UInt32 options);
 
-								// Lifecycle methods
-								SMediaSource(OSType id, const CString& name, const TArray<CString>& extensions,
-										ImportProc importProc) :
-									mID(id), mName(name), mExtensions(extensions), mImportProc(importProc)
-									{}
-								SMediaSource(const SMediaSource& other) :
-									mID(other.mID), mName(other.mName), mExtensions(other.mExtensions),
-											mImportProc(other.mImportProc)
-									{}
+							// Lifecycle methods
+							SMediaSource(OSType id, const CString& name, const TSet<CString>& extensions,
+									ImportProc importProc) :
+								mID(id), mName(name), mExtensions(extensions), mImportProc(importProc)
+								{}
+							SMediaSource(const SMediaSource& other) :
+								mID(other.mID), mName(other.mName), mExtensions(other.mExtensions),
+										mImportProc(other.mImportProc)
+								{}
 
-								// Instance methods
-			OSType				getID() const
-									{ return mID; }
-	const	CString&			getName() const
-									{ return mName; }
-	const	TArray<CString>&	getExtensions() const
-									{ return mExtensions; }
-			I<ImportResult>		import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-										const OI<CAppleResourceManager>& appleResourceManager,
-										TNArray<CString>& messages, UInt32 options) const
-									{ return mImportProc(randomAccessDataSource, appleResourceManager, messages,
-											options); }
+							// Instance methods
+			OSType			getID() const
+								{ return mID; }
+	const	CString&		getName() const
+								{ return mName; }
+	const	TSet<CString>&	getExtensions() const
+								{ return mExtensions; }
+			I<ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
+									const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages,
+									UInt32 options) const
+								{ return mImportProc(randomAccessDataSource, appleResourceManager, messages, options); }
 
 	// Properties
 	private:
-		OSType				mID;
-		CString				mName;
-		TNArray<CString>	mExtensions;
-		ImportProc			mImportProc;
+		OSType			mID;
+		CString			mName;
+		TNSet<CString>	mExtensions;
+		ImportProc		mImportProc;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -128,6 +127,8 @@ class CMediaSourceRegistry {
 										// Instance methods
 				void					registerMediaSource(const SMediaSource& mediaSource);
 		const	SMediaSource&			getMediaSource(OSType id) const;
+				TSet<CString>			getAllMediaSourceExtensions() const;
+
 				TVResult<ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const CString& extension,
 												const OI<CAppleResourceManager>& appleResourceManager,
@@ -136,7 +137,7 @@ class CMediaSourceRegistry {
 
 	private:
 										// Lifecycle methods
-										CMediaSourceRegistry();
+										CMediaSourceRegistry() {}
 
 	// Properties
 	public:

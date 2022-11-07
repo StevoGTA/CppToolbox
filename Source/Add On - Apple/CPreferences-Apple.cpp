@@ -122,7 +122,7 @@ bool CPreferences::hasValue(const Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CData> CPreferences::getDataArray(const Pref& pref)
+OV<TArray<CData> > CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -136,14 +136,14 @@ TArray<CData> CPreferences::getDataArray(const Pref& pref)
 		// Cleanup
 		::CFRelease(arrayRef);
 
-		return array;
+		return OV<TArray<CData> >(array);
 	} else
 		// Not found
-		return TNArray<CData>();
+		return OV<TArray<CData> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
+OV<TArray<CDictionary> > CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -157,23 +157,23 @@ TArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
 		// Cleanup
 		::CFRelease(arrayRef);
 
-		return array;
+		return OV<TArray<CDictionary> >(array);
 	} else
 		// Not found
-		return TNArray<CDictionary>();
+		return OV<TArray<CDictionary> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumberArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
+OV<TNumberArray<OSType> > CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref);
 
 	// Check if have array
-	TNumberArray<OSType>	array;
 	if (arrayRef != nil) {
 		// Iterate all items
+		TNumberArray<OSType>	array;
 		for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++) {
 			// Get value
 			CFNumberRef	numberRef = (CFNumberRef) ::CFArrayGetValueAtIndex(arrayRef, i);
@@ -187,44 +187,55 @@ TNumberArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
 
 		// Cleanup
 		::CFRelease(arrayRef);
-	}
 
-	return array;
+		return OV<TNumberArray<OSType> >(array);
+	} else
+		// Not found
+		return OV<TNumberArray<OSType> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CPreferences::getData(const Pref& pref)
+OV<CData> CPreferences::getData(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFDataRef	dataRef = (CFDataRef) mInternals->copyFrom(pref);
+
+	// Check if have data
 	if (dataRef != nil) {
 		CData	data = CCoreFoundation::dataFrom(dataRef);
 		::CFRelease(dataRef);
 
-		return data;
+		return OV<CData>(data);
 	} else
-		return CData::mEmpty;
+		return OV<CData>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CPreferences::getDictionary(const Pref& pref)
+OV<CDictionary> CPreferences::getDictionary(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) mInternals->copyFrom(pref);
+
+	// Check if have dictionary
 	if (dictionaryRef != nil) {
 		CDictionary	dictionary = CCoreFoundation::dictionaryFrom(dictionaryRef);
 		::CFRelease(dictionaryRef);
 
-		return dictionary;
+		return OV<CDictionary>(dictionary);
 	} else
-		return CDictionary();
+		return OV<CDictionary>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString CPreferences::getString(const StringPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFStringRef	stringRef = (CFStringRef) mInternals->copyFrom(pref);
+
+	// Check if have string
 	if (stringRef != nil) {
 		CString	string(stringRef);
 		::CFRelease(stringRef);
@@ -238,7 +249,10 @@ CString CPreferences::getString(const StringPref& pref)
 Float32 CPreferences::getFloat32(const Float32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+
+	// Check if have number
 	if (numberRef != nil) {
 		Float32	value;
 		::CFNumberGetValue(numberRef, kCFNumberFloat32Type, &value);
@@ -253,7 +267,10 @@ Float32 CPreferences::getFloat32(const Float32Pref& pref)
 Float64 CPreferences::getFloat64(const Float64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+
+	// Check if have number
 	if (numberRef != nil) {
 		Float64	value;
 		::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);
@@ -268,7 +285,10 @@ Float64 CPreferences::getFloat64(const Float64Pref& pref)
 SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+
+	// Check if have number
 	if (numberRef != nil) {
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
@@ -283,7 +303,10 @@ SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+
+	// Check if have number
 	if (numberRef != nil) {
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
@@ -298,7 +321,10 @@ UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+
+	// Check if have number
 	if (numberRef != nil) {
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
@@ -313,7 +339,10 @@ UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTimeIntervalPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+
+	// Check if have number
 	if (numberRef != nil) {
 		Float64	value;
 		::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);

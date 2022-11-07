@@ -89,8 +89,8 @@ class CDictionary : public CEquatable {
 	public:
 												// Lifecycle methods
 												CDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
-														SValue::OpaqueDisposeProc opaqueDisposeProc = nil,
-														SValue::OpaqueEqualsProc opaqueEqualsProc = nil);
+														SValue::OpaqueEqualsProc opaqueEqualsProc = nil,
+														SValue::OpaqueDisposeProc opaqueDisposeProc = nil);
 												CDictionary(const Procs& procs);
 												CDictionary(const CDictionary& other);
 		virtual									~CDictionary();
@@ -100,12 +100,12 @@ class CDictionary : public CEquatable {
 													{ return equals((const CDictionary&) other); }
 
 												// Instance methods
-						KeyCount				getKeyCount() const;
-						TSet<CString>			getKeys() const;
+		virtual			KeyCount				getKeyCount() const;
+		virtual			TSet<CString>			getKeys() const;
 						bool					isEmpty() const
 													{ return getKeyCount() == 0; }
 
-						bool					contains(const CString& key) const;
+		virtual			bool					contains(const CString& key) const;
 
 				const	SValue&					getValue(const CString& key) const;
 						bool					getBool(const CString& key, bool defaultValue = false) const;
@@ -227,67 +227,108 @@ template <typename T> class TDictionary : public CDictionary {
 
 	protected:
 						// Lifecycle methods
-						TDictionary(SValue::OpaqueCopyProc opaqueCopyProc, SValue::OpaqueEqualsProc opaqueEqualsProc) :
-							CDictionary(opaqueCopyProc, dispose, opaqueEqualsProc)
+						TDictionary(SValue::OpaqueCopyProc opaqueCopyProc, SValue::OpaqueEqualsProc opaqueEqualsProc,
+								SValue::OpaqueDisposeProc opaqueDisposeProc) :
+							CDictionary(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
 							{}
-
-	private:
-		static	void	dispose(SValue::Opaque opaque)
-							{ T* t = (T*) opaque; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TNDictionary (TDictionary where copy happens through new T())
+// MARK: - TMDictionary (TDictionary which can be modified)
 
-template <typename T> class TNDictionary : public TDictionary<T> {
+template <typename T> class TMDictionary : public TDictionary<T> {
+	// Methods
+	public:
+				// Instance methods
+		void	set(const CString& key, const T& item)
+					{ CDictionary::set(key, new T(item)); }
+		void	set(const CString& key, const OV<T>& item)
+					{
+						// Check for instance
+						if (item.hasInstance())
+							// Set
+							CDictionary::set(key, new T(*item));
+						else
+							// Remove
+							CDictionary::remove(key);
+					}
+
+	protected:
+				// Lifecycle methods
+				TMDictionary(SValue::OpaqueCopyProc opaqueCopyProc, SValue::OpaqueEqualsProc opaqueEqualsProc,
+						SValue::OpaqueDisposeProc opaqueDisposeProc) :
+					TDictionary<T>(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
+					{}
+				TMDictionary(SValue::OpaqueCopyProc opaqueCopyProc, SValue::OpaqueEqualsProc opaqueEqualsProc,
+						SValue::OpaqueDisposeProc opaqueDisposeProc, const TDictionary<T>& other,
+						CDictionary::Item::IncludeProc itemIncludeProc, void* userData) :
+					TDictionary<T>(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
+					{
+						for (TIteratorS<CDictionary::Item> iterator = other.getIterator(); iterator.hasValue();
+								iterator.advance()) {
+							// Call proc
+							if (itemIncludeProc(*iterator, userData))
+								// Add item
+								CDictionary::set(iterator->mKey, iterator->mValue);
+						}
+					}
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNDictionary (TMDictionary where copy happens through new T())
+
+template <typename T> class TNDictionary : public TMDictionary<T> {
 	// Methods
 	public:
 						// Lifecycle methods
 						TNDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
-							TDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc)
+							TMDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc,
+									(SValue::OpaqueDisposeProc) dispose)
 							{}
 						TNDictionary(const TDictionary<T>& other, CDictionary::Item::IncludeProc itemIncludeProc,
 								void* userData) :
-							TDictionary<T>((SValue::OpaqueCopyProc) copy, nil)
-							{
-								for (TIteratorS<CDictionary::Item> iterator = other.getIterator(); iterator.hasValue();
-										iterator.advance()) {
-									// Call proc
-									if (itemIncludeProc(*iterator, userData))
-										// Add item
-										CDictionary::set(iterator->mKey, iterator->mValue);
-								}
-							}
-
-						// Instance methods
-				void	set(const CString& key, const T& item)
-							{ CDictionary::set(key, new T(item)); }
-				void	set(const CString& key, const OV<T>& item)
-							{
-								// Check for instance
-								if (item.hasInstance())
-									// Set
-									CDictionary::set(key, new T(*item));
-								else
-									// Remove
-									CDictionary::remove(key);
-							}
+							TMDictionary<T>((SValue::OpaqueCopyProc) copy, nil, (SValue::OpaqueDisposeProc) dispose,
+									other, itemIncludeProc, userData)
+							{}
 
 	private:
 						// Class methods
 		static	T*		copy(SValue::Opaque opaque)
 							{ return new T(*((T*) opaque)); }
+		static	void	dispose(SValue::Opaque opaque)
+							{ T* t = (T*) opaque; Delete(t); }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNArrayDictionary (TNDictionary where values are arrays)
+
+template <typename T> class TNArrayDictionary : public TNDictionary<TNArray<T> > {
+	// Methods
+	public:
+				// Instance methods
+		void	add(const CString& key, const T& item)
+					{
+						// Update
+						const	OR<TNArray<T> >	array = TNDictionary<TNArray<T> >::get(key);
+						if (array.hasReference())
+							// Already have array
+							*array += item;
+						else
+							// First one
+							TNDictionary<TNArray<T> >::set(key, TNArray<T>(item));
+					}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TCDictionary (TDictionary where copy happens through opaque->copy())
 
-template <typename T> class TCDictionary : public TDictionary<T> {
+template <typename T> class TCDictionary : public TMDictionary<T> {
 	// Methods
 	public:
 						// Lifecycle methods
 						TCDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
-							TDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc)
+							TMDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc,
+									(SValue::OpaqueDisposeProc) dispose)
 							{}
 
 						// Instance methods
@@ -298,6 +339,8 @@ template <typename T> class TCDictionary : public TDictionary<T> {
 						// Class methods
 		static	T*		copy(SValue::Opaque opaque)
 							{ return ((T*) opaque)->copy(); }
+		static	void	dispose(SValue::Opaque opaque)
+							{ T* t = (T*) opaque; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -329,39 +372,47 @@ template <typename T> class TReferenceDictionary : public CDictionary {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TKeyConvertibleDictionary
 
-template <typename K, typename T> class TKeyConvertibleDictionary : public CDictionary {
+template <typename K, typename T> class TKeyConvertibleDictionary : public TNDictionary<T> {
 	// Methods
 	public:
 						// Lifecycle methods
 						TKeyConvertibleDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
-							CDictionary((SValue::OpaqueCopyProc) copy, dispose, opaqueEqualsProc)
+							TNDictionary<T>(opaqueEqualsProc)
 							{}
-						TKeyConvertibleDictionary(const TKeyConvertibleDictionary& dictionary) :
-							CDictionary(dictionary)
-							{}
-						~TKeyConvertibleDictionary() {}
 
 						// Instance methods
 		const	OR<T>	get(K key) const
-							{
-								// Get opaque
-								OV<SValue::Opaque>	opaque = CDictionary::getOpaque(CString(key));
-
-								return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
-							}
+							{ return TNDictionary<T>::get(CString(key)); }
 				void	set(K key, const T& item)
-							{ CDictionary::set(CString(key), new T(item)); }
+							{ TNDictionary<T>::set(CString(key), item); }
 
 				void	remove(K key)
 							{ CDictionary::remove(CString(key)); }
 
 		const	OR<T>	operator[](K key) const
 							{ return get(key); }
+};
 
-	private:
-						// Class methods
-		static	T*		copy(SValue::Opaque opaque)
-							{ return new T(*((T*) opaque)); }
-		static	void	dispose(SValue::Opaque opaque)
-							{ T* t = (T*) opaque; Delete(t); }
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNArrayKeyConvertibleDictionary
+
+template <typename K, typename T> class TNArrayKeyConvertibleDictionary :
+		public TKeyConvertibleDictionary<K, TNArray<T> > {
+	// Methods
+	public:
+				// Instance methods
+		void	add(K key, const T& item)
+					{
+						// Setup
+						CString	keyString(key);
+
+						// Update
+						const	OR<TNArray<T> >	array = TKeyConvertibleDictionary<K, TNArray<T> >::get(key);
+						if (array.hasReference())
+							// Already have array
+							*array += item;
+						else
+							// First one
+							TKeyConvertibleDictionary<K, TNArray<T> >::set(key, TNArray<T>(item));
+					}
 };

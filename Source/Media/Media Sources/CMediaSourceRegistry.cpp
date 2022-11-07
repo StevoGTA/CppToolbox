@@ -32,14 +32,6 @@ CMediaSourceRegistryInternals*	sMediaSourceRegistryInternals = nil;
 
 CMediaSourceRegistry	CMediaSourceRegistry::mShared;
 
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CMediaSourceRegistry::CMediaSourceRegistry()
-//----------------------------------------------------------------------------------------------------------------------
-{
-}
-
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -63,6 +55,22 @@ const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TSet<CString> CMediaSourceRegistry::getAllMediaSourceExtensions() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNSet<CString>	extensions;
+
+	// Iterate media source types to check file extension
+	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
+	for (TIteratorS<CString> iterator = mediaSourceTypes.getIterator(); iterator.hasValue(); iterator.advance())
+		// Add extensions
+		extensions += sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()]->getExtensions();
+
+	return extensions;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, const CString& extension,
 		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options) const
@@ -71,7 +79,7 @@ TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 	// Setup
 	CString			extensionUse = extension.lowercased();
 	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
-	TSet<CString>	remainingMediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
+	TNSet<CString>	remainingMediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
 
 	// Iterate media source types to check file extension
 	for (TIteratorS<CString> iterator = mediaSourceTypes.getIterator(); iterator.hasValue(); iterator.advance()) {

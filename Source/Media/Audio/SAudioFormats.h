@@ -130,6 +130,11 @@ struct SAudioStorageFormat {
 							mCodecID(codecID), mBits(OV<UInt8>(bits)), mSampleRate(sampleRate),
 									mAudioChannelMap(audioChannelMap)
 							{}
+						SAudioStorageFormat(OSType codecID, OV<UInt8> bits, Float32 sampleRate,
+								EAudioChannelMap audioChannelMap) :
+							mCodecID(codecID), mBits(bits), mSampleRate(sampleRate),
+									mAudioChannelMap(audioChannelMap)
+							{}
 						SAudioStorageFormat(OSType codecID, Float32 sampleRate, EAudioChannelMap audioChannelMap) :
 							mCodecID(codecID), mSampleRate(sampleRate), mAudioChannelMap(audioChannelMap)
 							{}

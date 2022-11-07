@@ -1322,5 +1322,5 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 static	CString	sExtensions[] = { CString(OSSTR("mov")) };
 
 REGISTER_MEDIA_SOURCE(quicktime,
-		SMediaSource(MAKE_OSTYPE('M', 'o', 'o', 'V'), CString(OSSTR("QuickTime")), TSArray<CString>(sExtensions, 1),
+		SMediaSource(MAKE_OSTYPE('M', 'o', 'o', 'V'), CString(OSSTR("QuickTime")), TSSet<CString>(sExtensions, 1),
 				sImport));

@@ -27,10 +27,12 @@ const	CString	CString::mColon(OSSTR(":"));
 const	CString	CString::mComma(OSSTR(","));
 const	CString	CString::mDoubleQuotes(OSSTR("\""));
 const	CString	CString::mEqualSign(OSSTR("="));
+const	CString	CString::mHyphen(OSSTR("-"));
 const	CString	CString::mPeriod(OSSTR("."));
 const	CString	CString::mSpace(OSSTR(" "));
 const	CString	CString::mSpaceX4(OSSTR("    "));
 const	CString	CString::mTab(OSSTR("\t"));
+const	CString	CString::mUnderscore(OSSTR("_"));
 
 const	CString	CString::mNewline(OSSTR("\n"));
 const	CString	CString::mLinefeed(OSSTR("\r"));
@@ -400,10 +402,10 @@ TArray<CString> CString::componentsRespectingQuotes(const CString& separator) co
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::compare(CString* const string1, CString* const string2, void* compareFlags)
+bool CString::compare(const CString& string1, const CString& string2, void* compareFlags)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return string1->compareTo(*string2, *((CompareFlags*) compareFlags));
+	return string1.compareTo(string2, *((CompareFlags*) compareFlags));
 }
 
 // MARK: Class methods
