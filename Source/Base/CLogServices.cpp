@@ -183,7 +183,7 @@ void CLogFile::logWarning(const CString& warning, const CString& when, const cha
 		const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logWarning(CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - warning ")) +
+	logWarning(*CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - warning ")) +
 			CString(OSSTR("\"")) + warning + CString(OSSTR("\"")) +
 			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
 			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +
@@ -207,7 +207,7 @@ void CLogFile::logError(const CString& error, const CString& when, const char* f
 		const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logError(CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - error ")) +
+	logError(*CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - error ")) +
 			CString(OSSTR("\"")) + error + CString(OSSTR("\"")) +
 			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
 			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +
@@ -326,7 +326,7 @@ void CLogServices::logWarning(const CString& warning, const CString& when, const
 		UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logWarning(CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - warning ")) +
+	logWarning(*CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - warning ")) +
 			CString(OSSTR("\"")) + warning + CString(OSSTR("\"")) +
 			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
 			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +
@@ -381,7 +381,7 @@ void CLogServices::logWarning(const CString& string)
 void CLogServices::logError(const CString& error, const CString& when, const char* file, const char* proc, UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logError(CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - error ")) +
+	logError(*CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - error ")) +
 			CString(OSSTR("\"")) + error + CString(OSSTR("\"")) +
 			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
 			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +

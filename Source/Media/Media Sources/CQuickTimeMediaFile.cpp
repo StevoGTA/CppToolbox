@@ -766,19 +766,16 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 			break;
 	}
 
-	if (!moovAtom.hasValue() || !mdatAtom.hasValue()) {
-		// Didn't find core atoms
-		if (error.hasValue())
-			return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(*error));
-		else
-			return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult());
-	}
+	// Check results
+	if (!moovAtom.hasValue() || !mdatAtom.hasValue())
+		// Did not find core atoms
+		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult());
 
+	// Iterate moov atom
 	TVResult<CAtomReader::ContainerAtom>	moovContainerAtom = atomReader.readContainerAtom(*moovAtom);
 	ReturnValueIfResultError(moovContainerAtom,
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(moovContainerAtom.getError())));
 
-	// Iterate moov atom
 	CMediaTrackInfos	mediaTrackInfos;
 	for (TIteratorD<CAtomReader::Atom> moovIterator = moovContainerAtom->getIterator();
 			moovIterator.hasValue(); moovIterator.advance()) {

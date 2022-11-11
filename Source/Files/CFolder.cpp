@@ -74,7 +74,7 @@ const CFilesystemPath& CFolder::getFilesystemPath() const
 CString CFolder::getName() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mFilesystemPath.getLastComponent();
+	return *mInternals->mFilesystemPath.getLastComponent();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -352,6 +352,9 @@ class CString : public CHashable {
 										// Class methods
 		static			bool			compare(const CString& string1, const CString& string2, void* compareFlags);
 
+		static			CString			lowercase(const CString* string);
+		static			CString			uppercase(const CString* string);
+
 		static			CString			make(OSStringType format, ...);
 		static			CString			make(OSStringType format, va_list args);
 		static			bool			isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet);

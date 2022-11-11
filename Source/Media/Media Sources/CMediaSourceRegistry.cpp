@@ -72,39 +72,44 @@ TSet<CString> CMediaSourceRegistry::getAllMediaSourceExtensions() const
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
-		const I<CRandomAccessDataSource>& randomAccessDataSource, const CString& extension,
+		const I<CRandomAccessDataSource>& randomAccessDataSource, const OV<CString>& extension,
 		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CString			extensionUse = extension.lowercased();
 	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
 	TNSet<CString>	remainingMediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
 
-	// Iterate media source types to check file extension
-	for (TIteratorS<CString> iterator = mediaSourceTypes.getIterator(); iterator.hasValue(); iterator.advance()) {
-		// Get info
-		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
+	// Check if have extension
+	if (extension.hasValue()) {
+		// Setup
+		CString	extensionUse = extension->lowercased();
+		
+		// Iterate media source types to check file extension
+		for (TIteratorS<CString> iterator = mediaSourceTypes.getIterator(); iterator.hasValue(); iterator.advance()) {
+			// Get info
+			SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
 
-		// Check extensions
-		if (mediaSource.getExtensions().contains(extensionUse)) {
-			// Found by extension
-			I<SMediaSource::ImportResult>	importResult =
-													mediaSource.import(randomAccessDataSource, appleResourceManager,
-															messages, options);
-			switch (importResult->getResult()) {
-				case SMediaSource::ImportResult::kSuccess:
-					// Success
-					return TVResult<ImportResult>(ImportResult(mediaSource.getID(), importResult));
+			// Check extensions
+			if (mediaSource.getExtensions().contains(extensionUse)) {
+				// Found by extension
+				I<SMediaSource::ImportResult>	importResult =
+														mediaSource.import(randomAccessDataSource, appleResourceManager,
+																messages, options);
+				switch (importResult->getResult()) {
+					case SMediaSource::ImportResult::kSuccess:
+						// Success
+						return TVResult<ImportResult>(ImportResult(mediaSource.getID(), importResult));
 
-				case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
-					// Matched source, but source unable to load
-					return TVResult<ImportResult>(importResult->getError());
+					case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
+						// Matched source, but source unable to load
+						return TVResult<ImportResult>(importResult->getError());
 
-				case SMediaSource::ImportResult::kSourceMismatch:
-					// Not a matched source
-					remainingMediaSourceTypes.remove(*iterator);
-					break;
+					case SMediaSource::ImportResult::kSourceMismatch:
+						// Not a matched source
+						remainingMediaSourceTypes.remove(*iterator);
+						break;
+				}
 			}
 		}
 	}

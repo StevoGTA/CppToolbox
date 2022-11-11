@@ -77,14 +77,14 @@ const CFilesystemPath& CFile::getFilesystemPath() const
 CString CFile::getName() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mFilesystemPath.getLastComponent();
+	return *mInternals->mFilesystemPath.getLastComponent();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString CFile::getNameDeletingExtension() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mFilesystemPath.getLastComponentDeletingExtension();
+	return *mInternals->mFilesystemPath.getLastComponentDeletingExtension();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

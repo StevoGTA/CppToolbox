@@ -192,6 +192,10 @@ template <typename T> class TMSet : public TSet<T> {
 // MARK: - TNSet (TArray where copy happens through new T())
 
 template <typename T> class TNSet : public TMSet<T> {
+	// Types
+	public:
+		typedef	T	(*ArrayMapProc)(CArray::ItemRef);
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -208,14 +212,14 @@ template <typename T> class TNSet : public TMSet<T> {
 									// Insert
 									CSet::insert(*iterator);
 							}
-						TNSet(const CArray& array, T (mappingProc)(CArray::ItemRef item)) :
+						TNSet(const CArray& array, ArrayMapProc arrayMapProc) :
 							TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
 							{
 								// Iterate all items
 								ItemCount	count = array.getCount();
 								for (CArray::ItemIndex i = 0; i < count; i++)
 									// Insert mapped item
-									this->insert(mappingProc(array.getItemAt(i)));
+									CSet::insert(arrayMapProc(array.getItemAt(i)));
 							}
 						TNSet(const TSet<T>& other) :
 							TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)

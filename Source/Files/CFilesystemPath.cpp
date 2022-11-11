@@ -67,18 +67,22 @@ CString CFilesystemPath::getString(Style style, const CString& wrapper) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CFilesystemPath::getExtension() const
+OV<CString> CFilesystemPath::getExtension() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if empty
-	if (mInternals->mString.isEmpty())
-		// No extension
-		return CString::mEmpty;
+	// Get last component
+	OV<CString>	component = getLastComponent();
+	if (!component.hasValue())
+		// We're empty
+		return OV<CString>();
 
 	// Get last component and break into fields based on "."
-	TArray<CString>	parts = getLastComponent().components(CString(OSSTR(".")));
+	TArray<CString>	parts = component->components(CString(OSSTR(".")));
+	if (parts.getCount() == 1)
+		// No extension
+		return OV<CString>();
 
-	return (parts.getCount() > 1) ? parts.getLast() : CString::mEmpty;
+	return OV<CString>(parts.getLast());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,7 +91,7 @@ TArray<CString> CFilesystemPath::getComponents() const
 {
 	// Check if empty
 	if (mInternals->mString.isEmpty())
-		// No components
+		// We're empty
 		return TNArray<CString>();
 
 	// Setup
@@ -108,29 +112,28 @@ TArray<CString> CFilesystemPath::getComponents() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CFilesystemPath::getLastComponent() const
+OV<CString> CFilesystemPath::getLastComponent() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return !mInternals->mString.isEmpty() ? getComponents().getLast() : CString::mEmpty;
+	return !mInternals->mString.isEmpty() ? OV<CString>(getComponents().getLast()) : OV<CString>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CFilesystemPath::getLastComponentDeletingExtension() const
+OV<CString> CFilesystemPath::getLastComponentDeletingExtension() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get last component
-	CString	component = getLastComponent();
-
-	// Check if empty
-	if (component.isEmpty())
-		// Empty
-		return CString::mEmpty;
+	OV<CString>	component = getLastComponent();
+	if (!component.hasValue())
+		// We're empty
+		return OV<CString>();
 
 	// Get fields
-	TArray<CString>	fields = component.components(CString(OSSTR(".")));
+	TArray<CString>	fields = component->components(CString(OSSTR(".")));
 
 	return (fields.getCount() > 1) ?
-			component.getSubString(0, component.getLength() - fields.getLast().getLength() - 1) : component;
+			OV<CString>(component->getSubString(0, component->getLength() - fields.getLast().getLength() - 1)) :
+			component;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -235,6 +238,17 @@ CFilesystemPath CFilesystemPath::appendingExtension(const CString& extension) co
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return CFilesystemPath(mInternals->mString + CString::mPeriod + extension);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CFilesystemPath& CFilesystemPath::operator=(const CFilesystemPath& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Change
+	mInternals->removeReference();
+	mInternals = other.mInternals->addReference();
+
+	return *this;
 }
 
 // MARK: Class methods

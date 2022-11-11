@@ -130,7 +130,7 @@ class CMediaSourceRegistry {
 				TSet<CString>			getAllMediaSourceExtensions() const;
 
 				TVResult<ImportResult>	import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-												const CString& extension,
+												const OV<CString>& extension,
 												const OI<CAppleResourceManager>& appleResourceManager,
 												TNArray<CString>& messages, UInt32 options = SMediaSource::kOptionsNone)
 												const;

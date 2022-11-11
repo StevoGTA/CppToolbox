@@ -59,11 +59,11 @@ class CFilesystemPath : public CHashable {
 				CString			getString(Style style = kStylePlatformDefault, const CString& wrapper = CString::mEmpty)
 										const;
 
-				CString			getExtension() const;
+				OV<CString>		getExtension() const;
 
 				TArray<CString>	getComponents() const;
-				CString			getLastComponent() const;
-				CString			getLastComponentDeletingExtension() const;
+				OV<CString>		getLastComponent() const;
+				OV<CString>		getLastComponentDeletingExtension() const;
 				CString			getLastComponentForDisplay() const;
 
 				CFilesystemPath	appendingComponent(const CString& component, Style style = kStylePlatformDefault) const;
@@ -72,6 +72,8 @@ class CFilesystemPath : public CHashable {
 
 				bool			equals(const CFilesystemPath& other) const
 									{ return getString() == other.getString(); }
+
+				CFilesystemPath&	operator=(const CFilesystemPath& other);
 
 								// Class methods
 		static	CString			makeLegalFilename(const CString& string,

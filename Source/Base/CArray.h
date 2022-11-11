@@ -217,7 +217,7 @@ template <typename T> class TArray : public CArray {
 
 										return OV<ItemIndex>();
 									}
-		OV<ItemIndex>			getIndexWhere(IsMatchProc isMatchProc, void* userData)
+		OV<ItemIndex>			getIndexWhere(IsMatchProc isMatchProc, void* userData = nil)
 									{
 										// Iterate all items
 										ItemCount	count = getCount();
@@ -230,7 +230,7 @@ template <typename T> class TArray : public CArray {
 
 										return OV<ItemIndex>();
 									}
-		TNumberArray<ItemIndex>	getIndexesWhere(IsMatchProc isMatchProc, void* userData)
+		TNumberArray<ItemIndex>	getIndexesWhere(IsMatchProc isMatchProc, void* userData = nil)
 									{
 										// Setup
 										TNumberArray<ItemIndex>	itemIndexes;
@@ -292,6 +292,40 @@ template <typename T> class TSArray : public TArray<T> {
 		TSArray(const T& item1, const T& item2) :
 			TArray<T>(nil, nil)
 			{ CArray::add(&item1); CArray::add(&item2); }
+		TSArray(const T& item1, const T& item2, const T& item3) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); CArray::add(&item3); }
+		TSArray(const T& item1, const T& item2, const T& item3, const T& item4) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); CArray::add(&item3); CArray::add(&item4); }
+		TSArray(const T& item1, const T& item2, const T& item3, const T& item4, const T& item5) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); CArray::add(&item3); CArray::add(&item4); CArray::add(&item5); }
+		TSArray(const T& item1, const T& item2, const T& item3, const T& item4, const T& item5, const T& item6) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); CArray::add(&item3); CArray::add(&item4); CArray::add(&item5);
+					CArray::add(&item6); }
+		TSArray(const T& item1, const T& item2, const T& item3, const T& item4, const T& item5, const T& item6,
+				const T& item7) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); CArray::add(&item3); CArray::add(&item4); CArray::add(&item5);
+					CArray::add(&item6); CArray::add(&item7); }
+		TSArray(const T& item1, const T& item2, const T& item3, const T& item4, const T& item5, const T& item6,
+				const T& item7, const T& item8) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); CArray::add(&item3); CArray::add(&item4); CArray::add(&item5);
+					CArray::add(&item6); CArray::add(&item7); CArray::add(&item8); }
+		TSArray(const T& item1, const T& item2, const T& item3, const T& item4, const T& item5, const T& item6,
+				const T& item7, const T& item8, const T& item9) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); CArray::add(&item3); CArray::add(&item4); CArray::add(&item5);
+					CArray::add(&item6); CArray::add(&item7); CArray::add(&item8); CArray::add(&item9); }
+		TSArray(const T& item1, const T& item2, const T& item3, const T& item4, const T& item5, const T& item6,
+				const T& item7, const T& item8, const T& item9, const T& item10) :
+			TArray<T>(nil, nil)
+			{ CArray::add(&item1); CArray::add(&item2); CArray::add(&item3); CArray::add(&item4); CArray::add(&item5);
+					CArray::add(&item6); CArray::add(&item7); CArray::add(&item8); CArray::add(&item9);
+					CArray::add(&item10); }
 		TSArray(const T items[], CArray::ItemCount itemCount) :
 			TArray<T>(nil, nil)
 			{ for (CArray::ItemIndex i = 0; i < itemCount; CArray::add(&items[i++])) ; }

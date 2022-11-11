@@ -155,13 +155,13 @@ template <typename T> class TNLockingArrayDictionary : public TNLockingDictionar
 						TLockingDictionary<TNArray<T> >::mLock.lockForWriting();
 
 						// Update
-						const	OR<TNArray<T> >	array = TNLockingDictionary<TNArray<T> >::get(key);
-						if (array.hasReference())
+						OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+						if (opaque.hasValue())
 							// Already have array
-							*array += item;
+							*((TNArray<T>*) opaque.getValue()) += item;
 						else
 							// First one
-							TNLockingDictionary<TNArray<T> >::set(key, TNArray<T>(item));
+							CDictionary::set(key, new TNArray<T>(item));
 
 						// Unlock
 						TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
