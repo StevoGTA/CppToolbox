@@ -22,11 +22,8 @@ class CMPEG4MediaFile {
 
 																	// Instance methods
 		virtual			I<SMediaSource::ImportResult>				import(
-																			const I<CRandomAccessDataSource>&
-																					randomAccessDataSource,
-																			const OI<CAppleResourceManager>&
-																					appleResourceManager,
-																			TNArray<CString>& messages, UInt32 options);
+																			const SMediaSource::ImportSetup&
+																					importSetup);
 						TArray<SMediaPacketAndLocation>				composePacketAndLocations(
 																			const Internals& internals) const;
 

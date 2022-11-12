@@ -32,7 +32,9 @@ class CIterator {
 	public:
 						// Instance methods
 		virtual	bool	hasValue() const = 0;
-		virtual	bool	isFirstValue() const = 0;
+		virtual	UInt32	getIndex() const = 0;
+				bool	isFirstValue() const
+							{ return getIndex() == 0; }
 		virtual	bool	advance() = 0;
 
 	protected:
@@ -48,11 +50,11 @@ template <typename T> class TIteratorS : public CIterator {
 	public:
 				// Lifecycle methods
 				TIteratorS(T* firstValue, AdvanceProc advanceProc, Info& info) :
-					mAdvanceProc(advanceProc), mIsFirstValue(true), mCurrentValue(firstValue), mInfo(info)
+					mAdvanceProc(advanceProc), mInfo(info), mCurrentValue(firstValue), mIndex(0)
 					{}
 				TIteratorS(const TIteratorS* other) :
-					mAdvanceProc(other->mAdvanceProc), mIsFirstValue(other->mIsFirstValue),
-							mCurrentValue(other->mCurrentValue), mInfo(*other->mInfo.copy())
+					mAdvanceProc(other->mAdvanceProc), mInfo(*other->mInfo.copy()), mCurrentValue(other->mCurrentValue),
+							mIndex(other->mIndex)
 					{}
 				~TIteratorS()
 					{ Info* info = &mInfo; Delete(info); }
@@ -60,13 +62,13 @@ template <typename T> class TIteratorS : public CIterator {
 				// Instance methods
 		bool	hasValue() const
 					{ return mCurrentValue != nil; }
-		bool	isFirstValue() const
-					{ return mIsFirstValue; }
+		UInt32	getIndex() const
+					{ return mIndex; }
 		bool	advance()
 					{
 						// Advance
 						mCurrentValue = (T*) mAdvanceProc(mInfo);
-						mIsFirstValue = false;
+						mIndex++;
 
 						return mCurrentValue != nil;
 					}
@@ -82,9 +84,9 @@ template <typename T> class TIteratorS : public CIterator {
 	// Properties
 	private:
 		AdvanceProc	mAdvanceProc;
-		bool		mIsFirstValue;
 		Info&		mInfo;
 		T*			mCurrentValue;
+		UInt32		mIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -95,11 +97,11 @@ template <typename T> class TIteratorD : public CIterator {
 	public:
 				// Lifecycle methods
 				TIteratorD(T** firstValue, AdvanceProc advanceProc, Info& info) :
-					mAdvanceProc(advanceProc), mIsFirstValue(true), mCurrentValue(firstValue), mInfo(info)
+					mAdvanceProc(advanceProc), mInfo(info), mCurrentValue(firstValue), mIndex(0)
 					{}
 				TIteratorD(const TIteratorD* other) :
-					mAdvanceProc(other->mAdvanceProc), mIsFirstValue(other->mIsFirstValue),
-							mCurrentValue(other->mCurrentValue), mInfo(*other->mInfo.copy())
+					mAdvanceProc(other->mAdvanceProc), mInfo(*other->mInfo.copy()),
+							mCurrentValue(other->mCurrentValue), mIndex(other->mIndex)
 					{}
 				~TIteratorD()
 					{ Info* info = &mInfo; Delete(info); }
@@ -107,13 +109,13 @@ template <typename T> class TIteratorD : public CIterator {
 				// Instance methods
 		bool	hasValue() const
 					{ return mCurrentValue != nil; }
-		bool	isFirstValue() const
-					{ return mIsFirstValue; }
+		UInt32	getIndex() const
+					{ return mIndex; }
 		bool	advance()
 					{
 						// Advance
 						mCurrentValue = (T**) mAdvanceProc(mInfo);
-						mIsFirstValue = false;
+						mIndex++;
 
 						return mCurrentValue != nil;
 					}
@@ -129,9 +131,9 @@ template <typename T> class TIteratorD : public CIterator {
 	// Properties
 	private:
 		AdvanceProc	mAdvanceProc;
-		bool		mIsFirstValue;
 		Info&		mInfo;
 		T**			mCurrentValue;
+		UInt32		mIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -142,12 +144,12 @@ template <typename K, typename T> class TIteratorM : public CIterator {
 	public:
 				// Lifecycle methods
 				TIteratorM(K** firstRawValue, T (mapProc)(K** rawValue), AdvanceProc advanceProc, Info& info) :
-					mAdvanceProc(advanceProc), mIsFirstValue(true), mCurrentRawValue(firstRawValue), mMapProc(mapProc),
-							mInfo(info)
+					mAdvanceProc(advanceProc), mInfo(info), mCurrentRawValue(firstRawValue), mMapProc(mapProc),
+							mIndex(0)
 					{}
 				TIteratorM(const TIteratorM* other, T (mapProc)(K** rawValue)) :
-					mAdvanceProc(other->mAdvanceProc), mIsFirstValue(other->mIsFirstValue),
-							mCurrentRawValue(other->mCurrentRawValue), mMapProc(mapProc), mInfo(*other->mInfo.copy())
+					mAdvanceProc(other->mAdvanceProc), mInfo(*other->mInfo.copy()),
+							mCurrentRawValue(other->mCurrentRawValue), mMapProc(mapProc), mIndex(other->mIndex)
 					{}
 				~TIteratorM()
 					{ Info*	info = &mInfo; Delete(info); }
@@ -155,13 +157,13 @@ template <typename K, typename T> class TIteratorM : public CIterator {
 				// Instance methods
 		bool	hasValue() const
 					{ return mCurrentRawValue != nil; }
-		bool	isFirstValue() const
-					{ return mIsFirstValue; }
+		UInt32	getIndex() const
+					{ return mIndex; }
 		bool	advance()
 					{
 						// Advance
 						mCurrentRawValue = (K**) mAdvanceProc(mInfo);
-						mIsFirstValue = false;
+						mIndex++;
 
 						return mCurrentRawValue != nil;
 					}
@@ -175,8 +177,8 @@ template <typename K, typename T> class TIteratorM : public CIterator {
 	// Properties
 	private:
 		AdvanceProc	mAdvanceProc;
-		bool		mIsFirstValue;
 		Info&		mInfo;
 		K**			mCurrentRawValue;
 		T 			(*mMapProc)(K** rawValue);
+		UInt32		mIndex;
 };

@@ -370,13 +370,13 @@ template <typename T> class TReferenceDictionary : public CDictionary {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TKeyConvertibleDictionary
+// MARK: - TNKeyConvertibleDictionary
 
-template <typename K, typename T> class TKeyConvertibleDictionary : public TNDictionary<T> {
+template <typename K, typename T> class TNKeyConvertibleDictionary : public TNDictionary<T> {
 	// Methods
 	public:
 						// Lifecycle methods
-						TKeyConvertibleDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+						TNKeyConvertibleDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
 							TNDictionary<T>(opaqueEqualsProc)
 							{}
 
@@ -387,7 +387,7 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public TNDic
 							{ TNDictionary<T>::set(CString(key), item); }
 
 				void	remove(K key)
-							{ CDictionary::remove(CString(key)); }
+							{ TNDictionary<T>::remove(CString(key)); }
 
 		const	OR<T>	operator[](K key) const
 							{ return get(key); }
@@ -397,7 +397,7 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public TNDic
 // MARK: - TNArrayKeyConvertibleDictionary
 
 template <typename K, typename T> class TNArrayKeyConvertibleDictionary :
-		public TKeyConvertibleDictionary<K, TNArray<T> > {
+		public TNKeyConvertibleDictionary<K, TNArray<T> > {
 	// Methods
 	public:
 				// Instance methods
@@ -407,12 +407,12 @@ template <typename K, typename T> class TNArrayKeyConvertibleDictionary :
 						CString	keyString(key);
 
 						// Update
-						const	OR<TNArray<T> >	array = TKeyConvertibleDictionary<K, TNArray<T> >::get(key);
+						const	OR<TNArray<T> >	array = TNKeyConvertibleDictionary<K, TNArray<T> >::get(key);
 						if (array.hasReference())
 							// Already have array
 							*array += item;
 						else
 							// First one
-							TKeyConvertibleDictionary<K, TNArray<T> >::set(key, TNArray<T>(item));
+							TNKeyConvertibleDictionary<K, TNArray<T> >::set(key, TNArray<T>(item));
 					}
 };

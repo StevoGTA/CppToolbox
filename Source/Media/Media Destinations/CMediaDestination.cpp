@@ -13,8 +13,8 @@ class CMediaDestinationInternals {
 	public:
 		CMediaDestinationInternals() {}
 
-		TKeyConvertibleDictionary<UInt32, I<CAudioProcessor> >	mAudioProcessors;
-		TKeyConvertibleDictionary<UInt32, I<CVideoProcessor> >	mVideoProcessors;
+		TNKeyConvertibleDictionary<UInt32, I<CAudioProcessor> >	mAudioProcessors;
+		TNKeyConvertibleDictionary<UInt32, I<CVideoProcessor> >	mVideoProcessors;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

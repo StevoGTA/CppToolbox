@@ -167,3 +167,22 @@ template <typename T> class TNLockingArrayDictionary : public TNLockingDictionar
 						TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
 					}
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNLockingKeyConvertibleDictionary
+
+template <typename K, typename T> class TNLockingKeyConvertibleDictionary : public TNLockingDictionary<T> {
+	// Methods
+	public:
+						// Instance methods
+		const	OR<T>	get(K key) const
+							{ return TNLockingDictionary<T>::get(CString(key)); }
+				void	set(K key, const T& item)
+							{ TNLockingDictionary<T>::set(CString(key), item); }
+
+				void	remove(K key)
+							{ TNLockingDictionary<T>::remove(CString(key)); }
+
+		const	OR<T>	operator[](K key) const
+							{ return get(key); }
+};

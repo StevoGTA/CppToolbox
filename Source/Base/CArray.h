@@ -187,6 +187,7 @@ template <typename T> class TNumberArray : public CArray {
 template <typename T> class TArray : public CArray {
 	// Types
 	public:
+		typedef	void	(*ApplyProc)(T& item, void* userData);
 		typedef	bool	(*IsMatchProc)(const T& item, void* userData);
 
 	// Methods

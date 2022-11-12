@@ -734,12 +734,11 @@ struct CQuickTimeMediaFile::Internals {
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
+I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::ImportSetup& importSetup)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CAtomReader	atomReader(randomAccessDataSource);
+	CAtomReader	atomReader(importSetup.getRandomAccessDataSource());
 	OV<SError>	error;
 
 	// Find core atoms
@@ -896,9 +895,11 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
 				// Audio track
 				TVResult<CMediaTrackInfos::AudioTrackInfo>	audioTrackInfo =
-																	composeAudioTrackInfo(randomAccessDataSource,
-																			options, stsdDescription.getType(),
-																			duration, metaAtomPayloadData, internals);
+																	composeAudioTrackInfo(
+																			importSetup.getRandomAccessDataSource(),
+																			importSetup.getOptions(),
+																			stsdDescription.getType(), duration,
+																			metaAtomPayloadData, internals);
 				if (audioTrackInfo.hasValue())
 					// Success
 					mediaTrackInfos.add(*audioTrackInfo);
@@ -908,10 +909,11 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
 				// Video track
 				TVResult<CMediaTrackInfos::VideoTrackInfo>	videoTrackInfo =
-																	composeVideoTrackInfo(randomAccessDataSource,
-																			options, stsdDescription.getType(),
-																			timeScale, duration, metaAtomPayloadData,
-																			internals);
+																	composeVideoTrackInfo(
+																			importSetup.getRandomAccessDataSource(),
+																			importSetup.getOptions(),
+																			stsdDescription.getType(), timeScale,
+																			duration, metaAtomPayloadData, internals);
 				if (videoTrackInfo.hasValue())
 					// Success
 					mediaTrackInfos.add(*videoTrackInfo);
@@ -928,7 +930,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const I<CRandomAccessD
 		}
 	}
 
-	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mediaTrackInfos));
+	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mediaTrackInfos, TNArray<CString>()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1272,11 +1274,10 @@ TVResult<CData> CQuickTimeMediaFile::getAudioDecompressionData(const Internals& 
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-static I<SMediaSource::ImportResult> sImport(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
+static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CQuickTimeMediaFile::create()->import(randomAccessDataSource, appleResourceManager, messages, options);
+	return CQuickTimeMediaFile::create()->import(importSetup);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -21,12 +21,7 @@ class CQuickTimeMediaFile {
 		virtual												~CQuickTimeMediaFile() {}
 
 															// Instance methods
-				I<SMediaSource::ImportResult>				import(
-																	const I<CRandomAccessDataSource>&
-																			randomAccessDataSource,
-																	const OI<CAppleResourceManager>&
-																			appleResourceManager,
-																	TNArray<CString>& messages, UInt32 options);
+				I<SMediaSource::ImportResult>				import(const SMediaSource::ImportSetup& importSetup);
 				TArray<SMediaPacketAndLocation>				composePacketAndLocations(const Internals& internals,
 																	const OV<UInt32>& framesPerPacket = OV<UInt32>(),
 																	const OV<UInt32>& bytesPerPacket = OV<UInt32>())

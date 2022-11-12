@@ -17,7 +17,6 @@ class CAudioDecoder : public CAudioSource {
 										// Lifecycle methods
 										CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
 												const I<CDecodeAudioCodec>& audioCodec, const CString& identifier);
-										CAudioDecoder(const CAudioDecoder& other);
 										~CAudioDecoder();
 
 										// CAudioProcessor methods

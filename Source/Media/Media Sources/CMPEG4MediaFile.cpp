@@ -588,12 +588,11 @@ struct CMPEG4MediaFile::Internals {
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
+I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::ImportSetup& importSetup)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CAtomReader	atomReader(randomAccessDataSource);
+	CAtomReader	atomReader(importSetup.getRandomAccessDataSource());
 	OV<SError>	error;
 
 	// Read root atom
@@ -728,9 +727,11 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
 				// Audio track
 				TVResult<CMediaTrackInfos::AudioTrackInfo>	audioTrackInfo =
-																	composeAudioTrackInfo(randomAccessDataSource,
-																			options, stsdDescription.getType(),
-																			duration, internals);
+																	composeAudioTrackInfo(
+																			importSetup.getRandomAccessDataSource(),
+																			importSetup.getOptions(),
+																			stsdDescription.getType(), duration,
+																			internals);
 				if (audioTrackInfo.hasValue())
 					// Success
 					mediaTrackInfos.add(*audioTrackInfo);
@@ -740,9 +741,11 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
 				// Video track
 				TVResult<CMediaTrackInfos::VideoTrackInfo>	videoTrackInfo =
-																	composeVideoTrackInfo(randomAccessDataSource,
-																			options, stsdDescription.getType(),
-																			timeScale, duration, internals);
+																	composeVideoTrackInfo(
+																			importSetup.getRandomAccessDataSource(),
+																			importSetup.getOptions(),
+																			stsdDescription.getType(), timeScale,
+																			duration, internals);
 				if (videoTrackInfo.hasValue())
 					// Success
 					mediaTrackInfos.add(*videoTrackInfo);
@@ -755,7 +758,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const I<CRandomAccessDataS
 			process(atomReader, *moovIterator);
 	}
 
-	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mediaTrackInfos));
+	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mediaTrackInfos, TNArray<CString>()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -976,11 +979,10 @@ TVResult<CData> CMPEG4MediaFile::getDecompressionData(const Internals& internals
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-static I<SMediaSource::ImportResult> sImport(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options)
+static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CMPEG4MediaFile::create()->import(randomAccessDataSource, appleResourceManager, messages, options);
+	return CMPEG4MediaFile::create()->import(importSetup);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

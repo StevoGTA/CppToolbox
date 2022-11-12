@@ -19,7 +19,7 @@ class CMediaSourceRegistryInternals {
 	public:
 		CMediaSourceRegistryInternals() {}
 
-		TKeyConvertibleDictionary<OSType, SMediaSource>	mMediaSources;
+		TNKeyConvertibleDictionary<OSType, SMediaSource>	mMediaSources;
 };
 
 CMediaSourceRegistryInternals*	sMediaSourceRegistryInternals = nil;
@@ -71,9 +71,8 @@ TSet<CString> CMediaSourceRegistry::getAllMediaSourceExtensions() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
-		const I<CRandomAccessDataSource>& randomAccessDataSource, const OV<CString>& extension,
-		const OI<CAppleResourceManager>& appleResourceManager, TNArray<CString>& messages, UInt32 options) const
+TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(const SMediaSource::ImportSetup& importSetup,
+		const OV<CString>& extension) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -93,9 +92,7 @@ TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 			// Check extensions
 			if (mediaSource.getExtensions().contains(extensionUse)) {
 				// Found by extension
-				I<SMediaSource::ImportResult>	importResult =
-														mediaSource.import(randomAccessDataSource, appleResourceManager,
-																messages, options);
+				I<SMediaSource::ImportResult>	importResult = mediaSource.import(importSetup);
 				switch (importResult->getResult()) {
 					case SMediaSource::ImportResult::kSuccess:
 						// Success
@@ -121,9 +118,7 @@ TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(
 		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
 
 		// Query tracks
-		I<SMediaSource::ImportResult>	importResult =
-												mediaSource.import(randomAccessDataSource, appleResourceManager,
-														messages, options);
+		I<SMediaSource::ImportResult>	importResult = mediaSource.import(importSetup);
 		switch (importResult->getResult()) {
 			case SMediaSource::ImportResult::kSuccess:
 				// Success

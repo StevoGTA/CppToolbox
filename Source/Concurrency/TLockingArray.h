@@ -152,6 +152,16 @@ template <typename T> class TNLockingArray : public TNArray<T> {
 										return item;
 									}
 
+		TNLockingArray<T>&		apply(void (proc)(T& item, void* userData), void* userData = nil)
+									{
+										// Perform under lock
+										mLock.lockForReading();
+										TNArray<T>::apply((CArray::ApplyProc) proc, userData);
+										mLock.unlockForReading();
+
+										return *this;
+									}
+
 		TNLockingArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData),
 										void* userData = nil)
 									{
@@ -178,94 +188,6 @@ template <typename T> class TNLockingArray : public TNArray<T> {
 									{ return removeFrom(other); }
 		TNLockingArray<T>&		operator-=(const TNLockingArray<T>& other)
 									{ return removeFrom(other); }
-
-	// Properties
-	private:
-		CReadPreferringLock	mLock;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TILockingArray
-
-template <typename T> class TILockingArray : public CArray {
-	// Methods
-	public:
-										// Lifecycle methods
-										TILockingArray(CArray::ItemCount initialCapacity = 0) :
-											CArray(initialCapacity, nil, dispose)
-											{}
-
-										// CArray methods
-				TILockingArray<T>&		add(T* item)	// Pointer to mirror that this is an instance array
-											{
-												// Add under lock
-												mLock.lockForWriting();
-												CArray::add(item);
-												mLock.unlockForWriting();
-
-												return *this;
-											}
-
-				T&						getAt(CArray::ItemIndex index) const
-											{
-												// Get under lock
-												mLock.lockForReading();
-												T&	item = *((T*) getItemAt(index));
-												mLock.unlockForReading();
-
-												return item;
-											}
-				OV<CArray::ItemIndex>	getIndexOf(T& item) const
-											{
-												// Query under lock
-												mLock.lockForReading();
-												OV<CArray::ItemIndex>	index;
-												for (CArray::ItemIndex i = 0; i < getCount(); i++) {
-													// Check if same
-													T&	testItem = getAt(i);
-													if (&item == &testItem)
-														// Match
-														index = i;
-														break;
-												}
-												mLock.unlockForReading();
-
-												return index;
-											}
-
-				TILockingArray<T>&		remove(T& item)
-											{
-												// Remove under lock
-												mLock.lockForWriting();
-												OV<CArray::ItemIndex>	index = getIndexOf(item);
-												if (index.hasValue())
-													// Remove
-													removeAtIndex(*index);
-												mLock.unlockForWriting();
-
-												return *this;
-											}
-
-				TILockingArray<T>&		apply(void (proc)(T& item, void* userData), void* userData = nil)
-											{
-												// Perform under lock
-												mLock.lockForReading();
-												CArray::apply((CArray::ApplyProc) proc, userData);
-												mLock.unlockForReading();
-
-												return *this;
-											}
-
-										// Instance methods
-				TILockingArray<T>&		operator+=(T* item)	// Pointer to mirror that this is an instance array
-											{ return add(item); }
-				TILockingArray<T>&		operator-=(T& item)
-											{ return remove(item); }
-
-	private:
-										// Class methods
-		static	void					dispose(CArray::ItemRef itemRef)
-											{ T* t = (T*) itemRef; Delete(t); }
 
 	// Properties
 	private:

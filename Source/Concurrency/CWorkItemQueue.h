@@ -111,6 +111,8 @@ class CWorkItemQueue {
 				void			pause();
 				void			resume();
 
+				void			wait() const;
+
 								// Class methods
 		static	CWorkItemQueue&	main();
 

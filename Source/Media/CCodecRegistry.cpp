@@ -13,8 +13,8 @@ class CCodecRegistryInternals {
 	public:
 		CCodecRegistryInternals() {}
 
-		TKeyConvertibleDictionary<OSType, CAudioCodec::Info>	mAudioCodecInfo;
-		TKeyConvertibleDictionary<OSType, CVideoCodec::Info>	mVideoCodecInfo;
+		TNKeyConvertibleDictionary<OSType, CAudioCodec::Info>	mAudioCodecInfo;
+		TNKeyConvertibleDictionary<OSType, CVideoCodec::Info>	mVideoCodecInfo;
 };
 
 CCodecRegistryInternals*	sCodecRegistryInternals = nil;

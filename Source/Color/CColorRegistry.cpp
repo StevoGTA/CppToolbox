@@ -99,7 +99,7 @@ class CColorSetInternals : public TReferenceCountable<CColorSetInternals> {
 
 	CString										mName;
 	OV<OSType>									mID;
-	TKeyConvertibleDictionary<UInt64, CColor>	mColorsMap;
+	TNKeyConvertibleDictionary<UInt64, CColor>	mColorsMap;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -308,7 +308,7 @@ class CColorRegistryInternals {
 		CNotificationCenter&							mNotificationCenter;
 		OI<CColorSet>									mCurrentColorSet;
 		OI<CPreferences::Pref>							mPref;
-		TKeyConvertibleDictionary<OSType, CColorGroup>	mColorGroupMap;
+		TNKeyConvertibleDictionary<OSType, CColorGroup>	mColorGroupMap;
 		TNArray<CColorSet>								mColorSets;
 		TNArray<CColorSet>								mColorSetPresets;
 };
