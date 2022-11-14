@@ -37,7 +37,7 @@ OV<CFile> CFilesystem::getDotUnderscoreFile(const CFile& file)
 	CFile	dotUnderscoreFile(
 					filesystemPath
 							.deletingLastComponent()
-							.appendingComponent(CString(OSSTR("._")) + filesystemPath.getLastComponent()));
+							.appendingComponent(CString(OSSTR("._")) + *filesystemPath.getLastComponent()));
 
 	return dotUnderscoreFile.doesExist() ? OV<CFile>(dotUnderscoreFile) : OV<CFile>();
 #endif
