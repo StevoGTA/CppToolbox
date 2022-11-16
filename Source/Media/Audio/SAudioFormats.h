@@ -209,68 +209,83 @@ struct SAudioProcessingFormat {
 		kNonInterleaved,
 	};
 
-						// Lifecycle methods
-						SAudioProcessingFormat(UInt8 bits, Float32 sampleRate, EAudioChannelMap audioChannelMap,
-								SampleType sampleType = kSampleTypeSignedInteger, Endian endian = kEndianNative,
-								Interleaved interleaved = kInterleaved) :
-							mBits(bits), mSampleRate(sampleRate), mAudioChannelMap(audioChannelMap),
-									mSampleType(sampleType), mEndian(endian), mInterleaved(interleaved)
-							{}
-						SAudioProcessingFormat(const SAudioProcessingFormat& other) :
-							mBits(other.mBits), mSampleRate(other.mSampleRate),
-									mAudioChannelMap(other.mAudioChannelMap), mSampleType(other.mSampleType),
-									mEndian(other.mEndian), mInterleaved(other.mInterleaved)
-							{}
+							// Lifecycle methods
+							SAudioProcessingFormat(UInt8 bits, Float32 sampleRate, EAudioChannelMap audioChannelMap,
+									SampleType sampleType = kSampleTypeSignedInteger, Endian endian = kEndianNative,
+									Interleaved interleaved = kInterleaved) :
+								mBits(bits), mSampleRate(sampleRate), mAudioChannelMap(audioChannelMap),
+										mSampleType(sampleType), mEndian(endian), mInterleaved(interleaved)
+								{}
+							SAudioProcessingFormat(const SAudioProcessingFormat& other) :
+								mBits(other.mBits), mSampleRate(other.mSampleRate),
+										mAudioChannelMap(other.mAudioChannelMap), mSampleType(other.mSampleType),
+										mEndian(other.mEndian), mInterleaved(other.mInterleaved)
+								{}
 
-						// Instance methods
-	UInt8				getBits() const
-							{ return mBits; }
-	Float32				getSampleRate() const
-							{ return mSampleRate; }
-	EAudioChannelMap	getAudioChannelMap() const
-							{ return mAudioChannelMap; }
-	UInt8				getChannels() const
-							{ return AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap); }
-	bool				getIsFloat() const
-							{ return mSampleType == kSampleTypeFloat; }
-	bool				getIsSignedInteger() const
-							{ return mSampleType == kSampleTypeSignedInteger; }
-	SampleType			getSampleType() const
-							{ return mSampleType; }
-	bool				getIsBigEndian() const
-							{ return mEndian == kEndianBig; }
-	Endian				getEndian() const
-							{ return mEndian; }
-	bool				getIsInterleaved() const
-							{ return mInterleaved == kInterleaved; }
-	Interleaved			getInterleaved() const
-							{ return mInterleaved; }
-	UInt32				getBytesPerSample() const
-							{ return mBits / 8; }
-	UInt32				getBytesPerFrame() const
-							{ return mBits / 8 * AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap); }
-	CString				getDescription() const
-							{
-								// Compose description
-								CString	description;
-								description +=
-										CString(mBits) +
-												((mSampleType == kSampleTypeFloat) ?
-														CString(OSSTR(" (Float), ")) :
-														CString(OSSTR(" (Signed Integer), ")));
-								description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
-								description +=
-										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap)) + CString(OSSTR(" (")) +
-												eChannelMapGetDescription(mAudioChannelMap) + CString(OSSTR("), "));
-								description +=
-										(mEndian == kEndianBig) ?
-												CString(OSSTR("Big Endian, ")) : CString(OSSTR("Little Endian, "));
-								description +=
-										(mInterleaved == kInterleaved) ?
-												CString(OSSTR("Interleaved, ")) : CString(OSSTR("Non-Interleaved, "));
+							// Instance methods
+	UInt8					getBits() const
+								{ return mBits; }
+	Float32					getSampleRate() const
+								{ return mSampleRate; }
+	EAudioChannelMap		getAudioChannelMap() const
+								{ return mAudioChannelMap; }
+	UInt8					getChannels() const
+								{ return AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap); }
+	bool					getIsFloat() const
+								{ return mSampleType == kSampleTypeFloat; }
+	bool					getIsSignedInteger() const
+								{ return mSampleType == kSampleTypeSignedInteger; }
+	SampleType				getSampleType() const
+								{ return mSampleType; }
+	bool					getIsBigEndian() const
+								{ return mEndian == kEndianBig; }
+	Endian					getEndian() const
+								{ return mEndian; }
+	bool					getIsInterleaved() const
+								{ return mInterleaved == kInterleaved; }
+	Interleaved				getInterleaved() const
+								{ return mInterleaved; }
+	UInt32					getBytesPerSample() const
+								{ return mBits / 8; }
+	UInt32					getBytesPerFrame() const
+								{ return mBits / 8 * AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap); }
+	CString					getDescription() const
+								{
+									// Compose description
+									CString	description;
+									description +=
+											CString(mBits) +
+													((mSampleType == kSampleTypeFloat) ?
+															CString(OSSTR(" (Float), ")) :
+															CString(OSSTR(" (Signed Integer), ")));
+									description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
+									description +=
+											CString(AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap)) +
+													CString(OSSTR(" (")) + eChannelMapGetDescription(mAudioChannelMap) +
+													CString(OSSTR("), "));
+									description +=
+											(mEndian == kEndianBig) ?
+													CString(OSSTR("Big Endian, ")) : CString(OSSTR("Little Endian, "));
+									description +=
+											(mInterleaved == kInterleaved) ?
+													CString(OSSTR("Interleaved")) :
+													CString(OSSTR("Non-Interleaved"));
 
-								return description;
-							}
+									return description;
+								}
+
+	SAudioProcessingFormat&	operator=(const SAudioProcessingFormat& other)
+								{
+									// Store
+									mBits = other.mBits;
+									mSampleRate = other.mSampleRate;
+									mAudioChannelMap = other.mAudioChannelMap;
+									mSampleType = other.mSampleType;
+									mEndian = other.mEndian;
+									mInterleaved = other.mInterleaved;
+
+									return *this;
+								}
 
 	// Properties
 	private:

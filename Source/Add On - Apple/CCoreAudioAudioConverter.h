@@ -25,6 +25,10 @@ class CCoreAudioAudioConverter : public CAudioConverter {
 
 		void				reset();
 
+							// CAudioConverter methods
+		bool				supportsNoninterleaved() const
+								{ return true; }
+
 	// Properties
 	private:
 		CCoreAudioAudioConverterInternals*	mInternals;

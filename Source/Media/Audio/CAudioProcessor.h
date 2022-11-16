@@ -130,12 +130,15 @@ class CBasicAudioProcessor : public CAudioProcessor {
 class CAudioConverter : public CBasicAudioProcessor {
 	// Methods
 	public:
-										// CAudioProcessor methods
-		TArray<SAudioProcessingSetup>	getOutputSetups() const
-											{ return TNArray<SAudioProcessingSetup>(
-													SAudioProcessingSetup::mUnspecified); }
+												// CAudioProcessor methods
+				TArray<SAudioProcessingSetup>	getOutputSetups() const
+													{ return TNArray<SAudioProcessingSetup>(
+															SAudioProcessingSetup::mUnspecified); }
+
+												// Instance methods
+		virtual	bool							supportsNoninterleaved() const = 0;
 
 	protected:
-										// Lifecycle methods
-										CAudioConverter() {}
+												// Lifecycle methods
+												CAudioConverter() {}
 };

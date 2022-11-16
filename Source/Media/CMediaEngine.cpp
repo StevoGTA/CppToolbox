@@ -205,6 +205,48 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 		const I<CAudioProcessor>& audioProcessorDestination, const SAudioProcessingFormat& audioProcessingFormat) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+/*
+	Source can be interleaved or non-interleaved
+	Destination can be interleaved or non-interleaved
+	May require Audio Converter if bits or sample rate don't match
+		Audio Converters always support interleaved, but may not support non-interleaved
+	May require Audio Channel Mapper if Audio Channel Maps don't match
+
+	Possible scenarios
+		Converter supports non-interleaved
+			Source (interleaved) -> Channel Mapper -> Converter -> Destination (interleaved)
+			Source (interleaved) -> Channel Mapper -> Converter -> Destination (non-interleaved)
+			Source (non-interleaved) -> Channel Mapper -> Converter -> Destination (interleaved)
+			Source (non-interleaved) -> Channel Mapper -> Converter -> Destination (non-interleaved)
+
+			Source (interleaved) -> Converter -> Destination (interleaved)
+			Source (interleaved) -> Converter -> Destination (non-interleaved)
+			Source (non-interleaved) -> Converter -> Destination (interleaved)
+			Source (non-interleaved) -> Converter -> Destination (non-interleaved)
+
+		Converter only supports interleaved
+			Source (interleaved) -> Channel Mapper -> Converter -> Destination (interleaved)
+			Source (interleaved) -> Channel Mapper -> Converter -> Deinterleaver -> Destination (non-interleaved)
+			Source (non-interleaved) -> Channel Mapper -> Interleaver -> Converter -> Destination (interleaved)
+			Source (non-interleaved) -> Channel Mapper -> Interleaver -> Converter -> Deinterleaver -> Destination (non-interleaved)
+
+			Source (interleaved) -> Converter -> Destination (interleaved)
+			Source (interleaved) -> Converter -> Deinterleaver -> Destination (non-interleaved)
+			Source (non-interleaved) -> Interleaver -> Converter -> Destination (interleaved)
+			Source (non-interleaved) -> Interleaver -> Converter -> Deinterleaver -> Destination (non-interleaved)
+
+		No Converter
+			Source (interleaved) -> Destination (interleaved)
+			Source (interleaved) -> Deinterleaver -> Destination (non-interleaved)
+			Source (non-interleaved) -> Interleaver -> Destination (interleaved)
+			Source (non-interleaved) -> Destination (non-interleaved)
+
+			Source (interleaved) -> Channel Mapper -> Destination (interleaved)
+			Source (interleaved) -> Channel Mapper -> Deinterleaver -> Destination (non-interleaved)
+			Source (non-interleaved) -> Channel Mapper -> Interleaver -> Destination (interleaved)
+			Source (non-interleaved) -> Channel Mapper -> Destination (non-interleaved)
+ */
+
 	// Setup
 	TArray<SAudioProcessingSetup>	audioProcessorSourceAudioProcessingSetups = audioProcessorSource->getOutputSetups();
 	TArray<SAudioProcessingSetup>	audioProcessorDestinationAudioProcessingSetups =
@@ -221,82 +263,101 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 
 		audioProcessorDestination->connectInput(audioProcessorSource, *commonAudioProcessingFormat);
 
-		return *commonAudioProcessingFormat;
-	} else {
-		// Requires converter and/or channel mapper
-		SAudioProcessingFormats	audioProcessingFormats =
-										sComposeAudioProcessingFormats(
-												audioProcessorSourceAudioProcessingSetups.getFirst(),
-												audioProcessorDestinationAudioProcessingSetups.getFirst(),
-												audioProcessingFormat);
-		bool					requiresConverter =
-										!audioProcessingFormats.doBitsMatch() ||
-												!audioProcessingFormats.doSampleRatesMatch() ||
-												!audioProcessingFormats.doInterleavedsMatch();
-		bool					requiresChannelMapper = !audioProcessingFormats.doAudioChannelMapsMatch();
-		OV<SError>				error;
-		if (requiresConverter && requiresChannelMapper) {
-			// Requires converter and channel mapper
-			SAudioProcessingFormat	intermediateAudioProcessingFormat(
-											audioProcessingFormats.mSourceAudioProcessingFormat.getBits(),
-											audioProcessingFormats.mSourceAudioProcessingFormat.getSampleRate(),
-											audioProcessingFormats.mDestinationAudioProcessingFormat
-													.getAudioChannelMap(),
-											audioProcessingFormats.mSourceAudioProcessingFormat.getSampleType(),
-											audioProcessingFormats.mSourceAudioProcessingFormat.getEndian(),
-											audioProcessingFormats.mSourceAudioProcessingFormat.getInterleaved());
+		return ConnectResult(*commonAudioProcessingFormat);
+	}
 
-			// Setup
-			I<CAudioChannelMapper>	audioChannelMapper(new CAudioChannelMapper());
-			I<CAudioConverter>		audioConverter = createAudioConverter();
+	// Requires intermediate audio processors
+	SAudioProcessingFormats	audioProcessingFormats =
+									sComposeAudioProcessingFormats(
+											audioProcessorSourceAudioProcessingSetups.getFirst(),
+											audioProcessorDestinationAudioProcessingSetups.getFirst(),
+											audioProcessingFormat);
+	I<CAudioProcessor>		currentAudioProcessor(audioProcessorDestination);
+	SAudioProcessingFormat	currentAudioProcessingFormat(audioProcessingFormats.mDestinationAudioProcessingFormat);
+	OV<SError>				error;
+	if (!audioProcessingFormats.doBitsMatch() || !audioProcessingFormats.doSampleRatesMatch() ||
+			!audioProcessingFormats.doEndiansMatch()) {
+		// Requires Audio Converter
+		I<CAudioConverter>	audioConverter = createAudioConverter();
 
-			// Connect
+		// Check if need Audio Deinterleaver.  Some Audio Converters do not support non-interleaved.  So we supply
+		//	a deinterleaver if necessary.
+		if (!currentAudioProcessingFormat.getIsInterleaved() && !audioConverter->supportsNoninterleaved()) {
+			// Create Audio Deinterleaver
+I<CAudioProcessor>	audioDeinterleaver(nil);
+
+			// Connect Audio Deinterleaver
 			error =
-					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioConverter,
-							audioProcessingFormats.mDestinationAudioProcessingFormat);
+					currentAudioProcessor->connectInput(audioDeinterleaver,
+							SAudioProcessingFormat(currentAudioProcessingFormat.getBits(),
+									currentAudioProcessingFormat.getSampleRate(),
+									currentAudioProcessingFormat.getAudioChannelMap(),
+									currentAudioProcessingFormat.getSampleType(),
+									currentAudioProcessingFormat.getEndian(), SAudioProcessingFormat::kNonInterleaved));
 			if (error.hasValue()) return ConnectResult(*error);
 
-			error =
-					audioConverter->connectInput((I<CAudioProcessor>&) audioChannelMapper,
-							intermediateAudioProcessingFormat);
-			if (error.hasValue()) return ConnectResult(*error);
-
-			error =
-					audioChannelMapper->connectInput(audioProcessorSource,
-							audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasValue()) return ConnectResult(*error);
-		} else if (requiresConverter) {
-			// Requires converter
-			I<CAudioConverter>	audioConverter = createAudioConverter();
-
-			// Connect
-			error =
-					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioConverter,
-							audioProcessingFormats.mDestinationAudioProcessingFormat);
-			if (error.hasValue()) return ConnectResult(*error);
-
-			error =
-					audioConverter->connectInput(audioProcessorSource,
-							audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasValue()) return ConnectResult(*error);
-		} else {
-			// Requires channel mapper
-			I<CAudioChannelMapper>	audioChannelMapper(new CAudioChannelMapper());
-
-			// Connect
-			error =
-					audioProcessorDestination->connectInput((I<CAudioProcessor>&) audioChannelMapper,
-							audioProcessingFormats.mDestinationAudioProcessingFormat);
-			if (error.hasValue()) return ConnectResult(*error);
-
-			error =
-					audioChannelMapper->connectInput(audioProcessorSource,
-							audioProcessingFormats.mSourceAudioProcessingFormat);
-			if (error.hasValue()) return ConnectResult(*error);
+			// Update
+			currentAudioProcessor = audioDeinterleaver;
+			currentAudioProcessingFormat =
+					SAudioProcessingFormat(currentAudioProcessingFormat.getBits(),
+							currentAudioProcessingFormat.getSampleRate(),
+							currentAudioProcessingFormat.getAudioChannelMap(),
+							currentAudioProcessingFormat.getSampleType(),
+							currentAudioProcessingFormat.getEndian(), SAudioProcessingFormat::kInterleaved);
 		}
 
-		return audioProcessingFormats.mSourceAudioProcessingFormat;
+		// Connect Audio Converter
+		error = currentAudioProcessor->connectInput((I<CAudioProcessor>&) audioConverter, currentAudioProcessingFormat);
+		if (error.hasValue()) return ConnectResult(*error);
+
+		// Update
+		currentAudioProcessor = (I<CAudioProcessor>&) audioConverter;
+		currentAudioProcessingFormat =
+				SAudioProcessingFormat(audioProcessingFormats.mSourceAudioProcessingFormat.getBits(),
+						audioProcessingFormats.mSourceAudioProcessingFormat.getSampleRate(),
+						currentAudioProcessingFormat.getAudioChannelMap(),
+						audioProcessingFormats.mSourceAudioProcessingFormat.getSampleType(),
+						audioProcessingFormats.mSourceAudioProcessingFormat.getEndian(),
+						audioConverter->supportsNoninterleaved() ?
+								audioProcessingFormats.mSourceAudioProcessingFormat.getInterleaved() :
+								SAudioProcessingFormat::kInterleaved);
+
+		// Check if need Audio Interleaver
+		if (!audioProcessingFormats.mSourceAudioProcessingFormat.getIsInterleaved() &&
+				!audioConverter->supportsNoninterleaved()) {
+			// Create Audio Interleaver
+I<CAudioProcessor>	audioInterleaver(nil);
+
+			// Connect Audio Interleaver
+			error = currentAudioProcessor->connectInput(audioInterleaver, currentAudioProcessingFormat);
+			if (error.hasValue()) return ConnectResult(*error);
+
+			// Update
+			currentAudioProcessor = audioInterleaver;
+		}
 	}
+
+	// Check if need Audio Channel Mapper
+	if (!audioProcessingFormats.doAudioChannelMapsMatch()) {
+		// Requires channel mapper
+		I<CAudioChannelMapper>	audioChannelMapper(new CAudioChannelMapper());
+
+		// Connect
+		error =
+				currentAudioProcessor->connectInput((I<CAudioProcessor>&) audioChannelMapper,
+						currentAudioProcessingFormat);
+		if (error.hasValue()) return ConnectResult(*error);
+
+		// Update
+		currentAudioProcessor = (I<CAudioProcessor>&) audioChannelMapper;
+
+	}
+
+	// Connect source
+	error = currentAudioProcessor->connectInput(audioProcessorSource, currentAudioProcessingFormat);
+	if (error.hasValue()) return ConnectResult(*error);
+
+	return ConnectResult(audioProcessingFormats.mSourceAudioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
