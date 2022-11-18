@@ -167,7 +167,7 @@ OV<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf(audioFrames.getAvailableFrameCount() < (1024 * 2));
+	AssertFailIf(audioFrames.getAllocatedFrameCount() < (1024 * 2));
 
 	// Setup
 	AudioBufferList	audioBufferList;

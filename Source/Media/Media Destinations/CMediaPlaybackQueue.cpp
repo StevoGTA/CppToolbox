@@ -8,9 +8,9 @@
 #include "CThread.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CMediaPlaybackQueuePrepareThread
+// MARK: CMediaPlaybackQueueItemPrepareThread
 
-class CMediaPlaybackQueuePrepareThread : public CThread {
+class CMediaPlaybackQueueItemPrepareThread : public CThread {
 	public:
 		struct StartedMessage : public CSRSWMessageQueue::ProcMessage {
 					// Lifecycle Methods
@@ -47,9 +47,9 @@ class CMediaPlaybackQueuePrepareThread : public CThread {
 			TVResult<I<CMediaPlayer> >*		mMediaPlayer;
 		};
 
-						CMediaPlaybackQueuePrepareThread(CSRSWMessageQueues& messageQueues,
+						CMediaPlaybackQueueItemPrepareThread(CSRSWMessageQueues& messageQueues,
 								const CMediaPlaybackQueue::Info& info) :
-							CThread(CString(OSSTR("CMediaPlaybackQueuePrepareThread"))),
+							CThread(CString(OSSTR("CMediaPlaybackQueueItemPrepareThread"))),
 									mInfo(info), mMessageQueue(1024),
 									mShutdownRequested(false),
 									mCancelled(false)
@@ -82,11 +82,10 @@ class CMediaPlaybackQueuePrepareThread : public CThread {
 										TVResult<I<CMediaPlayer> >	mediaPlayer = (*item)->prepare();
 
 										// Check cancelled
-										if (!mCancelled) {
+										if (!mCancelled)
 											// Queue message
 											mMessageQueue.submit(CompletedMessage(handleCompleted, this, *item,
 													mediaPlayer));
-										}
 
 										// Clear item
 										mItemLock.lock();
@@ -149,15 +148,15 @@ class CMediaPlaybackQueuePrepareThread : public CThread {
 		static	void	handleStarted(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
-								CMediaPlaybackQueuePrepareThread&	internals =
-																			*((CMediaPlaybackQueuePrepareThread*)
-																					userData);
-								StartedMessage&						startedMessage = (StartedMessage&) message;
+								CMediaPlaybackQueueItemPrepareThread&	mediaPlaybackQueueItemPrepareThread =
+																				*((CMediaPlaybackQueueItemPrepareThread*)
+																						userData);
+								StartedMessage&							startedMessage = (StartedMessage&) message;
 
 								// Check if shutdown requested
-								if (!internals.mShutdownRequested)
+								if (!mediaPlaybackQueueItemPrepareThread.mShutdownRequested)
 									// Inform
-									internals.mInfo.itemPrepareStarted(*startedMessage.mItem);
+									mediaPlaybackQueueItemPrepareThread.mInfo.itemPrepareStarted(*startedMessage.mItem);
 
 								// Cleanup
 								startedMessage.cleanup();
@@ -165,16 +164,16 @@ class CMediaPlaybackQueuePrepareThread : public CThread {
 		static	void	handleCompleted(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
-								CMediaPlaybackQueuePrepareThread&	internals =
-																			*((CMediaPlaybackQueuePrepareThread*)
-																					userData);
-								CompletedMessage&					completedMessage = (CompletedMessage&) message;
+								CMediaPlaybackQueueItemPrepareThread&	mediaPlaybackQueueItemPrepareThread =
+																				*((CMediaPlaybackQueueItemPrepareThread*)
+																						userData);
+								CompletedMessage&						completedMessage = (CompletedMessage&) message;
 
 								// Check if shutdown requested
-								if (!internals.mShutdownRequested)
+								if (!mediaPlaybackQueueItemPrepareThread.mShutdownRequested)
 									// Inform
-									internals.mInfo.itemPrepareCompleted(*completedMessage.mItem,
-											*completedMessage.mMediaPlayer);
+									mediaPlaybackQueueItemPrepareThread.mInfo.itemPrepareCompleted(
+											*completedMessage.mItem, *completedMessage.mMediaPlayer);
 
 								// Cleanup
 								completedMessage.cleanup();
@@ -199,19 +198,19 @@ class CMediaPlaybackQueuePrepareThread : public CThread {
 class CMediaPlaybackQueueInternals {
 	public:
 		CMediaPlaybackQueueInternals(CSRSWMessageQueues& messageQueues, const CMediaPlaybackQueue::Info& info) :
-			mPrepareThread(messageQueues, info),
+			mItemPrepareThread(messageQueues, info),
 					mCurrentItemIndex(0)
 			{}
 		~CMediaPlaybackQueueInternals()
 			{
 				// Request shutdown
-				mPrepareThread.shutdown();
+				mItemPrepareThread.shutdown();
 
 				// Wait until is no lonnger running
-				mPrepareThread.waitUntilFinished();
+				mItemPrepareThread.waitUntilFinished();
 			}
 
-		CMediaPlaybackQueuePrepareThread		mPrepareThread;
+		CMediaPlaybackQueueItemPrepareThread	mItemPrepareThread;
 
 		TNArray<I<CMediaPlaybackQueue::Item> >	mItems;
 		CArray::ItemIndex						mCurrentItemIndex;
@@ -251,7 +250,7 @@ void CMediaPlaybackQueue::set(const TArray<I<Item> >& items)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Cancel in-flight prepare
-	mInternals->mPrepareThread.cancelInflight();
+	mInternals->mItemPrepareThread.cancelInflight();
 
 	// Store
 	mInternals->mItems = items;
@@ -260,7 +259,7 @@ void CMediaPlaybackQueue::set(const TArray<I<Item> >& items)
 	// Check for items
 	if (!mInternals->mItems.isEmpty())
 		// Prepare
-		mInternals->mPrepareThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
+		mInternals->mItemPrepareThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -276,13 +275,13 @@ bool CMediaPlaybackQueue::prepareFirst()
 		return false;
 
 	// Cancel in-flight prepare
-	mInternals->mPrepareThread.cancelInflight();
+	mInternals->mItemPrepareThread.cancelInflight();
 
 	// Update
 	mInternals->mCurrentItemIndex = 0;
 
 	// Prepare
-	mInternals->mPrepareThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
+	mInternals->mItemPrepareThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
 
 	return true;
 }
@@ -297,13 +296,13 @@ bool CMediaPlaybackQueue::preparePrevious()
 		return false;
 
 	// Cancel in-flight prepare
-	mInternals->mPrepareThread.cancelInflight();
+	mInternals->mItemPrepareThread.cancelInflight();
 
 	// Update
 	mInternals->mCurrentItemIndex--;
 
 	// Prepare
-	mInternals->mPrepareThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
+	mInternals->mItemPrepareThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
 
 	return true;
 }
@@ -318,13 +317,13 @@ bool CMediaPlaybackQueue::prepareNext()
 		return false;
 
 	// Cancel in-flight prepare
-	mInternals->mPrepareThread.cancelInflight();
+	mInternals->mItemPrepareThread.cancelInflight();
 
 	// Update
 	mInternals->mCurrentItemIndex++;
 
 	// Prepare
-	mInternals->mPrepareThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
+	mInternals->mItemPrepareThread.prepare(mInternals->mItems[mInternals->mCurrentItemIndex]);
 
 	return true;
 }

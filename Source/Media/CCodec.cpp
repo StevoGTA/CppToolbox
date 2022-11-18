@@ -9,6 +9,8 @@
 
 static	CString	sErrorDomain(OSSTR("CCodec"));
 
+const	SError	CCodec::mErrorNoCodec(sErrorDomain, 1, CString(OSSTR("No codec")));
+
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCodec
@@ -19,12 +21,12 @@ static	CString	sErrorDomain(OSSTR("CCodec"));
 SError CCodec::unsupportedError(const CString& codecDescriptor)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return SError(sErrorDomain, 1, CString(OSSTR("Unsupported codec of type ")) + codecDescriptor);
+	return SError(sErrorDomain, 2, CString(OSSTR("Unsupported codec of type ")) + codecDescriptor);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SError CCodec::unsupportedConfigurationError(const CString& codecDescriptor)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return SError(sErrorDomain, 2, CString(OSSTR("Unsupported codec configuration for type ")) + codecDescriptor);
+	return SError(sErrorDomain, 3, CString(OSSTR("Unsupported codec configuration for type ")) + codecDescriptor);
 }

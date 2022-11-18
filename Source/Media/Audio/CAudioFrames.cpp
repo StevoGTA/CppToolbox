@@ -11,15 +11,15 @@
 
 class CAudioFramesInternals {
 	public:
-		CAudioFramesInternals(UInt32 segmentCount, UInt32 segmentByteCount, UInt32 availableFrameCount,
+		CAudioFramesInternals(UInt32 segmentCount, UInt32 segmentByteCount, UInt32 allocatedFrameCount,
 				UInt32 bytesPerFramePerSegment) :
-			mSegmentCount(segmentCount), mSegmentByteCount(segmentByteCount), mAvailableFrameCount(availableFrameCount),
+			mSegmentCount(segmentCount), mSegmentByteCount(segmentByteCount), mAllocatedFrameCount(allocatedFrameCount),
 					mCurrentFrameCount(0), mBytesPerFramePerSegment(bytesPerFramePerSegment)
 			{}
 
 		UInt32	mSegmentCount;
 		UInt32	mSegmentByteCount;
-		UInt32	mAvailableFrameCount;
+		UInt32	mAllocatedFrameCount;
 		UInt32	mCurrentFrameCount;
 		UInt32	mBytesPerFramePerSegment;
 };
@@ -58,10 +58,10 @@ CAudioFrames::~CAudioFrames()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CAudioFrames::getAvailableFrameCount() const
+UInt32 CAudioFrames::getAllocatedFrameCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount;
+	return mInternals->mAllocatedFrameCount - mInternals->mCurrentFrameCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ CAudioFrames::Info CAudioFrames::getWriteInfo()
 						mInternals->mSegmentByteCount * i +
 						mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment);
 
-	return Info(mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount, segments);
+	return Info(mInternals->mAllocatedFrameCount - mInternals->mCurrentFrameCount, segments);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ void CAudioFrames::completeWrite(UInt32 frameCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check
-	AssertFailIf((mInternals->mCurrentFrameCount + frameCount) > mInternals->mAvailableFrameCount);
+	AssertFailIf((mInternals->mCurrentFrameCount + frameCount) > mInternals->mAllocatedFrameCount);
 
 	// Update
 	mInternals->mCurrentFrameCount += frameCount;
@@ -116,7 +116,7 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& s
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check
-	AssertFailIf((mInternals->mCurrentFrameCount + frameCount) > mInternals->mAvailableFrameCount);
+	AssertFailIf((mInternals->mCurrentFrameCount + frameCount) > mInternals->mAllocatedFrameCount);
 
 	// Setup
 	CArray::ItemCount	sampleBuffersCount = sampleBufferPtrs.getCount();

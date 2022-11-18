@@ -219,23 +219,23 @@ SAudioSourceStatus CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
 {
 	// Setup
 	if (!mInternals->mInputAudioFrames.hasInstance() ||
-			(mInternals->mInputAudioFrames->getAvailableFrameCount() != audioFrames.getAvailableFrameCount())) {
-		// Create or reset Audio Data
+			(mInternals->mInputAudioFrames->getAllocatedFrameCount() != audioFrames.getAllocatedFrameCount())) {
+		// Create Audio Data
 		if (mInternals->mInputAudioProcessingFormat->getIsInterleaved())
 			// Interleaved
 			mInternals->mInputAudioFrames =
 					OI<CAudioFrames>(
 							new CAudioFrames(1, mInternals->mInputAudioProcessingFormat->getBytesPerFrame(),
-									audioFrames.getAvailableFrameCount()));
+									audioFrames.getAllocatedFrameCount()));
 		else
 			// Non-interleaved
 			mInternals->mInputAudioFrames =
 					OI<CAudioFrames>(
 							new CAudioFrames(mInternals->mInputAudioProcessingFormat->getChannels(),
 									mInternals->mInputAudioProcessingFormat->getBits() / 8,
-									audioFrames.getAvailableFrameCount()));
+									audioFrames.getAllocatedFrameCount()));
 	} else
-		// Use existing Audio Data
+		// Reset existing Audio Data
 		mInternals->mInputAudioFrames->reset();
 
 	// Read
@@ -250,6 +250,26 @@ SAudioSourceStatus CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
 			mOutputAudioProcessingFormat->getBytesPerFrame());
 
 	return audioSourceStatus;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CAudioChannelMapper::getInputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<SAudioProcessingSetup>(
+			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo(mOutputAudioProcessingFormat->getBits()),
+					SAudioProcessingSetup::SampleRateInfo(mOutputAudioProcessingFormat->getSampleRate()),
+					SAudioProcessingSetup::ChannelMapInfo::mUnspecified,
+					SAudioProcessingSetup::SampleTypeOption(
+							mOutputAudioProcessingFormat->getIsFloat() ?
+									SAudioProcessingSetup::kSampleTypeFloat :
+									SAudioProcessingSetup::kSampleTypeSignedInteger),
+					SAudioProcessingSetup::EndianOption(
+							mOutputAudioProcessingFormat->getIsBigEndian() ?
+									SAudioProcessingSetup::kEndianBig : SAudioProcessingSetup::kEndianLittle),
+					SAudioProcessingSetup::InterleavedOption(
+							mOutputAudioProcessingFormat->getIsInterleaved() ?
+									SAudioProcessingSetup::kInterleaved : SAudioProcessingSetup::kNonInterleaved)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

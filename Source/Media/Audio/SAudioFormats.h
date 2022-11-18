@@ -214,7 +214,9 @@ struct SAudioProcessingFormat {
 									SampleType sampleType = kSampleTypeSignedInteger, Endian endian = kEndianNative,
 									Interleaved interleaved = kInterleaved) :
 								mBits(bits), mSampleRate(sampleRate), mAudioChannelMap(audioChannelMap),
-										mSampleType(sampleType), mEndian(endian), mInterleaved(interleaved)
+										mSampleType(sampleType), mEndian(endian),
+										mInterleaved(
+												(audioChannelMap == kAudioChannelMap_1_0) ? kInterleaved : interleaved)
 								{}
 							SAudioProcessingFormat(const SAudioProcessingFormat& other) :
 								mBits(other.mBits), mSampleRate(other.mSampleRate),
@@ -446,22 +448,24 @@ struct SAudioProcessingSetup {
 										InterleavedOption interleavedOption = kInterleaved) :
 									mBitsInfo(bits), mSampleRateInfo(sampleRate), mChannelMapInfo(audioChannelMap),
 											mSampleTypeOption(sampleTypeOption), mEndianOption(endianOption),
-											mInterleavedOption(interleavedOption)
-									{}
-								SAudioProcessingSetup(const SAudioProcessingFormat& audioProcessingFormat) :
-									mBitsInfo(audioProcessingFormat.getBits()),
-											mSampleRateInfo(audioProcessingFormat.getSampleRate()),
-											mChannelMapInfo(audioProcessingFormat.getAudioChannelMap()),
-											mSampleTypeOption(
-													audioProcessingFormat.getIsFloat() ?
-															kSampleTypeFloat : kSampleTypeSignedInteger),
-											mEndianOption(
-													audioProcessingFormat.getIsBigEndian() ?
-															kEndianBig : kEndianLittle),
 											mInterleavedOption(
-													audioProcessingFormat.getIsInterleaved() ?
-															kInterleaved : kNonInterleaved)
+													(audioChannelMap == kAudioChannelMap_1_0) ?
+															kInterleaved : interleavedOption)
 									{}
+								//SAudioProcessingSetup(const SAudioProcessingFormat& audioProcessingFormat) :
+								//	mBitsInfo(audioProcessingFormat.getBits()),
+								//			mSampleRateInfo(audioProcessingFormat.getSampleRate()),
+								//			mChannelMapInfo(audioProcessingFormat.getAudioChannelMap()),
+								//			mSampleTypeOption(
+								//					audioProcessingFormat.getIsFloat() ?
+								//							kSampleTypeFloat : kSampleTypeSignedInteger),
+								//			mEndianOption(
+								//					audioProcessingFormat.getIsBigEndian() ?
+								//							kEndianBig : kEndianLittle),
+								//			mInterleavedOption(
+								//					audioProcessingFormat.getIsInterleaved() ?
+								//							kInterleaved : kNonInterleaved)
+								//	{}
 
 								// Instance methods
 	const	BitsInfo&			getBitsInfo() const

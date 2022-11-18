@@ -24,6 +24,8 @@ class CAudioChannelMapper : public CBasicAudioProcessor {
 
 				SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
 
+				TArray<SAudioProcessingSetup>	getInputSetups() const;
+
 				TArray<SAudioProcessingSetup>	getOutputSetups() const;
 
 												// Class methods

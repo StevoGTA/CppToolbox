@@ -160,8 +160,8 @@ OV<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor
 	// Create Secret Rabbit Code
 	int	error;
 	mInternals->mSRCState =
-		src_callback_new(CSecretRabbitCodeAudioConverterInternals::fillBufferData, SRC_SINC_BEST_QUALITY,
-				audioProcessingFormat.getChannels(), &error, mInternals);
+			src_callback_new(CSecretRabbitCodeAudioConverterInternals::fillBufferData, SRC_SINC_BEST_QUALITY,
+					audioProcessingFormat.getChannels(), &error, mInternals);
 	ReturnErrorIfSRCError(error);
 
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
@@ -192,7 +192,7 @@ SAudioSourceStatus CSecretRabbitCodeAudioConverter::performInto(CAudioFrames& au
 					mOutputAudioProcessingFormat->getSampleRate() /
 							mInternals->mInputAudioProcessingFormat->getSampleRate();
 	UInt32	frameCount =
-					src_callback_read(mInternals->mSRCState, srcRatio, audioFrames.getAvailableFrameCount(),
+					src_callback_read(mInternals->mSRCState, srcRatio, audioFrames.getAllocatedFrameCount(),
 							(float*) audioFrames.getWriteInfo().getSegments()[0]);
 	if (frameCount == 0) return SAudioSourceStatus(SError::mEndOfData);
 
@@ -214,4 +214,16 @@ void CSecretRabbitCodeAudioConverter::reset()
 
 	// Reset
 	src_reset(mInternals->mSRCState);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CSecretRabbitCodeAudioConverter::getInputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<SAudioProcessingSetup>(
+			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo::mUnspecified,
+					SAudioProcessingSetup::SampleRateInfo::mUnspecified,
+					SAudioProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
+					SAudioProcessingSetup::kSampleTypeUnspecified, SAudioProcessingSetup::kEndianLittle,
+					SAudioProcessingSetup::kInterleaved));
 }

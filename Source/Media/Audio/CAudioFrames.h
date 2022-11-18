@@ -85,7 +85,7 @@ class CAudioFrames : private CData {
 				~CAudioFrames();
 
 				// Instance methods
-		UInt32	getAvailableFrameCount() const;
+		UInt32	getAllocatedFrameCount() const;
 		UInt32	getCurrentFrameCount() const;
 
 		Info	getReadInfo() const;

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CAudioProcessor.h"
+#include "CAudioConverter.h"
 #include "CMediaDestination.h"
 #include "SMediaTracks.h"
 

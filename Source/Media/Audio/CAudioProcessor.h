@@ -105,40 +105,16 @@ class CAudioDestination : public CAudioProcessor {
 class CBasicAudioProcessor : public CAudioProcessor {
 	// Methods
 	public:
-										// CAudioProcessor methods
-		TArray<SAudioProcessingSetup>	getInputSetups() const
-											{ return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup(
-													*mOutputAudioProcessingFormat)); }
+					// CAudioProcessor methods
+		OV<SError>	setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+						{
+							// Store
+							mOutputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
 
-		OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
-											{
-												// Store
-												mOutputAudioProcessingFormat =
-														OV<SAudioProcessingFormat>(audioProcessingFormat);
-
-												return OV<SError>();
-											}
+							return OV<SError>();
+						}
 
 	// Properties
 	protected:
 		OV<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioConverter
-
-class CAudioConverter : public CBasicAudioProcessor {
-	// Methods
-	public:
-												// CAudioProcessor methods
-				TArray<SAudioProcessingSetup>	getOutputSetups() const
-													{ return TNArray<SAudioProcessingSetup>(
-															SAudioProcessingSetup::mUnspecified); }
-
-												// Instance methods
-		virtual	bool							supportsNoninterleaved() const = 0;
-
-	protected:
-												// Lifecycle methods
-												CAudioConverter() {}
 };

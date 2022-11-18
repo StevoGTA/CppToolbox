@@ -277,7 +277,7 @@ OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf(audioFrames.getAvailableFrameCount() < (mFramesPerPacket * 2));
+	AssertFailIf(audioFrames.getAllocatedFrameCount() < (mFramesPerPacket * 2));
 
 	// Setup
 	UInt8	channels = mAudioProcessingFormat->getChannels();

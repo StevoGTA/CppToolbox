@@ -212,7 +212,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrame
 	CAudioFrames::Requirements	requirements = getRequirements();
 
 	// Preflight
-	AssertFailIf(audioFrames.getAvailableFrameCount() < requirements.mFrameCountMinimum);
+	AssertFailIf(audioFrames.getAllocatedFrameCount() < requirements.mFrameCountMinimum);
 
 	if (!mInternals->mAudioDecoderTransform.hasInstance() || !mInternals->mInputSample.hasInstance() ||
 			!mInternals->mOutputSample.hasInstance())
@@ -220,7 +220,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrame
 		return OV<SError>(sSetupDidNotCompleteError);
 
 	// Fill audio frames as much as we can
-	while (audioFrames.getAvailableFrameCount() >= requirements.mFrameCountInterval) {
+	while (audioFrames.getAllocatedFrameCount() >= requirements.mFrameCountInterval) {
 		// Process output
 		OV<SError>	error =
 							CMediaFoundationServices::processOutput(*mInternals->mAudioDecoderTransform,

@@ -6,6 +6,8 @@
 
 #include "CAudioChannelMapper.h"
 #include "CAudioDecoder.h"
+#include "CAudioDeinterleaver.h"
+#include "CAudioInterleaver.h"
 #include "CCodecRegistry.h"
 #include "CVideoDecoder.h"
 
@@ -284,16 +286,10 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 		//	a deinterleaver if necessary.
 		if (!currentAudioProcessingFormat.getIsInterleaved() && !audioConverter->supportsNoninterleaved()) {
 			// Create Audio Deinterleaver
-I<CAudioProcessor>	audioDeinterleaver(nil);
+			I<CAudioProcessor>	audioDeinterleaver(new CAudioDeinterleaver());
 
 			// Connect Audio Deinterleaver
-			error =
-					currentAudioProcessor->connectInput(audioDeinterleaver,
-							SAudioProcessingFormat(currentAudioProcessingFormat.getBits(),
-									currentAudioProcessingFormat.getSampleRate(),
-									currentAudioProcessingFormat.getAudioChannelMap(),
-									currentAudioProcessingFormat.getSampleType(),
-									currentAudioProcessingFormat.getEndian(), SAudioProcessingFormat::kNonInterleaved));
+			error = currentAudioProcessor->connectInput(audioDeinterleaver, currentAudioProcessingFormat);
 			if (error.hasValue()) return ConnectResult(*error);
 
 			// Update
@@ -326,7 +322,7 @@ I<CAudioProcessor>	audioDeinterleaver(nil);
 		if (!audioProcessingFormats.mSourceAudioProcessingFormat.getIsInterleaved() &&
 				!audioConverter->supportsNoninterleaved()) {
 			// Create Audio Interleaver
-I<CAudioProcessor>	audioInterleaver(nil);
+			I<CAudioProcessor>	audioInterleaver(new CAudioInterleaver());
 
 			// Connect Audio Interleaver
 			error = currentAudioProcessor->connectInput(audioInterleaver, currentAudioProcessingFormat);
@@ -334,6 +330,12 @@ I<CAudioProcessor>	audioInterleaver(nil);
 
 			// Update
 			currentAudioProcessor = audioInterleaver;
+			currentAudioProcessingFormat =
+					SAudioProcessingFormat(currentAudioProcessingFormat.getBits(),
+							currentAudioProcessingFormat.getSampleRate(),
+							currentAudioProcessingFormat.getAudioChannelMap(),
+							currentAudioProcessingFormat.getSampleType(),
+							currentAudioProcessingFormat.getEndian(), SAudioProcessingFormat::kNonInterleaved);
 		}
 	}
 
@@ -350,7 +352,53 @@ I<CAudioProcessor>	audioInterleaver(nil);
 
 		// Update
 		currentAudioProcessor = (I<CAudioProcessor>&) audioChannelMapper;
+		currentAudioProcessingFormat =
+				SAudioProcessingFormat(currentAudioProcessingFormat.getBits(),
+						currentAudioProcessingFormat.getSampleRate(),
+						audioProcessingFormats.mSourceAudioProcessingFormat.getAudioChannelMap(),
+						currentAudioProcessingFormat.getSampleType(),
+						currentAudioProcessingFormat.getEndian(),
+						currentAudioProcessingFormat.getInterleaved());
+	}
 
+	// Check if need Deinterleaver
+	if (currentAudioProcessingFormat.getIsInterleaved() &&
+			!audioProcessingFormats.mSourceAudioProcessingFormat.getIsInterleaved()) {
+		// Create Audio Deinterleaver
+		I<CAudioProcessor>	audioDeinterleaver(new CAudioDeinterleaver());
+
+		// Connect Audio Deinterleaver
+		error = currentAudioProcessor->connectInput(audioDeinterleaver, currentAudioProcessingFormat);
+		if (error.hasValue()) return ConnectResult(*error);
+
+		// Update
+		currentAudioProcessor = audioDeinterleaver;
+		currentAudioProcessingFormat =
+				SAudioProcessingFormat(currentAudioProcessingFormat.getBits(),
+						currentAudioProcessingFormat.getSampleRate(),
+						currentAudioProcessingFormat.getAudioChannelMap(),
+						currentAudioProcessingFormat.getSampleType(),
+						currentAudioProcessingFormat.getEndian(), SAudioProcessingFormat::kInterleaved);
+	}
+
+	// Check if need Interleaver
+	if (!currentAudioProcessingFormat.getIsInterleaved() &&
+			audioProcessingFormats.mSourceAudioProcessingFormat.getIsInterleaved()) {
+		// Create Audio Interleaver
+		I<CAudioProcessor>	audioInterleaver(new CAudioInterleaver());
+
+		// Connect Audio Interleaver
+		error = currentAudioProcessor->connectInput(audioInterleaver, currentAudioProcessingFormat);
+		if (error.hasValue()) return ConnectResult(*error);
+
+		// Update
+		currentAudioProcessor = audioInterleaver;
+		currentAudioProcessingFormat =
+				SAudioProcessingFormat(currentAudioProcessingFormat.getBits(),
+						currentAudioProcessingFormat.getSampleRate(),
+						currentAudioProcessingFormat.getAudioChannelMap(),
+						currentAudioProcessingFormat.getSampleType(),
+						currentAudioProcessingFormat.getEndian(), SAudioProcessingFormat::kNonInterleaved);
 	}
 
 	// Connect source

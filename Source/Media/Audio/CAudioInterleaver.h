@@ -1,36 +1,34 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CSecretRabbitCodeAudioConverter.h			©2021 Stevo Brock	All rights reserved.
+//	CAudioInterleaver.h			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-#include "CAudioConverter.h"
+#include "CAudioProcessor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSecretRabbitCodeAudioConverter
+// MARK: CAudioInterleaver
 
-class CSecretRabbitCodeAudioConverterInternals;
-class CSecretRabbitCodeAudioConverter : public CAudioConverter {
+class CAudioInterleaverInternals;
+class CAudioInterleaver : public CBasicAudioProcessor {
+	// Methods
 	public:
 										// Lifecycle methods
-										CSecretRabbitCodeAudioConverter();
-										~CSecretRabbitCodeAudioConverter();
+										CAudioInterleaver();
+										~CAudioInterleaver();
 
 										// CAudioProcessor methods
 		OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 												const SAudioProcessingFormat& audioProcessingFormat);
 		TNArray<CString>				getSetupDescription(const CString& indent);
-	
+
 		SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
-		void							reset();
 
 		TArray<SAudioProcessingSetup>	getInputSetups() const;
 
-										// CAudioConverter methods
-		bool							supportsNoninterleaved() const
-											{ return false; }
+		TArray<SAudioProcessingSetup>	getOutputSetups() const;
 
 	// Properties
 	private:
-		CSecretRabbitCodeAudioConverterInternals*	mInternals;
+		CAudioInterleaverInternals*	mInternals;
 };

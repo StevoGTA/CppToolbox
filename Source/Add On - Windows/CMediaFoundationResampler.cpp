@@ -190,11 +190,11 @@ SAudioSourceStatus CMediaFoundationResampler::performInto(CAudioFrames& audioFra
 	}
 
 	// Fill audio frames as much as we can
-	while (audioFrames.getCurrentFrameCount() < audioFrames.getAvailableFrameCount()) {
+	while (audioFrames.getCurrentFrameCount() < audioFrames.getAllocatedFrameCount()) {
 		// Create output sample
 		TCIResult<IMFSample>	sample =
 										CMediaFoundationServices::createSample(
-												audioFrames.getAvailableFrameCount() *
+												audioFrames.getAllocatedFrameCount() *
 														mOutputAudioProcessingFormat->getBytesPerFrame());
 		ReturnValueIfResultError(sample, SAudioSourceStatus(sample.getError()));
 
@@ -228,4 +228,16 @@ void CMediaFoundationResampler::reset()
     mInternals->mResamplerTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
     mInternals->mResamplerTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
     mInternals->mResamplerTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CMediaFoundationResampler::getInputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<SAudioProcessingSetup>(
+			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo::mUnspecified,
+					SAudioProcessingSetup::SampleRateInfo::mUnspecified,
+					SAudioProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
+					SAudioProcessingSetup::kSampleTypeUnspecified, SAudioProcessingSetup::kEndianLittle,
+					SAudioProcessingSetup::kInterleaved));
 }
