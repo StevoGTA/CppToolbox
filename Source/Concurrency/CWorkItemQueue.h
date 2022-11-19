@@ -103,7 +103,7 @@ class CWorkItemQueue {
 										return workItem;
 									}
 
-				void			cancel(CWorkItem& workItem);
+				void			cancel(const I<CWorkItem>& workItem);
 				void			cancel(const TSet<CString>& workItemIDs);
 				void			cancelAll(const TSet<CString>& workItemReferences);
 				void			cancelAll();

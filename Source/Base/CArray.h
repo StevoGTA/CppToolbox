@@ -336,6 +336,11 @@ template <typename T> class TSArray : public TArray<T> {
 // MARK: - TMArray (TArray which can be modified)
 
 template <typename T> class TMArray : public TArray<T> {
+	// Types
+	public:
+		typedef	bool	(*CompareProc)(const T& item1, const T& item2, void* userData);
+		typedef	bool	(*IsMatchProc)(const T& item, void* userData);
+
 	// Methods
 	public:
 						// CArray methods
@@ -365,6 +370,21 @@ template <typename T> class TMArray : public TArray<T> {
 
 								return *this;
 							}
+		TMArray<T>&		remove(IsMatchProc isMatchProc, void* userData = nil)
+							{
+								// Iterate all items
+								for (CArray::ItemIndex i = CArray::getCount(); i > 0; i--) {
+									// Get item
+									T&	item = TArray<T>::getAt(i - 1);
+
+									// Call proc
+									if (isMatchProc(item, userData))
+										// Remove this item
+										CArray::removeAtIndex(i - 1);
+								}
+
+								return *this;
+							}
 		TMArray<T>&		removeFrom(const TArray<T>& other)
 							{
 								// Iterate all
@@ -380,7 +400,7 @@ template <typename T> class TMArray : public TArray<T> {
 		TMArray<T>&		removeAll()
 							{ CArray::removeAll(); return *this; }
 
-		TMArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData), void* userData = nil)
+		TMArray<T>&		sort(CompareProc compareProc, void* userData = nil)
 							{ CArray::sort((CArray::CompareProc) compareProc, userData); return *this; }
 
 						// Instance methods
@@ -397,7 +417,7 @@ template <typename T> class TMArray : public TArray<T> {
 
 								return item;
 							}
-		OV<T>			popFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
+		OV<T>			popFirst(IsMatchProc isMatchProc, void* userData = nil)
 							{
 								// Iterate all items
 								CArray::ItemCount	count = CArray::getCount();
@@ -406,7 +426,7 @@ template <typename T> class TMArray : public TArray<T> {
 									T&	item = TArray<T>::getAt(i);
 
 									// Call proc
-									if (proc(item, userData)) {
+									if (isMatchProc(item, userData)) {
 										// Proc indicates to return this item
 										OV<T>	reference(item);
 										removeAtIndex(i);
@@ -472,8 +492,6 @@ template <typename T> class TNArray : public TMArray<T> {
 									// Instance methods
 				T					popFirst()
 										{ return TMArray<T>::popFirst(); }
-				OV<T>				popFirst(bool (proc)(const T& item, void* userData), void* userData = nil)
-										{ return TMArray<T>::popFirst(proc, userData); }
 				TArray<T>			popFirst(ItemCount count)
 										{
 											// Setup
