@@ -242,3 +242,15 @@ void CCoreAudioAudioConverter::reset()
 		return;
 	}
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudioProcessingSetup> CCoreAudioAudioConverter::getInputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<SAudioProcessingSetup>(
+			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo::mUnspecified,
+					SAudioProcessingSetup::SampleRateInfo::mUnspecified,
+					SAudioProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
+					SAudioProcessingSetup::kSampleTypeUnspecified, SAudioProcessingSetup::kEndianUnspecified,
+					SAudioProcessingSetup::kInterleavedUnspecified));
+}

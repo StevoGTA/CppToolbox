@@ -20,6 +20,8 @@ class CCoreAudioDecodeAudioCodec : public CDecodeAudioCodec {
 
 											// CDecodeAudioCodec methods
 				OV<SError>					setup(const SAudioProcessingFormat& audioProcessingFormat);
+				CAudioFrames::Requirements	getRequirements() const
+												{ return CAudioFrames::Requirements(1024, 1024 * 2); }
 				void						seek(UniversalTimeInterval timeInterval);
 				OV<SError>					decodeInto(CAudioFrames& audioFrames);
 

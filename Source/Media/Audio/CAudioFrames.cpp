@@ -238,7 +238,7 @@ UInt32 CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
 
 	// Setup
 	UInt8*	buffer = (UInt8*) getMutableBytePtr();
-	UInt32	frameCount = mInternals->mAvailableFrameCount - mInternals->mCurrentFrameCount;
+	UInt32	frameCount = mInternals->mAllocatedFrameCount - mInternals->mCurrentFrameCount;
 
 	// Update AudioBufferList
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++) {

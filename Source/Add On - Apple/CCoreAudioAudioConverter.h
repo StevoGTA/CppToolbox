@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CAudioProcessor.h"
+#include "CAudioConverter.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreAudioAudioConverter
@@ -12,22 +12,24 @@
 class CCoreAudioAudioConverterInternals;
 class CCoreAudioAudioConverter : public CAudioConverter {
 	public:
-							// Lifecycle methods
-							CCoreAudioAudioConverter();
-							~CCoreAudioAudioConverter();
+										// Lifecycle methods
+										CCoreAudioAudioConverter();
+										~CCoreAudioAudioConverter();
 
-							// CAudioProcessor methods
-		OV<SError>			connectInput(const I<CAudioProcessor>& audioProcessor,
-									const SAudioProcessingFormat& audioProcessingFormat);
-		TNArray<CString>	getSetupDescription(const CString& indent);
+										// CAudioProcessor methods
+		OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
+												const SAudioProcessingFormat& audioProcessingFormat);
+		TNArray<CString>				getSetupDescription(const CString& indent);
 
-		SAudioSourceStatus	performInto(CAudioFrames& audioFrames);
+		SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
 
-		void				reset();
+		void							reset();
 
-							// CAudioConverter methods
-		bool				supportsNoninterleaved() const
-								{ return true; }
+		TArray<SAudioProcessingSetup>	getInputSetups() const;
+
+										// CAudioConverter methods
+		bool							supportsNoninterleaved() const
+											{ return true; }
 
 	// Properties
 	private:
