@@ -54,7 +54,8 @@ UInt32	CWorkItemInfo::mNextIndex = 0;
 
 class CWorkItemThread : public CThread {
 	public:
-		typedef	void	(*WorkItemInfoCompleteProc)(CWorkItemInfo& workItemInfo, CWorkItemThread& workItemThread);
+		typedef	void	(*WorkItemInfoCompleteProc)(const R<CWorkItemInfo>& workItemInfo,
+								CWorkItemThread& workItemThread);
 
 				CWorkItemThread(const CString& name, WorkItemInfoCompleteProc workItemInfoCompleteProc) :
 					CThread(name, CThread::kOptionsAutoStart),
@@ -66,33 +67,33 @@ class CWorkItemThread : public CThread {
 						// Run forever
 						while (true) {
 							// Check for work item info
-							if (!mWorkItemInfo.hasReference())
+							if (!mWorkItemInfo.hasValue())
 								// Wait
 								mSemaphore.waitFor();
 
 							// Setup
-							CWorkItemInfo&	workItemInfo = *mWorkItemInfo;
+							const	R<CWorkItemInfo>	workItemInfo(*mWorkItemInfo);
 
 							// Note active
-							workItemInfo.transitionTo(CWorkItem::kStateActive);
+							workItemInfo->transitionTo(CWorkItem::kStateActive);
 
 							// Process
-							workItemInfo.perform();
+							workItemInfo->perform();
 
 							// Note completed
-							workItemInfo.transitionTo(CWorkItem::kStateCompleted);
+							workItemInfo->transitionTo(CWorkItem::kStateCompleted);
 
 							// Reset
-							mWorkItemInfo = OR<CWorkItemInfo>();
+							mWorkItemInfo.removeValue();
 
 							// Call proc
 							mWorkItemInfoCompleteProc(workItemInfo, *this);
 						}
 					}
-		void	process(CWorkItemInfo& workItemInfo)
+		void	process(const R<CWorkItemInfo>& workItemInfo)
 					{
 						// Store
-						mWorkItemInfo = OR<CWorkItemInfo>(workItemInfo);
+						mWorkItemInfo.setValue(workItemInfo);
 
 						// Trigger
 						mSemaphore.signal();
@@ -103,7 +104,7 @@ class CWorkItemThread : public CThread {
 		WorkItemInfoCompleteProc	mWorkItemInfoCompleteProc;
 		CSemaphore					mSemaphore;
 
-		OR<CWorkItemInfo>			mWorkItemInfo;
+		OV<R<CWorkItemInfo> >		mWorkItemInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -281,7 +282,7 @@ class CWorkItemQueueInternals {
 																mActiveWorkItemThreads);
 
 														// Process work item info
-														workItemThread->process(*workItemInfo);
+														workItemThread->process(R<CWorkItemInfo>(*workItemInfo));
 													} else {
 														// Create new active thread
 														UInt32	threadNumber = mActiveWorkItemThreads.getCount() + 1;
@@ -294,7 +295,7 @@ class CWorkItemQueueInternals {
 														mActiveWorkItemThreads += workItemThread;
 
 														// Process work item info
-														workItemThread->process(*workItemInfo);
+														workItemThread->process(R<CWorkItemInfo>(*workItemInfo));
 													}
 
 													// Get next work item info
@@ -354,12 +355,12 @@ class CWorkItemQueueInternals {
 													// Use index
 													return workItemInfo1.mIndex < workItemInfo2.mIndex;
 											}
-		static	void					workItemInfoComplete(CWorkItemInfo& workItemInfo,
+		static	void					workItemInfoComplete(const R<CWorkItemInfo>& workItemInfo,
 												CWorkItemThread& workItemThread)
 											{
 												// Transition work item info to complete
-												workItemInfo.mOwningWorkItemQueueInternals.transitionToComplete(
-														workItemInfo);
+												workItemInfo->mOwningWorkItemQueueInternals.transitionToComplete(
+														*workItemInfo);
 
 												// Transition thread to idle
 												mWorkItemThreadsLock.lock();
