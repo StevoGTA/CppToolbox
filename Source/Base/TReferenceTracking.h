@@ -11,6 +11,9 @@ template <typename T> class TReferenceCountable {
 	public:
 						// Lifecycle methods
 						TReferenceCountable() : mReferenceCount(1) {}
+						TReferenceCountable(const TReferenceCountable<T>& other) :
+							mReferenceCount(other.mReferenceCount.load())
+							{}
 		virtual			~TReferenceCountable() {}
 
 						// Instance methods
@@ -32,7 +35,7 @@ template <typename T> class TReferenceCountable {
 							{ return mReferenceCount; }
 
 	private:
-		UInt32	mReferenceCount;
+		std::atomic<UInt32>	mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -42,6 +45,9 @@ template <typename T> class TCopyOnWriteReferenceCountable : public TReferenceCo
 	public:
 			// Lifecycle methods
 			TCopyOnWriteReferenceCountable() : TReferenceCountable<T>() {}
+			TCopyOnWriteReferenceCountable(const TCopyOnWriteReferenceCountable<T>& other) :
+				TReferenceCountable<T>(other)
+				{}
 
 			// Instance methods
 		T*	prepareForWrite()
