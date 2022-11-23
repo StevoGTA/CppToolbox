@@ -138,12 +138,13 @@ void CReadPreferringLock::unlockForWriting() const
 
 class CSemaphoreInternals {
 public:
-	CSemaphoreInternals() : mHandle(CreateEvent(NULL, false, false, TEXT(""))) {}
+	CSemaphoreInternals() : mIsWaiting(false), mHandle(CreateEvent(NULL, false, false, TEXT(""))) {}
 	~CSemaphoreInternals()
 		{
 			::CloseHandle(mHandle);
 		}
 
+	bool	mIsWaiting;
 	HANDLE	mHandle;
 };
 
@@ -173,12 +174,17 @@ CSemaphore::~CSemaphore()
 void CSemaphore::signal() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	::SetEvent(mInternals->mHandle);
+	// Check if waiting
+	if (mInternals->mIsWaiting)
+		// Set event
+		::SetEvent(mInternals->mHandle);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CSemaphore::waitFor() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	mInternals->mIsWaiting = true;
 	::WaitForSingleObject(mInternals->mHandle, INFINITE);
+	mInternals->mIsWaiting = false;
 }

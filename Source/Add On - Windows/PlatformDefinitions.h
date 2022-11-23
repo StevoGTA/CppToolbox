@@ -7,6 +7,7 @@
 #define _USE_MATH_DEFINES
 
 #include <algorithm>
+#include <atomic>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
