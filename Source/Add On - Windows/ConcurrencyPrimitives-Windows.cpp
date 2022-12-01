@@ -138,14 +138,18 @@ void CReadPreferringLock::unlockForWriting() const
 
 class CSemaphoreInternals {
 public:
-	CSemaphoreInternals() : mIsWaiting(false), mHandle(CreateEvent(NULL, false, false, TEXT(""))) {}
+	CSemaphoreInternals() : mHandle(CreateEvent(NULL, false, false, TEXT("")))
+		{
+			::InitializeCriticalSection(&mCriticalSection);
+		}
 	~CSemaphoreInternals()
 		{
+			::DeleteCriticalSection(&mCriticalSection);
 			::CloseHandle(mHandle);
 		}
 
-	bool	mIsWaiting;
-	HANDLE	mHandle;
+	CRITICAL_SECTION	mCriticalSection;
+	HANDLE				mHandle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -175,16 +179,19 @@ void CSemaphore::signal() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if waiting
-	if (mInternals->mIsWaiting)
-		// Set event
+	if (!::TryEnterCriticalSection(&mInternals->mCriticalSection))
+		// Waiting, set event
 		::SetEvent(mInternals->mHandle);
+	else
+		// Not waiting
+		::LeaveCriticalSection(&mInternals->mCriticalSection);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CSemaphore::waitFor() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mIsWaiting = true;
+	::EnterCriticalSection(&mInternals->mCriticalSection);
 	::WaitForSingleObject(mInternals->mHandle, INFINITE);
-	mInternals->mIsWaiting = false;
+	::LeaveCriticalSection(&mInternals->mCriticalSection);
 }
