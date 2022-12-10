@@ -42,43 +42,44 @@ class CFilesystemPath : public CHashable {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								CFilesystemPath(const CString& string, Style style = kStylePlatformDefault);
-								CFilesystemPath(const CFilesystemPath& other);
-								~CFilesystemPath();
+									// Lifecycle methods
+									CFilesystemPath(const CString& string, Style style = kStylePlatformDefault);
+									CFilesystemPath(const CFilesystemPath& other);
+									~CFilesystemPath();
 
-								// CEquatable methods
-				bool			operator==(const CEquatable& other) const
-									{ return equals((const CFilesystemPath&) other); }
+									// CEquatable methods
+				bool				operator==(const CEquatable& other) const
+										{ return equals((const CFilesystemPath&) other); }
 
-								// CHashable methods
-				void			hashInto(CHasher& hasher) const
-									{ getString().hashInto(hasher); }
+									// CHashable methods
+				void				hashInto(CHasher& hasher) const
+										{ getString().hashInto(hasher); }
 
-								// Instance methods
-				CString			getString(Style style = kStylePlatformDefault, const CString& wrapper = CString::mEmpty)
-										const;
+									// Instance methods
+				CString				getString(Style style = kStylePlatformDefault,
+											const CString& wrapper = CString::mEmpty) const;
 
-				OV<CString>		getExtension() const;
+				OV<CString>			getExtension() const;
 
-				TArray<CString>	getComponents() const;
-				OV<CString>		getLastComponent() const;
-				OV<CString>		getLastComponentDeletingExtension() const;
-				CString			getLastComponentForDisplay() const;
+				TArray<CString>		getComponents() const;
+				OV<CString>			getLastComponent() const;
+				OV<CString>			getLastComponentDeletingExtension() const;
+				CString				getLastComponentForDisplay() const;
 
-				CFilesystemPath	appendingComponent(const CString& component, Style style = kStylePlatformDefault) const;
-				CFilesystemPath	deletingLastComponent() const;
-				CFilesystemPath	appendingExtension(const CString& extension) const;
+				CFilesystemPath		appendingComponent(const CString& component, Style style = kStylePlatformDefault)
+											const;
+				CFilesystemPath		deletingLastComponent() const;
+				CFilesystemPath		appendingExtension(const CString& extension) const;
 
-				bool			equals(const CFilesystemPath& other) const
-									{ return getString() == other.getString(); }
+				bool				equals(const CFilesystemPath& other) const
+										{ return getString() == other.getString(); }
 
 				CFilesystemPath&	operator=(const CFilesystemPath& other);
 
-								// Class methods
-		static	CString			makeLegalFilename(const CString& string,
-										MakeLegalFilenameOptions makeLegalFilenameOptions =
-												kMakeLegalFilenameOptionsNone);
+									// Class methods
+		static	CString				makeLegalFilename(const CString& string,
+											MakeLegalFilenameOptions makeLegalFilenameOptions =
+													kMakeLegalFilenameOptionsNone);
 
 	// Properties
 	private:

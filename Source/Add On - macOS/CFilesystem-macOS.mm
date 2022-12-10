@@ -66,11 +66,11 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 	// Do the copy
 	NSError*	error;
 	if ([[NSFileManager defaultManager] copyItemAtURL:sourceURL toURL:destinationURL error:&error]) {
-		// Copy comment
-		CString	string = file.getComment();
-		if (!string.isEmpty())
-			// Read comment, write to dest
-			destinationFile.setComment(string);
+		// Copy comments
+		OV<CString>	comments = file.getComments();
+		if (comments.hasValue())
+			// Write to dest
+			destinationFile.setComments(*comments);
 
 		return OV<SError>();
 	} else

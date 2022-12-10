@@ -11,7 +11,7 @@
 // MARK: CFolder
 
 class CFolderInternals;
-class CFolder : CHashable {
+class CFolder : public CHashable {
 	// Methods
 	public:
 											// Lifecycle methods

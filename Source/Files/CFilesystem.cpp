@@ -63,21 +63,14 @@ OV<CFile> CFilesystem::getResourceFork(const CFile& file)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OI<CAppleResourceManager> CFilesystem::getAppleResourceManager(const CFile& file)
+OI<I<CRandomAccessDataSource> > CFilesystem::getResourceDataSource(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Try resource file
 	OV<CFile>	resourceFile = getResourceFork(file);
-	if (resourceFile.hasValue() && (resourceFile->getByteCount() > 0)) {
-		// Try creating Apple Resource Manager
-		TIResult<CAppleResourceManager>	appleResourceManager =
-												CAppleResourceManager::from(
-														I<CRandomAccessDataSource>(
-																new CMappedFileDataSource(*resourceFile)));
-		if (appleResourceManager.hasInstance())
-			// Success
-			return appleResourceManager.getOptionalInstance();
-	}
+	if (resourceFile.hasValue() && (resourceFile->getByteCount() > 0))
+		// Success
+		return OI<I<CRandomAccessDataSource> >(I<CRandomAccessDataSource>(new CMappedFileDataSource(*resourceFile)));
 
 	// Try ._ file
 	OV<CFile>	dotUnderscoreFile = getDotUnderscoreFile(file);
@@ -90,20 +83,13 @@ OI<CAppleResourceManager> CFilesystem::getAppleResourceManager(const CFile& file
 		if (dotUnderscoreReader.hasInstance()) {
 			// Get resource fork
 			OR<CData>	resourceFork = dotUnderscoreReader->getResourceFork();
-			if (resourceFork.hasReference()) {
-				// Try creating Apple Resource Manager
-				TIResult<CAppleResourceManager>	appleResourceManager =
-														CAppleResourceManager::from(
-																I<CRandomAccessDataSource>(
-																		new CDataDataSource(*resourceFork)));
-				if (appleResourceManager.hasInstance())
-					// Success
-					return appleResourceManager.getOptionalInstance();
-			}
+			if (resourceFork.hasReference())
+				// Success
+				return OI<I<CRandomAccessDataSource> >(I<CRandomAccessDataSource>(new CDataDataSource(*resourceFork)));
 		}
 	}
 
-	return OI<CAppleResourceManager>();
+	return OI<I<CRandomAccessDataSource> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

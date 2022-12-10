@@ -11,7 +11,7 @@
 // MARK: CFile
 
 class CFileInternals;
-class CFile : CHashable {
+class CFile : public CHashable {
 	// Methods
 	public:
 											// Lifecycle methods
@@ -46,8 +46,8 @@ class CFile : CHashable {
 						bool				getLocked() const;
 						OV<SError>			setLocked(bool lockFile) const;
 
-						UniversalTime		getCreationDate() const;
-						UniversalTime		getModificationDate() const;
+						UniversalTime		getCreationUniversalTime() const;
+						UniversalTime		getModificationUniversalTime() const;
 
 						bool				equals(const CFile& other) const;
 
@@ -83,8 +83,8 @@ class CFile : CHashable {
 #if defined(TARGET_OS_MACOS)
 						bool				isAlias() const;
 
-						CString				getComment() const;
-						OV<SError>			setComment(const CString& string) const;
+						OV<CString>			getComments() const;
+						OV<SError>			setComments(const CString& string) const;
 #endif
 
 	private:

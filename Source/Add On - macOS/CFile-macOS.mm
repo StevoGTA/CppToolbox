@@ -47,7 +47,7 @@ bool CFile::isHidden() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UniversalTime CFile::getCreationDate() const
+UniversalTime CFile::getCreationUniversalTime() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
@@ -65,7 +65,7 @@ UniversalTime CFile::getCreationDate() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UniversalTime CFile::getModificationDate() const
+UniversalTime CFile::getModificationUniversalTime() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
@@ -102,7 +102,7 @@ bool CFile::isAlias() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CFile::getComment() const
+OV<CString> CFile::getComments() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get URL
@@ -120,17 +120,17 @@ CString CFile::getComment() const
 			CString		string(stringRef);
 			::CFRelease(stringRef);
 
-			return string;
+			return OV<CString>(string);
 		} else
 			// Must not be a comment
-			return CString::mEmpty;
+			return OV<CString>();
 	} else
 		// Could not get MDItemRef
-		return CString::mEmpty;
+		return OV<CString>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFile::setComment(const CString& string) const
+OV<SError> CFile::setComments(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
