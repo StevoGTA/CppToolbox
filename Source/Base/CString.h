@@ -159,35 +159,35 @@ class CString : public CHashable {
 	// Structs
 	public:
 		struct C {
-					// Lifecycle methods
-					C(Length length)
-						{
-							// Setup
-							mBuffer = new char[std::max<Length>(length, 1)];
-							mBuffer[0] = 0;
+							// Lifecycle methods
+							C(Length length)
+								{
+									// Setup
+									mBuffer = new char[std::max<Length>(length, 1)];
+									mBuffer[0] = 0;
 
-							mReferenceCount = new UInt32;
-							*mReferenceCount = 1;
-						}
-					C(const C& other) :
-						mBuffer(other.mBuffer), mReferenceCount(other.mReferenceCount)
-						{ (*mReferenceCount)++; }
-					~C()
-						{
-							// Check if need to cleanup
-							if (--(*mReferenceCount) == 0) {
-								// Cleanup
-								DeleteArray(mBuffer);
-								Delete(mReferenceCount);
-							}
-						}
+									mReferenceCount = new UInt32;
+									*mReferenceCount = 1;
+								}
+							C(const C& other) :
+								mBuffer(other.mBuffer), mReferenceCount(other.mReferenceCount)
+								{ (*mReferenceCount)++; }
+							~C()
+								{
+									// Check if need to cleanup
+									if (--(*mReferenceCount) == 0) {
+										// Cleanup
+										DeleteArray(mBuffer);
+										Delete(mReferenceCount);
+									}
+								}
 
-					// Instance methods
-			char*	operator*() const
-						{ return mBuffer; }
+							// Instance methods
+					void	hashInto(CHasher& hasher) const
+								{ hasher.add(mBuffer); }
 
-			void	hashInto(CHasher& hasher) const
-						{ hasher.add(mBuffer); }
+			const	char*	operator*() const
+								{ return mBuffer; }
 
 			// Properties
 			private:

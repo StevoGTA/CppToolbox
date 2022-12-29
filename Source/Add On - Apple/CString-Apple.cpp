@@ -439,7 +439,7 @@ const CString::C CString::getCString(Encoding encoding) const
 
 	// Get c string
 	C	c(length);
-	::CFStringGetCString(mStringRef, *c, length, stringEncoding);
+	::CFStringGetCString(mStringRef, (char*) *c, length, stringEncoding);
 
 	return c;
 }

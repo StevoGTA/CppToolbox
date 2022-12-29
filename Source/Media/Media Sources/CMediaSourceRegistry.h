@@ -29,6 +29,10 @@ struct SMediaSource {
 												mRandomAccessDataSource(randomAccessDataSource),
 														mAppleResourceManager(appleResourceManager), mOptions(options)
 												{}
+											ImportSetup(const I<CRandomAccessDataSource>& randomAccessDataSource,
+													UInt32 options = SMediaSource::kOptionsNone) :
+												mRandomAccessDataSource(randomAccessDataSource), mOptions(options)
+												{}
 
 											// Instance methods
 		const	I<CRandomAccessDataSource>&	getRandomAccessDataSource() const

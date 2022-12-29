@@ -15,6 +15,41 @@
 // MARK: Info methods
 
 //----------------------------------------------------------------------------------------------------------------------
+UInt32 CCoreServices::getTotalProcessorCoresCount()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	int	sTotalProcessorCoresCount = 0;
+
+	if (sTotalProcessorCoresCount == 0) {
+		// Get info
+		int		request[2] = {CTL_HW, HW_NCPU};
+		size_t	size = sizeof(int);
+		int		status = ::sysctl(request, 2, &sTotalProcessorCoresCount, &size, nil, 0);
+		if (status != 0)
+			sTotalProcessorCoresCount = 1;
+	}
+
+	return sTotalProcessorCoresCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CCoreServices::getPhysicalMemoryByteCount()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	int64_t	sPhysicalMemoryByteCount = 0;
+
+	if (sPhysicalMemoryByteCount == 0) {
+		// Get info
+		int		request[2] = {CTL_HW, HW_MEMSIZE};
+		size_t	size = sizeof(int64_t);
+		::sysctl(request, 2, &sPhysicalMemoryByteCount, &size, nil, 0);
+	}
+
+	return sPhysicalMemoryByteCount;
+}
+
+#if defined(TARGET_OS_MACOS)
+//----------------------------------------------------------------------------------------------------------------------
 const SSystemVersionInfo& CCoreServices::getSystemVersion()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -47,7 +82,6 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 	return *sVersionInfo;
 }
 
-#if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
 const SVersionInfo& CCoreServices::getCoreAudioVersion()
 //----------------------------------------------------------------------------------------------------------------------
@@ -79,25 +113,6 @@ const SVersionInfo& CCoreServices::getCoreAudioVersion()
 
 	return *sVersionInfo;
 }
-#endif
-
-//----------------------------------------------------------------------------------------------------------------------
-UInt32 CCoreServices::getTotalProcessorCoresCount()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	static	int	sTotalProcessorCoresCount = 0;
-
-	if (sTotalProcessorCoresCount == 0) {
-		// Get info
-		int		request[2] = {CTL_HW, HW_NCPU};
-		size_t	size = sizeof(int);
-		int		status = ::sysctl(request, 2, &sTotalProcessorCoresCount, &size, nil, 0);
-		if (status != 0)
-			sTotalProcessorCoresCount = 1;
-	}
-
-	return sTotalProcessorCoresCount;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 const CString& CCoreServices::getProcessorInfo()
@@ -118,22 +133,6 @@ const CString& CCoreServices::getProcessorInfo()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CCoreServices::getPhysicalMemoryByteCount()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	static	int64_t	sPhysicalMemoryByteCount = 0;
-
-	if (sPhysicalMemoryByteCount == 0) {
-		// Get info
-		int		request[2] = {CTL_HW, HW_MEMSIZE};
-		size_t	size = sizeof(int64_t);
-		::sysctl(request, 2, &sPhysicalMemoryByteCount, &size, nil, 0);
-	}
-
-	return sPhysicalMemoryByteCount;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 UInt32 CCoreServices::getPhysicalMemoryPageSize()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -145,6 +144,7 @@ UInt32 CCoreServices::getPhysicalMemoryPageSize()
 
 	return sPhysicalMemoryPageSize;
 }
+#endif
 
 // MARK: Debugger methods
 

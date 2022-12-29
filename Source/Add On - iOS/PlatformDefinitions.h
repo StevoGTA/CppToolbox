@@ -58,4 +58,9 @@
 	#define EndianS64_NtoL(value)	value
 	#define EndianU64_LtoN(value)	value
 	#define EndianU64_NtoL(value)	value
+
+	#define Endian16_Swap(value)	(UInt16) (__builtin_constant_p(value) ? OSSwapConstInt16(value) : OSSwapInt16(value))
+	#define Endian32_Swap(value)	(UInt32) (__builtin_constant_p(value) ? OSSwapConstInt32(value) : OSSwapInt32(value))
+	#define Endian64_Swap(value)	(UInt64) (__builtin_constant_p(value) ? OSSwapConstInt64(value) : OSSwapInt64(value))
+
 #endif

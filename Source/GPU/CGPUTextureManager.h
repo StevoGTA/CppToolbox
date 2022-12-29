@@ -53,7 +53,7 @@ class CGPUTextureManager {
 
 	// Procs
 	public:
-		typedef	CBitmap	(*BitmapProc)(const CData& data);
+		typedef	TVResult<CBitmap>	(*BitmapProc)(const CData& data);
 
 	// Methods
 	public:

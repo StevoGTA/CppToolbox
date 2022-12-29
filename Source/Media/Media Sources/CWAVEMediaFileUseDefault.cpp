@@ -2,7 +2,7 @@
 //	CWAVEMediaFileUseDefault.h			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "WAVEMediaFile.h"
+#include "CWAVEMediaFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CWAVEMediaFile
@@ -23,5 +23,5 @@ I<CWAVEMediaFile> CWAVEMediaFile::create()
 static	CString	sExtensions[] = { CString(OSSTR("wav")) };
 
 REGISTER_MEDIA_SOURCE(wave,
-		SMediaSource(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")), TSArray<CString>(sExtensions, 1),
+		SMediaSource(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")), TSSet<CString>(sExtensions, 1),
 				CWAVEMediaFile::import));

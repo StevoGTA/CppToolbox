@@ -462,7 +462,8 @@ template <typename T> class TMArray : public TArray<T> {
 template <typename T> class TNArray : public TMArray<T> {
 	// Types
 	public:
-		typedef	T	(*MapProc)(CArray::ItemRef item);
+		typedef	T		(*MapProc)(CArray::ItemRef item);
+		typedef	bool	(*IsMatchProc)(const T& item, void* userData);
 
 	// Methods
 	public:
@@ -492,6 +493,8 @@ template <typename T> class TNArray : public TMArray<T> {
 									// Instance methods
 				T					popFirst()
 										{ return TMArray<T>::popFirst(); }
+				OV<T>				popFirst(IsMatchProc isMatchProc, void* userData = nil)
+										{ return TMArray<T>::popFirst(isMatchProc, userData); }
 				TArray<T>			popFirst(ItemCount count)
 										{
 											// Setup

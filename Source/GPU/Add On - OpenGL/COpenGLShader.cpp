@@ -18,7 +18,8 @@ class COpenGLShaderInternals {
 				if (mShader > 0) {
 					// Compile shader
 					const	CString::C	cString = string.getCString();
-					glShaderSource(mShader, 1, &cString.mBuffer, nil);
+					const	char*		string = *cString;
+					glShaderSource(mShader, 1, &string, nil);
 					glCompileShader(mShader);
 
 					// Get status

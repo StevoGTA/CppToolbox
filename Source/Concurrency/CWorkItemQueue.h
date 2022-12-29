@@ -91,17 +91,8 @@ class CWorkItemQueue {
 								// Instance methods
 				void			add(const I<CWorkItem>& workItem,
 										CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
-				I<CWorkItem>	add(CProcWorkItem::Proc proc, void* userData,
-										CWorkItem::Priority priority = CWorkItem::kPriorityNormal)
-									{
-										// Setup
-										I<CWorkItem>	workItem(new CProcWorkItem(proc, userData));
-
-										// Add
-										add(workItem, priority);
-
-										return workItem;
-									}
+				I<CWorkItem>	add(CWorkItem::Proc proc, void* userData,
+										CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
 
 				void			cancel(const I<CWorkItem>& workItem);
 				void			cancel(const TSet<CString>& workItemIDs);

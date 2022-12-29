@@ -35,7 +35,7 @@ class CGPU {
 		I<CGPUTexture>				registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
 											const S2DSizeU16& size);
 		TArray<I<CGPUTexture> >		registerTextures(const CVideoFrame& videoFrame);
-		void						unregisterTexture(I<CGPUTexture>& gpuTexture);
+		void						unregisterTexture(const I<CGPUTexture>& gpuTexture);
 
 		SGPUVertexBuffer			allocateVertexBuffer(UInt32 perVertexByteCount, const CData& data);
 		SGPUBuffer					allocateIndexBuffer(const CData& data);

@@ -68,7 +68,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 				bool	hasTwoLastReferences() const
 							{ return getReferenceCount() == 2; }
 				bool	getIsLoaded() const
-							{ return mGPUTexture.hasInstance(); }
+							{ return mGPUTexture.hasValue(); }
 		virtual	void	loadOrQueueForLoading()
 							{}
 		virtual	void	finishLoading()
@@ -76,7 +76,7 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 		virtual	void	unload()
 							{
 								// Check for texture
-								if (mGPUTexture.hasInstance())
+								if (mGPUTexture.hasValue())
 									// Unregister with GPU Render Engine
 									mGPUTextureManagerInfo.mGPU.unregisterTexture(*mGPUTexture);
 							}
@@ -99,7 +99,7 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 								SGPUTextureManagerInfo& gpuTextureManagerInfo) :
 							CGPUTextureReferenceInternals(reference, gpuTextureManagerInfo),
 									mDataFormat(dataFormat), mReferenceOptions(referenceOptions),
-									mWorkItem(nil), mFinishLoadingTriggered(false), mGPUTextureDataInfo(nil)
+									mFinishLoadingTriggered(false), mGPUTextureDataInfo(nil)
 							{}
 
 						// CGPUTextureReferenceInternals methods
@@ -120,7 +120,7 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 
 								// Setup to load
 								mLoadLock.lock();
-								if (!mGPUTexture.hasInstance()) {
+								if (!mGPUTexture.hasValue()) {
 									// Need to finish
 									if (mGPUTextureDataInfo == nil)
 										// Do full load
@@ -134,10 +134,10 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 				void	unload()
 							{
 								// Check for workItem
-								if (mWorkItem != nil) {
+								if (mWorkItem.hasValue()) {
 									// Cancel
 									mGPUTextureManagerInfo.mWorkItemQueue.cancel(*mWorkItem);
-									mWorkItem = nil;
+									mWorkItem.removeValue();
 								}
 
 								// Check for render materia texture
@@ -151,7 +151,8 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 
 						// Instance methods
 				bool	isLoadingContinuing()
-							{ return mFinishLoadingTriggered || ((mWorkItem != nil) && !mWorkItem->isCancelled()); }
+							{ return mFinishLoadingTriggered ||
+									(mWorkItem.hasValue() && !(*mWorkItem)->isCancelled()); }
 
 						// Instance methods for subclasses to call
 				void	loadComplete(const CData& data, CGPUTexture::DataFormat dataFormat, S2DSizeU16 size)
@@ -175,7 +176,7 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 		virtual	void	load() = 0;
 
 						// Class methods
-		static	void	load(CWorkItem& workItem, void* userData)
+		static	void	load(const I<CWorkItem>& workItem, void* userData)
 							{
 								// Get info
 								CGPULoadableTextureReferenceInternals&	internals =
@@ -183,7 +184,7 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 																						userData);
 
 								// Store
-								internals.mWorkItem = &workItem;
+								internals.mWorkItem.setValue(workItem);
 
 								// Setup to load
 								internals.mLoadLock.lock();
@@ -193,14 +194,14 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 								internals.mLoadLock.unlock();
 
 								// Finished
-								internals.mWorkItem = nil;
+								internals.mWorkItem.removeValue();
 							}
 
 		OV<CGPUTexture::DataFormat>				mDataFormat;
 		CGPUTextureManager::ReferenceOptions	mReferenceOptions;
 
 		CLock									mLoadLock;
-		CWorkItem*								mWorkItem;
+		OV<I<CWorkItem> >						mWorkItem;
 		bool									mFinishLoadingTriggered;
 		SGPUTextureDataInfo*					mGPUTextureDataInfo;
 };
@@ -392,7 +393,7 @@ class CBitmapProcGPUTextureReferenceInternals : public CBitmapGPUTextureReferenc
 						// Is loading continuing
 						if (isLoadingContinuing())
 							// Create bitmap
-							mLoadingBitmap = new CBitmap(mBitmapProc(mDataSource->readData().getValue()));
+							mLoadingBitmap = new CBitmap(mBitmapProc(mDataSource->readData().getValue()).getValue());
 
 						// Do super
 						CBitmapGPUTextureReferenceInternals::load();

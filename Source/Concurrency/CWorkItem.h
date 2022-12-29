@@ -29,6 +29,7 @@ class CWorkItem : public CHashable {
 	// Types
 	typedef	void	(*CompletedProc)(void* userData);
 	typedef	void	(*CancelledProc)(void* userData);
+	typedef	void	(*Proc)(const I<CWorkItem>& workItem, void* userData);
 
 	// Methods
 	public:
@@ -62,7 +63,7 @@ class CWorkItem : public CHashable {
 											{ return getState() == kStateCancelled; }
 
 										// Subclass methods
-		virtual			void			perform() = 0;
+		virtual			void			perform(const I<CWorkItem>& workItem) = 0;
 
 										// Internal-use only methods
 						void			transitionTo(State state);
@@ -75,27 +76,4 @@ class CWorkItem : public CHashable {
 	// Properties
 	private:
 		CWorkItemInternals*	mInternals;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CProcWorkItem
-
-class CProcWorkItem : public CWorkItem {
-	// Procs
-	public:
-		typedef	void	(*Proc)(CWorkItem& workItem, void* userData);
-
-	// Methods
-	public:
-				// Lifecycle methods
-				CProcWorkItem(Proc proc, void* userData) : CWorkItem(), mProc(proc), mUserData(userData) {}
-
-				// CWorkItem methods
-		void	perform()
-					{ mProc(*this, mUserData); }
-
-	// Properties
-	private:
-		Proc	mProc;
-		void*	mUserData;
 };

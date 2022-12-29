@@ -7,6 +7,7 @@
 #include "CVideoCodec.h"
 
 #include <CoreMedia/CoreMedia.h>
+#undef TARGET_OS_WINDOWS
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreMediaDecodeVideoCodec

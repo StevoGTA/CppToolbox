@@ -12,7 +12,27 @@
 #include "TLockingValue.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CWorkItemInfo
+// MARK: CProcWorkItem
+
+class CProcWorkItem : public CWorkItem {
+	// Methods
+	public:
+				// Lifecycle methods
+				CProcWorkItem(Proc proc, void* userData) : CWorkItem(), mProc(proc), mUserData(userData) {}
+
+				// CWorkItem methods
+		void	perform(const I<CWorkItem>& workItem)
+					{ mProc(workItem, mUserData); }
+
+	// Properties
+	private:
+		Proc	mProc;
+		void*	mUserData;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CWorkItemInfo
 
 class CWorkItemInfo : public CEquatable {
 	public:
@@ -35,7 +55,7 @@ class CWorkItemInfo : public CEquatable {
 		void	transitionTo(CWorkItem::State state)
 					{ mWorkItem->transitionTo(state); }
 		void	perform()
-					{ mWorkItem->perform(); }
+					{ mWorkItem->perform(mWorkItem); }
 
 		// Properties
 				CWorkItemQueueInternals&	mOwningWorkItemQueueInternals;
@@ -304,8 +324,8 @@ class CWorkItemQueueInternals {
 												mWorkItemThreadsLock.unlock();
 											}
 
-		static	bool					workItemInfoMatches(const I<CWorkItemInfo>& workItemInfo, void* userData)
-											{ return &workItemInfo == userData; }
+		static	bool					workItemMatches(const I<CWorkItemInfo>& workItemInfo, I<CWorkItem>* workItem)
+											{ return workItemInfo->mWorkItem == *workItem; }
 		static	bool					workItemInfoHasID(const CWorkItemInfo& workItemInfo,
 												TSet<CString>* workItemIDs)
 											{ return workItemIDs->contains(workItemInfo.mWorkItem->getID()); }
@@ -493,11 +513,24 @@ void CWorkItemQueue::add(const I<CWorkItem>& workItem, CWorkItem::Priority prior
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+I<CWorkItem> CWorkItemQueue::add(CWorkItem::Proc proc, void* userData, CWorkItem::Priority priority)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	I<CWorkItem>	workItem(new CProcWorkItem(proc, userData));
+
+	// Add
+	add(workItem, priority);
+
+	return workItem;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CWorkItemQueue::cancel(const I<CWorkItem>& workItem)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Cancel
-	mInternals->cancel((TArray<CWorkItemInfo>::IsMatchProc) CWorkItemQueueInternals::workItemInfoMatches,
+	mInternals->cancel((TArray<CWorkItemInfo>::IsMatchProc) CWorkItemQueueInternals::workItemMatches,
 			(void*) &workItem);
 }
 

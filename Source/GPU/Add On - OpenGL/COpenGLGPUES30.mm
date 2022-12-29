@@ -145,7 +145,7 @@ TArray<I<CGPUTexture> > CGPU::registerTextures(const CVideoFrame& videoFrame)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::unregisterTexture(I<CGPUTexture>& gpuTexture)
+void CGPU::unregisterTexture(const I<CGPUTexture>& gpuTexture)
 //----------------------------------------------------------------------------------------------------------------------
 {
 }
