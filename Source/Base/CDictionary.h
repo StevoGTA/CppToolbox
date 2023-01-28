@@ -352,7 +352,6 @@ template <typename T> class TReferenceDictionary : public CDictionary {
 						// Lifecycle methods
 						TReferenceDictionary() : CDictionary() {}
 						TReferenceDictionary(const TReferenceDictionary& dictionary) : CDictionary(dictionary) {}
-						~TReferenceDictionary() {}
 
 						// Instance methods
 		const	OR<T>	get(const CString& key) const

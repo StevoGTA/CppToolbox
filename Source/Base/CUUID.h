@@ -49,7 +49,7 @@ class CUUID : public CHashable {
 				CData	getData() const;
 				CString	getHexString() const;
 				CString	getBase64String() const
-							{ return getData().getBase64String(); }
+							{ return getData().getBase64String().getSubString(0, 22); }
 				Bytes	getBytes();
 
 				bool	equals(const CUUID& other) const;

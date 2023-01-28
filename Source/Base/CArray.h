@@ -52,8 +52,6 @@ class CArray : public CEquatable {
 									CArray(const CArray& other);
 
 									// Instance methods
-				ItemRef				copy(const ItemRef itemRef) const;
-
 				CArray&				add(const ItemRef itemRef);
 				CArray&				addFrom(const CArray& other);
 
@@ -131,16 +129,6 @@ template <typename T> class TNumberArray : public CArray {
 											// CArray methods
 				TNumberArray<T>&			add(T value)
 												{ CArray::add(new TNumber<T>(value)); return *this; }
-				TNumberArray<T>&			addFrom(const TNumberArray<T>& other)
-												{
-													// Iterate all
-													ItemCount	count = other.getCount();
-													for (ItemIndex i = 0; i < count; i++)
-														// Add
-														CArray::add(CArray::copy(other.getItemAt(i)));
-
-													return *this;
-												}
 
 				T							getAt(ItemIndex index) const
 												{ return ((TNumber<T>*) getItemAt(index))->mValue; }
@@ -345,17 +333,7 @@ template <typename T> class TMArray : public TArray<T> {
 	public:
 						// CArray methods
 		TMArray<T>&		add(const T& item)
-							{ CArray::add(CArray::copy(&item)); return *this; }
-		TMArray<T>&		addFrom(const TArray<T>& other)
-							{
-								// Iterate all
-								ItemCount	count = other.getCount();
-								for (CArray::ItemIndex i = 0; i < count; i++)
-									// Add
-									CArray::add(CArray::copy(other.getItemAt(i)));
-
-								return *this;
-							}
+							{ CArray::add(&item); return *this; }
 
 		TMArray<T>&		insertAtIndex(const T& item, CArray::ItemIndex itemIndex)
 							{ CArray::insertAtIndex(new T(item), itemIndex); return *this; }
@@ -441,7 +419,7 @@ template <typename T> class TMArray : public TArray<T> {
 		TMArray<T>&		operator+=(const T& item)
 							{ return add(item); }
 		TMArray<T>&		operator+=(const TArray<T>& other)
-							{ return addFrom(other); }
+							{ return (TMArray<T>&) TArray<T>::addFrom(other); }
 		TMArray<T>&		operator-=(const T& item)
 							{ return remove(item); }
 		TMArray<T>&		operator-=(const TArray<T>& other)

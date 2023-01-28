@@ -16,7 +16,7 @@ template <typename T> class TNLockingArray : public TNArray<T> {
 								// Lifecycle methods
 								TNLockingArray() : TNArray<T>() {}
 								TNLockingArray(const T& item) : TNArray<T>(item) {}
-								TNLockingArray(const TArray<T>& array) : TNArray<T>(array) {}
+								TNLockingArray(const TArray<T>& other) : TNArray<T>(other) {}
 
 								// CArray methods
 		CArray::ItemCount		getCount() const

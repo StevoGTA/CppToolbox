@@ -125,9 +125,17 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 																						sizeof(CArray::ItemRef));
 													}
 
-													// Append itemRefs into place
-													::memcpy(arrayInternals->mItemRefs + arrayInternals->mCount,
-															itemRefs, count * sizeof(CArray::ItemRef));
+													// Check if have copy proc
+													if (mCopyProc != nil) {
+														// Copy each item
+														for (CArray::ItemIndex i = 0; i < count; i++)
+															// Copy item
+															arrayInternals->mItemRefs[arrayInternals->mCount + i] =
+																	mCopyProc(itemRefs[i]);
+													} else
+														// Append itemRefs into place
+														::memcpy(arrayInternals->mItemRefs + arrayInternals->mCount,
+																itemRefs, count * sizeof(CArray::ItemRef));
 													arrayInternals->mCount = neededCount;
 
 													// Update info
@@ -161,8 +169,13 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 															(arrayInternals->mCount - itemIndex) *
 																	sizeof(CArray::ItemRef));
 
-													// Store new itemRef
-													arrayInternals->mItemRefs[itemIndex] = itemRef;
+													// Check if have copy proc
+													if (mCopyProc != nil)
+														// Copy item
+														arrayInternals->mItemRefs[itemIndex] = mCopyProc(itemRef);
+													else
+														// Store new itemRef
+														arrayInternals->mItemRefs[itemIndex] = itemRef;
 													arrayInternals->mCount++;
 
 													// Update info
@@ -289,13 +302,6 @@ CArray::~CArray()
 }
 
 // MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CArray::ItemRef CArray::copy(const ItemRef itemRef) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return (mInternals->mCopyProc != nil) ? mInternals->mCopyProc(itemRef) : itemRef;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 CArray& CArray::add(const ItemRef itemRef)
