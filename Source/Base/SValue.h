@@ -13,7 +13,7 @@
 class CDictionary;
 
 struct SValue {
-	// Enums
+	// Type
 	public:
 		enum Type {
 			kEmpty,
@@ -36,8 +36,26 @@ struct SValue {
 			kOpaque,
 		};
 
-	// Types
+	// Opaque
 	typedef	const	void*	Opaque;
+
+	// ValueTracker
+	public:
+		class ValueTracker {
+			// Procs
+			public:
+				typedef	void	(*NoteValueChangedProc)(const SValue& value, void* userData);
+
+			public:
+								// Lifecycle methods
+								ValueTracker() {}
+				virtual			~ValueTracker() {}
+
+								// Instance methods
+				virtual	SValue	getValue() const = 0;
+
+				virtual	void	setNoteValueChangedProc(NoteValueChangedProc noteValueChangedProc, void* userData) = 0;
+		};
 
 	// Procs
 	public:

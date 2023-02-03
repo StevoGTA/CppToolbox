@@ -133,6 +133,9 @@ class CDictionary : public CEquatable {
 						OV<SValue::Opaque>		getOpaque(const CString& key) const;
 						OSType					getOSType(const CString& key, OSType defaultValue = 0) const
 													{ return getUInt32(key, defaultValue); }
+						void					getValue(const CString& key, bool& outValue,
+														bool defaultValue = false) const
+													{ outValue = getBool(key, defaultValue); }
 						void					getValue(const CString& key, Float32& outValue,
 														Float32 defaultValue = 0.0) const
 													{ outValue = getFloat32(key, defaultValue); }
