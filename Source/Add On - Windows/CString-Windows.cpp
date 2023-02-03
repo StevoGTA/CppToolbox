@@ -377,6 +377,57 @@ CString::CString(const CData& data, Encoding encoding) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CString& localizationGroup, const CString& localizationKey, const CDictionary& localizationInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Retrieve from info
+	mString =
+			sLocalizationInfo.getString(localizationGroup + CString::mPeriod + localizationKey, localizationKey)
+					.mString;
+
+	// Replace values
+	for (TIteratorS<CDictionary::Item> iterator = localizationInfo.getIterator(); iterator.hasValue();
+			iterator.advance()) {
+		// Compose value
+		CString	replacement;
+		switch (iterator->mValue.getType()) {
+			case SValue::kBool:
+				// Bool
+				replacement = iterator->mValue.getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
+				break;
+
+			case SValue::kString:	replacement = iterator->mValue.getString();				break;
+			case SValue::kFloat32:	replacement = CString(iterator->mValue.getFloat32());	break;
+			case SValue::kFloat64:	replacement = CString(iterator->mValue.getFloat64());	break;
+			case SValue::kSInt8:	replacement = CString(iterator->mValue.getSInt8());		break;
+			case SValue::kSInt16:	replacement = CString(iterator->mValue.getSInt16());	break;
+			case SValue::kSInt32:	replacement = CString(iterator->mValue.getSInt32());	break;
+			case SValue::kSInt64:	replacement = CString(iterator->mValue.getSInt64());	break;
+			case SValue::kUInt8:	replacement = CString(iterator->mValue.getUInt8());		break;
+			case SValue::kUInt16:	replacement = CString(iterator->mValue.getUInt16());	break;
+			case SValue::kUInt32:	replacement = CString(iterator->mValue.getUInt32());	break;
+			case SValue::kUInt64:	replacement = CString(iterator->mValue.getUInt64());	break;
+
+			case SValue::kEmpty:
+			case SValue::kArrayOfDictionaries:
+			case SValue::kArrayOfStrings:
+			case SValue::kOpaque:
+			case SValue::kData:
+			case SValue::kDictionary:
+				// Unhandled
+				replacement = CString(OSSTR("->UNHANDLED<-"));
+				break;
+		}
+
+		// Replace
+		size_t	offset;
+		while ((offset = mString.find(iterator->mKey.mString.c_str(), 0)) != std::basic_string<TCHAR>::npos)
+			// Replace this substring
+			mString.replace(offset, iterator->mKey.mString.length(), replacement.mString.c_str());
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CString::CString(const CString& localizationGroup, const CString& localizationKey)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -544,10 +595,9 @@ CString CString::replacingSubStrings(const CString& subStringToReplace, const CS
 
 	// Iterate all substrings
 	size_t	offset;
-	while ((offset = string.mString.find(subStringToReplace.mString.c_str(), 0)) != std::basic_string<TCHAR>::npos) {
+	while ((offset = string.mString.find(subStringToReplace.mString.c_str(), 0)) != std::basic_string<TCHAR>::npos)
 		// Replace this substring
 		string.mString.replace(offset, substringToReplaceLength, replacementString.mString.c_str());
-	}
 
 	return string;
 }

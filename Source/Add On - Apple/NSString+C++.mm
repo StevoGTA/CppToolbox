@@ -72,7 +72,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 		}
 	} else
 		// Not found
-		mStringRef = CFSTR("");
+		mStringRef = (localizationGroup + mColon + localizationKey).getOSString();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 					value:sStringFor(localizationKey) table:sStringFor(localizationGroup)]);
 	if (mStringRef == nil)
 		// Not found
-		mStringRef = CFSTR("");
+		mStringRef = (localizationGroup + mColon + localizationKey).getOSString();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
