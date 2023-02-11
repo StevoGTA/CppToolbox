@@ -115,6 +115,8 @@ struct SValue {
 
 						void					dispose(OpaqueDisposeProc opaqueDisposeProc);
 
+						SValue&					operator=(const SValue& other);
+
 	private:
 												// Lifecycle methods
 												SValue();

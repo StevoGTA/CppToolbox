@@ -106,30 +106,56 @@ SValue::SValue(Opaque value) : mType(kOpaque), mValue(value)
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SValue::SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc) : mType(other.mType), mValue(other.mValue)
+SValue::SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc) : mType(other.mType), mValue(false)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check for ItemCopyProc
-	if (opaqueCopyProc != nil) {
-		// Copy value
-		if (mType == kArrayOfDictionaries)
+	// Check value type
+	switch (mType) {
+		case kArrayOfDictionaries:
 			// Array of dictionaries
-			mValue.mArrayOfDictionaries = new TNArray<CDictionary>(*mValue.mArrayOfDictionaries);
-		else if (mType == kArrayOfStrings)
+			mValue.mArrayOfDictionaries = new TArray<CDictionary>(*other.mValue.mArrayOfDictionaries);
+			break;
+
+		case kArrayOfStrings:
 			// Array of strings
-			mValue.mArrayOfStrings = new TNArray<CString>(*mValue.mArrayOfStrings);
-		else if (mType == kData)
+			mValue.mArrayOfStrings = new TArray<CString>(*other.mValue.mArrayOfStrings);
+			break;
+
+		case kData:
 			// Data
-			mValue.mData = new CData(*mValue.mData);
-		else if (mType == kDictionary)
+			mValue.mData = new CData(*other.mValue.mData);
+			break;
+
+		case kDictionary:
 			// Dictionary
-			mValue.mDictionary = new CDictionary(*mValue.mDictionary);
-		else if (mType == kString)
+			mValue.mDictionary = new CDictionary(*other.mValue.mDictionary);
+			break;
+
+		case kString:
 			// String
-			mValue.mString = new CString(*mValue.mString);
-		else if ((mType == kOpaque) && (opaqueCopyProc != nil))
-			// Opaque and have copy proc
-			mValue.mOpaque = opaqueCopyProc(mValue.mOpaque);
+			mValue.mString = new CString(*other.mValue.mString);
+			break;
+
+		case kEmpty:
+		case kBool:
+		case kFloat32:
+		case kFloat64:
+		case kSInt8:
+		case kSInt16:
+		case kSInt32:
+		case kSInt64:
+		case kUInt8:
+		case kUInt16:
+		case kUInt32:
+		case kUInt64:
+			// Can copy
+			mValue = other.mValue;
+			break;
+
+		case kOpaque:
+			// Opaque
+			mValue = (opaqueCopyProc != nil) ?  opaqueCopyProc(other.mValue.mOpaque) : other.mValue;
+			break;
 	}
 }
 
@@ -557,6 +583,61 @@ void SValue::dispose(OpaqueDisposeProc opaqueDisposeProc)
 		// Item Ref and have item dispose proc
 		opaqueDisposeProc(mValue.mOpaque);
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SValue& SValue::operator=(const SValue& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Copy type
+	mType = other.mType;
+
+	// Check value type
+	switch (mType) {
+		case kArrayOfDictionaries:
+			// Array of dictionaries
+			mValue.mArrayOfDictionaries = new TArray<CDictionary>(*other.mValue.mArrayOfDictionaries);
+			break;
+
+		case kArrayOfStrings:
+			// Array of strings
+			mValue.mArrayOfStrings = new TArray<CString>(*other.mValue.mArrayOfStrings);
+			break;
+
+		case kData:
+			// Data
+			mValue.mData = new CData(*other.mValue.mData);
+			break;
+
+		case kDictionary:
+			// Dictionary
+			mValue.mDictionary = new CDictionary(*other.mValue.mDictionary);
+			break;
+
+		case kString:
+			// String
+			mValue.mString = new CString(*other.mValue.mString);
+			break;
+
+		case kEmpty:
+		case kBool:
+		case kFloat32:
+		case kFloat64:
+		case kSInt8:
+		case kSInt16:
+		case kSInt32:
+		case kSInt64:
+		case kUInt8:
+		case kUInt16:
+		case kUInt32:
+		case kUInt64:
+		case kOpaque:
+			// Can copy
+			mValue = other.mValue;
+			break;
+	}
+
+	return *this;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -1036,7 +1036,7 @@ CDictionary& CDictionary::operator+=(const CDictionary& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all items
-	for (TIteratorS<Item> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance())
+	for (TIteratorS<Item> iterator = other.mInternals->getIterator(); iterator.hasValue(); iterator.advance())
 		// Set this value
 		mInternals->set(iterator->mKey, iterator->mValue);
 

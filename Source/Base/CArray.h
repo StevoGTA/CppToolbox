@@ -536,7 +536,7 @@ template <typename T> class TCArray : public TMArray<T> {
 	private:
 						// Class methods
 		static	T*		copy(CArray::ItemRef itemRef)
-							{ return ((T*) itemRef)->copy(); }
+							{ return (T*) ((T*) itemRef)->copy(); }
 		static	void	dispose(CArray::ItemRef itemRef)
 							{ T* t = (T*) itemRef; Delete(t); }
 };
