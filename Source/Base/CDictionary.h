@@ -248,7 +248,7 @@ template <typename T> class TMDictionary : public TDictionary<T> {
 		void	set(const CString& key, const OV<T>& item)
 					{
 						// Check for instance
-						if (item.hasInstance())
+						if (item.hasValue())
 							// Set
 							CDictionary::set(key, new T(*item));
 						else

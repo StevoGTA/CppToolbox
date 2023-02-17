@@ -48,21 +48,29 @@ struct SValue {
 
 			public:
 								// Lifecycle methods
-								ValueTracker() {}
+								ValueTracker(NoteValueChangedProc noteValueChangedProc = nil, void* userData = nil) :
+									mNoteValueChangedProc(noteValueChangedProc), mUserData(userData)
+									{}
 				virtual			~ValueTracker() {}
 
 								// Instance methods
 				virtual	SValue	getValue() const = 0;
 
-				virtual	void	setNoteValueChangedProc(NoteValueChangedProc noteValueChangedProc, void* userData) = 0;
+						void	setNoteValueChangedProc(NoteValueChangedProc noteValueChangedProc, void* userData)
+									{ mNoteValueChangedProc = noteValueChangedProc; mUserData = userData; }
+
+			// Properties
+			protected:
+				NoteValueChangedProc	mNoteValueChangedProc;
+				void*					mUserData;
 		};
 
 	// Procs
 	public:
-		typedef	Opaque				(*OpaqueCopyProc)(Opaque opaque);
-		typedef	bool				(*OpaqueEqualsProc)(Opaque opaque1, Opaque opaque2);
-		typedef	void				(*OpaqueDisposeProc)(Opaque opaque);
-		typedef	const OR<SValue>	(*Proc)(const CString& key, void* userData);
+		typedef			Opaque		(*OpaqueCopyProc)(Opaque opaque);
+		typedef			bool		(*OpaqueEqualsProc)(Opaque opaque1, Opaque opaque2);
+		typedef			void		(*OpaqueDisposeProc)(Opaque opaque);
+		typedef	const	OR<SValue>	(*Proc)(const CString& key, void* userData);
 
 	// Methods
 	public:
