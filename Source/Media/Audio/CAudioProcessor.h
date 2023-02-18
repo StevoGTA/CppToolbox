@@ -38,7 +38,7 @@ class CAudioProcessor {
 												// Instance methods
 		virtual	OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
-		virtual	TNArray<CString>				getSetupDescription(const CString& indent);
+		virtual	TArray<CString>					getSetupDescription(const CString& indent);
 
 		virtual	Requirements					queryRequirements() const;
 
@@ -72,7 +72,7 @@ class CAudioSource : public CAudioProcessor {
 										CAudioSource() : CAudioProcessor() {}
 
 										// CAudioProcessor methods
-		TNArray<CString>				getSetupDescription(const CString& indent)
+		TArray<CString>					getSetupDescription(const CString& indent)
 											{ return TNArray<CString>(); }
 
 		TArray<SAudioProcessingSetup>	getInputSetups() const

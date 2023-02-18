@@ -193,11 +193,11 @@ OV<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
+TArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
-	TNArray<CString>	setupDescriptions = CBasicAudioProcessor::getSetupDescription(indent);
+	TNArray<CString>	setupDescriptions(CBasicAudioProcessor::getSetupDescription(indent));
 
 	// Add our setup description
 	setupDescriptions +=

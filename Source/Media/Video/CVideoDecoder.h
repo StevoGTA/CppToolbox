@@ -22,7 +22,7 @@ class CVideoDecoder : public CVideoSource {
 							~CVideoDecoder();
 
 							// CVideoProcessor methods
-		TNArray<CString>	getSetupDescription(const CString& indent);
+		TArray<CString>		getSetupDescription(const CString& indent);
 
 		void				setSourceWindow(UniversalTimeInterval startTimeInterval,
 									const OV<UniversalTimeInterval>& durationTimeInterval);

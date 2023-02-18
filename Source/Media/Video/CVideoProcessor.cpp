@@ -49,7 +49,7 @@ OV<SError> CVideoProcessor::connectInput(const I<CVideoProcessor>& videoProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CVideoProcessor::getSetupDescription(const CString& indent)
+TArray<CString> CVideoProcessor::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return (*mInternals->mVideoProcessor)->getSetupDescription(indent);

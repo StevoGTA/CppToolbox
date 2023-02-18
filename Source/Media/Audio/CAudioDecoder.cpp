@@ -57,11 +57,11 @@ CAudioDecoder::~CAudioDecoder()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CAudioDecoder::getSetupDescription(const CString& indent)
+TArray<CString> CAudioDecoder::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
-	TNArray<CString>	setupDescriptions = CAudioSource::getSetupDescription(indent);
+	TNArray<CString>	setupDescriptions(CAudioSource::getSetupDescription(indent));
 
 	// Add our setup description
 	setupDescriptions += indent + CString(OSSTR("Audio Decoder (")) + mInternals->mIdentifier + CString(OSSTR(")"));

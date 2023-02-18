@@ -20,7 +20,7 @@ class CAudioDecoder : public CAudioSource {
 										~CAudioDecoder();
 
 										// CAudioProcessor methods
-		TNArray<CString>				getSetupDescription(const CString& indent);
+		TArray<CString>					getSetupDescription(const CString& indent);
 
 		Requirements					queryRequirements() const;
 

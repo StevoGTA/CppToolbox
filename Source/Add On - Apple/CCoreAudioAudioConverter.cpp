@@ -187,11 +187,11 @@ OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CCoreAudioAudioConverter::getSetupDescription(const CString& indent)
+TArray<CString> CCoreAudioAudioConverter::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
-	TNArray<CString>	setupDescriptions = CBasicAudioProcessor::getSetupDescription(indent);
+	TNArray<CString>	setupDescriptions(CBasicAudioProcessor::getSetupDescription(indent));
 
 	// Add our setup description
 	setupDescriptions += indent + CString(OSSTR("CoreAudio Converter"));

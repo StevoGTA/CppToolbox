@@ -50,7 +50,7 @@ OV<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcesso
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CAudioProcessor::getSetupDescription(const CString& indent)
+TArray<CString> CAudioProcessor::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return (*mInternals->mAudioProcessor)->getSetupDescription(indent);

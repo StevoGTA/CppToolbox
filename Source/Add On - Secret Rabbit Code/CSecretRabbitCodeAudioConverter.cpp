@@ -168,11 +168,11 @@ OV<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& indent)
+TArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
-	TNArray<CString>	setupDescriptions = CBasicAudioProcessor::getSetupDescription(indent);
+	TNArray<CString>	setupDescriptions(CBasicAudioProcessor::getSetupDescription(indent));
 
 	// Add our setup description
 	setupDescriptions += indent + CString(OSSTR("Secret Rabbit Code Audio Converter"));

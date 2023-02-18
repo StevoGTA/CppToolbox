@@ -119,7 +119,8 @@ class CVideoFrameStoreThread : public CThread {
 
 							// Dump frames before position
 							while ((mVideoFrames.getCount() > 1) &&
-									(mCurrentPresentationTimeInterval >= mVideoFrames[1].getPresentationTimeInterval())) {
+									(mCurrentPresentationTimeInterval >=
+											mVideoFrames[1].getPresentationTimeInterval())) {
 								// Dump first frame
 								mVideoFrames.removeAtIndex(0);
 								framesUpdated = true;
@@ -127,7 +128,8 @@ class CVideoFrameStoreThread : public CThread {
 
 							// Check if need to update current frame
 							if (mIsSeeking && !mCurrentFrameUpdatedCalled && (mVideoFrames.getCount() >= 2) &&
-									(mCurrentPresentationTimeInterval < mVideoFrames[1].getPresentationTimeInterval())) {
+									(mCurrentPresentationTimeInterval <
+											mVideoFrames[1].getPresentationTimeInterval())) {
 								// Notify
 								mInfo.currentFrameUpdated(mVideoFrameStore, mVideoFrames[0]);
 								mCurrentFrameUpdatedCalled = true;
@@ -253,11 +255,11 @@ CVideoFrameStore::~CVideoFrameStore()
 // MARK: CVideoProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CVideoFrameStore::getSetupDescription(const CString& indent)
+TArray<CString> CVideoFrameStore::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
-	TNArray<CString>	setupDescriptions = CVideoDestination::getSetupDescription(indent);
+	TNArray<CString>	setupDescriptions(CVideoDestination::getSetupDescription(indent));
 
 	// Add our setup description
 	setupDescriptions += indent + CString(OSSTR("Video Frame Store"));

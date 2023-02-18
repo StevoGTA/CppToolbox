@@ -46,7 +46,7 @@ class CVideoProcessor {
 
 									// Instance methods
 		virtual	OV<SError>			connectInput(const I<CVideoProcessor>& videoProcessor);
-		virtual	TNArray<CString>	getSetupDescription(const CString& indent);
+		virtual	TArray<CString>		getSetupDescription(const CString& indent);
 
 		virtual	void				setSourceWindow(UniversalTimeInterval startTimeInterval,
 											const OV<UniversalTimeInterval>& durationTimeInterval);
@@ -66,12 +66,12 @@ class CVideoProcessor {
 class CVideoSource : public CVideoProcessor {
 	// Methods
 	public:
-							// Lifecycle methods
-							CVideoSource() : CVideoProcessor() {}
+						// Lifecycle methods
+						CVideoSource() : CVideoProcessor() {}
 
-							// CVideoProcessor methods
-		TNArray<CString>	getSetupDescription(const CString& indent)
-									{ return TNArray<CString>(); }
+						// CVideoProcessor methods
+		TArray<CString>	getSetupDescription(const CString& indent)
+							{ return TNArray<CString>(); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,4 +85,17 @@ class CVideoDestination : public CVideoProcessor {
 
 						// Instance methods
 		virtual	void	setupComplete() = 0;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CVideoDestinationNone
+
+class CVideoDestinationNone : public CVideoDestination {
+	// Methods
+	public:
+				// Lifecycle methods
+				CVideoDestinationNone() : CVideoDestination() {}
+
+				// Instance methods
+		void	setupComplete() {}
 };

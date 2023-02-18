@@ -20,7 +20,7 @@ class CAudioChannelMapper : public CBasicAudioProcessor {
 												// CAudioProcessor methods
 				OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
 														const SAudioProcessingFormat& audioProcessingFormat);
-				TNArray<CString>				getSetupDescription(const CString& indent);
+				TArray<CString>					getSetupDescription(const CString& indent);
 
 				SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
 

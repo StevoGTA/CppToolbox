@@ -66,11 +66,11 @@ CVideoDecoder::~CVideoDecoder()
 // MARK: CVideoProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CVideoDecoder::getSetupDescription(const CString& indent)
+TArray<CString> CVideoDecoder::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
-	TNArray<CString>	setupDescriptions = CVideoSource::getSetupDescription(indent);
+	TNArray<CString>	setupDescriptions(CVideoSource::getSetupDescription(indent));
 
 	// Add our setup description
 	setupDescriptions += indent + CString(OSSTR("Video Decoder (")) + mInternals->mIdentifier + CString(OSSTR(")"));

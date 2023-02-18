@@ -17,7 +17,7 @@ struct SMediaSource {
 		kOptionsNone			= 0,
 		kOptionsCreateDecoders	= 1 << 1,
 
-		kOptionsLast = kOptionsCreateDecoders,
+		kOptionsLast			= kOptionsCreateDecoders,
 	};
 
 	// ImportSetup

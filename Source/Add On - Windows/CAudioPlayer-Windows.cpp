@@ -632,11 +632,11 @@ OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CAudioPlayer::getSetupDescription(const CString& indent)
+TArray<CString> CAudioPlayer::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
-	TNArray<CString>	setupDescriptions = CAudioDestination::getSetupDescription(indent);
+	TNArray<CString>	setupDescriptions(CAudioDestination::getSetupDescription(indent));
 
 	// Add our setup description
 	setupDescriptions += indent + CString(OSSTR("Audio Player"));
