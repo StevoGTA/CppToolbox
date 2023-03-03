@@ -191,7 +191,6 @@ SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSo
 		// Use native
 		endian = SAudioProcessingFormat::kEndianNative;
 
-
 	// Compose interleaved
 	SAudioProcessingFormat::Interleaved	interleaved =
 												(audioDestinationFirstAudioProcessingSetup.getInterleavedOption() ==
@@ -203,7 +202,7 @@ SAudioProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudioSo
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audioProcessorSource,
+TVResult<SAudioProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor>& audioProcessorSource,
 		const I<CAudioProcessor>& audioProcessorDestination, const SAudioProcessingFormat& audioProcessingFormat) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -261,11 +260,11 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 	if (commonAudioProcessingFormat.hasValue()) {
 		// Connect directly
 		OV<SError>	error = audioProcessorSource->setOutputFormat(*commonAudioProcessingFormat);
-		ReturnValueIfError(error, ConnectResult(*error));
+		ReturnValueIfError(error, TVResult<SAudioProcessingFormat>(*error));
 
 		audioProcessorDestination->connectInput(audioProcessorSource, *commonAudioProcessingFormat);
 
-		return ConnectResult(*commonAudioProcessingFormat);
+		return TVResult<SAudioProcessingFormat>(*commonAudioProcessingFormat);
 	}
 
 	// Requires intermediate audio processors
@@ -290,7 +289,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 
 			// Connect Audio Deinterleaver
 			error = currentAudioProcessor->connectInput(audioDeinterleaver, currentAudioProcessingFormat);
-			if (error.hasValue()) return ConnectResult(*error);
+			if (error.hasValue()) return TVResult<SAudioProcessingFormat>(*error);
 
 			// Update
 			currentAudioProcessor = audioDeinterleaver;
@@ -304,7 +303,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 
 		// Connect Audio Converter
 		error = currentAudioProcessor->connectInput((I<CAudioProcessor>&) audioConverter, currentAudioProcessingFormat);
-		if (error.hasValue()) return ConnectResult(*error);
+		if (error.hasValue()) return TVResult<SAudioProcessingFormat>(*error);
 
 		// Update
 		currentAudioProcessor = (I<CAudioProcessor>&) audioConverter;
@@ -326,7 +325,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 
 			// Connect Audio Interleaver
 			error = currentAudioProcessor->connectInput(audioInterleaver, currentAudioProcessingFormat);
-			if (error.hasValue()) return ConnectResult(*error);
+			if (error.hasValue()) return TVResult<SAudioProcessingFormat>(*error);
 
 			// Update
 			currentAudioProcessor = audioInterleaver;
@@ -348,7 +347,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 		error =
 				currentAudioProcessor->connectInput((I<CAudioProcessor>&) audioChannelMapper,
 						currentAudioProcessingFormat);
-		if (error.hasValue()) return ConnectResult(*error);
+		if (error.hasValue()) return TVResult<SAudioProcessingFormat>(*error);
 
 		// Update
 		currentAudioProcessor = (I<CAudioProcessor>&) audioChannelMapper;
@@ -369,7 +368,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 
 		// Connect Audio Interleaver
 		error = currentAudioProcessor->connectInput(audioInterleaver, currentAudioProcessingFormat);
-		if (error.hasValue()) return ConnectResult(*error);
+		if (error.hasValue()) return TVResult<SAudioProcessingFormat>(*error);
 
 		// Update
 		currentAudioProcessor = audioInterleaver;
@@ -389,7 +388,7 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 
 		// Connect Audio Deinterleaver
 		error = currentAudioProcessor->connectInput(audioDeinterleaver, currentAudioProcessingFormat);
-		if (error.hasValue()) return ConnectResult(*error);
+		if (error.hasValue()) return TVResult<SAudioProcessingFormat>(*error);
 
 		// Update
 		currentAudioProcessor = audioDeinterleaver;
@@ -403,9 +402,9 @@ CMediaEngine::ConnectResult CMediaEngine::connect(const I<CAudioProcessor>& audi
 
 	// Connect source
 	error = currentAudioProcessor->connectInput(audioProcessorSource, currentAudioProcessingFormat);
-	if (error.hasValue()) return ConnectResult(*error);
+	if (error.hasValue()) return TVResult<SAudioProcessingFormat>(*error);
 
-	return ConnectResult(audioProcessingFormats.mSourceAudioProcessingFormat);
+	return TVResult<SAudioProcessingFormat>(audioProcessingFormats.mSourceAudioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

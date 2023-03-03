@@ -10,6 +10,7 @@
 
 #ifdef __cplusplus
 	#include <algorithm>
+	#include <atomic>
 #endif
 
 #undef TARGET_OS_IOS

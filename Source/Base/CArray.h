@@ -52,6 +52,8 @@ class CArray : public CEquatable {
 									CArray(const CArray& other);
 
 									// Instance methods
+				CArray&				attach(const ItemRef itemRef);		// Adds itemRef without calling copyProc
+				
 				CArray&				add(const ItemRef itemRef);
 				CArray&				addFrom(const CArray& other);
 
@@ -64,8 +66,8 @@ class CArray : public CEquatable {
 
 				CArray&				insertAtIndex(const ItemRef itemRef, ItemIndex itemIndex);
 
-				CArray&				detach(const ItemRef itemRef);		// Removes itemRef without calling itemDisposeProc
-				CArray&				detachAtIndex(ItemIndex itemIndex);	// Removes at itemIndex without calling itemDisposeProc
+				CArray&				detach(const ItemRef itemRef);		// Removes itemRef without calling disposeProc
+				CArray&				detachAtIndex(ItemIndex itemIndex);	// Removes at itemIndex without calling disposeProc
 
 				CArray&				move(const ItemRef itemRef, CArray& other);
 

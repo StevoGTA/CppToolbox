@@ -105,7 +105,8 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													return OV<CArray::ItemIndex>();
 												}
 
-				CArrayInternals*			append(const CArray::ItemRef* itemRefs, CArray::ItemCount count)
+				CArrayInternals*			append(const CArray::ItemRef* itemRefs, CArray::ItemCount count,
+													CArray::CopyProc copyProc)
 												{
 													// Prepare for write
 													CArrayInternals*	arrayInternals = prepareForWrite();
@@ -126,12 +127,12 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													}
 
 													// Check if have copy proc
-													if (mCopyProc != nil) {
+													if (copyProc != nil) {
 														// Copy each item
 														for (CArray::ItemIndex i = 0; i < count; i++)
 															// Copy item
 															arrayInternals->mItemRefs[arrayInternals->mCount + i] =
-																	mCopyProc(itemRefs[i]);
+																	copyProc(itemRefs[i]);
 													} else
 														// Append itemRefs into place
 														::memcpy(arrayInternals->mItemRefs + arrayInternals->mCount,
@@ -143,7 +144,8 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 
 													return arrayInternals;
 												}
-				CArrayInternals*			insertAtIndex(const CArray::ItemRef itemRef, CArray::ItemIndex itemIndex)
+				CArrayInternals*			insertAtIndex(const CArray::ItemRef itemRef, CArray::ItemIndex itemIndex,
+													CArray::CopyProc copyProc)
 												{
 													// Prepare for write
 													CArrayInternals*	arrayInternals = prepareForWrite();
@@ -170,9 +172,9 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 																	sizeof(CArray::ItemRef));
 
 													// Check if have copy proc
-													if (mCopyProc != nil)
+													if (copyProc != nil)
 														// Copy item
-														arrayInternals->mItemRefs[itemIndex] = mCopyProc(itemRef);
+														arrayInternals->mItemRefs[itemIndex] = copyProc(itemRef);
 													else
 														// Store new itemRef
 														arrayInternals->mItemRefs[itemIndex] = itemRef;
@@ -304,6 +306,19 @@ CArray::~CArray()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
+CArray& CArray::attach(const ItemRef itemRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertNotNil(itemRef);
+
+	// Add item
+	mInternals = mInternals->append(&itemRef, 1, nil);
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CArray& CArray::add(const ItemRef itemRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -311,7 +326,7 @@ CArray& CArray::add(const ItemRef itemRef)
 	AssertNotNil(itemRef);
 
 	// Add item
-	mInternals = mInternals->append(&itemRef, 1);
+	mInternals = mInternals->append(&itemRef, 1, mInternals->mCopyProc);
 
 	return *this;
 }
@@ -326,7 +341,7 @@ CArray& CArray::addFrom(const CArray& other)
 		return *this;
 
 	// Add items
-	mInternals = mInternals->append(other.mInternals->mItemRefs, other.mInternals->mCount);
+	mInternals = mInternals->append(other.mInternals->mItemRefs, other.mInternals->mCount, mInternals->mCopyProc);
 
 	return *this;
 }
@@ -396,7 +411,7 @@ CArray& CArray::insertAtIndex(const ItemRef itemRef, ItemIndex itemIndex)
 	AssertFailIf(itemIndex > mInternals->mCount);
 
 	// Insert at index
-	mInternals = mInternals->insertAtIndex(itemRef, itemIndex);
+	mInternals = mInternals->insertAtIndex(itemRef, itemIndex, mInternals->mCopyProc);
 
 	return *this;
 }
@@ -429,7 +444,7 @@ CArray& CArray::move(const ItemRef itemRef, CArray& other)
 		mInternals = mInternals->removeAtIndex(*itemIndex, false);
 
 		// Append
-		other.add(itemRef);
+		other.attach(itemRef);
 	}
 
 	return *this;

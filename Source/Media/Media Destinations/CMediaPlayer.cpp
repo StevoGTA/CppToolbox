@@ -278,6 +278,28 @@ CMediaPlayer::~CMediaPlayer()
 // MARK: CMediaDestination methods
 
 //----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Do super
+	TMediaDestination<CAudioPlayer, CVideoFrameStore>::add(audioProcessor, trackIndex);
+
+	// Add message queue
+	mInternals->mMessageQueues.add(((const I<CMediaPlayerAudioPlayer>&) audioProcessor)->mMessageQueue);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Do super
+	TMediaDestination<CAudioPlayer, CVideoFrameStore>::add(videoProcessor, trackIndex);
+
+	// Add message queue
+	mInternals->mMessageQueues.add(((const I<CMediaPlayerVideoFrameStore>&) videoProcessor)->mMessageQueue);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::setSourceWindow(UniversalTimeInterval startTimeInterval,
 		const OV<UniversalTimeInterval>& durationTimeInterval)
 //----------------------------------------------------------------------------------------------------------------------
@@ -304,9 +326,13 @@ void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
 const CString& CMediaPlayer::getName() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	static	CString	sName(OSSTR("Media Player"));
+	// Setup
+	static	CString*	sName = nil;
+	if (sName == nil)
+		// Create
+		sName = new CString(OSSTR("Media Player"));
 
-	return sName;
+	return *sName;
 }
 
 // MARK: Instance methods
@@ -315,20 +341,11 @@ const CString& CMediaPlayer::getName() const
 I<CAudioPlayer> CMediaPlayer::newAudioPlayer(const CString& identifier, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create Audio Player
-	I<CMediaPlayerAudioPlayer>	audioPlayer(
-										new CMediaPlayerAudioPlayer(identifier,
-												CAudioPlayer::Info(CMediaPlayerInternals::audioPlayerPositionUpdated,
-														CMediaPlayerInternals::audioPlayerEndOfData,
-														CMediaPlayerInternals::audioPlayerError, mInternals)));
-
-	// Add message queue
-	mInternals->mMessageQueues.add(audioPlayer->mMessageQueue);
-
-	// Add
-	add((const I<CAudioProcessor>&) audioPlayer, trackIndex);
-
-	return *((I<CAudioPlayer>*) &audioPlayer);
+	return I<CAudioPlayer>(
+			new CMediaPlayerAudioPlayer(identifier,
+					CAudioPlayer::Info(CMediaPlayerInternals::audioPlayerPositionUpdated,
+							CMediaPlayerInternals::audioPlayerEndOfData,
+							CMediaPlayerInternals::audioPlayerError, mInternals)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -345,21 +362,10 @@ void CMediaPlayer::setAudioGain(Float32 audioGain)
 I<CVideoFrameStore> CMediaPlayer::newVideoFrameStore(const CString& identifier, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create Video Frame Store
-	I<CMediaPlayerVideoFrameStore>	videoFrameStore(
-											new CMediaPlayerVideoFrameStore(identifier,
-													CVideoFrameStore::Info(
-															CMediaPlayerInternals::videoFrameStoreCurrentFrameUpdated,
-															CMediaPlayerInternals::videoFrameStoreError,
-															mInternals)));
-
-	// Add message queue
-	mInternals->mMessageQueues.add(videoFrameStore->mMessageQueue);
-
-	// Add
-	add((const I<CVideoProcessor>&) videoFrameStore, trackIndex);
-
-	return *((I<CVideoFrameStore>*) &videoFrameStore);
+	return I<CVideoFrameStore>(
+			new CMediaPlayerVideoFrameStore(identifier,
+					CVideoFrameStore::Info(CMediaPlayerInternals::videoFrameStoreCurrentFrameUpdated,
+							CMediaPlayerInternals::videoFrameStoreError, mInternals)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

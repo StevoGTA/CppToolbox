@@ -46,6 +46,9 @@ OV<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcesso
 	// Store
 	mInternals->mAudioProcessor = new I<CAudioProcessor>(audioProcessor);
 
+	// Note
+	setInputFormat(audioProcessingFormat);
+
 	return audioProcessor->setOutputFormat(audioProcessingFormat);
 }
 
@@ -57,7 +60,7 @@ TArray<CString> CAudioProcessor::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioProcessor::Requirements CAudioProcessor::queryRequirements() const
+CAudioFrames::Requirements CAudioProcessor::queryRequirements() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight

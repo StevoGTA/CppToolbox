@@ -75,10 +75,10 @@ TArray<CString> CAudioDecoder::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioProcessor::Requirements CAudioDecoder::queryRequirements() const
+CAudioFrames::Requirements CAudioDecoder::queryRequirements() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return Requirements(mInternals->mDecodeAudioCodec->getRequirements());
+	return mInternals->mDecodeAudioCodec->getRequirements();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

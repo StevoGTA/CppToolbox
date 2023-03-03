@@ -16,19 +16,6 @@
 
 class CAudioProcessorInternals;
 class CAudioProcessor {
-	// Requirements
-	public:
-		struct Requirements {
-			// Lifecycle methods
-			Requirements(const CAudioFrames::Requirements& audioFramesRequirements) :
-					mAudioFramesRequirements(audioFramesRequirements)
-					{}
-			Requirements(const Requirements& other) : mAudioFramesRequirements(other.mAudioFramesRequirements) {}
-
-			// Properties
-			CAudioFrames::Requirements	mAudioFramesRequirements;
-		};
-
 	// Methods
 	public:
 												// Lifecycle methods
@@ -40,7 +27,7 @@ class CAudioProcessor {
 														const SAudioProcessingFormat& audioProcessingFormat);
 		virtual	TArray<CString>					getSetupDescription(const CString& indent);
 
-		virtual	Requirements					queryRequirements() const;
+		virtual	CAudioFrames::Requirements		queryRequirements() const;
 
 		virtual	void							setSourceWindow(UniversalTimeInterval startTimeInterval,
 														const OV<UniversalTimeInterval>& durationTimeInterval);
@@ -52,6 +39,9 @@ class CAudioProcessor {
 
 												// Subclass methods
 		virtual	TArray<SAudioProcessingSetup>	getInputSetups() const = 0;
+		virtual	void							setInputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+														const
+													{}
 
 		virtual	TArray<SAudioProcessingSetup>	getOutputSetups() const = 0;
 		virtual	OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
@@ -77,6 +67,8 @@ class CAudioSource : public CAudioProcessor {
 
 		TArray<SAudioProcessingSetup>	getInputSetups() const
 											{ AssertFailUnimplemented(); return TNArray<SAudioProcessingSetup>(); }
+		void							setInputFormat(const SAudioProcessingFormat& audioProcessingFormat) const
+											{ AssertFailUnimplemented(); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

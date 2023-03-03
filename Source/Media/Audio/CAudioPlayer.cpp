@@ -65,12 +65,12 @@ class CAudioPlayerBufferThreadInternals {
 						// Setup
 						if (!mRequirements.hasValue())
 							// Query
-							mRequirements = OV<CAudioProcessor::Requirements>(mAudioPlayer.queryRequirements());
+							mRequirements = OV<CAudioFrames::Requirements>(mAudioPlayer.queryRequirements());
 
 						// Request write
 						UInt32									framesToRequest =
-																		mRequirements->mAudioFramesRequirements
-																				.getFrameCount(mMaxOutputFrames * 2);
+																		mRequirements->getFrameCount(
+																				mMaxOutputFrames * 2);
 						CSRSWBIPSegmentedQueue::WriteBufferInfo	writeBufferInfo =
 																		mQueue.requestWrite(
 																				framesToRequest * mBytesPerFrame);
@@ -113,7 +113,7 @@ class CAudioPlayerBufferThreadInternals {
 		UInt32								mBytesPerFrame;
 		UInt32								mMaxOutputFrames;
 		void*								mProcsUserData;
-		OV<CAudioProcessor::Requirements>	mRequirements;
+		OV<CAudioFrames::Requirements>		mRequirements;
 
 		bool								mPauseRequested;
 		bool								mResumeRequested;

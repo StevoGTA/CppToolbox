@@ -40,9 +40,7 @@ class CSecretRabbitCodeAudioConverterInternals {
 								else {
 									// Setup
 									CAudioFrames::Requirements	requirements =
-																		internals.mAudioConverter
-																				.queryRequirements()
-																				.mAudioFramesRequirements;
+																		internals.mAudioConverter.queryRequirements();
 									UInt32						frameCountInterval =
 																		(requirements.mFrameCountInterval > 1) ?
 																				requirements.mFrameCountInterval : 1024;

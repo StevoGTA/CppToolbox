@@ -22,7 +22,7 @@ class CAudioDecoder : public CAudioSource {
 										// CAudioProcessor methods
 		TArray<CString>					getSetupDescription(const CString& indent);
 
-		Requirements					queryRequirements() const;
+		CAudioFrames::Requirements		queryRequirements() const;
 
 		void							setSourceWindow(UniversalTimeInterval startTimeInterval,
 												const OV<UniversalTimeInterval>& durationTimeInterval);

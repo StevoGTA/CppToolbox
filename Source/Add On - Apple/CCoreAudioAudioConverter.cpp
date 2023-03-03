@@ -43,8 +43,7 @@ class CCoreAudioAudioConverterInternals {
 										// Setup
 										CAudioFrames::Requirements	requirements =
 																			internals.mAudioConverter
-																					.queryRequirements()
-																					.mAudioFramesRequirements;
+																					.queryRequirements();
 										UInt32						frameCountInterval =
 																			(requirements.mFrameCountInterval > 1) ?
 																					requirements.mFrameCountInterval :

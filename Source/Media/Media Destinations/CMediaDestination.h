@@ -19,7 +19,10 @@ class CMediaDestination {
 		virtual									~CMediaDestination();
 
 												// Instance methods
+		virtual			void					add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex);
 						UInt32					getAudioTrackCount() const;
+
+		virtual			void					add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex);
 						UInt32					getVideoTrackCount() const;
 
 		virtual			void					setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
@@ -32,11 +35,9 @@ class CMediaDestination {
 												CMediaDestination();
 
 												// Instance methods
-						void					add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex);
 						OR<I<CAudioProcessor> >	getAudioProcessor(UInt32 trackIndex) const;
 						void					removeAllAudioProcessors();
 
-						void					add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex);
 						OR<I<CVideoProcessor> >	getVideoProcessor(UInt32 trackIndex) const;
 						void					removeAllVideoProcessors();
 
