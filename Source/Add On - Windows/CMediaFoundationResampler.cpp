@@ -153,7 +153,7 @@ OV<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& indent)
+TArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
@@ -180,10 +180,10 @@ SAudioSourceStatus CMediaFoundationResampler::performInto(CAudioFrames& audioFra
 	// Check if need to create input sample
 	if (!mInternals->mInputSample.hasInstance()) {
 		// Create input sample
-		CAudioProcessor::Requirements	audioProcessorRequirements = queryRequirements();
-		UInt32							byteCount =
-												audioProcessorRequirements.mAudioFramesRequirements.getFrameCount(1024)
-														* mInternals->mInputAudioProcessingFormat->getBytesPerFrame();
+		CAudioFrames::Requirements	audioFramesRequirements = queryRequirements();
+		UInt32						byteCount =
+											audioFramesRequirements.getFrameCount(1024) *
+													mInternals->mInputAudioProcessingFormat->getBytesPerFrame();
 		TCIResult<IMFSample>			sample = CMediaFoundationServices::createSample(byteCount);
 		ReturnValueIfResultError(sample, SAudioSourceStatus(sample.getError()));
 		mInternals->mInputSample = sample.getInstance();
