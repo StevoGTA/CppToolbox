@@ -4,24 +4,22 @@
 
 #include "CNotificationCenter.h"
 
-#include "TLockingArray.h"
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SNotificationObserverFullInfo
 
 struct SNotificationObserverFullInfo {
 			// Lifecycle methods
-			SNotificationObserverFullInfo(const void* senderRef,
-					const CNotificationCenter::ObserverInfo& observerInfo) :
-				mSenderRef(senderRef), mObserverInfo(observerInfo)
+			SNotificationObserverFullInfo(const OI<CNotificationCenter::Sender>& sender,
+					const CNotificationCenter::Observer& observer) :
+				mSender(sender), mObserver(observer)
 				{}
 			SNotificationObserverFullInfo(const SNotificationObserverFullInfo& other) :
-				mSenderRef(other.mSenderRef), mObserverInfo(other.mObserverInfo)
+				mSender(other.mSender), mObserver(other.mObserver)
 				{}
 
 	// Properties
-	const	void*								mSenderRef;
-			CNotificationCenter::ObserverInfo	mObserverInfo;
+	OI<CNotificationCenter::Sender>	mSender;
+	CNotificationCenter::Observer	mObserver;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,11 +30,11 @@ class CNotificationCenterInternals {
 	public:
 				CNotificationCenterInternals() {}
 
-		void	registerObserver(const CString& notificationName, const void* senderRef,
-						const CNotificationCenter::ObserverInfo& observerInfo)
+		void	registerObserver(const CString& notificationName, const OI<CNotificationCenter::Sender>& sender,
+						const CNotificationCenter::Observer& observer)
 					{
 						// Setup
-						SNotificationObserverFullInfo	notificationObserverFullInfo(senderRef, observerInfo);
+						SNotificationObserverFullInfo	notificationObserverFullInfo(sender, observer);
 
 						// Get existing observer infos
 						OR<TNArray<SNotificationObserverFullInfo> >	notificationObserverFullInfos =
@@ -96,7 +94,7 @@ class CNotificationCenterInternals {
 						// Iterate array
 						for (CArray::ItemIndex i = notificationObserverFullInfos.getCount(); i > 0; i--) {
 							// Check for match
-							if (notificationObserverFullInfos[i - 1].mObserverInfo.mObserverRef == observerRef)
+							if (notificationObserverFullInfos[i - 1].mObserver.mObserverRef == observerRef)
 								// Match
 								notificationObserverFullInfos.removeAtIndex(i - 1);
 						}
@@ -131,20 +129,20 @@ CNotificationCenter::~CNotificationCenter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::registerObserver(const CString& notificationName, const void* senderRef,
-		const ObserverInfo& observerInfo)
+void CNotificationCenter::registerObserver(const CString& notificationName, const OI<Sender>& sender,
+		const Observer& observer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add observer
-	mInternals->registerObserver(notificationName, senderRef, observerInfo);
+	mInternals->registerObserver(notificationName, sender, observer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::registerObserver(const CString& notificationName, const ObserverInfo& observerInfo)
+void CNotificationCenter::registerObserver(const CString& notificationName, const Observer& observer)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add observer
-	mInternals->registerObserver(notificationName, nil, observerInfo);
+	mInternals->registerObserver(notificationName, OI<Sender>(), observer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -164,7 +162,7 @@ void CNotificationCenter::unregisterObserver(const void* observerRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::send(const CString& notificationName, const void* senderRef, const CDictionary& info) const
+void CNotificationCenter::send(const CString& notificationName, const OI<Sender>& sender, const CDictionary& info) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -180,85 +178,12 @@ void CNotificationCenter::send(const CString& notificationName, const void* send
 		const	SNotificationObserverFullInfo&	notificationObserverFullInfo = iterator.getValue();
 
 		// Check sender
-		if ((notificationObserverFullInfo.mSenderRef != nil) && (notificationObserverFullInfo.mSenderRef != senderRef))
+		if (notificationObserverFullInfo.mSender.hasInstance() &&
+				(!sender.hasInstance() || (*notificationObserverFullInfo.mSender != *sender)))
 			// Sender does not match
 			return;
 
 		// Call proc
-		notificationObserverFullInfo.mObserverInfo.callProc(notificationName, senderRef, info);
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDeferredNotificationCenterInternals
-
-class CDeferredNotificationCenterInternals {
-	public:
-		struct Info {
-			Info(const CString& notificationName, const void* senderRef, const CDictionary& info) :
-				mNotificationName(notificationName), mSenderRef(senderRef), mInfo(info)
-				{}
-			Info(const Info& other) :
-				mNotificationName(other.mNotificationName), mSenderRef(other.mSenderRef), mInfo(other.mInfo)
-				{}
-
-					CString		mNotificationName;
-			const	void*		mSenderRef;
-					CDictionary	mInfo;
-		};
-
-		CDeferredNotificationCenterInternals() {}
-
-		TNLockingArray<Info>	mInfos;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDeferredNotificationCenter
-
-// MARK: Lifecycle methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CDeferredNotificationCenter::CDeferredNotificationCenter()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = new CDeferredNotificationCenterInternals();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CDeferredNotificationCenter::~CDeferredNotificationCenter()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Make sure to flush
-	flush();
-
-	// Cleanup
-	Delete(mInternals);
-}
-
-// MARK: CNotificationCenter methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CDeferredNotificationCenter::queue(const CString& notificationName, const void* senderRef, const CDictionary& info)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Add
-	mInternals->mInfos += CDeferredNotificationCenterInternals::Info(notificationName, senderRef, info);
-}
-
-// MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CDeferredNotificationCenter::flush()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Send all
-	while (mInternals->mInfos.getCount() > 0) {
-		// Pop first
-		CDeferredNotificationCenterInternals::Info	info = mInternals->mInfos.popFirst();
-
-		// Send
-		send(info.mNotificationName, info.mSenderRef, info.mInfo);
+		notificationObserverFullInfo.mObserver.callProc(notificationName, sender, info);
 	}
 }

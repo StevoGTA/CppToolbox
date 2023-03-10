@@ -11,24 +11,63 @@
 
 class CNotificationCenterInternals;
 class CNotificationCenter {
-	// Structures
+	// Sender
 	public:
-		struct ObserverInfo {
+		class Sender {
+			public:
+								// Lifecycle methods
+								Sender() {}
+				virtual			~Sender() {}
+
+								// Instance methods
+						bool	operator!=(const Sender& other) const
+									{ return !operator==(other); }
+
+			protected:
+								// Subclass methods
+				virtual	bool	operator==(const Sender& other) const
+									{ return false; }
+		};
+
+	// TSender
+	public:
+		template <typename T> class TSender : public Sender {
+			public:
+								// Lifecycle methods
+								TSender(const T& t) : mT(t) {}
+
+								// Instance methods
+				const	T&		operator*() const
+									{ return mT; }
+
+			protected:
+								// Sender methods
+						bool	operator==(const Sender& other) const
+									{ return mT == ((const TSender<T>&) other).mT; }
+
+			// Properties
+			private:
+				T	mT;
+		};
+
+	// Observer
+	public:
+		struct Observer {
 			// Procs
-			typedef	void	(*Proc)(const CString& notificationName, const void* senderRef, const CDictionary& info,
+			typedef	void	(*Proc)(const CString& notificationName, const OI<Sender>& sender, const CDictionary& info,
 									void* userData);
 
 					// Lifecycle methods
-					ObserverInfo(const void* observerRef, Proc proc, void* userData) :
+					Observer(const void* observerRef, Proc proc, void* userData) :
 						mObserverRef(observerRef), mProc(proc), mUserData(userData)
 						{}
-					ObserverInfo(const ObserverInfo& other) :
+					Observer(const Observer& other) :
 						mObserverRef(other.mObserverRef), mProc(other.mProc), mUserData(other.mUserData)
 						{}
 
 					// Instance methods
-			void	callProc(const CString& notificationName, const void* senderRef, const CDictionary& info) const
-						{ mProc(notificationName, senderRef, info, mUserData); }
+			void	callProc(const CString& notificationName, const OI<Sender>& sender, const CDictionary& info) const
+						{ mProc(notificationName, sender, info, mUserData); }
 
 			// Properties
 			const	void*	mObserverRef;
@@ -42,13 +81,13 @@ class CNotificationCenter {
 		virtual			~CNotificationCenter();
 
 						// Instance methods
-				void	registerObserver(const CString& notificationName, const void* senderRef,
-								const ObserverInfo& observerInfo);
-				void	registerObserver(const CString& notificationName, const ObserverInfo& observerInfo);
+				void	registerObserver(const CString& notificationName, const OI<Sender>& sender,
+								const Observer& observer);
+				void	registerObserver(const CString& notificationName, const Observer& observer);
 				void	unregisterObserver(const CString& notificationName, const void* observerRef);
 				void	unregisterObserver(const void* observerRef);
 
-		virtual	void	queue(const CString& notificationName, const void* senderRef = nil,
+		virtual	void	queue(const CString& notificationName, const OI<Sender>& sender = OI<Sender>(),
 								const CDictionary& info = CDictionary::mEmpty) = 0;
 
 	protected:
@@ -56,7 +95,7 @@ class CNotificationCenter {
 						CNotificationCenter();
 
 						// Instance methods
-				void	send(const CString& notificationName, const void* senderRef, const CDictionary& info) const;
+				void	send(const CString& notificationName, const OI<Sender>& sender, const CDictionary& info) const;
 
 	// Properties
 	private:
@@ -73,30 +112,7 @@ class CImmediateNotificationCenter : public CNotificationCenter {
 				CImmediateNotificationCenter() {}
 
 				// CNotificationCenter methods
-		void	queue(const CString& notificationName, const void* senderRef = nil,
+		void	queue(const CString& notificationName, const OI<Sender>& sender = OI<Sender>(),
 						const CDictionary& info = CDictionary::mEmpty)
-					{ send(notificationName, senderRef, info); }
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: CDeferredNotificationCenter
-
-class CDeferredNotificationCenterInternals;
-class CDeferredNotificationCenter : public CNotificationCenter {
-	// Methods
-	public:
-				// Lifecycle methods
-				CDeferredNotificationCenter();
-				~CDeferredNotificationCenter();
-
-				// CNotificationCenter methods
-		void	queue(const CString& notificationName, const void* senderRef = nil,
-						const CDictionary& info = CDictionary::mEmpty);
-
-				// Instance methods
-		void	flush();
-
-	// Properties
-	private:
-		CDeferredNotificationCenterInternals*	mInternals;
+					{ send(notificationName, sender, info); }
 };

@@ -59,6 +59,11 @@ struct SValue {
 						void	setNoteValueChangedProc(NoteValueChangedProc noteValueChangedProc, void* userData)
 									{ mNoteValueChangedProc = noteValueChangedProc; mUserData = userData; }
 
+			protected:
+								// Subclass methods
+						void	noteValueChanged() const
+									{ mNoteValueChangedProc(getValue(), mUserData); }
+
 			// Properties
 			protected:
 				NoteValueChangedProc	mNoteValueChangedProc;
