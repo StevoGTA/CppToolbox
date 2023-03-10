@@ -25,29 +25,28 @@ class CNotificationCenter {
 
 			protected:
 								// Subclass methods
-				virtual	bool	operator==(const Sender& other) const
-									{ return false; }
+				virtual	bool	operator==(const Sender& other) const = 0;
 		};
 
 	// TSender
 	public:
-		template <typename T> class TSender : public Sender {
+		template <typename T> class ISender : public Sender {
 			public:
 								// Lifecycle methods
-								TSender(const T& t) : mT(t) {}
+								ISender(const I<T>& i) : mI(i) {}
 
 								// Instance methods
-				const	T&		operator*() const
-									{ return mT; }
+						T&		operator*() const
+									{ return *mI; }
 
 			protected:
 								// Sender methods
 						bool	operator==(const Sender& other) const
-									{ return mT == ((const TSender<T>&) other).mT; }
+									{ return *mI == *((const ISender<T>&) other).mI; }
 
 			// Properties
 			private:
-				T	mT;
+				I<T>	mI;
 		};
 
 	// Observer
