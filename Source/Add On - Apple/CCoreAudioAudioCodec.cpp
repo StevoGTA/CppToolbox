@@ -70,7 +70,9 @@ class CCoreAudioDecodeAudioCodecInternals {
 																					internals
 																							.mInputPacketDescriptionsData
 																							.getMutableBytePtr();
-									*outDataPacketDescription = packetDescription;
+									if (outDataPacketDescription != nil)
+										//
+										*outDataPacketDescription = packetDescription;
 
 									SInt64	offset = 0;
 									for (TIteratorD<SMediaPacket> iterator = mediaPackets.getIterator();
