@@ -133,10 +133,12 @@ class CWorkItemThread : public CThread {
 
 class CWorkItemQueueInternals {
 	public:
-										CWorkItemQueueInternals(UInt32 maximumConcurrentWorkItems,
+										CWorkItemQueueInternals(const OR<CItemsProgress>& itemsProgress,
+												UInt32 maximumConcurrentWorkItems,
 												OR<CWorkItemQueueInternals> targetWorkItemQueueInternals =
 														OR<CWorkItemQueueInternals>()) :
-											mIsPaused(false),
+											mItemsProgress(itemsProgress),
+													mIsPaused(false),
 													mTargetWorkItemQueueInternals(targetWorkItemQueueInternals),
 													mMaximumConcurrentWorkItems(maximumConcurrentWorkItems)
 											{
@@ -166,7 +168,10 @@ class CWorkItemQueueInternals {
 												mIdleWorkItemInfos += CWorkItemInfo(*this, workItem, priority);
 												mWorkItemInfosLock.unlock();
 
-												mTotalWorkItemsCount.add(1);
+												// Update
+												if (mItemsProgress.hasReference())
+													mItemsProgress->addTotalItemsCount(1);
+												mInFlightWorkItemsCount.add(1);
 											}
 				void					cancel(TArray<CWorkItemInfo>::IsMatchProc isMatchProc, void* userData)
 											{
@@ -196,6 +201,11 @@ class CWorkItemQueueInternals {
 
 														// Remove
 														mIdleWorkItemInfos.removeAtIndex(i - 1);
+
+														// Update
+														if (mItemsProgress.hasReference())
+															mItemsProgress->addCompletedItemsCount(1);
+														mInFlightWorkItemsCount.subtract(1);
 													}
 												}
 
@@ -208,7 +218,7 @@ class CWorkItemQueueInternals {
 				void					resume()
 											{ mIsPaused = false; }
 				void					wait()
-											{ mTotalWorkItemsCount.wait(); }
+											{ mInFlightWorkItemsCount.wait(); }
 
 				UInt32					getActiveWorkItemInfosCountDeep()
 											{
@@ -259,21 +269,24 @@ class CWorkItemQueueInternals {
 
 												return workItemInfo;
 											}
-				void					transitionToActive(CWorkItemInfo& workItemInfo)
+				void					moveToActive(CWorkItemInfo& workItemInfo)
 											{
 												// Move from idle to active
 												mWorkItemInfosLock.lock();
 												mIdleWorkItemInfos.move(workItemInfo, mActiveWorkItemInfos);
 												mWorkItemInfosLock.unlock();
 											}
-				void					transitionToComplete(CWorkItemInfo& workItemInfo)
+				void					removeFromActive(CWorkItemInfo& workItemInfo)
 											{
 												// Remove from active
 												mWorkItemInfosLock.lock();
 												mActiveWorkItemInfos -= workItemInfo;
 												mWorkItemInfosLock.unlock();
 
-												mTotalWorkItemsCount.subtract(1);
+												// Update
+												if (mItemsProgress.hasReference())
+													mItemsProgress->addCompletedItemsCount(1);
+												mInFlightWorkItemsCount.subtract(1);
 											}
 
 		static	void					processWorkItems()
@@ -291,7 +304,7 @@ class CWorkItemQueueInternals {
 																		mMaximumConcurrentWorkItems) &&
 														workItemInfo.hasReference()) {
 													// Move from idle to active
-													workItemInfo->mOwningWorkItemQueueInternals.transitionToActive(
+													workItemInfo->mOwningWorkItemQueueInternals.moveToActive(
 															*workItemInfo);
 
 													// Find thread
@@ -379,7 +392,7 @@ class CWorkItemQueueInternals {
 												CWorkItemThread& workItemThread)
 											{
 												// Transition work item info to complete
-												workItemInfo->mOwningWorkItemQueueInternals.transitionToComplete(
+												workItemInfo->mOwningWorkItemQueueInternals.removeFromActive(
 														*workItemInfo);
 
 												// Transition thread to idle
@@ -403,6 +416,8 @@ class CWorkItemQueueInternals {
 		static	OR<CWorkItemQueueInternals>					mMainWorkItemQueueInternals;
 
 	private:
+				OR<CItemsProgress>							mItemsProgress;
+
 				bool										mIsPaused;
 
 				OR<CWorkItemQueueInternals>					mTargetWorkItemQueueInternals;
@@ -413,7 +428,7 @@ class CWorkItemQueueInternals {
 				TNArray<CWorkItemInfo>						mActiveWorkItemInfos;
 				TNArray<CWorkItemInfo>						mIdleWorkItemInfos;
 				CLock										mWorkItemInfosLock;
-				TLockingNumeric<UInt32>						mTotalWorkItemsCount;
+				TLockingNumeric<UInt32>						mInFlightWorkItemsCount;
 
 		static	TNArray<I<CWorkItemThread> >				mActiveWorkItemThreads;
 		static	TNArray<I<CWorkItemThread> >				mIdleWorkItemThreads;
@@ -445,7 +460,7 @@ CWorkItemQueue& CWorkItemQueue::main()
 	if (sMainWorkItemQueue == nil) {
 		// Create main work item queue
 		sCreatingMainWorkItemQueue = true;
-		sMainWorkItemQueue = new CWorkItemQueue(-1);
+		sMainWorkItemQueue = new CWorkItemQueue(OR<CItemsProgress>(), -1);
 		sCreatingMainWorkItemQueue = false;
 	}
 
@@ -455,7 +470,7 @@ CWorkItemQueue& CWorkItemQueue::main()
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CWorkItemQueue::CWorkItemQueue(SInt32 maximumConcurrentWorkItems)
+CWorkItemQueue::CWorkItemQueue(const OR<CItemsProgress>& itemsProgress, SInt32 maximumConcurrentWorkItems)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -474,21 +489,22 @@ CWorkItemQueue::CWorkItemQueue(SInt32 maximumConcurrentWorkItems)
 	// Check if creating main work item queue
 	if (sCreatingMainWorkItemQueue) {
 		// Main work item queue
-		mInternals = new CWorkItemQueueInternals(desiredMaximumConcurrentWorkItems);
+		mInternals = new CWorkItemQueueInternals(itemsProgress, desiredMaximumConcurrentWorkItems);
 		CWorkItemQueueInternals::mMainWorkItemQueueInternals = OR<CWorkItemQueueInternals>(*mInternals);
 	} else
 		// Other Work Item Queue
 		mInternals =
-				new CWorkItemQueueInternals(desiredMaximumConcurrentWorkItems,
+				new CWorkItemQueueInternals(itemsProgress, desiredMaximumConcurrentWorkItems,
 						OR<CWorkItemQueueInternals>(*main().mInternals));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CWorkItemQueue::CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue, UInt32 maximumConcurrentWorkItems)
+CWorkItemQueue::CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue, const OR<CItemsProgress>& itemsProgress,
+		UInt32 maximumConcurrentWorkItems)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CWorkItemQueueInternals(maximumConcurrentWorkItems,
+			new CWorkItemQueueInternals(itemsProgress, maximumConcurrentWorkItems,
 					OR<CWorkItemQueueInternals>(*targetWorkItemQueue.mInternals));
 }
 

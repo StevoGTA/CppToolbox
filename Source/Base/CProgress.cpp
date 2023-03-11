@@ -5,11 +5,11 @@
 #include "CProgress.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CProgressInternals
+// MARK: CProgress::Internals
 
-class CProgressInternals : public TCopyOnWriteReferenceCountable<CProgressInternals> {
+class CProgress::Internals {
 	public:
-		CProgressInternals(const CProgress::UpdateInfo& updateInfo) : mUpdateInfo(updateInfo) {}
+		Internals(const CProgress::UpdateInfo& updateInfo) : mUpdateInfo(updateInfo) {}
 
 		CProgress::UpdateInfo	mUpdateInfo;
 
@@ -28,24 +28,17 @@ CProgress::CProgress(const UpdateInfo& updateInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CProgressInternals(updateInfo);
+	mInternals = new Internals(updateInfo);
 
 	// Update
 	mInternals->mUpdateInfo.notify(*this);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CProgress::CProgress(const CProgress& other)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = other.mInternals->addReference();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CProgress::~CProgress()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->removeReference();
+	Delete(mInternals);
 }
 
 // MARK: Instance methods
@@ -61,9 +54,6 @@ const CString& CProgress::getMessage() const
 void CProgress::setMessage(const CString& message)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for write
-	mInternals = mInternals->prepareForWrite();
-
 	// Store
 	mInternals->mMessage = message;
 
@@ -82,9 +72,6 @@ const OV<Float32>& CProgress::getValue() const
 void CProgress::setValue(OV<Float32> value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for write
-	mInternals = mInternals->prepareForWrite();
-
 	// Store
 	mInternals->mValue = value;
 
@@ -94,16 +81,30 @@ void CProgress::setValue(OV<Float32> value)
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CItemsProgressInternal
+// MARK: - CItemsProgress::Internals
 
-class CItemsProgressInternals : public TCopyOnWriteReferenceCountable<CItemsProgressInternals> {
+class CItemsProgress::Internals {
 	public:
-		CItemsProgressInternals(const OV<UInt32>& initialTotalItemsCount) :
-			mTotalItemsCount(initialTotalItemsCount), mCompletedItemsCount(0)
-			{}
+				Internals(CItemsProgress& itemsProgress, const OV<UInt32>& initialTotalItemsCount) :
+					mItemsProgress(itemsProgress),
+							mTotalItemsCount(initialTotalItemsCount), mCompletedItemsCount(0)
+					{
+						// Set initial value
+						updateValue();
+					}
 
-		OV<UInt32>	mTotalItemsCount;
-		UInt32		mCompletedItemsCount;
+		void	updateValue()
+					{
+						mItemsProgress.setValue(
+								mTotalItemsCount.hasValue() ?
+										OV<Float32>((Float32) mCompletedItemsCount / (Float32) *mTotalItemsCount) :
+										OV<Float32>());
+					}
+
+		CItemsProgress&	mItemsProgress;
+
+		OV<UInt32>		mTotalItemsCount;
+		UInt32			mCompletedItemsCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -117,21 +118,14 @@ CItemsProgress::CItemsProgress(const UpdateInfo& updateInfo, const OV<UInt32>& i
 		CProgress(updateInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CItemsProgressInternals(initialTotalItemsCount);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CItemsProgress::CItemsProgress(const CItemsProgress& other) : CProgress(other)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals = other.mInternals->addReference();
+	mInternals = new Internals(*this, initialTotalItemsCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CItemsProgress::~CItemsProgress()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->removeReference();
+	Delete(mInternals);
 }
 
 // MARK Instance methods
@@ -140,9 +134,6 @@ CItemsProgress::~CItemsProgress()
 void CItemsProgress::addTotalItemsCount(UInt32 itemsCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for write
-	mInternals = mInternals->prepareForWrite();
-
 	// Update
 	if (mInternals->mTotalItemsCount.hasValue())
 		// Already have total items
@@ -152,16 +143,20 @@ void CItemsProgress::addTotalItemsCount(UInt32 itemsCount)
 		mInternals->mTotalItemsCount = OV<UInt32>(itemsCount);
 
 	// Update value
-	setValue(OV<Float32>((Float32) mInternals->mCompletedItemsCount / (Float32) *mInternals->mTotalItemsCount));
+	mInternals->updateValue();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<UInt32> CItemsProgress::getTotalItemsCount() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mTotalItemsCount;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CItemsProgress::addCompletedItemsCount(UInt32 itemsCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for write
-	mInternals = mInternals->prepareForWrite();
-
 	// Update
 	mInternals->mCompletedItemsCount += itemsCount;
 
@@ -169,4 +164,23 @@ void CItemsProgress::addCompletedItemsCount(UInt32 itemsCount)
 	if (mInternals->mTotalItemsCount.hasValue())
 		// Update value
 		setValue(OV<Float32>((Float32) mInternals->mCompletedItemsCount / (Float32) *mInternals->mTotalItemsCount));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CItemsProgress::getCompletedItemsCount() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mCompletedItemsCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CItemsProgress::reset()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Reset
+	mInternals->mTotalItemsCount = OV<UInt32>();
+	mInternals->mCompletedItemsCount = 0;
+
+	// Update value
+	mInternals->updateValue();
 }

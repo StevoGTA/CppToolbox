@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CProgress
 
-class CProgressInternals;
 class CProgress {
 	// UpdateInfo
 	public:
@@ -38,7 +37,6 @@ class CProgress {
 	public:
 										// Lifecycle methods
 										CProgress(const UpdateInfo& updateInfo);
-										CProgress(const CProgress& other);
 		virtual							~CProgress();
 
 										// Instance methods
@@ -50,7 +48,8 @@ class CProgress {
 
 	// Properties
 	private:
-		CProgressInternals*	mInternals;
+		class	Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -63,20 +62,24 @@ class CProgress {
 		determinate progress.
  */
 
-class CItemsProgressInternals;
 class CItemsProgress : public CProgress {
 	// Methods
 	public:
-				// Lifecycle methods
-				CItemsProgress(const UpdateInfo& updateInfo, const OV<UInt32>& initialTotalItemsCount = OV<UInt32>());
-				CItemsProgress(const CItemsProgress& other);
-				~CItemsProgress();
+					// Lifecycle methods
+					CItemsProgress(const UpdateInfo& updateInfo, const OV<UInt32>& initialTotalItemsCount = OV<UInt32>());
+					~CItemsProgress();
 
-				// Instance methods
-		void	addTotalItemsCount(UInt32 itemsCount);
-		void	addCompletedItemsCount(UInt32 itemsCount);
+					// Instance methods
+		void		addTotalItemsCount(UInt32 itemsCount);
+		OV<UInt32>	getTotalItemsCount() const;
+
+		void		addCompletedItemsCount(UInt32 itemsCount);
+		UInt32		getCompletedItemsCount() const;
+
+		void		reset();
 
 	// Properties
 	private:
-		CItemsProgressInternals*	mInternals;
+		class	Internals;
+		Internals*	mInternals;
 };

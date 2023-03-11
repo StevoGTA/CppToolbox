@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CProgress.h"
 #include "CSet.h"
 #include "CWorkItem.h"
 #include "TWrappers.h"
@@ -63,6 +64,13 @@
 
 	The Work Item Queue system also tracks the order in which Work Items are created and, everything else being equal,
 		will perform the Work Item created first.
+
+
+	maximumConcurrentWorkItems
+		 Positive numbers indicate desired concurrency.  i.e. 2 means max concurrency of 2.
+		 Negative numbers indicate processor cores to not request.  i.e. -2 means max concurrency of total processor
+		 		cores - 2.
+		 0 results in a max concurrency of 1.
  */
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -73,18 +81,10 @@ class CWorkItemQueue {
 	// Methods
 	public:
 								// Lifecycle methods
-								CWorkItemQueue(SInt32 maximumConcurrentWorkItems = ~0);	// Positive numbers indicate
-																						//	desired concurrency.  i.e.
-																						//	2 means max concurrency of
-																						//	2.
-																						// Negative numbers indicate
-																						//	processor cores to not
-																						//	request.  i.e. -2 means max
-																						//	concurrency of total
-																						//	processor cores - 2.
-																						// 0 results in a max
-																						//	concurrency of 1.
+								CWorkItemQueue(const OR<CItemsProgress>& itemsProgress = OR<CItemsProgress>(),
+										SInt32 maximumConcurrentWorkItems = ~0);
 								CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue,
+										const OR<CItemsProgress>& itemsProgress = OR<CItemsProgress>(),
 										UInt32 maximumConcurrentWorkItems = ~0);
 		virtual					~CWorkItemQueue();
 		
