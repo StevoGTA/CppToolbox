@@ -68,7 +68,7 @@ void CDeferredNotificationCenter::queue(const CString& notificationName, const O
 	// Add
 	mInternals->mInfos += Internals::Info(notificationName, sender, info);
 
-	//
+	// Submit message
 	mInternals->mMessageQueue.submit(
 			CSRSWMessageQueue::ProcMessage((CSRSWMessageQueue::ProcMessage::Proc) Internals::flush, this));
 }

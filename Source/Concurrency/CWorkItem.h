@@ -14,9 +14,9 @@ class CWorkItem : public CHashable {
 	// Enums
 	public:
 		enum Priority {
-			kPriorityHigh,
-			kPriorityNormal,
 			kPriorityBackground,
+			kPriorityNormal,
+			kPriorityHigh,
 		};
 
 		enum State {

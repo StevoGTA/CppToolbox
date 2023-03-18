@@ -78,9 +78,9 @@ class CWorkItemThread : public CThread {
 								CWorkItemThread& workItemThread);
 
 				CWorkItemThread(const CString& name, WorkItemInfoCompleteProc workItemInfoCompleteProc) :
-					CThread(name, CThread::kOptionsAutoStart),
+					CThread(name),
 							mWorkItemInfoCompleteProc(workItemInfoCompleteProc)
-					{}
+					{ start(); }
 
 		void	run()
 					{
@@ -133,284 +133,283 @@ class CWorkItemThread : public CThread {
 
 class CWorkItemQueueInternals {
 	public:
-										CWorkItemQueueInternals(const OR<CItemsProgress>& itemsProgress,
-												UInt32 maximumConcurrentWorkItems,
-												OR<CWorkItemQueueInternals> targetWorkItemQueueInternals =
-														OR<CWorkItemQueueInternals>()) :
-											mItemsProgress(itemsProgress),
-													mIsPaused(false),
-													mTargetWorkItemQueueInternals(targetWorkItemQueueInternals),
-													mMaximumConcurrentWorkItems(maximumConcurrentWorkItems)
-											{
-												if (mTargetWorkItemQueueInternals.hasReference())
-													// Add as child
-													mTargetWorkItemQueueInternals->addChild(*this);
+									CWorkItemQueueInternals(const OR<CItemsProgress>& itemsProgress,
+											UInt32 maximumConcurrentWorkItems,
+											OR<CWorkItemQueueInternals> targetWorkItemQueueInternals =
+													OR<CWorkItemQueueInternals>()) :
+										mItemsProgress(itemsProgress),
+												mIsPaused(false),
+												mTargetWorkItemQueueInternals(targetWorkItemQueueInternals),
+												mMaximumConcurrentWorkItems(maximumConcurrentWorkItems)
+										{
+											if (mTargetWorkItemQueueInternals.hasReference())
+												// Add as child
+												mTargetWorkItemQueueInternals->addChild(*this);
+										}
+									~CWorkItemQueueInternals()
+										{
+											// Check if have target
+											if (mTargetWorkItemQueueInternals.hasReference())
+												// Remove as child
+												mTargetWorkItemQueueInternals->removeChild(*this);
+										}
+
+				void				addChild(CWorkItemQueueInternals& childWorkItemQueueInternals)
+										{ mChildWorkItemQueueInternals +=
+												R<CWorkItemQueueInternals>(childWorkItemQueueInternals); }
+				void				removeChild(CWorkItemQueueInternals& childWorkItemQueueInternals)
+										{ mChildWorkItemQueueInternals -=
+												R<CWorkItemQueueInternals>(childWorkItemQueueInternals); }
+
+				void				add(const I<CWorkItem>& workItem, CWorkItem::Priority priority)
+										{
+											// Add
+											mWorkItemInfosLock.lock();
+											mIdleWorkItemInfos += CWorkItemInfo(*this, workItem, priority);
+											mWorkItemInfosLock.unlock();
+
+											// Update
+											if (mItemsProgress.hasReference())
+												mItemsProgress->addTotalItemsCount(1);
+											mInFlightWorkItemsCount.add(1);
+										}
+				void				cancel(TArray<CWorkItemInfo>::IsMatchProc isMatchProc, void* userData)
+										{
+											// Update info
+											mWorkItemInfosLock.lock();
+
+											// Process active work item infos
+											for (TIteratorD<CWorkItemInfo> iterator =
+															mActiveWorkItemInfos.getIterator();
+													iterator.hasValue(); iterator.advance()) {
+												// Check for match
+												if (isMatchProc(*iterator, userData))
+													// Transition to cancelled.  We do not remove from the array as
+													//	by definition, this work item is in progress.
+													iterator->transitionTo(CWorkItem::kStateCancelled);
 											}
-										~CWorkItemQueueInternals()
-											{
-												// Check if have target
-												if (mTargetWorkItemQueueInternals.hasReference())
-													// Remove as child
-													mTargetWorkItemQueueInternals->removeChild(*this);
-											}
 
-				void					addChild(CWorkItemQueueInternals& childWorkItemQueueInternals)
-											{ mChildWorkItemQueueInternals +=
-													R<CWorkItemQueueInternals>(childWorkItemQueueInternals); }
-				void					removeChild(CWorkItemQueueInternals& childWorkItemQueueInternals)
-											{ mChildWorkItemQueueInternals -=
-													R<CWorkItemQueueInternals>(childWorkItemQueueInternals); }
+											// Process idle work item infos
+											for (CArray::ItemIndex i = mIdleWorkItemInfos.getCount(); i > 0; i--) {
+												// Get item
+												CWorkItemInfo&	workItemInfo = mIdleWorkItemInfos[i - 1];
 
-				void					add(const I<CWorkItem>& workItem, CWorkItem::Priority priority)
-											{
-												// Add
-												mWorkItemInfosLock.lock();
-												mIdleWorkItemInfos += CWorkItemInfo(*this, workItem, priority);
-												mWorkItemInfosLock.unlock();
+												// Check for match
+												if (isMatchProc(workItemInfo, userData)) {
+													// Transition to cancelled
+													workItemInfo.transitionTo(CWorkItem::kStateCancelled);
 
-												// Update
-												if (mItemsProgress.hasReference())
-													mItemsProgress->addTotalItemsCount(1);
-												mInFlightWorkItemsCount.add(1);
-											}
-				void					cancel(TArray<CWorkItemInfo>::IsMatchProc isMatchProc, void* userData)
-											{
-												// Update info
-												mWorkItemInfosLock.lock();
+													// Remove
+													mIdleWorkItemInfos.removeAtIndex(i - 1);
 
-												// Process active work item infos
-												for (TIteratorD<CWorkItemInfo> iterator =
-																mActiveWorkItemInfos.getIterator();
-														iterator.hasValue(); iterator.advance()) {
-													// Check for match
-													if (isMatchProc(*iterator, userData))
-														// Transition to cancelled.  We do not remove from the array as
-														//	by definition, this work item is in progress.
-														iterator->transitionTo(CWorkItem::kStateCancelled);
+													// Update
+													if (mItemsProgress.hasReference())
+														mItemsProgress->addCompletedItemsCount(1);
+													mInFlightWorkItemsCount.subtract(1);
 												}
-
-												// Process idle work item infos
-												for (CArray::ItemIndex i = mIdleWorkItemInfos.getCount(); i > 0; i--) {
-													// Get item
-													CWorkItemInfo&	workItemInfo = mIdleWorkItemInfos[i - 1];
-
-													// Check for match
-													if (isMatchProc(workItemInfo, userData)) {
-														// Transition to cancelled
-														workItemInfo.transitionTo(CWorkItem::kStateCancelled);
-
-														// Remove
-														mIdleWorkItemInfos.removeAtIndex(i - 1);
-
-														// Update
-														if (mItemsProgress.hasReference())
-															mItemsProgress->addCompletedItemsCount(1);
-														mInFlightWorkItemsCount.subtract(1);
-													}
-												}
-
-												// All done
-												mWorkItemInfosLock.unlock();
 											}
 
-				void					pause()
-											{ mIsPaused = true; }
-				void					resume()
-											{ mIsPaused = false; }
-				void					wait()
-											{ mInFlightWorkItemsCount.wait(); }
+											// All done
+											mWorkItemInfosLock.unlock();
+										}
 
-				UInt32					getActiveWorkItemInfosCountDeep()
-											{
-												// Setup
-												UInt32	count = 0;
+				void				pause()
+										{ mIsPaused = true; }
+				void				resume()
+										{ mIsPaused = false; }
+				void				wait()
+										{ mInFlightWorkItemsCount.wait(); }
 
-												// Add our active work items
-												mWorkItemInfosLock.lock();
-												count += mActiveWorkItemInfos.getCount();
-												mWorkItemInfosLock.unlock();
+				UInt32				getActiveWorkItemInfosCountDeep()
+										{
+											// Setup
+											UInt32	count = 0;
 
-												// Add active work items from all child work item queues
-												mChildWorkItemQueueInternals.apply(
-														(TNLockingArray<R<CWorkItemQueueInternals> >::ApplyProc)
-																getActiveWorkItemInfosCountDeep,
-														&count);
+											// Add our active work items
+											mWorkItemInfosLock.lock();
+											count += mActiveWorkItemInfos.getCount();
+											mWorkItemInfosLock.unlock();
 
-												return count;
-											}
+											// Add active work items from all child work item queues
+											mChildWorkItemQueueInternals.apply(
+													(TNLockingArray<R<CWorkItemQueueInternals> >::ApplyProc)
+															getActiveWorkItemInfosCountDeep,
+													&count);
 
-				OR<CWorkItemInfo>		getNextWorkItemInfo()
-											{
-												// Check if paused
-												if (mIsPaused)
-													// Paused
-													return OR<CWorkItemInfo>();
+											return count;
+										}
 
-												// Check if have headroom
-												if (getActiveWorkItemInfosCountDeep() >= mMaximumConcurrentWorkItems)
-													// No more headroom
-													return OR<CWorkItemInfo>();
+				OR<CWorkItemInfo>	getNextWorkItemInfo()
+										{
+											// Check if paused
+											if (mIsPaused)
+												// Paused
+												return OR<CWorkItemInfo>();
 
-												// Get our next work item info
-												mWorkItemInfosLock.lock();
-												mIdleWorkItemInfos.sort(workItemInfoCompare);
-												OR<CWorkItemInfo>	workItemInfo =
-																				!mIdleWorkItemInfos.isEmpty() ?
-																						OR<CWorkItemInfo>(
-																								mIdleWorkItemInfos[0]) :
-																						OR<CWorkItemInfo>();
-												mWorkItemInfosLock.unlock();
+											// Check if have headroom
+											if (getActiveWorkItemInfosCountDeep() >= mMaximumConcurrentWorkItems)
+												// No more headroom
+												return OR<CWorkItemInfo>();
 
-												// Check any child work item queues
-												mChildWorkItemQueueInternals.apply(
-														(TNLockingArray<R<CWorkItemQueueInternals> >::ApplyProc)
-																getNextWorkItemInfo,
-														&workItemInfo);
+											// Get our next work item info
+											mWorkItemInfosLock.lock();
+											mIdleWorkItemInfos.sort(workItemInfoCompare);
+											OR<CWorkItemInfo>	workItemInfo =
+																		!mIdleWorkItemInfos.isEmpty() ?
+																				OR<CWorkItemInfo>(
+																						mIdleWorkItemInfos[0]) :
+																				OR<CWorkItemInfo>();
+											mWorkItemInfosLock.unlock();
 
-												return workItemInfo;
-											}
-				void					moveToActive(CWorkItemInfo& workItemInfo)
-											{
-												// Move from idle to active
-												mWorkItemInfosLock.lock();
-												mIdleWorkItemInfos.move(workItemInfo, mActiveWorkItemInfos);
-												mWorkItemInfosLock.unlock();
-											}
-				void					removeFromActive(CWorkItemInfo& workItemInfo)
-											{
-												// Remove from active
-												mWorkItemInfosLock.lock();
-												mActiveWorkItemInfos -= workItemInfo;
-												mWorkItemInfosLock.unlock();
+											// Check any child work item queues
+											mChildWorkItemQueueInternals.apply(
+													(TNLockingArray<R<CWorkItemQueueInternals> >::ApplyProc)
+															getNextWorkItemInfo,
+													&workItemInfo);
 
-												// Update
-												if (mItemsProgress.hasReference())
-													mItemsProgress->addCompletedItemsCount(1);
-												mInFlightWorkItemsCount.subtract(1);
-											}
+											return workItemInfo;
+										}
+				void				moveToActive(CWorkItemInfo& workItemInfo)
+										{
+											// Move from idle to active
+											mWorkItemInfosLock.lock();
+											mIdleWorkItemInfos.move(workItemInfo, mActiveWorkItemInfos);
+											mWorkItemInfosLock.unlock();
+										}
+				void				removeFromActive(CWorkItemInfo& workItemInfo)
+										{
+											// Remove from active
+											mWorkItemInfosLock.lock();
+											mActiveWorkItemInfos -= workItemInfo;
+											mWorkItemInfosLock.unlock();
 
-		static	void					processWorkItems()
-											{
-												// Check if can do another workItem
-												mWorkItemThreadsLock.lock();
+											// Update
+											if (mItemsProgress.hasReference())
+												mItemsProgress->addCompletedItemsCount(1);
+											mInFlightWorkItemsCount.subtract(1);
+										}
 
+		static	void				processWorkItems()
+										{
+											// Check if can do another workItem
+											mWorkItemThreadsLock.lock();
+
+											// Continue until we run out of threads
+											while (mActiveWorkItemThreads.getCount() <
+													mMainWorkItemQueueInternals->mMaximumConcurrentWorkItems) {
 												// Get next work item info
 												OR<CWorkItemInfo>	workItemInfo =
 																			mMainWorkItemQueueInternals->
 																					getNextWorkItemInfo();
-												while (
-														(mActiveWorkItemThreads.getCount() <
-																mMainWorkItemQueueInternals->
-																		mMaximumConcurrentWorkItems) &&
-														workItemInfo.hasReference()) {
-													// Move from idle to active
-													workItemInfo->mOwningWorkItemQueueInternals.moveToActive(
-															*workItemInfo);
+												if (!workItemInfo.hasReference())
+													// No more work items
+													break;
 
-													// Find thread
-													if (mIdleWorkItemThreads.getCount() > 0) {
-														// Resume an idle thread
-														I<CWorkItemThread>&	workItemThread = mIdleWorkItemThreads[0];
-														mIdleWorkItemThreads.move(workItemThread,
-																mActiveWorkItemThreads);
+												// Move from idle to active
+												workItemInfo->mOwningWorkItemQueueInternals.moveToActive(*workItemInfo);
 
-														// Process work item info
-														workItemThread->process(R<CWorkItemInfo>(*workItemInfo));
-													} else {
-														// Create new active thread
-														UInt32	threadNumber = mActiveWorkItemThreads.getCount() + 1;
-														CString	threadName =
-																		CString(OSSTR("CWorkItemQueue #")) +
-																				CString(threadNumber);
-														I<CWorkItemThread>	workItemThread(
-																					new CWorkItemThread(threadName,
-																							workItemInfoComplete));
-														mActiveWorkItemThreads += workItemThread;
+												// Find thread
+												if (mIdleWorkItemThreads.getCount() > 0) {
+													// Resume an idle thread
+													I<CWorkItemThread>&	workItemThread = mIdleWorkItemThreads[0];
+													mIdleWorkItemThreads.move(workItemThread, mActiveWorkItemThreads);
 
-														// Process work item info
-														workItemThread->process(R<CWorkItemInfo>(*workItemInfo));
-													}
+													// Process work item info
+													workItemThread->process(R<CWorkItemInfo>(*workItemInfo));
+												} else {
+													// Create new active thread
+													UInt32	threadNumber = mActiveWorkItemThreads.getCount() + 1;
+													CString	threadName =
+																	CString(OSSTR("CWorkItemQueue #")) +
+																			CString(threadNumber);
+													I<CWorkItemThread>	workItemThread(
+																				new CWorkItemThread(threadName,
+																						workItemInfoComplete));
+													mActiveWorkItemThreads += workItemThread;
 
-													// Get next work item info
-													workItemInfo = mMainWorkItemQueueInternals->getNextWorkItemInfo();
+													// Process work item info
+													workItemThread->process(R<CWorkItemInfo>(*workItemInfo));
 												}
-												mWorkItemThreadsLock.unlock();
-											}
 
-		static	bool					workItemMatches(const I<CWorkItemInfo>& workItemInfo, I<CWorkItem>* workItem)
-											{ return workItemInfo->mWorkItem == *workItem; }
-		static	bool					workItemInfoHasID(const CWorkItemInfo& workItemInfo,
-												TSet<CString>* workItemIDs)
-											{ return workItemIDs->contains(workItemInfo.mWorkItem->getID()); }
-		static	bool					workItemInfoHasReference(const CWorkItemInfo& workItemInfo,
-												TSet<CString>* workitemReferences)
-											{ return workItemInfo.mWorkItem->getReference().hasValue() &&
-													workitemReferences->contains(
-															*workItemInfo.mWorkItem->getReference()); }
-		static	bool					workItemInfoAlwaysMatches(const CWorkItemInfo& workItemInfo, void* userData)
-											{ return true; }
+												// Get next work item info
+												workItemInfo = mMainWorkItemQueueInternals->getNextWorkItemInfo();
+											}
+											mWorkItemThreadsLock.unlock();
+										}
+
+		static	bool				workItemMatches(const I<CWorkItemInfo>& workItemInfo, I<CWorkItem>* workItem)
+										{ return workItemInfo->mWorkItem == *workItem; }
+		static	bool				workItemInfoHasID(const CWorkItemInfo& workItemInfo, TSet<CString>* workItemIDs)
+										{ return workItemIDs->contains(workItemInfo.mWorkItem->getID()); }
+		static	bool				workItemInfoHasReference(const CWorkItemInfo& workItemInfo,
+											TSet<CString>* workitemReferences)
+										{ return workItemInfo.mWorkItem->getReference().hasValue() &&
+												workitemReferences->contains(*workItemInfo.mWorkItem->getReference()); }
+		static	bool				workItemInfoAlwaysMatches(const CWorkItemInfo& workItemInfo, void* userData)
+										{ return true; }
 
 	private:
-		static	void					getActiveWorkItemInfosCountDeep(
-												R<CWorkItemQueueInternals>& workItemQueueInternals, void* userData)
-											{ *((UInt32*) userData) +=
-													workItemQueueInternals->getActiveWorkItemInfosCountDeep(); }
-		static	void					getNextWorkItemInfo(
-												R<CWorkItemQueueInternals>& workItemQueueInternals, void* userData)
-											{
-												// Setup
-												OR<CWorkItemInfo>&	workItemInfo = *((OR<CWorkItemInfo>*) userData);
+		static	void				getActiveWorkItemInfosCountDeep(R<CWorkItemQueueInternals>& workItemQueueInternals,
+											void* userData)
+										{ *((UInt32*) userData) +=
+												workItemQueueInternals->getActiveWorkItemInfosCountDeep(); }
+		static	void				getNextWorkItemInfo(R<CWorkItemQueueInternals>& workItemQueueInternals,
+											void* userData)
+										{
+											// Setup
+											OR<CWorkItemInfo>&	workItemInfo = *((OR<CWorkItemInfo>*) userData);
 
-												// Update work item info
-												OR<CWorkItemInfo>	childWorkItemInfo =
-																			workItemQueueInternals
-																					->getNextWorkItemInfo();
-												if (childWorkItemInfo.hasReference() &&
-														(!workItemInfo.hasReference() ||
-																(childWorkItemInfo->mIndex < workItemInfo->mIndex)))
-													// Start with this child work item info
-													workItemInfo = childWorkItemInfo;
-											}
+											// Update work item info
+											OR<CWorkItemInfo>	childWorkItemInfo =
+																		workItemQueueInternals->getNextWorkItemInfo();
+											if (childWorkItemInfo.hasReference() &&
+													(!workItemInfo.hasReference() ||
+															(childWorkItemInfo->mPriority > workItemInfo->mPriority) ||
+															((childWorkItemInfo->mPriority ==
+																			workItemInfo->mPriority) &&
+																	(childWorkItemInfo->mIndex <
+																			workItemInfo->mIndex))))
+												// Use child work item info
+												workItemInfo = childWorkItemInfo;
+										}
 
-		static	bool					workItemInfoCompare(const CWorkItemInfo& workItemInfo1,
-												const CWorkItemInfo& workItemInfo2, void* userData)
-											{
-												// Sort in this order:
-												//	Priority
-												//	Index
-												if (workItemInfo1.mPriority < workItemInfo2.mPriority)
-													// Work item 1 has a higher priority
-													return true;
-												else if (workItemInfo2.mPriority < workItemInfo1.mPriority)
-													// Work item 2 has a higher priority
-													return false;
-												else
-													// Use index
-													return workItemInfo1.mIndex < workItemInfo2.mIndex;
-											}
-		static	void					workItemInfoComplete(const R<CWorkItemInfo>& workItemInfo,
-												CWorkItemThread& workItemThread)
-											{
-												// Transition work item info to complete
-												workItemInfo->mOwningWorkItemQueueInternals.removeFromActive(
-														*workItemInfo);
+		static	bool				workItemInfoCompare(const CWorkItemInfo& workItemInfo1,
+											const CWorkItemInfo& workItemInfo2, void* userData)
+										{
+											// Sort in this order:
+											//	Priority
+											//	Index
+											if (workItemInfo1.mPriority > workItemInfo2.mPriority)
+												// Work item 1 has a higher priority
+												return true;
+											else if (workItemInfo1.mPriority < workItemInfo2.mPriority)
+												// Work item 2 has a higher priority
+												return false;
+											else
+												// Use index
+												return workItemInfo1.mIndex < workItemInfo2.mIndex;
+										}
+		static	void				workItemInfoComplete(const R<CWorkItemInfo>& workItemInfo,
+											CWorkItemThread& workItemThread)
+										{
+											// Transition work item info to complete
+											workItemInfo->mOwningWorkItemQueueInternals.removeFromActive(*workItemInfo);
 
-												// Transition thread to idle
-												mWorkItemThreadsLock.lock();
-												I<CWorkItemThread>&	workItemThreadInstance =
-																			*mActiveWorkItemThreads.getFirst(
-																					(TArray<I<CWorkItemThread> >::
-																									IsMatchProc)
-																							I<CWorkItemThread>::
-																									doesInstanceMatch,
-																					&workItemThread);
-												mActiveWorkItemThreads.move(workItemThreadInstance,
-														mIdleWorkItemThreads);
-												mWorkItemThreadsLock.unlock();
+											// Transition thread to idle
+											mWorkItemThreadsLock.lock();
+											I<CWorkItemThread>&	workItemThreadInstance =
+																		*mActiveWorkItemThreads.getFirst(
+																				(TArray<I<CWorkItemThread> >::
+																								IsMatchProc)
+																						I<CWorkItemThread>::
+																								doesInstanceMatch,
+																				&workItemThread);
+											mActiveWorkItemThreads.move(workItemThreadInstance, mIdleWorkItemThreads);
+											mWorkItemThreadsLock.unlock();
 
-												// Process work items
-												processWorkItems();
-											}
+											// Process work items
+											processWorkItems();
+										}
 
 	public:
 		static	OR<CWorkItemQueueInternals>					mMainWorkItemQueueInternals;
