@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CAtomReader.h"
-#include "CMediaSourceRegistry.h"
+#include "SMediaSource.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMPEG4MediaFile

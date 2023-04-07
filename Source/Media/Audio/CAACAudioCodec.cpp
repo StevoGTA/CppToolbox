@@ -391,5 +391,5 @@ OV<I<CDecodeAudioCodec> > CAACAudioCodec::create(const Info& info,
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
-REGISTER_CODEC(aacLC, CAudioCodec::Info(CAACAudioCodec::mAACLCID, CAACAudioCodec::mAACLCName));
-REGISTER_CODEC(aacLD, CAudioCodec::Info(CAACAudioCodec::mAACLDID, CAACAudioCodec::mAACLDName));
+REGISTER_AUDIO_CODEC(aacLC, CCodec::Info(CAACAudioCodec::mAACLCID, CAACAudioCodec::mAACLCName));
+REGISTER_AUDIO_CODEC(aacLD, CCodec::Info(CAACAudioCodec::mAACLDID, CAACAudioCodec::mAACLDName));

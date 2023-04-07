@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CChunkReader.h"
-#include "CMediaSourceRegistry.h"
+#include "SMediaSource.h"
 #include "SWAVEInfo.h"
 
 //----------------------------------------------------------------------------------------------------------------------

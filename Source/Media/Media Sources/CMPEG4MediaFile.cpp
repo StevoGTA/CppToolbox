@@ -5,6 +5,7 @@
 #include "CMPEG4MediaFile.h"
 
 #include "CAACAudioCodec.h"
+#include "CMediaSourceRegistry.h"
 #include "CH264VideoCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -990,7 +991,6 @@ static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& im
 // MARK: - Register media source
 
 static	CString	sExtensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), CString(OSSTR("mp4")) };
-
 REGISTER_MEDIA_SOURCE(mp4,
-		SMediaSource(MAKE_OSTYPE('m', 'p', '4', '*'), CString(OSSTR("MPEG 4")), TSSet<CString>(sExtensions, 3),
+		SMediaSource(MAKE_OSTYPE('M', 'P', '4', ' '), CString(OSSTR("MPEG 4")), TSSet<CString>(sExtensions, 3),
 				sImport));

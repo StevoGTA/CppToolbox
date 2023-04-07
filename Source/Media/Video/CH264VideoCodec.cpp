@@ -667,4 +667,4 @@ OV<I<CDecodeVideoCodec> > CH264VideoCodec::create(const I<CRandomAccessDataSourc
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare video codecs
 
-REGISTER_CODEC(h264, CVideoCodec::Info(CH264VideoCodec::mID, CH264VideoCodec::mName));
+REGISTER_VIDEO_CODEC(h264, CCodec::Info(CH264VideoCodec::mID, CH264VideoCodec::mName));

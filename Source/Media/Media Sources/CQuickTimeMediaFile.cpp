@@ -6,6 +6,7 @@
 
 #include "CAACAudioCodec.h"
 #include "CH264VideoCodec.h"
+#include "CMediaSourceRegistry.h"
 #include "CPCMAudioCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1318,7 +1319,6 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 // MARK: - Register media source
 
 static	CString	sExtensions[] = { CString(OSSTR("mov")) };
-
 REGISTER_MEDIA_SOURCE(quicktime,
 		SMediaSource(MAKE_OSTYPE('M', 'o', 'o', 'V'), CString(OSSTR("QuickTime")), TSSet<CString>(sExtensions, 1),
 				sImport));

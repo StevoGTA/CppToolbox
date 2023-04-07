@@ -13,16 +13,16 @@
 class CCodecRegistry {
 	// Methods
 	public:
-									// Instance methods
-		void						registerCodec(const CAudioCodec::Info& info);
-		void						registerCodec(const CVideoCodec::Info& info);
+								// Instance methods
+		void					registerAudioCodec(const CCodec::Info& info);
+		void					registerVideoCodec(const CCodec::Info& info);
 
-		const	CAudioCodec::Info&	getAudioCodecInfo(OSType codecID);
-		const	CVideoCodec::Info&	getVideoCodecInfo(OSType codecID);
+		const	CCodec::Info&	getAudioCodecInfo(OSType codecID);
+		const	CCodec::Info&	getVideoCodecInfo(OSType codecID);
 
 	private:
-									// Lifecycle methods
-									CCodecRegistry();
+								// Lifecycle methods
+								CCodecRegistry();
 
 	// Properties
 	public:
@@ -32,9 +32,16 @@ class CCodecRegistry {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define REGISTER_CODEC(codecCodedName, info)													\
-	class codecCodedName##CodecRegisterer {														\
-		public:																					\
-			codecCodedName##CodecRegisterer() { CCodecRegistry::mShared.registerCodec(info); }	\
-	};																							\
+#define REGISTER_AUDIO_CODEC(codecCodedName, info)													\
+	class codecCodedName##CodecRegisterer {															\
+		public:																						\
+			codecCodedName##CodecRegisterer() { CCodecRegistry::mShared.registerAudioCodec(info); }	\
+	};																								\
+	static	codecCodedName##CodecRegisterer _##codecCodedName##CodecRegisterer
+
+#define REGISTER_VIDEO_CODEC(codecCodedName, info)													\
+	class codecCodedName##CodecRegisterer {															\
+		public:																						\
+			codecCodedName##CodecRegisterer() { CCodecRegistry::mShared.registerVideoCodec(info); }	\
+	};																								\
 	static	codecCodedName##CodecRegisterer _##codecCodedName##CodecRegisterer

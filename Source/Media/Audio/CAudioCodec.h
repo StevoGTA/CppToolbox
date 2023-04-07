@@ -15,41 +15,6 @@
 // MARK: CAudioCodec
 
 class CAudioCodec : public CCodec {
-	// Info
-	public:
-		struct Info {
-								// Lifecycle methods
-								Info(OSType id, const CString& name) : mID(id), mDecodeName(name), mEncodeName(name) {}
-								Info(OSType id, const CString& name, const EncodeSettings& encodeSettings) :
-									mID(id), mDecodeName(name), mEncodeName(name),
-											mEncodeSettings(OV<EncodeSettings>(encodeSettings))
-									{}
-								Info(OSType id, const CString& decodeName, const CString& encodeName,
-										const EncodeSettings& encodeSettings) :
-									mID(id), mDecodeName(decodeName), mEncodeName(encodeName),
-											mEncodeSettings(OV<EncodeSettings>(encodeSettings))
-									{}
-								Info(const Info& other) :
-									mID(other.mID), mDecodeName(other.mDecodeName), mEncodeName(other.mEncodeName),
-											mEncodeSettings(other.mEncodeSettings)
-									{}
-
-								// Instance methods
-					OSType		getID() const
-									{ return mID; }
-			const	CString&	getDecodeName() const
-									{ return mDecodeName; }
-			const	CString&	getEncodeName() const
-									{ return mEncodeName; }
-
-			// Properties
-			private:
-				OSType				mID;
-				CString				mDecodeName;
-				CString				mEncodeName;
-				OV<EncodeSettings>	mEncodeSettings;
-		};
-
 	// Methods
 	public:
 		// Lifecycle methods
@@ -211,19 +176,4 @@ class CDecodeAudioCodec : public CAudioCodec {
 	protected:
 												// Lifecycle methods
 												CDecodeAudioCodec() : CAudioCodec() {}
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CEncodeAudioCodec
-
-class CEncodeAudioCodec : public CAudioCodec {
-	// Methods
-	public:
-												// Instance methods
-		virtual	TArray<SAudioProcessingSetup>	getAudioProcessingSetups() const = 0;
-		virtual	void							setup(const SAudioProcessingFormat& audioProcessingFormat) = 0;
-
-	protected:
-												// Lifecycle methods
-												CEncodeAudioCodec() : CAudioCodec() {}
 };

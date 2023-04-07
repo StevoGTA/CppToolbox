@@ -129,5 +129,6 @@ OV<I<CDecodeAudioCodec> > CPCMAudioCodec::create(const SAudioStorageFormat& audi
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Declare audio codecs
 
-REGISTER_CODEC(pcmFloat, CAudioCodec::Info(CPCMAudioCodec::mFloatID, CString(OSSTR("None (Floating Point)"))));
-REGISTER_CODEC(pcmInteger, CAudioCodec::Info(CPCMAudioCodec::mIntegerID, CString(OSSTR("None (Integer)"))));
+REGISTER_AUDIO_CODEC(pcmFloat, CCodec::Info(CPCMAudioCodec::mFloatID, CString(OSSTR("None (Floating Point)"))));
+REGISTER_AUDIO_CODEC(pcmInteger,
+		CCodec::Info(CPCMAudioCodec::mIntegerID, CString(OSSTR("None (Integer)")), CString(OSSTR("None"))));

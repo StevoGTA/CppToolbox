@@ -21,7 +21,6 @@ I<CWAVEMediaFile> CWAVEMediaFile::create()
 // MARK: - Register media source
 
 static	CString	sExtensions[] = { CString(OSSTR("wav")) };
-
 REGISTER_MEDIA_SOURCE(wave,
 		SMediaSource(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")), TSSet<CString>(sExtensions, 1),
 				CWAVEMediaFile::import));

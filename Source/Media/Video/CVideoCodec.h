@@ -11,25 +11,6 @@
 // MARK: CVideoCodec
 
 class CVideoCodec : public CCodec {
-	// Info
-	public:
-		struct Info {
-								// Lifecycle methods
-								Info(OSType id, const CString& name) : mID(id), mDecodeName(name) {}
-								Info(const Info& other) : mID(other.mID), mDecodeName(other.mDecodeName) {}
-
-								// Instance methods
-					OSType		getID() const
-									{ return mID; }
-			const	CString&	getDecodeName() const
-									{ return mDecodeName; }
-
-			// Properties
-			private:
-				OSType	mID;
-				CString	mDecodeName;
-		};
-
 	// Methods
 	protected:
 		// Lifecycle methods

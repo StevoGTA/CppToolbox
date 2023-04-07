@@ -121,7 +121,7 @@ enum EAudioChannelMap : UInt16 {
 extern	const	CString	eChannelMapGetDescription(EAudioChannelMap audioChannelMap);
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SAudioStorageFormat
+// MARK: - SAudioStorageFormat
 
 struct SAudioStorageFormat {
 						// Lifecycle methods
@@ -188,12 +188,13 @@ struct SAudioStorageFormat {
 // MARK: - SAudioProcessingFormat
 
 struct SAudioProcessingFormat {
-	// Enums
+	// SampleType
 	enum SampleType {
 		kSampleTypeFloat,
 		kSampleTypeSignedInteger,
 	};
 
+	// Endian
 	enum Endian {
 		kEndianBig,
 		kEndianLittle,
@@ -204,6 +205,7 @@ struct SAudioProcessingFormat {
 #endif
 	};
 
+	// Interleaved
 	enum Interleaved {
 		kInterleaved,
 		kNonInterleaved,
@@ -303,7 +305,7 @@ struct SAudioProcessingFormat {
 // MARK: - SAudioProcessingSetup
 
 struct SAudioProcessingSetup {
-	// Structs
+	// BitsInfo
 	struct BitsInfo {
 		// Enums
 		enum Option {
@@ -318,10 +320,10 @@ struct SAudioProcessingSetup {
 				BitsInfo(UInt8 bits) : mOption(kSpecified), mValue(bits) {}
 
 				// Instance methods
-		bool	isSpecified() const
-					{ return mOption == kSpecified; }
 		Option	getOption() const
 					{ return mOption; }
+		bool	isSpecified() const
+					{ return mOption == kSpecified; }
 		UInt8	getValue() const
 					{ AssertFailIf(!mValue.hasValue()); return *mValue; }
 
@@ -339,6 +341,7 @@ struct SAudioProcessingSetup {
 							OV<UInt8>	mValue;
 	};
 
+	// SampleRateInfo
 	struct SampleRateInfo {
 		// Enums
 		enum Option {
@@ -353,10 +356,10 @@ struct SAudioProcessingSetup {
 				SampleRateInfo(Float32 sampleRate) : mOption(kSpecified), mValue(sampleRate) {}
 
 				// Instance methods
-		bool	isSpecified() const
-					{ return mOption == kSpecified; }
 		Option	getOption() const
 					{ return mOption; }
+		bool	isSpecified() const
+					{ return mOption == kSpecified; }
 		Float32	getValue() const
 					{ AssertFailIf(!mValue.hasValue()); return *mValue; }
 
@@ -374,6 +377,7 @@ struct SAudioProcessingSetup {
 							OV<Float32>		mValue;
 	};
 
+	// ChannelMapInfo
 	struct ChannelMapInfo {
 		// Enums
 		enum Option {
@@ -390,10 +394,10 @@ struct SAudioProcessingSetup {
 								{}
 
 							// Instance methods
-		bool				isSpecified() const
-								{ return mOption == kSpecified; }
 		Option				getOption() const
 								{ return mOption; }
+		bool				isSpecified() const
+								{ return mOption == kSpecified; }
 		EAudioChannelMap	getValue() const
 								{ AssertFailIf(!mValue.hasValue()); return *mValue; }
 
@@ -411,12 +415,14 @@ struct SAudioProcessingSetup {
 							OV<EAudioChannelMap>	mValue;
 	};
 
+	// SampleTypeOption
 	enum SampleTypeOption {
 		kSampleTypeFloat,
 		kSampleTypeSignedInteger,
 		kSampleTypeUnspecified,
 	};
 
+	// EndianOption
 	enum EndianOption {
 		kEndianBig,
 		kEndianLittle,
@@ -428,6 +434,7 @@ struct SAudioProcessingSetup {
 #endif
 	};
 
+	// InterleavedOption
 	enum InterleavedOption {
 		kInterleaved,
 		kNonInterleaved,
