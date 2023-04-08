@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CURL
 
-class CURLInternals;
 class CURL {
 	// Methods
 	public:
@@ -23,5 +22,6 @@ class CURL {
 
 	// Properties
 	private:
-		CURLInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };

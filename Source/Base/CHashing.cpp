@@ -15,12 +15,12 @@ const	UInt32	kInitialValue = 37; /* also prime */
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CHasherInternals
+// MARK: - CHasher::Internals
 
-class CHasherInternals {
+class CHasher::Internals {
 	public:
-				CHasherInternals() : mValue(kInitialValue) {}
-				~CHasherInternals() {}
+				Internals() : mValue(kInitialValue) {}
+				~Internals() {}
 
 		void	add(const char* string)
 					{
@@ -50,7 +50,7 @@ class CHasherInternals {
 CHasher::CHasher()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CHasherInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

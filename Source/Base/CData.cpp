@@ -16,67 +16,66 @@ const	CData	CData::mZeroByte("", 1, false);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDataInternals
+// MARK: - CData::Internals
 
-class CDataInternals : public TCopyOnWriteReferenceCountable<CDataInternals> {
+class CData::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-						CDataInternals(CData::ByteCount initialByteCount, const void* initialBuffer = nil,
-								bool copySourceData = true) :
-							TCopyOnWriteReferenceCountable(),
-									mFreeOnDelete(copySourceData), mBufferByteCount(initialByteCount)
-							{
-								// Check for initial buffer
-								if (initialBuffer != nil) {
-									// Check free on delete
-									if (copySourceData) {
-										// mBufferByteCount 0, initialBuffer not nil, copySourceData true
-										// mBufferByteCount >0, initialBuffer not nil, copySourceData true
-										mBuffer = ::malloc((size_t) mBufferByteCount);
-										::memcpy(mBuffer, initialBuffer, (size_t) mBufferByteCount);
-									} else {
-										// mBufferByteCount 0, initialBuffer not nil, copySourceData false
-										// mBufferByteCount >0, initialBuffer not nil, copySourceData false
-										mBuffer = (void*) initialBuffer;
-									}
-								} else if (mBufferByteCount > 0)
-									// mBufferByteCount >0, initialBuffer nil
-									mBuffer = ::calloc(1, (size_t) mBufferByteCount);
-								else
-									// mBufferByteCount 0, initialBuffer nil
-									mBuffer = nil;
-							}
-						CDataInternals(const CDataInternals& other) :
-							TCopyOnWriteReferenceCountable(), mFreeOnDelete(true),
-									mBuffer(
-											(other.mBufferByteCount > 0) ?
-													::malloc((size_t) other.mBufferByteCount) : nil),
-									mBufferByteCount(other.mBufferByteCount)
-							{
-								// Do we have any data
-								if (mBufferByteCount > 0)
-									// Copy data
-									::memcpy(mBuffer, other.mBuffer, (size_t) mBufferByteCount);
-							}
-						~CDataInternals()
-							{
-								// Cleanup
-								if (mFreeOnDelete)
-									// Free!
-									::free(mBuffer);
-							}
+					Internals(CData::ByteCount initialByteCount, const void* initialBuffer = nil,
+							bool copySourceData = true) :
+						TCopyOnWriteReferenceCountable(),
+								mFreeOnDelete(copySourceData), mBufferByteCount(initialByteCount)
+						{
+							// Check for initial buffer
+							if (initialBuffer != nil) {
+								// Check free on delete
+								if (copySourceData) {
+									// mBufferByteCount 0, initialBuffer not nil, copySourceData true
+									// mBufferByteCount >0, initialBuffer not nil, copySourceData true
+									mBuffer = ::malloc((size_t) mBufferByteCount);
+									::memcpy(mBuffer, initialBuffer, (size_t) mBufferByteCount);
+								} else {
+									// mBufferByteCount 0, initialBuffer not nil, copySourceData false
+									// mBufferByteCount >0, initialBuffer not nil, copySourceData false
+									mBuffer = (void*) initialBuffer;
+								}
+							} else if (mBufferByteCount > 0)
+								// mBufferByteCount >0, initialBuffer nil
+								mBuffer = ::calloc(1, (size_t) mBufferByteCount);
+							else
+								// mBufferByteCount 0, initialBuffer nil
+								mBuffer = nil;
+						}
+					Internals(const Internals& other) :
+						TCopyOnWriteReferenceCountable(), mFreeOnDelete(true),
+								mBuffer(
+										(other.mBufferByteCount > 0) ?
+												::malloc((size_t) other.mBufferByteCount) : nil),
+								mBufferByteCount(other.mBufferByteCount)
+						{
+							// Do we have any data
+							if (mBufferByteCount > 0)
+								// Copy data
+								::memcpy(mBuffer, other.mBuffer, (size_t) mBufferByteCount);
+						}
+					~Internals()
+						{
+							// Cleanup
+							if (mFreeOnDelete)
+								// Free!
+								::free(mBuffer);
+						}
 
-		CDataInternals*	setByteCount(CData::ByteCount byteCount)
-							{
-								// Prepare for write
-								CDataInternals*	dataInternals = prepareForWrite();
+		Internals*	setByteCount(CData::ByteCount byteCount)
+						{
+							// Prepare for write
+							Internals*	internals = prepareForWrite();
 
-								// Update byte count
-								dataInternals->mBufferByteCount = byteCount;
-								dataInternals->mBuffer =
-										::realloc(dataInternals->mBuffer, (size_t) dataInternals->mBufferByteCount);
+							// Update byte count
+							internals->mBufferByteCount = byteCount;
+							internals->mBuffer = ::realloc(internals->mBuffer, (size_t) internals->mBufferByteCount);
 
-								return dataInternals;
-							}
+							return internals;
+						}
 
 		bool				mFreeOnDelete;
 		void*				mBuffer;
@@ -94,7 +93,7 @@ CData::CData(ByteCount initialByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDataInternals(initialByteCount);
+	mInternals = new Internals(initialByteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -110,7 +109,7 @@ CData::CData(const void* buffer, ByteCount bufferByteCount, bool copySourceData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDataInternals(bufferByteCount, buffer, copySourceData);
+	mInternals = new Internals(bufferByteCount, buffer, copySourceData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -147,7 +146,7 @@ CData::CData(const CString& base64String)
 
 	// Setup internals
 	ByteCount	dataByteCount = (ByteCount) last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
-	mInternals = new CDataInternals(dataByteCount);
+	mInternals = new Internals(dataByteCount);
 
 	// Convert
 	UInt8*	dataPtr = (UInt8*) mInternals->mBuffer;
@@ -178,7 +177,7 @@ CData::CData(SInt8 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDataInternals(sizeof(SInt8), &value);
+	mInternals = new Internals(sizeof(SInt8), &value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -186,7 +185,7 @@ CData::CData(UInt8 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDataInternals(sizeof(UInt8), &value);
+	mInternals = new Internals(sizeof(UInt8), &value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

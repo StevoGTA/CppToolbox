@@ -35,15 +35,15 @@
 */
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSRSWBIPQueueInternals
+// MARK: CSRSWBIPQueue::Internals
 
-class CSRSWBIPQueueInternals : public TCopyOnWriteReferenceCountable<CSRSWBIPQueueInternals> {
+class CSRSWBIPQueue::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-		CSRSWBIPQueueInternals(UInt32 byteCount) :
+		Internals(UInt32 byteCount) :
 			mBuffer((UInt8*) ::malloc(byteCount)), mByteCount(byteCount), mReadPtr(mBuffer), mWritePtr(mBuffer),
 					mWriteWatermarkPtr(mBuffer)
 			{}
-		~CSRSWBIPQueueInternals()
+		~Internals()
 			{ ::free(mBuffer); }
 
 		// General
@@ -68,7 +68,7 @@ class CSRSWBIPQueueInternals : public TCopyOnWriteReferenceCountable<CSRSWBIPQue
 CSRSWBIPQueue::CSRSWBIPQueue(UInt32 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSRSWBIPQueueInternals(byteCount);
+	mInternals = new Internals(byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -187,16 +187,16 @@ void CSRSWBIPQueue::reset()
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSRSWBIPSegmentedQueueInternals
+// MARK: - CSRSWBIPSegmentedQueue::Internals
 
-class CSRSWBIPSegmentedQueueInternals {
+class CSRSWBIPSegmentedQueue::Internals {
 	public:
-		CSRSWBIPSegmentedQueueInternals(UInt32 segmentCount, UInt32 segmentByteCount) :
+		Internals(UInt32 segmentCount, UInt32 segmentByteCount) :
 			mBuffer((UInt8*) ::malloc(segmentCount * segmentByteCount)), mSegmentByteCount(segmentByteCount),
 					mSegmentCount(segmentCount), mReadPtr(mBuffer), mWritePtr(mBuffer),
 					mWriteWatermarkPtr(mBuffer)
 			{}
-		~CSRSWBIPSegmentedQueueInternals()
+		~Internals()
 			{ ::free(mBuffer); }
 
 		// General
@@ -222,7 +222,7 @@ class CSRSWBIPSegmentedQueueInternals {
 CSRSWBIPSegmentedQueue::CSRSWBIPSegmentedQueue(UInt32 segmentCount, UInt32 segmentByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSRSWBIPSegmentedQueueInternals(segmentCount, segmentByteCount);
+	mInternals = new Internals(segmentCount, segmentByteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -415,11 +415,11 @@ void CSRSWMessageQueue::handle(const Message& message)
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSRSWMessageQueuesInternals
+// MARK: - CSRSWMessageQueues::Internals
 
-class CSRSWMessageQueuesInternals {
+class CSRSWMessageQueues::Internals {
 	public:
-		CSRSWMessageQueuesInternals() {}
+		Internals() {}
 
 		TNArray<CSRSWMessageQueue>	mMessageQueues;
 };
@@ -434,7 +434,7 @@ class CSRSWMessageQueuesInternals {
 CSRSWMessageQueues::CSRSWMessageQueues()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSRSWMessageQueuesInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CTreeViewBacking
 
-class CTreeViewBackingInternals;
 class CTreeViewBacking {
 	// Info
 	public:
@@ -95,8 +94,9 @@ class CTreeViewBacking {
 
 	// Properties
 	public:
-		static	const	CString						mRootViewItemID;
+		static	const	CString		mRootViewItemID;
 
 	private:
-						CTreeViewBackingInternals*	mInternals;
+		class Internals;
+						Internals*	mInternals;
 };

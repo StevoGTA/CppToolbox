@@ -124,18 +124,18 @@ class CTreeViewBackingItem {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CTreeViewBackingInternals
+// MARK: - CTreeViewBacking::Internals
 
-class CTreeViewBackingInternals {
+class CTreeViewBacking::Internals {
 	public:
-						CTreeViewBackingInternals(const CTreeViewBacking::Info& info) :
+						Internals(const CTreeViewBacking::Info& info) :
 							mInfo(info), mInternalInfo(removeViewItemIDs, noteTreeViewBackingItems, this)
 							{}
 
 		static	void	removeViewItemIDs(const TArray<CString>& viewItemIDs, void* userData)
 							{
 								// Setup
-								CTreeViewBackingInternals&	internals = *((CTreeViewBackingInternals*) userData);
+								Internals&	internals = *((Internals*) userData);
 
 								// Remove
 								internals.mTreeViewBackingItemMap.remove(viewItemIDs);
@@ -144,7 +144,7 @@ class CTreeViewBackingInternals {
 								void* userData)
 							{
 								// Setup
-								CTreeViewBackingInternals&	internals = *((CTreeViewBackingInternals*) userData);
+								Internals&	internals = *((Internals*) userData);
 
 								// Iterate tree view backing items
 								for (TIteratorD<CTreeViewBackingItem> iterator = treeViewBackingItems.getIterator();
@@ -174,7 +174,7 @@ class CTreeViewBackingInternals {
 CTreeViewBacking::CTreeViewBacking(const Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CTreeViewBackingInternals(info);
+	mInternals = new Internals(info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

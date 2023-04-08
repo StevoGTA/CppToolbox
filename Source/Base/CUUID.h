@@ -18,7 +18,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CUUID
 
-class CUUIDInternals;
 class CUUID : public CHashable {
 	// Structs
 	public:
@@ -56,8 +55,9 @@ class CUUID : public CHashable {
 
 	// Properties
 	public:
-		static	const	CUUID			mZero;
+		static	const	CUUID		mZero;
 
 	private:
-						CUUIDInternals*	mInternals;
+		class Internals;
+						Internals*	mInternals;
 };

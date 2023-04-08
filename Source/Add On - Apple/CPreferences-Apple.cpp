@@ -9,18 +9,18 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CPreferencesInternals
+// MARK: CPreferences::Internals
 
-class CPreferencesInternals {
+class CPreferences::Internals {
 	public:
-					CPreferencesInternals() :
+					Internals() :
 						mApplicationID((CFStringRef) ::CFRetain(kCFPreferencesCurrentApplication)), mDelayWriteCount(0)
 						{}
-					CPreferencesInternals(const CPreferences::Reference& reference) :
+					Internals(const CPreferences::Reference& reference) :
 						mApplicationID(CCoreFoundation::createStringRefFrom(reference.mApplicationID)),
 								mDelayWriteCount(0)
 						{}
-					~CPreferencesInternals()
+					~Internals()
 						{
 							::CFRelease(mApplicationID);
 						}
@@ -89,14 +89,14 @@ CPreferences	CPreferences::mDefault;
 CPreferences::CPreferences()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CPreferencesInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CPreferences::CPreferences(const Reference& reference)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CPreferencesInternals(reference);
+	mInternals = new Internals(reference);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

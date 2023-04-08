@@ -17,13 +17,13 @@ struct SArraySortInfo {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CArrayIteratorInfo
+// MARK: - CArray::IteratorInfo
 
-class CArrayIteratorInfo : public CIterator::Info {
+class CArray::IteratorInfo : public CIterator::Info {
 	// Methods
 	public:
 						// Lifecycle methods
-						CArrayIteratorInfo(const CArrayInternals& internals, UInt32 initialReference) :
+						IteratorInfo(const Internals& internals, UInt32 initialReference) :
 							CIterator::Info(),
 									mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0)
 							{}
@@ -32,27 +32,26 @@ class CArrayIteratorInfo : public CIterator::Info {
 	CIterator::Info*	copy()
 							{
 								// Make copy
-								CArrayIteratorInfo*	iteratorInfo =
-															new CArrayIteratorInfo(mInternals, mInitialReference);
+								IteratorInfo*	iteratorInfo = new IteratorInfo(mInternals, mInitialReference);
 								iteratorInfo->mCurrentIndex = mCurrentIndex;
 
 								return iteratorInfo;
 							}
 
 	// Properties
-	const	CArrayInternals&	mInternals;
-			UInt32				mInitialReference;
-			UInt32				mCurrentIndex;
+	const	Internals&	mInternals;
+			UInt32		mInitialReference;
+			UInt32		mCurrentIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CArrayInternals
+// MARK: - CArray::Internals
 
-class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
+class CArray::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-											CArrayInternals(CArray::ItemCount initialCapacity,
-													CArray::CopyProc copyProc, CArray::DisposeProc disposeProc) :
+											Internals(CArray::ItemCount initialCapacity, CArray::CopyProc copyProc,
+													CArray::DisposeProc disposeProc) :
 												TCopyOnWriteReferenceCountable(),
 														mCapacity(std::max(initialCapacity, (UInt32) 10)), mCount(0),
 														mItemRefs(
@@ -61,7 +60,7 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 														mCopyProc(copyProc),
 														mDisposeProc(disposeProc), mReference(0)
 												{}
-											CArrayInternals(const CArrayInternals& other) :
+											Internals(const Internals& other) :
 												TCopyOnWriteReferenceCountable(),
 														mCapacity(other.mCount), mCount(other.mCount),
 														mItemRefs(
@@ -81,7 +80,7 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 														::memcpy(mItemRefs, other.mItemRefs,
 																mCount * sizeof(CArray::ItemRef));
 												}
-											~CArrayInternals()
+											~Internals()
 												{
 													// Remove all
 													removeAllInternal();
@@ -105,24 +104,24 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 													return OV<CArray::ItemIndex>();
 												}
 
-				CArrayInternals*			append(const CArray::ItemRef* itemRefs, CArray::ItemCount count,
+				Internals*					append(const CArray::ItemRef* itemRefs, CArray::ItemCount count,
 													CArray::CopyProc copyProc)
 												{
 													// Prepare for write
-													CArrayInternals*	arrayInternals = prepareForWrite();
+													Internals*	internals = prepareForWrite();
 
 													// Setup
-													CArray::ItemCount	neededCount = arrayInternals->mCount + count;
+													CArray::ItemCount	neededCount = internals->mCount + count;
 
 													// Check storage
-													if (neededCount > arrayInternals->mCapacity) {
+													if (neededCount > internals->mCapacity) {
 														// Expand storage
-														arrayInternals->mCapacity =
-																std::max(neededCount, arrayInternals->mCapacity * 2);
-														arrayInternals->mItemRefs =
+														internals->mCapacity =
+																std::max(neededCount, internals->mCapacity * 2);
+														internals->mItemRefs =
 																(CArray::ItemRef*)
-																		::realloc(arrayInternals->mItemRefs,
-																				arrayInternals->mCapacity *
+																		::realloc(internals->mItemRefs,
+																				internals->mCapacity *
 																						sizeof(CArray::ItemRef));
 													}
 
@@ -131,83 +130,82 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 														// Copy each item
 														for (CArray::ItemIndex i = 0; i < count; i++)
 															// Copy item
-															arrayInternals->mItemRefs[arrayInternals->mCount + i] =
+															internals->mItemRefs[internals->mCount + i] =
 																	copyProc(itemRefs[i]);
 													} else
 														// Append itemRefs into place
-														::memcpy(arrayInternals->mItemRefs + arrayInternals->mCount,
-																itemRefs, count * sizeof(CArray::ItemRef));
-													arrayInternals->mCount = neededCount;
+														::memcpy(internals->mItemRefs + internals->mCount, itemRefs,
+																count * sizeof(CArray::ItemRef));
+													internals->mCount = neededCount;
 
 													// Update info
-													arrayInternals->mReference++;
+													internals->mReference++;
 
-													return arrayInternals;
+													return internals;
 												}
-				CArrayInternals*			insertAtIndex(const CArray::ItemRef itemRef, CArray::ItemIndex itemIndex,
+				Internals*					insertAtIndex(const CArray::ItemRef itemRef, CArray::ItemIndex itemIndex,
 													CArray::CopyProc copyProc)
 												{
 													// Prepare for write
-													CArrayInternals*	arrayInternals = prepareForWrite();
+													Internals*	internals = prepareForWrite();
 
 													// Setup
-													CArray::ItemCount	neededCount = arrayInternals->mCount + 1;
+													CArray::ItemCount	neededCount = internals->mCount + 1;
 
 													// Check storage
-													if (neededCount > arrayInternals->mCapacity) {
+													if (neededCount > internals->mCapacity) {
 														// Expand storage
-														arrayInternals->mCapacity =
-																std::max(neededCount, arrayInternals->mCapacity * 2);
-														arrayInternals->mItemRefs =
+														internals->mCapacity =
+																std::max(neededCount, internals->mCapacity * 2);
+														internals->mItemRefs =
 																(CArray::ItemRef*)
 																		::realloc(mItemRefs,
-																				arrayInternals->mCapacity *
+																				internals->mCapacity *
 																						sizeof(CArray::ItemRef));
 													}
 
 													// Move following itemRefs back
-													::memmove(arrayInternals->mItemRefs + itemIndex + 1,
-															arrayInternals->mItemRefs + itemIndex,
-															(arrayInternals->mCount - itemIndex) *
-																	sizeof(CArray::ItemRef));
+													::memmove(internals->mItemRefs + itemIndex + 1,
+															internals->mItemRefs + itemIndex,
+															(internals->mCount - itemIndex) * sizeof(CArray::ItemRef));
 
 													// Check if have copy proc
 													if (copyProc != nil)
 														// Copy item
-														arrayInternals->mItemRefs[itemIndex] = copyProc(itemRef);
+														internals->mItemRefs[itemIndex] = copyProc(itemRef);
 													else
 														// Store new itemRef
-														arrayInternals->mItemRefs[itemIndex] = itemRef;
-													arrayInternals->mCount++;
+														internals->mItemRefs[itemIndex] = itemRef;
+													internals->mCount++;
 
 													// Update info
-													arrayInternals->mReference++;
+													internals->mReference++;
 
-													return arrayInternals;
+													return internals;
 												}
-				CArrayInternals*			removeAtIndex(CArray::ItemIndex itemIndex, bool performDispose)
+				Internals*					removeAtIndex(CArray::ItemIndex itemIndex, bool performDispose)
 												{
 													// Prepare for write
-													CArrayInternals*	arrayInternals = prepareForWrite();
+													Internals*	internals = prepareForWrite();
 
 													// Check if owns items
 													if (performDispose && (mDisposeProc != nil))
 														// Dispose
-														mDisposeProc(arrayInternals->mItemRefs[itemIndex]);
+														mDisposeProc(internals->mItemRefs[itemIndex]);
 
 													// Move following itemRefs forward
-													::memmove(arrayInternals->mItemRefs + itemIndex,
-															arrayInternals->mItemRefs + itemIndex + 1,
-															(arrayInternals->mCount - itemIndex - 1) *
+													::memmove(internals->mItemRefs + itemIndex,
+															internals->mItemRefs + itemIndex + 1,
+															(internals->mCount - itemIndex - 1) *
 																	sizeof(CArray::ItemRef));
 
 													// Update info
-													arrayInternals->mCount--;
-													arrayInternals->mReference++;
+													internals->mCount--;
+													internals->mReference++;
 
-													return arrayInternals;
+													return internals;
 												}
-				CArrayInternals*			removeAll()
+				Internals*					removeAll()
 												{
 													// Check if empty
 													if (mCount == 0)
@@ -215,16 +213,16 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 														return this;
 
 													// Prepare for write
-													CArrayInternals*	arrayInternals = prepareForWrite();
+													Internals*	internals = prepareForWrite();
 
 													// Remove all
-													arrayInternals->removeAllInternal();
+													internals->removeAllInternal();
 
 													// Update info
-													arrayInternals->mCount = 0;
-													arrayInternals->mReference++;
+													internals->mCount = 0;
+													internals->mReference++;
 
-													return arrayInternals;
+													return internals;
 												}
 				void						removeAllInternal()
 												{
@@ -241,15 +239,13 @@ class CArrayInternals : public TCopyOnWriteReferenceCountable<CArrayInternals> {
 				TIteratorS<CArray::ItemRef>	getIterator() const
 												{
 													// Setup
-													CArrayIteratorInfo*	iteratorInfo =
-																				new CArrayIteratorInfo(*this,
-																						mReference);
+													IteratorInfo*	iteratorInfo = new IteratorInfo(*this, mReference);
 
 													return TIteratorS<CArray::ItemRef>((mCount > 0) ? mItemRefs : nil,
 															(CIterator::AdvanceProc) iteratorAdvance, *iteratorInfo);
 												}
 
-		static	void*						iteratorAdvance(CArrayIteratorInfo& arrayIteratorInfo)
+		static	void*						iteratorAdvance(IteratorInfo& arrayIteratorInfo)
 												{
 													return (++arrayIteratorInfo.mCurrentIndex <
 																	arrayIteratorInfo.mInternals.mCount) ?
@@ -284,7 +280,7 @@ CArray::CArray(ItemCount initialCapacity, CopyProc copyProc, DisposeProc dispose
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CArrayInternals(initialCapacity, copyProc, disposeProc);
+	mInternals = new Internals(initialCapacity, copyProc, disposeProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

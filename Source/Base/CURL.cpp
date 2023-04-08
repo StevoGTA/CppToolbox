@@ -5,11 +5,11 @@
 #include "CURL.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CURLInternals
+// MARK: CURL::Internals
 
-class CURLInternals : public TReferenceCountable<CURLInternals> {
+class CURL::Internals : public TReferenceCountable<Internals> {
 	public:
-		CURLInternals(const CString& string) : TReferenceCountable(), mString(string) {}
+		Internals(const CString& string) : TReferenceCountable(), mString(string) {}
 
 		CString	mString;
 };
@@ -24,7 +24,7 @@ class CURLInternals : public TReferenceCountable<CURLInternals> {
 CURL::CURL(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CURLInternals(string);
+	mInternals = new Internals(string);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

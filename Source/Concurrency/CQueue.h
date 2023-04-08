@@ -18,7 +18,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSRSWBIPQueue
 
-class CSRSWBIPQueueInternals;
 class CSRSWBIPQueue : public CEquatable {
 	// Structs
 	public:
@@ -79,7 +78,8 @@ class CSRSWBIPQueue : public CEquatable {
 
 	// Properties
 	private:
-		CSRSWBIPQueueInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
  };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -139,7 +139,6 @@ template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSRSWBIPSegmentedQueue
 
-class CSRSWBIPSegmentedQueueInternals;
 class CSRSWBIPSegmentedQueue {
 	// Structs
 	public:
@@ -204,7 +203,8 @@ class CSRSWBIPSegmentedQueue {
 
 	// Properties
 	private:
-		CSRSWBIPSegmentedQueueInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
  };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -273,7 +273,6 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSRSWMessageQueues
 
-class CSRSWMessageQueuesInternals;
 class CSRSWMessageQueues {
 	// Methods
 	public:
@@ -289,5 +288,6 @@ class CSRSWMessageQueues {
 
 	// Properties
 	private:
-		CSRSWMessageQueuesInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };

@@ -7,11 +7,11 @@
 #include "TReferenceTracking.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CBitsInternals
+// MARK: CBits::Internals
 
-class CBitsInternals : public TCopyOnWriteReferenceCountable<CBitsInternals> {
+class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-				CBitsInternals(UInt32 count) :
+				Internals(UInt32 count) :
 					TCopyOnWriteReferenceCountable(), mUsed(count)
 					{
 						// Setup
@@ -19,14 +19,14 @@ class CBitsInternals : public TCopyOnWriteReferenceCountable<CBitsInternals> {
 						mAvailable = bytes * 8;
 						mStorage = (UInt8*) ::calloc(bytes, 1);
 					}
-				CBitsInternals(const CBitsInternals& other) :
+				Internals(const Internals& other) :
 					TCopyOnWriteReferenceCountable(), mAvailable(other.mAvailable), mUsed(other.mUsed)
 					{
 						// Copy storage
 						mStorage = (UInt8*) ::malloc(mAvailable / 8);
 						::memcpy(mStorage, other.mStorage, mAvailable / 8);
 					}
-				~CBitsInternals()
+				~Internals()
 					{
 						free(mStorage);
 					}
@@ -68,7 +68,7 @@ class CBitsInternals : public TCopyOnWriteReferenceCountable<CBitsInternals> {
 CBits::CBits(UInt32 count)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CBitsInternals(count);
+	mInternals = new Internals(count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

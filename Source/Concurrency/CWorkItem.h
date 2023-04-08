@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CWorkItem
 
-class CWorkItemInternals;
 class CWorkItem : public CHashable {
 	// Enums
 	public:
@@ -75,5 +74,6 @@ class CWorkItem : public CHashable {
 
 	// Properties
 	private:
-		CWorkItemInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };

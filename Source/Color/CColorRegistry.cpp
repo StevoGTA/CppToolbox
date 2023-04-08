@@ -8,11 +8,11 @@
 #include "CPreferences.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CColorGroupInternals
+// MARK: CColorGroup::Internals
 
-class CColorGroupInternals : public TReferenceCountable<CColorGroupInternals> {
+class CColorGroup::Internals : public TReferenceCountable<Internals> {
 	public:
-		CColorGroupInternals(OSType id, UInt32 displayIndex) :
+		Internals(OSType id, UInt32 displayIndex) :
 			TReferenceCountable(), mID(id), mDisplayIndex(displayIndex)
 			{}
 
@@ -31,7 +31,7 @@ class CColorGroupInternals : public TReferenceCountable<CColorGroupInternals> {
 CColorGroup::CColorGroup(OSType id, UInt32 displayIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorGroupInternals(id, displayIndex);
+	mInternals = new Internals(id, displayIndex);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -89,11 +89,11 @@ bool CColorGroup::compareDisplayIndexes(const CColorGroup& colorGroup1, const CC
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CColorSetInternals
+// MARK: - CColorSet::Internals
 
-class CColorSetInternals : public TReferenceCountable<CColorSetInternals> {
+class CColorSet::Internals : public TReferenceCountable<Internals> {
 	public:
-		CColorSetInternals(const CString& name, OV<OSType> id = OV<OSType>()) :
+		Internals(const CString& name, OV<OSType> id = OV<OSType>()) :
 			TReferenceCountable(), mName(name), mID(id), mColorsMap((SValue::OpaqueEqualsProc) CColor::areEqual)
 			{}
 
@@ -112,14 +112,14 @@ class CColorSetInternals : public TReferenceCountable<CColorSetInternals> {
 CColorSet::CColorSet(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorSetInternals(name);
+	mInternals = new Internals(name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CColorSet::CColorSet(OSType id)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorSetInternals(CString::mEmpty, OV<OSType>(id));
+	mInternals = new Internals(CString::mEmpty, OV<OSType>(id));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ CColorSet::CColorSet(const CDictionary& info)
 	CString		name = info.getString(CString(OSSTR("name")));
 
 	// Setup
-	mInternals = new CColorSetInternals(name);
+	mInternals = new Internals(name);
 
 	// Setup colors
 	TArray<CDictionary>	colorSetColorInfos = info.getArrayOfDictionaries(CString(OSSTR("colors")));
@@ -254,11 +254,11 @@ bool CColorSet::operator==(const CColorSet& other) const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CColorRegistryInternals
+// MARK: - CColorRegistry::Internals
 
-class CColorRegistryInternals {
+class CColorRegistry::Internals {
 	public:
-					CColorRegistryInternals(CNotificationCenter& notificationCenter,
+					Internals(CNotificationCenter& notificationCenter,
 							OI<CPreferences::Pref> pref = OI<CPreferences::Pref>()) :
 						mNotificationCenter(notificationCenter), mPref(pref)
 						{}
@@ -332,7 +332,7 @@ const	CString	CColorRegistry::mColorKey(OSSTR("color"));
 CColorRegistry::CColorRegistry(CNotificationCenter& notificationCenter)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorRegistryInternals(notificationCenter);
+	mInternals = new Internals(notificationCenter);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -340,7 +340,7 @@ CColorRegistry::CColorRegistry(CNotificationCenter& notificationCenter, const CP
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CColorRegistryInternals(notificationCenter, OI<CPreferences::Pref>(pref));
+	mInternals = new Internals(notificationCenter, OI<CPreferences::Pref>(pref));
 
 	// Load from prefs
 	OV<CDictionary>	info = CPreferences::mDefault.getDictionary(pref);
@@ -499,7 +499,7 @@ void CColorRegistry::setCurrentColorSetColor(OSType colorGroupID, OSType colorID
 	info.set(mColorIDKey, colorID);
 	info.set(mColorKey, &color);
 
-	mInternals->mNotificationCenter.queue(mColorChangedNotificationName, this, info);
+//	mInternals->mNotificationCenter.queue(mColorChangedNotificationName, this, info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CThread
 
-class CThreadInternals;
 class CThread {
 	// Types
 	public:
@@ -63,5 +62,6 @@ class CThread {
 
 	// Properties
 	private:
-		CThreadInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };

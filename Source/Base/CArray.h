@@ -13,7 +13,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CArray
 
-class CArrayInternals;
 class CArray : public CEquatable {
 	// Types:
 	public:
@@ -94,7 +93,10 @@ class CArray : public CEquatable {
 
 	// Properties
 	private:
-		CArrayInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
+
+		class IteratorInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

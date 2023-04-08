@@ -76,7 +76,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CWorkItemQueue
 
-class CWorkItemQueueInternals;
 class CWorkItemQueue {
 	// Methods
 	public:
@@ -109,5 +108,9 @@ class CWorkItemQueue {
 
 	// Properties
 	private:
-		CWorkItemQueueInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
+
+		class WorkItemInfo;
+		class WorkItemThread;
 };

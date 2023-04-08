@@ -11,11 +11,11 @@
 #include <pthread.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CThreadInternals
+// MARK: CThread::Internals
 
-class CThreadInternals {
+class CThread::Internals {
 	public:
-						CThreadInternals(CThread& thread, CThread::ThreadProc threadProc, void* userData,
+						Internals(CThread& thread, CThread::ThreadProc threadProc, void* userData,
 								const CString& name) :
 							mIsRunning(true), mThreadProc(threadProc), mThreadProcUserData(userData), mThreadName(name),
 									mThread(thread),
@@ -25,19 +25,18 @@ class CThreadInternals {
 		static	void*	threadProc(void* userData)
 							{
 								// Setup
-								CThreadInternals&	threadInternals = *((CThreadInternals*) userData);
+								Internals&	internals = *((Internals*) userData);
 
 								// Check if have name
-								if (!threadInternals.mThreadName.isEmpty())
+								if (!internals.mThreadName.isEmpty())
 									// Set name
-									::pthread_setname_np(*threadInternals.mThreadName.getCString());
+									::pthread_setname_np(*internals.mThreadName.getCString());
 
 								// Call proc
-								threadInternals.mThreadProc(threadInternals.mThread,
-										threadInternals.mThreadProcUserData);
+								internals.mThreadProc(internals.mThread, internals.mThreadProcUserData);
 
 								// Not running
-								threadInternals.mIsRunning = false;
+								internals.mIsRunning = false;
 
 								return nil;
 							}
@@ -53,7 +52,7 @@ class CThreadInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CThreadInternals
+// MARK: - CThread
 
 // MARK: Lifecycle methods
 
@@ -62,7 +61,7 @@ CThread::CThread(ThreadProc threadProc, void* userData, const CString& name, Opt
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
-	mInternals = new CThreadInternals(*this, threadProc, userData, name);
+	mInternals = new Internals(*this, threadProc, userData, name);
 
 	// Check options
 	if (options & kOptionsAutoStart)
@@ -75,7 +74,7 @@ CThread::CThread(const CString& name, Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
-	mInternals = new CThreadInternals(*this, CThread::runThreadProc, nil, name);
+	mInternals = new Internals(*this, CThread::runThreadProc, nil, name);
 
 	// Check options
 	if (options & kOptionsAutoStart)
@@ -118,7 +117,7 @@ void CThread::start()
 	}
 
 	// Create thread
-	result = ::pthread_create(&mInternals->mPThread, &attr, CThreadInternals::threadProc, mInternals);
+	result = ::pthread_create(&mInternals->mPThread, &attr, Internals::threadProc, mInternals);
 	::pthread_attr_destroy(&attr);
 	if (result != 0)
 		LogError(SErrorFromPOSIXerror(result), "creating pthread");

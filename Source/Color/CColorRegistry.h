@@ -13,7 +13,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CColorGroup
 
-class CColorGroupInternals;
 class CColorGroup {
 	// Methods
 	public:
@@ -35,13 +34,13 @@ class CColorGroup {
 
 	// Properties
 	private:
-		CColorGroupInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorSet
 
-class CColorSetInternals;
 class CColorSet {
 	// Methods
 	public:
@@ -71,13 +70,13 @@ class CColorSet {
 
 	// Properties
 	private:
-		CColorSetInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorRegistry
 
-class CColorRegistryInternals;
 class CColorRegistry {
 	// Notifications
 	public:
@@ -120,5 +119,6 @@ class CColorRegistry {
 
 	// Properties
 	private:
-		CColorRegistryInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };

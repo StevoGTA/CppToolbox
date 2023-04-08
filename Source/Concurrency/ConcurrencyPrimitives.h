@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CLock
 
-class CLockInternals;
 class CLock {
 	// Methods
 	public:
@@ -24,13 +23,13 @@ class CLock {
 
 	// Properties
 	private:
-		CLockInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CReadPreferringLock
 
-class CReadPreferringLockInternals;
 class CReadPreferringLock {
 	// Methods
 	public:
@@ -46,13 +45,13 @@ class CReadPreferringLock {
 
 	// Properties
 	private:
-		CReadPreferringLockInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSemaphore
 
-class CSemaphoreInternals;
 class CSemaphore {
 	// Methods
 	public:
@@ -67,13 +66,13 @@ class CSemaphore {
 
 	// Properties
 	private:
-		CSemaphoreInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSharedResource
 
-class CSharedResourceInternals;
 class CSharedResource {
 	// Methods
 	public:
@@ -87,5 +86,6 @@ class CSharedResource {
 
 	// Properties
 	private:
-		CSharedResourceInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };

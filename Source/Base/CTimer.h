@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CTimer
 
-class CTimerInternals;
 class CTimer {
 	// Procs
 	public:
@@ -37,5 +36,6 @@ class CTimer {
 
 	// Properties
 	private:
-		CTimerInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };

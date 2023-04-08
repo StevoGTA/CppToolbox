@@ -7,13 +7,13 @@
 #include <pthread.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CLockInternals
+// MARK: CLock::Internals
 
-class CLockInternals {
+class CLock::Internals {
 	public:
-		CLockInternals()
+		Internals()
 			{ ::pthread_mutex_init(&mMutex, nil); }
-		~CLockInternals()
+		~Internals()
 			{ ::pthread_mutex_destroy(&mMutex); }
 
 		pthread_mutex_t	mMutex;
@@ -29,7 +29,7 @@ class CLockInternals {
 CLock::CLock()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CLockInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,13 +64,13 @@ void CLock::unlock() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CReadPreferringLockInternals
+// MARK: - CReadPreferringLock::Internals
 
-class CReadPreferringLockInternals {
+class CReadPreferringLock::Internals {
 	public:
-		CReadPreferringLockInternals()
+		Internals()
 			{ ::pthread_rwlock_init(&mRWLock, nil); }
-		~CReadPreferringLockInternals()
+		~Internals()
 			{ pthread_rwlock_destroy(&mRWLock); }
 
 		pthread_rwlock_t	mRWLock;
@@ -86,7 +86,7 @@ class CReadPreferringLockInternals {
 CReadPreferringLock::CReadPreferringLock()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CReadPreferringLockInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -128,16 +128,16 @@ void CReadPreferringLock::unlockForWriting() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSemaphoreInternals
+// MARK: - CSemaphore::Internals
 
-class CSemaphoreInternals {
+class CSemaphore::Internals {
 	public:
-		CSemaphoreInternals()
+		Internals()
 			{
 				::pthread_cond_init(&mCond, nil);
 				::pthread_mutex_init(&mMutex, nil);
 			}
-		~CSemaphoreInternals()
+		~Internals()
 			{
 				::pthread_cond_destroy(&mCond);
 				::pthread_mutex_destroy(&mMutex);
@@ -157,7 +157,7 @@ class CSemaphoreInternals {
 CSemaphore::CSemaphore()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSemaphoreInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

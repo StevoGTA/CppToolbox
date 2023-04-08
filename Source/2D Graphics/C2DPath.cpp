@@ -20,12 +20,12 @@ enum E2DPathSegmentType {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - C2DPathInternals
+// MARK: - C2DPath::Internals
 
-class C2DPathInternals {
+class C2DPath::Internals {
 	public:
-				C2DPathInternals() {}
-				~C2DPathInternals() {}
+				Internals() {}
+				~Internals() {}
 
 		void	appendPathSegment(E2DPathSegmentType pathSegmentType, const CData& data)
 					{
@@ -46,14 +46,14 @@ class C2DPathInternals {
 C2DPath::C2DPath()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new C2DPathInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 C2DPath::C2DPath(const C2DPath& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new C2DPathInternals();
+	mInternals = new Internals();
 	mInternals->mPathSegmentData = other.mInternals->mPathSegmentData;
 }
 

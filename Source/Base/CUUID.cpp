@@ -13,13 +13,13 @@ extern	CUUID::Bytes	eCreateUUIDBytes();
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CUUIDInternals
+// MARK: - CUUID::Internals
 
-class CUUIDInternals : public TReferenceCountable<CUUIDInternals> {
+class CUUID::Internals : public TReferenceCountable<Internals> {
 	public:
-		CUUIDInternals() : TReferenceCountable(), mUUIDBytes(eCreateUUIDBytes()) {}
-		CUUIDInternals(const CUUID::Bytes& uuidBytes) : TReferenceCountable(), mUUIDBytes(uuidBytes) {}
-		CUUIDInternals(const CData& data) : TReferenceCountable()
+		Internals() : TReferenceCountable(), mUUIDBytes(eCreateUUIDBytes()) {}
+		Internals(const CUUID::Bytes& uuidBytes) : TReferenceCountable(), mUUIDBytes(uuidBytes) {}
+		Internals(const CData& data) : TReferenceCountable()
 			{
 				// Check if data is correct size
 				AssertFailIf(data.getByteCount() != 16);
@@ -32,7 +32,7 @@ class CUUIDInternals : public TReferenceCountable<CUUIDInternals> {
 					// Data is not correct size
 					mUUIDBytes = eCreateUUIDBytes();
 			}
-		CUUIDInternals(const CString& string) : TReferenceCountable()
+		Internals(const CString& string) : TReferenceCountable()
 			{
 				// Check length
 				if (string.getLength() == 36) {
@@ -64,28 +64,28 @@ const	CUUID	CUUID::mZero(CString(OSSTR("00000000-0000-0000-0000-000000000000")))
 CUUID::CUUID()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CUUIDInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CUUID::CUUID(const Bytes& bytes)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CUUIDInternals(bytes);
+	mInternals = new Internals(bytes);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CUUID::CUUID(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CUUIDInternals(data);
+	mInternals = new Internals(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CUUID::CUUID(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CUUIDInternals(string);
+	mInternals = new Internals(string);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

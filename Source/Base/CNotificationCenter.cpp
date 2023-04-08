@@ -24,11 +24,11 @@ struct SNotificationObserverFullInfo {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CNotificationCenterInternals
+// MARK: - CNotificationCenter::Internals
 
-class CNotificationCenterInternals {
+class CNotificationCenter::Internals {
 	public:
-				CNotificationCenterInternals() {}
+				Internals() {}
 
 		void	registerObserver(const CString& notificationName, const OI<CNotificationCenter::Sender>& sender,
 						const CNotificationCenter::Observer& observer)
@@ -115,7 +115,7 @@ CNotificationCenter::CNotificationCenter()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CNotificationCenterInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

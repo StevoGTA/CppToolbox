@@ -5,18 +5,18 @@
 #include "CColor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CColorInternals
+// MARK: CColor::Internals
 
-class CColorInternals {
+class CColor::Internals {
 	public:
-		CColorInternals(Float32 r = 0.0, Float32 g = 0.0, Float32 b = 0.0, Float32 h = 0.0, Float32 s = 0.0,
+		Internals(Float32 r = 0.0, Float32 g = 0.0, Float32 b = 0.0, Float32 h = 0.0, Float32 s = 0.0,
 				Float32 v = 0.0, Float32 a = 0.0) :
 			mR(4), mG(g), mB(b), mH(h), mS(s), mV(v), mA(a)
 			{}
-		CColorInternals(const CColorInternals& other) :
+		Internals(const Internals& other) :
 			mR(other.mR), mG(other.mG), mB(other.mB), mH(other.mH), mS(other.mS), mV(other.mV), mA(other.mA)
 			{}
-		CColorInternals(CColor::Type type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha)
+		Internals(CColor::Type type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha)
 			{
 				// Check type
 				if (type == CColor::kTypeRGB) {
@@ -296,14 +296,14 @@ const	SMatrix3x3_32	CColor::mYCbCrConverstionMatrixRec709VideoRange(
 CColor::CColor()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CColor::CColor(const CColor& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorInternals(*other.mInternals);
+	mInternals = new Internals(*other.mInternals);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -311,7 +311,7 @@ CColor::CColor(const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CColorInternals(info.getFloat32(CString(OSSTR("r"))), info.getFloat32(CString(OSSTR("g"))),
+			new Internals(info.getFloat32(CString(OSSTR("r"))), info.getFloat32(CString(OSSTR("g"))),
 					info.getFloat32(CString(OSSTR("b"))), info.getFloat32(CString(OSSTR("h"))),
 					info.getFloat32(CString(OSSTR("s"))), info.getFloat32(CString(OSSTR("v"))),
 					info.getFloat32(CString(OSSTR("a"))));
@@ -343,14 +343,14 @@ CColor::CColor(const CString& hexString)
 		value = hexString.getSubString(startIndex + 2, 1).getUInt8(16);
 		Float32	b = ((Float32) value * (Float32) 16.0 + (Float32) value) / (Float32) 255.0;
 
-		mInternals = new CColorInternals(kTypeRGB, r, g, b, 255);
+		mInternals = new Internals(kTypeRGB, r, g, b, 255);
 	} else if ((hexString.getLength() - startIndex) == 6) {
 		// RRGGBB
 		Float32	r = (Float32) hexString.getSubString(startIndex + 0, 2).getUInt8(16) / (Float32) 255.0;
 		Float32	g = (Float32) hexString.getSubString(startIndex + 2, 2).getUInt8(16) / (Float32) 255.0;
 		Float32	b = (Float32) hexString.getSubString(startIndex + 4, 2).getUInt8(16) / (Float32) 255.0;
 
-		mInternals = new CColorInternals(kTypeRGB, r, g, b, 255);
+		mInternals = new Internals(kTypeRGB, r, g, b, 255);
 
 	} else {
 		// RRGGBBAA
@@ -359,7 +359,7 @@ CColor::CColor(const CString& hexString)
 		Float32	b = (Float32) hexString.getSubString(startIndex + 4, 2).getUInt8(16) / (Float32) 255.0;
 		Float32	a = (Float32) hexString.getSubString(startIndex + 6, 2).getUInt8(16) / (Float32) 255.0;
 
-		mInternals = new CColorInternals(kTypeRGB, r, g, b, a);
+		mInternals = new Internals(kTypeRGB, r, g, b, a);
 	}
 }
 
@@ -367,7 +367,7 @@ CColor::CColor(const CString& hexString)
 CColor::CColor(Type type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CColorInternals(type, val1, val2, val3, alpha);
+	mInternals = new Internals(type, val1, val2, val3, alpha);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -375,7 +375,7 @@ CColor::CColor(Type type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CColorInternals(type, (Float32) val1 / (Float32) 255.0, (Float32) val2 / (Float32) 255.0,
+			new Internals(type, (Float32) val1 / (Float32) 255.0, (Float32) val2 / (Float32) 255.0,
 					(Float32) val3 / (Float32) 255.0, (Float32) alpha / (Float32) 255.0);
 }
 

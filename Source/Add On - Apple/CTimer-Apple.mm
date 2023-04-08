@@ -7,10 +7,10 @@
 #import <Foundation/Foundation.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CTimerInternals
-class CTimerInternals {
+// MARK: CTimer::Internals
+class CTimer::Internals {
 	public:
-		CTimerInternals(CTimer& timer, UniversalTimeInterval interval, bool repeats, CTimer::Proc proc,
+		Internals(CTimer& timer, UniversalTimeInterval interval, bool repeats, CTimer::Proc proc,
 				void* userData)
 			{
 				// Setup
@@ -34,7 +34,7 @@ class CTimerInternals {
 				mDispatchSourceTimer = (void*) ::CFBridgingRetain(dispatchSourceTimer);
 				mIsResumed = false;
 			}
-		~CTimerInternals()
+		~Internals()
 			{
 				// Cleanup
 				if (mDispatchSourceTimer != nil) {
@@ -59,7 +59,7 @@ CTimer::CTimer(UniversalTimeInterval interval, Proc proc, void* userData, bool r
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CTimerInternals(*this, interval, repeats, proc, userData);
+	mInternals = new Internals(*this, interval, repeats, proc, userData);
 
 	// Check options
 	if (options & kOptionsAutoResume)

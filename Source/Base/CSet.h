@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSet
 
-class CSetInternals;
 class CSet {
 	// Types
 	public:
@@ -54,7 +53,10 @@ class CSet {
 
 	// Properties
 	private:
-		CSetInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
+
+		class IteratorInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

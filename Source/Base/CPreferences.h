@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CPreferences
 
-class CPreferencesInternals;
 class CPreferences {
 	// Structs
 	public:
@@ -163,14 +162,15 @@ class CPreferences {
 
 	// Properties
 	public:
-		static			CPreferences			mDefault;
+		static			CPreferences	mDefault;
 
-		static	const	Pref					mNoPref;
-		static	const	StringPref				mNoStringPref;
-		static	const	Float32Pref				mNoFloat32Pref;
-		static	const	Float64Pref				mNoFloat64Pref;
-		static	const	UInt32Pref				mNoUInt32Pref;
+		static	const	Pref			mNoPref;
+		static	const	StringPref		mNoStringPref;
+		static	const	Float32Pref		mNoFloat32Pref;
+		static	const	Float64Pref		mNoFloat64Pref;
+		static	const	UInt32Pref		mNoUInt32Pref;
 
 	private:
-						CPreferencesInternals*	mInternals;
+		class Internals;
+						Internals*		mInternals;
 };

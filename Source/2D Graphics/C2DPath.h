@@ -14,7 +14,6 @@
 //		segments.  A 2D Path begins with a startPoint.  Each additional segment moves to a new point which can be
 //		queried as the currentPoint.
 
-class C2DPathInternals;
 class C2DPath {
 	// Methods
 	public:
@@ -46,7 +45,8 @@ class C2DPath {
 
 	// Properties
 	private:
-		C2DPathInternals*	mInternals;
+		class	Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

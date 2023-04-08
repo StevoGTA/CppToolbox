@@ -11,7 +11,6 @@
 
 class CString;
 
-class CDataInternals;
 class CData {
 	// Types
 	public:
@@ -59,9 +58,10 @@ class CData {
 
 	// Properties
 	public:
-		static	const	CData			mEmpty;
-		static	const	CData			mZeroByte;
+		static	const	CData		mEmpty;
+		static	const	CData		mZeroByte;
 
 	private:
-						CDataInternals*	mInternals;
+		class Internals;
+						Internals*	mInternals;
 };

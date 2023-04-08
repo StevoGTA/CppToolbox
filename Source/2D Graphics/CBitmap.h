@@ -11,7 +11,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CBitmap
 
-class CBitmapInternals;
 class CBitmap {
 	// Format
 	public:
@@ -146,5 +145,6 @@ class CBitmap {
 
 	// Properties
 	private:
-		CBitmapInternals*	mInternals;
+		class	Internals;
+		Internals*	mInternals;
 };

@@ -5,12 +5,12 @@
 #include "ConcurrencyPrimitives.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSharedResourceInternals
+// MARK: CSharedResource::Internals
 
-class CSharedResourceInternals {
+class CSharedResource::Internals {
 	public:
-		CSharedResourceInternals(UInt32 count) : mSemaphore(::dispatch_semaphore_create(count)) {}
-		~CSharedResourceInternals()
+		Internals(UInt32 count) : mSemaphore(::dispatch_semaphore_create(count)) {}
+		~Internals()
 			{ ::dispatch_release(mSemaphore); }
 
 		dispatch_semaphore_t	mSemaphore;
@@ -26,7 +26,7 @@ class CSharedResourceInternals {
 CSharedResource::CSharedResource(UInt32 count)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSharedResourceInternals(count);
+	mInternals = new Internals(count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

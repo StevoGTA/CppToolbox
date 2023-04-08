@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CNotificationCenter
 
-class CNotificationCenterInternals;
 class CNotificationCenter {
 	// Sender
 	public:
@@ -98,7 +97,8 @@ class CNotificationCenter {
 
 	// Properties
 	private:
-		CNotificationCenterInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -49,11 +49,11 @@ static	void	sLogToConsoleOutput(const CString& string);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CLogFileInternals
+// MARK: - CLogFile::Internals
 
-class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
+class CLogFile::Internals : public TReferenceCountable<Internals> {
 	public:
-						CLogFileInternals(const CFile& file) :
+						Internals(const CFile& file) :
 							TReferenceCountable(), mFile(file), mFileWriter(mFile),
 									mIsActive(true),
 									mWriteThread((CThread::ThreadProc) write, this, CString(OSSTR("CLogFile Writer")),
@@ -71,7 +71,7 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 									fprintf(stderr, "Unable to open log file at %s\n",
 											*mFile.getFilesystemPath().getString().getCString());
 							}
-						~CLogFileInternals()
+						~Internals()
 							{
 								// Stop writer thread
 								mIsActive = false;
@@ -100,7 +100,7 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 								mWriteSemaphore.signal();
 							}
 
-		static	void	write(CThread& thread, CLogFileInternals* logFileInternals)
+		static	void	write(CThread& thread, Internals* logFileInternals)
 							{
 								// While active
 								while (logFileInternals->mIsActive || !logFileInternals->mStrings.isEmpty()) {
@@ -138,7 +138,7 @@ class CLogFileInternals : public TReferenceCountable<CLogFileInternals> {
 CLogFile::CLogFile(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CLogFileInternals(file);
+	mInternals = new Internals(file);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -7,11 +7,11 @@
 #include "ConcurrencyPrimitives.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CWorkItemInternals
+// MARK: CWorkItem::Internals
 
-class CWorkItemInternals {
+class CWorkItem::Internals {
 	public:
-		CWorkItemInternals(const CString& id, const OV<CString>& reference, CWorkItem::CompletedProc completedProc,
+		Internals(const CString& id, const OV<CString>& reference, CWorkItem::CompletedProc completedProc,
 				CWorkItem::CancelledProc cancelledProc, void* userData) :
 			mID(id), mReference(reference), mCompletedProc(completedProc), mCancelledProc(cancelledProc),
 					mUserData(userData),
@@ -39,7 +39,7 @@ CWorkItem::CWorkItem(const CString& id, const OV<CString>& reference, CompletedP
 		CancelledProc cancelledProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CWorkItemInternals(id, reference, completedProc, cancelledProc, userData);
+	mInternals = new Internals(id, reference, completedProc, cancelledProc, userData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -28,13 +28,13 @@ struct SSetItemInfo {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSetIteratorInfo
+// MARK: - CSet::IteratorInfo
 
-struct CSetIteratorInfo : public CIterator::Info {
+struct CSet::IteratorInfo : public CIterator::Info {
 	// Methods
 	public:
 						// Lifecycle methods
-						CSetIteratorInfo(const CSetInternals& internals, UInt32 initialReference) :
+						IteratorInfo(const Internals& internals, UInt32 initialReference) :
 							CIterator::Info(),
 									mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0),
 									mCurrentItemInfo(nil)
@@ -44,7 +44,7 @@ struct CSetIteratorInfo : public CIterator::Info {
 	CIterator::Info*	copy()
 							{
 								// Make copy
-								CSetIteratorInfo*	iteratorInfo = new CSetIteratorInfo(mInternals, mInitialReference);
+								IteratorInfo*	iteratorInfo = new IteratorInfo(mInternals, mInitialReference);
 								iteratorInfo->mCurrentIndex = mCurrentIndex;
 								iteratorInfo->mCurrentItemInfo = mCurrentItemInfo;
 
@@ -52,7 +52,7 @@ struct CSetIteratorInfo : public CIterator::Info {
 							}
 
 	// Properties
-	const	CSetInternals&	mInternals;
+	const	Internals&		mInternals;
 			UInt32			mInitialReference;
 			UInt32			mCurrentIndex;
 			SSetItemInfo*	mCurrentItemInfo;
@@ -60,11 +60,11 @@ struct CSetIteratorInfo : public CIterator::Info {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSetInternals
+// MARK: - CSet::Internals
 
-class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
+class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-										CSetInternals(CSet::CopyProc copyProc, CSet::DisposeProc disposeProc) :
+										Internals(CSet::CopyProc copyProc, CSet::DisposeProc disposeProc) :
 											TCopyOnWriteReferenceCountable(),
 													mCopyProc(copyProc), mDisposeProc(disposeProc),
 													mCount(0), mReference(0), mItemInfosCount(16)
@@ -73,7 +73,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 														(SSetItemInfo**)
 																::calloc(mItemInfosCount, sizeof(SSetItemInfo*));
 											}
-										CSetInternals(const CSetInternals& other) :
+										Internals(const Internals& other) :
 											TCopyOnWriteReferenceCountable(),
 													mCopyProc(other.mCopyProc), mDisposeProc(other.mDisposeProc),
 													mReference(0),
@@ -87,7 +87,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 												for (UInt32 i = 0; i < mItemInfosCount; i++) {
 													// Setup for this linked list
 													SSetItemInfo*	itemInfo = other.mItemInfos[i];
-													SSetItemInfo*	setInternalsItemInfo = nil;
+													SSetItemInfo*	internalsItemInfo = nil;
 
 													while (itemInfo != nil) {
 														// Clone
@@ -98,19 +98,19 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 																								itemInfo->mHashable);
 
 														// Check for first in the linked list
-														if (setInternalsItemInfo == nil) {
+														if (internalsItemInfo == nil) {
 															// First in this linked list
 															mItemInfos[i] = setItemInfo;
-															setInternalsItemInfo = mItemInfos[i];
+															internalsItemInfo = mItemInfos[i];
 														} else {
 															// Next one in this linked list
-															setInternalsItemInfo->mNextItemInfo = setItemInfo;
-															setInternalsItemInfo = setInternalsItemInfo->mNextItemInfo;
+															internalsItemInfo->mNextItemInfo = setItemInfo;
+															internalsItemInfo = internalsItemInfo->mNextItemInfo;
 														}
 													}
 												}
 											}
-										~CSetInternals()
+										~Internals()
 											{
 												// Iterate all item infos
 												for (UInt32 i = 0; i < mItemInfosCount; i++) {
@@ -123,14 +123,14 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 												::free(mItemInfos);
 											}
 
-				CSetInternals*			insert(const CHashable& hashable)
+				Internals*				insert(const CHashable& hashable)
 											{
 												// Prepare for write
-												CSetInternals*	setInternals = prepareForWrite();
+												Internals*	internals = prepareForWrite();
 
 												// Setup
 												UInt32			hashValue = CHasher::getValueForHashable(hashable);
-												UInt32			index = hashValue & (setInternals->mItemInfosCount - 1);
+												UInt32			index = hashValue & (internals->mItemInfosCount - 1);
 												SSetItemInfo*	setItemInfo =
 																		new SSetItemInfo(hashValue,
 																				(mCopyProc != nil) ?
@@ -139,7 +139,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 
 												// Find
 												SSetItemInfo*	previousItemInfo = nil;
-												SSetItemInfo*	currentItemInfo = setInternals->mItemInfos[index];
+												SSetItemInfo*	currentItemInfo = internals->mItemInfos[index];
 												while ((currentItemInfo != nil) &&
 														!currentItemInfo->doesMatch(hashValue, hashable)) {
 													// Next in linked list
@@ -152,17 +152,17 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 													// Did not find
 													if (previousItemInfo == nil)
 														// First one
-														setInternals->mItemInfos[index] = setItemInfo;
+														internals->mItemInfos[index] = setItemInfo;
 													else
 														// Add to the end
 														previousItemInfo->mNextItemInfo = setItemInfo;
 
 													// Update info
-													setInternals->mCount++;
-													setInternals->mReference++;
+													internals->mCount++;
+													internals->mReference++;
 												}
 
-												return setInternals;
+												return internals;
 											}
 				bool					contains(const CHashable& hashable)
 											{
@@ -178,18 +178,18 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 
 												return itemInfo != nil;
 											}
-				CSetInternals*			remove(const CHashable& hashable)
+				Internals*				remove(const CHashable& hashable)
 											{
 												// Prepare for write
-												CSetInternals*	setInternals = prepareForWrite();
+												Internals*	internals = prepareForWrite();
 
 												// Setup
 												UInt32	hashValue = CHasher::getValueForHashable(hashable);
-												UInt32	index = hashValue & (setInternals->mItemInfosCount - 1);
+												UInt32	index = hashValue & (internals->mItemInfosCount - 1);
 
 												// Find
 												SSetItemInfo*	previousItemInfo = nil;
-												SSetItemInfo*	currentItemInfo = setInternals->mItemInfos[index];
+												SSetItemInfo*	currentItemInfo = internals->mItemInfos[index];
 												while ((currentItemInfo != nil) &&
 														!currentItemInfo->doesMatch(hashValue, hashable)) {
 													// Next in linked list
@@ -202,7 +202,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 													// Remove
 													if (previousItemInfo == nil)
 														// First in linked list
-														setInternals->mItemInfos[index] =
+														internals->mItemInfos[index] =
 																currentItemInfo->mNextItemInfo;
 													else
 														// Some other item info in linked list
@@ -218,34 +218,34 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 													Delete(currentItemInfo);
 
 													// Update info
-													setInternals->mCount--;
-													setInternals->mReference++;
+													internals->mCount--;
+													internals->mReference++;
 												}
 
-												return setInternals;
+												return internals;
 											}
-				CSetInternals*			removeAll()
+				Internals*				removeAll()
 											{
 												// Prepare for write
-												CSetInternals*	setInternals = prepareForWrite();
+												Internals*	internals = prepareForWrite();
 
 												// Iterate all item infos
-												for (UInt32 i = 0; i < setInternals->mItemInfosCount; i++) {
+												for (UInt32 i = 0; i < internals->mItemInfosCount; i++) {
 													// Check if have an item info
-													if (setInternals->mItemInfos[i] != nil) {
+													if (internals->mItemInfos[i] != nil) {
 														// Remove this chain
-														remove(setInternals->mItemInfos[i]);
+														remove(internals->mItemInfos[i]);
 
 														// Clear
-														setInternals->mItemInfos[i] = nil;
+														internals->mItemInfos[i] = nil;
 													}
 												}
 
 												// Update info
-												setInternals->mCount = 0;
-												setInternals->mReference++;
+												internals->mCount = 0;
+												internals->mReference++;
 
-												return setInternals;
+												return internals;
 											}
 				void					remove(SSetItemInfo* itemInfo)
 											{
@@ -266,8 +266,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 				TIteratorS<CHashable>	getIterator() const
 											{
 												// Setup
-												CSetIteratorInfo*	iteratorInfo =
-																			new CSetIteratorInfo(*this, mReference);
+												IteratorInfo*	iteratorInfo = new IteratorInfo(*this, mReference);
 
 												// Find first item info
 												while ((mItemInfos[iteratorInfo->mCurrentIndex] == nil) &&
@@ -290,7 +289,7 @@ class CSetInternals : public TCopyOnWriteReferenceCountable<CSetInternals> {
 		static	void*					iteratorAdvance(CIterator::Info& iteratorInfo)
 											{
 												// Setup
-												CSetIteratorInfo&	setIteratorInfo = (CSetIteratorInfo&) iteratorInfo;
+												IteratorInfo&	setIteratorInfo = (IteratorInfo&) iteratorInfo;
 
 												// Internals check
 												AssertFailIf(setIteratorInfo.mInitialReference !=
@@ -346,7 +345,7 @@ CSet::CSet(CopyProc copyProc, DisposeProc disposeProc)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CSetInternals(copyProc, disposeProc);
+	mInternals = new Internals(copyProc, disposeProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

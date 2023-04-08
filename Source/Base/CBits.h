@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CBits
 
-class CBitsInternals;
 class CBits {
 	// Methods
 	public:
@@ -27,5 +26,6 @@ class CBits {
 
 	// Properties
 	private:
-		CBitsInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };

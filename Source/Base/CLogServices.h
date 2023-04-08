@@ -52,7 +52,6 @@
 
 class CFile;
 
-class CLogFileInternals;
 class CLogFile {
 	// Methods
 	public:
@@ -78,7 +77,8 @@ class CLogFile {
 
 	// Properties
 	private:
-		CLogFileInternals*	mInternals;
+		class Internals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
