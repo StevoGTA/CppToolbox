@@ -8,7 +8,7 @@
 // MARK: EAudioChannelMap
 
 //----------------------------------------------------------------------------------------------------------------------
-const CString eChannelMapGetDescription(EAudioChannelMap audioChannelMap)
+const CString eAudioChannelMapGetDescription(EAudioChannelMap audioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check channel map

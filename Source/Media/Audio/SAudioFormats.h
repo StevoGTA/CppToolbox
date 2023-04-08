@@ -118,7 +118,7 @@ enum EAudioChannelMap : UInt16 {
 #define AUDIOCHANNELMAP_ISUNKNOWN(CHANNELMAP)		((CHANNELMAP & 0xFF00) == 0x0000)
 #define AUDIOCHANNELMAP_CHANNELCOUNT(CHANNELMAP)	(CHANNELMAP & 0x00FF)
 
-extern	const	CString	eChannelMapGetDescription(EAudioChannelMap audioChannelMap);
+extern	const	CString	eAudioChannelMapGetDescription(EAudioChannelMap audioChannelMap);
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SAudioStorageFormat
@@ -171,7 +171,7 @@ struct SAudioStorageFormat {
 								description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
 								description +=
 										CString(AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap)) + CString(OSSTR(" (")) +
-												eChannelMapGetDescription(mAudioChannelMap) + CString(OSSTR(")"));
+												eAudioChannelMapGetDescription(mAudioChannelMap) + CString(OSSTR(")"));
 
 								return description;
 							}
@@ -265,7 +265,8 @@ struct SAudioProcessingFormat {
 									description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
 									description +=
 											CString(AUDIOCHANNELMAP_CHANNELCOUNT(mAudioChannelMap)) +
-													CString(OSSTR(" (")) + eChannelMapGetDescription(mAudioChannelMap) +
+													CString(OSSTR(" (")) +
+													eAudioChannelMapGetDescription(mAudioChannelMap) +
 													CString(OSSTR("), "));
 									description +=
 											(mEndian == kEndianBig) ?

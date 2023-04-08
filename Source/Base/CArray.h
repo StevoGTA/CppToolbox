@@ -322,6 +322,8 @@ template <typename T> class TSArray : public TArray<T> {
 			{ for (CArray::ItemIndex i = 0; i < itemCount; CArray::add(&items[i++])) ; }
 };
 
+#define TSARRAY_FROM_C_ARRAY(T, array)	TSArray<T>(array, sizeof(array) / sizeof(T))
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TMArray (TArray which can be modified)
 
