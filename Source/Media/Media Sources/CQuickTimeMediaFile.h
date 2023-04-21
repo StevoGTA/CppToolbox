@@ -27,9 +27,6 @@ class CQuickTimeMediaFile {
 																	const OV<UInt32>& bytesPerPacket = OV<UInt32>())
 																	const;
 
-															// Class methods
-		static	I<CQuickTimeMediaFile>						create();
-
 	protected:
 															// Lifecycle methods
 															CQuickTimeMediaFile() {}
@@ -55,4 +52,8 @@ class CQuickTimeMediaFile {
 				Float32										getSampleRate(const Internals& internals) const;
 				UInt8										getChannels(const Internals& internals) const;
 				TVResult<CData>								getAudioDecompressionData(const Internals& internals) const;
+
+	// Properties
+	public:
+		static	OSType	mID;
 };

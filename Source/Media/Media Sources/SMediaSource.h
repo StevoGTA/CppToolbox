@@ -20,6 +20,31 @@ struct SMediaSource {
 		kOptionsLast			= kOptionsCreateDecoders,
 	};
 
+	// Identity
+	struct Identity {
+				// Lifecycle methods
+				Identity(OSType id, const CString& localizationGroup, const CString& localizationKey) :
+					mID(id), mLocalizationGroup(localizationGroup), mLocalizationKey(localizationKey)
+					{}
+				Identity(OSType id, const CString& name) : mID(id), mName(name) {}
+				Identity(const Identity& other) :
+					mID(other.mID), mName(other.mName), mLocalizationGroup(other.mLocalizationGroup),
+							mLocalizationKey(other.mLocalizationKey)
+					{}
+
+		OSType	getID() const
+					{ return mID; }
+		CString	getName() const
+					{ return mName.hasValue() ? *mName : CString(*mLocalizationGroup, *mLocalizationKey); }
+
+		// Properties
+		private:
+			OSType		mID;
+			OV<CString>	mName;
+			OV<CString>	mLocalizationGroup;
+			OV<CString>	mLocalizationKey;
+	};
+
 	// ImportSetup
 	struct ImportSetup {
 											// Lifecycle methods
@@ -63,9 +88,10 @@ struct SMediaSource {
 		public:
 
 									// Lifecycle methods
-									ImportResult(const CMediaTrackInfos& mediaTrackInfos,
-											const TArray<CString>& messages) :
-										mResult(kSuccess), mMediaTrackInfos(mediaTrackInfos), mMessages(messages)
+									ImportResult(OSType mediaSourceID, const CMediaTrackInfos& mediaTrackInfos,
+											const TArray<CString>& messages = TNArray<CString>()) :
+										mResult(kSuccess), mMediaSourceID(mediaSourceID),
+												mMediaTrackInfos(mediaTrackInfos), mMessages(messages)
 										{}
 									ImportResult(const SError& error) :
 										mResult(kSourceMatchButUnableToLoad), mError(error)
@@ -75,6 +101,8 @@ struct SMediaSource {
 									// Instance methods
 		const	Result				getResult() const
 										{ return mResult; }
+				OSType				getMediaSourceID() const
+										{ return *mMediaSourceID; }
 		const	CMediaTrackInfos&	getMediaTrackInfos() const
 										{ return *mMediaTrackInfos; }
 		const	TArray<CString>&	getMessages() const
@@ -85,6 +113,7 @@ struct SMediaSource {
 		// Properties
 		private:
 			Result					mResult;
+			OV<OSType>				mMediaSourceID;
 			OV<CMediaTrackInfos>	mMediaTrackInfos;
 			OV<TArray<CString> >	mMessages;
 			OV<SError>				mError;
@@ -93,30 +122,31 @@ struct SMediaSource {
 	// Procs
 	typedef	I<ImportResult>		(*ImportProc)(const ImportSetup& importSetup);
 
-							// Lifecycle methods
-							SMediaSource(OSType id, const CString& name, const TSet<CString>& extensions,
-									ImportProc importProc) :
-								mID(id), mName(name), mExtensions(extensions), mImportProc(importProc)
-								{}
-							SMediaSource(const SMediaSource& other) :
-								mID(other.mID), mName(other.mName), mExtensions(other.mExtensions),
-										mImportProc(other.mImportProc)
-								{}
+								// Lifecycle methods
+								SMediaSource(const TArray<Identity>& identities, const TArray<CString>& extensions,
+										ImportProc importProc) :
+									mIdentities(identities), mExtensions(extensions), mImportProc(importProc)
+									{}
+								SMediaSource(const Identity& identity, const TArray<CString>& extensions,
+										ImportProc importProc) :
+									mIdentities(identity), mExtensions(extensions), mImportProc(importProc)
+									{}
+								SMediaSource(const SMediaSource& other) :
+									mIdentities(other.mIdentities), mExtensions(other.mExtensions),
+											mImportProc(other.mImportProc)
+									{}
 
-							// Instance methods
-			OSType			getID() const
-								{ return mID; }
-	const	CString&		getName() const
-								{ return mName; }
-	const	TSet<CString>&	getExtensions() const
-								{ return mExtensions; }
-			I<ImportResult>	import(const ImportSetup& importSetup) const
-								{ return mImportProc(importSetup); }
+								// Instance methods
+	const	TArray<Identity>&	getIdentities() const
+									{ return mIdentities; }
+	const	TSet<CString>&		getExtensions() const
+									{ return mExtensions; }
+			I<ImportResult>		import(const ImportSetup& importSetup) const
+									{ return mImportProc(importSetup); }
 
 	// Properties
 	private:
-		OSType			mID;
-		CString			mName;
-		TNSet<CString>	mExtensions;
-		ImportProc		mImportProc;
+		TNArray<Identity>	mIdentities;
+		TNSet<CString>		mExtensions;
+		ImportProc			mImportProc;
 };

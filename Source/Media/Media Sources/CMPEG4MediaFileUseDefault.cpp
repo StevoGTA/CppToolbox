@@ -5,13 +5,20 @@
 #include "CMPEG4MediaFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CMPEG4MediaFile
-
-// MARK: Class methods
+// MARK: Local procs
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CMPEG4MediaFile> CMPEG4MediaFile::create()
+static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CMPEG4MediaFile>(new CMPEG4MediaFile());
+	return CMPEG4MediaFile().import(importSetup);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Register media source
+
+static	CString	sExtensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), CString(OSSTR("mp4")) };
+REGISTER_MEDIA_SOURCE(mp4,
+		SMediaSource(SMediaSource::Identity(CMPEG4MediaFile::mID, CString(OSSTR("MPEG 4"))),
+				TSARRAY_FROM_C_ARRAY(CString, sExtensions), sImport));

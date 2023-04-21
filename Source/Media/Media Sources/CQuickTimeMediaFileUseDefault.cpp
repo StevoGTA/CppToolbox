@@ -5,13 +5,20 @@
 #include "CQuickTimeMediaFile.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CQuickTimeMediaFile
-
-// MARK: Class methods
+// MARK: Local procs
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CQuickTimeMediaFile> CQuickTimeMediaFile::create()
+static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CQuickTimeMediaFile>(new CQuickTimeMediaFile());
+	return CQuickTimeMediaFile().import(importSetup);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Register media source
+
+static	CString	sExtensions[] = { CString(OSSTR("mov")) };
+REGISTER_MEDIA_SOURCE(quicktime,
+		SMediaSource(CQuickTimeMediaFile::mID, CString(OSSTR("QuickTime")),
+				TSARRAY_FROM_C_ARRAY(CString, sExtensions), sImport));

@@ -19,7 +19,9 @@ class CMediaSourceRegistryInternals {
 	public:
 		CMediaSourceRegistryInternals() {}
 
-		TNKeyConvertibleDictionary<OSType, SMediaSource>	mMediaSources;
+		TNArray<SMediaSource>										mMediaSources;
+		TNKeyConvertibleDictionary<OSType, SMediaSource>			mMediaSourcesByID;
+		TNKeyConvertibleDictionary<OSType, SMediaSource::Identity>	mMediaSourceIdentitiesByID;
 };
 
 CMediaSourceRegistryInternals*	sMediaSourceRegistryInternals = nil;
@@ -44,95 +46,86 @@ void CMediaSourceRegistry::registerMediaSource(const SMediaSource& mediaSource)
 		sMediaSourceRegistryInternals = new CMediaSourceRegistryInternals();
 
 	// Add info
-	sMediaSourceRegistryInternals->mMediaSources.set(mediaSource.getID(), mediaSource);
+	sMediaSourceRegistryInternals->mMediaSources += mediaSource;
+	for (TIteratorD<SMediaSource::Identity> iterator = mediaSource.getIdentities().getIterator(); iterator.hasValue();
+			iterator.advance()) {
+		// Add
+		sMediaSourceRegistryInternals->mMediaSourcesByID.set(iterator->getID(), mediaSource);
+		sMediaSourceRegistryInternals->mMediaSourceIdentitiesByID.set(iterator->getID(), *iterator);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 const SMediaSource& CMediaSourceRegistry::getMediaSource(OSType id) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return *sMediaSourceRegistryInternals->mMediaSources.get(id);
+	return *sMediaSourceRegistryInternals->mMediaSourcesByID.get(id);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CMediaSourceRegistry::getName(OSType id) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return sMediaSourceRegistryInternals->mMediaSourceIdentitiesByID.get(id)->getName();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TSet<CString> CMediaSourceRegistry::getExtensions(OSType id) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return sMediaSourceRegistryInternals->mMediaSourcesByID.get(id)->getExtensions();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 TSet<CString> CMediaSourceRegistry::getAllMediaSourceExtensions() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
+	// Collect all extensions
 	TNSet<CString>	extensions;
-
-	// Iterate media source types to check file extension
-	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
-	for (TIteratorS<CString> iterator = mediaSourceTypes.getIterator(); iterator.hasValue(); iterator.advance())
+	for (TIteratorD<SMediaSource> iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator();
+			iterator.hasValue(); iterator.advance())
 		// Add extensions
-		extensions += sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()]->getExtensions();
+		extensions += iterator->getExtensions();
 
 	return extensions;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMediaSourceRegistry::ImportResult> CMediaSourceRegistry::import(const SMediaSource::ImportSetup& importSetup,
+I<SMediaSource::ImportResult> CMediaSourceRegistry::import(const SMediaSource::ImportSetup& importSetup,
 		const OV<CString>& extension) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	TSet<CString>	mediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
-	TNSet<CString>	remainingMediaSourceTypes = sMediaSourceRegistryInternals->mMediaSources.getKeys();
-
 	// Check if have extension
 	if (extension.hasValue()) {
 		// Setup
 		CString	extensionUse = extension->lowercased();
-		
-		// Iterate media source types to check file extension
-		for (TIteratorS<CString> iterator = mediaSourceTypes.getIterator(); iterator.hasValue(); iterator.advance()) {
-			// Get info
-			SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
 
+		// Iterate media sources to check file extension
+		for (TIteratorD<SMediaSource> iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator();
+				iterator.hasValue(); iterator.advance()) {
 			// Check extensions
-			if (mediaSource.getExtensions().contains(extensionUse)) {
+			if (iterator->getExtensions().contains(extensionUse)) {
 				// Found by extension
-				I<SMediaSource::ImportResult>	importResult = mediaSource.import(importSetup);
-				switch (importResult->getResult()) {
-					case SMediaSource::ImportResult::kSuccess:
-						// Success
-						return TVResult<ImportResult>(ImportResult(mediaSource.getID(), importResult));
-
-					case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
-						// Matched source, but source unable to load
-						return TVResult<ImportResult>(importResult->getError());
-
-					case SMediaSource::ImportResult::kSourceMismatch:
-						// Not a matched source
-						remainingMediaSourceTypes.remove(*iterator);
-						break;
-				}
+				I<SMediaSource::ImportResult>	importResult = iterator->import(importSetup);
+				if (importResult->getResult() != SMediaSource::ImportResult::kSourceMismatch)
+					// Good enough
+					return importResult;
 			}
 		}
 	}
 
-	// Iterate media source types and just check
-	for (TIteratorS<CString> iterator = remainingMediaSourceTypes.getIterator(); iterator.hasValue();
-			iterator.advance()) {
-		// Get info
-		SMediaSource&	mediaSource = *sMediaSourceRegistryInternals->mMediaSources[iterator->getUInt32()];
-
-		// Query tracks
-		I<SMediaSource::ImportResult>	importResult = mediaSource.import(importSetup);
-		switch (importResult->getResult()) {
-			case SMediaSource::ImportResult::kSuccess:
-				// Success
-				return TVResult<ImportResult>(ImportResult(mediaSource.getID(), importResult));
-
-			case SMediaSource::ImportResult::kSourceMatchButUnableToLoad:
-				// Matched source, but source unable to load
-				return TVResult<ImportResult>(importResult->getError());
-
-			case SMediaSource::ImportResult::kSourceMismatch:
-				// Not a matched source
-				break;
+	// Iterate media sources and just check
+	for (TIteratorD<SMediaSource> iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator();
+			iterator.hasValue(); iterator.advance()) {
+		// Check extension situation
+		if (!extension.hasValue() || !iterator->getExtensions().contains(*extension)) {
+			// Query tracks
+			I<SMediaSource::ImportResult>	importResult = iterator->import(importSetup);
+			if (importResult->getResult() != SMediaSource::ImportResult::kSourceMismatch)
+				// Good enough
+				return importResult;
 		}
 	}
 
-	return TVResult<ImportResult>(sImportFailed);
+	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(sImportFailed));
 }

@@ -648,6 +648,10 @@ static	CMediaTrackInfos::AudioTrackInfo	sComposePCMAudioTrackInfo(const CQuickTi
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CQuickTimeMediaFile
 
+// MARK: Properties
+
+OSType	CQuickTimeMediaFile::mID = MAKE_OSTYPE('M', 'o', 'o', 'V');
+
 // MARK: Internals
 
 struct CQuickTimeMediaFile::Internals {
@@ -931,7 +935,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 		}
 	}
 
-	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mediaTrackInfos, TNArray<CString>()));
+	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mID, mediaTrackInfos));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1275,13 +1279,6 @@ TVResult<CData> CQuickTimeMediaFile::getAudioDecompressionData(const Internals& 
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return CQuickTimeMediaFile::create()->import(importSetup);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMediaFile& quickTimeMediaFile,
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, bool isFloat, UInt8 bits,
 		CPCMAudioCodec::Format format, UniversalTimeInterval duration, const CQuickTimeMediaFile::Internals& internals)
@@ -1313,12 +1310,3 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 		// Add audio track
 		return CMediaTrackInfos::AudioTrackInfo(audioTrack);
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Register media source
-
-static	CString	sExtensions[] = { CString(OSSTR("mov")) };
-REGISTER_MEDIA_SOURCE(quicktime,
-		SMediaSource(MAKE_OSTYPE('M', 'o', 'o', 'V'), CString(OSSTR("QuickTime")), TSSet<CString>(sExtensions, 1),
-				sImport));

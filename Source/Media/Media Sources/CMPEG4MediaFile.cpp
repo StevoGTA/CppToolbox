@@ -533,6 +533,10 @@ struct SMP4co64AtomPayload {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMPEG4MediaFile
 
+// MARK: Properties
+
+OSType	CMPEG4MediaFile::mID = MAKE_OSTYPE('M', 'P', '4', ' ');
+
 // MARK: Internals
 
 struct CMPEG4MediaFile::Internals {
@@ -759,7 +763,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 			process(atomReader, *moovIterator);
 	}
 
-	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mediaTrackInfos, TNArray<CString>()));
+	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mID, mediaTrackInfos));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -974,23 +978,3 @@ TVResult<CData> CMPEG4MediaFile::getDecompressionData(const Internals& internals
 {
 	return internals.getDecompressionData(offset);
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-
-//----------------------------------------------------------------------------------------------------------------------
-static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return CMPEG4MediaFile::create()->import(importSetup);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Register media source
-
-static	CString	sExtensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), CString(OSSTR("mp4")) };
-REGISTER_MEDIA_SOURCE(mp4,
-		SMediaSource(MAKE_OSTYPE('M', 'P', '4', ' '), CString(OSSTR("MPEG 4")), TSSet<CString>(sExtensions, 3),
-				sImport));

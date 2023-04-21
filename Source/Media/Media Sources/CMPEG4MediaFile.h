@@ -27,9 +27,6 @@ class CMPEG4MediaFile {
 						TArray<SMediaPacketAndLocation>				composePacketAndLocations(
 																			const Internals& internals) const;
 
-																	// Class methods
-		static			I<CMPEG4MediaFile>							create();
-
 	protected:
 																	// Lifecycle methods
 																	CMPEG4MediaFile() {}
@@ -56,4 +53,8 @@ class CMPEG4MediaFile {
 																			const;
 						TVResult<CData>								getDecompressionData(const Internals& internals,
 																			SInt64 offset) const;
+
+	// Properties
+	public:
+		static	OSType	mID;
 };
