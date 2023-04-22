@@ -11,11 +11,11 @@ using namespace Windows::Foundation;
 using namespace Windows::Storage;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CPreferencesInternals
+// MARK: CPreferences::Internals
 
-class CPreferencesInternals {
+class CPreferences::Internals {
 	public:
-		CPreferencesInternals(const CPreferences::Reference& reference) {}
+		Internals(const CPreferences::Reference& reference) {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ CPreferences	CPreferences::mDefault(Reference(0));
 CPreferences::CPreferences(const Reference& reference)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CPreferencesInternals(reference);
+	mInternals = new Internals(reference);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -12,11 +12,11 @@
 #define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CThreadInternals
+// MARK: CThread::Internals
 
-class CThreadInternals {
+class CThread::Internals {
 	public:
-						CThreadInternals(CThread& thread, CThread::ThreadProc threadProc, void* userData,
+						Internals(CThread& thread, CThread::ThreadProc threadProc, void* userData,
 								const CString& name) :
 							mIsRunning(true), mThreadProc(threadProc), mThreadProcUserData(userData), mThreadName(name),
 									mThread(thread),
@@ -26,14 +26,13 @@ class CThreadInternals {
 		static	DWORD	threadProc(void* userData)
 							{
 								// Setup
-								CThreadInternals&	threadInternals = *((CThreadInternals*) userData);
+								Internals&	internals = *((Internals*) userData);
 
 								// Call proc
-								threadInternals.mThreadProc(threadInternals.mThread,
-										threadInternals.mThreadProcUserData);
+								internals.mThreadProc(internals.mThread, internals.mThreadProcUserData);
 
 								// Not running
-								threadInternals.mIsRunning = false;
+								internals.mIsRunning = false;
 
 								return 0;
 							}
@@ -58,7 +57,7 @@ CThread::CThread(ThreadProc threadProc, void* userData, const CString& name, Opt
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
-	mInternals = new CThreadInternals(*this, threadProc, userData, name);
+	mInternals = new Internals(*this, threadProc, userData, name);
 
 	// Check options
 	if (options & kOptionsAutoStart)
@@ -71,7 +70,7 @@ CThread::CThread(const CString& name, Options options)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup internals
-	mInternals = new CThreadInternals(*this, CThread::runThreadProc, NULL, name);
+	mInternals = new Internals(*this, CThread::runThreadProc, NULL, name);
 
 	// Check options
 	if (options & kOptionsAutoStart)
@@ -107,7 +106,7 @@ void CThread::start()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create thread
-	mInternals->mWindowsThreadHandle = ::CreateThread(NULL, 0, CThreadInternals::threadProc, mInternals, 0, NULL);
+	mInternals->mWindowsThreadHandle = ::CreateThread(NULL, 0, Internals::threadProc, mInternals, 0, NULL);
 	::SetThreadDescription(mInternals->mWindowsThreadHandle, mInternals->mThreadName.getOSString());
 }
 

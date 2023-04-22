@@ -9,15 +9,15 @@
 #define Delete(x)		{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CLockInternals
+// MARK: CLock::Internals
 
-class CLockInternals {
+class CLock::Internals {
 public:
-	CLockInternals()
+	Internals()
 		{
 			::InitializeCriticalSection(&mCriticalSection);
 		}
-	~CLockInternals()
+	~Internals()
 		{
 			::DeleteCriticalSection(&mCriticalSection);
 		}
@@ -35,7 +35,7 @@ public:
 CLock::CLock()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CLockInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -70,11 +70,11 @@ void CLock::unlock() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CReadPreferringLockInternals
+// MARK: - CReadPreferringLock::Internals
 
-class CReadPreferringLockInternals {
+class CReadPreferringLock::Internals {
 public:
-	CReadPreferringLockInternals()
+	Internals()
 		{
 			::InitializeSRWLock(&mSRWLock);
 		}
@@ -92,7 +92,7 @@ public:
 CReadPreferringLock::CReadPreferringLock()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CReadPreferringLockInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -134,15 +134,15 @@ void CReadPreferringLock::unlockForWriting() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSemaphoreInternals
+// MARK: - CSemaphore::Internals
 
-class CSemaphoreInternals {
+class CSemaphore::Internals {
 public:
-	CSemaphoreInternals() : mHandle(CreateEvent(NULL, false, false, TEXT("")))
+	Internals() : mHandle(CreateEvent(NULL, false, false, TEXT("")))
 		{
 			::InitializeCriticalSection(&mCriticalSection);
 		}
-	~CSemaphoreInternals()
+	~Internals()
 		{
 			::DeleteCriticalSection(&mCriticalSection);
 			::CloseHandle(mHandle);
@@ -162,7 +162,7 @@ public:
 CSemaphore::CSemaphore()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSemaphoreInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

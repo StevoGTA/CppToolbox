@@ -7,16 +7,16 @@
 #include <Windows.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CTimerInternals
-class CTimerInternals {
+// MARK: CTimer::Internals
+class CTimer::Internals {
 	public:
-									CTimerInternals(CTimer& timer, UniversalTimeInterval interval, bool repeats,
+									Internals(CTimer& timer, UniversalTimeInterval interval, bool repeats,
 											CTimer::Proc proc, void* userData) :
 										mTimer(timer), mInterval(interval), mRepeats(repeats), mProc(proc),
 												mUserData(userData),
 												mTPTimer(::CreateThreadpoolTimer(timerProc, this, nullptr))
 										{}
-									~CTimerInternals()
+									~Internals()
 										{ ::CloseThreadpoolTimer(mTPTimer); }
 
 				void				resume()
@@ -48,7 +48,7 @@ class CTimerInternals {
 		static	VOID	CALLBACK	timerProc(PTP_CALLBACK_INSTANCE callbackInstance, PVOID userData, PTP_TIMER timer)
 										{
 											// Setup
-											CTimerInternals&	internals = *((CTimerInternals*) userData);
+											Internals&	internals = *((Internals*) userData);
 
 											// Call proc
 											internals.mProc(internals.mTimer, internals.mUserData);
@@ -74,7 +74,7 @@ CTimer::CTimer(UniversalTimeInterval interval, Proc proc, void* userData, bool r
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CTimerInternals(*this, interval, repeats, proc, userData);
+	mInternals = new Internals(*this, interval, repeats, proc, userData);
 
 	// Check options
 	if (options & kOptionsAutoResume)
