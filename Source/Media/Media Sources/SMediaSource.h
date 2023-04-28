@@ -23,26 +23,26 @@ struct SMediaSource {
 	// Identity
 	struct Identity {
 				// Lifecycle methods
-				Identity(OSType id, const CString& localizationGroup, const CString& localizationKey) :
-					mID(id), mLocalizationGroup(localizationGroup), mLocalizationKey(localizationKey)
+				Identity(OSType id, const CString& nameLocalizationGroup, const CString& nameLocalizationKey) :
+					mID(id), mNameLocalizationGroup(nameLocalizationGroup), mNameLocalizationKey(nameLocalizationKey)
 					{}
 				Identity(OSType id, const CString& name) : mID(id), mName(name) {}
 				Identity(const Identity& other) :
-					mID(other.mID), mName(other.mName), mLocalizationGroup(other.mLocalizationGroup),
-							mLocalizationKey(other.mLocalizationKey)
+					mID(other.mID), mName(other.mName), mNameLocalizationGroup(other.mNameLocalizationGroup),
+							mNameLocalizationKey(other.mNameLocalizationKey)
 					{}
 
 		OSType	getID() const
 					{ return mID; }
 		CString	getName() const
-					{ return mName.hasValue() ? *mName : CString(*mLocalizationGroup, *mLocalizationKey); }
+					{ return mName.hasValue() ? *mName : CString(*mNameLocalizationGroup, *mNameLocalizationKey); }
 
 		// Properties
 		private:
 			OSType		mID;
 			OV<CString>	mName;
-			OV<CString>	mLocalizationGroup;
-			OV<CString>	mLocalizationKey;
+			OV<CString>	mNameLocalizationGroup;
+			OV<CString>	mNameLocalizationKey;
 	};
 
 	// ImportSetup

@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CPCMAudioCodec.h			©2022 Stevo Brock	All rights reserved.
+//	CPCMAudioCodec.cpp			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CPCMAudioCodec.h"
@@ -124,11 +124,3 @@ OV<I<CDecodeAudioCodec> > CPCMAudioCodec::create(const SAudioStorageFormat& audi
 					new CPCMDecodeAudioCodec(randomAccessDataSource, startByteOffset, byteCount,
 							*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels(), format)));
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Declare audio codecs
-
-REGISTER_AUDIO_CODEC(pcmFloat, CCodec::Info(CPCMAudioCodec::mFloatID, CString(OSSTR("None (Floating Point)"))));
-REGISTER_AUDIO_CODEC(pcmInteger,
-		CCodec::Info(CPCMAudioCodec::mIntegerID, CString(OSSTR("None (Integer)")), CString(OSSTR("None"))));

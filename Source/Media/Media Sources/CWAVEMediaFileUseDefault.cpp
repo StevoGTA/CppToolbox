@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CWAVEMediaFileUseDefault.h			©2022 Stevo Brock	All rights reserved.
+//	CWAVEMediaFileUseDefault.cpp			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CWAVEMediaFile.h"

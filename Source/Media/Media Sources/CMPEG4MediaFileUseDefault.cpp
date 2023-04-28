@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CMPEG4MediaFileUseDefault.h			©2022 Stevo Brock	All rights reserved.
+//	CMPEG4MediaFileUseDefault.cpp			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CMPEG4MediaFile.h"

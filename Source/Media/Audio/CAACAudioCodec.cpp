@@ -287,10 +287,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 // MARK: Properties
 
 const	OSType	CAACAudioCodec::mAACLCID = MAKE_OSTYPE('m', 'p', '4', 'a');
-const	CString	CAACAudioCodec::mAACLCName(OSSTR("AAC Low Complexity"));
-
 const	OSType	CAACAudioCodec::mAACLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
-const	CString	CAACAudioCodec::mAACLDName(OSSTR("AAC Low Delay"));
 
 // MARK: Class methods
 
@@ -386,10 +383,3 @@ OV<I<CDecodeAudioCodec> > CAACAudioCodec::create(const Info& info,
 									new CSeekableVaryingMediaPacketSource(randomAccessDataSource,
 											packetAndLocations)))));
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Declare audio codecs
-
-REGISTER_AUDIO_CODEC(aacLC, CCodec::Info(CAACAudioCodec::mAACLCID, CAACAudioCodec::mAACLCName));
-REGISTER_AUDIO_CODEC(aacLD, CCodec::Info(CAACAudioCodec::mAACLDID, CAACAudioCodec::mAACLDName));

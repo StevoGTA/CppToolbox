@@ -378,10 +378,3 @@ OV<I<CDecodeAudioCodec> > CDVIIntelIMAADPCMAudioCodec::create(const SAudioStorag
 							new CSeekableUniformMediaPacketSource(randomAccessDataSource, startByteOffset, byteCount,
 									blockAlign, framesPerPacket))));
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Declare audio codecs
-
-REGISTER_AUDIO_CODEC(dviIntelIMA,
-		CCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString(OSSTR("DVI/Intel IMA ADPCM 4:1"))));

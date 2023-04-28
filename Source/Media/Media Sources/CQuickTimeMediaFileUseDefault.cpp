@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CQuickTimeMediaFileUseDefault.h			©2022 Stevo Brock	All rights reserved.
+//	CQuickTimeMediaFileUseDefault.cpp			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CQuickTimeMediaFile.h"
