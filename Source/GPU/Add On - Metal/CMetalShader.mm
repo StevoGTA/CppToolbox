@@ -6,11 +6,11 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CMetalVertexShaderInternals
+// MARK: CMetalVertexShader::Internals
 
-class CMetalVertexShaderInternals {
+class CMetalVertexShader::Internals {
 	public:
-		CMetalVertexShaderInternals(const CString& name) : mName(name) {}
+		Internals(const CString& name) : mName(name) {}
 
 		CString			mName;
 		SMatrix4x4_32	mModelMatrix;
@@ -26,7 +26,7 @@ class CMetalVertexShaderInternals {
 CMetalVertexShader::CMetalVertexShader(const CString& name) : CGPUVertexShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMetalVertexShaderInternals(name);
+	mInternals = new Internals(name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,11 +61,11 @@ const SMatrix4x4_32& CMetalVertexShader::getModelMatrix() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMetalVertexShaderInternals
+// MARK: - CMetalFragmentShader::Internals
 
-class CMetalFragmentShaderInternals {
+class CMetalFragmentShader::Internals {
 	public:
-		CMetalFragmentShaderInternals(const CString& name) : mName(name) {}
+		Internals(const CString& name) : mName(name) {}
 
 		CString	mName;
 };
@@ -80,7 +80,7 @@ class CMetalFragmentShaderInternals {
 CMetalFragmentShader::CMetalFragmentShader(const CString& name) : CGPUFragmentShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMetalFragmentShaderInternals(name);
+	mInternals = new Internals(name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

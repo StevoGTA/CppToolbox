@@ -12,12 +12,11 @@
 #define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPURenderStateInternals
+// MARK: CGPURenderState::Internals
 
-class CGPURenderStateInternals {
+class CGPURenderState::Internals {
 	public:
-		CGPURenderStateInternals(CGPURenderState::Mode mode, CGPUVertexShader& vertexShader,
-				CGPUFragmentShader& pixelShader) :
+		Internals(CGPURenderState::Mode mode, CGPUVertexShader& vertexShader, CGPUFragmentShader& pixelShader) :
 			mMode(mode), mVertexShader(vertexShader), mPixelShader(pixelShader)
 			{}
 
@@ -43,7 +42,7 @@ CGPURenderState::CGPURenderState(Mode mode, CGPUVertexShader& vertexShader, CGPU
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CGPURenderStateInternals(mode, vertexShader, pixelShader);
+	mInternals = new Internals(mode, vertexShader, pixelShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -106,7 +105,7 @@ CGPURenderState::Mode CGPURenderState::getMode() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitInfo)
+void CGPURenderState::commit(const CommitInfo& commitInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup buffers
@@ -115,13 +114,13 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 		ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mVertexBuffer->mPlatformReference;
 		UINT			stride = mInternals->mVertexBuffer->mPerVertexByteCount;
 		UINT			offset = 0;
-		renderStateCommitInfo.mD3DDeviceContext.IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
+		commitInfo.mD3DDeviceContext.IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
 	}
 
 	if (mInternals->mIndexBuffer.hasReference()) {
 		// Setup index buffer
 		ID3D11Buffer*	buffer = (ID3D11Buffer*) mInternals->mIndexBuffer->mPlatformReference;
-		renderStateCommitInfo.mD3DDeviceContext.IASetIndexBuffer(buffer, DXGI_FORMAT_R16_UINT, 0);
+		commitInfo.mD3DDeviceContext.IASetIndexBuffer(buffer, DXGI_FORMAT_R16_UINT, 0);
 	}
 
 	// Check for textures
@@ -139,8 +138,8 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 			TBuffer<ID3D11ShaderResourceView*>	shaderResourceViewPtrs(shaderResourceViews.getCount());
 			for (CArray::ItemIndex i = 0; i < shaderResourceViews.getCount(); i++)
 				shaderResourceViewPtrs[i] = *(shaderResourceViews[i]);
-			renderStateCommitInfo.mD3DDeviceContext.PSSetShaderResources(shaderResourceSlot,
-					shaderResourceViews.getCount(), *shaderResourceViewPtrs);
+			commitInfo.mD3DDeviceContext.PSSetShaderResources(shaderResourceSlot, shaderResourceViews.getCount(),
+					*shaderResourceViewPtrs);
 
 			// Update
 			needBlend |= texture.hasTransparency();
@@ -151,19 +150,16 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 		float	blendFactor[] = {0.0, 0.0, 0.0, 0.0};
 		if (needBlend)
 			// Setup blend state
-			renderStateCommitInfo.mD3DDeviceContext.OMSetBlendState(&renderStateCommitInfo.mD3DBlendState, blendFactor,
-					0xFFFFFFFF);
+			commitInfo.mD3DDeviceContext.OMSetBlendState(&commitInfo.mD3DBlendState, blendFactor, 0xFFFFFFFF);
 		else
 			// No blend
-			renderStateCommitInfo.mD3DDeviceContext.OMSetBlendState(NULL, blendFactor, 0xFFFFFFFF);
+			commitInfo.mD3DDeviceContext.OMSetBlendState(NULL, blendFactor, 0xFFFFFFFF);
 	}
 
 	// Setup shaders
 	((CDirectXVertexShader&) mInternals->mVertexShader).setModelMatrix(mInternals->mModelMatrix);
-	((CDirectXVertexShader&) mInternals->mVertexShader).setup(renderStateCommitInfo.mD3DDevice,
-			renderStateCommitInfo.mD3DDeviceContext, renderStateCommitInfo.mProjectionMatrix,
-			renderStateCommitInfo.mViewMatrix);
+	((CDirectXVertexShader&) mInternals->mVertexShader).setup(commitInfo.mD3DDevice, commitInfo.mD3DDeviceContext,
+			commitInfo.mProjectionMatrix, commitInfo.mViewMatrix);
 
-	((CDirectXPixelShader&) mInternals->mPixelShader).setup(renderStateCommitInfo.mD3DDevice,
-			renderStateCommitInfo.mD3DDeviceContext);
+	((CDirectXPixelShader&) mInternals->mPixelShader).setup(commitInfo.mD3DDevice, commitInfo.mD3DDeviceContext);
 }

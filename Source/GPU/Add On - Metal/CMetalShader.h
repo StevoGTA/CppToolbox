@@ -10,8 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMetalVertexShader
 
-class CMetalVertexShaderInternals;
 class CMetalVertexShader : public CGPUVertexShader {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -33,14 +36,17 @@ class CMetalVertexShader : public CGPUVertexShader {
 
 	// Properties
 	private:
-		CMetalVertexShaderInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMetalFragmentShader
 
-class CMetalFragmentShaderInternals;
 class CMetalFragmentShader : public CGPUFragmentShader {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -56,5 +62,5 @@ class CMetalFragmentShader : public CGPUFragmentShader {
 
 	// Properties
 	private:
-		CMetalFragmentShaderInternals*	mInternals;
+		Internals*	mInternals;
 };

@@ -26,14 +26,14 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFileWriterInternals
+// MARK: - CFileWriter::Internals
 
-class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
+class CFileWriter::Internals : public TReferenceCountable<Internals> {
 	public:
-					CFileWriterInternals(const CFile& file) :
+					Internals(const CFile& file) :
 						TReferenceCountable(), mFile(file), mRemoveIfNotClosed(false), mFILE(nil), mFD(-1)
 						{}
-					~CFileWriterInternals()
+					~Internals()
 						{
 							// Check if need to remove
 							bool	needToRemove = mRemoveIfNotClosed && ((mFILE != nil) || (mFD != -1));
@@ -92,7 +92,7 @@ class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 CFileWriter::CFileWriter(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFileWriterInternals(file);
+	mInternals = new Internals(file);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

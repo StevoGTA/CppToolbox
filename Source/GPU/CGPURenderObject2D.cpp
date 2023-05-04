@@ -7,11 +7,11 @@
 #include "CGPURenderState.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPURenderObject2DInternals
+// MARK: CGPURenderObject2D::Internals
 
-class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2DInternals> {
+class CGPURenderObject2D::Internals : public TReferenceCountable<Internals> {
 	public:
-				CGPURenderObject2DInternals(CGPU& gpu, const TArray<CGPURenderObject2D::Item>& items,
+				Internals(CGPU& gpu, const TArray<CGPURenderObject2D::Item>& items,
 						const TArray<CGPUTextureReference>& gpuTextureReferences,
 						CGPUFragmentShader::Proc fragmentShaderProc) :
 					TReferenceCountable(),
@@ -21,7 +21,7 @@ class CGPURenderObject2DInternals : public TReferenceCountable<CGPURenderObject2
 									mGPU.allocateVertexBuffer(sizeof(SVertex2DMultitexture), vertexData(items))),
 							mAngleRadians(0.0), mAlpha(1.0), mScale(1.0, 1.0)
 					{}
-				~CGPURenderObject2DInternals()
+				~Internals()
 					{
 						// Cleanup
 						mGPU.disposeBuffer(mGPUVertexBuffer);
@@ -102,8 +102,8 @@ CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const Item& item, const CGPUTe
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CGPURenderObject2DInternals(gpu, TSArray<Item>(item),
-					TSArray<CGPUTextureReference>(gpuTextureReference), fragmentShaderProc);
+			new Internals(gpu, TSArray<Item>(item), TSArray<CGPUTextureReference>(gpuTextureReference),
+					fragmentShaderProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const Item& item,
 		const TArray<CGPUTextureReference>& gpuTextureReferences, CGPUFragmentShader::Proc fragmentShaderProc)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPURenderObject2DInternals(gpu, TSArray<Item>(item), gpuTextureReferences, fragmentShaderProc);
+	mInternals = new Internals(gpu, TSArray<Item>(item), gpuTextureReferences, fragmentShaderProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -120,7 +120,7 @@ CGPURenderObject2D::CGPURenderObject2D(CGPU& gpu, const TArray<Item>& items,
 		CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPURenderObject2DInternals(gpu, items, gpuTextureReferences, fragmentShaderProc);
+	mInternals = new Internals(gpu, items, gpuTextureReferences, fragmentShaderProc);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

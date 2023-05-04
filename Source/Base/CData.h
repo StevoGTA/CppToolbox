@@ -17,6 +17,10 @@ class CData {
 		typedef	UInt64	ByteCount;
 		typedef	UInt64	ByteIndex;
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 							// Lifecycle methods
@@ -62,6 +66,5 @@ class CData {
 		static	const	CData		mZeroByte;
 
 	private:
-		class Internals;
 						Internals*	mInternals;
 };

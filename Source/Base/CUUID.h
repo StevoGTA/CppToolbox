@@ -26,6 +26,10 @@ class CUUID : public CHashable {
 			UInt8	mBytes[16];
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -58,6 +62,5 @@ class CUUID : public CHashable {
 		static	const	CUUID		mZero;
 
 	private:
-		class Internals;
 						Internals*	mInternals;
 };

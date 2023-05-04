@@ -9,8 +9,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderObject3D
 
-class CGPURenderObject3DInternals;
 class CGPURenderObject3D : public CGPURenderObject {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 					// Lifecycle methods
@@ -51,5 +54,5 @@ class CGPURenderObject3D : public CGPURenderObject {
 
 	// Properties
 	private:
-		CGPURenderObject3DInternals*	mInternals;
+		Internals*	mInternals;
 };

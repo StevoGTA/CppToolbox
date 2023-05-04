@@ -14,8 +14,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDirectXTexture
 
-class CDirectXTextureInternals;
 class CDirectXTexture : public CGPUTexture {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 														// Lifecycle methods
@@ -39,5 +42,5 @@ class CDirectXTexture : public CGPUTexture {
 
 	// Properties
 	private:
-		CDirectXTextureInternals* mInternals;
+		CGPUTexture* mInternals;
 };

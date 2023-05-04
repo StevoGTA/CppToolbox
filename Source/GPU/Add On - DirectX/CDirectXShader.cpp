@@ -15,14 +15,14 @@ using namespace DirectX;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDirectXVertexShaderInternals
+// MARK: CDirectXVertexShader::Internals
 
-class CDirectXVertexShaderInternals {
+class CDirectXVertexShader::Internals {
 	public:
-		CDirectXVertexShaderInternals(const CFilesystemPath& filesystemPath) :
+		Internals(const CFilesystemPath& filesystemPath) :
 			mFilesystemPath(filesystemPath), mShader(NULL)
 			{}
-		~CDirectXVertexShaderInternals()
+		~Internals()
 			{
 				// Cleanup
 				if (mShader != NULL)
@@ -46,7 +46,7 @@ class CDirectXVertexShaderInternals {
 CDirectXVertexShader::CDirectXVertexShader(const CFilesystemPath& filesystemPath) : CGPUVertexShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CDirectXVertexShaderInternals(filesystemPath);
+	mInternals = new Internals(filesystemPath);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -102,14 +102,14 @@ const XMFLOAT4X4& CDirectXVertexShader::getModelMatrix() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDirectXPixelShaderInternals
+// MARK: - CDirectXPixelShader::Internals
 
-class CDirectXPixelShaderInternals {
+class CDirectXPixelShader::Internals {
 	public:
-		CDirectXPixelShaderInternals(const CFilesystemPath& filesystemPath) :
+		Internals(const CFilesystemPath& filesystemPath) :
 			mFilesystemPath(filesystemPath), mShader(NULL)
 			{}
-		~CDirectXPixelShaderInternals()
+		~Internals()
 			{
 				// Cleanup
 				if (mShader != NULL)
@@ -132,7 +132,7 @@ class CDirectXPixelShaderInternals {
 CDirectXPixelShader::CDirectXPixelShader(const CFilesystemPath& filesystemPath) : CGPUFragmentShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CDirectXPixelShaderInternals(filesystemPath);
+	mInternals = new Internals(filesystemPath);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

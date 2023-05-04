@@ -7,9 +7,9 @@
 #include "CGPU.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPUProcsInfo
+// MARK: CGPU::Procs
 
-struct SGPUProcsInfo {
+struct CGPU::Procs {
 	// Procs
 	typedef	void				(*AcquireContextProc)(void* userData);
 	typedef	bool				(*TryAcquireContextProc)(void* userData);
@@ -26,7 +26,7 @@ struct SGPUProcsInfo {
 #endif
 
 						// Lifecycle methods
-						SGPUProcsInfo(AcquireContextProc acquireContextProc,
+						Procs(AcquireContextProc acquireContextProc,
 								TryAcquireContextProc tryAcquireContextProc, ReleaseContextProc releaseContextProc,
 								GetSizeProc getSizeProc, GetScaleProc getScaleProc,
 #if defined(TARGET_OS_IOS)
@@ -49,7 +49,7 @@ struct SGPUProcsInfo {
 #endif
 									mUserData(userData)
 							{}
-						SGPUProcsInfo(const SGPUProcsInfo& other) :
+						Procs(const Procs& other) :
 							mAcquireContextProc(other.mAcquireContextProc),
 									mTryAcquireContextProc(other.mTryAcquireContextProc),
 									mReleaseContextProc(other.mReleaseContextProc), mGetSizeProc(other.mGetSizeProc),

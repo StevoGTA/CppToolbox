@@ -23,8 +23,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: COpenGLTexture
 
-class COpenGLTextureInternals;
 class COpenGLTexture : public CGPUTexture {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -54,5 +57,5 @@ class COpenGLTexture : public CGPUTexture {
 
 	// Properties
 	private:
-		COpenGLTextureInternals*	mInternals;
+		Internals*	mInternals;
 };

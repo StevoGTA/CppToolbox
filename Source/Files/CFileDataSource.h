@@ -10,8 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFileDataSource
 
-class CFileDataSourceInternals;
 class CFileDataSource : public CRandomAccessDataSource {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -37,14 +40,17 @@ class CFileDataSource : public CRandomAccessDataSource {
 
 	// Properties
 	private:
-		CFileDataSourceInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMappedFileDataSource
 
-class CMappedFileDataSourceInternals;
 class CMappedFileDataSource : public CRandomAccessDataSource {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -60,5 +66,5 @@ class CMappedFileDataSource : public CRandomAccessDataSource {
 
 	// Properties
 	private:
-		CMappedFileDataSourceInternals*	mInternals;
+		Internals*	mInternals;
 };

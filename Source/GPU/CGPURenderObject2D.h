@@ -11,7 +11,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderObject2D
 
-class CGPURenderObject2DInternals;
 class CGPURenderObject2D : public CGPURenderObject {
 	// Structs
 	public:
@@ -36,6 +35,10 @@ class CGPURenderObject2D : public CGPURenderObject {
 	// Types
 	public:
 		typedef	TIndexes<UInt16>	Indexes;
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -82,5 +85,5 @@ class CGPURenderObject2D : public CGPURenderObject {
 
 	// Properties
 	private:
-		CGPURenderObject2DInternals*	mInternals;
+		Internals*	mInternals;
 };

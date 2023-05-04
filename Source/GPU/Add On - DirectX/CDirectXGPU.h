@@ -11,9 +11,9 @@ using namespace Windows::Graphics::Display;
 using namespace Windows::UI::Core;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPUProcsInfo
+// MARK: CGPU::Procs
 
-struct SGPUProcsInfo {
+struct CGPU::Procs {
 	// Procs
 	typedef CoreWindow^					(*GetCoreWindowProc)(void* userData);
 	typedef SDirectXDisplaySupportInfo	(*GetDisplaySupportInfoProc)(void* userData);
@@ -25,7 +25,7 @@ struct SGPUProcsInfo {
 	typedef void						(*HandledDeviceValidationProc)(void* userData);
 
 								// Lifecycle methods
-								SGPUProcsInfo(
+								Procs(
 										GetCoreWindowProc getCoreWindowProc,
 										GetDisplaySupportInfoProc getDisplaySupportInfoProc, GetFPSProc getFPSProc,
 										GetDPIProc getDPIProc, GetSizeProc getSizeProc,
@@ -40,7 +40,7 @@ struct SGPUProcsInfo {
 											mHandledDeviceValidationProc(handledDeviceValidationProc),
 											mUserData(userData)
 									{}
-								SGPUProcsInfo(const SGPUProcsInfo& other) :
+								Procs(const Procs& other) :
 									mGetCoreWindowProc(other.mGetCoreWindowProc),
 											mGetDisplaySupportInfoProc(other.mGetDisplaySupportInfoProc),
 											mGetFPSProc(other.mGetFPSProc),  mGetDPIProc(other.mGetDPIProc),

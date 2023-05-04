@@ -26,6 +26,10 @@ class CHashable : public CEquatable {
 // MARK: - CHasher
 
 class CHasher {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -44,6 +48,5 @@ class CHasher {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

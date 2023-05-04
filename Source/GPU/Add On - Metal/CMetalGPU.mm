@@ -19,11 +19,11 @@ static	const	UInt32	kBufferCount = 3;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUInternals
+// MARK: - CGPU::Internals
 
-class CGPUInternals {
+class CGPU::Internals {
 	public:
-		CGPUInternals(const SGPUProcsInfo& procs) :
+		Internals(const Procs& procs) :
 			mProcs(procs),
 					mCommandQueue([procs.getDevice() newCommandQueue]),
 					mShaderLibrary([procs.getDevice() newDefaultLibrary]),
@@ -52,7 +52,7 @@ class CGPUInternals {
  				mRenderPipelineDescriptor.sampleCount = procs.getSampleCount();
 				mRenderPipelineDescriptor.colorAttachments[0].pixelFormat = procs.getPixelFormat();
 			}
-		~CGPUInternals()
+		~Internals()
 			{
 				// Cleanup
 				if (mMetalTextureCache.hasInstance())
@@ -60,7 +60,7 @@ class CGPUInternals {
 					::CFRelease(*mMetalTextureCache);
 			}
 
-	SGPUProcsInfo												mProcs;
+	Procs														mProcs;
 
 	id<MTLCommandQueue>											mCommandQueue;
 	id<MTLLibrary>												mShaderLibrary;
@@ -95,10 +95,10 @@ class CGPUInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPU::CGPU(const SGPUProcsInfo& procs)
+CGPU::CGPU(const Procs& procs)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUInternals(procs);
+	mInternals = new Internals(procs);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -272,7 +272,7 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			// 2D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
-					SGPURenderStateCommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
+					CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -284,7 +284,7 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			// 3D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
-					SGPURenderStateCommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
+					CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -332,7 +332,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			// 2D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
-					SGPURenderStateCommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
+					CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -344,7 +344,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			// 3D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
-					SGPURenderStateCommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
+					CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,

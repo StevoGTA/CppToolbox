@@ -72,6 +72,11 @@ class CTreeViewBacking {
 
 				void*					mUserData;
 		};
+
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -97,6 +102,5 @@ class CTreeViewBacking {
 		static	const	CString		mRootViewItemID;
 
 	private:
-		class Internals;
 						Internals*	mInternals;
 };

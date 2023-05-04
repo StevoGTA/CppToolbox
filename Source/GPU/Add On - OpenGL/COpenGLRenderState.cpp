@@ -10,11 +10,11 @@
 #include "COpenGLTexture.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPURenderStateInternals
+// MARK: CGPURenderState::Internals
 
-class CGPURenderStateInternals {
+class CGPURenderState::Internals {
 	public:
-		CGPURenderStateInternals(CGPURenderState::Mode mode, COpenGLVertexShader& vertexShader,
+		Internals(CGPURenderState::Mode mode, COpenGLVertexShader& vertexShader,
 				COpenGLFragmentShader& fragmentShader) :
 			mMode(mode), mVertexShader(vertexShader), mFragmentShader(fragmentShader)
 			{}
@@ -41,9 +41,7 @@ CGPURenderState::CGPURenderState(Mode mode, CGPUVertexShader& vertexShader, CGPU
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals =
-			new CGPURenderStateInternals(mode, (COpenGLVertexShader&) vertexShader,
-					(COpenGLFragmentShader&) fragmentShader);
+	mInternals = new Internals(mode, (COpenGLVertexShader&) vertexShader, (COpenGLFragmentShader&) fragmentShader);
 
 	// Configure GL
 	mInternals->mVertexShader.configureGL();
@@ -121,7 +119,7 @@ CGPURenderState::Mode CGPURenderState::getMode() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitInfo)
+void CGPURenderState::commit(const CommitInfo& commitInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -167,6 +165,5 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 		sPrograms.set(programKey, COpenGLProgram(mInternals->mVertexShader, mInternals->mFragmentShader));
 
 	// Prepare program
-	sPrograms[programKey]->prepare(renderStateCommitInfo.mProjectionMatrix, renderStateCommitInfo.mViewMatrix,
-			mInternals->mModelMatrix);
+	sPrograms[programKey]->prepare(commitInfo.mProjectionMatrix, commitInfo.mViewMatrix, mInternals->mModelMatrix);
 }

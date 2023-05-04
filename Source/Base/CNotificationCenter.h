@@ -73,6 +73,10 @@ class CNotificationCenter {
 					void*	mUserData;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 						// Lifcycle methods
@@ -97,7 +101,6 @@ class CNotificationCenter {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };
 

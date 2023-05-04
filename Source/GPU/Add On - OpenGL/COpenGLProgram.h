@@ -9,8 +9,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: COpenGLProgram
 
-class COpenGLProgramInternals;
 class COpenGLProgram {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -24,5 +27,5 @@ class COpenGLProgram {
 
 	// Properties
 	private:
-		COpenGLProgramInternals*	mInternals;
+		Internals*	mInternals;
 };

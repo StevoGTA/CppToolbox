@@ -11,15 +11,15 @@ static	CString	sErrorDomain(OSSTR("CFile"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFileInternals
+// MARK: - CFile::Internals
 
-class CFileInternals : public TCopyOnWriteReferenceCountable<CFileInternals> {
+class CFile::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-		CFileInternals(const CFilesystemPath& filesystemPath) :
+		Internals(const CFilesystemPath& filesystemPath) :
 			TCopyOnWriteReferenceCountable(),
 					mFilesystemPath(filesystemPath)
 			{}
-		CFileInternals(const CFileInternals& other) :
+		Internals(const Internals& other) :
 			TCopyOnWriteReferenceCountable(),
 					mFilesystemPath(other.mFilesystemPath)
 			{}
@@ -47,7 +47,7 @@ const	SError	CFile::mUnableToWriteError(sErrorDomain, 7, CString(OSSTR("Unable t
 CFile::CFile(const CFilesystemPath& filesystemPath)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFileInternals(filesystemPath);
+	mInternals = new Internals(filesystemPath);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -25,12 +25,12 @@ using namespace Microsoft::WRL;
 using namespace Platform;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPUInternals
+// MARK: CGPU::Internals
 
-class CGPUInternals {
+class CGPU::Internals {
 	public:
-							CGPUInternals(const SGPUProcsInfo& procsInfo) :
-								mProcsInfo(procsInfo),
+							Internals(const Procs& procs) :
+								mProcs(procs),
 										mD3DFeatureLevel(D3D_FEATURE_LEVEL_11_0),
 										mD3DRenderTargetSize(),
 										mOutputSize(),
@@ -51,7 +51,7 @@ class CGPUInternals {
 									createDeviceIndependentResources();
 									createDeviceResources();
 								}
-							~CGPUInternals() {}
+							~Internals() {}
 
 		void				createDeviceIndependentResources()
 								{
@@ -256,8 +256,7 @@ class CGPUInternals {
 									} else {
 										// Otherwise, create a new one using the same adapter as the existing Direct3D
 										//	device.
-										SDirectXDisplaySupportInfo	displaySupportInfo =
-																			mProcsInfo.getDisplaySupportInfo();
+										SDirectXDisplaySupportInfo	displaySupportInfo = mProcs.getDisplaySupportInfo();
 										DXGI_SCALING				scaling =
 																			displaySupportInfo.mAlwaysSupportHighResolutions
 																					? DXGI_SCALING_NONE :
@@ -428,7 +427,7 @@ class CGPUInternals {
 								{
 									// Calculate render DPI
 									mRenderDPI =
-											mProcsInfo.getDisplaySupportInfo()
+											mProcs.getDisplaySupportInfo()
 													.getRenderDPI(mDPI,
 															S2DSizeF32(mLogicalSize.mWidth, mLogicalSize.mHeight));
 
@@ -575,67 +574,67 @@ class CGPUInternals {
 										AssertFailIf(FAILED(hr));
 								}
 
-		SGPUProcsInfo									mProcsInfo;
+		Procs							mProcs;
 
 		// Direct3D objects.
-		ComPtr<ID3D11Device3>							mD3DDeviceComPtr;
-		ComPtr<ID3D11DeviceContext3>					mD3DDeviceContextComPtr;
-		CLock											mD3DDeviceContextLock;
-		ComPtr<IDXGISwapChain3>							mDXGISwapChainComPtr;
+		ComPtr<ID3D11Device3>			mD3DDeviceComPtr;
+		ComPtr<ID3D11DeviceContext3>	mD3DDeviceContextComPtr;
+		CLock							mD3DDeviceContextLock;
+		ComPtr<IDXGISwapChain3>			mDXGISwapChainComPtr;
 
 		// Direct3D rendering objects. Required for 3D.
-		ComPtr<ID3D11RenderTargetView1>					mD3DRenderTargetViewComPtr;
-		ComPtr<ID3D11DepthStencilView>					mD3DDeptStencilViewComPtr;
-		D3D11_VIEWPORT									mD3DScreenViewport;
-		XMFLOAT4X4										mOrientationTransform3D;
+		ComPtr<ID3D11RenderTargetView1>	mD3DRenderTargetViewComPtr;
+		ComPtr<ID3D11DepthStencilView>	mD3DDeptStencilViewComPtr;
+		D3D11_VIEWPORT					mD3DScreenViewport;
+		XMFLOAT4X4						mOrientationTransform3D;
 
 		// Direct2D drawing components.
-		ComPtr<ID2D1Factory3>							mD2DFactoryComPtr;
-		ComPtr<ID2D1Device2>							mD2DDeviceComPtr;
-		ComPtr<ID2D1DeviceContext2>						mD2DDeviceContextComPtr;
-		ComPtr<ID2D1Bitmap1>							mD2DTargetBitmapComPtr;
-		Matrix3x2F										mOrientationTransform2D;
+		ComPtr<ID2D1Factory3>			mD2DFactoryComPtr;
+		ComPtr<ID2D1Device2>			mD2DDeviceComPtr;
+		ComPtr<ID2D1DeviceContext2>		mD2DDeviceContextComPtr;
+		ComPtr<ID2D1Bitmap1>			mD2DTargetBitmapComPtr;
+		Matrix3x2F						mOrientationTransform2D;
 
 		// DirectWrite drawing components.
-		ComPtr<IDWriteFactory3>							mDWriteFactoryComPtr;
-		ComPtr<IWICImagingFactory2>						mWICImagingFactoryComPtr;
+		ComPtr<IDWriteFactory3>			mDWriteFactoryComPtr;
+		ComPtr<IWICImagingFactory2>		mWICImagingFactoryComPtr;
 
 		// Cached reference to the Window.
-		Agile<CoreWindow>								mCoreWindowAgile;
+		Agile<CoreWindow>				mCoreWindowAgile;
 
 		// Cached device properties.
-		D3D_FEATURE_LEVEL								mD3DFeatureLevel;
-		Windows::Foundation::Size						mD3DRenderTargetSize;
-		Windows::Foundation::Size						mOutputSize;
-		S2DSizeF32										mLogicalSize;
-		DisplayOrientations								mNativeOrientation;
-		DisplayOrientations								mCurrentOrientation;
-		Float32											mDPI;
+		D3D_FEATURE_LEVEL				mD3DFeatureLevel;
+		Windows::Foundation::Size		mD3DRenderTargetSize;
+		Windows::Foundation::Size		mOutputSize;
+		S2DSizeF32						mLogicalSize;
+		DisplayOrientations				mNativeOrientation;
+		DisplayOrientations				mCurrentOrientation;
+		Float32							mDPI;
 
 		// This is the DPI that will be reported back to the app. It takes into account whether the app supports high
 		//	resolution screens or not.
-		Float32											mRenderDPI;
+		Float32							mRenderDPI;
 
 		// Matrices
-		XMFLOAT4X4										mViewMatrix2D;
-		XMFLOAT4X4										mProjectionMatrix2D;
-		XMFLOAT4X4										mViewMatrix3D;
-		XMFLOAT4X4										mProjectionMatrix3D;
+		XMFLOAT4X4						mViewMatrix2D;
+		XMFLOAT4X4						mProjectionMatrix2D;
+		XMFLOAT4X4						mViewMatrix3D;
+		XMFLOAT4X4						mProjectionMatrix3D;
 
 		// Blend state
-		ID3D11BlendState*								mD3DBlendState;
+		ID3D11BlendState*				mD3DBlendState;
 
 		// Rasterizer State
-		ID3D11RasterizerState*							mD3DRasterizerState2D;
-		ID3D11RasterizerState*							mD3DRasterizerState3D;
+		ID3D11RasterizerState*			mD3DRasterizerState2D;
+		ID3D11RasterizerState*			mD3DRasterizerState3D;
 
 		// Other stuffs
-		std::wstring									m_text;
-		DWRITE_TEXT_METRICS								m_textMetrics;
-		ComPtr<ID2D1SolidColorBrush>					m_whiteBrush;
-		ComPtr<ID2D1DrawingStateBlock1>					m_stateBlock;
-		ComPtr<IDWriteTextLayout3>						m_textLayout;
-		ComPtr<IDWriteTextFormat2>						m_textFormat;
+		std::wstring					m_text;
+		DWRITE_TEXT_METRICS				m_textMetrics;
+		ComPtr<ID2D1SolidColorBrush>	m_whiteBrush;
+		ComPtr<ID2D1DrawingStateBlock1>	m_stateBlock;
+		ComPtr<IDWriteTextLayout3>		m_textLayout;
+		ComPtr<IDWriteTextFormat2>		m_textFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -645,10 +644,10 @@ class CGPUInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPU::CGPU(const SGPUProcsInfo& procsInfo)
+CGPU::CGPU(const Procs& procs)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUInternals(procsInfo);
+	mInternals = new Internals(procs);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -768,20 +767,20 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 {
 	// Setup
 	mInternals->mD3DDeviceContextLock.lock();
-	if (mInternals->mProcsInfo.requiresDeviceValidation()) {
+	if (mInternals->mProcs.requiresDeviceValidation()) {
 		// Requires device validation
 		mInternals->validateDevice();
-		mInternals->mProcsInfo.handledDeviceValidation();
+		mInternals->mProcs.handledDeviceValidation();
 	}
 
 	bool				createWindowSizeDependentResources = false;
-	Float32				dpi = mInternals->mProcsInfo.getDPI();
-	DisplayOrientations	orientation = mInternals->mProcsInfo.getOrientation();
+	Float32				dpi = mInternals->mProcs.getDPI();
+	DisplayOrientations	orientation = mInternals->mProcs.getOrientation();
 	if (mInternals->mCoreWindowAgile.Get() == nullptr) {
 		// Setup
 		DisplayInformation^ currentDisplayInformation = DisplayInformation::GetForCurrentView();
 
-		mInternals->mCoreWindowAgile = mInternals->mProcsInfo.getCoreWindow();
+		mInternals->mCoreWindowAgile = mInternals->mProcs.getCoreWindow();
 		mInternals->mLogicalSize =
 				S2DSizeF32(mInternals->mCoreWindowAgile->Bounds.Width, mInternals->mCoreWindowAgile->Bounds.Height);
 		mInternals->mNativeOrientation = currentDisplayInformation->NativeOrientation;
@@ -802,9 +801,9 @@ void CGPU::renderStart(const S2DSizeF32& size2D, Float32 fieldOfViewAngle3D, Flo
 		mInternals->mD2DDeviceContextComPtr->SetDpi(mInternals->mDPI, mInternals->mDPI);
 
 		createWindowSizeDependentResources = true;
-	} else if (mInternals->mProcsInfo.getSize() != mInternals->mLogicalSize) {
+	} else if (mInternals->mProcs.getSize() != mInternals->mLogicalSize) {
 		// Update size
-		mInternals->mLogicalSize = mInternals->mProcsInfo.getSize();
+		mInternals->mLogicalSize = mInternals->mProcs.getSize();
 		createWindowSizeDependentResources = true;
 	} else if ((orientation != DisplayOrientations::None) && (orientation != mInternals->mCurrentOrientation)) {
 		// Update orientation
@@ -869,9 +868,8 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			mInternals->mD3DDeviceContextComPtr->RSSetState(mInternals->mD3DRasterizerState2D);
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets, NULL);
 			renderState.commit(
-					SGPURenderStateCommitInfo(*mInternals->mD3DDeviceComPtr.Get(),
-							*mInternals->mD3DDeviceContextComPtr.Get(), *mInternals->mD3DBlendState,
-							mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
+					CommitInfo(*mInternals->mD3DDeviceComPtr.Get(), *mInternals->mD3DDeviceContextComPtr.Get(),
+							*mInternals->mD3DBlendState, mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
 			break;
 
 		case CGPURenderState::kMode3D:
@@ -880,9 +878,8 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets,
 					mInternals->mD3DDeptStencilViewComPtr.Get());
 			renderState.commit(
-					SGPURenderStateCommitInfo(*mInternals->mD3DDeviceComPtr.Get(),
-							*mInternals->mD3DDeviceContextComPtr.Get(), *mInternals->mD3DBlendState,
-							mInternals->mProjectionMatrix3D, mInternals->mViewMatrix3D));
+					CommitInfo(*mInternals->mD3DDeviceComPtr.Get(), *mInternals->mD3DDeviceContextComPtr.Get(),
+							*mInternals->mD3DBlendState, mInternals->mProjectionMatrix3D, mInternals->mViewMatrix3D));
 			break;
 	}
 
@@ -917,9 +914,8 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			mInternals->mD3DDeviceContextComPtr->RSSetState(mInternals->mD3DRasterizerState2D);
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets, NULL);
 			renderState.commit(
-					SGPURenderStateCommitInfo(*mInternals->mD3DDeviceComPtr.Get(),
-							*mInternals->mD3DDeviceContextComPtr.Get(), *mInternals->mD3DBlendState,
-							mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
+					CommitInfo(*mInternals->mD3DDeviceComPtr.Get(), *mInternals->mD3DDeviceContextComPtr.Get(),
+							*mInternals->mD3DBlendState, mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
 			break;
 
 		case CGPURenderState::kMode3D:
@@ -928,9 +924,8 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets,
 					mInternals->mD3DDeptStencilViewComPtr.Get());
 			renderState.commit(
-					SGPURenderStateCommitInfo(*mInternals->mD3DDeviceComPtr.Get(),
-							*mInternals->mD3DDeviceContextComPtr.Get(), *mInternals->mD3DBlendState,
-							mInternals->mProjectionMatrix3D, mInternals->mViewMatrix3D));
+					CommitInfo(*mInternals->mD3DDeviceComPtr.Get(), *mInternals->mD3DDeviceContextComPtr.Get(),
+							*mInternals->mD3DBlendState, mInternals->mProjectionMatrix3D, mInternals->mViewMatrix3D));
 			break;
 	}
 
@@ -956,7 +951,7 @@ void CGPU::renderEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update display text.
-	UInt32	fps = mInternals->mProcsInfo.getFPS();
+	UInt32	fps = mInternals->mProcs.getFPS();
 
 	mInternals->m_text = (fps > 0) ? std::to_wstring(fps) + L" FPS" : L" - FPS";
 

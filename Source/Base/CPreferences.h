@@ -117,6 +117,10 @@ class CPreferences {
 		};
 #endif
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -171,6 +175,5 @@ class CPreferences {
 		static	const	UInt32Pref		mNoUInt32Pref;
 
 	private:
-		class Internals;
 						Internals*		mInternals;
 };

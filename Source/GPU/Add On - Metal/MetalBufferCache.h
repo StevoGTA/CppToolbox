@@ -12,9 +12,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MetalBufferCache : NSObject
 
 // Lifecycle methods
+
 - (instancetype) initWithDevice:(id<MTLDevice>) device;
 
 // Instance methods
+
 - (id<MTLBuffer>) bufferWithLength:(NSUInteger) length options:(MTLResourceOptions) options;
 - (id<MTLBuffer>) bufferWithBytes:(const void*) pointer length:(NSUInteger) length options:(MTLResourceOptions) options;
 - (void) reset;

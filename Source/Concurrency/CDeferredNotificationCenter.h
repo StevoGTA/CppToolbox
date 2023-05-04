@@ -11,6 +11,10 @@
 // MARK: CDeferredNotificationCenter
 
 class CDeferredNotificationCenter : public CNotificationCenter {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 							// Lifecycle methods
@@ -28,6 +32,5 @@ class CDeferredNotificationCenter : public CNotificationCenter {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

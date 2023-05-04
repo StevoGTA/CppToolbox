@@ -23,8 +23,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: COpenGLVertexShader
 
-class COpenGLVertexShaderInternals;
 class COpenGLVertexShader : public CGPUVertexShader {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 											// Lifecycle methods
@@ -52,14 +55,17 @@ class COpenGLVertexShader : public CGPUVertexShader {
 
 	// Properties
 	private:
-		COpenGLVertexShaderInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - COpenGLFragmentShader
 
-class COpenGLFragmentShaderInternals;
 class COpenGLFragmentShader : public CGPUFragmentShader {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 											// Lifecycle methods
@@ -78,5 +84,5 @@ class COpenGLFragmentShader : public CGPUFragmentShader {
 
 	// Properties
 	private:
-		COpenGLFragmentShaderInternals*	mInternals;
+		Internals*	mInternals;
 };

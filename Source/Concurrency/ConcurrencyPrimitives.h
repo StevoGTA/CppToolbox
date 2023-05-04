@@ -10,6 +10,10 @@
 // MARK: CLock
 
 class CLock {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -23,7 +27,6 @@ class CLock {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };
 
@@ -31,6 +34,10 @@ class CLock {
 // MARK: - CReadPreferringLock
 
 class CReadPreferringLock {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -45,7 +52,6 @@ class CReadPreferringLock {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };
 
@@ -53,6 +59,10 @@ class CReadPreferringLock {
 // MARK: - CSemaphore
 
 class CSemaphore {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -66,7 +76,6 @@ class CSemaphore {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };
 
@@ -74,6 +83,10 @@ class CSemaphore {
 // MARK: - CSharedResource
 
 class CSharedResource {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -86,6 +99,5 @@ class CSharedResource {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

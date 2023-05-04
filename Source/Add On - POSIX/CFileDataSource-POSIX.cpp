@@ -10,11 +10,11 @@
 #include <sys/mman.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFileDataSourceInternals
+// MARK: CFileDataSource::Internals
 
-class CFileDataSourceInternals {
+class CFileDataSource::Internals {
 	public:
-		CFileDataSourceInternals(const CFile& file, bool buffered) :
+		Internals(const CFile& file, bool buffered) :
 			mByteCount(file.getByteCount()), mFILE(nil), mFD(-1)
 			{
 				// Setup
@@ -40,7 +40,7 @@ class CFileDataSourceInternals {
 					}
 				}
 			}
-		~CFileDataSourceInternals()
+		~Internals()
 			{
 				if (mFILE != nil)
 					::fclose(mFILE);
@@ -66,7 +66,7 @@ class CFileDataSourceInternals {
 CFileDataSource::CFileDataSource(const CFile& file, bool buffered) : CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFileDataSourceInternals(file, buffered);
+	mInternals = new Internals(file, buffered);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -147,11 +147,11 @@ OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMappedFileDataSourceInternals
+// MARK: - CMappedFileDataSource::Internals
 
-class CMappedFileDataSourceInternals {
+class CMappedFileDataSource::Internals {
 	public:
-		CMappedFileDataSourceInternals(const CFile& file, UInt64 byteOffset, UInt64 byteCount)
+		Internals(const CFile& file, UInt64 byteOffset, UInt64 byteCount)
 			{
 				// Open
 				CString::C	path = file.getFilesystemPath().getString().getCString(CString::kEncodingUTF8);
@@ -184,7 +184,7 @@ class CMappedFileDataSourceInternals {
 					CLogServices::logError(*mError, "opening", __FILE__, __func__, __LINE__);
 				}
 			}
-		~CMappedFileDataSourceInternals()
+		~Internals()
 			{
 				if (mBytePtr != nil)
 					::munmap(mBytePtr, (size_t) mByteCount);
@@ -209,14 +209,14 @@ CMappedFileDataSource::CMappedFileDataSource(const CFile& file, UInt64 byteOffse
 		CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMappedFileDataSourceInternals(file, byteOffset, byteCount);
+	mInternals = new Internals(file, byteOffset, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMappedFileDataSourceInternals(file, 0, file.getByteCount());
+	mInternals = new Internals(file, 0, file.getByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

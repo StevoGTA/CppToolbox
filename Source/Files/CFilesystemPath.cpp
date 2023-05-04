@@ -13,12 +13,13 @@ static	const	CString&	sPathSeparator(CFilesystemPath::Style style);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFilesystemPathInternals
+// MARK: - CFilesystemPath::Internals
 
-class CFilesystemPathInternals : public TReferenceCountable<CFilesystemPathInternals> {
+class CFilesystemPath::Internals : public TReferenceCountable<Internals> {
 	public:
-		CFilesystemPathInternals(const CString& string, CFilesystemPath::Style style) :
-			TReferenceCountable(), mString(string), mStyle(style)
+		Internals(const CString& string, CFilesystemPath::Style style) :
+			TReferenceCountable(),
+					mString(string), mStyle(style)
 			{}
 
 		CString					mString;
@@ -35,7 +36,7 @@ class CFilesystemPathInternals : public TReferenceCountable<CFilesystemPathInter
 CFilesystemPath::CFilesystemPath(const CString& string, Style style) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFilesystemPathInternals(string, style);
+	mInternals = new Internals(string, style);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

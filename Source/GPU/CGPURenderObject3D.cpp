@@ -5,11 +5,11 @@
 #include "CGPURenderObject3D.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPURenderObject3DInternals
+// MARK: CGPURenderObject3D::Internals
 
-class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3DInternals> {
+class CGPURenderObject3D::Internals : public TReferenceCountable<Internals> {
 	public:
-				CGPURenderObject3DInternals(CGPU& gpu, const CData& vertexData, UInt32 indexCount,
+				Internals(CGPU& gpu, const CData& vertexData, UInt32 indexCount,
 						const CData& indexData, CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
 					TReferenceCountable(), mGPU(gpu),
 							mGPUVertexBuffer(
@@ -17,7 +17,7 @@ class CGPURenderObject3DInternals : public TReferenceCountable<CGPURenderObject3
 							mIndexCount(indexCount), mGPUIndexBuffer(mGPU.allocateIndexBuffer(indexData)),
 							mVertexShader(vertexShader), mFragmentShader(fragmentShader)
 					{}
-				~CGPURenderObject3DInternals()
+				~Internals()
 					{
 						// Cleanup
 						mGPU.disposeBuffer(mGPUVertexBuffer);
@@ -45,7 +45,7 @@ CGPURenderObject3D::CGPURenderObject3D(CGPU& gpu, const CData& vertexData, UInt3
 		CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) : CGPURenderObject()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPURenderObject3DInternals(gpu, vertexData, indexCount, indexData, vertexShader, fragmentShader);
+	mInternals = new Internals(gpu, vertexData, indexCount, indexData, vertexShader, fragmentShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

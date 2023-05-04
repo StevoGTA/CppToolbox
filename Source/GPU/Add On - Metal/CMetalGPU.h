@@ -10,9 +10,9 @@
 #include <QuartzCore/CAMetalLayer.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPUProcsInfo
+// MARK: CGPU::Procs
 
-struct SGPUProcsInfo {
+struct CGPU::Procs {
 	// Procs
 	typedef	id<MTLDevice>				(*GetDeviceProc)(void* userData);
 	typedef	id<CAMetalDrawable>			(*GetCurrentDrawableProc)(void* userData);
@@ -21,7 +21,7 @@ struct SGPUProcsInfo {
 	typedef	MTLRenderPassDescriptor*	(*GetCurrentRenderPassDescriptor)(void* userData);
 
 									// Lifecycle methods
-									SGPUProcsInfo(GetDeviceProc getDeviceProc,
+									Procs(GetDeviceProc getDeviceProc,
 											GetCurrentDrawableProc getCurrentDrawableProc,
 											GetPixelFormatProc getPixelFormatProc,
 											GetSampleCountProc getSampleCountProc,
@@ -33,7 +33,7 @@ struct SGPUProcsInfo {
 												mGetCurrentRenderPassDescriptorProc(getCurrentRenderPassDescriptorProc),
 												mUserData(userData)
 										{}
-									SGPUProcsInfo(const SGPUProcsInfo& other) :
+									Procs(const Procs& other) :
 										mGetDeviceProc(other.mGetDeviceProc),
 												mGetCurrentDrawableProc(other.mGetCurrentDrawableProc),
 												mGetPixelFormatProc(other.mGetPixelFormatProc),

@@ -10,8 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFolder
 
-class CFolderInternals;
 class CFolder : public CHashable {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 											// Lifecycle methods
@@ -100,9 +103,9 @@ class CFolder : public CHashable {
 
 	// Properties
 	public:
-		static	const	SError				mDoesNotExistError;
-		static	const	SError				mAlreadyExistsError;
+		static	const	SError		mDoesNotExistError;
+		static	const	SError		mAlreadyExistsError;
 
 	private:
-						CFolderInternals*	mInternals;
+						Internals*	mInternals;
 };

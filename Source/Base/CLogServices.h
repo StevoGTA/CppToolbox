@@ -53,6 +53,10 @@
 class CFile;
 
 class CLogFile {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -77,7 +81,6 @@ class CLogFile {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };
 

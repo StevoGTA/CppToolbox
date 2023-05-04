@@ -10,9 +10,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDotUnderscoreReader
 
-class CDotUnderscoreAttribute;
-class CDotUnderscoreReaderInternals;
 class CDotUnderscoreReader {
+	// Classes
+	private:
+		class Attribute;
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -27,11 +30,10 @@ class CDotUnderscoreReader {
 	private:
 												// Lifecycle methods
 												CDotUnderscoreReader(
-														const TNDictionary<TNArray<CDotUnderscoreAttribute> >&
-																attributeMap,
+														const TNDictionary<TNArray<Attribute> >& attributeMap,
 														const OV<CData>& resourceFork);
 
 	// Properties
 	private:
-		CDotUnderscoreReaderInternals*	mInternals;
+		Internals*	mInternals;
 };

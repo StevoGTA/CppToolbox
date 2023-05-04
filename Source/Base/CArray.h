@@ -28,6 +28,11 @@ class CArray : public CEquatable {
 		typedef	void	(*DisposeProc)(ItemRef itemRef);
 		typedef bool	(*IsMatchProc)(ItemRef itemRef, void* userData);
 
+	// Classes
+	private:
+		class Internals;
+		class IteratorInfo;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -93,10 +98,7 @@ class CArray : public CEquatable {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
-
-		class IteratorInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

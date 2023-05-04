@@ -9,13 +9,13 @@
 #include "COpenGLTexture.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPUInternals
+// MARK: CGPU::Internals
 
-class CGPUInternals {
+class CGPU::Internals {
 	public:
-		CGPUInternals(const SGPUProcsInfo& procs) : mProcs(procs) {}
+		Internals(const Procs& procs) : mProcs(procs) {}
 
-	SGPUProcsInfo	mProcs;
+	Procs			mProcs;
 
 	SMatrix4x4_32	mViewMatrix2D;
 	SMatrix4x4_32	mProjectionMatrix2D;
@@ -31,10 +31,10 @@ class CGPUInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPU::CGPU(const SGPUProcsInfo& procs)
+CGPU::CGPU(const Procs& procs)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUInternals(procs);
+	mInternals = new Internals(procs);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -191,14 +191,14 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 	switch (renderState.getMode()) {
 		case CGPURenderState::kMode2D:
 			// 2D
-			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
+			renderState.commit(CommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			break;
 
 		case CGPURenderState::kMode3D:
 			// 3D
-			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
+			renderState.commit(CommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
 			glCullFace(GL_BACK);
@@ -228,14 +228,14 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 	switch (renderState.getMode()) {
 		case CGPURenderState::kMode2D:
 			// 2D
-			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
+			renderState.commit(CommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			break;
 
 		case CGPURenderState::kMode3D:
 			// 3D
-			renderState.commit(SGPURenderStateCommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
+			renderState.commit(CommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
 			glCullFace(GL_BACK);

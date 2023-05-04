@@ -11,14 +11,14 @@
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CMetalTextureInternals
+// MARK: CMetalTexture::Internals
 
-class CMetalTextureInternals : public TReferenceCountable<CMetalTextureInternals> {
+class CMetalTexture::Internals : public TReferenceCountable<Internals> {
 	public:
-		CMetalTextureInternals(id<MTLDevice> device, const CData& data, CGPUTexture::DataFormat dataFormat,
+		Internals(id<MTLDevice> device, const CData& data, CGPUTexture::DataFormat dataFormat,
 				const S2DSizeU16& size) :
-mUsedPixelsSize(size),
-			TReferenceCountable(), mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
+			TReferenceCountable(),
+					mUsedPixelsSize(size), mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
 					SNumber::getNextPowerOf2(size.mHeight)))
 			{
 				// Setup
@@ -54,9 +54,9 @@ mUsedPixelsSize(size),
 				MTLRegion	region = {{0, 0, 0}, {size.mWidth, size.mHeight, 1}};
 				[mTexture replaceRegion:region mipmapLevel:0 withBytes:data.getBytePtr() bytesPerRow:bytesPerRow];
 			}
-		CMetalTextureInternals(CVMetalTextureCacheRef metalTextureCacheRef, CVImageBufferRef imageBufferRef,
-				UInt32 planeIndex) :
-			TReferenceCountable(), mHasTransparency(false)
+		Internals(CVMetalTextureCacheRef metalTextureCacheRef, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
+			TReferenceCountable(),
+					mHasTransparency(false)
 			{
 				// Setup
 				size_t	width = ::CVPixelBufferGetWidthOfPlane(imageBufferRef, planeIndex);
@@ -103,7 +103,7 @@ mUsedPixelsSize(size),
 							CString(OSSTR("CMetalTexture - error when creating texture from image: ")) +
 									CString(result));
 			}
-		~CMetalTextureInternals()
+		~Internals()
 			{
 				// Cleanup
 				if (mMetalTextureRef.hasInstance())
@@ -129,7 +129,7 @@ CMetalTexture::CMetalTexture(id<MTLDevice> device, const CData& data, CGPUTextur
 		const S2DSizeU16& size) : CGPUTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMetalTextureInternals(device, data, dataFormat, size);
+	mInternals = new Internals(device, data, dataFormat, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -137,7 +137,7 @@ CMetalTexture::CMetalTexture(CVMetalTextureCacheRef metalTextureCacheRef, CVImag
 		UInt32 planeIndex) : CGPUTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMetalTextureInternals(metalTextureCacheRef, imageBufferRef, planeIndex);
+	mInternals = new Internals(metalTextureCacheRef, imageBufferRef, planeIndex);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

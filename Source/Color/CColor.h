@@ -143,6 +143,10 @@ class CColor : public CEquatable {
 			HSVTransformer	mAdder;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -342,6 +346,5 @@ class CColor : public CEquatable {
 		static	const	SMatrix3x3_32	mYCbCrConverstionMatrixRec709VideoRange;
 
 	private:
-		class Internals;
 						Internals*		mInternals;
 };

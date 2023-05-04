@@ -10,25 +10,22 @@
 // Info from http://www.swiftforensics.com/2018/11/the-dot-underscore-file-format.html
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDotUnderscoreAttribute
+// MARK: CDotUnderscoreReader::Attribute
 
-class CDotUnderscoreAttribute {
-	public:
-};
+class CDotUnderscoreReader::Attribute {};
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDotUnderscoreReaderInternals
+// MARK: - CDotUnderscoreReader::Internals
 
-class CDotUnderscoreReaderInternals {
+class CDotUnderscoreReader::Internals {
 	public:
-		CDotUnderscoreReaderInternals(const TNDictionary<TNArray<CDotUnderscoreAttribute> >& attributeMap,
-				const OV<CData>& resourceFork) :
+		Internals(const TNDictionary<TNArray<Attribute> >& attributeMap, const OV<CData>& resourceFork) :
 			mAttributeMap(attributeMap), mResourceFork(resourceFork)
 			{}
 
-		TNDictionary<TNArray<CDotUnderscoreAttribute> >	mAttributeMap;
-		OV<CData>										mResourceFork;
+		TNDictionary<TNArray<Attribute> >	mAttributeMap;
+		OV<CData>							mResourceFork;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -93,12 +90,12 @@ static	SError	sInvalidData(sErrorDomain, 1, CString(OSSTR("Invalid Data")));
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDotUnderscoreReader::CDotUnderscoreReader(const TNDictionary<TNArray<CDotUnderscoreAttribute> >& attributeMap,
+CDotUnderscoreReader::CDotUnderscoreReader(const TNDictionary<TNArray<Attribute> >& attributeMap,
 		const OV<CData>& resourceFork)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CDotUnderscoreReaderInternals(attributeMap, resourceFork);
+	mInternals = new Internals(attributeMap, resourceFork);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -152,7 +149,7 @@ TIResult<CDotUnderscoreReader> CDotUnderscoreReader::from(const I<CRandomAccessD
 	UInt32	resourceForkOffset = attr.getResourceForkOffset();
 
 	// Read attributes
-	TNDictionary<TNArray<CDotUnderscoreAttribute> >	attributeMap;
+	TNDictionary<TNArray<Attribute> >	attributeMap;
 
 	// Get resource fork
 	error = byteReader.setPos(CByteReader::kPositionFromBeginning, resourceForkOffset);

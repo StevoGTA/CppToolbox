@@ -55,6 +55,10 @@ class CSRSWBIPQueue : public CEquatable {
 			UInt32	mByteCount;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 								// CEquatable methods
@@ -78,7 +82,6 @@ class CSRSWBIPQueue : public CEquatable {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
  };
 
@@ -184,6 +187,10 @@ class CSRSWBIPSegmentedQueue {
 			UInt32	mByteCount;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -203,7 +210,6 @@ class CSRSWBIPSegmentedQueue {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
  };
 
@@ -274,6 +280,10 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 // MARK: - CSRSWMessageQueues
 
 class CSRSWMessageQueues {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -288,6 +298,5 @@ class CSRSWMessageQueues {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

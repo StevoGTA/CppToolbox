@@ -13,15 +13,15 @@ static	CString	sErrorDomain(OSSTR("CFolder"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFolderInternals
+// MARK: - CFolder::Internals
 
-class CFolderInternals : public TCopyOnWriteReferenceCountable<CFolderInternals> {
+class CFolder::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-		CFolderInternals(const CFilesystemPath& filesystemPath) :
+		Internals(const CFilesystemPath& filesystemPath) :
 			TCopyOnWriteReferenceCountable(),
 					mFilesystemPath(filesystemPath)
 			{}
-		CFolderInternals(const CFolderInternals& other) :
+		Internals(const Internals& other) :
 			TCopyOnWriteReferenceCountable(),
 					mFilesystemPath(other.mFilesystemPath)
 			{}
@@ -44,7 +44,7 @@ const	SError CFolder::mAlreadyExistsError(sErrorDomain, 2, CString(OSSTR("Folder
 CFolder::CFolder(const CFilesystemPath& filesystemPath)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFolderInternals(filesystemPath);
+	mInternals = new Internals(filesystemPath);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

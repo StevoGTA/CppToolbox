@@ -77,6 +77,12 @@
 // MARK: CWorkItemQueue
 
 class CWorkItemQueue {
+	// Classes
+	private:
+		class Internals;
+		class WorkItemInfo;
+		class WorkItemThread;
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -108,9 +114,5 @@ class CWorkItemQueue {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
-
-		class WorkItemInfo;
-		class WorkItemThread;
 };

@@ -30,6 +30,10 @@ class CWorkItem : public CHashable {
 	typedef	void	(*CancelledProc)(void* userData);
 	typedef	void	(*Proc)(const I<CWorkItem>& workItem, void* userData);
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -74,6 +78,5 @@ class CWorkItem : public CHashable {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

@@ -13,9 +13,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPU
 
-struct SGPUProcsInfo;
-class CGPUInternals;
 class CGPU {
+	// Procs
+	public:
+		struct Procs;
+
 	// Enums
 	public:
 		enum RenderType {
@@ -23,10 +25,14 @@ class CGPU {
 			kRenderTypeTriangleStrip,
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
-									CGPU(const SGPUProcsInfo& procs);
+									CGPU(const Procs& procs);
 									~CGPU();
 
 									// Instance methods
@@ -54,5 +60,5 @@ class CGPU {
 
 	// Properties
 	private:
-		CGPUInternals*	mInternals;
+		Internals*	mInternals;
 };

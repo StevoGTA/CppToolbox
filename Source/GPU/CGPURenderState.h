@@ -13,9 +13,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderState
 
-class CGPURenderStateInternals;
-struct SGPURenderStateCommitInfo;
-
 class CGPURenderState {
 	// Enums
 	public:
@@ -23,6 +20,14 @@ class CGPURenderState {
 			kMode2D,
 			kMode3D,
 		};
+
+	// Structs
+	public:
+		struct CommitInfo;
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -41,11 +46,9 @@ class CGPURenderState {
 		const	OR<const TArray<const I<CGPUTexture> > >	getTextures() const;
 
 				Mode										getMode() const;
-				void										commit(
-																	const SGPURenderStateCommitInfo&
-																			renderStateCommitInfo);
+				void										commit(const CommitInfo& commitInfo);
 
 	// Properties
 	protected:
-		CGPURenderStateInternals*	mInternals;
+		Internals*	mInternals;
 };

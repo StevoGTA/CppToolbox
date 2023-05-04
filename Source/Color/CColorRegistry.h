@@ -14,6 +14,10 @@
 // MARK: CColorGroup
 
 class CColorGroup {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -34,7 +38,6 @@ class CColorGroup {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };
 
@@ -42,6 +45,10 @@ class CColorGroup {
 // MARK: - CColorSet
 
 class CColorSet {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 							// Lifecycle methods
@@ -70,7 +77,6 @@ class CColorSet {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };
 
@@ -93,6 +99,10 @@ class CColorRegistry {
 		static	const	CString	mGroupIDKey;	// OSType
 		static	const	CString	mColorIDKey;	// OSType
 		static	const	CString	mColorKey;		// CColor*
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -119,6 +129,5 @@ class CColorRegistry {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

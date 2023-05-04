@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFilesystemPath
 
-class CFilesystemPathInternals;
 class CFilesystemPath : public CHashable {
 	// Enums
 	public:
@@ -39,6 +38,10 @@ class CFilesystemPath : public CHashable {
 			kMakeLegalFilenameOptionsNone				= 0,
 			kMakeLegalFilenameOptionsDisallowSpaces	= 1 << 0,
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -83,5 +86,5 @@ class CFilesystemPath : public CHashable {
 
 	// Properties
 	private:
-		CFilesystemPathInternals*	mInternals;
+		Internals*	mInternals;
 };

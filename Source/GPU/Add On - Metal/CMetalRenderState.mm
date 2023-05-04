@@ -12,12 +12,11 @@
 #import <simd/simd.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPURenderStateInternals
+// MARK: CGPURenderState::Internals
 
-class CGPURenderStateInternals {
+class CGPURenderState::Internals {
 	public:
-		CGPURenderStateInternals(CGPURenderState::Mode mode, CGPUVertexShader& vertexShader,
-				CGPUFragmentShader& fragmentShader) :
+		Internals(CGPURenderState::Mode mode, CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
 			mMode(mode), mVertexShader(vertexShader), mFragmentShader(fragmentShader)
 			{}
 
@@ -43,7 +42,7 @@ CGPURenderState::CGPURenderState(Mode mode, CGPUVertexShader& vertexShader, CGPU
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CGPURenderStateInternals(mode, vertexShader, fragmentShader);
+	mInternals = new Internals(mode, vertexShader, fragmentShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -109,7 +108,7 @@ CGPURenderState::Mode CGPURenderState::getMode() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitInfo)
+void CGPURenderState::commit(const CommitInfo& commitInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -119,9 +118,9 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 	// Setup globals
 	GlobalUniforms	globalUniforms;
 	::memcpy(&globalUniforms.mModelMatrix, &mInternals->mModelMatrix, sizeof(matrix_float4x4));
-	::memcpy(&globalUniforms.mViewMatrix, &renderStateCommitInfo.mViewMatrix, sizeof(matrix_float4x4));
-	::memcpy(&globalUniforms.mProjectionMatrix, &renderStateCommitInfo.mProjectionMatrix, sizeof(matrix_float4x4));
-	[renderStateCommitInfo.mRenderCommandEncoder setVertexBytes:&globalUniforms length:sizeof(GlobalUniforms)
+	::memcpy(&globalUniforms.mViewMatrix, &commitInfo.mViewMatrix, sizeof(matrix_float4x4));
+	::memcpy(&globalUniforms.mProjectionMatrix, &commitInfo.mProjectionMatrix, sizeof(matrix_float4x4));
+	[commitInfo.mRenderCommandEncoder setVertexBytes:&globalUniforms length:sizeof(GlobalUniforms)
 			atIndex:kBufferIndexGlobalUniforms];
 
 	// Check for textures
@@ -134,26 +133,26 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 			const	CMetalTexture&	metalTexture = (const CMetalTexture&) *gpuTextures[i];
 
 			// Setup this texture
-			[renderStateCommitInfo.mRenderCommandEncoder setFragmentTexture:metalTexture.getMetalTexture() atIndex:i];
+			[commitInfo.mRenderCommandEncoder setFragmentTexture:metalTexture.getMetalTexture() atIndex:i];
 			needBlend |= metalTexture.hasTransparency();
 		}
 	}
 
 	// Setup functions
 	NSString*		vertexShaderName = (__bridge NSString*) vertexShader.getName().getOSString();
-	id<MTLFunction>	vertexFunction = renderStateCommitInfo.mFunctionsCache[vertexShaderName];
+	id<MTLFunction>	vertexFunction = commitInfo.mFunctionsCache[vertexShaderName];
 	if (vertexFunction == nil) {
 		// Create and store
-		vertexFunction = [renderStateCommitInfo.mShaderLibrary newFunctionWithName:vertexShaderName];
-		renderStateCommitInfo.mFunctionsCache[vertexShaderName] = vertexFunction;
+		vertexFunction = [commitInfo.mShaderLibrary newFunctionWithName:vertexShaderName];
+		commitInfo.mFunctionsCache[vertexShaderName] = vertexFunction;
 	}
 
 	NSString*		fragmentShaderName = (__bridge NSString*) fragmentShader.getName().getOSString();
-	id<MTLFunction>	fragmentFunction = renderStateCommitInfo.mFunctionsCache[fragmentShaderName];
+	id<MTLFunction>	fragmentFunction = commitInfo.mFunctionsCache[fragmentShaderName];
 	if (fragmentFunction == nil) {
 		// Create and store
-		fragmentFunction = [renderStateCommitInfo.mShaderLibrary newFunctionWithName:fragmentShaderName];
-		renderStateCommitInfo.mFunctionsCache[fragmentShaderName] = fragmentFunction;
+		fragmentFunction = [commitInfo.mShaderLibrary newFunctionWithName:fragmentShaderName];
+		commitInfo.mFunctionsCache[fragmentShaderName] = fragmentFunction;
 	}
 
 	// Setup render pipeline descriptor
@@ -162,40 +161,38 @@ void CGPURenderState::commit(const SGPURenderStateCommitInfo& renderStateCommitI
 						(needBlend ?			1 << 0 : 0) +
 						(requiresDepthTest ?	1 << 1 : 0);
 	NSString*	key = [NSString stringWithFormat:@"%@/%@/%u", vertexFunction.name, fragmentFunction.name, options];
-	id<MTLRenderPipelineState>	renderPipelineState = renderStateCommitInfo.mRenderPipelineStateCache[key];
+	id<MTLRenderPipelineState>	renderPipelineState = commitInfo.mRenderPipelineStateCache[key];
 	if (renderPipelineState == nil) {
 		// Create render pipeline state
-		renderStateCommitInfo.mRenderPipelineDescriptor.label = @"Pipeline";
-		renderStateCommitInfo.mRenderPipelineDescriptor.vertexFunction = vertexFunction;
-		renderStateCommitInfo.mRenderPipelineDescriptor.fragmentFunction = fragmentFunction;
-		renderStateCommitInfo.mRenderPipelineDescriptor.vertexDescriptor = vertexShader.getVertexDescriptor();
-		renderStateCommitInfo.mRenderPipelineDescriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+		commitInfo.mRenderPipelineDescriptor.label = @"Pipeline";
+		commitInfo.mRenderPipelineDescriptor.vertexFunction = vertexFunction;
+		commitInfo.mRenderPipelineDescriptor.fragmentFunction = fragmentFunction;
+		commitInfo.mRenderPipelineDescriptor.vertexDescriptor = vertexShader.getVertexDescriptor();
+		commitInfo.mRenderPipelineDescriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
 
-		renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].blendingEnabled = needBlend;
-		renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor =
-				MTLBlendFactorSourceAlpha;
-		renderStateCommitInfo.mRenderPipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor =
+		commitInfo.mRenderPipelineDescriptor.colorAttachments[0].blendingEnabled = needBlend;
+		commitInfo.mRenderPipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+		commitInfo.mRenderPipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor =
 				MTLBlendFactorOneMinusSourceAlpha;
 
 		NSError*	error;
 		renderPipelineState =
-				[renderStateCommitInfo.mDevice
-						newRenderPipelineStateWithDescriptor:renderStateCommitInfo.mRenderPipelineDescriptor
+				[commitInfo.mDevice newRenderPipelineStateWithDescriptor:commitInfo.mRenderPipelineDescriptor
 						error:&error];
 		if (renderPipelineState == nil)
 			// Error
 			NSLog(@"Failed to create pipeline state with error %@", error);
 
 		// Store
-		renderStateCommitInfo.mRenderPipelineStateCache[key] = renderPipelineState;
+		commitInfo.mRenderPipelineStateCache[key] = renderPipelineState;
 	}
 
 	// Setup render command encoder
 	id<MTLBuffer>	mtlBuffer = (__bridge id<MTLBuffer>) mInternals->mVertexBuffer->mPlatformReference;
-	[renderStateCommitInfo.mRenderCommandEncoder setRenderPipelineState:renderPipelineState];
+	[commitInfo.mRenderCommandEncoder setRenderPipelineState:renderPipelineState];
 
 	vertexShader.setModelMatrix(mInternals->mModelMatrix);
-	vertexShader.setup(renderStateCommitInfo.mRenderCommandEncoder, mtlBuffer, renderStateCommitInfo.mMetalBufferCache);
+	vertexShader.setup(commitInfo.mRenderCommandEncoder, mtlBuffer, commitInfo.mMetalBufferCache);
 
-	fragmentShader.setup(renderStateCommitInfo.mRenderCommandEncoder, renderStateCommitInfo.mMetalBufferCache);
+	fragmentShader.setup(commitInfo.mRenderCommandEncoder, commitInfo.mMetalBufferCache);
 }

@@ -5,12 +5,12 @@
 #include "CDirectXTexture.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CDirectXTextureInternals
+// MARK: CDirectXTexture::Internals
 
-class CDirectXTextureInternals : public TReferenceCountable<CDirectXTextureInternals> {
+class CDirectXTexture::Internals : public TReferenceCountable<Internals> {
 	public:
-		CDirectXTextureInternals(ID3D11Device& device, ID3D11DeviceContext& deviceContext, const CData& data,
-				DXGI_FORMAT format, const S2DSizeU16& size) :
+		Internals(ID3D11Device& device, ID3D11DeviceContext& deviceContext, const CData& data, DXGI_FORMAT format,
+				const S2DSizeU16& size) :
 			mFormat(format), mSize(size)
 			{
 				// Setup
@@ -117,7 +117,7 @@ CDirectXTexture::CDirectXTexture(ID3D11Device& device, ID3D11DeviceContext& devi
 		DXGI_FORMAT format, const S2DSizeU16& size)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CDirectXTextureInternals(device, deviceContext, data, format, size);
+	mInternals = new Internals(device, deviceContext, data, format, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

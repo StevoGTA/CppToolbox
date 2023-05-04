@@ -17,8 +17,11 @@ using namespace DirectX;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDirectXVertexShader
 
-class CDirectXVertexShaderInternals;
 class CDirectXVertexShader : public CGPUVertexShader {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -37,14 +40,17 @@ class CDirectXVertexShader : public CGPUVertexShader {
 
 	// Properties
 	private:
-		CDirectXVertexShaderInternals* mInternals;
+		Internals* mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDirectXPixelShader
 
-class CDirectXPixelShaderInternals;
 class CDirectXPixelShader : public CGPUFragmentShader {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -60,5 +66,5 @@ class CDirectXPixelShader : public CGPUFragmentShader {
 
 	// Properties
 	private:
-		CDirectXPixelShaderInternals* mInternals;
+		Internals* mInternals;
 };

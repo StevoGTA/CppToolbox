@@ -11,13 +11,14 @@
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: COpenGLTextureInternals
+// MARK: COpenGLTexture::Internals
 
-class COpenGLTextureInternals : public TReferenceCountable<COpenGLTextureInternals> {
+class COpenGLTexture::Internals : public TReferenceCountable<Internals> {
 	public:
-		COpenGLTextureInternals(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size) :
-mUsedPixelsSize(size),
-			TReferenceCountable(), mTextureTarget(GL_TEXTURE_2D),
+		Internals(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size) :
+			TReferenceCountable(),
+					mTextureTarget(GL_TEXTURE_2D),
+					mUsedPixelsSize(size),
 					mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
 							SNumber::getNextPowerOf2(size.mHeight)))
 			{
@@ -64,9 +65,9 @@ mUsedPixelsSize(size),
 				glTexParameteri(mTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
 #if defined(TARGET_OS_IOS)
-		COpenGLTextureInternals(CVOpenGLESTextureCacheRef openGLTextureCacheRef, CVImageBufferRef imageBufferRef,
-				UInt32 planeIndex) :
-			TReferenceCountable(), mHasTransparency(false)
+		Internals(CVOpenGLESTextureCacheRef openGLTextureCacheRef, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
+			TReferenceCountable(),
+					mHasTransparency(false)
 			{
 				// Setup
 				size_t	width = ::CVPixelBufferGetWidthOfPlane(imageBufferRef, planeIndex);
@@ -123,8 +124,7 @@ mUsedPixelsSize(size),
 			}
 #endif
 #if defined(TARGET_OS_MACOS)
-		COpenGLTextureInternals(CGLContextObj context, CVImageBufferRef imageBufferRef,
-				UInt32 planeIndex) :
+		Internals(CGLContextObj context, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
 			TReferenceCountable()
 			{
 				// Setup
@@ -174,7 +174,7 @@ mUsedPixelsSize(size),
 									CString(result));
 			}
 #endif
-		~COpenGLTextureInternals()
+		~Internals()
 			{
 				// Cleanup
 #if defined(TARGET_OS_IOS)
@@ -215,7 +215,7 @@ COpenGLTexture::COpenGLTexture(const CData& data, CGPUTexture::DataFormat dataFo
 		CGPUTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLTextureInternals(data, dataFormat, size);
+	mInternals = new Internals(data, dataFormat, size);
 }
 
 #if defined(TARGET_OS_IOS)
@@ -224,7 +224,7 @@ COpenGLTexture::COpenGLTexture(CVOpenGLESTextureCacheRef openGLTextureCacheRef, 
 		UInt32 planeIndex) : CGPUTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLTextureInternals(openGLTextureCacheRef, imageBufferRef, planeIndex);
+	mInternals = new Internals(openGLTextureCacheRef, imageBufferRef, planeIndex);
 }
 #endif
 
@@ -234,7 +234,7 @@ COpenGLTexture::COpenGLTexture(CGLContextObj context, CVImageBufferRef imageBuff
 		UInt32 planeIndex) : CGPUTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLTextureInternals(context, imageBufferRef, planeIndex);
+	mInternals = new Internals(context, imageBufferRef, planeIndex);
 }
 #endif
 

@@ -10,12 +10,15 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPUTextureReference
 
-class CGPUTextureReferenceInternals;
 class CGPUTextureReference : public CEquatable {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
-										CGPUTextureReference(CGPUTextureReferenceInternals& internals);
+										CGPUTextureReference(Internals& internals);
 										CGPUTextureReference(const CGPUTextureReference& other);
 										~CGPUTextureReference();
 
@@ -36,13 +39,12 @@ class CGPUTextureReference : public CEquatable {
 
 	// Properties
 	private:
-		CGPUTextureReferenceInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureManager
 
-class CGPUTextureManagerInternals;
 class CGPUTextureManager {
 	// Enums
 	public:
@@ -54,6 +56,10 @@ class CGPUTextureManager {
 	// Procs
 	public:
 		typedef	TVResult<CBitmap>	(*BitmapProc)(const CData& data);
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -89,5 +95,5 @@ class CGPUTextureManager {
 
 	// Properties
 	private:
-		CGPUTextureManagerInternals*	mInternals;
+		Internals*	mInternals;
 };

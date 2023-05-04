@@ -27,6 +27,10 @@ class CThread {
 			kOptionsAutoStart	= 1 << 0,
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -62,6 +66,5 @@ class CThread {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

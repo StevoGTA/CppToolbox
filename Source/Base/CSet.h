@@ -21,6 +21,11 @@ class CSet {
 		typedef	CHashable*	(*CopyProc)(const CHashable& hashable);
 		typedef	void		(*DisposeProc)(const CHashable& hashable);
 
+	// Classes
+	private:
+		class Internals;
+		class IteratorInfo;
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -53,10 +58,7 @@ class CSet {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
-
-		class IteratorInfo;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

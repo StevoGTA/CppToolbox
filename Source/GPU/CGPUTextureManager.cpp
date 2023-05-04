@@ -27,8 +27,6 @@ struct SGPUTextureDataInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SGPUTextureManagerInfo
 
-class CGPUTextureReferenceInternals;
-
 struct SGPUTextureManagerInfo {
 	// Lifecycle methods
 	SGPUTextureManagerInfo(CGPU& gpu) : mGPU(gpu) {}
@@ -41,24 +39,24 @@ struct SGPUTextureManagerInfo {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUTextureReferenceInternals
+// MARK: - CGPUTextureReference::Internals
 
-class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureReferenceInternals> {
+class CGPUTextureReference::Internals : public TReferenceCountable<Internals> {
 	public:
 						// Lifecycle methods
-						CGPUTextureReferenceInternals(const OR<const CString>& reference,
+						Internals(const OR<const CString>& reference,
 								SGPUTextureManagerInfo& gpuTextureManagerInfo) :
 							TReferenceCountable(),
 									mReference(reference.hasReference() ? *reference : CString::mEmpty),
 									mGPUTextureManagerInfo(gpuTextureManagerInfo)
 							{}
-						CGPUTextureReferenceInternals(const I<CGPUTexture>& gpuTexture,
+						Internals(const I<CGPUTexture>& gpuTexture,
 								SGPUTextureManagerInfo& gpuTextureManagerInfo) :
 							TReferenceCountable(),
 									mReference(CString::mEmpty), mGPUTextureManagerInfo(gpuTextureManagerInfo),
 									mGPUTexture(OV<I<CGPUTexture> >(gpuTexture))
 							{}
-		virtual			~CGPUTextureReferenceInternals()
+		virtual			~Internals()
 							{
 								// Cleanup
 								unload();
@@ -90,19 +88,19 @@ class CGPUTextureReferenceInternals : public TReferenceCountable<CGPUTextureRefe
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPULoadableTextureReferenceInternals
 
-class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInternals {
+class CGPULoadableTextureReferenceInternals : public CGPUTextureReference::Internals {
 	public:
 						// Lifecycle methods
 						CGPULoadableTextureReferenceInternals(const OR<const CString>& reference,
 								const OV<CGPUTexture::DataFormat>& dataFormat,
 								CGPUTextureManager::ReferenceOptions referenceOptions,
 								SGPUTextureManagerInfo& gpuTextureManagerInfo) :
-							CGPUTextureReferenceInternals(reference, gpuTextureManagerInfo),
+							CGPUTextureReference::Internals(reference, gpuTextureManagerInfo),
 									mDataFormat(dataFormat), mReferenceOptions(referenceOptions),
 									mFinishLoadingTriggered(false), mGPUTextureDataInfo(nil)
 							{}
 
-						// CGPUTextureReferenceInternals methods
+						// CGPUTextureReference::Internals methods
 				void	loadOrQueueForLoading()
 							{
 								// Check options
@@ -146,7 +144,7 @@ class CGPULoadableTextureReferenceInternals : public CGPUTextureReferenceInterna
 									Delete(mGPUTextureDataInfo);
 
 								// Do super
-								CGPUTextureReferenceInternals::unload();
+								CGPUTextureReference::Internals::unload();
 							}
 
 						// Instance methods
@@ -410,7 +408,7 @@ class CBitmapProcGPUTextureReferenceInternals : public CBitmapGPUTextureReferenc
 // MARK: Lifecyclde methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUTextureReference::CGPUTextureReference(CGPUTextureReferenceInternals& internals)
+CGPUTextureReference::CGPUTextureReference(Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// A reference is specified to disallow anyone else creating an instance of this class.  This constructor is only
@@ -502,11 +500,11 @@ CGPUTextureReference& CGPUTextureReference::operator=(const CGPUTextureReference
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPUTextureManagerInternals
+// MARK: - CGPUTextureManager::Internals
 
-class CGPUTextureManagerInternals : public TReferenceCountable<CGPUTextureManagerInternals> {
+class CGPUTextureManager::Internals : public TReferenceCountable<Internals> {
 	public:
-		CGPUTextureManagerInternals(CGPU& gpu) : TReferenceCountable(), mGPUTextureManagerInfo(gpu) {}
+		Internals(CGPU& gpu) : TReferenceCountable(), mGPUTextureManagerInfo(gpu) {}
 
 		SGPUTextureManagerInfo	mGPUTextureManagerInfo;
 };
@@ -521,7 +519,7 @@ class CGPUTextureManagerInternals : public TReferenceCountable<CGPUTextureManage
 CGPUTextureManager::CGPUTextureManager(CGPU& gpu)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CGPUTextureManagerInternals(gpu);
+	mInternals = new Internals(gpu);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -702,10 +700,8 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CGPUTexture
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create new
-	CGPUTextureReferenceInternals*	gpuTextureReferenceInternals =
-											new CGPUTextureReferenceInternals(gpuTexture,
-													mInternals->mGPUTextureManagerInfo);
-	CGPUTextureReference					textureReference(*gpuTextureReferenceInternals);
+	Internals*				internals = new Internals(gpuTexture, mInternals->mGPUTextureManagerInfo);
+	CGPUTextureReference	textureReference(*internals);
 	mInternals->mGPUTextureManagerInfo.mGPUTextureReferences += textureReference;
 
 	return textureReference;

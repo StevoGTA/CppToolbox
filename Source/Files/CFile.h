@@ -10,8 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFile
 
-class CFileInternals;
 class CFile : public CHashable {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 											// Lifecycle methods
@@ -93,14 +96,14 @@ class CFile : public CHashable {
 
 	// Properties
 	public:
-		static	const	SError			mDoesNotExistError;
-		static	const	SError			mIsOpenError;
-		static	const	SError			mNotOpenError;
-		static	const	SError			mNotFoundError;
-		static	const	SError			mUnableToRevealInFinderError;
-		static	const	SError			mUnableToReadError;
-		static	const	SError			mUnableToWriteError;
+		static	const	SError		mDoesNotExistError;
+		static	const	SError		mIsOpenError;
+		static	const	SError		mNotOpenError;
+		static	const	SError		mNotFoundError;
+		static	const	SError		mUnableToRevealInFinderError;
+		static	const	SError		mUnableToReadError;
+		static	const	SError		mUnableToWriteError;
 
 	private:
-						CFileInternals*	mInternals;
+						Internals*	mInternals;
 };

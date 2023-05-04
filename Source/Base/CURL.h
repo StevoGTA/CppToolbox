@@ -10,6 +10,10 @@
 // MARK: CURL
 
 class CURL {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -22,6 +26,5 @@ class CURL {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

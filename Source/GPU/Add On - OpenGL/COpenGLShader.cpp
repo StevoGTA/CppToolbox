@@ -7,11 +7,11 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: COpenGLShaderInternals
+// MARK: COpenGLShader::Internals
 
-class COpenGLShaderInternals {
+class COpenGLShader::Internals {
 	public:
-		COpenGLShaderInternals(GLenum type, const CString& string)
+		Internals(GLenum type, const CString& string)
 			{
 				// Create shader
 				mShader = glCreateShader(type);
@@ -43,7 +43,7 @@ class COpenGLShaderInternals {
 					// Error
 					CLogServices::logError(CString("Could not create shader"));
 			}
-		~COpenGLShaderInternals()
+		~Internals()
 			{
 				// Cleanup
 				glDeleteShader(mShader);
@@ -57,11 +57,11 @@ class COpenGLShaderInternals {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - COpenGLVertexShaderInternals
 
-class COpenGLVertexShaderInternals : public COpenGLShaderInternals {
+class COpenGLVertexShaderInternals : public COpenGLShader::Internals {
 	public:
 		COpenGLVertexShaderInternals(const CString& string, const TArray<CString>& attributeNames,
 				const TArray<CString>& uniformNames) :
-			COpenGLShaderInternals(GL_VERTEX_SHADER, string),
+			COpenGLShader::Internals(GL_VERTEX_SHADER, string),
 					mAttributeNames(attributeNames), mUniformNames(uniformNames)
 			{}
 
@@ -122,12 +122,12 @@ const TArray<CString>& COpenGLVertexShader::getUniformNames() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLVertexShaderInternals
+// MARK: - COpenGLFragmentShaderInternals
 
-class COpenGLFragmentShaderInternals : public COpenGLShaderInternals {
+class COpenGLFragmentShaderInternals : public COpenGLShader::Internals {
 	public:
 		COpenGLFragmentShaderInternals(const CString& string, const TArray<CString>& uniformNames) :
-			COpenGLShaderInternals(GL_FRAGMENT_SHADER, string), mUniformNames(uniformNames)
+			COpenGLShader::Internals(GL_FRAGMENT_SHADER, string), mUniformNames(uniformNames)
 			{}
 
 		TArray<CString>	mUniformNames;

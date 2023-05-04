@@ -7,13 +7,13 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: COpenGLProgramInternals
+// MARK: COpenGLProgram::Internals
 
-class COpenGLProgramInternals : public TReferenceCountable<COpenGLProgramInternals> {
+class COpenGLProgram::Internals : public TReferenceCountable<Internals> {
 	public:
-		COpenGLProgramInternals(COpenGLVertexShader& vertexShader, COpenGLFragmentShader& fragmentShader) :
-			TReferenceCountable(), mVertexShader(vertexShader), mFragmentShader(fragmentShader),
-					mProgram(glCreateProgram())
+		Internals(COpenGLVertexShader& vertexShader, COpenGLFragmentShader& fragmentShader) :
+			TReferenceCountable(),
+					mVertexShader(vertexShader), mFragmentShader(fragmentShader), mProgram(glCreateProgram())
 			{
 				// Setup
 				if (mProgram > 0) {
@@ -71,7 +71,7 @@ class COpenGLProgramInternals : public TReferenceCountable<COpenGLProgramInterna
 					// Error
 					CLogServices::logError(CString("Could not create program"));
 			}
-		~COpenGLProgramInternals()
+		~Internals()
 			{
 				// Cleanup
 				glDeleteProgram(mProgram);
@@ -96,7 +96,7 @@ class COpenGLProgramInternals : public TReferenceCountable<COpenGLProgramInterna
 COpenGLProgram::COpenGLProgram(COpenGLVertexShader& vertexShader, COpenGLFragmentShader& fragmentShader)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLProgramInternals(vertexShader, fragmentShader);
+	mInternals = new Internals(vertexShader, fragmentShader);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

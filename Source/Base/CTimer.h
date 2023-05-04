@@ -23,6 +23,10 @@ class CTimer {
 			kOptionsAutoResume	= 1 << 0,
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -36,6 +40,5 @@ class CTimer {
 
 	// Properties
 	private:
-		class Internals;
 		Internals*	mInternals;
 };

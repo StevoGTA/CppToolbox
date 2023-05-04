@@ -12,8 +12,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMetalTexture
 
-class CMetalTextureInternals;
 class CMetalTexture : public CGPUTexture {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -36,5 +39,5 @@ class CMetalTexture : public CGPUTexture {
 
 	// Properties
 	private:
-		CMetalTextureInternals*	mInternals;
+		Internals*	mInternals;
 };

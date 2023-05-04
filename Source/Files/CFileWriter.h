@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFileWriter
 
-class CFileWriterInternals;
 class CFileWriter {
 	// Enums
 	public:
@@ -19,6 +18,10 @@ class CFileWriter {
 			kPositionFromCurrent,
 			kPositionFromEnd,
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -62,5 +65,5 @@ class CFileWriter {
 
 	// Properties
 	private:
-		CFileWriterInternals*	mInternals;
+		Internals*	mInternals;
 };

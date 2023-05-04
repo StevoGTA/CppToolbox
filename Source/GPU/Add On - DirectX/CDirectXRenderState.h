@@ -12,11 +12,11 @@
 using namespace DirectX;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SGPURenderStateCommitInfo
+// MARK: CGPU::CommitInfo
 
-struct SGPURenderStateCommitInfo {
+struct CGPU::CommitInfo {
 	// Lifecycle methods
-	SGPURenderStateCommitInfo(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d3dDeviceContext,
+	CommitInfo(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d3dDeviceContext,
 			ID3D11BlendState& d3dBlendState, const XMFLOAT4X4& projectionMatrix, const XMFLOAT4X4& viewMatrix) :
 		mD3DDevice(d3dDevice), mD3DDeviceContext(d3dDeviceContext), mD3DBlendState(d3dBlendState),
 				mProjectionMatrix(projectionMatrix), mViewMatrix(viewMatrix)
