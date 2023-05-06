@@ -37,14 +37,14 @@ using namespace winrt::Windows::Storage::Streams;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFileWriterInternals
+// MARK: - CFileWriter::Internals
 
-class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
+class CFileWriter::Internals : public TReferenceCountable<Internals> {
 	public:
-					CFileWriterInternals(const CFile& file) :
+					Internals(const CFile& file) :
 						TReferenceCountable(), mFile(file), mIsOpen(false), mRemoveIfNotClosed(false)
 						{}
-					~CFileWriterInternals()
+					~Internals()
 						{
 							// Check if need to remove
 							bool	needToRemove = mRemoveIfNotClosed && mRandomAccessStream.CanWrite();
@@ -85,7 +85,7 @@ class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
 CFileWriter::CFileWriter(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFileWriterInternals(file);
+	mInternals = new Internals(file);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

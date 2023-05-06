@@ -76,7 +76,7 @@ class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 										Internals(const Internals& other) :
 											TCopyOnWriteReferenceCountable(),
 													mCopyProc(other.mCopyProc), mDisposeProc(other.mDisposeProc),
-													mReference(0),
+													mCount(other.mCount), mReference(0),
 													mItemInfosCount(other.mItemInfosCount)
 											{
 												// Finish setup

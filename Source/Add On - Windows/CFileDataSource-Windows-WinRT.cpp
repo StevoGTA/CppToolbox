@@ -25,11 +25,11 @@ using namespace winrt::Windows::Storage;
 using namespace winrt::Windows::Storage::Streams;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFileDataSourceInternals
+// MARK: CFileDataSource::Internals
 
-class CFileDataSourceInternals {
+class CFileDataSource::Internals {
 	public:
-		CFileDataSourceInternals(const CFile& file)
+		Internals(const CFile& file)
 			{
 				// Catch errors
 				try {
@@ -66,7 +66,7 @@ class CFileDataSourceInternals {
 CFileDataSource::CFileDataSource(const CFile& file, bool buffered) : CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFileDataSourceInternals(file);
+	mInternals = new Internals(file);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -150,11 +150,11 @@ OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMappedFileDataSourceInternals
+// MARK: - CMappedFileDataSource::Internals
 
-class CMappedFileDataSourceInternals {
+class CMappedFileDataSource::Internals {
 	public:
-		CMappedFileDataSourceInternals(const CFile& file, UInt64 byteOffset, UInt64 byteCount) :
+		Internals(const CFile& file, UInt64 byteOffset, UInt64 byteCount) :
 			mFile(file)
 			{
 				// Catch errors
@@ -211,7 +211,7 @@ class CMappedFileDataSourceInternals {
 					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
 				}
 			}
-		~CMappedFileDataSourceInternals()
+		~Internals()
 			{
 				// Check if need to unmap
 				if (mBytePtr != nil)
@@ -242,14 +242,14 @@ CMappedFileDataSource::CMappedFileDataSource(const CFile& file, UInt64 byteOffse
 		CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMappedFileDataSourceInternals(file, byteOffset, byteCount);
+	mInternals = new Internals(file, byteOffset, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMappedFileDataSourceInternals(file, 0, file.getByteCount());
+	mInternals = new Internals(file, 0, file.getByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

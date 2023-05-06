@@ -24,7 +24,10 @@ class CSet {
 	// Classes
 	private:
 		class Internals;
-		class IteratorInfo;
+
+	// Structs
+	private:
+		struct IteratorInfo;
 
 	// Methods
 	public:
