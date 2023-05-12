@@ -5,11 +5,11 @@
 #include "CChunkReader.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CChunkReaderInternals
+// MARK: CChunkReader::Internals
 
-class CChunkReaderInternals {
+class CChunkReader::Internals {
 	public:
-		CChunkReaderInternals(CChunkReader::Format format) : mFormat(format) {}
+		Internals(CChunkReader::Format format) : mFormat(format) {}
 
 		CChunkReader::Format	mFormat;
 };
@@ -25,7 +25,7 @@ CChunkReader::CChunkReader(const I<CRandomAccessDataSource>& randomAccessDataSou
 		CByteReader(randomAccessDataSource, format == kFormat32BitBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CChunkReaderInternals(format);
+	mInternals = new Internals(format);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -11,8 +11,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreAudioDecodeAudioCodec
 
-class CCoreAudioDecodeAudioCodecInternals;
 class CCoreAudioDecodeAudioCodec : public CDecodeAudioCodec {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 											// Lifecycle methods
@@ -38,5 +41,5 @@ class CCoreAudioDecodeAudioCodec : public CDecodeAudioCodec {
 
 	// Properties
 	private:
-		CCoreAudioDecodeAudioCodecInternals*	mInternals;
+		Internals*	mInternals;
 };

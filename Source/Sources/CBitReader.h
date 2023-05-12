@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CBitReader
 
-class CBitReaderInternals;
 class CBitReader {
 	// Position
 	public:
@@ -19,6 +18,10 @@ class CBitReader {
 			kPositionFromCurrent,
 			kPositionFromEnd,
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -51,5 +54,5 @@ class CBitReader {
 
 	// Properties
 	private:
-		CBitReaderInternals*	mInternals;
+		Internals*	mInternals;
 };

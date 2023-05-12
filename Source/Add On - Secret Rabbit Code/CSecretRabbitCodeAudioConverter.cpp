@@ -14,15 +14,15 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSecretRabbitCodeAudioConverterInternals
+// MARK: - CSecretRabbitCodeAudioConverter::Internals
 
-class CSecretRabbitCodeAudioConverterInternals {
+class CSecretRabbitCodeAudioConverter::Internals {
 	public:
-						CSecretRabbitCodeAudioConverterInternals(CAudioConverter& audioConverter) :
+						Internals(CAudioConverter& audioConverter) :
 								mAudioConverter(audioConverter),
 										mSRCState(nil), mSourceHasMoreToRead(true), mSourceTimeInterval(0.0)
 							{}
-						~CSecretRabbitCodeAudioConverterInternals()
+						~Internals()
 							{
 								if (mSRCState != nil)
 									src_delete(mSRCState);
@@ -31,9 +31,7 @@ class CSecretRabbitCodeAudioConverterInternals {
 		static	long	fillBufferData(void* userData, float** data)
 							{
 								// Setup
-								CSecretRabbitCodeAudioConverterInternals&	internals =
-																					*((CSecretRabbitCodeAudioConverterInternals*)
-																						userData);
+								Internals&	internals = *((Internals*) userData);
 								if (internals.mInputAudioFrames.hasInstance())
 									// Reset
 									internals.mInputAudioFrames->reset();
@@ -135,7 +133,7 @@ class CSecretRabbitCodeAudioConverterInternals {
 CSecretRabbitCodeAudioConverter::CSecretRabbitCodeAudioConverter() : CAudioConverter()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSecretRabbitCodeAudioConverterInternals(*this);
+	mInternals = new Internals(*this);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -158,8 +156,8 @@ OV<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor
 	// Create Secret Rabbit Code
 	int	error;
 	mInternals->mSRCState =
-			src_callback_new(CSecretRabbitCodeAudioConverterInternals::fillBufferData, SRC_SINC_BEST_QUALITY,
-					audioProcessingFormat.getChannels(), &error, mInternals);
+			src_callback_new(Internals::fillBufferData, SRC_SINC_BEST_QUALITY, audioProcessingFormat.getChannels(),
+					&error, mInternals);
 	ReturnErrorIfSRCError(error);
 
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);

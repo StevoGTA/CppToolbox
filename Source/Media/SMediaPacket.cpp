@@ -34,12 +34,12 @@ UInt32 CMediaPacketSource::seekToKeyframe(UInt32 initialFrameIndex, const TNumbe
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSeekableUniformMediaPacketSourceInternals
+// MARK: - CSeekableUniformMediaPacketSource::Internals
 
-class CSeekableUniformMediaPacketSourceInternals {
+class CSeekableUniformMediaPacketSource::Internals {
 	public:
-		CSeekableUniformMediaPacketSourceInternals(const I<CRandomAccessDataSource>& randomAccessDataSource,
-				UInt64 byteOffset, UInt64 byteCount, UInt32 bytesPerPacket, UInt32 durationPerPacket) :
+		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 byteOffset, UInt64 byteCount,
+				UInt32 bytesPerPacket, UInt32 durationPerPacket) :
 			mRandomAccessDataSource(randomAccessDataSource), mByteOffset(byteOffset),
 					mPacketCount((UInt32) (byteCount / (UInt64) bytesPerPacket)), mBytesPerPacket(bytesPerPacket),
 					mDurationPerPacket(durationPerPacket), mNextPacketIndex(0)
@@ -65,9 +65,7 @@ CSeekableUniformMediaPacketSource::CSeekableUniformMediaPacketSource(
 		UInt32 bytesPerPacket, UInt32 durationPerPacket)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals =
-			new CSeekableUniformMediaPacketSourceInternals(randomAccessDataSource, byteOffset, byteCount,
-					bytesPerPacket, durationPerPacket);
+	mInternals = new Internals(randomAccessDataSource, byteOffset, byteCount, bytesPerPacket, durationPerPacket);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -153,11 +151,11 @@ TVResult<TArray<SMediaPacket> > CSeekableUniformMediaPacketSource::readNextInto(
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSeekableVaryingMediaPacketSourceInternals
+// MARK: - CSeekableVaryingMediaPacketSource::Internals
 
-class CSeekableVaryingMediaPacketSourceInternals {
+class CSeekableVaryingMediaPacketSource::Internals {
 	public:
-		CSeekableVaryingMediaPacketSourceInternals(const I<CRandomAccessDataSource>& randomAccessDataSource,
+		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource,
 				const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
 			mRandomAccessDataSource(randomAccessDataSource), mMediaPacketAndLocations(mediaPacketAndLocations),
 					mNextPacketIndex(0)
@@ -179,7 +177,7 @@ CSeekableVaryingMediaPacketSource::CSeekableVaryingMediaPacketSource(
 		const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSeekableVaryingMediaPacketSourceInternals(randomAccessDataSource, mediaPacketAndLocations);
+	mInternals = new Internals(randomAccessDataSource, mediaPacketAndLocations);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

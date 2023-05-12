@@ -7,9 +7,9 @@
 #include "CDictionary.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteTableInternals
+// MARK: CSQLiteTable::Internals
 
-class CSQLiteTableInternals : public TReferenceCountable<CSQLiteTableInternals> {
+class CSQLiteTable::Internals : public TReferenceCountable<Internals> {
 	// Types
 	public:
 		struct SInt64Results {
@@ -23,7 +23,7 @@ class CSQLiteTableInternals : public TReferenceCountable<CSQLiteTableInternals> 
 
 	// Methods
 	public:
-								CSQLiteTableInternals(const CString& name, CSQLiteTable::Options options,
+								Internals(const CString& name, CSQLiteTable::Options options,
 										const TArray<CSQLiteTableColumn>& tableColumns,
 										const TArray<CSQLiteTableColumn::Reference>& references,
 										CSQLiteStatementPerformer& statementPerformer) :
@@ -216,7 +216,7 @@ class CSQLiteTableInternals : public TReferenceCountable<CSQLiteTableInternals> 
 		static	CSQLiteTableColumn							mCountAllTableColumn;
 };
 
-CSQLiteTableColumn	CSQLiteTableInternals::mCountAllTableColumn(CString(OSSTR("COUNT(*)")),
+CSQLiteTableColumn	CSQLiteTable::Internals::mCountAllTableColumn(CString(OSSTR("COUNT(*)")),
 							CSQLiteTableColumn::kInteger);
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -234,7 +234,7 @@ CSQLiteTable::CSQLiteTable(const CString& name, Options options, const TArray<CS
 		const TArray<CSQLiteTableColumn::Reference>& references, CSQLiteStatementPerformer& statementPerformer)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSQLiteTableInternals(name, options, tableColumns, references, statementPerformer);
+	mInternals = new Internals(name, options, tableColumns, references, statementPerformer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -243,8 +243,7 @@ CSQLiteTable::CSQLiteTable(const CString& name, Options options, const TArray<CS
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CSQLiteTableInternals(name, options, tableColumns, TNArray<CSQLiteTableColumn::Reference>(),
-					statementPerformer);
+			new Internals(name, options, tableColumns, TNArray<CSQLiteTableColumn::Reference>(), statementPerformer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -369,11 +368,11 @@ UInt32 CSQLiteTable::count(const OR<CSQLiteInnerJoin>& innerJoin, const OR<CSQLi
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CSQLiteTableInternals::SInt64Results	sInt64Results(CSQLiteTableInternals::mCountAllTableColumn);
+	Internals::SInt64Results	sInt64Results(Internals::mCountAllTableColumn);
 
 	// Perform
-	mInternals->select(CSQLiteTableInternals::mCountAllTableColumn.getName(), innerJoin, where,
-			OR<CSQLiteOrderBy>(), (CSQLiteResultsRow::Proc) CSQLiteTableInternals::storeSInt64Results, &sInt64Results);
+	mInternals->select(Internals::mCountAllTableColumn.getName(), innerJoin, where, OR<CSQLiteOrderBy>(),
+			(CSQLiteResultsRow::Proc) Internals::storeSInt64Results, &sInt64Results);
 
 	return sInt64Results.mValue.hasValue() ? (UInt32) *sInt64Results.mValue : 0;
 }
@@ -420,8 +419,7 @@ SInt64 CSQLiteTable::insertRow(const TableColumnAndValue tableColumnAndValues[],
 {
 	// Perform
 	SInt64	lastInsertRowID = 0;
-	insertRow(tableColumnAndValues, count, (LastInsertRowIDProc) CSQLiteTableInternals::storeLastInsertRowID,
-			&lastInsertRowID);
+	insertRow(tableColumnAndValues, count, (LastInsertRowIDProc) Internals::storeLastInsertRowID, &lastInsertRowID);
 
 	return lastInsertRowID;
 }
@@ -450,7 +448,7 @@ SInt64 CSQLiteTable::insertOrReplaceRow(const TableColumnAndValue tableColumnAnd
 {
 	// Perform
 	SInt64	lastInsertRowID = 0;
-	insertOrReplaceRow(tableColumnAndValues, count, (LastInsertRowIDProc) CSQLiteTableInternals::storeLastInsertRowID,
+	insertOrReplaceRow(tableColumnAndValues, count, (LastInsertRowIDProc) Internals::storeLastInsertRowID,
 			&lastInsertRowID);
 
 	return lastInsertRowID;

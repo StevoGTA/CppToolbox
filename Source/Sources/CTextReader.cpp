@@ -8,11 +8,11 @@
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CTextReaderInternals
+// MARK: CTextReader::Internals
 
-class CTextReaderInternals : public TReferenceCountable<CTextReaderInternals> {
+class CTextReader::Internals : public TReferenceCountable<Internals> {
 	public:
-		CTextReaderInternals(const I<CRandomAccessDataSource>& randomAccessDataSource) :
+		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource) :
 			TReferenceCountable(),
 					mRandomAccessDataSource(randomAccessDataSource), mDataSourceOffset(0),
 					mByteCount(mRandomAccessDataSource->getByteCount())
@@ -33,7 +33,7 @@ class CTextReaderInternals : public TReferenceCountable<CTextReaderInternals> {
 CTextReader::CTextReader(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CTextReaderInternals(randomAccessDataSource);
+	mInternals = new Internals(randomAccessDataSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -7,12 +7,11 @@
 #include "CSQLiteTable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteTriggerInternals
+// MARK: CSQLiteTrigger::Internals
 
-class CSQLiteTriggerInternals {
+class CSQLiteTrigger::Internals {
 	public:
-		CSQLiteTriggerInternals(const CSQLiteTableColumn& updateTableColumn,
-				const CSQLiteTableColumn& comparisonTableColumn) :
+		Internals(const CSQLiteTableColumn& updateTableColumn, const CSQLiteTableColumn& comparisonTableColumn) :
 			mUpdateTableColumn(updateTableColumn), mComparisonTableColumn(comparisonTableColumn)
 			{}
 
@@ -31,7 +30,7 @@ CSQLiteTrigger::CSQLiteTrigger(const CSQLiteTableColumn& updateTableColumn,
 		const CSQLiteTableColumn& comparisonTableColumn)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSQLiteTriggerInternals(updateTableColumn, comparisonTableColumn);
+	mInternals = new Internals(updateTableColumn, comparisonTableColumn);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

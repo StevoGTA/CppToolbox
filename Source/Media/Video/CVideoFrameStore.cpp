@@ -215,12 +215,11 @@ class CVideoFrameStoreThread : public CThread {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CVideoFrameStoreInternals
+// MARK: - CVideoFrameStore::Internals
 
-class CVideoFrameStoreInternals {
+class CVideoFrameStore::Internals {
 	public:
-		CVideoFrameStoreInternals(CVideoFrameStore& videoFrameStore, const CString& identifier,
-				const CVideoFrameStore::Info& info) :
+		Internals(CVideoFrameStore& videoFrameStore, const CString& identifier, const CVideoFrameStore::Info& info) :
 			mVideoFrameStoreThread(videoFrameStore, identifier, info), mSourceWindowStartTimeInterval(0.0)
 			{}
 
@@ -238,7 +237,7 @@ class CVideoFrameStoreInternals {
 CVideoFrameStore::CVideoFrameStore(const CString& identifier, const Info& info) : CVideoDestination()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CVideoFrameStoreInternals(*this, identifier, info);
+	mInternals = new Internals(*this, identifier, info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

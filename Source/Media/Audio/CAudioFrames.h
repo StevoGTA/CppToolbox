@@ -30,7 +30,6 @@
 			segments for each collection of samples.
 */
 
-class CAudioFramesInternals;
 class CAudioFrames : private CData {
 	// Requirements
 	public:
@@ -76,6 +75,10 @@ class CAudioFrames : private CData {
 				TNumberArray<void*>	mSegments;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -113,5 +116,5 @@ class CAudioFrames : private CData {
 
 	// Properties
 	private:
-		CAudioFramesInternals*	mInternals;
+		Internals*	mInternals;
 };

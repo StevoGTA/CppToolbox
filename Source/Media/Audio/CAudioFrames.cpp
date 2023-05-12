@@ -7,11 +7,11 @@
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioFramesInternals
+// MARK: CAudioFrames::Internals
 
-class CAudioFramesInternals {
+class CAudioFrames::Internals {
 	public:
-		CAudioFramesInternals(UInt32 segmentCount, UInt32 segmentByteCount, UInt32 allocatedFrameCount,
+		Internals(UInt32 segmentCount, UInt32 segmentByteCount, UInt32 allocatedFrameCount,
 				UInt32 bytesPerFramePerSegment) :
 			mSegmentCount(segmentCount), mSegmentByteCount(segmentByteCount), mAllocatedFrameCount(allocatedFrameCount),
 					mCurrentFrameCount(0), mBytesPerFramePerSegment(bytesPerFramePerSegment)
@@ -35,7 +35,7 @@ CAudioFrames::CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByte
 		UInt32 bytesPerFramePerSegment) : CData(buffer, segmentCount * segmentByteCount, false)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioFramesInternals(segmentCount, segmentByteCount, frameCount, bytesPerFramePerSegment);
+	mInternals = new Internals(segmentCount, segmentByteCount, frameCount, bytesPerFramePerSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -44,8 +44,8 @@ CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new CAudioFramesInternals(segmentCount, frameCountPerSegment * bytesPerFramePerSegment,
-					frameCountPerSegment, bytesPerFramePerSegment);
+			new Internals(segmentCount, frameCountPerSegment * bytesPerFramePerSegment, frameCountPerSegment,
+					bytesPerFramePerSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -9,8 +9,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteTrigger
 
-class CSQLiteTriggerInternals;
 class CSQLiteTrigger {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -23,5 +26,5 @@ class CSQLiteTrigger {
 
 	// Properties
 	private:
-		CSQLiteTriggerInternals*	mInternals;
+		Internals*	mInternals;
 };

@@ -10,8 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreGraphicsRenderer
 
-class CCoreGraphicsRendererInternals;
 class CCoreGraphicsRenderer : public T2DRenderer<CGFloat> {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 				// Lifecycle methods
@@ -30,5 +33,5 @@ class CCoreGraphicsRenderer : public T2DRenderer<CGFloat> {
 
 	// Properties
 	private:
-		CCoreGraphicsRendererInternals*	mInternals;
+		Internals*	mInternals;
 };

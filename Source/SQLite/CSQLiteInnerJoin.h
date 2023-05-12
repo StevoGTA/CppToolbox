@@ -9,8 +9,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteInnerJoin
 
-class CSQLiteInnerJoinInternals;
 class CSQLiteInnerJoin {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -28,5 +31,5 @@ class CSQLiteInnerJoin {
 
 	// Properties
 	private:
-		CSQLiteInnerJoinInternals*	mInternals;
+		Internals*	mInternals;
 };

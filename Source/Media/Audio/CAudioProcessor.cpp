@@ -5,12 +5,12 @@
 #include "CAudioProcessor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioProcessorInternals
+// MARK: CAudioProcessor::Internals
 
-class CAudioProcessorInternals {
+class CAudioProcessor::Internals {
 	public:
-		CAudioProcessorInternals() : mAudioProcessor(nil) {}
-		~CAudioProcessorInternals()
+		Internals() : mAudioProcessor(nil) {}
+		~Internals()
 			{ Delete(mAudioProcessor); }
 
 		I<CAudioProcessor>*	mAudioProcessor;
@@ -26,7 +26,7 @@ class CAudioProcessorInternals {
 CAudioProcessor::CAudioProcessor()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioProcessorInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

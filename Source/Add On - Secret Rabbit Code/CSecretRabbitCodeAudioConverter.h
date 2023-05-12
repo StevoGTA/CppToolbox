@@ -9,8 +9,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSecretRabbitCodeAudioConverter
 
-class CSecretRabbitCodeAudioConverterInternals;
 class CSecretRabbitCodeAudioConverter : public CAudioConverter {
+	// Classes
+	private:
+		class Internals;
+
+	// Methods
 	public:
 										// Lifecycle methods
 										CSecretRabbitCodeAudioConverter();
@@ -32,5 +36,5 @@ class CSecretRabbitCodeAudioConverter : public CAudioConverter {
 
 	// Properties
 	private:
-		CSecretRabbitCodeAudioConverterInternals*	mInternals;
+		Internals*	mInternals;
 };

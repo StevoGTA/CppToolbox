@@ -10,8 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioTrack
 
-class CAudioTrackInternals;
 class CAudioTrack : public CMediaTrack {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -45,5 +48,5 @@ class CAudioTrack : public CMediaTrack {
 
 	// Properties
 	private:
-		CAudioTrackInternals*	mInternals;
+		Internals*	mInternals;
 };

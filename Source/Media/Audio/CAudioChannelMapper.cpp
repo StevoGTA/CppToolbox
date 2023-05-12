@@ -5,14 +5,14 @@
 #include "CAudioChannelMapper.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioChannelMapperInternals
+// MARK: CAudioChannelMapper::Internals
 
-class CAudioChannelMapperInternals {
+class CAudioChannelMapper::Internals {
 	public:
 		typedef	void	(*PerformProc)(const CAudioFrames& sourceAudioFrames, CAudioFrames& destinationAudioFrames,
 								UInt32 sourceBytesPerFrame, UInt32 destinationBytesPerFrame);
 
-						CAudioChannelMapperInternals() : mPerformProc(nil) {}
+						Internals() : mPerformProc(nil) {}
 
 		static	void	performCopyCommon(const CAudioFrames& sourceAudioFrames,
 								CAudioFrames& destinationAudioFrames, UInt32 sourceBytesPerFrame,
@@ -149,7 +149,7 @@ class CAudioChannelMapperInternals {
 CAudioChannelMapper::CAudioChannelMapper() : CBasicAudioProcessor()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioChannelMapperInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -177,16 +177,16 @@ OV<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 				(audioProcessingFormat.getBits() == 24) || (audioProcessingFormat.getBits() == 16) ||
 				(audioProcessingFormat.getBits() == 8))
 			// Supported bits
-			mInternals->mPerformProc = CAudioChannelMapperInternals::performMonoToStereo;
+			mInternals->mPerformProc = Internals::performMonoToStereo;
 		else
 			// Unsupported bits
 			AssertFailUnimplemented();
 	} else if (mInternals->mInputAudioProcessingFormat->getChannels() > mOutputAudioProcessingFormat->getChannels())
 		// More -> Less
-		mInternals->mPerformProc = CAudioChannelMapperInternals::performCopyCommon;
+		mInternals->mPerformProc = Internals::performCopyCommon;
 	else
 		// Less -> More
-		mInternals->mPerformProc = CAudioChannelMapperInternals::performSilenceExtra;
+		mInternals->mPerformProc = Internals::performSilenceExtra;
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);

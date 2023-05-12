@@ -59,11 +59,11 @@ static	void				sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CImageInternals
+// MARK: - CImage::Internals
 
-class CImageInternals : public TReferenceCountable<CImageInternals> {
+class CImage::Internals : public TReferenceCountable<Internals> {
 	public:
-		CImageInternals(const CData& data, const OV<CImage::Type>& type, const OV<S2DSizeS32>& size) :
+		Internals(const CData& data, const OV<CImage::Type>& type, const OV<S2DSizeS32>& size) :
 			TReferenceCountable(), mData(data), mType(type), mSize(size)
 			{}
 
@@ -83,7 +83,7 @@ CImage::CImage(const CData& data, const OV<Type>& type, const OV<S2DSizeS32>& si
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CImageInternals(data, type, size);
+	mInternals = new Internals(data, type, size);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

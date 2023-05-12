@@ -14,8 +14,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioProcessor
 
-class CAudioProcessorInternals;
 class CAudioProcessor {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -49,7 +52,7 @@ class CAudioProcessor {
 
 	// Properties
 	private:
-		CAudioProcessorInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

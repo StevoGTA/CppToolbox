@@ -11,11 +11,11 @@
 #include <sqlite3.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteDatabaseInternals
+// MARK: CSQLiteDatabase::Internals
 
-class CSQLiteDatabaseInternals {
+class CSQLiteDatabase::Internals {
 	public:
-		CSQLiteDatabaseInternals(sqlite3* database, CSQLiteDatabase::Options options) :
+		Internals(sqlite3* database, CSQLiteDatabase::Options options) :
 			mDatabase(database), mStatementPerformer(database)
 			{
 				// Finish setup
@@ -23,7 +23,7 @@ class CSQLiteDatabaseInternals {
 					// Activate WAL mode
 					sqlite3_exec(mDatabase, "PRAGMA journal_mode = WAL;", nil, nil, nil);
 			}
-		~CSQLiteDatabaseInternals()
+		~Internals()
 			{
 				sqlite3_close(mDatabase);
 			}
@@ -54,7 +54,7 @@ CSQLiteDatabase::CSQLiteDatabase(const CFile& file, Options options)
 	}
 
 	// Setup internals
-	mInternals = new CSQLiteDatabaseInternals(database, options);
+	mInternals = new Internals(database, options);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ CSQLiteDatabase::CSQLiteDatabase(const CFolder& folder, const CString& name, Opt
 	}
 
 	// Setup internals
-	mInternals = new CSQLiteDatabaseInternals(database, options);
+	mInternals = new Internals(database, options);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

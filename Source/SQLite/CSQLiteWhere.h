@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteWhere
 
-class CSQLiteWhereInternals;
 class CSQLiteWhere {
 	// ValueGroup
 	public:
@@ -23,6 +22,10 @@ class CSQLiteWhere {
 			CString					mString;
 			TArray<SSQLiteValue>	mValues;
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -70,5 +73,5 @@ class CSQLiteWhere {
 
 	// Properties
 	private:
-		CSQLiteWhereInternals*	mInternals;
+		Internals*	mInternals;
 };

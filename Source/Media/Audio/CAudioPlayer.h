@@ -12,7 +12,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioPlayer
 
-class CAudioPlayerInternals;
 class CAudioPlayer : public CAudioDestination {
 	// Info
 	public:
@@ -51,6 +50,10 @@ class CAudioPlayer : public CAudioDestination {
 				ErrorProc			mErrorProc;
 				void*				mUserData;
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -98,17 +101,20 @@ class CAudioPlayer : public CAudioDestination {
 	private:
 		static	const	UniversalTimeInterval	kPreviewDuration;
 
-						CAudioPlayerInternals*	mInternals;
+						Internals*				mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAudioPlayerBufferThread
 
-class CAudioPlayerBufferThreadInternals;
 class CAudioPlayerBufferThread : public CThread {
 	// Procs
 	public:
 		typedef	void	(*ErrorProc)(const SError& error, void* userData);
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -131,5 +137,5 @@ class CAudioPlayerBufferThread : public CThread {
 
 	// Properties
 	private:
-		CAudioPlayerBufferThreadInternals*	mInternals;
+		Internals*	mInternals;
 };

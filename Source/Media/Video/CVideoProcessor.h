@@ -11,7 +11,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoProcessor
 
-class CVideoProcessorInternals;
 class CVideoProcessor {
 	// PerformResult
 	public:
@@ -38,6 +37,10 @@ class CVideoProcessor {
 				OI<CVideoFrame>		mVideoFrame;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -57,7 +60,7 @@ class CVideoProcessor {
 
 	// Properties
 	private:
-		CVideoProcessorInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

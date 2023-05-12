@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteDatabase
 
-class CSQLiteDatabaseInternals;
 class CSQLiteDatabase {
 	// Options
 	public:
@@ -29,6 +28,10 @@ class CSQLiteDatabase {
 	// Procs
 	public:
 		typedef	TransactionResult	(*TransactionProc)(void* userData);
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -50,5 +53,5 @@ class CSQLiteDatabase {
 
 	// Properties
 	private:
-		CSQLiteDatabaseInternals*	mInternals;
+		Internals*	mInternals;
 };

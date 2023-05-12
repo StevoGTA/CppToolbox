@@ -193,15 +193,15 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMediaPlaybackQueueInternals
+// MARK: - CMediaPlaybackQueue::Internals
 
-class CMediaPlaybackQueueInternals {
+class CMediaPlaybackQueue::Internals {
 	public:
-		CMediaPlaybackQueueInternals(CSRSWMessageQueues& messageQueues, const CMediaPlaybackQueue::Info& info) :
+		Internals(CSRSWMessageQueues& messageQueues, const CMediaPlaybackQueue::Info& info) :
 			mItemPrepareThread(messageQueues, info),
 					mCurrentItemIndex(0)
 			{}
-		~CMediaPlaybackQueueInternals()
+		~Internals()
 			{
 				// Request shutdown
 				mItemPrepareThread.shutdown();
@@ -226,7 +226,7 @@ class CMediaPlaybackQueueInternals {
 CMediaPlaybackQueue::CMediaPlaybackQueue(CSRSWMessageQueues& messageQueues, const Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMediaPlaybackQueueInternals(messageQueues, info);
+	mInternals = new Internals(messageQueues, info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

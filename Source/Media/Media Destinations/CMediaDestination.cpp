@@ -7,11 +7,11 @@
 #include "CDictionary.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CMediaDestinationInternals
+// MARK: CMediaDestination::Internals
 
-class CMediaDestinationInternals {
+class CMediaDestination::Internals {
 	public:
-		CMediaDestinationInternals() {}
+		Internals() {}
 
 		TNKeyConvertibleDictionary<UInt32, I<CAudioProcessor> >	mAudioProcessors;
 		TNKeyConvertibleDictionary<UInt32, I<CVideoProcessor> >	mVideoProcessors;
@@ -27,7 +27,7 @@ class CMediaDestinationInternals {
 CMediaDestination::CMediaDestination()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMediaDestinationInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

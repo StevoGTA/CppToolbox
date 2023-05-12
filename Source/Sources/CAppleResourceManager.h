@@ -10,9 +10,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAppleResourceManager
 
-class CAppleResource;
-class CAppleResourceManagerInternals;
 class CAppleResourceManager {
+	// Classes
+	private:
+		class Resource;
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -35,9 +38,9 @@ class CAppleResourceManager {
 	private:
 												// Lifecycle methods
 												CAppleResourceManager(
-														const TNDictionary<TNArray<CAppleResource> >& resourceMap);
+														const TNDictionary<TNArray<Resource> >& resourceMap);
 
 	// Properties
 	private:
-		CAppleResourceManagerInternals*	mInternals;
+		Internals*	mInternals;
 };

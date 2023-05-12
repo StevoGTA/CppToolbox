@@ -11,11 +11,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteResultsRow
 
-class CSQLiteResultsRowInternals;
 class CSQLiteResultsRow {
 	// Procs
 	public:
 		typedef	void	(*Proc)(const CSQLiteResultsRow& resultsRow, void* userData);
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -40,5 +43,5 @@ class CSQLiteResultsRow {
 
 	// Properties
 	private:
-		CSQLiteResultsRowInternals*	mInternals;
+		Internals*	mInternals;
 };

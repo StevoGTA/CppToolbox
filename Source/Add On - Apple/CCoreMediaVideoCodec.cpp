@@ -9,18 +9,18 @@
 #include <VideoToolbox/VideoToolbox.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CCoreMediaDecodeVideoCodecInternals
+// MARK: CCoreMediaDecodeVideoCodec::Internals
 
-class CCoreMediaDecodeVideoCodecInternals {
+class CCoreMediaDecodeVideoCodec::Internals {
 	public:
-						CCoreMediaDecodeVideoCodecInternals(OSType codecID,
+						Internals(OSType codecID,
 								const I<CMediaPacketSource>& mediaPacketSource, UInt32 timeScale,
 								const TNumberArray<UInt32>& keyframeIndexes) :
 							mCodecID(codecID), mMediaPacketSource(mediaPacketSource), mTimeScale(timeScale),
 									mKeyframeIndexes(keyframeIndexes),
 									mFormatDescriptionRef(nil), mDecompressionSessionRef(nil)
 							{}
-						~CCoreMediaDecodeVideoCodecInternals()
+						~Internals()
 							{
 								// Cleanup
 								if (mFormatDescriptionRef != nil)
@@ -63,7 +63,7 @@ CCoreMediaDecodeVideoCodec::CCoreMediaDecodeVideoCodec(OSType codecID, const I<C
 		UInt32 timeScale, const TNumberArray<UInt32>& keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CCoreMediaDecodeVideoCodecInternals(codecID, mediaPacketSource, timeScale, keyframeIndexes);
+	mInternals = new Internals(codecID, mediaPacketSource, timeScale, keyframeIndexes);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -86,8 +86,7 @@ OV<SError> CCoreMediaDecodeVideoCodec::setup(const SVideoProcessingFormat& video
 
 	// Setup Decompression Session
 	VTDecompressionOutputCallbackRecord	decompressionOutputCallbackRecord;
-	decompressionOutputCallbackRecord.decompressionOutputCallback =
-			CCoreMediaDecodeVideoCodecInternals::decompressionOutputCallback;
+	decompressionOutputCallbackRecord.decompressionOutputCallback = Internals::decompressionOutputCallback;
 	decompressionOutputCallbackRecord.decompressionOutputRefCon = this;
 
 	CFMutableDictionaryRef	destinationImageBufferAttributes =

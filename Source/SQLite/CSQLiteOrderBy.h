@@ -9,13 +9,16 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteOrderBy
 
-class CSQLiteOrderByInternals;
 class CSQLiteOrderBy {
 	// Order
 	enum Order {
 		kAscending,
 		kDescending,
 	};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -30,5 +33,5 @@ class CSQLiteOrderBy {
 
 	// Properties
 	private:
-		CSQLiteOrderByInternals*	mInternals;
+		Internals*	mInternals;
 };

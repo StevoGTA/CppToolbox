@@ -11,7 +11,6 @@
 
 class CSQLiteTable;
 
-class CSQLiteTableColumnInternals;
 class CSQLiteTableColumn : public CEquatable {
 	// Kind
 	public:
@@ -64,6 +63,10 @@ class CSQLiteTableColumn : public CEquatable {
 			const	CSQLiteTableColumn&	mReferencedTableColumn;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 											// Lifecycle methods
@@ -99,9 +102,9 @@ class CSQLiteTableColumn : public CEquatable {
 
 	// Properties
 	public:
-		static	const	CSQLiteTableColumn				mRowID;
-		static	const	CSQLiteTableColumn				mAll;
+		static	const	CSQLiteTableColumn	mRowID;
+		static	const	CSQLiteTableColumn	mAll;
 
 	private:
-						CSQLiteTableColumnInternals*	mInternals;
+						Internals*			mInternals;
 };

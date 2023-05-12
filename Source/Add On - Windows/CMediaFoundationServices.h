@@ -27,6 +27,7 @@ class CMediaFoundationServices {
 			//kCreateAudioMediaTypeOptionsAllSamplesIndependent	= 1 << 0,
 			kCreateAudioMediaTypeOptionsPreferWAVEFORMATEX		= 1 << 1,
 		};
+
 	// ProcessOutputInfo
 	public:
 		struct ProcessOutputInfo {

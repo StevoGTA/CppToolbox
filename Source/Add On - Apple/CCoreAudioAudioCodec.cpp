@@ -7,18 +7,17 @@
 #include "SError-Apple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CCoreAudioDecodeAudioCodecInternals
+// MARK: CCoreAudioDecodeAudioCodec::Internals
 
-class CCoreAudioDecodeAudioCodecInternals {
+class CCoreAudioDecodeAudioCodec::Internals {
 	public:
-							CCoreAudioDecodeAudioCodecInternals(OSType codecID,
-									const I<CMediaPacketSource>& mediaPacketSource) :
+							Internals(OSType codecID, const I<CMediaPacketSource>& mediaPacketSource) :
 								mCodecID(codecID), mMediaPacketSource(mediaPacketSource),
 										mAudioConverterRef(nil), mDecodeFramesToIgnore(0),
 										mInputPacketData((CData::ByteCount) 10 * 1024),
 										mInputPacketDescriptionsData((CData::ByteCount) 1 * 1024)
 								{}
-							~CCoreAudioDecodeAudioCodecInternals()
+							~Internals()
 								{
 									// Cleanup
 									if (mAudioConverterRef != nil)
@@ -31,9 +30,7 @@ class CCoreAudioDecodeAudioCodecInternals {
 									AudioStreamPacketDescription** outDataPacketDescription, void* inUserData)
 								{
 									// Setup
-									CCoreAudioDecodeAudioCodecInternals&	internals =
-																					*((CCoreAudioDecodeAudioCodecInternals*)
-																							inUserData);
+									Internals&	internals = *((Internals*) inUserData);
 
 									// Read packets
 									TVResult<TArray<SMediaPacket> >	mediaPacketsResult =
@@ -114,7 +111,7 @@ class CCoreAudioDecodeAudioCodecInternals {
 CCoreAudioDecodeAudioCodec::CCoreAudioDecodeAudioCodec(OSType codecID, const I<CMediaPacketSource>& mediaPacketSource)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CCoreAudioDecodeAudioCodecInternals(codecID, mediaPacketSource);
+	mInternals = new Internals(codecID, mediaPacketSource);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -182,9 +179,8 @@ OV<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 		// Decode these frames, but throw away
 		audioFrames.getAsWrite(audioBufferList);
 		status =
-				::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
-						CCoreAudioDecodeAudioCodecInternals::fillBufferData, mInternals,
-						&mInternals->mDecodeFramesToIgnore, &audioBufferList, nil);
+				::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, Internals::fillBufferData,
+						mInternals, &mInternals->mDecodeFramesToIgnore, &audioBufferList, nil);
 		if (status != noErr) return mInternals->mFillBufferDataError;
 		if (mInternals->mDecodeFramesToIgnore == 0) return OV<SError>(SError::mEndOfData);
 
@@ -195,9 +191,8 @@ OV<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 	// Fill buffer
 	UInt32	frameCount = audioFrames.getAsWrite(audioBufferList);
 	status =
-			::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
-					CCoreAudioDecodeAudioCodecInternals::fillBufferData, mInternals, &frameCount, &audioBufferList,
-					nil);
+			::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, Internals::fillBufferData, mInternals,
+					&frameCount, &audioBufferList, nil);
 	if (status != noErr) return mInternals->mFillBufferDataError;
 	if (frameCount == 0) return OV<SError>(SError::mEndOfData);
 

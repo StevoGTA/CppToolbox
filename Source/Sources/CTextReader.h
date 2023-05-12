@@ -11,8 +11,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CTextReader
 
-class CTextReaderInternals;
 class CTextReader {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 							// Lifecycle methods
@@ -27,5 +30,5 @@ class CTextReader {
 
 	// Properties
 	private:
-		CTextReaderInternals*	mInternals;
+		Internals*	mInternals;
 };

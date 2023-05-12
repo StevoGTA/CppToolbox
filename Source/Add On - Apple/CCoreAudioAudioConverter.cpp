@@ -9,16 +9,16 @@
 #include <AudioToolbox/AudioToolbox.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CCoreAudioAudioConverterInternals
+// MARK: CCoreAudioAudioConverter::Internals
 
-class CCoreAudioAudioConverterInternals {
+class CCoreAudioAudioConverter::Internals {
 	public:
-							CCoreAudioAudioConverterInternals(CAudioConverter& audioConverter) :
+							Internals(CAudioConverter& audioConverter) :
 								mAudioConverter(audioConverter),
 										mOutputAudioBufferList(nil), mAudioConverterRef(nil),
 										mSourceHasMoreToRead(true), mSourceTimeInterval(0.0)
 								{}
-							~CCoreAudioAudioConverterInternals()
+							~Internals()
 								{
 									// Cleanup
 									::free(mOutputAudioBufferList);
@@ -31,9 +31,7 @@ class CCoreAudioAudioConverterInternals {
 									AudioStreamPacketDescription** outDataPacketDescription, void* inUserData)
 								{
 									// Setup
-									CCoreAudioAudioConverterInternals&	internals =
-																				*((CCoreAudioAudioConverterInternals*)
-																						inUserData);
+									Internals&	internals = *((Internals*) inUserData);
 
 									// Check situation
 									if (internals.mInputAudioFrames.hasInstance())
@@ -125,7 +123,7 @@ class CCoreAudioAudioConverterInternals {
 CCoreAudioAudioConverter::CCoreAudioAudioConverter() : CAudioConverter()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CCoreAudioAudioConverterInternals(*this);
+	mInternals = new Internals(*this);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -210,9 +208,8 @@ SAudioSourceStatus CCoreAudioAudioConverter::performInto(CAudioFrames& audioFram
 
 	// Fill buffer
 	OSStatus	status =
-						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef,
-								CCoreAudioAudioConverterInternals::fillBufferData, mInternals, &frameCount,
-								mInternals->mOutputAudioBufferList, nil);
+						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, Internals::fillBufferData,
+								mInternals, &frameCount, mInternals->mOutputAudioBufferList, nil);
 	if (status != noErr) return SAudioSourceStatus(*mInternals->mFillBufferDataError);
 	if (frameCount == 0) return SAudioSourceStatus(SError::mEndOfData);
 

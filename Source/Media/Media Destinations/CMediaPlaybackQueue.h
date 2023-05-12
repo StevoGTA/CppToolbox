@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaPlaybackQueue
 
-class CMediaPlaybackQueueInternals;
 class CMediaPlaybackQueue {
 	// Item
 	public:
@@ -56,6 +55,10 @@ class CMediaPlaybackQueue {
 				void*						mUserData;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -71,5 +74,5 @@ class CMediaPlaybackQueue {
 
 	// Properties
 	private:
-		CMediaPlaybackQueueInternals*	mInternals;
+		Internals*	mInternals;
 };

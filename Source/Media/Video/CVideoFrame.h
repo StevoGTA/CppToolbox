@@ -29,7 +29,6 @@
 				bytes.  (For video data, this is typically 1 frame)
 */
 
-class CVideoFrameInternals;
 class CVideoFrame {
 	// Compatibility
 	public:
@@ -53,6 +52,10 @@ class CVideoFrame {
 			kDataFormatRGB,
 			kDataFormatYCbCr,
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -90,5 +93,5 @@ class CVideoFrame {
 
 	// Properties
 	private:
-		CVideoFrameInternals*	mInternals;
+		Internals*	mInternals;
 };

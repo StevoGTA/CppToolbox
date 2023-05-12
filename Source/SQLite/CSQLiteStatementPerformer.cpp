@@ -123,11 +123,11 @@ class CSQLiteStatement {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSQLiteStatementPerformerInternals
+// MARK: - CSQLiteStatementPerformer::Internals
 
-class CSQLiteStatementPerformerInternals {
+class CSQLiteStatementPerformer::Internals {
 	public:
-		CSQLiteStatementPerformerInternals(sqlite3* database) : mDatabase(database) {}
+		Internals(sqlite3* database) : mDatabase(database) {}
 
 		sqlite3*									mDatabase;
 		CLock										mLock;
@@ -144,7 +144,7 @@ class CSQLiteStatementPerformerInternals {
 CSQLiteStatementPerformer::CSQLiteStatementPerformer(sqlite3* database)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSQLiteStatementPerformerInternals(database);
+	mInternals = new Internals(database);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -33,9 +33,9 @@ class CMediaPlayerVideoFrameStore : public CVideoFrameStore {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMediaPlayerInternals
+// MARK: - CMediaPlayer::Internals
 
-class CMediaPlayerInternals {
+class CMediaPlayer::Internals {
 	public:
 		struct AudioPlayerPositionUpdatedMessage : public CSRSWMessageQueue::ProcMessage {
 			// Lifecycle Methods
@@ -87,7 +87,7 @@ class CMediaPlayerInternals {
 					SError				mError;
 		};
 
-						CMediaPlayerInternals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
+						Internals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
 								const CMediaPlayer::Info& info) :
 							mMediaPlayer(mediaPlayer), mMessageQueues(messageQueues), mInfo(info),
 									mSourceWindowStartTimeInterval(0.0), mCurrentPosition(0.0), mEndOfDataCount(0),
@@ -108,7 +108,7 @@ class CMediaPlayerInternals {
 								AudioPlayerPositionUpdatedMessage&	audioPlayerPositionUpdatedMessage =
 																			(AudioPlayerPositionUpdatedMessage&)
 																					message;
-								CMediaPlayerInternals&				internals = *((CMediaPlayerInternals*) userData);
+								Internals&							internals = *((Internals*) userData);
 								if (!mActiveInternals.contains(internals))
 									return;
 
@@ -133,7 +133,7 @@ class CMediaPlayerInternals {
 		static	void	handleAudioPlayerEndOfData(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
-								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
+								Internals&	internals = *((Internals*) userData);
 								if (!mActiveInternals.contains(internals))
 									return;
 
@@ -178,7 +178,7 @@ class CMediaPlayerInternals {
 		static	void	handleAudioPlayerError(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
-								CMediaPlayerInternals&		internals = *((CMediaPlayerInternals*) userData);
+								Internals&					internals = *((Internals*) userData);
 								AudioPlayerErrorMessage&	errorMessage = (AudioPlayerErrorMessage&) message;
 								if (!mActiveInternals.contains(internals))
 									return;
@@ -191,7 +191,7 @@ class CMediaPlayerInternals {
 								const CVideoFrame& videoFrame, void* userData)
 							{
 								// Setup
-								CMediaPlayerInternals&	internals = *((CMediaPlayerInternals*) userData);
+								Internals&	internals = *((Internals*) userData);
 
 								// Handle
 								internals.mInfo.videoFrameUpdated(videoFrame);
@@ -207,7 +207,7 @@ class CMediaPlayerInternals {
 		static	void	handleVideoFrameStoreError(CSRSWMessageQueue::ProcMessage& message, void* userData)
 							{
 								// Setup
-								CMediaPlayerInternals&			internals = *((CMediaPlayerInternals*) userData);
+								Internals&						internals = *((Internals*) userData);
 								VideoFrameStoreErrorMessage&	errorMessage = (VideoFrameStoreErrorMessage&) message;
 								if (!mActiveInternals.contains(internals))
 									return;
@@ -216,20 +216,20 @@ class CMediaPlayerInternals {
 								internals.mInfo.videoError(errorMessage.mError);
 							}
 
-				CMediaPlayer&						mMediaPlayer;
-				CSRSWMessageQueues&					mMessageQueues;
-				CMediaPlayer::Info					mInfo;
+				CMediaPlayer&			mMediaPlayer;
+				CSRSWMessageQueues&		mMessageQueues;
+				CMediaPlayer::Info		mInfo;
 
-				UniversalTimeInterval				mSourceWindowStartTimeInterval;
-				UniversalTimeInterval				mCurrentPosition;
-				UInt32								mEndOfDataCount;
-				OV<UInt32>							mLoopCount;
-				UInt32								mCurrentLoopCount;
+				UniversalTimeInterval	mSourceWindowStartTimeInterval;
+				UniversalTimeInterval	mCurrentPosition;
+				UInt32					mEndOfDataCount;
+				OV<UInt32>				mLoopCount;
+				UInt32					mCurrentLoopCount;
 
-		static	TNArray<R<CMediaPlayerInternals> >	mActiveInternals;
+		static	TNArray<R<Internals> >	mActiveInternals;
 };
 
-TNArray<R<CMediaPlayerInternals> >	CMediaPlayerInternals::mActiveInternals;
+TNArray<R<CMediaPlayer::Internals> >	CMediaPlayer::Internals::mActiveInternals;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -243,10 +243,10 @@ CMediaPlayer::CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info) 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CMediaPlayerInternals(*this, messageQueues, info);
+	mInternals = new Internals(*this, messageQueues, info);
 
 	// Add
-	CMediaPlayerInternals::mActiveInternals += R<CMediaPlayerInternals>(*mInternals);
+	Internals::mActiveInternals += R<Internals>(*mInternals);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -254,7 +254,7 @@ CMediaPlayer::~CMediaPlayer()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove
-	CMediaPlayerInternals::mActiveInternals -= R<CMediaPlayerInternals>(*mInternals);
+	Internals::mActiveInternals -= R<Internals>(*mInternals);
 
 	// Cleanup
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
@@ -343,9 +343,8 @@ I<CAudioPlayer> CMediaPlayer::newAudioPlayer(const CString& identifier, UInt32 t
 {
 	return I<CAudioPlayer>(
 			new CMediaPlayerAudioPlayer(identifier,
-					CAudioPlayer::Info(CMediaPlayerInternals::audioPlayerPositionUpdated,
-							CMediaPlayerInternals::audioPlayerEndOfData,
-							CMediaPlayerInternals::audioPlayerError, mInternals)));
+					CAudioPlayer::Info(Internals::audioPlayerPositionUpdated, Internals::audioPlayerEndOfData,
+							Internals::audioPlayerError, mInternals)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -364,8 +363,8 @@ I<CVideoFrameStore> CMediaPlayer::newVideoFrameStore(const CString& identifier, 
 {
 	return I<CVideoFrameStore>(
 			new CMediaPlayerVideoFrameStore(identifier,
-					CVideoFrameStore::Info(CMediaPlayerInternals::videoFrameStoreCurrentFrameUpdated,
-							CMediaPlayerInternals::videoFrameStoreError, mInternals)));
+					CVideoFrameStore::Info(Internals::videoFrameStoreCurrentFrameUpdated,
+							Internals::videoFrameStoreError, mInternals)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

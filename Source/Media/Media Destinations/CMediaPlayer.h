@@ -11,7 +11,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaPlayer
 
-class CMediaPlayerInternals;
 class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 	// Info
 	public:
@@ -98,6 +97,10 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 				void*						mUserData;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -137,5 +140,5 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 	// Properties
 	private:
-		CMediaPlayerInternals*	mInternals;
+		Internals*	mInternals;
 };

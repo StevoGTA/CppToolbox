@@ -11,8 +11,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaDestination
 
-class CMediaDestinationInternals;
 class CMediaDestination {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -46,7 +49,7 @@ class CMediaDestination {
 
 	// Properties
 	private:
-		CMediaDestinationInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

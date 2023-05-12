@@ -7,11 +7,11 @@
 #include "CData.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CBitReaderInternals
+// MARK: CBitReader::Internals
 
-class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
+class CBitReader::Internals : public TReferenceCountable<Internals> {
 	public:
-		CBitReaderInternals(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian) :
+		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian) :
 			TReferenceCountable(),
 					mIsBigEndian(isBigEndian), mRandomAccessDataSource(randomAccessDataSource), mDataSourceOffset(0),
 					mByteCount(mRandomAccessDataSource->getByteCount()),
@@ -129,7 +129,7 @@ class CBitReaderInternals : public TReferenceCountable<CBitReaderInternals> {
 CBitReader::CBitReader(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CBitReaderInternals(randomAccessDataSource, isBigEndian);
+	mInternals = new Internals(randomAccessDataSource, isBigEndian);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

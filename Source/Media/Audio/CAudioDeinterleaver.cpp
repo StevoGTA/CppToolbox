@@ -5,14 +5,14 @@
 #include "CAudioDeinterleaver.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioDeinterleaverInternals
+// MARK: CAudioDeinterleaver::Internals
 
-class CAudioDeinterleaverInternals {
+class CAudioDeinterleaver::Internals {
 	public:
 		typedef	void	(*PerformProc)(const TNumberArray<void*> readAudioFramesSegments,
 								const TNumberArray<void*> writeAudioFramesSegments, UInt32 frameCount);
 
-						CAudioDeinterleaverInternals() : mPerformProc(nil) {}
+						Internals() : mPerformProc(nil) {}
 
 		static	void	perform8BytesPerFrame(const TNumberArray<void*> readAudioFramesSegments,
 								const TNumberArray<void*> writeAudioFramesSegments, UInt32 frameCount)
@@ -123,7 +123,7 @@ class CAudioDeinterleaverInternals {
 CAudioDeinterleaver::CAudioDeinterleaver() : CBasicAudioProcessor()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioDeinterleaverInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -145,11 +145,11 @@ OV<SError> CAudioDeinterleaver::connectInput(const I<CAudioProcessor>& audioProc
 
 	// Setup
 	switch (mInternals->mInputAudioProcessingFormat->getBits()) {
-		case 64:	mInternals->mPerformProc = CAudioDeinterleaverInternals::perform8BytesPerFrame;	break;
-		case 32:	mInternals->mPerformProc = CAudioDeinterleaverInternals::perform4BytesPerFrame;	break;
-		case 24:	mInternals->mPerformProc = CAudioDeinterleaverInternals::perform3BytesPerFrame;	break;
-		case 16:	mInternals->mPerformProc = CAudioDeinterleaverInternals::perform2BytesPerFrame;	break;
-		default:	mInternals->mPerformProc = CAudioDeinterleaverInternals::perform1BytePerFrame;	break;
+		case 64:	mInternals->mPerformProc = Internals::perform8BytesPerFrame;	break;
+		case 32:	mInternals->mPerformProc = Internals::perform4BytesPerFrame;	break;
+		case 24:	mInternals->mPerformProc = Internals::perform3BytesPerFrame;	break;
+		case 16:	mInternals->mPerformProc = Internals::perform2BytesPerFrame;	break;
+		default:	mInternals->mPerformProc = Internals::perform1BytePerFrame;	break;
 	}
 
 	// Do super

@@ -10,8 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoDecoder
 
-class CVideoDecoderInternals;
 class CVideoDecoder : public CVideoSource {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 							// Lifecycle methods
@@ -33,5 +36,5 @@ class CVideoDecoder : public CVideoSource {
 
 	// Properties
 	private:
-		CVideoDecoderInternals*	mInternals;
+		Internals*	mInternals;
 };

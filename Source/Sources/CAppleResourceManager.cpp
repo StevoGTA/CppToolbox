@@ -10,12 +10,12 @@
 // Info from https://github.com/uliwitness/ReClassicfication
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAppleResource
+// MARK: CAppleResourceManager::Resource
 
-class CAppleResource {
+class CAppleResourceManager::Resource {
 	public:
-		CAppleResource(UInt16 id, const OV<CString>& name, const CData& data) : mID(id), mName(name), mData(data) {}
-		CAppleResource(const CAppleResource& other) : mID(other.mID), mName(other.mName), mData(other.mData) {}
+		Resource(UInt16 id, const OV<CString>& name, const CData& data) : mID(id), mName(name), mData(data) {}
+		Resource(const Resource& other) : mID(other.mID), mName(other.mName), mData(other.mData) {}
 
 	UInt16		mID;
 	OV<CString>	mName;
@@ -24,16 +24,14 @@ class CAppleResource {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAppleResourceManagerInternals
+// MARK: - CAppleResourceManager::Internals
 
-class CAppleResourceManagerInternals {
+class CAppleResourceManager::Internals {
 	public:
-		CAppleResourceManagerInternals(const TNDictionary<TNArray<CAppleResource> >& resourceMap) :
-			mResourceMap(resourceMap), mUpdated(false)
-			{}
+		Internals(const TNDictionary<TNArray<Resource> >& resourceMap) : mResourceMap(resourceMap), mUpdated(false) {}
 
-		TNDictionary<TNArray<CAppleResource> >	mResourceMap;
-		bool									mUpdated;
+		TNDictionary<TNArray<Resource> >	mResourceMap;
+		bool								mUpdated;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -50,11 +48,11 @@ static	SError	sInvalidResourceData(sErrorDomain, 1, CString(OSSTR("Invalid Resou
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAppleResourceManager::CAppleResourceManager(const TNDictionary<TNArray<CAppleResource> >& resourceMap)
+CAppleResourceManager::CAppleResourceManager(const TNDictionary<TNArray<Resource> >& resourceMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CAppleResourceManagerInternals(resourceMap);
+	mInternals = new Internals(resourceMap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -71,12 +69,12 @@ OR<CData> CAppleResourceManager::get(OSType resourceType, UInt16 resourceID) con
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get array of resources by type
-	OR<TNArray<CAppleResource> >	appleResources = mInternals->mResourceMap[CString(resourceType, true, false)];
-	if (!appleResources.hasReference())
+	OR<TNArray<Resource> >	resources = mInternals->mResourceMap[CString(resourceType, true, false)];
+	if (!resources.hasReference())
 		return OR<CData>();
 
 	// Search for resource by ID
-	for (TIteratorD<CAppleResource> iterator = appleResources->getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TIteratorD<Resource> iterator = resources->getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Check ID
 		if (iterator->mID == resourceID)
 			// Found
@@ -347,7 +345,7 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAcces
 	TVResult<SInt16>	lastTypeIndex = byteReader.readSInt16();
 	ReturnValueIfResultError(lastTypeIndex, TIResult<CAppleResourceManager>(lastTypeIndex.getError()));
 
-	TNDictionary<TNArray<CAppleResource> >	resourceMap;
+	TNDictionary<TNArray<Resource> >	resourceMap;
 	for (SInt16 typeIndex = 0; typeIndex <= *lastTypeIndex; typeIndex++) {
 		// Read resource info
 		TVResult<OSType>	resourceType = byteReader.readOSType();
@@ -369,7 +367,7 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAcces
 		ReturnValueIfError(error, TIResult<CAppleResourceManager>(*error));
 
 		// Read resources
-		TNArray<CAppleResource>	appleResources;
+		TNArray<Resource>	resources;
 		for (UInt16 resourceIndex = 0; resourceIndex <= *lastResourceIndex; resourceIndex++) {
 			// Read resource info
 			TVResult<UInt16>	resourceID = byteReader.readUInt16();
@@ -425,7 +423,7 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAcces
 			}
 
 			// Add to array
-			appleResources += CAppleResource(*resourceID, name, *resourceData);
+			resources += Resource(*resourceID, name, *resourceData);
 
 			// Seek to next resource position
 			error = byteReader.setPos(CByteReader::kPositionFromBeginning, innerOldOffset);
@@ -433,7 +431,7 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAcces
 		}
 
 		// Store resources for this resource type
-		resourceMap.set(CString(*resourceType, true, false), appleResources);
+		resourceMap.set(CString(*resourceType, true, false), resources);
 
 		// Seek to next resource type
 		error = byteReader.setPos(CByteReader::kPositionFromBeginning, resourceTypeOffset);

@@ -9,8 +9,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreAudioAudioConverter
 
-class CCoreAudioAudioConverterInternals;
 class CCoreAudioAudioConverter : public CAudioConverter {
+	// Classes
+	private:
+		class Internals;
+
 	public:
 										// Lifecycle methods
 										CCoreAudioAudioConverter();
@@ -33,5 +36,5 @@ class CCoreAudioAudioConverter : public CAudioConverter {
 
 	// Properties
 	private:
-		CCoreAudioAudioConverterInternals*	mInternals;
+		Internals*	mInternals;
 };

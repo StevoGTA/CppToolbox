@@ -51,8 +51,11 @@ class CRandomAccessDataSource : public CDataSource {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDataDataSource
 
-class CDataDataSourceInternals;
 class CDataDataSource : public CRandomAccessDataSource {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -67,7 +70,7 @@ class CDataDataSource : public CRandomAccessDataSource {
 
 	// Properties
 	private:
-		CDataDataSourceInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

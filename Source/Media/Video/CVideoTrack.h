@@ -11,8 +11,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoTrack
 
-class CVideoTrackInternals;
 class CVideoTrack : public CMediaTrack {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -27,5 +30,5 @@ class CVideoTrack : public CMediaTrack {
 
 	// Properties
 	private:
-		CVideoTrackInternals*	mInternals;
+		Internals*	mInternals;
 };

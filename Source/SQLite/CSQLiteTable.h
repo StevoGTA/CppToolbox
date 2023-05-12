@@ -13,7 +13,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteTable
 
-class CSQLiteTableInternals;
 class CSQLiteTable {
 	// Options
 	public:
@@ -72,6 +71,10 @@ class CSQLiteTable {
 	// Procs
 	public:
 		typedef	void	(*LastInsertRowIDProc)(SInt64 lastRowID, void* userData);
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -171,8 +174,8 @@ class CSQLiteTable {
 
 	// Properties
 	public:
-		static	const	CSQLiteTableColumn		mSelectAllTableColumn;
+		static	const	CSQLiteTableColumn	mSelectAllTableColumn;
 
 	private:
-						CSQLiteTableInternals*	mInternals;
+						Internals*			mInternals;
 };

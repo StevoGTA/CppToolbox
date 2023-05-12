@@ -5,11 +5,11 @@
 #include "CAudioTrack.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioTrackInternals
+// MARK: CAudioTrack::Internals
 
-class CAudioTrackInternals : public TReferenceCountable<CAudioTrackInternals> {
+class CAudioTrack::Internals : public TReferenceCountable<Internals> {
 	public:
-		CAudioTrackInternals(UInt32 index, const SAudioStorageFormat& audioStorageFormat) :
+		Internals(UInt32 index, const SAudioStorageFormat& audioStorageFormat) :
 			TReferenceCountable(), mIndex(index), mAudioStorageFormat(audioStorageFormat)
 			{}
 
@@ -28,7 +28,7 @@ CAudioTrack::CAudioTrack(const Info& info, const SAudioStorageFormat& audioStora
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CAudioTrackInternals(0, audioStorageFormat);
+	mInternals = new Internals(0, audioStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ CAudioTrack::CAudioTrack(UInt32 index, const Info& info, const SAudioStorageForm
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CAudioTrackInternals(index, audioStorageFormat);
+	mInternals = new Internals(index, audioStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

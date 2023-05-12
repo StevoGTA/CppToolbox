@@ -11,7 +11,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CByteReader
 
-class CByteReaderInternals;
 class CByteReader {
 	// Position
 	public:
@@ -20,6 +19,10 @@ class CByteReader {
 			kPositionFromCurrent,
 			kPositionFromEnd,
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -54,5 +57,5 @@ class CByteReader {
 
 	// Properties
 	private:
-		CByteReaderInternals*	mInternals;
+		Internals*	mInternals;
 };

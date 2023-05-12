@@ -7,11 +7,11 @@
 #include "CSQLiteTable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteInnerJoinInternals
+// MARK: CSQLiteInnerJoin::Internals
 
-class CSQLiteInnerJoinInternals {
+class CSQLiteInnerJoin::Internals {
 	public:
-		CSQLiteInnerJoinInternals() {}
+		Internals() {}
 
 	CString	mString;
 };
@@ -28,7 +28,7 @@ CSQLiteInnerJoin::CSQLiteInnerJoin(const CSQLiteTable& table, const CSQLiteTable
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CSQLiteInnerJoinInternals();
+	mInternals = new Internals();
 	addAnd(table, tableColumn, otherTable, otherTableColumn);
 }
 

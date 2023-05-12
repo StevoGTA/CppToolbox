@@ -5,12 +5,12 @@
 #include "CSQLiteTableColumn.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteTableColumnInternals
+// MARK: CSQLiteTableColumn::Internals
 
-class CSQLiteTableColumnInternals : public TReferenceCountable<CSQLiteTableColumnInternals> {
+class CSQLiteTableColumn::Internals : public TReferenceCountable<Internals> {
 	public:
-		CSQLiteTableColumnInternals(const CString& name, CSQLiteTableColumn::Kind kind,
-				CSQLiteTableColumn::Options options, OV<SSQLiteValue> defaultValue = OV<SSQLiteValue>()) :
+		Internals(const CString& name, CSQLiteTableColumn::Kind kind, CSQLiteTableColumn::Options options,
+				OV<SSQLiteValue> defaultValue = OV<SSQLiteValue>()) :
 			mName(name), mKind(kind), mOptions(options), mDefaultValue(defaultValue)
 			{}
 
@@ -35,7 +35,7 @@ const	CSQLiteTableColumn	CSQLiteTableColumn::mAll(CString(OSSTR("*")), kInteger)
 CSQLiteTableColumn::CSQLiteTableColumn(const CString& name, Kind kind, Options options, OV<SSQLiteValue> defaultValue)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSQLiteTableColumnInternals(name, kind, options, defaultValue);
+	mInternals = new Internals(name, kind, options, defaultValue);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -9,8 +9,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioChannelMapper
 
-class CAudioChannelMapperInternals;
 class CAudioChannelMapper : public CBasicAudioProcessor {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -34,5 +37,5 @@ class CAudioChannelMapper : public CBasicAudioProcessor {
 
 	// Properties
 	private:
-		CAudioChannelMapperInternals*	mInternals;
+		Internals*	mInternals;
 };

@@ -5,11 +5,11 @@
 #include "CVideoTrack.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CVideoTrackInternals
+// MARK: CVideoTrack::Internals
 
-class CVideoTrackInternals : public TReferenceCountable<CVideoTrackInternals> {
+class CVideoTrack::Internals : public TReferenceCountable<Internals> {
 	public:
-		CVideoTrackInternals(UInt32 index, const SVideoStorageFormat& videoStorageFormat) :
+		Internals(UInt32 index, const SVideoStorageFormat& videoStorageFormat) :
 			TReferenceCountable(), mIndex(index), mVideoStorageFormat(videoStorageFormat)
 			{}
 
@@ -28,7 +28,7 @@ CVideoTrack::CVideoTrack(const Info& info, const SVideoStorageFormat& videoStora
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CVideoTrackInternals(0, videoStorageFormat);
+	mInternals = new Internals(0, videoStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ CVideoTrack::CVideoTrack(UInt32 index, const Info& info, const SVideoStorageForm
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CVideoTrackInternals(index, videoStorageFormat);
+	mInternals = new Internals(index, videoStorageFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

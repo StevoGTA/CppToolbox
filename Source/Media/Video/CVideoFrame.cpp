@@ -11,19 +11,19 @@
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CVideoFrameInternals
+// MARK: CVideoFrame::Internals
 
-class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameInternals> {
+class CVideoFrame::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
-		CVideoFrameInternals(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
+		Internals(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
 				CVideoFrame::DataFormat dataFormat, CVImageBufferRef imageBufferRef) :
 			mPresentationTimeInterval(presentationTimeInterval), mFrameSize(frameSize),
 					mViewRect(S2DPointU16(), frameSize), mDataFormat(dataFormat),
 					mImageBufferRef((CVImageBufferRef) ::CFRetain(imageBufferRef))
 			{}
 #elif defined(TARGET_OS_WINDOWS)
-		CVideoFrameInternals(UniversalTimeInterval presentationTimeInterval, CVideoFrame::DataFormat dataFormat,
+		Internals(UniversalTimeInterval presentationTimeInterval, CVideoFrame::DataFormat dataFormat,
 				const S2DSizeU16& frameSize, const S2DRectU16& viewRect, IMFSample* sample) :
 			mPresentationTimeInterval(presentationTimeInterval), mDataFormat(dataFormat), mFrameSize(frameSize),
 					mViewRect(viewRect), mSample(sample)
@@ -32,7 +32,7 @@ class CVideoFrameInternals : public TCopyOnWriteReferenceCountable<CVideoFrameIn
 				mSample->AddRef();
 			}
 #endif
-		~CVideoFrameInternals()
+		~Internals()
 			{
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 				// Cleanup
@@ -94,8 +94,8 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImage
 	}
 
 	mInternals =
-			new CVideoFrameInternals(presentationTimeInterval, S2DSizeU16(frameSize.width, frameSize.height),
-					dataFormat, imageBufferRef);
+			new Internals(presentationTimeInterval, S2DSizeU16(frameSize.width, frameSize.height), dataFormat,
+					imageBufferRef);
 }
 #elif defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, IMFSamp
 		dataFormat = kDataFormatYCbCr;
 	}
 
-	mInternals = new CVideoFrameInternals(presentationTimeInterval, dataFormat, frameSize, viewRect, sample);
+	mInternals = new Internals(presentationTimeInterval, dataFormat, frameSize, viewRect, sample);
 }
 #endif
 

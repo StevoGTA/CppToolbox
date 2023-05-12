@@ -40,9 +40,9 @@ void CAudioPlayer::setPlaybackBufferDuration(UniversalTimeInterval playbackBuffe
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerBufferThreadInternals
+// MARK: - CAudioPlayerBufferThread::Internals
 
-class CAudioPlayerBufferThreadInternals {
+class CAudioPlayerBufferThread::Internals {
 	public:
 		enum State {
 			kStateStarting,
@@ -50,7 +50,7 @@ class CAudioPlayerBufferThreadInternals {
 			kStateFilling,
 		};
 
-				CAudioPlayerBufferThreadInternals(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
+				Internals(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
 						UInt32 bytesPerFrame, UInt32 maxOutputFrames, CAudioPlayerBufferThread::ErrorProc errorProc,
 						void* procsUserData) :
 					mAudioPlayer(audioPlayer), mErrorProc(errorProc), mQueue(queue), mBytesPerFrame(bytesPerFrame),
@@ -136,9 +136,7 @@ CAudioPlayerBufferThread::CAudioPlayerBufferThread(CAudioPlayer& audioPlayer, CS
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals =
-			new CAudioPlayerBufferThreadInternals(audioPlayer, queue, bytesPerFrame, maxOutputFrames, errorProc,
-					procsUserData);
+	mInternals = new Internals(audioPlayer, queue, bytesPerFrame, maxOutputFrames, errorProc, procsUserData);
 
 	// Start
 	start();
@@ -161,29 +159,26 @@ void CAudioPlayerBufferThread::run()
 	while (!mInternals->mShutdownRequested) {
 		// Check state
 		switch (mInternals->mState) {
-			case CAudioPlayerBufferThreadInternals::kStateStarting:
+			case Internals::kStateStarting:
 				// Starting
-				mInternals->mState =
-						mInternals->mResumeRequested ?
-								CAudioPlayerBufferThreadInternals::kStateFilling :
-								CAudioPlayerBufferThreadInternals::kStateWaiting;
+				mInternals->mState = mInternals->mResumeRequested ? Internals::kStateFilling : Internals::kStateWaiting;
 				break;
 
-			case CAudioPlayerBufferThreadInternals::kStateWaiting:
+			case Internals::kStateWaiting:
 				// Waiting
 				mInternals->mSemaphore.waitFor();
 
 				// Check if stop filling requested
 				if (!mInternals->mPauseRequested)
 					// Go for filling
-					mInternals->mState = CAudioPlayerBufferThreadInternals::kStateFilling;
+					mInternals->mState = Internals::kStateFilling;
 				break;
 
-			case CAudioPlayerBufferThreadInternals::kStateFilling:
+			case Internals::kStateFilling:
 				// Filling
 				if (mInternals->mPauseRequested || !mInternals->tryFill())
 					// Go to waiting
-					mInternals->mState = CAudioPlayerBufferThreadInternals::kStateWaiting;
+					mInternals->mState = Internals::kStateWaiting;
 				break;
 		}
 	}
@@ -199,7 +194,7 @@ void CAudioPlayerBufferThread::pause()
 	mInternals->mPauseRequested = true;
 
 	// Wait until waiting
-	while (mInternals->mState != CAudioPlayerBufferThreadInternals::kStateWaiting)
+	while (mInternals->mState != Internals::kStateWaiting)
 		// Sleep
 		CThread::sleepFor(0.001);
 }

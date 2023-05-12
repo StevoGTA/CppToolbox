@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoFrameStore
 
-class CVideoFrameStoreInternals;
 class CVideoFrameStore : public CVideoDestination {
 	// Info
 	public:
@@ -41,6 +40,10 @@ class CVideoFrameStore : public CVideoDestination {
 				void*				mUserData;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 									// Lifecycle methods
@@ -70,5 +73,5 @@ class CVideoFrameStore : public CVideoDestination {
 
 	// Properties
 	private:
-		CVideoFrameStoreInternals*	mInternals;
+		Internals*	mInternals;
 };

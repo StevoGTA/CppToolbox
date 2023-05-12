@@ -8,11 +8,11 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteResultsRowInternals
+// MARK: CSQLiteResultsRow::Internals
 
-class CSQLiteResultsRowInternals {
+class CSQLiteResultsRow::Internals {
 	public:
-		CSQLiteResultsRowInternals(sqlite3_stmt* statement) :
+		Internals(sqlite3_stmt* statement) :
 			mStatement(statement)
 			{
 				// Setup column name map
@@ -36,7 +36,7 @@ class CSQLiteResultsRowInternals {
 CSQLiteResultsRow::CSQLiteResultsRow(sqlite3_stmt* statement)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CSQLiteResultsRowInternals(statement);
+	mInternals = new Internals(statement);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

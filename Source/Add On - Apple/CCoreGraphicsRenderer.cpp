@@ -5,11 +5,11 @@
 #include "CCoreGraphicsRenderer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CCoreGraphicsRendererInternals
+// MARK: CCoreGraphicsRenderer::Internals
 
-class CCoreGraphicsRendererInternals {
+class CCoreGraphicsRenderer::Internals {
 	public:
-		CCoreGraphicsRendererInternals(CBitmap& bitmap)
+		Internals(CBitmap& bitmap)
 			{
 				// Setup
 				CGBitmapInfo	bitmapInfo;
@@ -29,7 +29,7 @@ class CCoreGraphicsRendererInternals {
 								bitmap.getBytesPerRow(), colorSpaceRef, bitmapInfo);
 				::CGColorSpaceRelease(colorSpaceRef);
 			}
-		~CCoreGraphicsRendererInternals()
+		~Internals()
 			{
 				::CGContextRelease(mContextRef);
 			}
@@ -47,7 +47,7 @@ class CCoreGraphicsRendererInternals {
 CCoreGraphicsRenderer::CCoreGraphicsRenderer(CBitmap& bitmap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CCoreGraphicsRendererInternals(bitmap);
+	mInternals = new Internals(bitmap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

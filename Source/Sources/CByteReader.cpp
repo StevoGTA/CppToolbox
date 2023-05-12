@@ -7,12 +7,12 @@
 #include "CData.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CByteReaderInternals
+// MARK: CByteReader::Internals
 
-class CByteReaderInternals : public TReferenceCountable<CByteReaderInternals> {
+class CByteReader::Internals : public TReferenceCountable<Internals> {
 	public:
-		CByteReaderInternals(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 dataSourceOffset,
-				UInt64 byteCount, bool isBigEndian) :
+		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 dataSourceOffset, UInt64 byteCount,
+				bool isBigEndian) :
 			TReferenceCountable(), mIsBigEndian(isBigEndian),
 					mRandomAccessDataSource(randomAccessDataSource), mInitialDataSourceOffset(dataSourceOffset),
 					mCurrentDataSourceOffset(dataSourceOffset), mByteCount(byteCount)
@@ -35,8 +35,7 @@ class CByteReaderInternals : public TReferenceCountable<CByteReaderInternals> {
 CByteReader::CByteReader(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals =
-			new CByteReaderInternals(randomAccessDataSource, 0, randomAccessDataSource->getByteCount(), isBigEndian);
+	mInternals = new Internals(randomAccessDataSource, 0, randomAccessDataSource->getByteCount(), isBigEndian);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -48,7 +47,7 @@ CByteReader::CByteReader(const I<CRandomAccessDataSource>& randomAccessDataSourc
 	AssertFailIf((offset + size) > randomAccessDataSource->getByteCount());
 
 	// Setup
-	mInternals = new CByteReaderInternals(randomAccessDataSource, offset, size, isBigEndian);
+	mInternals = new Internals(randomAccessDataSource, offset, size, isBigEndian);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

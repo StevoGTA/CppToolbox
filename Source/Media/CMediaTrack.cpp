@@ -7,11 +7,11 @@
 #include "TReferenceTracking.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CMediaTrackInternals
+// MARK: CMediaTrack::Internals
 
-class CMediaTrackInternals : public TReferenceCountable<CMediaTrackInternals> {
+class CMediaTrack::Internals : public TReferenceCountable<Internals> {
 	public:
-		CMediaTrackInternals(const CMediaTrack::Info& info) :
+		Internals(const CMediaTrack::Info& info) :
 			TReferenceCountable(),
 					mInfo(info)
 			{}
@@ -30,7 +30,7 @@ CMediaTrack::CMediaTrack(const Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CMediaTrackInternals(info);
+	mInternals = new Internals(info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

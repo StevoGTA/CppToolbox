@@ -7,11 +7,11 @@
 #include "CCodecRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioDecoderInternals
+// MARK: CAudioDecoder::Internals
 
-class CAudioDecoderInternals {
+class CAudioDecoder::Internals {
 	public:
-									CAudioDecoderInternals(const SAudioStorageFormat& audioStorageFormat,
+									Internals(const SAudioStorageFormat& audioStorageFormat,
 											const I<CDecodeAudioCodec>& decodeAudioCodec, const CString& identifier) :
 										mAudioStorageFormat(audioStorageFormat), mDecodeAudioCodec(decodeAudioCodec),
 												mIdentifier(identifier),
@@ -44,7 +44,7 @@ CAudioDecoder::CAudioDecoder(const SAudioStorageFormat& audioStorageFormat, cons
 		const CString& identifier) : CAudioSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioDecoderInternals(audioStorageFormat, audioCodec, identifier);
+	mInternals = new Internals(audioStorageFormat, audioCodec, identifier);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

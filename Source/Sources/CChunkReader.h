@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CChunkReader
 
-class CChunkReaderInternals;
 class CChunkReader : public CByteReader {
 	// ChunkInfo
 	public:
@@ -87,6 +86,10 @@ class CChunkReader : public CByteReader {
 			kFormat64BitLittleEndian,
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 							// Lifecycle methods
@@ -102,5 +105,5 @@ class CChunkReader : public CByteReader {
 
 	// Properties
 	private:
-		CChunkReaderInternals*	mInternals;
+		Internals*	mInternals;
 };

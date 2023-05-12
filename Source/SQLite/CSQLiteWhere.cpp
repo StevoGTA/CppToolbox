@@ -13,14 +13,14 @@ static	CString	sVariablePlaceholder(OSSTR("##VARIABLEPLACEHOLDER##"));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSQLiteWhereInternals
+// MARK: - CSQLiteWhere::Internals
 
-class CSQLiteWhereInternals {
+class CSQLiteWhere::Internals {
 	public:
-				CSQLiteWhereInternals(const CString& string, const TArray<SSQLiteValue>& values) :
+				Internals(const CString& string, const TArray<SSQLiteValue>& values) :
 					mString(string), mValues(values)
 					{}
-				CSQLiteWhereInternals(const CString& string) : mString(string) {}
+				Internals(const CString& string) : mString(string) {}
 
 		void	append(const CString& comparison, const SSQLiteValue& value)
 					{
@@ -62,7 +62,7 @@ CSQLiteWhere::CSQLiteWhere(const CSQLiteTable& table, const CSQLiteTableColumn& 
 {
 	// Setup
 	mInternals =
-			new CSQLiteWhereInternals(
+			new Internals(
 					CString(OSSTR(" WHERE `")) + table.getName() + CString(OSSTR("`.`")) + tableColumn.getName() +
 							CString(OSSTR("`")));
 	mInternals->append(comparison, value);
@@ -74,7 +74,7 @@ CSQLiteWhere::CSQLiteWhere(const CSQLiteTable& table, const CSQLiteTableColumn& 
 {
 	// Setup
 	mInternals =
-			new CSQLiteWhereInternals(
+			new Internals(
 					CString(OSSTR(" WHERE `")) + table.getName() + CString(OSSTR("`.`")) + tableColumn.getName() +
 							CString(OSSTR("`")));
 	mInternals->append(CString(OSSTR("=")), value);
@@ -85,7 +85,7 @@ CSQLiteWhere::CSQLiteWhere(const CSQLiteTableColumn& tableColumn, const CString&
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CSQLiteWhereInternals(CString(OSSTR(" WHERE `")) + tableColumn.getName() + CString(OSSTR("`")));
+	mInternals = new Internals(CString(OSSTR(" WHERE `")) + tableColumn.getName() + CString(OSSTR("`")));
 	mInternals->append(comparison, value);
 }
 
@@ -94,7 +94,7 @@ CSQLiteWhere::CSQLiteWhere(const CSQLiteTableColumn& tableColumn, const SSQLiteV
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CSQLiteWhereInternals(CString(OSSTR(" WHERE `")) + tableColumn.getName() + CString(OSSTR("`")));
+	mInternals = new Internals(CString(OSSTR(" WHERE `")) + tableColumn.getName() + CString(OSSTR("`")));
 	mInternals->append(CString(OSSTR("=")), value);
 }
 
@@ -105,7 +105,7 @@ CSQLiteWhere::CSQLiteWhere(const CSQLiteTable& table, const CSQLiteTableColumn& 
 {
 	// Setup
 	mInternals =
-			new CSQLiteWhereInternals(
+			new Internals(
 					CString(OSSTR(" WHERE `")) + table.getName() + CString(OSSTR("`.`")) + tableColumn.getName() +
 							CString(OSSTR("` IN (")) + sVariablePlaceholder + CString(OSSTR(")")),
 					values);
@@ -117,7 +117,7 @@ CSQLiteWhere::CSQLiteWhere(const CSQLiteTableColumn& tableColumn, const TArray<S
 {
 	// Setup
 	mInternals =
-			new CSQLiteWhereInternals(
+			new Internals(
 					CString(OSSTR(" WHERE `")) + tableColumn.getName() + CString(OSSTR("` IN (")) +
 							sVariablePlaceholder + CString(OSSTR(")")),
 					values);

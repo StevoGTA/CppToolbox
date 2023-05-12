@@ -9,7 +9,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaTrack
 
-class CMediaTrackInternals;
 class CMediaTrack {
 	// Info
 	public:
@@ -32,6 +31,10 @@ class CMediaTrack {
 				UInt32					mBitrate;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -47,5 +50,5 @@ class CMediaTrack {
 
 	// Properties
 	private:
-		CMediaTrackInternals*	mInternals;
+		Internals*	mInternals;
 };

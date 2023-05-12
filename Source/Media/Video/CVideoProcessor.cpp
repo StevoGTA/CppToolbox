@@ -5,12 +5,12 @@
 #include "CVideoProcessor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CVideoProcessorInternals
+// MARK: CVideoProcessor::Internals
 
-class CVideoProcessorInternals {
+class CVideoProcessor::Internals {
 	public:
-		CVideoProcessorInternals() : mVideoProcessor(nil) {}
-		~CVideoProcessorInternals()
+		Internals() : mVideoProcessor(nil) {}
+		~Internals()
 			{ Delete(mVideoProcessor); }
 
 		I<CVideoProcessor>*	mVideoProcessor;
@@ -26,7 +26,7 @@ class CVideoProcessorInternals {
 CVideoProcessor::CVideoProcessor()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CVideoProcessorInternals();
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

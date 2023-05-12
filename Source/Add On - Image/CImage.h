@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CImage
 
-class CImageInternals;
 class CImage {
 	// Enums
 	public:
@@ -19,6 +18,10 @@ class CImage {
 			kTypePNG	= MAKE_OSTYPE('P', 'N', 'G', ' '),
 			kTypeNV12	= MAKE_OSTYPE('N', 'V', '1', '2'),
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -44,5 +47,5 @@ class CImage {
 
 	// Properties
 	private:
-		CImageInternals*	mInternals;
+		Internals*	mInternals;
 };

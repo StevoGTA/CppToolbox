@@ -33,9 +33,9 @@ static	const	SInt16	sIndexAdjustTable[] = {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CIMAADPCMDecoderInternals
+// MARK: - CIMAADPCMDecoder::Internals
 
-class CIMAADPCMDecoderInternals {
+class CIMAADPCMDecoder::Internals {
 	public:
 		struct StateInfo {
 			// Lifecycle methods
@@ -46,9 +46,7 @@ class CIMAADPCMDecoderInternals {
 			SInt16	mIndex;
 		};
 
-				CIMAADPCMDecoderInternals(SInt16* framePtr, UInt8 channels) :
-					mFramePtr(framePtr), mStateInfos(channels)
-					{}
+				Internals(SInt16* framePtr, UInt8 channels) : mFramePtr(framePtr), mStateInfos(channels) {}
 
 		void	decodeForDeltaCode(SInt16* samplePtr, UInt8 deltaCode, StateInfo& stateInfo)
 					{
@@ -91,7 +89,7 @@ class CIMAADPCMDecoderInternals {
 CIMAADPCMDecoder::CIMAADPCMDecoder(SInt16* framePtr, UInt8 channels)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CIMAADPCMDecoderInternals(framePtr, channels);
+	mInternals = new Internals(framePtr, channels);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -108,7 +106,7 @@ void CIMAADPCMDecoder::initChannel(UInt8 channel, SInt16 sample, SInt16 index)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Init state info
-	mInternals->mStateInfos[channel] = CIMAADPCMDecoderInternals::StateInfo(sample, index);
+	mInternals->mStateInfos[channel] = Internals::StateInfo(sample, index);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -137,13 +135,13 @@ void CIMAADPCMDecoder::decodeInterleaved(const UInt8* packetPtr, UInt32 channelH
 		// Loop channels
 		for (UInt8 channel = 0; channel < channels; channel++) {
 			// Setup
-					CIMAADPCMDecoderInternals::StateInfo&	stateInfo = mInternals->mStateInfos[channel];
-			const	UInt8*									encodedSamplePtr =
-																	packetPtr +
-																	channelHeaderByteCount * channels +
-																	groupIndex * samplesPerGroup / 2 * channels +
-																	samplesPerGroup / 2 * channel;
-					SInt16*									decodedSamplePtr = mInternals->mFramePtr + channel;
+					Internals::StateInfo&	stateInfo = mInternals->mStateInfos[channel];
+			const	UInt8*					encodedSamplePtr =
+													packetPtr +
+													channelHeaderByteCount * channels +
+													groupIndex * samplesPerGroup / 2 * channels +
+													samplesPerGroup / 2 * channel;
+					SInt16*					decodedSamplePtr = mInternals->mFramePtr + channel;
 
 			// Iterate samples in group
 			for (UInt8 sampleIndex = 0; sampleIndex < samplesPerGroup; sampleIndex += 2) {
@@ -172,13 +170,12 @@ void CIMAADPCMDecoder::decodeNoninterleaved(const UInt8* packetPtr, UInt32 chann
 	// Iterate channels
 	for (UInt8 channel = 0; channel < channels; channel++) {
 		// Setup
-				CIMAADPCMDecoderInternals::StateInfo&	stateInfo = mInternals->mStateInfos[channel];
-		const	UInt8*									encodedSamplePtr =
-																packetPtr +
-																(channelHeaderByteCount + samplesPerChannel / 2) *
-																		channel +
-																channelHeaderByteCount;
-				SInt16*									decodedSamplePtr = mInternals->mFramePtr + channel;
+				Internals::StateInfo&	stateInfo = mInternals->mStateInfos[channel];
+		const	UInt8*					encodedSamplePtr =
+												packetPtr +
+												(channelHeaderByteCount + samplesPerChannel / 2) * channel +
+												channelHeaderByteCount;
+				SInt16*					decodedSamplePtr = mInternals->mFramePtr + channel;
 
 		// Iterate samples in group
 		for (UInt8 sampleIndex = 0; sampleIndex < samplesPerChannel; sampleIndex += 2) {

@@ -9,8 +9,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CIMAADPCMDecoder
 
-class CIMAADPCMDecoderInternals;
 class CIMAADPCMDecoder {
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -27,7 +29,7 @@ class CIMAADPCMDecoder {
 
 	// Properties
 	private:
-		CIMAADPCMDecoderInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

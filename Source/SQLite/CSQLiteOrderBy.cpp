@@ -7,11 +7,11 @@
 #include "CSQLiteTable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteOrderByInternals
+// MARK: CSQLiteOrderBy::Internals
 
-class CSQLiteOrderByInternals {
+class CSQLiteOrderBy::Internals {
 	public:
-		CSQLiteOrderByInternals() {}
+		Internals() {}
 
 		CString	mString;
 };
@@ -26,7 +26,7 @@ CSQLiteOrderBy::CSQLiteOrderBy(const CSQLiteTable& table, CSQLiteTableColumn& ta
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CSQLiteOrderByInternals();
+	mInternals = new Internals();
 	mInternals->mString =
 			CString(OSSTR(" ORDER BY `")) + table.getName() + CString(OSSTR("`.`")) + tableColumn.getName() +
 					CString(OSSTR("`")) + CString((order == kAscending) ? OSSTR("ASC") : OSSTR("DESC"));
@@ -37,7 +37,7 @@ CSQLiteOrderBy::CSQLiteOrderBy(CSQLiteTableColumn& tableColumn, Order order)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CSQLiteOrderByInternals();
+	mInternals = new Internals();
 	mInternals->mString =
 			CString(OSSTR(" ORDER BY `")) + tableColumn.getName() + CString(OSSTR("`")) +
 					CString((order == kAscending) ? OSSTR("ASC") : OSSTR("DESC"));

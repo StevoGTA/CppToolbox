@@ -10,8 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioDecoder
 
-class CAudioDecoderInternals;
 class CAudioDecoder : public CAudioSource {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -37,5 +40,5 @@ class CAudioDecoder : public CAudioSource {
 
 	// Properties
 	private:
-		CAudioDecoderInternals*	mInternals;
+		Internals*	mInternals;
 };

@@ -94,8 +94,11 @@ class CMediaPacketSource {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSeekableUniformMediaPacketSource
 
-class CSeekableUniformMediaPacketSourceInternals;
 class CSeekableUniformMediaPacketSource : public CMediaPacketSource {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -116,14 +119,17 @@ class CSeekableUniformMediaPacketSource : public CMediaPacketSource {
 
 	// Properties
 	private:
-		CSeekableUniformMediaPacketSourceInternals*	mInternals;
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSeekableVaryingMediaPacketSource
 
-class CSeekableVaryingMediaPacketSourceInternals;
 class CSeekableVaryingMediaPacketSource : public CMediaPacketSource {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 												// Lifecycle methods
@@ -142,5 +148,5 @@ class CSeekableVaryingMediaPacketSource : public CMediaPacketSource {
 
 	// Properties
 	private:
-		CSeekableVaryingMediaPacketSourceInternals*	mInternals;
+		Internals*	mInternals;
 };

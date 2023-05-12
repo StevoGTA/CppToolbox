@@ -12,8 +12,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreMediaDecodeVideoCodec
 
-class CCoreMediaDecodeVideoCodecInternals;
 class CCoreMediaDecodeVideoCodec : public CDecodeVideoCodec {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 													// Lifecycle methods
@@ -39,5 +42,5 @@ class CCoreMediaDecodeVideoCodec : public CDecodeVideoCodec {
 
 	// Properties
 	private:
-		CCoreMediaDecodeVideoCodecInternals*	mInternals;
+		Internals*	mInternals;
 };

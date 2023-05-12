@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteStatementPerformer
 
-class CSQLiteStatementPerformerInternals;
 class CSQLiteStatementPerformer {
 	// Transaction result
 	public:
@@ -23,6 +22,10 @@ class CSQLiteStatementPerformer {
 	public:
 		typedef	void				(*LastInsertRowIDProc)(SInt64 lastRowID, void* userData);
 		typedef	TransactionResult	(*TransactionProc)(void* userData);
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
@@ -45,5 +48,5 @@ class CSQLiteStatementPerformer {
 
 	// Properties
 	private:
-		CSQLiteStatementPerformerInternals*	mInternals;
+		Internals*	mInternals;
 };

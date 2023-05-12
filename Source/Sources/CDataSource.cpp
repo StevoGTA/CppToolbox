@@ -34,11 +34,11 @@ TVResult<CData> CRandomAccessDataSource::readData()
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDataDataSourceInternals
+// MARK: - CDataDataSource::Internals
 
-class CDataDataSourceInternals {
+class CDataDataSource::Internals {
 	public:
-		CDataDataSourceInternals(const CData& data) : mData(data), mCurrentOffset(0) {}
+		Internals(const CData& data) : mData(data), mCurrentOffset(0) {}
 
 		CData	mData;
 		UInt64	mCurrentOffset;
@@ -54,7 +54,7 @@ class CDataDataSourceInternals {
 CDataDataSource::CDataDataSource(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CDataDataSourceInternals(data);
+	mInternals = new Internals(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

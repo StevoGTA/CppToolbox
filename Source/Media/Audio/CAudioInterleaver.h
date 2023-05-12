@@ -9,8 +9,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioInterleaver
 
-class CAudioInterleaverInternals;
 class CAudioInterleaver : public CBasicAudioProcessor {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -30,5 +33,5 @@ class CAudioInterleaver : public CBasicAudioProcessor {
 
 	// Properties
 	private:
-		CAudioInterleaverInternals*	mInternals;
+		Internals*	mInternals;
 };

@@ -7,11 +7,11 @@
 #include "CCodecRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CVideoDecoderInternals
+// MARK: CVideoDecoder::Internals
 
-class CVideoDecoderInternals : public TReferenceCountable<CVideoDecoderInternals> {
+class CVideoDecoder::Internals : public TReferenceCountable<Internals> {
 	public:
-		CVideoDecoderInternals(const SVideoStorageFormat& videoStorageFormat, const I<CDecodeVideoCodec>& videoCodec,
+		Internals(const SVideoStorageFormat& videoStorageFormat, const I<CDecodeVideoCodec>& videoCodec,
 				const CString& identifier) :
 			TReferenceCountable(),
 					mVideoStorageFormat(videoStorageFormat), mVideoCodec(videoCodec), mIdentifier(identifier),
@@ -40,7 +40,7 @@ CVideoDecoder::CVideoDecoder(const SVideoStorageFormat& videoStorageFormat, cons
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new CVideoDecoderInternals(videoStorageFormat, videoCodec, identifier);
+	mInternals = new Internals(videoStorageFormat, videoCodec, identifier);
 
 	// Store
 	mInternals->mVideoProcessingFormat = OV<SVideoProcessingFormat>(videoProcessingFormat);
