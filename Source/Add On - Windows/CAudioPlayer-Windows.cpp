@@ -508,16 +508,16 @@ class CAudioPlayerImplementation :
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerInternals
+// MARK: - CAudioPlayer::Internals
 
-class CAudioPlayerInternals {
+class CAudioPlayer::Internals {
 	public:
-						CAudioPlayerInternals(CAudioPlayer& audioPlayer, const CString& identifier,
+						Internals(CAudioPlayer& audioPlayer, const CString& identifier,
 									const CAudioPlayer::Info& info) :
 							mAudioPlayer(audioPlayer), mInfo(info),
 									mImplementation(Make<CAudioPlayerImplementation>(audioPlayer, identifier, info))
 							{}
-						~CAudioPlayerInternals()
+						~Internals()
 							{
 								mImplementation->shutdown();
 							}
@@ -525,7 +525,7 @@ class CAudioPlayerInternals {
 		static	void	readerThreadError(const SError& error, void* userData)
 							{
 								// Setup
-								CAudioPlayerInternals&	internals = *((CAudioPlayerInternals*) userData);
+								Internals&	internals = *((Internals*) userData);
 
 								// Call proc
 								internals.mInfo.error(internals.mAudioPlayer, error);
@@ -547,7 +547,7 @@ class CAudioPlayerInternals {
 CAudioPlayer::CAudioPlayer(const CString& identifier, const Info& info) : CAudioDestination()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CAudioPlayerInternals(*this, identifier, info);
+	mInternals = new Internals(*this, identifier, info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -624,8 +624,7 @@ OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 			OI<CAudioPlayerBufferThread>(
 					new CAudioPlayerBufferThread(*this, *mInternals->mImplementation->mQueue,
 							mInternals->mImplementation->mMixFormat->nBlockAlign,
-							mInternals->mImplementation->mMaxPeriodInFrames, CAudioPlayerInternals::readerThreadError,
-							mInternals));
+							mInternals->mImplementation->mMaxPeriodInFrames, Internals::readerThreadError, mInternals));
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
