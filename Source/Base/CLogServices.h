@@ -48,43 +48,6 @@
 			}
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CLogFile
-
-class CFile;
-
-class CLogFile {
-	// Classes
-	private:
-		class Internals;
-
-	// Methods
-	public:
-						// Lifecycle methods
-						CLogFile(const CFile& file);
-						CLogFile(const CLogFile& other);
-						~CLogFile();
-
-						// Instance methods
-		const	CFile& getFile() const;
-
-				void	logMessage(const CString& string) const;
-				void	logMessages(const TArray<CString>& strings) const;
-				void	logWarning(const CString& warning, const CString& when, const char* file, const char* proc,
-								UInt32 line) const;
-				void	logWarning(const CString& string) const;
-				void	logError(const CString& error, const CString& when, const char* file, const char* proc,
-								UInt32 line) const;
-				void	logError(const CString& string) const;
-				void	logError(const SError& error, const CString& message, const char* file, const char* proc,
-								UInt32 line)
-							{ logError(error.getDefaultDescription(), message, file, proc, line); }
-
-	// Properties
-	private:
-		Internals*	mInternals;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CLogServices
 
 class CLogServices {
@@ -94,24 +57,24 @@ class CLogServices {
 
 	// Methods
 	public:
-								// Class methods
-		static	void			setPrimaryLogFile(const CLogFile& logFile);
-		static	OV<CLogFile>&	getPrimaryLogFile();
+						// Class methods
 
-		static	void			logMessage(const CString& string);
-		static	void			logMessages(const TArray<CString>& strings);
-		static	void			logDebugMessage(const CString& string);
-		static	void			logWarning(const CString& warning, const CString& when, const char* file,
-										const char* proc, UInt32 line);
-		static	void			logWarning(const CString& string);
-		static	void			logError(const CString& error, const CString& when, const char* file, const char* proc,
-										UInt32 line);
-		static	void			logError(const CString& string);
-		static	void			logError(const SError& error, const CString& message, const char* file,
-										const char* proc, UInt32 line)
-									{ logError(error.getDefaultDescription(), message, file, proc, line); }
+		static	void	logMessage(const CString& string);
+		static	void	logMessages(const TArray<CString>& strings);
+		static	void	logDebugMessage(const CString& string);
+		static	void	logWarning(const CString& warning, const CString& when, const char* file, const char* proc,
+								UInt32 line);
+		static	void	logWarning(const CString& string);
+		static	void	logError(const CString& error, const CString& when, const char* file, const char* proc,
+								UInt32 line);
+		static	void	logError(const CString& string);
+		static	void	logError(const SError& error, const CString& message, const char* file, const char* proc,
+								UInt32 line)
+							{ logError(error.getDefaultDescription(), message, file, proc, line); }
 
-		static	void			addLogMessageProc(LogProc logProc, void* userData = nil);
-		static	void			addLogWarningProc(LogProc logProc, void* userData = nil);
-		static	void			addLogErrorProc(LogProc logProc, void* userData = nil);
+		static	void	addLogMessageProc(LogProc logProc, void* userData = nil);
+		static	void	addLogWarningProc(LogProc logProc, void* userData = nil);
+		static	void	addLogErrorProc(LogProc logProc, void* userData = nil);
+
+		static	void	enableConsoleLogging();
 };
