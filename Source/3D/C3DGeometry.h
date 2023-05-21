@@ -15,10 +15,11 @@ template <typename T> struct T3DPoint {
 						T3DPoint(T x, T y, T z) : mX(x), mY(y), mZ(z) {}
 						T3DPoint(const CString& string)
 							{
-								// {0.0,0.0,0.0} => ,0.0,0.0,0.0}
+								// "{0.0,0.0,0.0}" => ",0.0,0.0,0.0}" => ["", "0.0", "0.0", "0.0}"]
 								TArray<CString>	array =
 														string.replacingSubStrings(CString(OSSTR("{")),
-																CString(OSSTR(","))).components(CString(OSSTR(",")));
+																		CString(OSSTR(",")))
+																.components(CString(OSSTR(",")));
 								if (array.getCount() >= 4) {
 									// Extract values
 									mX = array[1].getFloat32();

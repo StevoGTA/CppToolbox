@@ -26,10 +26,11 @@ template <typename T> struct T2DPoint {
 						T2DPoint(T x, T y) : mX(x), mY(y) {}
 						T2DPoint(const CString& string)
 							{
-								// {0.0,0.0} => ,0.0,0.0}
+								// "{0.0,0.0}" => ",0.0,0.0}" => ["", "0.0", "0.0}"]
 								TArray<CString>	array =
 														string.replacingSubStrings(CString(OSSTR("{")),
-																CString(OSSTR(","))).components(CString(OSSTR(",")));
+																		CString(OSSTR(",")))
+																.components(CString(OSSTR(",")));
 								if (array.getCount() >= 3) {
 									// Extract values
 									mX = array[1].getFloat32();
@@ -128,10 +129,11 @@ template <typename T> struct T2DSize {
 					T2DSize(T width, T height) : mWidth(width), mHeight(height) {}
 					T2DSize(const CString& string)
 						{
-							// {0.0,0.0} => ,0.0,0.0}
+							// "{0.0,0.0}" => ",0.0,0.0}" => ["", "0.0", "0.0}"]
 							TArray<CString>	array =
 													string.replacingSubStrings(CString(OSSTR("{")),
-															CString(OSSTR(","))).components(CString(OSSTR(",")));
+																	CString(OSSTR(",")))
+															.components(CString(OSSTR(",")));
 							if (array.getCount() >= 3) {
 								// Extract values
 								mWidth = array[1].getFloat32();
@@ -225,10 +227,11 @@ template <typename T> struct T2DRect {
 						T2DRect(const T2DPoint<T>& origin, const T2DSize<T>& size) : mOrigin(origin), mSize(size) {}
 						T2DRect(const CString& string)
 							{
-								// {{0.0,0.0},{0.0,0.0}} => ,,0.0,0.0},,0.0,0.0}}
+								// "{{0.0,0.0},{0.0,0.0}}" => ",,0.0,0.0},,0.0,0.0}}" => ["", "", "0.0", "0.0", "", "0.0", "0.0}}"]
 								TArray<CString>	array =
 														string.replacingSubStrings(CString(OSSTR("{")),
-																CString(OSSTR(","))).components(CString(OSSTR(",")));
+																		CString(OSSTR(",")))
+																.components(CString(OSSTR(",")));
 								if (array.getCount() >= 7) {
 									// Extract values
 									mOrigin.mX = array[2].getFloat32();
