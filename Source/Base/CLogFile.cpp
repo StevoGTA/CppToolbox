@@ -10,12 +10,6 @@
 #include "CThread.h"
 #include "TLockingArray.h"
 
-#if defined(TARGET_OS_WINDOWS)
-	#undef Delete
-	#include <Windows.h>
-	#define Delete(x)		{ delete x; x = nil; }
-#endif
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CLogFile::Internals
 
