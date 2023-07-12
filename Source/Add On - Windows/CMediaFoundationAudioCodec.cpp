@@ -113,7 +113,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 	TCIResult<IMFMediaType>	inputMediaType =
 									CMediaFoundationServices::createMediaType(*guid, 32,
 											audioProcessingFormat.getSampleRate(),
-											audioProcessingFormat.getAudioChannelMap(), OV<UInt32>(), OV<UInt32>(),
+											audioProcessingFormat.getChannelMap(), OV<UInt32>(), OV<UInt32>(),
 											getUserData());
 	ReturnErrorIfResultError(inputMediaType);
 
@@ -150,7 +150,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 		// Compare codec subtype, bits, and channels
 		if ((codecSubType == targetCodecSubType) &&
 				(bits == (UINT32) audioProcessingFormat.getBits()) &&
-				(channels == (UINT32)audioProcessingFormat.getChannels())) {
+				(channels == (UINT32)audioProcessingFormat.getChannelMap().getChannels())) {
 			// Found match
 			result = transform->SetOutputType(0, mediaType, 0);
 			if (result == S_OK) {

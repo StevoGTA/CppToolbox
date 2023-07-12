@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CAudioCodec.h"
+#include "CMediaPacketSource.h"
 
 #undef Delete
 

@@ -35,7 +35,7 @@ void sDBGMSG(PCWSTR format, ...);
 
 //----------------------------------------------------------------------------------------------------------------------
 TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& codecFormat, UInt8 bits,
-		Float32 sampleRate, EAudioChannelMap audioChannelMap, const OV<UInt32>& bytesPerFrame,
+		Float32 sampleRate, const SAudio::ChannelMap& audioChannelMap, const OV<UInt32>& bytesPerFrame,
 		const OV<UInt32>& bytesPerSecond, const OV<CData>& userData, CreateAudioMediaTypeOptions options)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -61,7 +61,7 @@ TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& co
 	ReturnValueIfFailed(result, OSSTR("SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND"),
 			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
 
-	result = mediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, AUDIOCHANNELMAP_CHANNELCOUNT(audioChannelMap));
+	result = mediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioChannelMap.getChannels());
 	ReturnValueIfFailed(result, OSSTR("SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS"),
 			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
 
@@ -101,7 +101,7 @@ TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const SAudio::
 {
 	return createMediaType(audioProcessingFormat.getIsFloat() ? MFAudioFormat_Float : MFAudioFormat_PCM,
 			audioProcessingFormat.getBits(), audioProcessingFormat.getSampleRate(),
-			audioProcessingFormat.getAudioChannelMap(), OV<UInt32>(audioProcessingFormat.getBytesPerFrame()),
+			audioProcessingFormat.getChannelMap(), OV<UInt32>(audioProcessingFormat.getBytesPerFrame()),
 			OV<UInt32>(audioProcessingFormat.getBytesPerFrame() * (UInt32) audioProcessingFormat.getSampleRate()));
 }
 
@@ -266,7 +266,7 @@ OV<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 	}
 
 	// Update current length
-	result = mediaBuffer->SetCurrentLength((DWORD) (*mediaPackets)[0].mByteCount);
+	result = mediaBuffer->SetCurrentLength((DWORD) (*mediaPackets)[0].getByteCount());
 	if (FAILED(result)) {
 		// Unlock
 		mediaBuffer->Unlock();

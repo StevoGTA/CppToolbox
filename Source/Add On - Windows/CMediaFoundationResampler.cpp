@@ -237,7 +237,7 @@ TArray<SAudio::ProcessingSetup> CMediaFoundationResampler::getInputSetups() cons
 	return TNArray<SAudio::ProcessingSetup>(
 			SAudio::ProcessingSetup(SAudio::ProcessingSetup::BitsInfo::mUnspecified,
 					SAudio::ProcessingSetup::SampleRateInfo::mUnspecified,
-					SAudio::ProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
+					SAudio::ProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getChannelMap()),
 					SAudio::ProcessingSetup::kSampleTypeUnspecified, SAudio::ProcessingSetup::kEndianLittle,
 					SAudio::ProcessingSetup::kInterleaved));
 }

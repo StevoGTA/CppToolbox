@@ -7,8 +7,8 @@
 #include "CAudioProcessor.h"
 #include "CImage.h"
 #include "CLogServices.h"
+#include "CMediaPacketSource.h"
 #include "CVideoFrame.h"
-#include "SMediaPacket.h"
 #include "SError-Windows.h"
 #include "TResult-Windows.h"
 
@@ -101,7 +101,7 @@ class CMediaFoundationServices {
 	public:
 										// Class methods
 		static	TCIResult<IMFMediaType>	createMediaType(const GUID& codecFormat, UInt8 bits, Float32 sampleRate,
-												EAudioChannelMap audioChannelMap,
+												const SAudio::ChannelMap& audioChannelMap,
 												const OV<UInt32>& bytesPerFrame = OV<UInt32>(),
 												const OV<UInt32>& bytesPerSecond = OV<UInt32>(),
 												const OV<CData>& userData = OV<CData>(),

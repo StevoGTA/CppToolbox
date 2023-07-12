@@ -158,7 +158,7 @@ CMediaFoundationDecodeVideoCodec::~CMediaFoundationDecodeVideoCodec()
 // MARK: CDecodeVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format& videoProcessingFormat)
+OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format& videoProcessorFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get and check GUID
@@ -203,7 +203,7 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 	result = mediaType->SetGUID(MF_MT_SUBTYPE, *guid);
 	ReturnErrorIfFailed(result, OSSTR("SetGUID of MF_MT_SUBTYPE for input"));
 
-	const	S2DSizeU16	frameSize = videoProcessingFormat.getFrameSize();
+	const	S2DSizeU16	frameSize = videoProcessorFormat.getFrameSize();
 	result = ::MFSetAttributeSize(mediaType, MF_MT_FRAME_SIZE, frameSize.mWidth, frameSize.mHeight);
 	ReturnErrorIfFailed(result, OSSTR("MFSetAttributeSize for input"));
 

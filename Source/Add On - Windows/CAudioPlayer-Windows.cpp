@@ -591,7 +591,7 @@ TArray<SAudio::ProcessingSetup> CAudioPlayer::getInputSetups() const
 			WAVEFORMATEX&	format = *mInternals->mImplementation->mMixFormat;
 			sAudioProcessingSetup =
 					new SAudio::ProcessingSetup((UInt8) format.wBitsPerSample, (Float32) format.nSamplesPerSec,
-							(EAudioChannelMap) format.nChannels,
+							SAudio::ChannelMap((UInt8) format.nChannels),
 							SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeFloat,
 							SAudio::ProcessingSetup::EndianOption::kEndianNative,
 							SAudio::ProcessingSetup::InterleavedOption::kInterleaved);

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CMediaPacketSource.h"
 #include "CVideoCodec.h"
 #include "TResult-Windows.h"
 
