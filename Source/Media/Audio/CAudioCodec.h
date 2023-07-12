@@ -7,7 +7,7 @@
 #include "CAudioFrames.h"
 #include "CCodec.h"
 #include "CDataSource.h"
-#include "SAudioFormats.h"
+#include "SAudio.h"
 #include "SAudioSourceStatus.h"
 #include "TimeAndDate.h"
 
@@ -109,30 +109,28 @@ class CDecodeAudioCodec : public CAudioCodec {
 			// Methods
 			public:
 
-															// Lifecycle methods
-															SourceInfo(
-																	const SAudioStorageFormat& audioStorageFormat,
-																	UInt64 frameCount) :
-																mAudioStorageFormat(audioStorageFormat),
-																		mFrameCount(frameCount)
-																{}
-															SourceInfo(const SourceInfo& other) :
-																mAudioStorageFormat(other.mAudioStorageFormat),
-																		mFrameCount(other.mFrameCount)
-																{}
-				virtual										~SourceInfo() {}
+														// Lifecycle methods
+														SourceInfo(const SAudio::Format& audioFormat,
+																UInt64 frameCount) :
+															mAudioFormat(audioFormat), mFrameCount(frameCount)
+															{}
+														SourceInfo(const SourceInfo& other) :
+															mAudioFormat(other.mAudioFormat),
+																	mFrameCount(other.mFrameCount)
+															{}
+				virtual									~SourceInfo() {}
 
-															// Instance methods
-						const	SAudioStorageFormat&		getAudioStorageFormat() const
-																{ return mAudioStorageFormat; }
-								UInt64						getFrameCount() const
-																{ return mFrameCount; }
-				virtual			OV<I<CDecodeAudioCodec> >	getDecodeAudioCodec() const = 0;
+														// Instance methods
+						const	SAudio::Format&			getAudioFormat() const
+															{ return mAudioFormat; }
+								UInt64					getFrameCount() const
+															{ return mFrameCount; }
+				virtual			I<CDecodeAudioCodec>	getDecodeAudioCodec() const = 0;
 
 			// Properties
 			protected:
-				SAudioStorageFormat	mAudioStorageFormat;
-				UInt64				mFrameCount;
+				SAudio::Format	mAudioFormat;
+				UInt64			mFrameCount;
 		};
 
 	// PacketSourceInfo
@@ -142,10 +140,10 @@ class CDecodeAudioCodec : public CAudioCodec {
 			public:
 
 				// Lifecycle methods
-				PacketSourceInfo(const SAudioStorageFormat& audioStorageFormat, UInt64 frameCount,
+				PacketSourceInfo(const SAudio::Format& audioFormat, UInt64 frameCount,
 						const I<CRandomAccessDataSource>& randomAccessDataSource,
-						const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations) :
-					SourceInfo(audioStorageFormat, frameCount),
+						const TArray<SMedia::PacketAndLocation>& mediaPacketAndLocations) :
+					SourceInfo(audioFormat, frameCount),
 							mRandomAccessDataSource(randomAccessDataSource),
 							mMediaPacketAndLocations(mediaPacketAndLocations)
 					{}
@@ -157,16 +155,16 @@ class CDecodeAudioCodec : public CAudioCodec {
 
 			// Properties
 			protected:
-				I<CRandomAccessDataSource>		mRandomAccessDataSource;
-				TArray<SMediaPacketAndLocation>	mMediaPacketAndLocations;
+				I<CRandomAccessDataSource>			mRandomAccessDataSource;
+				TArray<SMedia::PacketAndLocation>	mMediaPacketAndLocations;
 		};
 
 	// Methods
 	public:
 												// Instance methods
-		virtual	TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat)
+		virtual	TArray<SAudio::ProcessingSetup>	getAudioProcessingSetups(const SAudio::Format& audioFormat)
 														= 0;
-		virtual	OV<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat)
+		virtual	OV<SError>						setup(const SAudio::ProcessingFormat& audioProcessingFormat)
 													{ return OV<SError>(); }
 		virtual	CAudioFrames::Requirements		getRequirements() const
 													{ return CAudioFrames::Requirements(1, 1); }

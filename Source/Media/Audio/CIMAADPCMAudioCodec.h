@@ -38,17 +38,14 @@ class CIMAADPCMDecoder {
 class CDVIIntelIMAADPCMAudioCodec {
 	// Methods
 	public:
-											// Class methods
-		static	OV<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate,
-													EAudioChannelMap audioChannelMap);
-		static	OV<SAudioStorageFormat>		composeAudioStorageFormat(Float32 sampleRate, UInt8 channels)
-												{ return composeAudioStorageFormat(sampleRate,
-														AUDIOCHANNELMAP_FORUNKNOWN(channels)); }
-		static	UInt64						composeFrameCount(const SAudioStorageFormat& audioStorageFormat,
-													UInt64 byteCount, UInt16 blockAlign);
-		static	OV<I<CDecodeAudioCodec> >	create(const SAudioStorageFormat& audioStorageFormat,
-													const I<CRandomAccessDataSource>& randomAccessDataSource,
-													UInt64 startByteOffset, UInt64 byteCount, UInt16 blockAlign);
+										// Class methods
+		static	SAudio::Format			composeAudioFormat(Float32 sampleRate,
+												const SAudio::ChannelMap& audioChannelMap);
+		static	SMedia::SegmentInfo		composeMediaSegmentInfo(const SAudio::Format& audioFormat, UInt64 byteCount,
+												UInt16 blockAlign);
+		static	I<CDecodeAudioCodec>	create(const SAudio::Format& audioFormat,
+												const I<CRandomAccessDataSource>& randomAccessDataSource,
+												UInt64 startByteOffset, UInt64 byteCount, UInt16 blockAlign);
 
 	// Properties
 	public:

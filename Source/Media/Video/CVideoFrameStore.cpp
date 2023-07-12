@@ -72,14 +72,14 @@ class CVideoFrameStoreThread : public CThread {
 
 						// Perform
 						CVideoProcessor::PerformResult	performResult = mVideoFrameStore.perform();
-						if (!performResult.getVideoSourceStatus().isSuccess()) {
+						if (performResult.getResult().hasError()) {
 							// Finished or error
 							mReachedEnd = true;
 
 							// Check error
-							if (performResult.getVideoSourceStatus().getError() != SError::mEndOfData)
+							if (performResult.getResult().getError() != SError::mEndOfData)
 								// Error
-								mInfo.error(mVideoFrameStore, performResult.getVideoSourceStatus().getError());
+								mInfo.error(mVideoFrameStore, performResult.getResult().getError());
 
 							return false;
 						}

@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CAudioCodec.h"
-#include "SMediaPacket.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAACAudioCodec
@@ -17,16 +16,18 @@ class CAACAudioCodec {
 			// Methods
 			public:
 											// Lifecycle methods
-											Info(OSType codecID, Float32 sampleRate, EAudioChannelMap audioChannelMap,
+											Info(OSType codecID, Float32 sampleRate,
+													const SAudio::ChannelMap& audioChannelMap,
 													const CData& magicCookie, UInt16 startCodes) :
 												mCodecID(codecID), mSampleRate(sampleRate),
-														mAudioChannelMap(audioChannelMap), mMagicCookie(magicCookie),
-														mStartCodes(startCodes)
+														mAudioTrackChannelMap(audioChannelMap),
+														mMagicCookie(magicCookie), mStartCodes(startCodes)
 												{}
 											Info(const Info& other) :
 												mCodecID(other.mCodecID), mSampleRate(other.mSampleRate),
-														mAudioChannelMap(other.mAudioChannelMap),
-														mMagicCookie(other.mMagicCookie), mStartCodes(other.mStartCodes)
+														mAudioTrackChannelMap(other.mAudioTrackChannelMap),
+														mMagicCookie(other.mMagicCookie),
+														mStartCodes(other.mStartCodes)
 												{}
 
 											// Instance methods
@@ -34,8 +35,8 @@ class CAACAudioCodec {
 												{ return mCodecID; }
 						Float32				getSampleRate() const
 												{ return mSampleRate; }
-						EAudioChannelMap	getAudioChannelMap() const
-												{ return mAudioChannelMap; }
+				const	SAudio::ChannelMap&	getAudioChannelMap() const
+												{ return mAudioTrackChannelMap; }
 				const	CData&				getMagicCookie() const
 												{ return mMagicCookie; }
 						UInt16				getStartCodes() const
@@ -45,19 +46,19 @@ class CAACAudioCodec {
 			private:
 				OSType				mCodecID;
 				Float32				mSampleRate;
-				EAudioChannelMap	mAudioChannelMap;
+				SAudio::ChannelMap	mAudioTrackChannelMap;
 				CData				mMagicCookie;
 				UInt16				mStartCodes;
 		};
 
 	// Methods
 	public:
-											// Class methods
-		static	OV<Info>					composeInfo(const CData& configurationData, UInt16 channels);
-		static	SAudioStorageFormat			composeAudioStorageFormat(const Info& info);
-		static	OV<I<CDecodeAudioCodec> >	create(const Info& info,
-													const I<CRandomAccessDataSource>& randomAccessDataSource,
-													const TArray<SMediaPacketAndLocation>& packetAndLocations);
+										// Class methods
+		static	OV<Info>				composeInfo(const CData& configurationData, UInt16 channels);
+		static	SAudio::Format			composeAudioFormat(const Info& info);
+		static	I<CDecodeAudioCodec>	create(const Info& info,
+												const I<CRandomAccessDataSource>& randomAccessDataSource,
+												const TArray<SMedia::PacketAndLocation>& packetAndLocations);
 
 	// Properties
 	public:

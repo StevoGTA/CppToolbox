@@ -1,56 +1,14 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	SMediaPacket.h			©2021 Stevo Brock	All rights reserved.
+//	CMediaPacketSource.h			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
 #include "CDataSource.h"
+#include "SMedia.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SMediaPacket - Opaque data for compressed audio or video frames
-
-struct SMediaPacket {
-	// Lifecycle methods
-	SMediaPacket(UInt32 duration, UInt32 byteCount) : mDuration(duration), mByteCount(byteCount) {}
-	SMediaPacket(const SMediaPacket& other) : mDuration(other.mDuration), mByteCount(other.mByteCount) {}
-
-	// Properties
-	UInt32	mDuration;	// Duration is contextual - typically frame count for audio and time for video
-	UInt32	mByteCount;
-};
-
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SMediaPacketAndLocation - SMediaPacket with corresponding absolute position in the containing opaque data.
-
-struct SMediaPacketAndLocation {
-					// Lifecycle methods
-					SMediaPacketAndLocation(SMediaPacket mediaPacket, UInt64 byteOffset) :
-						mMediaPacket(mediaPacket), mByteOffset(byteOffset)
-						{}
-
-					// Class methods
-	static	UInt64	getTotalByteCount(const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations)
-						{
-							// Setup
-							UInt64	byteCount = 0;
-
-							// Iterate
-							for (TIteratorD<SMediaPacketAndLocation> iterator = mediaPacketAndLocations.getIterator();
-									iterator.hasValue(); iterator.advance())
-								// Update byte count
-								byteCount += iterator->mMediaPacket.mByteCount;
-
-							return byteCount;
-						}
-
-	// Properties
-	SMediaPacket	mMediaPacket;
-	UInt64			mByteOffset;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMediaPacketSource
+// MARK: CMediaPacketSource
 
 class CMediaPacketSource {
 	// DataInfo
@@ -73,22 +31,22 @@ class CMediaPacketSource {
 
 	// Methods
 	public:
-												// Lifecycle methods
-		virtual									~CMediaPacketSource() {}
+													// Lifecycle methods
+		virtual										~CMediaPacketSource() {}
 
-												// Instance methods
-		virtual	UInt32							seekToDuration(UInt32 duration) = 0;
-		virtual	void							seekToPacket(UInt32 packetIndex) = 0;
-				UInt32							seekToKeyframe(UInt32 initialFrameIndex,
-														const TNumberArray<UInt32>& keyframeIndexes);
+													// Instance methods
+		virtual	UInt32								seekToDuration(UInt32 duration) = 0;
+		virtual	void								seekToPacket(UInt32 packetIndex) = 0;
+				UInt32								seekToKeyframe(UInt32 initialFrameIndex,
+															const TNumberArray<UInt32>& keyframeIndexes);
 
-		virtual	TVResult<DataInfo>				readNext() = 0;
-		virtual	TVResult<TArray<SMediaPacket> >	readNextInto(CData& data,
-														const OV<UInt32>& maxPacketCount = OV<UInt32>()) = 0;
+		virtual	TVResult<DataInfo>					readNext() = 0;
+		virtual	TVResult<TArray<SMedia::Packet> >	readNextInto(CData& data,
+															const OV<UInt32>& maxPacketCount = OV<UInt32>()) = 0;
 
 	protected:
-												// Lifecycle methods
-												CMediaPacketSource() {}
+													// Lifecycle methods
+													CMediaPacketSource() {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,7 +72,7 @@ class CSeekableUniformMediaPacketSource : public CMediaPacketSource {
 													{ AssertFailUnimplemented(); }
 
 		TVResult<CMediaPacketSource::DataInfo>	readNext();
-		TVResult<TArray<SMediaPacket> >			readNextInto(CData& data,
+		TVResult<TArray<SMedia::Packet> >		readNextInto(CData& data,
 														const OV<UInt32>& maxPacketCount = OV<UInt32>());
 
 	// Properties
@@ -135,7 +93,7 @@ class CSeekableVaryingMediaPacketSource : public CMediaPacketSource {
 												// Lifecycle methods
 												CSeekableVaryingMediaPacketSource(
 														const I<CRandomAccessDataSource>& randomAccessDataSource,
-														const TArray<SMediaPacketAndLocation>& mediaPacketAndLocations);
+														const TArray<SMedia::PacketAndLocation>& mediaPacketAndLocations);
 												~CSeekableVaryingMediaPacketSource();
 
 												// CMediaPacketSource methods
@@ -143,7 +101,7 @@ class CSeekableVaryingMediaPacketSource : public CMediaPacketSource {
 		void									seekToPacket(UInt32 packetIndex);
 
 		TVResult<CMediaPacketSource::DataInfo>	readNext();
-		TVResult<TArray<SMediaPacket> >			readNextInto(CData& data,
+		TVResult<TArray<SMedia::Packet> >		readNextInto(CData& data,
 														const OV<UInt32>& maxPacketCount = OV<UInt32>());
 
 	// Properties

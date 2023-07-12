@@ -33,9 +33,11 @@ class CCoreAudioDecodeAudioCodec::Internals {
 									Internals&	internals = *((Internals*) inUserData);
 
 									// Read packets
-									TVResult<TArray<SMediaPacket> >	mediaPacketsResult =
-																			internals.mMediaPacketSource->readNextInto(
-																					internals.mInputPacketData);
+									TVResult<TArray<SMedia::Packet> >	mediaPacketsResult =
+																				internals.mMediaPacketSource->
+																						readNextInto(
+																								internals
+																										.mInputPacketData);
 									if (mediaPacketsResult.hasError()) {
 										// Check error
 										if (mediaPacketsResult.getError() == SError::mEndOfData) {
@@ -52,7 +54,7 @@ class CCoreAudioDecodeAudioCodec::Internals {
 									}
 
 									// Prepare return info
-									const	TArray<SMediaPacket>&	mediaPackets = *mediaPacketsResult;
+									const	TArray<SMedia::Packet>&	mediaPackets = *mediaPacketsResult;
 
 									*ioNumberDataPackets = mediaPackets.getCount();
 
@@ -72,14 +74,14 @@ class CCoreAudioDecodeAudioCodec::Internals {
 										*outDataPacketDescription = packetDescription;
 
 									SInt64	offset = 0;
-									for (TIteratorD<SMediaPacket> iterator = mediaPackets.getIterator();
+									for (TIteratorD<SMedia::Packet> iterator = mediaPackets.getIterator();
 											iterator.hasValue(); iterator.advance(), packetDescription++) {
 										// Update
 										packetDescription->mStartOffset = offset;
-										packetDescription->mVariableFramesInPacket = iterator->mDuration;
-										packetDescription->mDataByteSize = iterator->mByteCount;
+										packetDescription->mVariableFramesInPacket = iterator->getDuration();
+										packetDescription->mDataByteSize = iterator->getByteCount();
 
-										offset += iterator->mByteCount;
+										offset += iterator->getByteCount();
 									}
 
 									ioBufferList->mNumberBuffers = 1;
@@ -89,16 +91,16 @@ class CCoreAudioDecodeAudioCodec::Internals {
 									return noErr;
 								}
 
-		OSType						mCodecID;
-		I<CMediaPacketSource>		mMediaPacketSource;
+		OSType							mCodecID;
+		I<CMediaPacketSource>			mMediaPacketSource;
 
-		OV<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
 
-		AudioConverterRef			mAudioConverterRef;
-		UInt32						mDecodeFramesToIgnore;
-		CData						mInputPacketData;
-		CData						mInputPacketDescriptionsData;
-		OV<SError>					mFillBufferDataError;
+		AudioConverterRef				mAudioConverterRef;
+		UInt32							mDecodeFramesToIgnore;
+		CData							mInputPacketData;
+		CData							mInputPacketDescriptionsData;
+		OV<SError>						mFillBufferDataError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -124,19 +126,20 @@ CCoreAudioDecodeAudioCodec::~CCoreAudioDecodeAudioCodec()
 // MARK: CDecodeAudioCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CCoreAudioDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
+OV<SError> CCoreAudioDecodeAudioCodec::setup(const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	// Create Audio Converter
 	AudioStreamBasicDescription	sourceABSD = getSourceASBD(mInternals->mCodecID, audioProcessingFormat);
 
 	AudioStreamBasicDescription	destinationASBD;
-	FillOutASBDForLPCM(destinationASBD, audioProcessingFormat.getSampleRate(), audioProcessingFormat.getChannels(),
-			audioProcessingFormat.getBits(), audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(),
-			audioProcessingFormat.getIsBigEndian(), !audioProcessingFormat.getIsInterleaved());
+	FillOutASBDForLPCM(destinationASBD, audioProcessingFormat.getSampleRate(),
+			audioProcessingFormat.getChannelMap().getChannels(), audioProcessingFormat.getBits(),
+			audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(), audioProcessingFormat.getIsBigEndian(),
+			!audioProcessingFormat.getIsInterleaved());
 
 	OSStatus	status = ::AudioConverterNew(&sourceABSD, &destinationASBD, &mInternals->mAudioConverterRef);
 	ReturnErrorIfFailed(status, OSSTR("AudioConverterNew"));
@@ -171,7 +174,7 @@ OV<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 	// Setup
 	AudioBufferList	audioBufferList;
 	audioBufferList.mNumberBuffers = 1;
-	audioBufferList.mBuffers[0].mNumberChannels = mInternals->mAudioProcessingFormat->getChannels();
+	audioBufferList.mBuffers[0].mNumberChannels = mInternals->mAudioProcessingFormat->getChannelMap().getChannels();
 
 	// Check if have frames to ignore
 	OSStatus	status;

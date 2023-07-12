@@ -5,6 +5,8 @@
 #include "CAACAudioCodec.h"
 
 #include "CCodecRegistry.h"
+#include "CAudioProcessor.h"
+#include "CMediaPacketSource.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
 	#include "CCoreAudioAudioCodec.h"
@@ -216,12 +218,12 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 											{}
 
 										// CDecodeAudioCodec methods
-		TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat)
+		TArray<SAudio::ProcessingSetup>	getAudioProcessingSetups(const SAudio::Format& audioFormat)
 											{
-												return TNArray<SAudioProcessingSetup>(
-														SAudioProcessingSetup(32, audioStorageFormat.getSampleRate(),
-																audioStorageFormat.getAudioChannelMap(),
-																SAudioProcessingSetup::kSampleTypeFloat));
+												return TNArray<SAudio::ProcessingSetup>(
+														SAudio::ProcessingSetup(32, audioFormat.getSampleRate(),
+																audioFormat.getChannelMap(),
+																SAudio::ProcessingSetup::kSampleTypeFloat));
 											}
 		CAudioFrames::Requirements		getRequirements() const
 											{ return CAudioFrames::Requirements(1024, 1024 * 2); }
@@ -229,14 +231,15 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
 										// CCoreAudioDecodeAudioCodec methods
 		AudioStreamBasicDescription		getSourceASBD(OSType codecID,
-												const SAudioProcessingFormat& audioProcessingFormat)
+												const SAudio::ProcessingFormat& audioProcessingFormat)
 											{
 												AudioStreamBasicDescription	asbd = {0};
 												asbd.mFormatID =
 														(codecID == CAACAudioCodec::mAACLCID) ?
 																kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
 												asbd.mSampleRate = audioProcessingFormat.getSampleRate();
-												asbd.mChannelsPerFrame = audioProcessingFormat.getChannels();
+												asbd.mChannelsPerFrame =
+														audioProcessingFormat.getChannelMap().getChannels();
 
 												return asbd;
 											}
@@ -344,42 +347,40 @@ OV<CAACAudioCodec::Info> CAACAudioCodec::composeInfo(const CData& configurationD
 		default:	return OV<Info>();
 	}
 
-	EAudioChannelMap	audioChannelMap;
+	OV<SAudio::ChannelMap>	audioChannelMap;
 	switch ((startCodes & 0x0078) >> 3) {
-		case 0:		audioChannelMap = AUDIOCHANNELMAP_FORUNKNOWN(channels);	break;
-		case 1:		audioChannelMap = kAudioChannelMap_1_0;					break;
-		case 2:		audioChannelMap = kAudioChannelMap_2_0_Option1;			break;
-		case 3:		audioChannelMap = kAudioChannelMap_3_0_Option2;			break;
-		case 4:		audioChannelMap = kAudioChannelMap_4_0_Option3;			break;
-		case 5:		audioChannelMap = kAudioChannelMap_5_0_Option4;			break;
-		case 6:		audioChannelMap = kAudioChannelMap_5_1_Option4;			break;
-		case 7:		audioChannelMap = kAudioChannelMap_7_1_Option2;			break;
+		case 0:		audioChannelMap.setValue(SAudio::ChannelMap((UInt8) channels));	break;
+		case 1:		audioChannelMap.setValue(SAudio::ChannelMap::_1_0());			break;
+		case 2:		audioChannelMap.setValue(SAudio::ChannelMap::_2_0_Option1());	break;
+		case 3:		audioChannelMap.setValue(SAudio::ChannelMap::_3_0_Option2());	break;
+		case 4:		audioChannelMap.setValue(SAudio::ChannelMap::_4_0_Option3());	break;
+		case 5:		audioChannelMap.setValue(SAudio::ChannelMap::_5_0_Option4());	break;
+		case 6:		audioChannelMap.setValue(SAudio::ChannelMap::_5_1_Option4());	break;
+		case 7:		audioChannelMap.setValue(SAudio::ChannelMap::_7_1_Option2());	break;
 		default:	return OV<Info>();
 	}
 
 	return OV<Info>(
-			Info(codecID, sampleRate, audioChannelMap,
+			Info(codecID, sampleRate, *audioChannelMap,
 					CData((UInt8*) configurationData.getBytePtr() + 4, configurationData.getByteCount() - 4),
 					EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioStorageFormat CAACAudioCodec::composeAudioStorageFormat(const Info& info)
+SAudio::Format CAACAudioCodec::composeAudioFormat(const Info& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return SAudioStorageFormat(info.getCodecID(), info.getSampleRate(), info.getAudioChannelMap());
+	return SAudio::Format(info.getCodecID(), info.getSampleRate(), info.getAudioChannelMap());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<I<CDecodeAudioCodec> > CAACAudioCodec::create(const Info& info,
+I<CDecodeAudioCodec> CAACAudioCodec::create(const Info& info,
 		const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const TArray<SMediaPacketAndLocation>& packetAndLocations)
+		const TArray<SMedia::PacketAndLocation>& packetAndLocations)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OV<I<CDecodeAudioCodec> >(
-			I<CDecodeAudioCodec>(
-					new CAACDecodeAudioCodec(info,
-							I<CMediaPacketSource>(
-									new CSeekableVaryingMediaPacketSource(randomAccessDataSource,
-											packetAndLocations)))));
+	return I<CDecodeAudioCodec>(
+			new CAACDecodeAudioCodec(info,
+					I<CMediaPacketSource>(
+							new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations))));
 }

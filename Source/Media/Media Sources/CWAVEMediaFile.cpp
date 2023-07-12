@@ -75,9 +75,9 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 							chunkReader.getByteCount() - dataChunkInfo.getThisChunkPos());
 
 	// Process by format tag
-	OV<SAudioStorageFormat>		audioStorageFormat;
+	OV<SAudio::Format>			audioFormat;
+	OV<SMedia::SegmentInfo>		mediaSegmentInfo;
 	OV<I<CDecodeAudioCodec> >	decodeAudioCodec;
-	UInt64						frameCount;
 	switch (waveFormat.getFormatTag()) {
 		case 0x0000:	// Illegal/Unknown
 			return I<SMediaSource::ImportResult>(
@@ -92,16 +92,16 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 								CCodec::unsupportedConfigurationError(
 										CString(waveFormat.getFormatTag(), 4, true, true))));
 
-			audioStorageFormat =
-					CPCMAudioCodec::composeAudioStorageFormat(false, (UInt8) sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
-			frameCount = CPCMAudioCodec::composeFrameCount(*audioStorageFormat, dataChunkByteCount);
+			audioFormat.setValue(
+					CPCMAudioCodec::composeAudioFormat(false, (UInt8) sampleSize,
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels()));
+			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
 			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Create
 				decodeAudioCodec =
-						CPCMAudioCodec::create(*audioStorageFormat, chunkReader.getRandomAccessDataSource(),
+						CPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
 								dataChunkInfo.getThisChunkPos(), dataChunkByteCount,
-								(*audioStorageFormat->getBits() > 8) ?
+								(*audioFormat->getBits() > 8) ?
 										CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitUnsigned);
 			break;
 
@@ -113,32 +113,31 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 								CCodec::unsupportedConfigurationError(
 										CString(waveFormat.getFormatTag(), 4, true, true))));
 
-			audioStorageFormat =
-					CPCMAudioCodec::composeAudioStorageFormat(true, (UInt8) sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels());
-			frameCount = CPCMAudioCodec::composeFrameCount(*audioStorageFormat, dataChunkByteCount);
+			audioFormat.setValue(
+					CPCMAudioCodec::composeAudioFormat(true, (UInt8) sampleSize,
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels()));
+			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
 			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Create
 				decodeAudioCodec =
-						CPCMAudioCodec::create(*audioStorageFormat, chunkReader.getRandomAccessDataSource(),
+						CPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
 								dataChunkInfo.getThisChunkPos(), dataChunkByteCount,
-								(*audioStorageFormat->getBits() > 8) ?
+								(*audioFormat->getBits() > 8) ?
 										CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitUnsigned);
 			break;
 
 		case 0x0011:	// DVI/Intel ADPCM
-			audioStorageFormat =
-					CDVIIntelIMAADPCMAudioCodec::composeAudioStorageFormat((Float32) waveFormat.getSamplesPerSecond(),
-							AUDIOCHANNELMAP_FORUNKNOWN(waveFormat.getChannels()));
-			frameCount =
-					CDVIIntelIMAADPCMAudioCodec::composeFrameCount(*audioStorageFormat, dataChunkByteCount,
-							waveFormat.getBlockAlign());
+			audioFormat.setValue(
+					CDVIIntelIMAADPCMAudioCodec::composeAudioFormat((Float32) waveFormat.getSamplesPerSecond(),
+							SAudio::ChannelMap((UInt8) waveFormat.getChannels())));
+			mediaSegmentInfo.setValue(
+					CDVIIntelIMAADPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount,
+							waveFormat.getBlockAlign()));
 			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Create
 				decodeAudioCodec =
-						CDVIIntelIMAADPCMAudioCodec::create(*audioStorageFormat,
-								chunkReader.getRandomAccessDataSource(), dataChunkInfo.getThisChunkPos(),
-								dataChunkByteCount, waveFormat.getBlockAlign());
+						CDVIIntelIMAADPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
+								dataChunkInfo.getThisChunkPos(), dataChunkByteCount, waveFormat.getBlockAlign());
 			break;
 
 		default:
@@ -149,10 +148,8 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 	}
 
 	// Finalize
-	CAudioTrack			audioTrack(CAudioTrack::composeInfo(*audioStorageFormat, frameCount, dataChunkByteCount),
-								*audioStorageFormat);
 	CMediaTrackInfos	mediaTrackInfos;
-	mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(audioTrack, decodeAudioCodec));
+	mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(*audioFormat, *mediaSegmentInfo, decodeAudioCodec));
 
 	return I<SMediaSource::ImportResult>(
 			new SMediaSource::ImportResult(MAKE_OSTYPE('w', 'a', 'v', 'e'), mediaTrackInfos, TNArray<CString>()));

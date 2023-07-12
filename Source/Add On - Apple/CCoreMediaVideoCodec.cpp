@@ -46,7 +46,7 @@ class CCoreMediaDecodeVideoCodec::Internals {
 		UInt32						mTimeScale;
 		TNumberArray<UInt32>		mKeyframeIndexes;
 
-		OV<SVideoProcessingFormat>	mVideoProcessingFormat;
+		OV<CVideoProcessor::Format>	mVideoProcessorFormat;
 
 		CMFormatDescriptionRef		mFormatDescriptionRef;
 		VTDecompressionSessionRef	mDecompressionSessionRef;
@@ -76,7 +76,7 @@ CCoreMediaDecodeVideoCodec::~CCoreMediaDecodeVideoCodec()
 // MARK: CDecodeVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CCoreMediaDecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
+OV<SError> CCoreMediaDecodeVideoCodec::setup(const CVideoProcessor::Format& videoProcessorFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose format description
@@ -92,43 +92,7 @@ OV<SError> CCoreMediaDecodeVideoCodec::setup(const SVideoProcessingFormat& video
 	CFMutableDictionaryRef	destinationImageBufferAttributes =
 									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
 											&kCFTypeDictionaryValueCallBacks);
-
-	switch (videoProcessingFormat.getCompatibility()) {
-		case CVideoFrame::kCompatibilityCGImage:
-			// CGImage
-			::CFDictionarySetValue(destinationImageBufferAttributes, kCVPixelBufferCGImageCompatibilityKey,
-					kCFBooleanTrue);
-			break;
-
-		case CVideoFrame::kCompatibilityMetal:
-			// Metal
-			::CFDictionarySetValue(destinationImageBufferAttributes, kCVPixelBufferMetalCompatibilityKey,
-					kCFBooleanTrue);
-			break;
-
-#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
-		case CVideoFrame::kCompatibilityOpenGLES:
-			// OpenGLES
-			::CFDictionarySetValue(destinationImageBufferAttributes, kCVPixelBufferOpenGLESCompatibilityKey,
-					kCFBooleanTrue);
-			break;
-
-#else
-		case CVideoFrame::kCompatibilityOpenGL: {
-			// OpenGL
-			::CFDictionarySetValue(destinationImageBufferAttributes,
-					kCVPixelBufferOpenGLCompatibilityKey, kCFBooleanTrue);
-			::CFDictionarySetValue(destinationImageBufferAttributes,
-					kCVPixelBufferOpenGLTextureCacheCompatibilityKey, kCFBooleanTrue);
-
-			OSType		pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-			CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &pixelFormat);
-			::CFDictionarySetValue(destinationImageBufferAttributes,
-					kCVPixelBufferPixelFormatTypeKey, numberRef);
-			::CFRelease(numberRef);
-			} break;
-#endif
-	}
+	setCompatibility(destinationImageBufferAttributes);
 
 	CFMutableDictionaryRef	videoDecoderSpecification =
 									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
@@ -146,7 +110,7 @@ OV<SError> CCoreMediaDecodeVideoCodec::setup(const SVideoProcessingFormat& video
 	ReturnErrorIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
 
 	// Finish setup
-	mInternals->mVideoProcessingFormat = OV<SVideoProcessingFormat>(videoProcessingFormat);
+	mInternals->mVideoProcessorFormat = OV<CVideoProcessor::Format>(videoProcessorFormat);
 
 	return OV<SError>();
 }
@@ -161,10 +125,10 @@ void CCoreMediaDecodeVideoCodec::seek(UniversalTimeInterval timeInterval)
 	// Seek
 	UInt32	frameIndex =
 					mInternals->mMediaPacketSource->seekToKeyframe(
-							(UInt32) (timeInterval * mInternals->mVideoProcessingFormat->getFramerate() + 0.5),
+							(UInt32) (timeInterval * mInternals->mVideoProcessorFormat->getFramerate() + 0.5),
 							mInternals->mKeyframeIndexes);
 	seek(
-			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessingFormat->getFramerate() *
+			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessorFormat->getFramerate() *
 					(UniversalTimeInterval) mInternals->mTimeScale));
 }
 

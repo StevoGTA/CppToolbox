@@ -267,6 +267,13 @@ template <typename T> struct OR {
 	T*		operator->() const
 				{ AssertFailIf(mReference == nil); return mReference; }
 
+	bool	operator==(const OR<T>& other) const
+				{ return (hasReference() == other.hasReference()) &&
+						(!hasReference() || (*mReference == *other.mReference)); }
+	bool	operator!=(const OR<T>& other) const
+				{ return (hasReference() != other.hasReference()) ||
+						(hasReference() && (*mReference != *other.mReference)); }
+
 	// Properties
 	private:
 		T*	mReference;

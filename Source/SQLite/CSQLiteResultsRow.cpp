@@ -61,7 +61,7 @@ OV<SInt64> CSQLiteResultsRow::getSInt64(const CSQLiteTableColumn& tableColumn) c
 {
 	// Preflight
 	const	CString&	name = tableColumn.getName();
-	AssertFailIf(tableColumn.getKind() != CSQLiteTableColumn::kInteger);
+	AssertFailIf(tableColumn.getKind() != CSQLiteTableColumn::kKindInteger);
 
 	SInt32	index = mInternals->mColumnNameMap.getSInt32(name, -1);
 	AssertFailIf(index == -1);
@@ -76,7 +76,7 @@ OV<Float64> CSQLiteResultsRow::getFloat64(const CSQLiteTableColumn& tableColumn)
 {
 	// Preflight
 	const	CString&	name = tableColumn.getName();
-	AssertFailIf(tableColumn.getKind() != CSQLiteTableColumn::kReal);
+	AssertFailIf(tableColumn.getKind() != CSQLiteTableColumn::kKindReal);
 
 	SInt32	index = mInternals->mColumnNameMap.getSInt32(name, -1);
 	AssertFailIf(index == -1);
@@ -91,7 +91,7 @@ OV<CString> CSQLiteResultsRow::getString(const CSQLiteTableColumn& tableColumn) 
 {
 	// Preflight
 	const	CString&	name = tableColumn.getName();
-	AssertFailIf(tableColumn.getKind() != CSQLiteTableColumn::kText);
+	AssertFailIf(tableColumn.getKind() != CSQLiteTableColumn::kKindText);
 
 	SInt32	index = mInternals->mColumnNameMap.getSInt32(name, -1);
 	AssertFailIf(index == -1);
@@ -108,7 +108,7 @@ OV<CData> CSQLiteResultsRow::getData(const CSQLiteTableColumn& tableColumn) cons
 {
 	// Preflight
 	const	CString&	name = tableColumn.getName();
-	AssertFailIf(tableColumn.getKind() != CSQLiteTableColumn::kBlob);
+	AssertFailIf(tableColumn.getKind() != CSQLiteTableColumn::kKindBlob);
 
 	SInt32	index = mInternals->mColumnNameMap.getSInt32(name, -1);
 	AssertFailIf(index == -1);

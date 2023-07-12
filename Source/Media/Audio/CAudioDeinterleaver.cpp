@@ -108,9 +108,9 @@ class CAudioDeinterleaver::Internals {
 								}
 							}
 
-		OV<SAudioProcessingFormat>	mInputAudioProcessingFormat;
-		OI<CAudioFrames>			mInputAudioFrames;
-		PerformProc					mPerformProc;
+		OV<SAudio::ProcessingFormat>	mInputAudioProcessingFormat;
+		OI<CAudioFrames>				mInputAudioFrames;
+		PerformProc						mPerformProc;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -137,11 +137,11 @@ CAudioDeinterleaver::~CAudioDeinterleaver()
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CAudioDeinterleaver::connectInput(const I<CAudioProcessor>& audioProcessor,
-		const SAudioProcessingFormat& audioProcessingFormat)
+		const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mInputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mInputAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	// Setup
 	switch (mInternals->mInputAudioProcessingFormat->getBits()) {
@@ -202,33 +202,33 @@ SAudioSourceStatus CAudioDeinterleaver::performInto(CAudioFrames& audioFrames)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioDeinterleaver::getInputSetups() const
+TArray<SAudio::ProcessingSetup> CAudioDeinterleaver::getInputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(
-			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo(mOutputAudioProcessingFormat->getBits()),
-					SAudioProcessingSetup::SampleRateInfo(mOutputAudioProcessingFormat->getSampleRate()),
-					SAudioProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
-					SAudioProcessingSetup::SampleTypeOption(
+	return TNArray<SAudio::ProcessingSetup>(
+			SAudio::ProcessingSetup(SAudio::ProcessingSetup::BitsInfo(mOutputAudioProcessingFormat->getBits()),
+					SAudio::ProcessingSetup::SampleRateInfo(mOutputAudioProcessingFormat->getSampleRate()),
+					SAudio::ProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getChannelMap()),
+					SAudio::ProcessingSetup::SampleTypeOption(
 							mOutputAudioProcessingFormat->getIsFloat() ?
-									SAudioProcessingSetup::kSampleTypeFloat :
-									SAudioProcessingSetup::kSampleTypeSignedInteger),
-					SAudioProcessingSetup::EndianOption(
+									SAudio::ProcessingSetup::kSampleTypeFloat :
+									SAudio::ProcessingSetup::kSampleTypeSignedInteger),
+					SAudio::ProcessingSetup::EndianOption(
 							mOutputAudioProcessingFormat->getIsBigEndian() ?
-									SAudioProcessingSetup::kEndianBig : SAudioProcessingSetup::kEndianLittle),
-					SAudioProcessingSetup::InterleavedOption(SAudioProcessingSetup::kInterleaved)));
+									SAudio::ProcessingSetup::kEndianBig : SAudio::ProcessingSetup::kEndianLittle),
+					SAudio::ProcessingSetup::InterleavedOption(SAudio::ProcessingSetup::kInterleaved)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioDeinterleaver::getOutputSetups() const
+TArray<SAudio::ProcessingSetup> CAudioDeinterleaver::getOutputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(
-			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo::mUnspecified,
-					SAudioProcessingSetup::SampleRateInfo::mUnspecified,
-					SAudioProcessingSetup::ChannelMapInfo::mUnspecified,
-					SAudioProcessingSetup::SampleTypeOption::kSampleTypeUnspecified,
-					SAudioProcessingSetup::EndianOption::kEndianUnspecified,
-					SAudioProcessingSetup::InterleavedOption::kNonInterleaved));
+	return TNArray<SAudio::ProcessingSetup>(
+			SAudio::ProcessingSetup(SAudio::ProcessingSetup::BitsInfo::mUnspecified,
+					SAudio::ProcessingSetup::SampleRateInfo::mUnspecified,
+					SAudio::ProcessingSetup::ChannelMapInfo::mUnspecified,
+					SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeUnspecified,
+					SAudio::ProcessingSetup::EndianOption::kEndianUnspecified,
+					SAudio::ProcessingSetup::InterleavedOption::kNonInterleaved));
 }
 

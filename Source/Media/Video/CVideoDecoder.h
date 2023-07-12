@@ -6,6 +6,7 @@
 
 #include "CVideoCodec.h"
 #include "CVideoProcessor.h"
+#include "SVideo.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoDecoder
@@ -18,9 +19,8 @@ class CVideoDecoder : public CVideoSource {
 	// Methods
 	public:
 							// Lifecycle methods
-							CVideoDecoder(const SVideoStorageFormat& videoStorageFormat,
-									const I<CDecodeVideoCodec>& videoCodec,
-									const SVideoProcessingFormat& videoProcessingFormat, const CString& identifier);
+							CVideoDecoder(const SVideo::Format& videoFormat, const I<CDecodeVideoCodec>& videoCodec,
+									const CVideoProcessor::Format& videoProcessorFormat, const CString& identifier);
 							CVideoDecoder(const CVideoDecoder& other);
 							~CVideoDecoder();
 

@@ -5,11 +5,8 @@
 #pragma once
 
 #include "CAudioFrames.h"
-#include "SAudioFormats.h"
+#include "SAudio.h"
 #include "SAudioSourceStatus.h"
-#include "SError.h"
-#include "TimeAndDate.h"
-#include "TWrappers.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioProcessor
@@ -27,7 +24,7 @@ class CAudioProcessor {
 
 												// Instance methods
 		virtual	OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-														const SAudioProcessingFormat& audioProcessingFormat);
+														const SAudio::ProcessingFormat& audioProcessingFormat);
 		virtual	TArray<CString>					getSetupDescription(const CString& indent);
 
 		virtual	CAudioFrames::Requirements		queryRequirements() const;
@@ -41,13 +38,13 @@ class CAudioProcessor {
 		virtual	void							reset();
 
 												// Subclass methods
-		virtual	TArray<SAudioProcessingSetup>	getInputSetups() const = 0;
-		virtual	void							setInputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+		virtual	TArray<SAudio::ProcessingSetup>	getInputSetups() const = 0;
+		virtual	void							setInputFormat(const SAudio::ProcessingFormat& audioProcessingFormat)
 														const
 													{}
 
-		virtual	TArray<SAudioProcessingSetup>	getOutputSetups() const = 0;
-		virtual	OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+		virtual	TArray<SAudio::ProcessingSetup>	getOutputSetups() const = 0;
+		virtual	OV<SError>						setOutputFormat(const SAudio::ProcessingFormat& audioProcessingFormat)
 														= 0;
 
 	// Properties
@@ -68,9 +65,9 @@ class CAudioSource : public CAudioProcessor {
 		TArray<CString>					getSetupDescription(const CString& indent)
 											{ return TNArray<CString>(); }
 
-		TArray<SAudioProcessingSetup>	getInputSetups() const
-											{ AssertFailUnimplemented(); return TNArray<SAudioProcessingSetup>(); }
-		void							setInputFormat(const SAudioProcessingFormat& audioProcessingFormat) const
+		TArray<SAudio::ProcessingSetup>	getInputSetups() const
+											{ AssertFailUnimplemented(); return TNArray<SAudio::ProcessingSetup>(); }
+		void							setInputFormat(const SAudio::ProcessingFormat& audioProcessingFormat) const
 											{ AssertFailUnimplemented(); }
 };
 
@@ -84,10 +81,10 @@ class CAudioDestination : public CAudioProcessor {
 												CAudioDestination() : CAudioProcessor() {}
 
 												// CAudioProcessor methods
-				TArray<SAudioProcessingSetup>	getOutputSetups() const
+				TArray<SAudio::ProcessingSetup>	getOutputSetups() const
 													{ AssertFailUnimplemented();
-															return TNArray<SAudioProcessingSetup>(); }
-				OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+															return TNArray<SAudio::ProcessingSetup>(); }
+				OV<SError>						setOutputFormat(const SAudio::ProcessingFormat& audioProcessingFormat)
 													{ AssertFailUnimplemented(); return OV<SError>(); }
 
 												// Instance methods
@@ -101,15 +98,15 @@ class CBasicAudioProcessor : public CAudioProcessor {
 	// Methods
 	public:
 					// CAudioProcessor methods
-		OV<SError>	setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat)
+		OV<SError>	setOutputFormat(const SAudio::ProcessingFormat& audioProcessingFormat)
 						{
 							// Store
-							mOutputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
+							mOutputAudioProcessingFormat.setValue(audioProcessingFormat);
 
 							return OV<SError>();
 						}
 
 	// Properties
 	protected:
-		OV<SAudioProcessingFormat>	mOutputAudioProcessingFormat;
+		OV<SAudio::ProcessingFormat>	mOutputAudioProcessingFormat;
 };

@@ -96,7 +96,7 @@ TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const SAudioProcessingFormat& audioProcessingFormat)
+TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return createMediaType(audioProcessingFormat.getIsFloat() ? MFAudioFormat_Float : MFAudioFormat_PCM,
@@ -196,7 +196,7 @@ OV<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size
 
 //----------------------------------------------------------------------------------------------------------------------
 SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
-		const SAudioProcessingFormat& audioProcessingFormat)
+		const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -256,8 +256,8 @@ OV<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 	ReturnErrorIfFailed(result, OSSTR("Lock"));
 
 	// Read next media packet
-	CData	data(mediaBufferBytePtr, mediaBufferByteCount, false);
-	TVResult<TArray<SMediaPacket> >	mediaPackets = mediaPacketSource.readNextInto(data, 1);
+	CData								data(mediaBufferBytePtr, mediaBufferByteCount, false);
+	TVResult<TArray<SMedia::Packet> >	mediaPackets = mediaPacketSource.readNextInto(data, 1);
 	if (mediaPackets.hasError()) {
 		// Unlock
 		mediaBuffer->Unlock();
@@ -379,7 +379,7 @@ OV<SError> CMediaFoundationServices::processOutput(IMFTransform* transform, IMFS
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<UInt32> CMediaFoundationServices::completeWrite(IMFSample* sample, UInt32 frameOffset,
-		CAudioFrames& audioFrames, const SAudioProcessingFormat& audioProcessingFormat)
+		CAudioFrames& audioFrames, const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Copy

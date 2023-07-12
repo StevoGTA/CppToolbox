@@ -38,7 +38,7 @@ class CMediaFoundationDecodeVideoCodecInternals {
 		TNumberArray<UInt32>									mKeyframeIndexes;
 		CMediaFoundationDecodeVideoCodec::ReadInputSampleProc	mReadInputSampleProc;
 
-		OI<SVideoProcessingFormat>								mVideoProcessingFormat;
+		OI<CVideoProcessor::Format>								mVideoProcessorFormat;
 
 		OCI<IMFTransform>										mVideoDecoder;
 
@@ -158,7 +158,7 @@ CMediaFoundationDecodeVideoCodec::~CMediaFoundationDecodeVideoCodec()
 // MARK: CDecodeVideoCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
+OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format& videoProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get and check GUID
@@ -249,7 +249,7 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const SVideoProcessingFormat&
 	mInternals->mOutputSampleRequiredByteCount = outputStreamInfo.cbSize;
 
 	// Finish setup
-	mInternals->mVideoProcessingFormat = OI<SVideoProcessingFormat>(videoProcessingFormat);
+	mInternals->mVideoProcessorFormat = OI<CVideoProcessor::Format>(videoProcessorFormat);
 
 	// Flush
 	OV<SError>	error = CMediaFoundationServices::flush(*mInternals->mVideoDecoder);
@@ -275,10 +275,10 @@ void CMediaFoundationDecodeVideoCodec::seek(UniversalTimeInterval timeInterval)
 	// Seek
 	UInt32	frameIndex =
 					mInternals->mMediaPacketSource->seekToKeyframe(
-							(UInt32) (timeInterval * mInternals->mVideoProcessingFormat->getFramerate() + 0.5),
+							(UInt32) (timeInterval * mInternals->mVideoProcessorFormat->getFramerate() + 0.5),
 							mInternals->mKeyframeIndexes);
 	seek(
-			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessingFormat->getFramerate() *
+			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessorFormat->getFramerate() *
 					(UniversalTimeInterval) mInternals->mTimeScale));
 }
 

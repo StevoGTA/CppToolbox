@@ -61,13 +61,13 @@ class CMediaFoundationResamplerInternals {
 									return OV<SError>();
 								}
 
-		CAudioConverter&			mAudioConverter;
-		OI<SAudioProcessingFormat>	mInputAudioProcessingFormat;
+		CAudioConverter&				mAudioConverter;
+		OV<SAudio::ProcessingFormat>	mInputAudioProcessingFormat;
 
-		OCI<IMFTransform>			mResamplerTransform;
+		OCI<IMFTransform>				mResamplerTransform;
 
-		OCI<IMFSample>				mInputSample;
-		UniversalTimeInterval		mSourceTimeInterval;
+		OCI<IMFSample>					mInputSample;
+		UniversalTimeInterval			mSourceTimeInterval;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ CMediaFoundationResampler::~CMediaFoundationResampler()
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& audioProcessor,
-	const SAudioProcessingFormat& audioProcessingFormat)
+	const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Startup Media Foundation
@@ -102,7 +102,7 @@ OV<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 	ReturnErrorIfFailed(result, OSSTR("MFStartup()"));
 
 	// Store
-	mInternals->mInputAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mInputAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	// Setup transform
 	IUnknown*	unknown;
@@ -231,13 +231,13 @@ void CMediaFoundationResampler::reset()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CMediaFoundationResampler::getInputSetups() const
+TArray<SAudio::ProcessingSetup> CMediaFoundationResampler::getInputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(
-			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo::mUnspecified,
-					SAudioProcessingSetup::SampleRateInfo::mUnspecified,
-					SAudioProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
-					SAudioProcessingSetup::kSampleTypeUnspecified, SAudioProcessingSetup::kEndianLittle,
-					SAudioProcessingSetup::kInterleaved));
+	return TNArray<SAudio::ProcessingSetup>(
+			SAudio::ProcessingSetup(SAudio::ProcessingSetup::BitsInfo::mUnspecified,
+					SAudio::ProcessingSetup::SampleRateInfo::mUnspecified,
+					SAudio::ProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
+					SAudio::ProcessingSetup::kSampleTypeUnspecified, SAudio::ProcessingSetup::kEndianLittle,
+					SAudio::ProcessingSetup::kInterleaved));
 }

@@ -134,9 +134,9 @@ class CAudioChannelMapper::Internals {
 								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
 							}
 
-		OV<SAudioProcessingFormat>	mInputAudioProcessingFormat;
-		OI<CAudioFrames>			mInputAudioFrames;
-		PerformProc					mPerformProc;
+		OV<SAudio::ProcessingFormat>	mInputAudioProcessingFormat;
+		OI<CAudioFrames>				mInputAudioFrames;
+		PerformProc						mPerformProc;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -163,15 +163,15 @@ CAudioChannelMapper::~CAudioChannelMapper()
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProcessor,
-		const SAudioProcessingFormat& audioProcessingFormat)
+		const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mInputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mInputAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	// Setup
-	if ((mInternals->mInputAudioProcessingFormat->getAudioChannelMap() == kAudioChannelMap_1_0) &&
-			(mOutputAudioProcessingFormat->getAudioChannelMap() == kAudioChannelMap_2_0_Option1)) {
+	if ((mInternals->mInputAudioProcessingFormat->getChannelMap() == SAudio::ChannelMap::_1_0()) &&
+			(mOutputAudioProcessingFormat->getChannelMap() == SAudio::ChannelMap::_2_0_Option1())) {
 		// Mono -> Stereo
 		if ((audioProcessingFormat.getBits() == 64) || (audioProcessingFormat.getBits() == 32) ||
 				(audioProcessingFormat.getBits() == 24) || (audioProcessingFormat.getBits() == 16) ||
@@ -181,7 +181,8 @@ OV<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 		else
 			// Unsupported bits
 			AssertFailUnimplemented();
-	} else if (mInternals->mInputAudioProcessingFormat->getChannels() > mOutputAudioProcessingFormat->getChannels())
+	} else if (mInternals->mInputAudioProcessingFormat->getChannelMap().getChannels() >
+			mOutputAudioProcessingFormat->getChannelMap().getChannels())
 		// More -> Less
 		mInternals->mPerformProc = Internals::performCopyCommon;
 	else
@@ -203,12 +204,11 @@ TArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
 	setupDescriptions +=
 			indent + CString(OSSTR("Channel Mapper from ")) +
 					CString::mDoubleQuotes +
-							eAudioChannelMapGetDescription(
-									mInternals->mInputAudioProcessingFormat->getAudioChannelMap()) +
+							mInternals->mInputAudioProcessingFormat->getChannelMap().getDisplayString() +
 							CString::mDoubleQuotes +
 					CString(OSSTR(" to ")) +
 					CString::mDoubleQuotes +
-							eAudioChannelMapGetDescription(mOutputAudioProcessingFormat->getAudioChannelMap()) +
+							mOutputAudioProcessingFormat->getChannelMap().getDisplayString() +
 							CString::mDoubleQuotes;
 
 	return setupDescriptions;
@@ -232,7 +232,7 @@ SAudioSourceStatus CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
 			// Non-interleaved
 			mInternals->mInputAudioFrames =
 					OI<CAudioFrames>(
-							new CAudioFrames(mInternals->mInputAudioProcessingFormat->getChannels(),
+							new CAudioFrames(mInternals->mInputAudioProcessingFormat->getChannelMap().getChannels(),
 									mInternals->mInputAudioProcessingFormat->getBits() / 8,
 									audioFrames.getAllocatedFrameCount()));
 	} else
@@ -254,44 +254,44 @@ SAudioSourceStatus CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioChannelMapper::getInputSetups() const
+TArray<SAudio::ProcessingSetup> CAudioChannelMapper::getInputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(
-			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo(mOutputAudioProcessingFormat->getBits()),
-					SAudioProcessingSetup::SampleRateInfo(mOutputAudioProcessingFormat->getSampleRate()),
-					SAudioProcessingSetup::ChannelMapInfo::mUnspecified,
-					SAudioProcessingSetup::SampleTypeOption(
+	return TNArray<SAudio::ProcessingSetup>(
+			SAudio::ProcessingSetup(SAudio::ProcessingSetup::BitsInfo(mOutputAudioProcessingFormat->getBits()),
+					SAudio::ProcessingSetup::SampleRateInfo(mOutputAudioProcessingFormat->getSampleRate()),
+					SAudio::ProcessingSetup::ChannelMapInfo::mUnspecified,
+					SAudio::ProcessingSetup::SampleTypeOption(
 							mOutputAudioProcessingFormat->getIsFloat() ?
-									SAudioProcessingSetup::kSampleTypeFloat :
-									SAudioProcessingSetup::kSampleTypeSignedInteger),
-					SAudioProcessingSetup::EndianOption(
+									SAudio::ProcessingSetup::kSampleTypeFloat :
+									SAudio::ProcessingSetup::kSampleTypeSignedInteger),
+					SAudio::ProcessingSetup::EndianOption(
 							mOutputAudioProcessingFormat->getIsBigEndian() ?
-									SAudioProcessingSetup::kEndianBig : SAudioProcessingSetup::kEndianLittle),
-					SAudioProcessingSetup::InterleavedOption(
+									SAudio::ProcessingSetup::kEndianBig : SAudio::ProcessingSetup::kEndianLittle),
+					SAudio::ProcessingSetup::InterleavedOption(
 							mOutputAudioProcessingFormat->getIsInterleaved() ?
-									SAudioProcessingSetup::kInterleaved : SAudioProcessingSetup::kNonInterleaved)));
+									SAudio::ProcessingSetup::kInterleaved : SAudio::ProcessingSetup::kNonInterleaved)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioChannelMapper::getOutputSetups() const
+TArray<SAudio::ProcessingSetup> CAudioChannelMapper::getOutputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(SAudioProcessingSetup::mUnspecified);
+	return TSArray<SAudio::ProcessingSetup>(SAudio::ProcessingSetup::mUnspecified);
 }
 
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CAudioChannelMapper::canPerform(EAudioChannelMap fromAudioChannelMap, EAudioChannelMap toAudioChannelMap)
+bool CAudioChannelMapper::canPerform(const SAudio::ChannelMap& fromAudioChannelMap, const SAudio::ChannelMap& toAudioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return
 			// Mono -> Stereo
-			((fromAudioChannelMap == EAudioChannelMap::kAudioChannelMap_1_0) &&
-					(toAudioChannelMap == EAudioChannelMap::kAudioChannelMap_2_0_Option1)) ||
+			((fromAudioChannelMap == SAudio::ChannelMap::_1_0()) &&
+					(toAudioChannelMap == SAudio::ChannelMap::_2_0_Option1())) ||
 
 			// Stereo -> Mono
-			((fromAudioChannelMap == EAudioChannelMap::kAudioChannelMap_2_0_Option1) &&
-					(toAudioChannelMap == EAudioChannelMap::kAudioChannelMap_1_0));
+			((fromAudioChannelMap == SAudio::ChannelMap::_2_0_Option1()) &&
+					(toAudioChannelMap == SAudio::ChannelMap::_1_0()));
 }

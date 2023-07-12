@@ -29,7 +29,7 @@ class CMediaFoundationDecodeVideoCodec : public CDecodeVideoCodec {
 										~CMediaFoundationDecodeVideoCodec();
 
 										// CDecodeVideoCodec methods
-				OV<SError>				setup(const SVideoProcessingFormat& videoProcessingFormat);
+				OV<SError>				setup(const CVideoProcessor::Format& videoProcessorFormat);
 				void					seek(UniversalTimeInterval timeInterval);
 				TIResult<CVideoFrame>	decode();
 

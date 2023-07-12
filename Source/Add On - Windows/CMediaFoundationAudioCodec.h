@@ -23,7 +23,7 @@ class CMediaFoundationDecodeAudioCodec : public CDecodeAudioCodec {
 								~CMediaFoundationDecodeAudioCodec();
 
 								// CDecodeAudioCodec methods
-				OV<SError>		setup(const SAudioProcessingFormat& audioProcessingFormat);
+				OV<SError>		setup(const SAudio::ProcessingFormat& audioProcessingFormat);
 				void			seek(UniversalTimeInterval timeInterval);
 				OV<SError>		decodeInto(CAudioFrames& audioFrames);
 

@@ -4,6 +4,7 @@
 
 #include "CH264VideoCodec.h"
 
+#include "CBitReader.h"
 #include "CCodecRegistry.h"
 #include "CLogServices.h"
 
@@ -332,7 +333,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 															const CMediaPacketSource::DataInfo& dataInfo,
 															UInt32 timeScale);
 #elif defined(TARGET_OS_WINDOWS)
-				OV<SError>							setup(const SVideoProcessingFormat& videoProcessingFormat);
+				OV<SError>							setup(const CVideoProcessor::Format& videoProcessorFormat);
 
 				OR<const GUID>						getGUID() const
 														{ return OR<const GUID>(MFVideoFormat_H264); }
@@ -485,11 +486,11 @@ TVResult<CMSampleTimingInfo> CH264DecodeVideoCodec::composeSampleTimingInfo(
 
 #elif defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CH264DecodeVideoCodec::setup(const SVideoProcessingFormat& videoProcessingFormat)
+OV<SError> CH264DecodeVideoCodec::setup(const CVideoProcessor::Format& videoProcessorFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Do super
-	OV<SError>	error = CMediaFoundationDecodeVideoCodec::setup(videoProcessingFormat);
+	OV<SError>	error = CMediaFoundationDecodeVideoCodec::setup(videoProcessorFormat);
 	ReturnErrorIfError(error);
 
 	// Finish setup
@@ -643,24 +644,23 @@ const	CString	CH264VideoCodec::mName(OSSTR("h.264"));
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SVideoStorageFormat> CH264VideoCodec::composeVideoStorageFormat(const S2DSizeU16& frameSize, Float32 framerate)
+SVideo::Format CH264VideoCodec::composeVideoTrackFormat(const S2DSizeU16& frameSize, Float32 framerate)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OV<SVideoStorageFormat>(SVideoStorageFormat(mID, frameSize, framerate));
+	return SVideo::Format(mID, frameSize, framerate);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<I<CDecodeVideoCodec> > CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
-		const TArray<SMediaPacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
+I<CDecodeVideoCodec> CH264VideoCodec::create(const I<CRandomAccessDataSource>& randomAccessDataSource,
+		const TArray<SMedia::PacketAndLocation>& packetAndLocations, const CData& configurationData, UInt32 timeScale,
 		const TNumberArray<UInt32>& keyframeIndexes)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OV<I<CDecodeVideoCodec> >(
-			I<CDecodeVideoCodec>(
-					new CH264DecodeVideoCodec(
-							I<CMediaPacketSource>(
-									new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
-							configurationData, timeScale, keyframeIndexes)));
+	return I<CDecodeVideoCodec>(
+			new CH264DecodeVideoCodec(
+					I<CMediaPacketSource>(
+							new CSeekableVaryingMediaPacketSource(randomAccessDataSource, packetAndLocations)),
+					configurationData, timeScale, keyframeIndexes));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

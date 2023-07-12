@@ -44,24 +44,24 @@ class CSQLiteTable::Internals : public TReferenceCountable<Internals> {
 										CString	string = tableColumn.getName() + CString::mSpace;
 
 										switch (tableColumn.getKind()) {
-											case CSQLiteTableColumn::kInteger:
+											case CSQLiteTableColumn::kKindInteger:
 												// Integer
 												string += CString(OSSTR("INTEGER"));
 												break;
 
-											case CSQLiteTableColumn::kReal:
+											case CSQLiteTableColumn::kKindReal:
 												// Real
 												string += CString(OSSTR("REAL"));
 												break;
 
-											case CSQLiteTableColumn::kText:
-											case CSQLiteTableColumn::kDateISO8601FractionalSecondsAutoSet:
-											case CSQLiteTableColumn::kDateISO8601FractionalSecondsAutoUpdate:
+											case CSQLiteTableColumn::kKindText:
+											case CSQLiteTableColumn::kKindDateISO8601FractionalSecondsAutoSet:
+											case CSQLiteTableColumn::kKindDateISO8601FractionalSecondsAutoUpdate:
 												// Text
 												string += CString(OSSTR("TEXT"));
 												break;
 
-											case CSQLiteTableColumn::kBlob:
+											case CSQLiteTableColumn::kKindBlob:
 												// Blob
 												string += CString(OSSTR("BLOB"));
 												break;
@@ -217,7 +217,7 @@ class CSQLiteTable::Internals : public TReferenceCountable<Internals> {
 };
 
 CSQLiteTableColumn	CSQLiteTable::Internals::mCountAllTableColumn(CString(OSSTR("COUNT(*)")),
-							CSQLiteTableColumn::kInteger);
+							CSQLiteTableColumn::kKindInteger);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ CSQLiteTableColumn	CSQLiteTable::Internals::mCountAllTableColumn(CString(OSSTR("
 
 // MARK: Properties
 
-const	CSQLiteTableColumn	CSQLiteTable::mSelectAllTableColumn(CString(OSSTR("*")), CSQLiteTableColumn::kInteger);
+const	CSQLiteTableColumn	CSQLiteTable::mSelectAllTableColumn(CString(OSSTR("*")), CSQLiteTableColumn::kKindInteger);
 
 // MARK: Lifecycle methods
 

@@ -23,17 +23,16 @@ class CMediaEngine {
 				I<CAudioSource>						getAudioSource(
 															const CMediaTrackInfos::AudioTrackInfo& audioTrackInfo,
 															const CString& identifier) const;
-				SAudioProcessingFormat				composeAudioProcessingFormat(const CAudioSource& audioSource,
+				SAudio::ProcessingFormat			composeAudioProcessingFormat(const CAudioSource& audioSource,
 															const CAudioDestination& audioDestination,
 															const OV<Float32>& processingSampleRate = OV<Float32>())
 															const;
-				TVResult<SAudioProcessingFormat>	connect(const I<CAudioProcessor>& audioProcessorSource,
+				TVResult<SAudio::ProcessingFormat>	connect(const I<CAudioProcessor>& audioProcessorSource,
 															const I<CAudioProcessor>& audioProcessorDestination,
-															const SAudioProcessingFormat& audioProcessingFormat) const;
+															const SAudio::ProcessingFormat& audioProcessingFormat) const;
 
 				I<CVideoSource>						getVideoSource(
 															const CMediaTrackInfos::VideoTrackInfo& videoTrackInfo,
-															CVideoFrame::Compatibility compatibility,
 															const CString& identifier) const;
 
 	protected:

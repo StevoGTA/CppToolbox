@@ -105,7 +105,7 @@ class CNotificationCenter {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CImmediateNotificationCenter
+// MARK: - CImmediateNotificationCenter
 
 class CImmediateNotificationCenter : public CNotificationCenter {
 	// Methods

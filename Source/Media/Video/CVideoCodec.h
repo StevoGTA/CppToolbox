@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CCodec.h"
-#include "SVideoFormats.h"
+#include "CVideoProcessor.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoCodec
@@ -24,7 +24,7 @@ class CDecodeVideoCodec : public CVideoCodec {
 	// Methods
 	public:
 										// Instance methods
-		virtual	OV<SError>				setup(const SVideoProcessingFormat& videoProcessingFormat) = 0;
+		virtual	OV<SError>				setup(const CVideoProcessor::Format& videoProcessorFormat) = 0;
 		virtual	void					seek(UniversalTimeInterval timeInterval) = 0;
 		virtual	TIResult<CVideoFrame>	decode() = 0;
 

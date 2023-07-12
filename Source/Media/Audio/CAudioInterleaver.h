@@ -22,14 +22,14 @@ class CAudioInterleaver : public CBasicAudioProcessor {
 
 										// CAudioProcessor methods
 		OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-												const SAudioProcessingFormat& audioProcessingFormat);
+												const SAudio::ProcessingFormat& audioProcessingFormat);
 		TArray<CString>					getSetupDescription(const CString& indent);
 
 		SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
 
-		TArray<SAudioProcessingSetup>	getInputSetups() const;
+		TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 
-		TArray<SAudioProcessingSetup>	getOutputSetups() const;
+		TArray<SAudio::ProcessingSetup>	getOutputSetups() const;
 
 	// Properties
 	private:

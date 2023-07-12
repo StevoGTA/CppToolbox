@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CAudioCodec.h"
+#include "CMediaPacketSource.h"
 
 #include <AudioToolbox/AudioToolbox.h>
 
@@ -22,7 +23,7 @@ class CCoreAudioDecodeAudioCodec : public CDecodeAudioCodec {
 											~CCoreAudioDecodeAudioCodec();
 
 											// CDecodeAudioCodec methods
-				OV<SError>					setup(const SAudioProcessingFormat& audioProcessingFormat);
+				OV<SError>					setup(const SAudio::ProcessingFormat& audioProcessingFormat);
 				CAudioFrames::Requirements	getRequirements() const
 												{ return CAudioFrames::Requirements(1024, 1024 * 2); }
 				void						seek(UniversalTimeInterval timeInterval);
@@ -35,7 +36,7 @@ class CCoreAudioDecodeAudioCodec : public CDecodeAudioCodec {
 
 											// Subclass methods
 		virtual	AudioStreamBasicDescription	getSourceASBD(OSType codecID,
-													const SAudioProcessingFormat& audioProcessingFormat) = 0;
+													const SAudio::ProcessingFormat& audioProcessingFormat) = 0;
 		virtual	OV<SError>					setMagicCookie(AudioConverterRef audioConverterRef)
 												{ return OV<SError>(); }
 

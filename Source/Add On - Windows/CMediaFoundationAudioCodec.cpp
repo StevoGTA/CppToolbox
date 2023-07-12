@@ -37,15 +37,15 @@ class CMediaFoundationDecodeAudioCodecInternals {
 									return CMediaFoundationServices::load(mediaBuffer, *internals.mMediaPacketSource);
 								}
 
-		OSType						mCodecID;
-		I<CMediaPacketSource>		mMediaPacketSource;
+		OSType							mCodecID;
+		I<CMediaPacketSource>			mMediaPacketSource;
 
-		OI<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
 
-		OCI<IMFTransform>			mAudioDecoderTransform;
-		UInt32						mDecodeFramesToIgnore;
-		OCI<IMFSample>				mInputSample;
-		OCI<IMFSample>				mOutputSample;
+		OCI<IMFTransform>				mAudioDecoderTransform;
+		UInt32							mDecodeFramesToIgnore;
+		OCI<IMFSample>					mInputSample;
+		OCI<IMFSample>					mOutputSample;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ CMediaFoundationDecodeAudioCodec::~CMediaFoundationDecodeAudioCodec()
 // MARK: CDecodeAudioCodec methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
+OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get and check GUID
@@ -85,7 +85,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudioProcessingFormat&
 	HRESULT						result;
 
 	// Store
-	mInternals->mAudioProcessingFormat = OI<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	// Enum Audio Codecs to find Audio Decoder
 	MFT_REGISTER_TYPE_INFO	info = {MFMediaType_Audio, *guid};

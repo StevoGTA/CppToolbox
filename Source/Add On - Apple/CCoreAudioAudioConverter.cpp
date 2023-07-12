@@ -63,7 +63,7 @@ class CCoreAudioAudioConverter::Internals {
 													OI<CAudioFrames>(
 															new CAudioFrames(
 																	internals.mInputAudioProcessingFormat->
-																			getChannels(),
+																			getChannelMap().getChannels(),
 																	internals.mInputAudioProcessingFormat->getBits() /
 																			8,
 																	frameCount));
@@ -102,15 +102,15 @@ class CCoreAudioAudioConverter::Internals {
 									return status;
 								}
 
-		CAudioConverter&			mAudioConverter;
-		OV<SAudioProcessingFormat>	mInputAudioProcessingFormat;
+		CAudioConverter&				mAudioConverter;
+		OV<SAudio::ProcessingFormat>	mInputAudioProcessingFormat;
 
-		AudioBufferList*			mOutputAudioBufferList;
-		AudioConverterRef			mAudioConverterRef;
-		OI<CAudioFrames>			mInputAudioFrames;
-		OV<SError>					mFillBufferDataError;
-		bool						mSourceHasMoreToRead;
-		UniversalTimeInterval		mSourceTimeInterval;
+		AudioBufferList*				mOutputAudioBufferList;
+		AudioConverterRef				mAudioConverterRef;
+		OI<CAudioFrames>				mInputAudioFrames;
+		OV<SError>						mFillBufferDataError;
+		bool							mSourceHasMoreToRead;
+		UniversalTimeInterval			mSourceTimeInterval;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -137,21 +137,22 @@ CCoreAudioAudioConverter::~CCoreAudioAudioConverter()
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
-		const SAudioProcessingFormat& audioProcessingFormat)
+		const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mInputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mInputAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	// Setup
 	AudioStreamBasicDescription	sourceFormat;
-	FillOutASBDForLPCM(sourceFormat, audioProcessingFormat.getSampleRate(), audioProcessingFormat.getChannels(),
-			audioProcessingFormat.getBits(), audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(),
-			audioProcessingFormat.getIsBigEndian(), !audioProcessingFormat.getIsInterleaved());
+	FillOutASBDForLPCM(sourceFormat, audioProcessingFormat.getSampleRate(),
+			audioProcessingFormat.getChannelMap().getChannels(), audioProcessingFormat.getBits(),
+			audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(), audioProcessingFormat.getIsBigEndian(),
+			!audioProcessingFormat.getIsInterleaved());
 
 	AudioStreamBasicDescription	destinationFormat;
 	FillOutASBDForLPCM(destinationFormat, mOutputAudioProcessingFormat->getSampleRate(),
-			mOutputAudioProcessingFormat->getChannels(), mOutputAudioProcessingFormat->getBits(),
+			mOutputAudioProcessingFormat->getChannelMap().getChannels(), mOutputAudioProcessingFormat->getBits(),
 			mOutputAudioProcessingFormat->getBits(), mOutputAudioProcessingFormat->getIsFloat(),
 			mOutputAudioProcessingFormat->getIsBigEndian(), !mOutputAudioProcessingFormat->getIsInterleaved());
 
@@ -176,8 +177,10 @@ OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 	} else {
 		// Non-interleaved
 		mInternals->mOutputAudioBufferList =
-				(AudioBufferList*) ::calloc(mOutputAudioProcessingFormat->getChannels(), sizeof(AudioBufferList));
-		mInternals->mOutputAudioBufferList->mNumberBuffers = mOutputAudioProcessingFormat->getChannels();
+				(AudioBufferList*) ::calloc(mOutputAudioProcessingFormat->getChannelMap().getChannels(),
+						sizeof(AudioBufferList));
+		mInternals->mOutputAudioBufferList->mNumberBuffers =
+				mOutputAudioProcessingFormat->getChannelMap().getChannels();
 	}
 
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
@@ -240,13 +243,13 @@ void CCoreAudioAudioConverter::reset()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CCoreAudioAudioConverter::getInputSetups() const
+TArray<SAudio::ProcessingSetup> CCoreAudioAudioConverter::getInputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(
-			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo::mUnspecified,
-					SAudioProcessingSetup::SampleRateInfo::mUnspecified,
-					SAudioProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
-					SAudioProcessingSetup::kSampleTypeUnspecified, SAudioProcessingSetup::kEndianUnspecified,
-					SAudioProcessingSetup::kInterleavedUnspecified));
+	return TNArray<SAudio::ProcessingSetup>(
+			SAudio::ProcessingSetup(SAudio::ProcessingSetup::BitsInfo::mUnspecified,
+					SAudio::ProcessingSetup::SampleRateInfo::mUnspecified,
+					SAudio::ProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getChannelMap()),
+					SAudio::ProcessingSetup::kSampleTypeUnspecified, SAudio::ProcessingSetup::kEndianUnspecified,
+					SAudio::ProcessingSetup::kInterleavedUnspecified));
 }

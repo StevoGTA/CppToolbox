@@ -13,9 +13,9 @@ class CAudioConverter : public CBasicAudioProcessor {
 	// Methods
 	public:
 												// CAudioProcessor methods
-				TArray<SAudioProcessingSetup>	getOutputSetups() const
-													{ return TNArray<SAudioProcessingSetup>(
-															SAudioProcessingSetup::mUnspecified); }
+				TArray<SAudio::ProcessingSetup>	getOutputSetups() const
+													{ return TSArray<SAudio::ProcessingSetup>(
+															SAudio::ProcessingSetup::mUnspecified); }
 
 												// Instance methods
 		virtual	bool							supportsNoninterleaved() const = 0;

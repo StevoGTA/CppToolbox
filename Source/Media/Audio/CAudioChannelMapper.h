@@ -22,18 +22,18 @@ class CAudioChannelMapper : public CBasicAudioProcessor {
 
 												// CAudioProcessor methods
 				OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-														const SAudioProcessingFormat& audioProcessingFormat);
+														const SAudio::ProcessingFormat& audioProcessingFormat);
 				TArray<CString>					getSetupDescription(const CString& indent);
 
 				SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
 
-				TArray<SAudioProcessingSetup>	getInputSetups() const;
+				TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 
-				TArray<SAudioProcessingSetup>	getOutputSetups() const;
+				TArray<SAudio::ProcessingSetup>	getOutputSetups() const;
 
 												// Class methods
-		static	bool							canPerform(EAudioChannelMap fromAudioChannelMap,
-														EAudioChannelMap toAudioChannelMap);
+		static	bool							canPerform(const SAudio::ChannelMap& fromAudioChannelMap,
+														const SAudio::ChannelMap& toAudioChannelMap);
 
 	// Properties
 	private:

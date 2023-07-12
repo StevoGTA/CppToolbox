@@ -11,18 +11,18 @@
 
 class CVideoDecoder::Internals : public TReferenceCountable<Internals> {
 	public:
-		Internals(const SVideoStorageFormat& videoStorageFormat, const I<CDecodeVideoCodec>& videoCodec,
+		Internals(const SVideo::Format& videoFormat, const I<CDecodeVideoCodec>& videoCodec,
 				const CString& identifier) :
 			TReferenceCountable(),
-					mVideoStorageFormat(videoStorageFormat), mVideoCodec(videoCodec), mIdentifier(identifier),
+					mVideoFormat(videoFormat), mVideoCodec(videoCodec), mIdentifier(identifier),
 					mStartTimeInterval(0.0), mCurrentTimeInterval(0.0)
 			{}
 
-		SVideoStorageFormat			mVideoStorageFormat;
+		SVideo::Format				mVideoFormat;
 		I<CDecodeVideoCodec>		mVideoCodec;
 		CString						mIdentifier;
 
-		OV<SVideoProcessingFormat>	mVideoProcessingFormat;
+		OV<CVideoProcessor::Format>	mVideoProcessorFormat;
 		UniversalTimeInterval		mStartTimeInterval;
 		OV<UniversalTimeInterval>	mDurationTimeInterval;
 		UniversalTimeInterval		mCurrentTimeInterval;
@@ -35,18 +35,18 @@ class CVideoDecoder::Internals : public TReferenceCountable<Internals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CVideoDecoder::CVideoDecoder(const SVideoStorageFormat& videoStorageFormat, const I<CDecodeVideoCodec>& videoCodec,
-		const SVideoProcessingFormat& videoProcessingFormat, const CString& identifier) : CVideoSource()
+CVideoDecoder::CVideoDecoder(const SVideo::Format& videoFormat, const I<CDecodeVideoCodec>& videoCodec,
+		const CVideoProcessor::Format& videoProcessorFormat, const CString& identifier) : CVideoSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new Internals(videoStorageFormat, videoCodec, identifier);
+	mInternals = new Internals(videoFormat, videoCodec, identifier);
 
 	// Store
-	mInternals->mVideoProcessingFormat = OV<SVideoProcessingFormat>(videoProcessingFormat);
+	mInternals->mVideoProcessorFormat = OV<CVideoProcessor::Format>(videoProcessorFormat);
 
 	// Setup Video Codec
-	mInternals->mVideoCodec->setup(videoProcessingFormat);
+	mInternals->mVideoCodec->setup(videoProcessorFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -76,9 +76,8 @@ TArray<CString> CVideoDecoder::getSetupDescription(const CString& indent)
 	setupDescriptions += indent + CString(OSSTR("Video Decoder (")) + mInternals->mIdentifier + CString(OSSTR(")"));
 	setupDescriptions +=
 			indent + CString(OSSTR("    ")) +
-					CCodecRegistry::mShared.getVideoCodecInfo(mInternals->mVideoStorageFormat.getCodecID())
-							.getDecodeName() +
-					CString(OSSTR(", ")) + mInternals->mVideoStorageFormat.getDescription();
+					CCodecRegistry::mShared.getVideoCodecInfo(mInternals->mVideoFormat.getCodecID()).getDecodeName() +
+					CString(OSSTR(", ")) + mInternals->mVideoFormat.getDescription();
 
 	return setupDescriptions;
 }
@@ -132,7 +131,7 @@ CVideoProcessor::PerformResult CVideoDecoder::perform()
 	ReturnValueIfResultError(videoFrame, PerformResult(videoFrame.getError()));
 
 	// Update
-	currentTimeInterval += 1.0 / mInternals->mVideoProcessingFormat->getFramerate();
+	currentTimeInterval += 1.0 / mInternals->mVideoProcessorFormat->getFramerate();
 
 	return PerformResult(currentTimeInterval, *videoFrame);
 }

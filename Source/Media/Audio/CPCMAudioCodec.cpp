@@ -21,41 +21,40 @@ class CPCMDecodeAudioCodec : public CDecodeAudioCodec {
 											{}
 
 										// CAudioCodec methods - Decoding
-		TArray<SAudioProcessingSetup>	getAudioProcessingSetups(const SAudioStorageFormat& audioStorageFormat);
-		OV<SError>						setup(const SAudioProcessingFormat& audioProcessingFormat);
+		TArray<SAudio::ProcessingSetup>	getAudioProcessingSetups(const SAudio::Format& audioFormat);
+		OV<SError>						setup(const SAudio::ProcessingFormat& audioProcessingFormat);
 		void							seek(UniversalTimeInterval timeInterval);
 		OV<SError>						decodeInto(CAudioFrames& audioFrames);
 
 	private:
-		FrameSourceDecodeInfo		mFrameSourceDecodeInfo;
-		CPCMAudioCodec::Format		mFormat;
+		FrameSourceDecodeInfo			mFrameSourceDecodeInfo;
+		CPCMAudioCodec::Format			mFormat;
 
-		OV<SAudioProcessingFormat>	mAudioProcessingFormat;
+		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
 };
 
 // MARK: CAudioCodec methods - Decoding
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CPCMDecodeAudioCodec::getAudioProcessingSetups(
-		const SAudioStorageFormat& audioStorageFormat)
+TArray<SAudio::ProcessingSetup> CPCMDecodeAudioCodec::getAudioProcessingSetups(const SAudio::Format& audioFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(
-				SAudioProcessingSetup(*audioStorageFormat.getBits(), audioStorageFormat.getSampleRate(),
-						audioStorageFormat.getAudioChannelMap(),
-						(audioStorageFormat.getCodecID() == CPCMAudioCodec::mFloatID) ?
-								SAudioProcessingSetup::kSampleTypeFloat :
-								SAudioProcessingSetup::kSampleTypeSignedInteger,
+	return TNArray<SAudio::ProcessingSetup>(
+				SAudio::ProcessingSetup(*audioFormat.getBits(), audioFormat.getSampleRate(),
+						audioFormat.getChannelMap(),
+						(audioFormat.getCodecID() == CPCMAudioCodec::mFloatID) ?
+								SAudio::ProcessingSetup::kSampleTypeFloat :
+								SAudio::ProcessingSetup::kSampleTypeSignedInteger,
 						(mFormat == CPCMAudioCodec::kFormatBigEndian) ?
-								SAudioProcessingSetup::kEndianBig : SAudioProcessingSetup::kEndianLittle));
+								SAudio::ProcessingSetup::kEndianBig : SAudio::ProcessingSetup::kEndianLittle));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CPCMDecodeAudioCodec::setup(const SAudioProcessingFormat& audioProcessingFormat)
+OV<SError> CPCMDecodeAudioCodec::setup(const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
+	mAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	return OV<SError>();
 }
@@ -96,31 +95,28 @@ const	OSType	CPCMAudioCodec::mIntegerID = MAKE_OSTYPE('N', 'O', 'N', 'E');
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SAudioStorageFormat> CPCMAudioCodec::composeAudioStorageFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
-		EAudioChannelMap audioChannelMap)
+SAudio::Format CPCMAudioCodec::composeAudioFormat(bool isFloat, UInt8 bits, Float32 sampleRate,
+		const SAudio::ChannelMap& audioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Return audio storage format
-	return OV<SAudioStorageFormat>(
-			SAudioStorageFormat(isFloat ? mFloatID : mIntegerID, bits, sampleRate, audioChannelMap));
+	return SAudio::Format(isFloat ? mFloatID : mIntegerID, bits, sampleRate, audioChannelMap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CPCMAudioCodec::composeFrameCount(const SAudioStorageFormat& audioStorageFormat, UInt64 byteCount)
+SMedia::SegmentInfo CPCMAudioCodec::composeMediaSegmentInfo(const SAudio::Format& audioFormat, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Return frame count
-	return byteCount / (*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels());
+	return SAudio::composeMediaSegmentInfo(audioFormat, 1,
+			*audioFormat.getBits() / 8 * audioFormat.getChannelMap().getChannels(), byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<I<CDecodeAudioCodec> > CPCMAudioCodec::create(const SAudioStorageFormat& audioStorageFormat,
+I<CDecodeAudioCodec> CPCMAudioCodec::create(const SAudio::Format& audioFormat,
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 startByteOffset, UInt64 byteCount,
 		Format format)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return OV<I<CDecodeAudioCodec> >(
-			I<CDecodeAudioCodec>(
-					new CPCMDecodeAudioCodec(randomAccessDataSource, startByteOffset, byteCount,
-							*audioStorageFormat.getBits() / 8 * audioStorageFormat.getChannels(), format)));
+	return I<CDecodeAudioCodec>(
+			new CPCMDecodeAudioCodec(randomAccessDataSource, startByteOffset, byteCount,
+					*audioFormat.getBits() / 8 * audioFormat.getChannelMap().getChannels(), format));
 }

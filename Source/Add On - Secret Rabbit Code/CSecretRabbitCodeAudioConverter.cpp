@@ -112,15 +112,15 @@ class CSecretRabbitCodeAudioConverter::Internals {
 								return internals.mInputAudioFrames->getCurrentFrameCount();
 							}
 
-		CAudioConverter&			mAudioConverter;
-		OV<SAudioProcessingFormat>	mInputAudioProcessingFormat;
+		CAudioConverter&				mAudioConverter;
+		OV<SAudio::ProcessingFormat>	mInputAudioProcessingFormat;
 
-		SRC_STATE*					mSRCState;
-		OI<CAudioFrames>			mInputAudioFrames;
-		OI<CAudioFrames>			mInputFloatAudioFrames;
-		OV<SError>					mPerformError;
-		bool						mSourceHasMoreToRead;
-		UniversalTimeInterval		mSourceTimeInterval;
+		SRC_STATE*						mSRCState;
+		OI<CAudioFrames>				mInputAudioFrames;
+		OI<CAudioFrames>				mInputFloatAudioFrames;
+		OV<SError>						mPerformError;
+		bool							mSourceHasMoreToRead;
+		UniversalTimeInterval			mSourceTimeInterval;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -147,11 +147,11 @@ CSecretRabbitCodeAudioConverter::~CSecretRabbitCodeAudioConverter()
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor>& audioProcessor,
-	const SAudioProcessingFormat& audioProcessingFormat)
+	const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mInputAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mInputAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	// Create Secret Rabbit Code
 	int	error;
@@ -213,13 +213,13 @@ void CSecretRabbitCodeAudioConverter::reset()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CSecretRabbitCodeAudioConverter::getInputSetups() const
+TArray<SAudio::ProcessingSetup> CSecretRabbitCodeAudioConverter::getInputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<SAudioProcessingSetup>(
-			SAudioProcessingSetup(SAudioProcessingSetup::BitsInfo::mUnspecified,
-					SAudioProcessingSetup::SampleRateInfo::mUnspecified,
-					SAudioProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
-					SAudioProcessingSetup::kSampleTypeUnspecified, SAudioProcessingSetup::kEndianLittle,
-					SAudioProcessingSetup::kInterleaved));
+	return TNArray<SAudio::ProcessingSetup>(
+			SAudio::ProcessingSetup(SAudio::ProcessingSetup::BitsInfo::mUnspecified,
+					SAudio::ProcessingSetup::SampleRateInfo::mUnspecified,
+					SAudio::ProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
+					SAudio::ProcessingSetup::kSampleTypeUnspecified, SAudio::ProcessingSetup::kEndianLittle,
+					SAudio::ProcessingSetup::kInterleaved));
 }

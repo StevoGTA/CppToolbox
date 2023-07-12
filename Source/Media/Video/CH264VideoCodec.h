@@ -4,10 +4,9 @@
 
 #pragma once
 
-#include "CBitReader.h"
 #include "CVideoCodec.h"
-#include "SMediaPacket.h"
-#include "SVideoFormats.h"
+#include "SMedia.h"
+#include "SVideo.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CH264VideoCodec
@@ -15,12 +14,12 @@
 class CH264VideoCodec {
 	// Methods
 	public:
-											// Class methods
-		static	OV<SVideoStorageFormat>		composeVideoStorageFormat(const S2DSizeU16& frameSize, Float32 framerate);
-		static	OV<I<CDecodeVideoCodec> >	create(const I<CRandomAccessDataSource>& randomAccessDataSource,
-													const TArray<SMediaPacketAndLocation>& packetAndLocations,
-													const CData& configurationData, UInt32 timeScale,
-													const TNumberArray<UInt32>& keyframeIndexes);
+										// Class methods
+		static	SVideo::Format			composeVideoTrackFormat(const S2DSizeU16& frameSize, Float32 framerate);
+		static	I<CDecodeVideoCodec>	create(const I<CRandomAccessDataSource>& randomAccessDataSource,
+												const TArray<SMedia::PacketAndLocation>& packetAndLocations,
+												const CData& configurationData, UInt32 timeScale,
+												const TNumberArray<UInt32>& keyframeIndexes);
 
 	// Properties
 	public:

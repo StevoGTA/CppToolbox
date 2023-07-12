@@ -22,7 +22,7 @@ class CQuickTimeMediaFile {
 
 															// Instance methods
 		virtual	I<SMediaSource::ImportResult>				import(const SMediaSource::ImportSetup& importSetup);
-				TArray<SMediaPacketAndLocation>				composePacketAndLocations(const Internals& internals,
+				TArray<SMedia::PacketAndLocation>			composePacketAndLocations(const Internals& internals,
 																	const OV<UInt32>& framesPerPacket = OV<UInt32>(),
 																	const OV<UInt32>& bytesPerPacket = OV<UInt32>())
 																	const;

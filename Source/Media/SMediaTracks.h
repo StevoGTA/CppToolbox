@@ -4,45 +4,35 @@
 
 #pragma once
 
-#include "CAudioTrack.h"
-#include "CVideoTrack.h"
+#include "CAudioCodec.h"
+#include "CVideoCodec.h"
+#include "SAudio.h"
+#include "SVideo.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TMediaTrackInfo
 
-template <typename T, typename U> struct TMediaTrackInfo {
+template <typename MTF, typename C> struct TMediaTrackInfo {
 				// Lifecycle methods
-				TMediaTrackInfo<T, U>(const T& mediaTrack, const OV<I<U> >& codec) :
-					mMediaTrack(mediaTrack), mCodec(codec)
+				TMediaTrackInfo<MTF, C>(const MTF& mediaTrackFormat, const SMedia::SegmentInfo& mediaSegmentInfo,
+						const I<C>& codec) :
+					mMediaTrackFormat(mediaTrackFormat), mMediaSegmentInfo(mediaSegmentInfo), mCodec(codec)
 					{}
-				TMediaTrackInfo<T, U>(const T& mediaTrack) : mMediaTrack(mediaTrack) {}
-				TMediaTrackInfo<T, U>(const TMediaTrackInfo<T, U>& other) :
-					mMediaTrack(other.mMediaTrack), mCodec(other.mCodec)
+				TMediaTrackInfo<MTF, C>(const MTF& mediaTrackFormat, const SMedia::SegmentInfo& mediaSegmentInfo,
+						const OV<I<C> >& codec = OV<I<C> >()) :
+					mMediaTrackFormat(mediaTrackFormat), mMediaSegmentInfo(mediaSegmentInfo), mCodec(codec)
+					{}
+				TMediaTrackInfo<MTF, C>(const TMediaTrackInfo<MTF, C>& other) :
+					mMediaTrackFormat(other.mMediaTrackFormat), mMediaSegmentInfo(other.mMediaSegmentInfo),
+							mCodec(other.mCodec)
 					{}
 
 				// Class methods
-	static	T	getMediaTrack(TMediaTrackInfo<T, U>* mediaTrackInfo)
-					{ return mediaTrackInfo->mMediaTrack; }
 
 	// Properties
-	T			mMediaTrack;
-	OV<I<U> >	mCodec;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: SMediaTracks
-
-struct SMediaTracks {
-
-	// Lifecycle methods
-	SMediaTracks(const TArray<CAudioTrack>& audioTracks, const TArray<CVideoTrack>& videoTracks) :
-		mAudioTracks(audioTracks), mVideoTracks(videoTracks)
-		{}
-	SMediaTracks(const SMediaTracks& other) : mAudioTracks(other.mAudioTracks), mVideoTracks(other.mVideoTracks) {}
-
-	// Properties
-	TNArray<CAudioTrack>	mAudioTracks;
-	TNArray<CVideoTrack>	mVideoTracks;
+	MTF						mMediaTrackFormat;
+	OV<SMedia::SegmentInfo>	mMediaSegmentInfo;
+	OV<I<C> >				mCodec;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,8 +41,8 @@ struct SMediaTracks {
 class CMediaTrackInfos {
 	// Types
 	public:
-		typedef	TMediaTrackInfo<CAudioTrack, CDecodeAudioCodec>	AudioTrackInfo;
-		typedef	TMediaTrackInfo<CVideoTrack, CDecodeVideoCodec>	VideoTrackInfo;
+		typedef	TMediaTrackInfo<SAudio::Format, CDecodeAudioCodec>	AudioTrackInfo;
+		typedef	TMediaTrackInfo<SVideo::Format, CDecodeVideoCodec>	VideoTrackInfo;
 
 	// Methods
 	public:
@@ -75,32 +65,28 @@ class CMediaTrackInfos {
 			void					add(const VideoTrackInfo& videoTrackInfo)
 										{ mVideoTrackInfos += videoTrackInfo; }
 
-			SMediaTracks			getMediaTracks() const
-										{
-											return SMediaTracks(
-													TNArray<CAudioTrack>(mAudioTrackInfos,
-															(TNArray<CAudioTrack>::MapProc)
-																	AudioTrackInfo::getMediaTrack),
-													TNArray<CVideoTrack>(mVideoTrackInfos,
-															(TNArray<CVideoTrack>::MapProc)
-																	VideoTrackInfo::getMediaTrack));
-										}
 			UniversalTimeInterval	getDuration() const
 										{
 											// Compose total duration
 											UniversalTimeInterval	duration = 0.0;
 											for (TIteratorD<AudioTrackInfo> iterator = mAudioTrackInfos.getIterator();
-													iterator.hasValue(); iterator.advance())
-												// Update duration
-												duration =
-														std::max<UniversalTimeInterval>(duration,
-																iterator->mMediaTrack.getInfo().getDuration());
+													iterator.hasValue(); iterator.advance()) {
+												// Check for segment info
+												if (iterator->mMediaSegmentInfo.hasValue())
+													// Update duration
+													duration =
+															std::max<UniversalTimeInterval>(duration,
+																	iterator->mMediaSegmentInfo->getDuration());
+											}
 											for (TIteratorD<VideoTrackInfo> iterator = mVideoTrackInfos.getIterator();
-													iterator.hasValue(); iterator.advance())
-												// Update duration
-												duration =
-														std::max<UniversalTimeInterval>(duration,
-																iterator->mMediaTrack.getInfo().getDuration());
+													iterator.hasValue(); iterator.advance()) {
+												// Check for segment info
+												if (iterator->mMediaSegmentInfo.hasValue())
+													// Update duration
+													duration =
+															std::max<UniversalTimeInterval>(duration,
+																	iterator->mMediaSegmentInfo->getDuration());
+											}
 
 											return duration;
 										}

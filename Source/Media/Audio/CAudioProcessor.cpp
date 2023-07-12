@@ -40,7 +40,7 @@ CAudioProcessor::~CAudioProcessor()
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcessor,
-		const SAudioProcessingFormat& audioProcessingFormat)
+		const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store

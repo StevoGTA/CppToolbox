@@ -17,23 +17,23 @@ class CSQLiteTableColumn : public CEquatable {
 		enum Kind {
 			// Values
 			// INTEGER values are whole numbers (either positive or negative).
-			kInteger,
+			kKindInteger,
 
 			// REAL values are real numbers with decimal values that use 8-byte floats.
-			kReal,
+			kKindReal,
 
 			// TEXT is used to store character data. The maximum length of TEXT is unlimited. SQLite supports
 			//	various character encodings.
-			kText,
+			kKindText,
 
 			// BLOB stands for a binary large object that can be used to store any kind of data. The maximum size
 			//	of BLOBs is unlimited
-			kBlob,
+			kKindBlob,
 
 			// Dates (not built-in bytes, but we handle)
 			//	See https://sqlite.org/lang_datefunc.html
-			kDateISO8601FractionalSecondsAutoSet,		// YYYY-MM-DDTHH:MM:SS.SSS (will auto set on insert/replace)
-			kDateISO8601FractionalSecondsAutoUpdate,	// YYYY-MM-DDTHH:MM:SS.SSS (will auto update on insert/replace)
+			kKindDateISO8601FractionalSecondsAutoSet,		// YYYY-MM-DDTHH:MM:SS.SSS (will auto set on insert/replace)
+			kKindDateISO8601FractionalSecondsAutoUpdate,	// YYYY-MM-DDTHH:MM:SS.SSS (will auto update on insert/replace)
 		};
 
 	// Options
@@ -87,15 +87,15 @@ class CSQLiteTableColumn : public CEquatable {
 
 											// Class methods
 		static	bool						isInteger(Kind kind)
-												{ return kind == kInteger; }
+												{ return kind == kKindInteger; }
 		static	bool						isReal(Kind kind)
-												{ return kind == kReal; }
+												{ return kind == kKindReal; }
 		static	bool						isText(Kind kind)
-												{ return (kind == kText) ||
-														(kind == kDateISO8601FractionalSecondsAutoSet) ||
-														(kind == kDateISO8601FractionalSecondsAutoUpdate); }
+												{ return (kind == kKindText) ||
+														(kind == kKindDateISO8601FractionalSecondsAutoSet) ||
+														(kind == kKindDateISO8601FractionalSecondsAutoUpdate); }
 		static	bool						isBlob(Kind kind)
-												{ return kind == kBlob; }
+												{ return kind == kKindBlob; }
 
 		static	CSQLiteTableColumn			dateISO8601FractionalSecondsAutoSet(const CString& name);
 		static	CSQLiteTableColumn			dateISO8601FractionalSecondsAutoUpdate(const CString& name);

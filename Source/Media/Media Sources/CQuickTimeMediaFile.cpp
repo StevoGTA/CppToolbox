@@ -939,7 +939,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SMediaPacketAndLocation> CQuickTimeMediaFile::composePacketAndLocations(const Internals& internals,
+TArray<SMedia::PacketAndLocation> CQuickTimeMediaFile::composePacketAndLocations(const Internals& internals,
 		const OV<UInt32>& framesPerPacket, const OV<UInt32>& bytesPerPacket) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -963,7 +963,7 @@ TArray<SMediaPacketAndLocation> CQuickTimeMediaFile::composePacketAndLocations(c
 	// Iterate all stts entries
 	UInt32								sttsChunkCount = sttsAtomPayload.getChunkCount();
 	UInt32								currentFrameIndex = 0;
-	TNArray<SMediaPacketAndLocation>	packetAndLocations;
+	TNArray<SMedia::PacketAndLocation>	packetAndLocations;
 	for (UInt32 sttsChunkIndex = 0; sttsChunkIndex < sttsChunkCount; sttsChunkIndex++) {
 		// Get packet info
 		const	SQTsttsAtomPayload::Chunk&	sttsChunk = sttsAtomPayload.getChunk(sttsChunkIndex);
@@ -981,15 +981,14 @@ TArray<SMediaPacketAndLocation> CQuickTimeMediaFile::composePacketAndLocations(c
 				if (++currentFrameIndex == *framesPerPacket) {
 					// Add Packet Location Info
 					packetAndLocations +=
-							SMediaPacketAndLocation(SMediaPacket(*framesPerPacket, *bytesPerPacket), currentByteOffset);
+							SMedia::PacketAndLocation(*framesPerPacket, *bytesPerPacket, currentByteOffset);
 					currentByteOffset += *bytesPerPacket;
 					currentFrameIndex = 0;
 				}
 			} else {
 				// Add Packet Location Info
 				packetAndLocations +=
-						SMediaPacketAndLocation(SMediaPacket(sttsChunkPacketDuration, packetByteCount),
-								currentByteOffset);
+						SMedia::PacketAndLocation(sttsChunkPacketDuration, packetByteCount, currentByteOffset);
 			}
 
 			// Update
@@ -1139,23 +1138,24 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
-			SAudioStorageFormat	audioStorageFormat = CAACAudioCodec::composeAudioStorageFormat(*info);
-
 			// Compose info
-			TArray<SMediaPacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
-			UInt64							byteCount =
-													SMediaPacketAndLocation::getTotalByteCount(mediaPacketAndLocations);
+			TArray<SMedia::PacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
+			UInt64								byteCount =
+														SMedia::PacketAndLocation::getTotalByteCount(
+																mediaPacketAndLocations);
+			SAudio::Format						audioFormat = CAACAudioCodec::composeAudioFormat(*info);
+			SMedia::SegmentInfo					mediaSegmentInfo(duration, byteCount);
 
 			// Add audio track
-			CAudioTrack	audioTrack(CMediaTrack::composeInfo(duration, byteCount), audioStorageFormat);
 			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Add audio track with decode info
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
-						CMediaTrackInfos::AudioTrackInfo(audioTrack,
+						CMediaTrackInfos::AudioTrackInfo(audioFormat, mediaSegmentInfo,
 								CAACAudioCodec::create(*info, randomAccessDataSource, mediaPacketAndLocations)));
 			else
 				// Add audio track
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(CMediaTrackInfos::AudioTrackInfo(audioTrack));
+				return TVResult<CMediaTrackInfos::AudioTrackInfo>(CMediaTrackInfos::AudioTrackInfo(audioFormat,
+						mediaSegmentInfo));
 			}
 
 		default:
@@ -1200,25 +1200,24 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 			ReturnValueIfResultError(avcCAtomPayload,
 					TVResult<CMediaTrackInfos::VideoTrackInfo>(avcCAtomPayload.getError()));
 
-			// Setup
-			TArray<SMediaPacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
-			Float32							framerate =
-													(Float32) mediaPacketAndLocations.getCount() / (Float32) duration;
-			UInt64							byteCount =
-													SMediaPacketAndLocation::getTotalByteCount(mediaPacketAndLocations);
+			// Compose packet and locations
+			TArray<SMedia::PacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
+			Float32								framerate =
+														(Float32) mediaPacketAndLocations.getCount() /
+																(Float32) duration;
+			UInt64								byteCount =
+														SMedia::PacketAndLocation::getTotalByteCount(
+																mediaPacketAndLocations);
 
-			// Compose storage format
-			OV<SVideoStorageFormat>	videoStorageFormat =
-											CH264VideoCodec::composeVideoStorageFormat(
-													S2DSizeU16(videoSampleDescription.getWidth(),
-															videoSampleDescription.getHeight()), framerate);
-			if (!videoStorageFormat.hasValue())
-				// Unsupported configuration
-				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
-						CCodec::unsupportedConfigurationError(CString(type, true)));
+			// Compose info
+			SVideo::Format		videoFormat =
+										CH264VideoCodec::composeVideoTrackFormat(
+												S2DSizeU16(videoSampleDescription.getWidth(),
+														videoSampleDescription.getHeight()),
+												framerate);
+			SMedia::SegmentInfo	mediaSegmentInfo(duration, byteCount);
 
 			// Add video track
-			CVideoTrack	videoTrack(CMediaTrack::composeInfo(duration, byteCount), *videoStorageFormat);
 			if (options & SMediaSource::kOptionsCreateDecoders) {
 				// Setup
 				TVResult<CData>	stssAtomPayloadData =
@@ -1237,12 +1236,13 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 
 				// Add video track with decode info
 				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
-						CMediaTrackInfos::VideoTrackInfo(videoTrack,
+						CMediaTrackInfos::VideoTrackInfo(videoFormat, mediaSegmentInfo,
 								CH264VideoCodec::create(randomAccessDataSource, mediaPacketAndLocations,
 										*avcCAtomPayload, timeScale, keyframeIndexes)));
 			} else
 				// Add video track
-				return TVResult<CMediaTrackInfos::VideoTrackInfo>(CMediaTrackInfos::VideoTrackInfo(videoTrack));
+				return TVResult<CMediaTrackInfos::VideoTrackInfo>(CMediaTrackInfos::VideoTrackInfo(videoFormat,
+						mediaSegmentInfo));
 			}
 
 		default:
@@ -1285,28 +1285,28 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SQTAudioSampleDescription&		audioSampleDescription = internals.getAudioSampleDescription();
-			Float32							sampleRate = audioSampleDescription.getSampleRate();
-			UInt8							channels = (UInt8) audioSampleDescription.getChannels();
-			UInt32							bytesPerFrame = bits / 8 * channels;
-			TArray<SMediaPacketAndLocation>	mediaPacketAndLocations =
-													quickTimeMediaFile.composePacketAndLocations(internals,
+	const	SQTAudioSampleDescription&			audioSampleDescription = internals.getAudioSampleDescription();
+			Float32								sampleRate = audioSampleDescription.getSampleRate();
+			UInt8								channels = (UInt8) audioSampleDescription.getChannels();
+			UInt32								bytesPerFrame = bits / 8 * channels;
+			TArray<SMedia::PacketAndLocation>	mediaPacketAndLocations =
+														quickTimeMediaFile.composePacketAndLocations(internals,
 															OV<UInt32>(1), OV<UInt32>(bytesPerFrame));
-
-	OV<SAudioStorageFormat>	audioStorageFormat =
-									CPCMAudioCodec::composeAudioStorageFormat(isFloat, bits, sampleRate, channels);
-	UInt64					frameCount = mediaPacketAndLocations.getCount();
+			SAudio::Format						audioFormat =
+														CPCMAudioCodec::composeAudioFormat(isFloat, bits, sampleRate,
+																channels);
+			SMedia::SegmentInfo					mediaSegmentInfo =
+														SAudio::composeMediaSegmentInfo(audioFormat, duration,
+																bytesPerFrame);
 
 	// Compose audio track
-	CAudioTrack	audioTrack(CAudioTrack::composeInfo(duration, *audioStorageFormat, bytesPerFrame),
-						*audioStorageFormat);
 	if (options & SMediaSource::kOptionsCreateDecoders)
 		// Add audio track with decode info
-		return CMediaTrackInfos::AudioTrackInfo(audioTrack,
-						CPCMAudioCodec::create(*audioStorageFormat, randomAccessDataSource,
-								mediaPacketAndLocations.getFirst().mByteOffset,
-								frameCount * bytesPerFrame, format));
+		return CMediaTrackInfos::AudioTrackInfo(audioFormat, mediaSegmentInfo,
+						CPCMAudioCodec::create(audioFormat, randomAccessDataSource,
+								mediaPacketAndLocations.getFirst().getByteOffset(),
+								mediaPacketAndLocations.getCount() * bytesPerFrame, format));
 	else
 		// Add audio track
-		return CMediaTrackInfos::AudioTrackInfo(audioTrack);
+		return CMediaTrackInfos::AudioTrackInfo(audioFormat, mediaSegmentInfo);
 }

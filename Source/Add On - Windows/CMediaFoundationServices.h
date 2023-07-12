@@ -106,13 +106,13 @@ class CMediaFoundationServices {
 												const OV<UInt32>& bytesPerSecond = OV<UInt32>(),
 												const OV<CData>& userData = OV<CData>(),
 												CreateAudioMediaTypeOptions options = kCreateAudioMediaTypeOptionsNone);
-		static	TCIResult<IMFMediaType>	createMediaType(const SAudioProcessingFormat& audioProcessingFormat);
+		static	TCIResult<IMFMediaType>	createMediaType(const SAudio::ProcessingFormat& audioProcessingFormat);
 
 		static	TCIResult<IMFSample>	createSample(UInt32 size);
 		static	TCIResult<IMFSample>	createSample(const CData& data);
 		static	OV<SError>				resizeSample(IMFSample* sample, UInt32 size);
 		static	SAudioSourceStatus		load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
-												const SAudioProcessingFormat& audioProcessingFormat);
+												const SAudio::ProcessingFormat& audioProcessingFormat);
 		static	OV<SError>				load(IMFMediaBuffer* mediaBuffer, CMediaPacketSource& mediaPacketSource);
 		static	TVResult<CImage>		imageForVideoSample(const CVideoFrame& videoFrame);
 
@@ -120,7 +120,7 @@ class CMediaFoundationServices {
 												const ProcessOutputInfo& processOutputInfo);
 
 		static	TVResult<UInt32>		completeWrite(IMFSample* sample, UInt32 frameOffset, CAudioFrames& audioFrames,
-												const SAudioProcessingFormat& audioProcessingFormat);
+												const SAudio::ProcessingFormat& audioProcessingFormat);
 
 		static	OV<SError>				flush(IMFTransform* transform);
 

@@ -18,7 +18,7 @@ class CAudioDecoder : public CAudioSource {
 	// Methods
 	public:
 										// Lifecycle methods
-										CAudioDecoder(const SAudioStorageFormat& audioStorageFormat,
+										CAudioDecoder(const SAudio::Format& audioFormat,
 												const I<CDecodeAudioCodec>& audioCodec, const CString& identifier);
 										~CAudioDecoder();
 
@@ -35,8 +35,8 @@ class CAudioDecoder : public CAudioSource {
 
 		void							reset();
 
-		TArray<SAudioProcessingSetup>	getOutputSetups() const;
-		OV<SError>						setOutputFormat(const SAudioProcessingFormat& audioProcessingFormat);
+		TArray<SAudio::ProcessingSetup>	getOutputSetups() const;
+		OV<SError>						setOutputFormat(const SAudio::ProcessingFormat& audioProcessingFormat);
 
 	// Properties
 	private:

@@ -5,36 +5,56 @@
 #pragma once
 
 #include "CVideoFrame.h"
-#include "SVideoSourceStatus.h"
 #include "TimeAndDate.h"
+#include "TResult.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoProcessor
 
 class CVideoProcessor {
+	// Format
+	public:
+		struct Format {
+
+								// Lifecycle methods
+								Format(const S2DSizeU16& frameSize, Float32 framerate) :
+									mFrameSize(frameSize), mFramerate(framerate)
+									{}
+
+								// Instance methods
+			const	S2DSizeU16&	getFrameSize() const
+									{ return mFrameSize; }
+					Float32		getFramerate() const
+									{ return mFramerate; }
+
+			// Properties
+			private:
+				S2DSizeU16	mFrameSize;
+				Float32		mFramerate;
+		};
+
 	// PerformResult
 	public:
 		struct PerformResult {
-											// Lifecycle methods
-											PerformResult(UniversalTimeInterval timeInterval,
-													const CVideoFrame& videoFrame) :
-												mVideoSourceStatus(timeInterval), mVideoFrame(videoFrame)
-												{}
-											PerformResult(const SError& error) : mVideoSourceStatus(error) {}
-											PerformResult(const PerformResult& other) :
-												mVideoSourceStatus(other.mVideoSourceStatus),
-														mVideoFrame(other.mVideoFrame)
-											{}
+															// Lifecycle methods
+															PerformResult(UniversalTimeInterval timeInterval,
+																	const CVideoFrame& videoFrame) :
+																mResult(timeInterval), mVideoFrame(videoFrame)
+																{}
+															PerformResult(const SError& error) : mResult(error) {}
+															PerformResult(const PerformResult& other) :
+																mResult(other.mResult), mVideoFrame(other.mVideoFrame)
+															{}
 
-											// Instance methods
-				const	SVideoSourceStatus&	getVideoSourceStatus() const
-												{ return mVideoSourceStatus; }
-				const	CVideoFrame&		getVideoFrame() const
-												{ return *mVideoFrame; }
+															// Instance methods
+				const	TVResult<UniversalTimeInterval>&	getResult() const
+																{ return mResult; }
+				const	CVideoFrame&						getVideoFrame() const
+																{ return *mVideoFrame; }
 
 			private:
-				SVideoSourceStatus	mVideoSourceStatus;
-				OI<CVideoFrame>		mVideoFrame;
+				TVResult<UniversalTimeInterval>	mResult;
+				OI<CVideoFrame>					mVideoFrame;
 		};
 
 	// Classes

@@ -22,13 +22,13 @@ class CSecretRabbitCodeAudioConverter : public CAudioConverter {
 
 										// CAudioProcessor methods
 		OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-												const SAudioProcessingFormat& audioProcessingFormat);
+												const SAudio::ProcessingFormat& audioProcessingFormat);
 		TArray<CString>					getSetupDescription(const CString& indent);
 	
 		SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
 		void							reset();
 
-		TArray<SAudioProcessingSetup>	getInputSetups() const;
+		TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 
 										// CAudioConverter methods
 		bool							supportsNoninterleaved() const

@@ -24,7 +24,7 @@ class CMPEG4MediaFile {
 		virtual			I<SMediaSource::ImportResult>				import(
 																			const SMediaSource::ImportSetup&
 																					importSetup);
-						TArray<SMediaPacketAndLocation>				composePacketAndLocations(
+						TArray<SMedia::PacketAndLocation>			composePacketAndLocations(
 																			const Internals& internals) const;
 
 	protected:

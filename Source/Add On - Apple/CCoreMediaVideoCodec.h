@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CMediaPacketSource.h"
 #include "CVideoCodec.h"
 
 #include <CoreMedia/CoreMedia.h>
@@ -23,7 +24,7 @@ class CCoreMediaDecodeVideoCodec : public CDecodeVideoCodec {
 													~CCoreMediaDecodeVideoCodec();
 
 													// CDecodeVideoCodec methods
-				OV<SError>							setup(const SVideoProcessingFormat& videoProcessingFormat);
+				OV<SError>							setup(const CVideoProcessor::Format& videoProcessorFormat);
 				void								seek(UniversalTimeInterval timeInterval);
 				TIResult<CVideoFrame>				decode();
 
@@ -34,11 +35,14 @@ class CCoreMediaDecodeVideoCodec : public CDecodeVideoCodec {
 														UInt32 timeScale, const TNumberArray<UInt32>& keyframeIndexes);
 
 													// Subclass methods
-		virtual			void						seek(UInt64 frameTime) {}
+		virtual	void								seek(UInt64 frameTime) {}
 		virtual	TVResult<CMFormatDescriptionRef>	composeFormatDescription() = 0;
 		virtual	TVResult<CMSampleTimingInfo>		composeSampleTimingInfo(
 															const CMediaPacketSource::DataInfo& dataInfo,
 															UInt32 timeScale) = 0;
+
+	private:
+				void								setCompatibility(CFMutableDictionaryRef dictionaryRef);
 
 	// Properties
 	private:

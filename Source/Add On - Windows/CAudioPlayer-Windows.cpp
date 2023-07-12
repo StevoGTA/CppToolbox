@@ -534,7 +534,7 @@ class CAudioPlayer::Internals {
 		CAudioPlayer&						mAudioPlayer;
 		CAudioPlayer::Info					mInfo;
 		ComPtr<CAudioPlayerImplementation>	mImplementation;
-		OV<SAudioProcessingFormat>			mAudioProcessingFormat;
+		OV<SAudio::ProcessingFormat>		mAudioProcessingFormat;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -575,11 +575,11 @@ CAudioPlayer::~CAudioPlayer()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudioProcessingSetup> CAudioPlayer::getInputSetups() const
+TArray<SAudio::ProcessingSetup> CAudioPlayer::getInputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup if necessary
-	static	SAudioProcessingSetup*	sAudioProcessingSetup = nil;
+	static	SAudio::ProcessingSetup*	sAudioProcessingSetup = nil;
 	if (sAudioProcessingSetup == nil) {
 		// Wait until initialized
 		while (mInternals->mImplementation->mState == CAudioPlayerImplementation::kInitializing)
@@ -587,28 +587,28 @@ TArray<SAudioProcessingSetup> CAudioPlayer::getInputSetups() const
 			CThread::sleepFor(0.001);
 
 		if (!mInternals->mImplementation->mError.hasValue()) {
-			// Compose SAudioProcessingSetup
+			// Compose SAudio::ProcessingSetup
 			WAVEFORMATEX&	format = *mInternals->mImplementation->mMixFormat;
 			sAudioProcessingSetup =
-					new SAudioProcessingSetup((UInt8) format.wBitsPerSample, (Float32) format.nSamplesPerSec,
+					new SAudio::ProcessingSetup((UInt8) format.wBitsPerSample, (Float32) format.nSamplesPerSec,
 							(EAudioChannelMap) format.nChannels,
-							SAudioProcessingSetup::SampleTypeOption::kSampleTypeFloat,
-							SAudioProcessingSetup::EndianOption::kEndianNative,
-							SAudioProcessingSetup::InterleavedOption::kInterleaved);
+							SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeFloat,
+							SAudio::ProcessingSetup::EndianOption::kEndianNative,
+							SAudio::ProcessingSetup::InterleavedOption::kInterleaved);
 		}
 	}
 
 	return (sAudioProcessingSetup != nullptr) ?
-			TNArray<SAudioProcessingSetup>(*sAudioProcessingSetup) : TNArray<SAudioProcessingSetup>();
+			TNArray<SAudio::ProcessingSetup>(*sAudioProcessingSetup) : TNArray<SAudio::ProcessingSetup>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
-		const SAudioProcessingFormat& audioProcessingFormat)
+		const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessingFormat = OV<SAudioProcessingFormat>(audioProcessingFormat);
+	mInternals->mAudioProcessingFormat.setValue(audioProcessingFormat);
 	
 	// Wait until initialized
 	while (mInternals->mImplementation->mState == CAudioPlayerImplementation::kInitializing)
