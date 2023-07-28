@@ -13,16 +13,16 @@
 class CDeferredNotificationCenter::Internals {
 	public:
 		struct Info {
-			Info(const CString& notificationName, const OI<Sender>& sender, const CDictionary& info) :
+			Info(const CString& notificationName, const Sender& sender, const CDictionary& info) :
 				mNotificationName(notificationName), mSender(sender), mInfo(info)
 				{}
 			Info(const Info& other) :
 				mNotificationName(other.mNotificationName), mSender(other.mSender), mInfo(other.mInfo)
 				{}
 
-			CString		mNotificationName;
-			OI<Sender>	mSender;
-			CDictionary	mInfo;
+					CString		mNotificationName;
+			const	Sender&		mSender;
+					CDictionary	mInfo;
 		};
 
 						Internals(CDeferredNotificationCenter& deferredNotificationCenter) :
@@ -61,8 +61,7 @@ CDeferredNotificationCenter::~CDeferredNotificationCenter()
 // MARK: CNotificationCenter methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDeferredNotificationCenter::queue(const CString& notificationName, const OI<Sender>& sender,
-		const CDictionary& info)
+void CDeferredNotificationCenter::queue(const CString& notificationName, const Sender& sender, const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add

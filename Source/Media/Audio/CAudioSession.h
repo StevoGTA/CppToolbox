@@ -62,7 +62,7 @@ class CAudioSession {
 			Sent when the the audio session is interrupted
 				senderRef is CAudioSession
 		*/
-		static	const	CString			mInterruptionDidBeginNotificationName;
+		static	const	CString							mInterruptionDidBeginNotificationName;
 
 		/*
 			Sent when the audio session interruption is complete
@@ -70,8 +70,8 @@ class CAudioSession {
 				info has the following keys;
 					mInterruptionDidEndPlaybackShouldContinue	// bool
 		*/
-		static	const	CString			mInterruptionDidEndNotificationName;
-		static	const	CString			mInterruptionDidEndPlaybackShouldContinue;
+		static	const	CString							mInterruptionDidEndNotificationName;
+		static	const	CString							mInterruptionDidEndPlaybackShouldContinue;
 
 //		/*
 //			Sent when the requested property has changed

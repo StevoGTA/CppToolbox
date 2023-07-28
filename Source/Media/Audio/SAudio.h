@@ -535,8 +535,12 @@ struct SAudio {
 										{ return (Float32) (20.0 * log10(value)); }
 		static	Float32				getValueFromDB(Float32 db)
 										{ return powf(10.0, (Float32) (db / 20.0)); }
-//		static	Float32				getPercentFromValue(Float32 value)
-//										{ return value / 100.0; }
 
-		static	CString				getStringFromDB(Float32 db, Float32 muteDB);
+		static	CString				getDBDisplayString(Float32 value, Float32 muteValue = 0.0);
+		static	Float32				getValueFromDBDisplayString(const CString& string)
+										{ return getValueFromDB(string.getFloat32()); }
+		static	CString				getPercentDisplayString(Float32 value)
+										{ return CString(value * 100.0, 0, 1) + CString::mPercent; }
+		static	Float32				getValueFromPercentDisplayString(const CString& string)
+										{ return string.getFloat32() / 100.0; }
 };
