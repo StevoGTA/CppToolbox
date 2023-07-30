@@ -212,7 +212,7 @@ template <typename T> class TArray : public CArray {
 
 										return OV<ItemIndex>();
 									}
-		OV<ItemIndex>			getIndexWhere(IsMatchProc isMatchProc, void* userData = nil)
+		OV<ItemIndex>			getIndexWhere(IsMatchProc isMatchProc, void* userData = nil) const
 									{
 										// Iterate all items
 										ItemCount	count = getCount();
@@ -225,7 +225,7 @@ template <typename T> class TArray : public CArray {
 
 										return OV<ItemIndex>();
 									}
-		TNumberArray<ItemIndex>	getIndexesWhere(IsMatchProc isMatchProc, void* userData = nil)
+		TNumberArray<ItemIndex>	getIndexesWhere(IsMatchProc isMatchProc, void* userData = nil) const
 									{
 										// Setup
 										TNumberArray<ItemIndex>	itemIndexes;
@@ -266,7 +266,7 @@ template <typename T> class TArray : public CArray {
 
 		T&						operator[] (ItemIndex index) const
 									{ return *((T*) getItemAt(index)); }
-		TArray<T>				operator+(const TArray<T>& other)
+		TArray<T>				operator+(const TArray<T>& other) const
 									{ TArray<T>	array(*this); array += other; return array; }
 
 	protected:

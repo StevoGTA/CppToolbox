@@ -971,6 +971,32 @@ void CDictionary::remove(const TSet<CString>& keys)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CDictionary CDictionary::removing(const TArray<CString>& keys)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CDictionary	dictionary(*this);
+
+	// Remove
+	dictionary.remove(keys);
+
+	return dictionary;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionary CDictionary::removing(const TSet<CString>& keys)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CDictionary	dictionary(*this);
+
+	// Remove
+	dictionary.remove(keys);
+
+	return dictionary;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CDictionary::removeAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -1029,6 +1055,21 @@ CDictionary& CDictionary::operator=(const CDictionary& other)
 	mInternals = other.mInternals->addReference();
 
 	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionary CDictionary::operator+(const CDictionary& other) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CDictionary	dictionary(*this);
+
+	// Iterate all items
+	for (TIteratorS<Item> iterator = other.mInternals->getIterator(); iterator.hasValue(); iterator.advance())
+		// Set this value
+		dictionary.mInternals->set(iterator->mKey, iterator->mValue);
+
+	return dictionary;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
