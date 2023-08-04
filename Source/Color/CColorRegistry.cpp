@@ -6,6 +6,7 @@
 
 #include "CNotificationCenter.h"
 #include "CPreferences.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CColorGroup::Internals

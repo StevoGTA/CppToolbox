@@ -5,6 +5,7 @@
 #include "CByteReader.h"
 
 #include "CData.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CByteReader::Internals

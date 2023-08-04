@@ -5,6 +5,7 @@
 #include "CUUID.h"
 
 #include "CppToolboxAssert.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: External functions

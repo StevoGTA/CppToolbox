@@ -4,6 +4,7 @@
 
 #include "CFileWriter.h"
 
+#include "CReferenceCountable.h"
 #undef Delete
 #include <Unknwn.h>
 

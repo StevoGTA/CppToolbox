@@ -5,6 +5,7 @@
 #include "CDictionary.h"
 
 #include "CppToolboxAssert.h"
+#include "CReferenceCountable.h"
 #include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------

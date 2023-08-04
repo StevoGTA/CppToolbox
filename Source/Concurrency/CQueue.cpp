@@ -5,6 +5,7 @@
 #include "CQueue.h"
 
 #include "CArray.h"
+#include "CReferenceCountable.h"
 
 /*
 	Inspired by

@@ -5,6 +5,7 @@
 #include "CSQLiteTable.h"
 
 #include "CDictionary.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteTable::Internals

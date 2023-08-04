@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CppToolboxAssert.h"
-#include "TReferenceTracking.h"
 
 /*
 	// Top-level definitions

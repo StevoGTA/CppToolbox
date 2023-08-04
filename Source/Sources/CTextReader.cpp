@@ -5,6 +5,7 @@
 #include "CTextReader.h"
 
 #include "CDataSource.h"
+#include "CReferenceCountable.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------

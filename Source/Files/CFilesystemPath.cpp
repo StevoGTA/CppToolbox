@@ -4,6 +4,7 @@
 
 #include "CFilesystemPath.h"
 
+#include "CReferenceCountable.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------

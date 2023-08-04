@@ -5,6 +5,7 @@
 #include "CVideoDecoder.h"
 
 #include "CCodecRegistry.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoDecoder::Internals

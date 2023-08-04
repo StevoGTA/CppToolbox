@@ -5,6 +5,7 @@
 #include "CData.h"
 
 #include "CppToolboxAssert.h"
+#include "CReferenceCountable.h"
 #include "CString.h"
 #include "TBuffer.h"
 

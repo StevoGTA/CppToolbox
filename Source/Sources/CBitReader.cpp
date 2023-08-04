@@ -5,6 +5,7 @@
 #include "CBitReader.h"
 
 #include "CData.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CBitReader::Internals

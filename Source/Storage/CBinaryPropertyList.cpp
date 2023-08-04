@@ -6,6 +6,7 @@
 
 #include "CByteReader.h"
 #include "CppToolboxAssert.h"
+#include "CReferenceCountable.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------

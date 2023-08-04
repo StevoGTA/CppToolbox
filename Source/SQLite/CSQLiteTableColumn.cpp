@@ -4,6 +4,8 @@
 
 #include "CSQLiteTableColumn.h"
 
+#include "CReferenceCountable.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteTableColumn::Internals
 

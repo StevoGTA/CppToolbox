@@ -5,6 +5,7 @@
 #include "CFolder.h"
 
 #include "CFile.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data

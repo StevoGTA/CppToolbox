@@ -5,6 +5,7 @@
 #include "CArray.h"
 
 #include "CppToolboxAssert.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SArraySortInfo

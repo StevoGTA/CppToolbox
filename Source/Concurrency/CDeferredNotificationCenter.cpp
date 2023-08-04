@@ -7,8 +7,7 @@
 #include "TLockingArray.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDeferredNotificationCenter::Internals
+// MARK: CDeferredNotificationCenter::Internals
 
 class CDeferredNotificationCenter::Internals {
 	public:

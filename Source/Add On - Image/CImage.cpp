@@ -5,6 +5,7 @@
 #include "CImage.h"
 
 #include "CppToolboxAssert.h"
+#include "CReferenceCountable.h"
 
 // See https://libjpeg-turbo.org
 #include "jpeglib.h"

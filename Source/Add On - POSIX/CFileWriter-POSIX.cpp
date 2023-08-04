@@ -4,6 +4,7 @@
 
 #include "CFileWriter.h"
 
+#include "CReferenceCountable.h"
 #include "SError-POSIX.h"
 
 //----------------------------------------------------------------------------------------------------------------------

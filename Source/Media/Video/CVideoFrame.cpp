@@ -4,6 +4,7 @@
 
 #include "CVideoFrame.h"
 
+#include "CReferenceCountable.h"
 #include "SError.h"
 
 #if defined(TARGET_OS_WINDOWS)
