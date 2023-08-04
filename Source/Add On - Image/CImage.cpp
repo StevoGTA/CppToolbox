@@ -61,10 +61,11 @@ static	void				sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CImage::Internals
 
-class CImage::Internals : public TReferenceCountable<Internals> {
+class CImage::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const CData& data, const OV<CImage::Type>& type, const OV<S2DSizeS32>& size) :
-			TReferenceCountable(), mData(data), mType(type), mSize(size)
+			TReferenceCountableAutoDelete(),
+					mData(data), mType(type), mSize(size)
 			{}
 
 		CData				mData;

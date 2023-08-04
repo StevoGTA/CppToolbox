@@ -212,8 +212,10 @@ class CString : public CHashable {
 	public:
 										// Lifecycle methods
 										CString();
-										CString(const CString& other, OV<Length> length = OV<Length>());
-										CString(OSStringVar(initialString), OV<Length> length = OV<Length>());
+										CString(const CString& other);
+										CString(const CString& other, Length length);
+										CString(OSStringVar(initialString));
+										CString(OSStringVar(initialString), Length length);
 										CString(const char* chars, Length length,
 												Encoding encoding = kEncodingTextDefault);
 										CString(const char* chars, Encoding encoding = kEncodingTextDefault);

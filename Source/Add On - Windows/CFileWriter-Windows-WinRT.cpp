@@ -39,10 +39,11 @@ using namespace winrt::Windows::Storage::Streams;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFileWriter::Internals
 
-class CFileWriter::Internals : public TReferenceCountable<Internals> {
+class CFileWriter::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 					Internals(const CFile& file) :
-						TReferenceCountable(), mFile(file), mIsOpen(false), mRemoveIfNotClosed(false)
+						TReferenceCountableAutoDelete(),
+								mFile(file), mIsOpen(false), mRemoveIfNotClosed(false)
 						{}
 					~Internals()
 						{

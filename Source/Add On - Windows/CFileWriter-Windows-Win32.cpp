@@ -26,10 +26,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFileWriterInternals
 
-class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
+class CFileWriterInternals : public TReferenceCountableAutoDelete<CFileWriterInternals> {
 public:
 				CFileWriterInternals(const CFile& file) :
-					TReferenceCountable(), mFile(file), mRemoveIfNotClosed(false)
+					TReferenceCountableAutoDelete(),
+							mFile(file), mRemoveIfNotClosed(false)
 					{}
 				~CFileWriterInternals()
 					{}

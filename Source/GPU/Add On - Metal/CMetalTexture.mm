@@ -13,11 +13,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMetalTexture::Internals
 
-class CMetalTexture::Internals : public TReferenceCountable<Internals> {
+class CMetalTexture::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(id<MTLDevice> device, const CData& data, CGPUTexture::DataFormat dataFormat,
 				const S2DSizeU16& size) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mUsedPixelsSize(size), mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
 					SNumber::getNextPowerOf2(size.mHeight)))
 			{
@@ -55,7 +55,7 @@ class CMetalTexture::Internals : public TReferenceCountable<Internals> {
 				[mTexture replaceRegion:region mipmapLevel:0 withBytes:data.getBytePtr() bytesPerRow:bytesPerRow];
 			}
 		Internals(CVMetalTextureCacheRef metalTextureCacheRef, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mHasTransparency(false)
 			{
 				// Setup

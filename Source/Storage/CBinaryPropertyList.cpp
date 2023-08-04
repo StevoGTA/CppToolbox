@@ -50,7 +50,7 @@ static	SError	sUnknownFormatError(sErrorDomain, 1, CString(OSSTR("Unknown format
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CBPLReader declaration
 
-class CBPLReader : public TReferenceCountable<CBPLReader> {
+class CBPLReader : public TReferenceCountableAutoDelete<CBPLReader> {
 	public:
 					// Lifecycle methods
 					CBPLReader(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt8 objectOffsetFieldSize,
@@ -193,8 +193,8 @@ class CBPLDictionaryInfo {
 //----------------------------------------------------------------------------------------------------------------------
 CBPLReader::CBPLReader(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt8 objectOffsetFieldSize,
 		UInt8 objectIndexFieldSize, UInt64 totalObjectCount, UInt64 objectOffsetTableOffset) :
-	TReferenceCountable(), mByteReader(randomAccessDataSource, true), mObjectIndexFieldSize(objectIndexFieldSize),
-			mTotalObjectCount(totalObjectCount)
+	TReferenceCountableAutoDelete(), mByteReader(randomAccessDataSource, true),
+			mObjectIndexFieldSize(objectIndexFieldSize), mTotalObjectCount(totalObjectCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

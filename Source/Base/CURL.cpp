@@ -7,9 +7,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CURL::Internals
 
-class CURL::Internals : public TReferenceCountable<Internals> {
+class CURL::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals(const CString& string) : TReferenceCountable(), mString(string) {}
+		Internals(const CString& string) : TReferenceCountableAutoDelete(), mString(string) {}
 
 		CString	mString;
 };

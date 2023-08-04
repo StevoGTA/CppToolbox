@@ -14,15 +14,18 @@ class CDeferredNotificationCenter::Internals {
 	public:
 		struct Info {
 			Info(const CString& notificationName, const Sender& sender, const CDictionary& info) :
-				mNotificationName(notificationName), mSender(sender), mInfo(info)
+				mNotificationName(notificationName), mSender(sender.copy()), mInfo(info)
+				{}
+			Info(const CString& notificationName, const CDictionary& info) :
+				mNotificationName(notificationName), mInfo(info)
 				{}
 			Info(const Info& other) :
 				mNotificationName(other.mNotificationName), mSender(other.mSender), mInfo(other.mInfo)
 				{}
 
-					CString		mNotificationName;
-			const	Sender&		mSender;
-					CDictionary	mInfo;
+			CString		mNotificationName;
+			OI<Sender>	mSender;
+			CDictionary	mInfo;
 		};
 
 						Internals(CDeferredNotificationCenter& deferredNotificationCenter) :
@@ -72,6 +75,18 @@ void CDeferredNotificationCenter::queue(const CString& notificationName, const S
 			CSRSWMessageQueue::ProcMessage((CSRSWMessageQueue::ProcMessage::Proc) Internals::flush, this));
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+void CDeferredNotificationCenter::queue(const CString& notificationName, const CDictionary& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Add
+	mInternals->mInfos += Internals::Info(notificationName, info);
+
+	// Submit message
+	mInternals->mMessageQueue.submit(
+			CSRSWMessageQueue::ProcMessage((CSRSWMessageQueue::ProcMessage::Proc) Internals::flush, this));
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,6 +106,11 @@ void CDeferredNotificationCenter::flush()
 		Internals::Info	info = mInternals->mInfos.popFirst();
 
 		// Send
-		send(info.mNotificationName, info.mSender, info.mInfo);
+		if (info.mSender.hasInstance())
+			// Have sender
+			send(info.mNotificationName, OR<Sender>(*info.mSender), info.mInfo);
+		else
+			// Don't have sender
+			send(info.mNotificationName, OR<Sender>(), info.mInfo);
 	}
 }

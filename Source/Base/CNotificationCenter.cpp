@@ -5,26 +5,21 @@
 #include "CNotificationCenter.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CNotificationCenter::NoSender
-
-// MARK: Properties
-
-const	CNotificationCenter::NoSender	CNotificationCenter::NoSender::mNoSender;
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CNotificationCenter::Internals
+// MARK: CNotificationCenter::Internals
 
 class CNotificationCenter::Internals {
 	public:
 		struct ObserverInfo {
 			// Methods
-			ObserverInfo(const Sender& sender, const Observer& observer) : mSender(sender), mObserver(observer) {}
+			ObserverInfo(const Sender& sender, const Observer& observer) :
+				mSender(sender.copy()), mObserver(observer)
+				{}
+			ObserverInfo(const Observer& observer) : mObserver(observer) {}
 			ObserverInfo(const ObserverInfo& other) : mSender(other.mSender), mObserver(other.mObserver) {}
 
 			// Properties
-			const	Sender&		mSender;
-					Observer	mObserver;
+			OI<Sender>	mSender;
+			Observer	mObserver;
 		};
 
 	public:
@@ -43,7 +38,20 @@ class CNotificationCenter::Internals {
 							// First
 							mInfo.set(notificationName, TNArray<ObserverInfo>(ObserverInfo(sender, observer)));
 					}
-		void	unregisterObserver(const CString& notificationName, const void* observerRef)
+		void	registerObserver(const CString& notificationName, const Observer& observer)
+					{
+						// Get existing observer infos
+						OR<TNArray<ObserverInfo> >	observerInfos = mInfo[notificationName];
+
+						// Add
+						if (observerInfos.hasReference())
+							// Add to existing array
+							(*observerInfos).add(ObserverInfo(observer));
+						else
+							// First
+							mInfo.set(notificationName, TNArray<ObserverInfo>(ObserverInfo(observer)));
+					}
+		void	unregisterObserver(const CString& notificationName, Observer::Ref observerRef)
 					{
 						// Get existing observer infos
 						OR<TNArray<ObserverInfo> >	observerInfos = mInfo[notificationName];
@@ -59,7 +67,7 @@ class CNotificationCenter::Internals {
 							// No more observers for this notification name
 							mInfo.remove(notificationName);
 					}
-		void	unregisterObserver(const void* observerRef)
+		void	unregisterObserver(Observer::Ref observerRef)
 					{
 						// Iterate all notification names
 						TSet<CString>	keys = mInfo.getKeys();
@@ -80,12 +88,12 @@ class CNotificationCenter::Internals {
 					}
 
 	private:
-		void	unregisterObserver(const void* observerRef, TNArray<ObserverInfo>& observerInfos)
+		void	unregisterObserver(Observer::Ref observerRef, TNArray<ObserverInfo>& observerInfos)
 					{
 						// Iterate array
 						for (CArray::ItemIndex i = observerInfos.getCount(); i > 0; i--) {
 							// Check for match
-							if (observerInfos[i - 1].mObserver.mObserverRef == observerRef)
+							if (observerInfos[i - 1].mObserver.mRef == observerRef)
 								// Match
 								observerInfos.removeAtIndex(i - 1);
 						}
@@ -129,7 +137,15 @@ void CNotificationCenter::registerObserver(const CString& notificationName, cons
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::unregisterObserver(const CString& notificationName, const void* observerRef)
+void CNotificationCenter::registerObserver(const CString& notificationName, const Observer& observer)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Add observer
+	mInternals->registerObserver(notificationName, observer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CNotificationCenter::unregisterObserver(const CString& notificationName, Observer::Ref observerRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove observer
@@ -137,7 +153,7 @@ void CNotificationCenter::unregisterObserver(const CString& notificationName, co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::unregisterObserver(const void* observerRef)
+void CNotificationCenter::unregisterObserver(Observer::Ref observerRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove observer
@@ -145,7 +161,7 @@ void CNotificationCenter::unregisterObserver(const void* observerRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CNotificationCenter::send(const CString& notificationName, const Sender& sender, const CDictionary& info) const
+void CNotificationCenter::send(const CString& notificationName, const OR<Sender>& sender, const CDictionary& info) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -161,8 +177,7 @@ void CNotificationCenter::send(const CString& notificationName, const Sender& se
 		const	Internals::ObserverInfo&	observerInfo = *iterator;
 
 		// Check sender
-		if ((&observerInfo.mSender == &NoSender::mNoSender) || (&sender == &NoSender::mNoSender) ||
-				(observerInfo.mSender == sender))
+		if (!observerInfo.mSender.hasInstance() || !sender.hasReference() || (*observerInfo.mSender == *sender))
 			// Call proc
 			observerInfo.mObserver.callProc(notificationName, sender, info);
 	}

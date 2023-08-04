@@ -13,10 +13,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: COpenGLTexture::Internals
 
-class COpenGLTexture::Internals : public TReferenceCountable<Internals> {
+class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mTextureTarget(GL_TEXTURE_2D),
 					mUsedPixelsSize(size),
 					mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
@@ -66,7 +66,7 @@ class COpenGLTexture::Internals : public TReferenceCountable<Internals> {
 			}
 #if defined(TARGET_OS_IOS)
 		Internals(CVOpenGLESTextureCacheRef openGLTextureCacheRef, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mHasTransparency(false)
 			{
 				// Setup
@@ -125,7 +125,7 @@ class COpenGLTexture::Internals : public TReferenceCountable<Internals> {
 #endif
 #if defined(TARGET_OS_MACOS)
 		Internals(CGLContextObj context, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
-			TReferenceCountable()
+			TReferenceCountableAutoDelete()
 			{
 				// Setup
 				size_t	width = ::CVPixelBufferGetWidthOfPlane(imageBufferRef, planeIndex);

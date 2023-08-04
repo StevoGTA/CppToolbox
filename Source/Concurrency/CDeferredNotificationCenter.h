@@ -23,6 +23,7 @@ class CDeferredNotificationCenter : public CNotificationCenter {
 
 							// CNotificationCenter methods
 		void				queue(const CString& notificationName, const Sender& sender, const CDictionary& info);
+		void				queue(const CString& notificationName, const CDictionary& info);
 
 							// Instance methods
 		CSRSWMessageQueue&	getMessageQueue() const;
