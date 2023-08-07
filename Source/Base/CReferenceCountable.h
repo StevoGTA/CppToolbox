@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	TReferenceTracking.h			©2020 Stevo Brock	All rights reserved.
+//	CReferenceCountable.h			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -13,7 +13,13 @@ class CReferenceCountable {
 	// Methods
 	public:
 						// Lifecycle methods
-		virtual			~CReferenceCountable() { removeReference(); }
+		virtual			~CReferenceCountable()
+							{
+								// Check
+								if (getReferenceCount() > 0)
+									// Remove reference
+									removeReference();
+							}
 
 						// Instance methods
 				void	removeReference()
@@ -37,7 +43,8 @@ class CReferenceCountable {
 				UInt32	getReferenceCount() const
 							{ return mReferenceCount->load(); }
 
-		virtual	void	cleanup() = 0;
+		virtual	void	cleanup()
+							{}
 
 	// Properties
 	private:

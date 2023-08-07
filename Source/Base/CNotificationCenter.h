@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CDictionary.h"
-//#include "TReferenceTracking.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CNotificationCenter
@@ -13,37 +13,16 @@
 class CNotificationCenter {
 	// Sender
 	public:
-		class Sender {
+		class Sender : public CReferenceCountable {
 			// Methods
 			public:
 								// Lifecycle methods
-								Sender() : mReferenceCount(new std::atomic<UInt32>(1)) {}
-								Sender(const Sender& other) :
-									mReferenceCount(other.mReferenceCount)
-									{ (*mReferenceCount)++; }
-				virtual			~Sender() { removeReferenceInternal(); }
+								Sender() : CReferenceCountable() {}
+								Sender(const Sender& other) : CReferenceCountable(other) {}
 
 								// Instance methods
 				virtual	Sender*	copy() const = 0;
 				virtual	bool	operator==(const Sender& other) const = 0;
-
-			protected:
-								// Subclass methods
-				virtual	void	cleanup() = 0;
-
-			private:
-								// Internal methods
-						void	removeReferenceInternal()
-									{
-//										// Decrement reference count and check if we are the last one
-//										if (--(*mReferenceCount) == 0)
-//											// Cleanup
-//											cleanup();
-									}
-
-			// Properties
-			private:
-				std::atomic<UInt32>*	mReferenceCount;
 		};
 
 	// ISender - Pass pointer to sender that will have delete called at cleanup
@@ -54,10 +33,13 @@ class CNotificationCenter {
 								// Lifecycle methods
 								ISender(const T* t) : Sender(), mT(t) {}
 								ISender(const ISender& other) : Sender(other), mT(other.mT) {}
-
-								// TReferenceCountable methods
-						void	cleanup()
-									{ Delete(mT); }
+								~ISender()
+									{
+										// Check if last reference
+										if (getReferenceCount() == 1)
+											// Cleanup
+											Delete(mT);
+									}
 
 								// Instance methods
 				const	T&		operator*() const
