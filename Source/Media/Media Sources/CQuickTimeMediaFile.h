@@ -15,6 +15,25 @@ class CQuickTimeMediaFile {
 	public:
 		struct Internals;
 
+	// SstsdDescription
+	public:
+		struct SstsdDescription {
+				// Methods
+						OSType		getType() const
+										{ return EndianU32_BtoN(mType); }
+				const	CData		getSampleDescriptionPayload() const
+										{ return CData(&mPayload, EndianU32_BtoN(mLength) - sizeof(SstsdDescription),
+												false); }
+
+			// Properties (in storage endian)
+			private:
+				UInt32	mLength;
+				OSType	mType;
+				UInt8	mReserved[6];
+				UInt16	mDataRefIndex;
+				UInt8	mPayload[];
+		};
+
 	// Methods
 	public:
 															// Lifecycle methods
@@ -32,6 +51,7 @@ class CQuickTimeMediaFile {
 															CQuickTimeMediaFile() {}
 
 															// Instance methods
+		virtual	void										processFileMetadata(const CData& metaAtomPayloadData) {}
 		virtual	TVResult<CMediaTrackInfos::AudioTrackInfo>	composeAudioTrackInfo(
 																	const I<CRandomAccessDataSource>&
 																			randomAccessDataSource,
@@ -46,7 +66,13 @@ class CQuickTimeMediaFile {
 																	UInt32 timeScale, UniversalTimeInterval duration,
 																	const OV<CData>& metaAtomPayloadData,
 																	const Internals& internals);
-		virtual	void										processFileMetadata(const CData& metaAtomPayloadData) {}
+		virtual	OV<SError>									importTrack(
+																	const I<CRandomAccessDataSource>&
+																			randomAccessDataSource,
+																	OSType type,
+																	const SstsdDescription& stsdDescription,
+																	const Internals& internals)
+																{ return OV<SError>(); }
 
 															// Subclass methods
 				Float32										getSampleRate(const Internals& internals) const;

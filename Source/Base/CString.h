@@ -380,6 +380,7 @@ class CString : public CHashable {
 		static	const	CString		mHyphen;
 		static	const	CString		mPercent;
 		static	const	CString		mPeriod;
+		static	const	CString		mSemiColon;
 		static	const	CString		mSlash;
 		static	const	CString		mSpace;
 		static	const	CString		mSpaceX4;

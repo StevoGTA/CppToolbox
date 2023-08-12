@@ -35,9 +35,9 @@ class CVideoFrameStore : public CVideoDestination {
 
 			// Properties
 			private:
-			CurrentFrameUpdatedProc	mCurrentFrameUpdatedProc;
-				ErrorProc			mErrorProc;
-				void*				mUserData;
+				CurrentFrameUpdatedProc	mCurrentFrameUpdatedProc;
+				ErrorProc				mErrorProc;
+				void*					mUserData;
 		};
 
 	// Classes

@@ -30,6 +30,7 @@ const	CString	CString::mEqualSign(OSSTR("="));
 const	CString	CString::mHyphen(OSSTR("-"));
 const	CString	CString::mPercent(OSSTR("%"));
 const	CString	CString::mPeriod(OSSTR("."));
+const	CString	CString::mSemiColon(OSSTR(";"));
 const	CString	CString::mSlash(OSSTR("/"));
 const	CString	CString::mSpace(OSSTR(" "));
 const	CString	CString::mSpaceX4(OSSTR("    "));

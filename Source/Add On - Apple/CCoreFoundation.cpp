@@ -143,10 +143,13 @@ CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
 			CFArrayRef	arrayRef = (CFArrayRef) valueTypeRef;
 			if (::CFArrayGetCount(arrayRef) > 0) {
 				// What type
-				CFTypeRef	arrayValueTypeRef = ::CFArrayGetValueAtIndex(arrayRef, 0);
-				if (::CFGetTypeID(arrayValueTypeRef) == ::CFDictionaryGetTypeID())
+				CFTypeID	arrayElementTypeRef = ::CFGetTypeID(::CFArrayGetValueAtIndex(arrayRef, 0));
+				if (arrayElementTypeRef == ::CFDictionaryGetTypeID())
 					// Array of dictionaries
 					dictionary.set(CString(keyStringRefs[i]), arrayOfDictionariesFrom(arrayRef));
+				else if (arrayElementTypeRef == ::CFStringGetTypeID())
+					// Array of strings
+					dictionary.set(CString(keyStringRefs[i]), arrayOfStringsFrom(arrayRef));
 				else
 					// Uh oh
 					CCoreServices::stopInDebugger();

@@ -62,11 +62,11 @@ class CVideoFrame {
 														// Lifecycle methods
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 														CVideoFrame(UniversalTimeInterval presentationTimeInterval,
-																CVImageBufferRef imageBufferRef);
+																UInt32 index, CVImageBufferRef imageBufferRef);
 #elif defined(TARGET_OS_WINDOWS)
 														CVideoFrame(UniversalTimeInterval presentationTimeInterval,
-																IMFSample* sample, const GUID& dataFormatGUID,
-																const S2DSizeU16& frameSize,
+																UInt32 index, IMFSample* sample,
+																const GUID& dataFormatGUID, const S2DSizeU16& frameSize,
 																const S2DRectU16& viewRect);
 #endif
 														CVideoFrame(const CVideoFrame& other);
@@ -74,6 +74,7 @@ class CVideoFrame {
 
 														// Instance methods
 						UniversalTimeInterval			getPresentationTimeInterval() const;
+						UInt32							getIndex() const;
 						DataFormat						getDataFormat() const;
 				const	S2DSizeU16&						getFrameSize() const;
 				const	S2DRectU16&						getViewRect() const;

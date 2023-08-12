@@ -67,7 +67,8 @@ I<CAudioSource> CMediaEngine::getAudioSource(const CMediaTrackInfos::AudioTrackI
 		const CString& identifier) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CAudioSource>(new CAudioDecoder(audioTrackInfo.mMediaTrackFormat, *audioTrackInfo.mCodec, identifier));
+	return I<CAudioSource>(
+			new CAudioDecoder(audioTrackInfo.getMediaTrackFormat(), *audioTrackInfo.getCodec(), identifier));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -76,9 +77,9 @@ I<CVideoSource> CMediaEngine::getVideoSource(const CMediaTrackInfos::VideoTrackI
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return I<CVideoSource>(
-			new CVideoDecoder(videoTrackInfo.mMediaTrackFormat, *videoTrackInfo.mCodec,
-					CVideoProcessor::Format(videoTrackInfo.mMediaTrackFormat.getFrameSize(),
-							videoTrackInfo.mMediaTrackFormat.getFramerate()),
+			new CVideoDecoder(videoTrackInfo.getMediaTrackFormat(), *videoTrackInfo.getCodec(),
+					CVideoProcessor::Format(videoTrackInfo.getMediaTrackFormat().getFrameSize(),
+							videoTrackInfo.getMediaTrackFormat().getFramerate()),
 					identifier));
 }
 

@@ -17,17 +17,17 @@
 class CVideoFrame::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
-		Internals(UniversalTimeInterval presentationTimeInterval, const S2DSizeU16& frameSize,
+		Internals(UniversalTimeInterval presentationTimeInterval, UInt32 index, const S2DSizeU16& frameSize,
 				CVideoFrame::DataFormat dataFormat, CVImageBufferRef imageBufferRef) :
-			mPresentationTimeInterval(presentationTimeInterval), mFrameSize(frameSize),
+			mPresentationTimeInterval(presentationTimeInterval), mIndex(index), mFrameSize(frameSize),
 					mViewRect(S2DPointU16(), frameSize), mDataFormat(dataFormat),
 					mImageBufferRef((CVImageBufferRef) ::CFRetain(imageBufferRef))
 			{}
 #elif defined(TARGET_OS_WINDOWS)
-		Internals(UniversalTimeInterval presentationTimeInterval, CVideoFrame::DataFormat dataFormat,
+		Internals(UniversalTimeInterval presentationTimeInterval, UInt32 index, CVideoFrame::DataFormat dataFormat,
 				const S2DSizeU16& frameSize, const S2DRectU16& viewRect, IMFSample* sample) :
-			mPresentationTimeInterval(presentationTimeInterval), mDataFormat(dataFormat), mFrameSize(frameSize),
-					mViewRect(viewRect), mSample(sample)
+			mPresentationTimeInterval(presentationTimeInterval), mIndex(index), mDataFormat(dataFormat),
+					mFrameSize(frameSize), mViewRect(viewRect), mSample(sample)
 			{
 				// Keep around
 				mSample->AddRef();
@@ -45,6 +45,7 @@ class CVideoFrame::Internals : public TCopyOnWriteReferenceCountable<Internals> 
 			}
 
 		UniversalTimeInterval	mPresentationTimeInterval;
+		UInt32					mIndex;
 		CVideoFrame::DataFormat	mDataFormat;
 		S2DSizeU16				mFrameSize;
 		S2DRectU16				mViewRect;
@@ -67,7 +68,7 @@ class CVideoFrame::Internals : public TCopyOnWriteReferenceCountable<Internals> 
 	#define kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange '&8v0'
 #endif
 //----------------------------------------------------------------------------------------------------------------------
-CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImageBufferRef imageBufferRef)
+CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, UInt32 index, CVImageBufferRef imageBufferRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -95,13 +96,13 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, CVImage
 	}
 
 	mInternals =
-			new Internals(presentationTimeInterval, S2DSizeU16(frameSize.width, frameSize.height), dataFormat,
+			new Internals(presentationTimeInterval, index, S2DSizeU16(frameSize.width, frameSize.height), dataFormat,
 					imageBufferRef);
 }
 #elif defined(TARGET_OS_WINDOWS)
 //----------------------------------------------------------------------------------------------------------------------
-CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, IMFSample* sample, const GUID& dataFormatGUID,
-		const S2DSizeU16& frameSize, const S2DRectU16& viewRect)
+CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, UInt32 index, IMFSample* sample,
+		const GUID& dataFormatGUID, const S2DSizeU16& frameSize, const S2DRectU16& viewRect)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -115,7 +116,7 @@ CVideoFrame::CVideoFrame(UniversalTimeInterval presentationTimeInterval, IMFSamp
 		dataFormat = kDataFormatYCbCr;
 	}
 
-	mInternals = new Internals(presentationTimeInterval, dataFormat, frameSize, viewRect, sample);
+	mInternals = new Internals(presentationTimeInterval, index, dataFormat, frameSize, viewRect, sample);
 }
 #endif
 
@@ -140,6 +141,13 @@ UniversalTimeInterval CVideoFrame::getPresentationTimeInterval() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mPresentationTimeInterval;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CVideoFrame::getIndex() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mIndex;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

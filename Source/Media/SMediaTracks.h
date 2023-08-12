@@ -13,26 +13,36 @@
 // MARK: TMediaTrackInfo
 
 template <typename MTF, typename C> struct TMediaTrackInfo {
-				// Lifecycle methods
-				TMediaTrackInfo<MTF, C>(const MTF& mediaTrackFormat, const SMedia::SegmentInfo& mediaSegmentInfo,
-						const I<C>& codec) :
-					mMediaTrackFormat(mediaTrackFormat), mMediaSegmentInfo(mediaSegmentInfo), mCodec(codec)
-					{}
-				TMediaTrackInfo<MTF, C>(const MTF& mediaTrackFormat, const SMedia::SegmentInfo& mediaSegmentInfo,
-						const OV<I<C> >& codec = OV<I<C> >()) :
-					mMediaTrackFormat(mediaTrackFormat), mMediaSegmentInfo(mediaSegmentInfo), mCodec(codec)
-					{}
-				TMediaTrackInfo<MTF, C>(const TMediaTrackInfo<MTF, C>& other) :
-					mMediaTrackFormat(other.mMediaTrackFormat), mMediaSegmentInfo(other.mMediaSegmentInfo),
-							mCodec(other.mCodec)
-					{}
+											// Lifecycle methods
+											TMediaTrackInfo<MTF, C>(const MTF& mediaTrackFormat,
+													const SMedia::SegmentInfo& mediaSegmentInfo, const I<C>& codec) :
+												mMediaTrackFormat(mediaTrackFormat),
+														mMediaSegmentInfo(mediaSegmentInfo), mCodec(codec)
+												{}
+											TMediaTrackInfo<MTF, C>(const MTF& mediaTrackFormat,
+													const SMedia::SegmentInfo& mediaSegmentInfo,
+													const OV<I<C> >& codec = OV<I<C> >()) :
+												mMediaTrackFormat(mediaTrackFormat),
+														mMediaSegmentInfo(mediaSegmentInfo), mCodec(codec)
+												{}
+											TMediaTrackInfo<MTF, C>(const TMediaTrackInfo<MTF, C>& other) :
+												mMediaTrackFormat(other.mMediaTrackFormat),
+														mMediaSegmentInfo(other.mMediaSegmentInfo), mCodec(other.mCodec)
+												{}
 
-				// Class methods
+											// Instance methods
+		const	MTF&						getMediaTrackFormat() const
+												{ return mMediaTrackFormat; }
+		const	OV<SMedia::SegmentInfo>&	getMediaSegmentInfo() const
+												{ return mMediaSegmentInfo; }
+		const	OV<I<C> >&					getCodec() const
+												{ return mCodec; }
 
 	// Properties
-	MTF						mMediaTrackFormat;
-	OV<SMedia::SegmentInfo>	mMediaSegmentInfo;
-	OV<I<C> >				mCodec;
+	private:
+		MTF						mMediaTrackFormat;
+		OV<SMedia::SegmentInfo>	mMediaSegmentInfo;
+		OV<I<C> >				mCodec;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,20 +82,20 @@ class CMediaTrackInfos {
 											for (TIteratorD<AudioTrackInfo> iterator = mAudioTrackInfos.getIterator();
 													iterator.hasValue(); iterator.advance()) {
 												// Check for segment info
-												if (iterator->mMediaSegmentInfo.hasValue())
+												if (iterator->getMediaSegmentInfo().hasValue())
 													// Update duration
 													duration =
 															std::max<UniversalTimeInterval>(duration,
-																	iterator->mMediaSegmentInfo->getDuration());
+																	iterator->getMediaSegmentInfo()->getDuration());
 											}
 											for (TIteratorD<VideoTrackInfo> iterator = mVideoTrackInfos.getIterator();
 													iterator.hasValue(); iterator.advance()) {
 												// Check for segment info
-												if (iterator->mMediaSegmentInfo.hasValue())
+												if (iterator->getMediaSegmentInfo().hasValue())
 													// Update duration
 													duration =
 															std::max<UniversalTimeInterval>(duration,
-																	iterator->mMediaSegmentInfo->getDuration());
+																	iterator->getMediaSegmentInfo()->getDuration());
 											}
 
 											return duration;

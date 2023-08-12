@@ -112,7 +112,7 @@ class CMediaPlayer::Internals {
 								if (!mActiveInternals.contains(internals))
 									return;
 
-								// Store
+								// Update
 								internals.mCurrentPosition = audioPlayerPositionUpdatedMessage.mPosition;
 
 								// Iterate all video frame stores
@@ -193,6 +193,9 @@ class CMediaPlayer::Internals {
 								// Setup
 								Internals&	internals = *((Internals*) userData);
 
+								// Update
+								internals.mCurrentFrameIndex.setValue(videoFrame.getIndex());
+
 								// Handle
 								internals.mInfo.videoFrameUpdated(videoFrame);
 							}
@@ -222,6 +225,7 @@ class CMediaPlayer::Internals {
 
 				UniversalTimeInterval	mSourceWindowStartTimeInterval;
 				UniversalTimeInterval	mCurrentPosition;
+				OV<UInt32>				mCurrentFrameIndex;
 				UInt32					mEndOfDataCount;
 				OV<UInt32>				mLoopCount;
 				UInt32					mCurrentLoopCount;
@@ -361,6 +365,9 @@ void CMediaPlayer::setAudioGain(Float32 audioGain)
 I<CVideoFrameStore> CMediaPlayer::newVideoFrameStore(const CString& identifier, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Update
+	mInternals->mCurrentFrameIndex.setValue(0);
+
 	return I<CVideoFrameStore>(
 			new CMediaPlayerVideoFrameStore(identifier,
 					CVideoFrameStore::Info(Internals::videoFrameStoreCurrentFrameUpdated,
@@ -379,6 +386,13 @@ UniversalTimeInterval CMediaPlayer::getCurrentPosition() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mCurrentPosition;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const OV<UInt32>& CMediaPlayer::getCurrentFrameIndex() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mCurrentFrameIndex;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -472,6 +486,10 @@ void CMediaPlayer::reset()
 
 	// Update internals
 	mInternals->mCurrentPosition = mInternals->mSourceWindowStartTimeInterval;
+	if (getVideoTrackCount() > 0)
+		mInternals->mCurrentFrameIndex.setValue(0);
+	else
+		mInternals->mCurrentFrameIndex.removeValue();
 	mInternals->mEndOfDataCount = 0;
 
 	// Call proc
