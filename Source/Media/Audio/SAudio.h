@@ -36,6 +36,7 @@ struct SAudio {
 		public:
 										// Lifecycle methods
 										ChannelMap(UInt8 channels) : mValue(channels) {}
+										ChannelMap(const ChannelMap& other) : mValue(other.mValue) {}
 
 										// Instance methods
 							bool		hasUnknownOrder() const
