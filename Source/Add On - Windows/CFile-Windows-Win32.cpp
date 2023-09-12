@@ -69,16 +69,34 @@ UInt64 CFile::getByteCount() const
 OV<SError> CFile::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Remove
+	if (::DeleteFile(getFilesystemPath().getString().getOSString()))
+		// Success
+		return OV<SError>();
+	else {
+		// Error
+		OV<SError>	error(SErrorFromWindowsGetLastError());
+		CLogServices::logError(*error, "removing file", __FILE__, __func__, __LINE__);
+
+		return error;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CFile::doesExist() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return false;
+	// Get attributes
+	DWORD	attributes = ::GetFileAttributes(getFilesystemPath().getString().getOSString());
+
+	return attributes != INVALID_FILE_ATTRIBUTES;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CFile::isHidden() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return getName().hasPrefix(CString(OSSTR(".")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -95,4 +113,17 @@ OV<SError> CFile::setLocked(bool lockFile) const
 {
 	AssertFailUnimplemented();
 return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTime CFile::getCreationUniversalTime() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+return 0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTime CFile::getModificationUniversalTime() const
+{
+return 0;
 }

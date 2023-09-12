@@ -37,23 +37,71 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
+TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return TIResult<SFoldersFiles>(SError::mUnimplemented);
+	// Setup
+	CFilesystemPath	filesystemPath = folder.getFilesystemPath();
+
+	// Find
+	WIN32_FIND_DATA	findData;
+	HANDLE			findHandle =
+							::FindFirstFile(
+									filesystemPath.appendingComponent(CString(OSSTR("*"))).getString().getOSString(),
+									&findData);
+	if (findHandle != INVALID_HANDLE_VALUE) {
+		// Setup
+		TNArray<CFolder>	folders;
+		TNArray<CFile>		files;
+
+		// Iterate all entries
+		do {
+			// Check file attributes
+			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				// Folder
+				CFolder	childFolder(filesystemPath.appendingComponent(CString(findData.cFileName)));
+				folders += childFolder;
+
+				if (deep) {
+					// Get files for this folder
+					auto	result = getFoldersFiles(childFolder);
+					if (result.hasValue()) {
+						// Success
+						folders += result->getFolders();
+						files += result->getFiles();
+					} else
+						// Error
+						return result;
+				}
+			} else {
+				// File
+				files += CFile(filesystemPath.appendingComponent(CString(findData.cFileName)));
+			}
+		} while (::FindNextFile(findHandle, &findData) != 0);
+
+		// Cleanup
+		::FindClose(findHandle);
+
+		return TVResult<SFoldersFiles>(SFoldersFiles(folders, files));
+	} else {
+		// Error
+		SError	error = SErrorFromWindowsGetLastError();
+		CFilesystemReportErrorFileFolderX1(error, "calling FindFirstFile()", folder);
+
+		return TVResult<SFoldersFiles>(error);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool deep)
+TVResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return TIResult<TArray<CFolder> >(SError::mUnimplemented);
+return TVResult<TArray<CFolder> >(SError::mUnimplemented);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
+TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -73,7 +121,17 @@ TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 		do {
 			// Check file attributes
 			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-				// Directory
+				// Folder
+				if (deep) {
+					// Get files for this folder
+					auto	result = getFiles(CFolder(filesystemPath.appendingComponent(CString(findData.cFileName))));
+					if (result.hasValue())
+						// Success
+						files += *result;
+					else
+						// Error
+						return result;
+				}
 			} else {
 				// File
 				files += CFile(filesystemPath.appendingComponent(CString(findData.cFileName)));
@@ -83,13 +141,13 @@ TIResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 		// Cleanup
 		::FindClose(findHandle);
 
-		return TIResult<TArray<CFile> >(files);
+		return TVResult<TArray<CFile> >(files);
 	} else {
 		// Error
 		SError	error = SErrorFromWindowsGetLastError();
 		CFilesystemReportErrorFileFolderX1(error, "calling FindFirstFile()", folder);
 
-		return TIResult<TArray<CFile>>(error);
+		return TVResult<TArray<CFile>>(error);
 	}
 }
 

@@ -4,7 +4,9 @@
 
 #include "CTimer.h"
 
+#undef Delete
 #include <Windows.h>
+#define Delete(x)	{ delete x; x = nil; }
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CTimer::Internals

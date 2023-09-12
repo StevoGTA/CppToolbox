@@ -4,6 +4,8 @@
 
 #include "CFileWriter.h"
 
+#include "SError-Windows.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
@@ -24,31 +26,32 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CFileWriterInternals
+// MARK: - CFileWriter::Internals
 
-class CFileWriterInternals : public TReferenceCountable<CFileWriterInternals> {
-public:
-				CFileWriterInternals(const CFile& file) :
-					TReferenceCountable(), mFile(file), mRemoveIfNotClosed(false)
-					{}
-				~CFileWriterInternals()
-					{}
+class CFileWriter::Internals : public TReferenceCountable<Internals> {
+	public:
+		Internals(const CFile& file) :
+			TReferenceCountable(),
+					mFile(file), mRemoveIfNotClosed(false), mFileHandle(INVALID_HANDLE_VALUE)
+			{}
+		~Internals()
+			{
+				// Check if have HANDLE
+				if (mFileHandle != INVALID_HANDLE_VALUE) {
+					// Close
+					::CloseHandle(mFileHandle);
 
-	OV<SError>	write(const void* buffer, UInt64 byteCount)
-					{
-						AssertFailUnimplemented();
-						return OV<SError>();
-					}
-	OV<SError>	close()
-					{
-						AssertFailUnimplemented();
-						return OV<SError>();
-					}
+					// Check if removing
+					if (mRemoveIfNotClosed)
+						// Remove
+						mFile.remove();
+				}
+			}
 
-	CFile	mFile;
-	UInt32	mReferenceCount;
+		CFile	mFile;
 
-	bool	mRemoveIfNotClosed;
+		bool	mRemoveIfNotClosed;
+		HANDLE	mFileHandle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,7 +64,7 @@ public:
 CFileWriter::CFileWriter(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFileWriterInternals(file);
+	mInternals = new Internals(file);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,57 +90,178 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 	// Store
 	mInternals->mRemoveIfNotClosed = removeIfNotClosed;
 
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Check if open
+	if (mInternals->mFileHandle == INVALID_HANDLE_VALUE) {
+		// Open
+		CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
+		extendedParameters.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+		extendedParameters.dwFileAttributes = buffered ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_WRITE_THROUGH;
+		extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS;
+		mInternals->mFileHandle =
+				::CreateFile2(mInternals->mFile.getFilesystemPath().getString().getOSString(),
+						GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
+						append ? OPEN_ALWAYS : CREATE_NEW, &extendedParameters);
+		if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
+			// Unable to open
+			CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "opening");
+
+		// Check if appending
+		if (append) {
+			// Skip to the end
+			auto	result = ::SetFilePointer(mInternals->mFileHandle, {0}, NULL, FILE_END);
+			if (!result)
+				// Error
+				CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "setting position");
+		}
+
+		return OV<SError>();
+	} else {
+		// Already open
+		::SetFilePointerEx(mInternals->mFileHandle, {0}, NULL, FILE_BEGIN);
+
+		return OV<SError>();
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	OV<SError>	error = mInternals->write(buffer, byteCount);
-	if (!error.hasInstance())
-		// Error
-		CFileWriterReportErrorAndReturnError(*error, "writing");
+	// Check if open
+	if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
 
-	return error;
+	// Write
+	DWORD	bytesWritten;
+	auto	result = ::WriteFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, &bytesWritten, NULL);
+	if (!result)
+		// Error
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "writing");
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt64 CFileWriter::getPos() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return 0;
+	// Check if open
+	if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
+		// Not open
+		return 0;
+
+	// Get current position
+	LARGE_INTEGER	currentPosition{0};
+	::SetFilePointerEx(mInternals->mFileHandle, {0}, &currentPosition, FILE_CURRENT);
+
+	return currentPosition.QuadPart;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Check if open
+	if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
+	// Check position
+	LARGE_INTEGER	distanceToMove = {0};
+	distanceToMove.QuadPart = newPos;
+
+	BOOL	result = true;
+	switch (position) {
+		case kPositionFromBeginning:
+			// From beginning
+			result = ::SetFilePointerEx(mInternals->mFileHandle, distanceToMove, NULL, FILE_BEGIN);
+			break;
+
+		case kPositionFromCurrent:
+			// From current
+			result = ::SetFilePointerEx(mInternals->mFileHandle, distanceToMove, NULL, FILE_CURRENT);
+			break;
+
+		case kPositionFromEnd:
+			// From end
+			result = ::SetFilePointerEx(mInternals->mFileHandle, distanceToMove, NULL, FILE_END);
+			break;
+	}
+	if (!result)
+		// Error
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "setting position");
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Check if open
+	if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
+	// Set position
+	LARGE_INTEGER	position = {0};
+	position.QuadPart = byteCount;
+
+	auto	result = ::SetFilePointerEx(mInternals->mFileHandle, position, NULL, FILE_BEGIN);
+	if (!result)
+		// Error
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "setting position");
+
+	// Set End of File
+	result = ::SetEndOfFile(mInternals->mFileHandle);
+	if (!result)
+		// Error
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "setting end of file");
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFileWriter::flush() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Check if open
+	if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
+	// Flush
+	auto	result = ::FlushFileBuffers(mInternals->mFileHandle);
+	if (!result)
+		// Error
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "flushing");
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->close();
+	// Check if open
+	if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
+	// Close
+	auto	result = ::CloseHandle(mInternals->mFileHandle);
+	mInternals->mFileHandle = INVALID_HANDLE_VALUE;
+
+	if (result)
+		// Success
+		return OV<SError>();
+	else {
+		// Error
+		SError	error = SErrorFromWindowsGetLastError();
+		CLogServices::logError(error, "closing", __FILE__, __func__, __LINE__);
+		mInternals->mFile.logAsError(CString::mSpaceX4);
+
+		return OV<SError>(error);
+	}
 }

@@ -10,7 +10,9 @@
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.FileProperties.h>
 
+#undef Delete
 #include <Windows.h>
+#define Delete(x)	{ delete x; x = nil; }
 
 using namespace winrt::Windows::Storage;
 
@@ -137,4 +139,17 @@ OV<SError> CFile::setLocked(bool lockFile) const
 {
 	AssertFailUnimplemented();
 return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTime CFile::getCreationUniversalTime() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+return 0;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTime CFile::getModificationUniversalTime() const
+{
+return 0;
 }

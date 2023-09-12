@@ -10,12 +10,12 @@
 #undef THIS
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFileDataSourceInternals
+// MARK: CFileDataSource::Internals
 
-class CFileDataSourceInternals {
+class CFileDataSource::Internals {
 	public:
-		CFileDataSourceInternals(const CFile& file) :
-			mByteCount(file.getByteCount())
+		Internals(const CFile& file) :
+			mFile(file), mByteCount(file.getByteCount())
 			{
 				// Open
 				CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
@@ -27,15 +27,17 @@ class CFileDataSourceInternals {
 								FILE_SHARE_READ, OPEN_EXISTING, &extendedParameters);
 				if (mFileHandle == INVALID_HANDLE_VALUE) {
 					// Unable to open
-					mError = OV<SError>(SErrorFromWindowsGetLastError());
+					mError.setValue(SErrorFromWindowsGetLastError());
 					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
+					mFile.logAsError(CString::mSpaceX4);
 				}
 			}
-		~CFileDataSourceInternals()
+		~Internals()
 			{
 				::CloseHandle(mFileHandle);
 			}
 
+		CFile		mFile;
 		UInt64		mByteCount;
 		CLock		mLock;
 
@@ -50,10 +52,10 @@ class CFileDataSourceInternals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CFileDataSource::CFileDataSource(const CFile& file, bool buffered) : CSeekableDataSource()
+CFileDataSource::CFileDataSource(const CFile& file, bool buffered) : CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CFileDataSourceInternals(file);
+	mInternals = new Internals(file);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -77,7 +79,7 @@ OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
-	if (mInternals->mError.hasInstance())
+	if (mInternals->mError.hasValue())
 		// Error
 		return mInternals->mError;
 
@@ -97,34 +99,36 @@ OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 	DWORD		newPositionLow =
 						::SetFilePointer(mInternals->mFileHandle, localPosition.LowPart, &localPosition.HighPart,
 								FILE_BEGIN);
-	OV<SError>	error;
 	if (newPositionLow != INVALID_SET_FILE_POINTER) {
 		// Read
 		BOOL	result = ::ReadFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, NULL, NULL);
 		if (!result) {
 			// Error
-			error = OV<SError>(SErrorFromWindowsGetLastError());
-			CLogServices::logError(*error, "reading data buffered", __FILE__, __func__, __LINE__);
+			mInternals->mError.setValue(SErrorFromWindowsGetLastError());
+			CLogServices::logError(*mInternals->mError, "reading data buffered", __FILE__, __func__, __LINE__);
+			mInternals->mFile.logAsError(CString::mSpaceX4);
 		}
 	} else {
 		// Error
-		error = OV<SError>(SErrorFromWindowsGetLastError());
-		CLogServices::logError(*error, "setting position buffered", __FILE__, __func__, __LINE__);
+		mInternals->mError.setValue(SErrorFromWindowsGetLastError());
+		CLogServices::logError(*mInternals->mError, "setting position buffered", __FILE__, __func__, __LINE__);
+		mInternals->mFile.logAsError(CString::mSpaceX4);
 	}
 
 	// Done
 	mInternals->mLock.unlock();
 
-	return error;
+	return mInternals->mError;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CMappedFileDataSourceInternals
+// MARK: - CMappedFileDataSource::Internals
 
-class CMappedFileDataSourceInternals {
+class CMappedFileDataSource::Internals {
 	public:
-		CMappedFileDataSourceInternals(const CFile& file, UInt64 byteOffset, UInt64 byteCount)
+		Internals(const CFile& file, UInt64 byteOffset, UInt64 byteCount) :
+			mFile(file)
 			{
 				// Open
 				CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
@@ -134,7 +138,7 @@ class CMappedFileDataSourceInternals {
 				mFileHandle =
 						::CreateFile2(file.getFilesystemPath().getString().getOSString(), GENERIC_READ, FILE_SHARE_READ,
 								OPEN_EXISTING, &extendedParameters);
-				if (mFileHandle != NULL) {
+				if (mFileHandle != INVALID_HANDLE_VALUE) {
 					// Create file mapping
 					mFileMappingHandle = ::CreateFileMapping(mFileHandle, NULL, PAGE_READONLY, 0, 0, NULL);
 					if (mFileMappingHandle != NULL) {
@@ -154,25 +158,29 @@ class CMappedFileDataSourceInternals {
 						else {
 							// Failed
 							mByteCount = 0;
-							mError = OV<SError>(SErrorFromWindowsGetLastError());
+							mError.setValue(SErrorFromWindowsGetLastError());
 							CLogServices::logError(*mError, "creating file view", __FILE__, __func__, __LINE__);
+							mFile.logAsError(CString::mSpaceX4);
 						}
 					} else {
 						// Error
 						mBytePtr = NULL;
 						mByteCount = 0;
-						mError = OV<SError>(SErrorFromWindowsGetLastError());
+						mError.setValue(SErrorFromWindowsGetLastError());
 						CLogServices::logError(*mError, "creating file mapping", __FILE__, __func__, __LINE__);
+						mFile.logAsError(CString::mSpaceX4);
 					}
 				} else {
 					// Unable to open
+					mFileMappingHandle = NULL;
 					mBytePtr = NULL;
 					mByteCount = 0;
-					mError = OV<SError>(SErrorFromWindowsGetLastError());
+					mError.setValue(SErrorFromWindowsGetLastError());
 					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
+					mFile.logAsError(CString::mSpaceX4);
 				}
 			}
-		~CMappedFileDataSourceInternals()
+		~Internals()
 			{
 				// Check if need to unmap
 				if (mBytePtr != nil)
@@ -183,6 +191,7 @@ class CMappedFileDataSourceInternals {
 				::CloseHandle(mFileHandle);
 			}
 
+		CFile		mFile;
 		HANDLE		mFileHandle;
 		HANDLE		mFileMappingHandle;
 		void*		mBytePtr;
@@ -198,17 +207,17 @@ class CMappedFileDataSourceInternals {
 
 //----------------------------------------------------------------------------------------------------------------------
 CMappedFileDataSource::CMappedFileDataSource(const CFile& file, UInt64 byteOffset, UInt64 byteCount) :
-		CSeekableDataSource()
+		CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMappedFileDataSourceInternals(file, byteOffset, byteCount);
+	mInternals = new Internals(file, byteOffset, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CSeekableDataSource()
+CMappedFileDataSource::CMappedFileDataSource(const CFile& file) : CRandomAccessDataSource()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new CMappedFileDataSourceInternals(file, 0, file.getByteCount());
+	mInternals = new Internals(file, 0, file.getByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -232,7 +241,7 @@ OV<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData:
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
-	if (mInternals->mError.hasInstance())
+	if (mInternals->mError.hasValue())
 		// Error
 		return mInternals->mError;
 
@@ -246,4 +255,22 @@ OV<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData:
 	::memcpy(buffer, (UInt8*) mInternals->mBytePtr + position, (SIZE_T) byteCount);
 
 	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> CMappedFileDataSource::readData(UInt64 position, CData::ByteCount byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for error
+	if (mInternals->mError.hasValue())
+		// Error
+		return TVResult<CData>(*mInternals->mError);
+
+	// Preflight
+	AssertFailIf((position + byteCount) > mInternals->mByteCount);
+	if ((position + byteCount) > mInternals->mByteCount)
+		// Attempting to ready beyond end of data
+		return TVResult<CData>(SError::mEndOfData);
+
+	return TVResult<CData>(CData((UInt8*) mInternals->mBytePtr + position, byteCount, false));
 }

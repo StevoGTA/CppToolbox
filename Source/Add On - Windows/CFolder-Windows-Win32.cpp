@@ -4,9 +4,11 @@
 
 #include "CFolder.h"
 
-#undef Delete
-#include <Windows.h>
-#define Delete(x)	{ delete x; x = nil; }
+#include "SError-Windows.h"
+
+#include "shlobj.h"
+
+#pragma comment(lib, "shell32")
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -59,4 +61,26 @@ bool CFolder::doesExist() const
 {
 	AssertFailUnimplemented();
 return false;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CFolder& CFolder::localApplicationData()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CFolder*	sFolder = nil;
+
+	if (sFolder == nil) {
+		// Setup
+		PWSTR	path = NULL;
+		auto	result = ::SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &path);
+		if (SUCCEEDED(result)) {
+			// Success
+			sFolder = new CFolder(CFilesystemPath(CString(path)));
+			::CoTaskMemFree(path);
+		} else
+			// Error
+			LogFailedHRESULT(result, OSSTR("SHGetKnownFolderPath for FOLDERID_LocalAppData"));
+	}
+
+	return *sFolder;
 }

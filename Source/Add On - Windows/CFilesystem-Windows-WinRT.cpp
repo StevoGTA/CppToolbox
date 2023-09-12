@@ -49,18 +49,33 @@ TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 	// Catch errors
 	try {
 		// Setup
-		auto	storageFolder =
-						StorageFolder::GetFolderFromPathAsync(folder.getFilesystemPath().getString().getOSString())
-								.get();
+		auto				storageFolder =
+									StorageFolder::GetFolderFromPathAsync(
+											folder.getFilesystemPath().getString().getOSString()).get();
+		TNArray<CFolder>	folders;
+		TNArray<CFile>		files;
 
 		// Get folders
-		TNArray<CFolder>	folders;
-		for (auto const& childStorageFolder : storageFolder.GetFoldersAsync().get())
+		for (auto const& childStorageFolder : storageFolder.GetFoldersAsync().get()) {
 			// Add folder
-			folders += CFolder(CFilesystemPath(childStorageFolder.Path().data()));
+			CFolder	childFolder(CFilesystemPath(childStorageFolder.Path().data()));
+			folders += childFolder;
+
+			// Check deep
+			if (deep) {
+				// Get folders and files from this folder
+				auto	result = getFoldersFiles(childFolder, true);
+				if (result.hasValue()) {
+					// Success
+					folders += result->getFolders();
+					files += result->getFiles();
+				} else
+					// Error
+					return result;
+			}
+		}
 
 		// Get files
-		TNArray<CFile>	files;
 		for (auto const& storageFile : storageFolder.GetFilesAsync().get())
 			// Add file
 			files += CFile(CFilesystemPath(storageFile.Path().data()));
@@ -94,7 +109,7 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 						StorageFolder::GetFolderFromPathAsync(folder.getFilesystemPath().getString().getOSString())
 								.get();
 
-		// Compose files
+		// Collect files
 		TNArray<CFile>	files;
 
 		// Check deep
@@ -108,7 +123,7 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 					files += *result;
 				else
 					// Error
-					return TVResult<TArray<CFile> >(result.getError());
+					return result;
 			}
 		}
 

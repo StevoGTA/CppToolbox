@@ -95,8 +95,7 @@ class CFolder : public CHashable {
 		static	const	CFolder&			userLogs();
 		static	const	CFolder&			userMusic();
 #elif defined(TARGET_OS_WINDOWS)
-		static	const	CFolder&			local();
-		static	const	CFolder&			localCache();
+		static	const	CFolder&			localApplicationData();
 #endif
 
 	private:

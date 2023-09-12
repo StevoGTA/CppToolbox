@@ -41,38 +41,28 @@ using namespace winrt::Windows::Storage::Streams;
 
 class CFileWriter::Internals : public TReferenceCountable<Internals> {
 	public:
-					Internals(const CFile& file) :
-						TReferenceCountable(), mFile(file), mIsOpen(false), mRemoveIfNotClosed(false)
-						{}
-					~Internals()
-						{
-							// Check if need to remove
-							bool	needToRemove = mRemoveIfNotClosed && mRandomAccessStream.CanWrite();
+		Internals(const CFile& file) :
+			TReferenceCountable(),
+					mFile(file), mRemoveIfNotClosed(false)
+			{}
+		~Internals()
+			{
+				// Check if have Random Access Stream
+				if (mRandomAccessStream.CanWrite()) {
+					// Close
+					mRandomAccessStream.Close();
 
-							// Close
-							close();
-
-							// Check if need to remove
-							if (needToRemove)
-								// Remove
-								mFile.remove();
-						}
-
-		OV<SError>	close()
-						{
-							// Close
-							mRandomAccessStream.Close();
-							mRandomAccessStream = IRandomAccessStream(nullptr);
-							mIsOpen = false;
-
-							return OV<SError>();
-						}
+					// Check if need to remove
+					if (mRemoveIfNotClosed)
+						// Remove
+						mFile.remove();
+				}
+			}
 
 		CFile				mFile;
-		IRandomAccessStream	mRandomAccessStream;
 
-		bool				mIsOpen;
 		bool				mRemoveIfNotClosed;
+		IRandomAccessStream	mRandomAccessStream;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -112,12 +102,13 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 	mInternals->mRemoveIfNotClosed = removeIfNotClosed;
 
 	// Check if open
-	if (!mInternals->mIsOpen) {
+	if (mInternals->mRandomAccessStream.CanWrite()) {
 		// Open
 		try {
 			// Setup
-			auto	folderPath = mInternals->mFile.getFolder().getFilesystemPath();
-			auto	storageFolder = StorageFolder::GetFolderFromPathAsync(folderPath.getString().getOSString()).get();
+			auto	storageFolder =
+							StorageFolder::GetFolderFromPathAsync(
+									mInternals->mFile.getFolder().getFilesystemPath().getString().getOSString()).get();
 			auto	storageFile =
 							storageFolder.CreateFileAsync(mInternals->mFile.getName().getOSString(),
 									CreationCollisionOption::ReplaceExisting).get();
@@ -126,9 +117,6 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 			mInternals->mRandomAccessStream =
 					storageFile.OpenAsync(FileAccessMode::ReadWrite, StorageOpenOptions::None).get();
 
-			// Now open
-			mInternals->mIsOpen = true;
-		
 			return OV<SError>();
 		} catch (const hresult_error& exception) {
 			// Error
@@ -149,6 +137,11 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if open
+	if (!mInternals->mRandomAccessStream.CanWrite())
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
 	// Catch errors
 	try {
 		// Write
@@ -195,6 +188,11 @@ UInt64 CFileWriter::getPos() const
 OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if open
+	if (!mInternals->mRandomAccessStream.CanWrite())
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
 	// Check position
 	switch (position) {
 		case kPositionFromBeginning:
@@ -220,6 +218,11 @@ OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if open
+	if (!mInternals->mRandomAccessStream.CanWrite())
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
 	// Set size
 	mInternals->mRandomAccessStream.Size(byteCount);
 
@@ -230,6 +233,11 @@ OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 OV<SError> CFileWriter::flush() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if open
+	if (!mInternals->mRandomAccessStream.CanWrite())
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
 	// Flush
 	mInternals->mRandomAccessStream.FlushAsync().get();
 
@@ -240,5 +248,14 @@ OV<SError> CFileWriter::flush() const
 OV<SError> CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->close();
+	// Check if open
+	if (!mInternals->mRandomAccessStream.CanWrite())
+		// Not open
+		return OV<SError>(CFile::mNotOpenError);
+
+	// Close
+	mInternals->mRandomAccessStream.Close();
+	mInternals->mRandomAccessStream = IRandomAccessStream(nullptr);
+
+	return OV<SError>();
 }
