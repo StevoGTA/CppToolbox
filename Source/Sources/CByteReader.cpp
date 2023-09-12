@@ -5,17 +5,19 @@
 #include "CByteReader.h"
 
 #include "CData.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CByteReader::Internals
 
-class CByteReader::Internals : public TReferenceCountable<Internals> {
+class CByteReader::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 dataSourceOffset, UInt64 byteCount,
 				bool isBigEndian) :
-			TReferenceCountable(), mIsBigEndian(isBigEndian),
-					mRandomAccessDataSource(randomAccessDataSource), mInitialDataSourceOffset(dataSourceOffset),
-					mCurrentDataSourceOffset(dataSourceOffset), mByteCount(byteCount)
+			TReferenceCountableAutoDelete(),
+					mIsBigEndian(isBigEndian), mRandomAccessDataSource(randomAccessDataSource),
+					mInitialDataSourceOffset(dataSourceOffset), mCurrentDataSourceOffset(dataSourceOffset),
+					mByteCount(byteCount)
 			{}
 
 		bool						mIsBigEndian;

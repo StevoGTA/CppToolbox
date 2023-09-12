@@ -389,38 +389,12 @@ struct SQTVideoSampleDescription {
 		UInt8	mColorTable[];
 };
 
-// Sample Table Sample Description (general)
-struct SQTstsdDescription {
-			// Methods
-			OSType						getType() const
-											{ return EndianU32_BtoN(mType); }
-	const	SQTAudioSampleDescription&	getAudioSampleDescription() const
-											{ return mSampleDescription.mAudioSampleDescription; }
-	const	SQTVideoSampleDescription&	getVideoSampleDescription() const
-											{ return mSampleDescription.mVideoSampleDescription; }
-
-	// Properties (in storage endian)
-	public:
-		static	CData::ByteCount	mByteCountWithoutSampleDescriptions;
-
-	private:
-		UInt32				mLength;
-		OSType				mType;
-		UInt8				mReserved[6];
-		UInt16				mDataRefIndex;
-		union {
-			SQTAudioSampleDescription	mAudioSampleDescription;
-			SQTVideoSampleDescription	mVideoSampleDescription;
-		}					mSampleDescription;
-};
-CData::ByteCount	SQTstsdDescription::mByteCountWithoutSampleDescriptions = 16;
-
-
 // Sample Table Sample Description Atom Payload
 struct SQTstsdAtomPayload {
-								// Methods
-	const	SQTstsdDescription&	getFirstDescription() const
-									{ return *((SQTstsdDescription*) mDescriptions); }
+													// Methods
+	const	CQuickTimeMediaFile::SstsdDescription&	getFirstDescription() const
+														{ return *((CQuickTimeMediaFile::SstsdDescription*)
+																mDescriptions); }
 
 	// Properties (in storage endian)
 	private:
@@ -658,11 +632,11 @@ struct CQuickTimeMediaFile::Internals {
 
 										Internals(const CAtomReader& atomReader, const CAtomReader::Atom& stsdAtom,
 												const CAtomReader::ContainerAtom& stblContainerAtom,
-												const SQTstsdDescription& stsdDescription,
+												const SstsdDescription& stsdDescription,
 												const SQTsttsAtomPayload& sttsAtomPayload,
 												const SQTstscAtomPayload& stscAtomPayload,
 												const SQTstszAtomPayload& stszAtomPayload,
-												SQTstcoAtomPayload* stcoAtomPayload) :
+												const OR<SQTstcoAtomPayload>& stcoAtomPayload) :
 											mAtomReader(atomReader), mSTSDAtom(stsdAtom),
 													mSTBLContainerAtom(stblContainerAtom),
 													mSTSDDescription(stsdDescription),
@@ -673,17 +647,18 @@ struct CQuickTimeMediaFile::Internals {
 											{}
 
 	const	SQTAudioSampleDescription&	getAudioSampleDescription() const
-											{ return mSTSDDescription.getAudioSampleDescription(); }
+											{ return *((SQTAudioSampleDescription*)
+													mSTSDDescription.getSampleDescriptionPayload().getBytePtr()); }
 	const	SQTVideoSampleDescription&	getVideoSampleDescription() const
-											{ return mSTSDDescription.getVideoSampleDescription(); }
+											{ return *((SQTVideoSampleDescription*)
+													mSTSDDescription.getSampleDescriptionPayload().getBytePtr()); }
 
 			TVResult<CData>				getAudioDecompressionData() const
 											{
 												// Setup
 												CData::ByteIndex			codecConfigurationDataByteOffset =
 																					sizeof(SQTstsdAtomPayload) +
-																							SQTstsdDescription::
-																									mByteCountWithoutSampleDescriptions +
+																							sizeof(SstsdDescription) +
 																							getAudioSampleDescription()
 																									.getCodecConfigurationDataByteOffset();
 												TVResult<CAtomReader::Atom>	decompressionParamAtom =
@@ -699,8 +674,7 @@ struct CQuickTimeMediaFile::Internals {
 												// Setup
 												CData::ByteIndex	codecConfigurationDataByteOffset =
 																			sizeof(SQTstsdAtomPayload) +
-																					SQTstsdDescription::
-																							mByteCountWithoutSampleDescriptions +
+																					sizeof(SstsdDescription) +
 																					sizeof(SQTVideoSampleDescription);
 
 												// Read atom payload
@@ -729,11 +703,12 @@ struct CQuickTimeMediaFile::Internals {
 	const	CAtomReader&				mAtomReader;
 	const	CAtomReader::Atom&			mSTSDAtom;
 	const	CAtomReader::ContainerAtom&	mSTBLContainerAtom;
-	const	SQTstsdDescription&			mSTSDDescription;
+	const	SstsdDescription&			mSTSDDescription;
 	const	SQTsttsAtomPayload&			mSTTSAtomPayload;
 	const	SQTstscAtomPayload&			mSTSCAtomPayload;
 	const	SQTstszAtomPayload&			mSTSZAtomPayload;
-			SQTstcoAtomPayload* 		mSTCOAtomPayload;
+	const	OR<SQTstcoAtomPayload>&		mSTCOAtomPayload;
+//	const	OR<SQTco64AtomPayload>&		mCO64AtomPayload;
 };
 
 // MARK: Instance methods
@@ -837,7 +812,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 			if (error.hasValue()) continue;
 			const	SQTstsdAtomPayload&	stsdAtomPayload =
 												*((SQTstsdAtomPayload*) stsdAtomPayloadData->getBytePtr());
-			const	SQTstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
+			const	SstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
 
 			// Sample Table Time-to-Sample
 			TVResult<CData>	sttsAtomPayloadData =
@@ -880,7 +855,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 
 			// Internals
 			Internals	internals(atomReader, *stsdAtom, *stblContainerAtom, stsdDescription, sttsAtomPayload,
-								stscAtomPayload, stszAtomPayload, stcoAtomPayload);
+								stscAtomPayload, stszAtomPayload, OR<SQTstcoAtomPayload>(*stcoAtomPayload));
 
 			// Metadata
 			OR<CAtomReader::Atom>	metaAtom = trakContainerAtom->getAtom(MAKE_OSTYPE('m', 'e', 't', 'a'));
@@ -925,6 +900,14 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 				else
 					// Error
 					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrackInfo.getError()));
+			} else {
+				// Import track
+				error =
+						importTrack(importSetup.getRandomAccessDataSource(), hdlrAtomPayload.getSubType(),
+								stsdDescription, internals);
+				if (error.hasValue())
+					// Error
+					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(*error));
 			}
 		} else if (moovIterator->mType == MAKE_OSTYPE('m', 'e', 't', 'a')) {
 			// Process file metadata

@@ -4,6 +4,7 @@
 
 #include "CFileWriter.h"
 
+#include "CReferenceCountable.h"
 #undef Delete
 #include <Unknwn.h>
 
@@ -39,10 +40,10 @@ using namespace winrt::Windows::Storage::Streams;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFileWriter::Internals
 
-class CFileWriter::Internals : public TReferenceCountable<Internals> {
+class CFileWriter::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const CFile& file) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mFile(file), mRemoveIfNotClosed(false)
 			{}
 		~Internals()

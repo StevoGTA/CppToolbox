@@ -37,29 +37,35 @@ CString::CString() : CHashable(), mString()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CString& other, OV<Length> length) : CHashable()
+CString::CString(const CString& other) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check for length
-	if (length.hasValue())
-		// Have length
-		mString = std::basic_string<TCHAR>(other.mString, length.getValue());
-	else
-		// Don't have length
-		mString = other.mString;
+	// Make copy
+	mString = other.mString;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(OSStringVar(initialString), OV<Length> length) : CHashable()
+CString::CString(const CString& other, Length length) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check for length
-	if (length.hasValue())
-		// Have length
-		mString = std::basic_string<TCHAR>(initialString, length.getValue());
-	else
-		// Don't have length
-		mString = std::basic_string<TCHAR>(initialString);
+	// Setup
+	mString = std::basic_string<TCHAR>(other.mString, length);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(OSStringVar(initialString)) : CHashable()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mString = std::basic_string<TCHAR>(initialString);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(OSStringVar(initialString), Length length) : CHashable()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mString = std::basic_string<TCHAR>(initialString, length);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -582,7 +588,7 @@ CString CString::getSubString(CharIndex startIndex, OV<Length> length) const
 	TBuffer<TCHAR>	buffer((UInt32) lengthUse);
 	size_t			count = mString._Copy_s(*buffer, lengthUse, lengthUse, startIndex);
 
-	return CString(*buffer, OV<Length>((Length) count));
+	return CString(*buffer, (Length) count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

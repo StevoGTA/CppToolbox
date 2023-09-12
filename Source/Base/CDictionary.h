@@ -191,6 +191,8 @@ class CDictionary : public CEquatable {
 						void					remove(const CString& key);
 						void					remove(const TArray<CString>& keys);
 						void					remove(const TSet<CString>& keys);
+						CDictionary				removing(const TArray<CString>& keys);
+						CDictionary				removing(const TSet<CString>& keys);
 						void					removeAll();
 
 						bool					equals(const CDictionary& other, void* itemCompareProcUserData = nil)
@@ -200,6 +202,7 @@ class CDictionary : public CEquatable {
 
 				const	OR<SValue>				operator[](const CString& key) const;
 						CDictionary&			operator=(const CDictionary& other);
+						CDictionary				operator+(const CDictionary& other) const;
 						CDictionary&			operator+=(const CDictionary& other);
 
 	// Properties
@@ -292,6 +295,10 @@ template <typename T> class TNDictionary : public TMDictionary<T> {
 								void* userData) :
 							TMDictionary<T>((SValue::OpaqueCopyProc) copy, nil, (SValue::OpaqueDisposeProc) dispose,
 									other, itemIncludeProc, userData)
+							{}
+						TNDictionary(const TDictionary<T>& other) :
+							TMDictionary<T>((SValue::OpaqueCopyProc) copy, nil, (SValue::OpaqueDisposeProc) dispose,
+									other)
 							{}
 
 	private:

@@ -4,14 +4,17 @@
 
 #include "CSQLiteTableColumn.h"
 
+#include "CReferenceCountable.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteTableColumn::Internals
 
-class CSQLiteTableColumn::Internals : public TReferenceCountable<Internals> {
+class CSQLiteTableColumn::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const CString& name, CSQLiteTableColumn::Kind kind, CSQLiteTableColumn::Options options,
 				OV<SSQLiteValue> defaultValue = OV<SSQLiteValue>()) :
-			mName(name), mKind(kind), mOptions(options), mDefaultValue(defaultValue)
+			TReferenceCountableAutoDelete(),
+					mName(name), mKind(kind), mOptions(options), mDefaultValue(defaultValue)
 			{}
 
 		CString						mName;

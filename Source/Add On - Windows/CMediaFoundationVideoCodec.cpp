@@ -36,6 +36,7 @@ class CMediaFoundationDecodeVideoCodecInternals {
 		I<CMediaPacketSource>									mMediaPacketSource;
 		UInt32													mTimeScale;
 		TNumberArray<UInt32>									mKeyframeIndexes;
+		UInt32													mCurrentFrameIndex;
 		CMediaFoundationDecodeVideoCodec::ReadInputSampleProc	mReadInputSampleProc;
 
 		OI<CVideoProcessor::Format>								mVideoProcessorFormat;
@@ -57,7 +58,7 @@ CMediaFoundationDecodeVideoCodecInternals::CMediaFoundationDecodeVideoCodecInter
 		CMediaFoundationDecodeVideoCodec::ReadInputSampleProc readInputSampleProc) :
 				mMediaFoundationDecodeVideoCodec(mediaFoundationDecodeVideoCodec), mCodecID(codecID),
 				mMediaPacketSource(mediaPacketSource), mTimeScale(timeScale), mKeyframeIndexes(keyframeIndexes),
-				mReadInputSampleProc(readInputSampleProc)
+				mCurrentFrameIndex(0), mReadInputSampleProc(readInputSampleProc)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Finish setup
@@ -273,12 +274,13 @@ void CMediaFoundationDecodeVideoCodec::seek(UniversalTimeInterval timeInterval)
 	CMediaFoundationServices::flush(*mInternals->mVideoDecoder);
 
 	// Seek
-	UInt32	frameIndex =
-					mInternals->mMediaPacketSource->seekToKeyframe(
-							(UInt32) (timeInterval * mInternals->mVideoProcessorFormat->getFramerate() + 0.5),
-							mInternals->mKeyframeIndexes);
+	mInternals->mCurrentFrameIndex =
+			mInternals->mMediaPacketSource->seekToKeyframe(
+					(UInt32) (timeInterval * mInternals->mVideoProcessorFormat->getFramerate() + 0.5),
+					mInternals->mKeyframeIndexes);
 	seek(
-			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessorFormat->getFramerate() *
+			(UInt64) ((UniversalTimeInterval) mInternals->mCurrentFrameIndex /
+					mInternals->mVideoProcessorFormat->getFramerate() *
 					(UniversalTimeInterval) mInternals->mTimeScale));
 }
 
@@ -297,6 +299,7 @@ TIResult<CVideoFrame> CMediaFoundationDecodeVideoCodec::decode()
 	mInternals->mOutputSample = sample.getInstance();
 
 	// Process output
+	UInt32	currentFrameIndex = mInternals->mCurrentFrameIndex++;
 	OV<SError>	error =
 						CMediaFoundationServices::processOutput(*mInternals->mVideoDecoder, *mInternals->mOutputSample,
 								CMediaFoundationServices::ProcessOutputInfo(
@@ -311,7 +314,7 @@ TIResult<CVideoFrame> CMediaFoundationDecodeVideoCodec::decode()
 	ReturnValueIfFailed(result, OSSTR("GetSampleTime"), TIResult<CVideoFrame>(SErrorFromHRESULT(result)));
 
 	return TIResult<CVideoFrame>(
-			CVideoFrame((UniversalTimeInterval) sampleTime / 10000.0, *sample.getInstance(),
+			CVideoFrame((UniversalTimeInterval) sampleTime / 10000.0, currentFrameIndex, *sample.getInstance(),
 					mInternals->mOutputSampleDataFormatGUID, mInternals->mOutputSampleFrameSize,
 					mInternals->mOutputSampleViewRect));
 }

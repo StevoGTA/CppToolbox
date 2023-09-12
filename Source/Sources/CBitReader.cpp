@@ -5,14 +5,15 @@
 #include "CBitReader.h"
 
 #include "CData.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CBitReader::Internals
 
-class CBitReader::Internals : public TReferenceCountable<Internals> {
+class CBitReader::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource, bool isBigEndian) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mIsBigEndian(isBigEndian), mRandomAccessDataSource(randomAccessDataSource), mDataSourceOffset(0),
 					mByteCount(mRandomAccessDataSource->getByteCount()),
 					mCurrentByte(0), mCurrentByteBitsAvailable(0)

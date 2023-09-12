@@ -5,15 +5,16 @@
 #include "CTextReader.h"
 
 #include "CDataSource.h"
+#include "CReferenceCountable.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CTextReader::Internals
 
-class CTextReader::Internals : public TReferenceCountable<Internals> {
+class CTextReader::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mRandomAccessDataSource(randomAccessDataSource), mDataSourceOffset(0),
 					mByteCount(mRandomAccessDataSource->getByteCount())
 			{}

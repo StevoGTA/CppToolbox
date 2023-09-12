@@ -5,6 +5,7 @@
 #include "CUUID.h"
 
 #include "CppToolboxAssert.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: External functions
@@ -15,11 +16,11 @@ extern	CUUID::Bytes	eCreateUUIDBytes();
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CUUID::Internals
 
-class CUUID::Internals : public TReferenceCountable<Internals> {
+class CUUID::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals() : TReferenceCountable(), mUUIDBytes(eCreateUUIDBytes()) {}
-		Internals(const CUUID::Bytes& uuidBytes) : TReferenceCountable(), mUUIDBytes(uuidBytes) {}
-		Internals(const CData& data) : TReferenceCountable()
+		Internals() : TReferenceCountableAutoDelete(), mUUIDBytes(eCreateUUIDBytes()) {}
+		Internals(const CUUID::Bytes& uuidBytes) : TReferenceCountableAutoDelete(), mUUIDBytes(uuidBytes) {}
+		Internals(const CData& data) : TReferenceCountableAutoDelete()
 			{
 				// Check if data is correct size
 				AssertFailIf(data.getByteCount() != 16);
@@ -32,7 +33,7 @@ class CUUID::Internals : public TReferenceCountable<Internals> {
 					// Data is not correct size
 					mUUIDBytes = eCreateUUIDBytes();
 			}
-		Internals(const CString& string) : TReferenceCountable()
+		Internals(const CString& string) : TReferenceCountableAutoDelete()
 			{
 				// Check length
 				if (string.getLength() == 36) {

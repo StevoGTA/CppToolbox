@@ -5,11 +5,12 @@
 #include "CSQLiteTable.h"
 
 #include "CDictionary.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteTable::Internals
 
-class CSQLiteTable::Internals : public TReferenceCountable<Internals> {
+class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> {
 	// Types
 	public:
 		struct SInt64Results {
@@ -27,7 +28,8 @@ class CSQLiteTable::Internals : public TReferenceCountable<Internals> {
 										const TArray<CSQLiteTableColumn>& tableColumns,
 										const TArray<CSQLiteTableColumn::Reference>& references,
 										CSQLiteStatementPerformer& statementPerformer) :
-									mName(name), mOptions(options), mTableColumns(tableColumns),
+									TReferenceCountableAutoDelete(),
+											mName(name), mOptions(options), mTableColumns(tableColumns),
 											mStatementPerformer(statementPerformer)
 									{
 										// Iterate all table column references

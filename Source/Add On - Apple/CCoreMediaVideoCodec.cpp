@@ -17,7 +17,7 @@ class CCoreMediaDecodeVideoCodec::Internals {
 								const I<CMediaPacketSource>& mediaPacketSource, UInt32 timeScale,
 								const TNumberArray<UInt32>& keyframeIndexes) :
 							mCodecID(codecID), mMediaPacketSource(mediaPacketSource), mTimeScale(timeScale),
-									mKeyframeIndexes(keyframeIndexes),
+									mKeyframeIndexes(keyframeIndexes), mCurrentFrameIndex(0),
 									mFormatDescriptionRef(nil), mDecompressionSessionRef(nil)
 							{}
 						~Internals()
@@ -45,6 +45,7 @@ class CCoreMediaDecodeVideoCodec::Internals {
 		I<CMediaPacketSource>		mMediaPacketSource;
 		UInt32						mTimeScale;
 		TNumberArray<UInt32>		mKeyframeIndexes;
+		UInt32						mCurrentFrameIndex;
 
 		OV<CVideoProcessor::Format>	mVideoProcessorFormat;
 
@@ -123,12 +124,13 @@ void CCoreMediaDecodeVideoCodec::seek(UniversalTimeInterval timeInterval)
 	::VTDecompressionSessionWaitForAsynchronousFrames(mInternals->mDecompressionSessionRef);
 
 	// Seek
-	UInt32	frameIndex =
-					mInternals->mMediaPacketSource->seekToKeyframe(
-							(UInt32) (timeInterval * mInternals->mVideoProcessorFormat->getFramerate() + 0.5),
-							mInternals->mKeyframeIndexes);
+	mInternals->mCurrentFrameIndex =
+			mInternals->mMediaPacketSource->seekToKeyframe(
+					(UInt32) (timeInterval * mInternals->mVideoProcessorFormat->getFramerate() + 0.5),
+					mInternals->mKeyframeIndexes);
 	seek(
-			(UInt64) ((UniversalTimeInterval) frameIndex / mInternals->mVideoProcessorFormat->getFramerate() *
+			(UInt64) ((UniversalTimeInterval) mInternals->mCurrentFrameIndex /
+					mInternals->mVideoProcessorFormat->getFramerate() *
 					(UniversalTimeInterval) mInternals->mTimeScale));
 }
 
@@ -137,6 +139,7 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get next packet
+	UInt32	currentFrameIndex = mInternals->mCurrentFrameIndex++;
 	TVResult<CMediaPacketSource::DataInfo>	dataInfo = mInternals->mMediaPacketSource->readNext();
 	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
 
@@ -176,7 +179,8 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 	// Prepare return info
 	TIResult<CVideoFrame>	result(
 									CVideoFrame(::CMTimeGetSeconds((*sampleTimingInfo).presentationTimeStamp),
-											imageBufferRef));
+											currentFrameIndex, imageBufferRef));
 	::CFRelease(imageBufferRef);
 
-	return result;}
+	return result;
+}

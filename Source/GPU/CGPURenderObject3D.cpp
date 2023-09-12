@@ -7,11 +7,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderObject3D::Internals
 
-class CGPURenderObject3D::Internals : public TReferenceCountable<Internals> {
+class CGPURenderObject3D::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 				Internals(CGPU& gpu, const CData& vertexData, UInt32 indexCount,
 						const CData& indexData, CGPUVertexShader& vertexShader, CGPUFragmentShader& fragmentShader) :
-					TReferenceCountable(), mGPU(gpu),
+					TReferenceCountableAutoDelete(), mGPU(gpu),
 							mGPUVertexBuffer(
 									mGPU.allocateVertexBuffer(vertexShader.getPerVertexByteCount(), vertexData)),
 							mIndexCount(indexCount), mGPUIndexBuffer(mGPU.allocateIndexBuffer(indexData)),

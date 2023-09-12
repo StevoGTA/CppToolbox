@@ -7,11 +7,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDirectXTexture::Internals
 
-class CDirectXTexture::Internals : public TReferenceCountable<Internals> {
+class CDirectXTexture::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(ID3D11Device& device, ID3D11DeviceContext& deviceContext, const CData& data, DXGI_FORMAT format,
 				const S2DSizeU16& size) :
-			mFormat(format), mSize(size)
+			TReferenceCountableAutoDelete(),
+					mFormat(format), mSize(size)
 			{
 				// Setup
 				D3D11_TEXTURE2D_DESC	texture2DDesc;

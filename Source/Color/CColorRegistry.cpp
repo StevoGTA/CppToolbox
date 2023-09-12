@@ -6,14 +6,15 @@
 
 #include "CNotificationCenter.h"
 #include "CPreferences.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CColorGroup::Internals
 
-class CColorGroup::Internals : public TReferenceCountable<Internals> {
+class CColorGroup::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(OSType id, UInt32 displayIndex) :
-			TReferenceCountable(), mID(id), mDisplayIndex(displayIndex)
+			TReferenceCountableAutoDelete(), mID(id), mDisplayIndex(displayIndex)
 			{}
 
 		OSType					mID;
@@ -91,10 +92,11 @@ bool CColorGroup::compareDisplayIndexes(const CColorGroup& colorGroup1, const CC
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorSet::Internals
 
-class CColorSet::Internals : public TReferenceCountable<Internals> {
+class CColorSet::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const CString& name, OV<OSType> id = OV<OSType>()) :
-			TReferenceCountable(), mName(name), mID(id), mColorsMap((SValue::OpaqueEqualsProc) CColor::areEqual)
+			TReferenceCountableAutoDelete(),
+					mName(name), mID(id), mColorsMap((SValue::OpaqueEqualsProc) CColor::areEqual)
 			{}
 
 	CString										mName;

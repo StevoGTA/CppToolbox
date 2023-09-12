@@ -5,15 +5,16 @@
 #include "CVideoDecoder.h"
 
 #include "CCodecRegistry.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CVideoDecoder::Internals
 
-class CVideoDecoder::Internals : public TReferenceCountable<Internals> {
+class CVideoDecoder::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const SVideo::Format& videoFormat, const I<CDecodeVideoCodec>& videoCodec,
 				const CString& identifier) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mVideoFormat(videoFormat), mVideoCodec(videoCodec), mIdentifier(identifier),
 					mStartTimeInterval(0.0), mCurrentTimeInterval(0.0)
 			{}

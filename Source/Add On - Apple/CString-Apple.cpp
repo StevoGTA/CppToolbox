@@ -41,24 +41,34 @@ CString::CString() : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CString& other, OV<Length> length) : CHashable()
+CString::CString(const CString& other) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if length is specified
-	if (length.hasValue()) {
-		// Create limited copy
-		mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, other.mStringRef);
-		if (::CFStringGetLength(mStringRef) > *length)
-			// Truncate
-			::CFStringReplace((CFMutableStringRef) mStringRef,
-					CFRangeMake(*length, ::CFStringGetLength(mStringRef) - *length), CFSTR(""));
-	} else
-		// Make copy
-		mStringRef = (CFStringRef) ::CFRetain(other.mStringRef);
+	// Make copy
+	mStringRef = (CFStringRef) ::CFRetain(other.mStringRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const OSStringVar(initialString), OV<Length> length) : CHashable()
+CString::CString(const CString& other, Length length) : CHashable()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create limited copy
+	mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, other.mStringRef);
+	if (::CFStringGetLength(mStringRef) > length)
+		// Truncate
+		::CFStringReplace((CFMutableStringRef) mStringRef,
+				CFRangeMake(length, ::CFStringGetLength(mStringRef) - length), CFSTR(""));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const OSStringVar(initialString)) : CHashable()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mStringRef = (CFStringRef) ::CFRetain(initialString);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const OSStringVar(initialString), Length length) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mStringRef = (CFStringRef) ::CFRetain(initialString);

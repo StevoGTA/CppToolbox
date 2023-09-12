@@ -4,6 +4,7 @@
 
 #include "CFileWriter.h"
 
+#include "CReferenceCountable.h"
 #include "SError-Windows.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -28,10 +29,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFileWriter::Internals
 
-class CFileWriter::Internals : public TReferenceCountable<Internals> {
+class CFileWriter::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const CFile& file) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mFile(file), mRemoveIfNotClosed(false), mFileHandle(INVALID_HANDLE_VALUE)
 			{}
 		~Internals()

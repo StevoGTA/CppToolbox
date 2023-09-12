@@ -9,10 +9,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: COpenGLProgram::Internals
 
-class COpenGLProgram::Internals : public TReferenceCountable<Internals> {
+class COpenGLProgram::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(COpenGLVertexShader& vertexShader, COpenGLFragmentShader& fragmentShader) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mVertexShader(vertexShader), mFragmentShader(fragmentShader), mProgram(glCreateProgram())
 			{
 				// Setup

@@ -4,6 +4,7 @@
 
 #include "CFilesystemPath.h"
 
+#include "CReferenceCountable.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -15,10 +16,10 @@ static	const	CString&	sPathSeparator(CFilesystemPath::Style style);
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFilesystemPath::Internals
 
-class CFilesystemPath::Internals : public TReferenceCountable<Internals> {
+class CFilesystemPath::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 		Internals(const CString& string, CFilesystemPath::Style style) :
-			TReferenceCountable(),
+			TReferenceCountableAutoDelete(),
 					mString(string), mStyle(style)
 			{}
 

@@ -9,12 +9,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderObject2D::Internals
 
-class CGPURenderObject2D::Internals : public TReferenceCountable<Internals> {
+class CGPURenderObject2D::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 				Internals(CGPU& gpu, const TArray<CGPURenderObject2D::Item>& items,
 						const TArray<CGPUTextureReference>& gpuTextureReferences,
 						CGPUFragmentShader::Proc fragmentShaderProc) :
-					TReferenceCountable(),
+					TReferenceCountableAutoDelete(),
 							mGPU(gpu), mGPUTextureReferences(gpuTextureReferences),
 							mFragmentShaderProc(fragmentShaderProc),
 							mGPUVertexBuffer(

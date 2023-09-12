@@ -128,11 +128,11 @@ template <typename T> struct T3DVector {
 													   );
 								}
 
-	inline	T3DPoint<T>		operator+(const T3DPoint<T>& point)
+	inline	T3DPoint<T>		operator+(const T3DPoint<T>& point) const
 								{ return T3DPoint<T>(point.mX + mDX, point.mY + mDY, point.mZ + mDZ); }
-	inline	T3DVector<T>	operator+(const T3DVector<T>& other)
+	inline	T3DVector<T>	operator+(const T3DVector<T>& other) const
 								{ return T3DVector<T>(mDX + other.mDX, mDY + other.mDY, mDZ + other.mDZ); }
-	inline	T3DVector<T>	operator-(const T3DVector<T>& other)
+	inline	T3DVector<T>	operator-(const T3DVector<T>& other) const
 								{ return T3DVector<T>(mDX - other.mDX, mDY - other.mDY, mDZ - other.mDZ); }
 
 	inline	T3DVector<T>	operator*(T factor) const { return T3DVector<T>(mDX * factor, mDY * factor, mDZ * factor); }

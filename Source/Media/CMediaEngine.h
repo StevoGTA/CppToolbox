@@ -29,7 +29,8 @@ class CMediaEngine {
 															const;
 				TVResult<SAudio::ProcessingFormat>	connect(const I<CAudioProcessor>& audioProcessorSource,
 															const I<CAudioProcessor>& audioProcessorDestination,
-															const SAudio::ProcessingFormat& audioProcessingFormat) const;
+															const SAudio::ProcessingFormat& audioProcessingFormat)
+															const;
 
 				I<CVideoSource>						getVideoSource(
 															const CMediaTrackInfos::VideoTrackInfo& videoTrackInfo,

@@ -211,6 +211,14 @@ struct SH264SequenceParameterSetPayload {
 	UInt8				mPicOrderCountLSBBitCount;
 };
 
+enum ESliceType {
+	kSliceTypeP		= 0,
+	kSliceTypeB		= 1,
+	kSliceTypeI		= 2,
+	kSliceTypeSP	= 3,
+	kSliceTypeSI	= 4,
+};
+
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CH264DecodeVideoCodec
@@ -485,6 +493,7 @@ TVResult<CMSampleTimingInfo> CH264DecodeVideoCodec::composeSampleTimingInfo(
 }
 
 #elif defined(TARGET_OS_WINDOWS)
+
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CH264DecodeVideoCodec::setup(const CVideoProcessor::Format& videoProcessorFormat)
 //----------------------------------------------------------------------------------------------------------------------
@@ -601,7 +610,7 @@ TVResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::Frame
 	}
 
 	// Handle results
-	if (sliceType == 2) {
+	if ((sliceType % 5) == kSliceTypeI) {
 		// IDR
 		mCurrentFrameTime = mNextFrameTime;
 		mPicOrderCountMSB = 0;

@@ -199,10 +199,11 @@ template <typename T> struct T2DVector {
 								}
 	inline	T2DVector<T>	normalized() const { return *this / magnitude(); }
 
-	inline	T2DPoint<T>		operator+(const T2DPoint<T>& other) { return T2DPoint<T>(other.mX + mDX, other.mY + mDY); }
-	inline	T2DVector<T>	operator+(const T2DVector<T>& other)
+	inline	T2DPoint<T>		operator+(const T2DPoint<T>& other) const
+								{ return T2DPoint<T>(other.mX + mDX, other.mY + mDY); }
+	inline	T2DVector<T>	operator+(const T2DVector<T>& other) const
 								{ return T2DVector<T>(mDX + other.mDX, mDY + other.mDY); }
-	inline	T2DVector<T>	operator-(const T2DVector<T>& other)
+	inline	T2DVector<T>	operator-(const T2DVector<T>& other) const
 								{ return T2DVector<T>(mDX - other.mDX, mDY - other.mDY); }
 
 	inline	T2DVector<T>	operator*(T factor) const { return T2DVector<T>(mDX * factor, mDY * factor); }

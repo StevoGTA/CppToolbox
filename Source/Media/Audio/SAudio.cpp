@@ -125,11 +125,14 @@ const	SAudio::ProcessingSetup	SAudio::ProcessingSetup::mUnspecified(BitsInfo::mU
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString SAudio::getStringFromDB(Float32 db, Float32 muteDB)
+CString SAudio::getDBDisplayString(Float32 value, Float32 muteValue)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	Float32	db = getDBFromValue(value);
+
 	// Check value
-	if (db == muteDB)
+	if (value == muteValue)
 		// Silence
 		return CString(OSSTR("-\u221EdB"));
 	else if (db < 1.0)

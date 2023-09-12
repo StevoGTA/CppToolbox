@@ -41,18 +41,18 @@ struct SGPUTextureManagerInfo {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureReference::Internals
 
-class CGPUTextureReference::Internals : public TReferenceCountable<Internals> {
+class CGPUTextureReference::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
 						// Lifecycle methods
 						Internals(const OR<const CString>& reference,
 								SGPUTextureManagerInfo& gpuTextureManagerInfo) :
-							TReferenceCountable(),
+							TReferenceCountableAutoDelete(),
 									mReference(reference.hasReference() ? *reference : CString::mEmpty),
 									mGPUTextureManagerInfo(gpuTextureManagerInfo)
 							{}
 						Internals(const I<CGPUTexture>& gpuTexture,
 								SGPUTextureManagerInfo& gpuTextureManagerInfo) :
-							TReferenceCountable(),
+							TReferenceCountableAutoDelete(),
 									mReference(CString::mEmpty), mGPUTextureManagerInfo(gpuTextureManagerInfo),
 									mGPUTexture(OV<I<CGPUTexture> >(gpuTexture))
 							{}
@@ -502,9 +502,9 @@ CGPUTextureReference& CGPUTextureReference::operator=(const CGPUTextureReference
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CGPUTextureManager::Internals
 
-class CGPUTextureManager::Internals : public TReferenceCountable<Internals> {
+class CGPUTextureManager::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals(CGPU& gpu) : TReferenceCountable(), mGPUTextureManagerInfo(gpu) {}
+		Internals(CGPU& gpu) : TReferenceCountableAutoDelete(), mGPUTextureManagerInfo(gpu) {}
 
 		SGPUTextureManagerInfo	mGPUTextureManagerInfo;
 };
