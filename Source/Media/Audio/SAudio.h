@@ -543,5 +543,5 @@ struct SAudio {
 		static	CString				getPercentDisplayString(Float32 value)
 										{ return CString(value * 100.0, 0, 1) + CString::mPercent; }
 		static	Float32				getValueFromPercentDisplayString(const CString& string)
-										{ return string.getFloat32() / 100.0; }
+										{ return string.getFloat32() / 100.0f; }
 };

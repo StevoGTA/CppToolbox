@@ -1279,7 +1279,7 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 														CPCMAudioCodec::composeAudioFormat(isFloat, bits, sampleRate,
 																channels);
 			SMedia::SegmentInfo					mediaSegmentInfo =
-														SAudio::composeMediaSegmentInfo(audioFormat, duration,
+														SAudio::composeMediaSegmentInfo(audioFormat, (UInt64) duration,
 																bytesPerFrame);
 
 	// Compose audio track
