@@ -6,7 +6,7 @@
 
 #include "CAudioFrames.h"
 #include "SAudio.h"
-#include "SAudioSourceStatus.h"
+#include "TResult.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioProcessor
@@ -33,7 +33,7 @@ class CAudioProcessor {
 														const OV<UniversalTimeInterval>& durationTimeInterval);
 		virtual	void							seek(UniversalTimeInterval timeInterval);
 
-		virtual	SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
+		virtual	TVResult<SMedia::SourceInfo>	performInto(CAudioFrames& audioFrames);
 
 		virtual	void							reset();
 
@@ -88,7 +88,8 @@ class CAudioDestination : public CAudioProcessor {
 													{ AssertFailUnimplemented(); return OV<SError>(); }
 
 												// Instance methods
-		virtual	void							setupComplete() = 0;
+		virtual	void							setupComplete()
+													{}
 };
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -44,8 +44,9 @@ struct SError {
 
 	// Properties
 	public:
-		static	const	SError	mUnimplemented;
+		static	const	SError	mCancelled;
 		static	const	SError	mEndOfData;
+		static	const	SError	mUnimplemented;
 
 	private:
 						CString		mDomain;

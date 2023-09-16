@@ -10,40 +10,40 @@
 // MARK: STimecode
 
 struct STimecode {
-	// Mode
+	// Base
 	public:
-		enum Mode {
-			kMode24FPSNonDropFrame	= 24,	// film, ATSC, 2k, 4k, 6k
-//			kMode25FPSNonDropFrame	= 25,	// PAL (used in Europe, Uruguay, Argentina, Australia), SECAM, DVB, ATSC
-//			kMode29_97FPSDropFrame	= 2997,	// 30 ÷ 1.001 fps - NTSC American System (US, Canada, Mexico, Colombia, etc.), ATSC, PAL-M (Brazil)
-//			kMode30FPSNonDropFrame	= 30,	// ATSC
+		enum Base {
+			kBase24FPSNonDropFrame	= 24,	// film, ATSC, 2k, 4k, 6k
+//			kBase25FPSNonDropFrame	= 25,	// PAL (used in Europe, Uruguay, Argentina, Australia), SECAM, DVB, ATSC
+//			kBase29_97FPSDropFrame	= 2997,	// 30 ÷ 1.001 fps - NTSC American System (US, Canada, Mexico, Colombia, etc.), ATSC, PAL-M (Brazil)
+//			kBase30FPSNonDropFrame	= 30,	// ATSC
 		};
 
 	// Methods
 	public:
 					// Lifecycle methods
-					STimecode(SInt32 frameIndex, Mode mode) : mFrameIndex(frameIndex), mMode(mode) {}
-					STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames, Mode mode);
-					STimecode(const CString& string, Mode mode);
-					STimecode(const STimecode& other) : mFrameIndex(other.mFrameIndex), mMode(other.mMode) {}
+					STimecode(SInt32 frameIndex, Base base) : mFrameIndex(frameIndex), mBase(base) {}
+					STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames, Base base);
+					STimecode(const CString& string, Base base);
+					STimecode(const STimecode& other) : mFrameIndex(other.mFrameIndex), mBase(other.mBase) {}
 
 					// Instance methods
 		UInt32		getFrameIndex() const
 						{ return mFrameIndex; }
-		Mode		getMode() const
-						{ return mMode; }
+		Base		getBase() const
+						{ return mBase; }
 		CString		getDisplayString() const;
 
 		STimecode	addingFrames(SInt32 frameCount) const
-						{ return STimecode(mFrameIndex + frameCount, mMode); }
+						{ return STimecode(mFrameIndex + frameCount, mBase); }
 
 		bool		operator==(const STimecode& other) const
-						{ return (mFrameIndex == other.mFrameIndex) && (mMode == other.mMode); }
+						{ return (mFrameIndex == other.mFrameIndex) && (mBase == other.mBase); }
 		bool		operator!=(const STimecode& other) const
-						{ return (mFrameIndex != other.mFrameIndex) || (mMode != other.mMode); }
+						{ return (mFrameIndex != other.mFrameIndex) || (mBase != other.mBase); }
 
 	// Properties
 	private:
 		SInt32	mFrameIndex;
-		Mode	mMode;
+		Base	mBase;
 };

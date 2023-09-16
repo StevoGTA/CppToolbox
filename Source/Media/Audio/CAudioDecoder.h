@@ -31,7 +31,7 @@ class CAudioDecoder : public CAudioSource {
 												const OV<UniversalTimeInterval>& durationTimeInterval);
 		void							seek(UniversalTimeInterval timeInterval);
 
-		SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
+		TVResult<SMedia::SourceInfo>	performInto(CAudioFrames& audioFrames);
 
 		void							reset();
 

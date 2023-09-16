@@ -184,3 +184,46 @@ void CItemsProgress::reset()
 	// Update value
 	mInternals->updateValue();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CTimeIntervalProgress::Internals
+
+class CTimeIntervalProgress::Internals {
+	public:
+		Internals(UniversalTimeInterval totalTimeInterval) :
+			mTotalTimeInterval(totalTimeInterval)
+			{}
+
+		UniversalTimeInterval	mTotalTimeInterval;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CTimeIntervalProgress
+
+// MARK Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CTimeIntervalProgress::CTimeIntervalProgress(const UpdateInfo& updateInfo, UniversalTimeInterval totalTimeInterval) :
+		CProgress(updateInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(totalTimeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CTimeIntervalProgress::~CTimeIntervalProgress()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	Delete(mInternals);
+}
+
+// MARK Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+void CTimeIntervalProgress::setTimeInterval(UniversalTimeInterval timeInterval)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	setValue(OV<Float32>((Float32) (timeInterval / mInternals->mTotalTimeInterval)));
+}

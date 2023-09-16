@@ -22,11 +22,15 @@ class CMediaDestination {
 		virtual									~CMediaDestination();
 
 												// Instance methods
-		virtual			void					add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex);
-						UInt32					getAudioTrackCount() const;
+				const	CString&				getName() const;
 
-		virtual			void					add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex);
+						UInt32					getAudioTrackCount() const;
+		virtual			void					add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex);
+
 						UInt32					getVideoTrackCount() const;
+		virtual			void					add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex);
+
+		virtual			void					setupComplete() const = 0;
 
 		virtual			void					setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
 														const OV<UniversalTimeInterval>& durationTimeInterval =
@@ -35,7 +39,7 @@ class CMediaDestination {
 
 	protected:
 												// Lifecycle methods
-												CMediaDestination();
+												CMediaDestination(const CString& name);
 
 												// Instance methods
 						OR<I<CAudioProcessor> >	getAudioProcessor(UInt32 trackIndex) const;
@@ -43,9 +47,6 @@ class CMediaDestination {
 
 						OR<I<CVideoProcessor> >	getVideoProcessor(UInt32 trackIndex) const;
 						void					removeAllVideoProcessors();
-
-												// Subclass methods
-		virtual	const	CString&				getName() const = 0;
 
 	// Properties
 	private:
@@ -59,25 +60,10 @@ template <typename T, typename U> class TMediaDestination : public CMediaDestina
 	// Methods
 	public:
 				// Lifecycle methods
-				TMediaDestination() : CMediaDestination() {}
+				TMediaDestination(const CString& name) : CMediaDestination(name) {}
 
-				// Instance methods
-		OR<T>	getAudioProcessor(UInt32 trackIndex = 0) const
-					{
-						// Get Audio Processor
-						OR<I<CAudioProcessor> >	audioProcessor = CMediaDestination::getAudioProcessor(trackIndex);
-
-						return audioProcessor.hasReference() ? OR<T>(*((T*) &(**audioProcessor))) :  OR<T>();
-					}
-		OR<U>	getVideoProcessor(UInt32 trackIndex = 0) const
-					{
-						// Get Video Processor
-						OR<I<CVideoProcessor> >	videoProcessor = CMediaDestination::getVideoProcessor(trackIndex);
-
-						return videoProcessor.hasReference() ? OR<U>(*((U*) &(**videoProcessor))) :  OR<U>();
-					}
-
-		void	setupComplete()
+				// CMediaDestination methods
+		void	setupComplete() const
 					{
 						// Setup
 						TNArray<CString>	setupMessages;
@@ -111,5 +97,20 @@ template <typename T, typename U> class TMediaDestination : public CMediaDestina
 
 						// Log
 						CLogServices::logMessages(setupMessages);
+					}
+
+		OR<T>	getAudioProcessor(UInt32 trackIndex = 0) const
+					{
+						// Get Audio Processor
+						OR<I<CAudioProcessor> >	audioProcessor = CMediaDestination::getAudioProcessor(trackIndex);
+
+						return audioProcessor.hasReference() ? OR<T>(*((T*) &(**audioProcessor))) :  OR<T>();
+					}
+		OR<U>	getVideoProcessor(UInt32 trackIndex = 0) const
+					{
+						// Get Video Processor
+						OR<I<CVideoProcessor> >	videoProcessor = CMediaDestination::getVideoProcessor(trackIndex);
+
+						return videoProcessor.hasReference() ? OR<U>(*((U*) &(**videoProcessor))) :  OR<U>();
 					}
 };

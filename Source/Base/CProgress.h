@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CString.h"
+#include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CProgress
@@ -33,6 +33,10 @@ class CProgress {
 				void*	mUserData;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -48,7 +52,6 @@ class CProgress {
 
 	// Properties
 	private:
-		class	Internals;
 		Internals*	mInternals;
 };
 
@@ -63,6 +66,10 @@ class CProgress {
  */
 
 class CItemsProgress : public CProgress {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 					// Lifecycle methods
@@ -80,6 +87,27 @@ class CItemsProgress : public CProgress {
 
 	// Properties
 	private:
-		class	Internals;
+		Internals*	mInternals;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: CTimeIntervalProgress
+
+class CTimeIntervalProgress : public CProgress {
+	// Classes
+	private:
+		class Internals;
+
+	// Methods
+	public:
+				// Lifecycle methods
+				CTimeIntervalProgress(const UpdateInfo& updateInfo, UniversalTimeInterval totalTimeInterval);
+				~CTimeIntervalProgress();
+
+				// Instance methods
+		void	setTimeInterval(UniversalTimeInterval timeInterval);
+
+	// Properties
+	private:
 		Internals*	mInternals;
 };

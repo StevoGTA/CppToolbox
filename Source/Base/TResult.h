@@ -70,6 +70,37 @@ template <typename T> struct TVResult {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - TOVResult (Value)
+
+template <typename T> struct TOVResult {
+					// Lifecycle Methods
+					TOVResult() {}
+					TOVResult(const T value) : mValue(OV<T>(value)) {}
+					TOVResult(const SError& error) : mError(OV<SError>(error)) {}
+					TOVResult(const TOVResult& other) : mValue(other.mValue), mError(other.mError) {}
+
+					// Instance Methods
+			bool	hasValue() const
+						{ return mValue.hasValue(); }
+	const	T		getValue() const
+						{ return *mValue; }
+
+			bool	hasError() const
+						{ return mError.hasValue(); }
+	const	SError&	getError() const
+						{ AssertFailIf(!mError.hasValue()); return *mError; }
+
+	const	T&		operator*() const
+						{ AssertFailIf(!mValue.hasValue()); return *mValue; }
+	const	T*		operator->() const
+						{ AssertFailIf(!mValue.hasValue()); return &(*mValue); }
+
+	private:
+		OV<T>		mValue;
+		OV<SError>	mError;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
 #define ReturnIfResultError(result)				{ if (result.hasError()) return; }

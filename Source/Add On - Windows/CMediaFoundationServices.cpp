@@ -195,8 +195,8 @@ OV<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CAudioProcessor& audioProcessor,
-		const SAudio::ProcessingFormat& audioProcessingFormat)
+TVResult<SMedia::SourceInfo> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer,
+		CAudioProcessor& audioProcessor, const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -206,19 +206,19 @@ SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, C
 	BYTE*	mediaBufferBytePtr;
 	DWORD	mediaBufferByteCount;
 	HRESULT	result = mediaBuffer->Lock(&mediaBufferBytePtr, &mediaBufferByteCount, NULL);
-	ReturnValueIfFailed(result, OSSTR("Lock"), SAudioSourceStatus(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, OSSTR("Lock"), TVResult<SMedia::SourceInfo>(SErrorFromHRESULT(result)));
 
 	// Setup Audio Frames
 	CAudioFrames	audioFrames(mediaBufferBytePtr, 1, mediaBufferByteCount, mediaBufferByteCount / bytesPerFrame,
 							bytesPerFrame);
 
 	// Perform into
-	SAudioSourceStatus	audioSourceStatus = audioProcessor.CAudioProcessor::performInto(audioFrames);
-	if (!audioSourceStatus.isSuccess()) {
+	TVResult<SMedia::SourceInfo>	mediaSourceInfo = audioProcessor.CAudioProcessor::performInto(audioFrames);
+	if (mediaSourceInfo.hasError()) {
 		// Unlock
 		mediaBuffer->Unlock();
 
-		return audioSourceStatus;
+		return mediaSourceInfo;
 	}
 
 	// Check if need to transmogrify audio frames
@@ -235,14 +235,14 @@ SAudioSourceStatus CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, C
 		// Unlock
 		mediaBuffer->Unlock();
 
-		ReturnValueIfFailed(result, OSSTR("SetCurrentLength"), SAudioSourceStatus(SErrorFromHRESULT(result)));
+		ReturnValueIfFailed(result, OSSTR("SetCurrentLength"), TVResult<SMedia::SourceInfo>(SErrorFromHRESULT(result)));
 	}
 
 	// Unlock media buffer
 	result = mediaBuffer->Unlock();
-	ReturnValueIfFailed(result, OSSTR("Unlock"), SAudioSourceStatus(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, OSSTR("Unlock"), TVResult<SMedia::SourceInfo>(SErrorFromHRESULT(result)));
 
-	return audioSourceStatus;
+	return mediaSourceInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

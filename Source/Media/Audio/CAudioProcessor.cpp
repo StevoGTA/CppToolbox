@@ -91,7 +91,7 @@ void CAudioProcessor::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CAudioProcessor::performInto(CAudioFrames& audioFrames)
+TVResult<SMedia::SourceInfo> CAudioProcessor::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return (*mInternals->mAudioProcessor)->performInto(audioFrames);

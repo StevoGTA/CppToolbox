@@ -243,7 +243,7 @@ TNArray<R<CMediaPlayer::Internals> >	CMediaPlayer::Internals::mActiveInternals;
 
 //----------------------------------------------------------------------------------------------------------------------
 CMediaPlayer::CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info) :
-		TMediaDestination<CAudioPlayer, CVideoFrameStore>()
+		TMediaDestination<CAudioPlayer, CVideoFrameStore>(CString(OSSTR("Media Player")))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -324,19 +324,6 @@ void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
 
 	// Store
 	mInternals->mCurrentPosition = timeInterval;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const CString& CMediaPlayer::getName() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	static	CString*	sName = nil;
-	if (sName == nil)
-		// Create
-		sName = new CString(OSSTR("Media Player"));
-
-	return *sName;
 }
 
 // MARK: Instance methods

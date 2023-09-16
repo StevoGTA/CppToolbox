@@ -11,8 +11,9 @@
 
 class CMediaDestination::Internals {
 	public:
-		Internals() {}
+		Internals(const CString& name) : mName(name) {}
 
+		CString													mName;
 		TNKeyConvertibleDictionary<UInt32, I<CAudioProcessor> >	mAudioProcessors;
 		TNKeyConvertibleDictionary<UInt32, I<CVideoProcessor> >	mVideoProcessors;
 };
@@ -24,10 +25,10 @@ class CMediaDestination::Internals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaDestination::CMediaDestination()
+CMediaDestination::CMediaDestination(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals();
+	mInternals = new Internals(name);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -40,6 +41,13 @@ CMediaDestination::~CMediaDestination()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
+const CString& CMediaDestination::getName() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mName;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 UInt32 CMediaDestination::CMediaDestination::getAudioTrackCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -47,10 +55,26 @@ UInt32 CMediaDestination::CMediaDestination::getAudioTrackCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CMediaDestination::add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mAudioProcessors.set(trackIndex, audioProcessor);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 UInt32 CMediaDestination::CMediaDestination::getVideoTrackCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mVideoProcessors.getKeyCount();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaDestination::add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mVideoProcessors.set(trackIndex, videoProcessor);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,14 +109,6 @@ void CMediaDestination::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Store
-	mInternals->mAudioProcessors.set(trackIndex, audioProcessor);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 OR<I<CAudioProcessor> > CMediaDestination::CMediaDestination::getAudioProcessor(UInt32 trackIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -104,14 +120,6 @@ void CMediaDestination::removeAllAudioProcessors()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mAudioProcessors.removeAll();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Store
-	mInternals->mVideoProcessors.set(trackIndex, videoProcessor);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

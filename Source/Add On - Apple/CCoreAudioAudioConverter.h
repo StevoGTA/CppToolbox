@@ -24,7 +24,7 @@ class CCoreAudioAudioConverter : public CAudioConverter {
 												const SAudio::ProcessingFormat& audioProcessingFormat);
 		TArray<CString>					getSetupDescription(const CString& indent);
 
-		SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
+		TVResult<SMedia::SourceInfo>	performInto(CAudioFrames& audioFrames);
 
 		void							reset();
 

@@ -8,7 +8,6 @@
 #include "CCodec.h"
 #include "CDataSource.h"
 #include "SAudio.h"
-#include "SAudioSourceStatus.h"
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------

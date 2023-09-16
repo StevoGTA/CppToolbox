@@ -170,7 +170,7 @@ TArray<CString> CAudioInterleaver::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CAudioInterleaver::performInto(CAudioFrames& audioFrames)
+TVResult<SMedia::SourceInfo> CAudioInterleaver::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -187,10 +187,10 @@ SAudioSourceStatus CAudioInterleaver::performInto(CAudioFrames& audioFrames)
 		mInternals->mInputAudioFrames->reset();
 
 	// Read
-	SAudioSourceStatus	audioSourceStatus = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
-	if (!audioSourceStatus.isSuccess())
+	TVResult<SMedia::SourceInfo>	mediaSourceInfo = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
+	if (mediaSourceInfo.hasError())
 		// Error
-		return audioSourceStatus;
+		return mediaSourceInfo;
 
 	// Perform
 	CAudioFrames::Info	readAudioFramesInfo = mInternals->mInputAudioFrames->getReadInfo();
@@ -199,7 +199,7 @@ SAudioSourceStatus CAudioInterleaver::performInto(CAudioFrames& audioFrames)
 			mInternals->mInputAudioFrames->getCurrentFrameCount());
 	audioFrames.completeWrite(mInternals->mInputAudioFrames->getCurrentFrameCount());
 
-	return audioSourceStatus;
+	return mediaSourceInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

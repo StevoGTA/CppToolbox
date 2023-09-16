@@ -116,7 +116,7 @@ void CAudioDecoder::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CAudioDecoder::performInto(CAudioFrames& audioFrames)
+TVResult<SMedia::SourceInfo> CAudioDecoder::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -127,7 +127,7 @@ SAudioSourceStatus CAudioDecoder::performInto(CAudioFrames& audioFrames)
 										*mInternals->getEndTimeInterval() - mInternals->mCurrentTimeInterval;
 		if (durationRemaining <= 0.0)
 			// Already done
-			return SAudioSourceStatus(SError::mEndOfData);
+			return TVResult<SMedia::SourceInfo>(SError::mEndOfData);
 
 		// Calculate
 		maxFrames = (UInt32) (durationRemaining * mInternals->mAudioProcessingFormat->getSampleRate());
@@ -136,11 +136,11 @@ SAudioSourceStatus CAudioDecoder::performInto(CAudioFrames& audioFrames)
 		maxFrames = (UInt32) ~0;
 
 	// Setup
-	SAudioSourceStatus	audioSourceStatus(mInternals->mCurrentTimeInterval);
+	TVResult<SMedia::SourceInfo>	mediaSourceInfo(mInternals->mCurrentTimeInterval);
 
 	// Decode
 	OV<SError>	error = mInternals->mDecodeAudioCodec->decodeInto(audioFrames);
-	ReturnValueIfError(error, SAudioSourceStatus(*error));
+	ReturnValueIfError(error, TVResult<SMedia::SourceInfo>(*error));
 
 	// Limit to max frames
 	audioFrames.limit(maxFrames);
@@ -150,7 +150,7 @@ SAudioSourceStatus CAudioDecoder::performInto(CAudioFrames& audioFrames)
 			(UniversalTimeInterval) audioFrames.getCurrentFrameCount() /
 					mInternals->mAudioProcessingFormat->getSampleRate();
 
-	return audioSourceStatus;
+	return mediaSourceInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

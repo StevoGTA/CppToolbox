@@ -117,8 +117,6 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 																OV<UniversalTimeInterval>());
 						void					seek(UniversalTimeInterval timeInterval);
 
-				const	CString&				getName() const;
-
 												// Instance methods
 		virtual			I<CAudioPlayer>			newAudioPlayer(const CString& identifier, UInt32 trackIndex);
 		virtual			void					setAudioGain(Float32 audioGain);

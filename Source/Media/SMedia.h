@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CData.h"
 #include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -65,6 +66,24 @@ struct SMedia {
 			UInt64	mByteOffset;
 	};
 
+	// Packet Data
+	struct PacketData {
+						// Lifecycle methods
+						PacketData(UInt32 duration, const CData& data) : mDuration(duration), mData(data) {}
+						PacketData(const PacketData& other) : mDuration(other.mDuration), mData(other.mData) {}
+
+						// Instance methods
+				UInt32	getDuration() const
+							{ return mDuration; }
+		const	CData&	getData() const
+							{ return mData; }
+
+		// Properties
+		private:
+			UInt32	mDuration;	// Duration is contextual - typically frame count for audio and time for video
+			CData	mData;
+	};
+
 	// SegmentInfo
 	struct SegmentInfo {
 								// Lifecycle methods
@@ -86,5 +105,20 @@ struct SMedia {
 		private:
 			UniversalTimeInterval	mDuration;
 			UInt32					mBitrate;
+	};
+
+	// SourceInfo
+	struct SourceInfo {
+									// Lifecycle methods
+									SourceInfo(UniversalTimeInterval timeInterval) : mTimeInterval(timeInterval) {}
+									SourceInfo(const SourceInfo& other) : mTimeInterval(other.mTimeInterval) {}
+
+									// Instance methods
+			UniversalTimeInterval	getTimeInterval() const
+										{ return mTimeInterval; }
+
+		// Properties
+		private:
+			UniversalTimeInterval	mTimeInterval;
 	};
 };

@@ -215,7 +215,7 @@ TArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SAudioSourceStatus CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
+TVResult<SMedia::SourceInfo> CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -240,17 +240,17 @@ SAudioSourceStatus CAudioChannelMapper::performInto(CAudioFrames& audioFrames)
 		mInternals->mInputAudioFrames->reset();
 
 	// Read
-	SAudioSourceStatus	audioSourceStatus = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
-	if (!audioSourceStatus.isSuccess())
+	TVResult<SMedia::SourceInfo>	mediaSourceInfo = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
+	if (mediaSourceInfo.hasError())
 		// Error
-		return audioSourceStatus;
+		return mediaSourceInfo;
 
 	// Perform
 	mInternals->mPerformProc(*mInternals->mInputAudioFrames, audioFrames,
 			mInternals->mInputAudioProcessingFormat->getBytesPerFrame(),
 			mOutputAudioProcessingFormat->getBytesPerFrame());
 
-	return audioSourceStatus;
+	return mediaSourceInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

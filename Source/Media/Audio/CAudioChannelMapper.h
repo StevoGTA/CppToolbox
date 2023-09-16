@@ -25,7 +25,7 @@ class CAudioChannelMapper : public CBasicAudioProcessor {
 														const SAudio::ProcessingFormat& audioProcessingFormat);
 				TArray<CString>					getSetupDescription(const CString& indent);
 
-				SAudioSourceStatus				performInto(CAudioFrames& audioFrames);
+				TVResult<SMedia::SourceInfo>	performInto(CAudioFrames& audioFrames);
 
 				TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 

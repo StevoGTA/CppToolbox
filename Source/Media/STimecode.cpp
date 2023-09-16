@@ -10,15 +10,15 @@
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames, Mode mode)
+STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames, Base base)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mMode = mode;
+	mBase = base;
 
-	// Check mode
-	switch (mMode) {
-		case kMode24FPSNonDropFrame:
+	// Check Base
+	switch (mBase) {
+		case kBase24FPSNonDropFrame:
 			// 24 fps
 			mFrameIndex = (((hours * 60) + minutes) * 60 + seconds) * 24 + frames;
 			break;
@@ -26,11 +26,11 @@ STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-STimecode::STimecode(const CString& string, Mode mode)
+STimecode::STimecode(const CString& string, Base base)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mMode = mode;
+	mBase = base;
 
 	// Setup
 	TArray<CString>	components =
@@ -77,9 +77,9 @@ STimecode::STimecode(const CString& string, Mode mode)
 			return;
 	}
 
-	// Check mode
-	switch (mMode) {
-		case kMode24FPSNonDropFrame:
+	// Check Base
+	switch (mBase) {
+		case kBase24FPSNonDropFrame:
 			// 24 fps
 			mFrameIndex = (((hours * 60) + minutes) * 60 + seconds) * 24 + frames;
 			break;

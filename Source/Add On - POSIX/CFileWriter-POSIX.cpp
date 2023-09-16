@@ -69,10 +69,14 @@ class CFileWriter::Internals : public TReferenceCountableAutoDelete<Internals> {
 						}
 		OV<SError>	close()
 						{
-							if (mFILE != nil)
+							if (mFILE != nil) {
 								::fclose(mFILE);
-							if (mFD != -1)
+								mFILE = nil;
+							}
+							if (mFD != -1) {
 								::close(mFD);
+								mFD = -1;
+							}
 
 							return OV<SError>();
 						}
@@ -143,7 +147,7 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
 		} else
 			// Already open, reset to beginning of file
-			return setPos(kPositionFromBeginning, 0);
+			return setPosition(kPositionFromBeginning, 0);
 	} else {
 		// Not buffered, check if open
 		if (mInternals->mFILE != nil) {
@@ -156,18 +160,53 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 			// Open
 			mInternals->mFD =
 					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(CString::kEncodingUTF8),
-							!append ? (O_RDWR | O_CREAT | O_EXCL) : (O_RDWR | O_APPEND | O_EXLOCK),
+							!append ? (O_RDWR | O_CREAT | O_EXCL) : (O_RDWR | O_CREAT | O_APPEND | O_EXLOCK),
 							S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 			if (mInternals->mFD != -1)
 				// Success
 				return OV<SError>();
 			else
 				// Unable to open
-				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
+				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening non-buffered");
 		} else
 			// Already open, reset to beginning of file
-			return setPos(kPositionFromBeginning, 0);
+			return setPosition(kPositionFromBeginning, 0);
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> CFileWriter::read(CData::ByteCount byteCount) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CData	data(byteCount);
+	
+	// Check mode
+	if (mInternals->mFILE != nil) {
+		// FILE
+		// Read
+		ssize_t	bytesRead = ::fread(data.getMutableBytePtr(), 1, (size_t) byteCount, mInternals->mFILE);
+		if (bytesRead != (ssize_t) byteCount) {
+			// Error
+			SError	error = SErrorFromPOSIXerror(errno);
+			CLogServices::logError(error, "reading data buffered", __FILE__, __func__, __LINE__);
+
+			return TVResult<CData>(error);
+		}
+	} else {
+		// file
+		// Read
+		ssize_t bytesRead = ::read(mInternals->mFD, data.getMutableBytePtr(), (size_t) byteCount);
+		if (bytesRead == -1) {
+			// Error
+			SError	error = SErrorFromPOSIXerror(errno);
+			CLogServices::logError(error, "reading data non-buffered", __FILE__, __func__, __LINE__);
+
+			return TVResult<CData>(error);
+		}
+	}
+
+	return TVResult<CData>(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -184,7 +223,7 @@ OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CFileWriter::getPos() const
+UInt64 CFileWriter::getPosition() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
@@ -206,7 +245,7 @@ UInt64 CFileWriter::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
+OV<SError> CFileWriter::setPosition(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check open mode
