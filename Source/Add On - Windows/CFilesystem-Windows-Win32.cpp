@@ -56,26 +56,32 @@ TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 
 		// Iterate all entries
 		do {
+			// Setup
+			CString	name(findData.cFileName);
+
 			// Check file attributes
 			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				// Folder
-				CFolder	childFolder(filesystemPath.appendingComponent(CString(findData.cFileName)));
-				folders += childFolder;
+				if ((name != CString(OSSTR("."))) && (name != CString(OSSTR("..")))) {
+					// Process folder
+					CFolder	childFolder(filesystemPath.appendingComponent(name));
+					folders += childFolder;
 
-				if (deep) {
-					// Get files for this folder
-					auto	result = getFoldersFiles(childFolder);
-					if (result.hasValue()) {
-						// Success
-						folders += result->getFolders();
-						files += result->getFiles();
-					} else
-						// Error
-						return result;
+					if (deep) {
+						// Get files for this folder
+						auto	result = getFoldersFiles(childFolder);
+						if (result.hasValue()) {
+							// Success
+							folders += result->getFolders();
+							files += result->getFiles();
+						} else
+							// Error
+							return result;
+					}
 				}
 			} else {
 				// File
-				files += CFile(filesystemPath.appendingComponent(CString(findData.cFileName)));
+				files += CFile(filesystemPath.appendingComponent(name));
 			}
 		} while (::FindNextFile(findHandle, &findData) != 0);
 
