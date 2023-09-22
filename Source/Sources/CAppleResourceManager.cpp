@@ -10,7 +10,14 @@
 // Info from https://github.com/uliwitness/ReClassicfication
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAppleResourceManager::Resource
+// MARK: Local data
+
+static	CString	sErrorDomain(OSSTR("CAppleResourceManager"));
+static	SError	sInvalidResourceData(sErrorDomain, 1, CString(OSSTR("Invalid Resource Data")));
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAppleResourceManager::Resource
 
 class CAppleResourceManager::Resource {
 	public:
@@ -28,6 +35,7 @@ class CAppleResourceManager::Resource {
 
 class CAppleResourceManager::Internals {
 	public:
+		Internals() : mUpdated(false) {}
 		Internals(const TNDictionary<TNArray<Resource> >& resourceMap) : mResourceMap(resourceMap), mUpdated(false) {}
 
 		TNDictionary<TNArray<Resource> >	mResourceMap;
@@ -36,16 +44,17 @@ class CAppleResourceManager::Internals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local data
-
-static	CString	sErrorDomain(OSSTR("CAppleResourceManager"));
-static	SError	sInvalidResourceData(sErrorDomain, 1, CString(OSSTR("Invalid Resource Data")));
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAppleResourceManager
 
 // MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CAppleResourceManager::CAppleResourceManager()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mInternals = new Internals();
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 CAppleResourceManager::CAppleResourceManager(const TNDictionary<TNArray<Resource> >& resourceMap)
@@ -98,34 +107,32 @@ OV<CString> CAppleResourceManager::getPascalString(OSType resourceType, UInt16 r
 			OV<CString>();
 }
 
-#if 0
-
 //----------------------------------------------------------------------------------------------------------------------
 void CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, const CString& name, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-//	// Get array of resources by type
-//	CString					key(resourceType, true, false);
-//	TNArray<CAppleResource>	appleResources =
-//									mInternals->mResourceMap.contains(key) ?
-//											*mInternals->mResourceMap[key] : TNArray<CAppleResource>();
-//
-//	// Remove existing item
-//	for (CArrayItemIndex i = 0; i < appleResources.getCount(); i++) {
-//		// Check this apple resource
-//		if (appleResources[i].mID == resourceID) {
-//			// Found
-//			appleResources.removeAtIndex(i);
-//
-//			break;
-//		}
-//	}
-//
-//	// Add new item
-//	appleResources += CAppleResource(resourceID, name, data);
-//
-//	// Update map
-//	mInternals->mResourceMap.set(key, appleResources);
+	// Get array of resources by type
+	CString				key(resourceType, true, false);
+	TNArray<Resource>	resources =
+								mInternals->mResourceMap.contains(key) ?
+										*mInternals->mResourceMap[key] : TNArray<Resource>();
+
+	// Remove existing item
+	for (CArray::ItemIndex i = 0; i < resources.getCount(); i++) {
+		// Check this apple resource
+		if (resources[i].mID == resourceID) {
+			// Found
+			resources.removeAtIndex(i);
+
+			break;
+		}
+	}
+
+	// Add new item
+	resources += Resource(resourceID, name, data);
+
+	// Update map
+	mInternals->mResourceMap.set(key, resources);
 
 	// We are updated
 	mInternals->mUpdated = true;
@@ -149,144 +156,120 @@ void CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, const CS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CAppleResourceManager::write()
+CData CAppleResourceManager::getAsData()
 //----------------------------------------------------------------------------------------------------------------------
 {
-//	// Setup
-//	CData			dataData, typeListData, resourceListData, nameListData;
-//	TSet<CString>	types = mInternals->mResourceMap.getKeys();
-//	UInt16			uInt16Zero = 0;
-//	UInt32			uInt32Zero = 0;
-//
-//	// Start type list data
-//	SInt16	lastTypeIndex = EndianS16_NtoB((SInt16) types.getCount() - 1);
-//	typeListData.appendBytes((const UInt8*) &lastTypeIndex, sizeof(SInt16));
-//
-//	// Iterate resource types
-//	for (TIteratorS<CString> iterator = types.getIterator(); iterator.hasValue(); iterator.advance()) {
-//		// Get info
-//		CString&				type = iterator.getValue();
-//		TArray<CAppleResource>	appleResources = *mInternals->mResourceMap[type];
-//
-//		// Type ID
-//		OSType	typeID = EndianU32_NtoB(type.getOSType());
-//		typeListData.appendBytes((const UInt8*) &typeID, sizeof(OSType));
-//
-//		// Last resource index
-//		UInt16	lastResourceIndex = EndianU16_NtoB(appleResources.getCount() - 1);
-//		typeListData.appendBytes((const UInt8*) &lastResourceIndex, sizeof(UInt16));
-//
-//		// Resource list offset
-//		UInt16	resourceListOffset = EndianU16_NtoB(resourceListData.getByteCount() + 2 + 8 * types.getCount());
-//		typeListData.appendBytes((const UInt8*) &resourceListOffset, sizeof(UInt16));
-//
-//		// Iterate resources for this type
-//		for (CArrayItemIndex resourceIndex = 0; resourceIndex < appleResources.getCount(); resourceIndex++) {
-//			// Get this apple resource
-//			const	CAppleResource&	appleResource = appleResources[resourceIndex];
-//
-//			// ID
-//			UInt16	resourceID = EndianU16_NtoB(appleResource.mID);
-//			resourceListData.appendBytes((const UInt8*) &resourceID, sizeof(UInt16));
-//
-//			// Name
-//			UInt8	nameLength = appleResource.mName.getLength();
-//			if (nameLength > 0) {
-//				// Have name
-//				UInt16	nameOffset = EndianU16_NtoB(nameListData.getByteCount());
-//				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
-//
-//				nameListData.appendBytes((const UInt8*) &nameLength, sizeof(UInt8));
-//				nameListData += appleResource.mName.getData(kStringEncodingMacRoman);
-//			} else {
-//				// No name
-//				UInt16	nameOffset = EndianU16_NtoB(-1);
-//				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
-//			}
-//
-//			// Attributes + data offset
-//			UInt32	attributesAndDataOffset = EndianU32_NtoB((0 << 24) | dataData.getByteCount());
-//			resourceListData.appendBytes((const UInt8*) &attributesAndDataOffset, sizeof(UInt32));
-//
-//			// Resource handle placeholder
-//			resourceListData.appendBytes((const UInt8*) &uInt32Zero, sizeof(UInt32));
-//
-//			// Data
-//			UInt32	dataByteCount = EndianU32_NtoB(appleResource.mData.getByteCount());
-//			dataData.appendBytes((const UInt8*) &dataByteCount, sizeof(UInt32));
-//			dataData += appleResource.mData;
-//		}
-//	}
-//
-//	// Prepare to write to file
-//	UInt32	dataOffset = EndianU32_NtoB(256);
-//	UInt32	mapOffset = EndianU32_NtoB(256 + dataData.getByteCount());
-//	UInt32	dataByteCount = EndianU32_NtoB(dataData.getByteCount());
-//	UInt32	mapSize =
-//					EndianU32_NtoB(28 + typeListData.getByteCount() + resourceListData.getByteCount() +
-//							nameListData.getByteCount());
-//
-//	// Update file contents
-//	UError	error;
-//	error = mInternals->mFile.open(kFileOpenModeWriteBufferedRemoveIfNotClosed);
-//	ReturnErrorIfError(error);
-//
-//	// Header
-//	error = mInternals->mFile.write(dataOffset);
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(mapOffset);
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(dataByteCount);
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(mapSize);
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.setPos(kFilePositionModeFromBeginning, 256);
-//	ReturnErrorIfError(error);
-//
-//	// Data
-//	error = mInternals->mFile.write(dataData);
-//	ReturnErrorIfError(error);
-//
-//	// Map
-//	error = mInternals->mFile.write(dataOffset);	// File header copy
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(mapOffset);
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(dataByteCount);
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(mapSize);
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(uInt32Zero);	// Next resource map placeholder
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(uInt16Zero);	// File ref num placeholder
-//	ReturnErrorIfError(error);
-//	error = mInternals->mFile.write(uInt16Zero);	// File attributes
-//	ReturnErrorIfError(error);
-//
-//	UInt16	typeListOffset = EndianU16_NtoB(28);
-//	error = mInternals->mFile.write(typeListOffset);
-//	ReturnErrorIfError(error);
-//
-//	UInt16	nameListOffset = EndianU16_NtoB(28 + typeListData.getByteCount() + resourceListData.getByteCount());
-//	error = mInternals->mFile.write(nameListOffset);
-//	ReturnErrorIfError(error);
-//
-//	// Type list
-//	error = mInternals->mFile.write(typeListData);
-//	ReturnErrorIfError(error);
-//
-//	// Resource list
-//	error = mInternals->mFile.write(resourceListData);
-//	ReturnErrorIfError(error);
-//
-//	// Name list
-//	error = mInternals->mFile.write(nameListData);
-//	ReturnErrorIfError(error);
+	// Setup
+	CData			dataData, typeListData, resourceListData, nameListData;
+	TSet<CString>	types = mInternals->mResourceMap.getKeys();
+	UInt32			uInt32Zero = 0;
 
-	return OV<SError>();
+	// Start type list data
+	SInt16	lastTypeIndex = EndianS16_NtoB((SInt16) types.getCount() - 1);
+	typeListData.appendBytes((const UInt8*) &lastTypeIndex, sizeof(SInt16));
+
+	// Iterate resource types
+	for (TIteratorS<CString> iterator = types.getIterator(); iterator.hasValue(); iterator.advance()) {
+		// Get info
+		CString&			type = iterator.getValue();
+		TArray<Resource>	resources = *mInternals->mResourceMap[type];
+
+		// Type ID
+		OSType	typeID = EndianU32_NtoB(type.getOSType());
+		typeListData.appendBytes((const UInt8*) &typeID, sizeof(OSType));
+
+		// Last resource index
+		UInt16	lastResourceIndex = EndianU16_NtoB(resources.getCount() - 1);
+		typeListData.appendBytes((const UInt8*) &lastResourceIndex, sizeof(UInt16));
+
+		// Resource list offset
+		UInt16	resourceListOffset = EndianU16_NtoB(resourceListData.getByteCount() + 2 + 8 * types.getCount());
+		typeListData.appendBytes((const UInt8*) &resourceListOffset, sizeof(UInt16));
+
+		// Iterate resources for this type
+		for (CArray::ItemIndex resourceIndex = 0; resourceIndex < resources.getCount(); resourceIndex++) {
+			// Get this apple resource
+			const	Resource&	resource = resources[resourceIndex];
+
+			// ID
+			UInt16	resourceID = EndianU16_NtoB(resource.mID);
+			resourceListData.appendBytes((const UInt8*) &resourceID, sizeof(UInt16));
+
+			// Name
+			UInt8	nameLength = resource.mName.hasValue()? resource.mName->getLength() : 0;
+			if (nameLength > 0) {
+				// Have name
+				UInt16	nameOffset = EndianU16_NtoB(nameListData.getByteCount());
+				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
+
+				nameListData.appendBytes((const UInt8*) &nameLength, sizeof(UInt8));
+				nameListData += resource.mName->getData(CString::kEncodingMacRoman);
+			} else {
+				// No name
+				UInt16	nameOffset = EndianU16_NtoB(-1);
+				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
+			}
+
+			// Attributes + data offset
+			UInt32	attributesAndDataOffset = EndianU32_NtoB((0 << 24) | dataData.getByteCount());
+			resourceListData.appendBytes((const UInt8*) &attributesAndDataOffset, sizeof(UInt32));
+
+			// Resource handle placeholder
+			resourceListData.appendBytes((const UInt8*) &uInt32Zero, sizeof(UInt32));
+
+			// Data
+			UInt32	dataByteCount = EndianU32_NtoB(resource.mData.getByteCount());
+			dataData.appendBytes((const UInt8*) &dataByteCount, sizeof(UInt32));
+			dataData += resource.mData;
+		}
+	}
+
+	// Prepare to compose data
+	UInt32	dataOffset = EndianU32_NtoB(256);
+	UInt32	mapOffset = EndianU32_NtoB(256 + dataData.getByteCount());
+	UInt32	dataByteCount = EndianU32_NtoB(dataData.getByteCount());
+	UInt32	mapSize =
+					EndianU32_NtoB(28 + typeListData.getByteCount() + resourceListData.getByteCount() +
+							nameListData.getByteCount());
+	UInt16	typeListOffset = EndianU16_NtoB(28);
+	UInt16	nameListOffset = EndianU16_NtoB(28 + typeListData.getByteCount() + resourceListData.getByteCount());
+	UInt16	uInt16Zero = 0;
+
+	return
+			// Header
+			CData(&dataOffset, sizeof(dataOffset)) +
+			CData(&mapOffset, sizeof(mapOffset)) +
+			CData(&dataByteCount, sizeof(dataByteCount)) +
+			CData(&mapSize, sizeof(mapSize)) +
+			CData(
+					(CData::ByteCount)
+							(256 - sizeof(dataOffset) - sizeof(mapOffset) -sizeof(dataByteCount) - sizeof(mapSize))) +
+
+			// Data
+			dataData +
+
+			// Map
+			CData(&dataOffset, sizeof(dataOffset)) +	// File header copy
+			CData(&mapOffset, sizeof(mapOffset)) +
+			CData(&dataByteCount, sizeof(dataByteCount)) +
+			CData(&mapSize, sizeof(mapSize)) +
+			CData(&uInt32Zero, sizeof(uInt32Zero)) +	// Next resource map placeholder
+			CData(&uInt16Zero, sizeof(uInt16Zero)) +	// File ref num placeholder
+			CData(&uInt16Zero, sizeof(uInt16Zero)) +	// File attributes
+
+			CData(&typeListOffset, sizeof(typeListOffset)) +
+
+			CData(&nameListOffset, sizeof(nameListOffset)) +
+
+			// Type list
+			typeListData +
+
+			// Resource list
+			resourceListData +
+
+			// Name list
+			nameListData;
 }
-
-#endif
 
 // MARK: Class methods
 

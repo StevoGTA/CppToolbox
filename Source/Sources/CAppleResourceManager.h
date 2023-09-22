@@ -19,18 +19,19 @@ class CAppleResourceManager {
 	// Methods
 	public:
 												// Lifecycle methods
+												CAppleResourceManager();
 												~CAppleResourceManager();
 
 												// Instance methods
 				OR<CData>						get(OSType resourceType, UInt16 resourceID) const;
 				OV<CString>						getPascalString(OSType resourceType, UInt16 resourceID) const;
 
-//				void							set(OSType resourceType, UInt16 resourceID, const CString& name,
-//														const CData& data);
-//				void							set(OSType resourceType, UInt16 resourceID, const CString& name,
-//														const CString& pascalString);
-//
-//				OV<SError>						write();
+				void							set(OSType resourceType, UInt16 resourceID, const CString& name,
+														const CData& data);
+				void							set(OSType resourceType, UInt16 resourceID, const CString& name,
+														const CString& pascalString);
+
+				CData							getAsData();
 
 												// Class methods
 		static	TIResult<CAppleResourceManager>	from(const I<CRandomAccessDataSource>& randomAccessDataSource);

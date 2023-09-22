@@ -25,8 +25,10 @@ class CFilesystem {
 		static	TVResult<SFoldersFiles>			getFoldersFiles(const CFolder& folder, bool deep = false);
 		static	TVResult<TArray<CFolder> >		getFolders(const CFolder& folder, bool deep = false);
 		static	TVResult<TArray<CFile> >		getFiles(const CFolder& folder, bool deep = false);
-		static	OV<CFile>						getDotUnderscoreFile(const CFile& file);
-		static	OV<CFile>						getResourceFork(const CFile& file);
+		static	CFile							getDotUnderscoreFile(const CFile& file);
+#if defined(TARGET_OS_MACOS)
+		static	CFile							getResourceFork(const CFile& file);
+#endif
 		static	OI<I<CRandomAccessDataSource> >	getResourceDataSource(const CFile& file);
 
 												// Will copy sourceFolder *into* destinationFolder

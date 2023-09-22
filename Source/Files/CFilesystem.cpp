@@ -25,13 +25,9 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CFile> CFilesystem::getDotUnderscoreFile(const CFile& file)
+CFile CFilesystem::getDotUnderscoreFile(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if defined(TARGET_OS_MACOS)
-	// macOS doesn't need to access the ._ file
-	return OV<CFile>();
-#else
 	// Try {file}../._{filename}
 	const	CFilesystemPath&	filesystemPath = file.getFilesystemPath();
 	CFile	dotUnderscoreFile(
@@ -39,47 +35,42 @@ OV<CFile> CFilesystem::getDotUnderscoreFile(const CFile& file)
 							.deletingLastComponent()
 							.appendingComponent(CString(OSSTR("._")) + *filesystemPath.getLastComponent()));
 
-	return dotUnderscoreFile.doesExist() ? OV<CFile>(dotUnderscoreFile) : OV<CFile>();
-#endif
+	return dotUnderscoreFile;
 }
 
+#if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
-OV<CFile> CFilesystem::getResourceFork(const CFile& file)
+CFile CFilesystem::getResourceFork(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-#if defined(TARGET_OS_MACOS)
 	// Try {file}/..namedfork/rsrc
-	const	CFilesystemPath&	filesystemPath = file.getFilesystemPath();
-	CFile	resourceFork(
-					filesystemPath
-							.appendingComponent(CString(OSSTR("..namedfork")))
-							.appendingComponent(CString(OSSTR("rsrc"))));
-
-	return resourceFork.doesExist() ? OV<CFile>(resourceFork) : OV<CFile>();
-#else
-	// Unsupported
-	return OV<CFile>();
-#endif
+	return CFile(
+			file.getFilesystemPath()
+					.appendingComponent(CString(OSSTR("..namedfork")))
+					.appendingComponent(CString(OSSTR("rsrc"))));
 }
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 OI<I<CRandomAccessDataSource> > CFilesystem::getResourceDataSource(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
+#if defined(TARGET_OS_MACOS)
 	// Try resource file
-	OV<CFile>	resourceFile = getResourceFork(file);
-	if (resourceFile.hasValue() && (resourceFile->getByteCount() > 0))
+	CFile	resourceFile = getResourceFork(file);
+	if (resourceFile.doesExist() && (resourceFile.getByteCount() > 0))
 		// Success
-		return OI<I<CRandomAccessDataSource> >(I<CRandomAccessDataSource>(new CMappedFileDataSource(*resourceFile)));
+		return OI<I<CRandomAccessDataSource> >(I<CRandomAccessDataSource>(new CMappedFileDataSource(resourceFile)));
+#endif
 
 	// Try ._ file
-	OV<CFile>	dotUnderscoreFile = getDotUnderscoreFile(file);
-	if (dotUnderscoreFile.hasValue()) {
+	CFile	dotUnderscoreFile = getDotUnderscoreFile(file);
+	if (dotUnderscoreFile.doesExist()) {
 		// Was able to load ._ file
 		TIResult<CDotUnderscoreReader>	dotUnderscoreReader =
 												CDotUnderscoreReader::from(
 														I<CRandomAccessDataSource>(
-																new CMappedFileDataSource(*dotUnderscoreFile)));
+																new CMappedFileDataSource(dotUnderscoreFile)));
 		if (dotUnderscoreReader.hasInstance()) {
 			// Get resource fork
 			OR<CData>	resourceFork = dotUnderscoreReader->getResourceFork();
