@@ -144,7 +144,7 @@ OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CFileWriter::getPos() const
+UInt64 CFileWriter::getPosition() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if open
@@ -160,7 +160,7 @@ UInt64 CFileWriter::getPos() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
+OV<SError> CFileWriter::setPosition(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if open

@@ -214,7 +214,7 @@ TVResult<SMedia::SourceInfo> CMediaFoundationResampler::performInto(CAudioFrames
 		ReturnValueIfResultError(result, TVResult<SMedia::SourceInfo>(result.getError()));
 	}
 
-	return TVResult<SMedia::SourceInfo>(SMedia::SourceInfo(mInternals->mSourceTimeInterval)0;
+	return TVResult<SMedia::SourceInfo>(SMedia::SourceInfo(mInternals->mSourceTimeInterval));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
