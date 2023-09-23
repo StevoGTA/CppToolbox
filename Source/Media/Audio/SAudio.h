@@ -103,7 +103,7 @@ struct SAudio {
 			static	const	ChannelMap&	_5_1_Option2();		// L R Ls Rs C LFE
 			static	const	ChannelMap&	_5_1_Option3();		// L C R Ls Rs LFE
 			static	const	ChannelMap&	_5_1_Option4();		// C L R Ls Rs LFE
-			static	const	ChannelMap&	_6_0_Option1();			// L R Ls Rs C Cs (Hexagonal)
+			static	const	ChannelMap&	_6_0_Option1();		// L R Ls Rs C Cs (Hexagonal)
 			static	const	ChannelMap&	_6_0_Option2();		// C L R Ls Rs Cs
 
 										// 7 Channels
