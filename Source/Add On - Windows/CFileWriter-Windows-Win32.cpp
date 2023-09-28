@@ -85,6 +85,13 @@ CFileWriter::~CFileWriter()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
+const CFile& CFileWriter::getFile() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mFile;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -122,6 +129,24 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 
 		return OV<SError>();
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> CFileWriter::read(CData::ByteCount byteCount) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CData	data(byteCount);
+
+	// Read
+	BOOL	result = ::ReadFile(mInternals->mFileHandle, data.getMutableBytePtr(), (DWORD) byteCount, NULL, NULL);
+	if (!result) {
+		// Error
+		SError	error = SErrorFromWindowsGetLastError();
+		CFileWriterReportErrorAndReturnValue(error, "reading", TVResult<CData>(error))
+	}
+
+	return TVResult<CData>(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
