@@ -137,7 +137,7 @@ OV<SError> CCoreAudioDecodeAudioCodec::setup(const SAudio::ProcessingFormat& aud
 
 	AudioStreamBasicDescription	destinationASBD;
 	FillOutASBDForLPCM(destinationASBD, audioProcessingFormat.getSampleRate(),
-			audioProcessingFormat.getChannelMap().getChannels(), audioProcessingFormat.getBits(),
+			audioProcessingFormat.getChannelMap().getChannelCount(), audioProcessingFormat.getBits(),
 			audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(), audioProcessingFormat.getIsBigEndian(),
 			!audioProcessingFormat.getIsInterleaved());
 
@@ -174,7 +174,7 @@ OV<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 	// Setup
 	AudioBufferList	audioBufferList;
 	audioBufferList.mNumberBuffers = 1;
-	audioBufferList.mBuffers[0].mNumberChannels = mInternals->mAudioProcessingFormat->getChannelMap().getChannels();
+	audioBufferList.mBuffers[0].mNumberChannels = mInternals->mAudioProcessingFormat->getChannelMap().getChannelCount();
 
 	// Check if have frames to ignore
 	OSStatus	status;

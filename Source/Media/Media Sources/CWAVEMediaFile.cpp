@@ -57,12 +57,12 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 		// Have WAVEFORMATEX
 		const	SWAVEFORMATEX&	waveFormatEx = *((SWAVEFORMATEX*) payload->getBytePtr());
 		sampleSize = waveFormatEx.getBitsPerSample();
-	} else if ((waveFormat.getChannels() > 0) && (waveFormat.getSamplesPerSecond() > 0) &&
+	} else if ((waveFormat.getChannelCount() > 0) && (waveFormat.getSamplesPerSecond() > 0) &&
 			(waveFormat.getAverageBytesPerSec() > 0))
 		// Use WAVEFORMAT
 		sampleSize =
 				(UInt16) (waveFormat.getAverageBytesPerSec() / waveFormat.getSamplesPerSecond()) /
-						waveFormat.getChannels() * 8;
+						waveFormat.getChannelCount() * 8;
 	else
 		// ???
 		return I<SMediaSource::ImportResult>(
@@ -94,7 +94,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 
 			audioFormat.setValue(
 					CPCMAudioCodec::composeAudioFormat(false, (UInt8) sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels()));
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannelCount()));
 			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
 			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Create
@@ -115,7 +115,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 
 			audioFormat.setValue(
 					CPCMAudioCodec::composeAudioFormat(true, (UInt8) sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannels()));
+							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannelCount()));
 			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
 			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Create
@@ -129,7 +129,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 		case 0x0011:	// DVI/Intel ADPCM
 			audioFormat.setValue(
 					CDVIIntelIMAADPCMAudioCodec::composeAudioFormat((Float32) waveFormat.getSamplesPerSecond(),
-							SAudio::ChannelMap((UInt8) waveFormat.getChannels())));
+							SAudio::ChannelMap((UInt8) waveFormat.getChannelCount())));
 			mediaSegmentInfo.setValue(
 					CDVIIntelIMAADPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount,
 							waveFormat.getBlockAlign()));

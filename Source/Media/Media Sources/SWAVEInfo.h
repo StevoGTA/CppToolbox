@@ -47,9 +47,9 @@ struct SWAVEFORMChunk32 {
 
 struct SWAVEFORMAT {
 			// Lifecycle methods
-			SWAVEFORMAT(UInt16 formatTag, UInt16 channels, UInt32 samplesPerSecond, UInt32 averageBytesPerSecond,
+			SWAVEFORMAT(UInt16 formatTag, UInt16 channelCount, UInt32 samplesPerSecond, UInt32 averageBytesPerSecond,
 					UInt16 blockAlign) :
-				mFormatTag(EndianU16_NtoL(formatTag)), mChannels(EndianU16_LtoN(channels)),
+				mFormatTag(EndianU16_NtoL(formatTag)), mChannelCount(EndianU16_LtoN(channelCount)),
 						mSamplesPerSecond(EndianU32_NtoL(samplesPerSecond)),
 						mAverageBytesPerSecond(EndianU32_NtoL(averageBytesPerSecond)),
 						mBlockAlign(EndianU16_NtoL(blockAlign))
@@ -57,7 +57,7 @@ struct SWAVEFORMAT {
 
 			// Instance methods
 	UInt16	getFormatTag() const { return EndianU16_LtoN(mFormatTag); }
-	UInt16	getChannels() const { return EndianU16_LtoN(mChannels); }
+	UInt16	getChannelCount() const { return EndianU16_LtoN(mChannelCount); }
 	UInt32	getSamplesPerSecond() const { return EndianU32_LtoN(mSamplesPerSecond); }
 	UInt32	getAverageBytesPerSec() const { return EndianU32_LtoN(mAverageBytesPerSecond); }
 	UInt16	getBlockAlign() const { return EndianU16_LtoN(mBlockAlign); }
@@ -65,7 +65,7 @@ struct SWAVEFORMAT {
 	// Properties (in storage endian)
 	private:
 		UInt16	mFormatTag;
-		UInt16	mChannels;
+		UInt16	mChannelCount;
 		UInt32	mSamplesPerSecond;
 		UInt32	mAverageBytesPerSecond;
 		UInt16	mBlockAlign;
@@ -82,7 +82,7 @@ struct SWAVEFORMAT {
 struct SWAVEFORMATEX {
 			// Methods
 	UInt16	getFormatTag() const { return EndianU16_LtoN(mFormatTag); }
-	UInt16	getChannels() const { return EndianU16_LtoN(mChannels); }
+	UInt16	getChannelCount() const { return EndianU16_LtoN(mChannelCount); }
 	UInt32	getSamplesPerSec() const { return EndianU32_LtoN(mSamplesPerSec); }
 	UInt32	getAverageBytesPerSec() const { return EndianU32_LtoN(mAverageBytesPerSecond); }
 	UInt16	getBlockAlign() const { return EndianU16_LtoN(mBlockAlign); }
@@ -92,7 +92,7 @@ struct SWAVEFORMATEX {
 	// Properties (in storage endian)
 	private:
 		UInt16	mFormatTag;
-		UInt16	mChannels;
+		UInt16	mChannelCount;
 		UInt32	mSamplesPerSec;
 		UInt32	mAverageBytesPerSecond;
 		UInt16	mBlockAlign;

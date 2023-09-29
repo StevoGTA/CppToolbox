@@ -506,12 +506,13 @@ OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 	if (audioProcessingFormat.getIsInterleaved()) {
 		// Interleaved
 		mInternals->mBytesPerFrame =
-				OV<UInt32>(audioProcessingFormat.getBits() / 8 * audioProcessingFormat.getChannelMap().getChannels());
+				OV<UInt32>(audioProcessingFormat.getBits() / 8 *
+						audioProcessingFormat.getChannelMap().getChannelCount());
 		segmentCount = 1;
 	} else {
 		// Non-interleaved
 		mInternals->mBytesPerFrame = OV<UInt32>(audioProcessingFormat.getBits() / 8);
-		segmentCount = audioProcessingFormat.getChannelMap().getChannels();
+		segmentCount = audioProcessingFormat.getChannelMap().getChannelCount();
 	}
 
 	UInt32	frameCount = CAudioPlayer::getPlaybackBufferDuration() * audioProcessingFormat.getSampleRate();

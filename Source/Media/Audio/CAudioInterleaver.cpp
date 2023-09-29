@@ -179,7 +179,7 @@ TVResult<SMedia::SourceInfo> CAudioInterleaver::performInto(CAudioFrames& audioF
 		// Create Audio Data
 		mInternals->mInputAudioFrames =
 				OI<CAudioFrames>(
-						new CAudioFrames(mInternals->mInputAudioProcessingFormat->getChannelMap().getChannels(),
+						new CAudioFrames(mInternals->mInputAudioProcessingFormat->getChannelMap().getChannelCount(),
 								mInternals->mInputAudioProcessingFormat->getBits() / 8,
 								audioFrames.getAllocatedFrameCount()));
 	else

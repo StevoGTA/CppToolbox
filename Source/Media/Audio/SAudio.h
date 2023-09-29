@@ -35,13 +35,13 @@ struct SAudio {
 	struct ChannelMap {
 		public:
 										// Lifecycle methods
-										ChannelMap(UInt8 channels) : mValue(channels) {}
+										ChannelMap(UInt8 channelCount) : mValue(channelCount) {}
 										ChannelMap(const ChannelMap& other) : mValue(other.mValue) {}
 
 										// Instance methods
 							bool		hasUnknownOrder() const
 											{ return (mValue & 0xFF00) == 0x0000; }
-							UInt8		getChannels() const
+							UInt8		getChannelCount() const
 											{ return mValue & 0x00FF; }
 							CString		getDisplayString() const;
 
@@ -185,7 +185,7 @@ struct SAudio {
 											CString(OSSTR("n/a, "));
 							description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
 							description +=
-									CString(mChannelMap.getChannels()) + CString(OSSTR(" (")) +
+									CString(mChannelMap.getChannelCount()) + CString(OSSTR(" (")) +
 											mChannelMap.getDisplayString() + CString(OSSTR(")"));
 
 							return description;
@@ -269,7 +269,7 @@ struct SAudio {
 				UInt32				getBytesPerSample() const
 										{ return mBits / 8; }
 				UInt32				getBytesPerFrame() const
-										{ return mBits / 8 * mChannelMap.getChannels(); }
+										{ return mBits / 8 * mChannelMap.getChannelCount(); }
 
 				CString				getDescription() const
 										{
@@ -282,7 +282,7 @@ struct SAudio {
 																	CString(OSSTR(" (Signed Integer), ")));
 											description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
 											description +=
-													CString(mChannelMap.getChannels()) +
+													CString(mChannelMap.getChannelCount()) +
 															CString(OSSTR(" (")) +
 															mChannelMap.getDisplayString() +
 															CString(OSSTR("), "));

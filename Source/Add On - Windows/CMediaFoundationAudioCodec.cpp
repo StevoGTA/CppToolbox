@@ -150,7 +150,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 		// Compare codec subtype, bits, and channels
 		if ((codecSubType == targetCodecSubType) &&
 				(bits == (UINT32) audioProcessingFormat.getBits()) &&
-				(channels == (UINT32)audioProcessingFormat.getChannelMap().getChannels())) {
+				(channels == (UINT32)audioProcessingFormat.getChannelMap().getChannelCount())) {
 			// Found match
 			result = transform->SetOutputType(0, mediaType, 0);
 			if (result == S_OK) {

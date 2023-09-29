@@ -284,8 +284,8 @@ struct SMP4mdhdAtomPayload {
 // MP4A Description
 struct SMP4stsdMP4ADescription {
 			// Methods
-	UInt16	getChannels() const
-				{ return EndianU16_BtoN(mChannels); }
+	UInt16	getChannelCount() const
+				{ return EndianU16_BtoN(mChannelCounts); }
 
 	// Properties (in storage endian)
 	private:
@@ -297,7 +297,7 @@ struct SMP4stsdMP4ADescription {
 		UInt16	mQuickTimeEncodingVersion;
 		UInt16	mQuickTimeEncodingRevisionLevel;
 		OSType	mQuickTimeEncodingVendor;
-		UInt16	mChannels;
+		UInt16	mChannelCounts;
 		UInt16	mBits;
 		UInt16	mQuickTimeCompressionID;
 		UInt16	mQuickTimePacketSize;
@@ -860,7 +860,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 			// Compose format
 			OV<CAACAudioCodec::Info>	info =
 												CAACAudioCodec::composeInfo(*configurationData,
-														mp4ADescription.getChannels());
+														mp4ADescription.getChannelCount());
 			if (!info.hasValue())
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));

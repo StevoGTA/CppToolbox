@@ -76,7 +76,7 @@ class CQuickTimeMediaFile {
 
 															// Subclass methods
 				Float32										getSampleRate(const Internals& internals) const;
-				UInt8										getChannels(const Internals& internals) const;
+				UInt8										getChannelCount(const Internals& internals) const;
 				TVResult<CData>								getAudioDecompressionData(const Internals& internals) const;
 
 	// Properties

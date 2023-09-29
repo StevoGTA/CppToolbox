@@ -57,7 +57,7 @@ class CSecretRabbitCodeAudioConverter::Internals {
 														new CAudioFrames(1,
 																sizeof(Float32) *
 																		internals.mInputAudioProcessingFormat->
-																				getChannels(),
+																				getChannelCount(),
 																frameCount));
 								}
 
@@ -85,13 +85,15 @@ class CSecretRabbitCodeAudioConverter::Internals {
 												src_short_to_float_array((short*) readInfo.getSegments()[0],
 														(float*) writeInfo.getSegments()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
-																internals.mInputAudioProcessingFormat->getChannels());
+																internals.mInputAudioProcessingFormat->
+																		getChannelCount());
 											else
 												// Convert SInt32 => Float32
 												src_int_to_float_array((int*) readInfo.getSegments()[0],
 														(float*) writeInfo.getSegments()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
-																internals.mInputAudioProcessingFormat->getChannels());
+																internals.mInputAudioProcessingFormat->
+																		getChannelCount());
 										}
 									} else if (mediaSourceInfo.getError() == SError::mEndOfData) {
 										// End of data
@@ -156,7 +158,7 @@ OV<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor
 	// Create Secret Rabbit Code
 	int	error;
 	mInternals->mSRCState =
-			src_callback_new(Internals::fillBufferData, SRC_SINC_BEST_QUALITY, audioProcessingFormat.getChannels(),
+			src_callback_new(Internals::fillBufferData, SRC_SINC_BEST_QUALITY, audioProcessingFormat.getChannelCount(),
 					&error, mInternals);
 	ReturnErrorIfSRCError(error);
 

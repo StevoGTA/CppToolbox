@@ -181,8 +181,8 @@ OV<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 		else
 			// Unsupported bits
 			AssertFailUnimplemented();
-	} else if (mInternals->mInputAudioProcessingFormat->getChannelMap().getChannels() >
-			mOutputAudioProcessingFormat->getChannelMap().getChannels())
+	} else if (mInternals->mInputAudioProcessingFormat->getChannelMap().getChannelCount() >
+			mOutputAudioProcessingFormat->getChannelMap().getChannelCount())
 		// More -> Less
 		mInternals->mPerformProc = Internals::performCopyCommon;
 	else
@@ -232,7 +232,7 @@ TVResult<SMedia::SourceInfo> CAudioChannelMapper::performInto(CAudioFrames& audi
 			// Non-interleaved
 			mInternals->mInputAudioFrames =
 					OI<CAudioFrames>(
-							new CAudioFrames(mInternals->mInputAudioProcessingFormat->getChannelMap().getChannels(),
+							new CAudioFrames(mInternals->mInputAudioProcessingFormat->getChannelMap().getChannelCount(),
 									mInternals->mInputAudioProcessingFormat->getBits() / 8,
 									audioFrames.getAllocatedFrameCount()));
 	} else

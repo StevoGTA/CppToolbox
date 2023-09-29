@@ -107,7 +107,7 @@ SMedia::SegmentInfo CPCMAudioCodec::composeMediaSegmentInfo(const SAudio::Format
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return SAudio::composeMediaSegmentInfo(audioFormat, 1,
-			*audioFormat.getBits() / 8 * audioFormat.getChannelMap().getChannels(), byteCount);
+			*audioFormat.getBits() / 8 * audioFormat.getChannelMap().getChannelCount(), byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -118,5 +118,5 @@ I<CDecodeAudioCodec> CPCMAudioCodec::create(const SAudio::Format& audioFormat,
 {
 	return I<CDecodeAudioCodec>(
 			new CPCMDecodeAudioCodec(randomAccessDataSource, startByteOffset, byteCount,
-					*audioFormat.getBits() / 8 * audioFormat.getChannelMap().getChannels(), format));
+					*audioFormat.getBits() / 8 * audioFormat.getChannelMap().getChannelCount(), format));
 }

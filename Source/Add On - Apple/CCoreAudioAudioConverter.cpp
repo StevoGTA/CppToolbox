@@ -63,7 +63,7 @@ class CCoreAudioAudioConverter::Internals {
 													OI<CAudioFrames>(
 															new CAudioFrames(
 																	internals.mInputAudioProcessingFormat->
-																			getChannelMap().getChannels(),
+																			getChannelMap().getChannelCount(),
 																	internals.mInputAudioProcessingFormat->getBits() /
 																			8,
 																	frameCount));
@@ -146,13 +146,13 @@ OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 	// Setup
 	AudioStreamBasicDescription	sourceFormat;
 	FillOutASBDForLPCM(sourceFormat, audioProcessingFormat.getSampleRate(),
-			audioProcessingFormat.getChannelMap().getChannels(), audioProcessingFormat.getBits(),
+			audioProcessingFormat.getChannelMap().getChannelCount(), audioProcessingFormat.getBits(),
 			audioProcessingFormat.getBits(), audioProcessingFormat.getIsFloat(), audioProcessingFormat.getIsBigEndian(),
 			!audioProcessingFormat.getIsInterleaved());
 
 	AudioStreamBasicDescription	destinationFormat;
 	FillOutASBDForLPCM(destinationFormat, mOutputAudioProcessingFormat->getSampleRate(),
-			mOutputAudioProcessingFormat->getChannelMap().getChannels(), mOutputAudioProcessingFormat->getBits(),
+			mOutputAudioProcessingFormat->getChannelMap().getChannelCount(), mOutputAudioProcessingFormat->getBits(),
 			mOutputAudioProcessingFormat->getBits(), mOutputAudioProcessingFormat->getIsFloat(),
 			mOutputAudioProcessingFormat->getIsBigEndian(), !mOutputAudioProcessingFormat->getIsInterleaved());
 
@@ -177,10 +177,10 @@ OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 	} else {
 		// Non-interleaved
 		mInternals->mOutputAudioBufferList =
-				(AudioBufferList*) ::calloc(mOutputAudioProcessingFormat->getChannelMap().getChannels(),
+				(AudioBufferList*) ::calloc(mOutputAudioProcessingFormat->getChannelMap().getChannelCount(),
 						sizeof(AudioBufferList));
 		mInternals->mOutputAudioBufferList->mNumberBuffers =
-				mOutputAudioProcessingFormat->getChannelMap().getChannels();
+				mOutputAudioProcessingFormat->getChannelMap().getChannelCount();
 	}
 
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);

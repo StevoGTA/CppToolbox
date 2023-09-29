@@ -507,7 +507,7 @@ OV<SAudio::ProcessingFormat> sDetermineCommonAudioProcessingFormat(
 				// Setup
 				const	SAudio::ChannelMap&	sourceAudioChannelMap = sourceChannelMapInfo.getValue();
 				const	SAudio::ChannelMap&	destinationAudioChannelMap = destinationChannelMapInfo.getValue();
-				if (sourceAudioChannelMap.getChannels() == destinationAudioChannelMap.getChannels()) {
+				if (sourceAudioChannelMap.getChannelCount() == destinationAudioChannelMap.getChannelCount()) {
 					// Channel counts match
 					if (sourceAudioChannelMap.hasUnknownOrder() && destinationAudioChannelMap.hasUnknownOrder())
 						// Both source and destination have unknown order

@@ -61,7 +61,7 @@ TCIResult<IMFMediaType> CMediaFoundationServices::createMediaType(const GUID& co
 	ReturnValueIfFailed(result, OSSTR("SetUINT32 of MF_MT_AUDIO_SAMPLES_PER_SECOND"),
 			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
 
-	result = mediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioChannelMap.getChannels());
+	result = mediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, audioChannelMap.getChannelCount());
 	ReturnValueIfFailed(result, OSSTR("SetUINT32 of MF_MT_AUDIO_NUM_CHANNELS"),
 			TCIResult<IMFMediaType>(SErrorFromHRESULT(result)));
 

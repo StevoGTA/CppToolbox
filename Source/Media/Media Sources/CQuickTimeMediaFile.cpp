@@ -287,13 +287,13 @@ struct SQTAudioSampleDescription {
 									default:	return 0;
 								}
 							}
-	UInt16				getChannels() const
+	UInt16				getChannelCount() const
 							{
 								// Check version
 								switch (EndianU16_BtoN(mVersion)) {
-									case 0:		return EndianU16_BtoN(_.mV0.mChannels);
-									case 1:		return EndianU16_BtoN(_.mV1.mChannels);
-									case 2:		return (UInt16) EndianU32_BtoN(_.mV2.mChannels);
+									case 0:		return EndianU16_BtoN(_.mV0.mChannelCount);
+									case 1:		return EndianU16_BtoN(_.mV1.mChannelCount);
+									case 2:		return (UInt16) EndianU32_BtoN(_.mV2.mChannelCount);
 									default:	return 0;
 								}
 							}
@@ -315,7 +315,7 @@ struct SQTAudioSampleDescription {
 			struct V0 {	// Uncompressed
 				UInt16	mRevisionLevel;		// 0
 				OSType	mEncodingVendor;	// 0
-				UInt16	mChannels;			// 1 or 2
+				UInt16	mChannelCount;		// 1 or 2
 				UInt16	mBits;				// 8 or 16
 				UInt16	mCompressionID;		// 0
 				UInt16	mPacketSize;		// 0
@@ -325,7 +325,7 @@ struct SQTAudioSampleDescription {
 			struct V1 {	// Compressed
 				UInt16	mRevisionLevel;		// 0
 				OSType	mEncodingVendor;	// 0
-				UInt16	mChannels;			// 1 or 2
+				UInt16	mChannelCount;		// 1 or 2
 				UInt16	mBits;				// 8 or 16
 				UInt16	mCompressionID;		// may be -2
 				UInt16	mPacketSize;		// 0
@@ -349,7 +349,7 @@ struct SQTAudioSampleDescription {
 				UInt32			mAlways00010000;		// 00010000
 				UInt32			mSizeOfStructOnly;		// Offset to Atoms
 				StoredFloat64	mSampleRate;
-				UInt32			mChannels;
+				UInt32			mChannelCount;
 				UInt32			mAlways7F000000;		// 0x7F000000
 				UInt32			mConstBitsPerChannel;	// Set for uncompressed, 0 otherwise
 				UInt32			mFormatSpecificFlags;	// Set for uncompressed (See CoreAudio flags)
@@ -1116,7 +1116,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 			// Compose storage format
 			OV<CAACAudioCodec::Info>	info =
 												CAACAudioCodec::composeInfo(*esdsAtomPayload,
-														audioSampleDescription.getChannels());
+														audioSampleDescription.getChannelCount());
 			if (!info.hasValue())
 				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
@@ -1244,10 +1244,10 @@ Float32 CQuickTimeMediaFile::getSampleRate(const Internals& internals) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt8 CQuickTimeMediaFile::getChannels(const Internals& internals) const
+UInt8 CQuickTimeMediaFile::getChannelCount(const Internals& internals) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (UInt8) internals.getAudioSampleDescription().getChannels();
+	return (UInt8) internals.getAudioSampleDescription().getChannelCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1270,7 +1270,7 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 	// Setup
 	const	SQTAudioSampleDescription&			audioSampleDescription = internals.getAudioSampleDescription();
 			Float32								sampleRate = audioSampleDescription.getSampleRate();
-			UInt8								channels = (UInt8) audioSampleDescription.getChannels();
+			UInt8								channels = (UInt8) audioSampleDescription.getChannelCount();
 			UInt32								bytesPerFrame = bits / 8 * channels;
 			TArray<SMedia::PacketAndLocation>	mediaPacketAndLocations =
 														quickTimeMediaFile.composePacketAndLocations(internals,

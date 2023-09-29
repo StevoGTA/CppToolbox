@@ -239,7 +239,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 																kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
 												asbd.mSampleRate = audioProcessingFormat.getSampleRate();
 												asbd.mChannelsPerFrame =
-														audioProcessingFormat.getChannelMap().getChannels();
+														audioProcessingFormat.getChannelMap().getChannelCount();
 
 												return asbd;
 											}
