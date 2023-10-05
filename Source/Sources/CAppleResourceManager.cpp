@@ -179,11 +179,12 @@ CData CAppleResourceManager::getAsData()
 		typeListData.appendBytes((const UInt8*) &typeID, sizeof(OSType));
 
 		// Last resource index
-		UInt16	lastResourceIndex = EndianU16_NtoB(resources.getCount() - 1);
+		UInt16	lastResourceIndex = EndianU16_NtoB((UInt16) (resources.getCount() - 1));
 		typeListData.appendBytes((const UInt8*) &lastResourceIndex, sizeof(UInt16));
 
 		// Resource list offset
-		UInt16	resourceListOffset = EndianU16_NtoB(resourceListData.getByteCount() + 2 + 8 * types.getCount());
+		UInt16	resourceListOffset =
+						EndianU16_NtoB((UInt16) (resourceListData.getByteCount() + 2 + 8 * types.getCount()));
 		typeListData.appendBytes((const UInt8*) &resourceListOffset, sizeof(UInt16));
 
 		// Iterate resources for this type
@@ -196,29 +197,29 @@ CData CAppleResourceManager::getAsData()
 			resourceListData.appendBytes((const UInt8*) &resourceID, sizeof(UInt16));
 
 			// Name
-			UInt8	nameLength = resource.mName.hasValue()? resource.mName->getLength() : 0;
+			UInt8	nameLength = resource.mName.hasValue() ? (UInt8) resource.mName->getLength() : 0;
 			if (nameLength > 0) {
 				// Have name
-				UInt16	nameOffset = EndianU16_NtoB(nameListData.getByteCount());
+				UInt16	nameOffset = EndianU16_NtoB((UInt16) nameListData.getByteCount());
 				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
 
 				nameListData.appendBytes((const UInt8*) &nameLength, sizeof(UInt8));
 				nameListData += resource.mName->getData(CString::kEncodingMacRoman);
 			} else {
 				// No name
-				UInt16	nameOffset = EndianU16_NtoB(-1);
+				UInt16	nameOffset = EndianU16_NtoB(0xFFFF);
 				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
 			}
 
 			// Attributes + data offset
-			UInt32	attributesAndDataOffset = EndianU32_NtoB((0 << 24) | dataData.getByteCount());
+			UInt32	attributesAndDataOffset = EndianU32_NtoB((0 << 24) | (UInt32) dataData.getByteCount());
 			resourceListData.appendBytes((const UInt8*) &attributesAndDataOffset, sizeof(UInt32));
 
 			// Resource handle placeholder
 			resourceListData.appendBytes((const UInt8*) &uInt32Zero, sizeof(UInt32));
 
 			// Data
-			UInt32	dataByteCount = EndianU32_NtoB(resource.mData.getByteCount());
+			UInt32	dataByteCount = EndianU32_NtoB((UInt16) resource.mData.getByteCount());
 			dataData.appendBytes((const UInt8*) &dataByteCount, sizeof(UInt32));
 			dataData += resource.mData;
 		}
@@ -226,13 +227,14 @@ CData CAppleResourceManager::getAsData()
 
 	// Prepare to compose data
 	UInt32	dataOffset = EndianU32_NtoB(256);
-	UInt32	mapOffset = EndianU32_NtoB(256 + dataData.getByteCount());
-	UInt32	dataByteCount = EndianU32_NtoB(dataData.getByteCount());
+	UInt32	mapOffset = EndianU32_NtoB(256 + (UInt32) dataData.getByteCount());
+	UInt32	dataByteCount = EndianU32_NtoB((UInt32) dataData.getByteCount());
 	UInt32	mapSize =
-					EndianU32_NtoB(28 + typeListData.getByteCount() + resourceListData.getByteCount() +
-							nameListData.getByteCount());
+					EndianU32_NtoB((UInt32) (28 + typeListData.getByteCount() + resourceListData.getByteCount() +
+							nameListData.getByteCount()));
 	UInt16	typeListOffset = EndianU16_NtoB(28);
-	UInt16	nameListOffset = EndianU16_NtoB(28 + typeListData.getByteCount() + resourceListData.getByteCount());
+	UInt16	nameListOffset =
+					EndianU16_NtoB((UInt16) (28 + typeListData.getByteCount() + resourceListData.getByteCount()));
 	UInt16	uInt16Zero = 0;
 
 	return
