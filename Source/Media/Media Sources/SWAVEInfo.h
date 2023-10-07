@@ -20,15 +20,18 @@ const	OSType	kWAVEDataChunkID = MAKE_OSTYPE('d', 'a', 't', 'a');
 #pragma pack(push, 1)
 
 struct SWAVEFORMChunk32 {
-			// Lifecycle methods
-//			SWAVEFORMChunk32(OSType id = 0, UInt32 byteCount = 0, OSType formType = 0) :
-//				mID(EndianU32_NtoB(id)), mByteCount(EndianU32_NtoL(byteCount)), mFormType(EndianU32_NtoB(formType))
-//				{}
+	// Methods
+	public:
+				// Lifecycle methods
+				SWAVEFORMChunk32(UInt32 byteCount, OSType formType) :
+					mID(EndianU32_NtoB(kWAVEFORMChunkID)), mByteCount(EndianU32_NtoL(byteCount)),
+							mFormType(EndianU32_NtoB(formType))
+					{}
 
-			// Instance methods
-	OSType	getID() const { return EndianU32_BtoN(mID); }
-	UInt32	getByteCount() const { return EndianU32_LtoN(mByteCount); }
-	OSType	getFormType() const { return EndianU32_BtoN(mFormType); }
+				// Instance methods
+		OSType	getID() const { return EndianU32_BtoN(mID); }
+		UInt32	getByteCount() const { return EndianU32_LtoN(mByteCount); }
+		OSType	getFormType() const { return EndianU32_BtoN(mFormType); }
 
 	// Properties (in storage endian)
 	private:
@@ -80,14 +83,27 @@ struct SWAVEFORMAT {
 #pragma pack(push, 1)
 
 struct SWAVEFORMATEX {
-			// Methods
-	UInt16	getFormatTag() const { return EndianU16_LtoN(mFormatTag); }
-	UInt16	getChannelCount() const { return EndianU16_LtoN(mChannelCount); }
-	UInt32	getSamplesPerSec() const { return EndianU32_LtoN(mSamplesPerSec); }
-	UInt32	getAverageBytesPerSec() const { return EndianU32_LtoN(mAverageBytesPerSecond); }
-	UInt16	getBlockAlign() const { return EndianU16_LtoN(mBlockAlign); }
-	UInt16	getBitsPerSample() const { return EndianU16_LtoN(mBitsPerSample); }
-	UInt16	getAdditionalInfoByteCount() const { return EndianU16_LtoN(mAdditionalInfoByteCount); }
+	// Methods
+	public:
+				// Lifecycle methods
+				SWAVEFORMATEX(UInt16 formatTag, UInt8 bits, Float32 sampleRate, UInt8 channelCount,
+						UInt16 blockAlign, UInt16 bitsPerSample, UInt16 additionalInfoByteCount) :
+					mFormatTag(EndianU16_NtoL(formatTag)), mChannelCount(EndianU16_NtoL(channelCount)),
+							mSamplesPerSec(EndianU32_NtoL((UInt32) (sampleRate + 0.5))),
+							mAverageBytesPerSecond(EndianU32_NtoL(mSamplesPerSec * channelCount * bitsPerSample / 8)),
+							mBlockAlign(EndianU16_NtoL(blockAlign)),
+							mBitsPerSample(EndianU16_NtoL(bitsPerSample)),
+							mAdditionalInfoByteCount(EndianU16_NtoL(additionalInfoByteCount))
+					{}
+
+				// Instance methods
+		UInt16	getFormatTag() const { return EndianU16_LtoN(mFormatTag); }
+		UInt16	getChannelCount() const { return EndianU16_LtoN(mChannelCount); }
+		UInt32	getSamplesPerSec() const { return EndianU32_LtoN(mSamplesPerSec); }
+		UInt32	getAverageBytesPerSec() const { return EndianU32_LtoN(mAverageBytesPerSecond); }
+		UInt16	getBlockAlign() const { return EndianU16_LtoN(mBlockAlign); }
+		UInt16	getBitsPerSample() const { return EndianU16_LtoN(mBitsPerSample); }
+		UInt16	getAdditionalInfoByteCount() const { return EndianU16_LtoN(mAdditionalInfoByteCount); }
 
 	// Properties (in storage endian)
 	private:

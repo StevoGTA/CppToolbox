@@ -22,6 +22,8 @@ class CIMAADPCMCoder {
 					// Instance methods
 			SInt16	getSample() const
 						{ return mSample; }
+			void	setSample(SInt16 sample)
+						{ mSample = sample; }
 			SInt16	getIndex() const
 						{ return mIndex; }
 
@@ -67,6 +69,32 @@ class CIMAADPCMDecoder {
 // MARK: - CDVIIntelIMAADPCMAudioCodec
 
 class CDVIIntelIMAADPCMAudioCodec {
+	// ChannelHeader
+	public:
+#pragma pack(push, 1)
+		struct ChannelHeader {
+			// Methods
+			public:
+						// Lifecycle methods
+						ChannelHeader(const CIMAADPCMCoder::StateInfo& stateInfo) :
+							mInitialSample(EndianS16_NtoL(stateInfo.getSample())),
+									mInitialIndex((UInt8) stateInfo.getIndex()), mZero(0)
+							{}
+
+						// Instance methods
+				SInt16	getInitialSample() const
+							{ return EndianS16_LtoN(mInitialSample); }
+				SInt16	getInitialIndex() const
+							{ return mInitialIndex; }
+
+			// Properties (in storage endian)
+			private:
+				SInt16	mInitialSample;
+				UInt8	mInitialIndex;
+				UInt8	mZero;
+		};
+#pragma pack(pop)
+
 	// Methods
 	public:
 										// Class methods
