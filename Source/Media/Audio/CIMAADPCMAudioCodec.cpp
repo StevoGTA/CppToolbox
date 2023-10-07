@@ -305,7 +305,7 @@ void CIMAADPCMDecoder::decodeGrouped(const UInt8* packetPtr, UInt32 channelHeade
 
 			// Decode delta codes
 			mInternals->mStateInfos[channel].decodeDeltaCodes(deltaCodesPtr, mInternals->mFramePtr + channel,
-					channelCount, samplesPerGroup);
+					channelCount, (UInt16) samplesPerGroup);
 		}
 
 		// Update
@@ -331,7 +331,7 @@ void CIMAADPCMDecoder::decodeUngrouped(const UInt8* packetPtr, UInt32 channelHea
 
 		// Decode delta codes
 		mInternals->mStateInfos[channel].decodeDeltaCodes(deltaCodesPtr, mInternals->mFramePtr + channel, channelCount,
-				samplesPerChannel);
+				(UInt16) samplesPerChannel);
 	}
 
 	// Update

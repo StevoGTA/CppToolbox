@@ -149,7 +149,7 @@ template <typename T> class TNumberArray : public CArray {
 												}
 
 											// Instance methods
-				T							operator[] (ItemIndex index) const
+				T							operator[](ItemIndex index) const
 												{ return **((TNumber<T>*) getItemAt(index)); }
 				TNumberArray<T>&			operator+=(T value)
 												{ CArray::add(new TNumber<T>(value)); return *this; }
@@ -264,7 +264,7 @@ template <typename T> class TArray : public CArray {
 										return OR<T>();
 									}
 
-		T&						operator[] (ItemIndex index) const
+		T&						operator[](ItemIndex index) const
 									{ return *((T*) getItemAt(index)); }
 		TArray<T>				operator+(const TArray<T>& other) const
 									{ TArray<T>	array(*this); array += other; return array; }
