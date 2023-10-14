@@ -8,5 +8,5 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Register audio codecs
 
-REGISTER_AUDIO_CODEC(aacLC, CCodec::Info(CAACAudioCodec::mAACLCID, CString(OSSTR("AAC Low Complexity"))));
-REGISTER_AUDIO_CODEC(aacLD, CCodec::Info(CAACAudioCodec::mAACLDID, CString(OSSTR("AAC Low Delay"))));
+REGISTER_AUDIO_CODEC(aacLC, CCodec::Info(CAACAudioCodec::mLCID, CString(OSSTR("AAC Low Complexity"))));
+REGISTER_AUDIO_CODEC(aacLD, CCodec::Info(CAACAudioCodec::mLDID, CString(OSSTR("AAC Low Delay"))));

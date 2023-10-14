@@ -9,7 +9,7 @@
 #include "CMediaPacketSource.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-	#include "CCoreAudioAudioCodec.h"
+	#include "CCoreAudioDecodeAudioCodec.h"
 	#include "SError-Apple.h"
 #elif defined(TARGET_OS_WINDOWS)
 	#include "CMediaFoundationAudioCodec.h"
@@ -233,9 +233,10 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 		AudioStreamBasicDescription		getSourceASBD(OSType codecID,
 												const SAudio::ProcessingFormat& audioProcessingFormat)
 											{
+												// Setup
 												AudioStreamBasicDescription	asbd = {0};
 												asbd.mFormatID =
-														(codecID == CAACAudioCodec::mAACLCID) ?
+														(codecID == CAACAudioCodec::mLCID) ?
 																kAudioFormatMPEG4AAC : kAudioFormatMPEG4AAC_LD;
 												asbd.mSampleRate = audioProcessingFormat.getSampleRate();
 												asbd.mChannelsPerFrame =
@@ -245,6 +246,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 											}
 		OV<SError>						setMagicCookie(AudioConverterRef audioConverterRef)
 											{
+												// Set magic cookie
 												OSStatus	status =
 																	::AudioConverterSetProperty(audioConverterRef,
 																			kAudioConverterDecompressionMagicCookie,
@@ -263,6 +265,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 											{ return OR<const GUID>(MFAudioFormat_AAC); }
 		OV<CData>						getUserData() const
 											{
+												// Setup
 												#pragma pack(push, 1)
 													struct UserData {
 														WORD	mPayloadType;
@@ -289,8 +292,8 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 
 // MARK: Properties
 
-const	OSType	CAACAudioCodec::mAACLCID = MAKE_OSTYPE('m', 'p', '4', 'a');
-const	OSType	CAACAudioCodec::mAACLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
+const	OSType	CAACAudioCodec::mLCID = MAKE_OSTYPE('m', 'p', '4', 'a');
+const	OSType	CAACAudioCodec::mLDID = MAKE_OSTYPE('a', 'a', 'c', 'l');
 
 // MARK: Class methods
 
@@ -316,12 +319,12 @@ OV<CAACAudioCodec::Info> CAACAudioCodec::composeInfo(const CData& configurationD
 		case 4:
 		case 6:
 			// AAC variants
-			codecID = CAACAudioCodec::mAACLCID;
+			codecID = CAACAudioCodec::mLCID;
 			break;
 
 		case 23:
 			// AAC-LD
-			codecID = CAACAudioCodec::mAACLDID;
+			codecID = CAACAudioCodec::mLDID;
 			break;
 
 		default:

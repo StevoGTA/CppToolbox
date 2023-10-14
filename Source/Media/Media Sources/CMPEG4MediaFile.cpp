@@ -31,170 +31,56 @@
 	#pragma warning(disable:4200)
 #endif
 
-//struct SMP4ftypAtom {
-//	OSType	mMajorBrand;
-//	UInt32	mMajorBrandVersion;
-//	OSType	mCompatibleBrands[];
-//};
-
-struct SMP4hdlrAtomPayload {
-			// Methods
-	OSType	getSubType() const
-				{ return EndianU32_BtoN(mSubType); }
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mVersion;						// 0
-		UInt8	mFlags[3];
-		OSType	mQuickTimeType;
-		OSType	mSubType;
-		OSType	mQuickTimeManufacturerType;
-		UInt32	mQuickTimeComponentFlags;
-		UInt32	mQuickTimeComponentFlagsMask;
-		SInt8	mComponentTypeName[];
-};
-
-//struct SMP4mvhdAtomV0 {
-//	UInt8	mVersion;		// 0
-//	UInt8	mFlags[3];
-//
-//	UInt32	mCreatedDate;
-//	UInt32	mModifiedDate;
-//
-//	UInt32	mTimeScale;
-//
-//	UInt32	mDuration;
-//
-//	UInt32	mPlaybackSpeed;
-//	UInt16	mVolume;
-//	UInt16	mReserved[5];	// 0
-//	UInt32	mMatrixA;		// Width Scale
-//	UInt32	mMatrixB;		// Width Rotate
-//	UInt32	mMatrixU;		// Width Angle
-//	UInt32	mMatrixC;		// Height Rotate
-//	UInt32	mMatrixD;		// Height Scale
-//	UInt32	mMatrixV;		// Height Angle
-//	UInt32	mMatrixX;
-//	UInt32	mMatrixY;
-//	UInt32	mMatrixW;
-//
-//	UInt32	mQuickTimePreviewStart;
-//	UInt32	mQuickTimePreviewDuration;
-//	UInt32	mQuickTimePoster;
-//	UInt32	mQuickTimeSelectionStart;
-//	UInt32	mQuickTimeSelectionDuration;
-//	UInt32	mQuickTimeCurrentTime;
-//
-//	UInt32	mNextTrackID;
-//};
-//
-//struct SMP4mvhdAtomV1 {
-//	UInt8	mVersion;	// 1
-//	UInt8	mFlags[3];
-//
-//	UInt64	mCreatedDate;
-//	UInt64	mModifiedDate;
-//
-//	UInt32	mTimeScale;
-//
-//	UInt64	mDuration;
-//
-//	UInt32	mPlaybackSpeed;
-//	UInt16	mVolume;
-//	UInt16	mReserved[5];	// 0
-//	UInt32	mMatrixA;		// Width Scale
-//	UInt32	mMatrixB;		// Width Rotate
-//	UInt32	mMatrixU;		// Width Angle
-//	UInt32	mMatrixC;		// Height Rotate
-//	UInt32	mMatrixD;		// Height Scale
-//	UInt32	mMatrixV;		// Height Angle
-//	UInt32	mMatrixX;
-//	UInt32	mMatrixY;
-//	UInt32	mMatrixW;
-//
-//	UInt32	mQuickTimePreviewStart;
-//	UInt32	mQuickTimePreviewDuration;
-//	UInt32	mQuickTimePoster;
-//	UInt32	mQuickTimeSelectionStart;
-//	UInt32	mQuickTimeSelectionDuration;
-//	UInt32	mQuickTimeCurrentTime;
-//
-//	UInt32	mNextTrackID;
-//};
-//
-
-//struct SMP4tkhdAtomPayload {
+//struct SMP4mdhdAtomPayload {
 //	// Structs
 //	struct Payload {
 //		UInt8	mVersion;
-//		UInt8	mFlags[3];	// 0x000001:	Track Enabled
-//							// 0x000002:	Track In Movie
-//							// 0x000004:	Track In Preview
-//							// 0x000008:	Track In Poster
+//		UInt8	mFlags[3];
 //		union {
 //			struct InfoV0 {
-//				UInt32	mCreatedDate;
-//				UInt32	mModifiedDate;
+//				UInt32	mCreationDate;
+//				UInt32	mModificationDate;
 //
-//				UInt32	mTrackID;
-//				UInt32	mReserved;
+//				UInt32	mTimeScale;
 //				UInt32	mDuration;
-//				UInt32	mReserved1[2];
-//				UInt16	mVideoLayer;
-//				UInt16	mQuickTimeAlternateID;
-//				UInt16	mAudioVolume;
-//				UInt16	mReserved4;
-//				UInt32	mMatrixA;		// Width Scale
-//				UInt32	mMatrixB;		// Width Rotate
-//				UInt32	mMatrixU;		// Width Angle
-//				UInt32	mMatrixC;		// Height Rotate
-//				UInt32	mMatrixD;		// Height Scale
-//				UInt32	mMatrixV;		// Height Angle
-//				UInt32	mMatrixX;
-//				UInt32	mMatrixY;
-//				UInt32	mMatrixW;
-//				UInt32	mFrameWidth;
-//				UInt32	mFrameHeight;
+//
+//				UInt16	mLanguageCode;
+//				UInt16	mQuickTimeQuality;
 //			} mInfoV0;
 //
 //			struct InfoV1 {
-//				UInt64	mCreatedDate;
-//				UInt64	mModifiedDate;
+//				UInt64	mCreationDate;
+//				UInt64	mModificationDate;
 //
-//				UInt32	mTrackID;
-//				UInt32	mReserved;
+//				UInt32	mTimeScale;
 //				UInt64	mDuration;
-//				UInt32	mReserved1[2];
-//				UInt16	mVideoLayer;
-//				UInt16	mQuickTimeAlternateID;
-//				UInt16	mAudioVolume;
-//				UInt16	mReserved4;
-//				UInt32	mMatrixA;		// Width Scale
-//				UInt32	mMatrixB;		// Width Rotate
-//				UInt32	mMatrixU;		// Width Angle
-//				UInt32	mMatrixC;		// Height Rotate
-//				UInt32	mMatrixD;		// Height Scale
-//				UInt32	mMatrixV;		// Height Angle
-//				UInt32	mMatrixX;
-//				UInt32	mMatrixY;
-//				UInt32	mMatrixW;
-//				UInt32	mFrameWidth;
-//				UInt32	mFrameHeight;
+//
+//				UInt16	mLanguageCode;
+//				UInt16	mQuickTimeQuality;
 //			} mInfoV1;
 //		} _;
 //	};
 //
 //			// Lifecycle methods
-//			StkhdAtomPayload(const CData& data) : mData(data) {}
+//			SMP4mdhdAtomPayload(const CData& data) : mData(data) {}
 //
 //			// Instance Methods
+//	UInt32	getTimeScale() const
+//				{
+//					// Setup
+//					const	Payload&	payload = *((Payload*) mData.getBytePtr());
+//
+//					return (payload.mVersion == 0) ?
+//							EndianU32_BtoN(payload._.mInfoV0.mTimeScale) :
+//							EndianU32_BtoN(payload._.mInfoV1.mTimeScale);
+//				}
 //	UInt64	getDuration() const
 //				{
 //					// Setup
 //					const	Payload&	payload = *((Payload*) mData.getBytePtr());
 //
 //					return (payload.mVersion == 0) ?
-//							EndianU32_BtoN(payload._.mInfoV0.mDuration) :
+//							(UInt64) EndianU32_BtoN(payload._.mInfoV0.mDuration) :
 //							EndianU64_BtoN(payload._.mInfoV1.mDuration);
 //				}
 //
@@ -202,64 +88,6 @@ struct SMP4hdlrAtomPayload {
 //	private:
 //		const	CData&	mData;
 //};
-
-struct SMP4mdhdAtomPayload {
-	// Structs
-	struct Payload {
-		UInt8	mVersion;
-		UInt8	mFlags[3];
-		union {
-			struct InfoV0 {
-				UInt32	mCreationDate;
-				UInt32	mModificationDate;
-
-				UInt32	mTimeScale;
-				UInt32	mDuration;
-
-				UInt16	mLanguageCode;
-				UInt16	mQuickTimeQuality;
-			} mInfoV0;
-
-			struct InfoV1 {
-				UInt64	mCreationDate;
-				UInt64	mModificationDate;
-
-				UInt32	mTimeScale;
-				UInt64	mDuration;
-
-				UInt16	mLanguageCode;
-				UInt16	mQuickTimeQuality;
-			} mInfoV1;
-		} _;
-	};
-
-			// Lifecycle methods
-			SMP4mdhdAtomPayload(const CData& data) : mData(data) {}
-
-			// Instance Methods
-	UInt32	getTimeScale() const
-				{
-					// Setup
-					const	Payload&	payload = *((Payload*) mData.getBytePtr());
-
-					return (payload.mVersion == 0) ?
-							EndianU32_BtoN(payload._.mInfoV0.mTimeScale) :
-							EndianU32_BtoN(payload._.mInfoV1.mTimeScale);
-				}
-	UInt64	getDuration() const
-				{
-					// Setup
-					const	Payload&	payload = *((Payload*) mData.getBytePtr());
-
-					return (payload.mVersion == 0) ?
-							(UInt64) EndianU32_BtoN(payload._.mInfoV0.mDuration) :
-							EndianU64_BtoN(payload._.mInfoV1.mDuration);
-				}
-
-	// Properties (in storage endian)
-	private:
-		const	CData&	mData;
-};
 
 //struct SMP4smhdAtom {
 //	UInt8	mVersion;								// 0
@@ -643,20 +471,18 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 									atomReader.readAtomPayload(
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('m', 'd', 'h', 'd')));
 			if (mdhdAtomPayloadData.hasError()) continue;
-
-			SMP4mdhdAtomPayload		mdhdAtomPayload(*mdhdAtomPayloadData);
-			UInt32					timeScale = mdhdAtomPayload.getTimeScale();
-			UniversalTimeInterval	duration =
-											(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
-													(UniversalTimeInterval) timeScale;
+			const	SmdhdAtomPayload&		mdhdAtomPayload = *((SmdhdAtomPayload*) mdhdAtomPayloadData->getBytePtr());
+					UInt32					timeScale = mdhdAtomPayload.getTimeScale();
+					UniversalTimeInterval	duration =
+													(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
+															(UniversalTimeInterval) timeScale;
 
 			// Handler
 			TVResult<CData>	hdlrAtomPayloadData =
 									atomReader.readAtomPayload(
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('h', 'd', 'l', 'r')));
 			if (hdlrAtomPayloadData.hasError()) continue;
-			const	SMP4hdlrAtomPayload&	hdlrAtomPayload =
-													*((SMP4hdlrAtomPayload*) hdlrAtomPayloadData->getBytePtr());
+			const	ShdlrAtomPayload&	hdlrAtomPayload = *((ShdlrAtomPayload*) hdlrAtomPayloadData->getBytePtr());
 
 			// Media Information
 			TVResult<CAtomReader::ContainerAtom>	minfContainerAtom =
@@ -729,7 +555,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 								stscAtomPayload, stszAtomPayload, stcoAtomPayload, co64AtomPayload);
 
 			// Check track type
-			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
+			if (hdlrAtomPayload.getSubType() == ShdlrAtomPayload::kSubTypeSound) {
 				// Audio track
 				TVResult<CMediaTrackInfos::AudioTrackInfo>	audioTrackInfo =
 																	composeAudioTrackInfo(
@@ -743,7 +569,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 				else
 					// Error
 					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(audioTrackInfo.getError()));
-			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
+			} else if (hdlrAtomPayload.getSubType() == ShdlrAtomPayload::kSubTypeVideo) {
 				// Video track
 				TVResult<CMediaTrackInfos::VideoTrackInfo>	videoTrackInfo =
 																	composeVideoTrackInfo(
