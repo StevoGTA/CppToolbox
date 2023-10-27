@@ -31,21 +31,29 @@ class CAudioFrames::Internals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::CAudioFrames(UInt32 bytesPerFrame, UInt32 frameCount) :
+		CData((CData::ByteCount) (bytesPerFrame * frameCount))
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(1, bytesPerFrame * frameCount, frameCount, bytesPerFrame);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment) :
+		CData((CData::ByteCount) (segmentCount * bytesPerFramePerSegment * frameCountPerSegment))
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals =
+			new Internals(segmentCount, bytesPerFramePerSegment * frameCountPerSegment, frameCountPerSegment,
+					bytesPerFramePerSegment);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CAudioFrames::CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
 		UInt32 bytesPerFramePerSegment) : CData(buffer, segmentCount * segmentByteCount, false)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new Internals(segmentCount, segmentByteCount, frameCount, bytesPerFramePerSegment);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment) :
-		CData((CData::ByteCount) (segmentCount * frameCountPerSegment * bytesPerFramePerSegment))
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mInternals =
-			new Internals(segmentCount, frameCountPerSegment * bytesPerFramePerSegment, frameCountPerSegment,
-					bytesPerFramePerSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

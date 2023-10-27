@@ -71,9 +71,19 @@ class CData::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 							// Prepare for write
 							Internals*	internals = prepareForWrite();
 
+							// Update buffer
+							if (mFreeOnDelete)
+								// Can just realloc the buffer
+								internals->mBuffer = ::realloc(internals->mBuffer, (size_t) byteCount);
+							else {
+								// Alloc new buffer
+								void*	buffer = ::malloc((size_t) byteCount);
+								::memcpy(buffer, internals->mBuffer, internals->mBufferByteCount);
+								internals->mBuffer = buffer;
+							}
+
 							// Update byte count
 							internals->mBufferByteCount = byteCount;
-							internals->mBuffer = ::realloc(internals->mBuffer, (size_t) internals->mBufferByteCount);
 
 							return internals;
 						}

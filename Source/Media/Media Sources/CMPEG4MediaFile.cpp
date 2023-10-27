@@ -31,114 +31,84 @@
 	#pragma warning(disable:4200)
 #endif
 
-//struct SMP4mdhdAtomPayload {
-//	// Structs
-//	struct Payload {
-//		UInt8	mVersion;
-//		UInt8	mFlags[3];
-//		union {
-//			struct InfoV0 {
-//				UInt32	mCreationDate;
-//				UInt32	mModificationDate;
-//
-//				UInt32	mTimeScale;
-//				UInt32	mDuration;
-//
-//				UInt16	mLanguageCode;
-//				UInt16	mQuickTimeQuality;
-//			} mInfoV0;
-//
-//			struct InfoV1 {
-//				UInt64	mCreationDate;
-//				UInt64	mModificationDate;
-//
-//				UInt32	mTimeScale;
-//				UInt64	mDuration;
-//
-//				UInt16	mLanguageCode;
-//				UInt16	mQuickTimeQuality;
-//			} mInfoV1;
-//		} _;
-//	};
-//
-//			// Lifecycle methods
-//			SMP4mdhdAtomPayload(const CData& data) : mData(data) {}
-//
-//			// Instance Methods
-//	UInt32	getTimeScale() const
-//				{
-//					// Setup
-//					const	Payload&	payload = *((Payload*) mData.getBytePtr());
-//
-//					return (payload.mVersion == 0) ?
-//							EndianU32_BtoN(payload._.mInfoV0.mTimeScale) :
-//							EndianU32_BtoN(payload._.mInfoV1.mTimeScale);
-//				}
-//	UInt64	getDuration() const
-//				{
-//					// Setup
-//					const	Payload&	payload = *((Payload*) mData.getBytePtr());
-//
-//					return (payload.mVersion == 0) ?
-//							(UInt64) EndianU32_BtoN(payload._.mInfoV0.mDuration) :
-//							EndianU64_BtoN(payload._.mInfoV1.mDuration);
-//				}
-//
-//	// Properties (in storage endian)
-//	private:
-//		const	CData&	mData;
-//};
+// SMP4AtomHeader
+struct SMP4AtomHeader {
+	// Methods
+	public:
+				// Lifecycle methods
+				SMP4AtomHeader(UInt32 length, OSType type) :
+					mLength(EndianU32_NtoB(length)), mType(EndianU32_NtoB(type))
+					{}
 
-//struct SMP4smhdAtom {
-//	UInt8	mVersion;								// 0
-//	UInt8	mFlags[3];
-//
-//	UInt16	mAudioBalance;
-//	UInt8	mReserved[2];
-//};
-//
-//struct SMP4drefAtom {
-//	UInt8	mVersion;								// 0
-//	UInt8	mFlags[3];
-//
-//	UInt32	mReferenceCount;
-//};
-//
-//struct SMP4urlAtom {
-//	UInt8	mVersion;								// 0
-//	UInt8	mFlags[3];
-//};
-
-// MP4A Description
-struct SMP4stsdMP4ADescription {
-			// Methods
-	UInt16	getChannelCount() const
-				{ return EndianU16_BtoN(mChannelCounts); }
+				// Instance methods
+		UInt32	getLength() const
+					{ return EndianU32_BtoN(mLength); }
+		OSType	getType() const
+					{ return EndianU32_BtoN(mType); }
+		CData	getData() const
+					{ return CData(this, sizeof(SMP4AtomHeader), false); }
 
 	// Properties (in storage endian)
 	private:
 		UInt32	mLength;
 		OSType	mType;
-		UInt8	mReserved[6];
-		UInt16	mDataRefIndex;
+};
 
-		UInt16	mQuickTimeEncodingVersion;
-		UInt16	mQuickTimeEncodingRevisionLevel;
-		OSType	mQuickTimeEncodingVendor;
-		UInt16	mChannelCounts;
-		UInt16	mBits;
-		UInt16	mQuickTimeCompressionID;
-		UInt16	mQuickTimePacketSize;
-		UInt32	mSampleRate;
+// SMP4AudioFormatAtom
+struct SMP4AudioFormatAtom {
+	// Methods
+	public:
+				// Instance methods
+		UInt32	getLength() const
+					{ return EndianU32_BtoN(mLength); }
+		OSType	getType() const
+					{ return EndianU32_BtoN(mType); }
+		OSType	getFormat() const
+					{ return EndianU32_BtoN(mFormat); }
+
+	// Properties (in storage endian)
+	private:
+		UInt32	mLength;
+		OSType	mType;
+		OSType	mFormat;
+};
+
+// SMP4MP4AESDSAtomPayloadHeader
+struct SMP4MP4AESDSAtomPayloadHeader {
+	// Methods
+	public:
+				// Lifecycle methods
+				SMP4MP4AESDSAtomPayloadHeader() :
+					mVersion(0)
+					{
+						// Setup
+						mFlags[0] = 0;
+						mFlags[1] = 0;
+						mFlags[2] = 0;
+					}
+
+				// Instance methods
+		CData	getData() const
+					{ return CData(this, sizeof(SMP4MP4AESDSAtomPayloadHeader), false); }
+
+	// Properties (in storage endian)
+	private:
+		UInt8	mVersion;							// 0
+		UInt8	mFlags[3];
 };
 
 // h.264 Description
 struct SMP4stsdH264Description {
-			// Methods
-	UInt16	getWidth() const
-				{ return EndianU16_BtoN(mWidth); }
-	UInt16	getHeight() const
-				{ return EndianU16_BtoN(mHeight); }
+	// Type
+	enum { kType = MAKE_OSTYPE('a', 'v', 'c', '1') };
+
+	// Methods
+	public:
+				// Instance methods
+		UInt16	getWidth() const
+					{ return EndianU16_BtoN(mWidth); }
+		UInt16	getHeight() const
+					{ return EndianU16_BtoN(mHeight); }
 
 	// Properties (in storage endian)
 	private:
@@ -165,34 +135,6 @@ struct SMP4stsdH264Description {
 		UInt8	mQuickTimeColorTable[];
 };
 
-// Sample Table Sample Description (general)
-struct SMP4stsdDescription {
-	// Methods
-	OSType	getType() const
-				{ return EndianU32_BtoN(mType); }
-
-	// Properties (in storage endian)
-	private:
-		UInt32	mLength;
-		OSType	mType;
-		UInt8	mReserved[6];
-		UInt16	mDataRefIndex;
-};
-
-// Sample Table Sample Description Atom Payload
-struct SMP4stsdAtomPayload {
-									// Methods
-	const	SMP4stsdDescription&	getFirstDescription() const
-										{ return *((SMP4stsdDescription*) mDescriptions); }
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mVersion;				// 0
-		UInt8	mFlags[3];
-		UInt32	mDescriptionCount;
-		UInt8	mDescriptions[];
-};
-
 /*
 	Blocks are groups of packets.
 	In the stsc Atom, packet counts are associated with blocks.  Blocks that have the same
@@ -203,36 +145,6 @@ struct SMP4stsdAtomPayload {
 
 	How packets are grouped into blocks seems arbitrary at this point
 */
-
-// Sample Table Time-to-Sample Atom Payload
-struct SMP4sttsAtomPayload {
-	// Structs
-	struct Chunk {
-				// Methods
-		UInt32	getPacketCount() const
-					{ return EndianU32_BtoN(mPacketCount); }
-		UInt32	getPacketDuration() const
-					{ return EndianU32_BtoN(mPacketDuration); }
-
-		// Properties (in storage endian)
-		private:
-			UInt32	mPacketCount;
-			UInt32	mPacketDuration;
-	};
-
-					// Methods
-			UInt32	getChunkCount() const
-						{ return EndianU32_BtoN(mChunkCount); }
-	const	Chunk&	getChunk(UInt32 index) const
-						{ return mChunks[index]; }
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mVersion;
-		UInt8	mFlags[3];
-		UInt32	mChunkCount;
-		Chunk	mChunks[];
-};
 
 // Sample Table Sync Sample Atom Payload
 struct SMP4stssAtomPayload {
@@ -248,75 +160,6 @@ struct SMP4stssAtomPayload {
 		UInt8	mFlags[3];
 		UInt32	mKeyframesCount;
 		UInt32	mKeyFrameIndexes[];
-};
-
-// Sample Table Sample-to-Chunk Atom Payload
-struct SMP4stscAtomPayload {
-	// Structs
-	struct PacketGroupInfo {
-		// Methods
-		UInt32	getChunkStartIndex() const
-					{ return EndianU32_BtoN(mChunkStartIndex); }
-		UInt32	getPacketCount() const
-					{ return EndianU32_BtoN(mPacketCount); }
-
-		// Properties (in storage endian)
-		private:
-			UInt32	mChunkStartIndex;
-			UInt32	mPacketCount;
-			UInt32	mSampleDescriptionIndex;
-	};
-
-								// Methods
-			UInt32				getPacketGroupInfoCount() const
-									{ return EndianU32_BtoN(mPacketGroupInfoCount); }
-	const	PacketGroupInfo&	getPacketGroupInfo(UInt32 index) const
-									{ return mPacketGroupInfos[index]; }
-
-	// Properties (in storage endian)
-	private:
-		UInt8			mVersion;
-		UInt8			mFlags[3];
-		UInt32			mPacketGroupInfoCount;
-		PacketGroupInfo	mPacketGroupInfos[];
-};
-
-// Sample Table Sample siZe Atom Payload
-struct SMP4stszAtomPayload {
-			// Methods
-	UInt32	getPacketByteCount(UInt32 index) const
-					{ return (mGlobalPacketByteCount != 0) ?
-							EndianU32_BtoN(mGlobalPacketByteCount) : EndianU32_BtoN(mPacketByteCounts[index]); }
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mVersion;
-		UInt8	mFlags[3];
-
-		// If every packet has the same size, specify it here
-		UInt32	mGlobalPacketByteCount;	// 0 means use packet sizes below
-
-		// For every individual packet, specify the packet size
-		UInt32	mPacketByteCountCount;
-		UInt32	mPacketByteCounts[];			// Packet size in bytes
-};
-
-// Sample Table Chunk Offset Atom Payload
-struct SMP4stcoAtomPayload {
-			// Methods
-	UInt32	getPacketGroupOffsetCount() const
-				{ return EndianU32_BtoN(mPacketGroupOffsetCount); }
-	UInt64	getPacketGroupOffset(UInt32 index) const
-				{ return EndianU32_BtoN(mPacketGroupOffsets[index]); }
-
-	// Properties (in storage endian)
-	private:
-		UInt8	mVersion;
-		UInt8	mFlags[3];
-
-		// For each packet group specified in the stsc Atom, the file offset is specified
-		UInt32	mPacketGroupOffsetCount;
-		UInt32	mPacketGroupOffsets[];		// Offset to start of packet data from start of file
 };
 
 // sample table Chunk Offset 64 Atom Payload
@@ -337,25 +180,124 @@ struct SMP4co64AtomPayload {
 		UInt64	mPacketGroupOffsets[];		// Offset to start of packet data from start of file
 };
 
-//struct SMP4metaAtom {
-//	UInt8	mVersion;
-//	UInt8	mFlags[3];
-//};
-//
-//struct SMP4dataAtom {
-//	UInt8	mVersion;
-//	UInt8	mFlags[3];
-//
-//	UInt32	mReserved;
-//
-//	UInt8	mData[];
-//};
-
 #if defined(TARGET_OS_WINDOWS)
 	#pragma warning(default:4200)
 #endif
 
 #pragma pack(pop)
+
+static	CString	sErrorDomain(OSSTR("CMPEG4MediaFile"));
+static	SError	sInvalidMagicCookieError(sErrorDomain, 1, CString(OSSTR("Invalid Magic Cookie")));
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CMPEG4MediaFile::SstsdAtomPayload
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CMPEG4MediaFile::SstsdAtomPayload::SstsdAtomPayload(UInt32 descriptionCount) :
+		mVersion(0), mDescriptionCount(EndianU32_NtoB(descriptionCount))
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mFlags[0] = 0;
+	mFlags[1] = 0;
+	mFlags[2] = 0;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CData CMPEG4MediaFile::SstsdAtomPayload::getData(const TArray<CData>& descriptions)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	SstsdAtomPayload	stsdAtomPayload(descriptions.getCount());
+	CData				data(&stsdAtomPayload, sizeof(SstsdAtomPayload), false);
+
+	// Add descriptions
+	for (TIteratorD<CData> iterator = descriptions.getIterator(); iterator.hasValue(); iterator.advance())
+		// Add description
+		data += *iterator;
+
+	return data;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CMPEG4MediaFile::SstsdMP4ADescription
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CMPEG4MediaFile::SstsdMP4ADescription::SstsdMP4ADescription(UInt32 length, Float32 sampleRate,
+		const SAudio::ChannelMap& audioChannelMap, UInt16 dataRefIndex) :
+		mLength(EndianU32_NtoB(length)), mType(EndianU32_NtoB(kType)), mDataRefIndex(EndianU16_NtoB(dataRefIndex)),
+		mQuickTimeEncodingVersion(EndianU16_NtoB(0)), mQuickTimeEncodingRevisionLevel(EndianU16_NtoB(0)),
+		mQuickTimeEncodingVendor(EndianU32_NtoB(0)), mChannelCounts(EndianU16_NtoB(audioChannelMap.getChannelCount())),
+		mBits(EndianU16_NtoB(16)), mQuickTimeCompressionID(EndianU16_NtoB(0)), mQuickTimePacketSize(EndianU16_NtoB(0)),
+		mSampleRate(EndianU32_NtoB((UInt32) sampleRate << 16))
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mReserved[0] = 0;
+	mReserved[1] = 0;
+	mReserved[2] = 0;
+	mReserved[3] = 0;
+	mReserved[4] = 0;
+	mReserved[5] = 0;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> CMPEG4MediaFile::SstsdMP4ADescription::getData(Float32 sampleRate,
+		const SAudio::ChannelMap& audioChannelMap, UInt16 dataRefIndex, const CData& magicCookie)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Decode Magic Cookie
+	const	UInt8*					constBytePtr = (const UInt8*) magicCookie.getBytePtr();
+			CData::ByteCount		byteCount = magicCookie.getByteCount();
+	const	SMP4AudioFormatAtom&	audioFormatAtom = *((const SMP4AudioFormatAtom*) constBytePtr);
+			CData					magicCookieData;
+	if ((byteCount >= sizeof(SMP4AudioFormatAtom)) &&
+			(audioFormatAtom.getLength() == 12) &&
+			(audioFormatAtom.getType() == MAKE_OSTYPE('f', 'r', 'm', 'a')) &&
+			(audioFormatAtom.getFormat() == MAKE_OSTYPE('m', 'p', '4', 'a'))) {
+		// We have an old-style magic cookie in full atom form
+		// Skip the atom header
+		constBytePtr += audioFormatAtom.getLength();
+		byteCount -= audioFormatAtom.getLength();
+
+		// Extract just the part we need
+		const	SMP4AtomHeader&	mp4aAtomHeader = *((const SMP4AtomHeader*) constBytePtr);
+		if ((byteCount < sizeof(SMP4AtomHeader)) || (mp4aAtomHeader.getType() != MAKE_OSTYPE('m', 'p', '4', 'a')))
+			return TVResult<CData>(sInvalidMagicCookieError);
+
+		// Almost there...
+		constBytePtr += mp4aAtomHeader.getLength();
+
+		// Sanity check
+		const	SMP4AtomHeader&	esdsAtomHeader = *((const SMP4AtomHeader*) constBytePtr);
+		if (esdsAtomHeader.getType() != MAKE_OSTYPE('e', 's', 'd', 's'))
+			return TVResult<CData>(sInvalidMagicCookieError);
+
+		// Copy magic cookie
+		magicCookieData = CData(constBytePtr, esdsAtomHeader.getLength());
+	} else
+		// New style magic cookie
+		magicCookieData +=
+				SMP4AtomHeader(sizeof(SMP4AtomHeader) + sizeof(SMP4MP4AESDSAtomPayloadHeader) + (UInt32) byteCount,
+								MAKE_OSTYPE('e', 's', 'd', 's'))
+						.getData() +
+				SMP4MP4AESDSAtomPayloadHeader().getData() +
+				magicCookie;
+
+	return SstsdMP4ADescription(sizeof(SstsdMP4ADescription) + (UInt32) magicCookieData.getByteCount(), sampleRate,
+					audioChannelMap, dataRefIndex).getData() +
+			magicCookieData;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -371,15 +313,16 @@ struct CMPEG4MediaFile::Internals {
 
 								Internals(const CAtomReader& atomReader, const CAtomReader::Atom& stsdAtom,
 										const CAtomReader::ContainerAtom& stblContainerAtom,
-										const SMP4stsdDescription& stsdDescription,
-										const SMP4sttsAtomPayload& sttsAtomPayload,
-										const SMP4stscAtomPayload& stscAtomPayload,
-										const SMP4stszAtomPayload& stszAtomPayload,
-										SMP4stcoAtomPayload* stcoAtomPayload, SMP4co64AtomPayload* co64AtomPayload) :
+										const SstsdDescriptionHeader& stsdDescriptionHeader,
+										const SsttsAtomPayload& sttsAtomPayload,
+										const SstscAtomPayload& stscAtomPayload,
+										const SstszAtomPayload& stszAtomPayload,
+										SstcoAtomPayload* stcoAtomPayload, SMP4co64AtomPayload* co64AtomPayload) :
 									mAtomReader(atomReader), mSTSDAtom(stsdAtom), mSTBLContainerAtom(stblContainerAtom),
-											mSTSDDescription(stsdDescription), mSTTSAtomPayload(sttsAtomPayload),
-											mSTSCAtomPayload(stscAtomPayload), mSTSZAtomPayload(stszAtomPayload),
-											mSTCOAtomPayload(stcoAtomPayload), mCO64AtomPayload(co64AtomPayload)
+											mSTSDDescriptionHeader(stsdDescriptionHeader),
+											mSTTSAtomPayload(sttsAtomPayload), mSTSCAtomPayload(stscAtomPayload),
+											mSTSZAtomPayload(stszAtomPayload), mSTCOAtomPayload(stcoAtomPayload),
+											mCO64AtomPayload(co64AtomPayload)
 									{}
 
 			TVResult<CData>		getDecompressionData(SInt64 offset) const
@@ -387,8 +330,7 @@ struct CMPEG4MediaFile::Internals {
 										// Read atom
 										TVResult<CAtomReader::Atom>	atom =
 																			mAtomReader.readAtom(mSTSDAtom,
-																					sizeof(SMP4stsdAtomPayload) +
-																							offset);
+																					sizeof(SstsdAtomPayload) + offset);
 										ReturnValueIfResultError(atom, TVResult<CData>(atom.getError()));
 
 										return mAtomReader.readAtomPayload(*atom);
@@ -410,11 +352,11 @@ struct CMPEG4MediaFile::Internals {
 	const	CAtomReader&				mAtomReader;
 	const	CAtomReader::Atom&			mSTSDAtom;
 	const	CAtomReader::ContainerAtom&	mSTBLContainerAtom;
-	const	SMP4stsdDescription&		mSTSDDescription;
-	const	SMP4sttsAtomPayload&		mSTTSAtomPayload;
-	const	SMP4stscAtomPayload&		mSTSCAtomPayload;
-	const	SMP4stszAtomPayload&		mSTSZAtomPayload;
-			SMP4stcoAtomPayload* 		mSTCOAtomPayload;
+	const	SstsdDescriptionHeader&		mSTSDDescriptionHeader;
+	const	SsttsAtomPayload&			mSTTSAtomPayload;
+	const	SstscAtomPayload&			mSTSCAtomPayload;
+	const	SstszAtomPayload&			mSTSZAtomPayload;
+			SstcoAtomPayload*	 		mSTCOAtomPayload;
 			SMP4co64AtomPayload*		mCO64AtomPayload;
 };
 
@@ -503,35 +445,30 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 			if (!stsdAtom.hasReference()) continue;
 			TVResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
 			if (error.hasValue()) continue;
-			const	SMP4stsdAtomPayload&	stsdAtomPayload =
-													*((SMP4stsdAtomPayload*) stsdAtomPayloadData->getBytePtr());
-			const	SMP4stsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
+			const	SstsdAtomPayload&		stsdAtomPayload =
+													*((SstsdAtomPayload*) stsdAtomPayloadData->getBytePtr());
+			const	SstsdDescriptionHeader&	stsdDescriptionHeader = stsdAtomPayload.getFirstDescriptionHeader();
 
 			// Sample Table Time-to-Sample
 			TVResult<CData>	sttsAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 't', 's')));
 			if (sttsAtomPayloadData.hasError()) continue;
-			const	SMP4sttsAtomPayload&	sttsAtomPayload =
-													*((SMP4sttsAtomPayload*)
-															sttsAtomPayloadData->getBytePtr());
+			const	SsttsAtomPayload&	sttsAtomPayload = *((SsttsAtomPayload*) sttsAtomPayloadData->getBytePtr());
 
 			// Sample Table Sample Blocks
 			TVResult<CData>	stscAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'c')));
 			if (stscAtomPayloadData.hasError()) continue;
-			const	SMP4stscAtomPayload&	stscAtomPayload =
-													*((SMP4stscAtomPayload*)
-															stscAtomPayloadData->getBytePtr());
+			const	SstscAtomPayload&	stscAtomPayload = *((SstscAtomPayload*) stscAtomPayloadData->getBytePtr());
 
 			// Sample Table Packet Sizes
 			TVResult<CData>	stszAtomPayloadData =
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'z')));
 			if (stszAtomPayloadData.hasError()) continue;
-			const	SMP4stszAtomPayload&	stszAtomPayload =
-													*((SMP4stszAtomPayload*) stszAtomPayloadData->getBytePtr());
+			const	SstszAtomPayload&	stszAtomPayload = *((SstszAtomPayload*) stszAtomPayloadData->getBytePtr());
 
 			// Sample Table Block offsets
 			TVResult<CData>	stcoAtomPayloadData =
@@ -541,17 +478,15 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
 			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
-			SMP4stcoAtomPayload*	stcoAtomPayload =
+			SstcoAtomPayload*		stcoAtomPayload =
 											stcoAtomPayloadData.hasValue() ?
-													(SMP4stcoAtomPayload*) stcoAtomPayloadData->getBytePtr() :
-													nil;
+													(SstcoAtomPayload*) stcoAtomPayloadData->getBytePtr() : nil;
 			SMP4co64AtomPayload*	co64AtomPayload =
 											co64AtomPayloadData.hasValue() ?
-													(SMP4co64AtomPayload*) co64AtomPayloadData->getBytePtr() :
-													nil;
+													(SMP4co64AtomPayload*) co64AtomPayloadData->getBytePtr() : nil;
 
 			// Internals
-			Internals	internals(atomReader, *stsdAtom, *stblContainerAtom, stsdDescription, sttsAtomPayload,
+			Internals	internals(atomReader, *stsdAtom, *stblContainerAtom, stsdDescriptionHeader, sttsAtomPayload,
 								stscAtomPayload, stszAtomPayload, stcoAtomPayload, co64AtomPayload);
 
 			// Check track type
@@ -561,7 +496,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 																	composeAudioTrackInfo(
 																			importSetup.getRandomAccessDataSource(),
 																			importSetup.getOptions(),
-																			stsdDescription.getType(), duration,
+																			stsdDescriptionHeader.getType(), duration,
 																			internals);
 				if (audioTrackInfo.hasValue())
 					// Success
@@ -575,7 +510,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 																	composeVideoTrackInfo(
 																			importSetup.getRandomAccessDataSource(),
 																			importSetup.getOptions(),
-																			stsdDescription.getType(), timeScale,
+																			stsdDescriptionHeader.getType(), timeScale,
 																			duration, internals);
 				if (videoTrackInfo.hasValue())
 					// Success
@@ -597,9 +532,9 @@ TArray<SMedia::PacketAndLocation> CMPEG4MediaFile::composePacketAndLocations(con
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SMP4sttsAtomPayload&	sttsAtomPayload = internals.mSTTSAtomPayload;
-	const	SMP4stscAtomPayload&	stscAtomPayload = internals.mSTSCAtomPayload;
-	const	SMP4stszAtomPayload&	stszAtomPayload = internals.mSTSZAtomPayload;
+	const	SsttsAtomPayload&	sttsAtomPayload = internals.mSTTSAtomPayload;
+	const	SstscAtomPayload&	stscAtomPayload = internals.mSTSCAtomPayload;
+	const	SstszAtomPayload&	stszAtomPayload = internals.mSTSZAtomPayload;
 
 	// Construct info
 	UInt32	stszPacketByteCountIndex = 0;
@@ -618,7 +553,7 @@ TArray<SMedia::PacketAndLocation> CMPEG4MediaFile::composePacketAndLocations(con
 	TNArray<SMedia::PacketAndLocation>	packetAndLocations;
 	for (UInt32 sttsChunkIndex = 0; sttsChunkIndex < sttsChunkCount; sttsChunkIndex++) {
 		// Get packet info
-		const	SMP4sttsAtomPayload::Chunk&	sttsChunk = sttsAtomPayload.getChunk(sttsChunkIndex);
+		const	SsttsAtomPayload::Chunk&	sttsChunk = sttsAtomPayload.getChunk(sttsChunkIndex);
 				UInt32						sttsChunkPacketCount = sttsChunk.getPacketCount();
 				UInt32						sttsChunkPacketDuration = sttsChunk.getPacketDuration();
 
@@ -673,13 +608,13 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 {
 	// Check type
 	switch (type) {
-		case MAKE_OSTYPE('m', 'p', '4', 'a'): {
+		case SstsdMP4ADescription::kType: {
 			// MPEG4 (AAC) Audio
-			const	SMP4stsdMP4ADescription&	mp4ADescription =
-														*((SMP4stsdMP4ADescription*) &internals.mSTSDDescription);
+			const	SstsdMP4ADescription&	mp4ADescription =
+													*((SstsdMP4ADescription*) &internals.mSTSDDescriptionHeader);
 
 			// Get configuration data
-			TVResult<CData>	configurationData = internals.getDecompressionData(sizeof(SMP4stsdMP4ADescription));
+			TVResult<CData>	configurationData = internals.getDecompressionData(sizeof(SstsdMP4ADescription));
 			ReturnValueIfResultError(configurationData,
 					TVResult<CMediaTrackInfos::AudioTrackInfo>(configurationData.getError()))
 
@@ -726,10 +661,10 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInf
 {
 	// Check type
 	switch (type) {
-		case MAKE_OSTYPE('a', 'v', 'c', '1'): {
+		case SMP4stsdH264Description::kType: {
 			// h.264 Video
 			const	SMP4stsdH264Description&	h264Description =
-														*((SMP4stsdH264Description*) &internals.mSTSDDescription);
+														*((SMP4stsdH264Description*) &internals.mSTSDDescriptionHeader);
 
 
 			// Get configuration data
@@ -786,13 +721,6 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInf
 			// Unsupported video codec
 			return TVResult<CMediaTrackInfos::VideoTrackInfo>(CCodec::unsupportedError(CString(type, true)));
 	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const void* CMPEG4MediaFile::getSampleDescription(const Internals& internals) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return &internals.mSTSDDescription;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -76,6 +76,7 @@ template <typename T> struct TOVResult {
 					// Lifecycle Methods
 					TOVResult() {}
 					TOVResult(const T value) : mValue(OV<T>(value)) {}
+					TOVResult(const OV<T>& value) : mValue(value) {}
 					TOVResult(const SError& error) : mError(OV<SError>(error)) {}
 					TOVResult(const TOVResult& other) : mValue(other.mValue), mError(other.mError) {}
 
