@@ -7,8 +7,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	CString	sAtomMediaReaderErrorDomain(OSSTR("CAtomReader"));
-static	SError	sNoAtomError(sAtomMediaReaderErrorDomain, 1, CString(OSSTR("No Atom")));
+static	CString	sErrorDomain(OSSTR("CAtomReader"));
+static	SError	sNoAtomError(sErrorDomain, 1, CString(OSSTR("No Atom")));
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAtomReader

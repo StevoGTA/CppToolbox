@@ -53,7 +53,7 @@ class CCoreAudioAudioConverter::Internals {
 											// Interleaved
 											internals.mInputAudioFrames =
 													OI<CAudioFrames>(
-															new CAudioFrames(1,
+															new CAudioFrames(
 																	internals.mInputAudioProcessingFormat->
 																			getBytesPerFrame(),
 																	frameCount));

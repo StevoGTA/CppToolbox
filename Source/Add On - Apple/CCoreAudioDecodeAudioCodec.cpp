@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CCoreAudioAudioCodec.cpp			©2022 Stevo Brock	All rights reserved.
+//	CCoreAudioDecodeAudioCodec.cpp			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CCoreAudioAudioCodec.h"
+#include "CCoreAudioDecodeAudioCodec.h"
 
 #include "SError-Apple.h"
 

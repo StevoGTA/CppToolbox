@@ -226,7 +226,7 @@ TVResult<SMedia::SourceInfo> CAudioChannelMapper::performInto(CAudioFrames& audi
 			// Interleaved
 			mInternals->mInputAudioFrames =
 					OI<CAudioFrames>(
-							new CAudioFrames(1, mInternals->mInputAudioProcessingFormat->getBytesPerFrame(),
+							new CAudioFrames(mInternals->mInputAudioProcessingFormat->getBytesPerFrame(),
 									audioFrames.getAllocatedFrameCount()));
 		else
 			// Non-interleaved

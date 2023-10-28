@@ -51,6 +51,10 @@ class CData {
 
 				CData		subData(ByteIndex byteIndex, const OV<ByteCount>& byteCount = OV<ByteCount>(),
 									bool copySourceData = true) const;
+				CData		subData(ByteIndex byteIndex, ByteCount byteCount, bool copySourceData = true) const
+								{ return subData(byteIndex, OV<ByteCount>(byteCount), copySourceData); }
+				CData		subData(const OV<ByteCount>& byteCount = OV<ByteCount>(), bool copySourceData = true) const
+								{ return subData(0, byteCount, copySourceData); }
 
 				CData&		operator=(const CData& other);
 				bool		operator==(const CData& other) const;

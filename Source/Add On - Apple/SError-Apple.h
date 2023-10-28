@@ -41,19 +41,19 @@
 
 #define	ReturnErrorIfFailed(status, method)											\
 				if (status != noErr) {												\
-					SError	error = SErrorFromOSStatus(status);						\
+					SError	_error = SErrorFromOSStatus(status);					\
 					CLogServices::logError(											\
 							CString(method) + CString(OSSTR(" returned ")) +		\
-									error.getDefaultDescription());					\
+									_error.getDefaultDescription());				\
 																					\
-					return OV<SError>(error);										\
+					return OV<SError>(_error);										\
 				}
 #define	ReturnValueIfFailed(status, method, value)									\
 				if (status != noErr) {												\
-					SError	error = SErrorFromOSStatus(status);						\
+					SError	_error = SErrorFromOSStatus(status);					\
 					CLogServices::logError(											\
 							CString(method) + CString(OSSTR(" returned ")) +		\
-									error.getDefaultDescription());					\
+									_error.getDefaultDescription());				\
 																					\
 					return value;													\
 				}

@@ -82,9 +82,10 @@ class CAudioFrames : private CData {
 	// Methods
 	public:
 				// Lifecycle methods
+				CAudioFrames(UInt32 bytesPerFrame, UInt32 frameCount);
+				CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment);
 				CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
 						UInt32 bytesPerFramePerSegment);
-				CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment);
 				~CAudioFrames();
 
 				// Instance methods

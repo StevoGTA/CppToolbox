@@ -342,23 +342,6 @@ void CIMAADPCMDecoder::decodeUngrouped(const UInt8* packetPtr, UInt32 channelHea
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDVIIntelIMAADPCMDecodeAudioCodec
 
-#pragma pack(push, 1)
-
-struct SDVIIntelChannelHeader {
-			// Instance methods
-	SInt16	getInitialSample() const
-				{ return EndianS16_LtoN(mInitialSample); }
-	SInt16	getInitialIndex() const
-				{ return mInitialIndex; }
-
-	private:
-		SInt16	mInitialSample;
-		UInt8	mInitialIndex;
-		UInt8	mZero;
-};
-
-#pragma pack(pop)
-
 class CDVIIntelIMAADPCMDecodeAudioCodec : public CDecodeAudioCodec {
 	public:
 										// Lifecycle methods
@@ -450,7 +433,10 @@ OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 		CIMAADPCMDecoder	imaADCPMDecoder(bufferPtr, channels);
 		for (UInt8 channel = 0; channel < channels; channel++) {
 			// Get info
-			const	SDVIIntelChannelHeader&	channelHeader = ((SDVIIntelChannelHeader*) packetPtr)[channel];
+			const	CDVIIntelIMAADPCMAudioCodec::ChannelHeader&	channelHeader =
+																		((CDVIIntelIMAADPCMAudioCodec::ChannelHeader*)
+																						packetPtr)
+																				[channel];
 
 			// Init this channel
 			imaADCPMDecoder.initChannel(channel, channelHeader.getInitialSample(), channelHeader.getInitialIndex());
@@ -460,7 +446,8 @@ OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 		imaADCPMDecoder.emitSamplesFromState();
 
 		// Decode packet
-		imaADCPMDecoder.decodeGrouped(packetPtr, sizeof(SDVIIntelChannelHeader), 8, (mFramesPerPacket - 1) / 8);
+		imaADCPMDecoder.decodeGrouped(packetPtr, sizeof(CDVIIntelIMAADPCMAudioCodec::ChannelHeader), 8,
+				(mFramesPerPacket - 1) / 8);
 		audioFrames.completeWrite(mFramesPerPacket);
 
 		// Update
@@ -499,7 +486,7 @@ SMedia::SegmentInfo CDVIIntelIMAADPCMAudioCodec::composeMediaSegmentInfo( const 
 	// Setup
 	UInt64	framesPerPacket =
 					((UInt64) blockAlign / (UInt64) audioFormat.getChannelMap().getChannelCount() -
-							sizeof(SDVIIntelChannelHeader)) * 2 + 1;
+							sizeof(CDVIIntelIMAADPCMAudioCodec::ChannelHeader)) * 2 + 1;
 
 	return SAudio::composeMediaSegmentInfo(audioFormat, byteCount / (UInt64) blockAlign * framesPerPacket, byteCount);
 }
@@ -513,7 +500,7 @@ I<CDecodeAudioCodec> CDVIIntelIMAADPCMAudioCodec::create(const SAudio::Format& a
 	// Setup
 	UInt32	framesPerPacket =
 					((UInt32) blockAlign / (UInt32) audioFormat.getChannelMap().getChannelCount() -
-							sizeof(SDVIIntelChannelHeader)) * 2 + 1;
+							sizeof(CDVIIntelIMAADPCMAudioCodec::ChannelHeader)) * 2 + 1;
 
 	return I<CDecodeAudioCodec>(
 			new CDVIIntelIMAADPCMDecodeAudioCodec(framesPerPacket,

@@ -138,6 +138,28 @@ template <typename T> struct OI {
 			// Instamce methods
 	bool	hasInstance() const
 				{ return mInstance != nil; }
+	void	setInstance(T* instance = nil)
+				{
+					// Check for instance
+					if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
+						// All done
+						Delete(mInstance);
+						Delete(mReferenceCount);
+					}
+
+					// Store
+					mInstance = instance;
+
+					// Finish setup
+					if (mInstance != nil) {
+						// Have instance
+						mReferenceCount = new UInt32;
+						*mReferenceCount = 1;
+					} else {
+						// Don't have instance
+						Delete(mReferenceCount);
+					}
+				}
 
 	T&		operator*() const
 				{ AssertFailIf(mInstance == nil); return *mInstance; }
