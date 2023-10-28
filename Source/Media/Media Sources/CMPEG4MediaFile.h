@@ -238,6 +238,9 @@ class CMPEG4MediaFile {
 									mPacketCount(EndianU32_NtoB(packetCount)),
 											mPacketDuration(EndianU32_NtoB(packetDuration))
 									{}
+#if defined(TARGET_OS_WINDOWS)
+								Chunk() : mPacketCount(0), mPacketDuration(0) {}
+#endif
 
 								// Instance methods
 						UInt32	getPacketCount() const
@@ -316,6 +319,9 @@ class CMPEG4MediaFile {
 											mPacketCount(EndianU32_NtoB(packetCount)),
 											mSampleDescriptionIndex(EndianU32_NtoB(sampleDescriptionIndex))
 									{}
+#if defined(TARGET_OS_WINDOWS)
+								PacketGroupInfo() : mChunkStartIndex(0), mPacketCount(0), mSampleDescriptionIndex(0) {}
+#endif
 
 								// Instance methods
 						UInt32	getChunkStartIndex() const
