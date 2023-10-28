@@ -76,7 +76,7 @@ template <typename T> class TReferenceCountableAutoDelete : public TReferenceCou
 
 				// TReferenceCountable methods
 		void	cleanup()
-					{ T* THIS = (T*) this; Delete(THIS); }
+					{ T* _this = (T*) this; Delete(_this); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

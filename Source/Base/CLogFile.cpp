@@ -18,8 +18,7 @@ class CLogFile::Internals {
 						Internals(CFile& file) :
 							mFileWriter(file),
 									mIsActive(true),
-									mWriteThread((CThread::ThreadProc) write, this, CString(OSSTR("CLogFile Writer")),
-											CThread::kOptionsAutoStart)
+									mWriteThread((CThread::ThreadProc) write, this, CString(OSSTR("CLogFile Writer")))
 							{
 								// Setup
 								CLogServices::addLogMessageProc((CLogServices::LogProc) logMessage, this);
@@ -32,6 +31,9 @@ class CLogFile::Internals {
 									// Error
 									fprintf(stderr, "Unable to open log file at %s\n",
 											*file.getFilesystemPath().getString().getCString());
+
+								// Start thread
+								mWriteThread.start();
 							}
 						~Internals()
 							{
