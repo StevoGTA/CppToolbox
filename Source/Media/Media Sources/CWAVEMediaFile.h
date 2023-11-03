@@ -39,7 +39,7 @@ class CWAVEMediaFile {
 														UInt32 options) const;
 
 	// Properties
-	protected:
+	public:
 		static	CString	mErrorDomain;
 		static	SError	mInvalidWAVEFileError;
 };

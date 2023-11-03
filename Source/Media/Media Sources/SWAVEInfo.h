@@ -23,9 +23,8 @@ struct SWAVEFORMChunk32 {
 	// Methods
 	public:
 				// Lifecycle methods
-				SWAVEFORMChunk32(UInt32 byteCount, OSType formType) :
-					mID(EndianU32_NtoB(kWAVEFORMChunkID)), mByteCount(EndianU32_NtoL(byteCount)),
-							mFormType(EndianU32_NtoB(formType))
+				SWAVEFORMChunk32(OSType id, UInt32 byteCount, OSType formType) :
+					mID(EndianU32_NtoB(id)), mByteCount(EndianU32_NtoL(byteCount)), mFormType(EndianU32_NtoB(formType))
 					{}
 
 				// Instance methods
