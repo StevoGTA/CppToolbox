@@ -85,6 +85,8 @@ template <typename T> struct TOVResult {
 						{ return mValue.hasValue(); }
 	const	T		getValue() const
 						{ return *mValue; }
+	const	OV<T>&	getOptionalValue() const
+						{ return mValue; }
 
 			bool	hasError() const
 						{ return mError.hasValue(); }
