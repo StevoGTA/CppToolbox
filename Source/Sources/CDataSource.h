@@ -72,20 +72,3 @@ class CDataDataSource : public CRandomAccessDataSource {
 	private:
 		Internals*	mInternals;
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CStreamingDataSource
-
-class CStreamingDataSource : public CDataSource {
-	// Methods
-	public:
-								// Lifecycle methods
-								CStreamingDataSource() : CDataSource() {}
-
-								// CDataSource methods
-				TVResult<CData>	readData();
-
-								// Instance methods
-
-	// Properties
-};
