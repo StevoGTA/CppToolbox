@@ -218,7 +218,7 @@ class CAudioPlayerImplementation :
 									mOnFillBufferPreviousFrameCount = 0;
 
 									// Check if seeking
-									if (!mIsSeeking)
+									if (mOnFillBufferShouldSendFrames && !mIsSeeking)
 										// Notify playback position updated
 										mInfo.positionUpdated(mAudioPlayer, mCurrentPlaybackTimeInterval);
 

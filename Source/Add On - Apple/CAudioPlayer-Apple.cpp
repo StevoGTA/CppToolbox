@@ -285,7 +285,7 @@ class CAudioPlayer::Internals {
 										internals.mRenderProcPreviousFrameCount = 0;
 
 										// Check if seeking
-										if (!internals.mIsSeeking)
+										if (internals.mRenderProcShouldSendFrames && !internals.mIsSeeking)
 											// Notify playback position updated
 											internals.mInfo.positionUpdated(internals.mAudioPlayer,
 													internals.mCurrentPlaybackTimeInterval);
