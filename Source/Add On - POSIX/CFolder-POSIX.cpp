@@ -45,15 +45,28 @@ OV<SError> CFolder::rename(const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFolder::create() const
+OV<SError> CFolder::create(bool createIntermediateFolders) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (::mkdir(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8), 0777) == 0)
-		// Success
+	// Check if exists
+	if (!doesExist()) {
+		// Check if creating intermediate folders
+		if (createIntermediateFolders) {
+			// Create parent
+			OV<SError>	error = getParentFolder().create(true);
+			ReturnErrorIfError(error);
+		}
+
+		// Create
+		if (::mkdir(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8), 0777) == 0)
+			// Success
+			return OV<SError>();
+		else
+			// Error
+			CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "creating");
+	} else
+		// Exists
 		return OV<SError>();
-	else
-		// Error
-		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "creating");
 }
 
 //----------------------------------------------------------------------------------------------------------------------

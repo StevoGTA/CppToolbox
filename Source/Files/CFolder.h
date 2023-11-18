@@ -38,7 +38,7 @@ class CFolder : public CHashable {
 						CString				getName() const;
 						OV<SError>			rename(const CString& string);
 
-						OV<SError>			create() const;
+						OV<SError>			create(bool createIntermediateFolders = false) const;
 						OV<SError>			remove() const;
 						bool				doesExist() const;
 
