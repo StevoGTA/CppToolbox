@@ -101,6 +101,7 @@ struct SValue {
 
 												// Instance methods
 						Type					getType() const { return mType; }
+						bool					canCoerceToType(Type type) const;
 
 				const	TArray<CDictionary>&	getArrayOfDictionaries(
 														const TArray<CDictionary>& defaultValue =

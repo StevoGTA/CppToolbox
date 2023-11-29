@@ -162,26 +162,63 @@ SValue::SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc) : mType(other
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool SValue::getBool(bool defaultValue) const
+bool SValue::canCoerceToType(Type type) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check value type
-	switch (mType) {
-		case kBool:		return mValue.mBool;
-		case kSInt8:	return mValue.mSInt8 == 1;
-		case kSInt16:	return mValue.mSInt16 == 1;
-		case kSInt32:	return mValue.mSInt32 == 1;
-		case kSInt64:	return mValue.mSInt64 == 1;
-		case kUInt8:	return mValue.mUInt8 == 1;
-		case kUInt16:	return mValue.mUInt16 == 1;
-		case kUInt32:	return mValue.mUInt32 == 1;
-		case kUInt64:	return mValue.mUInt64 == 1;
+	// Check requsted type
+	switch (type) {
+		case kFloat32:
+		case kFloat64:
+			// Check current type
+			switch (mType) {
+				case kFloat32:
+				case kFloat64:
+				case kSInt8:
+				case kSInt16:
+				case kSInt32:
+				case kSInt64:
+				case kUInt8:
+				case kUInt16:
+				case kUInt32:
+				case kUInt64:
+					// Yes
+					return true;
+
+				default:
+					// No
+					return false;
+			}
+
+		case kSInt8:
+		case kSInt16:
+		case kSInt32:
+		case kSInt64:
+		case kUInt8:
+		case kUInt16:
+		case kUInt32:
+		case kUInt64:
+			// Check current type
+			switch (mType) {
+				case kSInt8:
+				case kSInt16:
+				case kSInt32:
+				case kSInt64:
+				case kUInt8:
+				case kUInt16:
+				case kUInt32:
+				case kUInt64:
+					// Yes
+					return true;
+
+				default:
+					// No
+					return false;
+			}
+
 		default:
 			// Cannot coerce value
-			AssertFail();
-
-			return defaultValue;
-	}
+			return false;
+	};
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -202,6 +239,29 @@ const TArray<CString>& SValue::getArrayOfStrings(const TArray<CString>& defaultV
 	AssertFailIf(mType != kArrayOfStrings);
 
 	return (mType == kArrayOfStrings) ? *mValue.mArrayOfStrings : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool SValue::getBool(bool defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check value type
+	switch (mType) {
+		case kBool:		return mValue.mBool;
+		case kSInt8:	return mValue.mSInt8 == 1;
+		case kSInt16:	return mValue.mSInt16 == 1;
+		case kSInt32:	return mValue.mSInt32 == 1;
+		case kSInt64:	return mValue.mSInt64 == 1;
+		case kUInt8:	return mValue.mUInt8 == 1;
+		case kUInt16:	return mValue.mUInt16 == 1;
+		case kUInt32:	return mValue.mUInt32 == 1;
+		case kUInt64:	return mValue.mUInt64 == 1;
+		default:
+			// Cannot coerce value
+			AssertFail();
+
+			return defaultValue;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

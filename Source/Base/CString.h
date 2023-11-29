@@ -326,6 +326,7 @@ class CString : public CHashable {
 						
 						CString			lowercased() const;
 						CString			uppercased() const;
+						CString			capitalizingFirstLetter() const;
 						CString			removingLeadingAndTrailingWhitespace() const;
 						CString			removingAllWhitespace() const;
 						CString			removingLeadingAndTrailingQuotes() const;

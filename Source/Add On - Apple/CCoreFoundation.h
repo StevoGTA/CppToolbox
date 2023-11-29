@@ -13,25 +13,26 @@
 class CCoreFoundation {
 	// Methods
 	public:
-									// Array methods
-		static	TArray<CData>		arrayOfDatasFrom(CFArrayRef arrayRef);
-		static	TArray<CDictionary>	arrayOfDictionariesFrom(CFArrayRef arrayRef);
-		static	TArray<CString>		arrayOfStringsFrom(CFArrayRef arrayRef);
-		static	CFArrayRef			createArrayRefFrom(const TArray<CDictionary>& array);
-		static	CFArrayRef			createArrayRefFrom(const TArray<CString>& array);
+										// Array methods
+		static	TArray<CData>			arrayOfDatasFrom(CFArrayRef arrayRef);
+		static	TArray<CDictionary>		arrayOfDictionariesFrom(CFArrayRef arrayRef);
+		static	TArray<CString>			arrayOfStringsFrom(CFArrayRef arrayRef);
+		static	CFArrayRef				createArrayRefFrom(const TArray<CDictionary>& array);
+		static	CFArrayRef				createArrayRefFrom(const TArray<CString>& array);
 
-									// Data methods
-		static	CData				dataFrom(CFDataRef dataRef);
-		static	CFDataRef			createDataRefFrom(const CData& data);
+										// Data methods
+		static	CData					dataFrom(CFDataRef dataRef);
+		static	CFDataRef				createDataRefFrom(const CData& data);
 
-									// Dictionary methods
-		static	CDictionary			dictionaryFrom(CFDictionaryRef dictionaryRef);
-		static	CFDictionaryRef		createDictionaryRefFrom(const CDictionary& dictionary);
+										// Dictionary methods
+		static	CDictionary				dictionaryFrom(CFDictionaryRef dictionaryRef);
+		static	TDictionary<CString>	dictionaryOfStringsFrom(CFDictionaryRef dictionaryRef);
+		static	CFDictionaryRef			createDictionaryRefFrom(const CDictionary& dictionary);
+		static	CFDictionaryRef			createDictionaryRefFrom(const TDictionary<CString>& dictionary);
 
-									// String methods
-		static	CFStringRef			createStringRefFrom(const CString& string);
+										// Set methods
+		static	TSet<CString>			setOfStringsFrom(const CFSetRef setRef);
 
-									// FilesystemPath methods
-		static	CFStringRef			createStringRefFrom(const CFilesystemPath& filesystemPath);
-		static	CFURLRef			createURLRefFrom(const CFilesystemPath& filesystemPath, bool isFolder);
+										// FilesystemPath methods
+		static	CFURLRef				createURLRefFrom(const CFilesystemPath& filesystemPath, bool isFolder);
 };

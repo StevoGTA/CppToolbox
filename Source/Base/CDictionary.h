@@ -278,12 +278,17 @@ template <typename T> class TMDictionary : public TDictionary<T> {
 								CDictionary::set(iterator->mKey, iterator->mValue);
 						}
 					}
+				TMDictionary(const TDictionary<T>& other) : TDictionary<T>(other) {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TNDictionary (TMDictionary where copy happens through new T())
 
 template <typename T> class TNDictionary : public TMDictionary<T> {
+	// Types
+	public:
+		typedef	bool	(*KeyIsMatchProc)(const CString& key, void* userData);
+
 	// Methods
 	public:
 						// Lifecycle methods
@@ -296,10 +301,26 @@ template <typename T> class TNDictionary : public TMDictionary<T> {
 							TMDictionary<T>((SValue::OpaqueCopyProc) copy, nil, (SValue::OpaqueDisposeProc) dispose,
 									other, itemIncludeProc, userData)
 							{}
-						TNDictionary(const TDictionary<T>& other) :
-							TMDictionary<T>((SValue::OpaqueCopyProc) copy, nil, (SValue::OpaqueDisposeProc) dispose,
-									other)
-							{}
+						TNDictionary(const TDictionary<T>& other) : TMDictionary<T>(other) {}
+
+						// Instance methods
+		TNDictionary<T>	filtered(KeyIsMatchProc keyIsMatchProc, void* userData = nil)
+							{
+								// Setup
+								TNDictionary<T>	dictionary;
+
+								// Iterate keys
+								TSet<CString>	keys = CDictionary::getKeys();
+								for (TIteratorS<CString> iterator = keys.getIterator(); iterator.hasValue();
+										iterator.advance()) {
+									// Check if match
+									if (keyIsMatchProc(*iterator, userData))
+										// A match
+										dictionary.set(*iterator, *TDictionary<T>::get(*iterator));
+								}
+
+								return dictionary;
+							}
 
 	private:
 						// Class methods
@@ -326,6 +347,48 @@ template <typename T> class TNArrayDictionary : public TNDictionary<TNArray<T> >
 						else
 							// First one
 							TNDictionary<TNArray<T> >::set(key, TNArray<T>(item));
+					}
+		void	add(const CString& key, const TArray<T>& items)
+					{
+						// Update
+						const	OR<TNArray<T> >	array = TNDictionary<TNArray<T> >::get(key);
+						if (array.hasReference())
+							// Already have array
+							*array += items;
+						else
+							// First one
+							TNDictionary<TNArray<T> >::set(key, TNArray<T>(items));
+					}
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNSetDictionary (TNDictionary where values are sets)
+
+template <typename T> class TNSetDictionary : public TNDictionary<TNSet<T> > {
+	// Methods
+	public:
+				// Instance methods
+		void	insert(const CString& key, const T& item)
+					{
+						// Update
+						const	OR<TNSet<T> >	set = TNDictionary<TNSet<T> >::get(key);
+						if (set.hasReference())
+							// Already have array
+							*set += item;
+						else
+							// First one
+							TNDictionary<TNSet<T> >::set(key, TNSet<T>(item));
+					}
+		void	insert(const CString& key, const TArray<T>& items)
+					{
+						// Update
+						const	OR<TNSet<T> >	set = TNDictionary<TNSet<T> >::get(key);
+						if (set.hasReference())
+							// Already have array
+							*set += items;
+						else
+							// First one
+							TNDictionary<TNSet<T> >::set(key, TNSet<T>(items));
 					}
 };
 

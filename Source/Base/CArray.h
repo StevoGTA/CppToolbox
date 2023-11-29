@@ -75,8 +75,6 @@ class CArray : public CEquatable {
 
 				CArray&				move(const ItemRef itemRef, CArray& other);
 
-				CArray				popFirst(ItemCount count);
-
 				CArray&				remove(const ItemRef itemRef);
 				CArray&				removeAtIndex(ItemIndex itemIndex);
 				CArray&				removeAll();
@@ -193,8 +191,6 @@ template <typename T> class TArray : public CArray {
 		bool					contains(const T& item) const
 									{ return getIndexOf(item).hasValue(); }
 
-		T&						getAt(ItemIndex index) const
-									{ return *((T*) getItemAt(index)); }
 		T&						getFirst() const
 									{ return *((T*) CArray::getFirst()); }
 		T&						getLast() const
@@ -211,6 +207,30 @@ template <typename T> class TArray : public CArray {
 										}
 
 										return OV<ItemIndex>();
+									}
+
+		TIteratorD<T>			getIterator() const
+									{ TIteratorS<ItemRef> iterator = CArray::getIterator();
+										return TIteratorD<T>((TIteratorD<T>*) &iterator); }
+
+								// Instance methods
+		T&						getAt(ItemIndex index) const
+									{ return *((T*) getItemAt(index)); }
+		OR<T>					getFirst(IsMatchProc isMatchProc, void* userData = nil) const
+									{
+										// Iterate all items
+										ItemCount	count = getCount();
+										for (ItemIndex i = 0; i < count; i++) {
+											// Get item
+											T&	item = getAt(i);
+
+											// Call proc
+											if (isMatchProc(item, userData))
+												// Proc indicates to return this item
+												return OR<T>(item);
+										}
+
+										return OR<T>();
 									}
 		OV<ItemIndex>			getIndexWhere(IsMatchProc isMatchProc, void* userData = nil) const
 									{
@@ -242,27 +262,8 @@ template <typename T> class TArray : public CArray {
 										return itemIndexes;
 									}
 
-		TIteratorD<T>			getIterator() const
-									{ TIteratorS<ItemRef> iterator = CArray::getIterator();
-										return TIteratorD<T>((TIteratorD<T>*) &iterator); }
-
-								// Instance methods
-		OR<T>					getFirst(IsMatchProc isMatchProc, void* userData = nil) const
-									{
-										// Iterate all items
-										ItemCount	count = getCount();
-										for (ItemIndex i = 0; i < count; i++) {
-											// Get item
-											T&	item = getAt(i);
-
-											// Call proc
-											if (isMatchProc(item, userData))
-												// Proc indicates to return this item
-												return OR<T>(item);
-										}
-
-										return OR<T>();
-									}
+		TArray<T>				apply(ApplyProc applyProc, void* userData = nil)
+									{ CArray::apply((CArray::ApplyProc) applyProc, userData); }
 
 		T&						operator[](ItemIndex index) const
 									{ return *((T*) getItemAt(index)); }
@@ -346,6 +347,9 @@ template <typename T> class TMArray : public TArray<T> {
 		TMArray<T>&		insertAtIndex(const T& item, CArray::ItemIndex itemIndex)
 							{ CArray::insertAtIndex(new T(item), itemIndex); return *this; }
 
+		TMArray<T>&		move(const T& item, TMArray<T>& other)
+							{ CArray::move(&item, other); return *this; }
+
 		TMArray<T>&		remove(const T& item)
 							{
 								// Check if found
@@ -353,31 +357,6 @@ template <typename T> class TMArray : public TArray<T> {
 								if (index.hasValue())
 									// Remove
 									removeAtIndex(*index);
-
-								return *this;
-							}
-		TMArray<T>&		remove(IsMatchProc isMatchProc, void* userData = nil)
-							{
-								// Iterate all items
-								for (CArray::ItemIndex i = CArray::getCount(); i > 0; i--) {
-									// Get item
-									T&	item = TArray<T>::getAt(i - 1);
-
-									// Call proc
-									if (isMatchProc(item, userData))
-										// Remove this item
-										CArray::removeAtIndex(i - 1);
-								}
-
-								return *this;
-							}
-		TMArray<T>&		removeFrom(const TArray<T>& other)
-							{
-								// Iterate all
-								ItemCount	count = other.getCount();
-								for (CArray::ItemIndex i = 0; i < count; i++)
-									// Remove
-									remove(other[i]);
 
 								return *this;
 							}
@@ -390,9 +369,6 @@ template <typename T> class TMArray : public TArray<T> {
 							{ CArray::sort((CArray::CompareProc) compareProc, userData); return *this; }
 
 						// Instance methods
-		TMArray<T>&		move(const T& item, TMArray<T>& other)
-							{ CArray::move(&item, other); return *this; }
-
 		T				popFirst()
 							{
 								// Get first item
@@ -423,6 +399,33 @@ template <typename T> class TMArray : public TArray<T> {
 
 								return OV<T>();
 							}
+
+		TMArray<T>&		remove(IsMatchProc isMatchProc, void* userData = nil)
+							{
+								// Iterate all items
+								for (CArray::ItemIndex i = CArray::getCount(); i > 0; i--) {
+									// Get item
+									T&	item = TArray<T>::getAt(i - 1);
+
+									// Call proc
+									if (isMatchProc(item, userData))
+										// Remove this item
+										CArray::removeAtIndex(i - 1);
+								}
+
+								return *this;
+							}
+		TMArray<T>&		removeFrom(const TArray<T>& other)
+							{
+								// Iterate all
+								ItemCount	count = other.getCount();
+								for (CArray::ItemIndex i = 0; i < count; i++)
+									// Remove
+									remove(other[i]);
+
+								return *this;
+							}
+
 
 		TMArray<T>&		operator+=(const T& item)
 							{ return add(item); }
@@ -455,11 +458,11 @@ template <typename T> class TNArray : public TMArray<T> {
 	public:
 									// Lifecycle methods
 									TNArray() : TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose) {}
-									TNArray(const T& item, ItemCount count = 1) :
+									TNArray(const T& item, ItemCount itemCount = 1) :
 										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
 										{
 											// Loop requested times
-											for (CArray::ItemIndex i = 0; i < count; i++)
+											for (CArray::ItemIndex i = 0; i < itemCount; i++)
 												// Add
 												TMArray<T>::add(item);
 										}
@@ -470,38 +473,55 @@ template <typename T> class TNArray : public TMArray<T> {
 										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
 										{
 											// Iterate all items
-											ItemCount	count = other.getCount();
-											for (CArray::ItemIndex i = 0; i < count; i++)
+											ItemCount	itemCount = other.getCount();
+											for (CArray::ItemIndex i = 0; i < itemCount; i++)
 												// Add mapped item
 												TMArray<T>::add(mapProc(other.getItemAt(i)));
+										}
+
+									// CArray methods
+				TNArray<T>			filtered(IsMatchProc isMatchProc, void* userData = nil)
+										{
+											// Setup
+											TNArray<T>	array;
+											ItemCount	itemCount = CArray::getCount();
+											for (CArray::ItemIndex i = 0; i < itemCount; i++) {
+												// Check if match
+												const	T&	item = (*this)[i];
+												if (!isMatchProc(item, userData))
+													// Not a match
+													array.add(item);
+											}
+
+											return array;
 										}
 
 									// Instance methods
 				T					popFirst()
 										{ return TMArray<T>::popFirst(); }
-				OV<T>				popFirst(IsMatchProc isMatchProc, void* userData = nil)
-										{ return TMArray<T>::popFirst(isMatchProc, userData); }
-				TArray<T>			popFirst(ItemCount count)
+				TArray<T>			popFirst(ItemCount itemCount)
 										{
 											// Setup
 											TNArray<T>	array;
-											for (CArray::ItemIndex i = 0; i < count; i++)
+											for (CArray::ItemIndex i = 0; (i < itemCount) && !CArray::isEmpty(); i++)
 												// Move first item to other array
 												array += TMArray<T>::popFirst();
 
 											return array;
 										}
+				OV<T>				popFirst(IsMatchProc isMatchProc, void* userData = nil)
+										{ return TMArray<T>::popFirst(isMatchProc, userData); }
 
 									// Class methods
 		static	TArray<TArray<T> >	asChunksFrom(const TArray<T>& other, ItemCount chunkSize)
 										{
 											// Setup
 											TNArray<TArray<T> >	chunks;
-											ItemCount			count = other.getCount();
+											ItemCount			itemCount = other.getCount();
 
 											// Iterate all values
 											TNArray<T>	chunk;
-											for (CArray::ItemIndex i = 0; i < count; i++) {
+											for (CArray::ItemIndex i = 0; i < itemCount; i++) {
 												// Add value to chunk
 												chunk += other.getAt(i);
 

@@ -78,31 +78,37 @@ template <typename T> class TSet : public CSet {
 
 	// Methods
 	public:
-						// Lifecycle methods
-						TSet(const TSet<T>& other) : CSet(other) {}
+								// Lifecycle methods
+								TSet(const TSet<T>& other) : CSet(other) {}
 
-						// Instance methods
-		bool			intersects(const TSet<T>& other) const
-							{
-								// Iterate values
-								for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-										iterator.advance()) {
-									// Check if have value
-									if (CSet::contains(*iterator))
-										// Has value
-										return true;
-								}
+								// Instance methods
+				bool			contains(const T& item) const
+									{ return CSet::contains(item); }
+				bool			intersects(const TSet<T>& other) const
+									{
+										// Iterate values
+										for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
+												iterator.advance()) {
+											// Check if have value
+											if (CSet::contains(*iterator))
+												// Has value
+												return true;
+										}
 
-								return false;
-							}
+										return false;
+									}
 
-		TIteratorS<T>	getIterator() const
-							{ TIteratorS<CHashable> iterator = CSet::getIterator();
-									return TIteratorS<T>((TIteratorS<T>*) &iterator); }
+				TIteratorS<T>	getIterator() const
+									{ TIteratorS<CHashable> iterator = CSet::getIterator();
+											return TIteratorS<T>((TIteratorS<T>*) &iterator); }
+
+								// Class methods
+		static	bool			containsItem(const T& item, TSet<T>* set)
+									{ return set->contains(item); }
 
 	protected:
-						// Lifecycle methods
-						TSet(CopyProc copyProc, DisposeProc disposeProc) : CSet(copyProc, disposeProc) {}
+								// Lifecycle methods
+								TSet(CopyProc copyProc, DisposeProc disposeProc) : CSet(copyProc, disposeProc) {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------

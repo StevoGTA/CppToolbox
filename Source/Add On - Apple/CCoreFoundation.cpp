@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreFoundation
 
-// MARK: Array utilities
+// MARK: Array methods
 
 //----------------------------------------------------------------------------------------------------------------------
 TArray<CData> CCoreFoundation::arrayOfDatasFrom(CFArrayRef arrayRef)
@@ -90,17 +90,14 @@ CFArrayRef CCoreFoundation::createArrayRefFrom(const TArray<CString>& array)
 	// Setup
 	CFMutableArrayRef	arrayRef =
 								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
-	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
-		// Add dictionary
-		CFStringRef	stringRef = createStringRefFrom(array[i]);
-		::CFArrayAppendValue(arrayRef, stringRef);
-		::CFRelease(stringRef);
-	}
+	for (CArray::ItemIndex i = 0; i < array.getCount(); i++)
+		// Add string
+		::CFArrayAppendValue(arrayRef, array[i].getOSString());
 
 	return arrayRef;
 }
 
-// MARK: Data utilities
+// MARK: Data methods
 
 //----------------------------------------------------------------------------------------------------------------------
 CData CCoreFoundation::dataFrom(CFDataRef dataRef)
@@ -116,7 +113,7 @@ CFDataRef CCoreFoundation::createDataRefFrom(const CData& data)
 	return ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getByteCount());
 }
 
-// MARK: Dictionary utilities
+// MARK: Dictionary methods
 
 //----------------------------------------------------------------------------------------------------------------------
 CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
@@ -241,6 +238,35 @@ CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TDictionary<CString> CCoreFoundation::dictionaryOfStringsFrom(CFDictionaryRef dictionaryRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNDictionary<CString>	dictionary;
+
+	// Get keys and values
+	CFIndex		count = ::CFDictionaryGetCount(dictionaryRef);
+	CFStringRef	keyStringRefs[count];
+	CFTypeRef	valueTypeRefs[count];
+	::CFDictionaryGetKeysAndValues(dictionaryRef, (const void**) &keyStringRefs, (const void**) &valueTypeRefs);
+
+	// Add all items
+	for (CFIndex i = 0; i < count; i++) {
+		// What type
+		CFTypeRef	valueTypeRef = valueTypeRefs[i];
+		if (::CFGetTypeID(valueTypeRef) == ::CFStringGetTypeID())
+			// String
+			dictionary.set(CString(keyStringRefs[i]), CString((CFStringRef) valueTypeRef));
+		else {
+			// Uh oh
+			CCoreServices::stopInDebugger();
+		}
+	}
+
+	return dictionary;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -252,8 +278,8 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 	// Copy all items
 	for (TIteratorS<CDictionary::Item> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Get info
-		const	CString&			key = iterator.getValue().mKey;
-				CFStringRef			keyStringRef = createStringRefFrom(key);
+		const	CString&	key = iterator.getValue().mKey;
+				CFStringRef	keyStringRef = key.getOSString();
 
 		// Store value in dictionary
 		const	SValue&	value = iterator.getValue().mValue;
@@ -297,12 +323,10 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(valueDictionaryRef);
 				} break;
 
-			case SValue::kString: {
+			case SValue::kString:
 				// String
-				CFStringRef	stringRef = createStringRefFrom(value.getString());
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, stringRef);
-				::CFRelease(stringRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, value.getString().getOSString());
+				break;
 
 			case SValue::kFloat32: {
 				// Float32
@@ -388,42 +412,56 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				// Something else that cannot be represented by Core Foundation
 				break;
 		}
-
-		// Cleanup
-		::CFRelease(keyStringRef);
 	}
 
 	return dictionaryRef;
 }
 
-// MARK: String utilities
-
 //----------------------------------------------------------------------------------------------------------------------
-CFStringRef CCoreFoundation::createStringRefFrom(const CString& string)
+CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const TDictionary<CString>& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringCreateWithCString(kCFAllocatorDefault, *string.getCString(CString::kEncodingUTF8),
-			kCFStringEncodingUTF8);
+	// Setup
+	CFMutableDictionaryRef	dictionaryRef =
+									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
+											&kCFTypeDictionaryValueCallBacks);
+
+	// Copy all items
+	for (TIteratorS<CDictionary::Item> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance())
+		// Store value in dictionary
+		::CFDictionarySetValue(dictionaryRef, iterator.getValue().mKey.getOSString(),
+				((const CString*) iterator.getValue().mValue.getOpaque())->getOSString());
+
+	return dictionaryRef;
 }
 
-// MARK: FilesystemPath utilities
+// MARK: Set methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CFStringRef CCoreFoundation::createStringRefFrom(const CFilesystemPath& filesystemPath)
+TSet<CString> CCoreFoundation::setOfStringsFrom(const CFSetRef setRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return createStringRefFrom(filesystemPath.getString());
+	// Setup
+	TNSet<CString>	set;
+
+	// Get values
+	CFIndex		count = ::CFSetGetCount(setRef);
+	CFStringRef	stringRefs[count];
+	::CFSetGetValues(setRef, (const void**) stringRefs);
+	for (CFIndex i = 0; i < count; i++)
+		// Add data
+		set += CString(stringRefs[i]);
+
+	return set;
 }
+
+// MARK: FilesystemPath methods
 
 //----------------------------------------------------------------------------------------------------------------------
 CFURLRef CCoreFoundation::createURLRefFrom(const CFilesystemPath& filesystemPath, bool isFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create URLRef
-	CFStringRef	stringRef = createStringRefFrom(filesystemPath.getString());
-	CFURLRef	urlRef =
-						::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, stringRef, kCFURLPOSIXPathStyle, isFolder);
-	::CFRelease(stringRef);
-
-	return urlRef;
+	return ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, filesystemPath.getString().getOSString(),
+			kCFURLPOSIXPathStyle, isFolder);
 }

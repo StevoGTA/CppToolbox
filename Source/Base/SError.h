@@ -23,17 +23,20 @@ struct SError {
 										{}
 									SError(const SError& other) :
 										mDomain(other.mDomain), mCode(other.mCode),
+												mLocalizationInfo(other.mLocalizationInfo),
 												mDefaultLocalizedDescription(other.mDefaultLocalizedDescription)
 										{}
 
 									// Instance methods
+			const	CString&		getDomain() const
+										{ return mDomain; }
 					SInt32			getCode() const
 										{ return mCode; }
-			const	CDictionary&	getLocalizationInfo() const
-										{ return mLocalizationInfo; }
-					CString			getDefaultDescription() const
+					CString			getDescription() const
 										{ return mDomain + CString(OSSTR("/")) + CString(mCode) + CString(OSSTR(" (")) +
 												mDefaultLocalizedDescription + CString(OSSTR(")")); }
+			const	CString&		getDefaultLocalizedDescription() const
+										{ return mDefaultLocalizedDescription; }
 					CString			getLocalizedDescription() const
 										{ return CString(mDomain, CString(mCode), mLocalizationInfo); }
 

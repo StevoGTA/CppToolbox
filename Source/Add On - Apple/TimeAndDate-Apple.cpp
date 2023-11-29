@@ -127,9 +127,8 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, ComponentStyle
 
 	// Get time
 	CFAbsoluteTime	time = ::CFAbsoluteTimeGetCurrent();
-	CFStringRef		stringRef = CCoreFoundation::createStringRefFrom(string);
+	CFStringRef		stringRef = string.getOSString();
 	::CFDateFormatterGetAbsoluteTimeFromString(dateFormatterRef, stringRef, nil, &time);
-	::CFRelease(stringRef);
 	::CFRelease(dateFormatterRef);
 
 	// Convert to gregorian units
