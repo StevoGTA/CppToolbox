@@ -20,37 +20,41 @@ SError	SErrorFromWindowsGetLastError();
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define LogFailedHRESULT(result, method)																		\
-				{																								\
-					SError	_error = SErrorFromHRESULT(result);													\
-					CLogServices::logError(																		\
-							CString(method) + CString(OSSTR(" returned ")) + _error.getDefaultDescription());	\
+#define LogFailedHRESULT(result, method)												\
+				{																		\
+					SError	_error = SErrorFromHRESULT(result);							\
+					CLogServices::logError(												\
+							CString(method) + CString(OSSTR(" returned ")) +			\
+									_error.getDefaultLocalizedDescription());			\
 				}
-#define	ReturnError(result, method)																				\
-				{																								\
-					SError	_error = SErrorFromHRESULT(result);													\
-					CLogServices::logError(																		\
-							CString(method) + CString(OSSTR(" returned ")) + _error.getDefaultDescription());	\
-																												\
-					return OV<SError>(_error);																	\
+#define	ReturnError(result, method)														\
+				{																		\
+					SError	_error = SErrorFromHRESULT(result);							\
+					CLogServices::logError(												\
+							CString(method) + CString(OSSTR(" returned ")) +			\
+									_error.getDefaultLocalizedDescription());			\
+																						\
+					return OV<SError>(_error);											\
 				}
-#define	ReturnErrorIfFailed(result, method)																			\
-				{																									\
-					if (FAILED(result)) {																			\
-						SError	_error = SErrorFromHRESULT(result);													\
-						CLogServices::logError(																		\
-								CString(method) + CString(OSSTR(" returned ")) + _error.getDefaultDescription());	\
-																													\
-						return OV<SError>(_error);																	\
-					}																								\
+#define	ReturnErrorIfFailed(result, method)												\
+				{																		\
+					if (FAILED(result)) {												\
+						SError	_error = SErrorFromHRESULT(result);						\
+						CLogServices::logError(											\
+								CString(method) + CString(OSSTR(" returned ")) +		\
+										_error.getDefaultLocalizedDescription());		\
+																						\
+						return OV<SError>(_error);										\
+					}																	\
 				}
-#define	ReturnValueIfFailed(result, method, value)																	\
-				{																									\
-					if (FAILED(result)) {																			\
-						SError	_error = SErrorFromHRESULT(result);													\
-						CLogServices::logError(																		\
-								CString(method) + CString(OSSTR(" returned ")) + _error.getDefaultDescription());	\
-																													\
-						return value;																				\
-					}																								\
+#define	ReturnValueIfFailed(result, method, value)										\
+				{																		\
+					if (FAILED(result)) {												\
+						SError	_error = SErrorFromHRESULT(result);						\
+						CLogServices::logError(											\
+								CString(method) + CString(OSSTR(" returned ")) +		\
+										_error.getDefaultLocalizedDescription());		\
+																						\
+						return value;													\
+					}																	\
 				}

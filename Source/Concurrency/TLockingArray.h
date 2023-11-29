@@ -156,7 +156,7 @@ template <typename T> class TNLockingArray : public TNArray<T> {
 									{
 										// Perform under lock
 										mLock.lockForReading();
-										TNArray<T>::apply((CArray::ApplyProc) proc, userData);
+										TNArray<T>::apply((TArray<T>::ApplyProc) proc, userData);
 										mLock.unlockForReading();
 
 										return *this;

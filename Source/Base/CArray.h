@@ -263,7 +263,7 @@ template <typename T> class TArray : public CArray {
 									}
 
 		TArray<T>				apply(ApplyProc applyProc, void* userData = nil)
-									{ CArray::apply((CArray::ApplyProc) applyProc, userData); }
+									{ CArray::apply((CArray::ApplyProc) applyProc, userData); return *this; }
 
 		T&						operator[](ItemIndex index) const
 									{ return *((T*) getItemAt(index)); }
