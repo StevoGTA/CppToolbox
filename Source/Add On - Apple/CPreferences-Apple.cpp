@@ -14,16 +14,11 @@
 class CPreferences::Internals {
 	public:
 					Internals() :
-						mApplicationID((CFStringRef) ::CFRetain(kCFPreferencesCurrentApplication)), mDelayWriteCount(0)
+						mApplicationID(kCFPreferencesCurrentApplication), mDelayWriteCount(0)
 						{}
 					Internals(const CPreferences::Reference& reference) :
-						mApplicationID(CCoreFoundation::createStringRefFrom(reference.mApplicationID)),
-								mDelayWriteCount(0)
+						mApplicationID(reference.mApplicationID.getOSString()), mDelayWriteCount(0)
 						{}
-					~Internals()
-						{
-							::CFRelease(mApplicationID);
-						}
 
 		CFTypeRef	copyFrom(const CPreferences::Pref& pref)
 						{
@@ -38,15 +33,11 @@ class CPreferences::Internals {
 							typeRef = ::CFPreferencesCopyAppValue(pref.mKeyString, mApplicationID);
 
 							// Did we get it?
-							if ((typeRef == nil) && mAlternatePreferencesReference.hasValue()) {
+							if ((typeRef == nil) && mAlternatePreferencesReference.hasValue())
 								// Try to get from old prefs file
-								CFStringRef	alternateApplicationIDStringRef =
-													CCoreFoundation::createStringRefFrom(
-															mAlternatePreferencesReference->mApplicationID);
 								typeRef =
-										::CFPreferencesCopyAppValue(pref.mKeyString, alternateApplicationIDStringRef);
-								::CFRelease(alternateApplicationIDStringRef);
-							}
+										::CFPreferencesCopyAppValue(pref.mKeyString,
+												mAlternatePreferencesReference->mApplicationID.getOSString());
 
 							return typeRef;
 						}
@@ -442,9 +433,7 @@ void CPreferences::set(const Pref& pref, const CDictionary& dictionary)
 void CPreferences::set(const StringPref& pref, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFStringRef	stringRef = CCoreFoundation::createStringRefFrom(string);
-	mInternals->setTo(pref, stringRef);
-	::CFRelease(stringRef);
+	mInternals->setTo(pref, string.getOSString());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

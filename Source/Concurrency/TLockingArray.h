@@ -11,6 +11,11 @@
 // MARK: TNLockingArray
 
 template <typename T> class TNLockingArray : public TNArray<T> {
+	// Types
+	public:
+		typedef	void	(*ApplyProc)(T& item, void* userData);
+		typedef	bool	(*CompareProc)(const T& item1, const T& item2, void* userData);
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -152,22 +157,21 @@ template <typename T> class TNLockingArray : public TNArray<T> {
 										return item;
 									}
 
-		TNLockingArray<T>&		apply(void (proc)(T& item, void* userData), void* userData = nil)
+		TNLockingArray<T>&		apply(ApplyProc proc, void* userData = nil)
 									{
 										// Perform under lock
 										mLock.lockForReading();
-										TNArray<T>::apply((TArray<T>::ApplyProc) proc, userData);
+										TNArray<T>::apply(proc, userData);
 										mLock.unlockForReading();
 
 										return *this;
 									}
 
-		TNLockingArray<T>&		sort(bool (compareProc)(const T& item1, const T& item2, void* userData),
-										void* userData = nil)
+		TNLockingArray<T>&		sort(CompareProc compareProc, void* userData = nil)
 									{
 										// Perform under lock
 										mLock.lockForWriting();
-										TNArray<T>::sort((CArray::CompareProc) compareProc, userData);
+										TNArray<T>::sort(compareProc, userData);
 										mLock.unlockForWriting();
 
 										return *this;

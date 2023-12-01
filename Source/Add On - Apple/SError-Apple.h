@@ -19,24 +19,24 @@
 	extern SError SErrorFromOSStatus(OSStatus status);
 #endif
 
-#define LogOSStatusIfFailed(status, method)												\
-				if (status != noErr)													\
-					CLogServices::logError(												\
-							CString(method) + CString(OSSTR(" returned ")) +			\
-									SErrorFromOSStatus(status).getDefaultDescription());
-#define LogOSStatusIfFailedAndReturn(status, method)										\
-				if (status != noErr) {														\
-					CLogServices::logError(													\
-							CString(method) + CString(OSSTR(" returned ")) +				\
-									SErrorFromOSStatus(status).getDefaultDescription());	\
-					return;																	\
+#define LogOSStatusIfFailed(status, method)															\
+				if (status != noErr)																\
+					CLogServices::logError(															\
+							CString(method) + CString(OSSTR(" returned ")) +						\
+									SErrorFromOSStatus(status).getDefaultLocalizedDescription());
+#define LogOSStatusIfFailedAndReturn(status, method)												\
+				if (status != noErr) {																\
+					CLogServices::logError(															\
+							CString(method) + CString(OSSTR(" returned ")) +						\
+									SErrorFromOSStatus(status).getDefaultLocalizedDescription());	\
+					return;																			\
 				}
-#define LogOSStatusIfFailedAndReturnValue(status, method, value)							\
-				if (status != noErr) {														\
-					CLogServices::logError(													\
-							CString(method) + CString(OSSTR(" returned ")) +				\
-									SErrorFromOSStatus(status).getDefaultDescription());	\
-					return value;															\
+#define LogOSStatusIfFailedAndReturnValue(status, method, value)									\
+				if (status != noErr) {																\
+					CLogServices::logError(															\
+							CString(method) + CString(OSSTR(" returned ")) +						\
+									SErrorFromOSStatus(status).getDefaultLocalizedDescription());	\
+					return value;																	\
 				}
 
 #define	ReturnErrorIfFailed(status, method)											\
@@ -44,7 +44,7 @@
 					SError	_error = SErrorFromOSStatus(status);					\
 					CLogServices::logError(											\
 							CString(method) + CString(OSSTR(" returned ")) +		\
-									_error.getDefaultDescription());				\
+									_error.getDefaultLocalizedDescription());		\
 																					\
 					return OV<SError>(_error);										\
 				}
@@ -53,7 +53,7 @@
 					SError	_error = SErrorFromOSStatus(status);					\
 					CLogServices::logError(											\
 							CString(method) + CString(OSSTR(" returned ")) +		\
-									_error.getDefaultDescription());				\
+									_error.getDefaultLocalizedDescription());		\
 																					\
 					return value;													\
 				}

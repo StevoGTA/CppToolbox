@@ -134,7 +134,7 @@ OV<SError> CFile::setComments(const CString& string) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFStringRef	stringRef = CCoreFoundation::createStringRefFrom(getFilesystemPath());
+	CFStringRef	stringRef = string.getOSString();
 
 	// Compose AppleScript
 	NSMutableString*	appleScriptString = [NSMutableString string];
@@ -142,9 +142,6 @@ OV<SError> CFile::setComments(const CString& string) const
 	[appleScriptString appendFormat:@"SET filePath TO \"%@\" AS POSIX FILE\n", (__bridge NSString*) stringRef];
 	[appleScriptString appendFormat:@"SET COMMENT OF (filePath AS ALIAS) TO \"%@\"\n", stringRef];
 	[appleScriptString appendString:@"END TELL"];
-
-	// Cleanup
-	::CFRelease(stringRef);
 
 	// Run it!
 	NSAppleScript*	appleScript = [[NSAppleScript alloc] initWithSource:appleScriptString];
