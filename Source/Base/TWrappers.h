@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CppToolboxAssert.h"
+#include "CHashing.h"
 
 /*
 	// Top-level definitions
@@ -29,52 +30,59 @@
 //	An Instance is something that needs to be maintained as it is passed around.  It cannot be copied as it is not
 //	possible to know exactly how it is to be copied
 
-template <typename T> struct I {
-					// Lifecycle methods
-					I(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
-					I(const I<T>& other) :
-						mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
-						{ (*mReferenceCount)++; }
-					~I()
-						{
-							// One less reference
-							if (--(*mReferenceCount) == 0) {
-								// All done
-								Delete(mInstance);
-								Delete(mReferenceCount);
-							}
-						}
-
-					// Instance methods
-			T&		operator*() const
-						{ return *mInstance; }
-			T*		operator->() const
-						{ return mInstance; }
-
-			I<T>&	operator=(const I<T>& other)
-						{
-							// Check for instance
-							if (--(*mReferenceCount) == 0) {
-								// All done
-								Delete(mInstance);
-								Delete(mReferenceCount);
+template <typename T> class I : public CHashable {
+	// Methods
+	public:
+						// Lifecycle methods
+						I(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+						I(const I<T>& other) :
+							mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
+							{ (*mReferenceCount)++; }
+						~I()
+							{
+								// One less reference
+								if (--(*mReferenceCount) == 0) {
+									// All done
+									Delete(mInstance);
+									Delete(mReferenceCount);
+								}
 							}
 
-							// Copy
-							mInstance = other.mInstance;
-							mReferenceCount = other.mReferenceCount;
+						// CEquatable methods
+				bool	operator==(const CEquatable& other) const
+							{ return mInstance == ((const I&) other).mInstance; }
 
-							// Additional reference
-							(*mReferenceCount)++;
+						// CHashable methods
+				void	hashInto(CHasher& hasher) const
+							{ hasher.add((const UInt8*) mInstance, sizeof(T*)); }
 
-							return *this;
-						}
+						// Instance methods
+				T&		operator*() const
+							{ return *mInstance; }
+				T*		operator->() const
+							{ return mInstance; }
 
-			bool	operator==(const I& other) const
-						{ return mInstance == other.mInstance; }
+				I<T>&	operator=(const I<T>& other)
+							{
+								// Check for instance
+								if (--(*mReferenceCount) == 0) {
+									// All done
+									Delete(mInstance);
+									Delete(mReferenceCount);
+								}
 
-	static	bool	doesInstanceMatch(const I<T>& reference, T* instance)
-						{ return reference.mInstance == instance; }
+								// Copy
+								mInstance = other.mInstance;
+								mReferenceCount = other.mReferenceCount;
+
+								// Additional reference
+								(*mReferenceCount)++;
+
+								return *this;
+							}
+
+		static	bool	doesInstanceMatch(const I<T>& reference, T* instance)
+							{ return reference.mInstance == instance; }
 
 	// Properties
 	private:

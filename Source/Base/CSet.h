@@ -187,10 +187,14 @@ template <typename T> class TMSet : public TSet<T> {
 							{ CSet::operator=(other); return *this; }
 		TMSet<T>&		operator+=(const T& item)
 							{ return insert(item); }
+		TMSet<T>&		operator+=(const TArray<T>& array)
+							{ return insertFrom(array); }
 		TMSet<T>&		operator+=(const TSet<T>& other)
 							{ return insertFrom(other); }
 		TMSet<T>&		operator-=(const T& item)
 							{ return remove(item); }
+		TMSet<T>&		operator-=(const TArray<T>& array)
+							{ return removeFrom(array); }
 		TMSet<T>&		operator-=(const TSet<T>& other)
 							{ return removeFrom(other); }
 
