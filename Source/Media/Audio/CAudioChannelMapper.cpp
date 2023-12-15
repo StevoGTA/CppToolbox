@@ -241,9 +241,7 @@ TVResult<SMedia::SourceInfo> CAudioChannelMapper::performInto(CAudioFrames& audi
 
 	// Read
 	TVResult<SMedia::SourceInfo>	mediaSourceInfo = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
-	if (mediaSourceInfo.hasError())
-		// Error
-		return mediaSourceInfo;
+	ReturnValueIfResultError(mediaSourceInfo, mediaSourceInfo);
 
 	// Perform
 	mInternals->mPerformProc(*mInternals->mInputAudioFrames, audioFrames,

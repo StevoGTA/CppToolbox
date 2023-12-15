@@ -9,11 +9,7 @@
 
 class CAudioProcessor::Internals {
 	public:
-		Internals() : mAudioProcessor(nil) {}
-		~Internals()
-			{ Delete(mAudioProcessor); }
-
-		I<CAudioProcessor>*	mAudioProcessor;
+		OV<I<CAudioProcessor> >	mAudioProcessor;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -44,7 +40,7 @@ OV<SError> CAudioProcessor::connectInput(const I<CAudioProcessor>& audioProcesso
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessor = new I<CAudioProcessor>(audioProcessor);
+	mInternals->mAudioProcessor.setValue(I<CAudioProcessor>(audioProcessor));
 
 	// Note
 	setInputFormat(audioProcessingFormat);
@@ -64,7 +60,7 @@ CAudioFrames::Requirements CAudioProcessor::queryRequirements() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	AssertFailIf(mInternals->mAudioProcessor == nil)
+	AssertFailIf(!mInternals->mAudioProcessor.hasValue())
 
 	return (*mInternals->mAudioProcessor)->queryRequirements();
 }
@@ -75,7 +71,7 @@ void CAudioProcessor::setSourceWindow(UniversalTimeInterval startTimeInterval,
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
-	if (mInternals->mAudioProcessor != nil)
+	if (mInternals->mAudioProcessor.hasValue())
 		// Set source window
 		(*mInternals->mAudioProcessor)->setSourceWindow(startTimeInterval, durationTimeInterval);
 }
@@ -85,7 +81,7 @@ void CAudioProcessor::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
-	if (mInternals->mAudioProcessor != nil)
+	if (mInternals->mAudioProcessor.hasValue())
 		// Seek
 		(*mInternals->mAudioProcessor)->seek(timeInterval);
 }
@@ -102,7 +98,7 @@ void CAudioProcessor::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
-	if (mInternals->mAudioProcessor != nil)
+	if (mInternals->mAudioProcessor.hasValue())
 		// Reset
 		(*mInternals->mAudioProcessor)->reset();
 }

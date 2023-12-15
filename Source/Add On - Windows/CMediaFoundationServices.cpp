@@ -215,7 +215,7 @@ TVResult<SMedia::SourceInfo> CMediaFoundationServices::load(IMFMediaBuffer* medi
 	// Perform into
 	TVResult<SMedia::SourceInfo>	mediaSourceInfo = audioProcessor.CAudioProcessor::performInto(audioFrames);
 	if (mediaSourceInfo.hasError()) {
-		// Unlock
+		// Error
 		mediaBuffer->Unlock();
 
 		return mediaSourceInfo;

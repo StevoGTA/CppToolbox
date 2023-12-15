@@ -187,9 +187,7 @@ TVResult<SMedia::SourceInfo> CAudioDeinterleaver::performInto(CAudioFrames& audi
 
 	// Read
 	TVResult<SMedia::SourceInfo>	mediaSourceInfo = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
-	if (mediaSourceInfo.hasError())
-		// Error
-		return mediaSourceInfo;
+	ReturnValueIfResultError(mediaSourceInfo, mediaSourceInfo);
 
 	// Perform
 	CAudioFrames::Info	readAudioFramesInfo = mInternals->mInputAudioFrames->getReadInfo();

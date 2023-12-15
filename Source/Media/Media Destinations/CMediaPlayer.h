@@ -108,9 +108,9 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 												~CMediaPlayer();
 
 												// CMediaDestination methods
-						void					add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex);
+						void					add(const I<CAudioDestination>& audioDestination, UInt32 trackIndex);
 
-						void					add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex);
+						void					add(const I<CVideoDestination>& videoDestination, UInt32 trackIndex);
 
 						void					setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
 														const OV<UniversalTimeInterval>& durationTimeInterval =

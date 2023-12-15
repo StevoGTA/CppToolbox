@@ -56,22 +56,27 @@ class CAudioFrames : private CData {
 	public:
 		struct Info {
 											// Lifecycle methods
-											Info(UInt32 frameCount, const TNumberArray<void*>& segments) :
-												mFrameCount(frameCount), mSegments(segments)
+											Info(UInt32 frameCount, UInt32 byteCount,
+													const TNumberArray<void*>& segments) :
+												mFrameCount(frameCount), mByteCount(byteCount), mSegments(segments)
 												{}
 											Info(const Info& other) :
-												mFrameCount(other.mFrameCount), mSegments(other.mSegments)
+												mFrameCount(other.mFrameCount), mByteCount(other.mByteCount),
+														mSegments(other.mSegments)
 												{}
 
 											// Instance methods
 					UInt32					getFrameCount() const
 												{ return mFrameCount; }
+					UInt32					getByteCount() const
+												{ return mByteCount; }
 			const	TNumberArray<void*>&	getSegments() const
 												{ return mSegments; }
 
 			// Properties
 			private:
 				UInt32				mFrameCount;
+				UInt32				mByteCount;
 				TNumberArray<void*>	mSegments;
 		};
 
@@ -86,6 +91,7 @@ class CAudioFrames : private CData {
 				CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment);
 				CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
 						UInt32 bytesPerFramePerSegment);
+				CAudioFrames(const Info& info, UInt32 segmentIndex, bool isRead = false);
 				~CAudioFrames();
 
 				// Instance methods

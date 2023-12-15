@@ -51,9 +51,7 @@ class CMediaFoundationResamplerInternals {
 																			CMediaFoundationServices::load(mediaBuffer,
 																					internals.mAudioConverter,
 																					*internals.mInputAudioProcessingFormat);
-									if (mediaSourceInfo.hasError())
-										// Error
-										return OV<SError>(mediaSourceInfo.getError());
+									ReturnErrorIfResultError(mediaSourceInfo);
 
 									// Store
 									internals.mSourceTimeInterval = mediaSourceInfo->getTimeInterval();
