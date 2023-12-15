@@ -19,7 +19,7 @@ template <typename T> struct TIResult {
 					// Instance Methods
 			bool	hasInstance() const
 						{ return mInstance.hasInstance(); }
-	const	OI<T>	getOptionalInstance() const
+	const	OI<T>&	getOptionalInstance() const
 						{ return mInstance; }
 	const	T&		getInstance() const
 						{ AssertFailIf(!mInstance.hasInstance()); return *mInstance; }
@@ -51,7 +51,7 @@ template <typename T> struct TVResult {
 					// Instance Methods
 			bool	hasValue() const
 						{ return mValue.hasValue(); }
-	const	T		getValue() const
+	const	T&		getValue() const
 						{ return *mValue; }
 
 			bool	hasError() const
@@ -83,7 +83,7 @@ template <typename T> struct TOVResult {
 					// Instance Methods
 			bool	hasValue() const
 						{ return mValue.hasValue(); }
-	const	T		getValue() const
+	const	T&		getValue() const
 						{ return *mValue; }
 	const	OV<T>&	getOptionalValue() const
 						{ return mValue; }
