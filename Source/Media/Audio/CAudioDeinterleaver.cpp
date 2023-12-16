@@ -170,7 +170,7 @@ TArray<CString> CAudioDeinterleaver::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<SMedia::SourceInfo> CAudioDeinterleaver::performInto(CAudioFrames& audioFrames)
+TVResult<CAudioProcessor::SourceInfo> CAudioDeinterleaver::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -186,8 +186,8 @@ TVResult<SMedia::SourceInfo> CAudioDeinterleaver::performInto(CAudioFrames& audi
 		mInternals->mInputAudioFrames->reset();
 
 	// Read
-	TVResult<SMedia::SourceInfo>	mediaSourceInfo = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
-	ReturnValueIfResultError(mediaSourceInfo, mediaSourceInfo);
+	TVResult<SourceInfo>	sourceInfo = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
+	ReturnValueIfResultError(sourceInfo, sourceInfo);
 
 	// Perform
 	CAudioFrames::Info	readAudioFramesInfo = mInternals->mInputAudioFrames->getReadInfo();
@@ -196,7 +196,7 @@ TVResult<SMedia::SourceInfo> CAudioDeinterleaver::performInto(CAudioFrames& audi
 			mInternals->mInputAudioFrames->getCurrentFrameCount());
 	audioFrames.completeWrite(mInternals->mInputAudioFrames->getCurrentFrameCount());
 
-	return mediaSourceInfo;
+	return sourceInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

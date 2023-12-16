@@ -88,8 +88,9 @@ class CAudioPlayerBufferThread::Internals {
 
 						// If we have not performed the first fill, we queue 2 * max output frames to get us started.
 						//	Subsequently, we try to fill the buffer as much as possible.
-						TVResult<SMedia::SourceInfo>	mediaSourceInfo = mAudioPlayer.performInto(audioFrames);
-						if (mediaSourceInfo.hasValue()) {
+						TVResult<CAudioProcessor::SourceInfo>	audioProcessorSourceInfo =
+																		mAudioPlayer.performInto(audioFrames);
+						if (audioProcessorSourceInfo.hasValue()) {
 							// Success
 							mQueue.commitWrite(audioFrames.getCurrentFrameCount() * mBytesPerFrame);
 
@@ -98,9 +99,9 @@ class CAudioPlayerBufferThread::Internals {
 							// Finished or error
 							mReachedEnd = true;
 							
-							if (mediaSourceInfo.getError() != SError::mEndOfData)
+							if (audioProcessorSourceInfo.getError() != SError::mEndOfData)
 								// Error
-								mErrorProc(mediaSourceInfo.getError(), mProcsUserData);
+								mErrorProc(audioProcessorSourceInfo.getError(), mProcsUserData);
 
 							return false;
 						}

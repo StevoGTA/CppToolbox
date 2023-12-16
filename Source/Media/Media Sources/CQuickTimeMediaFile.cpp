@@ -612,7 +612,7 @@ struct SQTstcoAtomPayload {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	CMediaTrackInfos::AudioTrackInfo	sComposePCMAudioTrackInfo(const CQuickTimeMediaFile& quickTimeMediaFile,
+static	SMediaSource::Tracks::AudioTrack	sComposePCMAudioTrackInfo(const CQuickTimeMediaFile& quickTimeMediaFile,
 													const I<CRandomAccessDataSource>& randomAccessDataSource,
 													UInt32 options, bool isFloat, UInt8 bits,
 													CPCMAudioCodec::Format format, UniversalTimeInterval duration,
@@ -755,7 +755,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 	ReturnValueIfResultError(moovContainerAtom,
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(moovContainerAtom.getError())));
 
-	CMediaTrackInfos	mediaTrackInfos;
+	SMediaSource::Tracks	mediaSourceTracks;
 	for (TIteratorD<CAtomReader::Atom> moovIterator = moovContainerAtom->getIterator();
 			moovIterator.hasValue(); moovIterator.advance()) {
 		// Check type
@@ -874,32 +874,30 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 			// Check track type
 			if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('s', 'o', 'u', 'n')) {
 				// Audio track
-				TVResult<CMediaTrackInfos::AudioTrackInfo>	audioTrackInfo =
-																	composeAudioTrackInfo(
+				TVResult<SMediaSource::Tracks::AudioTrack>	audioTrack =
+																	composeAudioTrack(
 																			importSetup.getRandomAccessDataSource(),
 																			importSetup.getOptions(),
 																			stsdDescription.getType(), duration,
 																			metaAtomPayloadData, internals);
-				if (audioTrackInfo.hasValue())
-					// Success
-					mediaTrackInfos.add(*audioTrackInfo);
-				else
-					// Error
-					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(audioTrackInfo.getError()));
+				ReturnValueIfResultError(audioTrack,
+						I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(audioTrack.getError())));
+
+				// Success
+				mediaSourceTracks.add(*audioTrack);
 			} else if (hdlrAtomPayload.getSubType() == MAKE_OSTYPE('v', 'i', 'd', 'e')) {
 				// Video track
-				TVResult<CMediaTrackInfos::VideoTrackInfo>	videoTrackInfo =
-																	composeVideoTrackInfo(
+				TVResult<SMediaSource::Tracks::VideoTrack>	videoTrack =
+																	composeVideoTrack(
 																			importSetup.getRandomAccessDataSource(),
 																			importSetup.getOptions(),
 																			stsdDescription.getType(), timeScale,
 																			duration, metaAtomPayloadData, internals);
-				if (videoTrackInfo.hasValue())
-					// Success
-					mediaTrackInfos.add(*videoTrackInfo);
-				else
-					// Error
-					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrackInfo.getError()));
+				ReturnValueIfResultError(videoTrack,
+						I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrack.getError())));
+
+				// Success
+				mediaSourceTracks.add(*videoTrack);
 			} else {
 				// Import track
 				error =
@@ -918,7 +916,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 		}
 	}
 
-	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mID, mediaTrackInfos));
+	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mID, mediaSourceTracks));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1010,7 +1008,7 @@ TArray<SMedia::PacketAndLocation> CQuickTimeMediaFile::composePacketAndLocations
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrackInfo(
+TVResult<SMediaSource::Tracks::AudioTrack> CQuickTimeMediaFile::composeAudioTrack(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, OSType type,
 		UniversalTimeInterval duration, const OV<CData>& metaAtomPayloadData, const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
@@ -1027,13 +1025,13 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 				// Good to go
 				UInt8	bits = (UInt8) audioSampleDescription.getBits();
 
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						sComposePCMAudioTrackInfo(*this, randomAccessDataSource, options, false, bits,
 								(bits > 8) ? CPCMAudioCodec::kFormatBigEndian : CPCMAudioCodec::kFormat8BitSigned,
 								duration, internals));
 			} else
 				// Don't know what to do with sample size greater than 32 bits
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 		case MAKE_OSTYPE('s', 'o', 'w', 't'):
@@ -1042,13 +1040,13 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 				// Good to go
 				UInt8	bits = (UInt8) audioSampleDescription.getBits();
 
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						sComposePCMAudioTrackInfo(*this, randomAccessDataSource, options, false, bits,
 								(bits > 8) ? CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitSigned,
 								duration, internals));
 			} else
 				// Don't know what to do with sample size greater than 32 bits
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 		case MAKE_OSTYPE('r', 'a', 'w', ' '):
@@ -1057,31 +1055,31 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 				// Good to go
 				UInt8	bits = (UInt8) audioSampleDescription.getBits();
 
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						sComposePCMAudioTrackInfo(*this, randomAccessDataSource, options, false, bits,
 								(bits > 8) ? CPCMAudioCodec::kFormatBigEndian : CPCMAudioCodec::kFormat8BitUnsigned,
 								duration, internals));
 			} else
 				// Don't know what to do with sample size greater than 32 bits
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 		case MAKE_OSTYPE('i', 'n', '2', '4'):
 			// 24-bit Integer
-			return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+			return TVResult<SMediaSource::Tracks::AudioTrack>(
 					sComposePCMAudioTrackInfo(*this, randomAccessDataSource, options, false, 24,
 							CPCMAudioCodec::kFormatBigEndian, duration, internals));
 
 		case MAKE_OSTYPE('i', 'n', '3', '2'):
 			// 32-bit Integer
-			return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+			return TVResult<SMediaSource::Tracks::AudioTrack>(
 					sComposePCMAudioTrackInfo(*this, randomAccessDataSource, options, false, 32,
 							CPCMAudioCodec::kFormatBigEndian, duration, internals));
 
 		case MAKE_OSTYPE('f', 'l', '3', '2'):
 		case MAKE_OSTYPE('F', 'L', '3', '2'):
 			// None / Floating Point
-			return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+			return TVResult<SMediaSource::Tracks::AudioTrack>(
 					sComposePCMAudioTrackInfo(*this, randomAccessDataSource, options, true, 32,
 							CPCMAudioCodec::kFormatBigEndian, duration, internals));
 
@@ -1091,7 +1089,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 			// MPEG4 (AAC) Audio
 			TVResult<CData>	decompressionData = internals.getAudioDecompressionData();
 			ReturnValueIfResultError(decompressionData,
-					TVResult<CMediaTrackInfos::AudioTrackInfo>(
+					TVResult<SMediaSource::Tracks::AudioTrack>(
 							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			CAtomReader	decompressionAtomReader(I<CRandomAccessDataSource>(new CDataDataSource(*decompressionData)));
@@ -1099,18 +1097,18 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 			TVResult<CAtomReader::ContainerAtom>	decompressionParamContainerAtom =
 															decompressionAtomReader.readContainerAtom();
 			ReturnValueIfResultError(decompressionParamContainerAtom,
-					TVResult<CMediaTrackInfos::AudioTrackInfo>(
+					TVResult<SMediaSource::Tracks::AudioTrack>(
 							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			OR<CAtomReader::Atom>	esdsAtom = decompressionParamContainerAtom->getAtom(
 															MAKE_OSTYPE('e', 's', 'd', 's'));
 			if (!esdsAtom.hasReference())
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 			TVResult<CData>	esdsAtomPayload = decompressionAtomReader.readAtomPayload(*esdsAtom);
 			ReturnValueIfResultError(esdsAtomPayload,
-					TVResult<CMediaTrackInfos::AudioTrackInfo>(
+					TVResult<SMediaSource::Tracks::AudioTrack>(
 							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			// Compose storage format
@@ -1118,7 +1116,7 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 												CAACAudioCodec::composeInfo(*esdsAtomPayload,
 														audioSampleDescription.getChannelCount());
 			if (!info.hasValue())
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 			// Compose info
@@ -1132,23 +1130,23 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CQuickTimeMediaFile::composeAudioTrac
 			// Add audio track
 			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Add audio track with decode info
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
-						CMediaTrackInfos::AudioTrackInfo(audioFormat, mediaSegmentInfo,
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
+						SMediaSource::Tracks::AudioTrack(audioFormat, mediaSegmentInfo,
 								CAACAudioCodec::create(*info, randomAccessDataSource, mediaPacketAndLocations)));
 			else
 				// Add audio track
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(CMediaTrackInfos::AudioTrackInfo(audioFormat,
-						mediaSegmentInfo));
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
+						SMediaSource::Tracks::AudioTrack(audioFormat, mediaSegmentInfo));
 			}
 
 		default:
 			// Unsupported audio codec
-			return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::unsupportedError(CString(type, true)));
+			return TVResult<SMediaSource::Tracks::AudioTrack>(CCodec::unsupportedError(CString(type, true)));
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrackInfo(
+TVResult<SMediaSource::Tracks::VideoTrack> CQuickTimeMediaFile::composeVideoTrack(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, OSType type, UInt32 timeScale,
 		UniversalTimeInterval duration, const OV<CData>& metaAtomPayloadData, const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
@@ -1162,7 +1160,7 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 			// h.264 Video
 			TVResult<CData>	decompressionData = internals.getVideoDecompressionData();
 			ReturnValueIfResultError(decompressionData,
-					TVResult<CMediaTrackInfos::VideoTrackInfo>(decompressionData.getError()));
+					TVResult<SMediaSource::Tracks::VideoTrack>(decompressionData.getError()));
 
 			CAtomReader					atomReader(I<CRandomAccessDataSource>(new CDataDataSource(*decompressionData)));
 			TVResult<CAtomReader::Atom>	avcCAtom(SError::mEndOfData);
@@ -1176,12 +1174,12 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 					atomReader.seekToNextAtom(*avcCAtom);
 			} while (!avcCAtom.hasError() && (avcCAtom->mType != MAKE_OSTYPE('a', 'v', 'c', 'C')));
 			ReturnValueIfResultError(avcCAtom,
-					TVResult<CMediaTrackInfos::VideoTrackInfo>(
+					TVResult<SMediaSource::Tracks::VideoTrack>(
 							CCodec::unsupportedConfigurationError(CString(type, true))));
 
 			TVResult<CData>	avcCAtomPayload = atomReader.readAtomPayload(*avcCAtom);
 			ReturnValueIfResultError(avcCAtomPayload,
-					TVResult<CMediaTrackInfos::VideoTrackInfo>(avcCAtomPayload.getError()));
+					TVResult<SMediaSource::Tracks::VideoTrack>(avcCAtomPayload.getError()));
 
 			// Compose packet and locations
 			TArray<SMedia::PacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
@@ -1207,7 +1205,7 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 										internals.mAtomReader.readAtomPayload(
 												internals.mSTBLContainerAtom.getAtom(MAKE_OSTYPE('s', 't', 's', 's')));
 				ReturnValueIfResultError(stssAtomPayloadData,
-						TVResult<CMediaTrackInfos::VideoTrackInfo>(stssAtomPayloadData.getError()));
+						TVResult<SMediaSource::Tracks::VideoTrack>(stssAtomPayloadData.getError()));
 
 				const	SQTstssAtomPayload&		stssAtomPayload =
 														*((SQTstssAtomPayload*) stssAtomPayloadData->getBytePtr());
@@ -1218,19 +1216,19 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CQuickTimeMediaFile::composeVideoTrac
 					keyframeIndexes += stssAtomPayload.getKeyframeIndex(i);
 
 				// Add video track with decode info
-				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
-						CMediaTrackInfos::VideoTrackInfo(videoFormat, mediaSegmentInfo,
+				return TVResult<SMediaSource::Tracks::VideoTrack>(
+						SMediaSource::Tracks::VideoTrack(videoFormat, mediaSegmentInfo,
 								CH264VideoCodec::create(randomAccessDataSource, mediaPacketAndLocations,
 										*avcCAtomPayload, timeScale, keyframeIndexes)));
 			} else
 				// Add video track
-				return TVResult<CMediaTrackInfos::VideoTrackInfo>(CMediaTrackInfos::VideoTrackInfo(videoFormat,
-						mediaSegmentInfo));
+				return TVResult<SMediaSource::Tracks::VideoTrack>(
+						SMediaSource::Tracks::VideoTrack(videoFormat, mediaSegmentInfo));
 			}
 
 		default:
 			// Unsupported video codec
-			return TVResult<CMediaTrackInfos::VideoTrackInfo>(CCodec::unsupportedError(CString(type, true)));
+			return TVResult<SMediaSource::Tracks::VideoTrack>(CCodec::unsupportedError(CString(type, true)));
 	}
 }
 
@@ -1262,7 +1260,7 @@ TVResult<CData> CQuickTimeMediaFile::getAudioDecompressionData(const Internals& 
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMediaFile& quickTimeMediaFile,
+SMediaSource::Tracks::AudioTrack sComposePCMAudioTrackInfo(const CQuickTimeMediaFile& quickTimeMediaFile,
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, bool isFloat, UInt8 bits,
 		CPCMAudioCodec::Format format, UniversalTimeInterval duration, const CQuickTimeMediaFile::Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
@@ -1285,11 +1283,11 @@ CMediaTrackInfos::AudioTrackInfo sComposePCMAudioTrackInfo(const CQuickTimeMedia
 	// Compose audio track
 	if (options & SMediaSource::kOptionsCreateDecoders)
 		// Add audio track with decode info
-		return CMediaTrackInfos::AudioTrackInfo(audioFormat, mediaSegmentInfo,
+		return SMediaSource::Tracks::AudioTrack(audioFormat, mediaSegmentInfo,
 						CPCMAudioCodec::create(audioFormat, randomAccessDataSource,
 								mediaPacketAndLocations.getFirst().getByteOffset(),
 								mediaPacketAndLocations.getCount() * bytesPerFrame, format));
 	else
 		// Add audio track
-		return CMediaTrackInfos::AudioTrackInfo(audioFormat, mediaSegmentInfo);
+		return SMediaSource::Tracks::AudioTrack(audioFormat, mediaSegmentInfo);
 }

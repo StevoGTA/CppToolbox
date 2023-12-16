@@ -195,7 +195,7 @@ OV<SError> CMediaFoundationServices::resizeSample(IMFSample* sample, UInt32 size
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<SMedia::SourceInfo> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer,
+TVResult<CAudioProcessor::SourceInfo> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer,
 		CAudioProcessor& audioProcessor, const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -206,19 +206,19 @@ TVResult<SMedia::SourceInfo> CMediaFoundationServices::load(IMFMediaBuffer* medi
 	BYTE*	mediaBufferBytePtr;
 	DWORD	mediaBufferByteCount;
 	HRESULT	result = mediaBuffer->Lock(&mediaBufferBytePtr, &mediaBufferByteCount, NULL);
-	ReturnValueIfFailed(result, OSSTR("Lock"), TVResult<SMedia::SourceInfo>(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, OSSTR("Lock"), TVResult<SourceInfo>(SErrorFromHRESULT(result)));
 
 	// Setup Audio Frames
 	CAudioFrames	audioFrames(mediaBufferBytePtr, 1, mediaBufferByteCount, mediaBufferByteCount / bytesPerFrame,
 							bytesPerFrame);
 
 	// Perform into
-	TVResult<SMedia::SourceInfo>	mediaSourceInfo = audioProcessor.CAudioProcessor::performInto(audioFrames);
-	if (mediaSourceInfo.hasError()) {
+	TVResult<SourceInfo>	sourceInfo = audioProcessor.CAudioProcessor::performInto(audioFrames);
+	if (sourceInfo.hasError()) {
 		// Error
 		mediaBuffer->Unlock();
 
-		return mediaSourceInfo;
+		return sourceInfo;
 	}
 
 	// Check if need to transmogrify audio frames
@@ -235,14 +235,14 @@ TVResult<SMedia::SourceInfo> CMediaFoundationServices::load(IMFMediaBuffer* medi
 		// Unlock
 		mediaBuffer->Unlock();
 
-		ReturnValueIfFailed(result, OSSTR("SetCurrentLength"), TVResult<SMedia::SourceInfo>(SErrorFromHRESULT(result)));
+		ReturnValueIfFailed(result, OSSTR("SetCurrentLength"), TVResult<SourceInfo>(SErrorFromHRESULT(result)));
 	}
 
 	// Unlock media buffer
 	result = mediaBuffer->Unlock();
-	ReturnValueIfFailed(result, OSSTR("Unlock"), TVResult<SMedia::SourceInfo>(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, OSSTR("Unlock"), TVResult<SourceInfo>(SErrorFromHRESULT(result)));
 
-	return mediaSourceInfo;
+	return sourceInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

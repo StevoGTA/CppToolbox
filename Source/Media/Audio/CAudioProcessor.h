@@ -12,6 +12,22 @@
 // MARK: CAudioProcessor
 
 class CAudioProcessor {
+	// SourceInfo
+	public:
+		struct SourceInfo {
+										// Lifecycle methods
+										SourceInfo(UniversalTimeInterval timeInterval) : mTimeInterval(timeInterval) {}
+										SourceInfo(const SourceInfo& other) : mTimeInterval(other.mTimeInterval) {}
+
+										// Instance methods
+				UniversalTimeInterval	getTimeInterval() const
+											{ return mTimeInterval; }
+
+			// Properties
+			private:
+				UniversalTimeInterval	mTimeInterval;
+		};
+
 	// Classes
 	private:
 		class Internals;
@@ -33,7 +49,7 @@ class CAudioProcessor {
 														const OV<UniversalTimeInterval>& durationTimeInterval);
 		virtual	void							seek(UniversalTimeInterval timeInterval);
 
-		virtual	TVResult<SMedia::SourceInfo>	performInto(CAudioFrames& audioFrames);
+		virtual	TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
 
 		virtual	void							reset();
 

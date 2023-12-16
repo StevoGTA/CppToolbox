@@ -5,8 +5,11 @@
 #pragma once
 
 #include "CAppleResourceManager.h"
+#include "CAudioCodec.h"
 #include "CDataSource.h"
-#include "SMediaTracks.h"
+#include "CVideoCodec.h"
+#include "SMedia.h"
+#include "SVideo.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SMediaSource
@@ -79,6 +82,95 @@ struct SMediaSource {
 			UInt32						mOptions;
 	};
 
+	// Track
+	template <typename MTF, typename DC> struct Track {
+											// Lifecycle methods
+											Track(const MTF& mediaTrackFormat,
+													const SMedia::SegmentInfo& mediaSegmentInfo,
+													const I<DC>& decodeCodec) :
+												mMediaTrackFormat(mediaTrackFormat),
+														mMediaSegmentInfo(mediaSegmentInfo), mDecodeCodec(decodeCodec)
+												{}
+											Track(const MTF& mediaTrackFormat,
+													const SMedia::SegmentInfo& mediaSegmentInfo,
+													const OV<I<DC> >& decodeCodec = OV<I<DC> >()) :
+												mMediaTrackFormat(mediaTrackFormat),
+														mMediaSegmentInfo(mediaSegmentInfo), mDecodeCodec(decodeCodec)
+												{}
+											Track(const Track<MTF, DC>& other) :
+												mMediaTrackFormat(other.mMediaTrackFormat),
+														mMediaSegmentInfo(other.mMediaSegmentInfo),
+														mDecodeCodec(other.mDecodeCodec)
+												{}
+
+											// Instance methods
+			const	MTF&					getMediaTrackFormat() const
+												{ return mMediaTrackFormat; }
+			const	SMedia::SegmentInfo&	getMediaSegmentInfo() const
+												{ return mMediaSegmentInfo; }
+			const	OV<I<DC> >&				getDecodeCodec() const
+												{ return mDecodeCodec; }
+
+		// Properties
+		private:
+			MTF					mMediaTrackFormat;
+			SMedia::SegmentInfo	mMediaSegmentInfo;
+			OV<I<DC> >			mDecodeCodec;
+	};
+
+	// Tracks
+	class Tracks {
+		// Types
+		public:
+			typedef	Track<SAudio::Format, CDecodeAudioCodec>	AudioTrack;
+			typedef	Track<SVideo::Format, CDecodeVideoCodec>	VideoTrack;
+
+		// Methods
+		public:
+
+										// Lifecycle methods
+										Tracks() {}
+										Tracks(const Tracks& other) :
+											mAudioTracks(other.mAudioTracks), mVideoTracks(other.mVideoTracks)
+											{}
+
+										// Instance methods
+		const	TArray<AudioTrack>&		getAudioTracks() const
+											{ return mAudioTracks; }
+				void					add(const AudioTrack& audioTrack)
+											{ mAudioTracks += audioTrack; }
+
+		const	TArray<VideoTrack>&		getVideoTracks() const
+											{ return mVideoTracks; }
+				void					add(const VideoTrack& videoTrack)
+											{ mVideoTracks += videoTrack; }
+
+				UniversalTimeInterval	getDuration() const
+											{
+												// Compose total duration
+												UniversalTimeInterval	duration = 0.0;
+												for (TIteratorD<AudioTrack> iterator = mAudioTracks.getIterator();
+														iterator.hasValue(); iterator.advance())
+													// Update duration
+													duration =
+															std::max<UniversalTimeInterval>(duration,
+																	iterator->getMediaSegmentInfo().getDuration());
+												for (TIteratorD<VideoTrack> iterator = mVideoTracks.getIterator();
+														iterator.hasValue(); iterator.advance())
+													// Update duration
+													duration =
+															std::max<UniversalTimeInterval>(duration,
+																	iterator->getMediaSegmentInfo().getDuration());
+
+												return duration;
+											}
+
+		// Properties
+		private:
+			TNArray<AudioTrack>	mAudioTracks;
+			TNArray<VideoTrack>	mVideoTracks;
+	};
+
 	// ImportResult
 	class ImportResult {
 		// Result
@@ -93,10 +185,10 @@ struct SMediaSource {
 		public:
 
 									// Lifecycle methods
-									ImportResult(OSType mediaSourceID, const CMediaTrackInfos& mediaTrackInfos,
+									ImportResult(OSType mediaSourceID, const Tracks& tracks,
 											const TArray<CString>& messages = TNArray<CString>()) :
-										mResult(kSuccess), mMediaSourceID(mediaSourceID),
-												mMediaTrackInfos(mediaTrackInfos), mMessages(messages)
+										mResult(kSuccess), mMediaSourceID(mediaSourceID), mTracks(tracks),
+												mMessages(messages)
 										{}
 									ImportResult(const SError& error) :
 										mResult(kSourceMatchButUnableToLoad), mError(error)
@@ -108,8 +200,8 @@ struct SMediaSource {
 										{ return mResult; }
 				OSType				getMediaSourceID() const
 										{ return *mMediaSourceID; }
-		const	CMediaTrackInfos&	getMediaTrackInfos() const
-										{ return *mMediaTrackInfos; }
+		const	Tracks&				getTracks() const
+										{ return *mTracks; }
 		const	TArray<CString>&	getMessages() const
 										{ return *mMessages; }
 		const	SError&				getError() const
@@ -119,7 +211,7 @@ struct SMediaSource {
 		private:
 			Result					mResult;
 			OV<OSType>				mMediaSourceID;
-			OV<CMediaTrackInfos>	mMediaTrackInfos;
+			OV<Tracks>				mTracks;
 			OV<TArray<CString> >	mMessages;
 			OV<SError>				mError;
 	};

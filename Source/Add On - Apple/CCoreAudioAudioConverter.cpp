@@ -73,21 +73,21 @@ class CCoreAudioAudioConverter::Internals {
 									OSStatus	status;
 									if (internals.mSourceHasMoreToRead) {
 										// Try to read
-										TVResult<SMedia::SourceInfo>	mediaSourceInfo =
-																				internals.mAudioConverter.
-																						CAudioProcessor::performInto(
-																								*internals.mInputAudioFrames);
-										if (mediaSourceInfo.hasValue()) {
+										TVResult<CAudioProcessor::SourceInfo>	audioProcessorSourceInfo =
+																						internals.mAudioConverter.
+																								CAudioProcessor::performInto(
+																										*internals.mInputAudioFrames);
+										if (audioProcessorSourceInfo.hasValue()) {
 											// Success
-											internals.mSourceTimeInterval = mediaSourceInfo->getTimeInterval();
+											internals.mSourceTimeInterval = audioProcessorSourceInfo->getTimeInterval();
 											status = noErr;
-										} else if (mediaSourceInfo.getError() == SError::mEndOfData) {
+										} else if (audioProcessorSourceInfo.getError() == SError::mEndOfData) {
 											// End of data
 											internals.mSourceHasMoreToRead = false;
 											status = noErr;
 										} else {
 											// Error
-											internals.mFillBufferDataError = mediaSourceInfo.getError();
+											internals.mFillBufferDataError = audioProcessorSourceInfo.getError();
 											status = -1;
 										}
 									} else
@@ -203,7 +203,7 @@ TArray<CString> CCoreAudioAudioConverter::getSetupDescription(const CString& ind
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<SMedia::SourceInfo> CCoreAudioAudioConverter::performInto(CAudioFrames& audioFrames)
+TVResult<CAudioProcessor::SourceInfo> CCoreAudioAudioConverter::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -213,13 +213,13 @@ TVResult<SMedia::SourceInfo> CCoreAudioAudioConverter::performInto(CAudioFrames&
 	OSStatus	status =
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, Internals::fillBufferData,
 								mInternals, &frameCount, mInternals->mOutputAudioBufferList, nil);
-	if (status != noErr) return TVResult<SMedia::SourceInfo>(*mInternals->mFillBufferDataError);
-	if (frameCount == 0) return TVResult<SMedia::SourceInfo>(SError::mEndOfData);
+	if (status != noErr) return TVResult<SourceInfo>(*mInternals->mFillBufferDataError);
+	if (frameCount == 0) return TVResult<SourceInfo>(SError::mEndOfData);
 
 	// Update
 	audioFrames.completeWrite(*mInternals->mOutputAudioBufferList);
 
-	return TVResult<SMedia::SourceInfo>(SMedia::SourceInfo(mInternals->mSourceTimeInterval));
+	return TVResult<SourceInfo>(SourceInfo(mInternals->mSourceTimeInterval));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

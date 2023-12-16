@@ -65,12 +65,12 @@ class CSecretRabbitCodeAudioConverter::Internals {
 								CAudioFrames::ReadInfo	readInfo = internals.mInputAudioFrames->getReadInfo();
 								if (internals.mSourceHasMoreToRead) {
 									// Try to read
-									TVResult<SMedia::SourceInfo>	mediaSourceInfo =
-																			internals.mAudioConverter.CAudioProcessor::performInto(
-																					*internals.mInputAudioFrames);
-									if (mediaSourceInfo.hasValue()) {
+									TVResult<CAudioProcessor::SourceInfo>	audioProcessorSourceInfo =
+																					internals.mAudioConverter.CAudioProcessor::performInto(
+																							*internals.mInputAudioFrames);
+									if (audioProcessorSourceInfo.hasValue()) {
 										// Success
-										internals.mSourceTimeInterval = mediaSourceInfo->getTimeInterval();
+										internals.mSourceTimeInterval = audioProcessorSourceInfo->getTimeInterval();
 
 										// Check if need to convert
 										if (internals.mInputAudioProcessingFormat->getIsSignedInteger()) {
@@ -95,12 +95,12 @@ class CSecretRabbitCodeAudioConverter::Internals {
 																internals.mInputAudioProcessingFormat->
 																		getChannelCount());
 										}
-									} else if (mediaSourceInfo.getError() == SError::mEndOfData) {
+									} else if (audioProcessorSourceInfo.getError() == SError::mEndOfData) {
 										// End of data
 										internals.mSourceHasMoreToRead = false;
 									} else
 										// Error
-										internals.mPerformError = mediaSourceInfo.getError();
+										internals.mPerformError = audioProcessorSourceInfo.getError();
 								}
 
 								// Prepare return info
@@ -182,7 +182,7 @@ TArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& in
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<SMedia::SourceInfo> CSecretRabbitCodeAudioConverter::performInto(CAudioFrames& audioFrames)
+TVResult<CAudioProcessor::SourceInfo> CSecretRabbitCodeAudioConverter::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Fill buffer
@@ -192,12 +192,12 @@ TVResult<SMedia::SourceInfo> CSecretRabbitCodeAudioConverter::performInto(CAudio
 	UInt32	frameCount =
 					src_callback_read(mInternals->mSRCState, srcRatio, audioFrames.getAllocatedFrameCount(),
 							(float*) audioFrames.getWriteInfo().getSegments()[0]);
-	if (frameCount == 0) return SAudioSourceStatus(SError::mEndOfData);
+	if (frameCount == 0) return TVResult<SourceInfo>(SError::mEndOfData);
 
 	// Update
 	audioFrames.completeWrite(frameCount);
 
-	return TVResult<SMedia::SourceInfo>(SMedia::SourceInfo(mInternals->mSourceTimeInterval));
+	return TVResult<SourceInfo>(SourceInfo(mInternals->mSourceTimeInterval));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
