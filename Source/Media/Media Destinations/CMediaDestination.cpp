@@ -78,19 +78,18 @@ void CMediaDestination::add(const I<CVideoDestination>& videoDestination, UInt32
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CMediaDestination::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Set window
-		(*mInternals->mAudioDestinationByTrack[i])->setSourceWindow(startTimeInterval, durationTimeInterval);
+		(*mInternals->mAudioDestinationByTrack[i])->setMediaSegment(mediaSegment);
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Seek
-		(*mInternals->mVideoDestinationByTrack[i])->setSourceWindow(startTimeInterval, durationTimeInterval);
+		(*mInternals->mVideoDestinationByTrack[i])->setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

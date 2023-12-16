@@ -112,9 +112,8 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 						void					add(const I<CVideoDestination>& videoDestination, UInt32 trackIndex);
 
-						void					setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
-														const OV<UniversalTimeInterval>& durationTimeInterval =
-																OV<UniversalTimeInterval>());
+						void					setMediaSegment(
+														const SMedia::Segment& mediaSegment = SMedia::Segment());
 						void					seek(UniversalTimeInterval timeInterval);
 
 												// Instance methods

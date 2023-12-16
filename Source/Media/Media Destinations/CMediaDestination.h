@@ -34,9 +34,8 @@ class CMediaDestination {
 
 		virtual			void						setupComplete() const = 0;
 
-		virtual			void						setSourceWindow(UniversalTimeInterval startTimeInterval = 0.0,
-															const OV<UniversalTimeInterval>& durationTimeInterval =
-																	OV<UniversalTimeInterval>());
+		virtual			void						setMediaSegment(
+															const SMedia::Segment& mediaSegment = SMedia::Segment());
 		virtual			void						seek(UniversalTimeInterval timeInterval);
 
 	protected:

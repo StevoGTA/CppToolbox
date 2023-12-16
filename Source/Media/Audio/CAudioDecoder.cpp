@@ -11,25 +11,18 @@
 
 class CAudioDecoder::Internals {
 	public:
-									Internals(const SAudio::Format& audioFormat,
-											const I<CDecodeAudioCodec>& decodeAudioCodec, const CString& identifier) :
-										mAudioFormat(audioFormat), mDecodeAudioCodec(decodeAudioCodec),
-												mIdentifier(identifier),
-												mStartTimeInterval(0.0), mCurrentTimeInterval(0.0)
-										{}
-
-		OV<UniversalTimeInterval>	getEndTimeInterval()
-										{ return mDurationTimeInterval.hasValue() ?
-												OV<UniversalTimeInterval>(mStartTimeInterval + *mDurationTimeInterval) :
-												OV<UniversalTimeInterval>(); }
+		Internals(const SAudio::Format& audioFormat, const I<CDecodeAudioCodec>& decodeAudioCodec,
+				const CString& identifier) :
+			mAudioFormat(audioFormat), mDecodeAudioCodec(decodeAudioCodec), mIdentifier(identifier),
+					mCurrentTimeInterval(0.0)
+			{}
 
 		SAudio::Format					mAudioFormat;
 		I<CDecodeAudioCodec>			mDecodeAudioCodec;
 		CString							mIdentifier;
 
 		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
-		UniversalTimeInterval			mStartTimeInterval;
-		OV<UniversalTimeInterval>		mDurationTimeInterval;
+		SMedia::Segment					mMediaSegment;
 		UniversalTimeInterval			mCurrentTimeInterval;
 };
 
@@ -81,21 +74,19 @@ CAudioFrames::Requirements CAudioDecoder::queryRequirements() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioDecoder::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CAudioDecoder::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	bool	performSeek = startTimeInterval != mInternals->mStartTimeInterval;
+	bool	performSeek = mediaSegment.getStartTimeInterval() != mInternals->mMediaSegment.getStartTimeInterval();
 
 	// Store
-	mInternals->mStartTimeInterval = startTimeInterval;
-	mInternals->mDurationTimeInterval = OV<UniversalTimeInterval>(durationTimeInterval);
+	mInternals->mMediaSegment = mediaSegment;
 
 	// Check if need seek
 	if (performSeek)
 		// Seek
-		seek(mInternals->mStartTimeInterval);
+		seek(mInternals->mMediaSegment.getStartTimeInterval());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -103,10 +94,10 @@ void CAudioDecoder::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Bound the given time
-	timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mStartTimeInterval);
-	if (mInternals->mDurationTimeInterval.hasValue())
+	timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment.getStartTimeInterval());
+	if (mInternals->mMediaSegment.getDurationTimeInterval().hasValue())
 		// Limit to duration
-		timeInterval = std::min<UniversalTimeInterval>(timeInterval, *mInternals->getEndTimeInterval());
+		timeInterval = std::min<UniversalTimeInterval>(timeInterval, *mInternals->mMediaSegment.getEndTimeInterval());
 
 	// Update
 	mInternals->mCurrentTimeInterval = timeInterval;
@@ -121,10 +112,11 @@ TVResult<CAudioProcessor::SourceInfo> CAudioDecoder::performInto(CAudioFrames& a
 {
 	// Setup
 	UInt32	maxFrames;
-	if (mInternals->mDurationTimeInterval.hasValue()) {
+	if (mInternals->mMediaSegment.getDurationTimeInterval().hasValue()) {
 		// Have duration
 		UniversalTimeInterval	durationRemaining =
-										*mInternals->getEndTimeInterval() - mInternals->mCurrentTimeInterval;
+										*mInternals->mMediaSegment.getEndTimeInterval() -
+												mInternals->mCurrentTimeInterval;
 		if (durationRemaining <= 0.0)
 			// Already done
 			return TVResult<SourceInfo>(SError::mEndOfData);
@@ -158,8 +150,8 @@ void CAudioDecoder::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Seek
-	mInternals->mDecodeAudioCodec->seek(mInternals->mStartTimeInterval);
-	mInternals->mCurrentTimeInterval = mInternals->mStartTimeInterval;
+	mInternals->mDecodeAudioCodec->seek(mInternals->mMediaSegment.getStartTimeInterval());
+	mInternals->mCurrentTimeInterval = mInternals->mMediaSegment.getStartTimeInterval();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

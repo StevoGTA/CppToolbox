@@ -90,6 +90,7 @@ struct SMedia {
 			// Methods
 			public:
 													// Lifecycle methods
+													Segment() : mStartTimeInterval(0.0) {}
 													Segment(UniversalTimeInterval startTimeInterval,
 															const OV<UniversalTimeInterval>& durationTimeInterval) :
 														mStartTimeInterval(startTimeInterval),
@@ -105,6 +106,22 @@ struct SMedia {
 														{ return mStartTimeInterval; }
 				const	OV<UniversalTimeInterval>&	getDurationTimeInterval() const
 														{ return mDurationTimeInterval; }
+
+						OV<UniversalTimeInterval>	getEndTimeInterval() const
+														{ return mDurationTimeInterval.hasValue() ?
+																OV<UniversalTimeInterval>(
+																		mStartTimeInterval + *mDurationTimeInterval) :
+																OV<UniversalTimeInterval>(); }
+
+						Segment&					operator=(const Segment& other)
+														{
+															// Store
+															mStartTimeInterval = other.mStartTimeInterval;
+															mDurationTimeInterval = mDurationTimeInterval;
+
+															return *this;
+														}
+
 			// Properties
 			private:
 				UniversalTimeInterval		mStartTimeInterval;

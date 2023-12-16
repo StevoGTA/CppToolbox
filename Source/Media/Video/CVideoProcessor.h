@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CVideoFrame.h"
+#include "SMedia.h"
 #include "TimeAndDate.h"
 #include "TResult.h"
 
@@ -71,8 +72,7 @@ class CVideoProcessor {
 		virtual	OV<SError>			connectInput(const I<CVideoProcessor>& videoProcessor);
 		virtual	TArray<CString>		getSetupDescription(const CString& indent);
 
-		virtual	void				setSourceWindow(UniversalTimeInterval startTimeInterval,
-											const OV<UniversalTimeInterval>& durationTimeInterval);
+		virtual	void				setMediaSegment(const SMedia::Segment& mediaSegment);
 		virtual	void				seek(UniversalTimeInterval timeInterval);
 
 		virtual	PerformResult		perform();

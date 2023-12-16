@@ -66,14 +66,13 @@ CAudioFrames::Requirements CAudioProcessor::queryRequirements() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioProcessor::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CAudioProcessor::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
 	if (mInternals->mAudioProcessor.hasValue())
 		// Set source window
-		(*mInternals->mAudioProcessor)->setSourceWindow(startTimeInterval, durationTimeInterval);
+		(*mInternals->mAudioProcessor)->setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

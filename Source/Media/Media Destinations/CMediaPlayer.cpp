@@ -90,8 +90,7 @@ class CMediaPlayer::Internals {
 						Internals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
 								const CMediaPlayer::Info& info) :
 							mMediaPlayer(mediaPlayer), mMessageQueues(messageQueues), mInfo(info),
-									mSourceWindowStartTimeInterval(0.0), mCurrentPosition(0.0), mEndOfDataCount(0),
-									mCurrentLoopCount(0)
+									mCurrentPosition(0.0), mEndOfDataCount(0), mCurrentLoopCount(0)
 							{}
 
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
@@ -223,7 +222,7 @@ class CMediaPlayer::Internals {
 				CSRSWMessageQueues&		mMessageQueues;
 				CMediaPlayer::Info		mInfo;
 
-				UniversalTimeInterval	mSourceWindowStartTimeInterval;
+				SMedia::Segment			mMediaSegment;
 				UniversalTimeInterval	mCurrentPosition;
 				OV<UInt32>				mCurrentFrameIndex;
 				UInt32					mEndOfDataCount;
@@ -304,15 +303,14 @@ void CMediaPlayer::add(const I<CVideoDestination>& videoDestination, UInt32 trac
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CMediaPlayer::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mSourceWindowStartTimeInterval = startTimeInterval;
+	mInternals->mMediaSegment = mediaSegment;
 
 	// Do super
-	CMediaDestination::setSourceWindow(startTimeInterval, durationTimeInterval);
+	CMediaDestination::setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -472,7 +470,7 @@ void CMediaPlayer::reset()
 		getVideoDestination(i)->reset();
 
 	// Update internals
-	mInternals->mCurrentPosition = mInternals->mSourceWindowStartTimeInterval;
+	mInternals->mCurrentPosition = mInternals->mMediaSegment.getStartTimeInterval();
 	if (getVideoTrackCount() > 0)
 		mInternals->mCurrentFrameIndex.setValue(0);
 	else

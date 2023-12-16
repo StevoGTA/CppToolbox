@@ -45,8 +45,7 @@ class CAudioProcessor {
 
 		virtual	CAudioFrames::Requirements		queryRequirements() const;
 
-		virtual	void							setSourceWindow(UniversalTimeInterval startTimeInterval,
-														const OV<UniversalTimeInterval>& durationTimeInterval);
+		virtual	void							setMediaSegment(const SMedia::Segment& mediaSegment);
 		virtual	void							seek(UniversalTimeInterval timeInterval);
 
 		virtual	TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
