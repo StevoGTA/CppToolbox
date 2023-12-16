@@ -206,19 +206,20 @@ TVResult<CAudioProcessor::SourceInfo> CMediaFoundationServices::load(IMFMediaBuf
 	BYTE*	mediaBufferBytePtr;
 	DWORD	mediaBufferByteCount;
 	HRESULT	result = mediaBuffer->Lock(&mediaBufferBytePtr, &mediaBufferByteCount, NULL);
-	ReturnValueIfFailed(result, OSSTR("Lock"), TVResult<SourceInfo>(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, OSSTR("Lock"), TVResult<CAudioProcessor::SourceInfo>(SErrorFromHRESULT(result)));
 
 	// Setup Audio Frames
 	CAudioFrames	audioFrames(mediaBufferBytePtr, 1, mediaBufferByteCount, mediaBufferByteCount / bytesPerFrame,
 							bytesPerFrame);
 
 	// Perform into
-	TVResult<SourceInfo>	sourceInfo = audioProcessor.CAudioProcessor::performInto(audioFrames);
-	if (sourceInfo.hasError()) {
+	TVResult<CAudioProcessor::SourceInfo>	audioProcessorSourceInfo =
+													audioProcessor.CAudioProcessor::performInto(audioFrames);
+	if (audioProcessorSourceInfo.hasError()) {
 		// Error
 		mediaBuffer->Unlock();
 
-		return sourceInfo;
+		return audioProcessorSourceInfo;
 	}
 
 	// Check if need to transmogrify audio frames
@@ -235,14 +236,15 @@ TVResult<CAudioProcessor::SourceInfo> CMediaFoundationServices::load(IMFMediaBuf
 		// Unlock
 		mediaBuffer->Unlock();
 
-		ReturnValueIfFailed(result, OSSTR("SetCurrentLength"), TVResult<SourceInfo>(SErrorFromHRESULT(result)));
+		ReturnValueIfFailed(result, OSSTR("SetCurrentLength"),
+				TVResult<CAudioProcessor::SourceInfo>(SErrorFromHRESULT(result)));
 	}
 
 	// Unlock media buffer
 	result = mediaBuffer->Unlock();
-	ReturnValueIfFailed(result, OSSTR("Unlock"), TVResult<SourceInfo>(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, OSSTR("Unlock"), TVResult<CAudioProcessor::SourceInfo>(SErrorFromHRESULT(result)));
 
-	return sourceInfo;
+	return audioProcessorSourceInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
