@@ -124,6 +124,7 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 		virtual			void					setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
 
+				const	SMedia::Segment&		getMediaSegment() const;
 						UniversalTimeInterval	getCurrentPosition() const;
 				const	OV<UInt32>&				getCurrentFrameIndex() const;
 
