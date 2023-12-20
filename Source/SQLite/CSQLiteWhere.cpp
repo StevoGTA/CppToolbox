@@ -25,7 +25,7 @@ class CSQLiteWhere::Internals {
 		void	append(const CString& comparison, const SSQLiteValue& value)
 					{
 						// Check value type
-						if (value.mType == SSQLiteValue::kNull) {
+						if (value.getType() == SSQLiteValue::kTypeNull) {
 							// Value is NULL
 							if (comparison == CString(OSSTR("=")))
 								// IS NULL
@@ -36,7 +36,7 @@ class CSQLiteWhere::Internals {
 							else
 								// Unsupported NULL comparison
 								AssertFail();
-						} else if (value.mType != SSQLiteValue::kLastInsertRowID) {
+						} else if (value.getType() != SSQLiteValue::kTypeLastInsertRowID) {
 							// Actual value
 							mString += CString::mSpace + comparison + CString(OSSTR(" ?"));
 							mValues += TNArray<SSQLiteValue>(value);

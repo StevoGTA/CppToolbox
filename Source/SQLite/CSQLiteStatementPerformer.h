@@ -11,11 +11,11 @@
 // MARK: CSQLiteStatementPerformer
 
 class CSQLiteStatementPerformer {
-	// Transaction result
+	// TransactionResult
 	public:
 		enum TransactionResult {
-			kCommit,
-			kRollback,
+			kTransactionResultCommit,
+			kTransactionResultRollback,
 		};
 
 	// Procs
@@ -29,22 +29,23 @@ class CSQLiteStatementPerformer {
 
 	// Methods
 	public:
-							// Lifecycle methods
-							CSQLiteStatementPerformer(sqlite3* database);
-							~CSQLiteStatementPerformer();
+					// Lifecycle methods
+					CSQLiteStatementPerformer(sqlite3* database);
+					~CSQLiteStatementPerformer();
 
-							// Instance methods
-		void				addToTransactionOrPerform(const CString& statement,
-									const TArray<SSQLiteValue>& values = TNArray<SSQLiteValue>(),
-									LastInsertRowIDProc lastInsertRowIDProc = nil, void* userData = nil);
+					// Instance methods
+		void		addToTransactionOrPerform(const CString& statement,
+							const TArray<SSQLiteValue>& values = TNArray<SSQLiteValue>(),
+							LastInsertRowIDProc lastInsertRowIDProc = nil, void* userData = nil);
 
-		CSQLiteResultsRow	perform(const CString& statement, const TArray<SSQLiteValue>& values);
-		CSQLiteResultsRow	perform(const CString& statement)
-								{ return perform(statement, TNArray<SSQLiteValue>()); }
+		OV<SError>	perform(const CString& statement, const TArray<SSQLiteValue>& values,
+							CSQLiteResultsRow::Proc resultsRowProc, void* userData);
+		OV<SError>	perform(const CString& statement, CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+						{ return perform(statement, TNArray<SSQLiteValue>(), resultsRowProc, userData); }
 
-		void				performAsTransaction(TransactionProc transactionProc, void* userData);
+		void		performAsTransaction(TransactionProc transactionProc, void* userData);
 
-		SInt32				getVariableNumberLimit();
+		SInt32		getVariableNumberLimit();
 
 	// Properties
 	private:

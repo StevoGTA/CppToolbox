@@ -39,28 +39,40 @@ class CSQLiteTableColumn : public CEquatable {
 	// Options
 	public:
 		enum Options {
-			kNone	 		= 0,
-			kPrimaryKey		= 1 << 0,
-			kAutoIncrement	= 1 << 1,
-			kNotNull		= 1 << 2,
-			kUnique			= 1 << 3,
-			kCheck			= 1 << 4,
+			kOptionsNone	 		= 0,
+			kOptionsPrimaryKey		= 1 << 0,
+			kOptionsAutoIncrement	= 1 << 1,
+			kOptionsNotNull			= 1 << 2,
+			kOptionsUnique			= 1 << 3,
+			kOptionsCheck			= 1 << 4,
 		};
 
 	// Reference
 	public:
 		struct Reference {
-			// Lifecycle methods
-			Reference(const CSQLiteTableColumn& tableColumn, const CSQLiteTable& referencedTable,
-					const CSQLiteTableColumn& referencedTableColumn) :
-				mTableColumn(tableColumn), mReferencedTable(referencedTable),
-						mReferencedTableColumn(referencedTableColumn)
-				{}
+			// Methods
+			public:
+											// Lifecycle methods
+											Reference(const CSQLiteTableColumn& tableColumn,
+													const CSQLiteTable& referencedTable,
+													const CSQLiteTableColumn& referencedTableColumn) :
+												mTableColumn(tableColumn), mReferencedTable(referencedTable),
+														mReferencedTableColumn(referencedTableColumn)
+												{}
+
+											// Instance methods
+				const	CSQLiteTableColumn&	getTableColumn() const
+												{ return mTableColumn; }
+				const	CSQLiteTable&		getReferencedTable() const
+												{ return mReferencedTable; }
+				const	CSQLiteTableColumn&	getReferencedTableColumn() const
+												{ return mReferencedTableColumn; }
 
 			// Properties
-			const	CSQLiteTableColumn&	mTableColumn;
-			const	CSQLiteTable&		mReferencedTable;
-			const	CSQLiteTableColumn&	mReferencedTableColumn;
+			private:
+				const	CSQLiteTableColumn&	mTableColumn;
+				const	CSQLiteTable&		mReferencedTable;
+				const	CSQLiteTableColumn&	mReferencedTableColumn;
 		};
 
 	// Classes
@@ -70,7 +82,8 @@ class CSQLiteTableColumn : public CEquatable {
 	// Methods
 	public:
 											// Lifecycle methods
-											CSQLiteTableColumn(const CString& name, Kind kind, Options options = kNone,
+											CSQLiteTableColumn(const CString& name, Kind kind,
+													Options options = kOptionsNone,
 													OV<SSQLiteValue> defaultValue = OV<SSQLiteValue>());
 											CSQLiteTableColumn(const CSQLiteTableColumn& other);
 											~CSQLiteTableColumn();
@@ -99,11 +112,12 @@ class CSQLiteTableColumn : public CEquatable {
 
 		static	CSQLiteTableColumn			dateISO8601FractionalSecondsAutoSet(const CString& name);
 		static	CSQLiteTableColumn			dateISO8601FractionalSecondsAutoUpdate(const CString& name);
+		static	CSQLiteTableColumn			sum(const CSQLiteTableColumn& tableColumn);
 
 	// Properties
 	public:
-		static	const	CSQLiteTableColumn	mRowID;
 		static	const	CSQLiteTableColumn	mAll;
+		static	const	CSQLiteTableColumn	mRowID;
 
 	private:
 						Internals*			mInternals;

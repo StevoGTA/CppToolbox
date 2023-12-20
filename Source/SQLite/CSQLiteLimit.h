@@ -1,21 +1,15 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CSQLiteOrderBy.h			©2021 Stevo Brock	All rights reserved.
+//	CSQLiteLimit.h			©2023 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-#include "CSQLiteTableColumn.h"
+#include "CString.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteOrderBy
+// MARK: CSQLiteLimit
 
-class CSQLiteOrderBy {
-	// Order
-	enum Order {
-		kOrderAscending,
-		kOrderDescending,
-	};
-
+class CSQLiteLimit {
 	// Classes
 	private:
 		class Internals;
@@ -23,10 +17,8 @@ class CSQLiteOrderBy {
 	// Methods
 	public:
 							// Lifecycle methods
-							CSQLiteOrderBy(const CSQLiteTable& table, CSQLiteTableColumn& tableColumn,
-									Order order = kOrderAscending);
-							CSQLiteOrderBy(CSQLiteTableColumn& tableColumn, Order order = kOrderAscending);
-							~CSQLiteOrderBy();
+							CSQLiteLimit(UInt32 limit, const OV<UInt32>& offset = OV<UInt32>());
+							~CSQLiteLimit();
 
 							// Instance methods
 		const	CString&	getString() const;

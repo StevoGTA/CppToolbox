@@ -15,18 +15,48 @@
 
 class CSQLiteDatabase::Internals {
 	public:
-		Internals(sqlite3* database, CSQLiteDatabase::Options options) :
-			mDatabase(database), mStatementPerformer(database)
-			{
-				// Finish setup
-				if (options & CSQLiteDatabase::kWALMode)
-					// Activate WAL mode
-					sqlite3_exec(mDatabase, "PRAGMA journal_mode = WAL;", nil, nil, nil);
-			}
-		~Internals()
-			{
-				sqlite3_close(mDatabase);
-			}
+		struct TransactionInfo {
+			public:
+									TransactionInfo(TransactionProc transactionProc, void* userData) :
+										mTransactionProc(transactionProc), mUserData(userData)
+										{}
+
+				TransactionResult	perform()
+										{ return mTransactionProc(mUserData); }
+
+			private:
+				TransactionProc	mTransactionProc;
+				void*			mUserData;
+		};
+
+																Internals(sqlite3* database,
+																		CSQLiteDatabase::Options options) :
+																	mDatabase(database), mStatementPerformer(database)
+																	{}
+																~Internals()
+																	{
+																		sqlite3_close(mDatabase);
+																	}
+
+		static	CSQLiteStatementPerformer::TransactionResult	performAsTransaction(TransactionProc transactionProc,
+																		TransactionInfo* transactionInfo)
+																	{
+																		// Perform
+																		TransactionResult	transactionResult =
+																									transactionInfo->
+																											perform();
+
+																		// Handle result
+																		switch (transactionResult) {
+																			case kTransactionResultCommit:
+																					return CSQLiteStatementPerformer::
+																							kTransactionResultCommit;
+
+																			case kTransactionResultRollback:
+																					return CSQLiteStatementPerformer::
+																							kTransactionResultRollback;
+																		}
+																	}
 
 		sqlite3*					mDatabase;
 		CSQLiteStatementPerformer	mStatementPerformer;
@@ -49,12 +79,17 @@ CSQLiteDatabase::CSQLiteDatabase(const CFile& file, Options options)
 		// Error
 		CLogServices::logError(
 				CString(OSSTR("CSQLiteDatabase failed to open with ")) + CString(result) +
-						CString(OSSTR(" (\"")) + CString(sqlite3_errmsg(database)) + CString(OSSTR("\")")));
+						CString(OSSTR(" (\"")) + CString(sqlite3_errstr(result)) + CString(OSSTR("\")")));
 		AssertFail();
 	}
 
 	// Setup internals
 	mInternals = new Internals(database, options);
+
+	// Check options
+	if (options & kOptionsWALMode)
+		// Activate WAL mode
+		sqlite3_exec(database, "PRAGMA journal_mode = WAL;", nil, nil, nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,12 +109,17 @@ CSQLiteDatabase::CSQLiteDatabase(const CFolder& folder, const CString& name, Opt
 		// Error
 		CLogServices::logError(
 				CString(OSSTR("CSQLiteDatabase failed to open with ")) + CString(result) +
-						CString(OSSTR(" (\"")) + CString(sqlite3_errmsg(database)) + CString(OSSTR("\")")));
+						CString(OSSTR(" (\"")) + CString(sqlite3_errstr(result)) + CString(OSSTR("\")")));
 		AssertFail();
 	}
 
 	// Setup internals
 	mInternals = new Internals(database, options);
+
+	// Check options
+	if (options & kOptionsWALMode)
+		// Activate WAL mode
+		sqlite3_exec(database, "PRAGMA journal_mode = WAL;", nil, nil, nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -90,6 +130,13 @@ CSQLiteDatabase::~CSQLiteDatabase()
 }
 
 // MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<CSQLiteTable> CSQLiteDatabase::getAllTables() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CSQLiteTable::getAll(mInternals->mStatementPerformer);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 CSQLiteTable CSQLiteDatabase::getTable(const CString& name, CSQLiteTable::Options options,
@@ -104,9 +151,12 @@ CSQLiteTable CSQLiteDatabase::getTable(const CString& name, CSQLiteTable::Option
 void CSQLiteDatabase::performAsTransaction(TransactionProc transactionProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	Internals::TransactionInfo	transactionInfo(transactionProc, userData);
+
 	// Perform as transaction
-	mInternals->mStatementPerformer.performAsTransaction((CSQLiteStatementPerformer::TransactionProc) transactionProc,
-			userData);
+	mInternals->mStatementPerformer.performAsTransaction(
+			(CSQLiteStatementPerformer::TransactionProc) Internals::performAsTransaction, &transactionInfo);
 }
 
 // Class methods

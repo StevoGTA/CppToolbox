@@ -11,114 +11,130 @@
 #include "CThread.h"
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: Types
+
+typedef	CSQLiteStatementPerformer::LastInsertRowIDProc	LastInsertRowIDProc;
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: CSQLiteStatement
 
 class CSQLiteStatement {
 	// Methods
 	public:
-								CSQLiteStatement(const CString& statement, const TArray<SSQLiteValue>& values,
-										CSQLiteStatementPerformer::LastInsertRowIDProc lastInsertRowIDProc,
-										void* userData) :
-									mString(statement), mValues(values), mLastInsertRowIDProc(lastInsertRowIDProc),
-											mUserData(userData)
-									{}
-								CSQLiteStatement(const CString& statement, const TArray<SSQLiteValue>& values) :
-									mString(statement), mValues(values), mLastInsertRowIDProc(nil), mUserData(nil)
-									{}
-								CSQLiteStatement(const CString& statement) :
-									mString(statement), mValues(TNArray<SSQLiteValue>()), mLastInsertRowIDProc(nil),
-											mUserData(nil)
-									{}
-								CSQLiteStatement(const CSQLiteStatement& other) :
-									mString(other.mString), mValues(other.mValues),
-											mLastInsertRowIDProc(other.mLastInsertRowIDProc), mUserData(other.mUserData)
-									{}
+					CSQLiteStatement(const CString& statement, const TArray<SSQLiteValue>& values,
+							LastInsertRowIDProc lastInsertRowIDProc, void* userData) :
+						mString(statement), mValues(values), mLastInsertRowIDProc(lastInsertRowIDProc),
+								mSQLiteResultsRowProc(nil), mUserData(userData)
+						{}
+					CSQLiteStatement(const CString& statement, const TArray<SSQLiteValue>& values,
+							CSQLiteResultsRow::Proc resultsRowProc, void* userData) :
+						mString(statement), mValues(values), mLastInsertRowIDProc(nil),
+								mSQLiteResultsRowProc(resultsRowProc), mUserData(userData)
+						{}
+					CSQLiteStatement(const CString& statement) :
+						mString(statement), mValues(TNArray<SSQLiteValue>()), mLastInsertRowIDProc(nil),
+								mSQLiteResultsRowProc(nil), mUserData(nil)
+						{}
+					CSQLiteStatement(const CSQLiteStatement& other) :
+						mString(other.mString), mValues(other.mValues),
+								mLastInsertRowIDProc(other.mLastInsertRowIDProc),
+								mSQLiteResultsRowProc(other.mSQLiteResultsRowProc),
+								mUserData(other.mUserData)
+						{}
 
-		OI<CSQLiteResultsRow>	perform(sqlite3* database)
-									{
-										// Prepare
-										sqlite3_stmt*	statement;
-										if (sqlite3_prepare_v2(database, *mString.getCString(), -1, &statement, nil) !=
-												SQLITE_OK) {
-											// Error
-											CLogServices::logError(
-													CString(OSSTR("SQLiteStatement could not prepare query with \"")) +
-													mString + CString(OSSTR("\", with error \"")) +
-													CString(sqlite3_errmsg(database)) + CString(OSSTR("\"")));
-											AssertFail();
-										}
+		OV<SError>	perform(sqlite3* database)
+						{
+							// Prepare
+							sqlite3_stmt*	statement;
+							if (sqlite3_prepare_v2(database, *mString.getCString(), -1, &statement, nil) !=
+									SQLITE_OK) {
+								// Error
+								CLogServices::logError(
+										CString(OSSTR("SQLiteStatement could not prepare query with \"")) + mString +
+										CString(OSSTR("\", with error \"")) + CString(sqlite3_errmsg(database)) +
+										CString(OSSTR("\"")));
+								AssertFail();
+							}
 
-										// Bind values
-										for (CArray::ItemIndex i = 0; i < mValues.getCount(); i++) {
-											// Setup
-											const	SSQLiteValue&	value = mValues[i];
+							// Bind values
+							for (CArray::ItemIndex i = 0; i < mValues.getCount(); i++) {
+								// Setup
+								const	SSQLiteValue&	value = mValues[i];
 
-											// Check value type
-											switch (value.mType) {
-												case SSQLiteValue::kInt64:
-													// Int64
-													sqlite3_bind_int64(statement, i + 1, value.mValue.mInt64);
-													break;
+								// Check value type
+								switch (value.getType()) {
+									case SSQLiteValue::kTypeData:
+										// Data
+										sqlite3_bind_blob(statement, i + 1, value.getData().getBytePtr(),
+												(int) value.getData().getByteCount(), SQLITE_STATIC);
+										break;
 
-												case SSQLiteValue::kFloat64:
-													// Float64
-													sqlite3_bind_double(statement, i + 1, value.mValue.mFloat64);
-													break;
+									case SSQLiteValue::kTypeFloat64:
+										// Float64
+										sqlite3_bind_double(statement, i + 1, value.getFloat64());
+										break;
 
-												case SSQLiteValue::kString:
-													// String
-													sqlite3_bind_text(statement, i + 1,
-															*value.mValue.mString->getCString(), -1, SQLITE_TRANSIENT);
-													break;
+									case SSQLiteValue::kTypeInt64:
+										// Int64
+										sqlite3_bind_int64(statement, i + 1, value.getInt64());
+										break;
 
-												case SSQLiteValue::kData:
-													// Data
-													sqlite3_bind_blob(statement, i + 1,
-															value.mValue.mData->getBytePtr(),
-															(int) value.mValue.mData->getByteCount(), SQLITE_STATIC);
-													break;
+									case SSQLiteValue::kTypeString:
+										// String
+										sqlite3_bind_text(statement, i + 1, *value.getString().getCString(), -1,
+												SQLITE_TRANSIENT);
+										break;
 
-												case SSQLiteValue::kLastInsertRowID:
-													// Last insert row ID
-													sqlite3_bind_int64(statement, i + 1,
-															sqlite3_last_insert_rowid(database));
-													break;
+									case SSQLiteValue::kTypeLastInsertRowID:
+										// Last insert row ID
+										sqlite3_bind_int64(statement, i + 1,
+												sqlite3_last_insert_rowid(database));
+										break;
 
-												case SSQLiteValue::kNull:
-													// Null
-													sqlite3_bind_null(statement, i + 1);
-													break;
-											}
-										}
+									case SSQLiteValue::kTypeNull:
+										// Null
+										sqlite3_bind_null(statement, i + 1);
+										break;
+								}
+							}
 
-										// Perform
-										if (mLastInsertRowIDProc == nil)
-											// Perform as query
-											return OI<CSQLiteResultsRow>(new CSQLiteResultsRow(statement));
-										else {
-											// Perform as step
-											if (sqlite3_step(statement) != SQLITE_DONE) {
-												// Error
-												CLogServices::logError(
-														CString(OSSTR("SQLiteStatement could not prepare query with \""))
-														+ mString + CString(OSSTR("\", with error \"")) +
-														CString(sqlite3_errmsg(database)) + CString(OSSTR("\"")));
-												AssertFail();
-											}
+							// Perform
+							if (mSQLiteResultsRowProc != nil) {
+								// Perform as query
+								CSQLiteResultsRow	sqliteResultsRow(statement);
+								while (sqlite3_step(statement) == SQLITE_ROW) {
+									// Call proc
+									OV<SError>	error = mSQLiteResultsRowProc(sqliteResultsRow, mUserData);
+									ReturnErrorIfError(error);
+								}
 
-											// Check for last insert row ID proc
-											if (mLastInsertRowIDProc != nil)
-												// Call proc
-												mLastInsertRowIDProc(sqlite3_last_insert_rowid(database), mUserData);
+								return OV<SError>();
+							} else {
+								// Perform as step
+								if (sqlite3_step(statement) != SQLITE_DONE) {
+									// Error
+									CLogServices::logError(
+											CString(OSSTR("SQLiteStatement could not prepare query with \""))
+											+ mString + CString(OSSTR("\", with error \"")) +
+											CString(sqlite3_errmsg(database)) + CString(OSSTR("\"")));
+									AssertFail();
+								}
 
-											return OI<CSQLiteResultsRow>();
-										}
-									}
+								// Check for last insert row ID proc
+								if (mLastInsertRowIDProc != nil)
+									// Call proc
+									mLastInsertRowIDProc(sqlite3_last_insert_rowid(database), mUserData);
 
-		CString											mString;
-		TArray<SSQLiteValue>							mValues;
-		CSQLiteStatementPerformer::LastInsertRowIDProc	mLastInsertRowIDProc;
-		void*											mUserData;
+								return OV<SError>();
+							}
+						}
+
+		CString					mString;
+		TArray<SSQLiteValue>	mValues;
+		LastInsertRowIDProc		mLastInsertRowIDProc;
+		CSQLiteResultsRow::Proc	mSQLiteResultsRowProc;
+		void*					mUserData;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -183,19 +199,20 @@ void CSQLiteStatementPerformer::addToTransactionOrPerform(const CString& stateme
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSQLiteResultsRow CSQLiteStatementPerformer::perform(const CString& statement, const TArray<SSQLiteValue>& values)
+OV<SError> CSQLiteStatementPerformer::perform(const CString& statement, const TArray<SSQLiteValue>& values,
+		CSQLiteResultsRow::Proc resultsRowProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Lock
 	mInternals->mLock.lock();
 
 	// Perform
-	OI<CSQLiteResultsRow>	resultsRow = CSQLiteStatement(statement, values).perform(mInternals->mDatabase);
+	OV<SError>	error = CSQLiteStatement(statement, values, resultsRowProc, userData).perform(mInternals->mDatabase);
 
 	// Unlock
 	mInternals->mLock.unlock();
 
-	return *resultsRow;
+	return error;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -223,7 +240,7 @@ void CSQLiteStatementPerformer::performAsTransaction(TransactionProc transaction
 	mInternals->mTransacftionsMapLock.unlockForWriting();
 
 	// Call proc and check result
-	if (transactionProc(userData) == kCommit) {
+	if (transactionProc(userData) == kTransactionResultCommit) {
 		// End transaction
 		mInternals->mTransacftionsMapLock.lockForWriting();
 		TNArray<CSQLiteStatement>	sqliteStatements = *mInternals->mTransactionsMap[currentThreadRef];

@@ -360,7 +360,10 @@ class CString : public CHashable {
 
 		static			CString			make(OSStringType format, ...);
 		static			CString			make(OSStringType format, va_list args);
+
 		static			bool			isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet);
+		static			bool			isEmpty(const CString& string, void* userData);
+		static			bool			isNotEmpty(const CString& string, void* userData);
 
 #if defined(TARGET_OS_WINDOWS)
 		static			void			setupLocalization(const CData& stringsFileData);

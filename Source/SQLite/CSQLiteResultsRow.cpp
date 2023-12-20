@@ -56,7 +56,7 @@ bool CSQLiteResultsRow::moveToNext() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SInt64> CSQLiteResultsRow::getSInt64(const CSQLiteTableColumn& tableColumn) const
+OV<SInt64> CSQLiteResultsRow::getInteger(const CSQLiteTableColumn& tableColumn) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -71,7 +71,7 @@ OV<SInt64> CSQLiteResultsRow::getSInt64(const CSQLiteTableColumn& tableColumn) c
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<Float64> CSQLiteResultsRow::getFloat64(const CSQLiteTableColumn& tableColumn) const
+OV<Float64> CSQLiteResultsRow::getReal(const CSQLiteTableColumn& tableColumn) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
@@ -86,7 +86,7 @@ OV<Float64> CSQLiteResultsRow::getFloat64(const CSQLiteTableColumn& tableColumn)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CString> CSQLiteResultsRow::getString(const CSQLiteTableColumn& tableColumn) const
+OV<CString> CSQLiteResultsRow::getText(const CSQLiteTableColumn& tableColumn) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight

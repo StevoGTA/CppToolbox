@@ -14,7 +14,7 @@
 class CSQLiteResultsRow {
 	// Procs
 	public:
-		typedef	void	(*Proc)(const CSQLiteResultsRow& resultsRow, void* userData);
+		typedef	OV<SError>	(*Proc)(const CSQLiteResultsRow& resultsRow, void* userData);
 
 	// Classes
 	private:
@@ -29,16 +29,16 @@ class CSQLiteResultsRow {
 					// Instance methods
 		bool		moveToNext() const;
 
-		OV<SInt64>	getSInt64(const CSQLiteTableColumn& tableColumn) const;
+		OV<SInt64>	getInteger(const CSQLiteTableColumn& tableColumn) const;
 		OV<UInt32>	getUInt32(const CSQLiteTableColumn& tableColumn) const
 						{
 							// Setup
-							OV<SInt64>	value = getSInt64(tableColumn);
+							OV<SInt64>	value = getInteger(tableColumn);
 
 							return value.hasValue() ? OV<UInt32>((UInt32) *value) : OV<UInt32>();
 						}
-		OV<Float64>	getFloat64(const CSQLiteTableColumn& tableColumn) const;
-		OV<CString>	getString(const CSQLiteTableColumn& tableColumn) const;
+		OV<Float64>	getReal(const CSQLiteTableColumn& tableColumn) const;
+		OV<CString>	getText(const CSQLiteTableColumn& tableColumn) const;
 		OV<CData>	getData(const CSQLiteTableColumn& tableColumn) const;
 
 	// Properties

@@ -29,8 +29,8 @@ class CSQLiteTableColumn::Internals : public TReferenceCountableAutoDelete<Inter
 
 // MARK: Properties
 
-const	CSQLiteTableColumn	CSQLiteTableColumn::mRowID(CString(OSSTR("rowid")), kKindInteger);
 const	CSQLiteTableColumn	CSQLiteTableColumn::mAll(CString(OSSTR("*")), kKindInteger);
+const	CSQLiteTableColumn	CSQLiteTableColumn::mRowID(CString(OSSTR("rowid")), kKindInteger);
 
 // MARK: Lifecycle methods
 
@@ -91,7 +91,7 @@ OV<SSQLiteValue> CSQLiteTableColumn::getDefaultValue() const
 CSQLiteTableColumn CSQLiteTableColumn::dateISO8601FractionalSecondsAutoSet(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CSQLiteTableColumn(name, kKindDateISO8601FractionalSecondsAutoSet, kNotNull,
+	return CSQLiteTableColumn(name, kKindDateISO8601FractionalSecondsAutoSet, kOptionsNotNull,
 			OV<SSQLiteValue>(CString(OSSTR("strftime('%Y-%m-%dT%H:%M:%f', 'now', 'localtime')"))));
 }
 
@@ -99,6 +99,13 @@ CSQLiteTableColumn CSQLiteTableColumn::dateISO8601FractionalSecondsAutoSet(const
 CSQLiteTableColumn CSQLiteTableColumn::dateISO8601FractionalSecondsAutoUpdate(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CSQLiteTableColumn(name, kKindDateISO8601FractionalSecondsAutoUpdate, kNotNull,
+	return CSQLiteTableColumn(name, kKindDateISO8601FractionalSecondsAutoUpdate, kOptionsNotNull,
 			OV<SSQLiteValue>(CString(OSSTR("strftime('%Y-%m-%dT%H:%M:%f', 'now', 'localtime')"))));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CSQLiteTableColumn CSQLiteTableColumn::sum(const CSQLiteTableColumn& tableColumn)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CSQLiteTableColumn(CString(OSSTR("SUM(`\(tableColumn.name)`)")), kKindInteger);
 }

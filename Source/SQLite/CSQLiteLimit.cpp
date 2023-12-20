@@ -1,50 +1,38 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CSQLiteOrderBy.cpp			©2021 Stevo Brock	All rights reserved.
+//	CSQLiteLimit.cpp			©2023	Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CSQLiteOrderBy.h"
-
-#include "CSQLiteTable.h"
+#include "CSQLiteLimit.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CSQLiteOrderBy::Internals
+// MARK: CSQLiteLimit::Internals
 
-class CSQLiteOrderBy::Internals {
+class CSQLiteLimit::Internals {
 	public:
-		Internals() {}
+		Internals(const CString& string) : mString(string) {}
 
-		CString	mString;
+	CString	mString;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSQLiteOrderBy
+// MARK: - CSQLiteLimit
 
 // MARK: Lifecycle methods
+
 //----------------------------------------------------------------------------------------------------------------------
-CSQLiteOrderBy::CSQLiteOrderBy(const CSQLiteTable& table, CSQLiteTableColumn& tableColumn, Order order)
+CSQLiteLimit::CSQLiteLimit(UInt32 limit, const OV<UInt32>& offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new Internals();
-	mInternals->mString =
-			CString(OSSTR(" ORDER BY `")) + table.getName() + CString(OSSTR("`.`")) + tableColumn.getName() +
-					CString(OSSTR("`")) + CString((order == kOrderAscending) ? OSSTR("ASC") : OSSTR("DESC"));
+	mInternals =
+			new Internals(
+					CString(OSSTR(" LIMIT ")) + CString(limit) +
+							(offset.hasValue() ? CString(OSSTR(" OFFSET ")) + CString(*offset) : CString::mEmpty));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSQLiteOrderBy::CSQLiteOrderBy(CSQLiteTableColumn& tableColumn, Order order)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	mInternals = new Internals();
-	mInternals->mString =
-			CString(OSSTR(" ORDER BY `")) + tableColumn.getName() + CString(OSSTR("`")) +
-					CString((order == kOrderAscending) ? OSSTR("ASC") : OSSTR("DESC"));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CSQLiteOrderBy::~CSQLiteOrderBy()
+CSQLiteLimit::~CSQLiteLimit()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
@@ -53,7 +41,7 @@ CSQLiteOrderBy::~CSQLiteOrderBy()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-const CString& CSQLiteOrderBy::getString() const
+const CString& CSQLiteLimit::getString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mString;

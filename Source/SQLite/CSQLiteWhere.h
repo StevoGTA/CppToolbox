@@ -14,13 +14,26 @@ class CSQLiteWhere {
 	// ValueGroup
 	public:
 		struct ValueGroup {
-			// Lifecycle methods
-			ValueGroup(const CString& string, const TArray<SSQLiteValue>& values) : mString(string), mValues(values) {}
-			ValueGroup(const ValueGroup& other) : mString(other.mString), mValues(other.mValues) {}
+			public:
+				// Methods
+												// Lifecycle methods
+												ValueGroup(const CString& string, const TArray<SSQLiteValue>& values) :
+													mString(string), mValues(values)
+													{}
+												ValueGroup(const ValueGroup& other) :
+													mString(other.mString), mValues(other.mValues)
+													{}
+
+												// Instance methods
+				const	CString&				getString() const
+													{ return mString; }
+				const	TArray<SSQLiteValue>	getValues() const
+													{ return mValues; }
 
 			// Properties
-			CString					mString;
-			TArray<SSQLiteValue>	mValues;
+			private:
+				CString					mString;
+				TArray<SSQLiteValue>	mValues;
 		};
 
 	// Classes
