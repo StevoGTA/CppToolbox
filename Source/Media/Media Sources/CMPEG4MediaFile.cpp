@@ -392,7 +392,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(moovContainerAtom.getError())));
 
 	// Iterate moov atom
-	CMediaTrackInfos	mediaTrackInfos;
+	SMediaSource::Tracks	mediaSourceTracks;
 	for (TIteratorD<CAtomReader::Atom> moovIterator = moovContainerAtom->getIterator();
 			moovIterator.hasValue(); moovIterator.advance()) {
 		// Check type
@@ -492,39 +492,37 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 			// Check track type
 			if (hdlrAtomPayload.getSubType() == ShdlrAtomPayload::kSubTypeSound) {
 				// Audio track
-				TVResult<CMediaTrackInfos::AudioTrackInfo>	audioTrackInfo =
-																	composeAudioTrackInfo(
+				TVResult<SMediaSource::Tracks::AudioTrack>	audioTrack =
+																	composeAudioTrack(
 																			importSetup.getRandomAccessDataSource(),
 																			importSetup.getOptions(),
 																			stsdDescriptionHeader.getType(), duration,
 																			internals);
-				if (audioTrackInfo.hasValue())
-					// Success
-					mediaTrackInfos.add(*audioTrackInfo);
-				else
-					// Error
-					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(audioTrackInfo.getError()));
+				ReturnValueIfResultError(audioTrack,
+						I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(audioTrack.getError())));
+
+				// Success
+				mediaSourceTracks.add(*audioTrack);
 			} else if (hdlrAtomPayload.getSubType() == ShdlrAtomPayload::kSubTypeVideo) {
 				// Video track
-				TVResult<CMediaTrackInfos::VideoTrackInfo>	videoTrackInfo =
-																	composeVideoTrackInfo(
+				TVResult<SMediaSource::Tracks::VideoTrack>	videoTrack =
+																	composeVideoTrack(
 																			importSetup.getRandomAccessDataSource(),
 																			importSetup.getOptions(),
 																			stsdDescriptionHeader.getType(), timeScale,
 																			duration, internals);
-				if (videoTrackInfo.hasValue())
-					// Success
-					mediaTrackInfos.add(*videoTrackInfo);
-				else
-					// Error
-					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrackInfo.getError()));
+				ReturnValueIfResultError(videoTrack,
+						I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrack.getError())));
+
+				// Success
+				mediaSourceTracks.add(*videoTrack);
 			}
 		} else
 			// Pass to any subclass
 			process(atomReader, *moovIterator);
 	}
 
-	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mID, mediaTrackInfos));
+	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mID, mediaSourceTracks));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -601,7 +599,7 @@ TArray<SMedia::PacketAndLocation> CMPEG4MediaFile::composePacketAndLocations(con
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInfo(
+TVResult<SMediaSource::Tracks::AudioTrack> CMPEG4MediaFile::composeAudioTrack(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, OSType type,
 		UniversalTimeInterval duration, const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
@@ -616,14 +614,14 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 			// Get configuration data
 			TVResult<CData>	configurationData = internals.getDecompressionData(sizeof(SstsdMP4ADescription));
 			ReturnValueIfResultError(configurationData,
-					TVResult<CMediaTrackInfos::AudioTrackInfo>(configurationData.getError()))
+					TVResult<SMediaSource::Tracks::AudioTrack>(configurationData.getError()))
 
 			// Compose format
 			OV<CAACAudioCodec::Info>	info =
 												CAACAudioCodec::composeInfo(*configurationData,
 														mp4ADescription.getChannelCount());
 			if (!info.hasValue())
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						CCodec::unsupportedConfigurationError(CString(type, true)));
 
 			SAudio::Format						audioFormat = CAACAudioCodec::composeAudioFormat(*info);
@@ -638,23 +636,23 @@ TVResult<CMediaTrackInfos::AudioTrackInfo> CMPEG4MediaFile::composeAudioTrackInf
 			// Add audio track
 			if (options & SMediaSource::kOptionsCreateDecoders)
 				// Add audio track with decode info
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
-						CMediaTrackInfos::AudioTrackInfo(audioFormat, mediaSegmentInfo,
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
+						SMediaSource::Tracks::AudioTrack(audioFormat, mediaSegmentInfo,
 								CAACAudioCodec::create(*info, randomAccessDataSource, mediaPacketAndLocations)));
 			else
 				// Add audio track
-				return TVResult<CMediaTrackInfos::AudioTrackInfo>(
-						CMediaTrackInfos::AudioTrackInfo(audioFormat, mediaSegmentInfo));
+				return TVResult<SMediaSource::Tracks::AudioTrack>(
+						SMediaSource::Tracks::AudioTrack(audioFormat, mediaSegmentInfo));
 			}
 
 		default:
 			// Unsupported audio codec
-			return TVResult<CMediaTrackInfos::AudioTrackInfo>(CCodec::unsupportedError(CString(type, true)));
+			return TVResult<SMediaSource::Tracks::AudioTrack>(CCodec::unsupportedError(CString(type, true)));
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInfo(
+TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, OSType type, UInt32 timeScale,
 		UniversalTimeInterval duration, const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
@@ -672,12 +670,12 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInf
 									internals.mAtomReader.readAtomPayload(
 											internals.mSTBLContainerAtom.getAtom(MAKE_OSTYPE('s', 't', 's', 's')));
 			ReturnValueIfResultError(stssAtomPayloadData,
-					TVResult<CMediaTrackInfos::VideoTrackInfo>(stssAtomPayloadData.getError()));
+					TVResult<SMediaSource::Tracks::VideoTrack>(stssAtomPayloadData.getError()));
 
 			// Get configuration data
 			TVResult<CData>	configurationData = internals.getDecompressionData(sizeof(SMP4stsdH264Description));
 			ReturnValueIfResultError(configurationData,
-					TVResult<CMediaTrackInfos::VideoTrackInfo>(configurationData.getError()))
+					TVResult<SMediaSource::Tracks::VideoTrack>(configurationData.getError()))
 
 			// Compose packet and locations
 			TArray<SMedia::PacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
@@ -707,19 +705,19 @@ TVResult<CMediaTrackInfos::VideoTrackInfo> CMPEG4MediaFile::composeVideoTrackInf
 					keyframeIndexes += stssAtomPayload.getKeyframeIndex(i);
 
 				// Add video track with decode info
-				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
-						CMediaTrackInfos::VideoTrackInfo(videoFormat, mediaSegmentInfo,
+				return TVResult<SMediaSource::Tracks::VideoTrack>(
+						SMediaSource::Tracks::VideoTrack(videoFormat, mediaSegmentInfo,
 								CH264VideoCodec::create(randomAccessDataSource, mediaPacketAndLocations,
 										*configurationData, timeScale, keyframeIndexes)));
 			} else
 				// Add video track
-				return TVResult<CMediaTrackInfos::VideoTrackInfo>(
-						CMediaTrackInfos::VideoTrackInfo(videoFormat, mediaSegmentInfo));
+				return TVResult<SMediaSource::Tracks::VideoTrack>(
+						SMediaSource::Tracks::VideoTrack(videoFormat, mediaSegmentInfo));
 			}
 
 		default:
 			// Unsupported video codec
-			return TVResult<CMediaTrackInfos::VideoTrackInfo>(CCodec::unsupportedError(CString(type, true)));
+			return TVResult<SMediaSource::Tracks::VideoTrack>(CCodec::unsupportedError(CString(type, true)));
 	}
 }
 

@@ -148,11 +148,11 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 	}
 
 	// Finalize
-	CMediaTrackInfos	mediaTrackInfos;
-	mediaTrackInfos.add(CMediaTrackInfos::AudioTrackInfo(*audioFormat, *mediaSegmentInfo, decodeAudioCodec));
+	SMediaSource::Tracks	mediaSourceTracks;
+	mediaSourceTracks.add(SMediaSource::Tracks::AudioTrack(*audioFormat, *mediaSegmentInfo, decodeAudioCodec));
 
 	return I<SMediaSource::ImportResult>(
-			new SMediaSource::ImportResult(MAKE_OSTYPE('w', 'a', 'v', 'e'), mediaTrackInfos, TNArray<CString>()));
+			new SMediaSource::ImportResult(MAKE_OSTYPE('w', 'a', 'v', 'e'), mediaSourceTracks, TNArray<CString>()));
 }
 
 // MARK: Class methods

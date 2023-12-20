@@ -63,23 +63,23 @@ static	SAudioProcessingFormats			sComposeAudioProcessingFormats(
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CAudioSource> CMediaEngine::getAudioSource(const CMediaTrackInfos::AudioTrackInfo& audioTrackInfo,
+I<CAudioSource> CMediaEngine::getAudioSource(const SMediaSource::Tracks::AudioTrack& audioTrack,
 		const CString& identifier) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return I<CAudioSource>(
-			new CAudioDecoder(audioTrackInfo.getMediaTrackFormat(), *audioTrackInfo.getCodec(), identifier));
+			new CAudioDecoder(audioTrack.getMediaTrackFormat(), *audioTrack.getDecodeCodec(), identifier));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CVideoSource> CMediaEngine::getVideoSource(const CMediaTrackInfos::VideoTrackInfo& videoTrackInfo,
+I<CVideoSource> CMediaEngine::getVideoSource(const SMediaSource::Tracks::VideoTrack& videoTrack,
 		const CString& identifier) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return I<CVideoSource>(
-			new CVideoDecoder(videoTrackInfo.getMediaTrackFormat(), *videoTrackInfo.getCodec(),
-					CVideoProcessor::Format(videoTrackInfo.getMediaTrackFormat().getFrameSize(),
-							videoTrackInfo.getMediaTrackFormat().getFramerate()),
+			new CVideoDecoder(videoTrack.getMediaTrackFormat(), *videoTrack.getDecodeCodec(),
+					CVideoProcessor::Format(videoTrack.getMediaTrackFormat().getFrameSize(),
+							videoTrack.getMediaTrackFormat().getFramerate()),
 					identifier));
 }
 

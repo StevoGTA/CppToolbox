@@ -144,7 +144,7 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 			// Open
 			mInternals->mFILE =
 					::fopen(*mInternals->mFile.getFilesystemPath().getString().getCString(CString::kEncodingUTF8),
-							!append ? "wb" : "ab+");
+							!append ? "wb+" : "ab+");
 
 			if (mInternals->mFILE != nil)
 				// Success

@@ -57,6 +57,21 @@ CAudioFrames::CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByte
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::CAudioFrames(const Info& info, UInt32 segmentIndex, bool isRead) :
+		CData(info.getSegments()[segmentIndex], info.getByteCount(), false)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mInternals =
+			new Internals(1, info.getByteCount(), info.getFrameCount(), info.getByteCount() / info.getFrameCount());
+
+	// Check if read
+	if (isRead)
+		// Read
+		mInternals->mCurrentFrameCount = info.getFrameCount();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CAudioFrames::~CAudioFrames()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -89,7 +104,7 @@ CAudioFrames::Info CAudioFrames::getReadInfo() const
 		// Update
 		segments += (void*) ((UInt8*) getBytePtr() + mInternals->mSegmentByteCount * i);
 
-	return Info(mInternals->mCurrentFrameCount, segments);
+	return Info(mInternals->mCurrentFrameCount, mInternals->mSegmentByteCount, segments);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -105,7 +120,8 @@ CAudioFrames::Info CAudioFrames::getWriteInfo()
 						mInternals->mSegmentByteCount * i +
 						mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment);
 
-	return Info(mInternals->mAllocatedFrameCount - mInternals->mCurrentFrameCount, segments);
+	return Info(mInternals->mAllocatedFrameCount - mInternals->mCurrentFrameCount, mInternals->mSegmentByteCount,
+			segments);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

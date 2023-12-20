@@ -47,16 +47,15 @@ class CMediaFoundationResamplerInternals {
 																						userData);
 
 									// Load
-									TVResult<SMedia::SourceInfo>	mediaSourceInfo =
-																			CMediaFoundationServices::load(mediaBuffer,
-																					internals.mAudioConverter,
-																					*internals.mInputAudioProcessingFormat);
-									if (mediaSourceInfo.hasError())
-										// Error
-										return OV<SError>(mediaSourceInfo.getError());
+									TVResult<CAudioProcessor::SourceInfo>	audioProcessorSourceInfo =
+																					CMediaFoundationServices::load(
+																							mediaBuffer,
+																							internals.mAudioConverter,
+																							*internals.mInputAudioProcessingFormat);
+									ReturnErrorIfResultError(audioProcessorSourceInfo);
 
 									// Store
-									internals.mSourceTimeInterval = mediaSourceInfo->getTimeInterval();
+									internals.mSourceTimeInterval = audioProcessorSourceInfo->getTimeInterval();
 
 									return OV<SError>();
 								}
@@ -169,13 +168,13 @@ TArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& in
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<SMedia::SourceInfo> CMediaFoundationResampler::performInto(CAudioFrames& audioFrames)
+TVResult<CAudioProcessor::SourceInfo> CMediaFoundationResampler::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
 	if (!mInternals->mResamplerTransform.hasInstance())
 		// Failed initialization
-		return TVResult<SMedia::SourceInfo>(sSetupDidNotCompleteError);
+		return TVResult<SourceInfo>(sSetupDidNotCompleteError);
 
 	// Check if need to create input sample
 	if (!mInternals->mInputSample.hasInstance()) {
@@ -185,7 +184,7 @@ TVResult<SMedia::SourceInfo> CMediaFoundationResampler::performInto(CAudioFrames
 											audioFramesRequirements.getFrameCount(1024) *
 													mInternals->mInputAudioProcessingFormat->getBytesPerFrame();
 		TCIResult<IMFSample>			sample = CMediaFoundationServices::createSample(byteCount);
-		ReturnValueIfResultError(sample, TVResult<SMedia::SourceInfo>(sample.getError()));
+		ReturnValueIfResultError(sample, TVResult<SourceInfo>(sample.getError()));
 		mInternals->mInputSample = sample.getInstance();
 	}
 
@@ -196,7 +195,7 @@ TVResult<SMedia::SourceInfo> CMediaFoundationResampler::performInto(CAudioFrames
 										CMediaFoundationServices::createSample(
 												audioFrames.getAllocatedFrameCount() *
 														mOutputAudioProcessingFormat->getBytesPerFrame());
-		ReturnValueIfResultError(sample, TVResult<SMedia::SourceInfo>(sample.getError()));
+		ReturnValueIfResultError(sample, TVResult<SourceInfo>(sample.getError()));
 
 		// Process output
 		OV<SError>	error =
@@ -205,16 +204,16 @@ TVResult<SMedia::SourceInfo> CMediaFoundationResampler::performInto(CAudioFrames
 									CMediaFoundationServices::ProcessOutputInfo(
 											CMediaFoundationResamplerInternals::fillInputBuffer,
 											mInternals->mInputSample, mInternals));
-		ReturnValueIfError(error, TVResult<SMedia::SourceInfo>(*error));
+		ReturnValueIfError(error, TVResult<SourceInfo>(*error));
 
 		// Complete write
 		TVResult<UInt32>	result =
 									CMediaFoundationServices::completeWrite(*sample.getInstance(), 0, audioFrames,
 											*mOutputAudioProcessingFormat);
-		ReturnValueIfResultError(result, TVResult<SMedia::SourceInfo>(result.getError()));
+		ReturnValueIfResultError(result, TVResult<SourceInfo>(result.getError()));
 	}
 
-	return TVResult<SMedia::SourceInfo>(SMedia::SourceInfo(mInternals->mSourceTimeInterval));
+	return TVResult<SourceInfo>(SourceInfo(mInternals->mSourceTimeInterval));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -84,41 +84,76 @@ struct SMedia {
 			CData	mData;
 	};
 
+	// Segment
+	public:
+		struct Segment {
+			// Methods
+			public:
+													// Lifecycle methods
+													Segment() : mStartTimeInterval(0.0) {}
+													Segment(UniversalTimeInterval startTimeInterval,
+															const OV<UniversalTimeInterval>& durationTimeInterval) :
+														mStartTimeInterval(startTimeInterval),
+																mDurationTimeInterval(durationTimeInterval)
+														{}
+													Segment(const Segment& other) :
+														mStartTimeInterval(other.mStartTimeInterval),
+																mDurationTimeInterval(other.mDurationTimeInterval)
+														{}
+
+													// Instance methods
+						UniversalTimeInterval		getStartTimeInterval() const
+														{ return mStartTimeInterval; }
+				const	OV<UniversalTimeInterval>&	getDurationTimeInterval() const
+														{ return mDurationTimeInterval; }
+
+						OV<UniversalTimeInterval>	getEndTimeInterval() const
+														{ return mDurationTimeInterval.hasValue() ?
+																OV<UniversalTimeInterval>(
+																		mStartTimeInterval + *mDurationTimeInterval) :
+																OV<UniversalTimeInterval>(); }
+
+						Segment&					operator=(const Segment& other)
+														{
+															// Store
+															mStartTimeInterval = other.mStartTimeInterval;
+															mDurationTimeInterval = mDurationTimeInterval;
+
+															return *this;
+														}
+
+			// Properties
+			private:
+				UniversalTimeInterval		mStartTimeInterval;
+				OV<UniversalTimeInterval>	mDurationTimeInterval;
+		};
+
 	// SegmentInfo
-	struct SegmentInfo {
-								// Lifecycle methods
-								SegmentInfo(UniversalTimeInterval duration, UInt32 bitrate) :
-									mDuration(duration), mBitrate(bitrate)
-									{}
-								SegmentInfo(UniversalTimeInterval duration, UInt64 byteCount) :
-									mDuration(duration),
-											mBitrate((UInt32) ((Float32) byteCount * 8 / (Float32) duration))
-									{}
+	public:
+		struct SegmentInfo {
+			// Methods
+			public:
+										// Lifecycle methods
+										SegmentInfo(UniversalTimeInterval duration, UInt32 bitrate) :
+											mDuration(duration), mBitrate(bitrate)
+											{}
+										SegmentInfo(UniversalTimeInterval duration, UInt64 byteCount) :
+											mDuration(duration),
+													mBitrate((UInt32) ((Float32) byteCount * 8 / (Float32) duration))
+											{}
+										SegmentInfo(const SegmentInfo& other) :
+											mDuration(other.mDuration), mBitrate(other.mBitrate)
+											{}
 
-								// Instance methods
-		UniversalTimeInterval	getDuration() const
-									{ return mDuration; }
-		UInt32					getBitrate() const
-									{ return mBitrate; }
+										// Instance methods
+				UniversalTimeInterval	getDuration() const
+											{ return mDuration; }
+				UInt32					getBitrate() const
+											{ return mBitrate; }
 
-		// Properties
-		private:
-			UniversalTimeInterval	mDuration;
-			UInt32					mBitrate;
-	};
-
-	// SourceInfo
-	struct SourceInfo {
-									// Lifecycle methods
-									SourceInfo(UniversalTimeInterval timeInterval) : mTimeInterval(timeInterval) {}
-									SourceInfo(const SourceInfo& other) : mTimeInterval(other.mTimeInterval) {}
-
-									// Instance methods
-			UniversalTimeInterval	getTimeInterval() const
-										{ return mTimeInterval; }
-
-		// Properties
-		private:
-			UniversalTimeInterval	mTimeInterval;
-	};
+			// Properties
+			private:
+				UniversalTimeInterval	mDuration;
+				UInt32					mBitrate;
+		};
 };

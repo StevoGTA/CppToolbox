@@ -90,8 +90,7 @@ class CMediaPlayer::Internals {
 						Internals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
 								const CMediaPlayer::Info& info) :
 							mMediaPlayer(mediaPlayer), mMessageQueues(messageQueues), mInfo(info),
-									mSourceWindowStartTimeInterval(0.0), mCurrentPosition(0.0), mEndOfDataCount(0),
-									mCurrentLoopCount(0)
+									mCurrentPosition(0.0), mEndOfDataCount(0), mCurrentLoopCount(0)
 							{}
 
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
@@ -118,7 +117,7 @@ class CMediaPlayer::Internals {
 								// Iterate all video frame stores
 								for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++)
 									// Update video decoder
-									internals.mMediaPlayer.getVideoProcessor(i)->notePositionUpdated(
+									internals.mMediaPlayer.getVideoDestination(i)->notePositionUpdated(
 											internals.mCurrentPosition);
 
 								// Call proc
@@ -152,13 +151,13 @@ class CMediaPlayer::Internals {
 										// Reset and start playback again
 										for (UInt32 i = 0; i < internals.mMediaPlayer.getAudioTrackCount(); i++) {
 											// Reset and play
-											internals.mMediaPlayer.getAudioProcessor(i)->reset();
-											internals.mMediaPlayer.getAudioProcessor(i)->play();
+											internals.mMediaPlayer.getAudioDestination(i)->reset();
+											internals.mMediaPlayer.getAudioDestination(i)->play();
 										}
 										for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++) {
 											// Reset and resume
-											internals.mMediaPlayer.getVideoProcessor(i)->reset();
-											internals.mMediaPlayer.getVideoProcessor(i)->resume();
+											internals.mMediaPlayer.getVideoDestination(i)->reset();
+											internals.mMediaPlayer.getVideoDestination(i)->resume();
 										}
 									} else {
 										// Finished
@@ -223,7 +222,7 @@ class CMediaPlayer::Internals {
 				CSRSWMessageQueues&		mMessageQueues;
 				CMediaPlayer::Info		mInfo;
 
-				UniversalTimeInterval	mSourceWindowStartTimeInterval;
+				SMedia::Segment			mMediaSegment;
 				UniversalTimeInterval	mCurrentPosition;
 				OV<UInt32>				mCurrentFrameIndex;
 				UInt32					mEndOfDataCount;
@@ -263,17 +262,17 @@ CMediaPlayer::~CMediaPlayer()
 	// Cleanup
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
 		// Remove message queue
-		CMediaPlayerAudioPlayer&	audioPlayer = (CMediaPlayerAudioPlayer&) *getAudioProcessor(i);
+		CMediaPlayerAudioPlayer&	audioPlayer = (CMediaPlayerAudioPlayer&) *getAudioDestination(i);
 		mInternals->mMessageQueues.remove(audioPlayer.mMessageQueue);
 	}
-	removeAllAudioProcessors();
+	removeAllAudioDestinations();
 
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++) {
 		// Remove message queue
-		CMediaPlayerVideoFrameStore&	videoFrameStore = (CMediaPlayerVideoFrameStore&) *getVideoProcessor(i);
+		CMediaPlayerVideoFrameStore&	videoFrameStore = (CMediaPlayerVideoFrameStore&) *getVideoDestination(i);
 		mInternals->mMessageQueues.remove(videoFrameStore.mMessageQueue);
 	}
-	removeAllVideoProcessors();
+	removeAllVideoDestinations();
 
 	// Cleanup
 	Delete(mInternals);
@@ -282,37 +281,36 @@ CMediaPlayer::~CMediaPlayer()
 // MARK: CMediaDestination methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex)
+void CMediaPlayer::add(const I<CAudioDestination>& audioDestination, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Do super
-	TMediaDestination<CAudioPlayer, CVideoFrameStore>::add(audioProcessor, trackIndex);
+	TMediaDestination<CAudioPlayer, CVideoFrameStore>::add(audioDestination, trackIndex);
 
 	// Add message queue
-	mInternals->mMessageQueues.add(((const I<CMediaPlayerAudioPlayer>&) audioProcessor)->mMessageQueue);
+	mInternals->mMessageQueues.add(((const I<CMediaPlayerAudioPlayer>&) audioDestination)->mMessageQueue);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex)
+void CMediaPlayer::add(const I<CVideoDestination>& videoDestination, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Do super
-	TMediaDestination<CAudioPlayer, CVideoFrameStore>::add(videoProcessor, trackIndex);
+	TMediaDestination<CAudioPlayer, CVideoFrameStore>::add(videoDestination, trackIndex);
 
 	// Add message queue
-	mInternals->mMessageQueues.add(((const I<CMediaPlayerVideoFrameStore>&) videoProcessor)->mMessageQueue);
+	mInternals->mMessageQueues.add(((const I<CMediaPlayerVideoFrameStore>&) videoDestination)->mMessageQueue);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CMediaPlayer::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mSourceWindowStartTimeInterval = startTimeInterval;
+	mInternals->mMediaSegment = mediaSegment;
 
 	// Do super
-	CMediaDestination::setSourceWindow(startTimeInterval, durationTimeInterval);
+	CMediaDestination::setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -345,7 +343,7 @@ void CMediaPlayer::setAudioGain(Float32 audioGain)
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Set audio gain to this audio track
-		getAudioProcessor(i)->setGain(audioGain);
+		getAudioDestination(i)->setGain(audioGain);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -369,6 +367,13 @@ void CMediaPlayer::setLoopCount(OV<UInt32> loopCount)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+const SMedia::Segment& CMediaPlayer::getMediaSegment() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mMediaSegment;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 UniversalTimeInterval CMediaPlayer::getCurrentPosition() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -389,12 +394,12 @@ void CMediaPlayer::play()
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Play
-		getAudioProcessor(i)->play();
+		getAudioDestination(i)->play();
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Resume
-		getVideoProcessor(i)->resume();
+		getVideoDestination(i)->resume();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -404,12 +409,12 @@ void CMediaPlayer::pause()
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Pause
-		getAudioProcessor(i)->pause();
+		getAudioDestination(i)->pause();
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Pause
-		getVideoProcessor(i)->pause();
+		getVideoDestination(i)->pause();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -419,7 +424,7 @@ bool CMediaPlayer::isPlaying() const
 	// We are playing if any track is playing
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
 		// Check if playing
-		if (getAudioProcessor(i)->isPlaying())
+		if (getAudioDestination(i)->isPlaying())
 			// Is playing
 			return true;
 	}
@@ -434,12 +439,12 @@ void CMediaPlayer::startSeek()
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Start seek
-		getAudioProcessor(i)->startSeek();
+		getAudioDestination(i)->startSeek();
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Start seek
-		getVideoProcessor(i)->startSeek();
+		getVideoDestination(i)->startSeek();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -449,12 +454,12 @@ void CMediaPlayer::finishSeek()
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Finish seek
-		getAudioProcessor(i)->finishSeek();
+		getAudioDestination(i)->finishSeek();
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Finish seek
-		getVideoProcessor(i)->finishSeek();
+		getVideoDestination(i)->finishSeek();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -464,15 +469,15 @@ void CMediaPlayer::reset()
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Reset
-		getAudioProcessor(i)->reset();
+		getAudioDestination(i)->reset();
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Reset
-		getVideoProcessor(i)->reset();
+		getVideoDestination(i)->reset();
 
 	// Update internals
-	mInternals->mCurrentPosition = mInternals->mSourceWindowStartTimeInterval;
+	mInternals->mCurrentPosition = mInternals->mMediaSegment.getStartTimeInterval();
 	if (getVideoTrackCount() > 0)
 		mInternals->mCurrentFrameIndex.setValue(0);
 	else

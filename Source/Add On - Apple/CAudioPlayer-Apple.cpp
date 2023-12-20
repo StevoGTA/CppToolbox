@@ -242,12 +242,11 @@ class CAudioPlayer::Internals {
 									const CAudioPlayer::Info& info) :
 								mAudioPlayer(audioPlayer), mIdentifier(identifier), mInfo(info),
 										mIsPlaying(false), mIsSeeking(false),
-										mSourceWindowStartTimeInterval(0.0), mLastSeekTimeInterval(0.0),
-										mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
-										mRenderProcShouldSendFrames(false),
-										mRenderProcIsSendingFrames(false), mRenderProcShouldNotifyEndOfData(false),
-										mRenderProcPreviousReadByteCount(0), mRenderProcPreviousFrameCount(0),
-										mRenderProcFrameIndex(0), mRenderProcFrameCount(~0)
+										mLastSeekTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
+										mRenderProcShouldSendFrames(false), mRenderProcIsSendingFrames(false),
+										mRenderProcShouldNotifyEndOfData(false), mRenderProcPreviousReadByteCount(0),
+										mRenderProcPreviousFrameCount(0), mRenderProcFrameIndex(0),
+										mRenderProcFrameCount(~0)
 								{}
 
 		static	void		readerThreadError(const SError& error, void* userData)
@@ -438,7 +437,7 @@ class CAudioPlayer::Internals {
 
 		bool							mIsPlaying;
 		bool							mIsSeeking;
-		UniversalTimeInterval			mSourceWindowStartTimeInterval;
+		SMedia::Segment					mMediaSegment;
 		UniversalTimeInterval			mLastSeekTimeInterval;
 		UniversalTimeInterval			mCurrentPlaybackTimeInterval;
 		Float32							mGain;
@@ -543,15 +542,14 @@ TArray<CString> CAudioPlayer::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CAudioPlayer::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mSourceWindowStartTimeInterval = startTimeInterval;
+	mInternals->mMediaSegment = mediaSegment;
 
 	// Do super
-	CAudioDestination::setSourceWindow(startTimeInterval, durationTimeInterval);
+	CAudioDestination::setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -636,7 +634,7 @@ void CAudioPlayer::reset()
 	CAudioDestination::reset();
 
 	// Reset
-	mInternals->mCurrentPlaybackTimeInterval = mInternals->mSourceWindowStartTimeInterval;
+	mInternals->mCurrentPlaybackTimeInterval = mInternals->mMediaSegment.getStartTimeInterval();
 
 	mInternals->mRenderProcFrameIndex = 0;
 	mInternals->mRenderProcFrameCount = ~0;

@@ -56,14 +56,13 @@ TArray<CString> CVideoProcessor::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CVideoProcessor::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CVideoProcessor::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
 	if (mInternals->mVideoProcessor != nil)
 		// Set source window
-		(*mInternals->mVideoProcessor)->setSourceWindow(startTimeInterval, durationTimeInterval);
+		(*mInternals->mVideoProcessor)->setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -27,11 +27,10 @@ class CAudioDecoder : public CAudioSource {
 
 		CAudioFrames::Requirements		queryRequirements() const;
 
-		void							setSourceWindow(UniversalTimeInterval startTimeInterval,
-												const OV<UniversalTimeInterval>& durationTimeInterval);
+		void							setMediaSegment(const SMedia::Segment& mediaSegment);
 		void							seek(UniversalTimeInterval timeInterval);
 
-		TVResult<SMedia::SourceInfo>	performInto(CAudioFrames& audioFrames);
+		TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
 
 		void							reset();
 

@@ -53,8 +53,7 @@ class CVideoFrameStore : public CVideoDestination {
 									// CVideoProcessor methods
 				TArray<CString>		getSetupDescription(const CString& indent);
 
-				void				setSourceWindow(UniversalTimeInterval startTimeInterval,
-											const OV<UniversalTimeInterval>& durationTimeInterval);
+				void				setMediaSegment(const SMedia::Segment& mediaSegment);
 				void				seek(UniversalTimeInterval timeInterval);
 
 				void				reset();

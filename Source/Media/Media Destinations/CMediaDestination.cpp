@@ -13,9 +13,9 @@ class CMediaDestination::Internals {
 	public:
 		Internals(const CString& name) : mName(name) {}
 
-		CString													mName;
-		TNKeyConvertibleDictionary<UInt32, I<CAudioProcessor> >	mAudioProcessors;
-		TNKeyConvertibleDictionary<UInt32, I<CVideoProcessor> >	mVideoProcessors;
+		CString														mName;
+		TNKeyConvertibleDictionary<UInt32, I<CAudioDestination> >	mAudioDestinationByTrack;
+		TNKeyConvertibleDictionary<UInt32, I<CVideoDestination> >	mVideoDestinationByTrack;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,46 +51,45 @@ const CString& CMediaDestination::getName() const
 UInt32 CMediaDestination::CMediaDestination::getAudioTrackCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAudioProcessors.getKeyCount();
+	return mInternals->mAudioDestinationByTrack.getKeyCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::add(const I<CAudioProcessor>& audioProcessor, UInt32 trackIndex)
+void CMediaDestination::add(const I<CAudioDestination>& audioDestination, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mAudioProcessors.set(trackIndex, audioProcessor);
+	mInternals->mAudioDestinationByTrack.set(trackIndex, audioDestination);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 CMediaDestination::CMediaDestination::getVideoTrackCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mVideoProcessors.getKeyCount();
+	return mInternals->mVideoDestinationByTrack.getKeyCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::add(const I<CVideoProcessor>& videoProcessor, UInt32 trackIndex)
+void CMediaDestination::add(const I<CVideoDestination>& videoDestination, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mVideoProcessors.set(trackIndex, videoProcessor);
+	mInternals->mVideoDestinationByTrack.set(trackIndex, videoDestination);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CMediaDestination::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Set window
-		(*mInternals->mAudioProcessors[i])->setSourceWindow(startTimeInterval, durationTimeInterval);
+		(*mInternals->mAudioDestinationByTrack[i])->setMediaSegment(mediaSegment);
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Seek
-		(*mInternals->mVideoProcessors[i])->setSourceWindow(startTimeInterval, durationTimeInterval);
+		(*mInternals->mVideoDestinationByTrack[i])->setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -100,38 +99,38 @@ void CMediaDestination::seek(UniversalTimeInterval timeInterval)
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Seek
-		(*mInternals->mAudioProcessors[i])->seek(timeInterval);
+		(*mInternals->mAudioDestinationByTrack[i])->seek(timeInterval);
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Seek
-		(*mInternals->mVideoProcessors[i])->seek(timeInterval);
+		(*mInternals->mVideoDestinationByTrack[i])->seek(timeInterval);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OR<I<CAudioProcessor> > CMediaDestination::CMediaDestination::getAudioProcessor(UInt32 trackIndex) const
+OR<I<CAudioDestination> > CMediaDestination::CMediaDestination::getAudioDestination(UInt32 trackIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAudioProcessors[trackIndex];
+	return mInternals->mAudioDestinationByTrack[trackIndex];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::removeAllAudioProcessors()
+void CMediaDestination::removeAllAudioDestinations()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mAudioProcessors.removeAll();
+	mInternals->mAudioDestinationByTrack.removeAll();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OR<I<CVideoProcessor> > CMediaDestination::CMediaDestination::getVideoProcessor(UInt32 trackIndex) const
+OR<I<CVideoDestination> > CMediaDestination::CMediaDestination::getVideoDestination(UInt32 trackIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mVideoProcessors[trackIndex];
+	return mInternals->mVideoDestinationByTrack[trackIndex];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::removeAllVideoProcessors()
+void CMediaDestination::removeAllVideoDestinations()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mVideoProcessors.removeAll();
+	mInternals->mVideoDestinationByTrack.removeAll();
 }

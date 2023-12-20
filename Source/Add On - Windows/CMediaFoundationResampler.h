@@ -21,7 +21,7 @@ class CMediaFoundationResampler : public CAudioConverter {
 												const SAudio::ProcessingFormat& audioProcessingFormat);
 		TArray<CString>					getSetupDescription(const CString& indent);
 
-		TVResult<SMedia::SourceInfo>	performInto(CAudioFrames& audioFrames);
+		TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
 		void							reset();
 
 		TArray<SAudio::ProcessingSetup>	getInputSetups() const;

@@ -220,11 +220,11 @@ class CVideoFrameStoreThread : public CThread {
 class CVideoFrameStore::Internals {
 	public:
 		Internals(CVideoFrameStore& videoFrameStore, const CString& identifier, const CVideoFrameStore::Info& info) :
-			mVideoFrameStoreThread(videoFrameStore, identifier, info), mSourceWindowStartTimeInterval(0.0)
+			mVideoFrameStoreThread(videoFrameStore, identifier, info)
 			{}
 
 		CVideoFrameStoreThread	mVideoFrameStoreThread;
-		UniversalTimeInterval	mSourceWindowStartTimeInterval;
+		SMedia::Segment			mMediaSegment;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -267,15 +267,14 @@ TArray<CString> CVideoFrameStore::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CVideoFrameStore::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CVideoFrameStore::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mSourceWindowStartTimeInterval = startTimeInterval;
+	mInternals->mMediaSegment = mediaSegment;
 
 	// Do super
-	CVideoDestination::setSourceWindow(startTimeInterval, durationTimeInterval);
+	CVideoDestination::setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -300,7 +299,7 @@ void CVideoFrameStore::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset thread
-	mInternals->mVideoFrameStoreThread.seek(mInternals->mSourceWindowStartTimeInterval);
+	mInternals->mVideoFrameStoreThread.seek(mInternals->mMediaSegment.getStartTimeInterval());
 
 	// Reset
 	CVideoDestination::reset();

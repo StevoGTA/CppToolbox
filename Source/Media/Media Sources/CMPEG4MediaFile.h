@@ -544,13 +544,13 @@ class CMPEG4MediaFile {
 																	CMPEG4MediaFile() {}
 
 																	// Instance methods
-		virtual			TVResult<CMediaTrackInfos::AudioTrackInfo>	composeAudioTrackInfo(
+		virtual			TVResult<SMediaSource::Tracks::AudioTrack>	composeAudioTrack(
 																			const I<CRandomAccessDataSource>&
 																					randomAccessDataSource,
 																			UInt32 options, OSType type,
 																			UniversalTimeInterval duration,
 																			const Internals& internals);
-		virtual			TVResult<CMediaTrackInfos::VideoTrackInfo>	composeVideoTrackInfo(
+		virtual			TVResult<SMediaSource::Tracks::VideoTrack>	composeVideoTrack(
 																			const I<CRandomAccessDataSource>&
 																					randomAccessDataSource,
 																			UInt32 options, OSType type,

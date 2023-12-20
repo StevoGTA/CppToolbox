@@ -16,7 +16,7 @@ class CVideoDecoder::Internals : public TReferenceCountableAutoDelete<Internals>
 				const CString& identifier) :
 			TReferenceCountableAutoDelete(),
 					mVideoFormat(videoFormat), mVideoCodec(videoCodec), mIdentifier(identifier),
-					mStartTimeInterval(0.0), mCurrentTimeInterval(0.0)
+					mCurrentTimeInterval(0.0)
 			{}
 
 		SVideo::Format				mVideoFormat;
@@ -24,8 +24,7 @@ class CVideoDecoder::Internals : public TReferenceCountableAutoDelete<Internals>
 		CString						mIdentifier;
 
 		OV<CVideoProcessor::Format>	mVideoProcessorFormat;
-		UniversalTimeInterval		mStartTimeInterval;
-		OV<UniversalTimeInterval>	mDurationTimeInterval;
+		SMedia::Segment				mMediaSegment;
 		UniversalTimeInterval		mCurrentTimeInterval;
 };
 
@@ -84,21 +83,19 @@ TArray<CString> CVideoDecoder::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CVideoDecoder::setSourceWindow(UniversalTimeInterval startTimeInterval,
-		const OV<UniversalTimeInterval>& durationTimeInterval)
+void CVideoDecoder::setMediaSegment(const SMedia::Segment& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	bool	performSeek = startTimeInterval != mInternals->mStartTimeInterval;
+	bool	performSeek = mediaSegment.getStartTimeInterval() != mInternals->mMediaSegment.getStartTimeInterval();
 
 	// Store
-	mInternals->mStartTimeInterval = startTimeInterval;
-	mInternals->mDurationTimeInterval = OV<UniversalTimeInterval>(durationTimeInterval);
+	mInternals->mMediaSegment = mediaSegment;
 
 	// Check if need seek
 	if (performSeek)
 		// Seek
-		seek(mInternals->mStartTimeInterval);
+		seek(mInternals->mMediaSegment.getStartTimeInterval());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -106,12 +103,10 @@ void CVideoDecoder::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Bound the given time
-	timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mStartTimeInterval);
-	if (mInternals->mDurationTimeInterval.hasValue())
+	timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment.getStartTimeInterval());
+	if (mInternals->mMediaSegment.getDurationTimeInterval().hasValue())
 		// Limit to duration
-		timeInterval =
-				std::min<UniversalTimeInterval>(timeInterval,
-						mInternals->mStartTimeInterval + *mInternals->mDurationTimeInterval);
+		timeInterval = std::min<UniversalTimeInterval>(timeInterval, *mInternals->mMediaSegment.getEndTimeInterval());
 
 	// Update
 	mInternals->mCurrentTimeInterval = timeInterval;
@@ -142,6 +137,6 @@ void CVideoDecoder::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Seek
-	mInternals->mVideoCodec->seek(mInternals->mStartTimeInterval);
-	mInternals->mCurrentTimeInterval = mInternals->mStartTimeInterval;
+	mInternals->mVideoCodec->seek(mInternals->mMediaSegment.getStartTimeInterval());
+	mInternals->mCurrentTimeInterval = mInternals->mMediaSegment.getStartTimeInterval();
 }

@@ -479,7 +479,7 @@ SAudio::Format CDVIIntelIMAADPCMAudioCodec::composeAudioFormat(Float32 sampleRat
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-SMedia::SegmentInfo CDVIIntelIMAADPCMAudioCodec::composeMediaSegmentInfo( const SAudio::Format& audioFormat,
+SMedia::SegmentInfo CDVIIntelIMAADPCMAudioCodec::composeMediaSegmentInfo(const SAudio::Format& audioFormat,
 		UInt64 byteCount, UInt16 blockAlign)
 //----------------------------------------------------------------------------------------------------------------------
 {

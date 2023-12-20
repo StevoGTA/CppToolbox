@@ -6,7 +6,7 @@
 
 #include "CAudioConverter.h"
 #include "CMediaDestination.h"
-#include "SMediaTracks.h"
+#include "SMediaSource.h"
 #include "TResult.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ class CMediaEngine {
 
 													// Instance methods
 				I<CAudioSource>						getAudioSource(
-															const CMediaTrackInfos::AudioTrackInfo& audioTrackInfo,
+															const SMediaSource::Tracks::AudioTrack& audioTrack,
 															const CString& identifier) const;
 				SAudio::ProcessingFormat			composeAudioProcessingFormat(const CAudioSource& audioSource,
 															const CAudioDestination& audioDestination,
@@ -33,7 +33,7 @@ class CMediaEngine {
 															const;
 
 				I<CVideoSource>						getVideoSource(
-															const CMediaTrackInfos::VideoTrackInfo& videoTrackInfo,
+															const SMediaSource::Tracks::VideoTrack& videoTrack,
 															const CString& identifier) const;
 
 	protected:
