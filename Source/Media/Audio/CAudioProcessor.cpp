@@ -212,5 +212,5 @@ TVResult<UInt32> CAudioSource::calculateMaxFrames(Float32 sampleRate) const
 		return TVResult<UInt32>((UInt32) (durationRemaining * sampleRate));
 	} else
 		// No duration
-		return TVResult<UInt32>(~0);
+		return TVResult<UInt32>((UInt32) ~0);
 }

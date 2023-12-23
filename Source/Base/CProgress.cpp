@@ -344,7 +344,7 @@ class CAggregateTimeIntervalProgress::Internals {
 								// Update value
 								Float32	value =
 												(internals->mProgress.getValue().hasValue() ?
-																*internals->mProgress.getValue() : 0.0) +
+																*internals->mProgress.getValue() : 0.0F) +
 														((Float32) progress.getTimeInterval() -
 																		info.mPreviousTimeInterval) /
 																internals->mTotalTimeInterval;
@@ -412,14 +412,14 @@ CTimeIntervalProgress& CAggregateTimeIntervalProgress::addTimeIntervalProgress(U
 
 			// Update metrics
 			currentTimeInterval += _info.mPreviousTimeInterval;
-			mInternals->mTotalTimeInterval += _info.mProgress.getTotalTimeInterval();
+			mInternals->mTotalTimeInterval += (Float32) _info.mProgress.getTotalTimeInterval();
 		}
 
 		// Update value
 		setValue(currentTimeInterval / mInternals->mTotalTimeInterval);
 	} else
 		// Update total time interval
-		mInternals->mTotalTimeInterval += totalTimeInterval;
+		mInternals->mTotalTimeInterval += (Float32) totalTimeInterval;
 
 	return info->mProgress;
 }
