@@ -48,7 +48,12 @@ class CProgress {
 						void			setMessage(const CString& message);
 
 				const	OV<Float32>&	getValue() const;
-						void			setValue(OV<Float32> value);
+						void			setValue(Float32 value);
+						void			removeValue();
+
+	protected:
+										// Lifecycle methods
+										CProgress(const UpdateInfo& updateInfo, Float32 initialValue);
 
 	// Properties
 	private:
@@ -56,7 +61,7 @@ class CProgress {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CItemsProgress
+// MARK: - CItemsProgress
 /*
 	Always has a completed items count.
 	Once there is a total items count, the CProgress value will be set to the ratio.
@@ -73,7 +78,8 @@ class CItemsProgress : public CProgress {
 	// Methods
 	public:
 					// Lifecycle methods
-					CItemsProgress(const UpdateInfo& updateInfo, const OV<UInt32>& initialTotalItemsCount = OV<UInt32>());
+					CItemsProgress(const UpdateInfo& updateInfo, UInt32 initialTotalItemsCount);
+					CItemsProgress(const UpdateInfo& updateInfo);
 					~CItemsProgress();
 
 					// Instance methods
@@ -91,7 +97,7 @@ class CItemsProgress : public CProgress {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CTimeIntervalProgress
+// MARK: - CTimeIntervalProgress
 
 class CTimeIntervalProgress : public CProgress {
 	// Classes
@@ -100,12 +106,40 @@ class CTimeIntervalProgress : public CProgress {
 
 	// Methods
 	public:
-				// Lifecycle methods
-				CTimeIntervalProgress(const UpdateInfo& updateInfo, UniversalTimeInterval totalTimeInterval);
-				~CTimeIntervalProgress();
+								// Lifecycle methods
+								CTimeIntervalProgress(const UpdateInfo& updateInfo,
+										UniversalTimeInterval totalTimeInterval);
+								~CTimeIntervalProgress();
 
-				// Instance methods
-		void	setTimeInterval(UniversalTimeInterval timeInterval);
+								// Instance methods
+		UniversalTimeInterval	getTotalTimeInterval() const;
+
+		UniversalTimeInterval	getTimeInterval() const;
+		void					setTimeInterval(UniversalTimeInterval timeInterval);
+		void					complete();
+
+	// Properties
+	private:
+		Internals*	mInternals;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAggregateTimeIntervalProgress
+
+class CAggregateTimeIntervalProgress : public CProgress {
+	// Classes
+	private:
+		class Internals;
+
+	// Methods
+	public:
+								// Lifecycle methods
+								CAggregateTimeIntervalProgress(const UpdateInfo& updateInfo);
+								~CAggregateTimeIntervalProgress();
+
+								// Instance methods
+		CTimeIntervalProgress&	addTimeIntervalProgress(UniversalTimeInterval totalTimeInterval);
+		void					reset();
 
 	// Properties
 	private:

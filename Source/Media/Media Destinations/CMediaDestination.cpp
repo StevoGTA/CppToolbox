@@ -78,7 +78,7 @@ void CMediaDestination::add(const I<CVideoDestination>& videoDestination, UInt32
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaDestination::setMediaSegment(const SMedia::Segment& mediaSegment)
+void CMediaDestination::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all audio tracks

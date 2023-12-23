@@ -224,7 +224,7 @@ class CVideoFrameStore::Internals {
 			{}
 
 		CVideoFrameStoreThread	mVideoFrameStoreThread;
-		SMedia::Segment			mMediaSegment;
+		OV<SMedia::Segment>		mMediaSegment;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ TArray<CString> CVideoFrameStore::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CVideoFrameStore::setMediaSegment(const SMedia::Segment& mediaSegment)
+void CVideoFrameStore::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -299,7 +299,8 @@ void CVideoFrameStore::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset thread
-	mInternals->mVideoFrameStoreThread.seek(mInternals->mMediaSegment.getStartTimeInterval());
+	mInternals->mVideoFrameStoreThread.seek(
+			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0);
 
 	// Reset
 	CVideoDestination::reset();

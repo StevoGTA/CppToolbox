@@ -45,7 +45,7 @@ class CAudioProcessor {
 
 		virtual	CAudioFrames::Requirements		queryRequirements() const;
 
-		virtual	void							setMediaSegment(const SMedia::Segment& mediaSegment);
+		virtual	void							setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 		virtual	void							seek(UniversalTimeInterval timeInterval);
 
 		virtual	TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
@@ -71,19 +71,40 @@ class CAudioProcessor {
 // MARK: - CAudioSource
 
 class CAudioSource : public CAudioProcessor {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
-										CAudioSource() : CAudioProcessor() {}
+										CAudioSource();
+										~CAudioSource();
 
 										// CAudioProcessor methods
 		TArray<CString>					getSetupDescription(const CString& indent)
 											{ return TNArray<CString>(); }
 
+		void							setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
+		void							seek(UniversalTimeInterval timeInterval);
+
+		void							reset();
+
 		TArray<SAudio::ProcessingSetup>	getInputSetups() const
 											{ AssertFailUnimplemented(); return TNArray<SAudio::ProcessingSetup>(); }
 		void							setInputFormat(const SAudio::ProcessingFormat& audioProcessingFormat) const
 											{ AssertFailUnimplemented(); }
+
+	protected:
+										// Instance methods
+		UniversalTimeInterval			getCurrentTimeInterval() const;
+		void							setCurrentTimeInterval(UniversalTimeInterval timeInterval);
+
+		TVResult<UInt32>				calculateMaxFrames(Float32 sampleRate) const;
+
+	// Properties
+	private:
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -437,7 +437,7 @@ class CAudioPlayer::Internals {
 
 		bool							mIsPlaying;
 		bool							mIsSeeking;
-		SMedia::Segment					mMediaSegment;
+		OV<SMedia::Segment>				mMediaSegment;
 		UniversalTimeInterval			mLastSeekTimeInterval;
 		UniversalTimeInterval			mCurrentPlaybackTimeInterval;
 		Float32							mGain;
@@ -542,7 +542,7 @@ TArray<CString> CAudioPlayer::getSetupDescription(const CString& indent)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::setMediaSegment(const SMedia::Segment& mediaSegment)
+void CAudioPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -634,7 +634,8 @@ void CAudioPlayer::reset()
 	CAudioDestination::reset();
 
 	// Reset
-	mInternals->mCurrentPlaybackTimeInterval = mInternals->mMediaSegment.getStartTimeInterval();
+	mInternals->mCurrentPlaybackTimeInterval =
+			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0;
 
 	mInternals->mRenderProcFrameIndex = 0;
 	mInternals->mRenderProcFrameCount = ~0;

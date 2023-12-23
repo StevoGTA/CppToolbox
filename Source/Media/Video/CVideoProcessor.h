@@ -72,7 +72,7 @@ class CVideoProcessor {
 		virtual	OV<SError>			connectInput(const I<CVideoProcessor>& videoProcessor);
 		virtual	TArray<CString>		getSetupDescription(const CString& indent);
 
-		virtual	void				setMediaSegment(const SMedia::Segment& mediaSegment);
+		virtual	void				setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 		virtual	void				seek(UniversalTimeInterval timeInterval);
 
 		virtual	PerformResult		perform();
@@ -87,14 +87,33 @@ class CVideoProcessor {
 // MARK: - CVideoSource
 
 class CVideoSource : public CVideoProcessor {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
-						// Lifecycle methods
-						CVideoSource() : CVideoProcessor() {}
+								// Lifecycle methods
+								CVideoSource();
+								~CVideoSource();
 
-						// CVideoProcessor methods
-		TArray<CString>	getSetupDescription(const CString& indent)
-							{ return TNArray<CString>(); }
+								// CVideoProcessor methods
+		TArray<CString>			getSetupDescription(const CString& indent)
+									{ return TNArray<CString>(); }
+
+		void					setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
+		void					seek(UniversalTimeInterval timeInterval);
+
+		void					reset();
+
+	protected:
+								// Instance methods
+		UniversalTimeInterval	getCurrentTimeInterval() const;
+		void					setCurrentTimeInterval(UniversalTimeInterval timeInterval);
+
+	// Properties
+	private:
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

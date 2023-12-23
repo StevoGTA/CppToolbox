@@ -89,43 +89,43 @@ struct SMedia {
 		struct Segment {
 			// Methods
 			public:
-													// Lifecycle methods
-													Segment() : mStartTimeInterval(0.0) {}
-													Segment(UniversalTimeInterval startTimeInterval,
-															const OV<UniversalTimeInterval>& durationTimeInterval) :
-														mStartTimeInterval(startTimeInterval),
-																mDurationTimeInterval(durationTimeInterval)
-														{}
-													Segment(const Segment& other) :
-														mStartTimeInterval(other.mStartTimeInterval),
-																mDurationTimeInterval(other.mDurationTimeInterval)
-														{}
+										// Lifecycle methods
+										Segment(UniversalTimeInterval startTimeInterval,
+												UniversalTimeInterval durationTimeInterval) :
+											mStartTimeInterval(startTimeInterval),
+													mDurationTimeInterval(durationTimeInterval)
+											{}
+										Segment(const Segment& other) :
+											mStartTimeInterval(other.mStartTimeInterval),
+													mDurationTimeInterval(other.mDurationTimeInterval)
+											{}
 
-													// Instance methods
-						UniversalTimeInterval		getStartTimeInterval() const
-														{ return mStartTimeInterval; }
-				const	OV<UniversalTimeInterval>&	getDurationTimeInterval() const
-														{ return mDurationTimeInterval; }
+										// Instance methods
+				UniversalTimeInterval	getStartTimeInterval() const
+											{ return mStartTimeInterval; }
+				UniversalTimeInterval	getDurationTimeInterval() const
+											{ return mDurationTimeInterval; }
 
-						OV<UniversalTimeInterval>	getEndTimeInterval() const
-														{ return mDurationTimeInterval.hasValue() ?
-																OV<UniversalTimeInterval>(
-																		mStartTimeInterval + *mDurationTimeInterval) :
-																OV<UniversalTimeInterval>(); }
+				UniversalTimeInterval	getEndTimeInterval() const
+											{ return mStartTimeInterval + mDurationTimeInterval; }
 
-						Segment&					operator=(const Segment& other)
-														{
-															// Store
-															mStartTimeInterval = other.mStartTimeInterval;
-															mDurationTimeInterval = mDurationTimeInterval;
+				bool					contains(UniversalTimeInterval timeInterval) const
+											{ return (timeInterval >= mStartTimeInterval) &&
+													(timeInterval < getEndTimeInterval()); }
 
-															return *this;
-														}
+				Segment&				operator=(const Segment& other)
+											{
+												// Store
+												mStartTimeInterval = other.mStartTimeInterval;
+												mDurationTimeInterval = other.mDurationTimeInterval;
+
+												return *this;
+											}
 
 			// Properties
 			private:
-				UniversalTimeInterval		mStartTimeInterval;
-				OV<UniversalTimeInterval>	mDurationTimeInterval;
+				UniversalTimeInterval	mStartTimeInterval;
+				UniversalTimeInterval	mDurationTimeInterval;
 		};
 
 	// SegmentInfo

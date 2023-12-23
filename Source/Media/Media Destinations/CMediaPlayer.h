@@ -113,7 +113,8 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 						void					add(const I<CVideoDestination>& videoDestination, UInt32 trackIndex);
 
 						void					setMediaSegment(
-														const SMedia::Segment& mediaSegment = SMedia::Segment());
+														const OV<SMedia::Segment>& mediaSegment =
+																OV<SMedia::Segment>());
 						void					seek(UniversalTimeInterval timeInterval);
 
 												// Instance methods
@@ -124,8 +125,8 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 		virtual			void					setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
 
-				const	SMedia::Segment&		getMediaSegment() const;
-						UniversalTimeInterval	getCurrentPosition() const;
+				const	OV<SMedia::Segment>&	getMediaSegment() const;
+						UniversalTimeInterval	getCurrentTimeInterval() const;
 				const	OV<UInt32>&				getCurrentFrameIndex() const;
 
 		virtual			void					play();

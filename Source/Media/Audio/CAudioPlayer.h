@@ -65,7 +65,7 @@ class CAudioPlayer : public CAudioDestination {
 																const SAudio::ProcessingFormat& audioProcessingFormat);
 						TArray<CString>					getSetupDescription(const CString& indent);
 
-						void							setMediaSegment(const SMedia::Segment& mediaSegment);
+						void							setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 						void							seek(UniversalTimeInterval timeInterval);
 
 						void							reset();

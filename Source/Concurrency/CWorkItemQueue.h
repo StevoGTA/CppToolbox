@@ -112,6 +112,11 @@ class CWorkItemQueue {
 								// Class methods
 		static	CWorkItemQueue&	main();
 
+	protected:
+								// Subclass methods
+		virtual	void			noteEmpty()
+									{}
+
 	// Properties
 	private:
 		Internals*	mInternals;

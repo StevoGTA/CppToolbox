@@ -27,7 +27,6 @@ class CVideoDecoder : public CVideoSource {
 							// CVideoProcessor methods
 		TArray<CString>		getSetupDescription(const CString& indent);
 
-		void				setMediaSegment(const SMedia::Segment& mediaSegment);
 		void				seek(UniversalTimeInterval timeInterval);
 
 		PerformResult		perform();

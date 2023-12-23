@@ -90,7 +90,7 @@ class CMediaPlayer::Internals {
 						Internals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
 								const CMediaPlayer::Info& info) :
 							mMediaPlayer(mediaPlayer), mMessageQueues(messageQueues), mInfo(info),
-									mCurrentPosition(0.0), mEndOfDataCount(0), mCurrentLoopCount(0)
+									mCurrentTimeInterval(0.0), mEndOfDataCount(0), mCurrentLoopCount(0)
 							{}
 
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
@@ -112,13 +112,13 @@ class CMediaPlayer::Internals {
 									return;
 
 								// Update
-								internals.mCurrentPosition = audioPlayerPositionUpdatedMessage.mPosition;
+								internals.mCurrentTimeInterval = audioPlayerPositionUpdatedMessage.mPosition;
 
 								// Iterate all video frame stores
 								for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++)
 									// Update video decoder
 									internals.mMediaPlayer.getVideoDestination(i)->notePositionUpdated(
-											internals.mCurrentPosition);
+											internals.mCurrentTimeInterval);
 
 								// Call proc
 								internals.mInfo.audioPositionUpdated(audioPlayerPositionUpdatedMessage.mPosition);
@@ -222,8 +222,8 @@ class CMediaPlayer::Internals {
 				CSRSWMessageQueues&		mMessageQueues;
 				CMediaPlayer::Info		mInfo;
 
-				SMedia::Segment			mMediaSegment;
-				UniversalTimeInterval	mCurrentPosition;
+				OV<SMedia::Segment>		mMediaSegment;
+				UniversalTimeInterval	mCurrentTimeInterval;
 				OV<UInt32>				mCurrentFrameIndex;
 				UInt32					mEndOfDataCount;
 				OV<UInt32>				mLoopCount;
@@ -303,7 +303,7 @@ void CMediaPlayer::add(const I<CVideoDestination>& videoDestination, UInt32 trac
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::setMediaSegment(const SMedia::Segment& mediaSegment)
+void CMediaPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -321,7 +321,7 @@ void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
 	TMediaDestination<CAudioPlayer, CVideoFrameStore>::seek(timeInterval);
 
 	// Store
-	mInternals->mCurrentPosition = timeInterval;
+	mInternals->mCurrentTimeInterval = timeInterval;
 }
 
 // MARK: Instance methods
@@ -350,9 +350,6 @@ void CMediaPlayer::setAudioGain(Float32 audioGain)
 I<CVideoFrameStore> CMediaPlayer::newVideoFrameStore(const CString& identifier, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Update
-	mInternals->mCurrentFrameIndex.setValue(0);
-
 	return I<CVideoFrameStore>(
 			new CMediaPlayerVideoFrameStore(identifier,
 					CVideoFrameStore::Info(Internals::videoFrameStoreCurrentFrameUpdated,
@@ -367,17 +364,17 @@ void CMediaPlayer::setLoopCount(OV<UInt32> loopCount)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const SMedia::Segment& CMediaPlayer::getMediaSegment() const
+const OV<SMedia::Segment>& CMediaPlayer::getMediaSegment() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mMediaSegment;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UniversalTimeInterval CMediaPlayer::getCurrentPosition() const
+UniversalTimeInterval CMediaPlayer::getCurrentTimeInterval() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mCurrentPosition;
+	return mInternals->mCurrentTimeInterval;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -477,13 +474,11 @@ void CMediaPlayer::reset()
 		getVideoDestination(i)->reset();
 
 	// Update internals
-	mInternals->mCurrentPosition = mInternals->mMediaSegment.getStartTimeInterval();
-	if (getVideoTrackCount() > 0)
-		mInternals->mCurrentFrameIndex.setValue(0);
-	else
-		mInternals->mCurrentFrameIndex.removeValue();
+	mInternals->mCurrentTimeInterval =
+			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0;
+	mInternals->mCurrentFrameIndex.removeValue();
 	mInternals->mEndOfDataCount = 0;
 
 	// Call proc
-	mInternals->mInfo.audioPositionUpdated(mInternals->mCurrentPosition);
+	mInternals->mInfo.audioPositionUpdated(mInternals->mCurrentTimeInterval);
 }

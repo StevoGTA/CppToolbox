@@ -13,8 +13,7 @@ class CAudioDecoder::Internals {
 	public:
 		Internals(const SAudio::Format& audioFormat, const I<CDecodeAudioCodec>& decodeAudioCodec,
 				const CString& identifier) :
-			mAudioFormat(audioFormat), mDecodeAudioCodec(decodeAudioCodec), mIdentifier(identifier),
-					mCurrentTimeInterval(0.0)
+			mAudioFormat(audioFormat), mDecodeAudioCodec(decodeAudioCodec), mIdentifier(identifier)
 			{}
 
 		SAudio::Format					mAudioFormat;
@@ -22,8 +21,6 @@ class CAudioDecoder::Internals {
 		CString							mIdentifier;
 
 		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
-		SMedia::Segment					mMediaSegment;
-		UniversalTimeInterval			mCurrentTimeInterval;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,73 +71,39 @@ CAudioFrames::Requirements CAudioDecoder::queryRequirements() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioDecoder::setMediaSegment(const SMedia::Segment& mediaSegment)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	bool	performSeek = mediaSegment.getStartTimeInterval() != mInternals->mMediaSegment.getStartTimeInterval();
-
-	// Store
-	mInternals->mMediaSegment = mediaSegment;
-
-	// Check if need seek
-	if (performSeek)
-		// Seek
-		seek(mInternals->mMediaSegment.getStartTimeInterval());
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CAudioDecoder::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Bound the given time
-	timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment.getStartTimeInterval());
-	if (mInternals->mMediaSegment.getDurationTimeInterval().hasValue())
-		// Limit to duration
-		timeInterval = std::min<UniversalTimeInterval>(timeInterval, *mInternals->mMediaSegment.getEndTimeInterval());
+	// Do super
+	CAudioSource::seek(timeInterval);
 
-	// Update
-	mInternals->mCurrentTimeInterval = timeInterval;
-
-	// Inform codec
-	mInternals->mDecodeAudioCodec->seek(timeInterval);
+	// Update codec
+	mInternals->mDecodeAudioCodec->seek(getCurrentTimeInterval());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CAudioProcessor::SourceInfo> CAudioDecoder::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	UInt32	maxFrames;
-	if (mInternals->mMediaSegment.getDurationTimeInterval().hasValue()) {
-		// Have duration
-		UniversalTimeInterval	durationRemaining =
-										*mInternals->mMediaSegment.getEndTimeInterval() -
-												mInternals->mCurrentTimeInterval;
-		if (durationRemaining <= 0.0)
-			// Already done
-			return TVResult<SourceInfo>(SError::mEndOfData);
-
-		// Calculate
-		maxFrames = (UInt32) (durationRemaining * mInternals->mAudioProcessingFormat->getSampleRate());
-	} else
-		// No duration
-		maxFrames = (UInt32) ~0;
+	// Get max frames
+	TVResult<UInt32>	maxFrames = calculateMaxFrames(mInternals->mAudioProcessingFormat->getSampleRate());
+	ReturnValueIfResultError(maxFrames, TVResult<SourceInfo>(maxFrames.getError()));
 
 	// Setup
-	TVResult<SourceInfo>	sourceInfo(mInternals->mCurrentTimeInterval);
+	TVResult<SourceInfo>	sourceInfo(getCurrentTimeInterval());
 
 	// Decode
 	OV<SError>	error = mInternals->mDecodeAudioCodec->decodeInto(audioFrames);
 	ReturnValueIfError(error, TVResult<SourceInfo>(*error));
 
 	// Limit to max frames
-	audioFrames.limit(maxFrames);
+	audioFrames.limit(*maxFrames);
 
 	// Update
-	mInternals->mCurrentTimeInterval +=
-			(UniversalTimeInterval) audioFrames.getCurrentFrameCount() /
-					mInternals->mAudioProcessingFormat->getSampleRate();
+	setCurrentTimeInterval(
+			getCurrentTimeInterval() +
+					(UniversalTimeInterval) audioFrames.getCurrentFrameCount() /
+							mInternals->mAudioProcessingFormat->getSampleRate());
 
 	return sourceInfo;
 }
@@ -149,9 +112,11 @@ TVResult<CAudioProcessor::SourceInfo> CAudioDecoder::performInto(CAudioFrames& a
 void CAudioDecoder::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Seek
-	mInternals->mDecodeAudioCodec->seek(mInternals->mMediaSegment.getStartTimeInterval());
-	mInternals->mCurrentTimeInterval = mInternals->mMediaSegment.getStartTimeInterval();
+	// Do super
+	CAudioSource::reset();
+
+	// Update codec
+	mInternals->mDecodeAudioCodec->seek(getCurrentTimeInterval());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
