@@ -79,6 +79,7 @@ class CFolder : public CHashable {
 
 											// Class methods
 		static	const	CFolder&			temp();
+		static	const	CFolder&			userDesktop();
 
 #if defined(TARGET_OS_MACOS)
 		static	const	CFolder&			systemApplicationSupport();
@@ -89,7 +90,6 @@ class CFolder : public CHashable {
 		static	const	CFolder&			userApplicationSupport();
 		static	const	CFolder&			userAudioPlugins();
 		static	const	CFolder&			userAudioPresets();
-		static	const	CFolder&			userDesktop();
 		static	const	CFolder&			userHome();
 		static	const	CFolder&			userLibrary();
 		static	const	CFolder&			userLogs();

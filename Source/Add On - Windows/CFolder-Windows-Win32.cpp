@@ -64,6 +64,28 @@ return false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+const CFolder& CFolder::userDesktop()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CFolder*	sFolder = nil;
+
+	if (sFolder == nil) {
+		// Setup
+		PWSTR	path = NULL;
+		auto	result = ::SHGetKnownFolderPath(FOLDERID_Desktop, KF_FLAG_CREATE, NULL, &path);
+		if (SUCCEEDED(result)) {
+			// Success
+			sFolder = new CFolder(CFilesystemPath(CString(path)));
+			::CoTaskMemFree(path);
+		} else
+			// Error
+			LogFailedHRESULT(result, OSSTR("SHGetKnownFolderPath for FOLDERID_LocalAppData"));
+	}
+
+	return *sFolder;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const CFolder& CFolder::localApplicationData()
 //----------------------------------------------------------------------------------------------------------------------
 {

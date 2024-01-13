@@ -65,13 +65,21 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 							{
 								// Run until shutdown
 								while (!mShutdownRequested) {
-									// Wait
-									mSemaphore.waitFor();
-
 									// Get item
 									mItemLock.lock();
 									OR<I<CMediaPlaybackQueue::Item> >	item = mItem;
 									mItemLock.unlock();
+
+									// Check for item
+									if (!item.hasReference()) {
+										// Wait
+										mSemaphore.waitFor();
+
+										// Get item
+										mItemLock.lock();
+										item = mItem;
+										mItemLock.unlock();
+									}
 
 									// Check for current item
 									if (item.hasReference()) {
