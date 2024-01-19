@@ -1031,12 +1031,8 @@ CFOptionFlags sGetCFOptionFlagsForCStringOptionFlags(CString::CompareFlags compa
 	CFOptionFlags	outFlags = 0;
 	if (compareFlags & CString::kCompareFlagsCaseInsensitive)
 		outFlags |= kCFCompareCaseInsensitive;
-	if (compareFlags & CString::kCompareFlagsBackwards)
-		outFlags |= kCFCompareBackwards;
 	if (compareFlags & CString::kCompareFlagsNonliteral)
 		outFlags |= kCFCompareNonliteral;
-	if (compareFlags & CString::kCompareFlagsLocalized)
-		outFlags |= kCFCompareLocalized;
 	if (compareFlags & CString::kCompareFlagsNumerically)
 		outFlags |= kCFCompareNumerically;
 	

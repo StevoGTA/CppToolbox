@@ -32,18 +32,14 @@ class CString : public CHashable {
 		enum CompareFlags {
 			kCompareFlagsNone				= 0,
 			kCompareFlagsCaseInsensitive	= 1 << 0,	// FOO.TXT == foo.txt
-			kCompareFlagsBackwards			= 1 << 1,	// Starting from the end of the string
-			kCompareFlagsNonliteral			= 1 << 2,	// Loose equivalence is performed (o-umlaut == o, umlaut)
-			kCompareFlagsLocalized			= 1 << 3,	// User's default locale is used for the comparison
-			kCompareFlagsNumerically		= 1 << 4,	// Numeric comparison; i.e. Foo2.txt < Foo7.txt < Foo25.txt
+			kCompareFlagsNonliteral			= 1 << 1,	// Loose equivalence is performed (o-umlaut == o, umlaut)
+			kCompareFlagsNumerically		= 1 << 2,	// Numeric comparison; i.e. Foo2.txt < Foo7.txt < Foo25.txt
 
 			kCompareFlagsDefault =
-					kCompareFlagsNonliteral |
-					kCompareFlagsLocalized,
+					kCompareFlagsNonliteral,
 			kCompareFlagsSortDefault =
 					kCompareFlagsCaseInsensitive |
 					kCompareFlagsNonliteral |
-					kCompareFlagsLocalized |
 					kCompareFlagsNumerically,
 		};
 
