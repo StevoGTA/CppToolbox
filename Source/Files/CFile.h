@@ -23,11 +23,11 @@ class CFile : public CHashable {
 											~CFile();
 
 											// CEquatable methods
-				bool						operator==(const CEquatable& other) const
+						bool				operator==(const CEquatable& other) const
 												{ return equals((const CFile&) other); }
 
 											// CHashable methods
-				void						hashInto(CHasher& hasher) const
+						void				hashInto(CHasher& hasher) const
 												{ getFilesystemPath().hashInto(hasher); }
 
 											// Instance methods
@@ -89,6 +89,10 @@ class CFile : public CHashable {
 						OV<CString>			getComments() const;
 						OV<SError>			setComments(const CString& string) const;
 #endif
+
+		static			CString				getFilesystemPathsForDisplay(const TArray<CFile>& files,
+													CFilesystemPath::Style filesystemPathStyle =
+															CFilesystemPath::kStylePlatformDefault);
 
 	private:
 											// Instance methods

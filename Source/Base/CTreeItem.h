@@ -11,8 +11,10 @@ class CTreeItem {
 	// Methods
 	public:
 
-				// Lifecycle methods
-				CTreeItem() {}
-				CTreeItem(const CTreeItem& other) {}
-		virtual	~CTreeItem() {}
+						// Lifecycle methods
+						CTreeItem() {}
+		virtual			~CTreeItem() {}
+
+						// Subclass methods
+		virtual	OSType	getType() const = 0;
 };
