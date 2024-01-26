@@ -21,14 +21,22 @@ class CSQLiteLimit::Internals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CSQLiteLimit::CSQLiteLimit(UInt32 limit, const OV<UInt32>& offset)
+CSQLiteLimit::CSQLiteLimit(const OV<UInt32> limit, UInt32 offset)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	mInternals =
 			new Internals(
-					CString(OSSTR(" LIMIT ")) + CString(limit) +
-							(offset.hasValue() ? CString(OSSTR(" OFFSET ")) + CString(*offset) : CString::mEmpty));
+					CString(OSSTR(" LIMIT ")) + CString(limit.hasValue() ? *limit : -1) +
+							CString(OSSTR(" OFFSET ")) + CString(offset));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CSQLiteLimit::CSQLiteLimit(const OV<UInt32> limit)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mInternals = new Internals(CString(OSSTR(" LIMIT ")) + CString(limit.hasValue() ? *limit : -1));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

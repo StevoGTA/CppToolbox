@@ -33,6 +33,16 @@ CSQLiteInnerJoin::CSQLiteInnerJoin(const CSQLiteTable& table, const CSQLiteTable
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CSQLiteInnerJoin::CSQLiteInnerJoin(const CSQLiteTable& table, const CSQLiteTableColumn& tableColumn,
+		const CSQLiteTable& otherTable, const CSQLiteTableColumn& otherTableColumn)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mInternals = new Internals();
+	addAnd(table, tableColumn, otherTable, OR<CSQLiteTableColumn>((CSQLiteTableColumn&) otherTableColumn));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CSQLiteInnerJoin::~CSQLiteInnerJoin()
 //----------------------------------------------------------------------------------------------------------------------
 {

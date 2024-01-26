@@ -20,6 +20,8 @@ class CSQLiteInnerJoin {
 									CSQLiteInnerJoin(const CSQLiteTable& table, const CSQLiteTableColumn& tableColumn,
 											const CSQLiteTable& otherTable,
 											const OR<CSQLiteTableColumn>& otherTableColumn = OR<CSQLiteTableColumn>());
+									CSQLiteInnerJoin(const CSQLiteTable& table, const CSQLiteTableColumn& tableColumn,
+											const CSQLiteTable& otherTable, const CSQLiteTableColumn& otherTableColumn);
 									~CSQLiteInnerJoin();
 
 									// Instance methods

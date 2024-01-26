@@ -14,6 +14,9 @@ class CJSON {
 	// Methods
 	public:
 		// Class methods
-		static	TVResult<CDictionary>	dictionaryFrom(const CData& data);
-		static	TVResult<CData>			dataFrom(const CDictionary& dictionary);
+		static	TVResult<CData>					dataFrom(const TArray<CDictionary>& array);
+		static	TVResult<CData>					dataFrom(const CDictionary& dictionary);
+
+		static	TVResult<TArray<CDictionary> >	arrayOfDictionariesFrom(const CData& data);
+		static	TVResult<CDictionary>			dictionaryFrom(const CData& data);
 };

@@ -103,7 +103,7 @@ OV<CString> CSQLiteResultsRow::getText(const CSQLiteTableColumn& tableColumn) co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CData> CSQLiteResultsRow::getData(const CSQLiteTableColumn& tableColumn) const
+OV<CData> CSQLiteResultsRow::getBlob(const CSQLiteTableColumn& tableColumn) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight

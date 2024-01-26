@@ -442,27 +442,45 @@ template <typename T> class TReferenceDictionary : public CDictionary {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - TNKeyConvertibleDictionary
+// MARK: - TKeyConvertibleDictionary
 
-template <typename K, typename T> class TNKeyConvertibleDictionary : public TNDictionary<T> {
+template <typename K, typename T> class TKeyConvertibleDictionary : public TNDictionary<T> {
 	// Methods
 	public:
-						// Lifecycle methods
-						TNKeyConvertibleDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
-							TNDictionary<T>(opaqueEqualsProc)
-							{}
-
 						// Instance methods
 		const	OR<T>	get(K key) const
 							{ return TNDictionary<T>::get(CString(key)); }
-				void	set(K key, const T& item)
-							{ TNDictionary<T>::set(CString(key), item); }
-
-				void	remove(K key)
-							{ TNDictionary<T>::remove(CString(key)); }
 
 		const	OR<T>	operator[](K key) const
 							{ return get(key); }
+
+	protected:
+						// Lifecycle methods
+						TKeyConvertibleDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+							TNDictionary<T>(opaqueEqualsProc)
+							{}
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TNKeyConvertibleDictionary
+
+template <typename K, typename T> class TNKeyConvertibleDictionary : public TKeyConvertibleDictionary<K, T> {
+	// Methods
+	public:
+				// Lifecycle methods
+				TNKeyConvertibleDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+					TKeyConvertibleDictionary<K, T>(opaqueEqualsProc)
+					{}
+				TNKeyConvertibleDictionary(const TKeyConvertibleDictionary<K, T>& other) :
+					TKeyConvertibleDictionary<K, T>(other)
+					{}
+
+				// Instance methods
+		void	set(K key, const T& item)
+					{ TNDictionary<T>::set(CString(key), item); }
+
+		void	remove(K key)
+					{ TNDictionary<T>::remove(CString(key)); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

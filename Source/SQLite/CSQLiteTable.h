@@ -106,119 +106,163 @@ class CSQLiteTable {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CSQLiteTable(const CString& name, Options options,
-														const TArray<CSQLiteTableColumn>& tableColumns,
-														const TArray<CSQLiteTableColumn::Reference>& references,
-														CSQLiteStatementPerformer& statementPerformer);
-												CSQLiteTable(const CSQLiteTable& other);
-												~CSQLiteTable();
+													// Lifecycle methods
+													CSQLiteTable(const CString& name, Options options,
+															const TArray<CSQLiteTableColumn>& tableColumns,
+															const TArray<CSQLiteTableColumn::Reference>& references,
+															CSQLiteStatementPerformer& statementPerformer);
+													CSQLiteTable(const CSQLiteTable& other);
+													~CSQLiteTable();
 
-												// Instance methods
-				const	CString&				getName() const;
+													// Instance methods
+				const	CString&					getName() const;
 
-						SInt32					getVariableNumberLimit() const;
+						SInt32						getVariableNumberLimit() const;
 
-						void					add(const CSQLiteTableColumn& tableColumn);
-						void					add(const CSQLiteTrigger& trigger);
+						void						add(const CSQLiteTableColumn& tableColumn);
+						void						add(const CSQLiteTrigger& trigger);
 
-						UInt32					count(const OR<CSQLiteInnerJoin>& innerJoin = OR<CSQLiteInnerJoin>(),
-														const OR<CSQLiteWhere>& where = OR<CSQLiteWhere>()) const;
+						UInt32						count(
+															const OR<CSQLiteInnerJoin>& innerJoin =
+																	OR<CSQLiteInnerJoin>(),
+															const OR<CSQLiteWhere>& where = OR<CSQLiteWhere>()) const;
+						UInt32						count(const CSQLiteWhere& where) const
+														{ return count(OR<CSQLiteInnerJoin>(),
+																OR<CSQLiteWhere>((CSQLiteWhere&) where)); }
 
-						void					create(bool ifNotExists = true) const;
+						void						create(bool ifNotExists = true) const;
 
-						void					deleteRow(const CSQLiteWhere& where);
-						void					deleteRows(const CSQLiteTableColumn& tableColumn,
-														const TArray<SSQLiteValue>& values) const;
-						void					deleteRows(const CSQLiteTableColumn& tableColumn,
-														const SSQLiteValue& value) const
-													{ deleteRows(tableColumn, TSArray<SSQLiteValue>(value)); }
+						void						deleteRow(const CSQLiteWhere& where);
+						void						deleteRows(const CSQLiteTableColumn& tableColumn,
+															const TArray<SSQLiteValue>& values) const;
+						void						deleteRows(const CSQLiteTableColumn& tableColumn,
+															const SSQLiteValue& value) const
+														{ deleteRows(tableColumn, TSArray<SSQLiteValue>(value)); }
 
-						void					drop(const CString& triggerName);
-						void					drop() const;
+						void						drop(const CString& triggerName);
+						void						drop() const;
 
-						bool					hasRow(const CSQLiteWhere& where) const;
+						bool						hasRow(const CSQLiteWhere& where) const;
 
-						SInt64					insertRow(const TArray<TableColumnAndValue>& tableColumnAndValues)
-														const;
-						void					insertRow(const TArray<TableColumnAndValue>& tableColumnAndValues,
-														LastInsertRowIDProc lastInsertRowIDProc, void* userData) const;
+						SInt64						insertRow(const TArray<TableColumnAndValue>& tableColumnAndValues)
+															const;
+						void						insertRow(const TArray<TableColumnAndValue>& tableColumnAndValues,
+															LastInsertRowIDProc lastInsertRowIDProc, void* userData)
+															const;
 
-						SInt64					insertOrReplaceRow(
-														const TArray<TableColumnAndValue>& tableColumnAndValues) const;
-						void					insertOrReplaceRow(
-														const TArray<TableColumnAndValue>& tableColumnAndValues,
-														LastInsertRowIDProc lastInsertRowIDProc, void* userData) const;
-						void					insertOrReplaceRows(const CSQLiteTableColumn& tableColumn,
-														const TArray<SSQLiteValue>& values) const;
+						SInt64						insertOrReplaceRow(
+															const TArray<TableColumnAndValue>& tableColumnAndValues)
+															const;
+						void						insertOrReplaceRow(
+															const TArray<TableColumnAndValue>& tableColumnAndValues,
+															LastInsertRowIDProc lastInsertRowIDProc, void* userData)
+															const;
+						void						insertOrReplaceRows(const CSQLiteTableColumn& tableColumn,
+															const TArray<SSQLiteValue>& values) const;
 
-						OV<SError>				migrate(ResultsRowMigrationProc resultsRowMigrationProc,
-														void* userData);
+						OV<SError>					migrate(ResultsRowMigrationProc resultsRowMigrationProc,
+															void* userData = nil);
 
-						void					rename(const CString& name) const;
+						void						rename(const CString& name) const;
 
-						OV<SInt64>				rowID(const CSQLiteWhere& where) const;
+						OV<SInt64>					rowID(const CSQLiteWhere& where) const;
 
-						OV<SError>				select(const TArray<CSQLiteTableColumn>& tableColumns,
-														const OR<CSQLiteInnerJoin>& innerJoin,
-														const OR<CSQLiteWhere>& where,
-														const OR<CSQLiteOrderBy>& orderBy,
-														const OR<CSQLiteLimit>& limit,
-														CSQLiteResultsRow::Proc resultsRowProc, void* userData) const;
-						OV<SError>				select(const TArray<CSQLiteTableColumn>& tableColumns,
-														const CSQLiteWhere& where,
-														CSQLiteResultsRow::Proc resultsRowProc, void* userData) const
-													{ return select(tableColumns, OR<CSQLiteInnerJoin>(),
-															OR<CSQLiteWhere>((CSQLiteWhere&) where),
-															OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(), resultsRowProc,
-															userData); }
-						OV<SError>				select(const CSQLiteInnerJoin& innerJoin, const CSQLiteWhere& where,
-														CSQLiteResultsRow::Proc resultsRowProc, void* userData) const
-													{ return select(TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
+						OV<SError>					select(const TArray<CSQLiteTableColumn>& tableColumns,
+															const OR<CSQLiteInnerJoin>& innerJoin,
+															const OR<CSQLiteWhere>& where,
+															const OR<CSQLiteOrderBy>& orderBy,
+															const OR<CSQLiteLimit>& limit,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const;
+						OV<SError>					select(const TArray<CSQLiteTableColumn>& tableColumns,
+															const CSQLiteInnerJoin& innerJoin,
+															const CSQLiteWhere& where,
+															const CSQLiteOrderBy& orderBy,
+															const CSQLiteLimit& limit,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(tableColumns,
+																OR<CSQLiteInnerJoin>((CSQLiteInnerJoin&) innerJoin),
+																OR<CSQLiteWhere>((CSQLiteWhere&) where),
+																OR<CSQLiteOrderBy>((CSQLiteOrderBy&) orderBy),
+																OR<CSQLiteLimit>((CSQLiteLimit&) limit), resultsRowProc,
+																userData); }
+						OV<SError>					select(const TArray<CSQLiteTableColumn>& tableColumns,
+															const CSQLiteWhere& where,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(tableColumns, OR<CSQLiteInnerJoin>(),
+																OR<CSQLiteWhere>((CSQLiteWhere&) where),
+																OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(),
+																resultsRowProc, userData); }
+						OV<SError>					select(const CSQLiteInnerJoin& innerJoin, const CSQLiteWhere& where,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(
+																TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
 																OR<CSQLiteInnerJoin>((CSQLiteInnerJoin&) innerJoin),
 																OR<CSQLiteWhere>((CSQLiteWhere&) where),
 																OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(),
 																resultsRowProc, userData); }
-						OV<SError>				select(const CSQLiteInnerJoin& innerJoin,
-														CSQLiteResultsRow::Proc resultsRowProc, void* userData) const
-													{ return select(TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
+						OV<SError>					select(const CSQLiteInnerJoin& innerJoin,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(
+																TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
 																OR<CSQLiteInnerJoin>((CSQLiteInnerJoin&) innerJoin),
 																OR<CSQLiteWhere>(), OR<CSQLiteOrderBy>(),
 																OR<CSQLiteLimit>(), resultsRowProc, userData); }
-						OV<SError>				select(CSQLiteResultsRow::Proc resultsRowProc, void* userData) const
-													{ return select(TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
+						OV<SError>					select(const CSQLiteWhere& where,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData) const
+														{ return select(TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
+																OR<CSQLiteInnerJoin>(),
+																OR<CSQLiteWhere>((CSQLiteWhere&) where),
+																OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(),
+																resultsRowProc, userData); }
+						OV<SError>					select(CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(
+																TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
 																OR<CSQLiteInnerJoin>(), OR<CSQLiteWhere>(),
 																OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(),
 																resultsRowProc, userData); }
-						OV<SError>				select(const TArray<TableAndTableColumn>& tableAndTableColumns,
-														const OR<CSQLiteInnerJoin>& innerJoin,
-														const OR<CSQLiteWhere>& where,
-														const OR<CSQLiteOrderBy>& orderBy,
-														const OR<CSQLiteLimit>& limit,
-														CSQLiteResultsRow::Proc resultsRowProc, void* userData) const;
+						OV<SError>					select(const TArray<TableAndTableColumn>& tableAndTableColumns,
+															const OR<CSQLiteInnerJoin>& innerJoin,
+															const OR<CSQLiteWhere>& where,
+															const OR<CSQLiteOrderBy>& orderBy,
+															const OR<CSQLiteLimit>& limit,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const;
 
-						TVResult<SInt64>		sum(const CSQLiteTableColumn& tableColumn,
-														const OR<CSQLiteInnerJoin>& innerJoin,
-														const OR<CSQLiteWhere>& where) const;
-						TVResult<CDictionary>	sum(const TArray<CSQLiteTableColumn>& tableColumns,
-														const OR<CSQLiteInnerJoin>& innerJoin,
-														const OR<CSQLiteWhere>& where) const;
+						TVResult<SInt64>			sum(const CSQLiteTableColumn& tableColumn,
+															const OR<CSQLiteInnerJoin>& innerJoin,
+															const OR<CSQLiteWhere>& where) const;
+						TVResult<CDictionary>		sum(const TArray<CSQLiteTableColumn>& tableColumns,
+															const OR<CSQLiteInnerJoin>& innerJoin,
+															const OR<CSQLiteWhere>& where) const;
+						TVResult<CDictionary>		sum(const TArray<CSQLiteTableColumn>& tableColumns,
+															const CSQLiteInnerJoin& innerJoin,
+															const CSQLiteWhere& where) const
+														{ return sum(tableColumns,
+																OR<CSQLiteInnerJoin>((CSQLiteInnerJoin&) innerJoin),
+																OR<CSQLiteWhere>((CSQLiteWhere&) where)); }
 
-				const	CSQLiteTableColumn&		getTableColumn(const CString& name) const;
+				const	CSQLiteTableColumn&			getTableColumn(const CString& name) const;
+						TArray<CSQLiteTableColumn>	getTableColumns(const TArray<CString>& names) const;
 
-						void					update(const TArray<TableColumnAndValue>& tableColumnAndValues,
-														const CSQLiteWhere& where) const;
-						void					update(const TableColumnAndValue& tableColumnAndValue,
-														const CSQLiteWhere& where) const
-													{ update(TSArray<TableColumnAndValue>(tableColumnAndValue),
-															where); }
+						void						update(const TArray<TableColumnAndValue>& tableColumnAndValues,
+															const CSQLiteWhere& where) const;
+						void						update(const TableColumnAndValue& tableColumnAndValue,
+															const CSQLiteWhere& where) const
+														{ update(TSArray<TableColumnAndValue>(tableColumnAndValue),
+																where); }
 
-		static			TArray<CSQLiteTable>	getAll(CSQLiteStatementPerformer& statementPerformer);
+		static			TArray<CSQLiteTable>		getAll(CSQLiteStatementPerformer& statementPerformer);
 
 	private:
-												// Lifecycle methods
-												CSQLiteTable(const CString& name,
-														CSQLiteStatementPerformer& statementPerformer);
+													// Lifecycle methods
+													CSQLiteTable(const CString& name,
+															CSQLiteStatementPerformer& statementPerformer);
 	// Properties
 	public:
 		static	const	CSQLiteTableColumn	mSelectAllTableColumn;

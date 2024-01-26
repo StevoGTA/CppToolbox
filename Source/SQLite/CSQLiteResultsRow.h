@@ -39,7 +39,7 @@ class CSQLiteResultsRow {
 						}
 		OV<Float64>	getReal(const CSQLiteTableColumn& tableColumn) const;
 		OV<CString>	getText(const CSQLiteTableColumn& tableColumn) const;
-		OV<CData>	getData(const CSQLiteTableColumn& tableColumn) const;
+		OV<CData>	getBlob(const CSQLiteTableColumn& tableColumn) const;
 
 	// Properties
 	private:

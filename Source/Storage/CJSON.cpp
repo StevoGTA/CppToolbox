@@ -17,16 +17,17 @@ static	SError	sInvalidTokenError(sErrorDomain, 2, CString(OSSTR("Invalid Token")
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local method declarations
 
-static	OV<SError>				sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array);
-static	OV<SError>				sAddArrayOfStrings(CData& data, const TArray<CString>& array);
-static	OV<SError>				sAddDictionary(CData& data, const CDictionary& dictionary);
-static	void					sAddString(CData& data, const CString& string);
+static	OV<SError>						sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array);
+static	OV<SError>						sAddArrayOfStrings(CData& data, const TArray<CString>& array);
+static	OV<SError>						sAddDictionary(CData& data, const CDictionary& dictionary);
+static	void							sAddString(CData& data, const CString& string);
 
-static	TVResult<CDictionary>	sReadDictionary(const SInt8*& charPtr);
-static	TVResult<CString>		sReadString(const SInt8*& charPtr);
-static	TVResult<SValue>		sReadValue(const SInt8*& charPtr);
-static	void					sSkipWhitespace(const SInt8*& charPtr);
-static	OV<SError>				sValidateToken(const SInt8*& charPtr, char token, bool advance = false);
+static	TVResult<TArray<CDictionary> >	sReadArrayOfDictionaries(const SInt8*& charPtr);
+static	TVResult<CDictionary>			sReadDictionary(const SInt8*& charPtr);
+static	TVResult<CString>				sReadString(const SInt8*& charPtr);
+static	TVResult<SValue>				sReadValue(const SInt8*& charPtr);
+static	void							sSkipWhitespace(const SInt8*& charPtr);
+static	OV<SError>						sValidateToken(const SInt8*& charPtr, char token, bool advance = false);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -35,13 +36,17 @@ static	OV<SError>				sValidateToken(const SInt8*& charPtr, char token, bool adva
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CDictionary> CJSON::dictionaryFrom(const CData& data)
+TVResult<CData> CJSON::dataFrom(const TArray<CDictionary>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Read dictionary
-	const	SInt8*	charPtr = (const SInt8*) data.getBytePtr();
+	// Setup
+	CData	data;
 
-	return sReadDictionary(charPtr);
+	// Add array
+	OV<SError>	error = sAddArrayOfDictionaries(data, array);
+	ReturnValueIfError(error, TVResult<CData>(*error));
+
+	return TVResult<CData>(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -53,11 +58,29 @@ TVResult<CData> CJSON::dataFrom(const CDictionary& dictionary)
 
 	// Add dictionary
 	OV<SError>	error = sAddDictionary(data, dictionary);
-	if (error.hasValue())
-		// Error
-		return TVResult<CData>(*error);
+	ReturnValueIfError(error, TVResult<CData>(*error));
 
 	return TVResult<CData>(data);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<TArray<CDictionary> > CJSON::arrayOfDictionariesFrom(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read array of dictionaries
+	const	SInt8*	charPtr = (const SInt8*) data.getBytePtr();
+
+	return sReadArrayOfDictionaries(charPtr);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CDictionary> CJSON::dictionaryFrom(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read dictionary
+	const	SInt8*	charPtr = (const SInt8*) data.getBytePtr();
+
+	return sReadDictionary(charPtr);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -256,6 +279,42 @@ void sAddString(CData& data, const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TVResult<TArray<CDictionary> > sReadArrayOfDictionaries(const SInt8*& charPtr)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Compose array
+	TNArray<CDictionary>	array;
+	while (true) {
+		// Read dictionary
+		TVResult<CDictionary>	result = sReadDictionary(charPtr);
+		ReturnValueIfResultError(result, TVResult<TArray<CDictionary> >(result.getError()));
+		array += *result;
+
+		// Skip whitespace
+		sSkipWhitespace(charPtr);
+
+		// Check token
+		if (*charPtr == ',') {
+			// More values
+			charPtr++;
+
+			// Skip whitespace
+			sSkipWhitespace(charPtr);
+		} else if (*charPtr == ']') {
+			// End of array
+			charPtr++;
+
+			// Skip whitespace
+			sSkipWhitespace(charPtr);
+
+			return TVResult<TArray<CDictionary> >(array);
+		} else
+			// Invalid token
+			return TVResult<TArray<CDictionary> >(sInvalidTokenError);
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TVResult<CDictionary> sReadDictionary(const SInt8*& charPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -385,35 +444,10 @@ TVResult<SValue> sReadValue(const SInt8*& charPtr)
 
 		if (*charPtr == '{') {
 			// Array of dictionaries
-			TNArray<CDictionary>	array;
-			while (true) {
-				// Read dictionary
-				TVResult<CDictionary>	result = sReadDictionary(charPtr);
-				ReturnValueIfResultError(result, TVResult<SValue>(result.getError()));
-				array += *result;
+			TVResult<TArray<CDictionary> >	result = sReadArrayOfDictionaries(charPtr);
+			ReturnValueIfResultError(result, TVResult<SValue>(result.getError()));
 
-				// Skip whitespace
-				sSkipWhitespace(charPtr);
-
-				// Check token
-				if (*charPtr == ',') {
-					// More values
-					charPtr++;
-
-					// Skip whitespace
-					sSkipWhitespace(charPtr);
-				} else if (*charPtr == ']') {
-					// End of array
-					charPtr++;
-
-					// Skip whitespace
-					sSkipWhitespace(charPtr);
-
-					return TVResult<SValue>(SValue(array));
-				} else
-					// Invalid token
-					return TVResult<SValue>(sInvalidTokenError);
-			}
+			return TVResult<SValue>(SValue(*result));
 		} else if (*charPtr == '\"') {
 			// Array of strings
 			TNArray<CString>	array;

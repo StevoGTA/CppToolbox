@@ -17,7 +17,8 @@ class CSQLiteLimit {
 	// Methods
 	public:
 							// Lifecycle methods
-							CSQLiteLimit(UInt32 limit, const OV<UInt32>& offset = OV<UInt32>());
+							CSQLiteLimit(const OV<UInt32> limit, UInt32 offset);
+							CSQLiteLimit(const OV<UInt32> limit);
 							~CSQLiteLimit();
 
 							// Instance methods
