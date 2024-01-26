@@ -22,7 +22,10 @@ static	CDictionary	sLocalizationInfo;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
- static	UINT	sGetCodePageForCStringEncoding(CString::Encoding encoding);
+static	bool	sIsDigit(int character);
+static	int		sCompare(const std::basic_string<TCHAR>& string1, const std::basic_string<TCHAR>& string2,
+						CString::CompareFlags compareFlags);
+static	UINT	sGetCodePageForCStringEncoding(CString::Encoding encoding);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -33,8 +36,7 @@ static	CDictionary	sLocalizationInfo;
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString() : CHashable(), mString()
 //----------------------------------------------------------------------------------------------------------------------
-{
-}
+{}
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(const CString& other) : CHashable()
@@ -140,8 +142,10 @@ CString::CString(Float32 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
+		// Compose string without field size
 		count = ::_stprintf_s(&mString[0], 100, _TEXT("%0.*f"), digitsAfterDecimalPoint, value);
 	else
+		// Compose string with field size
 		count =
 				::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%0*.*f") : _TEXT("%*.*f"), fieldSize,
 						digitsAfterDecimalPoint, value);
@@ -160,8 +164,10 @@ CString::CString(Float64 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
+		// Compose string without field size
 		count = ::_stprintf_s(&mString[0], 100, _TEXT("%0.*f"), digitsAfterDecimalPoint, value);
 	else
+		// Compose string with field size
 		count =
 				::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%0*.*f") : _TEXT("%*.*f"), fieldSize,
 						digitsAfterDecimalPoint, value);
@@ -194,8 +200,10 @@ CString::CString(SInt32 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
+		// Compose string without field size
 		count = ::_stprintf_s(&mString[0], 100, _TEXT("%ld"), value);
 	else
+		// Compose string with field size
 		count = ::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*ld") : _TEXT("%*ld"), fieldSize, value);
 
 	// Update
@@ -212,8 +220,10 @@ CString::CString(SInt64 value, UInt32 fieldSize, bool padWithZeros) : CHashable(
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
+		// Compose string without field size
 		count = ::_stprintf_s(&mString[0], 100, _TEXT("%lld"), value);
 	else
+		// Compose string with field size
 		count = ::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*lld") : _TEXT("%*lld"), fieldSize, value);
 
 	// Update
@@ -230,13 +240,16 @@ CString::CString(UInt8 value, UInt32 fieldSize, bool padWithZeros, bool makeHex)
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
+		// Compose string without field size
 		count = ::_stprintf_s(&mString[0], 100, _TEXT("%u"), value);
 	else {
 		// Setup
 		TCHAR*	format;
 		if (makeHex)
+			// Make hex
 			format = padWithZeros ? _TEXT("%#.*x") : _TEXT("%#*x");
 		else
+			// Make unsigned
 			format = padWithZeros ? _TEXT("%.*u") : _TEXT("%*u");
 
 		count = ::_stprintf_s(&mString[0], 100, format, fieldSize, value);
@@ -256,13 +269,16 @@ CString::CString(UInt16 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
+		// Compose string without field size
 		count = ::_stprintf_s(&mString[0], 100, _TEXT("%u"), value);
 	else {
 		// Setup
 		TCHAR*	format;
 		if (makeHex)
+			// Make hex
 			format = padWithZeros ? _TEXT("%#.*x") : _TEXT("%#*x");
 		else
+			// Make unsigned
 			format = padWithZeros ? _TEXT("%.*u") : _TEXT("%*u");
 
 		count = ::_stprintf_s(&mString[0], 100, format, fieldSize, value);
@@ -282,13 +298,16 @@ CString::CString(UInt32 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
+		// Compose string without field size
 		count = ::_stprintf_s(&mString[0], 100, _TEXT("%lu"), value);
 	else {
 		// Setup
 		TCHAR*	format;
 		if (makeHex)
+			// Make hex
 			format = padWithZeros ? _TEXT("%#.*lx") : _TEXT("%#*lx");
 		else
+			// Make unsigned
 			format = padWithZeros ? _TEXT("%.*lu") : _TEXT("%*lu");
 
 		count = ::_stprintf_s(&mString[0], 100, format, fieldSize, value);
@@ -308,13 +327,16 @@ CString::CString(UInt64 value, UInt32 fieldSize, bool padWithZeros, bool makeHex
 	// Check field size
 	int	count;
 	if (fieldSize == 0)
+		// Compose string without field size
 		count = ::_stprintf_s(&mString[0], 100, _TEXT("%llu"), value);
 	else {
 		// Setup
 		TCHAR*	format;
 		if (makeHex)
+			// Make hex
 			format = padWithZeros ? _TEXT("%#.*llx") : _TEXT("%#*llx");
 		else
+			// Make unsigned
 			format = padWithZeros ? _TEXT("%.*llu") : _TEXT("%*llu");
 
 		count = ::_stprintf_s(&mString[0], 100, format, fieldSize, value);
@@ -670,8 +692,12 @@ return CString::mEmpty;
 CString CString::removingAllWhitespace() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return CString::mEmpty;
+	// Setup
+	size_t	startPos = mString.find_first_not_of(L" \t");
+	size_t	endPos = mString.find_last_not_of(L" \t");
+
+	return ((startPos != std::basic_string<TCHAR>::npos) && (endPos != std::basic_string<TCHAR>::npos)) ?
+			CString(mString.substr(startPos, endPos - startPos + 1).c_str()) : CString(mString.c_str());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -723,15 +749,16 @@ TArray<CString> CString::components(const CString& delimiterString, bool include
 bool CString::compareTo(const CString& other, CString::CompareFlags compareFlags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return false;
+	// Return if this string is "less than" the other string
+	return sCompare(mString, other.mString, compareFlags) == -1;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CString::equals(const CString& other, CString::CompareFlags compareFlags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mString.compare(other.mString) == 0;
+	// Return if this string is "equal to" the other string
+	return sCompare(mString, other.mString, compareFlags) == 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -854,15 +881,95 @@ void CString::setupLocalization(const CData& stringsFileData)
 //----------------------------------------------------------------------------------------------------------------------
 void CString::init()
 //----------------------------------------------------------------------------------------------------------------------
-{
-}
+{}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
+bool sIsDigit(int character)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return std::isdigit(character);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+int sCompare(const std::basic_string<TCHAR>& string1, const std::basic_string<TCHAR>& string2,
+		CString::CompareFlags compareFlags)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if comparing numerically
+	if (compareFlags & CString::kCompareFlagsNumerically) {
+		// Compare as chunks
+		auto	iterator1 = string1.begin();
+		auto	iterator2 = string2.begin();
+		while ((iterator1 != string1.end()) && (iterator2 != string2.end())) {
+			// Check if next compare character is digit
+			if (sIsDigit(*iterator1) && sIsDigit(*iterator2)) {
+				// Is digit
+				auto number1 = std::stoi(std::basic_string<TCHAR>(iterator1, std::find_if_not(iterator1, string1.end(), sIsDigit)));
+				auto number2 = std::stoi(std::basic_string<TCHAR>(iterator2, std::find_if_not(iterator2, string2.end(), sIsDigit)));
+				if (number1 != number2)
+					// Numbers are different
+					return number1 < number2;
+
+				// Advance iterators
+				iterator1 = std::find_if_not(iterator1, string1.end(), sIsDigit);
+				iterator2 = std::find_if_not(iterator2, string2.end(), sIsDigit);
+			} else {
+				// Not digit
+#if defined(_UNICODE)
+				auto	character1 = (compareFlags & CString::kCompareFlagsCaseInsensitive) ? towlower(*iterator1) : *iterator1;
+				auto	character2 = (compareFlags & CString::kCompareFlagsCaseInsensitive) ? towlower(*iterator2) : *iterator2;
+#else
+				auto	character1 = (compareFlags & CString::kCompareFlagsCaseInsensitive) ? tolower(*iterator1) : *iterator1;
+				auto	character2 = (compareFlags & CString::kCompareFlagsCaseInsensitive) ? tolower(*iterator2) : *iterator2;
+#endif
+				if (character1 != character2)
+					// Characters are different
+					return character1 < character2;
+
+				// Advance iterators
+				++iterator1;
+				++iterator2;
+			}
+		}
+
+		// Check result
+		if (iterator1 == string1.end())
+			// 1 before 2
+			return -1;
+		else if (iterator2 == string2.end())
+			// 1 after 2
+			return 1;
+		else
+			// Identical
+			return 0;
+	} else {
+		// Compare as text
+		auto	string1Use = string1;
+		auto	string2Use = string2;
+
+		// Check if comparing case insensitive
+		if (compareFlags & CString::kCompareFlagsCaseInsensitive) {
+			// Transform to lowercase
+	#if defined(_UNICODE)
+			std::transform(string1Use.begin(), string1Use.end(), string1Use.begin(), ::towlower);
+			std::transform(string2Use.begin(), string2Use.end(), string2Use.begin(), ::towlower);
+	#else
+			std::transform(string1Use.begin(), string1Use.end(), string1Use.begin(), ::tolower);
+			std::transform(string2Use.begin(), string2Use.end(), string2Use.begin(), ::tolower);
+	#endif
+		}
+
+		return string1Use.compare(string2Use);
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 UINT sGetCodePageForCStringEncoding(CString::Encoding encoding)
+//----------------------------------------------------------------------------------------------------------------------
 {
 	switch (encoding) {
 		case CString::kEncodingASCII:		return 20127;
