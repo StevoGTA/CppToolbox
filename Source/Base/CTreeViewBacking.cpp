@@ -14,150 +14,135 @@ class CRootTreeItem : public CTreeItem {};
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - STreeViewBackingInternalInfo
-
-class CTreeViewBackingItem;
-struct STreeViewBackingInternalInfo {
-	// Types
-	typedef	void	(*RemoveViewItemIDsProc)(const TArray<CString>& viewItemIDs, void* userData);
-	typedef	void	(*NoteTreeViewBackingItemsProc)(const TArray<CTreeViewBackingItem>& treeViewBackingItems,
-							void* userData);
-
-			// Lifecycle methods
-			STreeViewBackingInternalInfo(RemoveViewItemIDsProc removeViewItemIDsProc,
-					NoteTreeViewBackingItemsProc noteTreeViewBackingItemsProc, void* userData) :
-				mRemoveViewItemIDsProc(removeViewItemIDsProc),
-						mNoteTreeViewBackingItemsProc(noteTreeViewBackingItemsProc), mUserData(userData)
-				{}
-
-			// Instance methods
-	void	removeViewItemIDs(const TArray<CString>& viewItemIDs) const
-				{ mRemoveViewItemIDsProc(viewItemIDs, mUserData); }
-	void	noteTreeViewBackingItems(const TArray<CTreeViewBackingItem>& treeViewBackingItems) const
-				{ mNoteTreeViewBackingItemsProc(treeViewBackingItems, mUserData); }
-
-	// Properties
-	private:
-		RemoveViewItemIDsProc			mRemoveViewItemIDsProc;
-		NoteTreeViewBackingItemsProc	mNoteTreeViewBackingItemsProc;
-		void*							mUserData;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CTreeViewBackingItem
-
-class CTreeViewBackingItem {
-	public:
-				CTreeViewBackingItem(const I<CTreeItem>& treeItem, const CString& viewItemID,
-						const CTreeViewBacking::Info& info, const STreeViewBackingInternalInfo& internalInfo) :
-					 mTreeItem(treeItem), mViewItemID(viewItemID), mInfo(info), mInternalInfo(internalInfo),
-					 		mNeedsReload(true), mReloadInProgress(false)
-					{}
-				CTreeViewBackingItem(const I<CTreeItem>& treeItem, const CTreeViewBacking::Info& info,
-						const STreeViewBackingInternalInfo& internalInfo) :
-					 mTreeItem(treeItem), mViewItemID(CUUID().getBase64String()), mInfo(info),
-					 		mInternalInfo(internalInfo),
-					 		mNeedsReload(true), mReloadInProgress(false)
-					{}
-				CTreeViewBackingItem(const CTreeViewBackingItem& other) :
-					mTreeItem(other.mTreeItem), mViewItemID(other.mViewItemID), mInfo(other.mInfo),
-							mInternalInfo(other.mInternalInfo),
-							mChildViewItemIDs(other.mChildViewItemIDs), mNeedsReload(other.mNeedsReload),
-							mReloadInProgress(other.mReloadInProgress)
-					{}
-
-		void	reloadChildItems()
-					{
-						// Check if needs reload
-						if (!mNeedsReload || mReloadInProgress)
-							// Punt
-							return;
-
-						// Setup
-						mReloadInProgress = true;
-
-						// Remove existing items
-						mInternalInfo.removeViewItemIDs(mChildViewItemIDs);
-						mChildViewItemIDs.removeAll();
-
-						// Check how to get child items
-						if (mInfo.canGetChildTreeItemsSync()) {
-							// Get child tree items
-							TMArray<I<CTreeItem> >	childTreeItems = mInfo.getChildTreeItems(mTreeItem);
-							if (mInfo.mCompareTreeItemsProc != nil)
-								// Sort
-								childTreeItems.sort(mInfo.mCompareTreeItemsProc);
-
-							// Iterate child tree items
-							TNArray<CTreeViewBackingItem>	treeViewBackingItems;
-							for (TIteratorD<I<CTreeItem> > iterator = childTreeItems.getIterator(); iterator.hasValue();
-									iterator.advance()) {
-								// Create tree view backing item
-								CTreeViewBackingItem	treeViewBackingItem(*iterator, mInfo, mInternalInfo);
-
-								// Update arrays
-								treeViewBackingItems += treeViewBackingItem;
-								mChildViewItemIDs += treeViewBackingItem.mViewItemID;
-							}
-
-							// Note
-							mInternalInfo.noteTreeViewBackingItems(treeViewBackingItems);
-
-							// Done
-							mNeedsReload = false;
-							mReloadInProgress = false;
-						} else {
-							// Load child tree items
-						}
-					}
-
-				I<CTreeItem>					mTreeItem;
-				CString							mViewItemID;
-		const	CTreeViewBacking::Info&			mInfo;
-		const	STreeViewBackingInternalInfo&	mInternalInfo;
-
-				TNArray<CString>				mChildViewItemIDs;
-				bool							mNeedsReload;
-				bool							mReloadInProgress;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CTreeViewBacking::Internals
 
 class CTreeViewBacking::Internals {
 	public:
-						Internals(const CTreeViewBacking::Info& info) :
-							mInfo(info), mInternalInfo(removeViewItemIDs, noteTreeViewBackingItems, this)
+		class Item;
+
+	public:
+		struct InternalInfo {
+			// Types
+			typedef	void	(*RemoveViewItemIDsProc)(const TArray<CString>& viewItemIDs, void* userData);
+			typedef	void	(*NoteItemsProc)(const TArray<Item>& items, void* userData);
+
+					// Lifecycle methods
+					InternalInfo(RemoveViewItemIDsProc removeViewItemIDsProc,
+							NoteItemsProc noteItemsProc, void* userData) :
+						mRemoveViewItemIDsProc(removeViewItemIDsProc),
+								mNoteItemsProc(noteItemsProc), mUserData(userData)
+						{}
+
+					// Instance methods
+			void	removeViewItemIDs(const TArray<CString>& viewItemIDs) const
+						{ mRemoveViewItemIDsProc(viewItemIDs, mUserData); }
+			void	noteItems(const TArray<Item>& items) const
+						{ mNoteItemsProc(items, mUserData); }
+
+			// Properties
+			private:
+				RemoveViewItemIDsProc	mRemoveViewItemIDsProc;
+				NoteItemsProc			mNoteItemsProc;
+				void*					mUserData;
+		};
+
+	public:
+		class Item {
+			public:
+						Item(const I<CTreeItem>& treeItem, const CString& viewItemID,
+								const CTreeViewBacking::Info& info, const InternalInfo& internalInfo) :
+							 mTreeItem(treeItem), mViewItemID(viewItemID), mInfo(info), mInternalInfo(internalInfo),
+									mNeedsReload(true), mReloadInProgress(false)
+							{}
+						Item(const I<CTreeItem>& treeItem, const CTreeViewBacking::Info& info,
+								const InternalInfo& internalInfo) :
+							 mTreeItem(treeItem), mViewItemID(CUUID().getBase64String()), mInfo(info),
+									mInternalInfo(internalInfo),
+									mNeedsReload(true), mReloadInProgress(false)
+							{}
+						Item(const Item& other) :
+							mTreeItem(other.mTreeItem), mViewItemID(other.mViewItemID), mInfo(other.mInfo),
+									mInternalInfo(other.mInternalInfo),
+									mChildViewItemIDs(other.mChildViewItemIDs), mNeedsReload(other.mNeedsReload),
+									mReloadInProgress(other.mReloadInProgress)
 							{}
 
-		static	void	removeViewItemIDs(const TArray<CString>& viewItemIDs, void* userData)
+				void	reloadChildItems()
 							{
-								// Setup
-								Internals&	internals = *((Internals*) userData);
+								// Check if needs reload
+								if (!mNeedsReload || mReloadInProgress)
+									// Punt
+									return;
 
-								// Remove
-								internals.mTreeViewBackingItemMap.remove(viewItemIDs);
+								// Setup
+								mReloadInProgress = true;
+
+								// Remove existing items
+								mInternalInfo.removeViewItemIDs(mChildViewItemIDs);
+								mChildViewItemIDs.removeAll();
+
+								// Check how to get child items
+								if (mInfo.canGetChildTreeItemsSync()) {
+									// Get child tree items
+									TMArray<I<CTreeItem> >	childTreeItems = mInfo.getChildTreeItems(mTreeItem);
+
+									// Iterate child tree items
+									TNArray<Item>	items;
+									for (TIteratorD<I<CTreeItem> > iterator = childTreeItems.getIterator();
+											iterator.hasValue(); iterator.advance()) {
+										// Create tree view backing item
+										Item	item(*iterator, mInfo, mInternalInfo);
+
+										// Update arrays
+										items += item;
+										mChildViewItemIDs += item.mViewItemID;
+									}
+
+									// Note
+									mInternalInfo.noteItems(items);
+
+									// Done
+									mNeedsReload = false;
+									mReloadInProgress = false;
+								} else {
+									// Load child tree items
+								}
 							}
-		static	void	noteTreeViewBackingItems(const TArray<CTreeViewBackingItem>& treeViewBackingItems,
-								void* userData)
-							{
-								// Setup
-								Internals&	internals = *((Internals*) userData);
 
-								// Iterate tree view backing items
-								for (TIteratorD<CTreeViewBackingItem> iterator = treeViewBackingItems.getIterator();
-										iterator.hasValue(); iterator.advance())
+						I<CTreeItem>			mTreeItem;
+						CString					mViewItemID;
+				const	CTreeViewBacking::Info&	mInfo;
+				const	InternalInfo&			mInternalInfo;
+
+						TNArray<CString>		mChildViewItemIDs;
+						bool					mNeedsReload;
+						bool					mReloadInProgress;
+		};
+
+	public:
+						Internals(const CTreeViewBacking::Info& info) :
+							mInfo(info),
+									mInternalInfo(
+											(InternalInfo::RemoveViewItemIDsProc) removeViewItemIDs,
+											(InternalInfo::NoteItemsProc) noteItems, this)
+							{}
+
+		static	void	removeViewItemIDs(const TArray<CString>& viewItemIDs, Internals* internals)
+							{ internals->mItemByViewItemID.remove(viewItemIDs); }
+		static	void	noteItems(const TArray<Item>& item, Internals* internals)
+							{
+								// Iterate items
+								for (TIteratorD<Item> iterator = item.getIterator(); iterator.hasValue();
+										iterator.advance())
 									// Update map
-									internals.mTreeViewBackingItemMap.set(iterator->mViewItemID, *iterator);
+									internals->mItemByViewItemID.set(iterator->mViewItemID, *iterator);
 							}
 
-		const	CTreeViewBacking::Info&				mInfo;
-				STreeViewBackingInternalInfo		mInternalInfo;
+		CTreeViewBacking::Info	mInfo;
+		InternalInfo			mInternalInfo;
 
-				TNDictionary<CTreeViewBackingItem>	mTreeViewBackingItemMap;
-				TNArray<CString>					mTopLevelViewItemIDs;
+		TNDictionary<Item>		mItemByViewItemID;
+		TNArray<CString>		mTopLevelViewItemIDs;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -191,9 +176,9 @@ void CTreeViewBacking::set(const I<CTreeItem>& rootTreeItem)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals->mTreeViewBackingItemMap.removeAll();
-	mInternals->mTreeViewBackingItemMap.set(mRootViewItemID,
-			CTreeViewBackingItem(rootTreeItem, mRootViewItemID, mInternals->mInfo, mInternals->mInternalInfo));
+	mInternals->mItemByViewItemID.removeAll();
+	mInternals->mItemByViewItemID.set(mRootViewItemID,
+			Internals::Item(rootTreeItem, mRootViewItemID, mInternals->mInfo, mInternals->mInternalInfo));
 
 	mInternals->mTopLevelViewItemIDs.removeAll();
 }
@@ -203,7 +188,7 @@ void CTreeViewBacking::set(const TArray<I<CTreeItem> >& topLevelTreeItems)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals->mTreeViewBackingItemMap.removeAll();
+	mInternals->mItemByViewItemID.removeAll();
 
 	// Add
 	add(topLevelTreeItems);
@@ -217,11 +202,11 @@ void CTreeViewBacking::add(const TArray<I<CTreeItem> >& topLevelTreeItems)
 	for (TIteratorD<I<CTreeItem> > iterator = topLevelTreeItems.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Setup
-		CTreeViewBackingItem	treeViewBackingItem(*iterator, mInternals->mInfo, mInternals->mInternalInfo);
+		Internals::Item	item(*iterator, mInternals->mInfo, mInternals->mInternalInfo);
 
 		// Store
-		mInternals->mTreeViewBackingItemMap.set(treeViewBackingItem.mViewItemID, treeViewBackingItem);
-		mInternals->mTopLevelViewItemIDs += treeViewBackingItem.mViewItemID;
+		mInternals->mItemByViewItemID.set(item.mViewItemID, item);
+		mInternals->mTopLevelViewItemIDs += item.mViewItemID;
 	}
 }
 
@@ -236,7 +221,7 @@ TArray<I<CTreeItem> > CTreeViewBacking::getTopLevelTreeItems() const
 const I<CTreeItem>& CTreeViewBacking::getTreeItem(const CString& viewItemID) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mTreeViewBackingItemMap[viewItemID]->mTreeItem;
+	return mInternals->mItemByViewItemID[viewItemID]->mTreeItem;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -247,7 +232,7 @@ TArray<I<CTreeItem> > CTreeViewBacking::getTreeItems(const TArray<CString>& view
 	TNArray<I<CTreeItem> >	treeItems;
 	for (TIteratorD<CString> iterator = viewItemIDs.getIterator(); iterator.hasValue(); iterator.advance())
 		// Add tree item
-		treeItems += mInternals->mTreeViewBackingItemMap[*iterator]->mTreeItem;
+		treeItems += mInternals->mItemByViewItemID[*iterator]->mTreeItem;
 
 	return treeItems;
 }
@@ -257,17 +242,17 @@ bool CTreeViewBacking::hasChildren(const CString& viewItemID) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CTreeViewBackingItem& treeViewBackingItem = *mInternals->mTreeViewBackingItemMap[viewItemID];
+	Internals::Item& item = *mInternals->mItemByViewItemID[viewItemID];
 
 	// Check if have proc
 	if (!mInternals->mInfo.canGetChildTreeItemsSync())
 		// Query proc
-		return mInternals->mInfo.hasChildTreeItems(treeViewBackingItem.mTreeItem);
+		return item.mTreeItem->hasChildren();
 	else {
 		// Reload
-		treeViewBackingItem.reloadChildItems();
+		item.reloadChildItems();
 
-		return !treeViewBackingItem.mChildViewItemIDs.isEmpty();
+		return !item.mChildViewItemIDs.isEmpty();
 	}
 }
 
@@ -276,17 +261,17 @@ UInt32 CTreeViewBacking::getChildCount(const CString& viewItemID) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	OR<CTreeViewBackingItem>	treeViewBackingItem = mInternals->mTreeViewBackingItemMap[viewItemID];
+	OR<Internals::Item>	item = mInternals->mItemByViewItemID[viewItemID];
 
 	// Check situation
-	if ((viewItemID == mRootViewItemID) && !treeViewBackingItem.hasReference())
+	if ((viewItemID == mRootViewItemID) && !item.hasReference())
 		// Requesting root item, but no root item
 		return mInternals->mTopLevelViewItemIDs.getCount();
 	else {
 		// Reload
-		treeViewBackingItem->reloadChildItems();
+		item->reloadChildItems();
 
-		return treeViewBackingItem->mChildViewItemIDs.getCount();
+		return item->mChildViewItemIDs.getCount();
 	}
 }
 
@@ -295,16 +280,16 @@ CString CTreeViewBacking::getChildViewItemID(const CString& viewItemID, UInt32 i
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	OR<CTreeViewBackingItem>	treeViewBackingItem = mInternals->mTreeViewBackingItemMap[viewItemID];
+	OR<Internals::Item>	item = mInternals->mItemByViewItemID[viewItemID];
 
 	// Check situation
-	if ((viewItemID == mRootViewItemID) && !treeViewBackingItem.hasReference())
+	if ((viewItemID == mRootViewItemID) && !item.hasReference())
 		// Requesting child of root item, but no root item
-		return mInternals->mTreeViewBackingItemMap[mInternals->mTopLevelViewItemIDs[index]]->mViewItemID;
+		return mInternals->mItemByViewItemID[mInternals->mTopLevelViewItemIDs[index]]->mViewItemID;
 	else {
 		// Reload
-		treeViewBackingItem->reloadChildItems();
+		item->reloadChildItems();
 
-		return treeViewBackingItem->mChildViewItemIDs[index];
+		return item->mChildViewItemIDs[index];
 	}
 }

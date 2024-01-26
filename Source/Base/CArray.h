@@ -105,7 +105,7 @@ class CArray : public CEquatable {
 template <typename T> class TNumberArray : public CArray {
 	// Types
 	public:
-		typedef	T	(*MapProc)(CArray::ItemRef item);
+		typedef	T	(*MapProc)(CArray::ItemRef item, void* userData);
 
 	// Methods
 	public:
@@ -451,7 +451,7 @@ template <typename T> class TMArray : public TArray<T> {
 template <typename T> class TNArray : public TMArray<T> {
 	// Types
 	public:
-		typedef	T		(*MapProc)(CArray::ItemRef item);
+		typedef	T		(*MapProc)(CArray::ItemRef item, void* userData);
 		typedef	bool	(*IsMatchProc)(const T& item, void* userData);
 
 	// Methods
@@ -469,14 +469,14 @@ template <typename T> class TNArray : public TMArray<T> {
 									TNArray(const TArray<T>& other) :
 										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
 										{ TMArray<T>::addFrom(other); }
-									TNArray(const CArray& other, MapProc mapProc) :
+									TNArray(const CArray& other, MapProc mapProc, void* userData = nil) :
 										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
 										{
 											// Iterate all items
 											ItemCount	itemCount = other.getCount();
 											for (CArray::ItemIndex i = 0; i < itemCount; i++)
 												// Add mapped item
-												TMArray<T>::add(mapProc(other.getItemAt(i)));
+												TMArray<T>::add(mapProc(other.getItemAt(i), userData));
 										}
 
 									// CArray methods
@@ -488,7 +488,7 @@ template <typename T> class TNArray : public TMArray<T> {
 											for (CArray::ItemIndex i = 0; i < itemCount; i++) {
 												// Check if match
 												const	T&	item = (*this)[i];
-												if (!isMatchProc(item, userData))
+												if (isMatchProc(item, userData))
 													// Not a match
 													array.add(item);
 											}

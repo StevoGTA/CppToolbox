@@ -43,7 +43,7 @@ static	TNArray<SLogProcInfo>*	sLogErrorProcInfos = nil;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	CString	sStringWithDate(const CString& string);
+static	CString	sStringWithDate(const CString& string, void* userData = nil);
 static	void	sLogToConsoleOutput(const CString& string);
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ void CLogServices::enableConsoleLogging()
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-CString	sStringWithDate(const CString& string)
+CString	sStringWithDate(const CString& string, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return SGregorianDate().getString() + CString(OSSTR(": ")) + string;

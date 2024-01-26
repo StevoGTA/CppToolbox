@@ -14,61 +14,59 @@ class CTreeViewBacking {
 	// Info
 	public:
 		struct Info {
-			// Types
-			typedef	TMArray<I<CTreeItem> >	(*ChildTreeItemsProc)(const I<CTreeItem>& treeItem, void* userData);
+			public:
+				// Types
+				typedef	TMArray<I<CTreeItem> >	(*GetChildTreeItemsProc)(const I<CTreeItem>& treeItem, void* userData);
 
-			typedef	bool					(*HasChildTreeItemsProc)(const I<CTreeItem>& treeItem, void* userData);
-			typedef	void					(*LoadChildTreeItemsCompletionProc)(const TArray<I<CTreeItem> > treeItems);
-			typedef	void					(*LoadChildTreeItemsProc)(const I<CTreeItem>& treeItem,
-													LoadChildTreeItemsCompletionProc completionProc, void* userData);
+				typedef	void					(*LoadChildTreeItemsCompletionProc)(
+														const TArray<I<CTreeItem> > treeItems);
+				typedef	void					(*LoadChildTreeItemsProc)(const I<CTreeItem>& treeItem,
+														LoadChildTreeItemsCompletionProc completionProc,
+														void* userData);
 
-			typedef	bool					(*CompareTreeItemsProc)(const I<CTreeItem>& treeItem1,
-													const I<CTreeItem>& treeItem2, void* userData);
+				typedef	bool					(*CompareTreeItemsProc)(const I<CTreeItem>& treeItem1,
+														const I<CTreeItem>& treeItem2, void* userData);
 
-											// Lifecycle methods
-											Info(HasChildTreeItemsProc hasChildTreeItemsProc,
-													ChildTreeItemsProc childTreeItemsProc,
-													LoadChildTreeItemsProc loadChildTreeItemsProc,
-													CompareTreeItemsProc compareTreeItemsProc, void* userData) :
-												mHasChildTreeItemsProc(hasChildTreeItemsProc),
-														mChildTreeItemsProc(childTreeItemsProc),
-														mLoadChildTreeItemsProc(loadChildTreeItemsProc),
-														mCompareTreeItemsProc(compareTreeItemsProc), mUserData(userData)
-												{}
-											Info(const Info& other) :
-												mHasChildTreeItemsProc(other.mHasChildTreeItemsProc),
-														mChildTreeItemsProc(other.mChildTreeItemsProc),
-														mLoadChildTreeItemsProc(other.mLoadChildTreeItemsProc),
-														mCompareTreeItemsProc(other.mCompareTreeItemsProc),
-														mUserData(other.mUserData)
-												{}
+			public:
+				// Methods
+													// Lifecycle methods
+													Info(GetChildTreeItemsProc getChildTreeItemsProc,
+															LoadChildTreeItemsProc loadChildTreeItemsProc,
+															CompareTreeItemsProc compareTreeItemsProc, void* userData) :
+														mGetChildTreeItemsProc(getChildTreeItemsProc),
+																mLoadChildTreeItemsProc(loadChildTreeItemsProc),
+																mCompareTreeItemsProc(compareTreeItemsProc),
+																mUserData(userData)
+														{}
+													Info(const Info& other) :
+														mGetChildTreeItemsProc(other.mGetChildTreeItemsProc),
+																mLoadChildTreeItemsProc(other.mLoadChildTreeItemsProc),
+																mCompareTreeItemsProc(other.mCompareTreeItemsProc),
+																mUserData(other.mUserData)
+														{}
 
-											// Instance methods
-					bool					canGetChildTreeItemsSync() const
-												{ return mChildTreeItemsProc != nil; }
+													// Instance methods
+							bool					canGetChildTreeItemsSync() const
+														{ return mGetChildTreeItemsProc != nil; }
 
-					TMArray<I<CTreeItem> >	getChildTreeItems(const I<CTreeItem>& treeItem) const
-												{ return mChildTreeItemsProc(treeItem, mUserData); }
+							TMArray<I<CTreeItem> >	getChildTreeItems(const I<CTreeItem>& treeItem) const
+														{ return mGetChildTreeItemsProc(treeItem, mUserData); }
 
-					bool					hasChildTreeItems(const I<CTreeItem>& treeItem) const
-												{ return mHasChildTreeItemsProc(treeItem, mUserData); }
-					void					loadChildTreeItems(const I<CTreeItem>& treeItem) const
-												{ mLoadChildTreeItemsProc(treeItem, loadChildTreeItemsCompletion,
-														mUserData); }
+							void					loadChildTreeItems(const I<CTreeItem>& treeItem) const
+														{ mLoadChildTreeItemsProc(treeItem,
+																loadChildTreeItemsCompletion, mUserData); }
 
-											// Class methods
-			static	void					loadChildTreeItemsCompletion(const TArray<I<CTreeItem> > treeItems)
-												{}
+													// Class methods
+					static	void					loadChildTreeItemsCompletion(const TArray<I<CTreeItem> > treeItems)
+														{}
 
 			// Properties
-			public:
-				CompareTreeItemsProc	mCompareTreeItemsProc;
-
 			private:
-				ChildTreeItemsProc		mChildTreeItemsProc;
+				GetChildTreeItemsProc	mGetChildTreeItemsProc;
 
-				HasChildTreeItemsProc	mHasChildTreeItemsProc;
 				LoadChildTreeItemsProc	mLoadChildTreeItemsProc;
+
+				CompareTreeItemsProc	mCompareTreeItemsProc;
 
 				void*					mUserData;
 		};

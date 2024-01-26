@@ -90,9 +90,13 @@ class CFile : public CHashable {
 						OV<SError>			setComments(const CString& string) const;
 #endif
 
-		static			CString				getFilesystemPathsForDisplay(const TArray<CFile>& files,
+		static			TArray<CString>		getFilesystemPaths(const TArray<CFile>& files,
 													CFilesystemPath::Style filesystemPathStyle =
 															CFilesystemPath::kStylePlatformDefault);
+		static			CString				getFilesystemPathsForDisplay(const TArray<CFile>& files,
+													CFilesystemPath::Style filesystemPathStyle =
+															CFilesystemPath::kStylePlatformDefault)
+												{ return CString(getFilesystemPaths(files, filesystemPathStyle)); }
 
 	private:
 											// Instance methods

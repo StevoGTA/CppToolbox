@@ -414,14 +414,14 @@ bool CString::compare(const CString& string1, const CString& string2, void* comp
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::lowercase(const CString* string)
+CString CString::lowercase(const CString* string, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return string->lowercased();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::uppercase(const CString* string)
+CString CString::uppercase(const CString* string, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return string->uppercased();

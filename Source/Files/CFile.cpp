@@ -141,7 +141,7 @@ void CFile::update(const CFilesystemPath& filesystemPath)
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CFile::getFilesystemPathsForDisplay(const TArray<CFile>& files, CFilesystemPath::Style filesystemPathStyle)
+TArray<CString> CFile::getFilesystemPaths(const TArray<CFile>& files, CFilesystemPath::Style filesystemPathStyle)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Collect filesystem paths
@@ -150,5 +150,5 @@ CString CFile::getFilesystemPathsForDisplay(const TArray<CFile>& files, CFilesys
 		// Add filesystem path
 		filesystemPaths += iterator->getFilesystemPath().getString(filesystemPathStyle);
 
-	return CString(filesystemPaths);
+	return filesystemPaths;
 }
