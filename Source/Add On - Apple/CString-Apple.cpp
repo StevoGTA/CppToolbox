@@ -703,19 +703,6 @@ CString CString::uppercased() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::capitalizingFirstLetter() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Compose new string
-	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
-	::CFStringCapitalize(stringRef, nil);
-	CString	string(stringRef);
-	::CFRelease(stringRef);
-
-	return string;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CString CString::removingLeadingAndTrailingWhitespace() const
 //----------------------------------------------------------------------------------------------------------------------
 {

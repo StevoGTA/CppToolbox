@@ -80,7 +80,7 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFilesystem::open(const TArray<CFile> files, const Application& application)
+OV<SError> CFilesystem::open(const TArray<CFile>& files, const Application& application)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -107,7 +107,7 @@ OV<SError> CFilesystem::open(const TArray<CFile> files, const Application& appli
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CFilesystem::moveToTrash(const TArray<CFile> files, TMArray<CFile>& outUntrashedFiles)
+void CFilesystem::moveToTrash(const TArray<CFile>& files, TMArray<CFile>& outUntrashedFiles)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate files
@@ -128,7 +128,7 @@ void CFilesystem::moveToTrash(const TArray<CFile> files, TMArray<CFile>& outUntr
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFilesystem::moveToTrash(const TArray<CFile> files)
+OV<SError> CFilesystem::moveToTrash(const TArray<CFile>& files)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -167,7 +167,7 @@ OV<SError> CFilesystem::revealInFinder(const CFolder& folder)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFilesystem::revealInFinder(const TArray<CFile> files)
+OV<SError> CFilesystem::revealInFinder(const TArray<CFile>& files)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
