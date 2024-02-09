@@ -205,6 +205,17 @@ class CSQLiteTable {
 																OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(),
 																resultsRowProc, userData); }
 						OV<SError>					select(const CSQLiteInnerJoin& innerJoin,
+															const CSQLiteOrderBy& orderBy, const CSQLiteLimit& limit,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(
+																TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
+																OR<CSQLiteInnerJoin>((CSQLiteInnerJoin&) innerJoin),
+																OR<CSQLiteWhere>(),
+																OR<CSQLiteOrderBy>((CSQLiteOrderBy&) orderBy),
+																OR<CSQLiteLimit>((CSQLiteLimit&) limit), resultsRowProc,
+																userData); }
+						OV<SError>					select(const CSQLiteInnerJoin& innerJoin,
 															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
 															const
 														{ return select(
@@ -212,9 +223,22 @@ class CSQLiteTable {
 																OR<CSQLiteInnerJoin>((CSQLiteInnerJoin&) innerJoin),
 																OR<CSQLiteWhere>(), OR<CSQLiteOrderBy>(),
 																OR<CSQLiteLimit>(), resultsRowProc, userData); }
+						OV<SError>					select(const CSQLiteWhere& where, const CSQLiteOrderBy& orderBy,
+															const CSQLiteLimit& limit,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(
+																TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
+																OR<CSQLiteInnerJoin>(),
+																OR<CSQLiteWhere>((CSQLiteWhere&) where),
+																OR<CSQLiteOrderBy>((CSQLiteOrderBy&) orderBy),
+																OR<CSQLiteLimit>((CSQLiteLimit&) limit), resultsRowProc,
+																userData); }
 						OV<SError>					select(const CSQLiteWhere& where,
-															CSQLiteResultsRow::Proc resultsRowProc, void* userData) const
-														{ return select(TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(
+																TSArray<CSQLiteTableColumn>(mSelectAllTableColumn),
 																OR<CSQLiteInnerJoin>(),
 																OR<CSQLiteWhere>((CSQLiteWhere&) where),
 																OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(),

@@ -22,7 +22,7 @@ class CSQLiteOrderBy::Internals {
 
 // MARK: Lifecycle methods
 //----------------------------------------------------------------------------------------------------------------------
-CSQLiteOrderBy::CSQLiteOrderBy(const CSQLiteTable& table, CSQLiteTableColumn& tableColumn, Order order)
+CSQLiteOrderBy::CSQLiteOrderBy(const CSQLiteTable& table, const CSQLiteTableColumn& tableColumn, Order order)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -33,7 +33,7 @@ CSQLiteOrderBy::CSQLiteOrderBy(const CSQLiteTable& table, CSQLiteTableColumn& ta
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CSQLiteOrderBy::CSQLiteOrderBy(CSQLiteTableColumn& tableColumn, Order order)
+CSQLiteOrderBy::CSQLiteOrderBy(const CSQLiteTableColumn& tableColumn, Order order)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup

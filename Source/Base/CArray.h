@@ -119,15 +119,15 @@ template <typename T> class TNumberArray : public CArray {
 													// Loop requested times
 													for (ItemIndex i = 0; i < count; i++)
 														// Add
-														CArray::add(new TNumber<T>(value));
+														TNumberArray<T>::add(value);
 												}
-											TNumberArray(const CArray& other, MapProc mapProc) :
+											TNumberArray(const CArray& other, MapProc mapProc, void* userData = nil) :
 												CArray(0, (CArray::CopyProc) copy, dispose)
 												{
 													// Map from other array
 													ItemCount	count = other.getCount();
 													for (ItemIndex i = 0; i < count; i++)
-														CArray::add(mapProc(other.getItemAt(i)));
+														TNumberArray<T>::add(mapProc(other.getItemAt(i), userData));
 												}
 											TNumberArray(const TNumberArray<T>& other) : CArray(other) {}
 

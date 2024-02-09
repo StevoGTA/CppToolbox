@@ -23,9 +23,9 @@ class CSQLiteOrderBy {
 	// Methods
 	public:
 							// Lifecycle methods
-							CSQLiteOrderBy(const CSQLiteTable& table, CSQLiteTableColumn& tableColumn,
+							CSQLiteOrderBy(const CSQLiteTable& table, const CSQLiteTableColumn& tableColumn,
 									Order order = kOrderAscending);
-							CSQLiteOrderBy(CSQLiteTableColumn& tableColumn, Order order = kOrderAscending);
+							CSQLiteOrderBy(const CSQLiteTableColumn& tableColumn, Order order = kOrderAscending);
 							~CSQLiteOrderBy();
 
 							// Instance methods
