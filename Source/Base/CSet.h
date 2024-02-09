@@ -68,8 +68,7 @@ class CSet {
 // MARK: - TSet
 //	TSets are used when passing a set across an API boundary.  Because object lifetime management is tricky in
 //		C++, the TSet handles it all internally.  TSets are not to be instantiated directly, but instead to be
-//		done through either TNSet or TCSet.  Objects in the TSet need to be reference counted to ensure proper
-//		lifetime management.
+//		done through TNSet.  Objects in the TSet need to be reference counted to ensure proper lifetime management.
 
 template <typename T> class TSet : public CSet {
 	// Types
@@ -256,18 +255,18 @@ template <typename T> class TNSet : public TMSet<T> {
 								}
 
 				TNArray<T>	getArray() const
-							{
-								// Setup
-								TNArray<T>	array;
+								{
+									// Setup
+									TNArray<T>	array;
 
-								// Iterate all hashables
-								for (TIteratorS<T> iterator = TSet<T>::getIterator(); iterator.hasValue();
-										iterator.advance())
-									// Add
-									array += *iterator;
+									// Iterate all hashables
+									for (TIteratorS<T> iterator = TSet<T>::getIterator(); iterator.hasValue();
+											iterator.advance())
+										// Add
+										array += *iterator;
 
-								return array;
-							}
+									return array;
+								}
 
 	private:
 							// Class methods

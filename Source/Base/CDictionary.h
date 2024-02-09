@@ -227,6 +227,13 @@ template <typename T> class TDictionary : public CDictionary {
 
 								return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
 							}
+				T		get(const CString& key, const T& defaultValue) const
+							{
+								// Get opaque
+								OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+
+								return opaque.hasValue() ? *((T*) opaque.getValue()) : defaultValue;
+							}
 
 		const	OR<T>	operator[](const CString& key) const
 							{ return get(key); }
