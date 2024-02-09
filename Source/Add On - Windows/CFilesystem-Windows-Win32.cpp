@@ -6,6 +6,10 @@
 
 #include "SError-Windows.h"
 
+#include <shellapi.h>
+
+#pragma comment(lib, "shell32")
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
@@ -171,4 +175,24 @@ OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 {
 	AssertFailUnimplemented();
 return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFilesystem::revealInFileExplorer(const TArray<CFile>& files)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate files
+	OV<SError>	error;
+	for (TIteratorD<CFile> iterator = files.getIterator(); iterator.hasValue(); iterator.advance()) {
+		// Explore file
+		HINSTANCE	result =
+							ShellExecuteW(NULL, L"explore",
+									iterator->getFolder().getFilesystemPath().getString().getOSString(), NULL, NULL,
+									SW_SHOW);
+		if (((INT_PTR) result) < 32)
+			// Error
+			error.setValue(SErrorFromWindowsGetLastError());
+	}
+
+	return error;
 }

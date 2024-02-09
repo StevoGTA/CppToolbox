@@ -31,9 +31,15 @@ class CTreeViewBacking {
 				// Methods
 													// Lifecycle methods
 													Info(GetChildTreeItemsProc getChildTreeItemsProc,
-															LoadChildTreeItemsProc loadChildTreeItemsProc,
 															CompareTreeItemsProc compareTreeItemsProc, void* userData) :
 														mGetChildTreeItemsProc(getChildTreeItemsProc),
+																mLoadChildTreeItemsProc(nil),
+																mCompareTreeItemsProc(compareTreeItemsProc),
+																mUserData(userData)
+														{}
+													Info(LoadChildTreeItemsProc loadChildTreeItemsProc,
+															CompareTreeItemsProc compareTreeItemsProc, void* userData) :
+														mGetChildTreeItemsProc(nil),
 																mLoadChildTreeItemsProc(loadChildTreeItemsProc),
 																mCompareTreeItemsProc(compareTreeItemsProc),
 																mUserData(userData)

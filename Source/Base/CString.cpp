@@ -425,6 +425,23 @@ bool CString::isNotEmpty(const CString& string, void* userData)
 	return !string.isEmpty();
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CString CString::capitalizingFirstLetter() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	Length	length = getLength();
+	if (length == 0)
+		// Empty
+		return *this;
+	else if (length == 1)
+		// Single character
+		return uppercased();
+	else
+		// Multiple characters
+		return getSubString(0, OV<Length>(1)).uppercased() + getSubString(1);
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------

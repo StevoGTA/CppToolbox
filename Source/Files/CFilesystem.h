@@ -44,12 +44,15 @@ class CFilesystem {
 		static	OV<SError>						replace(const CFile& sourceFile, const CFile& destinationFile);
 
 #if defined(TARGET_OS_MACOS)
-		static	OV<SError>						open(const TArray<CFile> files, const Application& application);
-		static	void							moveToTrash(const TArray<CFile> files,
+		static	OV<SError>						open(const TArray<CFile>& files, const Application& application);
+		static	void							moveToTrash(const TArray<CFile>& files,
 														TMArray<CFile>& outUntrashedFiles);
-		static	OV<SError>						moveToTrash(const TArray<CFile> files);
+		static	OV<SError>						moveToTrash(const TArray<CFile>& files);
 
 		static	OV<SError>						revealInFinder(const CFolder& folder);
-		static	OV<SError>						revealInFinder(const TArray<CFile> files);
+		static	OV<SError>						revealInFinder(const TArray<CFile>& files);
+#endif
+#if defined(TARGET_OS_WINDOWS)
+		static	OV<SError>						revealInFileExplorer(const TArray<CFile>& files);
 #endif
 };
