@@ -19,15 +19,17 @@ class CVideoFrame::Internals : public TCopyOnWriteReferenceCountable<Internals> 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		Internals(UniversalTimeInterval presentationTimeInterval, UInt32 index, const S2DSizeU16& frameSize,
 				CVideoFrame::DataFormat dataFormat, CVImageBufferRef imageBufferRef) :
-			mPresentationTimeInterval(presentationTimeInterval), mIndex(index), mFrameSize(frameSize),
-					mViewRect(S2DPointU16(), frameSize), mDataFormat(dataFormat),
-					mImageBufferRef((CVImageBufferRef) ::CFRetain(imageBufferRef))
+			TCopyOnWriteReferenceCountable<Internals>(),
+					mPresentationTimeInterval(presentationTimeInterval), mIndex(index), mFrameSize(frameSize),
+							mViewRect(S2DPointU16(), frameSize), mDataFormat(dataFormat),
+							mImageBufferRef((CVImageBufferRef) ::CFRetain(imageBufferRef))
 			{}
 #elif defined(TARGET_OS_WINDOWS)
 		Internals(UniversalTimeInterval presentationTimeInterval, UInt32 index, CVideoFrame::DataFormat dataFormat,
 				const S2DSizeU16& frameSize, const S2DRectU16& viewRect, IMFSample* sample) :
-			mPresentationTimeInterval(presentationTimeInterval), mIndex(index), mDataFormat(dataFormat),
-					mFrameSize(frameSize), mViewRect(viewRect), mSample(sample)
+			TCopyOnWriteReferenceCountable<Internals>(),
+					mPresentationTimeInterval(presentationTimeInterval), mIndex(index), mDataFormat(dataFormat),
+							mFrameSize(frameSize), mViewRect(viewRect), mSample(sample)
 			{
 				// Keep around
 				mSample->AddRef();

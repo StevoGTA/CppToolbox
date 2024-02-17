@@ -4,8 +4,8 @@
 
 #include "CProgress.h"
 
-#include "CDictionary.h"
 #include "CUUID.h"
+#include "TLockingDictionary.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CProgress::Internals
@@ -339,7 +339,9 @@ class CAggregateTimeIntervalProgress::Internals {
 		static	void	progressUpdated(const CAggregateableTimeIntervalProgress& progress, Internals* internals)
 							{
 								// Look up by id
+								internals->mInfoByIDLock.lockForReading();
 								Info&	info = **internals->mInfoByID[progress.mID];
+								internals->mInfoByIDLock.unlockForReading();
 
 								// Update value
 								Float32	value =
@@ -358,6 +360,7 @@ class CAggregateTimeIntervalProgress::Internals {
 
 		CAggregateTimeIntervalProgress&	mProgress;
 		TNDictionary<I<Info> >			mInfoByID;
+		CReadPreferringLock				mInfoByIDLock;
 		Float32							mTotalTimeInterval;
 };
 
@@ -395,6 +398,9 @@ CTimeIntervalProgress& CAggregateTimeIntervalProgress::addTimeIntervalProgress(U
 												mInternals),
 										totalTimeInterval));
 
+	// Update
+	mInternals->mInfoByIDLock.lockForWriting();
+
 	// Store
 	mInternals->mInfoByID.set(info->mProgress.mID, info);
 
@@ -420,6 +426,9 @@ CTimeIntervalProgress& CAggregateTimeIntervalProgress::addTimeIntervalProgress(U
 	} else
 		// Update total time interval
 		mInternals->mTotalTimeInterval += (Float32) totalTimeInterval;
+
+	// Done
+	mInternals->mInfoByIDLock.unlockForWriting();
 
 	return info->mProgress;
 }

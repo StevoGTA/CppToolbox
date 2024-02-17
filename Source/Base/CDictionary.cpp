@@ -24,13 +24,14 @@ template <typename T> class TDictionaryInternals : public TCopyOnWriteReferenceC
 												// Instance methods
 		virtual	CDictionary::KeyCount			getKeyCount() = 0;
 		virtual	OR<SValue>						getValue(const CString& key) = 0;
-		virtual	CDictionaryInternals*			set(const CString& key, const SValue& value) = 0;
-		virtual	CDictionaryInternals*			remove(const CString& key) = 0;
-		virtual	CDictionaryInternals*			remove(const TSet<CString>& keys) = 0;
-		virtual	CDictionaryInternals*			removeAll() = 0;
+		virtual	void							set(const CString& key, const SValue& value) = 0;
+		virtual	void							remove(const CString& key) = 0;
+		virtual	void							remove(const TSet<CString>& keys) = 0;
+		virtual	void							removeAll() = 0;
 
 		virtual	TIteratorS<CDictionary::Item>	getIterator() const = 0;
 
+		virtual	void							prepareForWrite(TDictionaryInternals<T>** internals) = 0;
 		virtual	SValue::OpaqueEqualsProc		getOpaqueEqualsProc() const = 0;
 };
 
@@ -114,13 +115,15 @@ class CStandardDictionaryInternals : public TDictionaryInternals<CStandardDictio
 												// TDictionaryInternals methods
 				CDictionary::KeyCount			getKeyCount();
 				OR<SValue>						getValue(const CString& key);
-				CDictionaryInternals*			set(const CString& key, const SValue& value);
-				CDictionaryInternals*			remove(const CString& key);
-				CDictionaryInternals*			remove(const TSet<CString>& keys);
-				CDictionaryInternals*			removeAll();
+				void							set(const CString& key, const SValue& value);
+				void							remove(const CString& key);
+				void							remove(const TSet<CString>& keys);
+				void							removeAll();
 
 				TIteratorS<CDictionary::Item>	getIterator() const;
 
+				void							prepareForWrite(
+														TDictionaryInternals<CStandardDictionaryInternals>** internals);
 				SValue::OpaqueEqualsProc		getOpaqueEqualsProc() const;
 
 												// Private methods
@@ -227,19 +230,16 @@ OR<SValue> CStandardDictionaryInternals::getValue(const CString& key)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryInternals* CStandardDictionaryInternals::set(const CString& key, const SValue& value)
+void CStandardDictionaryInternals::set(const CString& key, const SValue& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for write
-	CStandardDictionaryInternals*	dictionaryInternals = (CStandardDictionaryInternals*) prepareForWrite();
-
 	// Setup
 	UInt32	hashValue = CHasher::getValueForHashable(key);
-	UInt32	index = hashValue & (dictionaryInternals->mItemInfosCount - 1);
+	UInt32	index = hashValue & (mItemInfosCount - 1);
 
 	// Find
 	SDictionaryItemInfo*	previousItemInfo = nil;
-	SDictionaryItemInfo*	currentItemInfo = dictionaryInternals->mItemInfos[index];
+	SDictionaryItemInfo*	currentItemInfo = mItemInfos[index];
 	while ((currentItemInfo != nil) && !currentItemInfo->doesMatch(hashValue, key)) {
 		// Next in linked list
 		previousItemInfo = currentItemInfo;
@@ -251,37 +251,32 @@ CDictionaryInternals* CStandardDictionaryInternals::set(const CString& key, cons
 		// Did not find
 		if (previousItemInfo == nil)
 			// First one
-			dictionaryInternals->mItemInfos[index] = new SDictionaryItemInfo(hashValue, key, value);
+			mItemInfos[index] = new SDictionaryItemInfo(hashValue, key, value);
 		else
 			// Add to the end
 			previousItemInfo->mNextItemInfo = new SDictionaryItemInfo(hashValue, key, value);
 
 		// Update info
-		dictionaryInternals->mCount++;
-		dictionaryInternals->mReference++;
+		mCount++;
+		mReference++;
 	} else {
 		// Did find a match
 		currentItemInfo->disposeValue(mOpaqueDisposeProc);
 		currentItemInfo->mItem.mValue = value;
 	}
-
-	return (CDictionaryInternals*) dictionaryInternals;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryInternals* CStandardDictionaryInternals::remove(const CString& key)
+void CStandardDictionaryInternals::remove(const CString& key)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for write
-	CStandardDictionaryInternals*	dictionaryInternals = (CStandardDictionaryInternals*) prepareForWrite();
-
 	// Setup
 	UInt32	hashValue = CHasher::getValueForHashable(key);
-	UInt32	index = hashValue & (dictionaryInternals->mItemInfosCount - 1);
+	UInt32	index = hashValue & (mItemInfosCount - 1);
 
 	// Find
 	SDictionaryItemInfo*	previousItemInfo = nil;
-	SDictionaryItemInfo*	currentItemInfo = dictionaryInternals->mItemInfos[index];
+	SDictionaryItemInfo*	currentItemInfo = mItemInfos[index];
 	while ((currentItemInfo != nil) && !currentItemInfo->doesMatch(hashValue, key)) {
 		// Next in linked list
 		previousItemInfo = currentItemInfo;
@@ -293,7 +288,7 @@ CDictionaryInternals* CStandardDictionaryInternals::remove(const CString& key)
 		// Did find a match
 		if (previousItemInfo == nil)
 			// First item info
-			dictionaryInternals->mItemInfos[index] = currentItemInfo->mNextItemInfo;
+			mItemInfos[index] = currentItemInfo->mNextItemInfo;
 		else
 			// Not the first item info
 			previousItemInfo->mNextItemInfo = currentItemInfo->mNextItemInfo;
@@ -302,48 +297,36 @@ CDictionaryInternals* CStandardDictionaryInternals::remove(const CString& key)
 		remove(currentItemInfo, false);
 
 		// Update info
-		dictionaryInternals->mCount--;
-		dictionaryInternals->mReference++;
+		mCount--;
+		mReference++;
 	}
-
-	return (CDictionaryInternals*) dictionaryInternals;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryInternals* CStandardDictionaryInternals::remove(const TSet<CString>& keys)
+void CStandardDictionaryInternals::remove(const TSet<CString>& keys)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Prepare for write
-	CStandardDictionaryInternals*	dictionaryInternals = (CStandardDictionaryInternals*) prepareForWrite();
-
 	// Iterate keys
 	for (TIteratorS<CString> iterator = keys.getIterator(); iterator.hasValue(); iterator.advance())
 		// Remove this key
-		dictionaryInternals->remove(*iterator);
-
-	return (CDictionaryInternals*) dictionaryInternals;
+		remove(*iterator);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionaryInternals* CStandardDictionaryInternals::removeAll()
+void CStandardDictionaryInternals::removeAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if empty
 	if (mCount == 0)
 		// Nothing to remove
-		return (CDictionaryInternals*) this;
-
-	// Prepare for write
-	CStandardDictionaryInternals*	dictionaryInternals = (CStandardDictionaryInternals*) prepareForWrite();
+		return;
 
 	// Remove all
-	dictionaryInternals->removeAllInternal();
+	removeAllInternal();
 
 	// Update info
-	dictionaryInternals->mCount = 0;
-	dictionaryInternals->mReference++;
-
-	return (CDictionaryInternals*) dictionaryInternals;
+	mCount = 0;
+	mReference++;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -364,6 +347,15 @@ TIteratorS<CDictionary::Item> CStandardDictionaryInternals::getIterator() const
 	}
 
 	return TIteratorS<CDictionary::Item>(firstItem, (CIterator::AdvanceProc) iteratorAdvance, *iteratorInfo);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CStandardDictionaryInternals::prepareForWrite(TDictionaryInternals<CStandardDictionaryInternals>** internals)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Prepare for write
+	TCopyOnWriteReferenceCountable<CStandardDictionaryInternals>::prepareForWrite(
+			(CStandardDictionaryInternals**) internals);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -415,10 +407,10 @@ void* CStandardDictionaryInternals::iteratorAdvance(IteratorInfo& iteratorInfo)
 	AssertFailIf(iteratorInfo.mInitialReference != iteratorInfo.mInternals.mReference);
 
 	// Check for additional item info in linked list
-	if (iteratorInfo.mCurrentItemInfo->mNextItemInfo != nil) {
+	if (iteratorInfo.mCurrentItemInfo->mNextItemInfo != nil)
 		// Have next item info
 		iteratorInfo.mCurrentItemInfo = iteratorInfo.mCurrentItemInfo->mNextItemInfo;
-	} else {
+	else {
 		// End of item info linked list
 		while ((++iteratorInfo.mCurrentIndex < iteratorInfo.mInternals.mItemInfosCount) &&
 				(iteratorInfo.mInternals.mItemInfos [iteratorInfo.mCurrentIndex] == nil)) ;
@@ -477,19 +469,14 @@ class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryIn
 													{ return mProcs.getKeyCount(); }
 				OR<SValue>						getValue(const CString& key)
 													{ return mProcs.getValue(key); }
-				CDictionaryInternals*			set(const CString& key, const SValue& value)
-													{ mProcs.set(key, value); return (CDictionaryInternals*) this; }
-				CDictionaryInternals*			remove(const CString& key)
-													{
-														// Remove key
-														mProcs.removeKeys(TNSet<CString>(key));
-
-														return (CDictionaryInternals*) this;
-													}
-				CDictionaryInternals*			remove(const TSet<CString>& keys)
-													{ mProcs.removeKeys(keys); return (CDictionaryInternals*) this; }
-				CDictionaryInternals*			removeAll()
-													{ mProcs.removeAll(); return (CDictionaryInternals*) this; }
+				void							set(const CString& key, const SValue& value)
+													{ mProcs.set(key, value); }
+				void							remove(const CString& key)
+													{ mProcs.removeKeys(TNSet<CString>(key)); }
+				void							remove(const TSet<CString>& keys)
+													{ mProcs.removeKeys(keys); }
+				void							removeAll()
+													{ mProcs.removeAll(); }
 
 				TIteratorS<CDictionary::Item>	getIterator() const
 													{
@@ -509,6 +496,14 @@ class CProcsDictionaryInternals : public TDictionaryInternals<CProcsDictionaryIn
 																*iteratorInfo);
 													}
 
+				void							prepareForWrite(
+														TDictionaryInternals<CProcsDictionaryInternals>** internals)
+													{
+														// Prepare for write
+														TCopyOnWriteReferenceCountable<CProcsDictionaryInternals>::
+																prepareForWrite(
+																		(CProcsDictionaryInternals**) internals);
+													}
 				SValue::OpaqueEqualsProc		getOpaqueEqualsProc() const
 													{ return nil; }
 
@@ -696,6 +691,16 @@ Float32 CDictionary::getFloat32(const CString& key, Float32 defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<Float32> CDictionary::getOVFloat32(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<Float32>(value->getFloat32()) : OV<Float32>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 Float64 CDictionary::getFloat64(const CString& key, Float64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -703,6 +708,16 @@ Float64 CDictionary::getFloat64(const CString& key, Float64 defaultValue) const
 	OR<SValue>	value = mInternals->getValue(key);
 
 	return value.hasReference() ? value->getFloat64(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<Float64> CDictionary::getOVFloat64(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<Float64>(value->getFloat64()) : OV<Float64>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -716,6 +731,16 @@ SInt8 CDictionary::getSInt8(const CString& key, SInt8 defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<SInt8> CDictionary::getOVSInt8(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<SInt8>(value->getSInt8()) : OV<SInt8>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SInt16 CDictionary::getSInt16(const CString& key, SInt16 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -723,6 +748,16 @@ SInt16 CDictionary::getSInt16(const CString& key, SInt16 defaultValue) const
 	OR<SValue>	value = mInternals->getValue(key);
 
 	return value.hasReference() ? value->getSInt16(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SInt16> CDictionary::getOVSInt16(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<SInt16>(value->getSInt16()) : OV<SInt16>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -736,6 +771,16 @@ SInt32 CDictionary::getSInt32(const CString& key, SInt32 defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<SInt32> CDictionary::getOVSInt32(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<SInt32>(value->getSInt32()) : OV<SInt32>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SInt64 CDictionary::getSInt64(const CString& key, SInt64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -743,6 +788,16 @@ SInt64 CDictionary::getSInt64(const CString& key, SInt64 defaultValue) const
 	OR<SValue>	value = mInternals->getValue(key);
 
 	return value.hasReference() ? value->getSInt64(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SInt64> CDictionary::getOVSInt64(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<SInt64>(value->getSInt64()) : OV<SInt64>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -756,6 +811,16 @@ UInt8 CDictionary::getUInt8(const CString& key, UInt8 defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<UInt8> CDictionary::getOVUInt8(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<UInt8>(value->getUInt8()) : OV<UInt8>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 UInt16 CDictionary::getUInt16(const CString& key, UInt16 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -763,6 +828,16 @@ UInt16 CDictionary::getUInt16(const CString& key, UInt16 defaultValue) const
 	OR<SValue>	value = mInternals->getValue(key);
 
 	return value.hasReference() ? value->getUInt16(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<UInt16> CDictionary::getOVUInt16(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<UInt16>(value->getUInt16()) : OV<UInt16>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -776,6 +851,16 @@ UInt32 CDictionary::getUInt32(const CString& key, UInt32 defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<UInt32> CDictionary::getOVUInt32(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<UInt32>(value->getUInt32()) : OV<UInt32>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 UInt64 CDictionary::getUInt64(const CString& key, UInt64 defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -783,6 +868,16 @@ UInt64 CDictionary::getUInt64(const CString& key, UInt64 defaultValue) const
 	OR<SValue>	value = mInternals->getValue(key);
 
 	return value.hasReference() ? value->getUInt64(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<UInt64> CDictionary::getOVUInt64(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<UInt64>(value->getUInt64()) : OV<UInt64>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -799,176 +894,231 @@ OV<SValue::Opaque> CDictionary::getOpaque(const CString& key) const
 void CDictionary::set(const CString& key, bool value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const TArray<CDictionary>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const TArray<CString>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const CData& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const CDictionary& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const CString& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, Float32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, Float64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SInt8 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SInt16 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SInt64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, UInt8 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, UInt16 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, UInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, UInt64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, SValue::Opaque value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, SValue(value));
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
+	// Set
+	mInternals->set(key, SValue(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const SValue& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = (CDictionaryInternals*) mInternals->set(key, value);
-}
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
 
-//----------------------------------------------------------------------------------------------------------------------
-void CDictionary::set(const CString& key, const OV<SValue>& value)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check for value
-	if (value.hasValue())
-		// Have value
-		mInternals = (CDictionaryInternals*) mInternals->set(key, *value);
-	else
-		// Don't have value
-		mInternals = (CDictionaryInternals*) mInternals->remove(key);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CDictionary::set(const CString& key, const OR<SValue>& value)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check for value
-	if (value.hasReference())
-		// Have value
-		mInternals = (CDictionaryInternals*) mInternals->set(key, *value);
-	else
-		// Don't have value
-		mInternals = (CDictionaryInternals*) mInternals->remove(key);
+	// Set
+	mInternals->set(key, value);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::remove(const CString& key)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
 	// Remove
-	mInternals = (CDictionaryInternals*) mInternals->remove(key);
+	mInternals->remove(key);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::remove(const TArray<CString>& keys)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
 	// Remove
-	mInternals = (CDictionaryInternals*) mInternals->remove(TNSet<CString>(keys));
+	mInternals->remove(TNSet<CString>(keys));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::remove(const TSet<CString>& keys)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
 	// Remove
-	mInternals = (CDictionaryInternals*) mInternals->remove(keys);
+	mInternals->remove(keys);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1001,8 +1151,11 @@ CDictionary CDictionary::removing(const TSet<CString>& keys)
 void CDictionary::removeAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Prepare for write
+	mInternals->prepareForWrite((TDictionaryInternals<CDictionaryInternals> **) &mInternals);
+
 	// Remove all
-	mInternals = (CDictionaryInternals*) mInternals->removeAll();
+	mInternals->removeAll();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

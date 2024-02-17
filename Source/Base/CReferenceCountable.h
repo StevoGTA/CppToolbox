@@ -19,6 +19,9 @@ class CReferenceCountable {
 								if (getReferenceCount() > 0)
 									// Remove reference
 									removeReference();
+								else
+									// Cleanup
+									Delete(mReferenceCount);
 							}
 
 						// Instance methods
@@ -85,26 +88,28 @@ template <typename T> class TReferenceCountableAutoDelete : public TReferenceCou
 template <typename T> class TCopyOnWriteReferenceCountable : public TReferenceCountableAutoDelete<T> {
 	// Methods
 	public:
-			// Instance methods
-		T*	prepareForWrite()
-				{
-					// Check reference count.  If there is more than 1 reference, we implement a
-					//	"copy on write".  So we will clone ourselves so we have a personal buffer that
-					//	can be changed while leaving the exiting buffer as-is for the other references.
-					if (CReferenceCountable::getReferenceCount() > 1) {
-						// Multiple references
-						CReferenceCountable::removeReference();
+						// Class methods
+		static	void	prepareForWrite(T** t)
+							{
+								// Check reference count.  If there is more than 1 reference, we implement a
+								//	"copy on write".  So we will clone ourselves so we have a personal buffer that
+								//	can be changed while leaving the exiting buffer as-is for the other references.
+								if ((*t)->CReferenceCountable::getReferenceCount() > 1) {
+									// Save
+									T*	oldT = *t;
 
-						return new T((T&) *this);
-					} else
-						// Only a single reference
-						return (T*) this;
-				}
+									// Create new
+									*t = new T((T&) **t);
+
+									// No longer need a reference to old
+									oldT->removeReference();
+								}
+							}
 
 	protected:
-			// Lifecycle methods
-			TCopyOnWriteReferenceCountable() : TReferenceCountableAutoDelete<T>() {}
-			TCopyOnWriteReferenceCountable(const TCopyOnWriteReferenceCountable<T>& other) :
-				TReferenceCountableAutoDelete<T>(other)
-				{}
+						// Lifecycle methods
+						TCopyOnWriteReferenceCountable() : TReferenceCountableAutoDelete<T>() {}
+						TCopyOnWriteReferenceCountable(const TCopyOnWriteReferenceCountable<T>& other) :
+							TReferenceCountableAutoDelete<T>(other)
+							{}
 };

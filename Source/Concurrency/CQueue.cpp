@@ -41,8 +41,9 @@
 class CSRSWBIPQueue::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
 		Internals(UInt32 byteCount) :
-			mBuffer((UInt8*) ::malloc(byteCount)), mByteCount(byteCount), mReadPtr(mBuffer), mWritePtr(mBuffer),
-					mWriteWatermarkPtr(mBuffer)
+			TCopyOnWriteReferenceCountable<Internals>(),
+					mBuffer((UInt8*) ::malloc(byteCount)), mByteCount(byteCount), mReadPtr(mBuffer), mWritePtr(mBuffer),
+							mWriteWatermarkPtr(mBuffer)
 			{}
 		~Internals()
 			{ ::free(mBuffer); }

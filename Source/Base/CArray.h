@@ -24,9 +24,11 @@ class CArray : public CEquatable {
 	public:
 		typedef	void	(*ApplyProc)(ItemRef itemRef, void* userData);
 		typedef	bool	(*CompareProc)(ItemRef itemRef1, ItemRef itemRef2, void* userData);
+		typedef bool	(*IsMatchProc)(ItemRef itemRef, void* userData);
+
+	protected:
 		typedef	ItemRef	(*CopyProc)(ItemRef itemRef);
 		typedef	void	(*DisposeProc)(ItemRef itemRef);
-		typedef bool	(*IsMatchProc)(ItemRef itemRef, void* userData);
 
 	// Classes
 	private:
@@ -558,24 +560,4 @@ template <typename T> class TNArray : public TMArray<T> {
 										{ return new T(*((T*) itemRef)); }
 		static	void				dispose(CArray::ItemRef itemRef)
 										{ T* t = (T*) itemRef; Delete(t); }
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TCArray (TMArray where copy happens through T->copy())
-
-template <typename T> class TCArray : public TMArray<T> {
-	// Methods
-	public:
-						// Lifecycle methods
-						TCArray() : TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose) {}
-						TCArray(const T& item) :
-							TMArray<T>(item, (CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
-							{}
-
-	private:
-						// Class methods
-		static	T*		copy(CArray::ItemRef itemRef)
-							{ return (T*) ((T*) itemRef)->copy(); }
-		static	void	dispose(CArray::ItemRef itemRef)
-							{ T* t = (T*) itemRef; Delete(t); }
 };

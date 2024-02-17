@@ -105,25 +105,20 @@ class CArray::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 													return OV<CArray::ItemIndex>();
 												}
 
-				Internals*					append(const CArray::ItemRef* itemRefs, CArray::ItemCount count,
+				void						append(const CArray::ItemRef* itemRefs, CArray::ItemCount count,
 													CArray::CopyProc copyProc)
 												{
-													// Prepare for write
-													Internals*	internals = prepareForWrite();
-
 													// Setup
-													CArray::ItemCount	neededCount = internals->mCount + count;
+													CArray::ItemCount	neededCount = mCount + count;
 
 													// Check storage
-													if (neededCount > internals->mCapacity) {
+													if (neededCount > mCapacity) {
 														// Expand storage
-														internals->mCapacity =
-																std::max(neededCount, internals->mCapacity * 2);
-														internals->mItemRefs =
+														mCapacity = std::max(neededCount, mCapacity * 2);
+														mItemRefs =
 																(CArray::ItemRef*)
-																		::realloc(internals->mItemRefs,
-																				internals->mCapacity *
-																						sizeof(CArray::ItemRef));
+																		::realloc(mItemRefs,
+																				mCapacity * sizeof(CArray::ItemRef));
 													}
 
 													// Check if have copy proc
@@ -131,110 +126,71 @@ class CArray::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 														// Copy each item
 														for (CArray::ItemIndex i = 0; i < count; i++)
 															// Copy item
-															internals->mItemRefs[internals->mCount + i] =
-																	copyProc(itemRefs[i]);
+															mItemRefs[mCount + i] = copyProc(itemRefs[i]);
 													} else
 														// Append itemRefs into place
-														::memcpy(internals->mItemRefs + internals->mCount, itemRefs,
+														::memcpy(mItemRefs + mCount, itemRefs,
 																count * sizeof(CArray::ItemRef));
-													internals->mCount = neededCount;
+													mCount = neededCount;
 
 													// Update info
-													internals->mReference++;
-
-													return internals;
+													mReference++;
 												}
-				Internals*					insertAtIndex(const CArray::ItemRef itemRef, CArray::ItemIndex itemIndex,
+				void						insertAtIndex(const CArray::ItemRef itemRef, CArray::ItemIndex itemIndex,
 													CArray::CopyProc copyProc)
 												{
-													// Prepare for write
-													Internals*	internals = prepareForWrite();
-
 													// Setup
-													CArray::ItemCount	neededCount = internals->mCount + 1;
+													CArray::ItemCount	neededCount = mCount + 1;
 
 													// Check storage
-													if (neededCount > internals->mCapacity) {
+													if (neededCount > mCapacity) {
 														// Expand storage
-														internals->mCapacity =
-																std::max(neededCount, internals->mCapacity * 2);
-														internals->mItemRefs =
+														mCapacity = std::max(neededCount, mCapacity * 2);
+														mItemRefs =
 																(CArray::ItemRef*)
 																		::realloc(mItemRefs,
-																				internals->mCapacity *
-																						sizeof(CArray::ItemRef));
+																				mCapacity * sizeof(CArray::ItemRef));
 													}
 
 													// Move following itemRefs back
-													::memmove(internals->mItemRefs + itemIndex + 1,
-															internals->mItemRefs + itemIndex,
-															(internals->mCount - itemIndex) * sizeof(CArray::ItemRef));
+													::memmove(mItemRefs + itemIndex + 1, mItemRefs + itemIndex,
+															(mCount - itemIndex) * sizeof(CArray::ItemRef));
 
 													// Check if have copy proc
 													if (copyProc != nil)
 														// Copy item
-														internals->mItemRefs[itemIndex] = copyProc(itemRef);
+														mItemRefs[itemIndex] = copyProc(itemRef);
 													else
 														// Store new itemRef
-														internals->mItemRefs[itemIndex] = itemRef;
-													internals->mCount++;
+														mItemRefs[itemIndex] = itemRef;
+													mCount++;
 
 													// Update info
-													internals->mReference++;
-
-													return internals;
+													mReference++;
 												}
-				Internals*					removeAtIndex(CArray::ItemIndex itemIndex, bool performDispose)
+				void						removeAtIndex(CArray::ItemIndex itemIndex, bool performDispose)
 												{
-													// Prepare for write
-													Internals*	internals = prepareForWrite();
-
 													// Check if owns items
 													if (performDispose && (mDisposeProc != nil))
 														// Dispose
-														mDisposeProc(internals->mItemRefs[itemIndex]);
+														mDisposeProc(mItemRefs[itemIndex]);
 
 													// Move following itemRefs forward
-													::memmove(internals->mItemRefs + itemIndex,
-															internals->mItemRefs + itemIndex + 1,
-															(internals->mCount - itemIndex - 1) *
-																	sizeof(CArray::ItemRef));
+													::memmove(mItemRefs + itemIndex, mItemRefs + itemIndex + 1,
+															(mCount - itemIndex - 1) * sizeof(CArray::ItemRef));
 
 													// Update info
-													internals->mCount--;
-													internals->mReference++;
-
-													return internals;
+													mCount--;
+													mReference++;
 												}
-				Internals*					removeAll()
+				void						removeAll()
 												{
-													// Check if empty
-													if (mCount == 0)
-														// Nothing to remove
-														return this;
-
-													// Prepare for write
-													Internals*	internals = prepareForWrite();
-
 													// Remove all
-													internals->removeAllInternal();
+													removeAllInternal();
 
 													// Update info
-													internals->mCount = 0;
-													internals->mReference++;
-
-													return internals;
-												}
-				void						removeAllInternal()
-												{
-													// Check if have item dispose proc
-													if (mDisposeProc != nil) {
-														// Dispose each item
-														for (CArray::ItemIndex i = 0; i < mCount; i++) {
-															// Dispose
-															mDisposeProc(mItemRefs[i]);
-														}
-													}
+													mCount = 0;
+													mReference++;
 												}
 
 				TIteratorS<CArray::ItemRef>	getIterator() const
@@ -253,6 +209,19 @@ class CArray::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 															arrayIteratorInfo.mInternals.mItemRefs +
 																	arrayIteratorInfo.mCurrentIndex :
 															nil;
+												}
+
+	private:
+				void						removeAllInternal()
+												{
+													// Check if have item dispose proc
+													if (mDisposeProc != nil) {
+														// Dispose each item
+														for (CArray::ItemIndex i = 0; i < mCount; i++) {
+															// Dispose
+															mDisposeProc(mItemRefs[i]);
+														}
+													}
 												}
 
 	public:
@@ -309,8 +278,11 @@ CArray& CArray::attach(const ItemRef itemRef)
 	// Parameter check
 	AssertNotNil(itemRef);
 
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Add item
-	mInternals = mInternals->append(&itemRef, 1, nil);
+	mInternals->append(&itemRef, 1, nil);
 
 	return *this;
 }
@@ -322,8 +294,11 @@ CArray& CArray::add(const ItemRef itemRef)
 	// Parameter check
 	AssertNotNil(itemRef);
 
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Add item
-	mInternals = mInternals->append(&itemRef, 1, mInternals->mCopyProc);
+	mInternals->append(&itemRef, 1, mInternals->mCopyProc);
 
 	return *this;
 }
@@ -337,8 +312,11 @@ CArray& CArray::addFrom(const CArray& other)
 		// Nothing to add
 		return *this;
 
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Add items
-	mInternals = mInternals->append(other.mInternals->mItemRefs, other.mInternals->mCount, mInternals->mCopyProc);
+	mInternals->append(other.mInternals->mItemRefs, other.mInternals->mCount, mInternals->mCopyProc);
 
 	return *this;
 }
@@ -407,8 +385,11 @@ CArray& CArray::insertAtIndex(const ItemRef itemRef, ItemIndex itemIndex)
 	AssertNotNil(itemRef);
 	AssertFailIf(itemIndex > mInternals->mCount);
 
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Insert at index
-	mInternals = mInternals->insertAtIndex(itemRef, itemIndex, mInternals->mCopyProc);
+	mInternals->insertAtIndex(itemRef, itemIndex, mInternals->mCopyProc);
 
 	return *this;
 }
@@ -421,9 +402,13 @@ CArray& CArray::detach(const ItemRef itemRef)
 	OV<ItemIndex>	itemIndex = getIndexOf(itemRef);
 
 	// Check if itemRef was found
-	if (itemIndex.hasValue())
+	if (itemIndex.hasValue()) {
+		// Prepare for write
+		Internals::prepareForWrite(&mInternals);
+
 		// Remove
-		mInternals = mInternals->removeAtIndex(*itemIndex, false);
+		mInternals->removeAtIndex(*itemIndex, false);
+	}
 
 	return *this;
 }
@@ -437,8 +422,11 @@ CArray& CArray::move(const ItemRef itemRef, CArray& other)
 
 	// Check if itemRef was found
 	if (itemIndex.hasValue()) {
+		// Prepare for write
+		Internals::prepareForWrite(&mInternals);
+
 		// Remove
-		mInternals = mInternals->removeAtIndex(*itemIndex, false);
+		mInternals->removeAtIndex(*itemIndex, false);
 
 		// Append
 		other.attach(itemRef);
@@ -454,8 +442,11 @@ CArray& CArray::detachAtIndex(ItemIndex itemIndex)
 	// Parameter check
 	AssertFailIf(itemIndex >= mInternals->mCount);
 
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Remove
-	mInternals = mInternals->removeAtIndex(itemIndex, false);
+	mInternals->removeAtIndex(itemIndex, false);
 
 	return *this;
 }
@@ -468,9 +459,13 @@ CArray& CArray::remove(const ItemRef itemRef)
 	OV<ItemIndex>	itemIndex = getIndexOf(itemRef);
 
 	// Check if itemRef was found
-	if (itemIndex.hasValue())
+	if (itemIndex.hasValue()) {
+		// Prepare for write
+		Internals::prepareForWrite(&mInternals);
+
 		// Remove
-		mInternals = mInternals->removeAtIndex(*itemIndex, true);
+		mInternals->removeAtIndex(*itemIndex, true);
+	}
 
 	return *this;
 }
@@ -482,8 +477,11 @@ CArray& CArray::removeAtIndex(ItemIndex itemIndex)
 	// Parameter check
 	AssertFailIf(itemIndex >= mInternals->mCount);
 
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Remove
-	mInternals = mInternals->removeAtIndex(itemIndex, true);
+	mInternals->removeAtIndex(itemIndex, true);
 
 	return *this;
 }
@@ -492,8 +490,11 @@ CArray& CArray::removeAtIndex(ItemIndex itemIndex)
 CArray& CArray::removeAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Remove all
-	mInternals = mInternals->removeAll();
+	mInternals->removeAll();
 
 	return *this;
 }
@@ -531,7 +532,7 @@ CArray& CArray::sort(CompareProc compareProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Prepare for write
-	mInternals = mInternals->prepareForWrite();
+	Internals::prepareForWrite(&mInternals);
 
 	// Sort
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)

@@ -797,7 +797,7 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 		return;
 
 	// Prepare for write
-	mInternals = mInternals->prepareForWrite();
+	Internals::prepareForWrite(&mInternals);
 
 	// Update pixel data
 	void*	pixelDataPtr =

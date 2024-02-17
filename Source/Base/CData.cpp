@@ -21,72 +21,67 @@ const	CData	CData::mZeroByte("", 1, false);
 
 class CData::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-					Internals(CData::ByteCount initialByteCount, const void* initialBuffer = nil,
-							bool copySourceData = true) :
-						TCopyOnWriteReferenceCountable(),
-								mFreeOnDelete(copySourceData), mBufferByteCount(initialByteCount)
-						{
-							// Check for initial buffer
-							if (initialBuffer != nil) {
-								// Check free on delete
-								if (copySourceData) {
-									// mBufferByteCount 0, initialBuffer not nil, copySourceData true
-									// mBufferByteCount >0, initialBuffer not nil, copySourceData true
-									mBuffer = ::malloc((size_t) mBufferByteCount);
-									::memcpy(mBuffer, initialBuffer, (size_t) mBufferByteCount);
-								} else {
-									// mBufferByteCount 0, initialBuffer not nil, copySourceData false
-									// mBufferByteCount >0, initialBuffer not nil, copySourceData false
-									mBuffer = (void*) initialBuffer;
-								}
-							} else if (mBufferByteCount > 0)
-								// mBufferByteCount >0, initialBuffer nil
-								mBuffer = ::calloc(1, (size_t) mBufferByteCount);
-							else
-								// mBufferByteCount 0, initialBuffer nil
-								mBuffer = nil;
-						}
-					Internals(const Internals& other) :
-						TCopyOnWriteReferenceCountable(), mFreeOnDelete(true),
-								mBuffer(
-										(other.mBufferByteCount > 0) ?
-												::malloc((size_t) other.mBufferByteCount) : nil),
-								mBufferByteCount(other.mBufferByteCount)
-						{
-							// Do we have any data
-							if (mBufferByteCount > 0)
-								// Copy data
-								::memcpy(mBuffer, other.mBuffer, (size_t) mBufferByteCount);
-						}
-					~Internals()
-						{
-							// Cleanup
-							if (mFreeOnDelete)
-								// Free!
-								::free(mBuffer);
-						}
-
-		Internals*	setByteCount(CData::ByteCount byteCount)
-						{
-							// Prepare for write
-							Internals*	internals = prepareForWrite();
-
-							// Update buffer
-							if (mFreeOnDelete)
-								// Can just realloc the buffer
-								internals->mBuffer = ::realloc(internals->mBuffer, (size_t) byteCount);
-							else {
-								// Alloc new buffer
-								void*	buffer = ::malloc((size_t) byteCount);
-								::memcpy(buffer, internals->mBuffer, internals->mBufferByteCount);
-								internals->mBuffer = buffer;
+				Internals(CData::ByteCount initialByteCount, const void* initialBuffer = nil,
+						bool copySourceData = true) :
+					TCopyOnWriteReferenceCountable(),
+							mFreeOnDelete(copySourceData), mBufferByteCount(initialByteCount)
+					{
+						// Check for initial buffer
+						if (initialBuffer != nil) {
+							// Check free on delete
+							if (copySourceData) {
+								// mBufferByteCount 0, initialBuffer not nil, copySourceData true
+								// mBufferByteCount >0, initialBuffer not nil, copySourceData true
+								mBuffer = ::malloc((size_t) mBufferByteCount);
+								::memcpy(mBuffer, initialBuffer, (size_t) mBufferByteCount);
+							} else {
+								// mBufferByteCount 0, initialBuffer not nil, copySourceData false
+								// mBufferByteCount >0, initialBuffer not nil, copySourceData false
+								mBuffer = (void*) initialBuffer;
 							}
+						} else if (mBufferByteCount > 0)
+							// mBufferByteCount >0, initialBuffer nil
+							mBuffer = ::calloc(1, (size_t) mBufferByteCount);
+						else
+							// mBufferByteCount 0, initialBuffer nil
+							mBuffer = nil;
+					}
+				Internals(const Internals& other) :
+					TCopyOnWriteReferenceCountable(), mFreeOnDelete(true),
+							mBuffer(
+									(other.mBufferByteCount > 0) ?
+											::malloc((size_t) other.mBufferByteCount) : nil),
+							mBufferByteCount(other.mBufferByteCount)
+					{
+						// Do we have any data
+						if (mBufferByteCount > 0)
+							// Copy data
+							::memcpy(mBuffer, other.mBuffer, (size_t) mBufferByteCount);
+					}
+				~Internals()
+					{
+						// Cleanup
+						if (mFreeOnDelete)
+							// Free!
+							::free(mBuffer);
+					}
 
-							// Update byte count
-							internals->mBufferByteCount = byteCount;
-
-							return internals;
+		void	setByteCount(CData::ByteCount byteCount)
+					{
+						// Update buffer
+						if (mFreeOnDelete)
+							// Can just realloc the buffer
+							mBuffer = ::realloc(mBuffer, (size_t) byteCount);
+						else {
+							// Alloc new buffer
+							void*	buffer = ::malloc((size_t) byteCount);
+							::memcpy(buffer, mBuffer, mBufferByteCount);
+							mBuffer = buffer;
 						}
+
+						// Update byte count
+						mBufferByteCount = byteCount;
+					}
 
 		bool				mFreeOnDelete;
 		void*				mBuffer;
@@ -220,16 +215,22 @@ CData::ByteCount CData::getByteCount() const
 void CData::setByteCount(ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Set byte count
-	mInternals = mInternals->setByteCount(byteCount);
+	mInternals->setByteCount(byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CData::increaseByteCountBy(ByteCount byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Update byte count
-	mInternals = mInternals->setByteCount(mInternals->mBufferByteCount + byteCount);
+	mInternals->setByteCount(mInternals->mBufferByteCount + byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -244,7 +245,7 @@ void* CData::getMutableBytePtr()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Prepare for write
-	mInternals = mInternals->prepareForWrite();
+	Internals::prepareForWrite(&mInternals);
 
 	return mInternals->mBuffer;
 }
@@ -282,9 +283,12 @@ void CData::appendBytes(const void* buffer, ByteCount bufferByteCount)
 	if (buffer == nil)
 		return;
 
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Setup
 	ByteCount	originalByteCount = mInternals->mBufferByteCount;
-	mInternals = mInternals->setByteCount(mInternals->mBufferByteCount + bufferByteCount);
+	mInternals->setByteCount(mInternals->mBufferByteCount + bufferByteCount);
 
 	// Copy
 	::memcpy((UInt8*) mInternals->mBuffer + originalByteCount, buffer, (size_t) bufferByteCount);
@@ -303,18 +307,20 @@ void CData::replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const vo
 	if ((startByteIndex + byteCount) > getByteCount())
 		return;
 
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Check what is happening
 	ByteCount	resultByteCount = mInternals->mBufferByteCount - byteCount + bufferByteCount;
-	if (resultByteCount == mInternals->mBufferByteCount) {
+	if (resultByteCount == mInternals->mBufferByteCount)
 		// Overall byte count is staying the same
-		mInternals = mInternals->prepareForWrite();
 		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, (size_t) bufferByteCount);
-	} else if (resultByteCount > mInternals->mBufferByteCount) {
+	else if (resultByteCount > mInternals->mBufferByteCount) {
 		// Overall byte count is increasing
 		// [0...startByteIndex] stays the same
 		// [startByteIndex...startByteIndex+byteCount] becomes [startByteIndex...startByteIndex+bufferByteCount]
 		// [startByteIndex+byteCount...end] stays the same
-		mInternals = mInternals->setByteCount(resultByteCount);
+		mInternals->setByteCount(resultByteCount);
 		::memmove((UInt8*) mInternals->mBuffer + startByteIndex + bufferByteCount,
 				(UInt8*) mInternals->mBuffer + startByteIndex + byteCount,
 				(size_t) (resultByteCount - startByteIndex - bufferByteCount));
@@ -328,7 +334,7 @@ void CData::replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const vo
 				(UInt8*) mInternals->mBuffer + startByteIndex + byteCount,
 				(size_t) (resultByteCount - startByteIndex - bufferByteCount));
 		::memcpy((UInt8*) mInternals->mBuffer + startByteIndex, buffer, (size_t) bufferByteCount);
-		mInternals = mInternals->setByteCount(resultByteCount);
+		mInternals->setByteCount(resultByteCount);
 	}
 }
 

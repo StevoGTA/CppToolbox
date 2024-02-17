@@ -132,7 +132,7 @@ void CFile::update(const CFilesystemPath& filesystemPath)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Prepare for write
-	mInternals = mInternals->prepareForWrite();
+	Internals::prepareForWrite(&mInternals);
 
 	// Update
 	mInternals->mFilesystemPath = filesystemPath;

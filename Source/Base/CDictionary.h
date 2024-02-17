@@ -121,18 +121,30 @@ class CDictionary : public CEquatable {
 				const	CString&				getString(const CString& key,
 														const CString& defaultValue = CString::mEmpty) const;
 						Float32					getFloat32(const CString& key, Float32 defaultValue = 0.0) const;
+						OV<Float32>				getOVFloat32(const CString& key) const;
 						Float64					getFloat64(const CString& key, Float64 defaultValue = 0.0) const;
+						OV<Float64>				getOVFloat64(const CString& key) const;
 						SInt8					getSInt8(const CString& key, SInt8 defaultValue = 0) const;
+						OV<SInt8>				getOVSInt8(const CString& key) const;
 						SInt16					getSInt16(const CString& key, SInt16 defaultValue = 0) const;
+						OV<SInt16>				getOVSInt16(const CString& key) const;
 						SInt32					getSInt32(const CString& key, SInt32 defaultValue = 0) const;
+						OV<SInt32>				getOVSInt32(const CString& key) const;
 						SInt64					getSInt64(const CString& key, SInt64 defaultValue = 0) const;
+						OV<SInt64>				getOVSInt64(const CString& key) const;
 						UInt8					getUInt8(const CString& key, UInt8 defaultValue = 0) const;
+						OV<UInt8>				getOVUInt8(const CString& key) const;
 						UInt16					getUInt16(const CString& key, UInt16 defaultValue = 0) const;
+						OV<UInt16>				getOVUInt16(const CString& key) const;
 						UInt32					getUInt32(const CString& key, UInt32 defaultValue = 0) const;
+						OV<UInt32>				getOVUInt32(const CString& key) const;
 						UInt64					getUInt64(const CString& key, UInt64 defaultValue = 0) const;
+						OV<UInt64>				getOVUInt64(const CString& key) const;
 						OV<SValue::Opaque>		getOpaque(const CString& key) const;
 						OSType					getOSType(const CString& key, OSType defaultValue = 0) const
 													{ return getUInt32(key, defaultValue); }
+						OV<OSType>				getOVOSType(const CString& key) const
+													{ return getOVUInt32(key); }
 						void					getValue(const CString& key, bool& outValue,
 														bool defaultValue = false) const
 													{ outValue = getBool(key, defaultValue); }
@@ -169,24 +181,192 @@ class CDictionary : public CEquatable {
 
 						void					set(const CString& key, bool value);
 						void					set(const CString& key, const TArray<CDictionary>& value);
+						void					set(const CString& key, const OV<TArray<CDictionary> >& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, const TArray<CString>& value);
+						void					set(const CString& key, const OV<TArray<CString> >& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, const CData& value);
+						void					set(const CString& key, const OV<CData>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, const CDictionary& value);
+						void					set(const CString& key, const OV<CDictionary>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, const CString& value);
+						void					set(const CString& key, const OV<CString>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, Float32 value);
+						void					set(const CString& key, const OV<Float32>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, Float64 value);
+						void					set(const CString& key, const OV<Float64>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, SInt8 value);
+						void					set(const CString& key, const OV<SInt8>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, SInt16 value);
+						void					set(const CString& key, const OV<SInt16>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, SInt32 value);
+						void					set(const CString& key, const OV<SInt32>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, SInt64 value);
+						void					set(const CString& key, const OV<SInt64>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, UInt8 value);
+						void					set(const CString& key, const OV<UInt8>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, UInt16 value);
+						void					set(const CString& key, const OV<UInt16>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, UInt32 value);
+						void					set(const CString& key, const OV<UInt32>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, UInt64 value);
+						void					set(const CString& key, const OV<UInt64>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 						void					set(const CString& key, SValue::Opaque value);
 						void					set(const CString& key, const SValue& value);
-						void					set(const CString& key, const OV<SValue>& value);
-						void					set(const CString& key, const OR<SValue>& value);
+						void					set(const CString& key, const OV<SValue>& value)
+													{
+														// Check for value
+														if (value.hasValue())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
+						void					set(const CString& key, const OR<SValue>& value)
+													{
+														// Check for value
+														if (value.hasReference())
+															// Have value
+															set(key, *value);
+														else
+															// Don't have value
+															remove(key);
+													}
 
 						void					remove(const CString& key);
 						void					remove(const TArray<CString>& keys);
@@ -251,21 +431,6 @@ template <typename T> class TDictionary : public CDictionary {
 
 template <typename T> class TMDictionary : public TDictionary<T> {
 	// Methods
-	public:
-				// Instance methods
-		void	set(const CString& key, const T& item)
-					{ CDictionary::set(key, new T(item)); }
-		void	set(const CString& key, const OV<T>& item)
-					{
-						// Check for instance
-						if (item.hasValue())
-							// Set
-							CDictionary::set(key, new T(*item));
-						else
-							// Remove
-							CDictionary::remove(key);
-					}
-
 	protected:
 				// Lifecycle methods
 				TMDictionary(SValue::OpaqueCopyProc opaqueCopyProc, SValue::OpaqueEqualsProc opaqueEqualsProc,
@@ -311,6 +476,19 @@ template <typename T> class TNDictionary : public TMDictionary<T> {
 						TNDictionary(const TDictionary<T>& other) : TMDictionary<T>(other) {}
 
 						// Instance methods
+		void			set(const CString& key, const T& item)
+							{ CDictionary::set(key, new T(item)); }
+		void			set(const CString& key, const OV<T>& item)
+							{
+								// Check for instance
+								if (item.hasValue())
+									// Set
+									CDictionary::set(key, new T(*item));
+								else
+									// Remove
+									CDictionary::remove(key);
+							}
+
 		TNDictionary<T>	filtered(KeyIsMatchProc keyIsMatchProc, void* userData = nil)
 							{
 								// Setup
@@ -349,7 +527,7 @@ template <typename T> class TNArrayDictionary : public TNDictionary<TNArray<T> >
 						// Update
 						const	OR<TNArray<T> >	array = TNDictionary<TNArray<T> >::get(key);
 						if (array.hasReference())
-							// Already have array
+							// Already have an array
 							*array += item;
 						else
 							// First one
@@ -360,7 +538,7 @@ template <typename T> class TNArrayDictionary : public TNDictionary<TNArray<T> >
 						// Update
 						const	OR<TNArray<T> >	array = TNDictionary<TNArray<T> >::get(key);
 						if (array.hasReference())
-							// Already have array
+							// Already have an array
 							*array += items;
 						else
 							// First one
@@ -380,7 +558,7 @@ template <typename T> class TNSetDictionary : public TNDictionary<TNSet<T> > {
 						// Update
 						const	OR<TNSet<T> >	set = TNDictionary<TNSet<T> >::get(key);
 						if (set.hasReference())
-							// Already have array
+							// Already have a set
 							*set += item;
 						else
 							// First one
@@ -391,36 +569,12 @@ template <typename T> class TNSetDictionary : public TNDictionary<TNSet<T> > {
 						// Update
 						const	OR<TNSet<T> >	set = TNDictionary<TNSet<T> >::get(key);
 						if (set.hasReference())
-							// Already have array
+							// Already have a set
 							*set += items;
 						else
 							// First one
 							TNDictionary<TNSet<T> >::set(key, TNSet<T>(items));
 					}
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TCDictionary (TDictionary where copy happens through opaque->copy())
-
-template <typename T> class TCDictionary : public TMDictionary<T> {
-	// Methods
-	public:
-						// Lifecycle methods
-						TCDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
-							TMDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc,
-									(SValue::OpaqueDisposeProc) dispose)
-							{}
-
-						// Instance methods
-				void	set(const CString& key, const T& item)
-							{ CDictionary::set(key, item.copy()); }
-
-	private:
-						// Class methods
-		static	T*		copy(SValue::Opaque opaque)
-							{ return ((T*) opaque)->copy(); }
-		static	void	dispose(SValue::Opaque opaque)
-							{ T* t = (T*) opaque; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
