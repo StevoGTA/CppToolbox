@@ -297,10 +297,10 @@ template <typename T> class TNumberSet : public TMSet<TNumber<T> > {
 
 								// Instance methods
 				bool			contains(T value) const
-									{ return TNSet<TNumber<T> >::contains(TNumber<T>(value)); }
+									{ return TMSet<TNumber<T> >::contains(TNumber<T>(value)); }
 
 				TNumberSet<T>&	insert(T value)
-									{ TNSet<TNumber<T> >::insert(TNumber<T>(value)); return *this; }
+									{ TMSet<TNumber<T> >::insert(TNumber<T>(value)); return *this; }
 
 				TNumberArray<T>	getNumberArray() const
 									{
@@ -308,7 +308,7 @@ template <typename T> class TNumberSet : public TMSet<TNumber<T> > {
 										TNumberArray<T>	array;
 
 										// Iterate all hashables
-										for (TIteratorS<TNumber<T> > iterator = TNSet<TNumber<T> >::getIterator();
+										for (TIteratorS<TNumber<T> > iterator = TMSet<TNumber<T> >::getIterator();
 												iterator.hasValue(); iterator.advance())
 											// Add
 											array += **iterator;
