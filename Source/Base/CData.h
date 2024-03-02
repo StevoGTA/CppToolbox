@@ -47,6 +47,7 @@ class CData {
 				void		replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer,
 									ByteCount bufferByteCount);
 
+				CString		getHexString(bool uppercase = false) const;
 				CString		getBase64String(bool prettyPrint = false) const;
 
 				CData		subData(ByteIndex byteIndex, const OV<ByteCount>& byteCount = OV<ByteCount>(),

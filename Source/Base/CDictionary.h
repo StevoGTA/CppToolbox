@@ -120,6 +120,7 @@ class CDictionary : public CEquatable {
 														const CDictionary& defaultValue = mEmpty) const;
 				const	CString&				getString(const CString& key,
 														const CString& defaultValue = CString::mEmpty) const;
+						OV<CString>				getOVString(const CString& key) const;
 						Float32					getFloat32(const CString& key, Float32 defaultValue = 0.0) const;
 						OV<Float32>				getOVFloat32(const CString& key) const;
 						Float64					getFloat64(const CString& key, Float64 defaultValue = 0.0) const;

@@ -133,7 +133,7 @@ class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 				void				insert(const CHashable& hashable)
 											{
 												// Setup
-												UInt32			hashValue = CHasher::getValueForHashable(hashable);
+												UInt32			hashValue = hashable.getHashValue();
 												UInt32			index = hashValue & (mItemInfosCount - 1);
 												SSetItemInfo*	setItemInfo =
 																		new SSetItemInfo(hashValue,
@@ -169,7 +169,7 @@ class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 				bool					contains(const CHashable& hashable)
 											{
 												// Setup
-												UInt32	hashValue = CHasher::getValueForHashable(hashable);
+												UInt32	hashValue = hashable.getHashValue();
 												UInt32	index = hashValue & (mItemInfosCount - 1);
 
 												// Find item info that matches
@@ -183,7 +183,7 @@ class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 				void					remove(const CHashable& hashable)
 											{
 												// Setup
-												UInt32	hashValue = CHasher::getValueForHashable(hashable);
+												UInt32	hashValue = hashable.getHashValue();
 												UInt32	index = hashValue & (mItemInfosCount - 1);
 
 												// Find

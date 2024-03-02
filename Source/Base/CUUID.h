@@ -45,8 +45,8 @@ class CUUID : public CHashable {
 							{ return equals((const CUUID&) other); }
 
 						// CHashable methods
-				void	hashInto(CHasher& hasher) const
-							{ getBase64String().hashInto(hasher); }
+				void	hashInto(CHashable::HashCollector& hashableHashCollector) const
+							{ getBase64String().hashInto(hashableHashCollector); }
 
 						// Instance methods
 				CData	getData() const;

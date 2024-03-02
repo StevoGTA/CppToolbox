@@ -103,7 +103,7 @@ class CBPLDictionaryInfo {
 													// Setup key
 													UInt64	objectIndex = mBPLReader.readIndex();
 													mKeys[i] = mBPLReader.mStrings[objectIndex];
-													mKeyHashes[i] = CHasher::getValueForHashable(*mKeys[i]);
+													mKeyHashes[i] = mKeys[i]->getHashValue();
 												}
 
 												// Setup values
@@ -154,7 +154,7 @@ class CBPLDictionaryInfo {
 		static	OR<SValue>				getValue(const CString& key, CBPLDictionaryInfo* bplDictionaryInfo)
 											{
 												// Iterate keys
-												UInt32	keyHash = CHasher::getValueForHashable(key);
+												UInt32	keyHash = key.getHashValue();
 												for (CDictionary::KeyCount i = 0;
 														i < bplDictionaryInfo->mKeyCount; i++) {
 													// Compare this key

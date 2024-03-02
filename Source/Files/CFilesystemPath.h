@@ -55,8 +55,8 @@ class CFilesystemPath : public CHashable {
 										{ return equals((const CFilesystemPath&) other); }
 
 									// CHashable methods
-				void				hashInto(CHasher& hasher) const
-										{ getString().hashInto(hasher); }
+				void				hashInto(CHashable::HashCollector& hashableHashCollector) const
+										{ getString().hashInto(hashableHashCollector); }
 
 									// Instance methods
 				CString				getString(Style style = kStylePlatformDefault,

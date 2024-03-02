@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CppToolboxAssert.h"
-#include "CHashing.h"
+#include "CHashable.h"
 
 /*
 	// Top-level definitions
@@ -53,8 +53,8 @@ template <typename T> class I : public CHashable {
 							{ return mInstance == ((const I&) other).mInstance; }
 
 						// CHashable methods
-				void	hashInto(CHasher& hasher) const
-							{ hasher.add((const UInt8*) mInstance, sizeof(T*)); }
+				void	hashInto(CHashable::HashCollector& hashableHashCollector) const
+							{ hashableHashCollector.add((const UInt8*) mInstance, sizeof(T*)); }
 
 						// Instance methods
 				T&		operator*() const
