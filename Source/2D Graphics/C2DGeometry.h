@@ -124,39 +124,60 @@ typedef	T2DOffset<Float32>	S2DOffsetF32;
 // MARK: - T2DSize
 
 template <typename T> struct T2DSize {
-					// Lifecycle methods
-					T2DSize() : mWidth(0), mHeight(0) {}
-					T2DSize(T width, T height) : mWidth(width), mHeight(height) {}
-					T2DSize(const CString& string)
-						{
-							// "{0.0,0.0}" => ",0.0,0.0}" => ["", "0.0", "0.0}"]
-							TArray<CString>	array =
-													string.replacingSubStrings(CString(OSSTR("{")),
-																	CString(OSSTR(",")))
-															.components(CString(OSSTR(",")));
-							if (array.getCount() >= 3) {
-								// Extract values
-								mWidth = array[1].getFloat32();
-								mHeight = array[2].getFloat32();
-							} else {
-								// Use default values
-								mWidth = 0;
-								mHeight = 0;
+						// Lifecycle methods
+						T2DSize() : mWidth(0), mHeight(0) {}
+						T2DSize(T width, T height) : mWidth(width), mHeight(height) {}
+						T2DSize(const CString& string)
+							{
+								// "{0.0,0.0}" => ",0.0,0.0}" => ["", "0.0", "0.0}"]
+								TArray<CString>	array =
+														string.replacingSubStrings(CString(OSSTR("{")),
+																		CString(OSSTR(",")))
+																.components(CString(OSSTR(",")));
+								if (array.getCount() >= 3) {
+									// Extract values
+									mWidth = array[1].getFloat32();
+									mHeight = array[2].getFloat32();
+								} else {
+									// Use default values
+									mWidth = 0;
+									mHeight = 0;
+								}
 							}
-						}
 
-					// Instance methods
-	inline	T		aspectRatio() const
-						{ return (mHeight != 0) ? mWidth / mHeight : 0; }
-	inline	CString	asString() const
-						{
-							return CString(OSSTR("{")) + CString(mWidth, 5, 3) + CString(OSSTR(",")) +
-									CString(mHeight, 5, 3) + CString(OSSTR("}"));
-						}
-	inline	bool	operator==(const T2DSize& other) const
-						{ return (mWidth == other.mWidth) && (mHeight == other.mHeight); }
-	inline	bool	operator!=(const T2DSize& other) const
-						{ return (mWidth != other.mWidth) || (mHeight != other.mHeight); }
+						// Instance methods
+	inline	T			aspectRatio() const
+							{ return (mHeight != 0) ? mWidth / mHeight : 0; }
+	inline	T2DSize<T>	aspectFitIn(const T2DSize& size)
+							{
+								// Setup
+								Float32	widthFactor = (Float32) size.mWidth / (Float32) mWidth;
+								Float32	heightFactor = (Float32) size.mHeight / (Float32) mHeight;
+
+								// Check which dimension is more constrained
+								if (widthFactor < heightFactor) {
+									// Width constrained
+									T	scaledHeight = widthFactor * (Float32) mHeight;
+
+									return T2DSize<T>(size.mWidth, scaledHeight);
+								} else {
+									// Height constrained
+									T	scaledWidth = heightFactor * (Float32) mWidth;
+
+									return T2DSize<T>(scaledWidth, size.mHeight);
+								}
+							}
+
+	inline	CString		asString() const
+							{
+								return CString(OSSTR("{")) + CString(mWidth, 5, 3) + CString(OSSTR(",")) +
+										CString(mHeight, 5, 3) + CString(OSSTR("}"));
+							}
+
+	inline	bool		operator==(const T2DSize& other) const
+							{ return (mWidth == other.mWidth) && (mHeight == other.mHeight); }
+	inline	bool		operator!=(const T2DSize& other) const
+							{ return (mWidth != other.mWidth) || (mHeight != other.mHeight); }
 
 	// Properties
 	T	mWidth;
@@ -397,3 +418,6 @@ template <typename T> struct T2DAffineTransform {
 	T	mTX;
 	T	mTY;
 };
+
+typedef	T2DAffineTransform<Float32>	S2DAffineTransformF32;
+typedef	T2DAffineTransform<Float64>	S2DAffineTransformF64;
