@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CHashing.h"
+#include "CHashable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Byte swapping
@@ -93,8 +93,8 @@ template <typename T> class TNumber : public CHashable {
 					{ return mValue == ((const TNumber<T>&) other).mValue; }
 
 				// CHashable methods
-		void	hashInto(CHasher& hasher) const
-					{ hasher.add((const UInt8*) &mValue, sizeof(T)); }
+		void	hashInto(CHashable::HashCollector& hashableHashCollector) const
+					{ hashableHashCollector.add((const UInt8*) &mValue, sizeof(T)); }
 
 				// Instance methods
 		T		operator*() const

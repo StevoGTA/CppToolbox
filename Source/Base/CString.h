@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CArray.h"
-#include "CHashing.h"
+#include "CHashable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Native strings
@@ -179,8 +179,8 @@ class CString : public CHashable {
 						}
 
 					// Instance methods
-			void	hashInto(CHasher& hasher) const
-						{ hasher.add(mBuffer); }
+			void	hashInto(CHashable::HashCollector& hashableHashCollector) const
+						{ hashableHashCollector.add(mBuffer); }
 
 			char*	operator*() const
 						{ return mBuffer; }
@@ -256,8 +256,8 @@ class CString : public CHashable {
 											{ return equals((const CString&) other); }
 
 										// CHashable methods
-						void			hashInto(CHasher& hasher) const
-											{ getCString().hashInto(hasher); }
+						void			hashInto(CHashable::HashCollector& hashableHashCollector) const
+											{ getCString().hashInto(hashableHashCollector); }
 
 										// Instance methods
 						OSStringType	getOSString() const;

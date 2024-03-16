@@ -217,7 +217,7 @@ OR<SValue> CStandardDictionaryInternals::getValue(const CString& key)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	hashValue = CHasher::getValueForHashable(key);
+	UInt32	hashValue = key.getHashValue();
 	UInt32	index = hashValue & (mItemInfosCount - 1);
 
 	// Find item info that matches
@@ -234,7 +234,7 @@ void CStandardDictionaryInternals::set(const CString& key, const SValue& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	hashValue = CHasher::getValueForHashable(key);
+	UInt32	hashValue = key.getHashValue();
 	UInt32	index = hashValue & (mItemInfosCount - 1);
 
 	// Find
@@ -271,7 +271,7 @@ void CStandardDictionaryInternals::remove(const CString& key)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32	hashValue = CHasher::getValueForHashable(key);
+	UInt32	hashValue = key.getHashValue();
 	UInt32	index = hashValue & (mItemInfosCount - 1);
 
 	// Find
@@ -678,6 +678,16 @@ const CString& CDictionary::getString(const CString& key, const CString& default
 	OR<SValue>	value = mInternals->getValue(key);
 
 	return value.hasReference() ? value->getString(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<CString> CDictionary::getOVString(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<CString>(value->getString()) : OV<CString>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

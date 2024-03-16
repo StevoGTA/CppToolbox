@@ -339,6 +339,29 @@ void CData::replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const vo
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CString CData::getHexString(bool uppercase) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Statics
+	static	const	char	sTableLowercase[] =
+									{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+	static	const	char	sTableUppercase[] =
+									{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+	// Setup
+			TBuffer<char>	buffer((UInt32) getByteCount() * 2);
+	const	UInt8*			bytePtr = (const UInt8*) getBytePtr();
+	const	char*			table = uppercase ? sTableUppercase : sTableLowercase;
+	for (UInt32 i = 0; i < (UInt32) getByteCount(); i++, bytePtr++) {
+		// Store
+		buffer[i * 2] = table[(*bytePtr & 0xF0) >> 4];
+		buffer[i * 2 + 1] = table[*bytePtr & 0x0F];
+	}
+
+	return CString(*buffer, (CString::Length) getByteCount() * 2);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CString CData::getBase64String(bool prettyPrint) const
 //----------------------------------------------------------------------------------------------------------------------
 {

@@ -25,10 +25,10 @@ enum E2DPathSegmentType {
 class C2DPath::Internals {
 	public:
 				Internals() {}
-				~Internals() {}
 
 		void	appendPathSegment(E2DPathSegmentType pathSegmentType, const CData& data)
 					{
+						// Append
 						mPathSegmentData.appendBytes((const UInt8*) &pathSegmentType, sizeof(E2DPathSegmentType));
 						mPathSegmentData += data;
 					}

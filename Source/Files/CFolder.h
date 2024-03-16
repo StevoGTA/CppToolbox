@@ -29,8 +29,8 @@ class CFolder : public CHashable {
 												{ return equals((const CFolder&) other); }
 
 											// CHashable methods
-								void		hashInto(CHasher& hasher) const
-												{ getFilesystemPath().hashInto(hasher); }
+								void		hashInto(CHashable::HashCollector& hashableHashCollector) const
+												{ getFilesystemPath().hashInto(hashableHashCollector); }
 
 											// Instance methods
 				const	CFilesystemPath&	getFilesystemPath() const;

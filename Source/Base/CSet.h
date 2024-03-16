@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CArray.h"
-#include "CHashing.h"
+#include "CHashable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CSet

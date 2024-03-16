@@ -48,8 +48,8 @@ class CWorkItem : public CHashable {
 											{ return getID() == ((const CWorkItem&) other).getID(); }
 
 										// CHashable methods
-						void			hashInto(CHasher& hasher) const
-											{ getID().hashInto(hasher); }
+						void			hashInto(CHashable::HashCollector& hashableHashCollector) const
+											{ getID().hashInto(hashableHashCollector); }
 
 										// Instance methods
 				const	CString&		getID() const;

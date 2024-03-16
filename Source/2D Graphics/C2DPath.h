@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	C2DGeometry.h			©2012 Stevo Brock		All rights reserved.
+//	C2DPath.h			©2012 Stevo Brock		All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
@@ -53,6 +53,16 @@ class C2DPath {
 // MARK: - T2DPath
 
 template <typename T> class T2DPath : public C2DPath {
+	// Types
+	public:
+		typedef	void	(*MoveToProc)(const T2DPoint<T>& point, void* userData);
+		typedef	void	(*LineToProc)(const T2DPoint<T>& point, void* userData);
+		typedef	void	(*QuadCurveToProc)(const T2DPoint<T>& controlPoint, const T2DPoint<T>& point, void* userData);
+		typedef	void	(*CubicCurveToProc)(const T2DPoint<T>& controlPoint1, const T2DPoint<T>& controlPoint2,
+								const T2DPoint<T>& point, void* userData);
+		typedef	void	(*ArcToProc)(T radiusX, T radiusY, T rotationAngleRadians, bool useLargerArc, bool isClockwise,
+								const T2DPoint<T>& point, void* userData);
+
 	// Methods
 	public:
 										// Lifecycle methods
@@ -164,18 +174,9 @@ template <typename T> class T2DPath : public C2DPath {
 												return *this;
 											}
 				const	T2DPoint<T>&	getCurrentPoint() const { return mCurrentPoint; }
-						void			iterateSegments(
-												void (*moveToProc)(void* userInfo, const T2DPoint<T>& point),
-												void (*lineToProc)(void* userInfo, const T2DPoint<T>& point),
-												void (*quadCurveToProc)(void* userInfo, const T2DPoint<T>& controlPoint,
-														const T2DPoint<T>& point),
-												void (*cubicCurveToProc)(void* userInfo,
-														const T2DPoint<T>& controlPoint1,
-														const T2DPoint<T>& controlPoint2, const T2DPoint<T>& point),
-												void (*arcToProc)(void* userInfo, T radiusX, T radiusY,
-														T rotationAngleRadians, bool useLargerArc, bool isClockwise,
-														const T2DPoint<T>& point),
-												void* userInfo)
+						void			iterateSegments(MoveToProc moveToProc, LineToProc lineToProc,
+												QuadCurveToProc quadCurveToProc, CubicCurveToProc cubicCurveToProc,
+												ArcToProc arcToProc, void* userData)
 											{
 												// Store
 												mIterateMoveToProc = moveToProc;
@@ -183,7 +184,7 @@ template <typename T> class T2DPath : public C2DPath {
 												mIterateQuadCurveToProc = quadCurveToProc;
 												mIterateCubicCurveToProc = cubicCurveToProc;
 												mIterateArcToProc = arcToProc;
-												mIterateUserInfo = userInfo;
+												mIterateUserData = userData;
 
 												// Iterate segments
 												C2DPath::iterateSegments(false);
@@ -207,7 +208,7 @@ template <typename T> class T2DPath : public C2DPath {
 														addMoveTo(point.applyTransform(*mConstructingIterateTransform));
 													else
 														// Call proc
-														mIterateMoveToProc(mIterateUserInfo, point);
+														mIterateMoveToProc(point, mIterateUserData);
 												}
 
 												return byteCount;
@@ -228,7 +229,7 @@ template <typename T> class T2DPath : public C2DPath {
 														addLineTo(point.applyTransform(*mConstructingIterateTransform));
 													else
 														// Call proc
-														mIterateLineToProc(mIterateUserInfo, point);
+														mIterateLineToProc(point, mIterateUserData);
 												}
 
 												return byteCount;
@@ -254,7 +255,7 @@ template <typename T> class T2DPath : public C2DPath {
 																point.applyTransform(*mConstructingIterateTransform));
 													else
 														// Call proc
-														mIterateQuadCurveToProc(mIterateUserInfo, controlPoint, point);
+														mIterateQuadCurveToProc(controlPoint, point, mIterateUserData);
 												}
 
 												return byteCount;
@@ -286,8 +287,8 @@ template <typename T> class T2DPath : public C2DPath {
 																point.applyTransform(*mConstructingIterateTransform));
 													else
 														// Call proc
-														mIterateCubicCurveToProc(mIterateUserInfo, controlPoint1,
-																controlPoint2, point);
+														mIterateCubicCurveToProc(controlPoint1, controlPoint2, point,
+																mIterateUserData);
 												}
 
 												return byteCount;
@@ -321,8 +322,8 @@ template <typename T> class T2DPath : public C2DPath {
 																point.applyTransform(*mConstructingIterateTransform));
 													else
 														// Call proc
-														mIterateArcToProc(mIterateUserInfo, radiusX, radiusY,
-																rotationAngleRadians, false, false, point);
+														mIterateArcToProc(radiusX, radiusY, rotationAngleRadians, false,
+																false, point, mIterateUserData);
 												}
 
 												return byteCount;
@@ -356,8 +357,8 @@ template <typename T> class T2DPath : public C2DPath {
 																point.applyTransform(*mConstructingIterateTransform));
 													else
 														// Call proc
-														mIterateArcToProc(mIterateUserInfo, radiusX, radiusY,
-																rotationAngleRadians, false, true, point);
+														mIterateArcToProc(radiusX, radiusY, rotationAngleRadians, false,
+																true, point, mIterateUserData);
 												}
 
 												return byteCount;
@@ -391,8 +392,8 @@ template <typename T> class T2DPath : public C2DPath {
 																point.applyTransform(*mConstructingIterateTransform));
 													else
 														// Call proc
-														mIterateArcToProc(mIterateUserInfo, radiusX, radiusY,
-																rotationAngleRadians, true, false, point);
+														mIterateArcToProc(radiusX, radiusY, rotationAngleRadians, true,
+																false, point, mIterateUserData);
 												}
 
 												return byteCount;
@@ -426,27 +427,18 @@ template <typename T> class T2DPath : public C2DPath {
 																point.applyTransform(*mConstructingIterateTransform));
 													else
 														// Call proc
-														mIterateArcToProc(mIterateUserInfo, radiusX, radiusY,
-																rotationAngleRadians, true, true, point);
+														mIterateArcToProc(radiusX, radiusY, rotationAngleRadians, true,
+																true, point, mIterateUserData);
 												}
 
 												return byteCount;
 											}
 
-		static			T2DPath			pathForRect(const T2DRect<T>& rect)
+		static			T2DPath			forCircle(const T2DPoint<T>& center, T radius)
+											{ return forEllipse(center, radius, radius); }
+		static			T2DPath			forEllipse(const T2DPoint<T>& center, T radiusX, T radiusY)
 											{
-												T2DPath	path;
-												path.addMoveTo(T2DPoint<T>(rect.getMidX(), rect.getMinY()))
-														.addLineTo(T2DPoint<T>(rect.getMaxX(), rect.getMinY()))
-														.addLineTo(T2DPoint<T>(rect.getMaxX(), rect.getMaxY()))
-														.addLineTo(T2DPoint<T>(rect.getMinX(), rect.getMaxY()))
-														.addLineTo(T2DPoint<T>(rect.getMinX(), rect.getMinY()))
-														.close();
-												
-												return path;
-											}
-		static			T2DPath			pathForEllipse(const T2DPoint<T>& center, T radiusX, T radiusY)
-											{
+												// Setup
 												T			kX = radiusX * (M_SQRT2 - 1.0) * 4.0 / 3.0;
 												T			kY = radiusY * (M_SQRT2 - 1.0) * 4.0 / 3.0;
 
@@ -455,6 +447,7 @@ template <typename T> class T2DPath : public C2DPath {
 												T2DPoint<T>	left = T2DPoint<T>(center.mX - radiusX, center.mY);
 												T2DPoint<T>	right = T2DPoint<T>(center.mX + radiusX, center.mY);
 
+												// Compose path
 												T2DPath	path;
 												path.addMoveTo(top)
 													.addCubicCurveTo(T2DPoint<T>(top.mX - kX, top.mY),
@@ -469,21 +462,67 @@ template <typename T> class T2DPath : public C2DPath {
 												
 												return path;
 											}
+		static			T2DPath			forRect(const T2DRect<T>& rect)
+											{
+												// Setup
+												T	minX = rect.getMinX();
+												T	maxX = rect.getMaxX();
+												T	minY = rect.getMinY();
+												T	maxY = rect.getMaxY();
+
+												// Compose path
+												T2DPath	path;
+												path.addMoveTo(T2DPoint<T>(minX, minY))
+														.addLineTo(T2DPoint<T>(maxX, minY))
+														.addLineTo(T2DPoint<T>(maxX, maxY))
+														.addLineTo(T2DPoint<T>(minX, maxY))
+														.addLineTo(T2DPoint<T>(minX, minY))
+														.close();
+
+												return path;
+											}
+		static			T2DPath			forRoundedRect(const T2DRect<T>& rect, T cornerRadius)
+											{
+												// From https://web.archive.org/web/20100602144213/http://developer.apple.com/iphone/library/samplecode/QuartzDemo/Listings/Quartz_QuartzCurves_m.html
+												// Setup
+												T	minX = rect.getMinX();
+												T	midX = rect.getMidX();
+												T	maxX = rect.getMaxX();
+												T	minY = rect.getMinY();
+												T	midY = rect.getMidY();
+												T	maxY = rect.getMaxY();
+
+												// Compose path
+												//       minX    midX    maxX
+												// minY    2       3       4
+												// midY   1 9              5
+												// maxY    8       7       6
+												T2DPath	path;
+												path.moveToPoint(T2DPoint<T>(minX, midY))
+														.addArcTo(cornerRadius, cornerRadius, M_PI / 2.0, false, true,
+																T2DPoint<T>(midX, minY))
+														.addArcTo(cornerRadius, cornerRadius, M_PI / 2.0, false, true,
+																T2DPoint<T>(maxX, midY))
+														.addArcTo(cornerRadius, cornerRadius, M_PI / 2.0, false, true,
+																T2DPoint<T>(midX, maxY))
+														.addArcTo(cornerRadius, cornerRadius, M_PI / 2.0, false, true,
+																T2DPoint<T>(minX, midY))
+														.close();
+
+												return path;
+											}
 
 	// Properties
 	private:
 		T2DPoint<T>				mCurrentPoint;
 		T2DAffineTransform<T>*	mConstructingIterateTransform;
 
-		void					(*mIterateMoveToProc)(void* userInfo, const T2DPoint<T>& point);
-		void					(*mIterateLineToProc)(void* userInfo, const T2DPoint<T>& point);
-		void					(*mIterateQuadCurveToProc)(void* userInfo, const T2DPoint<T>& controlPoint,
-										const T2DPoint<T>& point);
-		void					(*mIterateCubicCurveToProc)(void* userInfo, const T2DPoint<T>& controlPoint1,
-										const T2DPoint<T>& controlPoint2, const T2DPoint<T>& point);
-		void					(*mIterateArcToProc)(void* userInfo, T radiusX, T radiusY, T rotationAngleRadians,
-										bool useLargerArc, bool isClockwise, const T2DPoint<T>& point);
-		void*					mIterateUserInfo;
+		MoveToProc				mIterateMoveToProc;
+		LineToProc				mIterateLineToProc;
+		QuadCurveToProc			mIterateQuadCurveToProc;
+		CubicCurveToProc		mIterateCubicCurveToProc;
+		ArcToProc				mIterateArcToProc;
+		void*					mIterateUserData;
 };
 
 typedef	T2DPath<Float32>	S2DPath32;
