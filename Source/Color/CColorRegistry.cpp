@@ -139,12 +139,12 @@ CColorSet::CColorSet(const CDictionary& info)
 	for (CArray::ItemIndex j = 0; j < colorSetColorInfos.getCount(); j++) {
 		// Get color set color info
 		const	CDictionary&	colorSetColorInfo = colorSetColorInfos[j];
-				OSType			colorGroupID = colorSetColorInfo.getOSType(CString(OSSTR("groupID")));
+				OSType			groupID = colorSetColorInfo.getOSType(CString(OSSTR("groupID")));
 				OSType			colorID = colorSetColorInfo.getOSType(CString(OSSTR("colorID")));
 				CDictionary		colorInfo = colorSetColorInfo.getDictionary(CString(OSSTR("color")));
 
 		// Store
-		UInt64	key = ((UInt64) colorGroupID << 32) | colorID;
+		UInt64	key = ((UInt64) groupID << 32) | colorID;
 		mInternals->mColorsMap.set(key, CColor(colorInfo));
 	}
 }
@@ -180,22 +180,22 @@ OV<OSType> CColorSet::getID() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CColor& CColorSet::getColor(OSType colorGroupID, OSType colorID, const CColor& defaultColor) const
+const CColor& CColorSet::getColor(OSType groupID, OSType colorID, const CColor& defaultColor) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64	key = ((UInt64) colorGroupID << 32) | colorID;
+	UInt64	key = ((UInt64) groupID << 32) | colorID;
 	OR<CColor>	color = mInternals->mColorsMap[key];
 
 	return color.hasReference() ? *color : defaultColor;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CColorSet::setColor(OSType colorGroupID, OSType colorID, const CColor& color)
+void CColorSet::setColor(OSType groupID, OSType colorID, const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt64	key = ((UInt64) colorGroupID << 32) | colorID;
+	UInt64	key = ((UInt64) groupID << 32) | colorID;
 
 	// Store
 	mInternals->mColorsMap.set(key, color);
@@ -222,11 +222,11 @@ CDictionary CColorSet::getInfo() const
 			iterator.advance()) {
 		// Get info
 		UInt64	key = iterator.getValue().mKey.getUInt64();
-		OSType	colorGroupID = (OSType) (key >> 32);
+		OSType	groupID = (OSType) (key >> 32);
 		OSType	colorID = (OSType) (key & 0xFFFFFFFF);
 
 		CDictionary	colorSetColorInfo;
-		colorSetColorInfo.set(CString(OSSTR("groupID")), colorGroupID);
+		colorSetColorInfo.set(CString(OSSTR("groupID")), groupID);
 		colorSetColorInfo.set(CString(OSSTR("colorID")), colorID);
 		colorSetColorInfo.set(CString(OSSTR("color")), ((CColor*) iterator.getValue().mValue.getOpaque())->getInfo());
 
@@ -463,45 +463,43 @@ void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 	for (CArray::ItemIndex i = 0; i < colorGroups.getCount(); i++) {
 		// Get info
 		CColorGroup&			colorGroup = colorGroups[i];
-		OSType					colorGroupID = colorGroup.getID();
+		OSType					groupID = colorGroup.getID();
 		TNumberArray<OSType>	colorIDs = colorGroup.getColorIDs();
 
 		// Setup
-		info.set(mGroupIDKey, colorGroupID);
+		info.set(mGroupIDKey, groupID);
 
 		// Iterate color IDs
 		for (CArray::ItemIndex j = 0; j < colorIDs.getCount(); j++) {
 			// Get info
 					OSType	colorID = colorIDs[j];
-			const	CColor&	color = mInternals->getCurrentColorSet().getColor(colorGroupID, colorID);
+			const	CColor&	color = mInternals->getCurrentColorSet().getColor(groupID, colorID);
 
 			// Setup
 			info.set(mColorIDKey, colorID);
 			info.set(mColorKey, &color);
 
-			// Send notification
-			mInternals->mNotificationCenter.queue(mColorChangedNotificationName, this, info);
+			// Queue notification
 		}
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CColorRegistry::setCurrentColorSetColor(OSType colorGroupID, OSType colorID, const CColor& color)
+void CColorRegistry::setCurrentColorSetColor(OSType groupID, OSType colorID, const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
-	mInternals->getCurrentColorSet().setColor(colorGroupID, colorID, color);
+	mInternals->getCurrentColorSet().setColor(groupID, colorID, color);
 
 	// Save to prefs
 	mInternals->writeToPrefs();
 
-	// Send notification
 	CDictionary	info;
-	info.set(mGroupIDKey, colorGroupID);
+	info.set(mGroupIDKey, groupID);
 	info.set(mColorIDKey, colorID);
 	info.set(mColorKey, &color);
 
-//	mInternals->mNotificationCenter.queue(mColorChangedNotificationName, this, info);
+	// Queue notification
 }
 
 //----------------------------------------------------------------------------------------------------------------------

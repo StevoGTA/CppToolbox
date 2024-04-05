@@ -182,5 +182,5 @@ struct SValue {
 							UInt32					mUInt32;
 							UInt64					mUInt64;
 							Opaque					mOpaque;
-						}	mValue;
+						} mValue;
 };

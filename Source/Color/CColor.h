@@ -25,13 +25,6 @@
 */
 
 class CColor : public CEquatable {
-	// Type
-	public:
-		enum Type {
-			kTypeRGB,
-			kTypeHSV,
-		};
-
 	// Primaries
 	public:
 		enum Primaries {
@@ -67,80 +60,188 @@ class CColor : public CEquatable {
 
 	// Structs
 	public:
-		struct RGBTransformer {
-							// Lifecycle methods
-							RGBTransformer() : mR(1.0), mG(1.0), mB(1.0), mA(1.0) {}
-							RGBTransformer(Float32 r, Float32 g, Float32 b, Float32 a) : mR(r), mG(g), mB(b), mA(a) {}
+		struct RGBValues {
+			// Methods
+			public:
+						// Lifecycle methods
+						RGBValues(Float32 red, Float32 green, Float32 blue, Float32 alpha = 1.0) :
+							mRed(red), mGreen(green), mBlue(blue), mAlpha(alpha)
+							{}
+						RGBValues(UInt8 red, UInt8 green, UInt8 blue, UInt8 alpha = 255) :
+							mRed((Float32) red / (Float32) 255.0), mGreen((Float32) green / (Float32) 255.0),
+									mBlue((Float32) blue / (Float32) 255.0), mAlpha((Float32) alpha / (Float32) 255.0)
+							{}
+						RGBValues(const RGBValues& other) :
+							mRed(other.mRed), mGreen(other.mGreen), mBlue(other.mBlue), mAlpha(other.mAlpha)
+							{}
 
-							// Instance methods
-			RGBTransformer	operator*(Float32 factor) const
-								{ return RGBTransformer(mR * factor, mG * factor, mB * factor, mA * factor); }
-			RGBTransformer	operator+(const RGBTransformer& other) const
-								{ return RGBTransformer(mR + other.mR, mG + other.mG, mB + other.mB, mA + other.mA); }
+						// Instance methods
+				Float32	getRed() const
+							{ return mRed; }
+				Float32	getGreen() const
+							{ return mGreen; }
+				Float32	getBlue() const
+							{ return mBlue; }
+				Float32	getAlpha() const
+							{ return mAlpha; }
+
+				bool	operator==(const RGBValues& other)
+							{ return (mRed == other.mRed) && (mGreen == other.mGreen) && (mBlue == other.mBlue) &&
+									(mAlpha == other.mAlpha); }
 
 			// Properties
-			Float32	mR;
-			Float32	mG;
-			Float32	mB;
-			Float32	mA;
+			private:
+				Float32	mRed;
+				Float32	mGreen;
+				Float32	mBlue;
+				Float32	mAlpha;
+		};
+
+		struct RGBTransformer {
+			// Methods
+			public:
+								// Lifecycle methods
+								RGBTransformer() : mR(1.0), mG(1.0), mB(1.0), mA(1.0) {}
+								RGBTransformer(Float32 r, Float32 g, Float32 b, Float32 a) :
+									mR(r), mG(g), mB(b), mA(a)
+									{}
+
+								// Instance methods
+				RGBValues		multiply(const RGBValues& rgbValues) const
+									{ return RGBValues(rgbValues.getRed() * mR, rgbValues.getGreen() * mG,
+											rgbValues.getBlue() * mB, rgbValues.getAlpha() * mA); }
+				RGBValues		add(const RGBValues& rgbValues) const
+									{ return RGBValues(rgbValues.getRed() + mR, rgbValues.getGreen() + mG,
+											rgbValues.getBlue() + mB, rgbValues.getAlpha() + mA); }
+
+				RGBTransformer	operator*(Float32 factor) const
+									{ return RGBTransformer(mR * factor, mG * factor, mB * factor, mA * factor); }
+				RGBTransformer	operator+(const RGBTransformer& other) const
+									{ return RGBTransformer(mR + other.mR, mG + other.mG, mB + other.mB,
+											mA + other.mA); }
+
+			// Properties
+			private:
+				Float32	mR;
+				Float32	mG;
+				Float32	mB;
+				Float32	mA;
 		};
 
 		struct RGBColorTransform {
-										// Lifecycle methods
-										RGBColorTransform() {}
-										RGBColorTransform(const RGBTransformer& multiplier,
-												const RGBTransformer& adder) :
-											mMultiplier(multiplier), mAdder(adder)
-											{}
+			// Methods
+			public:
+									// Lifecycle methods
+									RGBColorTransform() {}
+									RGBColorTransform(const RGBTransformer& multiplier,
+											const RGBTransformer& adder) :
+										mMultiplier(multiplier), mAdder(adder)
+										{}
 
-										// Instance methods
-			inline	RGBColorTransform	operator*(Float32 factor) const
-											{ return RGBColorTransform(mMultiplier * factor, mAdder * factor); }
-			inline	RGBColorTransform	operator+(const RGBColorTransform& other) const
-											{ return RGBColorTransform(mMultiplier + other.mMultiplier,
-														mAdder + other.mAdder); }
+									// Instance methods
+				RGBValues			apply(const RGBValues& rgbValues) const
+										{ return mAdder.add(mMultiplier.multiply(rgbValues)); }
+
+				RGBColorTransform	operator*(Float32 factor) const
+										{ return RGBColorTransform(mMultiplier * factor, mAdder * factor); }
+				RGBColorTransform	operator+(const RGBColorTransform& other) const
+										{ return RGBColorTransform(mMultiplier + other.mMultiplier,
+												mAdder + other.mAdder); }
 
 			// Properties
-			RGBTransformer	mMultiplier;
-			RGBTransformer	mAdder;
+			private:
+				RGBTransformer	mMultiplier;
+				RGBTransformer	mAdder;
+		};
+
+		struct HSVValues {
+			// Methods
+			public:
+						// Lifecycle methods
+						HSVValues(Float32 hue, Float32 saturation, Float32 value, Float32 alpha = 1.0) :
+							mHue(hue), mSaturation(saturation), mValue(value), mAlpha(alpha)
+							{}
+						HSVValues(const HSVValues& other) :
+							mHue(other.mHue), mSaturation(other.mSaturation), mValue(other.mValue), mAlpha(other.mAlpha)
+							{}
+
+						// Instance methods
+				Float32	getHue() const
+							{ return mHue; }
+				Float32	getSaturation() const
+							{ return mSaturation; }
+				Float32	getValue() const
+							{ return mValue; }
+				Float32	getAlpha() const
+							{ return mAlpha; }
+
+				bool	operator==(const HSVValues& other)
+							{ return (mHue == other.mHue) && (mSaturation == other.mSaturation) &&
+									(mValue == other.mValue) && (mAlpha == other.mAlpha); }
+
+			// Properties
+			private:
+				Float32	mHue;
+				Float32	mSaturation;
+				Float32	mValue;
+				Float32	mAlpha;
 		};
 
 		struct HSVTransformer {
-							// Lifecycle methods
-							HSVTransformer() : mH(1.0), mS(1.0), mV(1.0), mA(1.0) {}
-							HSVTransformer(Float32 r, Float32 g, Float32 b, Float32 a) : mH(r), mS(g), mV(b), mA(a) {}
+			// Methods
+			public:
+								// Lifecycle methods
+								HSVTransformer() : mH(1.0), mS(1.0), mV(1.0), mA(1.0) {}
+								HSVTransformer(Float32 r, Float32 g, Float32 b, Float32 a) :
+										mH(r), mS(g), mV(b), mA(a)
+										{}
 
-							// Instance methods
-			HSVTransformer	operator*(Float32 factor) const
-								{ return HSVTransformer(mH * factor, mS * factor, mV * factor, mA * factor); }
-			HSVTransformer	operator+(const HSVTransformer& other) const
-								{ return HSVTransformer(mH + other.mH, mS + other.mS, mV + other.mV, mA + other.mA); }
+								// Instance methods
+				HSVValues		multiply(const HSVValues& hsvValues) const
+									{ return HSVValues(hsvValues.getHue() * mH, hsvValues.getSaturation() * mS,
+											hsvValues.getValue() * mV, hsvValues.getAlpha() * mA); }
+				HSVValues		add(const HSVValues& hsvValues) const
+									{ return HSVValues(hsvValues.getHue() + mH, hsvValues.getSaturation() + mS,
+											hsvValues.getValue() + mV, hsvValues.getAlpha() + mA); }
+
+				HSVTransformer	operator*(Float32 factor) const
+									{ return HSVTransformer(mH * factor, mS * factor, mV * factor, mA * factor); }
+				HSVTransformer	operator+(const HSVTransformer& other) const
+									{ return HSVTransformer(mH + other.mH, mS + other.mS, mV + other.mV,
+											mA + other.mA); }
 
 			// Properties
-			Float32	mH;
-			Float32	mS;
-			Float32	mV;
-			Float32	mA;
+			private:
+				Float32	mH;
+				Float32	mS;
+				Float32	mV;
+				Float32	mA;
 		};
 
 		struct HSVColorTransform {
-										// Lifecycle methods
-										HSVColorTransform() {}
-										HSVColorTransform(const HSVTransformer& multiplier,
-												const HSVTransformer& adder) :
-											mMultiplier(multiplier), mAdder(adder)
-											{}
+			// Methods
+			public:
+									// Lifecycle methods
+									HSVColorTransform() {}
+									HSVColorTransform(const HSVTransformer& multiplier,
+											const HSVTransformer& adder) :
+										mMultiplier(multiplier), mAdder(adder)
+										{}
 
-										// Instance methods
-			inline	HSVColorTransform	operator*(Float32 factor) const
-											{ return HSVColorTransform(mMultiplier * factor, mAdder * factor); }
-			inline	HSVColorTransform	operator+(const HSVColorTransform& other) const
-											{ return HSVColorTransform(mMultiplier + other.mMultiplier,
-														mAdder + other.mAdder); }
+									// Instance methods
+				HSVValues			apply(const HSVValues& hsvValues) const
+										{ return mAdder.add(mMultiplier.multiply(hsvValues)); }
+
+				HSVColorTransform	operator*(Float32 factor) const
+										{ return HSVColorTransform(mMultiplier * factor, mAdder * factor); }
+				HSVColorTransform	operator+(const HSVColorTransform& other) const
+										{ return HSVColorTransform(mMultiplier + other.mMultiplier,
+													mAdder + other.mAdder); }
 
 			// Properties
-			HSVTransformer	mMultiplier;
-			HSVTransformer	mAdder;
+			private:
+				HSVTransformer	mMultiplier;
+				HSVTransformer	mAdder;
 		};
 
 	// Classes
@@ -150,43 +251,30 @@ class CColor : public CEquatable {
 	// Methods
 	public:
 									// Lifecycle methods
-									CColor();
-									CColor(const CColor& other);
+									CColor(const RGBValues& rgbValues);
+									CColor(const HSVValues& hsvValues);
+									CColor(const CString& rgbHexString);
 									CColor(const CDictionary& info);
-									CColor(const CString& hexString);
-
-									CColor(Type type, Float32 val1, Float32 val2, Float32 val3, Float32 alpha);
-									CColor(Type type, UInt8 val1, UInt8 val2, UInt8 val3, UInt8 alpha);
-
+									CColor(const CColor& other);
 									~CColor();
 
 									// CEquatable methods
-				bool				operator==(const CEquatable& other) const
-										{ return equals((const CColor&) other); }
+				bool				operator==(const CEquatable& other) const;
 
 									// Instance methods
-				Float32				getRed() const;
-				Float32				getGreen() const;
-				Float32				getBlue() const;
-
-				Float32				getHue() const;
-				Float32				getSaturation() const;
-				Float32				getValue() const;
-
-				Float32				getAlpha() const;
+				RGBValues			getRGBValues() const;
+				HSVValues			getHSVValues() const;
 
 				CDictionary			getInfo() const;
-				CString				getInfoAsString() const;
 
-				bool				equals(const CColor& other) const;
-
-				CColor				operator+(const CColor& other) const;
-
-				CColor				operator*(const RGBColorTransform& transform) const;
-				CColor				operator*(const HSVColorTransform& transform) const;
+				CColor				operator*(const RGBColorTransform& transform) const
+										{ return CColor(transform.apply(getRGBValues())); }
+				CColor				operator*(const HSVColorTransform& transform) const
+										{ return CColor(transform.apply(getHSVValues())); }
 
 									// Class methods
-		static	OR<const CColor>	getColorWithName(const CString& colorName);
+		static	OR<const CColor>	colorForName(const CString& colorName);
+
 		static	bool				areEqual(const CColor& color1, const CColor& color2)
 										{ return color1 == color2; }
 

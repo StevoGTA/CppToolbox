@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "C2DPath.h"
 #include "CBitmap.h"
 
 #include <CoreGraphics/CoreGraphics.h>
@@ -12,24 +13,28 @@
 // MARK: CCoreGraphics
 
 class CCoreGraphics {
-	// Types
-	public:
-		typedef	T2DPoint<CGFloat>	Point;
-		typedef	T2DRect<CGFloat>	Rect;
-
 	// Methods
 	public:
-							// Class methods
-		static	Point		from(const CGPoint& point)
-								{ return Point(point.x, point.y); }
-		static	CGPoint		from(const Point& point)
-								{ return CGPointMake(point.mX, point.mY); }
+									// Class methods
+		static	CGPoint				cgPointFor(const S2DPointF32& point)
+										{ return CGPointMake(point.mX, point.mY); }
+		static	S2DPointF32			pointFor(const CGPoint& point)
+										{ return S2DPointF32(point.x, point.y); }
 
-		static	Rect		from(const CGRect& rect)
-								{ return Rect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height); }
-		static	CGRect		from(const Rect& rect)
-								{ return CGRectMake(rect.mOrigin.mX, rect.mOrigin.mY, rect.mSize.mWidth,
-										rect.mSize.mHeight); }
+		static	CGRect				cgRectFor(const S2DRectF32& rect)
+										{ return CGRectMake(rect.mOrigin.mX, rect.mOrigin.mY, rect.mSize.mWidth,
+												rect.mSize.mHeight); }
+		static	S2DRectF32			rectFor(const CGRect& rect)
+										{ return S2DRectF32(rect.origin.x, rect.origin.y, rect.size.width,
+												rect.size.height); }
 
-		static	CGImageRef	newImageRef(const CBitmap& bitmap);
+		static	CGImageRef			newImageRef(const CBitmap& bitmap);
+
+		static	CGPathRef			newPathRef(const S2DPath32& path,
+											const S2DAffineTransformF32& affineTransform = S2DAffineTransformF32());
+
+		static	CGAffineTransform	cgAffineTransformFor(const S2DAffineTransformF32& affineTransform)
+										{ return CGAffineTransformMake(affineTransform.mA, affineTransform.mB,
+												affineTransform.mC, affineTransform.mD, affineTransform.mTX,
+												affineTransform.mTY); }
 };

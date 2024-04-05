@@ -7,8 +7,6 @@
 #include "CColor.h"
 #include "CNotificationCenter.h"
 #include "CPreferences.h"
-//#include "CString.h"
-#include "CUUID.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CColorGroup
@@ -64,9 +62,8 @@ class CColorSet {
 				bool		getCanModify() const
 								{ return !getID().hasValue(); }
 
-		const	CColor&		getColor(OSType colorGroupID, OSType colorID,
-									const CColor& defaultColor = CColor::mClear) const;
-				void		setColor(OSType colorGroupID, OSType colorID, const CColor& color);
+		const	CColor&		getColor(OSType groupID, OSType colorID, const CColor& defaultColor = CColor::mClear) const;
+				void		setColor(OSType groupID, OSType colorID, const CColor& color);
 				void		setColorsFrom(const CColorSet& other);
 
 				CDictionary	getInfo() const;
@@ -122,7 +119,7 @@ class CColorRegistry {
 
 		const	CColorSet&			getCurrentColorSet() const;
 				void				setAsCurrent(const CColorSet& colorSet);
-				void				setCurrentColorSetColor(OSType colorGroupID, OSType colorID, const CColor& color);
+				void				setCurrentColorSetColor(OSType groupID, OSType colorID, const CColor& color);
 		const	CColorSet&			createNewFromCurrentColorSet(const CString& name);
 				void				updateFromCurrentColorSet(CColorSet& colorSet) const;
 				OR<CColorSet>		getFirstMatchingColorsOfCurrentColorSet() const;

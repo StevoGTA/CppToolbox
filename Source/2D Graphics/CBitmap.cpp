@@ -800,65 +800,66 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 	Internals::prepareForWrite(&mInternals);
 
 	// Update pixel data
-	void*	pixelDataPtr =
-					(UInt8*) mInternals->mPixelData.getMutableBytePtr() + point.mY * mInternals->mBytesPerRow +
-							point.mX * mInternals->mBytesPerPixel;
+	CColor::RGBValues	rgbValues = color.getRGBValues();
+	void*				pixelDataPtr =
+								(UInt8*) mInternals->mPixelData.getMutableBytePtr() +
+										point.mY * mInternals->mBytesPerRow + point.mX * mInternals->mBytesPerPixel;
 	switch (mInternals->mFormat) {
 		case kFormatRGBA4444: {
 			// RGBA4444
 			PixelDataRGBA4444*	pixelData = (PixelDataRGBA4444*) pixelDataPtr;
-			pixelData->mComponents.mR = (UInt16) (color.getRed() * 15.0);
-			pixelData->mComponents.mG = (UInt16) (color.getGreen() * 15.0);
-			pixelData->mComponents.mB = (UInt16) (color.getBlue() * 15.0);
-			pixelData->mComponents.mA = (UInt16) (color.getAlpha() * 15.0);
+			pixelData->mComponents.mR = (UInt16) (rgbValues.getRed() * 15.0);
+			pixelData->mComponents.mG = (UInt16) (rgbValues.getGreen() * 15.0);
+			pixelData->mComponents.mB = (UInt16) (rgbValues.getBlue() * 15.0);
+			pixelData->mComponents.mA = (UInt16) (rgbValues.getAlpha() * 15.0);
 			break;
 		}
 
 		case kFormatRGBA5551: {
 			// RGBA5551
 			PixelDataRGBA5551*	pixelData = (PixelDataRGBA5551*) pixelDataPtr;
-			pixelData->mComponents.mR = (UInt16) (color.getRed() * 31.0);
-			pixelData->mComponents.mG = (UInt16) (color.getGreen() * 31.0);
-			pixelData->mComponents.mB = (UInt16) (color.getBlue() * 31.0);
-			pixelData->mComponents.mA = (UInt16) (color.getAlpha() * 1.0);
+			pixelData->mComponents.mR = (UInt16) (rgbValues.getRed() * 31.0);
+			pixelData->mComponents.mG = (UInt16) (rgbValues.getGreen() * 31.0);
+			pixelData->mComponents.mB = (UInt16) (rgbValues.getBlue() * 31.0);
+			pixelData->mComponents.mA = (UInt16) (rgbValues.getAlpha() * 1.0);
 			break;
 		}
 
 		case kFormatRGB565: {
 			// RGB565
 			PixelDataRGB565*	pixelData = (PixelDataRGB565*) pixelDataPtr;
-			pixelData->mComponents.mR = (UInt16) (color.getRed() * 31.0);
-			pixelData->mComponents.mG = (UInt16) (color.getGreen() * 63.0);
-			pixelData->mComponents.mB = (UInt16) (color.getBlue() * 31.0);
+			pixelData->mComponents.mR = (UInt16) (rgbValues.getRed() * 31.0);
+			pixelData->mComponents.mG = (UInt16) (rgbValues.getGreen() * 63.0);
+			pixelData->mComponents.mB = (UInt16) (rgbValues.getBlue() * 31.0);
 			break;
 		}
 
 		case kFormatRGB888: {
 			// RGB888
 			PixelDataRGB888*	pixelData = (PixelDataRGB888*) pixelDataPtr;
-			pixelData->mR = (UInt8) (color.getRed() * 255.0);
-			pixelData->mG = (UInt8) (color.getGreen() * 255.0);
-			pixelData->mB = (UInt8) (color.getBlue() * 255.0);
+			pixelData->mR = (UInt8) (rgbValues.getRed() * 255.0);
+			pixelData->mG = (UInt8) (rgbValues.getGreen() * 255.0);
+			pixelData->mB = (UInt8) (rgbValues.getBlue() * 255.0);
 			break;
 		}
 
 		case kFormatRGBA8888: {
 			// RGBA8888
 			PixelDataRGBA8888*	pixelData = (PixelDataRGBA8888*) pixelDataPtr;
-			pixelData->mComponents.mR = (UInt8) (color.getRed() * 255.0);
-			pixelData->mComponents.mG = (UInt8) (color.getGreen() * 255.0);
-			pixelData->mComponents.mB = (UInt8) (color.getBlue() * 255.0);
-			pixelData->mComponents.mA = (UInt8) (color.getAlpha() * 255.0);
+			pixelData->mComponents.mR = (UInt8) (rgbValues.getRed() * 255.0);
+			pixelData->mComponents.mG = (UInt8) (rgbValues.getGreen() * 255.0);
+			pixelData->mComponents.mB = (UInt8) (rgbValues.getBlue() * 255.0);
+			pixelData->mComponents.mA = (UInt8) (rgbValues.getAlpha() * 255.0);
 			break;
 		}
 
 		case kFormatARGB8888: {
 			// ARGB8888
 			PixelDataARGB8888*	pixelData = (PixelDataARGB8888*) pixelDataPtr;
-			pixelData->mComponents.mA = (UInt8) (color.getAlpha() * 255.0);
-			pixelData->mComponents.mR = (UInt8) (color.getRed() * 255.0);
-			pixelData->mComponents.mG = (UInt8) (color.getGreen() * 255.0);
-			pixelData->mComponents.mB = (UInt8) (color.getBlue() * 255.0);
+			pixelData->mComponents.mA = (UInt8) (rgbValues.getAlpha() * 255.0);
+			pixelData->mComponents.mR = (UInt8) (rgbValues.getRed() * 255.0);
+			pixelData->mComponents.mG = (UInt8) (rgbValues.getGreen() * 255.0);
+			pixelData->mComponents.mB = (UInt8) (rgbValues.getBlue() * 255.0);
 			break;
 		}
 	}

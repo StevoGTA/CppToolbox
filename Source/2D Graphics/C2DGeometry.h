@@ -45,6 +45,8 @@ template <typename T> struct T2DPoint {
 						// Instance methods
 	inline	T2DPoint	offset(const T2DOffset<T>& offset) const
 							{ return T2DPoint(mX + offset.mDX, mY + offset.mDY); }
+	inline	T2DPoint	offset(const T x, const T y) const
+							{ return T2DPoint(mX + x, mY + y); }
 	inline	T2DPoint	midpoint(const T2DPoint& point, T ratio) const
 							{ return T2DPoint(mX + (point.mX - mX) * ratio, mY + (point.mY - mY) * ratio); }
 	inline	T2DPoint	reflectedBy(const T2DPoint& anchorPoint) const
@@ -146,6 +148,11 @@ template <typename T> struct T2DSize {
 							}
 
 						// Instance methods
+	inline	T2DSize		offset(const T2DOffset<T>& offset) const
+							{ return T2DSize(mWidth + offset.mDX, mHeight + offset.mDY); }
+	inline	T2DSize		offset(const T w, const T h) const
+							{ return T2DSize(mWidth + w, mHeight + h); }
+
 	inline	T			aspectRatio() const
 							{ return (mHeight != 0) ? mWidth / mHeight : 0; }
 	inline	T2DSize<T>	aspectFitIn(const T2DSize& size)
@@ -270,6 +277,9 @@ template <typename T> struct T2DRect {
 							}
 
 						// Instance methods
+	inline	bool		isEmpty() const
+							{ return (mSize.mWidth == 0) && (mSize.mHeight == 0); }
+
 	inline	T			getMinX() const
 							{ return mOrigin.mX; }
 	inline	T			getMidX() const
@@ -286,8 +296,23 @@ template <typename T> struct T2DRect {
 							{ return mSize.mWidth; }
 	inline	T			getHeight() const
 							{ return mSize.mHeight; }
-	inline	bool		isEmpty() const
-							{ return (mSize.mWidth == 0) && (mSize.mHeight == 0); }
+
+	inline	T2DPoint<T>	getTopLeft() const
+							{ return T2DPoint<T>(getMinX(), getMinY()); }
+	inline	T2DPoint<T>	getTopRight() const
+							{ return T2DPoint<T>(getMaxX(), getMinY()); }
+	inline	T2DPoint<T>	getBottomLeft() const
+							{ return T2DPoint<T>(getMinX(), getMaxY()); }
+	inline	T2DPoint<T>	getBottomRight() const
+							{ return T2DPoint<T>(getMaxX(), getMaxY()); }
+
+	inline	T2DRect<T>	inset(T value) const
+							{ return T2DRect<T>(mOrigin.mX + value, mOrigin.mY + value, mSize.mWidth - value * 2,
+									mSize.mHeight - value * 2); }
+	inline	T2DRect<T>	inset(T x, T y) const
+							{ return T2DRect<T>(mOrigin.mX + x, mOrigin.mY + y, mSize.mWidth - x * 2,
+									mSize.mHeight - y * 2); }
+
 	inline	bool		contains(const T2DPoint<T>& point) const
 							{
 								return (point.mX >= getMinX()) && (point.mX < getMaxX()) &&

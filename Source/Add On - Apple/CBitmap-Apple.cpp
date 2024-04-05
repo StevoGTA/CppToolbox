@@ -155,8 +155,9 @@ void CBitmap::setPixels(const S2DRectS32& rect, const CColor& color)
 		::CGColorSpaceRelease(colorSpaceRef);
 
 		// Set pixels
-		::CGContextSetRGBFillColor(bitmapContextRef, color.getRed(), color.getGreen(), color.getBlue(),
-				color.getAlpha());
+		CColor::RGBValues	rgbValues = color.getRGBValues();
+		::CGContextSetRGBFillColor(bitmapContextRef, rgbValues.getRed(), rgbValues.getGreen(), rgbValues.getBlue(),
+				rgbValues.getAlpha());
 		::CGContextFillRect(bitmapContextRef,
 				::CGRectMake(rect.mOrigin.mX, bitmapSize.mHeight - rect.mOrigin.mY, rect.getWidth(),
 						-rect.getHeight()));
@@ -173,22 +174,23 @@ UInt32 sGetPixelData32ForColor(CBitmap::Format bitmapFormat, const CColor& color
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check format
+	CColor::RGBValues	rgbValues = color.getRGBValues();
 	switch (bitmapFormat) {
 		case CBitmap::kFormatRGBA8888:
 			// RGBA 8888
 			return EndianU32_BtoN(
-					((UInt32) (color.getRed() * 255.0) << 24) |
-					((UInt32) (color.getGreen() * 255.0) << 16) |
-					((UInt32) (color.getBlue() * 255.0) << 8) |
-					(UInt32) (color.getAlpha() * 255.0));
+					((UInt32) (rgbValues.getRed() * 255.0) << 24) |
+					((UInt32) (rgbValues.getGreen() * 255.0) << 16) |
+					((UInt32) (rgbValues.getBlue() * 255.0) << 8) |
+					(UInt32) (rgbValues.getAlpha() * 255.0));
 
 		case CBitmap::kFormatARGB8888:
 			// ARGB 8888
 			return EndianU32_BtoN(
-					((UInt32) (color.getAlpha() * 255.0) << 24) |
-					((UInt32) (color.getRed() * 255.0) << 16) |
-					((UInt32) (color.getGreen() * 255.0) << 8) |
-					(UInt32) (color.getBlue() * 255.0));
+					((UInt32) (rgbValues.getAlpha() * 255.0) << 24) |
+					((UInt32) (rgbValues.getRed() * 255.0) << 16) |
+					((UInt32) (rgbValues.getGreen() * 255.0) << 8) |
+					(UInt32) (rgbValues.getBlue() * 255.0));
 
 		default:
 			return 0;

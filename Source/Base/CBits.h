@@ -17,7 +17,7 @@ class CBits {
 	// Methods
 	public:
 				// Lifecycle methods
-				CBits(UInt32 count = 8);
+				CBits(UInt32 count = 8, bool initialValue = false);
 				CBits(const CBits& other);
 				~CBits();
 
@@ -27,6 +27,8 @@ class CBits {
 		void	set(UInt32 index, bool value = true);
 		void	clear(UInt32 index)
 					{ set(index, false); }
+
+		CBits&	operator=(const CBits& other);
 
 	// Properties
 	private:
