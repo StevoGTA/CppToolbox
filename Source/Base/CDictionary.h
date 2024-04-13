@@ -118,6 +118,7 @@ class CDictionary : public CEquatable {
 														const;
 				const	CDictionary&			getDictionary(const CString& key,
 														const CDictionary& defaultValue = mEmpty) const;
+						OV<CDictionary>			getOVDictionary(const CString& key) const;
 				const	CString&				getString(const CString& key,
 														const CString& defaultValue = CString::mEmpty) const;
 						OV<CString>				getOVString(const CString& key) const;

@@ -163,7 +163,7 @@ struct SH264NALUInfo {
 		static	CData				mAnnexBMarker;
 
 };
-CData	SH264NALUInfo::mAnnexBMarker(CString(OSSTR("AAAAAQ==")));
+CData	SH264NALUInfo::mAnnexBMarker = CData::fromBase64String(CString(OSSTR("AAAAAQ==")));
 
 // SH264SequenceParameterSetPayload
 struct SH264SequenceParameterSetPayload {

@@ -4,6 +4,7 @@
 
 #include "CBits.h"
 
+#include "CDictionary.h"
 #include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -23,6 +24,14 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						if (initialValue)
 							// Set all bits
 							::memset(mStorage, 0xFF, mUsed / 8);
+					}
+				Internals(UInt32 count, const CData& data) :
+					TCopyOnWriteReferenceCountable(), mUsed(count)
+					{
+						// Setup
+						mAvailable = (UInt32) data.getByteCount() * 8;
+						mStorage = (UInt8*) ::malloc(mAvailable);
+						::memcpy(mStorage, data.getBytePtr(), data.getByteCount());
 					}
 				~Internals()
 					{
@@ -70,6 +79,15 @@ CBits::CBits(UInt32 count, bool initialValue)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CBits::CBits(const CDictionary& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals =
+			new Internals(info.getUInt32(CString(OSSTR("used"))),
+					CData::fromBase64String(info.getString(CString(OSSTR("data")))));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CBits::CBits(const CBits& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -103,10 +121,27 @@ bool CBits::get(UInt32 index) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CBits::set(UInt32 index, bool value)
+CBits& CBits::set(UInt32 index, bool value)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Set
 	mInternals->set(index, value);
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionary CBits::getInfo() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CDictionary	info;
+
+	// Store
+	info.set(CString(OSSTR("data")), CData(mInternals->mStorage, mInternals->mAvailable / 8, false).getBase64String());
+	info.set(CString(OSSTR("used")), mInternals->mUsed);
+
+	return info;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -10,23 +10,30 @@
 // MARK: Local data
 
 struct SRGBInterpolateColorInfo {
-	CGFloat	mColor1Red;
-	CGFloat	mColor1Green;
-	CGFloat	mColor1Blue;
-	CGFloat	mColor1Alpha;
+	public:
+						SRGBInterpolateColorInfo(const CColor& color1, const CColor& color2) :
+							mInitialRGBValues(color1.getRGBValues()),
+									mDeltaRGBValues(color2.getRGBValues() - color1.getRGBValues())
+							{}
 
-	CGFloat	mColor2Red;
-	CGFloat	mColor2Green;
-	CGFloat	mColor2Blue;
-	CGFloat	mColor2Alpha;
+		static	void	interpolate(SRGBInterpolateColorInfo *info, const CGFloat* mix, CGFloat* result)
+							{
+								result[0] =
+										info->mInitialRGBValues.getRed() + info->mDeltaRGBValues.getRed() * mix[0];
+								result[1] =
+										info->mInitialRGBValues.getGreen() + info->mDeltaRGBValues.getGreen() * mix[0];
+								result[2] =
+										info->mInitialRGBValues.getBlue() + info->mDeltaRGBValues.getBlue() * mix[0];
+								result[3] =
+										info->mInitialRGBValues.getAlpha() + info->mDeltaRGBValues.getAlpha() * mix[0];
+							}
+		static	void	cleanup(SRGBInterpolateColorInfo* info)
+							{ Delete(info); }
+
+	private:
+		CColor::RGBValues	mInitialRGBValues;
+		CColor::RGBValues	mDeltaRGBValues;
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	void	sInterpolateSRGBInterpolateColorInfo(SRGBInterpolateColorInfo *info, const CGFloat* in,
-						CGFloat* output);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,6 +68,8 @@ class CCoreGraphicsRenderer::Internals {
 			}
 
 		CGContextRef	mContextRef;
+		OV<CColor>		mFillColor;
+		OV<CColor>		mStrokeColor;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -96,6 +105,10 @@ CCoreGraphicsRenderer::~CCoreGraphicsRenderer()
 void CCoreGraphicsRenderer::setFillColor(const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Store
+	mInternals->mFillColor.setValue(color);
+
+	// Update CGContextRef
 	CColor::RGBValues	rgbValues = color.getRGBValues();
 	::CGContextSetRGBFillColor(mInternals->mContextRef, rgbValues.getRed(), rgbValues.getGreen(), rgbValues.getBlue(),
 			rgbValues.getAlpha());
@@ -105,6 +118,10 @@ void CCoreGraphicsRenderer::setFillColor(const CColor& color)
 void CCoreGraphicsRenderer::setStrokeColor(const CColor& color)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Store
+	mInternals->mStrokeColor.setValue(color);
+
+	// Update CGContextRef
 	CColor::RGBValues	rgbValues = color.getRGBValues();
 	::CGContextSetRGBStrokeColor(mInternals->mContextRef, rgbValues.getRed(), rgbValues.getGreen(), rgbValues.getBlue(),
 			rgbValues.getAlpha());
@@ -151,13 +168,6 @@ void CCoreGraphicsRenderer::strokeLines(const S2DPointF32* points, UInt32 count,
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsRenderer::strokeRect(const S2DRectF32& rect) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	::CGContextStrokeRect(mInternals->mContextRef, CCoreGraphics::cgRectFor(rect));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CCoreGraphicsRenderer::fillRect(const S2DRectF32& rect) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -174,50 +184,49 @@ void CCoreGraphicsRenderer::shadeRect(const S2DRectF32& rect, const S2DPointF32&
 	::CGContextClipToRect(mInternals->mContextRef, CCoreGraphics::cgRectFor(rect));
 
 	// Setup
-	CColor::RGBValues	startColorRGBValues = startColor.getRGBValues();
-	CColor::RGBValues	endColorRGBValues = endColor.getRGBValues();
-	CGColorSpaceRef		colorSpaceRef = ::CGColorSpaceCreateDeviceRGB();
+	CGFloat						domain[2] = {0.0, 1.0};
+	CGFloat						range[8] = {0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0};
+	CGFunctionCallbacks			callbacks =
+										{0, (CGFunctionEvaluateCallback) SRGBInterpolateColorInfo::interpolate,
+												(CGFunctionReleaseInfoCallback) SRGBInterpolateColorInfo::cleanup};
 
-	CGFloat					domain[2] = {0.0, 1.0};
-	CGFloat					range[8] = {0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0};
-	CGFunctionCallbacks		callbacks = {0, (CGFunctionEvaluateCallback) sInterpolateSRGBInterpolateColorInfo, nil};
+	SRGBInterpolateColorInfo*	rgbInterpolateColorInfo = new SRGBInterpolateColorInfo(startColor, endColor);
 
-	SRGBInterpolateColorInfo	info;
-	info.mColor1Red = startColorRGBValues.getRed();
-	info.mColor1Green = startColorRGBValues.getGreen();
-	info.mColor1Blue = startColorRGBValues.getBlue();
-	info.mColor1Alpha = startColorRGBValues.getAlpha();
-
-	info.mColor2Red = endColorRGBValues.getRed();
-	info.mColor2Green = endColorRGBValues.getGreen();
-	info.mColor2Blue = endColorRGBValues.getBlue();
-	info.mColor2Alpha = endColorRGBValues.getAlpha();
-
-	CGFunctionRef	functionRef = ::CGFunctionCreate(&info, 1, domain, 4, range, &callbacks);
-	CGShadingRef	shadingRef =
-							::CGShadingCreateAxial(colorSpaceRef, CCoreGraphics::cgPointFor(shadeStartPoint),
-									CCoreGraphics::cgPointFor(shadeEndPoint), functionRef, true, true);
+	CGColorSpaceRef				colorSpaceRef = ::CGColorSpaceCreateDeviceRGB();
+	CGFunctionRef				functionRef =
+										::CGFunctionCreate(rgbInterpolateColorInfo, 1, domain, 4, range, &callbacks);
+	CGShadingRef				shadingRef =
+										::CGShadingCreateAxial(colorSpaceRef,
+												CCoreGraphics::cgPointFor(shadeStartPoint),
+												CCoreGraphics::cgPointFor(shadeEndPoint), functionRef, false, false);
+	::CFRelease(colorSpaceRef);
+	::CFRelease(functionRef);
 
 	// Do it
 	::CGContextDrawShading(mInternals->mContextRef, shadingRef);
+	::CFRelease(shadingRef);
 
 	// Unclip
 	::CGContextRestoreGState(mInternals->mContextRef);
-
-	// Cleanup
-	::CFRelease(colorSpaceRef);
-	::CFRelease(functionRef);
-	::CFRelease(shadingRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsRenderer::strokePath(const S2DPath32& path, const S2DAffineTransformF32& affineTransform) const
+void CCoreGraphicsRenderer::strokeRect(const S2DRectF32& rect) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	::CGContextStrokeRect(mInternals->mContextRef, CCoreGraphics::cgRectFor(rect));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CCoreGraphicsRenderer::strokePath(const S2DPath32& path, Float32 lineWidth,
+		const S2DAffineTransformF32& affineTransform) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CGPathRef	pathRef = CCoreGraphics::newPathRef(path, affineTransform);
 
 	// Stroke
+	::CGContextSetLineWidth(mInternals->mContextRef, lineWidth);
 	::CGContextAddPath(mInternals->mContextRef, pathRef);
 	::CGContextStrokePath(mInternals->mContextRef);
 
@@ -226,27 +235,61 @@ void CCoreGraphicsRenderer::strokePath(const S2DPath32& path, const S2DAffineTra
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsRenderer::fillText(const CString& string, const Font& font, const S2DPointF32& point,
-		TextPositioning textPositioning) const
+S2DSizeF32 CCoreGraphicsRenderer::getTextSize(const CString& string, const Font& font) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CTFontRef		fontRef = ::CTFontCreateWithName(font.getName().getOSString(), font.getSize(), nil);
-	CFStringRef		keys[] =
-						{
-							kCTFontAttributeName,
-							kCTForegroundColorFromContextAttributeName,
-						};
-	CFTypeRef		values[] =
-						{
-							fontRef,
-							kCFBooleanTrue,
-						};
+	CFStringRef		keys[] = { kCTFontAttributeName };
+	CFTypeRef		values[] = { fontRef };
 	CFDictionaryRef	attributesDictionaryRef =
 							::CFDictionaryCreate(kCFAllocatorDefault, (const void**) &keys,
 									(const void**) &values, sizeof(keys) / sizeof(keys[0]),
 									&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 	::CFRelease(fontRef);
+
+	CFAttributedStringRef	attributedStringRef =
+									::CFAttributedStringCreate(kCFAllocatorDefault, string.getOSString(),
+											attributesDictionaryRef);
+	::CFRelease(attributesDictionaryRef);
+
+	CTLineRef	lineRef = ::CTLineCreateWithAttributedString(attributedStringRef);
+	::CFRelease(attributedStringRef);
+
+	CGRect	imageBounds = ::CTLineGetImageBounds(lineRef, mInternals->mContextRef);
+
+	return S2DSizeF32(imageBounds.size.width, imageBounds.size.height);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CCoreGraphicsRenderer::strokeText(const CString& string, const Font& font, const S2DPointF32& point,
+		TextPositioning textPositioning) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CTFontRef			fontRef = ::CTFontCreateWithName(font.getName().getOSString(), font.getSize(), nil);
+
+	CColor::RGBValues	rgbValues = mInternals->mStrokeColor.getValue(CColor::mBlack).getRGBValues();
+	CGColorRef			colorRef =
+								::CGColorCreateGenericRGB(rgbValues.getRed(), rgbValues.getGreen(), rgbValues.getBlue(),
+										rgbValues.getAlpha());
+
+	CFStringRef			keys[] =
+							{
+								kCTFontAttributeName,
+								kCTForegroundColorAttributeName,
+							};
+	CFTypeRef			values[] =
+							{
+								fontRef,
+								colorRef,
+							};
+	CFDictionaryRef	attributesDictionaryRef =
+							::CFDictionaryCreate(kCFAllocatorDefault, (const void**) &keys,
+									(const void**) &values, sizeof(keys) / sizeof(keys[0]),
+									&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	::CFRelease(fontRef);
+	::CGColorRelease(colorRef);
 
 	CFAttributedStringRef	attributedStringRef =
 									::CFAttributedStringCreate(kCFAllocatorDefault, string.getOSString(),
@@ -311,19 +354,4 @@ void CCoreGraphicsRenderer::fillText(const CString& string, const Font& font, co
 	// Draw
 	::CTLineDraw(lineRef, mInternals->mContextRef);
 	::CFRelease(lineRef);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
-
-//----------------------------------------------------------------------------------------------------------------------
-void sInterpolateSRGBInterpolateColorInfo(SRGBInterpolateColorInfo *info, const CGFloat* in, CGFloat* output)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Perform
-	output[0] = info->mColor1Red + in[0] * (info->mColor2Red - info->mColor1Red);
-	output[1] = info->mColor1Green + in[0] * (info->mColor2Green - info->mColor1Green);
-	output[2] = info->mColor1Blue + in[0] * (info->mColor2Blue - info->mColor1Blue);
-	output[3] = info->mColor1Alpha + in[0] * (info->mColor2Alpha - info->mColor1Alpha);
 }

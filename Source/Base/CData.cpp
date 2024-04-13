@@ -119,66 +119,6 @@ CData::CData(const void* buffer, ByteCount bufferByteCount, bool copySourceData)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData::CData(const CString& base64String)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// From https://stackoverflow.com/questions/180947/base64-decode-snippet-in-c/13935718
-	static	const	UInt8	sMap[256] =
-									{
-										0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-										0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-										0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  62, 63, 62, 62, 63,
-										52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 0,  0,  0,  0,  0,  0,
-										0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
-										15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0,  0,  0,  0,  63,
-										0,  26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-										41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
-									};
-
-	// Setup
-	CString::Length	stringLength = base64String.getLength();
-	if (stringLength == 0) {
-		// No string
-		mInternals = CData::mEmpty.mInternals->addReference();
-
-		return;
-	}
-
-			CString::C		cString = base64String.getCString();
-	const	char*			stringPtr = *cString;
-			bool			pad1 = ((stringLength % 4) != 0) || (stringPtr[stringLength - 1] == '=');
-			bool			pad2 = pad1 && (((stringLength % 4) > 2) || (stringPtr[stringLength - 2] != '='));
-			CString::Length	last = (stringLength - (pad1 ? 1 : 0)) / 4 << 2;
-
-	// Setup internals
-	ByteCount	dataByteCount = (ByteCount) last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
-	mInternals = new Internals(dataByteCount);
-
-	// Convert
-	UInt8*	dataPtr = (UInt8*) mInternals->mBuffer;
-	for (UInt32 i = 0; i < last; i += 4) {
-		// Convert these 4 characters to 3 bytes
-		UInt32	bytes =
-						(sMap[stringPtr[i]] << 18) | (sMap[stringPtr[i + 1]] << 12) | (sMap[stringPtr[i + 2]] << 6) |
-								sMap[stringPtr[i + 3]];
-		*dataPtr++ = (UInt8) (bytes >> 16);
-		*dataPtr++ = bytes >> 8 & 0xFF;
-		*dataPtr++ = bytes & 0xFF;
-	}
-
-	if (pad1) {
-		// Have extra bytes
-		UInt32	bytes = (sMap[stringPtr[last]] << 18) | (sMap[stringPtr[last + 1]] << 12);
-		*dataPtr++ = (UInt8) (bytes >> 16);
-		if (pad2) {
-			// One more byte
-			bytes |= sMap[stringPtr[last + 2]] << 6;
-			*dataPtr++ = bytes >> 8 & 0xFF;
-		}
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CData::CData(SInt8 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -482,6 +422,65 @@ CData CData::operator+(const CData& other) const
 	::memcpy(data.mInternals->mBuffer, mInternals->mBuffer, (size_t) mInternals->mBufferByteCount);
 	::memcpy((UInt8*) data.mInternals->mBuffer + mInternals->mBufferByteCount, other.mInternals->mBuffer,
 			(size_t) other.mInternals->mBufferByteCount);
+
+	return data;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CData CData::fromBase64String(const CString& base64String)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// From https://stackoverflow.com/questions/180947/base64-decode-snippet-in-c/13935718
+	static	const	UInt8	sMap[256] =
+									{
+										0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+										0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+										0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  62, 63, 62, 62, 63,
+										52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 0,  0,  0,  0,  0,  0,
+										0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+										15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0,  0,  0,  0,  63,
+										0,  26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+										41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51,
+									};
+
+	// Setup
+	CString::Length	stringLength = base64String.getLength();
+	if (stringLength == 0)
+		// No string
+		return CData();
+
+			CString::C		cString = base64String.getCString();
+	const	char*			stringPtr = *cString;
+			bool			pad1 = ((stringLength % 4) != 0) || (stringPtr[stringLength - 1] == '=');
+			bool			pad2 = pad1 && (((stringLength % 4) > 2) || (stringPtr[stringLength - 2] != '='));
+			CString::Length	last = (stringLength - (pad1 ? 1 : 0)) / 4 << 2;
+
+	// Setup internals
+	ByteCount	dataByteCount = (ByteCount) last / 4 * 3 + (pad1 ? 1 : 0) + (pad2 ? 1 : 0);
+	CData		data(dataByteCount);
+
+	// Convert
+	UInt8*	dataPtr = (UInt8*) data.getMutableBytePtr();
+	for (UInt32 i = 0; i < last; i += 4) {
+		// Convert these 4 characters to 3 bytes
+		UInt32	bytes =
+						(sMap[stringPtr[i]] << 18) | (sMap[stringPtr[i + 1]] << 12) | (sMap[stringPtr[i + 2]] << 6) |
+								sMap[stringPtr[i + 3]];
+		*dataPtr++ = (UInt8) (bytes >> 16);
+		*dataPtr++ = bytes >> 8 & 0xFF;
+		*dataPtr++ = bytes & 0xFF;
+	}
+
+	if (pad1) {
+		// Have extra bytes
+		UInt32	bytes = (sMap[stringPtr[last]] << 18) | (sMap[stringPtr[last + 1]] << 12);
+		*dataPtr++ = (UInt8) (bytes >> 16);
+		if (pad2) {
+			// One more byte
+			bytes |= sMap[stringPtr[last + 2]] << 6;
+			*dataPtr++ = bytes >> 8 & 0xFF;
+		}
+	}
 
 	return data;
 }

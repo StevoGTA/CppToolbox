@@ -671,6 +671,16 @@ const CDictionary& CDictionary::getDictionary(const CString& key, const CDiction
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<CDictionary> CDictionary::getOVDictionary(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<CDictionary>(value->getDictionary()) : OV<CDictionary>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const CString& CDictionary::getString(const CString& key, const CString& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {

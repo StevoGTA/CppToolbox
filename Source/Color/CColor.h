@@ -63,31 +63,35 @@ class CColor : public CEquatable {
 		struct RGBValues {
 			// Methods
 			public:
-						// Lifecycle methods
-						RGBValues(Float32 red, Float32 green, Float32 blue, Float32 alpha = 1.0) :
-							mRed(red), mGreen(green), mBlue(blue), mAlpha(alpha)
-							{}
-						RGBValues(UInt8 red, UInt8 green, UInt8 blue, UInt8 alpha = 255) :
-							mRed((Float32) red / (Float32) 255.0), mGreen((Float32) green / (Float32) 255.0),
-									mBlue((Float32) blue / (Float32) 255.0), mAlpha((Float32) alpha / (Float32) 255.0)
-							{}
-						RGBValues(const RGBValues& other) :
-							mRed(other.mRed), mGreen(other.mGreen), mBlue(other.mBlue), mAlpha(other.mAlpha)
-							{}
+							// Lifecycle methods
+							RGBValues(Float32 red, Float32 green, Float32 blue, Float32 alpha = 1.0) :
+								mRed(red), mGreen(green), mBlue(blue), mAlpha(alpha)
+								{}
+							RGBValues(UInt8 red, UInt8 green, UInt8 blue, UInt8 alpha = 255) :
+								mRed((Float32) red / (Float32) 255.0), mGreen((Float32) green / (Float32) 255.0),
+										mBlue((Float32) blue / (Float32) 255.0),
+										mAlpha((Float32) alpha / (Float32) 255.0)
+								{}
+							RGBValues(const RGBValues& other) :
+								mRed(other.mRed), mGreen(other.mGreen), mBlue(other.mBlue), mAlpha(other.mAlpha)
+								{}
 
-						// Instance methods
-				Float32	getRed() const
-							{ return mRed; }
-				Float32	getGreen() const
-							{ return mGreen; }
-				Float32	getBlue() const
-							{ return mBlue; }
-				Float32	getAlpha() const
-							{ return mAlpha; }
+							// Instance methods
+				Float32		getRed() const
+								{ return mRed; }
+				Float32		getGreen() const
+								{ return mGreen; }
+				Float32		getBlue() const
+								{ return mBlue; }
+				Float32		getAlpha() const
+								{ return mAlpha; }
 
-				bool	operator==(const RGBValues& other)
-							{ return (mRed == other.mRed) && (mGreen == other.mGreen) && (mBlue == other.mBlue) &&
-									(mAlpha == other.mAlpha); }
+				RGBValues	operator-(const RGBValues& other) const
+								{ return RGBValues(mRed - other.mRed, mGreen - other.mGreen, mBlue - other.mBlue,
+										mAlpha - other.mAlpha); }
+				bool		operator==(const RGBValues& other)
+								{ return (mRed == other.mRed) && (mGreen == other.mGreen) && (mBlue == other.mBlue) &&
+										(mAlpha == other.mAlpha); }
 
 			// Properties
 			private:
@@ -271,6 +275,7 @@ class CColor : public CEquatable {
 										{ return CColor(transform.apply(getRGBValues())); }
 				CColor				operator*(const HSVColorTransform& transform) const
 										{ return CColor(transform.apply(getHSVValues())); }
+				CColor&				operator=(const CColor& other);
 
 									// Class methods
 		static	OR<const CColor>	colorForName(const CString& colorName);

@@ -389,14 +389,20 @@ CColor::CColor(const CString& rgbHexString)
 CColor::CColor(const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-//	mInternals =
-//			new Internals(info.getFloat32(CString(OSSTR("r"))), info.getFloat32(CString(OSSTR("g"))),
-//					info.getFloat32(CString(OSSTR("b"))), info.getFloat32(CString(OSSTR("h"))),
-//					info.getFloat32(CString(OSSTR("s"))), info.getFloat32(CString(OSSTR("v"))),
-//					info.getFloat32(CString(OSSTR("a"))));
-// Crash
-mInternals = nil;
-(void) *mInternals;
+	// Get type
+	Internals::Type	type = (Internals::Type) info.getUInt8(CString(OSSTR("type")));
+	if (type == Internals::kTypeRGB)
+		// RGB
+		mInternals =
+				new Internals(
+						RGBValues(info.getFloat32(CString(OSSTR("r"))), info.getFloat32(CString(OSSTR("g"))),
+								info.getFloat32(CString(OSSTR("b"))), info.getFloat32(CString(OSSTR("a")))));
+	else
+		// HSV
+		mInternals =
+				new Internals(
+						HSVValues(info.getFloat32(CString(OSSTR("h"))), info.getFloat32(CString(OSSTR("s"))),
+								info.getFloat32(CString(OSSTR("v"))), info.getFloat32(CString(OSSTR("a")))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -454,20 +460,43 @@ CColor::HSVValues CColor::getHSVValues() const
 CDictionary CColor::getInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	CDictionary	info;
 
-//	info.set(CString(OSSTR("r")), mInternals->mR);
-//	info.set(CString(OSSTR("g")), mInternals->mG);
-//	info.set(CString(OSSTR("b")), mInternals->mB);
-//	info.set(CString(OSSTR("h")), mInternals->mH);
-//	info.set(CString(OSSTR("s")), mInternals->mS);
-//	info.set(CString(OSSTR("v")), mInternals->mV);
-//	info.set(CString(OSSTR("a")), mInternals->mA);
-// Crash
-Internals* internals = nil;
-(void) *internals;
+	// Store
+	info.set(CString(OSSTR("type")), (UInt8) mInternals->mType);
+	if (mInternals->mType == Internals::kTypeRGB) {
+		// RGB
+		info.set(CString(OSSTR("r")), mInternals->_.mRGBValues->getRed());
+		info.set(CString(OSSTR("g")), mInternals->_.mRGBValues->getGreen());
+		info.set(CString(OSSTR("b")), mInternals->_.mRGBValues->getBlue());
+		info.set(CString(OSSTR("a")), mInternals->_.mRGBValues->getAlpha());
+	} else {
+		// HSV
+		info.set(CString(OSSTR("h")), mInternals->_.mHSVValues->getHue());
+		info.set(CString(OSSTR("s")), mInternals->_.mHSVValues->getSaturation());
+		info.set(CString(OSSTR("v")), mInternals->_.mHSVValues->getValue());
+		info.set(CString(OSSTR("a")), mInternals->_.mHSVValues->getAlpha());
+	}
 
 	return info;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CColor& CColor::operator=(const CColor& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
 }
 
 // MARK: Class methods
