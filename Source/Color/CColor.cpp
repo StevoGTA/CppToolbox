@@ -91,6 +91,10 @@ class CColor::Internals : public TReferenceCountableAutoDelete<CColor::Internals
 										return RGBValues(r, g, b, hsvValues.getAlpha());
 									}
 								}
+
+#if defined(TARGET_OS_WINDOWS)
+								default:		return *_.mRGBValues;
+#endif
 							}
 						}
 		HSVValues	getHSVValues()
@@ -142,6 +146,10 @@ class CColor::Internals : public TReferenceCountableAutoDelete<CColor::Internals
 								}
 
 								case kTypeHSV:	return *_.mHSVValues;
+
+#if defined(TARGET_OS_WINDOWS)
+								default:		return *_.mHSVValues;
+#endif
 							}
 						}
 

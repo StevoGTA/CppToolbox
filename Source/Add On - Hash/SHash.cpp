@@ -45,5 +45,9 @@ CString SHash::valueFor(const CData& data, Type type, bool uppercase)
 
 			return CData(&hash, sizeof(XXH128_hash_t), false).getHexString(uppercase);
 		}
+
+#if defined(TARGET_OS_WINDOWS)
+		default:	return CString::mEmpty;
+#endif
 	}
 }
