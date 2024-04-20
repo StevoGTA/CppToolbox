@@ -509,300 +509,300 @@ OR<const CColor> CColor::colorForName(const CString& colorName)
 	CString	colorNameUse = colorName.lowercased();
 	if (colorNameUse == CString(OSSTR("clear")))
 		return OR<const CColor>(mClear);
-	else if (colorNameUse == CString(OSSTR("aliceblue")))
+	if (colorNameUse == CString(OSSTR("aliceblue")))
 		return OR<const CColor>(mAliceBlue);
-	else if (colorNameUse == CString(OSSTR("antiquewhite")))
+	if (colorNameUse == CString(OSSTR("antiquewhite")))
 		return OR<const CColor>(mAntiqueWhite);
-	else if (colorNameUse == CString(OSSTR("aqua")))
+	if (colorNameUse == CString(OSSTR("aqua")))
 		return OR<const CColor>(mAqua);
-	else if (colorNameUse == CString(OSSTR("aquamarine")))
+	if (colorNameUse == CString(OSSTR("aquamarine")))
 		return OR<const CColor>(mAquamarine);
-	else if (colorNameUse == CString(OSSTR("azure")))
+	if (colorNameUse == CString(OSSTR("azure")))
 		return OR<const CColor>(mAzure);
-	else if (colorNameUse == CString(OSSTR("beige")))
+	if (colorNameUse == CString(OSSTR("beige")))
 		return OR<const CColor>(mBeige);
-	else if (colorNameUse == CString(OSSTR("bisque")))
+	if (colorNameUse == CString(OSSTR("bisque")))
 		return OR<const CColor>(mBisque);
-	else if (colorNameUse == CString(OSSTR("black")))
+	if (colorNameUse == CString(OSSTR("black")))
 		return OR<const CColor>(mBlack);
-	else if (colorNameUse == CString(OSSTR("blanchedalmond")))
+	if (colorNameUse == CString(OSSTR("blanchedalmond")))
 		return OR<const CColor>(mBlanchedAlmond);
-	else if (colorNameUse == CString(OSSTR("blue")))
+	if (colorNameUse == CString(OSSTR("blue")))
 		return OR<const CColor>(mBlue);
-	else if (colorNameUse == CString(OSSTR("blueviolet")))
+	if (colorNameUse == CString(OSSTR("blueviolet")))
 		return OR<const CColor>(mBlueViolet);
-	else if (colorNameUse == CString(OSSTR("brown")))
+	if (colorNameUse == CString(OSSTR("brown")))
 		return OR<const CColor>(mBrown);
-	else if (colorNameUse == CString(OSSTR("burlywood")))
+	if (colorNameUse == CString(OSSTR("burlywood")))
 		return OR<const CColor>(mBurlywood);
-	else if (colorNameUse == CString(OSSTR("cadetblue")))
+	if (colorNameUse == CString(OSSTR("cadetblue")))
 		return OR<const CColor>(mCadetBlue);
-	else if (colorNameUse == CString(OSSTR("chartreuse")))
+	if (colorNameUse == CString(OSSTR("chartreuse")))
 		return OR<const CColor>(mChartreuse);
-	else if (colorNameUse == CString(OSSTR("chocolate")))
+	if (colorNameUse == CString(OSSTR("chocolate")))
 		return OR<const CColor>(mChocolate);
-	else if (colorNameUse == CString(OSSTR("coral")))
+	if (colorNameUse == CString(OSSTR("coral")))
 		return OR<const CColor>(mCoral);
-	else if (colorNameUse == CString(OSSTR("cornflowerblue")))
+	if (colorNameUse == CString(OSSTR("cornflowerblue")))
 		return OR<const CColor>(mCornflowerBlue);
-	else if (colorNameUse == CString(OSSTR("cornsilk")))
+	if (colorNameUse == CString(OSSTR("cornsilk")))
 		return OR<const CColor>(mCornSilk);
-	else if (colorNameUse == CString(OSSTR("crimson")))
+	if (colorNameUse == CString(OSSTR("crimson")))
 		return OR<const CColor>(mCrimson);
-	else if (colorNameUse == CString(OSSTR("cyan")))
+	if (colorNameUse == CString(OSSTR("cyan")))
 		return OR<const CColor>(mCyan);
-	else if (colorNameUse == CString(OSSTR("darkblue")))
+	if (colorNameUse == CString(OSSTR("darkblue")))
 		return OR<const CColor>(mDarkBlue);
-	else if (colorNameUse == CString(OSSTR("darkcyan")))
+	if (colorNameUse == CString(OSSTR("darkcyan")))
 		return OR<const CColor>(mDarkCyan);
-	else if (colorNameUse == CString(OSSTR("darkgoldenrod")))
+	if (colorNameUse == CString(OSSTR("darkgoldenrod")))
 		return OR<const CColor>(mDarkGoldenrod);
-	else if (colorNameUse == CString(OSSTR("darkgray")))
+	if (colorNameUse == CString(OSSTR("darkgray")))
 		return OR<const CColor>(mDarkGray);
-	else if (colorNameUse == CString(OSSTR("darkgreen")))
+	if (colorNameUse == CString(OSSTR("darkgreen")))
 		return OR<const CColor>(mDarkGreen);
-	else if (colorNameUse == CString(OSSTR("darkgrey")))
+	if (colorNameUse == CString(OSSTR("darkgrey")))
 		return OR<const CColor>(mDarkGrey);
-	else if (colorNameUse == CString(OSSTR("darkkhaki")))
+	if (colorNameUse == CString(OSSTR("darkkhaki")))
 		return OR<const CColor>(mDarkKhaki);
-	else if (colorNameUse == CString(OSSTR("darkmagenta")))
+	if (colorNameUse == CString(OSSTR("darkmagenta")))
 		return OR<const CColor>(mDarkMagenta);
-	else if (colorNameUse == CString(OSSTR("darkolivegreen")))
+	if (colorNameUse == CString(OSSTR("darkolivegreen")))
 		return OR<const CColor>(mDarkOliveGreen);
-	else if (colorNameUse == CString(OSSTR("darkorange")))
+	if (colorNameUse == CString(OSSTR("darkorange")))
 		return OR<const CColor>(mDarkOrange);
-	else if (colorNameUse == CString(OSSTR("darkorchid")))
+	if (colorNameUse == CString(OSSTR("darkorchid")))
 		return OR<const CColor>(mDarkOrchid);
-	else if (colorNameUse == CString(OSSTR("darkred")))
+	if (colorNameUse == CString(OSSTR("darkred")))
 		return OR<const CColor>(mDarkdRed);
-	else if (colorNameUse == CString(OSSTR("darksalmon")))
+	if (colorNameUse == CString(OSSTR("darksalmon")))
 		return OR<const CColor>(mDarkSalmon);
-	else if (colorNameUse == CString(OSSTR("darkseagreen")))
+	if (colorNameUse == CString(OSSTR("darkseagreen")))
 		return OR<const CColor>(mDarkSeaGreen);
-	else if (colorNameUse == CString(OSSTR("darkslateblue")))
+	if (colorNameUse == CString(OSSTR("darkslateblue")))
 		return OR<const CColor>(mDarkSlateBlue);
-	else if (colorNameUse == CString(OSSTR("darkslategray")))
+	if (colorNameUse == CString(OSSTR("darkslategray")))
 		return OR<const CColor>(mDarkSlateGray);
-	else if (colorNameUse == CString(OSSTR("darkslategrey")))
+	if (colorNameUse == CString(OSSTR("darkslategrey")))
 		return OR<const CColor>(mDarkSlateGrey);
-	else if (colorNameUse == CString(OSSTR("darkturquoise")))
+	if (colorNameUse == CString(OSSTR("darkturquoise")))
 		return OR<const CColor>(mDarkTurquoise);
-	else if (colorNameUse == CString(OSSTR("darkviolet")))
+	if (colorNameUse == CString(OSSTR("darkviolet")))
 		return OR<const CColor>(mDarkViolet);
-	else if (colorNameUse == CString(OSSTR("deeppink")))
+	if (colorNameUse == CString(OSSTR("deeppink")))
 		return OR<const CColor>(mDeepPink);
-	else if (colorNameUse == CString(OSSTR("deepskyblue")))
+	if (colorNameUse == CString(OSSTR("deepskyblue")))
 		return OR<const CColor>(mDeepSkyBlue);
-	else if (colorNameUse == CString(OSSTR("dimgray")))
+	if (colorNameUse == CString(OSSTR("dimgray")))
 		return OR<const CColor>(mDimGray);
-	else if (colorNameUse == CString(OSSTR("dimgrey")))
+	if (colorNameUse == CString(OSSTR("dimgrey")))
 		return OR<const CColor>(mDimGrey);
-	else if (colorNameUse == CString(OSSTR("dodgerblue")))
+	if (colorNameUse == CString(OSSTR("dodgerblue")))
 		return OR<const CColor>(mDodgerBlue);
-	else if (colorNameUse == CString(OSSTR("firebrick")))
+	if (colorNameUse == CString(OSSTR("firebrick")))
 		return OR<const CColor>(mFireBrick);
-	else if (colorNameUse == CString(OSSTR("floralwhite")))
+	if (colorNameUse == CString(OSSTR("floralwhite")))
 		return OR<const CColor>(mFloralWhite);
-	else if (colorNameUse == CString(OSSTR("forestgreen")))
+	if (colorNameUse == CString(OSSTR("forestgreen")))
 		return OR<const CColor>(mForestGreen);
-	else if (colorNameUse == CString(OSSTR("fuchsia")))
+	if (colorNameUse == CString(OSSTR("fuchsia")))
 		return OR<const CColor>(mFuchsia);
-	else if (colorNameUse == CString(OSSTR("gainsboro")))
+	if (colorNameUse == CString(OSSTR("gainsboro")))
 		return OR<const CColor>(mGainsboro);
-	else if (colorNameUse == CString(OSSTR("ghostwhite")))
+	if (colorNameUse == CString(OSSTR("ghostwhite")))
 		return OR<const CColor>(mGhostWhite);
-	else if (colorNameUse == CString(OSSTR("gold")))
+	if (colorNameUse == CString(OSSTR("gold")))
 		return OR<const CColor>(mGold);
-	else if (colorNameUse == CString(OSSTR("goldenrod")))
+	if (colorNameUse == CString(OSSTR("goldenrod")))
 		return OR<const CColor>(mGoldenrod);
-	else if (colorNameUse == CString(OSSTR("gray")))
+	if (colorNameUse == CString(OSSTR("gray")))
 		return OR<const CColor>(mGray);
-	else if (colorNameUse == CString(OSSTR("grey")))
+	if (colorNameUse == CString(OSSTR("grey")))
 		return OR<const CColor>(mGrey);
-	else if (colorNameUse == CString(OSSTR("green")))
+	if (colorNameUse == CString(OSSTR("green")))
 		return OR<const CColor>(mGreen);
-	else if (colorNameUse == CString(OSSTR("greenyellow")))
+	if (colorNameUse == CString(OSSTR("greenyellow")))
 		return OR<const CColor>(mGreenYellow);
-	else if (colorNameUse == CString(OSSTR("honeydew")))
+	if (colorNameUse == CString(OSSTR("honeydew")))
 		return OR<const CColor>(mHoneydew);
-	else if (colorNameUse == CString(OSSTR("hotpink")))
+	if (colorNameUse == CString(OSSTR("hotpink")))
 		return OR<const CColor>(mHotPink);
-	else if (colorNameUse == CString(OSSTR("indianred")))
+	if (colorNameUse == CString(OSSTR("indianred")))
 		return OR<const CColor>(mIndianRed);
-	else if (colorNameUse == CString(OSSTR("indigo")))
+	if (colorNameUse == CString(OSSTR("indigo")))
 		return OR<const CColor>(mIndigo);
-	else if (colorNameUse == CString(OSSTR("ivory")))
+	if (colorNameUse == CString(OSSTR("ivory")))
 		return OR<const CColor>(mIvory);
-	else if (colorNameUse == CString(OSSTR("khaki")))
+	if (colorNameUse == CString(OSSTR("khaki")))
 		return OR<const CColor>(mKhaki);
-	else if (colorNameUse == CString(OSSTR("lavender")))
+	if (colorNameUse == CString(OSSTR("lavender")))
 		return OR<const CColor>(mLavender);
-	else if (colorNameUse == CString(OSSTR("lavenderblush")))
+	if (colorNameUse == CString(OSSTR("lavenderblush")))
 		return OR<const CColor>(mLavenderBlush);
-	else if (colorNameUse == CString(OSSTR("lawngreen")))
+	if (colorNameUse == CString(OSSTR("lawngreen")))
 		return OR<const CColor>(mLawnGreen);
-	else if (colorNameUse == CString(OSSTR("lemonchiffon")))
+	if (colorNameUse == CString(OSSTR("lemonchiffon")))
 		return OR<const CColor>(mLemonChiffon);
-	else if (colorNameUse == CString(OSSTR("lightblue")))
+	if (colorNameUse == CString(OSSTR("lightblue")))
 		return OR<const CColor>(mLightBlue);
-	else if (colorNameUse == CString(OSSTR("lightcoral")))
+	if (colorNameUse == CString(OSSTR("lightcoral")))
 		return OR<const CColor>(mLightCoral);
-	else if (colorNameUse == CString(OSSTR("lightcyan")))
+	if (colorNameUse == CString(OSSTR("lightcyan")))
 		return OR<const CColor>(mLightCyan);
-	else if (colorNameUse == CString(OSSTR("lightgoldenrodyellow")))
+	if (colorNameUse == CString(OSSTR("lightgoldenrodyellow")))
 		return OR<const CColor>(mLightGoldenrodYellow);
-	else if (colorNameUse == CString(OSSTR("lightgray")))
+	if (colorNameUse == CString(OSSTR("lightgray")))
 		return OR<const CColor>(mLightGray);
-	else if (colorNameUse == CString(OSSTR("lightgreen")))
+	if (colorNameUse == CString(OSSTR("lightgreen")))
 		return OR<const CColor>(mLightGreen);
-	else if (colorNameUse == CString(OSSTR("lightgrey")))
+	if (colorNameUse == CString(OSSTR("lightgrey")))
 		return OR<const CColor>(mLightGrey);
-	else if (colorNameUse == CString(OSSTR("lightpink")))
+	if (colorNameUse == CString(OSSTR("lightpink")))
 		return OR<const CColor>(mLightPink);
-	else if (colorNameUse == CString(OSSTR("lightsalmon")))
+	if (colorNameUse == CString(OSSTR("lightsalmon")))
 		return OR<const CColor>(mLighSalmon);
-	else if (colorNameUse == CString(OSSTR("lightseagreen")))
+	if (colorNameUse == CString(OSSTR("lightseagreen")))
 		return OR<const CColor>(mLightSeaGreen);
-	else if (colorNameUse == CString(OSSTR("lightskyblue")))
+	if (colorNameUse == CString(OSSTR("lightskyblue")))
 		return OR<const CColor>(mLightSkyBlue);
-	else if (colorNameUse == CString(OSSTR("lightslategray")))
+	if (colorNameUse == CString(OSSTR("lightslategray")))
 		return OR<const CColor>(mLightSlateGray);
-	else if (colorNameUse == CString(OSSTR("lightslategrey")))
+	if (colorNameUse == CString(OSSTR("lightslategrey")))
 		return OR<const CColor>(mLightSlateGrey);
-	else if (colorNameUse == CString(OSSTR("lightsteelblue")))
+	if (colorNameUse == CString(OSSTR("lightsteelblue")))
 		return OR<const CColor>(mLightSteelBlue);
-	else if (colorNameUse == CString(OSSTR("lightyellow")))
+	if (colorNameUse == CString(OSSTR("lightyellow")))
 		return OR<const CColor>(mLightYellow);
-	else if (colorNameUse == CString(OSSTR("lime")))
+	if (colorNameUse == CString(OSSTR("lime")))
 		return OR<const CColor>(mLime);
-	else if (colorNameUse == CString(OSSTR("limegreen")))
+	if (colorNameUse == CString(OSSTR("limegreen")))
 		return OR<const CColor>(mLimeGreen);
-	else if (colorNameUse == CString(OSSTR("linen")))
+	if (colorNameUse == CString(OSSTR("linen")))
 		return OR<const CColor>(mLinen);
-	else if (colorNameUse == CString(OSSTR("magenta")))
+	if (colorNameUse == CString(OSSTR("magenta")))
 		return OR<const CColor>(mMagenta);
-	else if (colorNameUse == CString(OSSTR("maroon")))
+	if (colorNameUse == CString(OSSTR("maroon")))
 		return OR<const CColor>(mMaroon);
-	else if (colorNameUse == CString(OSSTR("mediumaquamarine")))
+	if (colorNameUse == CString(OSSTR("mediumaquamarine")))
 		return OR<const CColor>(mMediumAquamarine);
-	else if (colorNameUse == CString(OSSTR("mediumblue")))
+	if (colorNameUse == CString(OSSTR("mediumblue")))
 		return OR<const CColor>(mMediumBlue);
-	else if (colorNameUse == CString(OSSTR("mediumorchid")))
+	if (colorNameUse == CString(OSSTR("mediumorchid")))
 		return OR<const CColor>(mMediumOrchid);
-	else if (colorNameUse == CString(OSSTR("mediumpurple")))
+	if (colorNameUse == CString(OSSTR("mediumpurple")))
 		return OR<const CColor>(mMediumPurple);
-	else if (colorNameUse == CString(OSSTR("mediumseagreen")))
+	if (colorNameUse == CString(OSSTR("mediumseagreen")))
 		return OR<const CColor>(mMediumSeaGreen);
-	else if (colorNameUse == CString(OSSTR("mediumslateblue")))
+	if (colorNameUse == CString(OSSTR("mediumslateblue")))
 		return OR<const CColor>(mMediumSlateBlue);
-	else if (colorNameUse == CString(OSSTR("mediumspringgreen")))
+	if (colorNameUse == CString(OSSTR("mediumspringgreen")))
 		return OR<const CColor>(mMediumSpringGreen);
-	else if (colorNameUse == CString(OSSTR("mediumturquoise")))
+	if (colorNameUse == CString(OSSTR("mediumturquoise")))
 		return OR<const CColor>(mMediumTurquoise);
-	else if (colorNameUse == CString(OSSTR("mediumvioletred")))
+	if (colorNameUse == CString(OSSTR("mediumvioletred")))
 		return OR<const CColor>(mMediumVioletRed);
-	else if (colorNameUse == CString(OSSTR("midnightblue")))
+	if (colorNameUse == CString(OSSTR("midnightblue")))
 		return OR<const CColor>(mMidnightBlue);
-	else if (colorNameUse == CString(OSSTR("mintcream")))
+	if (colorNameUse == CString(OSSTR("mintcream")))
 		return OR<const CColor>(mMintCream);
-	else if (colorNameUse == CString(OSSTR("mistyrose")))
+	if (colorNameUse == CString(OSSTR("mistyrose")))
 		return OR<const CColor>(mMistyRose);
-	else if (colorNameUse == CString(OSSTR("moccasin")))
+	if (colorNameUse == CString(OSSTR("moccasin")))
 		return OR<const CColor>(mMoccasin);
-	else if (colorNameUse == CString(OSSTR("navajowhite")))
+	if (colorNameUse == CString(OSSTR("navajowhite")))
 		return OR<const CColor>(mNavajoWhite);
-	else if (colorNameUse == CString(OSSTR("navy")))
+	if (colorNameUse == CString(OSSTR("navy")))
 		return OR<const CColor>(mNavy);
-	else if (colorNameUse == CString(OSSTR("oldlace")))
+	if (colorNameUse == CString(OSSTR("oldlace")))
 		return OR<const CColor>(mOldLace);
-	else if (colorNameUse == CString(OSSTR("olive")))
+	if (colorNameUse == CString(OSSTR("olive")))
 		return OR<const CColor>(mOlive);
-	else if (colorNameUse == CString(OSSTR("olivedrab")))
+	if (colorNameUse == CString(OSSTR("olivedrab")))
 		return OR<const CColor>(mOliveDrab);
-	else if (colorNameUse == CString(OSSTR("orange")))
+	if (colorNameUse == CString(OSSTR("orange")))
 		return OR<const CColor>(mOrange);
-	else if (colorNameUse == CString(OSSTR("orangered")))
+	if (colorNameUse == CString(OSSTR("orangered")))
 		return OR<const CColor>(mOrangeRed);
-	else if (colorNameUse == CString(OSSTR("orchid")))
+	if (colorNameUse == CString(OSSTR("orchid")))
 		return OR<const CColor>(mOrchid);
-	else if (colorNameUse == CString(OSSTR("palegoldenrod")))
+	if (colorNameUse == CString(OSSTR("palegoldenrod")))
 		return OR<const CColor>(mPaleGoldenrod);
-	else if (colorNameUse == CString(OSSTR("palegreen")))
+	if (colorNameUse == CString(OSSTR("palegreen")))
 		return OR<const CColor>(mPaleGreen);
-	else if (colorNameUse == CString(OSSTR("paleturquoise")))
+	if (colorNameUse == CString(OSSTR("paleturquoise")))
 		return OR<const CColor>(mPaleTurquoise);
-	else if (colorNameUse == CString(OSSTR("palevioletred")))
+	if (colorNameUse == CString(OSSTR("palevioletred")))
 		return OR<const CColor>(mPaleVioletRed);
-	else if (colorNameUse == CString(OSSTR("papayawhip")))
+	if (colorNameUse == CString(OSSTR("papayawhip")))
 		return OR<const CColor>(mPapayaWhip);
-	else if (colorNameUse == CString(OSSTR("peachpuff")))
+	if (colorNameUse == CString(OSSTR("peachpuff")))
 		return OR<const CColor>(mPeachPuff);
-	else if (colorNameUse == CString(OSSTR("peru")))
+	if (colorNameUse == CString(OSSTR("peru")))
 		return OR<const CColor>(mPeru);
-	else if (colorNameUse == CString(OSSTR("pink")))
+	if (colorNameUse == CString(OSSTR("pink")))
 		return OR<const CColor>(mPink);
-	else if (colorNameUse == CString(OSSTR("plum")))
+	if (colorNameUse == CString(OSSTR("plum")))
 		return OR<const CColor>(mPlum);
-	else if (colorNameUse == CString(OSSTR("powderblue")))
+	if (colorNameUse == CString(OSSTR("powderblue")))
 		return OR<const CColor>(mPowderBlue);
-	else if (colorNameUse == CString(OSSTR("purple")))
+	if (colorNameUse == CString(OSSTR("purple")))
 		return OR<const CColor>(mPurple);
-	else if (colorNameUse == CString(OSSTR("red")))
+	if (colorNameUse == CString(OSSTR("red")))
 		return OR<const CColor>(mRed);
-	else if (colorNameUse == CString(OSSTR("rosybrown")))
+	if (colorNameUse == CString(OSSTR("rosybrown")))
 		return OR<const CColor>(mRosyBrown);
-	else if (colorNameUse == CString(OSSTR("royalblue")))
+	if (colorNameUse == CString(OSSTR("royalblue")))
 		return OR<const CColor>(mRoyalBlue);
-	else if (colorNameUse == CString(OSSTR("saddlebrown")))
+	if (colorNameUse == CString(OSSTR("saddlebrown")))
 		return OR<const CColor>(mSadleBrown);
-	else if (colorNameUse == CString(OSSTR("salmon")))
+	if (colorNameUse == CString(OSSTR("salmon")))
 		return OR<const CColor>(mSalmon);
-	else if (colorNameUse == CString(OSSTR("sandybrown")))
+	if (colorNameUse == CString(OSSTR("sandybrown")))
 		return OR<const CColor>(mSandyBrown);
-	else if (colorNameUse == CString(OSSTR("seagreen")))
+	if (colorNameUse == CString(OSSTR("seagreen")))
 		return OR<const CColor>(mSeaGreen);
-	else if (colorNameUse == CString(OSSTR("seashell")))
+	if (colorNameUse == CString(OSSTR("seashell")))
 		return OR<const CColor>(mSeashell);
-	else if (colorNameUse == CString(OSSTR("sienna")))
+	if (colorNameUse == CString(OSSTR("sienna")))
 		return OR<const CColor>(mSienna);
-	else if (colorNameUse == CString(OSSTR("silver")))
+	if (colorNameUse == CString(OSSTR("silver")))
 		return OR<const CColor>(mSilver);
-	else if (colorNameUse == CString(OSSTR("skyblue")))
+	if (colorNameUse == CString(OSSTR("skyblue")))
 		return OR<const CColor>(mSkyBlue);
-	else if (colorNameUse == CString(OSSTR("slateblue")))
+	if (colorNameUse == CString(OSSTR("slateblue")))
 		return OR<const CColor>(mSlateBlue);
-	else if (colorNameUse == CString(OSSTR("slategray")))
+	if (colorNameUse == CString(OSSTR("slategray")))
 		return OR<const CColor>(mSlateGray);
-	else if (colorNameUse == CString(OSSTR("slategrey")))
+	if (colorNameUse == CString(OSSTR("slategrey")))
 		return OR<const CColor>(mSlateGrey);
-	else if (colorNameUse == CString(OSSTR("snow")))
+	if (colorNameUse == CString(OSSTR("snow")))
 		return OR<const CColor>(mSnow);
-	else if (colorNameUse == CString(OSSTR("springgreen")))
+	if (colorNameUse == CString(OSSTR("springgreen")))
 		return OR<const CColor>(mSpringGreen);
-	else if (colorNameUse == CString(OSSTR("steelblue")))
+	if (colorNameUse == CString(OSSTR("steelblue")))
 		return OR<const CColor>(mSteelBlue);
-	else if (colorNameUse == CString(OSSTR("tan")))
+	if (colorNameUse == CString(OSSTR("tan")))
 		return OR<const CColor>(mTan);
-	else if (colorNameUse == CString(OSSTR("teal")))
+	if (colorNameUse == CString(OSSTR("teal")))
 		return OR<const CColor>(mTeal);
-	else if (colorNameUse == CString(OSSTR("thistle")))
+	if (colorNameUse == CString(OSSTR("thistle")))
 		return OR<const CColor>(mThistle);
-	else if (colorNameUse == CString(OSSTR("tomato")))
+	if (colorNameUse == CString(OSSTR("tomato")))
 		return OR<const CColor>(mTomato);
-	else if (colorNameUse == CString(OSSTR("turquoise")))
+	if (colorNameUse == CString(OSSTR("turquoise")))
 		return OR<const CColor>(mTurquoise);
-	else if (colorNameUse == CString(OSSTR("violet")))
+	if (colorNameUse == CString(OSSTR("violet")))
 		return OR<const CColor>(mViolet);
-	else if (colorNameUse == CString(OSSTR("wheat")))
+	if (colorNameUse == CString(OSSTR("wheat")))
 		return OR<const CColor>(mWheat);
-	else if (colorNameUse == CString(OSSTR("white")))
+	if (colorNameUse == CString(OSSTR("white")))
 		return OR<const CColor>(mWhite);
-	else if (colorNameUse == CString(OSSTR("whitesmoke")))
+	if (colorNameUse == CString(OSSTR("whitesmoke")))
 		return OR<const CColor>(mWhiteSmoke);
-	else if (colorNameUse == CString(OSSTR("yellow")))
+	if (colorNameUse == CString(OSSTR("yellow")))
 		return OR<const CColor>(mYellow);
-	else if (colorNameUse == CString(OSSTR("yellowgreen")))
+	if (colorNameUse == CString(OSSTR("yellowgreen")))
 		return OR<const CColor>(mYellowGreen);
-	else
-		return OR<const CColor>();
+
+	return OR<const CColor>();
 }
