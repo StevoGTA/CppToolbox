@@ -140,32 +140,17 @@ CAudioSource::~CAudioSource()
 void CAudioSource::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	bool	performSeek = mediaSegment.hasValue() && !mediaSegment->contains(mInternals->mCurrentTimeInterval);
-
 	// Store
 	mInternals->mMediaSegment = mediaSegment;
 
 	// Do super
 	CAudioProcessor::setMediaSegment(mediaSegment);
-
-	// Check if need seek
-	if (performSeek)
-		// Seek
-		seek(mInternals->mMediaSegment->getStartTimeInterval());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAudioSource::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Bound the given time
-	if (mInternals->mMediaSegment.hasValue()) {
-		// Limit to within start and end
-		timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getStartTimeInterval());
-		timeInterval = std::min<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getEndTimeInterval());
-	}
-
 	// Update
 	mInternals->mCurrentTimeInterval = timeInterval;
 }

@@ -306,11 +306,26 @@ void CMediaPlayer::add(const I<CVideoDestination>& videoDestination, UInt32 trac
 void CMediaPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Store
-	mInternals->mMediaSegment = mediaSegment;
+	// Setup
+	bool	performSeek =
+					mediaSegment.hasValue() &&
+							(mediaSegment->getStartTimeInterval() != mInternals->mCurrentTimeInterval);
+
+	// Check Media Segment
+	if (mediaSegment.hasValue() && (mediaSegment->getDurationTimeInterval() > 0.0))
+		// Store
+		mInternals->mMediaSegment = mediaSegment;
+	else
+		// Clear
+		mInternals->mMediaSegment.removeValue();
 
 	// Do super
-	CMediaDestination::setMediaSegment(mediaSegment);
+	CMediaDestination::setMediaSegment(mInternals->mMediaSegment);
+
+	// Check for seek
+	if (performSeek)
+		// Seek
+		seek(mediaSegment->getStartTimeInterval());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -105,7 +105,8 @@ struct SMedia {
 											{ return mStartTimeInterval; }
 				UniversalTimeInterval	getDurationTimeInterval() const
 											{ return mDurationTimeInterval; }
-
+				UniversalTimeInterval	getMidDurationTimeInterval() const
+											{ return mStartTimeInterval + mDurationTimeInterval / 2.0; }
 				UniversalTimeInterval	getEndTimeInterval() const
 											{ return mStartTimeInterval + mDurationTimeInterval; }
 
