@@ -80,11 +80,17 @@ class CColorSet {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorRegistry
 
-class CColorRegistry {
+class CColorRegistry : public CEquatable {
 	// Notifications
 	public:
 		/*
-			Sent when a color has been changed
+			Sent when a ColorSet has been changed
+				senderRef is CColorRegistry
+		*/
+		static	const	CString mColorSetChangedNotificationName;
+
+		/*
+			Sent when a Color has been changed
 				senderRef is CColorRegistry
 				info contains the following keys:
 					mGroupIDKey
@@ -103,26 +109,30 @@ class CColorRegistry {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									CColorRegistry(CNotificationCenter& notificationCenter);
-									CColorRegistry(CNotificationCenter& notificationCenter,
-											const CPreferences::Pref& pref);
-									~CColorRegistry();
+										// Lifecycle methods
+										CColorRegistry();
+										CColorRegistry(const CPreferences::Pref& pref);
+										~CColorRegistry();
 
-									// Instance methods
-				CColorGroup&		registerColorGroup(OSType id, UInt32 displayIndex = 0);
-				TArray<CColorGroup>	getColorGroups() const;
+										// CEquatable methods
+				bool					operator==(const CEquatable& other) const
+											{ return &other == this; }
 
-				CColorSet&			registerColorSetPreset(OSType id);
-				TArray<CColorSet>	getColorSets(bool includeColorSetPresets) const;
-				void				removeColorSet(const CColorSet& colorSet);
+										// Instance methods
+				CNotificationCenter&	getNotificationCenter() const;
+				CColorGroup&			registerColorGroup(OSType id, UInt32 displayIndex = 0);
+				TArray<CColorGroup>		getColorGroups() const;
 
-		const	CColorSet&			getCurrentColorSet() const;
-				void				setAsCurrent(const CColorSet& colorSet);
-				void				setCurrentColorSetColor(OSType groupID, OSType colorID, const CColor& color);
-		const	CColorSet&			createNewFromCurrentColorSet(const CString& name);
-				void				updateFromCurrentColorSet(CColorSet& colorSet) const;
-				OR<CColorSet>		getFirstMatchingColorsOfCurrentColorSet() const;
+				CColorSet&				registerColorSetPreset(OSType id);
+				TArray<CColorSet>		getColorSets(bool includeColorSetPresets) const;
+				void					removeColorSet(const CColorSet& colorSet);
+
+		const	CColorSet&				getCurrentColorSet() const;
+				void					setAsCurrent(const CColorSet& colorSet);
+				void					setCurrentColorSetColor(OSType groupID, OSType colorID, const CColor& color);
+		const	CColorSet&				createNewFromCurrentColorSet(const CString& name);
+				void					updateFromCurrentColorSet(CColorSet& colorSet) const;
+				OR<CColorSet>			getFirstMatchingColorsOfCurrentColorSet() const;
 
 	// Properties
 	private:

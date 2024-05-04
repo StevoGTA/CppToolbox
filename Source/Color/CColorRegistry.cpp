@@ -260,10 +260,7 @@ bool CColorSet::operator==(const CColorSet& other) const
 
 class CColorRegistry::Internals {
 	public:
-					Internals(CNotificationCenter& notificationCenter,
-							OI<CPreferences::Pref> pref = OI<CPreferences::Pref>()) :
-						mNotificationCenter(notificationCenter), mPref(pref)
-						{}
+					Internals(OI<CPreferences::Pref> pref = OI<CPreferences::Pref>()) : mPref(pref) {}
 
 			void	writeToPrefs()
 						{
@@ -307,7 +304,7 @@ class CColorRegistry::Internals {
 							return *mCurrentColorSet;
 						}
 
-		CNotificationCenter&							mNotificationCenter;
+		CImmediateNotificationCenter					mNotificationCenter;
 		OI<CColorSet>									mCurrentColorSet;
 		OI<CPreferences::Pref>							mPref;
 		TNKeyConvertibleDictionary<OSType, CColorGroup>	mColorGroupMap;
@@ -321,7 +318,8 @@ class CColorRegistry::Internals {
 
 // MARK: Notifications
 
-const	CString CColorRegistry::mColorChangedNotificationName(OSSTR("colorRegistryColorChangedNotification"));
+const	CString CColorRegistry::mColorSetChangedNotificationName(OSSTR("colorRegistryColorSetChanged"));
+const	CString CColorRegistry::mColorChangedNotificationName(OSSTR("colorRegistryColorChanged"));
 
 const	CString	CColorRegistry::mGroupIDKey(OSSTR("groupID"));
 const	CString	CColorRegistry::mColorIDKey(OSSTR("colorID"));
@@ -331,18 +329,18 @@ const	CString	CColorRegistry::mColorKey(OSSTR("color"));
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CColorRegistry::CColorRegistry(CNotificationCenter& notificationCenter)
+CColorRegistry::CColorRegistry()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(notificationCenter);
+	mInternals = new Internals();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColorRegistry::CColorRegistry(CNotificationCenter& notificationCenter, const CPreferences::Pref& pref)
+CColorRegistry::CColorRegistry(const CPreferences::Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new Internals(notificationCenter, OI<CPreferences::Pref>(pref));
+	mInternals = new Internals(OI<CPreferences::Pref>(pref));
 
 	// Load from prefs
 	OV<CDictionary>	info = CPreferences::mDefault.getDictionary(pref);
@@ -369,6 +367,13 @@ CColorRegistry::~CColorRegistry()
 }
 
 // MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CNotificationCenter& CColorRegistry::getNotificationCenter() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mNotificationCenter;
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 CColorGroup& CColorRegistry::registerColorGroup(OSType id, UInt32 displayIndex)
@@ -457,31 +462,9 @@ void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 	// Save to prefs
 	mInternals->writeToPrefs();
 
-	// Iterate color groups
-	CDictionary			info;
-	TArray<CColorGroup>	colorGroups = getColorGroups();
-	for (CArray::ItemIndex i = 0; i < colorGroups.getCount(); i++) {
-		// Get info
-		CColorGroup&			colorGroup = colorGroups[i];
-		OSType					groupID = colorGroup.getID();
-		TNumberArray<OSType>	colorIDs = colorGroup.getColorIDs();
-
-		// Setup
-		info.set(mGroupIDKey, groupID);
-
-		// Iterate color IDs
-		for (CArray::ItemIndex j = 0; j < colorIDs.getCount(); j++) {
-			// Get info
-					OSType	colorID = colorIDs[j];
-			const	CColor&	color = mInternals->getCurrentColorSet().getColor(groupID, colorID);
-
-			// Setup
-			info.set(mColorIDKey, colorID);
-			info.set(mColorKey, &color);
-
-			// Queue notification
-		}
-	}
+	// Queue notification
+	mInternals->mNotificationCenter.queue(mColorSetChangedNotificationName,
+			CNotificationCenter::RSender<CColorRegistry>(*this));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -500,6 +483,8 @@ void CColorRegistry::setCurrentColorSetColor(OSType groupID, OSType colorID, con
 	info.set(mColorKey, &color);
 
 	// Queue notification
+	mInternals->mNotificationCenter.queue(mColorChangedNotificationName,
+			CNotificationCenter::RSender<CColorRegistry>(*this), info);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
