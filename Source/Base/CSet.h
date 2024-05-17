@@ -265,6 +265,9 @@ template <typename T> class TNSet : public TMSet<T> {
 									return array;
 								}
 
+				TMSet<T>	operator+(const TSet<T>& other) const
+								{ TNSet<T>	set(*this); set += other; return set; }
+
 	private:
 							// Class methods
 		static	T*			copy(const CHashable& hashable)

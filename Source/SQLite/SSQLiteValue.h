@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include "CData.h"
-#include "CString.h"
+#include "SValue.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SSQLiteValue
@@ -16,7 +15,7 @@ struct SSQLiteValue {
 		enum Type {
 			kTypeData,
 			kTypeFloat64,
-			kTypeInt64,
+			kTypeSInt64,
 			kTypeString,
 
 			kTypeLastInsertRowID,
@@ -35,13 +34,37 @@ struct SSQLiteValue {
 												// Lifecycle methods
 												SSQLiteValue(const CData& data) : mType(kTypeData), mValue(data) {}
 												SSQLiteValue(Float64 float64) : mType(kTypeFloat64), mValue(float64) {}
-												SSQLiteValue(SInt64 sInt64) : mType(kTypeInt64), mValue(sInt64) {}
+												SSQLiteValue(SInt64 sInt64) : mType(kTypeSInt64), mValue(sInt64) {}
 												SSQLiteValue(UInt32 uInt32) :
-													mType(kTypeInt64), mValue((SInt64) uInt32)
+													mType(kTypeSInt64), mValue((SInt64) uInt32)
 													{}
 												SSQLiteValue(const CString& string) :
 													mType(kTypeString), mValue(string)
 													{}
+												SSQLiteValue(const SValue& value) : mValue((SInt64) 0)
+													{
+														// Check value type
+														if (value.getType() == SValue::kTypeData) {
+															// Data
+															mType = kTypeData;
+															mValue.mData = new CData(value.getData());
+														} else if (value.getType() == SValue::kTypeString) {
+															// String
+															mType = kTypeString;
+															mValue.mString = new CString(value.getString());
+														} else if ((value.getType() == SValue::kTypeFloat32) ||
+																(value.getType() == SValue::kTypeFloat64)) {
+															// Float64
+															mType = kTypeFloat64;
+															mValue.mFloat64 = value.getFloat64();
+														} else if (value.canCoerceToType(SValue::kTypeSInt64)) {
+															// SInt64
+															mType = kTypeSInt64;
+															mValue.mSInt64 = value.getSInt64();
+														} else
+															// Null
+															mType = kTypeNull;
+													}
 												SSQLiteValue(NonValueTypeKind nonValueTypeKind) : mValue((SInt64) 0)
 													{
 														// Check kind
@@ -86,8 +109,8 @@ struct SSQLiteValue {
 													{ return *mValue.mData; }
 						Float64					getFloat64() const
 													{ return mValue.mFloat64; }
-						SInt64					getInt64() const
-													{ return mValue.mInt64; }
+						SInt64					getSInt64() const
+													{ return mValue.mSInt64; }
 				const	CString&				getString() const
 													{ return *mValue.mString; }
 
@@ -96,7 +119,7 @@ struct SSQLiteValue {
 														// Check type
 														switch (mType) {
 															case kTypeFloat64:	return CString(mValue.mFloat64);
-															case kTypeInt64:	return CString(mValue.mInt64);
+															case kTypeSInt64:	return CString(mValue.mSInt64);
 															case kTypeString:	return *mValue.mString;
 															case kTypeNull:		return CString(OSSTR("NULL"));
 															default:			AssertFail();	return CString::mEmpty;
@@ -133,12 +156,12 @@ struct SSQLiteValue {
 		union ValueValue {
 			ValueValue(const CData& data) : mData(new CData(data)) {}
 			ValueValue(Float64 float64) : mFloat64(float64) {}
-			ValueValue(SInt64 sInt64) : mInt64(sInt64) {}
+			ValueValue(SInt64 sInt64) : mSInt64(sInt64) {}
 			ValueValue(const CString& string) : mString(new CString(string)) {}
 
 			CData*		mData;
 			Float64		mFloat64;
-			SInt64		mInt64;
+			SInt64		mSInt64;
 			CString*	mString;
 		} mValue;
 };

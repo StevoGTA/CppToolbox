@@ -284,51 +284,51 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 		// Store value in dictionary
 		const	SValue&	value = iterator.getValue().mValue;
 		switch (value.getType()) {
-			case SValue::kEmpty:
+			case SValue::kTypeEmpty:
 				// Empty (null)
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, kCFNull);
 				break;
 
-			case SValue::kBool:
+			case SValue::kTypeBool:
 				// Bool
 				::CFDictionarySetValue(dictionaryRef, keyStringRef,
 						value.getBool() ? kCFBooleanTrue : kCFBooleanFalse);
 				break;
 
-			case SValue::kArrayOfDictionaries: {
+			case SValue::kTypeArrayOfDictionaries: {
 				// Array of dictionaries
 				CFArrayRef	arrayRef = createArrayRefFrom(value.getArrayOfDictionaries());
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, arrayRef);
 				::CFRelease(arrayRef);
 				} break;
 
-			case SValue::kArrayOfStrings: {
+			case SValue::kTypeArrayOfStrings: {
 				// Array of strings
 				CFArrayRef	arrayRef = createArrayRefFrom(value.getArrayOfStrings());
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, arrayRef);
 				::CFRelease(arrayRef);
 				} break;
 
-			case SValue::kData: {
+			case SValue::kTypeData: {
 				// Data
 				CFDataRef	dataRef = createDataRefFrom(value.getData());
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, dataRef);
 				::CFRelease(dataRef);
 				} break;
 
-			case SValue::kDictionary: {
+			case SValue::kTypeDictionary: {
 				// Dictionary
 				CFDictionaryRef	valueDictionaryRef = createDictionaryRefFrom(value.getDictionary());
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, valueDictionaryRef);
 				::CFRelease(valueDictionaryRef);
 				} break;
 
-			case SValue::kString:
+			case SValue::kTypeString:
 				// String
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, value.getString().getOSString());
 				break;
 
-			case SValue::kFloat32: {
+			case SValue::kTypeFloat32: {
 				// Float32
 				Float32		float32	= value.getFloat32();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &float32);
@@ -336,7 +336,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kFloat64: {
+			case SValue::kTypeFloat64: {
 				// Float64
 				Float64		float64 = value.getFloat64();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &float64);
@@ -344,7 +344,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kSInt8: {
+			case SValue::kTypeSInt8: {
 				// SInt8
 				SInt8		sInt8 = value.getSInt8();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, &sInt8);
@@ -352,7 +352,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kSInt16: {
+			case SValue::kTypeSInt16: {
 				// SInt16
 				SInt16		sInt16 = value.getSInt16();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &sInt16);
@@ -360,7 +360,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kSInt32: {
+			case SValue::kTypeSInt32: {
 				// SInt32
 				SInt32		sInt32 = value.getSInt32();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &sInt32);
@@ -368,7 +368,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kSInt64: {
+			case SValue::kTypeSInt64: {
 				// SInt64
 				SInt64		sInt64 = value.getSInt64();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
@@ -376,7 +376,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kUInt8: {
+			case SValue::kTypeUInt8: {
 				// UInt8
 				SInt64		sInt64 = value.getUInt8();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
@@ -384,7 +384,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kUInt16: {
+			case SValue::kTypeUInt16: {
 				// UInt16
 				SInt64		sInt64 = value.getUInt16();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
@@ -392,7 +392,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kUInt32: {
+			case SValue::kTypeUInt32: {
 				// UInt32
 				SInt64		sInt64 = value.getUInt32();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
@@ -400,7 +400,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kUInt64: {
+			case SValue::kTypeUInt64: {
 				// UInt64
 				SInt64		sInt64 = value.getUInt64();
 				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
@@ -408,7 +408,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 				::CFRelease(numberRef);
 				} break;
 
-			case SValue::kOpaque:
+			case SValue::kTypeOpaque:
 				// Something else that cannot be represented by Core Foundation
 				break;
 		}

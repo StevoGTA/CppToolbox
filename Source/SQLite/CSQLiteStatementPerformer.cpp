@@ -75,9 +75,9 @@ class CSQLiteStatement {
 										sqlite3_bind_double(statement, i + 1, value.getFloat64());
 										break;
 
-									case SSQLiteValue::kTypeInt64:
+									case SSQLiteValue::kTypeSInt64:
 										// Int64
-										sqlite3_bind_int64(statement, i + 1, value.getInt64());
+										sqlite3_bind_int64(statement, i + 1, value.getSInt64());
 										break;
 
 									case SSQLiteValue::kTypeString:
@@ -146,7 +146,6 @@ class CSQLiteStatementPerformer::Internals {
 		Internals(sqlite3* database) : mDatabase(database) {}
 
 		sqlite3*									mDatabase;
-		CLock										mLock;
 		TNDictionary<TNArray<CSQLiteStatement> >	mTransactionsMap;
 		CReadPreferringLock							mTransacftionsMapLock;
 };
@@ -203,14 +202,8 @@ OV<SError> CSQLiteStatementPerformer::perform(const CString& statement, const TA
 		CSQLiteResultsRow::Proc resultsRowProc, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Lock
-	mInternals->mLock.lock();
-
 	// Perform
 	OV<SError>	error = CSQLiteStatement(statement, values, resultsRowProc, userData).perform(mInternals->mDatabase);
-
-	// Unlock
-	mInternals->mLock.unlock();
 
 	return error;
 }
@@ -256,12 +249,10 @@ void CSQLiteStatementPerformer::performAsTransaction(TransactionProc transaction
 		sqliteStatements += CSQLiteStatement(CString(OSSTR("COMMIT")));
 
 		// Perform
-		mInternals->mLock.lock();
 		for (TIteratorD<CSQLiteStatement> iterator = sqliteStatements.getIterator(); iterator.hasValue();
 				iterator.advance())
 			// Perform
 			iterator->perform(mInternals->mDatabase);
-		mInternals->mLock.unlock();
 	} else {
 		// No longer in transaction
 		mInternals->mTransacftionsMapLock.lockForWriting();

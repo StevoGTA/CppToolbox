@@ -108,6 +108,7 @@ class CDictionary : public CEquatable {
 		virtual			bool					contains(const CString& key) const;
 
 				const	SValue&					getValue(const CString& key) const;
+						OV<SValue>				getOValue(const CString& key) const;
 						bool					getBool(const CString& key, bool defaultValue = false) const;
 				const	TArray<CDictionary>&	getArrayOfDictionaries(const CString& key,
 														const TArray<CDictionary>& defaultValue =

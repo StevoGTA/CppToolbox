@@ -74,7 +74,9 @@ CSQLiteDatabase::CSQLiteDatabase(const CFile& file, Options options)
 {
 	// Setup database
 	sqlite3*	database;
-	int			result = sqlite3_open(*file.getFilesystemPath().getString().getCString(), &database);
+	int			result =
+						sqlite3_open_v2(*file.getFilesystemPath().getString().getCString(), &database,
+								SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil);
 	if (result != SQLITE_OK) {
 		// Error
 		CLogServices::logError(
@@ -104,7 +106,9 @@ CSQLiteDatabase::CSQLiteDatabase(const CFolder& folder, const CString& name, Opt
 
 	// Setup database
 	sqlite3*	database;
-	int			result = sqlite3_open(*file.getFilesystemPath().getString().getCString(), &database);
+	int			result =
+						sqlite3_open_v2(*file.getFilesystemPath().getString().getCString(), &database,
+								SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil);
 	if (result != SQLITE_OK) {
 		// Error
 		CLogServices::logError(

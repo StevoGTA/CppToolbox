@@ -27,11 +27,9 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 
 				static			OV<SError>	process(const CSQLiteResultsRow& resultsRow, SInt64Result* int64Result)
 												{
-													// Try to get row
-													if (resultsRow.moveToNext())
-														// Store value
-														int64Result->mValue =
-																resultsRow.getInteger(int64Result->mTableColumn);
+													// Store value
+													int64Result->mValue =
+															resultsRow.getInteger(int64Result->mTableColumn);
 
 													return OV<SError>();
 												}
@@ -54,19 +52,16 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 				static			OV<SError>		process(const CSQLiteResultsRow& resultsRow,
 														SInt64ResultByTableColumnName* int64ResultByTableColumnName)
 													{
-														// Try to get row
-														if (resultsRow.moveToNext()) {
-															// Iterate table columns
-															for (TIteratorD<CSQLiteTableColumn> iterator =
-																			int64ResultByTableColumnName->mTableColumns
-																					.getIterator();
-																	iterator.hasValue(); iterator.advance())
-																// Store value
-																int64ResultByTableColumnName->mResultByTableColumnName
-																		.set(
-																				*resultsRow.getInteger(*iterator),
-																				iterator->getName());
-														}
+														// Iterate table columns
+														for (TIteratorD<CSQLiteTableColumn> iterator =
+																		int64ResultByTableColumnName->mTableColumns
+																				.getIterator();
+																iterator.hasValue(); iterator.advance())
+															// Store value
+															int64ResultByTableColumnName->mResultByTableColumnName
+																	.set(
+																			*resultsRow.getInteger(*iterator),
+																			iterator->getName());
 
 														return OV<SError>();
 													}
@@ -155,8 +150,7 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 										for (TIteratorD<CSQLiteTableColumn> iterator = tableColumns.getIterator();
 												iterator.hasValue(); iterator.advance())
 											// Add to map
-											mTableColumnReferenceByName.set(iterator->getName(),
-													R<CSQLiteTableColumn>(*iterator));
+											mTableColumnReferenceByName.set(iterator->getName(), *iterator);
 
 										// Iterate all table column references
 										for (TIteratorD<CSQLiteTableColumn::Reference> iterator =
@@ -358,7 +352,7 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 				TNDictionary<CSQLiteTableColumn::Reference>	mTableColumnReferenceMap;
 				CSQLiteStatementPerformer&					mStatementPerformer;
 
-				TNDictionary<R<CSQLiteTableColumn> >		mTableColumnReferenceByName;
+				TNDictionary<CSQLiteTableColumn>			mTableColumnReferenceByName;
 
 		static	CSQLiteTableColumn							mCountAllTableColumn;
 		static	CSQLiteTableColumn							mNameTableColumn;
@@ -790,7 +784,7 @@ TVResult<CDictionary> CSQLiteTable::sum(const TArray<CSQLiteTableColumn>& tableC
 const CSQLiteTableColumn& CSQLiteTable::getTableColumn(const CString& name) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return **mInternals->mTableColumnReferenceByName[name];
+	return *mInternals->mTableColumnReferenceByName[name];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -801,7 +795,7 @@ TArray<CSQLiteTableColumn> CSQLiteTable::getTableColumns(const TArray<CString>& 
 	TNArray<CSQLiteTableColumn>	tableColumns;
 	for (TIteratorD<CString> iterator = names.getIterator(); iterator.hasValue(); iterator.advance())
 		// Add table column
-		tableColumns += **mInternals->mTableColumnReferenceByName[*iterator];
+		tableColumns += *mInternals->mTableColumnReferenceByName[*iterator];
 
 	return tableColumns;
 }

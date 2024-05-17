@@ -158,24 +158,24 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 		// Add value
 		OV<SError>	error;
 		switch (iterator->mValue.getType()) {
-			case SValue::kEmpty:
+			case SValue::kTypeEmpty:
 				// Empty (null)
 				data.appendBytes("null", 4);
 				break;
 
-			case SValue::kArrayOfDictionaries:
+			case SValue::kTypeArrayOfDictionaries:
 				// Array of dictionaries
 				error = sAddArrayOfDictionaries(data, iterator->mValue.getArrayOfDictionaries());
 				ReturnErrorIfError(error);
 				break;
 
-			case SValue::kArrayOfStrings:
+			case SValue::kTypeArrayOfStrings:
 				// Array of strings
 				error = sAddArrayOfStrings(data, iterator->mValue.getArrayOfStrings());
 				ReturnErrorIfError(error);
 				break;
 
-			case SValue::kBool:
+			case SValue::kTypeBool:
 				// Add bool
 				if (iterator->mValue.getBool())
 					// True
@@ -185,69 +185,69 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 					data.appendBytes("false", 5);
 				break;
 
-			case SValue::kDictionary:
+			case SValue::kTypeDictionary:
 				// Add dictionary
 				error = sAddDictionary(data, iterator->mValue.getDictionary());
 				ReturnErrorIfError(error);
 				break;
 
-			case SValue::kString:
+			case SValue::kTypeString:
 				// String
 				sAddString(data, iterator->mValue.getString());
 				break;
 
-			case SValue::kFloat32:
+			case SValue::kTypeFloat32:
 				// Float32
 				data += CString(iterator->mValue.getFloat32()).getData();
 				break;
 
-			case SValue::kFloat64:
+			case SValue::kTypeFloat64:
 				// Float64
 				data += CString(iterator->mValue.getFloat64()).getData();
 				break;
 
-			case SValue::kSInt8:
+			case SValue::kTypeSInt8:
 				// SInt8
 				data += CString(iterator->mValue.getSInt8()).getData();
 				break;
 
-			case SValue::kSInt16:
+			case SValue::kTypeSInt16:
 				// SInt16
 				data += CString(iterator->mValue.getSInt16()).getData();
 				break;
 
-			case SValue::kSInt32:
+			case SValue::kTypeSInt32:
 				// SInt32
 				data += CString(iterator->mValue.getSInt32()).getData();
 				break;
 
-			case SValue::kSInt64:
+			case SValue::kTypeSInt64:
 				// SInt64
 				data += CString(iterator->mValue.getSInt64()).getData();
 				break;
 
-			case SValue::kUInt8:
+			case SValue::kTypeUInt8:
 				// UInt8
 				data += CString(iterator->mValue.getUInt8()).getData();
 				break;
 
-			case SValue::kUInt16:
+			case SValue::kTypeUInt16:
 				// UInt16
 				data += CString(iterator->mValue.getUInt16()).getData();
 				break;
 
-			case SValue::kUInt32:
+			case SValue::kTypeUInt32:
 				// UInt32
 				data += CString(iterator->mValue.getUInt32()).getData();
 				break;
 
-			case SValue::kUInt64:
+			case SValue::kTypeUInt64:
 				// UInt64
 				data += CString(iterator->mValue.getUInt64()).getData();
 				break;
 
-			case SValue::kData:
-			case SValue::kOpaque:
+			case SValue::kTypeData:
+			case SValue::kTypeOpaque:
 				// Invalid
 				return OV<SError>(sInvalidItemTypeError);
 		}
@@ -282,6 +282,10 @@ void sAddString(CData& data, const CString& string)
 TVResult<TArray<CDictionary> > sReadArrayOfDictionaries(const SInt8*& charPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Validate start token
+	OV<SError>	error = sValidateToken(charPtr, '[', true);
+	ReturnValueIfError(error, TVResult<TArray<CDictionary> >(*error));
+
 	// Compose array
 	TNArray<CDictionary>	array;
 	while (true) {

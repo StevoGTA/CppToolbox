@@ -79,6 +79,10 @@ class CSQLiteTable {
 													const CString& string) :
 												mTableColumn(tableColumn), mValue(string)
 												{}
+											TableColumnAndValue(const CSQLiteTableColumn& tableColumn,
+													const SValue& value) :
+												mTableColumn(tableColumn), mValue(value)
+												{}
 											TableColumnAndValue(const TableColumnAndValue& other) :
 												mTableColumn(other.mTableColumn), mValue(other.mValue)
 												{}

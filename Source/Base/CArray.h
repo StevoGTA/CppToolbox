@@ -140,6 +140,9 @@ template <typename T> class TNumberArray : public CArray {
 				T							getAt(ItemIndex index) const
 												{ return ((TNumber<T>*) getItemAt(index))->mValue; }
 
+				TNumberArray<T>&			removeAll()
+												{ CArray::removeAll(); return *this; }
+
 				TIteratorM<TNumber<T>, T>	getIterator() const
 												{
 													TIteratorS<ItemRef> iterator = CArray::getIterator();
@@ -150,8 +153,40 @@ template <typename T> class TNumberArray : public CArray {
 												}
 
 											// Instance methods
+				T							popFirst()
+												{
+													// Get first item
+													T	value = **((TNumber<T>*) CArray::getFirst());
+
+													// Remove
+													removeAtIndex(0);
+
+													return value;
+												}
+				TNumberArray<T>				popFirst(ItemCount itemCount)
+												{
+													// Setup
+													TNumberArray<T>	array;
+													for (CArray::ItemIndex i = 0; (i < itemCount) && !CArray::isEmpty();
+															i++)
+														// Move first item to other array
+														array += popFirst();
+
+													return array;
+												}
+
 				T							operator[](ItemIndex index) const
 												{ return **((TNumber<T>*) getItemAt(index)); }
+				TNumberArray<T>				operator+(const TNumberArray<T>& other) const
+												{
+													// Setup
+													TNumberArray<T>	array(*this);
+
+													// Add other
+													array += other;
+
+													return array;
+												}
 				TNumberArray<T>&			operator+=(const TNumberArray<T>& other)
 												{
 													// Iterate other array
