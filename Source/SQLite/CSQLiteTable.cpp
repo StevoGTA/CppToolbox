@@ -42,8 +42,10 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 		struct SInt64ResultByTableColumnName {
 			public:
 												SInt64ResultByTableColumnName(
-														const TArray<CSQLiteTableColumn>& tableColumns) :
-													mTableColumns(tableColumns)
+														const TDictionary<CSQLiteTableColumn>&
+																sumTableColumnsByTableColumnName) :
+													mSumTableColumnsByTableColumnName(
+															sumTableColumnsByTableColumnName)
 													{}
 
 						const	CDictionary&	getResultByTableColumnName() const
@@ -53,22 +55,27 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 														SInt64ResultByTableColumnName* int64ResultByTableColumnName)
 													{
 														// Iterate table columns
-														for (TIteratorD<CSQLiteTableColumn> iterator =
-																		int64ResultByTableColumnName->mTableColumns
-																				.getIterator();
+														const	TSet<CString>	sumTableColumnNames =
+																						int64ResultByTableColumnName->
+																								mSumTableColumnsByTableColumnName
+																								.getKeys();
+														for (TIteratorS<CString> iterator =
+																		sumTableColumnNames.getIterator();
 																iterator.hasValue(); iterator.advance())
 															// Store value
 															int64ResultByTableColumnName->mResultByTableColumnName
-																	.set(
-																			*resultsRow.getInteger(*iterator),
-																			iterator->getName());
+																	.set(*iterator,
+																			*resultsRow.getInteger(
+																					*int64ResultByTableColumnName->
+																							mSumTableColumnsByTableColumnName[
+																									*iterator]));
 
 														return OV<SError>();
 													}
 
 			private:
-				TNArray<CSQLiteTableColumn>	mTableColumns;
-				CDictionary					mResultByTableColumnName;
+				const	TDictionary<CSQLiteTableColumn>&	mSumTableColumnsByTableColumnName;
+						CDictionary							mResultByTableColumnName;
 		};
 
 		struct MigrationInfo {
@@ -755,19 +762,19 @@ TVResult<CDictionary> CSQLiteTable::sum(const TArray<CSQLiteTableColumn>& tableC
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	TNArray<CSQLiteTableColumn>	sumTableColumns;
-	TNArray<CString>			sumTableColumnNames;
+	TNDictionary<CSQLiteTableColumn>	tableColumnNameBySumTableColumnName;
+	TNArray<CString>					sumTableColumnNames;
 	for (TIteratorD<CSQLiteTableColumn> iterator = tableColumns.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Setup
 		CSQLiteTableColumn	sumTableColumn = CSQLiteTableColumn::sum(*iterator);
 
 		// Add
-		sumTableColumns += CSQLiteTableColumn::sum(*iterator);
-		sumTableColumnNames += iterator->getName();
+		tableColumnNameBySumTableColumnName.set(iterator->getName(), sumTableColumn);
+		sumTableColumnNames += sumTableColumn.getName();
 	}
 
-	Internals::SInt64ResultByTableColumnName	sInt64ResultByTableColumnName(sumTableColumns);
+	Internals::SInt64ResultByTableColumnName	sInt64ResultByTableColumnName(tableColumnNameBySumTableColumnName);
 
 	// Perform
 	OV<SError>	error =

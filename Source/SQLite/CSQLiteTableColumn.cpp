@@ -107,5 +107,5 @@ CSQLiteTableColumn CSQLiteTableColumn::dateISO8601FractionalSecondsAutoUpdate(co
 CSQLiteTableColumn CSQLiteTableColumn::sum(const CSQLiteTableColumn& tableColumn)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CSQLiteTableColumn(CString(OSSTR("SUM(`\(tableColumn.name)`)")), kKindInteger);
+	return CSQLiteTableColumn(CString(OSSTR("SUM(`")) + tableColumn.getName() + CString(OSSTR("`)")), kKindInteger);
 }

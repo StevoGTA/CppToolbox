@@ -104,6 +104,8 @@ template <typename T> class TSet : public CSet {
 								// Class methods
 		static	bool			containsItem(const T& item, TSet<T>* set)
 									{ return set->contains(item); }
+		static	bool			doesNotContainItem(const T& item, TSet<T>* set)
+									{ return !set->contains(item); }
 
 	protected:
 								// Lifecycle methods
