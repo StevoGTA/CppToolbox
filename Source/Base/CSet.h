@@ -290,6 +290,9 @@ template <typename T> class TNumberSet : public TMSet<TNumber<T> > {
 	public:
 								// Lifecycle methods
 								TNumberSet() : TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose) {}
+								TNumberSet(T value) :
+									TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+									{ TMSet<TNumber<T> >::insert(TNumber<T>(value)); }
 								TNumberSet(const CArray& array, ArrayMapProc arrayMapProc) :
 									TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
 									{

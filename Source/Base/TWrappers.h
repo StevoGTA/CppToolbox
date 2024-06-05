@@ -121,85 +121,87 @@ template <typename T> class I : public CHashable {
  */
 
 template <typename T> struct OI {
-			// Lifecycle methods
-			OI() : mInstance(nil), mReferenceCount(nil) {}
-			OI(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
-			OI(const T& instance) : mInstance(new T(instance)), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
-			OI(const OI<T>& other) :
-				mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
-				{
-					// Check if have reference
-					if (mInstance != nil)
-						// Additional reference
-						(*mReferenceCount)++;
-				}
-			~OI()
-				{
-					// Check for instance
-					if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
-						// All done
-						Delete(mInstance);
-						Delete(mReferenceCount);
+	// Methods
+	public:
+				// Lifecycle methods
+				OI() : mInstance(nil), mReferenceCount(nil) {}
+				OI(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+				OI(const T& instance) : mInstance(new T(instance)), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+				OI(const OI<T>& other) :
+					mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
+					{
+						// Check if have reference
+						if (mInstance != nil)
+							// Additional reference
+							(*mReferenceCount)++;
 					}
-				}
-
-			// Instamce methods
-	bool	hasInstance() const
-				{ return mInstance != nil; }
-	void	setInstance(T* instance = nil)
-				{
-					// Check for instance
-					if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
-						// All done
-						Delete(mInstance);
-						Delete(mReferenceCount);
+				~OI()
+					{
+						// Check for instance
+						if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
+							// All done
+							Delete(mInstance);
+							Delete(mReferenceCount);
+						}
 					}
 
-					// Store
-					mInstance = instance;
+				// Instamce methods
+		bool	hasInstance() const
+					{ return mInstance != nil; }
+		void	setInstance(T* instance = nil)
+					{
+						// Check for instance
+						if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
+							// All done
+							Delete(mInstance);
+							Delete(mReferenceCount);
+						}
 
-					// Finish setup
-					if (mInstance != nil) {
-						// Have instance
-						mReferenceCount = new UInt32;
-						*mReferenceCount = 1;
-					} else {
-						// Don't have instance
-						Delete(mReferenceCount);
-					}
-				}
+						// Store
+						mInstance = instance;
 
-	T&		operator*() const
-				{ AssertFailIf(mInstance == nil); return *mInstance; }
-	T*		operator->() const
-				{ AssertFailIf(mInstance == nil); return mInstance; }
-
-	OI<T>&	operator=(const OI<T>& other)
-				{
-					// Check for instance
-					if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
-						// All done
-						Delete(mInstance);
-						Delete(mReferenceCount);
+						// Finish setup
+						if (mInstance != nil) {
+							// Have instance
+							mReferenceCount = new UInt32;
+							*mReferenceCount = 1;
+						} else {
+							// Don't have instance
+							Delete(mReferenceCount);
+						}
 					}
 
-					// Copy
-					mInstance = other.mInstance;
-					mReferenceCount = other.mReferenceCount;
+		T&		operator*() const
+					{ AssertFailIf(mInstance == nil); return *mInstance; }
+		T*		operator->() const
+					{ AssertFailIf(mInstance == nil); return mInstance; }
 
-					// Note additional reference if have reference
-					if (mInstance != nil)
-						(*mReferenceCount)++;
+		OI<T>&	operator=(const OI<T>& other)
+					{
+						// Check for instance
+						if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
+							// All done
+							Delete(mInstance);
+							Delete(mReferenceCount);
+						}
 
-					return *this;
-				}
+						// Copy
+						mInstance = other.mInstance;
+						mReferenceCount = other.mReferenceCount;
 
-	bool	operator==(const OI<T>& other) const
-				{ return (hasInstance() == other.hasInstance()) &&
-						(!hasInstance() || (*mInstance == *other.mInstance)); }
-	bool	operator!=(const OI<T>& other) const
-				{ return (hasInstance() != other.hasInstance()) ||
-						(hasInstance() && (*mInstance != *other.mInstance)); }
+						// Note additional reference if have reference
+						if (mInstance != nil)
+							(*mReferenceCount)++;
+
+						return *this;
+					}
+
+		bool	operator==(const OI<T>& other) const
+					{ return (hasInstance() == other.hasInstance()) &&
+							(!hasInstance() || (*mInstance == *other.mInstance)); }
+		bool	operator!=(const OI<T>& other) const
+					{ return (hasInstance() != other.hasInstance()) ||
+							(hasInstance() && (*mInstance != *other.mInstance)); }
 
 	// Properties
 	private:
@@ -222,19 +224,21 @@ template <typename T> struct OI {
  */
 
 template <typename T> struct OP {
-			// Lifecycle methods
-			OP() : mProc(nil) {}
-			OP(T proc) : mProc(proc) {}
-			OP(const OP& other) : mProc(other.mProc) {}
+	// Methods
+	public:
+				// Lifecycle methods
+				OP() : mProc(nil) {}
+				OP(T proc) : mProc(proc) {}
+				OP(const OP& other) : mProc(other.mProc) {}
 
-			// Instamce methods
-	bool	hasProc() const
-				{ return mProc != nil; }
-	T		getProc() const
-				{ AssertFailIf(mProc == nil); return mProc; }
+				// Instamce methods
+		bool	hasProc() const
+					{ return mProc != nil; }
+		T		getProc() const
+					{ AssertFailIf(mProc == nil); return mProc; }
 
-	T		operator*() const
-				{ AssertFailIf(mProc == nil); return mProc; }
+		T		operator*() const
+					{ AssertFailIf(mProc == nil); return mProc; }
 
 	// Properties
 	private:
@@ -245,18 +249,20 @@ template <typename T> struct OP {
 // MARK: - R (Reference)
 
 template <typename T> struct R {
-			// Lifecycle methods
-			R(T& reference) : mReference(&reference) {}
-			R(const R<T>& other) : mReference(other.mReference) {}
+	// Methods
+	public:
+				// Lifecycle methods
+				R(T& reference) : mReference(&reference) {}
+				R(const R<T>& other) : mReference(other.mReference) {}
 
-			// Instamce methods
-	T&		operator*() const
-				{ return *mReference; }
-	T*		operator->() const
-				{ return mReference; }
+				// Instamce methods
+		T&		operator*() const
+					{ return *mReference; }
+		T*		operator->() const
+					{ return mReference; }
 
-	bool	operator==(const R<T>& other) const
-				{ return mReference == other.mReference; }
+		bool	operator==(const R<T>& other) const
+					{ return mReference == other.mReference; }
 
 	// Properties
 	private:
@@ -280,28 +286,30 @@ template <typename T> struct R {
  */
 
 template <typename T> struct OR {
-			// Lifecycle methods
-			OR() : mReference(nil) {}
-			OR(T& reference) : mReference(&reference) {}
-			OR(const OR& other) : mReference(other.mReference) {}
+	// Methods
+	public:
+				// Lifecycle methods
+				OR() : mReference(nil) {}
+				OR(T& reference) : mReference(&reference) {}
+				OR(const OR& other) : mReference(other.mReference) {}
 
-			// Instamce methods
-	bool	hasReference() const
-				{ return mReference != nil; }
-	T&		getReference() const
-				{ AssertFailIf(mReference == nil); return *mReference; }
+				// Instamce methods
+		bool	hasReference() const
+					{ return mReference != nil; }
+		T&		getReference() const
+					{ AssertFailIf(mReference == nil); return *mReference; }
 
-	T&		operator*() const
-				{ AssertFailIf(mReference == nil); return *mReference; }
-	T*		operator->() const
-				{ AssertFailIf(mReference == nil); return mReference; }
+		T&		operator*() const
+					{ AssertFailIf(mReference == nil); return *mReference; }
+		T*		operator->() const
+					{ AssertFailIf(mReference == nil); return mReference; }
 
-	bool	operator==(const OR<T>& other) const
-				{ return (hasReference() == other.hasReference()) &&
-						(!hasReference() || (*mReference == *other.mReference)); }
-	bool	operator!=(const OR<T>& other) const
-				{ return (hasReference() != other.hasReference()) ||
-						(hasReference() && (*mReference != *other.mReference)); }
+		bool	operator==(const OR<T>& other) const
+					{ return (hasReference() == other.hasReference()) &&
+							(!hasReference() || (*mReference == *other.mReference)); }
+		bool	operator!=(const OR<T>& other) const
+					{ return (hasReference() != other.hasReference()) ||
+							(hasReference() && (*mReference != *other.mReference)); }
 
 	// Properties
 	private:
@@ -328,51 +336,53 @@ template <typename T> struct OR {
  */
 
 template <typename T> struct OV {
-					// Lifecycle methods
-					OV() : mValue(nil) {}
-					OV(T value) : mValue(new T(value)) {}
-					OV(const OV& other) : mValue((other.mValue != nil) ? new T(*other.mValue) : nil) {}
-					~OV() { Delete(mValue); }
+	// Methods
+	public:
+				// Lifecycle methods
+				OV() : mValue(nil) {}
+				OV(T value) : mValue(new T(value)) {}
+				OV(const OV& other) : mValue((other.mValue != nil) ? new T(*other.mValue) : nil) {}
+				~OV() { Delete(mValue); }
 
-					// Instamce methods
-			bool	hasValue() const
-						{ return mValue != nil; }
-	const	T&		getValue() const
-						{ AssertFailIf(mValue == nil); return *mValue; }
-	const	T&		getValue(const T& defaultValue) const
-						{ return (mValue != nil) ? *mValue : defaultValue; }
-			void	setValue(T value)
-						{ if (mValue != nil) *mValue = value; else mValue = new T(value); }
-			void	setValue(const OV<T>& value)
-						{
-							// Check situation
-							if ((mValue != nil) && value.hasValue())
-								// Update value
-								*mValue = *value;
-							else if (mValue != nil) {
-								// No longer have a value
-								Delete(mValue);
-							} else if (value.hasValue())
-								// Now have a value
-								mValue = new T(*value);
-						}
-			void	removeValue()
-						{ Delete(mValue); }
+				// Instamce methods
+		bool	hasValue() const
+					{ return mValue != nil; }
+		T&		getValue() const
+					{ AssertFailIf(mValue == nil); return *mValue; }
+		T		getValue(T defaultValue) const
+					{ return (mValue != nil) ? *mValue : defaultValue; }
+		void	setValue(T value)
+					{ if (mValue != nil) *mValue = value; else mValue = new T(value); }
+		void	setValue(const OV<T>& value)
+					{
+						// Check situation
+						if ((mValue != nil) && value.hasValue())
+							// Update value
+							*mValue = *value;
+						else if (mValue != nil) {
+							// No longer have a value
+							Delete(mValue);
+						} else if (value.hasValue())
+							// Now have a value
+							mValue = new T(*value);
+					}
+		void	removeValue()
+					{ Delete(mValue); }
 
-	const	T&		operator*() const
-						{ AssertFailIf(mValue == nil); return *mValue; }
-			T*		operator->() const
-						{ AssertFailIf(mValue == nil); return mValue; }
+		T&		operator*() const
+					{ AssertFailIf(mValue == nil); return *mValue; }
+		T*		operator->() const
+					{ AssertFailIf(mValue == nil); return mValue; }
 
-			OV<T>&	operator=(T value)
-						{ setValue(value); return *this; }
-			OV<T>&	operator=(const OV<T>& value)
-						{ setValue(value); return *this; }
+		OV<T>&	operator=(T value)
+					{ setValue(value); return *this; }
+		OV<T>&	operator=(const OV<T>& value)
+					{ setValue(value); return *this; }
 
-			bool	operator==(const OV<T>& other) const
-						{ return (hasValue() == other.hasValue()) && (!hasValue() || (*mValue == *other.mValue)); }
-			bool	operator!=(const OV<T>& other) const
-						{ return (hasValue() != other.hasValue()) || (hasValue() && (*mValue != *other.mValue)); }
+		bool	operator==(const OV<T>& other) const
+					{ return (hasValue() == other.hasValue()) && (!hasValue() || (*mValue == *other.mValue)); }
+		bool	operator!=(const OV<T>& other) const
+					{ return (hasValue() != other.hasValue()) || (hasValue() && (*mValue != *other.mValue)); }
 
 	// Properties
 	private:

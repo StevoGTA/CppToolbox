@@ -96,7 +96,7 @@ void CWorkItem::transitionTo(State state)
 				// Completed
 				if (mInternals->mCompletedProc != nil)
 					// Call proc
-					mInternals->mCompletedProc(mInternals->mUserData);
+					mInternals->mCompletedProc(*this, mInternals->mUserData);
 				else
 					// Call subclass
 					completed();
@@ -106,7 +106,7 @@ void CWorkItem::transitionTo(State state)
 				// Cancelled
 				if (mInternals->mCancelledProc != nil)
 					// Call proc
-					mInternals->mCancelledProc(mInternals->mUserData);
+					mInternals->mCancelledProc(*this, mInternals->mUserData);
 				else
 					// Call subclass
 					cancelled();

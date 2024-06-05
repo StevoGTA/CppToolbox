@@ -85,23 +85,21 @@ class CColorRegistry : public CEquatable {
 	public:
 		/*
 			Sent when a ColorSet has been changed
-				senderRef is CColorRegistry
+				sender is RSender<CColorRegistry>
 		*/
 		static	const	CString mColorSetChangedNotificationName;
 
 		/*
 			Sent when a Color has been changed
-				senderRef is CColorRegistry
-				info contains the following keys:
-					mGroupIDKey
-					mColorIDKey
-					mColorKey
+				sender is RSender<CColorRegistry>
+				info contains the groupID, colorID, and color
 		*/
 		static	const	CString mColorChangedNotificationName;
 
-		static	const	CString	mGroupIDKey;	// OSType
-		static	const	CString	mColorIDKey;	// OSType
-		static	const	CString	mColorKey;		// CColor*
+		// Notificaton methods
+		static			OSType	notificationGetGroupID(const CDictionary& info);
+		static			OSType	notificationGetColorID(const CDictionary& info);
+		static	const	CColor&	notificationGetColor(const CDictionary& info);
 
 	// Classes
 	private:

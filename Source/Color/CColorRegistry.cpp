@@ -321,11 +321,6 @@ class CColorRegistry::Internals {
 const	CString CColorRegistry::mColorSetChangedNotificationName(OSSTR("colorRegistryColorSetChanged"));
 const	CString CColorRegistry::mColorChangedNotificationName(OSSTR("colorRegistryColorChanged"));
 
-const	CString	CColorRegistry::mGroupIDKey(OSSTR("groupID"));
-const	CString	CColorRegistry::mColorIDKey(OSSTR("colorID"));
-const	CString	CColorRegistry::mColorKey(OSSTR("color"));
-
-
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -478,9 +473,9 @@ void CColorRegistry::setCurrentColorSetColor(OSType groupID, OSType colorID, con
 	mInternals->writeToPrefs();
 
 	CDictionary	info;
-	info.set(mGroupIDKey, groupID);
-	info.set(mColorIDKey, colorID);
-	info.set(mColorKey, &color);
+	info.set(CString(OSSTR("groupID")), groupID);
+	info.set(CString(OSSTR("colorID")), colorID);
+	info.set(CString(OSSTR("color")), &color);
 
 	// Queue notification
 	mInternals->mNotificationCenter.queue(mColorChangedNotificationName,
@@ -538,4 +533,27 @@ OR<CColorSet> CColorRegistry::getFirstMatchingColorsOfCurrentColorSet() const
 	}
 
 	return OR<CColorSet>();
+}
+
+// MARK: Notification methods
+
+//----------------------------------------------------------------------------------------------------------------------
+OSType CColorRegistry::notificationGetGroupID(const CDictionary& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return info.getOSType(CString(OSSTR("groupID")));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OSType CColorRegistry::notificationGetColorID(const CDictionary& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return info.getOSType(CString(OSSTR("colorID")));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CColor& CColorRegistry::notificationGetColor(const CDictionary& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return *((CColor*) info.getValue(CString(OSSTR("color"))).getOpaque());
 }

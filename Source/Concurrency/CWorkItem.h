@@ -26,8 +26,8 @@ class CWorkItem : public CHashable {
 		};
 
 	// Types
-	typedef	void	(*CompletedProc)(void* userData);
-	typedef	void	(*CancelledProc)(void* userData);
+	typedef	void	(*CompletedProc)(const CWorkItem& workItem, void* userData);
+	typedef	void	(*CancelledProc)(const CWorkItem& workItem, void* userData);
 	typedef	void	(*Proc)(const I<CWorkItem>& workItem, void* userData);
 
 	// Classes

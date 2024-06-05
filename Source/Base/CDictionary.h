@@ -39,39 +39,43 @@ class CDictionary : public CEquatable {
 
 		struct Procs {
 			// Procs
-			typedef	KeyCount	(*GetKeyCountProc)(void* userData);
-			typedef	CString		(*GetKeyAtIndexProc)(UInt32 index, void* userData);
-			typedef	OR<SValue>	(*GetValueProc)(const CString& key, void* userData);
-			typedef	void		(*SetProc)(const CString& key, const SValue& value, void* userData);
-			typedef	void		(*RemoveKeysProc)(const TSet<CString>& keys, void* userData);
-			typedef	void		(*RemoveAllProc)(void* userData);
-			typedef	void		(*DisposeUserDataProc)(void* userData);
+			public:
+				typedef	KeyCount	(*GetKeyCountProc)(void* userData);
+				typedef	CString		(*GetKeyAtIndexProc)(UInt32 index, void* userData);
+				typedef	OR<SValue>	(*GetValueProc)(const CString& key, void* userData);
+				typedef	void		(*SetProc)(const CString& key, const SValue& value, void* userData);
+				typedef	void		(*RemoveKeysProc)(const TSet<CString>& keys, void* userData);
+				typedef	void		(*RemoveAllProc)(void* userData);
+				typedef	void		(*DisposeUserDataProc)(void* userData);
 
-						// Lifecycle methods
-						Procs(GetKeyCountProc getKeyCountProc, GetKeyAtIndexProc getKeyAtIndexProc,
-								GetValueProc getValueProc, SetProc setProc, RemoveKeysProc removeKeysProc,
-								RemoveAllProc removeAllProc, DisposeUserDataProc disposeUserDataProc, void* userData) :
-							mGetKeyCountProc(getKeyCountProc), mGetKeyAtIndexProc(getKeyAtIndexProc),
-									mGetValueProc(getValueProc), mSetProc(setProc), mRemoveKeysProc(removeKeysProc),
-									mRemoveAllProc(removeAllProc), mDisposeUserDataProc(disposeUserDataProc),
-									mUserData(userData)
-							{}
+			// Methods
+			public:
+							// Lifecycle methods
+							Procs(GetKeyCountProc getKeyCountProc, GetKeyAtIndexProc getKeyAtIndexProc,
+									GetValueProc getValueProc, SetProc setProc, RemoveKeysProc removeKeysProc,
+									RemoveAllProc removeAllProc, DisposeUserDataProc disposeUserDataProc,
+											void* userData) :
+								mGetKeyCountProc(getKeyCountProc), mGetKeyAtIndexProc(getKeyAtIndexProc),
+										mGetValueProc(getValueProc), mSetProc(setProc), mRemoveKeysProc(removeKeysProc),
+										mRemoveAllProc(removeAllProc), mDisposeUserDataProc(disposeUserDataProc),
+										mUserData(userData)
+								{}
 
-						// Instance methods
-			KeyCount	getKeyCount() const
-							{ return mGetKeyCountProc(mUserData); }
-			CString		getKeyAtIndex(UInt32 index) const
-							{ return mGetKeyAtIndexProc(index, mUserData); }
-			OR<SValue>	getValue(const CString& key) const
-							{ return mGetValueProc(key, mUserData); }
-			void		set(const CString& key, const SValue& value)
-							{ mSetProc(key, value, mUserData); }
-			void		removeKeys(const TSet<CString>& keys)
-							{ mRemoveKeysProc(keys, mUserData); }
-			void		removeAll()
-							{ mRemoveAllProc(mUserData); }
-			void		disposeUserData() const
-							{ return mDisposeUserDataProc(mUserData); }
+							// Instance methods
+				KeyCount	getKeyCount() const
+								{ return mGetKeyCountProc(mUserData); }
+				CString		getKeyAtIndex(UInt32 index) const
+								{ return mGetKeyAtIndexProc(index, mUserData); }
+				OR<SValue>	getValue(const CString& key) const
+								{ return mGetValueProc(key, mUserData); }
+				void		set(const CString& key, const SValue& value)
+								{ mSetProc(key, value, mUserData); }
+				void		removeKeys(const TSet<CString>& keys)
+								{ mRemoveKeysProc(keys, mUserData); }
+				void		removeAll()
+								{ mRemoveAllProc(mUserData); }
+				void		disposeUserData() const
+								{ return mDisposeUserDataProc(mUserData); }
 
 			// Properties
 			private:
