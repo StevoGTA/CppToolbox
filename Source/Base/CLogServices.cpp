@@ -68,7 +68,7 @@ void CLogServices::logMessage(const CString& string)
 		for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos->getIterator(); iterator.hasValue();
 				iterator.advance())
 			// Call proc
-			iterator.getValue().callProc(stringWithDate);
+			iterator->callProc(stringWithDate);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ void CLogServices::logMessages(const TArray<CString>& strings)
 		for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos->getIterator(); iterator.hasValue();
 				iterator.advance())
 			// Call proc
-			iterator.getValue().callProc(stringsWithDatesString);
+			iterator->callProc(stringsWithDatesString);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ void CLogServices::logWarning(const CString& string)
 		for (TIteratorD<SLogProcInfo> iterator = sLogWarningProcInfos->getIterator(); iterator.hasValue();
 				iterator.advance())
 			// Call proc
-			iterator.getValue().callProc(compositeString);
+			iterator->callProc(compositeString);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -181,7 +181,7 @@ void CLogServices::logError(const CString& string)
 		for (TIteratorD<SLogProcInfo> iterator = sLogErrorProcInfos->getIterator(); iterator.hasValue();
 				iterator.advance())
 			// Call proc
-			iterator.getValue().callProc(compositeString);
+			iterator->callProc(compositeString);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

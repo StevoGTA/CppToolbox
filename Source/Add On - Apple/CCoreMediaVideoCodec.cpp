@@ -85,31 +85,6 @@ OV<SError> CCoreMediaDecodeVideoCodec::setup(const CVideoProcessor::Format& vide
 	ReturnErrorIfResultError(formatDescription);
 	mInternals->mFormatDescriptionRef = *formatDescription;
 
-	// Setup Decompression Session
-	VTDecompressionOutputCallbackRecord	decompressionOutputCallbackRecord;
-	decompressionOutputCallbackRecord.decompressionOutputCallback = Internals::decompressionOutputCallback;
-	decompressionOutputCallbackRecord.decompressionOutputRefCon = this;
-
-	CFMutableDictionaryRef	destinationImageBufferAttributes =
-									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
-											&kCFTypeDictionaryValueCallBacks);
-	setCompatibility(destinationImageBufferAttributes);
-
-	CFMutableDictionaryRef	videoDecoderSpecification =
-									::CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
-											&kCFTypeDictionaryKeyCallBacks,
-											&kCFTypeDictionaryValueCallBacks);
-	::CFDictionarySetValue(videoDecoderSpecification, kVTDecompressionPropertyKey_RealTime,
-			kCFBooleanTrue);
-
-	OSStatus	status =
-						::VTDecompressionSessionCreate(kCFAllocatorDefault, mInternals->mFormatDescriptionRef,
-								videoDecoderSpecification, destinationImageBufferAttributes,
-								&decompressionOutputCallbackRecord, &mInternals->mDecompressionSessionRef);
-	::CFRelease(destinationImageBufferAttributes);
-	::CFRelease(videoDecoderSpecification);
-	ReturnErrorIfFailed(status, OSSTR("VTDecompressionSessionCreate"));
-
 	// Finish setup
 	mInternals->mVideoProcessorFormat = OV<CVideoProcessor::Format>(videoProcessorFormat);
 
@@ -121,7 +96,9 @@ void CCoreMediaDecodeVideoCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reset
-	::VTDecompressionSessionWaitForAsynchronousFrames(mInternals->mDecompressionSessionRef);
+	if (mInternals->mDecompressionSessionRef != nil)
+		// Wait for frames
+		::VTDecompressionSessionWaitForAsynchronousFrames(mInternals->mDecompressionSessionRef);
 
 	// Seek
 	mInternals->mCurrentFrameIndex =
@@ -138,6 +115,38 @@ void CCoreMediaDecodeVideoCodec::seek(UniversalTimeInterval timeInterval)
 TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
+	OSStatus	status;
+
+	// Check if have decompression session
+	if (mInternals->mDecompressionSessionRef == nil) {
+		// Setup Decompression Session
+		CFMutableDictionaryRef	videoDecoderSpecification =
+										::CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
+												&kCFTypeDictionaryKeyCallBacks,
+												&kCFTypeDictionaryValueCallBacks);
+		::CFDictionarySetValue(videoDecoderSpecification, kVTDecompressionPropertyKey_RealTime,
+				kCFBooleanTrue);
+
+		CFMutableDictionaryRef	destinationImageBufferAttributes =
+										::CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
+												&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+		setCompatibility(destinationImageBufferAttributes);
+
+		VTDecompressionOutputCallbackRecord	decompressionOutputCallbackRecord;
+		decompressionOutputCallbackRecord.decompressionOutputCallback = Internals::decompressionOutputCallback;
+		decompressionOutputCallbackRecord.decompressionOutputRefCon = this;
+
+		status =
+				::VTDecompressionSessionCreate(kCFAllocatorDefault, mInternals->mFormatDescriptionRef,
+						videoDecoderSpecification, destinationImageBufferAttributes, &decompressionOutputCallbackRecord,
+						&mInternals->mDecompressionSessionRef);
+		::CFRelease(destinationImageBufferAttributes);
+		::CFRelease(videoDecoderSpecification);
+		LogOSStatusIfFailedAndReturnValue(status, OSSTR("VTDecompressionSessionCreate"),
+				TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
+	}
+
 	// Get next packet
 	UInt32	currentFrameIndex = mInternals->mCurrentFrameIndex++;
 	TVResult<CMediaPacketSource::DataInfo>	dataInfo = mInternals->mMediaPacketSource->readNext();
@@ -150,10 +159,9 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 	// Setup sample buffer
 	const	CData&				data = dataInfo->getData();
 			CMBlockBufferRef	blockBufferRef;
-			OSStatus			status =
-										::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
-												(void*) data.getBytePtr(), data.getByteCount(), kCFAllocatorNull, nil,
-												0, data.getByteCount(), 0, &blockBufferRef);
+	status =
+			::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) data.getBytePtr(), data.getByteCount(),
+					kCFAllocatorNull, nil, 0, data.getByteCount(), 0, &blockBufferRef);
 	LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMBlockBufferCreateWithMemoryBlock"),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 

@@ -34,6 +34,8 @@ class CBits {
 		CDictionary	getInfo() const;
 
 		CBits&		operator=(const CBits& other);
+		bool		operator[](UInt32 index)
+						{ return get(index); }
 
 	// Properties
 	private:

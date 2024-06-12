@@ -4,6 +4,7 @@
 
 #include "COpenGLTexture.h"
 
+#include "CReferenceCountable.h"
 #include "CLogServices.h"
 
 #if defined(TARGET_OS_IOS)

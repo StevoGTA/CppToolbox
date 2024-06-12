@@ -4,6 +4,8 @@
 
 #include "CGPURenderObject3D.h"
 
+#include "CReferenceCountable.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderObject3D::Internals
 

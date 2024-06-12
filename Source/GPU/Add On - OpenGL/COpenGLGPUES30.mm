@@ -239,14 +239,14 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 	switch (renderState.getMode()) {
 		case CGPURenderState::kMode2D:
 			// 2D
-			renderState.commit(CommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
+			renderState.commit(CGPURenderState::CommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			break;
 
 		case CGPURenderState::kMode3D:
 			// 3D
-			renderState.commit(CommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
+			renderState.commit(CGPURenderState::CommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
 			glCullFace(GL_BACK);
@@ -276,14 +276,14 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 	switch (renderState.getMode()) {
 		case CGPURenderState::kMode2D:
 			// 2D
-			renderState.commit(CommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
+			renderState.commit(CGPURenderState::CommitInfo(mInternals->mViewMatrix2D, mInternals->mProjectionMatrix2D));
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			break;
 
 		case CGPURenderState::kMode3D:
 			// 3D
-			renderState.commit(CommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
+			renderState.commit(CGPURenderState::CommitInfo(mInternals->mViewMatrix3D, mInternals->mProjectionMatrix3D));
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
 			glCullFace(GL_BACK);

@@ -171,7 +171,7 @@ CData CAppleResourceManager::getAsData()
 	// Iterate resource types
 	for (TIteratorS<CString> iterator = types.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Get info
-		CString&			type = iterator.getValue();
+		CString&			type = *iterator;
 		TArray<Resource>	resources = *mInternals->mResourceMap[type];
 
 		// Type ID

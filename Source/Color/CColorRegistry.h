@@ -80,7 +80,7 @@ class CColorSet {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorRegistry
 
-class CColorRegistry : public CEquatable {
+class CColorRegistry {
 	// Notifications
 	public:
 		/*
@@ -97,9 +97,11 @@ class CColorRegistry : public CEquatable {
 		static	const	CString mColorChangedNotificationName;
 
 		// Notificaton methods
-		static			OSType	notificationGetGroupID(const CDictionary& info);
-		static			OSType	notificationGetColorID(const CDictionary& info);
-		static	const	CColor&	notificationGetColor(const CDictionary& info);
+		static			CColorRegistry&	notificatnGetMediaDocument(const OR<CNotificationCenter::Sender>& sender);
+
+		static			OSType			notificationGetGroupID(const CDictionary& info);
+		static			OSType			notificationGetColorID(const CDictionary& info);
+		static	const	CColor&			notificationGetColor(const CDictionary& info);
 
 	// Classes
 	private:
@@ -111,10 +113,6 @@ class CColorRegistry : public CEquatable {
 										CColorRegistry();
 										CColorRegistry(const CPreferences::Pref& pref);
 										~CColorRegistry();
-
-										// CEquatable methods
-				bool					operator==(const CEquatable& other) const
-											{ return &other == this; }
 
 										// Instance methods
 				CNotificationCenter&	getNotificationCenter() const;
@@ -131,6 +129,9 @@ class CColorRegistry : public CEquatable {
 		const	CColorSet&				createNewFromCurrentColorSet(const CString& name);
 				void					updateFromCurrentColorSet(CColorSet& colorSet) const;
 				OR<CColorSet>			getFirstMatchingColorsOfCurrentColorSet() const;
+
+				bool					operator==(const CColorRegistry& other) const
+											{ return &other == this; }
 
 	// Properties
 	private:

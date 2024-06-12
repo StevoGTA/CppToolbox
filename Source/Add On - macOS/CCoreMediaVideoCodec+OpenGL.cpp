@@ -15,7 +15,7 @@ void CCoreMediaDecodeVideoCodec::setCompatibility(CFMutableDictionaryRef diction
 {
 	// Update
 	::CFDictionarySetValue(dictionaryRef, kCVPixelBufferOpenGLCompatibilityKey, kCFBooleanTrue);
-	::CFDictionarySetValue(dictionaryRef, kCVPixelBufferOpenGLTextureCach[eCompatibilityKey, kCFBooleanTrue);
+	::CFDictionarySetValue(dictionaryRef, kCVPixelBufferOpenGLTextureCacheCompatibilityKey, kCFBooleanTrue);
 
 	OSType		pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &pixelFormat);

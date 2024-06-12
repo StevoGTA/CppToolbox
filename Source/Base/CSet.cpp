@@ -422,7 +422,7 @@ CSet& CSet::apply(ApplyProc applyProc, void* userData)
 	// Iterate all hashables
 	for (TIteratorS<CHashable> iterator = getIterator(); iterator.hasValue(); iterator.advance())
 		// Call proc
-		applyProc(iterator.getValue(), userData);
+		applyProc(*iterator, userData);
 
 	return *this;
 }

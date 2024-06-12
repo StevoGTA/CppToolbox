@@ -99,9 +99,9 @@ class COpenGLVertexBufferInfo : COpenGLBufferInfo {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CGPU::CommitInfo
+// MARK: - CGPURenderState::CommitInfo
 
-struct CGPU::CommitInfo {
+struct CGPURenderState::CommitInfo {
 	// Lifecycle methods
 	CommitInfo(const SMatrix4x4_32& viewMatrix, const SMatrix4x4_32& projectionMatrix) :
 		mViewMatrix(viewMatrix), mProjectionMatrix(projectionMatrix)

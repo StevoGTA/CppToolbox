@@ -5,6 +5,7 @@
 #import "CMetalTexture.h"
 
 #include "CLogServices.h"
+#include "CReferenceCountable.h"
 
 #if defined(TARGET_OS_MACOS)
 	#define kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange '&8v0'

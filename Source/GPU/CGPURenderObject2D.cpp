@@ -5,6 +5,7 @@
 #include "CGPURenderObject2D.h"
 
 #include "CGPURenderState.h"
+#include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CGPURenderObject2D::Internals
@@ -37,7 +38,7 @@ class CGPURenderObject2D::Internals : public TReferenceCountableAutoDelete<Inter
 						for (TIteratorD<CGPURenderObject2D::Item> iterator = items.getIterator(); iterator.hasValue();
 								iterator.advance()) {
 							// Setup
-							const	CGPURenderObject2D::Item&	item = iterator.getValue();
+							const	CGPURenderObject2D::Item&	item = *iterator;
 							const	S2DRectF32&					screenRect = item.mScreenRect;
 							const	S2DRectF32&					textureRect = item.mTextureRect;
 
@@ -224,7 +225,7 @@ void CGPURenderObject2D::finishLoading() const
 	for (TIteratorD<CGPUTextureReference> iterator = mInternals->mGPUTextureReferences.getIterator();
 			iterator.hasValue(); iterator.advance())
 		// Finish loading
-		iterator.getValue().finishLoading();
+		iterator->finishLoading();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -287,7 +288,7 @@ void CGPURenderObject2D::render(const Indexes& indexes, const RenderInfo& render
 	// Iterate index ranges
 	for (; iterator.hasValue(); iterator.advance()) {
 		// Get index range
-		const	TIndexRange<UInt16>&	indexRange = iterator.getValue();
+		const	TIndexRange<UInt16>&	indexRange = *iterator;
 
 		// Setup and render
 		renderState.setModelMatrix(modelMatrix);

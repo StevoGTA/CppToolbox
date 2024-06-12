@@ -412,14 +412,14 @@ template <typename T> class TDictionary : public CDictionary {
 								// Get opaque
 								OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 
-								return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
+								return opaque.hasValue() ? OR<T>(*((T*) *opaque)) : OR<T>();
 							}
 				T		get(const CString& key, const T& defaultValue) const
 							{
 								// Get opaque
 								OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 
-								return opaque.hasValue() ? *((T*) opaque.getValue()) : defaultValue;
+								return opaque.hasValue() ? *((T*) *opaque) : defaultValue;
 							}
 
 		const	OR<T>	operator[](const CString& key) const
@@ -600,7 +600,7 @@ template <typename T> class TReferenceDictionary : public CDictionary {
 								// Get opaque
 								OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 
-								return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
+								return opaque.hasValue() ? OR<T>(*((T*) *opaque)) : OR<T>();
 							}
 				void	set(const CString& key, const T& item)
 							{ CDictionary::set(key, &item); }

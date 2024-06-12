@@ -74,8 +74,7 @@ class CNotificationCenter::Internals {
 						for (TIteratorS<CString> iterator = keys.getIterator(); iterator.hasValue();
 								iterator.advance()) {
 							// Get existing observer infos
-							CString&					notificationName = iterator.getValue();
-							OR<TNArray<ObserverInfo> >	observerInfos = mInfo[notificationName];
+							OR<TNArray<ObserverInfo> >	observerInfos = mInfo[*iterator];
 
 							// Remove observers
 							unregisterObserver(observerRef, *observerInfos);
@@ -83,7 +82,7 @@ class CNotificationCenter::Internals {
 							// Check if have any left
 							if (observerInfos->isEmpty())
 								// No more observers for this notification name
-								mInfo.remove(notificationName);
+								mInfo.remove(*iterator);
 						}
 					}
 

@@ -22,21 +22,18 @@ class CThread::Internals {
 									mPThread(nil)
 							{}
 
-		static	void*	threadProc(void* userData)
+		static	void*	threadProc(Internals* internals)
 							{
-								// Setup
-								Internals&	internals = *((Internals*) userData);
-
 								// Check if have name
-								if (!internals.mThreadName.isEmpty())
+								if (!internals->mThreadName.isEmpty())
 									// Set name
-									::pthread_setname_np(*internals.mThreadName.getCString());
+									::pthread_setname_np(*internals->mThreadName.getCString());
 
 								// Call proc
-								internals.mThreadProc(internals.mThread, internals.mThreadProcUserData);
+								internals->mThreadProc(internals->mThread, internals->mThreadProcUserData);
 
 								// Not running
-								internals.mIsRunning = false;
+								internals->mIsRunning = false;
 
 								return nil;
 							}
@@ -117,7 +114,7 @@ void CThread::start()
 	}
 
 	// Create thread
-	result = ::pthread_create(&mInternals->mPThread, &attr, Internals::threadProc, mInternals);
+	result = ::pthread_create(&mInternals->mPThread, &attr, (void* (*)(void*)) Internals::threadProc, mInternals);
 	::pthread_attr_destroy(&attr);
 	if (result != 0)
 		LogError(SErrorFromPOSIXerror(result), "creating pthread");

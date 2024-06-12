@@ -58,7 +58,7 @@ template <typename T> class TLockingDictionary : public CDictionary {
 										OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 										mLock.unlockForReading();
 
-										return opaque.hasValue() ? OR<T>(*((T*) opaque.getValue())) : OR<T>();
+										return opaque.hasValue() ? OR<T>(*((T*) *opaque)) : OR<T>();
 									}
 
 		const	OR<T>			operator[](const CString& key) const
@@ -102,7 +102,7 @@ template <typename T> class TNLockingDictionary : public TLockingDictionary<T> {
 												OV<T>				updatedValue =
 																			updateProc(
 																					opaque.hasValue() ?
-																							OR<T>(*((T*) opaque.getValue())) :
+																							OR<T>(*((T*) *opaque)) :
 																							OR<T>(),
 																					userData);
 												if (updatedValue.hasValue())
@@ -176,7 +176,7 @@ template <typename T> class TNLockingArrayDictionary : public TNLockingDictionar
 						OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 						if (opaque.hasValue())
 							// Already have array
-							*((TNArray<T>*) opaque.getValue()) += item;
+							*((TNArray<T>*) *opaque) += item;
 						else
 							// First one
 							CDictionary::set(key, new TNArray<T>(item));
@@ -193,7 +193,7 @@ template <typename T> class TNLockingArrayDictionary : public TNLockingDictionar
 						OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
 						if (opaque.hasValue()) {
 							// Already have array
-							TNArray<T>&	array = *((TNArray<T>*) opaque.getValue());
+							TNArray<T>&	array = *((TNArray<T>*) *opaque);
 							array -= item;
 
 							// Check if empty

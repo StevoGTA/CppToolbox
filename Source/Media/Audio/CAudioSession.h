@@ -11,7 +11,38 @@
 // MARK: CAudioSession
 
 class CAudioSession {
-	// Enums
+	// Notifications
+	public:
+		/*
+			Sent when the the audio session is interrupted
+				sender is RSender<CAudioSession>
+		*/
+		static	const	CString	mInterruptionDidBeginNotificationName;
+
+		/*
+			Sent when the audio session interruption is complete
+				sender is RSender<CAudioSession>
+				info contains if playback should continue
+		*/
+		static	const	CString	mInterruptionDidEndNotificationName;
+
+		// Notification methods
+		static	CAudioSession&	notificatnGetMediaDocument(const OR<CNotificationCenter::Sender>& sender);
+
+		static	bool			notificationGetPlaybackShouldContinue(const CDictionary& info);
+
+//		/*
+//			Sent when the requested property has changed
+//				senderRef is CAudioSession
+//				info has the following keys:
+//					mPropertyDidChangePropertyName
+//					mPropertyDidChangePropertyValue
+//		*/
+//		static	const	CString			mPropertyDidChangeNotificationName;
+//		static	const	CString			mPropertyDidChangePropertyName;		// OSType
+//		static	const	CString			mPropertyDidChangePropertyValue;	// CData
+
+	// Category
 	public:
 		enum Category {
 			kPlaybackMixWithOthers,
@@ -20,6 +51,8 @@ class CAudioSession {
 			kRecordAndPlayback,
 		};
 
+	// OverrideRoute
+	public:
 		enum OverrideRoute {
 			kNone,
 			kSpeaker,
@@ -48,6 +81,9 @@ class CAudioSession {
 		void					logInfo();
 #endif
 
+		bool					operator==(const CAudioSession& other) const
+									{ return &other == this; }
+
 	private:
 								// Lifecycle methods
 								CAudioSession();
@@ -55,32 +91,6 @@ class CAudioSession {
 
 	// Properties
 	public:
-		static			CAudioSession					mShared;
-		static			CImmediateNotificationCenter	mNotificationCenter;
-
-		/*
-			Sent when the the audio session is interrupted
-				senderRef is CAudioSession
-		*/
-		static	const	CString							mInterruptionDidBeginNotificationName;
-
-		/*
-			Sent when the audio session interruption is complete
-				senderRef is CAudioSession
-				info has the following keys;
-					mInterruptionDidEndPlaybackShouldContinue	// bool
-		*/
-		static	const	CString							mInterruptionDidEndNotificationName;
-		static	const	CString							mInterruptionDidEndPlaybackShouldContinue;
-
-//		/*
-//			Sent when the requested property has changed
-//				senderRef is CAudioSession
-//				info has the following keys:
-//					mPropertyDidChangePropertyName
-//					mPropertyDidChangePropertyValue
-//		*/
-//		static	const	CString			mPropertyDidChangeNotificationName;
-//		static	const	CString			mPropertyDidChangePropertyName;		// OSType
-//		static	const	CString			mPropertyDidChangePropertyValue;	// CData
+		static	CAudioSession					mShared;
+		static	CImmediateNotificationCenter	mNotificationCenter;
 };

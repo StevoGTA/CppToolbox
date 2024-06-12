@@ -4,6 +4,8 @@
 
 #include "CMPEG4MediaFile.h"
 
+#include "CMediaSourceRegistry.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local procs
 

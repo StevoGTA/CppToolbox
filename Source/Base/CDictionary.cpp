@@ -1199,9 +1199,8 @@ bool CDictionary::equals(const CDictionary& other, void* itemCompareProcUserData
 	// Iterate all items
 	for (TIteratorS<Item> iterator = mInternals->getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Get value
-		Item&		item = iterator.getValue();
-		OR<SValue>	value = other.mInternals->getValue(item.mKey);
-		if (!value.hasReference() || !item.mValue.equals(*value, mInternals->getOpaqueEqualsProc()))
+		OR<SValue>	value = other.mInternals->getValue(iterator->mKey);
+		if (!value.hasReference() || !iterator->mValue.equals(*value, mInternals->getOpaqueEqualsProc()))
 			// Value not found or value is not the same
 			return false;
 	}

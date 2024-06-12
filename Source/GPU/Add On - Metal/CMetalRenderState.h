@@ -7,9 +7,9 @@
 #import "MetalBufferCache.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPU::CommitInfo
+// MARK: CGPURenderState::CommitInfo
 
-struct CGPU::CommitInfo {
+struct CGPURenderState::CommitInfo {
 	// Lifecycle methods
 	CommitInfo(id<MTLDevice> device, id<MTLLibrary> shaderLibrary,
 			id<MTLRenderCommandEncoder> renderCommandEncoder, MetalBufferCache* metalBufferCache,

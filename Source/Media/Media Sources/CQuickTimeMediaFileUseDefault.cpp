@@ -4,6 +4,8 @@
 
 #include "CQuickTimeMediaFile.h"
 
+#include "CMediaSourceRegistry.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local procs
 
@@ -20,5 +22,5 @@ static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& im
 
 static	CString	sExtensions[] = { CString(OSSTR("mov")) };
 REGISTER_MEDIA_SOURCE(quicktime,
-		SMediaSource(CQuickTimeMediaFile::mID, CString(OSSTR("QuickTime")),
+		SMediaSource(SMediaSource::Identity(CQuickTimeMediaFile::mID, CString(OSSTR("QuickTime"))),
 				TSARRAY_FROM_C_ARRAY(CString, sExtensions), sImport));

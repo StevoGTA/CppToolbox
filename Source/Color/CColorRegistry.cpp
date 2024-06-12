@@ -221,14 +221,14 @@ CDictionary CColorSet::getInfo() const
 	for (TIteratorS<CDictionary::Item> iterator = mInternals->mColorsMap.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Get info
-		UInt64	key = iterator.getValue().mKey.getUInt64();
+		UInt64	key = iterator->mKey.getUInt64();
 		OSType	groupID = (OSType) (key >> 32);
 		OSType	colorID = (OSType) (key & 0xFFFFFFFF);
 
 		CDictionary	colorSetColorInfo;
 		colorSetColorInfo.set(CString(OSSTR("groupID")), groupID);
 		colorSetColorInfo.set(CString(OSSTR("colorID")), colorID);
-		colorSetColorInfo.set(CString(OSSTR("color")), ((CColor*) iterator.getValue().mValue.getOpaque())->getInfo());
+		colorSetColorInfo.set(CString(OSSTR("color")), ((CColor*) iterator->mValue.getOpaque())->getInfo());
 
 		// Add to array
 		colorSetColorInfos += colorSetColorInfo;
@@ -316,11 +316,6 @@ class CColorRegistry::Internals {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CColorRegistry
 
-// MARK: Notifications
-
-const	CString CColorRegistry::mColorSetChangedNotificationName(OSSTR("colorRegistryColorSetChanged"));
-const	CString CColorRegistry::mColorChangedNotificationName(OSSTR("colorRegistryColorChanged"));
-
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -389,7 +384,7 @@ TArray<CColorGroup> CColorRegistry::getColorGroups() const
 	for (TIteratorS<CDictionary::Item> iterator = mInternals->mColorGroupMap.getIterator();
 			iterator.hasValue(); iterator.advance())
 		// Insert value
-		colorGroups += *((CColorGroup*) iterator.getValue().mValue.getOpaque());
+		colorGroups += *((CColorGroup*) iterator->mValue.getOpaque());
 
 	// Sort by display index
 	colorGroups.sort(CColorGroup::compareDisplayIndexes);
@@ -518,24 +513,34 @@ OR<CColorSet> CColorRegistry::getFirstMatchingColorsOfCurrentColorSet() const
 	for (TIteratorD<CColorSet> iterator = mInternals->mColorSetPresets.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Check this color set
-		if (iterator.getValue().matchesColorsOf(mInternals->getCurrentColorSet()))
+		if (iterator->matchesColorsOf(mInternals->getCurrentColorSet()))
 			// Match
-			return OR<CColorSet>(iterator.getValue());
+			return OR<CColorSet>(*iterator);
 	}
 
 	// Examine user defined color sets
 	for (TIteratorD<CColorSet> iterator = mInternals->mColorSets.getIterator(); iterator.hasValue();
 			iterator.advance()) {
 		// Check this color set
-		if (iterator.getValue().matchesColorsOf(mInternals->getCurrentColorSet()))
+		if (iterator->matchesColorsOf(mInternals->getCurrentColorSet()))
 			// Match
-			return OR<CColorSet>(iterator.getValue());
+			return OR<CColorSet>(*iterator);
 	}
 
 	return OR<CColorSet>();
 }
 
-// MARK: Notification methods
+// MARK: Notifications
+
+const	CString CColorRegistry::mColorSetChangedNotificationName(OSSTR("colorRegistryColorSetChanged"));
+const	CString CColorRegistry::mColorChangedNotificationName(OSSTR("colorRegistryColorChanged"));
+
+//----------------------------------------------------------------------------------------------------------------------
+CColorRegistry& CColorRegistry::notificatnGetMediaDocument(const OR<CNotificationCenter::Sender>& sender)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return *((const CNotificationCenter::RSender<CColorRegistry>&) sender);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 OSType CColorRegistry::notificationGetGroupID(const CDictionary& info)

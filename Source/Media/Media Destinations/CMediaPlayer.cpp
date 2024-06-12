@@ -98,73 +98,73 @@ class CMediaPlayer::Internals {
 							{
 								// Queue message
 								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
-										AudioPlayerPositionUpdatedMessage(handleAudioPlayerPositionUpdated, userData,
-												audioPlayer, position));
+										AudioPlayerPositionUpdatedMessage(
+												(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerPositionUpdated,
+												userData, audioPlayer, position));
 							}
-		static	void	handleAudioPlayerPositionUpdated(CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleAudioPlayerPositionUpdated(
+								AudioPlayerPositionUpdatedMessage& audioPlayerPositionUpdatedMessage,
+								Internals* internals)
 							{
 								// Setup
-								AudioPlayerPositionUpdatedMessage&	audioPlayerPositionUpdatedMessage =
-																			(AudioPlayerPositionUpdatedMessage&)
-																					message;
-								Internals&							internals = *((Internals*) userData);
-								if (!mActiveInternals.contains(internals))
+								if (!mActiveInternals.contains(*internals))
 									return;
 
 								// Update
-								internals.mCurrentTimeInterval = audioPlayerPositionUpdatedMessage.mPosition;
+								internals->mCurrentTimeInterval = audioPlayerPositionUpdatedMessage.mPosition;
 
 								// Iterate all video frame stores
-								for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++)
+								for (UInt32 i = 0; i < internals->mMediaPlayer.getVideoTrackCount(); i++)
 									// Update video decoder
-									internals.mMediaPlayer.getVideoDestination(i)->notePositionUpdated(
-											internals.mCurrentTimeInterval);
+									internals->mMediaPlayer.getVideoDestination(i)->notePositionUpdated(
+											internals->mCurrentTimeInterval);
 
 								// Call proc
-								internals.mInfo.audioPositionUpdated(audioPlayerPositionUpdatedMessage.mPosition);
+								internals->mInfo.audioPositionUpdated(audioPlayerPositionUpdatedMessage.mPosition);
 							}
 		static	void	audioPlayerEndOfData(const CAudioPlayer& audioPlayer, void* userData)
 							{
 								// Submit
 								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
-										AudioPlayerEndOfDataMessage(handleAudioPlayerEndOfData, userData, audioPlayer));
+										AudioPlayerEndOfDataMessage(
+												(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerEndOfData,
+												userData, audioPlayer));
 							}
-		static	void	handleAudioPlayerEndOfData(CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleAudioPlayerEndOfData(CSRSWMessageQueue::ProcMessage& message, Internals* internals)
 							{
 								// Setup
-								Internals&	internals = *((Internals*) userData);
-								if (!mActiveInternals.contains(internals))
+								if (!mActiveInternals.contains(*internals))
 									return;
 
 								// One more at end
-								if (++internals.mEndOfDataCount == internals.mMediaPlayer.getAudioTrackCount()) {
+								if (++internals->mEndOfDataCount == internals->mMediaPlayer.getAudioTrackCount()) {
 									// All at the end
-									internals.mCurrentLoopCount++;
+									internals->mCurrentLoopCount++;
 
 									// Check if have loop count
-									if (internals.mLoopCount.hasValue() &&
-											((internals.mLoopCount.getValue() == 0) ||
-													(internals.mCurrentLoopCount < internals.mLoopCount.getValue()))) {
+									if (internals->mLoopCount.hasValue() &&
+											((*internals->mLoopCount == 0) ||
+													(internals->mCurrentLoopCount < *internals->mLoopCount))) {
 										// Reset and go again
-										internals.mEndOfDataCount = 0;
+										internals->mEndOfDataCount = 0;
 
 										// Reset and start playback again
-										for (UInt32 i = 0; i < internals.mMediaPlayer.getAudioTrackCount(); i++) {
+										for (UInt32 i = 0; i < internals->mMediaPlayer.getAudioTrackCount(); i++) {
 											// Reset and play
-											internals.mMediaPlayer.getAudioDestination(i)->reset();
-											internals.mMediaPlayer.getAudioDestination(i)->play();
+											internals->mMediaPlayer.getAudioDestination(i)->reset();
+											internals->mMediaPlayer.getAudioDestination(i)->play();
 										}
-										for (UInt32 i = 0; i < internals.mMediaPlayer.getVideoTrackCount(); i++) {
+										for (UInt32 i = 0; i < internals->mMediaPlayer.getVideoTrackCount(); i++) {
 											// Reset and resume
-											internals.mMediaPlayer.getVideoDestination(i)->reset();
-											internals.mMediaPlayer.getVideoDestination(i)->resume();
+											internals->mMediaPlayer.getVideoDestination(i)->reset();
+											internals->mMediaPlayer.getVideoDestination(i)->resume();
 										}
 									} else {
 										// Finished
-										internals.mEndOfDataCount = 0;
+										internals->mEndOfDataCount = 0;
 
 										// Call proc
-										internals.mInfo.finished();
+										internals->mInfo.finished();
 									}
 								}
 							}
@@ -172,50 +172,48 @@ class CMediaPlayer::Internals {
 							{
 								// Submit
 								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
-										AudioPlayerErrorMessage(handleAudioPlayerError, userData, audioPlayer, error));
+										AudioPlayerErrorMessage(
+												(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerError, userData,
+												audioPlayer, error));
 							}
-		static	void	handleAudioPlayerError(CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleAudioPlayerError(CSRSWMessageQueue::ProcMessage& message, Internals* internals)
 							{
 								// Setup
-								Internals&					internals = *((Internals*) userData);
 								AudioPlayerErrorMessage&	errorMessage = (AudioPlayerErrorMessage&) message;
-								if (!mActiveInternals.contains(internals))
+								if (!mActiveInternals.contains(*internals))
 									return;
 
 								// Handle
-								internals.mInfo.audioError(errorMessage.mError);
+								internals->mInfo.audioError(errorMessage.mError);
 							}
 
 		static	void	videoFrameStoreCurrentFrameUpdated(const CVideoFrameStore& videoFrameStore,
-								const CVideoFrame& videoFrame, void* userData)
+								const CVideoFrame& videoFrame, Internals* internals)
 							{
-								// Setup
-								Internals&	internals = *((Internals*) userData);
-
 								// Update
-								internals.mCurrentFrameIndex.setValue(videoFrame.getIndex());
+								internals->mCurrentFrameIndex.setValue(videoFrame.getIndex());
 
 								// Handle
-								internals.mInfo.videoFrameUpdated(videoFrame);
+								internals->mInfo.videoFrameUpdated(videoFrame);
 							}
 		static	void	videoFrameStoreError(const CVideoFrameStore& videoFrameStore, const SError& error,
 								void* userData)
 							{
 								// Submit
 								((CMediaPlayerVideoFrameStore&) videoFrameStore).mMessageQueue.submit(
-										VideoFrameStoreErrorMessage(handleVideoFrameStoreError, userData,
-												videoFrameStore, error));
+										VideoFrameStoreErrorMessage(
+												(CSRSWMessageQueue::ProcMessage::Proc) handleVideoFrameStoreError,
+												userData, videoFrameStore, error));
 							}
-		static	void	handleVideoFrameStoreError(CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleVideoFrameStoreError(CSRSWMessageQueue::ProcMessage& message, Internals* internals)
 							{
 								// Setup
-								Internals&						internals = *((Internals*) userData);
 								VideoFrameStoreErrorMessage&	errorMessage = (VideoFrameStoreErrorMessage&) message;
-								if (!mActiveInternals.contains(internals))
+								if (!mActiveInternals.contains(*internals))
 									return;
 
 								// Handle
-								internals.mInfo.videoError(errorMessage.mError);
+								internals->mInfo.videoError(errorMessage.mError);
 							}
 
 				CMediaPlayer&			mMediaPlayer;
@@ -367,7 +365,9 @@ I<CVideoFrameStore> CMediaPlayer::newVideoFrameStore(const CString& identifier, 
 {
 	return I<CVideoFrameStore>(
 			new CMediaPlayerVideoFrameStore(identifier,
-					CVideoFrameStore::Info(Internals::videoFrameStoreCurrentFrameUpdated,
+					CVideoFrameStore::Info(
+							(CVideoFrameStore::Info::CurrentFrameUpdatedProc)
+									Internals::videoFrameStoreCurrentFrameUpdated,
 							Internals::videoFrameStoreError, mInternals)));
 }
 

@@ -84,7 +84,9 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 									// Check for current item
 									if (item.hasReference()) {
 										// Queue message
-										mMessageQueue.submit(StartedMessage(handleStarted, this, *item));
+										mMessageQueue.submit(
+												StartedMessage((CSRSWMessageQueue::ProcMessage::Proc) handleStarted,
+														this, *item));
 
 										// Prepare
 										TVResult<I<CMediaPlayer> >	mediaPlayer = (*item)->prepare();
@@ -92,7 +94,10 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 										// Check cancelled
 										if (!mCancelled)
 											// Queue message
-											mMessageQueue.submit(CompletedMessage(handleCompleted, this, *item,
+											mMessageQueue.submit(
+													CompletedMessage(
+															(CSRSWMessageQueue::ProcMessage::Proc) handleCompleted,
+															this, *item,
 													mediaPlayer));
 
 										// Clear item
@@ -153,34 +158,31 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 								// Signal
 								mSemaphore.signal();
 							}
-		static	void	handleStarted(CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleStarted(CSRSWMessageQueue::ProcMessage& message,
+								CMediaPlaybackQueueItemPrepareThread* mediaPlaybackQueueItemPrepareThread)
 							{
 								// Setup
-								CMediaPlaybackQueueItemPrepareThread&	mediaPlaybackQueueItemPrepareThread =
-																				*((CMediaPlaybackQueueItemPrepareThread*)
-																						userData);
-								StartedMessage&							startedMessage = (StartedMessage&) message;
+								StartedMessage&	startedMessage = (StartedMessage&) message;
 
 								// Check if shutdown requested
-								if (!mediaPlaybackQueueItemPrepareThread.mShutdownRequested)
+								if (!mediaPlaybackQueueItemPrepareThread->mShutdownRequested)
 									// Inform
-									mediaPlaybackQueueItemPrepareThread.mInfo.itemPrepareStarted(*startedMessage.mItem);
+									mediaPlaybackQueueItemPrepareThread->mInfo.itemPrepareStarted(
+											*startedMessage.mItem);
 
 								// Cleanup
 								startedMessage.cleanup();
 							}
-		static	void	handleCompleted(CSRSWMessageQueue::ProcMessage& message, void* userData)
+		static	void	handleCompleted(CSRSWMessageQueue::ProcMessage& message,
+								CMediaPlaybackQueueItemPrepareThread* mediaPlaybackQueueItemPrepareThread)
 							{
 								// Setup
-								CMediaPlaybackQueueItemPrepareThread&	mediaPlaybackQueueItemPrepareThread =
-																				*((CMediaPlaybackQueueItemPrepareThread*)
-																						userData);
-								CompletedMessage&						completedMessage = (CompletedMessage&) message;
+								CompletedMessage&	completedMessage = (CompletedMessage&) message;
 
 								// Check if shutdown requested
-								if (!mediaPlaybackQueueItemPrepareThread.mShutdownRequested)
+								if (!mediaPlaybackQueueItemPrepareThread->mShutdownRequested)
 									// Inform
-									mediaPlaybackQueueItemPrepareThread.mInfo.itemPrepareCompleted(
+									mediaPlaybackQueueItemPrepareThread->mInfo.itemPrepareCompleted(
 											*completedMessage.mItem, *completedMessage.mMediaPlayer);
 
 								// Cleanup

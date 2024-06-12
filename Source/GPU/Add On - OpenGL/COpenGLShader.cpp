@@ -7,11 +7,11 @@
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: COpenGLShader::Internals
+// MARK: COpenGLShaderInternals
 
-class COpenGLShader::Internals {
+class COpenGLShaderInternals {
 	public:
-		Internals(GLenum type, const CString& string)
+		COpenGLShaderInternals(GLenum type, const CString& string)
 			{
 				// Create shader
 				mShader = glCreateShader(type);
@@ -43,7 +43,7 @@ class COpenGLShader::Internals {
 					// Error
 					CLogServices::logError(CString("Could not create shader"));
 			}
-		~Internals()
+		~COpenGLShaderInternals()
 			{
 				// Cleanup
 				glDeleteShader(mShader);
@@ -55,13 +55,13 @@ class COpenGLShader::Internals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLVertexShaderInternals
+// MARK: - COpenGLVertexShader::Internals
 
-class COpenGLVertexShaderInternals : public COpenGLShader::Internals {
+class COpenGLVertexShader::Internals : public COpenGLShaderInternals {
 	public:
-		COpenGLVertexShaderInternals(const CString& string, const TArray<CString>& attributeNames,
+		Internals(const CString& string, const TArray<CString>& attributeNames,
 				const TArray<CString>& uniformNames) :
-			COpenGLShader::Internals(GL_VERTEX_SHADER, string),
+			COpenGLShaderInternals(GL_VERTEX_SHADER, string),
 					mAttributeNames(attributeNames), mUniformNames(uniformNames)
 			{}
 
@@ -80,7 +80,7 @@ COpenGLVertexShader::COpenGLVertexShader(const CString& string, const TArray<CSt
 		const TArray<CString>& uniformNames) : CGPUVertexShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLVertexShaderInternals(string, attributeNames, uniformNames);
+	mInternals = new Internals(string, attributeNames, uniformNames);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -122,12 +122,12 @@ const TArray<CString>& COpenGLVertexShader::getUniformNames() const
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - COpenGLFragmentShaderInternals
+// MARK: - COpenGLFragmentShader::Internals
 
-class COpenGLFragmentShaderInternals : public COpenGLShader::Internals {
+class COpenGLFragmentShader::Internals : public COpenGLShaderInternals {
 	public:
-		COpenGLFragmentShaderInternals(const CString& string, const TArray<CString>& uniformNames) :
-			COpenGLShader::Internals(GL_FRAGMENT_SHADER, string), mUniformNames(uniformNames)
+		Internals(const CString& string, const TArray<CString>& uniformNames) :
+			COpenGLShaderInternals(GL_FRAGMENT_SHADER, string), mUniformNames(uniformNames)
 			{}
 
 		TArray<CString>	mUniformNames;
@@ -144,7 +144,7 @@ COpenGLFragmentShader::COpenGLFragmentShader(const CString& string, const TArray
 		CGPUFragmentShader()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new COpenGLFragmentShaderInternals(string, uniformNames);
+	mInternals = new Internals(string, uniformNames);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

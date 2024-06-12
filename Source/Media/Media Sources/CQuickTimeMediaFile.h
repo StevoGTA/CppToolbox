@@ -37,6 +37,7 @@ class CQuickTimeMediaFile {
 	// Methods
 	public:
 															// Lifecycle methods
+															CQuickTimeMediaFile() {}
 		virtual												~CQuickTimeMediaFile() {}
 
 															// Instance methods
@@ -47,9 +48,6 @@ class CQuickTimeMediaFile {
 																	const;
 
 	protected:
-															// Lifecycle methods
-															CQuickTimeMediaFile() {}
-
 															// Instance methods
 		virtual	void										processFileMetadata(const CData& metaAtomPayloadData) {}
 		virtual	TVResult<SMediaSource::Tracks::AudioTrack>	composeAudioTrack(

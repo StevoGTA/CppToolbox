@@ -12,7 +12,7 @@
 
 class CGPUTextureReference : public CEquatable {
 	// Classes
-	private:
+	public:
 		class Internals;
 
 	// Methods

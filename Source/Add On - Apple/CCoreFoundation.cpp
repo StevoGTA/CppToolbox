@@ -278,11 +278,11 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 	// Copy all items
 	for (TIteratorS<CDictionary::Item> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Get info
-		const	CString&	key = iterator.getValue().mKey;
+		const	CString&	key = iterator->mKey;
 				CFStringRef	keyStringRef = key.getOSString();
 
 		// Store value in dictionary
-		const	SValue&	value = iterator.getValue().mValue;
+		const	SValue&	value = iterator->mValue;
 		switch (value.getType()) {
 			case SValue::kTypeEmpty:
 				// Empty (null)
@@ -429,8 +429,8 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const TDictionary<CStri
 	// Copy all items
 	for (TIteratorS<CDictionary::Item> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance())
 		// Store value in dictionary
-		::CFDictionarySetValue(dictionaryRef, iterator.getValue().mKey.getOSString(),
-				((const CString*) iterator.getValue().mValue.getOpaque())->getOSString());
+		::CFDictionarySetValue(dictionaryRef, iterator->mKey.getOSString(),
+				((const CString*) iterator->mValue.getOpaque())->getOSString());
 
 	return dictionaryRef;
 }

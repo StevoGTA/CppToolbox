@@ -249,14 +249,8 @@ class CAudioPlayer::Internals {
 										mRenderProcFrameCount(~0)
 								{}
 
-		static	void		readerThreadError(const SError& error, void* userData)
-								{
-									// Setup
-									Internals&	internals = *((Internals*) userData);
-
-									// Call proc
-									internals.mInfo.error(internals.mAudioPlayer, error);
-								}
+		static	void		readerThreadError(const SError& error, Internals* internals)
+								{ internals->mInfo.error(internals->mAudioPlayer, error); }
 
 		static	OSStatus	renderProc(void* inRefCon, AudioUnitRenderActionFlags* inActionFlags,
 									const AudioTimeStamp* inTimeStamp, UInt32 inBusNumber, UInt32 inNumFrames,
@@ -478,7 +472,7 @@ CAudioPlayer::~CAudioPlayer()
 	// Remove from engine
 	if (mInternals->mAudioEngineIndex.hasValue())
 		// Remove
-		CAudioEngine::mShared.removeAudioPlayer(mInternals->mAudioEngineIndex.getValue());
+		CAudioEngine::mShared.removeAudioPlayer(*mInternals->mAudioEngineIndex);
 
 	// Stop threads
 	if (mInternals->mAudioPlayerBufferThread.hasInstance())
@@ -521,7 +515,8 @@ OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 	mInternals->mAudioPlayerBufferThread =
 			OI<CAudioPlayerBufferThread>(
 					new CAudioPlayerBufferThread(*this, *mInternals->mQueue, *mInternals->mBytesPerFrame,
-							CAudioEngine::mShared.getMaxOutputFrames(), Internals::readerThreadError, mInternals));
+							CAudioEngine::mShared.getMaxOutputFrames(),
+							(CAudioPlayerBufferThread::ErrorProc) Internals::readerThreadError, mInternals));
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
@@ -560,7 +555,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	if (!mInternals->mAudioEngineIndex.hasValue()) {
 		// Add player
 		mInternals->mAudioEngineIndex = CAudioEngine::mShared.addAudioPlayer(Internals::renderProc, mInternals);
-		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), 1.0);
+		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
 	}
 	if (!mInternals->mAudioEngineIndex.hasValue())
 		// No available slots
@@ -617,7 +612,7 @@ void CAudioPlayer::reset()
 	// Remove from engine
 	if (mInternals->mAudioEngineIndex.hasValue()) {
 		// Remove
-		CAudioEngine::mShared.removeAudioPlayer(mInternals->mAudioEngineIndex.getValue());
+		CAudioEngine::mShared.removeAudioPlayer(*mInternals->mAudioEngineIndex);
 		mInternals->mAudioEngineIndex = OV<UInt32>();
 	}
 
@@ -710,7 +705,7 @@ void CAudioPlayer::play()
 	if (!mInternals->mAudioEngineIndex.hasValue()) {
 		// Add player
 		mInternals->mAudioEngineIndex = CAudioEngine::mShared.addAudioPlayer(Internals::renderProc, mInternals);
-		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), 1.0);
+		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
 	}
 	if (!mInternals->mAudioEngineIndex.hasValue())
 		// No available slots
@@ -755,7 +750,7 @@ void CAudioPlayer::startSeek()
 	if (!mInternals->mAudioEngineIndex.hasValue()) {
 		// Add player
 		mInternals->mAudioEngineIndex = CAudioEngine::mShared.addAudioPlayer(Internals::renderProc, mInternals);
-		CAudioEngine::mShared.setAudioPlayerGain(mInternals->mAudioEngineIndex.getValue(), 1.0);
+		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
 	}
 	if (!mInternals->mAudioEngineIndex.hasValue())
 		// No available slots

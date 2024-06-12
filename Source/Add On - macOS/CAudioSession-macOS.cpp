@@ -91,7 +91,9 @@ void CAudioSession::logInfo()
 		status =
 				::AudioObjectGetPropertyData(deviceIDs[i], &propertyAddress, 0, nil, &dataSize, &serialNumberStringRef);
 
-		CString	infoString = CString(nameStringRef) + CString(OSSTR(", ")) + CString(manufacturerStringRef);
+		CString	infoString(nameStringRef);
+		if (manufacturerStringRef != nil)
+			infoString += CString(OSSTR(", ")) + CString(manufacturerStringRef);
 		if (modelNameStringRef != nil)
 			infoString += CString(OSSTR(", Model: ")) + CString(modelNameStringRef);
 		if (firmwareVersionStringRef != nil)

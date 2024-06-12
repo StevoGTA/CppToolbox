@@ -34,7 +34,7 @@
 			// Began
 			// Post notification
 			CAudioSession::mNotificationCenter.queue(CAudioSession::mInterruptionDidBeginNotificationName,
-					&CAudioSession::mShared);
+					CNotificationCenter::RSender<CAudioSession>(CAudioSession::mShared));
 			break;
 
 		case AVAudioSessionInterruptionTypeEnded:
@@ -46,11 +46,11 @@
 
 			// Post notification
 			CDictionary	info;
-			info.set(CAudioSession::mInterruptionDidEndPlaybackShouldContinue,
+			info.set(CString(OSSTR("playbackShouldContinue")),
 					(interruptionOptions & AVAudioSessionInterruptionOptionShouldResume) != 0);
 
 			CAudioSession::mNotificationCenter.queue(CAudioSession::mInterruptionDidEndNotificationName,
-					&CAudioSession::mShared, info);
+					CNotificationCenter::RSender<CAudioSession>(CAudioSession::mShared), info);
 			break;
 	}
 }
@@ -73,12 +73,8 @@ static	NotificationObserver*	sNotificationObserver = [[NotificationObserver allo
 
 // MARK: Properties
 
-		CAudioSession					CAudioSession::mShared;
-		CImmediateNotificationCenter	CAudioSession::mNotificationCenter;
-
-const	CString CAudioSession::mInterruptionDidBeginNotificationName(OSSTR("CAudioSession - Interruption Did Begin"));
-const	CString CAudioSession::mInterruptionDidEndNotificationName(OSSTR("CAudioSession - Interruption Did End"));
-const	CString	CAudioSession::mInterruptionDidEndPlaybackShouldContinue(OSSTR("playbackShouldContinue"));
+CAudioSession					CAudioSession::mShared;
+CImmediateNotificationCenter	CAudioSession::mNotificationCenter;
 
 // MARK: Lifecycle methods
 
@@ -257,4 +253,23 @@ Float32 CAudioSession::getCurrentHardwareOutputVolume() const
 #else
 	return 1.0; 
 #endif
+}
+
+// MARK: Notifications
+
+const	CString	CAudioSession::mInterruptionDidBeginNotificationName(OSSTR("audioSessionInterruptionDidBegin"));
+const	CString	CAudioSession::mInterruptionDidEndNotificationName(OSSTR("audioSessionInterruptionDidEnd"));
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioSession& CAudioSession::notificatnGetMediaDocument(const OR<CNotificationCenter::Sender>& sender)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return *((const CNotificationCenter::RSender<CAudioSession>&) sender);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CAudioSession::notificationGetPlaybackShouldContinue(const CDictionary& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return info.getBool(CString(OSSTR("playbackShouldContinue")));
 }

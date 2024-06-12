@@ -63,29 +63,29 @@ class CNotificationCenter {
 		template <typename T> class RSender : public Sender {
 			// Methods
 			public:
-								// Lifecycle methods
-								RSender(const T& t) : Sender(), mT(t) {}
-								RSender(const RSender& other) : Sender(other), mT(other.mT) {}
+						// Lifecycle methods
+						RSender(T& t) : Sender(), mT(t) {}
+						RSender(const RSender& other) : Sender(other), mT(other.mT) {}
 
-								// TReferenceCountable methods
-						void	cleanup()
-									{}
+						// TReferenceCountable methods
+				void	cleanup()
+							{}
 
-								// Instance methods
-						T&		operator*() const
-									{ return *mT; }
+						// Instance methods
+				T&		operator*() const
+							{ return mT; }
 
 			protected:
-								// Sender methods
-						Sender*	copy() const
-									{ return new RSender(*this); }
+						// Sender methods
+				Sender*	copy() const
+							{ return new RSender(*this); }
 
-						bool	operator==(const Sender& other) const
-									{ return mT == ((const RSender<T>&) other).mT; }
+				bool	operator==(const Sender& other) const
+							{ return mT == ((const RSender<T>&) other).mT; }
 
 			// Properties
 			private:
-				const	T&	mT;
+				T&	mT;
 		};
 
 	// Observer

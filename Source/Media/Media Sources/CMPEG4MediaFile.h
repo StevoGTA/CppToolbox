@@ -530,6 +530,7 @@ class CMPEG4MediaFile {
 	// Methods
 	public:
 																	// Lifecycle methods
+																	CMPEG4MediaFile() {}
 		virtual														~CMPEG4MediaFile() {}
 
 																	// Instance methods
@@ -540,9 +541,6 @@ class CMPEG4MediaFile {
 																			const Internals& internals) const;
 
 	protected:
-																	// Lifecycle methods
-																	CMPEG4MediaFile() {}
-
 																	// Instance methods
 		virtual			TVResult<SMediaSource::Tracks::AudioTrack>	composeAudioTrack(
 																			const I<CRandomAccessDataSource>&

@@ -195,7 +195,7 @@ void CData::copyBytes(void* destinationBuffer, ByteIndex startByteIndex, OV<Byte
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	ByteCount	byteCountUse = byteCount.hasValue() ? byteCount.getValue() : getByteCount() - startByteIndex;
+	ByteCount	byteCountUse = byteCount.hasValue() ? *byteCount : getByteCount() - startByteIndex;
 
 	// Parameter check
 	AssertNotNil(destinationBuffer);

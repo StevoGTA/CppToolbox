@@ -37,7 +37,7 @@ TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 {
 	// Setup
 	NSURL*							folderURL =
-											(NSURL*) CFBridgingRelease(
+											(NSURL*) ::CFBridgingRelease(
 													CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
 															false));
 	NSDirectoryEnumerationOptions	directoryEnumerationOptions =
@@ -78,7 +78,7 @@ TVResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool d
 {
 	// Setup
 	NSURL*							folderURL =
-											(NSURL*) CFBridgingRelease(
+											(NSURL*) ::CFBridgingRelease(
 													CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
 															false));
 	NSDirectoryEnumerationOptions	directoryEnumerationOptions =
@@ -119,7 +119,7 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 {
 	// Setup
 	NSURL*							folderURL =
-											(NSURL*) CFBridgingRelease(
+											(NSURL*) ::CFBridgingRelease(
 													CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(),
 															false));
 	NSDirectoryEnumerationOptions	directoryEnumerationOptions =
@@ -160,10 +160,10 @@ OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 {
 	// Setup
 	NSURL*	sourceURL =
-					(NSURL*) CFBridgingRelease(
+					(NSURL*) ::CFBridgingRelease(
 							CCoreFoundation::createURLRefFrom(sourceFile.getFilesystemPath(), false));
 	NSURL*	destinationURL =
-					(NSURL*) CFBridgingRelease(
+					(NSURL*) ::CFBridgingRelease(
 							CCoreFoundation::createURLRefFrom(destinationFile.getFilesystemPath(), false));
 
 	// Replace contents

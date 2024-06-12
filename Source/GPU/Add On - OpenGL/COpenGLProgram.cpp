@@ -4,6 +4,7 @@
 
 #include "COpenGLProgram.h"
 
+#include "CReferenceCountable.h"
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -50,22 +51,19 @@ class COpenGLProgram::Internals : public TReferenceCountableAutoDelete<Internals
 						for (TIteratorD<CString> iterator = attributeNames.getIterator(); iterator.hasValue();
 								iterator.advance())
 							// Store attribute location
-							mAttributeInfo.set(iterator.getValue(),
-									glGetAttribLocation(mProgram, *iterator.getValue().getCString()));
+							mAttributeInfo.set(*iterator, glGetAttribLocation(mProgram, *iterator->getCString()));
 
 						const	TArray<CString>&	vertexShaderUniformNames = mVertexShader.getUniformNames();
 						for (TIteratorD<CString> iterator = vertexShaderUniformNames.getIterator(); iterator.hasValue();
 								iterator.advance())
 							// Store attribute location
-							mUniformInfo.set(iterator.getValue(),
-									glGetUniformLocation(mProgram, *iterator.getValue().getCString()));
+							mUniformInfo.set(*iterator, glGetUniformLocation(mProgram, *iterator->getCString()));
 
 						const	TArray<CString>&	fragmentShaderuniformNames = mFragmentShader.getUniformNames();
 						for (TIteratorD<CString> iterator = fragmentShaderuniformNames.getIterator();
 								iterator.hasValue(); iterator.advance())
 							// Store attribute location
-							mUniformInfo.set(iterator.getValue(),
-									glGetUniformLocation(mProgram, *iterator.getValue().getCString()));
+							mUniformInfo.set(*iterator, glGetUniformLocation(mProgram, *iterator->getCString()));
 					}
 				} else
 					// Error

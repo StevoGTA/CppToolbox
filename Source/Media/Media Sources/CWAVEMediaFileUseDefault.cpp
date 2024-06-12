@@ -4,6 +4,8 @@
 
 #include "CWAVEMediaFile.h"
 
+#include "CMediaSourceRegistry.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CWAVEMediaFile
 
@@ -22,5 +24,5 @@ I<CWAVEMediaFile> CWAVEMediaFile::create()
 
 static	CString	sExtensions[] = { CString(OSSTR("wav")) };
 REGISTER_MEDIA_SOURCE(wave,
-		SMediaSource(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE")), TSSet<CString>(sExtensions, 1),
-				CWAVEMediaFile::import));
+		SMediaSource(SMediaSource::Identity(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE"))),
+				TSARRAY_FROM_C_ARRAY(CString, sExtensions), CWAVEMediaFile::import));

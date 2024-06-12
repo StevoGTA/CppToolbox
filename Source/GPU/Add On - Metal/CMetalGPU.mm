@@ -265,7 +265,7 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			// 2D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
-					CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
+					CGPURenderState::CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -277,7 +277,7 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			// 3D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
-					CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
+					CGPURenderState::CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -325,7 +325,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			// 2D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState2D];
 			renderState.commit(
-					CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
+					CGPURenderState::CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
@@ -337,7 +337,7 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			// 3D
 			[mInternals->mCurrentRenderCommandEncoder setDepthStencilState:mInternals->mDepthStencilState3D];
 			renderState.commit(
-					CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
+					CGPURenderState::CommitInfo(mInternals->mProcs.getDevice(), mInternals->mShaderLibrary,
 							mInternals->mCurrentRenderCommandEncoder,
 							mInternals->mMetalBufferCaches[mInternals->mMetalBufferCacheIndex],
 							mInternals->mFunctionsCache, mInternals->mRenderPipelineDescriptor,
