@@ -419,29 +419,29 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 		// Compose value
 		CString	replacement;
 		switch (iterator->mValue.getType()) {
-			case SValue::kBool:
+			case SValue::kTypeBool:
 				// Bool
 				replacement = iterator->mValue.getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
 				break;
 
-			case SValue::kString:	replacement = iterator->mValue.getString();				break;
-			case SValue::kFloat32:	replacement = CString(iterator->mValue.getFloat32());	break;
-			case SValue::kFloat64:	replacement = CString(iterator->mValue.getFloat64());	break;
-			case SValue::kSInt8:	replacement = CString(iterator->mValue.getSInt8());		break;
-			case SValue::kSInt16:	replacement = CString(iterator->mValue.getSInt16());	break;
-			case SValue::kSInt32:	replacement = CString(iterator->mValue.getSInt32());	break;
-			case SValue::kSInt64:	replacement = CString(iterator->mValue.getSInt64());	break;
-			case SValue::kUInt8:	replacement = CString(iterator->mValue.getUInt8());		break;
-			case SValue::kUInt16:	replacement = CString(iterator->mValue.getUInt16());	break;
-			case SValue::kUInt32:	replacement = CString(iterator->mValue.getUInt32());	break;
-			case SValue::kUInt64:	replacement = CString(iterator->mValue.getUInt64());	break;
+			case SValue::kTypeString:	replacement = iterator->mValue.getString();				break;
+			case SValue::kTypeFloat32:	replacement = CString(iterator->mValue.getFloat32());	break;
+			case SValue::kTypeFloat64:	replacement = CString(iterator->mValue.getFloat64());	break;
+			case SValue::kTypeSInt8:	replacement = CString(iterator->mValue.getSInt8());		break;
+			case SValue::kTypeSInt16:	replacement = CString(iterator->mValue.getSInt16());	break;
+			case SValue::kTypeSInt32:	replacement = CString(iterator->mValue.getSInt32());	break;
+			case SValue::kTypeSInt64:	replacement = CString(iterator->mValue.getSInt64());	break;
+			case SValue::kTypeUInt8:	replacement = CString(iterator->mValue.getUInt8());		break;
+			case SValue::kTypeUInt16:	replacement = CString(iterator->mValue.getUInt16());	break;
+			case SValue::kTypeUInt32:	replacement = CString(iterator->mValue.getUInt32());	break;
+			case SValue::kTypeUInt64:	replacement = CString(iterator->mValue.getUInt64());	break;
 
-			case SValue::kEmpty:
-			case SValue::kArrayOfDictionaries:
-			case SValue::kArrayOfStrings:
-			case SValue::kOpaque:
-			case SValue::kData:
-			case SValue::kDictionary:
+			case SValue::kTypeEmpty:
+			case SValue::kTypeArrayOfDictionaries:
+			case SValue::kTypeArrayOfStrings:
+			case SValue::kTypeOpaque:
+			case SValue::kTypeData:
+			case SValue::kTypeDictionary:
 				// Unhandled
 				replacement = CString(OSSTR("->UNHANDLED<-"));
 				break;
@@ -864,7 +864,10 @@ void CString::setupLocalization(const CData& stringsFileData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate lines
-	TArray<CString>	lines = CString(stringsFileData).components(CString::mNewline);
+	TArray<CString>	lines =
+							CString(stringsFileData)
+									.replacingSubStrings(CString(OSSTR("\\U00B5")), CString(OSSTR("\u00B5")))
+									.components(CString::mNewline);
 	for (TIteratorD<CString> iterator = lines.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Process line
 		TArray<CString>	components = iterator->components(CString(OSSTR(" = ")));
