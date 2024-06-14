@@ -42,5 +42,5 @@ class CDirectXTexture : public CGPUTexture {
 
 	// Properties
 	private:
-		CGPUTexture* mInternals;
+		Internals* mInternals;
 };

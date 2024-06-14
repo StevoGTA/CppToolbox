@@ -177,6 +177,7 @@ OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 return OV<SError>();
 }
 
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFilesystem::revealInFileExplorer(const TArray<CFile>& files)
 //----------------------------------------------------------------------------------------------------------------------
@@ -196,3 +197,4 @@ OV<SError> CFilesystem::revealInFileExplorer(const TArray<CFile>& files)
 
 	return error;
 }
+#endif

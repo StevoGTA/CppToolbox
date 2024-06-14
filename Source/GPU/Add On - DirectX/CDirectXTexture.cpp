@@ -4,6 +4,9 @@
 
 #include "CDirectXTexture.h"
 
+#include "CReferenceCountable.h"
+#include "SError.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDirectXTexture::Internals
 

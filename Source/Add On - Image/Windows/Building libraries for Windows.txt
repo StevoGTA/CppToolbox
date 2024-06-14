@@ -7,3 +7,4 @@ Install-Package libjpeg-msvc-x64
 libpng
 ------
 Install-Package libpng-msvc-x64
+Install-Package zlib-msvc-x64

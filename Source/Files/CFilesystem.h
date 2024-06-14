@@ -53,6 +53,8 @@ class CFilesystem {
 		static	OV<SError>						revealInFinder(const TArray<CFile>& files);
 #endif
 #if defined(TARGET_OS_WINDOWS)
+	#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 		static	OV<SError>						revealInFileExplorer(const TArray<CFile>& files);
+	#endif
 #endif
 };

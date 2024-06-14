@@ -56,7 +56,7 @@ class CAudioPlayerImplementation :
 									mBufferFrames(0), mDefaultPeriodInFrames(0), mFundamentalPeriodInFrames(0),
 									mMaxPeriodInFrames(0), mMinPeriodInFrames(0),  mMixFormat(nullptr),
 									mIsPlaying(false), mIsSeeking(false), mLastSeekTimeInterval(0.0),
-									mCurrentPlaybackTimeInterval(0.0),
+									mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
 									mOnFillBufferShouldSendFrames(true), mOnFillBufferIsSendingFrames(false),
 									mOnFillBufferShouldNotifyEndOfData(false), mOnFillBufferPreviousFrameCount(0),
 									mOnFillBufferFrameIndex(0), mOnFillBufferFrameCount(~0U)

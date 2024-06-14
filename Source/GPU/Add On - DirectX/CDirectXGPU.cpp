@@ -705,7 +705,7 @@ TArray<I<CGPUTexture> > CGPU::registerTextures(const CVideoFrame& videoFrame)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CGPU::unregisterTexture(I<CGPUTexture>& gpuTexture)
+void CGPU::unregisterTexture(const I<CGPUTexture>& gpuTexture)
 //----------------------------------------------------------------------------------------------------------------------
 {
 }
@@ -861,8 +861,9 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			mInternals->mD3DDeviceContextComPtr->RSSetState(mInternals->mD3DRasterizerState2D);
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets, NULL);
 			renderState.commit(
-					CommitInfo(*mInternals->mD3DDeviceComPtr.Get(), *mInternals->mD3DDeviceContextComPtr.Get(),
-							*mInternals->mD3DBlendState, mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
+					CGPURenderState::CommitInfo(*mInternals->mD3DDeviceComPtr.Get(),
+							*mInternals->mD3DDeviceContextComPtr.Get(), *mInternals->mD3DBlendState,
+							mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
 			break;
 
 		case CGPURenderState::kMode3D:
@@ -871,8 +872,9 @@ void CGPU::render(CGPURenderState& renderState, RenderType renderType, UInt32 co
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets,
 					mInternals->mD3DDeptStencilViewComPtr.Get());
 			renderState.commit(
-					CommitInfo(*mInternals->mD3DDeviceComPtr.Get(), *mInternals->mD3DDeviceContextComPtr.Get(),
-							*mInternals->mD3DBlendState, mInternals->mProjectionMatrix3D, mInternals->mViewMatrix3D));
+					CGPURenderState::CommitInfo(*mInternals->mD3DDeviceComPtr.Get(),
+							*mInternals->mD3DDeviceContextComPtr.Get(), *mInternals->mD3DBlendState,
+							mInternals->mProjectionMatrix3D, mInternals->mViewMatrix3D));
 			break;
 	}
 
@@ -907,8 +909,9 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			mInternals->mD3DDeviceContextComPtr->RSSetState(mInternals->mD3DRasterizerState2D);
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets, NULL);
 			renderState.commit(
-					CommitInfo(*mInternals->mD3DDeviceComPtr.Get(), *mInternals->mD3DDeviceContextComPtr.Get(),
-							*mInternals->mD3DBlendState, mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
+					CGPURenderState::CommitInfo(*mInternals->mD3DDeviceComPtr.Get(),
+							*mInternals->mD3DDeviceContextComPtr.Get(), *mInternals->mD3DBlendState,
+							mInternals->mProjectionMatrix2D, mInternals->mViewMatrix2D));
 			break;
 
 		case CGPURenderState::kMode3D:
@@ -917,8 +920,9 @@ void CGPU::renderIndexed(CGPURenderState& renderState, RenderType renderType, UI
 			mInternals->mD3DDeviceContextComPtr->OMSetRenderTargets(1, targets,
 					mInternals->mD3DDeptStencilViewComPtr.Get());
 			renderState.commit(
-					CommitInfo(*mInternals->mD3DDeviceComPtr.Get(), *mInternals->mD3DDeviceContextComPtr.Get(),
-							*mInternals->mD3DBlendState, mInternals->mProjectionMatrix3D, mInternals->mViewMatrix3D));
+					CGPURenderState::CommitInfo(*mInternals->mD3DDeviceComPtr.Get(),
+							*mInternals->mD3DDeviceContextComPtr.Get(), *mInternals->mD3DBlendState,
+							mInternals->mProjectionMatrix3D, mInternals->mViewMatrix3D));
 			break;
 	}
 

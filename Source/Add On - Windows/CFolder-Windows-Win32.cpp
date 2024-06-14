@@ -63,6 +63,7 @@ bool CFolder::doesExist() const
 return false;
 }
 
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 //----------------------------------------------------------------------------------------------------------------------
 const CFolder& CFolder::userDesktop()
 //----------------------------------------------------------------------------------------------------------------------
@@ -106,3 +107,4 @@ const CFolder& CFolder::localApplicationData()
 
 	return *sFolder;
 }
+#endif

@@ -57,12 +57,12 @@ class CSecretRabbitCodeAudioConverter::Internals {
 														new CAudioFrames(1,
 																sizeof(Float32) *
 																		internals.mInputAudioProcessingFormat->
-																				getChannelCount(),
+																				getChannelMap().getChannelCount(),
 																frameCount));
 								}
 
 								// Check if have more to read
-								CAudioFrames::ReadInfo	readInfo = internals.mInputAudioFrames->getReadInfo();
+								CAudioFrames::Info	readInfo = internals.mInputAudioFrames->getReadInfo();
 								if (internals.mSourceHasMoreToRead) {
 									// Try to read
 									TVResult<CAudioProcessor::SourceInfo>	audioProcessorSourceInfo =
@@ -77,23 +77,23 @@ class CSecretRabbitCodeAudioConverter::Internals {
 											// Convert
 											internals.mInputFloatAudioFrames->reset();
 
-											CAudioFrames::WriteInfo	writeInfo =
-																			internals.mInputFloatAudioFrames->
-																					getWriteInfo();
+											CAudioFrames::Info	writeInfo =
+																		internals.mInputFloatAudioFrames->
+																				getWriteInfo();
 											if (internals.mInputAudioProcessingFormat->getBits() == 16)
 												// Convert SInt16 => Float32
 												src_short_to_float_array((short*) readInfo.getSegments()[0],
 														(float*) writeInfo.getSegments()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->
-																		getChannelCount());
+																		getChannelMap().getChannelCount());
 											else
 												// Convert SInt32 => Float32
 												src_int_to_float_array((int*) readInfo.getSegments()[0],
 														(float*) writeInfo.getSegments()[0],
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->
-																		getChannelCount());
+																		getChannelMap().getChannelCount());
 										}
 									} else if (audioProcessorSourceInfo.getError() == SError::mEndOfData) {
 										// End of data
@@ -158,15 +158,15 @@ OV<SError> CSecretRabbitCodeAudioConverter::connectInput(const I<CAudioProcessor
 	// Create Secret Rabbit Code
 	int	error;
 	mInternals->mSRCState =
-			src_callback_new(Internals::fillBufferData, SRC_SINC_BEST_QUALITY, audioProcessingFormat.getChannelCount(),
-					&error, mInternals);
+			src_callback_new(Internals::fillBufferData, SRC_SINC_BEST_QUALITY,
+					audioProcessingFormat.getChannelMap().getChannelCount(), &error, mInternals);
 	ReturnErrorIfSRCError(error);
 
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CMediaFoundationResampler::getSetupDescription(const CString& indent)
+TArray<CString> CSecretRabbitCodeAudioConverter::getSetupDescription(const CString& indent)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get upstream setup descriptions
@@ -221,7 +221,7 @@ TArray<SAudio::ProcessingSetup> CSecretRabbitCodeAudioConverter::getInputSetups(
 	return TNArray<SAudio::ProcessingSetup>(
 			SAudio::ProcessingSetup(SAudio::ProcessingSetup::BitsInfo::mUnspecified,
 					SAudio::ProcessingSetup::SampleRateInfo::mUnspecified,
-					SAudio::ProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getAudioChannelMap()),
+					SAudio::ProcessingSetup::ChannelMapInfo(mOutputAudioProcessingFormat->getChannelMap()),
 					SAudio::ProcessingSetup::kSampleTypeUnspecified, SAudio::ProcessingSetup::kEndianLittle,
 					SAudio::ProcessingSetup::kInterleaved));
 }

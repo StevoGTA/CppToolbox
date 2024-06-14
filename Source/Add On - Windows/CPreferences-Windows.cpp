@@ -52,43 +52,43 @@ bool CPreferences::hasValue(const Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CData> CPreferences::getDataArray(const Pref& pref)
+OV<TArray<CData> > CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return TNArray<CData>();
+return OV<TArray<CData> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CDictionary> CPreferences::getDictionaryArray(const Pref& pref)
+OV<TArray<CDictionary> > CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return TNArray<CDictionary>();
+return OV<TArray<CDictionary> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumberArray<OSType> CPreferences::getOSTypeArray(const Pref& pref)
+OV<TNumberArray<OSType> > CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return TNumberArray<OSType>();
+return OV<TNumberArray<OSType> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CPreferences::getData(const Pref& pref)
+OV<CData> CPreferences::getData(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return CData::mEmpty;
+return OV<CData>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CPreferences::getDictionary(const Pref& pref)
+OV<CDictionary> CPreferences::getDictionary(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
-return CDictionary::mEmpty;
+return OV<CDictionary>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

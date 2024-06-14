@@ -12,9 +12,9 @@
 using namespace DirectX;
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CGPU::CommitInfo
+// MARK: CGPURenderState::CommitInfo
 
-struct CGPU::CommitInfo {
+struct CGPURenderState::CommitInfo {
 	// Lifecycle methods
 	CommitInfo(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d3dDeviceContext,
 			ID3D11BlendState& d3dBlendState, const XMFLOAT4X4& projectionMatrix, const XMFLOAT4X4& viewMatrix) :
