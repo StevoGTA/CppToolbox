@@ -42,8 +42,9 @@ class CImage {
 		static	OV<CString>			getDefaultFilenameExtension(Type type);
 		static	OV<CString>			getMIMEType(Type type);
 
-		static	TVResult<CBitmap>	getBitmap(const CData& data)
-										{ return CImage(data).getBitmap(); }
+		static	TVResult<CBitmap>	getBitmap(const CData& data, const OV<Type>& type = OV<Type>())
+										{ return CImage(data, type).getBitmap(); }
+		static	TVResult<CData>		getData(const CBitmap& bitmap, Type type);
 
 	// Properties
 	private:

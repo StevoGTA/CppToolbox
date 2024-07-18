@@ -381,7 +381,7 @@ void CSRSWMessageQueue::handleAll()
 		handle(message);
 
 		// Processed
-		commitRead(message.mByteCount);
+		commitRead(message.getByteCount());
 
 		// Get next
 		readBufferInfo = requestRead();
@@ -393,14 +393,14 @@ void CSRSWMessageQueue::submit(const Message& message)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Query situation
-	CSRSWBIPQueue::WriteBufferInfo	writeBufferInfo = requestWrite(message.mByteCount);
+	CSRSWBIPQueue::WriteBufferInfo	writeBufferInfo = requestWrite(message.getByteCount());
 
 	// Validate
-	AssertFailIf(writeBufferInfo.mByteCount < message.mByteCount);
+	AssertFailIf(writeBufferInfo.mByteCount < message.getByteCount());
 
 	// Copy and commit
-	::memcpy(writeBufferInfo.mBuffer, &message, message.mByteCount);
-	commitWrite(message.mByteCount);
+	::memcpy(writeBufferInfo.mBuffer, (void*) &message, message.getByteCount());
+	commitWrite(message.getByteCount());
 }
 
 // MARK: Subclass methods
@@ -410,9 +410,11 @@ void CSRSWMessageQueue::handle(const Message& message)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check type
-	if (message.mType == ProcMessage::mType)
+	if (message.getType() == ProcMessage::mType) {
 		// Perform
 		((ProcMessage&) message).perform();
+		((ProcMessage&) message).cleanup();
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

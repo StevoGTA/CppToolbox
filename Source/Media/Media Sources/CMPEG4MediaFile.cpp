@@ -516,10 +516,27 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 
 				// Success
 				mediaSourceTracks.add(*videoTrack);
+			} else {
+				// Import track
+				error =
+						importTrack(importSetup.getRandomAccessDataSource(), hdlrAtomPayload.getSubType(),
+								stsdDescriptionHeader, internals);
+				if (error.hasValue())
+					// Error
+					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(*error));
 			}
-		} else
-			// Pass to any subclass
-			process(atomReader, *moovIterator);
+		} else if (moovIterator->mType == MAKE_OSTYPE('u', 'd', 't', 'a')) {
+			// User Data
+			TVResult<CAtomReader::ContainerAtom>	udtaContainerAtom = atomReader.readContainerAtom(*moovIterator);
+			if (!udtaContainerAtom.hasValue())
+				continue;
+
+			OR<CAtomReader::Atom>	metaAtom = udtaContainerAtom->getAtom(MAKE_OSTYPE('m', 'e', 't', 'a'));
+			TVResult<CData>			metaAtomPayloadData = atomReader.readAtomPayload(metaAtom);
+			if (metaAtomPayloadData.hasValue())
+				// Process file metadata
+				processFileMetadata(*metaAtomPayloadData);
+		}
 	}
 
 	return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mID, mediaSourceTracks));

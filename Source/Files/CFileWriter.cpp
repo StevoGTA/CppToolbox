@@ -5,7 +5,31 @@
 #include "CFileWriter.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAtomFileWriter
+// MARK: CFileWriter
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFileWriter::write(const CFile& file, const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFileWriter	fileWriter(file);
+
+	// Open
+	OV<SError>	error = fileWriter.open(false, false, true);
+	ReturnErrorIfError(error);
+
+	// Write
+	error = fileWriter.write(data);
+	ReturnErrorIfError(error);
+
+	return fileWriter.close();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAtomFileWriter
 
 // MARK: Lifecycle methods
 

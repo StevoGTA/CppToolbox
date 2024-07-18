@@ -68,7 +68,7 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 									// Calculate and round up to a 16 byte boundary
 									mBytesPerRow = (UInt16) (mSize.mWidth * mBytesPerPixel);
 									if ((mBytesPerRow % 0x10) != 0)
-										mBytesPerRow += 0x10 - (mBytesPerRow % 0x0F);
+										mBytesPerRow += 0x10 - (mBytesPerRow & 0x0F);
 								}
 								mPixelData =
 										!pixelData.isEmpty() ?

@@ -70,6 +70,9 @@ class CFileWriter {
 
 						OV<SError>		close() const;
 
+										// Class methods
+		static			OV<SError>		write(const CFile& file, const CData& data);
+
 	// Properties
 	private:
 		Internals*	mInternals;

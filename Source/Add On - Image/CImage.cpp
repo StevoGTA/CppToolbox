@@ -26,26 +26,21 @@ struct SJPEGErrorInfo : public jpeg_error_mgr {
 	char	mErrorMessage[JMSG_LENGTH_MAX];
 };
 
-struct SJPEGSourceInfo : public jpeg_source_mgr {
-	// Properties
-	void*	mUserInfo;
-};
-
-struct SPNGDecodeInfo {
-	// Properties
-	const	UInt8*	mCurrentDataPtr;
-};
-
 static	CString	sErrorDomain(OSSTR("CImage"));
 static	SError	sErrorUnknownType(sErrorDomain, 1, CString(OSSTR("Unknown type")));
 static	SError	sErrorMissingSize(sErrorDomain, 2, CString(OSSTR("Missing size")));
 static	SError	sErrorUnableToDecode(sErrorDomain, 3, CString(OSSTR("Unable to decode")));
+static	SError	sErrorUnableToEncode(sErrorDomain, 4, CString(OSSTR("Unable to encode")));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
 static	TVResult<CBitmap>	sDecodeJPEGData(const CData& data);
+static	TVResult<CData>		sEncodeJPEGData(const CBitmap& bitmap);
+static	void				sJPEGDestinationInit(j_compress_ptr jpegInfoPtr);
+static	boolean				sJPEGDestinationEmptyBuffer(j_compress_ptr jpegInfoPtr);
+static	void				sJPEGDestinationTerminate(j_compress_ptr jpegInfoPtr);
 static	void				sJPEGSourceInit(j_decompress_ptr jpegInfoPtr);
 static	void				sJPEGSourceTerminate(j_decompress_ptr jpegInfoPtr);
 static	boolean				sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr);
@@ -56,7 +51,7 @@ static	void				sDecodeNV12Data(const CData& data, const S2DSizeS32& size, CBitma
 									const S2DRectS32& rect);
 
 static	TVResult<CBitmap>	sDecodePNGData(const CData& data);
-static	void				sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t length);
+static	TVResult<CData>		sEncodePNGData(const CBitmap& bitmap);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -287,6 +282,35 @@ OV<CString> CImage::getMIMEType(Type type)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> CImage::getData(const CBitmap& bitmap, Type type)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check image type
+	switch (type) {
+		case kTypeJPEG:
+			// JPEG
+			return sEncodeJPEGData(bitmap);
+
+		case kTypePNG:
+			// PNG
+			return sEncodePNGData(bitmap);
+
+		case kTypeNV12: {
+			// NV12
+			AssertFailUnimplemented();
+
+			return TVResult<CData>(CData::mEmpty);
+		}
+
+#if defined(TARGET_OS_WINDOWS)
+		default:
+			// Just to make compiler happy.  Will never get here.
+			return TVResult<CData>(CData::mEmpty);
+#endif
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
 
@@ -294,26 +318,12 @@ OV<CString> CImage::getMIMEType(Type type)
 TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Step 1: allocate and initialize JPEG decompression object
-	jpeg_decompress_struct	jpegInfo;
-	SJPEGErrorInfo			jerr;
-	jpegInfo.err = jpeg_std_error(&jerr);
-	jerr.error_exit = sJPEGErrorExit;
+	// Setup
+	SJPEGErrorInfo			jpegErrorInfo;
+	jpegErrorInfo.error_exit = sJPEGErrorExit;
 
-	// Establish setjmp return context
-	if (setjmp(jerr.mSetjmpBuffer)) {
-		// If we get here, the JPEG code has signaled an error.
-		SError	error(sErrorDomain, -1, CString(jerr.mErrorMessage));
-		jpeg_destroy_decompress(&jpegInfo);
-
-		return TVResult<CBitmap>(error);
-	}
-
-	// Initialize the decompression object
-	jpeg_create_decompress(&jpegInfo);
-
-	// Step 2: Specify data source
-	SJPEGSourceInfo	jpegSourceInfo;
+	// Specify data source
+	jpeg_source_mgr	jpegSourceInfo;
 	jpegSourceInfo.next_input_byte = nil;
 	jpegSourceInfo.bytes_in_buffer = 0;
 	jpegSourceInfo.init_source = sJPEGSourceInit;
@@ -321,38 +331,142 @@ TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 	jpegSourceInfo.skip_input_data = sJPEGSkipInputData;
 	jpegSourceInfo.resync_to_restart = jpeg_resync_to_restart;
 	jpegSourceInfo.term_source = sJPEGSourceTerminate;
-	jpegSourceInfo.mUserInfo = (void*) &data;
 
-	jpegInfo.src = &jpegSourceInfo;
+	jpeg_decompress_struct	jpegDecompressInfo;
+	jpeg_create_decompress(&jpegDecompressInfo);
+	jpegDecompressInfo.err = jpeg_std_error(&jpegErrorInfo);
+	jpegDecompressInfo.client_data = (void*) &data;
+	jpegDecompressInfo.src = &jpegSourceInfo;
 
-	// Step 3: read parameters
-	jpeg_read_header(&jpegInfo, TRUE);
+	// Establish setjmp return context
+	if (setjmp(jpegErrorInfo.mSetjmpBuffer)) {
+		// If we get here, the JPEG code has signaled an error.
+		SError	error(sErrorDomain, -1, CString(jpegErrorInfo.mErrorMessage));
+		jpeg_destroy_decompress(&jpegDecompressInfo);
 
-	// Step 4: set decompression parameters
-
-	// Step 5: Start the decompressor
-	jpeg_start_decompress(&jpegInfo);
-
-	// Setup bitmap
-	CBitmap	bitmap(S2DSizeS32(jpegInfo.output_width, jpegInfo.output_height), CBitmap::kFormatRGB888,
-					OV<UInt16>((UInt16) jpegInfo.output_width * (UInt16) jpegInfo.output_components));
-
-	// Step 6: Decompress the image
-	JSAMPLE*	bytePtr = (JSAMPLE*) bitmap.getPixelData().getMutableBytePtr();
-	UInt16		bytesPerRow = bitmap.getBytesPerRow();
-	while (jpegInfo.output_scanline < jpegInfo.output_height) {
-//		JSAMPLE*	samplePtr = internals.mBytePtr + jpegInfo.output_scanline * internals.mRowBytes;
-		JSAMPLE*	samplePtr = bytePtr + jpegInfo.output_scanline * bytesPerRow;
-		jpeg_read_scanlines(&jpegInfo, &samplePtr, 1);
+		return TVResult<CBitmap>(error);
 	}
 
-	// Step 7: Finish decompression
-	jpeg_finish_decompress(&jpegInfo);
+	// Read parameters
+	jpeg_read_header(&jpegDecompressInfo, TRUE);
 
-	// Step 8: Cleanup
-	jpeg_destroy_decompress(&jpegInfo);
+	// Start the decompressor
+	jpeg_start_decompress(&jpegDecompressInfo);
+
+	// Setup bitmap
+	CBitmap	bitmap(S2DSizeS32(jpegDecompressInfo.output_width, jpegDecompressInfo.output_height),
+					CBitmap::kFormatRGB888);
+
+	// Decompress the image
+	JSAMPLE*	bytePtr = (JSAMPLE*) bitmap.getPixelData().getMutableBytePtr();
+	UInt16		bytesPerRow = bitmap.getBytesPerRow();
+	while (jpegDecompressInfo.output_scanline < jpegDecompressInfo.output_height) {
+		// Do the work
+		JSAMPLE*	samplePtr = bytePtr + jpegDecompressInfo.output_scanline * bytesPerRow;
+		jpeg_read_scanlines(&jpegDecompressInfo, &samplePtr, 1);
+	}
+
+	// Finish decompression
+	jpeg_finish_decompress(&jpegDecompressInfo);
+
+	// Cleanup
+	jpeg_destroy_decompress(&jpegDecompressInfo);
 
 	return TVResult<CBitmap>(bitmap);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> sEncodeJPEGData(const CBitmap& bitmap)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Specify data destination
+	CData	data(bitmap.getPixelData().getByteCount());
+
+	jpeg_destination_mgr	jpegDestinationManager;
+	jpegDestinationManager.next_output_byte = (JOCTET*) data.getMutableBytePtr();
+	jpegDestinationManager.free_in_buffer = data.getByteCount();
+	jpegDestinationManager.init_destination = sJPEGDestinationInit;
+	jpegDestinationManager.empty_output_buffer = sJPEGDestinationEmptyBuffer;
+	jpegDestinationManager.term_destination = sJPEGDestinationTerminate;
+
+	// Setup JPEG compression object
+	jpeg_error_mgr jerr;
+
+	jpeg_compress_struct	jpegCompressInfo;
+	jpeg_create_compress(&jpegCompressInfo);
+	jpegCompressInfo.err = jpeg_std_error(&jerr);
+	jpegCompressInfo.client_data = nil;
+	jpegCompressInfo.dest = &jpegDestinationManager;
+
+	// Set parameters for compression
+	jpegCompressInfo.image_width = bitmap.getSize().mWidth;
+	jpegCompressInfo.image_height = bitmap.getSize().mHeight;
+	switch (bitmap.getFormat()) {
+		case CBitmap::kFormatRGB888:
+			// RGB 8888
+			jpegCompressInfo.input_components = 3;
+			jpegCompressInfo.in_color_space = JCS_RGB;
+			break;
+
+		case CBitmap::kFormatRGBA8888:
+			// RGBA 8888
+			jpegCompressInfo.input_components = 4;
+			jpegCompressInfo.in_color_space = JCS_EXT_RGBA;
+			break;
+
+		case CBitmap::kFormatARGB8888:
+			// ARGB 8888
+			jpegCompressInfo.input_components = 4;
+			jpegCompressInfo.in_color_space = JCS_EXT_ARGB;
+			break;
+
+		default:
+			// Can't encode
+			return TVResult<CData>(sErrorUnableToEncode);
+	}
+	jpeg_set_defaults(&jpegCompressInfo);
+//	jpeg_set_quality(&jpegCompressInfo, 75, TRUE /* limit to baseline-JPEG values */);
+
+	// Start compressor
+	jpeg_start_compress(&jpegCompressInfo, TRUE);
+
+	// Encode all scanlines
+	int			row_stride = bitmap.getBytesPerRow();
+	JSAMPLE*	image_buffer = (JSAMPLE*) bitmap.getPixelData().getBytePtr();
+	while (jpegCompressInfo.next_scanline < jpegCompressInfo.image_height) {
+		// Do the compression
+		JSAMPROW 	row_pointer[1];
+		row_pointer[0] = &image_buffer[jpegCompressInfo.next_scanline * row_stride];
+		jpeg_write_scanlines(&jpegCompressInfo, row_pointer, 1);
+	}
+
+	// Finish compression
+	jpeg_finish_compress(&jpegCompressInfo);
+	data.setByteCount(data.getByteCount() - jpegDestinationManager.free_in_buffer);
+
+	// Cleanup
+	jpeg_destroy_compress(&jpegCompressInfo);
+
+	return TVResult<CData>(data);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void sJPEGDestinationInit(j_compress_ptr jpegInfoPtr)
+//----------------------------------------------------------------------------------------------------------------------
+{
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+boolean sJPEGDestinationEmptyBuffer(j_compress_ptr jpegInfoPtr)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return true;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void sJPEGDestinationTerminate(j_compress_ptr jpegInfoPtr)
+//----------------------------------------------------------------------------------------------------------------------
+{
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -382,11 +496,10 @@ boolean sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr)
 		return FALSE;
 	} else {
 		// 1st time, point to data
-		SJPEGSourceInfo*	sourceInfo = (SJPEGSourceInfo*) jpegInfoPtr->src;
-		CData*				imageData = (CData*) sourceInfo->mUserInfo;
+		CData*	data = (CData*) jpegInfoPtr->client_data;
 
-		jpegInfoPtr->src->next_input_byte = (const JOCTET*) imageData->getBytePtr();
-		jpegInfoPtr->src->bytes_in_buffer = imageData->getByteCount();
+		jpegInfoPtr->src->next_input_byte = (const JOCTET*) data->getBytePtr();
+		jpegInfoPtr->src->bytes_in_buffer = data->getByteCount();
 
 		return TRUE;
 	}
@@ -525,158 +638,75 @@ TVResult<CBitmap> sDecodePNGData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	png_struct*	pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nil, nil, nil);
-	if (pngPtr == nil)
+	png_image	pngImage;
+	memset(&pngImage, 0, sizeof(png_image));
+	pngImage.version = PNG_IMAGE_VERSION;
+	if (png_image_begin_read_from_memory(&pngImage, data.getBytePtr(), data.getByteCount()) == 0)
+		// Nope!
 		return TVResult<CBitmap>(sErrorUnableToDecode);
-
-	png_info*	pngInfoPtr = png_create_info_struct(pngPtr);
-	if (pngInfoPtr == nil) {
-		png_destroy_read_struct(&pngPtr, nil, nil);
-
-		return TVResult<CBitmap>(sErrorUnableToDecode);
-	}
-
-	// Set error handling
-	if (setjmp(png_jmpbuf(pngPtr))) {
-		// Error handling
-		png_destroy_read_struct(&pngPtr, &pngInfoPtr, nil);
-
-		return TVResult<CBitmap>(sErrorUnableToDecode);
-	}
-
-	// Initialize
-	SPNGDecodeInfo	pngDecodeInfo;
-	pngDecodeInfo.mCurrentDataPtr = (const UInt8*) data.getBytePtr();
-
-	png_set_read_fn(pngPtr, &pngDecodeInfo, sPNGReadWriteProc);
-
-	/* if you are using replacement message functions, here you would call */
-//	png_set_message_fn(pngPtr, (void *)msg_ptr, user_error_fn, user_warning_fn);
-	/* where msg_ptr is a structure you want available to the callbacks */
-
-	// Read info
-	png_read_info(pngPtr, pngInfoPtr);
-
-	int			bitDepth, colorType;
-	png_uint_32	width, height;
-	png_get_IHDR(pngPtr, pngInfoPtr, &width, &height, &bitDepth, &colorType, nil, nil, nil);
-
-	// Activate options
-	// Strip 16 bit files down to 8 bits
-//	png_set_strip_16(pngPtr);
-
-//	// Strip alpha bytes from the input data without combining with the background (not recommended)
-//	png_set_strip_alpha(pngPtr);
-
-//	png_set_invert_alpha(pngPtr);
-
-//	png_set_invert_mono(pngPtr);
-
-	if ((colorType == PNG_COLOR_TYPE_GRAY) || (colorType == PNG_COLOR_TYPE_GRAY_ALPHA))
-		png_set_gray_to_rgb(pngPtr);
-
-	if (colorType == PNG_COLOR_TYPE_PALETTE)
-		png_set_palette_to_rgb(pngPtr);
-
-//	if (png_get_valid(pngPtr, pngInfoPtr, PNG_INFO_tRNS))
-//		png_set_tRNS_to_alpha(pngPtr);
-
-#if 0
-	/* Set the background color to draw transparent and alpha images over */
-	png_color_16 my_background;
-	my_background.index = 0;
-	my_background.red = 0;
-	my_background.green = 0;
-	my_background.blue = 0;
-	my_background.gray = 0;
-
-//	if (pngInfoPtr->valid & PNG_INFO_bKGD)
-//		png_set_background(pngPtr, &(pngInfoPtr->background), PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
-//	else
-		png_set_background(pngPtr, &my_background, PNG_BACKGROUND_GAMMA_SCREEN, 0, 1.0);
-//		png_set_background(pngPtr, &my_background, PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
-#endif
-
-//	/* tell libpng to handle the gamma conversion for you */
-//	if (pngInfoPtr->valid & PNG_INFO_gAMA)
-//		png_set_gamma(pngPtr, screen_gamma, pngInfoPtr->gamma);
-//	else
-//		png_set_gamma(pngPtr, screen_gamma, 0.45);
-
-//	/* shift the pixels down to their true bit depth */
-//	if ((pngInfoPtr->valid & PNG_INFO_sBIT) && (pngInfoPtr->bit_depth > pngInfoPtr->sig_bit))
-//		png_set_shift(pngPtr, &(pngInfoPtr->sig_bit));
-
-	/* pack pixels into bytes */
-	if (bitDepth < 8)
-		png_set_packing(pngPtr);
-
-//	/* flip the rgb pixels to bgr */
-//	if ((pngInfoPtr->color_type == PNG_COLOR_TYPE_RGB) ||
-//			(pngInfoPtr->color_type == PNG_COLOR_TYPE_RGB_ALPHA))
-//		png_set_bgr(pngPtr);
-
-//	/* swap bytes of 16 bit files to least significant bit first */
-//	if (pngInfoPtr->bit_depth == 16)
-//		png_set_swap(pngPtr);
-
-//	/* add a filler byte to rgb files */
-//	if ((pngInfoPtr->bit_depth == 8) && (pngInfoPtr->color_type == PNG_COLOR_TYPE_RGB))
-//		png_set_filler(pngPtr, 0xff, PNG_FILLER_AFTER);
-
-	// Update info
-	png_read_update_info(pngPtr, pngInfoPtr);
 
 	// Setup bitmap
-//	internals.setup(S2DSizeS32(width, height),
-//			(colorType == PNG_COLOR_TYPE_RGB) ? kCBitmapFormatRGB888 : kCBitmapFormatRGBA8888,
-//			png_get_rowbytes(pngPtr, pngInfoPtr));
-	CBitmap	bitmap(S2DSizeS32(width, height),
-					(colorType == PNG_COLOR_TYPE_RGB) ? CBitmap::kFormatRGB888 : CBitmap::kFormatRGBA8888,
-					(UInt16) png_get_rowbytes(pngPtr, pngInfoPtr));
+	CBitmap::Format	bitmapFormat;
+	if (pngImage.format & PNG_FORMAT_FLAG_ALPHA) {
+		// Have alpha
+		bitmapFormat = CBitmap::kFormatRGBA8888;
+		pngImage.format = PNG_FORMAT_RGBA;
+	} else {
+		// No alpha
+		bitmapFormat = CBitmap::kFormatRGB888;
+		pngImage.format = PNG_FORMAT_RGB;
+	}
 
-	// Read the image
-	png_bytepp	rowPointers = (png_bytepp) ::malloc(height * sizeof(png_bytep));
-	png_bytep	bytePtr = (png_bytep) bitmap.getPixelData().getMutableBytePtr();
-	for (UInt32 i = 0; i < height; i++)
-//		rowPointers[i] = internals.mBytePtr + i * internals.mRowBytes;
-		rowPointers[i] = bytePtr + i * bitmap.getBytesPerRow();
-	png_read_image(pngPtr, rowPointers);
-
-//#if TARGET_UI_ANDROID
-//	// Apply pre-multiplied alpha to match CoreGraphics on iOS
-//	for (UInt32 y = 0; y < height; y++) {
-//		UInt32*	bytePtr = (UInt32*) rowPointers[y];
-//		for (UInt32 x = 0; x < bitmap.getBytesPerRow(); x += 4, bytePtr++) {
-//			UInt32	alpha = (*bytePtr >> 24) & 0xFF;
-//			UInt32	red = (*bytePtr >> 16) & 0xFF;
-//			UInt32	green = (*bytePtr >> 8) & 0xFF;
-//			UInt32	blue = (*bytePtr >> 0) & 0xFF;
-//
-//			red = (red * alpha) >> 8;
-//			green = (green * alpha) >> 8;
-//			blue = (blue * alpha) >> 8;
-//
-//			*bytePtr = (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
-//		}
-//	}
-//#endif
-
-	// Cleanup
-	png_destroy_read_struct(&pngPtr, &pngInfoPtr, nil);
-	free(rowPointers);
+	CBitmap	bitmap(S2DSizeS32(pngImage.width, pngImage.height), bitmapFormat);
+	if (png_image_finish_read(&pngImage, nil, bitmap.getPixelData().getMutableBytePtr(), bitmap.getBytesPerRow(), nil)
+			== 0)
+		// Something went wrong
+		return TVResult<CBitmap>(sErrorUnableToDecode);
 
 	return TVResult<CBitmap>(bitmap);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void sPNGReadWriteProc(png_structp pngPtr, png_bytep dataPtr, png_size_t length)
+TVResult<CData> sEncodePNGData(const CBitmap& bitmap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SPNGDecodeInfo*	pngDecodeInfo = (SPNGDecodeInfo*) png_get_io_ptr(pngPtr);
+	png_image	pngImage;
+	memset(&pngImage, 0, sizeof(png_image));
+	pngImage.version = PNG_IMAGE_VERSION;
+	pngImage.width = bitmap.getSize().mWidth;
+	pngImage.height = bitmap.getSize().mHeight;
 
-	// Just copy bytes
-	memcpy(dataPtr, pngDecodeInfo->mCurrentDataPtr, length);
-	pngDecodeInfo->mCurrentDataPtr += length;
+	switch (bitmap.getFormat()) {
+		case CBitmap::kFormatRGB888:
+			// RGB888
+			pngImage.format = PNG_FORMAT_RGB;
+			break;
+
+		case CBitmap::kFormatRGBA8888:
+			// RGBA8888
+			pngImage.format = PNG_FORMAT_RGBA;
+			break;
+
+		case CBitmap::kFormatARGB8888:
+			// ARGB8888
+			pngImage.format = PNG_FORMAT_ARGB;
+			break;
+
+		default:
+			// The rest - unsupported
+			return TVResult<CData>(sErrorUnableToEncode);
+	}
+
+	CData	data(bitmap.getPixelData().getByteCount());
+
+	// Write
+	png_alloc_size_t	byteCount = data.getByteCount();
+	png_image_write_to_memory(&pngImage, data.getMutableBytePtr(), &byteCount, 0, bitmap.getPixelData().getBytePtr(),
+			bitmap.getBytesPerRow(), nil);
+
+	// Finish up
+	data.setByteCount(byteCount);
+
+	return TVResult<CData>(data);
 }

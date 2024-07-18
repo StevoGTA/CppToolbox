@@ -114,10 +114,15 @@ class CBitmap {
 				virtual	void	write(const PixelDataRGB888& pixelData) = 0;
 		};
 
+	// Classes
+	private:
+		class	Internals;
+
 	// Methods
 	public:
 										// Lifecycle methods
-										CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1), Format format = kFormatRGBA8888,
+										CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1),
+												Format format = kFormatRGBA8888,
 												const OV<UInt16>& bytesPerRow = OV<UInt16>());
 										CBitmap(const S2DSizeS32& size, Format format, const CData& pixelData,
 												UInt16 bytesPerRow);
@@ -145,6 +150,5 @@ class CBitmap {
 
 	// Properties
 	private:
-		class	Internals;
 		Internals*	mInternals;
 };

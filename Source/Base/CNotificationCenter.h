@@ -88,6 +88,36 @@ class CNotificationCenter {
 				T&	mT;
 		};
 
+	// VSender - Pass by value to sender
+	public:
+		template <typename T> class VSender : public Sender {
+			// Methods
+			public:
+								// Lifecycle methods
+								VSender(const T& t) : Sender(), mT(t) {}
+								VSender(const VSender& other) : Sender(other), mT(other.mT) {}
+
+								// TReferenceCountable methods
+						void	cleanup()
+									{}
+
+								// Instance methods
+				const	T&		operator*() const
+									{ return mT; }
+
+			protected:
+								// Sender methods
+						Sender*	copy() const
+									{ return new VSender(*this); }
+
+						bool	operator==(const Sender& other) const
+									{ return *mT == *((const VSender<T>&) other).mT; }
+
+			// Properties
+			private:
+				T	mT;
+		};
+
 	// Observer
 	public:
 		struct Observer {

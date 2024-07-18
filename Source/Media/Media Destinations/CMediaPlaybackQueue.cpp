@@ -12,39 +12,35 @@
 
 class CMediaPlaybackQueueItemPrepareThread : public CThread {
 	public:
-		struct StartedMessage : public CSRSWMessageQueue::ProcMessage {
-					// Lifecycle Methods
-					StartedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item) :
-						CSRSWMessageQueue::ProcMessage(sizeof(StartedMessage), proc, userData),
-								mItem(new I<CMediaPlaybackQueue::Item>(item))
-						{}
+		class StartedMessage : public CSRSWMessageQueue::ProcMessage {
+			public:
+						StartedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item) :
+							CSRSWMessageQueue::ProcMessage(sizeof(StartedMessage), proc, userData),
+									mItem(new I<CMediaPlaybackQueue::Item>(item))
+							{}
 
-					// Instance methods
-			void	cleanup()
-						{ Delete(mItem); }
+				void	cleanup()
+							{ Delete(mItem); }
 
-			// Properties
-			I<CMediaPlaybackQueue::Item>*	mItem;
+				I<CMediaPlaybackQueue::Item>*	mItem;
 		};
-		struct CompletedMessage : public CSRSWMessageQueue::ProcMessage {
-					// Lifecycle Methods
-					CompletedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item,
-							const TVResult<I<CMediaPlayer> >& mediaPlayer) :
-						CSRSWMessageQueue::ProcMessage(sizeof(CompletedMessage), proc, userData),
-								mItem(new I<CMediaPlaybackQueue::Item>(item)),
-								mMediaPlayer(new TVResult<I<CMediaPlayer> >(mediaPlayer))
-						{}
+		class CompletedMessage : public CSRSWMessageQueue::ProcMessage {
+			public:
+						CompletedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item,
+								const TVResult<I<CMediaPlayer> >& mediaPlayer) :
+							CSRSWMessageQueue::ProcMessage(sizeof(CompletedMessage), proc, userData),
+									mItem(new I<CMediaPlaybackQueue::Item>(item)),
+									mMediaPlayer(new TVResult<I<CMediaPlayer> >(mediaPlayer))
+							{}
 
-					// Instance methods
-			void	cleanup()
-						{
-							Delete(mItem);
-							Delete(mMediaPlayer);
-						}
+				void	cleanup()
+							{
+								Delete(mItem);
+								Delete(mMediaPlayer);
+							}
 
-			// Properties
-			I<CMediaPlaybackQueue::Item>*	mItem;
-			TVResult<I<CMediaPlayer> >*		mMediaPlayer;
+				I<CMediaPlaybackQueue::Item>*	mItem;
+				TVResult<I<CMediaPlayer> >*		mMediaPlayer;
 		};
 
 						CMediaPlaybackQueueItemPrepareThread(CSRSWMessageQueues& messageQueues,
@@ -169,9 +165,6 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 									// Inform
 									mediaPlaybackQueueItemPrepareThread->mInfo.itemPrepareStarted(
 											*startedMessage.mItem);
-
-								// Cleanup
-								startedMessage.cleanup();
 							}
 		static	void	handleCompleted(CSRSWMessageQueue::ProcMessage& message,
 								CMediaPlaybackQueueItemPrepareThread* mediaPlaybackQueueItemPrepareThread)
@@ -184,9 +177,6 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 									// Inform
 									mediaPlaybackQueueItemPrepareThread->mInfo.itemPrepareCompleted(
 											*completedMessage.mItem, *completedMessage.mMediaPlayer);
-
-								// Cleanup
-								completedMessage.cleanup();
 							}
 
 	private:

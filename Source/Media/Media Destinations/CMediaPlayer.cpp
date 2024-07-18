@@ -37,54 +37,50 @@ class CMediaPlayerVideoFrameStore : public CVideoFrameStore {
 
 class CMediaPlayer::Internals {
 	public:
-		struct AudioPlayerPositionUpdatedMessage : public CSRSWMessageQueue::ProcMessage {
-			// Lifecycle Methods
-			AudioPlayerPositionUpdatedMessage(Proc proc, void* userData, const CAudioPlayer& audioPlayer,
-					UniversalTimeInterval position) :
-				CSRSWMessageQueue::ProcMessage(sizeof(AudioPlayerPositionUpdatedMessage), proc, userData),
-						mAudioPlayer(audioPlayer), mPosition(position)
-				{}
+		class AudioPlayerPositionUpdatedMessage : public CSRSWMessageQueue::ProcMessage {
+			public:
+				AudioPlayerPositionUpdatedMessage(Proc proc, void* userData, const CAudioPlayer& audioPlayer,
+						UniversalTimeInterval position) :
+					CSRSWMessageQueue::ProcMessage(sizeof(AudioPlayerPositionUpdatedMessage), proc, userData),
+							mAudioPlayer(audioPlayer), mPosition(position)
+					{}
 
-			// Properties
-			const	CAudioPlayer&			mAudioPlayer;
-					UniversalTimeInterval	mPosition;
+				const	CAudioPlayer&			mAudioPlayer;
+						UniversalTimeInterval	mPosition;
 		};
 
-		struct AudioPlayerEndOfDataMessage : public CSRSWMessageQueue::ProcMessage {
-			// Lifecycle Methods
-			AudioPlayerEndOfDataMessage(Proc proc, void* userData, const CAudioPlayer& audioPlayer) :
-				CSRSWMessageQueue::ProcMessage(sizeof(AudioPlayerEndOfDataMessage), proc, userData),
-						mAudioPlayer(audioPlayer)
-				{}
+		class AudioPlayerEndOfDataMessage : public CSRSWMessageQueue::ProcMessage {
+			public:
+				AudioPlayerEndOfDataMessage(Proc proc, void* userData, const CAudioPlayer& audioPlayer) :
+					CSRSWMessageQueue::ProcMessage(sizeof(AudioPlayerEndOfDataMessage), proc, userData),
+							mAudioPlayer(audioPlayer)
+					{}
 
-			// Properties
-			const	CAudioPlayer&	mAudioPlayer;
+				const	CAudioPlayer&	mAudioPlayer;
 		};
 
-		struct AudioPlayerErrorMessage : public CSRSWMessageQueue::ProcMessage {
-			// Lifecycle Methods
-			AudioPlayerErrorMessage(Proc proc, void* userData, const CAudioPlayer& audioPlayer,
-					const SError& error) :
-				CSRSWMessageQueue::ProcMessage(sizeof(AudioPlayerErrorMessage), proc, userData),
-						mAudioPlayer(audioPlayer), mError(error)
-				{}
+		class AudioPlayerErrorMessage : public CSRSWMessageQueue::ProcMessage {
+			public:
+				AudioPlayerErrorMessage(Proc proc, void* userData, const CAudioPlayer& audioPlayer,
+						const SError& error) :
+					CSRSWMessageQueue::ProcMessage(sizeof(AudioPlayerErrorMessage), proc, userData),
+							mAudioPlayer(audioPlayer), mError(error)
+					{}
 
-			// Properties
-			const	CAudioPlayer&	mAudioPlayer;
-					SError			mError;
+				const	CAudioPlayer&	mAudioPlayer;
+						SError			mError;
 		};
 
-		struct VideoFrameStoreErrorMessage : public CSRSWMessageQueue::ProcMessage {
-			// Lifecycle Methods
-			VideoFrameStoreErrorMessage(Proc proc, void* userData, const CVideoFrameStore& videoFrameStore,
-					const SError& error) :
-				CSRSWMessageQueue::ProcMessage(sizeof(VideoFrameStoreErrorMessage), proc, userData),
-						mVideoFrameStore(videoFrameStore), mError(error)
-				{}
+		class VideoFrameStoreErrorMessage : public CSRSWMessageQueue::ProcMessage {
+			public:
+				VideoFrameStoreErrorMessage(Proc proc, void* userData, const CVideoFrameStore& videoFrameStore,
+						const SError& error) :
+					CSRSWMessageQueue::ProcMessage(sizeof(VideoFrameStoreErrorMessage), proc, userData),
+							mVideoFrameStore(videoFrameStore), mError(error)
+					{}
 
-			// Properties
-			const	CVideoFrameStore&	mVideoFrameStore;
-					SError				mError;
+				const	CVideoFrameStore&	mVideoFrameStore;
+						SError				mError;
 		};
 
 						Internals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,

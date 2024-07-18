@@ -529,38 +529,41 @@ class CMPEG4MediaFile {
 
 	// Methods
 	public:
-																	// Lifecycle methods
-																	CMPEG4MediaFile() {}
-		virtual														~CMPEG4MediaFile() {}
+															// Lifecycle methods
+															CMPEG4MediaFile() {}
+		virtual												~CMPEG4MediaFile() {}
 
-																	// Instance methods
-		virtual			I<SMediaSource::ImportResult>				import(
-																			const SMediaSource::ImportSetup&
-																					importSetup);
-						TArray<SMedia::PacketAndLocation>			composePacketAndLocations(
-																			const Internals& internals) const;
+															// Instance methods
+		virtual	I<SMediaSource::ImportResult>				import(const SMediaSource::ImportSetup& importSetup);
+				TArray<SMedia::PacketAndLocation>			composePacketAndLocations(const Internals& internals) const;
 
 	protected:
-																	// Instance methods
-		virtual			TVResult<SMediaSource::Tracks::AudioTrack>	composeAudioTrack(
-																			const I<CRandomAccessDataSource>&
-																					randomAccessDataSource,
-																			UInt32 options, OSType type,
-																			UniversalTimeInterval duration,
-																			const Internals& internals);
-		virtual			TVResult<SMediaSource::Tracks::VideoTrack>	composeVideoTrack(
-																			const I<CRandomAccessDataSource>&
-																					randomAccessDataSource,
-																			UInt32 options, OSType type,
-																			UInt32 timeScale,
-																			UniversalTimeInterval duration,
-																			const Internals& internals);
-		virtual			void										process(const CAtomReader& atomReader,
-																			const CAtomReader::Atom& atom) {}
+															// Instance methods
+		virtual	TVResult<SMediaSource::Tracks::AudioTrack>	composeAudioTrack(
+																	const I<CRandomAccessDataSource>&
+																			randomAccessDataSource,
+																	UInt32 options, OSType type,
+																	UniversalTimeInterval duration,
+																	const Internals& internals);
+		virtual	TVResult<SMediaSource::Tracks::VideoTrack>	composeVideoTrack(
+																	const I<CRandomAccessDataSource>&
+																			randomAccessDataSource,
+																	UInt32 options, OSType type,
+																	UInt32 timeScale,
+																	UniversalTimeInterval duration,
+																	const Internals& internals);
+		virtual	OV<SError>									importTrack(
+																	const I<CRandomAccessDataSource>&
+																			randomAccessDataSource,
+																	OSType type,
+																	const SstsdDescriptionHeader& stsdDescriptionHeader,
+																	const Internals& internals)
+																{ return OV<SError>(); }
+		virtual	void										processFileMetadata(const CData& metaAtomPayloadData) {}
 
-																	// Subclass methods
-						TVResult<CData>								getDecompressionData(const Internals& internals,
-																			SInt64 offset) const;
+															// Subclass methods
+				TVResult<CData>								getDecompressionData(const Internals& internals,
+																	SInt64 offset) const;
 
 	// Properties
 	public:

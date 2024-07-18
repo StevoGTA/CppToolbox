@@ -216,49 +216,57 @@ class CSRSWBIPSegmentedQueue {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSRSWMessageQueue
 
-// This class is primarily in place to facilite sending messages from the realtime audio player thread up the stack
-//	to classes that need to make decisions or show UI.  The only current implementation is in Scene App where it
-//	runs its own loop tied to the display refresh.  During this loop, it is free to call flush() to keep things running.
-//	In a UI update scenario, we do not have access to the UI thread event loop so will need to introduce another
-//	mechanism to flush the message queue.  The current thinking is to introduce a thread that will be triggered on
-//	submit and will then, on its own thread, allocate whatever is needed for that platform to schedule something to be
-//	run on the next iteration of the UI loop.
-//		On macOS, this can be some kind of dispatch to the main queue.
-//		On Windows, this can be connected to the CoreDispatcher of each CoreWindow (where each window would have its own
-//			queue).
-
 class CSRSWMessageQueue : public CSRSWBIPQueue {
 	// Structs
 	public:
-		struct Message {
+		class Message {
 			// Methods
-			Message(OSType type, UInt32 byteCount) : mType(type), mByteCount(byteCount) {}
+			public:
+								// Lifecycle methods
+								Message(OSType type, UInt32 byteCount) : mType(type), mByteCount(byteCount) {}
+				virtual			~Message()
+									{}
+
+								// Instance methods
+						OSType	getType() const
+									{ return mType; }
+						UInt32	getByteCount() const
+									{ return mByteCount; }
 
 			// Properties
-			OSType	mType;
-			UInt32	mByteCount;
+			private:
+				OSType	mType;
+				UInt32	mByteCount;
 		};
 
-		struct ProcMessage : public Message {
+		class ProcMessage : public Message {
 			// Procs
-			typedef	void	(*Proc)(ProcMessage& message, void* userData);
+			public:
+				typedef	void	(*Proc)(ProcMessage& message, void* userData);
 
-					// Methods
-					ProcMessage(Proc proc, void* userData) :
-						Message(mType, sizeof(ProcMessage)), mProc(proc), mUserData(userData)
-						{}
-					ProcMessage(UInt32 byteCount, Proc proc, void* userData) :
-						Message(mType, byteCount), mProc(proc), mUserData(userData)
-						{}
+			// Methods
+			public:
+								// Lifecycle methods
+								ProcMessage(Proc proc, void* userData) :
+									Message(mType, sizeof(ProcMessage)), mProc(proc), mUserData(userData)
+									{}
+								ProcMessage(UInt32 byteCount, Proc proc, void* userData) :
+									Message(mType, byteCount), mProc(proc), mUserData(userData)
+									{}
 
-			void	perform()
-						{ mProc(*this, mUserData); }
+								// Instance methods
+						void	perform()
+									{ mProc(*this, mUserData); }
+				virtual	void	cleanup()
+									{}
 
 			// Properties
-			static	const	OSType	mType;
+			public:
+				static	const	OSType	mType;
 
-							Proc	mProc;
-							void*	mUserData;
+			private:
+								Proc	mProc;
+								void*	mUserData;
 		};
 
 	// Methods

@@ -49,7 +49,6 @@ class CQuickTimeMediaFile {
 
 	protected:
 															// Instance methods
-		virtual	void										processFileMetadata(const CData& metaAtomPayloadData) {}
 		virtual	TVResult<SMediaSource::Tracks::AudioTrack>	composeAudioTrack(
 																	const I<CRandomAccessDataSource>&
 																			randomAccessDataSource,
@@ -71,6 +70,7 @@ class CQuickTimeMediaFile {
 																	const SstsdDescription& stsdDescription,
 																	const Internals& internals)
 																{ return OV<SError>(); }
+		virtual	void										processFileMetadata(const CData& metaAtomPayloadData) {}
 
 															// Subclass methods
 				Float32										getSampleRate(const Internals& internals) const;
