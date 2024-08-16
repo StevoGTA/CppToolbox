@@ -639,6 +639,16 @@ bool CDictionary::getBool(const CString& key, bool defaultValue) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<bool> CDictionary::getOVBool(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ? OV<bool>(value->getBool()) : OV<bool>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const TArray<CDictionary>& CDictionary::getArrayOfDictionaries(const CString& key,
 		const TArray<CDictionary>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------

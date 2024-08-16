@@ -56,9 +56,12 @@ template <typename T> class TLockingDictionary : public CDictionary {
 										// Get
 										mLock.lockForReading();
 										OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+										OR<T>				value =
+																	opaque.hasValue() ?
+																			OR<T>(*((T*) *opaque)) : OR<T>();
 										mLock.unlockForReading();
 
-										return opaque.hasValue() ? OR<T>(*((T*) *opaque)) : OR<T>();
+										return value;
 									}
 
 		const	OR<T>			operator[](const CString& key) const

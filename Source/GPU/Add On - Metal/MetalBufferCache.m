@@ -28,7 +28,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 - (instancetype) initWithDevice:(id<MTLDevice>) device
 {
-	// Init
+	// Do super
 	self = [super init];
 	if (self != nil) {
 		// Store

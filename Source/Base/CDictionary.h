@@ -114,6 +114,7 @@ class CDictionary : public CEquatable {
 				const	SValue&					getValue(const CString& key) const;
 						OV<SValue>				getOValue(const CString& key) const;
 						bool					getBool(const CString& key, bool defaultValue = false) const;
+						OV<bool>				getOVBool(const CString& key) const;
 				const	TArray<CDictionary>&	getArrayOfDictionaries(const CString& key,
 														const TArray<CDictionary>& defaultValue =
 																TNArray<CDictionary>()) const;
@@ -155,36 +156,58 @@ class CDictionary : public CEquatable {
 						void					getValue(const CString& key, bool& outValue,
 														bool defaultValue = false) const
 													{ outValue = getBool(key, defaultValue); }
+						void					getValue(const CString& key, OV<bool>& outValue) const
+													{ outValue = getOVBool(key); }
 						void					getValue(const CString& key, Float32& outValue,
 														Float32 defaultValue = 0.0) const
 													{ outValue = getFloat32(key, defaultValue); }
+						void					getValue(const CString& key, OV<Float32>& outValue) const
+													{ outValue = getOVFloat32(key); }
 						void					getValue(const CString& key, Float64& outValue,
 														Float64 defaultValue = 0.0) const
 													{ outValue = getFloat64(key, defaultValue); }
+						void					getValue(const CString& key, OV<Float64>& outValue) const
+													{ outValue = getOVFloat64(key); }
 						void					getValue(const CString& key, SInt8& outValue, SInt8 defaultValue = 0)
 														const
 													{ outValue = getSInt8(key, defaultValue); }
+						void					getValue(const CString& key, OV<SInt8>& outValue) const
+													{ outValue = getOVSInt8(key); }
 						void					getValue(const CString& key, SInt16& outValue, SInt16 defaultValue = 0)
 														const
 													{ outValue = getSInt16(key, defaultValue); }
+						void					getValue(const CString& key, OV<SInt16>& outValue) const
+													{ outValue = getOVSInt16(key); }
 						void					getValue(const CString& key, SInt32& outValue, SInt32 defaultValue = 0)
 														const
 													{ outValue = getSInt32(key, defaultValue); }
+						void					getValue(const CString& key, OV<SInt32>& outValue) const
+													{ outValue = getOVSInt32(key); }
 						void					getValue(const CString& key, SInt64& outValue, SInt64 defaultValue = 0)
 														const
 													{ outValue = getSInt64(key, defaultValue); }
+						void					getValue(const CString& key, OV<SInt64>& outValue) const
+													{ outValue = getOVSInt64(key); }
 						void					getValue(const CString& key, UInt8& outValue, UInt8 defaultValue = 0)
 														const
 													{ outValue = getUInt8(key, defaultValue); }
+						void					getValue(const CString& key, OV<UInt8>& outValue) const
+													{ outValue = getOVUInt8(key); }
 						void					getValue(const CString& key, UInt16& outValue, UInt16 defaultValue = 0)
 														const
 													{ outValue = getUInt16(key, defaultValue); }
+						void					getValue(const CString& key, OV<UInt16>& outValue) const
+													{ outValue = getOVUInt16(key); }
 						void					getValue(const CString& key, UInt32& outValue, UInt32 defaultValue = 0)
 														const
 													{ outValue = getUInt32(key, defaultValue); }
+						void					getValue(const CString& key, OV<UInt32>& outValue) const
+													{ outValue = getOVUInt32(key); }
 						void					getValue(const CString& key, UInt64& outValue, UInt64 defaultValue = 0)
 														const
 													{ outValue = getUInt64(key, defaultValue); }
+						void					getValue(const CString& key, OV<UInt64>& outValue) const
+													{ outValue = getOVUInt64(key); }
 
 						void					set(const CString& key, bool value);
 						void					set(const CString& key, const TArray<CDictionary>& value);
