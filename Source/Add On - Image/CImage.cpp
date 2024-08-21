@@ -11,6 +11,11 @@
 #include "jpeglib.h"
 #include "jerror.h"
 
+#if defined(TARGET_OS_WINDOWS)
+	#pragma comment(lib, "turbojpeg-static.lib")
+#endif
+
+
 // See http://www.libpng.org/pub/png/libpng.html
 // See https://sourceforge.net/projects/libpng/files/
 #include "png.h"
