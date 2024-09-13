@@ -393,7 +393,7 @@ template <typename T> class TMArray : public TArray<T> {
 							{ CArray::add(&item); return *this; }
 
 		TMArray<T>&		insertAtIndex(const T& item, CArray::ItemIndex itemIndex)
-							{ CArray::insertAtIndex(new T(item), itemIndex); return *this; }
+							{ CArray::insertAtIndex(&item, itemIndex); return *this; }
 
 		TMArray<T>&		move(const T& item, TMArray<T>& other)
 							{ CArray::move(&item, other); return *this; }
