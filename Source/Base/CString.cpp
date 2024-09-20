@@ -439,7 +439,7 @@ CString CString::capitalizingFirstLetter() const
 		return uppercased();
 	else
 		// Multiple characters
-		return getSubString(0, OV<Length>(1)).uppercased() + getSubString(1);
+		return getSubString(0, 1).uppercased() + getSubString(1);
 }
 
 // MARK: Class methods

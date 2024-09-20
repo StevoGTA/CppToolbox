@@ -312,6 +312,8 @@ class CString : public CHashable {
 												const;
 						
 						CString			getSubString(CharIndex startIndex, OV<Length> length = OV<Length>()) const;
+						CString			getSubString(CharIndex startIndex, Length length) const
+											{ return getSubString(startIndex, OV<Length>(length)); }
 						CString			replacingSubStrings(const CString& subStringToReplace,
 												const CString& replacementString = CString::mEmpty) const;
 						CString			replacingCharacters(CharIndex startIndex = 0, OV<Length> length = OV<Length>(),
