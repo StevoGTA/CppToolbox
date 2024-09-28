@@ -1,28 +1,26 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CWAVEMediaFileUseDefault.cpp			©2022 Stevo Brock	All rights reserved.
+//	CQuickTimeMediaFile+Default.cpp			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CWAVEMediaFile.h"
+#include "CQuickTimeMediaFile.h"
 
 #include "CMediaSourceRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CWAVEMediaFile
-
-// MARK: Class methods
+// MARK: Local procs
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CWAVEMediaFile> CWAVEMediaFile::create()
+static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CWAVEMediaFile>(new CWAVEMediaFile());
+	return CQuickTimeMediaFile().import(importSetup);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Register media source
 
-static	CString	sExtensions[] = { CString(OSSTR("wav")) };
-REGISTER_MEDIA_SOURCE(wave,
-		SMediaSource(SMediaSource::Identity(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE"))),
-				TSARRAY_FROM_C_ARRAY(CString, sExtensions), CWAVEMediaFile::import));
+static	CString	sExtensions[] = { CString(OSSTR("mov")) };
+REGISTER_MEDIA_SOURCE(quicktime,
+		SMediaSource(SMediaSource::Identity(CQuickTimeMediaFile::mID, CString(OSSTR("QuickTime"))),
+				TSARRAY_FROM_C_ARRAY(CString, sExtensions), sImport));

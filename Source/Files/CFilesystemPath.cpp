@@ -263,16 +263,17 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, MakeLegalFilen
 	CString::Length	length = string.getLength();
 
 	// Extract characters
-	TBuffer<UTF16Char>	buffer(length);
+	TBuffer<UTF32Char>	buffer(length);
 	string.get(*buffer, length);
 
 	// Replace "illegal" ones with '_'
-	UTF16Char*	p = *buffer;
+	UTF32Char*	p = *buffer;
 	for (CString::Length i = 0; i < length; i++, p++) {
 		if ((*p < 0x20) || (*p == ':') || (*p == 0x7F))
+			// Replace with _
 			*p = '_';
-
-		if ((makeLegalFilenameOptions & kMakeLegalFilenameOptionsDisallowSpaces) && (*p == ' '))
+		else if ((makeLegalFilenameOptions & kMakeLegalFilenameOptionsDisallowSpaces) && (*p == ' '))
+			// Replace with _
 			*p = '_';
 	}
 

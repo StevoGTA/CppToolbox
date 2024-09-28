@@ -120,6 +120,7 @@ class CDictionary : public CEquatable {
 																TNArray<CDictionary>()) const;
 				const	TArray<CString>&		getArrayOfStrings(const CString& key,
 														const TArray<CString>& defaultValue = TNArray<CString>()) const;
+						OV<TArray<CString> >	getOVArrayOfStrings(const CString& key) const;
 				const	CData&					getData(const CString& key, const CData& defaultValue = CData::mEmpty)
 														const;
 				const	CDictionary&			getDictionary(const CString& key,

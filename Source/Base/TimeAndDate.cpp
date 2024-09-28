@@ -272,15 +272,16 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 				return OV<SGregorianDate>();
 
 			// Check for timezone offset sign
-			CString::Range	timezoneOffsetMinusRange = string.findSubString(CString(OSSTR("-")), 17);
-			CString::Range	timezoneOffsetPlusRange = string.findSubString(CString(OSSTR("+")), 17);
-			if (!timezoneOffsetMinusRange.isValid() && !timezoneOffsetPlusRange.isValid())
+			OV<CString::Range>	timezoneOffsetMinusRange = string.findSubString(CString(OSSTR("-")), 17);
+			OV<CString::Range>	timezoneOffsetPlusRange = string.findSubString(CString(OSSTR("+")), 17);
+			if (!timezoneOffsetMinusRange.hasValue() && !timezoneOffsetPlusRange.hasValue())
 				// Did not find timezone offset sign
 				return OV<SGregorianDate>();
 
 			CString::CharIndex	timezoneOffsetSignCharIndex =
-										timezoneOffsetMinusRange.isValid() ?
-												timezoneOffsetMinusRange.mStart : timezoneOffsetPlusRange.mStart;
+										timezoneOffsetMinusRange.hasValue() ?
+												timezoneOffsetMinusRange->getStart() :
+												timezoneOffsetPlusRange->getStart();
 
 			// Compose gregorian date
 			SGregorianDate	gregorianDate;
@@ -297,7 +298,7 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 			SInt32					timezoneOffsetHours = timezoneOffsetRaw / 100;
 			SInt32					timezoneOffsetMinutes = timezoneOffsetRaw % 100;
 			UniversalTimeInterval	timezoneOffset =
-											timezoneOffsetMinusRange.isValid() ?
+											timezoneOffsetMinusRange.hasValue() ?
 													(UniversalTimeInterval)
 															(-timezoneOffsetHours * 60 * 60 -
 																	timezoneOffsetMinutes * 60) :

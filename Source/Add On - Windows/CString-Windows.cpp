@@ -524,27 +524,6 @@ return 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::Length CString::get(UTF16Char* buffer, Length bufferLen, Encoding encoding) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertNotNil(buffer);
-	if (buffer == nil)
-		return 0;
-
-	AssertFailIf((encoding != kEncodingUTF16BE) && (encoding != kEncodingUTF16LE));
-	if ((encoding != kEncodingUTF16BE) && (encoding != kEncodingUTF16LE))
-		return 0;
-
-	if (bufferLen > getLength())
-		bufferLen = getLength();
-
-	AssertFailUnimplemented();
-
-	return 0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 UTF32Char CString::getCharacterAtIndex(CharIndex index) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -636,14 +615,6 @@ CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, co
 {
 	AssertFailUnimplemented();
 return CString::mEmpty;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::Range CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailUnimplemented();
-return Range(0, 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
