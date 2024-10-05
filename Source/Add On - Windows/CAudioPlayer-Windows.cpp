@@ -627,7 +627,7 @@ OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 							mInternals->mImplementation->mMaxPeriodInFrames, Internals::readerThreadError, mInternals));
 
 	// Do super
-	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
+	return __super::connectInput(audioProcessor, audioProcessingFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -652,7 +652,7 @@ void CAudioPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 	mInternals->mImplementation->mMediaSegment = mediaSegment;
 
 	// Do super
-	CAudioDestination::setMediaSegment(mediaSegment);
+	__super::setMediaSegment(mediaSegment);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

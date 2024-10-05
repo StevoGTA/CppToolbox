@@ -221,7 +221,7 @@ void CMediaFoundationResampler::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Do super
-	CAudioProcessor::reset();
+	__super::reset();
 
 	// Reset Resampler
     mInternals->mResamplerTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
