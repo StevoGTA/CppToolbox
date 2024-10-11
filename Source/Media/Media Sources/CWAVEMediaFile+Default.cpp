@@ -1,26 +1,28 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CMPEG4MediaFileUseDefault.cpp			©2022 Stevo Brock	All rights reserved.
+//	CWAVEMediaFile+Default.cpp			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CMPEG4MediaFile.h"
+#include "CWAVEMediaFile.h"
 
 #include "CMediaSourceRegistry.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local procs
+// MARK: CWAVEMediaFile
+
+// MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
+I<CWAVEMediaFile> CWAVEMediaFile::create()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CMPEG4MediaFile().import(importSetup);
+	return I<CWAVEMediaFile>(new CWAVEMediaFile());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Register media source
 
-static	CString	sExtensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), CString(OSSTR("mp4")) };
-REGISTER_MEDIA_SOURCE(mp4,
-		SMediaSource(SMediaSource::Identity(CMPEG4MediaFile::mID, CString(OSSTR("MPEG 4"))),
-				TSARRAY_FROM_C_ARRAY(CString, sExtensions), sImport));
+static	CString	sExtensions[] = { CString(OSSTR("wav")) };
+REGISTER_MEDIA_SOURCE(wave,
+		SMediaSource(SMediaSource::Identity(MAKE_OSTYPE('w', 'a', 'v', 'e'), CString(OSSTR("WAVE"))),
+				TSARRAY_FROM_C_ARRAY(CString, sExtensions), CWAVEMediaFile::import));

@@ -4,6 +4,8 @@
 
 #include "CString.h"
 
+#include "TBuffer.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
@@ -28,6 +30,8 @@ const	CString	CString::mComma(OSSTR(","));
 const	CString	CString::mDoubleQuotes(OSSTR("\""));
 const	CString	CString::mEqualSign(OSSTR("="));
 const	CString	CString::mHyphen(OSSTR("-"));
+const	CString	CString::mParenthesisClose(OSSTR(")"));
+const	CString	CString::mParenthesisOpen(OSSTR("("));
 const	CString	CString::mPercent(OSSTR("%"));
 const	CString	CString::mPeriod(OSSTR("."));
 const	CString	CString::mSemiColon(OSSTR(";"));
@@ -37,6 +41,7 @@ const	CString	CString::mSpaceX4(OSSTR("    "));
 const	CString	CString::mTab(OSSTR("\t"));
 const	CString	CString::mUnderscore(OSSTR("_"));
 
+const	CString	CString::mNull(OSSTR("\0"));
 const	CString	CString::mNewline(OSSTR("\n"));
 const	CString	CString::mLinefeed(OSSTR("\r"));
 const	CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
@@ -439,7 +444,27 @@ CString CString::capitalizingFirstLetter() const
 		return uppercased();
 	else
 		// Multiple characters
-		return getSubString(0, OV<Length>(1)).uppercased() + getSubString(1);
+		return getSubString(0, 1).uppercased() + getSubString(1);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CString::containsOnly(CharacterSet characterSet) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	Length	length = getLength();
+	TBuffer<UTF32Char>	buffer(length);
+	get(*buffer, length);
+
+	// Check
+	for (CharIndex i = 0; i < length; i++) {
+		// Check character
+		if (!isCharacterInSet(buffer[i], characterSet))
+			// Nope
+			return false;
+	}
+
+	return true;
 }
 
 // MARK: Class methods

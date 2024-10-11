@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CPCMAudioCodecUseDefault.cpp			©2023 Stevo Brock	All rights reserved.
+//	CPCMAudioCodec+Default.cpp			©2023 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "CCodecRegistry.h"

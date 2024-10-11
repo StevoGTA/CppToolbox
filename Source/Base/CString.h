@@ -27,7 +27,7 @@ class CData;
 class CDictionary;
 
 class CString : public CHashable {
-	// Enums
+	// CompareFlags
 	public:
 		enum CompareFlags {
 			kCompareFlagsNone				= 0,
@@ -43,6 +43,8 @@ class CString : public CHashable {
 					kCompareFlagsNumerically,
 		};
 
+	// Encoding
+	public:
 		enum Encoding {
 			kEncodingASCII,		// 0..127 (values greater than 127 are treated as corresponding Unicode value)
 			kEncodingMacRoman,
@@ -68,6 +70,8 @@ class CString : public CHashable {
 #endif
 		};
 
+	// CharacterSet
+	public:
 		enum CharacterSet {
 			kCharacterSetControl,				// Control character set (Unicode General Category Cc and Cf
 			kCharacterSetWhitespace,			// Whitespace character set (Unicode General Category Zs and U0009 CHARACTER TABULATION
@@ -76,15 +80,13 @@ class CString : public CHashable {
 			kCharacterSetLetter,				// Letter character set (Unicode General Category L* & M*)
 			kCharacterSetLowercaseLetter,		// Lowercase character set (Unicode General Category Ll)
 			kCharacterSetUppercaseLetter,		// Uppercase character set (Unicode General Category Lu and Lt)
-			kCharacterSetNonBase,				// Non-base character set (Unicode General Category M*)
-			kCharacterSetDecomposable,			// Canonically decomposable character set
 			kCharacterSetAlphaNumeric,			// Alpha Numeric character set (Unicode General Category L*, M*, & N*)
 			kCharacterSetPunctuation,			// Punctuation character set (Unicode General Category P*)
-			kCharacterSetIllegal,				// Illegal character set
 			kCharacterSetCapitalizedLetter,		// Titlecase character set (Unicode General Category Lt)
-			kCharacterSetSymbol,				// Symbol character set (Unicode General Category S*)
 		};
 
+	// SpecialFormattingOptions
+	public:
 		enum SpecialFormattingOptions {
 			// Bytes - Decimal
 			kSpecialFormattingOptionsBytesDecimal						= 1 << 0,
@@ -192,16 +194,19 @@ class CString : public CHashable {
 		};
 
 		struct Range {
-					// Lifecycle methods
-					Range(CharIndex start, Length length) : mStart(start), mLength(length) {}
+						// Lifecycle methods
+						Range(CharIndex start, Length length) : mStart(start), mLength(length) {}
 
-					// Instance methods
-			bool	isValid() const
-						{ return mLength != 0; }
+						// Instance methods
+			CharIndex	getStart() const
+							{ return mStart; }
+			Length		getLength() const
+							{ return mLength; }
 
 			// Properties
-			CharIndex	mStart;
-			Length		mLength;	// 0 if not found
+			private	:
+				CharIndex	mStart;
+				Length		mLength;
 		};
 
 	// Methods
@@ -270,8 +275,7 @@ class CString : public CHashable {
 
 						Length			get(char* buffer, Length bufferLen, bool addNull = true,
 												Encoding encoding = kEncodingTextDefault) const;
-						Length			get(UTF16Char* buffer, Length bufferLen,
-												Encoding encoding = kEncodingUTF16Native) const;
+						Length			get(UTF32Char* buffer, Length bufferLen) const;
 
 						UTF32Char		getCharacterAtIndex(CharIndex charIndex) const;
 
@@ -312,12 +316,14 @@ class CString : public CHashable {
 												const;
 						
 						CString			getSubString(CharIndex startIndex, OV<Length> length = OV<Length>()) const;
+						CString			getSubString(CharIndex startIndex, Length length) const
+											{ return getSubString(startIndex, OV<Length>(length)); }
 						CString			replacingSubStrings(const CString& subStringToReplace,
 												const CString& replacementString = CString::mEmpty) const;
 						CString			replacingCharacters(CharIndex startIndex = 0, OV<Length> length = OV<Length>(),
 												const CString& replacementString = CString::mEmpty) const;
 
-						Range			findSubString(const CString& subString, CharIndex startIndex = 0,
+						OV<Range>		findSubString(const CString& subString, CharIndex startIndex = 0,
 												OV<Length> length = OV<Length>()) const;
 						
 						CString			lowercased() const;
@@ -341,7 +347,8 @@ class CString : public CHashable {
 						bool			hasSuffix(const CString& other) const;
 						bool			contains(const CString& other, CompareFlags compareFlags = kCompareFlagsDefault)
 												const;
-												
+						bool			containsOnly(CharacterSet characterSet) const;
+
 						bool			operator==(const CString& other) const
 											{ return equals(other); }
 						CString&		operator=(const CString& other);
@@ -378,6 +385,8 @@ class CString : public CHashable {
 		static	const	CString		mDoubleQuotes;
 		static	const	CString		mEqualSign;
 		static	const	CString		mHyphen;
+		static	const	CString		mParenthesisClose;
+		static	const	CString		mParenthesisOpen;
 		static	const	CString		mPercent;
 		static	const	CString		mPeriod;
 		static	const	CString		mSemiColon;
@@ -387,6 +396,7 @@ class CString : public CHashable {
 		static	const	CString		mTab;
 		static	const	CString		mUnderscore;
 
+		static	const	CString		mNull;
 		static	const	CString		mNewline;
 		static	const	CString		mLinefeed;
 		static	const	CString		mNewlineLinefeed;

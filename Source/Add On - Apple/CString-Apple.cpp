@@ -365,10 +365,10 @@ CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	osType = EndianU32_NtoB(osType);
 	mStringRef =
-			::CFStringCreateWithFormat(kCFAllocatorDefault, nil, includeQuotes ? CFSTR("\'%4.4s\'") : CFSTR("%4.4s"),
-					(char*) &osType);
+			::CFStringCreateWithFormat(kCFAllocatorDefault, nil,
+					includeQuotes ? CFSTR("\'%c%c%c%c\'") : CFSTR("%c%c%c"), (osType >> 24) & 0xFF,
+					(osType >> 16) & 0xFF, (osType >> 8) & 0xFF, osType & 0xFF);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -521,16 +521,12 @@ CString::Length CString::get(char* buffer, Length bufferLen, bool addNull, Encod
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::Length CString::get(UTF16Char* buffer, Length bufferLen, Encoding encoding) const
+CString::Length CString::get(UTF32Char* buffer, Length bufferLen) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
 	AssertNotNil(buffer);
 	if (buffer == nil)
-		return 0;
-
-	AssertFailIf((encoding != kEncodingUTF16BE) && (encoding != kEncodingUTF16LE));
-	if ((encoding != kEncodingUTF16BE) && (encoding != kEncodingUTF16LE))
 		return 0;
 
 	// Check if limiting buffer length
@@ -539,8 +535,8 @@ CString::Length CString::get(UTF16Char* buffer, Length bufferLen, Encoding encod
 		bufferLen = getLength();
 	
 	return (Length) ::CFStringGetBytes(mStringRef, CFRangeMake(0, bufferLen),
-			sGetCFStringEncodingForCStringEncoding(encoding), 0, false, (UInt8*) buffer, bufferLen * sizeof(UTF16Char),
-			nil);
+			sGetCFStringEncodingForCStringEncoding(kEncodingUTF32Native), 0, false, (UInt8*) buffer,
+			bufferLen * sizeof(UTF16Char), nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -657,7 +653,7 @@ CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::Range CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
+OV<CString::Range> CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if need to limit length
@@ -673,7 +669,7 @@ CString::Range CString::findSubString(const CString& subString, CharIndex startI
 	CFRange	range = {0, 0};
 	::CFStringFindWithOptions(mStringRef, subString.mStringRef, CFRangeMake(startIndex, lengthUse), 0, &range);
 
-	return Range((CharIndex) range.location, (Length) range.length);
+	return (range.length > 0) ? OV<Range>(Range((CharIndex) range.location, (Length) range.length)) : OV<Range>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -965,14 +961,6 @@ bool CString::isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet)
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetUppercaseLetter), utf32Char);
 
-		case kCharacterSetNonBase:
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetNonBase), utf32Char);
-
-		case kCharacterSetDecomposable:
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetDecomposable), utf32Char);
-
 		case kCharacterSetAlphaNumeric:
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetAlphaNumeric), utf32Char);
@@ -981,17 +969,9 @@ bool CString::isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet)
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetPunctuation), utf32Char);
 
-		case kCharacterSetIllegal:
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetIllegal), utf32Char);
-
 		case kCharacterSetCapitalizedLetter:
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetCapitalizedLetter), utf32Char);
-
-		case kCharacterSetSymbol:
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetSymbol), utf32Char);
 
 		default:
 			return false;

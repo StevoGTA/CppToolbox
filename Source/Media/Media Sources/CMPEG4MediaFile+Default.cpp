@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CQuickTimeMediaFileUseDefault.cpp			©2022 Stevo Brock	All rights reserved.
+//	CMPEG4MediaFile+Default.cpp			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CQuickTimeMediaFile.h"
+#include "CMPEG4MediaFile.h"
 
 #include "CMediaSourceRegistry.h"
 
@@ -13,14 +13,14 @@
 static I<SMediaSource::ImportResult> sImport(const SMediaSource::ImportSetup& importSetup)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CQuickTimeMediaFile().import(importSetup);
+	return CMPEG4MediaFile().import(importSetup);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Register media source
 
-static	CString	sExtensions[] = { CString(OSSTR("mov")) };
-REGISTER_MEDIA_SOURCE(quicktime,
-		SMediaSource(SMediaSource::Identity(CQuickTimeMediaFile::mID, CString(OSSTR("QuickTime"))),
+static	CString	sExtensions[] = { CString(OSSTR("m4a")), CString(OSSTR("m4v")), CString(OSSTR("mp4")) };
+REGISTER_MEDIA_SOURCE(mp4,
+		SMediaSource(SMediaSource::Identity(CMPEG4MediaFile::mID, CString(OSSTR("MPEG 4"))),
 				TSARRAY_FROM_C_ARRAY(CString, sExtensions), sImport));

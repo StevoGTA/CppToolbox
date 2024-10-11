@@ -1,12 +1,12 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CIMAADPCMAudioCodecUseDefault.cpp			©2023 Stevo Brock	All rights reserved.
+//	CAACAudioCodec+Default.cpp			©2023 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
+#include "CAACAudioCodec.h"
 #include "CCodecRegistry.h"
-#include "CIMAADPCMAudioCodec.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Register audio codec
+// MARK: Register audio codecs
 
-REGISTER_AUDIO_CODEC(dviIntelIMA,
-		CCodec::Info(CDVIIntelIMAADPCMAudioCodec::mID, CString(OSSTR("DVI/Intel IMA ADPCM 4:1"))));
+REGISTER_AUDIO_CODEC(aacLC, CCodec::Info(CAACAudioCodec::mLCID, CString(OSSTR("AAC Low Complexity"))));
+REGISTER_AUDIO_CODEC(aacLD, CCodec::Info(CAACAudioCodec::mLDID, CString(OSSTR("AAC Low Delay"))));

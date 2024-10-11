@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	SAudio+ChannelMap.cpp			©2023 Stevo Brock	All rights reserved.
+//	SAudio+Default.cpp			©2023 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "SAudio.h"
@@ -94,5 +94,5 @@ CString SAudio::ChannelMap::getDisplayString() const
 	else if (*this == _10_0_Unknown())	return CString(OSSTR("Unknown 10 channel"));
 
 	// Unknown
-	else								 return CString(OSSTR("Unknown"));
+	else								return CString(OSSTR("Unknown"));
 }

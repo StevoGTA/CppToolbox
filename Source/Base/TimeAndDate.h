@@ -113,12 +113,35 @@ struct SGregorianDate {
 									SGregorianDate(UniversalTime time = SUniversalTime::getCurrent());
 
 									// Instance methods
+			UInt32					getYear() const
+										{ return mYear; }
+			UInt8					getMonth() const
+										{ return mMonth; }
+			UInt8					getDay() const
+										{ return mDay; }
+			UInt8					getHour() const
+										{ return mHour; }
+			UInt8					getMinute() const
+										{ return mMinute; }
+			Float32					getSecond() const
+										{ return mSecond; }
+			UInt8					getDayOfWeek() const
+										{ return mDayOfWeek; }
+
 			UniversalTime			getUniversalTime() const;
 
 			CString					getString(ComponentStyle dateComponentStyle,
 											ComponentStyle timeComponentStyle) const;
 			CString					getString(StringStyle stringStyle = kStringStyleRFC339Extended) const;
 
+			bool					operator==(const SGregorianDate& other) const
+										{ return (mYear == other.mYear) && (mMonth == other.mMonth) &&
+												(mDay == other.mDay) && (mHour == other.mHour) &&
+												(mMinute == other.mMinute) && (mSecond == other.mSecond); }
+			bool					operator!=(const SGregorianDate& other) const
+										{ return (mYear != other.mYear) || (mMonth != other.mMonth) ||
+												(mDay != other.mDay) || (mHour != other.mHour) ||
+												(mMinute != other.mMinute) || (mSecond != other.mSecond); }
 			SGregorianDate			operator+(const Units& units) const;
 			SGregorianDate&			operator+=(const Units& units)
 										{ *this = *this + units; return *this; }
@@ -137,47 +160,49 @@ struct SGregorianDate {
 	static	UniversalTimeInterval	getCurrentTimeZoneOffset();
 
 	// Properties
-			UInt32	mYear;		// i.e. 2010
-			UInt8	mMonth;		// 1 - 12
-			UInt8	mDay;		// 1 - 28/29/30/31
-			UInt8	mHour;		// 0 - 23
-			UInt8	mMinute;	// 0 - 59
-			Float32	mSecond;	// 0 - 59.9
-			UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
+	public:
+		static	const	CString	mJanString;
+		static	const	CString	mFebString;
+		static	const	CString	mMarString;
+		static	const	CString	mAprString;
+		static	const	CString	mMayString;
+		static	const	CString	mJunString;
+		static	const	CString	mJulString;
+		static	const	CString	mAugString;
+		static	const	CString	mSepString;
+		static	const	CString	mOctString;
+		static	const	CString	mNovString;
+		static	const	CString	mDecString;
 
-	static	const	CString	mJanString;
-	static	const	CString	mFebString;
-	static	const	CString	mMarString;
-	static	const	CString	mAprString;
-	static	const	CString	mMayString;
-	static	const	CString	mJunString;
-	static	const	CString	mJulString;
-	static	const	CString	mAugString;
-	static	const	CString	mSepString;
-	static	const	CString	mOctString;
-	static	const	CString	mNovString;
-	static	const	CString	mDecString;
+		static	const	CString	mJanuaryString;
+		static	const	CString	mFebruaryString;
+		static	const	CString	mMarchString;
+		static	const	CString	mAprilString;
+		static	const	CString	mJuneString;
+		static	const	CString	mJulyString;
+		static	const	CString	mAugustString;
+		static	const	CString	mSeptemberString;
+		static	const	CString	mOctoberString;
+		static	const	CString	mNovemberString;
+		static	const	CString	mDecemberString;
 
-	static	const	CString	mJanuaryString;
-	static	const	CString	mFebruaryString;
-	static	const	CString	mMarchString;
-	static	const	CString	mAprilString;
-	static	const	CString	mJuneString;
-	static	const	CString	mJulyString;
-	static	const	CString	mAugustString;
-	static	const	CString	mSeptemberString;
-	static	const	CString	mOctoberString;
-	static	const	CString	mNovemberString;
-	static	const	CString	mDecemberString;
+		static	const	CString	mSunString;
+		static	const	CString	mMonString;
+		static	const	CString	mTueString;
+		static	const	CString	mWedString;
+		static	const	CString	mThuString;
+		static	const	CString	mFriString;
+		static	const	CString	mSatString;
 
-	static	const	CString	mSunString;
-	static	const	CString	mMonString;
-	static	const	CString	mTueString;
-	static	const	CString	mWedString;
-	static	const	CString	mThuString;
-	static	const	CString	mFriString;
-	static	const	CString	mSatString;
+		static	const	CString	mAMString;
+		static	const	CString	mPMString;
 
-	static	const	CString	mAMString;
-	static	const	CString	mPMString;
+	private:
+						UInt32	mYear;		// i.e. 2010
+						UInt8	mMonth;		// 1 - 12
+						UInt8	mDay;		// 1 - 28/29/30/31
+						UInt8	mHour;		// 0 - 23
+						UInt8	mMinute;	// 0 - 59
+						Float32	mSecond;	// 0 - 59.9
+						UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
 };
