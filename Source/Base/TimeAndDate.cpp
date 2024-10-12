@@ -272,8 +272,8 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 				return OV<SGregorianDate>();
 
 			// Check for timezone offset sign
-			OV<CString::Range>	timezoneOffsetMinusRange = string.findSubString(CString(OSSTR("-")), 17);
-			OV<CString::Range>	timezoneOffsetPlusRange = string.findSubString(CString(OSSTR("+")), 17);
+			OV<SRange32>	timezoneOffsetMinusRange = string.findSubString(CString(OSSTR("-")), 17);
+			OV<SRange32>	timezoneOffsetPlusRange = string.findSubString(CString(OSSTR("+")), 17);
 			if (!timezoneOffsetMinusRange.hasValue() && !timezoneOffsetPlusRange.hasValue())
 				// Did not find timezone offset sign
 				return OV<SGregorianDate>();

@@ -536,7 +536,7 @@ CString::Length CString::get(UTF32Char* buffer, Length bufferLen) const
 	
 	return (Length) ::CFStringGetBytes(mStringRef, CFRangeMake(0, bufferLen),
 			sGetCFStringEncodingForCStringEncoding(kEncodingUTF32Native), 0, false, (UInt8*) buffer,
-			bufferLen * sizeof(UTF16Char), nil);
+			bufferLen * sizeof(UTF32Char), nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -653,7 +653,7 @@ CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CString::Range> CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
+OV<SRange32> CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if need to limit length
@@ -669,7 +669,7 @@ OV<CString::Range> CString::findSubString(const CString& subString, CharIndex st
 	CFRange	range = {0, 0};
 	::CFStringFindWithOptions(mStringRef, subString.mStringRef, CFRangeMake(startIndex, lengthUse), 0, &range);
 
-	return (range.length > 0) ? OV<Range>(Range((CharIndex) range.location, (Length) range.length)) : OV<Range>();
+	return (range.length > 0) ? OV<SRange32>(SRange32((UInt32) range.location, (UInt32) range.length)) : OV<SRange32>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

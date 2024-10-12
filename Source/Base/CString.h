@@ -6,6 +6,7 @@
 
 #include "CArray.h"
 #include "CHashable.h"
+#include "TRange.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Native strings
@@ -193,22 +194,6 @@ class CString : public CHashable {
 				UInt32*	mReferenceCount;
 		};
 
-		struct Range {
-						// Lifecycle methods
-						Range(CharIndex start, Length length) : mStart(start), mLength(length) {}
-
-						// Instance methods
-			CharIndex	getStart() const
-							{ return mStart; }
-			Length		getLength() const
-							{ return mLength; }
-
-			// Properties
-			private	:
-				CharIndex	mStart;
-				Length		mLength;
-		};
-
 	// Methods
 	public:
 										// Lifecycle methods
@@ -323,7 +308,7 @@ class CString : public CHashable {
 						CString			replacingCharacters(CharIndex startIndex = 0, OV<Length> length = OV<Length>(),
 												const CString& replacementString = CString::mEmpty) const;
 
-						OV<Range>		findSubString(const CString& subString, CharIndex startIndex = 0,
+						OV<SRange32>	findSubString(const CString& subString, CharIndex startIndex = 0,
 												OV<Length> length = OV<Length>()) const;
 						
 						CString			lowercased() const;
