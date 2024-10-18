@@ -201,7 +201,7 @@ template <typename T> struct OI {
 							(!hasInstance() || (*mInstance == *other.mInstance)); }
 		bool	operator!=(const OI<T>& other) const
 					{ return (hasInstance() != other.hasInstance()) ||
-							(hasInstance() && (*mInstance != *other.mInstance)); }
+							(hasInstance() && !(*mInstance == *other.mInstance)); }
 
 	// Properties
 	private:
@@ -309,7 +309,7 @@ template <typename T> struct OR {
 							(!hasReference() || (*mReference == *other.mReference)); }
 		bool	operator!=(const OR<T>& other) const
 					{ return (hasReference() != other.hasReference()) ||
-							(hasReference() && (*mReference != *other.mReference)); }
+							(hasReference() && !(*mReference == *other.mReference)); }
 
 	// Properties
 	private:
@@ -382,7 +382,7 @@ template <typename T> struct OV {
 		bool	operator==(const OV<T>& other) const
 					{ return (hasValue() == other.hasValue()) && (!hasValue() || (*mValue == *other.mValue)); }
 		bool	operator!=(const OV<T>& other) const
-					{ return (hasValue() != other.hasValue()) || (hasValue() && (*mValue != *other.mValue)); }
+					{ return (hasValue() != other.hasValue()) || (hasValue() && !(*mValue == *other.mValue)); }
 
 	// Properties
 	private:
