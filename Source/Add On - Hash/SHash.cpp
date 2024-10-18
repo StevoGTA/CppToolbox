@@ -5,7 +5,11 @@
 #include "SHash.h"
 
 #include "CString.h"
-#include "xxhash.h"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
+	#include "xxhash.h"
+#pragma clang diagnostic pop
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SHash

@@ -18,7 +18,10 @@
 
 // See http://www.libpng.org/pub/png/libpng.html
 // See https://sourceforge.net/projects/libpng/files/
-#include "png.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
+	#include "png.h"
+#pragma clang diagnostic pop
 
 // See https://github.com/andrechen/yuv2rgb
 
