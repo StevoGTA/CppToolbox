@@ -42,10 +42,10 @@ struct SLocalization {
 				static	const	Language&			getDefault();
 
 			private:
-											// Lifecycle methods
-											Language(OSType iso639_2_Code, bool isCommon) :
-												mISO639_2_Code(iso639_2_Code), mIsCommon(isCommon)
-												{}
+													// Lifecycle methods
+													Language(OSType iso639_2_Code, bool isCommon) :
+														mISO639_2_Code(iso639_2_Code), mIsCommon(isCommon)
+														{}
 
 			// Properties
 			private:
