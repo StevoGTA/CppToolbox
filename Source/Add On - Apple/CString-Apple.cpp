@@ -789,8 +789,8 @@ TArray<CString> CString::components(const CString& separator, bool includeEmptyC
 bool CString::compareTo(const CString& other, CompareFlags compareFlags) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringCompare(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(compareFlags)) ==
-			kCFCompareLessThan;
+	return ::CFStringCompare(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(compareFlags)) !=
+			kCFCompareGreaterThan;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

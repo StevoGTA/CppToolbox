@@ -95,14 +95,27 @@ OV<SError> CFilesystem::open(const TArray<CFile>& files, const Application& appl
 					(NSURL*) CFBridgingRelease(
 							CCoreFoundation::createURLRefFrom(application.getFilesystemPath(), true));
 	// Open
-	NSError*	error;
-	if ([[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:applicationURL options:0 configuration:@{}
-			error:&error])
+			dispatch_semaphore_t	semaphore = dispatch_semaphore_create(0);
+	__block	NSError*				openURLsError = nil;
+	[[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:applicationURL
+			configuration:[NSWorkspaceOpenConfiguration configuration]
+			completionHandler:^(NSRunningApplication* runningApplication, NSError* error) {
+		// Store error
+		openURLsError = error;
+
+		// Done
+		dispatch_semaphore_signal(semaphore);
+	}];
+	while (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW))
+		[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+
+	// Handle results
+	if (openURLsError == nil)
 		// Success
 		return OV<SError>();
 	else
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(error), "opening files with",
+		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(openURLsError), "opening files with",
 				application);
 }
 
