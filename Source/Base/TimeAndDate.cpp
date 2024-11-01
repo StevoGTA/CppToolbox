@@ -7,65 +7,7 @@
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SUniversalTime
-
-// MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-UniversalTime SUniversalTime::getDistantFuture()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return 64092211200.0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UniversalTime SUniversalTime::getDistantPast()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return -62135769600.0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - SGregorianDate
-
-// MARK: Properties
-
-const	CString		SGregorianDate::mJanString(OSSTR("Jan"));
-const	CString		SGregorianDate::mFebString(OSSTR("Feb"));
-const	CString		SGregorianDate::mMarString(OSSTR("Mar"));
-const	CString		SGregorianDate::mAprString(OSSTR("Apr"));
-const	CString		SGregorianDate::mMayString(OSSTR("May"));
-const	CString		SGregorianDate::mJunString(OSSTR("Jun"));
-const	CString		SGregorianDate::mJulString(OSSTR("Jul"));
-const	CString		SGregorianDate::mAugString(OSSTR("Aug"));
-const	CString		SGregorianDate::mSepString(OSSTR("Sep"));
-const	CString		SGregorianDate::mOctString(OSSTR("Oct"));
-const	CString		SGregorianDate::mNovString(OSSTR("Nov"));
-const	CString		SGregorianDate::mDecString(OSSTR("Dec"));
-
-const	CString		SGregorianDate::mJanuaryString(OSSTR("January"));
-const	CString		SGregorianDate::mFebruaryString(OSSTR("February"));
-const	CString		SGregorianDate::mMarchString(OSSTR("March"));
-const	CString		SGregorianDate::mAprilString(OSSTR("April"));
-const	CString		SGregorianDate::mJuneString(OSSTR("June"));
-const	CString		SGregorianDate::mJulyString(OSSTR("July"));
-const	CString		SGregorianDate::mAugustString(OSSTR("August"));
-const	CString		SGregorianDate::mSeptemberString(OSSTR("September"));
-const	CString		SGregorianDate::mOctoberString(OSSTR("October"));
-const	CString		SGregorianDate::mNovemberString(OSSTR("November"));
-const	CString		SGregorianDate::mDecemberString(OSSTR("December"));
-
-const	CString		SGregorianDate::mSunString(OSSTR("Sunday"));
-const	CString		SGregorianDate::mMonString(OSSTR("Monday"));
-const	CString		SGregorianDate::mTueString(OSSTR("Tuesday"));
-const	CString		SGregorianDate::mWedString(OSSTR("Wednesday"));
-const	CString		SGregorianDate::mThuString(OSSTR("Thursday"));
-const	CString		SGregorianDate::mFriString(OSSTR("Friday"));
-const	CString		SGregorianDate::mSatString(OSSTR("Saturday"));
-
-const	CString		SGregorianDate::mAMString(OSSTR("am"));
-const	CString		SGregorianDate::mPMString(OSSTR("pm"));
+// MARK: SGregorianDate
 
 // MARK: Instance methods
 
@@ -74,10 +16,8 @@ CString SGregorianDate::getString(ComponentStyle dateComponentStyle, ComponentSt
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose string
-	const	CString*	day;
-	const	CString*	month;
-			CString		string;
-			UInt8		hour = (mHour == 0) ? 12 : ((mHour - 1) % 12 + 1);
+	CString	string;
+	UInt8	hour = (mHour == 0) ? 12 : ((mHour - 1) % 12 + 1);
 
 	switch (dateComponentStyle) {
 		case kComponentStyleNone:
@@ -91,78 +31,19 @@ CString SGregorianDate::getString(ComponentStyle dateComponentStyle, ComponentSt
 
 		case kComponentStyleMedium:
 			// Medium - Jan 12, 1952
-			switch (mMonth) {
-				case 1:		month = &SGregorianDate::mJanString;	break;
-				case 2:		month = &SGregorianDate::mFebString;	break;
-				case 3:		month = &SGregorianDate::mMarString;	break;
-				case 4:		month = &SGregorianDate::mAprString;	break;
-				case 5:		month = &SGregorianDate::mMayString;	break;
-				case 6:		month = &SGregorianDate::mJunString;	break;
-				case 7:		month = &SGregorianDate::mJulString;	break;
-				case 8:		month = &SGregorianDate::mAugString;	break;
-				case 9:		month = &SGregorianDate::mSepString;	break;
-				case 10:	month = &SGregorianDate::mOctString;	break;
-				case 11:	month = &SGregorianDate::mNovString;	break;
-				case 12:	month = &SGregorianDate::mDecString;	break;
-				default:	month = &CString::mEmpty;		break;
-			}
-
-			string = *month + CString(OSSTR(" ")) + CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
+			string = getMonthString(true) + CString(OSSTR(" ")) + CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
 			break;
 
 		case kComponentStyleLong:
 			// Long - January 12, 1952
-			switch (mMonth) {
-				case 1:		month = &SGregorianDate::mJanuaryString;		break;
-				case 2:		month = &SGregorianDate::mFebruaryString;	break;
-				case 3:		month = &SGregorianDate::mMarchString;		break;
-				case 4:		month = &SGregorianDate::mAprilString;		break;
-				case 5:		month = &SGregorianDate::mMayString;			break;
-				case 6:		month = &SGregorianDate::mJuneString;		break;
-				case 7:		month = &SGregorianDate::mJulyString;		break;
-				case 8:		month = &SGregorianDate::mAugustString;		break;
-				case 9:		month = &SGregorianDate::mSeptemberString;	break;
-				case 10:	month = &SGregorianDate::mOctoberString;		break;
-				case 11:	month = &SGregorianDate::mNovemberString;	break;
-				case 12:	month = &SGregorianDate::mDecemberString;	break;
-				default:	month = &CString::mEmpty;				break;
-			}
-
-			string = *month + CString(OSSTR(" ")) + CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
+			string = getMonthString() + CString(OSSTR(" ")) + CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
 			break;
 
 		case kComponentStyleFull:
 			// Full - Tuesday, April 12, 1952 AD
-			switch (mDayOfWeek) {
-				case 0:		day = &SGregorianDate::mSunString;	break;
-				case 1:		day = &SGregorianDate::mMonString;	break;
-				case 2:		day = &SGregorianDate::mTueString;	break;
-				case 3:		day = &SGregorianDate::mWedString;	break;
-				case 4:		day = &SGregorianDate::mThuString;	break;
-				case 5:		day = &SGregorianDate::mFriString;	break;
-				case 6:		day = &SGregorianDate::mSatString;	break;
-				default:	day = &CString::mEmpty;			break;
-			}
-
-			switch (mMonth) {
-				case 1:		month = &SGregorianDate::mJanuaryString;		break;
-				case 2:		month = &SGregorianDate::mFebruaryString;	break;
-				case 3:		month = &SGregorianDate::mMarchString;		break;
-				case 4:		month = &SGregorianDate::mAprilString;		break;
-				case 5:		month = &SGregorianDate::mMayString;			break;
-				case 6:		month = &SGregorianDate::mJuneString;		break;
-				case 7:		month = &SGregorianDate::mJulyString;		break;
-				case 8:		month = &SGregorianDate::mAugustString;		break;
-				case 9:		month = &SGregorianDate::mSeptemberString;	break;
-				case 10:	month = &SGregorianDate::mOctoberString;		break;
-				case 11:	month = &SGregorianDate::mNovemberString;	break;
-				case 12:	month = &SGregorianDate::mDecemberString;	break;
-				default:	month = &CString::mEmpty;				break;
-			}
-
 			string =
-					*day + CString(OSSTR(", ")) + *month + CString(OSSTR(" ")) + CString(mDay) +
-							CString(OSSTR(", ")) + CString(mYear);
+					getDayOfWeekString(false) + CString(OSSTR(", ")) + getMonthString() + CString(OSSTR(" ")) +
+							CString(mDay) + CString(OSSTR(", ")) + CString(mYear);
 			break;
 	}
 
@@ -177,7 +58,7 @@ CString SGregorianDate::getString(ComponentStyle dateComponentStyle, ComponentSt
 				string += CString(OSSTR(" "));
 			string +=
 					CString(hour) + CString(OSSTR(":")) + CString(mMinute, 2, true) +
-							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
+							((mHour >= 12) ? getPMString() : getAMString());
 			break;
 
 		case kComponentStyleMedium:
@@ -186,7 +67,7 @@ CString SGregorianDate::getString(ComponentStyle dateComponentStyle, ComponentSt
 				string += CString(OSSTR(" "));
 			string +=
 					CString(hour) + CString(OSSTR(":")) + CString(mMinute, 2, true) +
-							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
+							((mHour >= 12) ? getPMString() : getAMString());
 			break;
 
 		case kComponentStyleLong:
@@ -195,8 +76,7 @@ CString SGregorianDate::getString(ComponentStyle dateComponentStyle, ComponentSt
 				string += CString(OSSTR(" "));
 			string +=
 					CString(hour) + CString(OSSTR(":")) + CString(mMinute, 2, true) + CString(OSSTR(":")) +
-							CString((UInt16) mSecond, 2, true) +
-							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString);
+							CString((UInt16) mSecond, 2, true) + ((mHour >= 12) ? getPMString() : getAMString());
 			break;
 
 		case kComponentStyleFull:
@@ -205,9 +85,7 @@ CString SGregorianDate::getString(ComponentStyle dateComponentStyle, ComponentSt
 				string += CString(OSSTR(" "));
 			string +=
 					CString(hour) + CString(OSSTR(":")) + CString(mMinute, 2, true) + CString(OSSTR(":")) +
-							CString((UInt16) mSecond, 2, true) +
-							((mHour >= 12) ? SGregorianDate::mPMString : SGregorianDate::mAMString) +
-							CString(OSSTR(" GMT"));
+							CString((UInt16) mSecond, 2, true) + CString(OSSTR(" GMT"));
 			break;
 	}
 
@@ -220,6 +98,26 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 {
 	// Check style
 	switch (stringStyle) {
+		case kStringStyleHH_MM_SS:
+			// HH:mm:ss
+			return CString::make(OSSTR("%02u:%02u:%02f"), mHour, mMinute, mSecond);
+
+		case kStringStyleHH_MM:
+			// HH:mm
+			return CString::make(OSSTR("%02u:%02u"), mHour, mMinute);
+
+		case kStringStyleHHMM:
+			// HHmm
+			return CString::make(OSSTR("%02u%02u"), mHour, mMinute);
+
+		case kStringStyleDDMM:
+			// ddMM
+			return CString::make(OSSTR("%02u%02u"), mDay, mMonth);
+
+		case kStringStyleMMDD:
+			// MMdd
+			return CString::make(OSSTR("%02u%02u"), mMonth, mDay);
+
 		case kStringStyleRFC339Extended: {
 			// RFC339 extended
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
@@ -228,9 +126,17 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 			char			offsetSign = (offset > 0) ? '+' : '-';
 			SInt32			offsetAbsolute = abs(offset);
 
-			return CString::make(OSSTR("%4u-%02u-%02uT%02u:%02u:%06.3f%c%02u%02u"), mYear, mMonth, mDay, mHour, mMinute,
-					mSecond, offsetSign, offsetAbsolute / 60, offsetAbsolute % 60);
+			return CString::make(OSSTR("%04u-%02u-%02uT%02u:%02u:%06.3f%c%02u%02u"), mYear, mMonth, mDay, mHour,
+					mMinute, mSecond, offsetSign, offsetAbsolute / 60, offsetAbsolute % 60);
 		}
+
+		case kStringStyleYYYY_MM_DD:
+			// yyyy-MM-dd
+			return CString::make(OSSTR("%04u-%02u-%02"), mYear, mMonth, mDay);
+
+		case kStringStyleYYYY:
+			// yyyy
+			return CString::make(OSSTR("%04u"), mYear);
 
 #if defined(TARGET_OS_WINDOWS)
 		// Unnessary, but making the compiler happy
@@ -242,11 +148,83 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
+UInt8 SGregorianDate::getMaxDays(UInt8 month)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check month
+	switch (month) {
+		case 1:		return 31;
+		case 2:		return 29;
+		case 3:		return 31;
+		case 4:		return 30;
+		case 5:		return 31;
+		case 6:		return 30;
+		case 7:		return 31;
+		case 8:		return 31;
+		case 9:		return 30;
+		case 10:	return 31;
+		case 11:	return 30;
+		case 12:	return 31;
+		default:	return 0;
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle stringStyle)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check style
 	switch (stringStyle) {
+		case kStringStyleHH_MM_SS:
+			// HH:mm:ss
+			if (string.getLength() != 8)
+				// Must be 8 characters
+				return OV<SGregorianDate>();
+
+			return OV<SGregorianDate>(
+					SGregorianDate::forHourMinuteSecond(string.getSubString(0, 2).getUInt8(),
+							string.getSubString(3, 2).getUInt8(), string.getSubString(6, 2).getFloat32()));
+
+		case kStringStyleHH_MM:
+			// HH:mm
+			if (string.getLength() != 5)
+				// Must be 5 characters
+				return OV<SGregorianDate>();
+
+			return OV<SGregorianDate>(
+					SGregorianDate::forHourMinute(string.getSubString(0, 2).getUInt8(),
+							string.getSubString(3).getUInt8()));
+
+		case kStringStyleHHMM:
+			// HHmm
+			if (string.getLength() != 4)
+				// Must be 4 characters
+				return OV<SGregorianDate>();
+
+			return OV<SGregorianDate>(
+					SGregorianDate::forHourMinute(string.getSubString(0, 2).getUInt8(),
+							string.getSubString(2).getUInt8()));
+
+		case kStringStyleDDMM:
+			// ddMM
+			if (string.getLength() != 4)
+				// Must be 4 characters
+				return OV<SGregorianDate>();
+
+			return OV<SGregorianDate>(
+					SGregorianDate::forMonthDay(string.getSubString(2).getUInt8(),
+							string.getSubString(0, 2).getUInt8()));
+
+		case kStringStyleMMDD:
+			// MM/dd
+			if (string.getLength() != 5)
+				// Must be 5 characters
+				return OV<SGregorianDate>();
+
+			return OV<SGregorianDate>(
+					SGregorianDate::forMonthDay(string.getSubString(0, 2).getUInt8(),
+							string.getSubString(3).getUInt8()));
+
 		case kStringStyleRFC339Extended: {
 			// RFC339 extended
 			// "yyyy-MM-dd'T'HH:mm:ss.SX"
@@ -308,6 +286,24 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 			return OV<SGregorianDate>(
 					SGregorianDate(gregorianDate.getUniversalTime() - timezoneOffset + getCurrentTimeZoneOffset()));
 		}
+
+		case kStringStyleYYYY_MM_DD:
+			// yyyy-MM-dd
+			if (string.getLength() != 10)
+				// Must be 10 characters
+				return OV<SGregorianDate>();
+
+			return OV<SGregorianDate>(
+					SGregorianDate::forYearMonthDay(string.getSubString(0, 4).getUInt32(),
+							string.getSubString(5, 2).getUInt8(), string.getSubString(8, 2).getUInt8()));
+
+		case kStringStyleYYYY:
+			// yyyy
+			if (string.getLength() != 4)
+				// Must be 4 characters
+				return OV<SGregorianDate>();
+
+			return OV<SGregorianDate>(SGregorianDate::forYear(string.getUInt32()));
 
 #if defined(TARGET_OS_WINDOWS)
 		// Unnessary, but making the compiler happy

@@ -21,8 +21,11 @@ const	UniversalTimeInterval	kUniversalTimeIntervalMinute		= kUniversalTimeInterv
 const	UniversalTimeInterval	kUniversalTimeIntervalHour			= kUniversalTimeIntervalMinute * 60.0;
 const	UniversalTimeInterval	kUniversalTimeIntervalDay			= kUniversalTimeIntervalHour * 24.0;
 
-// UniversalTime is the number of seconds relative to 00:00:00 January 1, 2001
+// UniversalTime is the number of seconds relative to 00:00:00 on January 1, 2001
 typedef Float64 UniversalTime;
+
+const	UniversalTime			kUniversalTimeDistantFuture = 64092211200.0;
+const	UniversalTime			kUniversalTimeDistantPast = -62135769600.0;
 
 const	UniversalTimeInterval	kUniversalTimeInterval1904To2001	= 3061152000.0;
 const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
@@ -31,15 +34,14 @@ const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
 // MARK: - SUniversalTime
 
 struct SUniversalTime {
-							// Class methods
-	static	UniversalTime	getCurrent();
-	static	UniversalTime	getDistantFuture();
-	static	UniversalTime	getDistantPast();
-
-	static	void			setCurrent(UniversalTime time);
+	// Methods
+	public:
+								// Class methods
+		static	UniversalTime	getCurrent();
+		static	void			setCurrent(UniversalTime time);
 
 #if defined(TARGET_OS_MACOS)
-	static	UniversalTime	get(const UTCDateTime& utcDateTime);
+		static	UniversalTime	get(const UTCDateTime& utcDateTime);
 #endif
 };
 
@@ -68,11 +70,20 @@ struct SGregorianDate {
 		};
 
 		enum StringStyle {
-//			// TODO
-//			kStringStyleISO8601,
+			// HH:mm:ss
+			kStringStyleHH_MM_SS,
 
-//			// TODO
-//			kStringStyleRFC3339,
+			// HH:mm
+			kStringStyleHH_MM,
+
+			// HHmm
+			kStringStyleHHMM,
+
+			// ddMM
+			kStringStyleDDMM,
+
+			// MM/dd
+			kStringStyleMMDD,
 
 			// "yyyy-MM-dd'T'HH:mm:ss.SX"
 			// "yyyy-MM-dd'T'HH:mm:ss.SSX"
@@ -85,6 +96,12 @@ struct SGregorianDate {
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
 			//	2021-03-23T22:54:13.922-0700
 			kStringStyleRFC339Extended,
+
+			// yyyy-MM-dd
+			kStringStyleYYYY_MM_DD,
+
+			// yyyy
+			kStringStyleYYYY,
 		};
 
 	// Structs
@@ -130,6 +147,11 @@ struct SGregorianDate {
 
 			UniversalTime			getUniversalTime() const;
 
+			CString					getMonthString(bool abbrieviated = false) const
+										{ return getMonthString(mMonth, abbrieviated); }
+			CString					getDayOfWeekString(bool abbrieviated = false) const;
+			CString					getAMString() const;
+			CString					getPMString() const;
 			CString					getString(ComponentStyle dateComponentStyle,
 											ComponentStyle timeComponentStyle) const;
 			CString					getString(StringStyle stringStyle = kStringStyleRFC339Extended) const;
@@ -147,6 +169,9 @@ struct SGregorianDate {
 										{ *this = *this + units; return *this; }
 
 									// Class methods
+	static	CString					getMonthString(UInt8 month, bool abbrieviated = false);
+	static	UInt8					getMaxDays(UInt8 month);
+
 	static	OV<SGregorianDate>		getFrom(const CString& string, ComponentStyle dateComponentStyle,
 											ComponentStyle timeComponentStyle);
 	static	OV<SGregorianDate>		getFrom(const CString& string,
@@ -156,53 +181,27 @@ struct SGregorianDate {
 										{ return (string.hasReference()) ?
 												getFrom(*string, stringStyle) : OV<SGregorianDate>(); }
 
+	static	SGregorianDate			forHourMinuteSecond(UInt8 hour, UInt8 minute, Float32 second)
+										{ return SGregorianDate(0, 0, 0, hour, minute, second); }
+	static	SGregorianDate			forHourMinute(UInt8 hour, UInt8 minute)
+										{ return SGregorianDate(0, 0, 0, hour, minute, 0.0); }
+	static	SGregorianDate			forMonthDay(UInt8 month, UInt8 day)
+										{ return SGregorianDate(0, month, day, 0, 0, 0.0); }
+	static	SGregorianDate			forYear(UInt32 year)
+										{ return SGregorianDate(year, 0, 0, 0, 0, 0.0); }
+	static	SGregorianDate			forYearMonthDay(UInt32 year, UInt8 month, UInt8 day)
+										{ return SGregorianDate(year, month, day, 0, 0, 0.0); }
+
 	static	CString					getCurrentTimeZoneName();
 	static	UniversalTimeInterval	getCurrentTimeZoneOffset();
 
 	// Properties
-	public:
-		static	const	CString	mJanString;
-		static	const	CString	mFebString;
-		static	const	CString	mMarString;
-		static	const	CString	mAprString;
-		static	const	CString	mMayString;
-		static	const	CString	mJunString;
-		static	const	CString	mJulString;
-		static	const	CString	mAugString;
-		static	const	CString	mSepString;
-		static	const	CString	mOctString;
-		static	const	CString	mNovString;
-		static	const	CString	mDecString;
-
-		static	const	CString	mJanuaryString;
-		static	const	CString	mFebruaryString;
-		static	const	CString	mMarchString;
-		static	const	CString	mAprilString;
-		static	const	CString	mJuneString;
-		static	const	CString	mJulyString;
-		static	const	CString	mAugustString;
-		static	const	CString	mSeptemberString;
-		static	const	CString	mOctoberString;
-		static	const	CString	mNovemberString;
-		static	const	CString	mDecemberString;
-
-		static	const	CString	mSunString;
-		static	const	CString	mMonString;
-		static	const	CString	mTueString;
-		static	const	CString	mWedString;
-		static	const	CString	mThuString;
-		static	const	CString	mFriString;
-		static	const	CString	mSatString;
-
-		static	const	CString	mAMString;
-		static	const	CString	mPMString;
-
 	private:
-						UInt32	mYear;		// i.e. 2010
-						UInt8	mMonth;		// 1 - 12
-						UInt8	mDay;		// 1 - 28/29/30/31
-						UInt8	mHour;		// 0 - 23
-						UInt8	mMinute;	// 0 - 59
-						Float32	mSecond;	// 0 - 59.9
-						UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
+		UInt32	mYear;		// i.e. 2010
+		UInt8	mMonth;		// 1 - 12
+		UInt8	mDay;		// 1 - 28/29/30/31
+		UInt8	mHour;		// 0 - 23
+		UInt8	mMinute;	// 0 - 59
+		Float32	mSecond;	// 0 - 59.9
+		UInt8	mDayOfWeek;	// 0 (Sun) - 6 (Sat)
 };
