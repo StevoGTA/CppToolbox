@@ -155,6 +155,8 @@ OV<SError> CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, co
 
 	// Add
 	set(resourceType, resourceID, name, data);
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
