@@ -540,24 +540,6 @@ CString::Length CString::get(UTF32Char* buffer, Length bufferLen) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UTF32Char CString::getCharacterAtIndex(CharIndex index) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertFailIf(index > getLength());
-	if (index > getLength())
-		return 0;
-
-	// Get character
-	UTF32Char	_char;
-	::CFStringGetBytes(mStringRef, CFRangeMake(index, 1),
-			sGetCFStringEncodingForCStringEncoding(kEncodingUTF32Native), 0, false, (UInt8*) &_char,
-			sizeof(UTF32Char), nil);
-
-	return _char;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 Float32 CString::getFloat32() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -656,14 +638,10 @@ CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, co
 OV<SRange32> CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if need to limit length
-	CFIndex	lengthUse;
-	if (length.hasValue() && ((startIndex + *length) <= ::CFStringGetLength(mStringRef)))
-		// Use requested
-		lengthUse = *length;
-	else
-		// Limit to remainder of string
-		lengthUse = ::CFStringGetLength(mStringRef) - startIndex;
+	// Get length to check
+	CFIndex	lengthUse =
+					(length.hasValue() && ((startIndex + *length) <= ::CFStringGetLength(mStringRef))) ?
+							*length : ::CFStringGetLength(mStringRef) - startIndex;
 
 	// Find
 	CFRange	range = {0, 0};
@@ -718,24 +696,6 @@ CString CString::removingLeadingAndTrailingWhitespace() const
 			::CFStringHasSuffix(stringRef, CFSTR("\n")) ||
 			::CFStringHasSuffix(stringRef, CFSTR("\r")))
 		::CFStringDelete(stringRef, CFRangeMake(::CFStringGetLength(stringRef) - 1, 1));
-
-	CString	string(stringRef);
-	::CFRelease(stringRef);
-
-	return string;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString CString::removingAllWhitespace() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
-
-	::CFStringFindAndReplace(stringRef, CFSTR(" "), CFSTR(""), ::CFRangeMake(0, ::CFStringGetLength(stringRef)), 0);
-	::CFStringFindAndReplace(stringRef, CFSTR("\t"), CFSTR(""), ::CFRangeMake(0, ::CFStringGetLength(stringRef)), 0);
-	::CFStringFindAndReplace(stringRef, CFSTR("\n"), CFSTR(""), ::CFRangeMake(0, ::CFStringGetLength(stringRef)), 0);
-	::CFStringFindAndReplace(stringRef, CFSTR("\r"), CFSTR(""), ::CFRangeMake(0, ::CFStringGetLength(stringRef)), 0);
 
 	CString	string(stringRef);
 	::CFRelease(stringRef);
@@ -865,6 +825,26 @@ bool CString::contains(const CString& other, CompareFlags compareFlags) const
 	return range.location != kCFNotFound;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+bool CString::containsOnly(CharacterSet characterSet) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	Length	length = getLength();
+	TBuffer<UTF32Char>	buffer(length);
+	get(*buffer, length);
+
+	// Check
+	for (CharIndex i = 0; i < length; i++) {
+		// Check character
+		if (!isCharacterInSet(buffer[i], characterSet))
+			// Nope
+			return false;
+	}
+
+	return true;
+}
+
 // MARK: Convenience operators
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -932,46 +912,52 @@ CString CString::make(OSStringType format, va_list args)
 bool CString::isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check character set
 	switch (characterSet) {
 		case kCharacterSetControl:
+			// Control
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetControl), utf32Char);
 
 		case kCharacterSetWhitespace:
+			// Whitespace
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetWhitespace), utf32Char);
 
 		case kCharacterSetWhitespaceAndNewline:
+			// Whitespace and newline
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetWhitespaceAndNewline), utf32Char);
 
 		case kCharacterSetDecimalDigit:
+			// Decimal digit
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetDecimalDigit), utf32Char);
 
 		case kCharacterSetLetter:
+			// Letter
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetLetter), utf32Char);
 
 		case kCharacterSetLowercaseLetter:
+			// Lowercase letter
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetLowercaseLetter), utf32Char);
 
 		case kCharacterSetUppercaseLetter:
+			// Uppercase letter
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetUppercaseLetter), utf32Char);
 
 		case kCharacterSetAlphaNumeric:
+			// Alpha numeric
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetAlphaNumeric), utf32Char);
 
 		case kCharacterSetPunctuation:
+			// Puncuation
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetPunctuation), utf32Char);
-
-		case kCharacterSetCapitalizedLetter:
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetCapitalizedLetter), utf32Char);
 
 		default:
 			return false;

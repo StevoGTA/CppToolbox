@@ -6,6 +6,7 @@
 
 #include "CArray.h"
 #include "CHashable.h"
+#include "TBuffer.h"
 #include "TRange.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -28,20 +29,31 @@ class CData;
 class CDictionary;
 
 class CString : public CHashable {
-	// CompareFlags
+	// CompareToOptions
 	public:
-		enum CompareFlags {
-			kCompareFlagsNone				= 0,
-			kCompareFlagsCaseInsensitive	= 1 << 0,	// FOO.TXT == foo.txt
-			kCompareFlagsNonliteral			= 1 << 1,	// Loose equivalence is performed (o-umlaut == o, umlaut)
-			kCompareFlagsNumerically		= 1 << 2,	// Numeric comparison; i.e. Foo2.txt < Foo7.txt < Foo25.txt
+		enum CompareToOptions {
+			kCompareToOptionsNone				= 0,
+			kCompareToOptionsCaseInsensitive	= 1 << 0,	// FOO.TXT == foo.txt
+			kCompareToOptionsNonliteral			= 1 << 1,	// Loose equivalence is performed (o-umlaut == o, umlaut)
+			kCompareToOptionsNumerically		= 1 << 2,	// Numeric comparison; i.e. Foo2.txt < Foo7.txt < Foo25.txt
 
-			kCompareFlagsDefault =
-					kCompareFlagsNonliteral,
-			kCompareFlagsSortDefault =
-					kCompareFlagsCaseInsensitive |
-					kCompareFlagsNonliteral |
-					kCompareFlagsNumerically,
+			kCompareToOptionsDefault =
+					kCompareToOptionsNonliteral,
+			kCompareToOptionsSortDefault =
+					kCompareToOptionsCaseInsensitive |
+					kCompareToOptionsNonliteral |
+					kCompareToOptionsNumerically,
+		};
+
+	// ContainsOptions
+	public:
+		enum ContainsOptions {
+			kContainsOptionsNone			= 0,
+			kContainsOptionsCaseInsensitive	= 1 << 0,	// FOO.TXT == foo.txt
+			kContainsOptionsNonliteral		= 1 << 1,	// Loose equivalence is performed (o-umlaut == o, umlaut)
+
+			kContainsOptionsDefault =
+					kContainsOptionsNonliteral,
 		};
 
 	// Encoding
@@ -51,16 +63,15 @@ class CString : public CHashable {
 			kEncodingMacRoman,
 			kEncodingUTF8,
 			kEncodingISOLatin,	// ISO 8859-1
-			kEncodingUnicode,
 
 			kEncodingUTF16,		// UTF 16 w/ BOM
 			kEncodingUTF16BE,	// UTF 16 w/o BOM and explicit BE order
 			kEncodingUTF16LE,	// UTF 16 w/o BOM and explicit LE order
-			kEncodingUTF32,		// UTF 32 w/ BOM
+
 			kEncodingUTF32BE,	// UTF 32 w/o BOM and explicit BE order
 			kEncodingUTF32LE,	// UTF 32 w/o BOM and explicit LE order
 
-			kEncodingTextDefault = kEncodingUTF8,
+			//kEncodingTextDefault = kEncodingUTF8,
 
 #if TARGET_RT_BIG_ENDIAN
 			kEncodingUTF16Native = kEncodingUTF16BE,
@@ -83,7 +94,6 @@ class CString : public CHashable {
 			kCharacterSetUppercaseLetter,		// Uppercase character set (Unicode General Category Lu and Lt)
 			kCharacterSetAlphaNumeric,			// Alpha Numeric character set (Unicode General Category L*, M*, & N*)
 			kCharacterSetPunctuation,			// Punctuation character set (Unicode General Category P*)
-			kCharacterSetCapitalizedLetter,		// Titlecase character set (Unicode General Category Lt)
 		};
 
 	// SpecialFormattingOptions
@@ -196,170 +206,159 @@ class CString : public CHashable {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CString();
-										CString(const CString& other);
-										CString(const CString& other, Length length);
-										CString(OSStringVar(initialString));
-										CString(OSStringVar(initialString), Length length);
-										CString(const char* chars, Length length,
-												Encoding encoding = kEncodingTextDefault);
-										CString(const char* chars, Encoding encoding = kEncodingTextDefault);
-										CString(const UTF16Char* chars, Length length,
-												Encoding encoding = kEncodingUTF16Native);
-										CString(const UTF32Char* chars, Length length,
-												Encoding encoding = kEncodingUTF32Native);
+											// Lifecycle methods
+											CString();
+											CString(const CString& other);
+											CString(OSStringVar(initialString));
+											CString(const void* ptr, UInt32 byteCount, Encoding encoding);
+											CString(const TBuffer<UTF32Char>& buffer);
 
-										CString(Float32 value, UInt32 fieldSize = 0,
-												UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
-										CString(Float64 value, UInt32 fieldSize = 0,
-												UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
-										CString(SInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false);
-										CString(SInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false);
-										CString(SInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false);
-										CString(SInt64 value, UInt32 fieldSize = 0, bool padWithZeros = false);
-										CString(UInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false,
-												bool makeHex = false);
-										CString(UInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false,
-												bool makeHex = false);
-										CString(UInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false,
-												bool makeHex = false);
-										CString(UInt64 value, UInt32 fieldSize = 0, bool padWithZeros = false,
-												bool makeHex = false);
-										CString(OSType osType, bool isOSType, bool includeQuotes = true);
-										CString(UInt64 value, SpecialFormattingOptions specialFormattingOptions);
-										CString(const void* pointer);
+											CString(Float32 value, UInt32 fieldSize = 0,
+													UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
+											CString(Float64 value, UInt32 fieldSize = 0,
+													UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
+											CString(SInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false);
+											CString(SInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false);
+											CString(SInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false);
+											CString(SInt64 value, UInt32 fieldSize = 0, bool padWithZeros = false);
+											CString(UInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false,
+													bool makeHex = false);
+											CString(UInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false,
+													bool makeHex = false);
+											CString(UInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false,
+													bool makeHex = false);
+											CString(UInt64 value, UInt32 fieldSize = 0, bool padWithZeros = false,
+													bool makeHex = false);
+											CString(OSType osType, bool isOSType, bool includeQuotes = true);
+											CString(UInt64 value, SpecialFormattingOptions specialFormattingOptions);
+											CString(const void* pointer);
 
-										CString(const TArray<CString>& components,
-												const CString& separator = CString(OSSTR(", ")));
+											CString(const CData& data, Encoding encoding);
 
-										CString(const CData& data, Encoding encoding = kEncodingTextDefault);
+											CString(const TArray<CString>& components,
+													const CString& separator = CString(OSSTR(", ")));
 
-										CString(const CString& localizationGroup, const CString& localizationKey,
-												const CDictionary& localizationInfo);
-										CString(const CString& localizationGroup, const CString& localizationKey);
+											CString(const CString& localizationGroup, const CString& localizationKey,
+													const CDictionary& localizationInfo);
+											CString(const CString& localizationGroup, const CString& localizationKey);
 
-										~CString();
+											~CString();
 
-										// CEquatable methods
-						bool			operator==(const CEquatable& other) const
-											{ return equals((const CString&) other); }
+											// CEquatable methods
+						bool				operator==(const CEquatable& other) const
+												{ return equals((const CString&) other); }
 
-										// CHashable methods
-						void			hashInto(CHashable::HashCollector& hashableHashCollector) const
-											{ getCString().hashInto(hashableHashCollector); }
+											// CHashable methods
+						void				hashInto(CHashable::HashCollector& hashableHashCollector) const
+												{ getUTF8String().hashInto(hashableHashCollector); }
 
-										// Instance methods
-						OSStringType	getOSString() const;
-				const	C				getCString(Encoding encoding = kEncodingTextDefault) const;
-						Length			getLength() const;
-						Length			getLength(Encoding encoding, SInt8 lossCharacter = '\0',
-												bool forExternalStorageOrTransmission = false) const;
-						bool			isEmpty() const
-											{ return getLength() == 0; }
+											// Instance methods
+						OSStringType		getOSString() const;
+				const	C					getUTF8String() const;
+						Length				getLength() const;
+						bool				isEmpty() const
+												{ return getLength() == 0; }
 
-						Length			get(char* buffer, Length bufferLen, bool addNull = true,
-												Encoding encoding = kEncodingTextDefault) const;
-						Length			get(UTF32Char* buffer, Length bufferLen) const;
-
-						UTF32Char		getCharacterAtIndex(CharIndex charIndex) const;
-
-						Float32			getFloat32() const;
-						void			getValue(Float32& value) const
-											{ value = getFloat32(); }
-						Float64			getFloat64() const;
-						void			getValue(Float64& value) const
-											{ value = getFloat64(); }
-						SInt8			getSInt8(UInt8 base = 10) const;
-						void			getValue(SInt8& value, UInt8 base = 10) const
-											{ value = getSInt8(base); }
-						SInt16			getSInt16(UInt8 base = 10) const;
-						void			getValue(SInt16& value, UInt8 base = 10) const
-											{ value = getSInt16(base); }
-						SInt32			getSInt32(UInt8 base = 10) const;
-						void			getValue(SInt32& value, UInt8 base = 10) const
-											{ value = getSInt32(base); }
-						SInt64			getSInt64(UInt8 base = 10) const;
-						void			getValue(SInt64& value, UInt8 base = 10) const
-											{ value = getSInt64(base); }
-						UInt8			getUInt8(UInt8 base = 10) const;
-						void			getValue(UInt8& value, UInt8 base = 10) const
-											{ value = getUInt8(base); }
-						UInt16			getUInt16(UInt8 base = 10) const;
-						void			getValue(UInt16& value, UInt8 base = 10) const
-											{ value = getUInt16(base); }
-						UInt32			getUInt32(UInt8 base = 10) const;
-						void			getValue(UInt32& value, UInt8 base = 10) const
-											{ value = getUInt32(base); }
-						OSType			getOSType() const;
-						UInt64			getUInt64(UInt8 base = 10) const;
-						void			getValue(UInt64& value, UInt8 base = 10) const
-											{ value = getUInt64(base); }
-						UInt64			getAsByteCount() const;
+						Float32				getFloat32() const;
+						void				getValue(Float32& value) const
+												{ value = getFloat32(); }
+						Float64				getFloat64() const;
+						void				getValue(Float64& value) const
+												{ value = getFloat64(); }
+						SInt8				getSInt8(UInt8 base = 10) const;
+						void				getValue(SInt8& value, UInt8 base = 10) const
+												{ value = getSInt8(base); }
+						SInt16				getSInt16(UInt8 base = 10) const;
+						void				getValue(SInt16& value, UInt8 base = 10) const
+												{ value = getSInt16(base); }
+						SInt32				getSInt32(UInt8 base = 10) const;
+						void				getValue(SInt32& value, UInt8 base = 10) const
+												{ value = getSInt32(base); }
+						SInt64				getSInt64(UInt8 base = 10) const;
+						void				getValue(SInt64& value, UInt8 base = 10) const
+												{ value = getSInt64(base); }
+						UInt8				getUInt8(UInt8 base = 10) const;
+						void				getValue(UInt8& value, UInt8 base = 10) const
+												{ value = getUInt8(base); }
+						UInt16				getUInt16(UInt8 base = 10) const;
+						void				getValue(UInt16& value, UInt8 base = 10) const
+												{ value = getUInt16(base); }
+						UInt32				getUInt32(UInt8 base = 10) const;
+						void				getValue(UInt32& value, UInt8 base = 10) const
+												{ value = getUInt32(base); }
+						OSType				getOSType() const;
+						UInt64				getUInt64(UInt8 base = 10) const;
+						void				getValue(UInt64& value, UInt8 base = 10) const
+												{ value = getUInt64(base); }
+						UInt64				getAsByteCount() const;
 						
-						CData			getData(Encoding encoding = kEncodingTextDefault, SInt8 lossCharacter = '\0')
-												const;
-						
-						CString			getSubString(CharIndex startIndex, OV<Length> length = OV<Length>()) const;
-						CString			getSubString(CharIndex startIndex, Length length) const
-											{ return getSubString(startIndex, OV<Length>(length)); }
-						CString			replacingSubStrings(const CString& subStringToReplace,
-												const CString& replacementString = CString::mEmpty) const;
-						CString			replacingCharacters(CharIndex startIndex = 0, OV<Length> length = OV<Length>(),
-												const CString& replacementString = CString::mEmpty) const;
+						TBuffer<char>		getUTF8Chars() const;
+						TBuffer<UTF32Char>	getUTF32Chars() const;
+						OV<CData>			getData(Encoding encoding) const;
+						CData				getUTF8Data() const;
 
-						OV<SRange32>	findSubString(const CString& subString, CharIndex startIndex = 0,
-												OV<Length> length = OV<Length>()) const;
-						
-						CString			lowercased() const;
-						CString			uppercased() const;
-						CString			capitalizingFirstLetter() const;
-						CString			removingLeadingAndTrailingWhitespace() const;
-						CString			removingAllWhitespace() const;
-						CString			removingLeadingAndTrailingQuotes() const;
+						CString				getSubString(CharIndex startIndex, OV<Length> length = OV<Length>()) const;
+						CString				getSubString(CharIndex startIndex, Length length) const
+												{ return getSubString(startIndex, OV<Length>(length)); }
+						CString				replacingSubStrings(const CString& subStringToReplace,
+													const CString& replacementString = CString::mEmpty) const;
+						CString				replacingCharacters(CharIndex startIndex = 0, OV<Length> length = OV<Length>(),
+													const CString& replacementString = CString::mEmpty) const;
 
-						bool			isValidEmailAddress() const;
-						CString			getCommonPrefix(const CString& other) const;
+						OV<SRange32>		findSubString(const CString& subString, CharIndex startIndex = 0,
+													const OV<Length>& length = OV<Length>()) const;
+						
+						CString				lowercased() const;
+						CString				uppercased() const;
+						CString				capitalizingFirstLetter() const;
+						CString				removingLeadingAndTrailingWhitespace() const;
+						CString				removingAllWhitespace() const;
+						CString				removingLeadingAndTrailingQuotes() const;
+	
+						bool				isValidEmailAddress() const;
+						CString				getCommonPrefix(const CString& other) const;
 					
-						TArray<CString>	components(const CString& separator, bool includeEmptyComponents = true) const;
-						TArray<CString>	componentsRespectingQuotes(const CString& separator) const;
+						TArray<CString>		components(const CString& separator, bool includeEmptyComponents = true) const;
+						TArray<CString>		componentsRespectingQuotes(const CString& separator) const;
 
-						bool			compareTo(const CString& other,
-												CompareFlags compareFlags = kCompareFlagsDefault) const;
-						bool			equals(const CString& other, CompareFlags compareFlags = kCompareFlagsDefault)
-												const;
-						bool			hasPrefix(const CString& other) const;
-						bool			hasSuffix(const CString& other) const;
-						bool			contains(const CString& other, CompareFlags compareFlags = kCompareFlagsDefault)
-												const;
-						bool			containsOnly(CharacterSet characterSet) const;
+						bool				compareTo(const CString& other,
+													CompareToOptions compareToOptions = kCompareToOptionsDefault) const;
+						bool				hasPrefix(const CString& other) const;
+						bool				hasSuffix(const CString& other) const;
+						bool				contains(const CString& other,
+													ContainsOptions containsOptions = kContainsOptionsDefault) const;
+						bool				equals(const CString& other,
+													ContainsOptions containsOptions = kContainsOptionsDefault) const;
+						bool				containsOnly(CharacterSet characterSet) const;
 
-						bool			operator==(const CString& other) const
-											{ return equals(other); }
-						CString&		operator=(const CString& other);
-						CString&		operator+=(const CString& other);
-						CString			operator+(const CString& other) const;
+						bool				operator==(const CString& other) const
+												{ return equals(other); }
+						CString&			operator=(const CString& other);
+						CString&			operator+=(const CString& other);
+						CString				operator+(const CString& other) const;
 												
-										// Class methods
-		static			bool			compare(const CString& string1, const CString& string2, void* compareFlags);
+											// Class methods
+		static			bool				compare(const CString& string1, const CString& string2, void* compareToOptions);
 
-		static			CString			lowercase(const CString* string, void* userData);
-		static			CString			uppercase(const CString* string, void* userData);
+		static			CString				lowercase(const CString* string, void* userData);
+		static			CString				uppercase(const CString* string, void* userData);
 
-		static			CString			make(OSStringType format, ...);
-		static			CString			make(OSStringType format, va_list args);
+		static			CString				fromPascal(const UInt8* ptr)
+												{ return CString(ptr + 1, ptr[0], kEncodingMacRoman); }
+		static			CString				fromPascal(const CData& data);
+		static			CString				make(OSStringType format, ...);
+		static			CString				make(OSStringType format, va_list args);
 
-		static			bool			isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet);
-		static			bool			isEmpty(const CString& string, void* userData);
-		static			bool			isNotEmpty(const CString& string, void* userData);
+		static			bool				isEmpty(const CString& string, void* userData);
+		static			bool				isNotEmpty(const CString& string, void* userData);
 
 #if defined(TARGET_OS_WINDOWS)
-		static			void			setupLocalization(const CData& stringsFileData);
+		static			void				setupLocalization(const CData& stringsFileData);
 #endif
 
 	protected:
-										// Internal methods
-						void			init();
+											// Internal methods
+						void				init();
 
 	// Properties
 	public:
@@ -367,7 +366,7 @@ class CString : public CHashable {
 
 		static	const	CString		mColon;
 		static	const	CString		mComma;
-		static	const	CString		mDoubleQuotes;
+		static	const	CString		mDoubleQuote;
 		static	const	CString		mEqualSign;
 		static	const	CString		mHyphen;
 		static	const	CString		mParenthesisClose;
@@ -381,7 +380,6 @@ class CString : public CHashable {
 		static	const	CString		mTab;
 		static	const	CString		mUnderscore;
 
-		static	const	CString		mNull;
 		static	const	CString		mNewline;
 		static	const	CString		mLinefeed;
 		static	const	CString		mNewlineLinefeed;

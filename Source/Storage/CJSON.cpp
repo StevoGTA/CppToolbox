@@ -198,52 +198,52 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 
 			case SValue::kTypeFloat32:
 				// Float32
-				data += CString(iterator->mValue.getFloat32()).getData();
+				data += CString(iterator->mValue.getFloat32()).getUTF8Data();
 				break;
 
 			case SValue::kTypeFloat64:
 				// Float64
-				data += CString(iterator->mValue.getFloat64()).getData();
+				data += CString(iterator->mValue.getFloat64()).getUTF8Data();
 				break;
 
 			case SValue::kTypeSInt8:
 				// SInt8
-				data += CString(iterator->mValue.getSInt8()).getData();
+				data += CString(iterator->mValue.getSInt8()).getUTF8Data();
 				break;
 
 			case SValue::kTypeSInt16:
 				// SInt16
-				data += CString(iterator->mValue.getSInt16()).getData();
+				data += CString(iterator->mValue.getSInt16()).getUTF8Data();
 				break;
 
 			case SValue::kTypeSInt32:
 				// SInt32
-				data += CString(iterator->mValue.getSInt32()).getData();
+				data += CString(iterator->mValue.getSInt32()).getUTF8Data();
 				break;
 
 			case SValue::kTypeSInt64:
 				// SInt64
-				data += CString(iterator->mValue.getSInt64()).getData();
+				data += CString(iterator->mValue.getSInt64()).getUTF8Data();
 				break;
 
 			case SValue::kTypeUInt8:
 				// UInt8
-				data += CString(iterator->mValue.getUInt8()).getData();
+				data += CString(iterator->mValue.getUInt8()).getUTF8Data();
 				break;
 
 			case SValue::kTypeUInt16:
 				// UInt16
-				data += CString(iterator->mValue.getUInt16()).getData();
+				data += CString(iterator->mValue.getUInt16()).getUTF8Data();
 				break;
 
 			case SValue::kTypeUInt32:
 				// UInt32
-				data += CString(iterator->mValue.getUInt32()).getData();
+				data += CString(iterator->mValue.getUInt32()).getUTF8Data();
 				break;
 
 			case SValue::kTypeUInt64:
 				// UInt64
-				data += CString(iterator->mValue.getUInt64()).getData();
+				data += CString(iterator->mValue.getUInt64()).getUTF8Data();
 				break;
 
 			case SValue::kTypeData:
@@ -274,7 +274,7 @@ void sAddString(CData& data, const CString& string)
 					.replacingSubStrings(CString(OSSTR("\b")), CString(OSSTR("\\b")))
 					.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR("\\/")))
 					.replacingSubStrings(CString(OSSTR("\"")), CString(OSSTR("\\\"")))
-					.getData(CString::kEncodingUTF8);
+					.getUTF8Data();
 	data.appendBytes("\"", 1);
 }
 

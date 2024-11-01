@@ -28,10 +28,10 @@ class CAppleResourceManager {
 
 				void							set(OSType resourceType, UInt16 resourceID, const CString& name,
 														const CData& data);
-				void							set(OSType resourceType, UInt16 resourceID, const CString& name,
+				OV<SError>						set(OSType resourceType, UInt16 resourceID, const CString& name,
 														const CString& pascalString);
 
-				CData							getAsData();
+				TVResult<CData>					getAsData();
 
 												// Class methods
 		static	TIResult<CAppleResourceManager>	from(const I<CRandomAccessDataSource>& randomAccessDataSource);

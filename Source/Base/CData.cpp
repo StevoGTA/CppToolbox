@@ -367,7 +367,7 @@ CString CData::getBase64String(bool prettyPrint) const
 		// Add newline
 		*stringPtr++ = '\n';
 
-	return CString(*stringBuffer, stringLength, CString::kEncodingUTF8);
+	return CString(*stringBuffer, stringLength, CString::kEncodingASCII);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -385,6 +385,52 @@ CData CData::subData(ByteIndex byteIndex, const OV<ByteCount>& byteCount, bool c
 
 	return CData((UInt8*) mInternals->mBuffer + byteIndex,
 			byteCount.hasValue() ? *byteCount : mInternals->mBufferByteCount - byteIndex, copySourceData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SRange64> CData::findSubData(const CData& subData, ByteIndex startIndex, const OV<ByteCount>& byteCount) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertFailIf(subData.getByteCount() == 0);
+	if (subData.getByteCount() == 0)
+		return OV<SRange64>();
+
+	AssertFailIf(startIndex >= mInternals->mBufferByteCount);
+	if (startIndex >= mInternals->mBufferByteCount)
+		return OV<SRange64>();
+
+	AssertFailIf(byteCount.hasValue() && ((startIndex + *byteCount) >= mInternals->mBufferByteCount));
+	if (byteCount.hasValue() && ((startIndex + *byteCount) >= mInternals->mBufferByteCount))
+		return OV<SRange64>();
+
+	// Setup
+	ByteCount	byteCount_ = byteCount.hasValue() ? *byteCount : mInternals->mBufferByteCount - startIndex;
+
+	// Search
+	while ((startIndex < mInternals->mBufferByteCount) &&
+			((startIndex + subData.getByteCount()) < mInternals->mBufferByteCount)) {
+		// Look for first byte
+		const	void*	ptr =
+								::memchr((const char*) mInternals->mBuffer + startIndex,
+										*((const char* )subData.getBytePtr()), byteCount_);
+		if (ptr == nil)
+			// Not found
+			return OV<SRange64>();
+
+		// Check if data matches
+		int	result =
+					::memcmp((const char*)mInternals->mBuffer + startIndex, subData.getBytePtr(),
+							subData.getByteCount());
+		if (result == 0)
+			// Found
+			return OV<SRange64>(SRange64(startIndex, subData.getByteCount()));
+
+		// Start with next byte
+		startIndex++;
+	}
+
+	return OV<SRange64>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -449,7 +495,7 @@ CData CData::fromBase64String(const CString& base64String)
 		// No string
 		return CData();
 
-			CString::C		cString = base64String.getCString();
+			CString::C		cString = base64String.getUTF8String();
 	const	char*			stringPtr = *cString;
 			bool			pad1 = ((stringLength % 4) != 0) || (stringPtr[stringLength - 1] == '=');
 			bool			pad2 = pad1 && (((stringLength % 4) > 2) || (stringPtr[stringLength - 2] != '='));
