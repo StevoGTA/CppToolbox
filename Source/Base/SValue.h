@@ -109,23 +109,46 @@ struct SValue {
 				const	TArray<CString>&		getArrayOfStrings(
 														const TArray<CString>& defaultValue = TNArray<CString>()) const;
 						bool					getBool(bool defaultValue = false) const;
+						void					getValue(bool& value, bool defaultValue = false) const
+													{ value = getBool(defaultValue); }
 				const	CData&					getData(const CData& defaultValue = CData::mEmpty) const;
 				const	CDictionary&			getDictionary(const CDictionary& defaultValue = getEmptyDictionary())
 														const;
 				const	CString&				getString(const CString& defaultValue = CString::mEmpty) const;
 						Float32					getFloat32(Float32 defaultValue = 0.0) const;
+						void					getValue(Float32& value, Float32 defaultValue = 0.0) const
+													{ value = getFloat32(defaultValue); }
 						Float64					getFloat64(Float64 defaultValue = 0.0) const;
+						void					getValue(Float64& value, Float64 defaultValue = 0.0) const
+													{ value = getFloat64(defaultValue); }
 						SInt8					getSInt8(SInt8 defaultValue = 0) const;
+						void					getValue(SInt8& value, SInt8 defaultValue = 0) const
+													{ value = getSInt8(defaultValue); }
 						SInt16					getSInt16(SInt16 defaultValue = 0) const;
+						void					getValue(SInt16& value, SInt16 defaultValue = 0) const
+													{ value = getSInt16(defaultValue); }
 						SInt32					getSInt32(SInt32 defaultValue = 0) const;
+						void					getValue(SInt32& value, SInt32 defaultValue = 0) const
+													{ value = getSInt32(defaultValue); }
 						SInt64					getSInt64(SInt64 defaultValue = 0) const;
+						void					getValue(SInt64& value, SInt64 defaultValue = 0) const
+													{ value = getSInt64(defaultValue); }
 						UInt8					getUInt8(UInt8 defaultValue = 0) const;
+						void					getValue(UInt8& value, UInt8 defaultValue = 0) const
+													{ value = getUInt8(defaultValue); }
 						UInt16					getUInt16(UInt16 defaultValue = 0) const;
+						void					getValue(UInt16& value, UInt16 defaultValue = 0) const
+													{ value = getUInt16(defaultValue); }
 						UInt32					getUInt32(UInt32 defaultValue = 0) const;
+						void					getValue(UInt32& value, UInt32 defaultValue = 0) const
+													{ value = getUInt32(defaultValue); }
 						UInt64					getUInt64(UInt64 defaultValue = 0) const;
+						void					getValue(UInt64& value, UInt64 defaultValue = 0) const
+													{ value = getUInt64(defaultValue); }
 						Opaque					getOpaque() const;
 
-						bool					equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc) const;
+						bool					equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc = nil)
+														const;
 
 						void					dispose(OpaqueDisposeProc opaqueDisposeProc);
 

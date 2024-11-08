@@ -199,6 +199,8 @@ bool SValue::canCoerceToType(Type type) const
 		case kTypeUInt64:
 			// Check current type
 			switch (mType) {
+				case kTypeFloat32:
+				case kTypeFloat64:
 				case kTypeSInt8:
 				case kTypeSInt16:
 				case kTypeSInt32:
@@ -248,6 +250,8 @@ bool SValue::getBool(bool defaultValue) const
 	// Check value type
 	switch (mType) {
 		case kTypeBool:		return mValue.mBool;
+		case kTypeFloat32:	return mValue.mFloat32 == 1.0;
+		case kTypeFloat64:	return mValue.mFloat64 == 1.0;
 		case kTypeSInt8:	return mValue.mSInt8 == 1;
 		case kTypeSInt16:	return mValue.mSInt16 == 1;
 		case kTypeSInt32:	return mValue.mSInt32 == 1;
@@ -348,14 +352,16 @@ SInt8 SValue::getSInt8(SInt8 defaultValue) const
 {
 	// Check value type
 	switch (mType) {
+		case kTypeFloat32:	return (SInt8) mValue.mFloat32;
+		case kTypeFloat64:	return (SInt8) mValue.mFloat64;
 		case kTypeSInt8:	return mValue.mSInt8;
 		case kTypeSInt16:	return (SInt8) mValue.mSInt16;
-		case kTypeSInt32:	return (SInt8)mValue.mSInt32;
-		case kTypeSInt64:	return (SInt8)mValue.mSInt64;
+		case kTypeSInt32:	return (SInt8) mValue.mSInt32;
+		case kTypeSInt64:	return (SInt8) mValue.mSInt64;
 		case kTypeUInt8:	return mValue.mUInt8;
-		case kTypeUInt16:	return (SInt8)mValue.mUInt16;
-		case kTypeUInt32:	return (SInt8)mValue.mUInt32;
-		case kTypeUInt64:	return (SInt8)mValue.mUInt64;
+		case kTypeUInt16:	return (SInt8) mValue.mUInt16;
+		case kTypeUInt32:	return (SInt8) mValue.mUInt32;
+		case kTypeUInt64:	return (SInt8) mValue.mUInt64;
 		default:
 			// Cannot coerce value
 			AssertFail();
@@ -370,6 +376,8 @@ SInt16 SValue::getSInt16(SInt16 defaultValue) const
 {
 	// Check value type
 	switch (mType) {
+		case kTypeFloat32:	return (SInt16) mValue.mFloat32;
+		case kTypeFloat64:	return (SInt16) mValue.mFloat64;
 		case kTypeSInt8:	return mValue.mSInt8;
 		case kTypeSInt16:	return mValue.mSInt16;
 		case kTypeSInt32:	return (SInt16) mValue.mSInt32;
@@ -392,6 +400,8 @@ SInt32 SValue::getSInt32(SInt32 defaultValue) const
 {
 	// Check value type
 	switch (mType) {
+		case kTypeFloat32:	return (SInt32) mValue.mFloat32;
+		case kTypeFloat64:	return (SInt32) mValue.mFloat64;
 		case kTypeSInt8:	return mValue.mSInt8;
 		case kTypeSInt16:	return mValue.mSInt16;
 		case kTypeSInt32:	return mValue.mSInt32;
@@ -414,6 +424,8 @@ SInt64 SValue::getSInt64(SInt64 defaultValue) const
 {
 	// Check value type
 	switch (mType) {
+		case kTypeFloat32:	return (SInt64) mValue.mFloat32;
+		case kTypeFloat64:	return (SInt64) mValue.mFloat64;
 		case kTypeSInt8:	return mValue.mSInt8;
 		case kTypeSInt16:	return mValue.mSInt16;
 		case kTypeSInt32:	return mValue.mSInt32;
@@ -436,6 +448,8 @@ UInt8 SValue::getUInt8(UInt8 defaultValue) const
 {
 	// Check value type
 	switch (mType) {
+		case kTypeFloat32:	return (UInt8) mValue.mFloat32;
+		case kTypeFloat64:	return (UInt8) mValue.mFloat64;
 		case kTypeSInt8:	return mValue.mSInt8;
 		case kTypeSInt16:	return (UInt8) mValue.mSInt16;
 		case kTypeSInt32:	return (UInt8) mValue.mSInt32;
@@ -458,6 +472,8 @@ UInt16 SValue::getUInt16(UInt16 defaultValue) const
 {
 	// Check value type
 	switch (mType) {
+		case kTypeFloat32:	return (UInt16) mValue.mFloat32;
+		case kTypeFloat64:	return (UInt16) mValue.mFloat64;
 		case kTypeSInt8:	return mValue.mSInt8;
 		case kTypeSInt16:	return mValue.mSInt16;
 		case kTypeSInt32:	return (UInt16) mValue.mSInt32;
@@ -480,6 +496,8 @@ UInt32 SValue::getUInt32(UInt32 defaultValue) const
 {
 	// Check value type
 	switch (mType) {
+		case kTypeFloat32:	return (UInt32) mValue.mFloat32;
+		case kTypeFloat64:	return (UInt32) mValue.mFloat64;
 		case kTypeSInt8:	return mValue.mSInt8;
 		case kTypeSInt16:	return mValue.mSInt16;
 		case kTypeSInt32:	return mValue.mSInt32;
@@ -502,6 +520,8 @@ UInt64 SValue::getUInt64(UInt64 defaultValue) const
 {
 	// Check value type
 	switch (mType) {
+		case kTypeFloat32:	return (UInt64) mValue.mFloat32;
+		case kTypeFloat64:	return (UInt64) mValue.mFloat64;
 		case kTypeSInt8:	return mValue.mSInt8;
 		case kTypeSInt16:	return mValue.mSInt16;
 		case kTypeSInt32:	return mValue.mSInt32;
