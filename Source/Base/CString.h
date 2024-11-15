@@ -394,3 +394,12 @@ class CString : public CHashable {
 						std::basic_string<TCHAR>	mString;
 #endif
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Macros
+
+#define CSTRING_LAZYILY_LOCALIZED(localizationGroup, localizationKey)				\
+	static	CString*	sString = nil;												\
+	if (sString == nil)																\
+		sString = new CString(localizationGroup, CString(OSSTR(localizationKey)));	\
+	return *sString;
