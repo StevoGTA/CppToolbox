@@ -5,7 +5,18 @@
 #include "SLocalization.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SLocalization::Language
+// MARK: Local procs
+
+//----------------------------------------------------------------------------------------------------------------------
+static CString sGetDisplayNameForLocalizationLanguage(SLocalization::Language* localizationLanguage, void* userData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return localizationLanguage->getDisplayName();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SLocalization::Language
 
 // MARK: Class methods
 
@@ -881,6 +892,18 @@ OV<SLocalization::Language> SLocalization::Language::getFor(OSType iso639_2_Code
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<SLocalization::Language> SLocalization::Language::getFor(const CString& iso639_2_CodeString)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Validate
+	if (iso639_2_CodeString.getLength() != 3)
+		// Must be 3 characters
+		return OV<Language>();
+
+	return getFor((iso639_2_CodeString + CString::mNull).getOSType());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const SLocalization::Language& SLocalization::Language::getDefault()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -888,4 +911,31 @@ const SLocalization::Language& SLocalization::Language::getDefault()
 	static	Language	sLanguageENG(MAKE_OSTYPE('e', 'n', 'g', 0), false);
 
 	return sLanguageENG;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString SLocalization::Language::getDisplayName(const TArray<Language>& languages)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CString(TNArray<CString>(languages, (TNArray<CString>::MapProc) sGetDisplayNameForLocalizationLanguage));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool SLocalization::Language::equals(const TArray<Language>& languages1, const TArray<Language>& languages2)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check count
+	if (languages1.getCount() != languages2.getCount())
+		// Counts differ
+		return false;
+
+	// Check items
+	for (CArray::ItemIndex i = 0; i < languages1.getCount(); i++) {
+		// Check item
+		if (!(languages1[i] == languages2[i]))
+			// Differ
+			return false;
+	}
+
+	return true;
 }

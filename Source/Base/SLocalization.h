@@ -26,6 +26,9 @@ struct SLocalization {
 													// Instance methods
 								OSType				getISO639_2_Code() const
 														{ return mISO639_2_Code; }
+								CString				getISO639_2_CodeAsString() const
+														{ return CString(getISO639_2_Code(), true, false)
+																.getSubString(0, 3); }
 								bool				isCommon() const
 														{ return mIsCommon; }
 
@@ -39,7 +42,13 @@ struct SLocalization {
 													// Class methods
 				static			TArray<Language>&	getAll();
 				static			OV<Language>		getFor(OSType iso639_2_Code);
+				static			OV<Language>		getFor(const CString& iso639_2_CodeString);
 				static	const	Language&			getDefault();
+
+				static			CString				getDisplayName(const TArray<Language>& languages);
+
+				static			bool				equals(const TArray<Language>& languages1,
+															const TArray<Language>& languages2);
 
 			private:
 													// Lifecycle methods
