@@ -91,330 +91,332 @@ class CDictionary : public CEquatable {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
-														SValue::OpaqueEqualsProc opaqueEqualsProc = nil,
-														SValue::OpaqueDisposeProc opaqueDisposeProc = nil);
-												CDictionary(const Procs& procs);
-												CDictionary(const CDictionary& other);
-		virtual									~CDictionary();
+													// Lifecycle methods
+													CDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
+															SValue::OpaqueEqualsProc opaqueEqualsProc = nil,
+															SValue::OpaqueDisposeProc opaqueDisposeProc = nil);
+													CDictionary(const Procs& procs);
+													CDictionary(const CDictionary& other);
+		virtual										~CDictionary();
 
-												// CEquatable methods
-						bool					operator==(const CEquatable& other) const
-													{ return equals((const CDictionary&) other); }
+													// CEquatable methods
+						bool						operator==(const CEquatable& other) const
+														{ return equals((const CDictionary&) other); }
 
-												// Instance methods
-		virtual			KeyCount				getKeyCount() const;
-		virtual			TSet<CString>			getKeys() const;
-						bool					isEmpty() const
-													{ return getKeyCount() == 0; }
+													// Instance methods
+		virtual			KeyCount					getKeyCount() const;
+		virtual			TSet<CString>				getKeys() const;
+						bool						isEmpty() const
+														{ return getKeyCount() == 0; }
 
-		virtual			bool					contains(const CString& key) const;
+		virtual			bool						contains(const CString& key) const;
 
-				const	SValue&					getValue(const CString& key) const;
-						OV<SValue>				getOValue(const CString& key) const;
-						bool					getBool(const CString& key, bool defaultValue = false) const;
-						OV<bool>				getOVBool(const CString& key) const;
-				const	TArray<CDictionary>&	getArrayOfDictionaries(const CString& key,
-														const TArray<CDictionary>& defaultValue =
-																TNArray<CDictionary>()) const;
-				const	TArray<CString>&		getArrayOfStrings(const CString& key,
-														const TArray<CString>& defaultValue = TNArray<CString>()) const;
-						OV<TArray<CString> >	getOVArrayOfStrings(const CString& key) const;
-				const	CData&					getData(const CString& key, const CData& defaultValue = CData::mEmpty)
-														const;
-				const	CDictionary&			getDictionary(const CString& key,
-														const CDictionary& defaultValue = mEmpty) const;
-						OV<CDictionary>			getOVDictionary(const CString& key) const;
-				const	CString&				getString(const CString& key,
-														const CString& defaultValue = CString::mEmpty) const;
-						OV<CString>				getOVString(const CString& key) const;
-						Float32					getFloat32(const CString& key, Float32 defaultValue = 0.0) const;
-						OV<Float32>				getOVFloat32(const CString& key) const;
-						Float64					getFloat64(const CString& key, Float64 defaultValue = 0.0) const;
-						OV<Float64>				getOVFloat64(const CString& key) const;
-						SInt8					getSInt8(const CString& key, SInt8 defaultValue = 0) const;
-						OV<SInt8>				getOVSInt8(const CString& key) const;
-						SInt16					getSInt16(const CString& key, SInt16 defaultValue = 0) const;
-						OV<SInt16>				getOVSInt16(const CString& key) const;
-						SInt32					getSInt32(const CString& key, SInt32 defaultValue = 0) const;
-						OV<SInt32>				getOVSInt32(const CString& key) const;
-						SInt64					getSInt64(const CString& key, SInt64 defaultValue = 0) const;
-						OV<SInt64>				getOVSInt64(const CString& key) const;
-						UInt8					getUInt8(const CString& key, UInt8 defaultValue = 0) const;
-						OV<UInt8>				getOVUInt8(const CString& key) const;
-						UInt16					getUInt16(const CString& key, UInt16 defaultValue = 0) const;
-						OV<UInt16>				getOVUInt16(const CString& key) const;
-						UInt32					getUInt32(const CString& key, UInt32 defaultValue = 0) const;
-						OV<UInt32>				getOVUInt32(const CString& key) const;
-						UInt64					getUInt64(const CString& key, UInt64 defaultValue = 0) const;
-						OV<UInt64>				getOVUInt64(const CString& key) const;
-						OV<SValue::Opaque>		getOpaque(const CString& key) const;
-						OSType					getOSType(const CString& key, OSType defaultValue = 0) const
-													{ return getUInt32(key, defaultValue); }
-						OV<OSType>				getOVOSType(const CString& key) const
-													{ return getOVUInt32(key); }
-						void					getValue(const CString& key, bool& outValue,
-														bool defaultValue = false) const
-													{ outValue = getBool(key, defaultValue); }
-						void					getValue(const CString& key, OV<bool>& outValue) const
-													{ outValue = getOVBool(key); }
-						void					getValue(const CString& key, Float32& outValue,
-														Float32 defaultValue = 0.0) const
-													{ outValue = getFloat32(key, defaultValue); }
-						void					getValue(const CString& key, OV<Float32>& outValue) const
-													{ outValue = getOVFloat32(key); }
-						void					getValue(const CString& key, Float64& outValue,
-														Float64 defaultValue = 0.0) const
-													{ outValue = getFloat64(key, defaultValue); }
-						void					getValue(const CString& key, OV<Float64>& outValue) const
-													{ outValue = getOVFloat64(key); }
-						void					getValue(const CString& key, SInt8& outValue, SInt8 defaultValue = 0)
-														const
-													{ outValue = getSInt8(key, defaultValue); }
-						void					getValue(const CString& key, OV<SInt8>& outValue) const
-													{ outValue = getOVSInt8(key); }
-						void					getValue(const CString& key, SInt16& outValue, SInt16 defaultValue = 0)
-														const
-													{ outValue = getSInt16(key, defaultValue); }
-						void					getValue(const CString& key, OV<SInt16>& outValue) const
-													{ outValue = getOVSInt16(key); }
-						void					getValue(const CString& key, SInt32& outValue, SInt32 defaultValue = 0)
-														const
-													{ outValue = getSInt32(key, defaultValue); }
-						void					getValue(const CString& key, OV<SInt32>& outValue) const
-													{ outValue = getOVSInt32(key); }
-						void					getValue(const CString& key, SInt64& outValue, SInt64 defaultValue = 0)
-														const
-													{ outValue = getSInt64(key, defaultValue); }
-						void					getValue(const CString& key, OV<SInt64>& outValue) const
-													{ outValue = getOVSInt64(key); }
-						void					getValue(const CString& key, UInt8& outValue, UInt8 defaultValue = 0)
-														const
-													{ outValue = getUInt8(key, defaultValue); }
-						void					getValue(const CString& key, OV<UInt8>& outValue) const
-													{ outValue = getOVUInt8(key); }
-						void					getValue(const CString& key, UInt16& outValue, UInt16 defaultValue = 0)
-														const
-													{ outValue = getUInt16(key, defaultValue); }
-						void					getValue(const CString& key, OV<UInt16>& outValue) const
-													{ outValue = getOVUInt16(key); }
-						void					getValue(const CString& key, UInt32& outValue, UInt32 defaultValue = 0)
-														const
-													{ outValue = getUInt32(key, defaultValue); }
-						void					getValue(const CString& key, OV<UInt32>& outValue) const
-													{ outValue = getOVUInt32(key); }
-						void					getValue(const CString& key, UInt64& outValue, UInt64 defaultValue = 0)
-														const
-													{ outValue = getUInt64(key, defaultValue); }
-						void					getValue(const CString& key, OV<UInt64>& outValue) const
-													{ outValue = getOVUInt64(key); }
+				const	SValue&						getValue(const CString& key) const;
+						OV<SValue>					getOValue(const CString& key) const;
+						bool						getBool(const CString& key, bool defaultValue = false) const;
+						OV<bool>					getOVBool(const CString& key) const;
+				const	TArray<CDictionary>&		getArrayOfDictionaries(const CString& key,
+															const TArray<CDictionary>& defaultValue =
+																	TNArray<CDictionary>()) const;
+						OV<TArray<CDictionary> >	getOVArrayOfDictionaries(const CString& key) const;
+				const	TArray<CString>&			getArrayOfStrings(const CString& key,
+															const TArray<CString>& defaultValue = TNArray<CString>())
+															const;
+						OV<TArray<CString> >		getOVArrayOfStrings(const CString& key) const;
+				const	CData&						getData(const CString& key,
+															const CData& defaultValue = CData::mEmpty) const;
+				const	CDictionary&				getDictionary(const CString& key,
+															const CDictionary& defaultValue = mEmpty) const;
+						OV<CDictionary>				getOVDictionary(const CString& key) const;
+				const	CString&					getString(const CString& key,
+															const CString& defaultValue = CString::mEmpty) const;
+						OV<CString>					getOVString(const CString& key) const;
+						Float32						getFloat32(const CString& key, Float32 defaultValue = 0.0) const;
+						OV<Float32>					getOVFloat32(const CString& key) const;
+						Float64						getFloat64(const CString& key, Float64 defaultValue = 0.0) const;
+						OV<Float64>					getOVFloat64(const CString& key) const;
+						SInt8						getSInt8(const CString& key, SInt8 defaultValue = 0) const;
+						OV<SInt8>					getOVSInt8(const CString& key) const;
+						SInt16						getSInt16(const CString& key, SInt16 defaultValue = 0) const;
+						OV<SInt16>					getOVSInt16(const CString& key) const;
+						SInt32						getSInt32(const CString& key, SInt32 defaultValue = 0) const;
+						OV<SInt32>					getOVSInt32(const CString& key) const;
+						SInt64						getSInt64(const CString& key, SInt64 defaultValue = 0) const;
+						OV<SInt64>					getOVSInt64(const CString& key) const;
+						UInt8						getUInt8(const CString& key, UInt8 defaultValue = 0) const;
+						OV<UInt8>					getOVUInt8(const CString& key) const;
+						UInt16						getUInt16(const CString& key, UInt16 defaultValue = 0) const;
+						OV<UInt16>					getOVUInt16(const CString& key) const;
+						UInt32						getUInt32(const CString& key, UInt32 defaultValue = 0) const;
+						OV<UInt32>					getOVUInt32(const CString& key) const;
+						UInt64						getUInt64(const CString& key, UInt64 defaultValue = 0) const;
+						OV<UInt64>					getOVUInt64(const CString& key) const;
+						OV<SValue::Opaque>			getOpaque(const CString& key) const;
+						OSType						getOSType(const CString& key, OSType defaultValue = 0) const
+														{ return getUInt32(key, defaultValue); }
+						OV<OSType>					getOVOSType(const CString& key) const
+														{ return getOVUInt32(key); }
+						void						getValue(const CString& key, bool& outValue,
+															bool defaultValue = false) const
+														{ outValue = getBool(key, defaultValue); }
+						void						getValue(const CString& key, OV<bool>& outValue) const
+														{ outValue = getOVBool(key); }
+						void						getValue(const CString& key, Float32& outValue,
+															Float32 defaultValue = 0.0) const
+														{ outValue = getFloat32(key, defaultValue); }
+						void						getValue(const CString& key, OV<Float32>& outValue) const
+														{ outValue = getOVFloat32(key); }
+						void						getValue(const CString& key, Float64& outValue,
+															Float64 defaultValue = 0.0) const
+														{ outValue = getFloat64(key, defaultValue); }
+						void						getValue(const CString& key, OV<Float64>& outValue) const
+														{ outValue = getOVFloat64(key); }
+						void						getValue(const CString& key, SInt8& outValue,
+															SInt8 defaultValue = 0) const
+														{ outValue = getSInt8(key, defaultValue); }
+						void						getValue(const CString& key, OV<SInt8>& outValue) const
+														{ outValue = getOVSInt8(key); }
+						void						getValue(const CString& key, SInt16& outValue,
+															SInt16 defaultValue = 0) const
+														{ outValue = getSInt16(key, defaultValue); }
+						void						getValue(const CString& key, OV<SInt16>& outValue) const
+														{ outValue = getOVSInt16(key); }
+						void						getValue(const CString& key, SInt32& outValue,
+															SInt32 defaultValue = 0) const
+														{ outValue = getSInt32(key, defaultValue); }
+						void						getValue(const CString& key, OV<SInt32>& outValue) const
+														{ outValue = getOVSInt32(key); }
+						void						getValue(const CString& key, SInt64& outValue,
+															SInt64 defaultValue = 0) const
+														{ outValue = getSInt64(key, defaultValue); }
+						void						getValue(const CString& key, OV<SInt64>& outValue) const
+														{ outValue = getOVSInt64(key); }
+						void						getValue(const CString& key, UInt8& outValue,
+															UInt8 defaultValue = 0) const
+														{ outValue = getUInt8(key, defaultValue); }
+						void						getValue(const CString& key, OV<UInt8>& outValue) const
+														{ outValue = getOVUInt8(key); }
+						void						getValue(const CString& key, UInt16& outValue,
+															UInt16 defaultValue = 0) const
+														{ outValue = getUInt16(key, defaultValue); }
+						void						getValue(const CString& key, OV<UInt16>& outValue) const
+														{ outValue = getOVUInt16(key); }
+						void						getValue(const CString& key, UInt32& outValue,
+															UInt32 defaultValue = 0) const
+														{ outValue = getUInt32(key, defaultValue); }
+						void						getValue(const CString& key, OV<UInt32>& outValue) const
+														{ outValue = getOVUInt32(key); }
+						void						getValue(const CString& key, UInt64& outValue,
+															UInt64 defaultValue = 0) const
+														{ outValue = getUInt64(key, defaultValue); }
+						void						getValue(const CString& key, OV<UInt64>& outValue) const
+														{ outValue = getOVUInt64(key); }
 
-						void					set(const CString& key, bool value);
-						void					set(const CString& key, const TArray<CDictionary>& value);
-						void					set(const CString& key, const OV<TArray<CDictionary> >& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, const TArray<CString>& value);
-						void					set(const CString& key, const OV<TArray<CString> >& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, const CData& value);
-						void					set(const CString& key, const OV<CData>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, const CDictionary& value);
-						void					set(const CString& key, const OV<CDictionary>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, const CString& value);
-						void					set(const CString& key, const OV<CString>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, Float32 value);
-						void					set(const CString& key, const OV<Float32>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, Float64 value);
-						void					set(const CString& key, const OV<Float64>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, SInt8 value);
-						void					set(const CString& key, const OV<SInt8>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, SInt16 value);
-						void					set(const CString& key, const OV<SInt16>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, SInt32 value);
-						void					set(const CString& key, const OV<SInt32>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, SInt64 value);
-						void					set(const CString& key, const OV<SInt64>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, UInt8 value);
-						void					set(const CString& key, const OV<UInt8>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, UInt16 value);
-						void					set(const CString& key, const OV<UInt16>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, UInt32 value);
-						void					set(const CString& key, const OV<UInt32>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, UInt64 value);
-						void					set(const CString& key, const OV<UInt64>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, SValue::Opaque value);
-						void					set(const CString& key, const SValue& value);
-						void					set(const CString& key, const OV<SValue>& value)
-													{
-														// Check for value
-														if (value.hasValue())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
-						void					set(const CString& key, const OR<SValue>& value)
-													{
-														// Check for value
-														if (value.hasReference())
-															// Have value
-															set(key, *value);
-														else
-															// Don't have value
-															remove(key);
-													}
+						void						set(const CString& key, bool value);
+						void						set(const CString& key, const TArray<CDictionary>& value);
+						void						set(const CString& key, const OV<TArray<CDictionary> >& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, const TArray<CString>& value);
+						void						set(const CString& key, const OV<TArray<CString> >& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, const CData& value);
+						void						set(const CString& key, const OV<CData>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, const CDictionary& value);
+						void						set(const CString& key, const OV<CDictionary>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, const CString& value);
+						void						set(const CString& key, const OV<CString>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, Float32 value);
+						void						set(const CString& key, const OV<Float32>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, Float64 value);
+						void						set(const CString& key, const OV<Float64>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, SInt8 value);
+						void						set(const CString& key, const OV<SInt8>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, SInt16 value);
+						void						set(const CString& key, const OV<SInt16>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, SInt32 value);
+						void						set(const CString& key, const OV<SInt32>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, SInt64 value);
+						void						set(const CString& key, const OV<SInt64>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, UInt8 value);
+						void						set(const CString& key, const OV<UInt8>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, UInt16 value);
+						void						set(const CString& key, const OV<UInt16>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, UInt32 value);
+						void						set(const CString& key, const OV<UInt32>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, UInt64 value);
+						void						set(const CString& key, const OV<UInt64>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, SValue::Opaque value);
+						void						set(const CString& key, const SValue& value);
+						void						set(const CString& key, const OV<SValue>& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, const OR<SValue>& value)
+														{
+															// Check for value
+															if (value.hasReference())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
 
-						void					remove(const CString& key);
-						void					remove(const TArray<CString>& keys);
-						void					remove(const TSet<CString>& keys);
-						CDictionary				removing(const TArray<CString>& keys);
-						CDictionary				removing(const TSet<CString>& keys);
-						void					removeAll();
+						void						remove(const CString& key);
+						void						remove(const TArray<CString>& keys);
+						void						remove(const TSet<CString>& keys);
+						CDictionary					removing(const TArray<CString>& keys);
+						CDictionary					removing(const TSet<CString>& keys);
+						void						removeAll();
 
-						bool					equals(const CDictionary& other, void* itemCompareProcUserData = nil)
-														const;
+						bool						equals(const CDictionary& other,
+															void* itemCompareProcUserData = nil) const;
 
-						TIteratorS<Item>		getIterator() const;
+						TIteratorS<Item>			getIterator() const;
 
-				const	OR<SValue>				operator[](const CString& key) const;
-						CDictionary&			operator=(const CDictionary& other);
-						CDictionary				operator+(const CDictionary& other) const;
-						CDictionary&			operator+=(const CDictionary& other);
+				const	OR<SValue>					operator[](const CString& key) const;
+						CDictionary&				operator=(const CDictionary& other);
+						CDictionary					operator+(const CDictionary& other) const;
+						CDictionary&				operator+=(const CDictionary& other);
 
 	// Properties
 	public:

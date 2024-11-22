@@ -660,6 +660,17 @@ const TArray<CDictionary>& CDictionary::getArrayOfDictionaries(const CString& ke
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<TArray<CDictionary> > CDictionary::getOVArrayOfDictionaries(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mInternals->getValue(key);
+
+	return value.hasReference() ?
+			OV<TArray<CDictionary> >(value->getArrayOfDictionaries()) : OV<TArray<CDictionary> >();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const TArray<CString>& CDictionary::getArrayOfStrings(const CString& key, const TArray<CString>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
