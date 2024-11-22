@@ -384,8 +384,9 @@ class CString : public CHashable {
 		static	const	CString		mTab;
 		static	const	CString		mUnderscore;
 
-		static	const	CString		mNewline;
 		static	const	CString		mLinefeed;
+		static	const	CString		mLineFeedNewline;
+		static	const	CString		mNewline;
 		static	const	CString		mNewlineLinefeed;
 		static	const	CString		mPlatformDefaultNewline;
 		

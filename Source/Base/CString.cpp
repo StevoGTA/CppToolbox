@@ -42,8 +42,9 @@ const	CString	CString::mSpaceX4(OSSTR("    "));
 const	CString	CString::mTab(OSSTR("\t"));
 const	CString	CString::mUnderscore(OSSTR("_"));
 
-const	CString	CString::mNewline(OSSTR("\n"));
 const	CString	CString::mLinefeed(OSSTR("\r"));
+const	CString	CString::mLineFeedNewline(OSSTR("\r\n"));
+const	CString	CString::mNewline(OSSTR("\n"));
 const	CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
