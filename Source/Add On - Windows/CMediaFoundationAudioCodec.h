@@ -16,8 +16,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaFoundationDecodeAudioCodec
 
-class CMediaFoundationDecodeAudioCodecInternals;
 class CMediaFoundationDecodeAudioCodec : public CDecodeAudioCodec {
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -40,5 +43,5 @@ class CMediaFoundationDecodeAudioCodec : public CDecodeAudioCodec {
 
 	// Properties
 	private:
-		CMediaFoundationDecodeAudioCodecInternals*	mInternals;
+		Internals*	mInternals;
 };

@@ -912,15 +912,16 @@ void CString::setupLocalization(const CData& stringsFileData)
 	TArray<CString>	lines =
 							CString(stringsFileData, kEncodingUTF8)
 									.replacingSubStrings(CString(OSSTR("\\U00B5")), CString(OSSTR("\u00B5")))
-									.components(CString::mNewline);
+									.components(CString::mPlatformDefaultNewline);
 	for (TIteratorD<CString> iterator = lines.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Process line
 		TArray<CString>	components = iterator->components(CString(OSSTR(" = ")));
 		if (components.getCount() == 2)
 			// Have a localization line
 			sLocalizationInfo.set(components[0].getSubString(1, components[0].getLength() - 2),
-					components[1].getSubString(1, components[1].getLength() - 4)
-							.replacingSubStrings(CString(OSSTR("\\\"")), CString::mDoubleQuote));
+					components[1].getSubString(1, components[1].getLength() - 3)
+							.replacingSubStrings(CString(OSSTR("\\\"")), CString::mDoubleQuote)
+							.replacingSubStrings(CString(OSSTR("\\n")), CString::mNewline));
 	}
 }
 
