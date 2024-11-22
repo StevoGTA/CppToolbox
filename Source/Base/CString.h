@@ -71,8 +71,6 @@ class CString : public CHashable {
 			kEncodingUTF32BE,	// UTF 32 w/o BOM and explicit BE order
 			kEncodingUTF32LE,	// UTF 32 w/o BOM and explicit LE order
 
-			//kEncodingTextDefault = kEncodingUTF8,
-
 #if TARGET_RT_BIG_ENDIAN
 			kEncodingUTF16Native = kEncodingUTF16BE,
 			kEncodingUTF32Native = kEncodingUTF32BE,
@@ -86,8 +84,10 @@ class CString : public CHashable {
 	public:
 		enum CharacterSet {
 			kCharacterSetControl,				// Control character set (Unicode General Category Cc and Cf
-			kCharacterSetWhitespace,			// Whitespace character set (Unicode General Category Zs and U0009 CHARACTER TABULATION
-			kCharacterSetWhitespaceAndNewline,	// Whitespace and Newline character set (Unicode General Category Z*, U000A ~ U000D, and U0085)
+			kCharacterSetWhitespace,			// Whitespace character set (Unicode General Category Zs and U0009
+												//	CHARACTER TABULATION
+			kCharacterSetWhitespaceAndNewline,	// Whitespace and Newline character set (Unicode General Category Z*,
+												//	U000A ~ U000D, and U0085)
 			kCharacterSetDecimalDigit,			// Decimal digit character set
 			kCharacterSetLetter,				// Letter character set (Unicode General Category L* & M*)
 			kCharacterSetLowercaseLetter,		// Lowercase character set (Unicode General Category Ll)
@@ -210,6 +210,7 @@ class CString : public CHashable {
 											CString();
 											CString(const CString& other);
 											CString(OSStringVar(initialString));
+											CString(const char chars[]);
 											CString(const void* ptr, UInt32 byteCount, Encoding encoding);
 											CString(const TBuffer<UTF32Char>& buffer);
 
@@ -302,7 +303,8 @@ class CString : public CHashable {
 												{ return getSubString(startIndex, OV<Length>(length)); }
 						CString				replacingSubStrings(const CString& subStringToReplace,
 													const CString& replacementString = CString::mEmpty) const;
-						CString				replacingCharacters(CharIndex startIndex = 0, OV<Length> length = OV<Length>(),
+						CString				replacingCharacters(CharIndex startIndex = 0,
+													OV<Length> length = OV<Length>(),
 													const CString& replacementString = CString::mEmpty) const;
 
 						OV<SRange32>		findSubString(const CString& subString, CharIndex startIndex = 0,
@@ -318,7 +320,8 @@ class CString : public CHashable {
 						bool				isValidEmailAddress() const;
 						CString				getCommonPrefix(const CString& other) const;
 					
-						TArray<CString>		components(const CString& separator, bool includeEmptyComponents = true) const;
+						TArray<CString>		components(const CString& separator, bool includeEmptyComponents = true)
+													const;
 						TArray<CString>		componentsRespectingQuotes(const CString& separator) const;
 
 						bool				compareTo(const CString& other,
@@ -338,7 +341,8 @@ class CString : public CHashable {
 						CString				operator+(const CString& other) const;
 												
 											// Class methods
-		static			bool				compare(const CString& string1, const CString& string2, void* compareToOptions);
+		static			bool				compare(const CString& string1, const CString& string2,
+													void* compareToOptions);
 
 		static			CString				lowercase(const CString* string, void* userData);
 		static			CString				uppercase(const CString* string, void* userData);

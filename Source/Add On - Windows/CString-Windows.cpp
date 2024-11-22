@@ -515,22 +515,19 @@ TBuffer<char> CString::getUTF8Chars() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	int	length = (int)mString.length();
+	int	length = (int) mString.length();
 
 	// Check length
 	if (length > 0) {
 		// Setup
-		TBuffer<char>	tempBuffer(length * 4);
+		TBuffer<char>	buffer(length * 4);
 
 		// Convert
 		int	count =
 					::WideCharToMultiByte(sGetCodePageForCStringEncoding(kEncodingUTF8), 0, mString.c_str(), length,
-							(char*) *tempBuffer, length * 4, NULL, NULL);
+							(char*) *buffer, length * 4, NULL, NULL);
 
-		TBuffer<char>	buffer(count);
-		::memcpy(*buffer, *tempBuffer, count);
-
-		return buffer;
+		return TBuffer<char>(buffer, count);
 	} else
 		// Empty
 		return TBuffer<char>(0);

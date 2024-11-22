@@ -250,6 +250,6 @@ void sLogToConsoleOutput(const CString& string)
 #if defined(TARGET_OS_WINDOWS)
 	OutputDebugString((string + CString::mNewline).getOSString());
 #else
-	fprintf(stdout, "%s\n", *string.getCString());
+	fprintf(stdout, "%s\n", *string.getUTF8String());
 #endif
 }

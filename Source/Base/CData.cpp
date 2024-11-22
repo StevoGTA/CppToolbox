@@ -39,12 +39,9 @@ class CData::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 								// mBufferByteCount >0, initialBuffer not nil, copySourceData false
 								mBuffer = (void*) initialBuffer;
 							}
-						} else if (mBufferByteCount > 0)
-							// mBufferByteCount >0, initialBuffer nil
+						} else
+							// initialBuffer nil
 							mBuffer = ::calloc(1, (size_t) mBufferByteCount);
-						else
-							// mBufferByteCount 0, initialBuffer nil
-							mBuffer = nil;
 					}
 				Internals(const Internals& other) :
 					TCopyOnWriteReferenceCountable(), mFreeOnDelete(true),

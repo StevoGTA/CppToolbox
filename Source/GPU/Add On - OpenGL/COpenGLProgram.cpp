@@ -39,7 +39,9 @@ class COpenGLProgram::Internals : public TReferenceCountableAutoDelete<Internals
 						if (logLength > 0) {
 							char	log[logLength];
 							glGetProgramInfoLog(mProgram, logLength, &logLength, log);
-							CLogServices::logError(CString("Program failed to link with log:\n") + CString(log));
+							CLogServices::logError(
+									CString(OSSTR("Program failed to link with log:\n")) +
+											CString(log, logLength, CString::kEncodingASCII));
 						}
 
 						// Cleanup
@@ -51,23 +53,23 @@ class COpenGLProgram::Internals : public TReferenceCountableAutoDelete<Internals
 						for (TIteratorD<CString> iterator = attributeNames.getIterator(); iterator.hasValue();
 								iterator.advance())
 							// Store attribute location
-							mAttributeInfo.set(*iterator, glGetAttribLocation(mProgram, *iterator->getCString()));
+							mAttributeInfo.set(*iterator, glGetAttribLocation(mProgram, *iterator->getUTF8String()));
 
 						const	TArray<CString>&	vertexShaderUniformNames = mVertexShader.getUniformNames();
 						for (TIteratorD<CString> iterator = vertexShaderUniformNames.getIterator(); iterator.hasValue();
 								iterator.advance())
 							// Store attribute location
-							mUniformInfo.set(*iterator, glGetUniformLocation(mProgram, *iterator->getCString()));
+							mUniformInfo.set(*iterator, glGetUniformLocation(mProgram, *iterator->getUTF8String()));
 
 						const	TArray<CString>&	fragmentShaderuniformNames = mFragmentShader.getUniformNames();
 						for (TIteratorD<CString> iterator = fragmentShaderuniformNames.getIterator();
 								iterator.hasValue(); iterator.advance())
 							// Store attribute location
-							mUniformInfo.set(*iterator, glGetUniformLocation(mProgram, *iterator->getCString()));
+							mUniformInfo.set(*iterator, glGetUniformLocation(mProgram, *iterator->getUTF8String()));
 					}
 				} else
 					// Error
-					CLogServices::logError(CString("Could not create program"));
+					CLogServices::logError(CString(OSSTR("Could not create program")));
 			}
 		~Internals()
 			{

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CBitmap.h"
 #include "CGPUTexture.h"
 
 #include <CoreVideo/CoreVideo.h>
@@ -20,8 +21,10 @@ class CMetalTexture : public CGPUTexture {
 	// Methods
 	public:
 								// Lifecycle methods
-								CMetalTexture(id<MTLDevice> device, const CData& data,
-										CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size);
+								CMetalTexture(id<MTLDevice> device, const CBitmap& bitmap,
+										CGPUTexture::DataFormat gpuTextureDataFormat);
+								CMetalTexture(id<MTLDevice> device, const CData& data, const S2DSizeU16& dimensions,
+										CGPUTexture::DataFormat gpuTextureDataFormat);
 								CMetalTexture(CVMetalTextureCacheRef metalTextureCacheRef,
 										CVImageBufferRef imageBufferRef, UInt32 planeIndex);
 								CMetalTexture(const CMetalTexture& other);

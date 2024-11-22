@@ -531,7 +531,7 @@ TArray<CString> CAudioPlayer::getSetupDescription(const CString& indent)
 
 	// Add our setup description
 	setupDescriptions += indent + CString(OSSTR("Audio Player"));
-	setupDescriptions += indent + CString("    ") + mInternals->mAudioProcessingFormat->getDescription();
+	setupDescriptions += indent + CString(OSSTR("    ")) + mInternals->mAudioProcessingFormat->getDescription();
 
 	return setupDescriptions;
 }

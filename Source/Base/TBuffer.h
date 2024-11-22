@@ -23,13 +23,22 @@ template <typename T> struct TBuffer {
 						*mReferenceCount = 1;
 					}
 				TBuffer(T* buffer, UInt32 size) : mStorage(buffer), mByteCount(size), mReferenceCount(nil) {}
+				TBuffer(const TBuffer<T>& other, UInt32 count) :
+					mStorage(other.mStorage), mByteCount(count), mReferenceCount(other.mReferenceCount)
+					{
+						// Check for reference count
+						if (mReferenceCount != nil)
+							// Add reference
+							(*mReferenceCount)++;
+					}
 				TBuffer(const TBuffer<T>& other) :
 					mStorage(other.mStorage), mByteCount(other.mByteCount), mReferenceCount(other.mReferenceCount)
 					{
 						// Check for reference count
 						if (mReferenceCount != nil)
 							// Add reference
-							(*mReferenceCount)++; }
+							(*mReferenceCount)++;
+					}
 				~TBuffer()
 					{
 						// Check if need to cleanup

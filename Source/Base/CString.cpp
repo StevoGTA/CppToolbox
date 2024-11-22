@@ -57,6 +57,17 @@ const	CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
+CString::CString(const char chars[])
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Init
+	init();
+
+	// Finish setting up
+	*this = CString(chars, (UInt32) ::strlen(chars), kEncodingASCII);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CString::CString(UInt64 value, SpecialFormattingOptions options) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -254,7 +265,7 @@ CString::CString(const CData& data, Encoding encoding)
 	init();
 
 	// Finish setting up
-	*this = CString(data.getBytePtr(), data.getByteCount(), encoding);
+	*this = CString(data.getBytePtr(), (UInt32) data.getByteCount(), encoding);
 }
 
 // MARK: Instance methods

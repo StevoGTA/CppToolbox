@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CBitmap.h"
 #include "CGPURenderState.h"
 #include "CGPUTexture.h"
 #include "CVideoCodec.h"
@@ -36,8 +37,9 @@ class CGPU {
 								~CGPU();
 
 								// Instance methods
-		I<CGPUTexture>			registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat,
-										const S2DSizeU16& size);
+		I<CGPUTexture>			registerTexture(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat);
+		I<CGPUTexture>			registerTexture(const CData& data, const S2DSizeU16& dimensions,
+										CGPUTexture::DataFormat gpuTextureDataFormat);
 		TArray<I<CGPUTexture> >	registerTextures(const CVideoFrame& videoFrame);
 		void					unregisterTexture(const I<CGPUTexture>& gpuTexture);
 

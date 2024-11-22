@@ -18,7 +18,7 @@ class CFileDataSource::Internals {
 			mByteCount(file.getByteCount()), mFILE(nil), mFD(-1)
 			{
 				// Setup
-				CString::C	path = file.getFilesystemPath().getString().getCString(CString::kEncodingUTF8);
+				CString::C	path = file.getFilesystemPath().getString().getUTF8String();
 
 				// Check buffered
 				if (buffered) {
@@ -154,7 +154,7 @@ class CMappedFileDataSource::Internals {
 		Internals(const CFile& file, UInt64 byteOffset, UInt64 byteCount)
 			{
 				// Open
-				CString::C	path = file.getFilesystemPath().getString().getCString(CString::kEncodingUTF8);
+				CString::C	path = file.getFilesystemPath().getString().getUTF8String();
 				mFD = ::open(*path, O_RDONLY, 0);
 				if (mFD != -1) {
 					// Limit to bytes remaining

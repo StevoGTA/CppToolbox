@@ -24,8 +24,10 @@ static	SError	sCreateFailedError(sErrorDomain, 1, CString(OSSTR("Unable to creat
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
-static	CFOptionFlags		sGetCFOptionFlagsForCStringOptionFlags(CString::CompareFlags compareFlags);
-static	CFStringEncoding	sGetCFStringEncodingForCStringEncoding(CString::Encoding encoding);
+static	CFStringCompareFlags	sGetCFStringCompareFlagsForCStringContainsOptions(
+										CString::ContainsOptions containsOptions);
+static	CFStringEncoding		sGetCFStringEncodingForCStringEncoding(CString::Encoding encoding);
+static	bool					sIsCharacterInSet(UTF32Char utf32Char, CString::CharacterSet characterSet);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -49,18 +51,6 @@ CString::CString(const CString& other) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CString& other, Length length) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Create limited copy
-	mStringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, other.mStringRef);
-	if (::CFStringGetLength(mStringRef) > length)
-		// Truncate
-		::CFStringReplace((CFMutableStringRef) mStringRef,
-				CFRangeMake(length, ::CFStringGetLength(mStringRef) - length), CFSTR(""));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CString::CString(const OSStringVar(initialString)) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -68,28 +58,21 @@ CString::CString(const OSStringVar(initialString)) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const OSStringVar(initialString), Length length) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	mStringRef = (CFStringRef) ::CFRetain(initialString);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char* chars, Length length, Encoding encoding) : CHashable()
+CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertNotNil(chars);
+	AssertNotNil(ptr);
 
 	// Check situation
-	if (chars == nil)
+	if (ptr == nil)
 		// No initial string
 		mStringRef = CFSTR("");
 	else {
 		// Use only the length specified
-		char	buffer[length + 1];
-		::memmove(buffer, chars, length);
-		buffer[length] = 0;
+		char	buffer[byteCount + 1];
+		::memmove(buffer, ptr, byteCount);
+		buffer[byteCount] = 0;
 		mStringRef =
 				::CFStringCreateWithCString(kCFAllocatorDefault, buffer,
 						sGetCFStringEncodingForCStringEncoding(encoding));
@@ -104,79 +87,13 @@ CString::CString(const char* chars, Length length, Encoding encoding) : CHashabl
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char* chars, Encoding encoding) : CHashable()
+CString::CString(const TBuffer<UTF32Char>& buffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Parameter check
-	AssertNotNil(chars);
-
-	// Check situation
-	if (chars == nil)
-		// No initial string
-		mStringRef = CFSTR("");
-	else
-		// Use entire string
-		mStringRef =
-				::CFStringCreateWithCString(kCFAllocatorDefault, chars,
-						sGetCFStringEncodingForCStringEncoding(encoding));
-
-	// Validate we have something
-	if (mStringRef == nil) {
-		// Have something
-		LogError(sCreateFailedError, "creating CFStringRef from C string");
-		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF16Char* chars, Length length, Encoding encoding) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertNotNil(chars);
-
-	bool	encodingIsValid =
-					(encoding == kEncodingUnicode) ||
-					(encoding == kEncodingUTF16) ||
-					(encoding == kEncodingUTF16BE) ||
-					(encoding == kEncodingUTF16LE);
-	AssertFailIf(!encodingIsValid);
-
-	// Check situation
-	if ((chars == nil) || !encodingIsValid)
-		// Missing or invalid parameters
-		mStringRef = CFSTR("");
-	else
-		// Create string
-		mStringRef =
-				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars, length * sizeof(UTF16Char),
-						sGetCFStringEncodingForCStringEncoding(encoding), false);
-
-	// Validate we have something
-	if (mStringRef == nil) {
-		// Have something
-		LogError(sCreateFailedError, "creating CFStringRef from bytes");
-		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF32Char* chars, Length length, Encoding encoding) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertNotNil(chars);
-	AssertFailIf((encoding != kEncodingUTF32BE) && (encoding != kEncodingUTF32LE));
-
-	// Check situation
-	if ((chars == nil) || ((encoding != kEncodingUTF32BE) && (encoding != kEncodingUTF32LE)))
-		// Missing or invalid parameters
-		mStringRef = CFSTR("");
-	else
-		// Create string
-		mStringRef =
-				::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) chars, length * sizeof(UTF32Char),
-						sGetCFStringEncodingForCStringEncoding(encoding), false);
+	// Create string
+	mStringRef =
+			::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*) *buffer, buffer.getCount() * sizeof(UTF32Char),
+					sGetCFStringEncodingForCStringEncoding(kEncodingUTF32Native), false);
 
 	// Validate we have something
 	if (mStringRef == nil) {
@@ -401,27 +318,6 @@ CString::CString(const TArray<CString>& components, const CString& separator) : 
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CData& data, Encoding encoding) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Create dataRef
-	CFDataRef	dataRef = ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getByteCount());
-
-	// Create stringRef
-	mStringRef =
-			::CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, dataRef,
-					sGetCFStringEncodingForCStringEncoding(encoding));
-	::CFRelease(dataRef);
-
-	// Validate we have something
-	if (mStringRef == nil) {
-		// Have something
-		LogError(sCreateFailedError, "creating CFStringRef from external representation");
-		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CString::~CString()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -438,18 +334,17 @@ OSStringType CString::getOSString() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CString::C CString::getCString(Encoding encoding) const
+const CString::C CString::getUTF8String() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFStringEncoding	stringEncoding = sGetCFStringEncodingForCStringEncoding(encoding);
-	Length				length =
-								(Length) ::CFStringGetMaximumSizeForEncoding(
-										::CFStringGetLength(mStringRef), stringEncoding) + 1;
+	Length	length =
+					(Length) ::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(mStringRef),
+							kCFStringEncodingUTF8) + 1;
 
 	// Get c string
 	C	c(length);
-	::CFStringGetCString(mStringRef, (char*) *c, length, stringEncoding);
+	::CFStringGetCString(mStringRef, (char*) *c, length, kCFStringEncodingUTF8);
 
 	return c;
 }
@@ -459,84 +354,6 @@ CString::Length CString::getLength() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return (Length) ::CFStringGetLength(mStringRef);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::Length CString::getLength(Encoding encoding, SInt8 lossCharacter, bool forExternalStorageOrTransmission) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get length
-	CFIndex	byteCount;
-	::CFStringGetBytes(mStringRef, CFRangeMake(0, ::CFStringGetLength(mStringRef)),
-			sGetCFStringEncodingForCStringEncoding(encoding), lossCharacter, forExternalStorageOrTransmission, nil, 0,
-			&byteCount);
-
-	return (Length) byteCount;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::Length CString::get(char* buffer, Length bufferLen, bool addNull, Encoding encoding) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertNotNil(buffer);
-	if (buffer == nil)
-		return 0;
-
-	AssertFailIf(bufferLen == 0);
-	if (bufferLen == 0)
-		return 0;
-	
-	if ((buffer != nil) && (bufferLen > 0)) {
-		// Save space for the null
-		if (addNull)
-			bufferLen--;
-
-		// Calculate max characters to get
-		CFIndex	length = ::CFStringGetLength(mStringRef);
-		if (length > (CFIndex) bufferLen)
-			// Each character takes at least one byte
-			length = (CFIndex) bufferLen;
-		
-		// Take off characters at the end until we can fit in our buffer
-		CFIndex	byteCount;
-		do {
-			::CFStringGetBytes(mStringRef, CFRangeMake(0, length), sGetCFStringEncodingForCStringEncoding(encoding), 0,
-					false, nil, 0, &byteCount);
-			if ((Length) byteCount > bufferLen)
-				length--;
-		} while ((Length) byteCount > bufferLen);
-
-		// Get characters
-		::CFStringGetBytes(mStringRef, CFRangeMake(0, length), sGetCFStringEncodingForCStringEncoding(encoding), 0,
-				false, (UInt8*) buffer, bufferLen, &byteCount);
-
-		// Add null if needed
-		if (addNull)
-			buffer[byteCount++] = 0;
-
-		return (Length) byteCount;
-	} else
-		return 0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::Length CString::get(UTF32Char* buffer, Length bufferLen) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertNotNil(buffer);
-	if (buffer == nil)
-		return 0;
-
-	// Check if limiting buffer length
-	if (bufferLen > getLength())
-		// Limit buffer length
-		bufferLen = getLength();
-	
-	return (Length) ::CFStringGetBytes(mStringRef, CFRangeMake(0, bufferLen),
-			sGetCFStringEncodingForCStringEncoding(kEncodingUTF32Native), 0, false, (UInt8*) buffer,
-			bufferLen * sizeof(UTF32Char), nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -554,24 +371,60 @@ Float64 CString::getFloat64() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
+TBuffer<char> CString::getUTF8Chars() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFIndex	length = ::CFStringGetLength(mStringRef);
+
+	// Check length
+	if (length > 0) {
+		// Setup
+		TBuffer<char>	buffer((UInt32) length * 4);
+
+		// Convert
+		CFIndex	count =
+						::CFStringGetBytes(mStringRef, CFRangeMake(0, length), kCFStringEncodingUTF8, 0, false,
+								(UInt8*) *buffer, length * 4, nil);
+
+		return TBuffer<char>(buffer, (UInt32) count);
+	} else
+		// Empty
+		return TBuffer<char>(0);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TBuffer<UTF32Char> CString::getUTF32Chars() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Collect characters
+	CFIndex				length = ::CFStringGetLength(mStringRef);
+	TBuffer<UTF32Char>	buffer((UInt32) length);
+	::CFStringGetBytes(mStringRef, CFRangeMake(0, length), sGetCFStringEncodingForCStringEncoding(kEncodingUTF32Native),
+			0, false, (UInt8*) *buffer, length * sizeof(UTF32Char), nil);
+
+	return buffer;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<CData> CString::getData(Encoding encoding) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose dataRef
 	CFDataRef	dataRef =
 						::CFStringCreateExternalRepresentation(kCFAllocatorDefault, mStringRef,
-								sGetCFStringEncodingForCStringEncoding(encoding), lossCharacter);
+								sGetCFStringEncodingForCStringEncoding(encoding), '_');
 	if (dataRef != nil) {
 		// Create data
 		CData	data(::CFDataGetBytePtr(dataRef), (CData::ByteCount) ::CFDataGetLength(dataRef));
 		::CFRelease(dataRef);
 		
-		return data;
+		return OV<CData>(data);
 	} else {
 		// Failed
 		LogError(sCreateFailedError, "getting data");
 
-		return CData::mEmpty;
+		return OV<CData>();
 	}
 }
 
@@ -635,7 +488,7 @@ CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, co
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SRange32> CString::findSubString(const CString& subString, CharIndex startIndex, OV<Length> length) const
+OV<SRange32> CString::findSubString(const CString& subString, CharIndex startIndex, const OV<Length>& length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get length to check
@@ -786,19 +639,19 @@ TArray<CString> CString::components(const CString& separator, bool includeEmptyC
 // MARK: Comparison methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::compareTo(const CString& other, CompareFlags compareFlags) const
+bool CString::compareTo(const CString& other, CompareToOptions compareToOptions) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFStringCompare(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(compareFlags)) !=
-			kCFCompareGreaterThan;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-bool CString::equals(const CString& other, CompareFlags compareFlags) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return ::CFStringCompare(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(compareFlags)) ==
-			kCFCompareEqualTo;
+	// Setup
+	CFStringCompareFlags	compareFlags = 0;
+	if (compareToOptions & CString::kCompareToOptionsCaseInsensitive)
+		compareFlags |= kCFCompareCaseInsensitive;
+	if (compareToOptions & CString::kCompareToOptionsNonliteral)
+		compareFlags |= kCFCompareNonliteral;
+	if (compareToOptions & CString::kCompareToOptionsNumerically)
+		compareFlags |= kCFCompareNumerically;
+	
+	return ::CFStringCompare(mStringRef, other.mStringRef, compareFlags) != kCFCompareGreaterThan;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -816,13 +669,23 @@ bool CString::hasSuffix(const CString& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::contains(const CString& other, CompareFlags compareFlags) const
+bool CString::contains(const CString& other, ContainsOptions containsOptions) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get range
-	CFRange	range = ::CFStringFind(mStringRef, other.mStringRef, sGetCFOptionFlagsForCStringOptionFlags(compareFlags));
+	CFRange	range =
+					::CFStringFind(mStringRef, other.mStringRef,
+							sGetCFStringCompareFlagsForCStringContainsOptions(containsOptions));
 
 	return range.location != kCFNotFound;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CString::equals(const CString& other, ContainsOptions containsOptions) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return ::CFStringCompare(mStringRef, other.mStringRef,
+			sGetCFStringCompareFlagsForCStringContainsOptions(containsOptions)) == kCFCompareEqualTo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -830,22 +693,18 @@ bool CString::containsOnly(CharacterSet characterSet) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	Length	length = getLength();
-	TBuffer<UTF32Char>	buffer(length);
-	get(*buffer, length);
+	TBuffer<UTF32Char>	buffer = getUTF32Chars();
 
 	// Check
-	for (CharIndex i = 0; i < length; i++) {
+	for (CharIndex i = 0; i < buffer.getCount(); i++) {
 		// Check character
-		if (!isCharacterInSet(buffer[i], characterSet))
+		if (!sIsCharacterInSet(buffer[i], characterSet))
 			// Nope
 			return false;
 	}
 
 	return true;
 }
-
-// MARK: Convenience operators
 
 //----------------------------------------------------------------------------------------------------------------------
 CString& CString::operator=(const CString& other)
@@ -892,7 +751,7 @@ CString CString::operator+(const CString& other) const
 	return string;
 }
 
-// MARK: Utility methods
+// MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
 CString CString::make(OSStringType format, va_list args)
@@ -906,62 +765,6 @@ CString CString::make(OSStringType format, va_list args)
 	::CFRelease(stringRef);
 
 	return string;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-bool CString::isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check character set
-	switch (characterSet) {
-		case kCharacterSetControl:
-			// Control
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetControl), utf32Char);
-
-		case kCharacterSetWhitespace:
-			// Whitespace
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetWhitespace), utf32Char);
-
-		case kCharacterSetWhitespaceAndNewline:
-			// Whitespace and newline
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetWhitespaceAndNewline), utf32Char);
-
-		case kCharacterSetDecimalDigit:
-			// Decimal digit
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetDecimalDigit), utf32Char);
-
-		case kCharacterSetLetter:
-			// Letter
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetLetter), utf32Char);
-
-		case kCharacterSetLowercaseLetter:
-			// Lowercase letter
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetLowercaseLetter), utf32Char);
-
-		case kCharacterSetUppercaseLetter:
-			// Uppercase letter
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetUppercaseLetter), utf32Char);
-
-		case kCharacterSetAlphaNumeric:
-			// Alpha numeric
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetAlphaNumeric), utf32Char);
-
-		case kCharacterSetPunctuation:
-			// Puncuation
-			return CFCharacterSetIsLongCharacterMember(
-					::CFCharacterSetGetPredefined(kCFCharacterSetPunctuation), utf32Char);
-
-		default:
-			return false;
-	}
 }
 
 // MARK: Internal methods
@@ -978,18 +781,17 @@ void CString::init()
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-CFOptionFlags sGetCFOptionFlagsForCStringOptionFlags(CString::CompareFlags compareFlags)
+CFStringCompareFlags sGetCFStringCompareFlagsForCStringContainsOptions(CString::ContainsOptions containsOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFOptionFlags	outFlags = 0;
-	if (compareFlags & CString::kCompareFlagsCaseInsensitive)
-		outFlags |= kCFCompareCaseInsensitive;
-	if (compareFlags & CString::kCompareFlagsNonliteral)
-		outFlags |= kCFCompareNonliteral;
-	if (compareFlags & CString::kCompareFlagsNumerically)
-		outFlags |= kCFCompareNumerically;
-	
-	return outFlags;
+	// Setup
+	CFStringCompareFlags	compareFlags = 0;
+	if (containsOptions & CString::kContainsOptionsCaseInsensitive)
+		compareFlags |= kCFCompareCaseInsensitive;
+	if (containsOptions & CString::kContainsOptionsNonliteral)
+		compareFlags |= kCFCompareNonliteral;
+
+	return compareFlags;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1001,15 +803,65 @@ CFStringEncoding sGetCFStringEncodingForCStringEncoding(CString::Encoding encodi
 		case CString::kEncodingMacRoman:	return kCFStringEncodingMacRoman;
 		case CString::kEncodingUTF8:		return kCFStringEncodingUTF8;
 		case CString::kEncodingISOLatin:	return kCFStringEncodingISOLatin1;
-		case CString::kEncodingUnicode:		return kCFStringEncodingUnicode;
 
 		case CString::kEncodingUTF16:		return kCFStringEncodingUTF16;
 		case CString::kEncodingUTF16BE:		return kCFStringEncodingUTF16BE;
 		case CString::kEncodingUTF16LE:		return kCFStringEncodingUTF16LE;
-		case CString::kEncodingUTF32:		return kCFStringEncodingUTF32;
+
 		case CString::kEncodingUTF32BE:		return kCFStringEncodingUTF32BE;
 		case CString::kEncodingUTF32LE:		return kCFStringEncodingUTF32LE;
+	}
+}
 
-		default:							return kCFStringEncodingUTF8;
+//----------------------------------------------------------------------------------------------------------------------
+bool sIsCharacterInSet(UTF32Char utf32Char, CString::CharacterSet characterSet)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check character set
+	switch (characterSet) {
+		case CString::kCharacterSetControl:
+			// Control
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetControl), utf32Char);
+
+		case CString::kCharacterSetWhitespace:
+			// Whitespace
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetWhitespace), utf32Char);
+
+		case CString::kCharacterSetWhitespaceAndNewline:
+			// Whitespace and newline
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetWhitespaceAndNewline), utf32Char);
+
+		case CString::kCharacterSetDecimalDigit:
+			// Decimal digit
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetDecimalDigit), utf32Char);
+
+		case CString::kCharacterSetLetter:
+			// Letter
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetLetter), utf32Char);
+
+		case CString::kCharacterSetLowercaseLetter:
+			// Lowercase letter
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetLowercaseLetter), utf32Char);
+
+		case CString::kCharacterSetUppercaseLetter:
+			// Uppercase letter
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetUppercaseLetter), utf32Char);
+
+		case CString::kCharacterSetAlphaNumeric:
+			// Alpha numeric
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetAlphaNumeric), utf32Char);
+
+		case CString::kCharacterSetPunctuation:
+			// Puncuation
+			return CFCharacterSetIsLongCharacterMember(
+					::CFCharacterSetGetPredefined(kCFCharacterSetPunctuation), utf32Char);
 	}
 }

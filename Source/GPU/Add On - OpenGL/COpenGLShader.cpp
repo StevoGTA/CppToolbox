@@ -17,7 +17,7 @@ class COpenGLShaderInternals {
 				mShader = glCreateShader(type);
 				if (mShader > 0) {
 					// Compile shader
-					const	CString::C	cString = string.getCString();
+					const	CString::C	cString = string.getUTF8String();
 					const	char*		string = *cString;
 					glShaderSource(mShader, 1, &string, nil);
 					glCompileShader(mShader);
