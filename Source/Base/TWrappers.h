@@ -388,3 +388,8 @@ template <typename T> struct OV {
 	private:
 		T*	mValue;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Macros
+
+#define	ReturnValueIfNoValue(instance, value)	{ if (!instance.hasValue()) return value; }
