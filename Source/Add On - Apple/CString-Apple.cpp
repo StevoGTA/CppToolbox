@@ -318,6 +318,77 @@ CString::CString(const TArray<CString>& components, const CString& separator) : 
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CString& localizationGroup, const CString& localizationKey, const CDictionary& localizationInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mStringRef =
+			::CFBundleCopyLocalizedString(::CFBundleGetMainBundle(), localizationKey.mStringRef,
+					localizationKey.mStringRef, localizationGroup.mStringRef);
+
+	// Check situation
+	if (mStringRef != nil) {
+		// Replace values
+		CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+		::CFRelease(mStringRef);
+		mStringRef = stringRef;
+
+		for (TIteratorS<CDictionary::Item> iterator = localizationInfo.getIterator(); iterator.hasValue();
+				iterator.advance()) {
+			// Compose value
+			CString	replacement;
+			switch (iterator->mValue.getType()) {
+				case SValue::kTypeBool:
+					// Bool
+					replacement = iterator->mValue.getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
+					break;
+
+				case SValue::kTypeString:	replacement = iterator->mValue.getString();				break;
+				case SValue::kTypeFloat32:	replacement = CString(iterator->mValue.getFloat32());	break;
+				case SValue::kTypeFloat64:	replacement = CString(iterator->mValue.getFloat64());	break;
+				case SValue::kTypeSInt8:	replacement = CString(iterator->mValue.getSInt8());		break;
+				case SValue::kTypeSInt16:	replacement = CString(iterator->mValue.getSInt16());	break;
+				case SValue::kTypeSInt32:	replacement = CString(iterator->mValue.getSInt32());	break;
+				case SValue::kTypeSInt64:	replacement = CString(iterator->mValue.getSInt64());	break;
+				case SValue::kTypeUInt8:	replacement = CString(iterator->mValue.getUInt8());		break;
+				case SValue::kTypeUInt16:	replacement = CString(iterator->mValue.getUInt16());	break;
+				case SValue::kTypeUInt32:	replacement = CString(iterator->mValue.getUInt32());	break;
+				case SValue::kTypeUInt64:	replacement = CString(iterator->mValue.getUInt64());	break;
+
+				case SValue::kTypeEmpty:
+				case SValue::kTypeArrayOfDictionaries:
+				case SValue::kTypeArrayOfStrings:
+				case SValue::kTypeOpaque:
+				case SValue::kTypeData:
+				case SValue::kTypeDictionary:
+					// Unhandled
+					replacement = CString(OSSTR("->UNHANDLED<-"));
+					break;
+			}
+
+			// Replace
+			::CFStringFindAndReplace(stringRef, iterator->mKey.mStringRef, replacement.mStringRef,
+					::CFRangeMake(0, ::CFStringGetLength(mStringRef)), 0);
+		}
+	} else
+		// Not found
+		mStringRef = (localizationGroup + mColon + localizationKey).getOSString();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CString& localizationGroup, const CString& localizationKey)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mStringRef =
+			::CFBundleCopyLocalizedString(::CFBundleGetMainBundle(), localizationKey.mStringRef,
+					localizationKey.mStringRef, localizationGroup.mStringRef);
+	if (mStringRef == nil)
+		// Not found
+		mStringRef = (localizationGroup + mColon + localizationKey).getOSString();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CString::~CString()
 //----------------------------------------------------------------------------------------------------------------------
 {
