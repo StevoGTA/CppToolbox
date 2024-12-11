@@ -132,10 +132,16 @@ struct SAudio {
 			static	const	ChannelMap&	_9_0_Unknown();		// Unknown
 
 										// 10 Channels
-			static	const	ChannelMap&	_10_0_Unknown();		// Unknown
+			static	const	ChannelMap&	_10_0_Unknown();	// Unknown
 
 			static			ChannelMap	fromRawValue(UInt16 rawValue)
 											{ return ChannelMap(rawValue); }
+
+			static			bool		compareValue(const ChannelMap& channelMap1,
+												const ChannelMap& channelMap2, void* userData)
+											{ return channelMap1.mValue <= channelMap2.mValue; }
+			static			void		sort(TMArray<ChannelMap>& channelMaps)
+											{ channelMaps.sort((TMArray<ChannelMap>::CompareProc) compareValue, nil); }
 
 		private:
 										// Lifecycle methods

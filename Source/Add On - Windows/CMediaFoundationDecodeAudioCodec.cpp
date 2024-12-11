@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CMediaFoundationAudioCodec.cpp			©2021 Stevo Brock	All rights reserved.
+//	CMediaFoundationDecodeAudioCodec.cpp			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CMediaFoundationAudioCodec.h"
+#include "CMediaFoundationDecodeAudioCodec.h"
 
 #include "CLogServices-Windows.h"
 #include "CMediaFoundationServices.h"
@@ -11,7 +11,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	CString	sErrorDomain(OSSTR("CMediaFoundationAudioCodec"));
+static	CString	sErrorDomain(OSSTR("CMediaFoundationDecodeAudioCodec"));
 static	SError	sSetupDidNotCompleteError(sErrorDomain, 1, CString(OSSTR("Setup did not complete")));
 static	SError	sNoMatchingOutputMediaTypes(sErrorDomain, 2, CString(OSSTR("No matching output media types")));
 
@@ -97,7 +97,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 	// Create the Audio Decoder
 	IMFTransform*	transform;
 	result = activates[0]->ActivateObject(IID_PPV_ARGS(&transform));
-	OCI<IMFTransform>	audioDecoder(transform);
+	mInternals->mAudioDecoderTransform = OCI<IMFTransform>(transform);
 
 	for (UINT32 i = 0; i < count; i++)
 		// Release
@@ -107,64 +107,15 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 	ReturnErrorIfFailed(result, OSSTR("ActivateObject"));
 
 	// Setup input media type
-	TCIResult<IMFMediaType>	inputMediaType =
-									CMediaFoundationServices::createMediaType(*guid, 32,
-											audioProcessingFormat.getSampleRate(),
-											audioProcessingFormat.getChannelMap(), OV<UInt32>(), OV<UInt32>(),
-											getUserData());
-	ReturnErrorIfResultError(inputMediaType);
+	OV<SError>	error =
+						CMediaFoundationServices::setInputType(transform, *guid, 32,
+								audioProcessingFormat.getSampleRate(), audioProcessingFormat.getChannelMap(),
+								OV<UInt32>(), OV<UInt32>(), getUserData());
+	ReturnErrorIfError(error);
 
-	result = transform->SetInputType(0, *(inputMediaType.getInstance()), 0);
-	ReturnErrorIfFailed(result, OSSTR("SetInputType"));
-
-	// Iterate output media types to find matching
-	DWORD	index = 0;
-	GUID	targetCodecSubType = audioProcessingFormat.getIsFloat() ? MFAudioFormat_Float : MFAudioFormat_PCM;
-	while (true) {
-		// Get next media type
-		IMFMediaType*	mediaType;
-		result = transform->GetOutputAvailableType(0, index++, &mediaType);
-		if (result != S_OK)
-			// No matching output media types
-			return OV<SError>(sNoMatchingOutputMediaTypes);
-
-		// Get info
-		GUID	codecSubType;
-		result = mediaType->GetGUID(MF_MT_SUBTYPE, &codecSubType);
-		if (result != S_OK)
-			// Error
-			continue;
-		if (codecSubType != targetCodecSubType)
-			// Not a match
-			continue;
-
-		UINT32	bits = 0;
-		result = mediaType->GetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, &bits);
-		if (result != S_OK)
-			// Error
-			continue;
-		if (bits != (UINT32) audioProcessingFormat.getBits())
-			// Not a match
-			continue;
-
-		UINT32	channels = 0;
-		result = mediaType->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &channels);
-		if (result != S_OK)
-			// Error
-			continue;
-		if (channels != (UINT32) audioProcessingFormat.getChannelMap().getChannelCount())
-			// Not a match
-			continue;
-
-		// Found match
-		result = transform->SetOutputType(0, mediaType, 0);
-		if (result == S_OK) {
-			// Success
-			mInternals->mAudioDecoderTransform = audioDecoder;
-
-			break;
-		}
-	}
+	// Setup output media type
+	error = CMediaFoundationServices::setOutputType(transform, audioProcessingFormat);
+	ReturnErrorIfError(error);
 
 	// Create input sample
 	TCIResult<IMFSample>	sample = CMediaFoundationServices::createSample(10 * requirements.mFrameCountInterval);

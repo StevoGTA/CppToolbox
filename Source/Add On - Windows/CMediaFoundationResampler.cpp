@@ -128,18 +128,12 @@ OV<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 	ReturnErrorIfFailed(result, OSSTR("Setting Filter Quality"));
 
 	// Setup input media type
-	TCIResult<IMFMediaType>	inputMediaType = CMediaFoundationServices::createMediaType(audioProcessingFormat);
-	ReturnErrorIfResultError(inputMediaType);
-
-	result = transform->SetInputType(0, *(inputMediaType.getInstance()), 0);
-	ReturnErrorIfFailed(result, OSSTR("SetInputType"));
+	OV<SError>	error = CMediaFoundationServices::setInputType(transform, audioProcessingFormat);
+	ReturnErrorIfError(error);
 
 	// Setup output media type
-	TCIResult<IMFMediaType>	outputMediaType = CMediaFoundationServices::createMediaType(*mOutputAudioProcessingFormat);
-	ReturnErrorIfResultError(outputMediaType);
-
-	result = transform->SetOutputType(0, *(outputMediaType.getInstance()), 0);
-	ReturnErrorIfFailed(result, OSSTR("SetOutputType"));
+	error = CMediaFoundationServices::setOutputType(transform, *mOutputAudioProcessingFormat);
+	ReturnErrorIfError(error);
 
 	// Store
 	mInternals->mResamplerTransform = audioResampler;

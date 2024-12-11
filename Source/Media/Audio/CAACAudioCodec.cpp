@@ -12,7 +12,7 @@
 	#include "CCoreAudioDecodeAudioCodec.h"
 	#include "SError-Apple.h"
 #elif defined(TARGET_OS_WINDOWS)
-	#include "CMediaFoundationAudioCodec.h"
+	#include "CMediaFoundationDecodeAudioCodec.h"
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------

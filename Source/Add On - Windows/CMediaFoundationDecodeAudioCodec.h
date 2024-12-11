@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CMediaFoundationAudioCodec.h			©2022 Stevo Brock	All rights reserved.
+//	CMediaFoundationDecodeAudioCodec.h			©2022 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
