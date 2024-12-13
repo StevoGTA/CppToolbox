@@ -14,6 +14,8 @@
 
 static	CString	sErrorDomain(OSSTR("CAppleResourceManager"));
 static	SError	sInvalidResourceData(sErrorDomain, 1, CString(OSSTR("Invalid Resource Data")));
+static	SError	sInvalidResourceName(sErrorDomain, 2, CString(OSSTR("Invalid Resource Name")));
+static	SError	sInvalidResourcePayload(sErrorDomain, 3, CString(OSSTR("Invalid Resource Payload")));
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -100,11 +102,7 @@ OV<CString> CAppleResourceManager::getPascalString(OSType resourceType, UInt16 r
 	// Get data
 	OR<CData>	data = get(resourceType, resourceID);
 
-	return data.hasReference() ?
-			OV<CString>(
-					CString((const char*) data->getBytePtr() + 1, (CString::Length) (data->getByteCount() - 1),
-							CString::kEncodingMacRoman)) :
-			OV<CString>();
+	return data.hasReference() ? OV<CString>(CString::fromPascal(*data)) : OV<CString>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -139,7 +137,7 @@ void CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, const CS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, const CString& name,
+OV<SError> CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, const CString& name,
 		const CString& pascalString)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -149,14 +147,20 @@ void CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, const CS
 	// Construct data
 	CData	data;
 	data.appendBytes(&length, sizeof(UInt8));
-	data += pascalString.getData(CString::kEncodingMacRoman);
+
+	OV<CData>	pascalStringData = pascalString.getData(CString::kEncodingMacRoman);
+	if (!pascalStringData.hasValue())
+		return OV<SError>(sInvalidResourcePayload);
+	data += *pascalStringData;
 
 	// Add
 	set(resourceType, resourceID, name, data);
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CAppleResourceManager::getAsData()
+TVResult<CData> CAppleResourceManager::getAsData()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -204,7 +208,11 @@ CData CAppleResourceManager::getAsData()
 				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
 
 				nameListData.appendBytes((const UInt8*) &nameLength, sizeof(UInt8));
-				nameListData += resource.mName->getData(CString::kEncodingMacRoman);
+
+				OV<CData>	nameData = resource.mName->getData(CString::kEncodingMacRoman);
+				if (!nameData.hasValue())
+					return TVResult<CData>(sInvalidResourceName);
+				nameListData += *nameData;
 			} else {
 				// No name
 				UInt16	nameOffset = EndianU16_NtoB(0xFFFF);
@@ -238,39 +246,40 @@ CData CAppleResourceManager::getAsData()
 	UInt16	uInt16Zero = 0;
 
 	return
-			// Header
-			CData(&dataOffset, sizeof(dataOffset)) +
-			CData(&mapOffset, sizeof(mapOffset)) +
-			CData(&dataByteCount, sizeof(dataByteCount)) +
-			CData(&mapSize, sizeof(mapSize)) +
-			CData(
-					(CData::ByteCount)
-							(256 - sizeof(dataOffset) - sizeof(mapOffset) -sizeof(dataByteCount) - sizeof(mapSize))) +
+			TVResult<CData>(
+					// Header
+					CData(&dataOffset, sizeof(dataOffset)) +
+					CData(&mapOffset, sizeof(mapOffset)) +
+					CData(&dataByteCount, sizeof(dataByteCount)) +
+					CData(&mapSize, sizeof(mapSize)) +
+					CData(
+							(CData::ByteCount)
+									(256 - sizeof(dataOffset) - sizeof(mapOffset) -sizeof(dataByteCount) - sizeof(mapSize))) +
 
-			// Data
-			dataData +
+					// Data
+					dataData +
 
-			// Map
-			CData(&dataOffset, sizeof(dataOffset)) +	// File header copy
-			CData(&mapOffset, sizeof(mapOffset)) +
-			CData(&dataByteCount, sizeof(dataByteCount)) +
-			CData(&mapSize, sizeof(mapSize)) +
-			CData(&uInt32Zero, sizeof(uInt32Zero)) +	// Next resource map placeholder
-			CData(&uInt16Zero, sizeof(uInt16Zero)) +	// File ref num placeholder
-			CData(&uInt16Zero, sizeof(uInt16Zero)) +	// File attributes
+					// Map
+					CData(&dataOffset, sizeof(dataOffset)) +	// File header copy
+					CData(&mapOffset, sizeof(mapOffset)) +
+					CData(&dataByteCount, sizeof(dataByteCount)) +
+					CData(&mapSize, sizeof(mapSize)) +
+					CData(&uInt32Zero, sizeof(uInt32Zero)) +	// Next resource map placeholder
+					CData(&uInt16Zero, sizeof(uInt16Zero)) +	// File ref num placeholder
+					CData(&uInt16Zero, sizeof(uInt16Zero)) +	// File attributes
 
-			CData(&typeListOffset, sizeof(typeListOffset)) +
+					CData(&typeListOffset, sizeof(typeListOffset)) +
 
-			CData(&nameListOffset, sizeof(nameListOffset)) +
+					CData(&nameListOffset, sizeof(nameListOffset)) +
 
-			// Type list
-			typeListData +
+					// Type list
+					typeListData +
 
-			// Resource list
-			resourceListData +
+					// Resource list
+					resourceListData +
 
-			// Name list
-			nameListData;
+					// Name list
+					nameListData);
 }
 
 // MARK: Class methods

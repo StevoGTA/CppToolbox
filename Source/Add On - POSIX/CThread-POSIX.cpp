@@ -27,7 +27,7 @@ class CThread::Internals {
 								// Check if have name
 								if (!internals->mThreadName.isEmpty())
 									// Set name
-									::pthread_setname_np(*internals->mThreadName.getCString());
+									::pthread_setname_np(*internals->mThreadName.getUTF8String());
 
 								// Call proc
 								internals->mThreadProc(internals->mThread, internals->mThreadProcUserData);

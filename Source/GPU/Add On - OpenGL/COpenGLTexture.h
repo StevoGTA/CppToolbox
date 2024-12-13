@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CBitmap.h"
 #include "CGPUTexture.h"
 
 #if defined(TARGET_OS_IOS)
@@ -31,7 +32,9 @@ class COpenGLTexture : public CGPUTexture {
 	// Methods
 	public:
 								// Lifecycle methods
-								COpenGLTexture(const CData& data, DataFormat dataFormat, const S2DSizeU16& size);
+								COpenGLTexture(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat);
+								COpenGLTexture(const CData& data, const S2DSizeU16& dimensions,
+										CGPUTexture::DataFormat gpuTextureDataFormat);
 #if defined(TARGET_OS_IOS)
 								COpenGLTexture(CVOpenGLESTextureCacheRef openGLTextureCacheRef,
 										CVImageBufferRef imageBufferRef, UInt32 planeIndex);

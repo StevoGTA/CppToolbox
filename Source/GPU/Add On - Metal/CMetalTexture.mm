@@ -16,16 +16,16 @@
 
 class CMetalTexture::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals(id<MTLDevice> device, const CData& data, CGPUTexture::DataFormat dataFormat,
-				const S2DSizeU16& size) :
+		Internals(id<MTLDevice> device, const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat) :
 			TReferenceCountableAutoDelete(),
-					mUsedPixelsSize(size), mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
-					SNumber::getNextPowerOf2(size.mHeight)))
+					mUsedPixelsSize(S2DSizeU16(bitmap.getSize().mWidth, bitmap.getSize().mHeight)),
+							mTotalPixelsSize(
+									S2DSizeU16(SNumber::getNextPowerOf2(bitmap.getSize().mWidth),
+											SNumber::getNextPowerOf2(bitmap.getSize().mHeight)))
 			{
 				// Setup
 				MTLPixelFormat	pixelFormat;
-				NSUInteger		bytesPerRow;
-				switch (dataFormat) {
+				switch (gpuTextureDataFormat) {
 //					case CGPUTexture::kDataFormatRGB565:	pixelFormat = MTLPixelFormatB5G6R5Unorm;
 //					case CGPUTexture::kDataFormatRGBA4444:	pixelFormat = MTLPixelFormatABGR4Unorm;
 //					case CGPUTexture::kDataFormatRGBA5551:	pixelFormat = MTLPixelFormatBGR5A1Unorm;
@@ -34,7 +34,6 @@ class CMetalTexture::Internals : public TReferenceCountableAutoDelete<Internals>
 						// RGBA8888
 						mHasTransparency = true;
 						pixelFormat = MTLPixelFormatRGBA8Unorm;
-						bytesPerRow = 4 * size.mWidth;
 						break;
 				}
 
@@ -52,7 +51,49 @@ class CMetalTexture::Internals : public TReferenceCountableAutoDelete<Internals>
 				mTexture = [device newTextureWithDescriptor:textureDescriptor];
 
 				// Load image data
-				MTLRegion	region = {{0, 0, 0}, {size.mWidth, size.mHeight, 1}};
+				MTLRegion	region = {{0, 0, 0}, {mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, 1}};
+				[mTexture replaceRegion:region mipmapLevel:0 withBytes:bitmap.getPixelData().getBytePtr()
+						bytesPerRow:bitmap.getBytesPerRow()];
+			}
+		Internals(id<MTLDevice> device, const CData& data, const S2DSizeU16& dimensions,
+				CGPUTexture::DataFormat gpuTextureDataFormat) :
+			TReferenceCountableAutoDelete(),
+					mUsedPixelsSize(dimensions),
+					mTotalPixelsSize(
+							S2DSizeU16(SNumber::getNextPowerOf2(dimensions.mWidth),
+									SNumber::getNextPowerOf2(dimensions.mHeight)))
+			{
+				// Setup
+				MTLPixelFormat	pixelFormat;
+				NSUInteger		bytesPerRow;
+				switch (gpuTextureDataFormat) {
+//					case CGPUTexture::kDataFormatRGB565:	pixelFormat = MTLPixelFormatB5G6R5Unorm;
+//					case CGPUTexture::kDataFormatRGBA4444:	pixelFormat = MTLPixelFormatABGR4Unorm;
+//					case CGPUTexture::kDataFormatRGBA5551:	pixelFormat = MTLPixelFormatBGR5A1Unorm;
+
+					case CGPUTexture::kDataFormatRGBA8888:
+						// RGBA8888
+						mHasTransparency = true;
+						pixelFormat = MTLPixelFormatRGBA8Unorm;
+						bytesPerRow = 4 * dimensions.mWidth;
+						break;
+				}
+
+				MTLTextureDescriptor*	textureDescriptor = [[MTLTextureDescriptor alloc] init];
+				textureDescriptor.pixelFormat = pixelFormat;
+				textureDescriptor.width = mTotalPixelsSize.mWidth;
+				textureDescriptor.height = mTotalPixelsSize.mHeight;
+#if defined(TARGET_OS_IOS)
+				textureDescriptor.storageMode = MTLStorageModeShared;
+#endif
+#if defined(TARGET_OS_MACOS)
+				textureDescriptor.storageMode = MTLStorageModeManaged;
+#endif
+				// Create texture
+				mTexture = [device newTextureWithDescriptor:textureDescriptor];
+
+				// Load image data
+				MTLRegion	region = {{0, 0, 0}, {dimensions.mWidth, dimensions.mHeight, 1}};
 				[mTexture replaceRegion:region mipmapLevel:0 withBytes:data.getBytePtr() bytesPerRow:bytesPerRow];
 			}
 		Internals(CVMetalTextureCacheRef metalTextureCacheRef, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
@@ -126,11 +167,19 @@ class CMetalTexture::Internals : public TReferenceCountableAutoDelete<Internals>
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CMetalTexture::CMetalTexture(id<MTLDevice> device, const CData& data, CGPUTexture::DataFormat dataFormat,
-		const S2DSizeU16& size) : CGPUTexture()
+CMetalTexture::CMetalTexture(id<MTLDevice> device, const CBitmap& bitmap,
+		CGPUTexture::DataFormat gpuTextureDataFormat) : CGPUTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(device, data, dataFormat, size);
+	mInternals = new Internals(device, bitmap, gpuTextureDataFormat);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CMetalTexture::CMetalTexture(id<MTLDevice> device, const CData& data, const S2DSizeU16& dimensions,
+		CGPUTexture::DataFormat gpuTextureDataFormat) : CGPUTexture()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(device, data, dimensions, gpuTextureDataFormat);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

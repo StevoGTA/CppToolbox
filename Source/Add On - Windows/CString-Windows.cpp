@@ -22,9 +22,6 @@ static	CDictionary	sLocalizationInfo;
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
-static	bool	sIsDigit(int character);
-static	int		sCompare(const std::basic_string<TCHAR>& string1, const std::basic_string<TCHAR>& string2,
-						CString::CompareFlags compareFlags);
 static	UINT	sGetCodePageForCStringEncoding(CString::Encoding encoding);
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -47,14 +44,6 @@ CString::CString(const CString& other) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CString& other, Length length) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	mString = std::basic_string<TCHAR>(other.mString, length);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CString::CString(OSStringVar(initialString)) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -63,73 +52,64 @@ CString::CString(OSStringVar(initialString)) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(OSStringVar(initialString), Length length) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	mString = std::basic_string<TCHAR>(initialString, length);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char* chars, Length length, Encoding encoding) : CHashable()
+CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertNotNil(chars);
-
-	// Create string
-	mString.resize(length);
+	AssertNotNil(ptr);
 
 	// Check length
-	if (length > 0) {
+	if (byteCount > 0) {
+		// Check encoding
+		if (encoding == kEncodingUTF16) {
+			// Determine byte order
+			AssertFailIf(byteCount < 2);
+
+			// Check first 2 bytes
+			const	UInt8*	bytePtr = (const UInt8*) ptr;
+			if ((bytePtr[0] == 0xFE) && (bytePtr[1] == 0xFF)) {
+				// Big-endian
+				ptr = bytePtr + 2;
+				byteCount -= 2;
+				encoding = kEncodingUTF16BE;
+			} else if ((bytePtr[0] == 0xFF) && (bytePtr[1] == 0xFE)) {
+				// Little-endian
+				ptr = bytePtr + 2;
+				byteCount -= 2;
+				encoding = kEncodingUTF16LE;
+			} else
+				// Unknown
+				AssertFail();
+		}
+
+		// Resize
+		mString.resize(byteCount);
+
 		// Convert
 		int	count =
-				::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, length, &mString[0], length);
+				::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (const char*) ptr, byteCount,
+						&mString[0], byteCount);
 		AssertFailIf(count == 0);
+		mString.resize(count);
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char* chars, Encoding encoding) : CHashable()
+CString::CString(const TBuffer<UTF32Char>& buffer) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Parameter check
-	AssertNotNil(chars);
-
-	// Setup
-	Length	length = (Length) ::strlen(chars);
-
-	// Create string
-	mString.resize(length);
-
 	// Check length
-	if (length > 0) {
+	UInt32	charCount = buffer.getCount();
+	if (charCount > 0) {
+		// Setup string
+		mString.resize(charCount);
+
 		// Convert
 		int	count =
-				::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, chars, length, &mString[0], length);
+					::MultiByteToWideChar(sGetCodePageForCStringEncoding(kEncodingUTF32Native), 0,
+							(const char*) *buffer, charCount, &mString[0], charCount);
 		AssertFailIf(count == 0);
 	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF16Char* chars, Length charsCount, Encoding encoding) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertNotNil(chars);
-
-	AssertFailUnimplemented();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::CString(const UTF32Char* chars, Length charsCount, Encoding encoding) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Parameter check
-	AssertNotNil(chars);
-	AssertFailIf((encoding != kEncodingUTF32BE) && (encoding != kEncodingUTF32LE));
-
-	AssertFailUnimplemented();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -180,14 +160,40 @@ CString::CString(Float64 value, UInt32 fieldSize, UInt32 digitsAfterDecimalPoint
 CString::CString(SInt8 value, UInt32 fieldSize, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Setup
+	mString.resize(100);
+
+	// Check field size
+	int	count;
+	if (fieldSize == 0)
+		// Compose string without field size
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%d"), value);
+	else
+		// Compose string with field size
+		count = ::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*d") : _TEXT("%*d"), fieldSize, value);
+
+	// Update
+	mString.resize(count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(SInt16 value, UInt32 fieldSize, bool padWithZeros) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Setup
+	mString.resize(100);
+
+	// Check field size
+	int	count;
+	if (fieldSize == 0)
+		// Compose string without field size
+		count = ::_stprintf_s(&mString[0], 100, _TEXT("%d"), value);
+	else
+		// Compose string with field size
+		count = ::_stprintf_s(&mString[0], 100, padWithZeros ? _TEXT("%.*d") : _TEXT("%*d"), fieldSize, value);
+
+	// Update
+	mString.resize(count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -372,7 +378,7 @@ CString::CString(const void* pointer) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const TArray<CString>& components, const CString& separator) : CHashable(), mString()
+CString::CString(const TArray<CString>& components, const CString& separator) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate array
@@ -384,23 +390,6 @@ CString::CString(const TArray<CString>& components, const CString& separator) : 
 
 		// Append this component
 		mString += components[i].mString;
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::CString(const CData& data, Encoding encoding) : CHashable()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Ensure we have something to convert
-	if (data.getByteCount() > 0) {
-		// Setup
-		mString.resize((size_t) data.getByteCount());
-
-		// Convert
-		int	count =
-					::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (char*) data.getBytePtr(),
-							(int) data.getByteCount(), &mString[0], (int) data.getByteCount());
-		AssertFailIf(count == 0);
 	}
 }
 
@@ -480,7 +469,7 @@ OSStringType CString::getOSString() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CString::C CString::getCString(Encoding encoding) const
+const CString::C CString::getUTF8String() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -491,7 +480,7 @@ const CString::C CString::getCString(Encoding encoding) const
 	if (length > 0) {
 		// Convert
 		int	count =
-					::WideCharToMultiByte(sGetCodePageForCStringEncoding(encoding), 0, mString.c_str(), length,
+					::WideCharToMultiByte(sGetCodePageForCStringEncoding(kEncodingUTF8), 0, mString.c_str(), length,
 							*c, length * 4, NULL, NULL);
 		(*c)[count] = 0;
 	}
@@ -504,36 +493,6 @@ CString::Length CString::getLength() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return (Length) mString.length();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::Length CString::getLength(Encoding encoding, SInt8 lossCharacter, bool forExternalStorageOrTransmission)
-		const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailUnimplemented();
-return 0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString::Length CString::get(char* buffer, Length bufferLen, bool addNull, Encoding encoding) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailUnimplemented();
-return 0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-UTF32Char CString::getCharacterAtIndex(CharIndex index) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailIf(index > getLength());
-	if (index > getLength())
-		return 0;
-
-	AssertFailUnimplemented();
-
-	return 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -550,8 +509,44 @@ Float64 CString::getFloat64() const
 	return std::stod(mString);
 }
 
+
 //----------------------------------------------------------------------------------------------------------------------
-CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
+TBuffer<char> CString::getUTF8Chars() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	int	length = (int) mString.length();
+
+	// Check length
+	if (length > 0) {
+		// Setup
+		TBuffer<char>	buffer(length * 4);
+
+		// Convert
+		int	count =
+					::WideCharToMultiByte(sGetCodePageForCStringEncoding(kEncodingUTF8), 0, mString.c_str(), length,
+							(char*) *buffer, length * 4, NULL, NULL);
+
+		return TBuffer<char>(buffer, count);
+	} else
+		// Empty
+		return TBuffer<char>(0);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TBuffer<UTF32Char> CString::getUTF32Chars() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Collect characters
+	TBuffer<UTF32Char>	buffer(mString.length());
+	::WideCharToMultiByte(sGetCodePageForCStringEncoding(kEncodingUTF32Native), 0, mString.c_str(), mString.length(),
+			(char*) *buffer, mString.length() * 4, NULL, NULL);
+
+	return buffer;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<CData> CString::getData(Encoding encoding) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check length
@@ -559,17 +554,22 @@ CData CString::getData(Encoding encoding, SInt8 lossCharacter) const
 	if (length > 0) {
 		// Setup
 		CData	data((CData::ByteCount) length * 4);
+		UINT	codePage = sGetCodePageForCStringEncoding((encoding == kEncodingUTF16) ? kEncodingUTF16LE : encoding);
 
 		// Convert
 		int	count =
-					::WideCharToMultiByte(sGetCodePageForCStringEncoding(encoding), 0, mString.c_str(), length,
-							(LPSTR) data.getMutableBytePtr(), length * 4, NULL, NULL);
+					::WideCharToMultiByte(codePage, 0, mString.c_str(), length, (char*) data.getMutableBytePtr(),
+							length * 4, NULL, NULL);
 		data.setByteCount(count);
 
-		return data;
+		if (encoding == kEncodingUTF16)
+			// Add BOM
+			data = CData((UInt8) 0xFF) + CData((UInt8) 0xFE) + data;
+
+		return OV<CData>(data);
 	} else
 		// Empty
-		return CData::mEmpty;
+		return OV<CData>(CData::mEmpty);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -577,19 +577,15 @@ CString CString::getSubString(CharIndex startIndex, OV<Length> length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if need to limit length
-	size_t	lengthUse;
-	if (length.hasValue() && (((size_t) startIndex + (size_t) *length) <= mString.length()))
-		// Use requested
-		lengthUse = *length;
-	else
-		// Limit to remainder of string
-		lengthUse = mString.length() - startIndex;
+	size_t	lengthUse =
+					(length.hasValue() && (((size_t) startIndex + (size_t) *length) <= mString.length())) ?
+							*length : mString.length() - startIndex;
 
-	// Setup
-	TBuffer<TCHAR>	buffer((UInt32) lengthUse);
-	size_t			count = mString._Copy_s(*buffer, lengthUse, lengthUse, startIndex);
+	// Create string
+	CString	string;
+	string.mString = mString.substr(startIndex, lengthUse);
 
-	return CString(*buffer, (Length) count);
+	return string;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -610,11 +606,17 @@ CString CString::replacingSubStrings(const CString& subStringToReplace, const CS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, const CString& replacementString) const
+OV<SRange32> CString::findSubString(const CString& subString, CharIndex startIndex, const OV<Length>& length) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return CString::mEmpty;
+	// Find
+	size_t	pos = mString.find(subString.mString, startIndex);
+	if (pos == std::string::npos)
+		// Not found
+		return OV<SRange32>();
+
+	return (!length.hasValue() || ((pos + subString.mString.length()) <= (startIndex + *length))) ?
+			OV<SRange32>(SRange32((UInt32) pos, (UInt32) subString.mString.length())) : OV<SRange32>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -655,36 +657,12 @@ CString CString::uppercased() const
 CString CString::removingLeadingAndTrailingWhitespace() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return CString::mEmpty;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString CString::removingAllWhitespace() const
-//----------------------------------------------------------------------------------------------------------------------
-{
 	// Setup
 	size_t	startPos = mString.find_first_not_of(L" \t");
 	size_t	endPos = mString.find_last_not_of(L" \t");
 
 	return ((startPos != std::basic_string<TCHAR>::npos) && (endPos != std::basic_string<TCHAR>::npos)) ?
-			CString(mString.substr(startPos, endPos - startPos + 1).c_str()) : CString(mString.c_str());
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString CString::removingLeadingAndTrailingQuotes() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailUnimplemented();
-return CString::mEmpty;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CString CString::getCommonPrefix(const CString& other) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailUnimplemented();
-return CString::mEmpty;
+		CString(mString.substr(startPos, endPos - startPos + 1).c_str()) : CString(mString.c_str());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -717,19 +695,25 @@ TArray<CString> CString::components(const CString& delimiterString, bool include
 // MARK: Comparison methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::compareTo(const CString& other, CString::CompareFlags compareFlags) const
+bool CString::compareTo(const CString& other, CompareToOptions compareToOptions) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Return if this string is "less than" the other string
-	return sCompare(mString, other.mString, compareFlags) == -1;
-}
+	// Setup
+	DWORD	compareFlags = 0;
+	if (compareFlags & kCompareToOptionsCaseInsensitive)
+		// Case insensitive
+		compareFlags |= LINGUISTIC_IGNORECASE;
 
-//----------------------------------------------------------------------------------------------------------------------
-bool CString::equals(const CString& other, CString::CompareFlags compareFlags) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Return if this string is "equal to" the other string
-	return sCompare(mString, other.mString, compareFlags) == 0;
+	if (compareFlags & kCompareToOptionsNonliteral)
+		// Non-literal
+		compareFlags |= LINGUISTIC_IGNOREDIACRITIC | NORM_IGNOREKANATYPE;
+
+	if (compareFlags & kCompareToOptionsNumerically)
+		// Numeric
+		compareFlags |= SORT_DIGITSASNUMBERS;
+
+	return ::CompareStringEx(LOCALE_NAME_USER_DEFAULT, compareFlags, mString.c_str(), (int) mString.length(),
+			other.mString.c_str(), (int) other.mString.length(), NULL, NULL, 0) != CSTR_GREATER_THAN;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -756,11 +740,106 @@ bool CString::hasSuffix(const CString& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::contains(const CString& other, CString::CompareFlags compareFlags) const
+bool CString::contains(const CString& other, ContainsOptions containsOptions) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return false;
+	// Preflight
+	auto	length = other.mString.length();
+	if (length > mString.length())
+		// other is longer than us
+		return false;
+
+	// Setup
+	DWORD	compareFlags = 0;
+	if (containsOptions & kContainsOptionsCaseInsensitive)
+		// Case insensitive
+		compareFlags |= LINGUISTIC_IGNORECASE;
+
+	if (containsOptions & kContainsOptionsNonliteral)
+		// Non-literal
+		compareFlags |= LINGUISTIC_IGNOREDIACRITIC | NORM_IGNOREKANATYPE;
+
+	// Iterate through looking for string
+	for (size_t i = 0; i <= mString.length() - length; i++) {
+		// Compare
+		if (::CompareStringEx(LOCALE_NAME_USER_DEFAULT, compareFlags, mString.substr(i, length).c_str(), (int) length,
+				other.mString.c_str(), (int) length, NULL, NULL, 0) == CSTR_EQUAL)
+			// Match!
+			return true;
+	}
+
+	return false;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CString::equals(const CString& other, ContainsOptions containsOptions) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Preflight
+	auto	length = other.mString.length();
+	if (length != mString.length())
+		// Length differs
+		return false;
+
+	// Setup
+	DWORD	compareFlags = 0;
+	if (containsOptions & kContainsOptionsCaseInsensitive)
+		// Case insensitive
+		compareFlags |= LINGUISTIC_IGNORECASE;
+
+	if (containsOptions & kContainsOptionsNonliteral)
+		// Non-literal
+		compareFlags |= LINGUISTIC_IGNOREDIACRITIC | NORM_IGNOREKANATYPE;
+
+	return ::CompareStringEx(LOCALE_NAME_USER_DEFAULT, compareFlags, mString.c_str(), (int) length,
+				other.mString.c_str(), (int) length, NULL, NULL, 0) == CSTR_EQUAL;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CString::containsOnly(CharacterSet characterSet) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check character set
+	switch (characterSet) {
+	case kCharacterSetControl:
+		// Control
+		return std::all_of(mString.begin(), mString.end(), ::iscntrl);
+
+	case kCharacterSetWhitespace:
+		// Whitespace
+		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch) { return ch == L' ' || ch == L'\t'; });
+
+	case kCharacterSetWhitespaceAndNewline:
+		// Whitespace and newline
+		return std::all_of(mString.begin(), mString.end(), ::isspace);
+
+	case kCharacterSetDecimalDigit:
+		// Decimal digit
+		return std::all_of(mString.begin(), mString.end(), ::isdigit);
+
+	case kCharacterSetLetter:
+		// Letter
+		return std::all_of(mString.begin(), mString.end(), ::isalpha);
+
+	case kCharacterSetLowercaseLetter:
+		// Lowercase letter
+		return std::all_of(mString.begin(), mString.end(), ::islower);
+
+	case kCharacterSetUppercaseLetter:
+		// Uppercase letter
+		return std::all_of(mString.begin(), mString.end(), ::isupper);
+
+	case kCharacterSetAlphaNumeric:
+		// Alpha numeric
+		return std::all_of(mString.begin(), mString.end(), ::isalnum);
+
+	case kCharacterSetPunctuation:
+		// Puncuation
+		return std::all_of(mString.begin(), mString.end(), ::ispunct);
+
+	default:
+		return false;
+	}
 }
 
 // MARK: Convenience operators
@@ -823,30 +902,23 @@ CString CString::make(OSStringType format, va_list args)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::isCharacterInSet(UTF32Char utf32Char, CharacterSet characterSet)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	AssertFailUnimplemented();
-return false;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CString::setupLocalization(const CData& stringsFileData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate lines
 	TArray<CString>	lines =
-							CString(stringsFileData)
+							CString(stringsFileData, kEncodingUTF8)
 									.replacingSubStrings(CString(OSSTR("\\U00B5")), CString(OSSTR("\u00B5")))
-									.components(CString::mNewline);
+									.components(CString::mPlatformDefaultNewline);
 	for (TIteratorD<CString> iterator = lines.getIterator(); iterator.hasValue(); iterator.advance()) {
 		// Process line
 		TArray<CString>	components = iterator->components(CString(OSSTR(" = ")));
 		if (components.getCount() == 2)
 			// Have a localization line
 			sLocalizationInfo.set(components[0].getSubString(1, components[0].getLength() - 2),
-					components[1].getSubString(1, components[1].getLength() - 4)
-							.replacingSubStrings(CString(OSSTR("\\\"")), CString::mDoubleQuotes));
+					components[1].getSubString(1, components[1].getLength() - 3)
+							.replacingSubStrings(CString(OSSTR("\\\"")), CString::mDoubleQuote)
+							.replacingSubStrings(CString(OSSTR("\\n")), CString::mNewline));
 	}
 }
 
@@ -862,86 +934,6 @@ void CString::init()
 // MARK: - Local proc definitions
 
 //----------------------------------------------------------------------------------------------------------------------
-bool sIsDigit(int character)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return std::isdigit(character);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-int sCompare(const std::basic_string<TCHAR>& string1, const std::basic_string<TCHAR>& string2,
-		CString::CompareFlags compareFlags)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check if comparing numerically
-	if (compareFlags & CString::kCompareFlagsNumerically) {
-		// Compare as chunks
-		auto	iterator1 = string1.begin();
-		auto	iterator2 = string2.begin();
-		while ((iterator1 != string1.end()) && (iterator2 != string2.end())) {
-			// Check if next compare character is digit
-			if (sIsDigit(*iterator1) && sIsDigit(*iterator2)) {
-				// Is digit
-				auto number1 = std::stoi(std::basic_string<TCHAR>(iterator1, std::find_if_not(iterator1, string1.end(), sIsDigit)));
-				auto number2 = std::stoi(std::basic_string<TCHAR>(iterator2, std::find_if_not(iterator2, string2.end(), sIsDigit)));
-				if (number1 != number2)
-					// Numbers are different
-					return number1 < number2;
-
-				// Advance iterators
-				iterator1 = std::find_if_not(iterator1, string1.end(), sIsDigit);
-				iterator2 = std::find_if_not(iterator2, string2.end(), sIsDigit);
-			} else {
-				// Not digit
-#if defined(_UNICODE)
-				auto	character1 = (compareFlags & CString::kCompareFlagsCaseInsensitive) ? towlower(*iterator1) : *iterator1;
-				auto	character2 = (compareFlags & CString::kCompareFlagsCaseInsensitive) ? towlower(*iterator2) : *iterator2;
-#else
-				auto	character1 = (compareFlags & CString::kCompareFlagsCaseInsensitive) ? tolower(*iterator1) : *iterator1;
-				auto	character2 = (compareFlags & CString::kCompareFlagsCaseInsensitive) ? tolower(*iterator2) : *iterator2;
-#endif
-				if (character1 != character2)
-					// Characters are different
-					return character1 < character2;
-
-				// Advance iterators
-				++iterator1;
-				++iterator2;
-			}
-		}
-
-		// Check result
-		if (iterator1 == string1.end())
-			// 1 before 2
-			return -1;
-		else if (iterator2 == string2.end())
-			// 1 after 2
-			return 1;
-		else
-			// Identical
-			return 0;
-	} else {
-		// Compare as text
-		auto	string1Use = string1;
-		auto	string2Use = string2;
-
-		// Check if comparing case insensitive
-		if (compareFlags & CString::kCompareFlagsCaseInsensitive) {
-			// Transform to lowercase
-	#if defined(_UNICODE)
-			std::transform(string1Use.begin(), string1Use.end(), string1Use.begin(), ::towlower);
-			std::transform(string2Use.begin(), string2Use.end(), string2Use.begin(), ::towlower);
-	#else
-			std::transform(string1Use.begin(), string1Use.end(), string1Use.begin(), ::tolower);
-			std::transform(string2Use.begin(), string2Use.end(), string2Use.begin(), ::tolower);
-	#endif
-		}
-
-		return string1Use.compare(string2Use);
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 UINT sGetCodePageForCStringEncoding(CString::Encoding encoding)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -950,12 +942,8 @@ UINT sGetCodePageForCStringEncoding(CString::Encoding encoding)
 		case CString::kEncodingMacRoman:	return CP_MACCP;
 		case CString::kEncodingUTF8:		return CP_UTF8;
 		case CString::kEncodingISOLatin:	return 1252;
-		//case kStringEncodingUnicode:	return kCFStringEncodingUnicode;
-
-		//case CString::kEncodingUTF16:		return kCFStringEncodingUTF16;
 		case CString::kEncodingUTF16BE:		return 1201;
 		case CString::kEncodingUTF16LE:		return 1200;
-		//case CString::kEncodingUTF32:		return kCFStringEncodingUTF32;
 		case CString::kEncodingUTF32BE:		return 12001;
 		case CString::kEncodingUTF32LE:		return 12000;
 

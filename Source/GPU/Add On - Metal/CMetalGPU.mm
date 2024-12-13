@@ -111,10 +111,18 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size)
+I<CGPUTexture> CGPU::registerTexture(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CGPUTexture>(new CMetalTexture(mInternals->mProcs.getDevice(), data, dataFormat, size));
+	return I<CGPUTexture>(new CMetalTexture(mInternals->mProcs.getDevice(), bitmap, gpuTextureDataFormat));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CGPUTexture> CGPU::registerTexture(const CData& data, const S2DSizeU16& dimensions,
+		CGPUTexture::DataFormat gpuTextureDataFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return I<CGPUTexture>(new CMetalTexture(mInternals->mProcs.getDevice(), data, dimensions, gpuTextureDataFormat));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

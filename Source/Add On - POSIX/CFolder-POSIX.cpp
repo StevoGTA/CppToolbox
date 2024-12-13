@@ -33,8 +33,7 @@ OV<SError> CFolder::rename(const CString& string)
 	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(string);
 
 	// Rename
-	if (::rename(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8),
-			*filesystemPath.getString().getCString(CString::kEncodingUTF8)) == 0) {
+	if (::rename(*getFilesystemPath().getString().getUTF8String(), *filesystemPath.getString().getUTF8String()) == 0) {
 		// Success
 		update(filesystemPath);
 
@@ -58,7 +57,7 @@ OV<SError> CFolder::create(bool createIntermediateFolders) const
 		}
 
 		// Create
-		if (::mkdir(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8), 0777) == 0)
+		if (::mkdir(*getFilesystemPath().getString().getUTF8String(), 0777) == 0)
 			// Success
 			return OV<SError>();
 		else
@@ -73,7 +72,7 @@ OV<SError> CFolder::create(bool createIntermediateFolders) const
 OV<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (::unlink(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8)) == 0)
+	if (::unlink(*getFilesystemPath().getString().getUTF8String()) == 0)
 		// Success
 		return OV<SError>();
 	else
@@ -87,6 +86,5 @@ bool CFolder::doesExist() const
 {
 	struct	stat	statInfo;
 
-	return (::stat(*getFilesystemPath().getString().getCString(CString::kEncodingUTF8), &statInfo) == 0) &&
-			S_ISDIR(statInfo.st_mode);
+	return (::stat(*getFilesystemPath().getString().getUTF8String(), &statInfo) == 0) && S_ISDIR(statInfo.st_mode);
 }

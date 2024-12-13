@@ -30,7 +30,7 @@ class CLogFile::Internals {
 								if (error.hasValue())
 									// Error
 									fprintf(stderr, "Unable to open log file at %s\n",
-											*file.getFilesystemPath().getString().getCString());
+											*file.getFilesystemPath().getString().getUTF8String());
 
 								// Start thread
 								mWriteThread.start();

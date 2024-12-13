@@ -39,8 +39,20 @@
 OV<SError> CFile::rename(const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Compose new filesystem path
+	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(string);
+
+	// Rename
+	if (::MoveFile(getFilesystemPath().getString().getOSString(), filesystemPath.getString().getOSString()))
+		// Success
+		return OV<SError>();
+	else {
+		// Error
+		OV<SError>	error(SErrorFromWindowsGetLastError());
+		CLogServices::logError(*error, "renaming file", __FILE__, __func__, __LINE__);
+
+		return error;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -52,7 +64,7 @@ UInt64 CFile::getByteCount() const
 	if (::GetFileAttributesEx(getFilesystemPath().getString().getOSString(), GetFileExInfoStandard,
 			&fileAttributeData)) {
 		// Handle results
-		LARGE_INTEGER	byteCount;
+		LARGE_INTEGER	byteCount = {0};
 		byteCount.HighPart = fileAttributeData.nFileSizeHigh;
 		byteCount.LowPart = fileAttributeData.nFileSizeLow;
 
@@ -103,27 +115,86 @@ bool CFile::isHidden() const
 bool CFile::getLocked() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return false;
+	// Get attributes
+	DWORD	attributes = ::GetFileAttributes(getFilesystemPath().getString().getOSString());
+
+	return (attributes & FILE_ATTRIBUTE_READONLY) != 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFile::setLocked(bool lockFile) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Get attributes
+	DWORD	attributes = ::GetFileAttributes(getFilesystemPath().getString().getOSString());
+	if (attributes == INVALID_FILE_ATTRIBUTES) {
+		// Error
+		OV<SError>	error(SErrorFromWindowsGetLastError());
+		CLogServices::logError(*error, "setting file locked", __FILE__, __func__, __LINE__);
+
+		return error;
+	}
+
+	// Update
+	if (lockFile)
+		// Locking
+		attributes |= FILE_ATTRIBUTE_READONLY;
+	else
+		// Unlocking
+		attributes &= ~FILE_ATTRIBUTE_READONLY;
+
+	// Set attributes
+	if (::SetFileAttributes(getFilesystemPath().getString().getOSString(), attributes))
+		// Success
+		return OV<SError>();
+	else {
+		OV<SError>	error(SErrorFromWindowsGetLastError());
+		CLogServices::logError(*error, "setting file locked", __FILE__, __func__, __LINE__);
+
+		return error;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UniversalTime CFile::getCreationUniversalTime() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-return 0;
+	// Query info
+	WIN32_FILE_ATTRIBUTE_DATA	fileAttributeData;
+	if (::GetFileAttributesEx(getFilesystemPath().getString().getOSString(), GetFileExInfoStandard,
+			&fileAttributeData)) {
+		// Handle results
+		ULARGE_INTEGER	dateTime = {0};
+		dateTime.LowPart = fileAttributeData.ftCreationTime.dwLowDateTime;
+		dateTime.HighPart = fileAttributeData.ftCreationTime.dwHighDateTime;
+
+		return (UniversalTime) dateTime.QuadPart / (UniversalTime) 10000000ULL - 12622780800LL;
+	} else {
+		// Error
+		CFileReportError(SErrorFromWindowsGetLastError(), "GetFileAttributexEx");
+
+		return 0;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UniversalTime CFile::getModificationUniversalTime() const
+//----------------------------------------------------------------------------------------------------------------------
 {
-return 0;
+	// Query info
+	WIN32_FILE_ATTRIBUTE_DATA	fileAttributeData;
+	if (::GetFileAttributesEx(getFilesystemPath().getString().getOSString(), GetFileExInfoStandard,
+			&fileAttributeData)) {
+		// Handle results
+		ULARGE_INTEGER	dateTime = {0};
+		dateTime.LowPart = fileAttributeData.ftLastWriteTime.dwLowDateTime;
+		dateTime.HighPart = fileAttributeData.ftLastWriteTime.dwHighDateTime;
+
+		return (UniversalTime)dateTime.QuadPart / (UniversalTime)10000000ULL - 12622780800LL;
+	} else {
+		// Error
+		CFileReportError(SErrorFromWindowsGetLastError(), "GetFileAttributexEx");
+
+		return 0;
+	}
 }

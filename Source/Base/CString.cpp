@@ -4,6 +4,7 @@
 
 #include "CString.h"
 
+#include "CData.h"
 #include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -27,7 +28,7 @@ const	CString	CString::mEmpty;
 
 const	CString	CString::mColon(OSSTR(":"));
 const	CString	CString::mComma(OSSTR(","));
-const	CString	CString::mDoubleQuotes(OSSTR("\""));
+const	CString	CString::mDoubleQuote(OSSTR("\""));
 const	CString	CString::mEqualSign(OSSTR("="));
 const	CString	CString::mHyphen(OSSTR("-"));
 const	CString	CString::mParenthesisClose(OSSTR(")"));
@@ -41,9 +42,9 @@ const	CString	CString::mSpaceX4(OSSTR("    "));
 const	CString	CString::mTab(OSSTR("\t"));
 const	CString	CString::mUnderscore(OSSTR("_"));
 
-const	CString	CString::mNull(OSSTR("\0"));
-const	CString	CString::mNewline(OSSTR("\n"));
 const	CString	CString::mLinefeed(OSSTR("\r"));
+const	CString	CString::mLineFeedNewline(OSSTR("\r\n"));
+const	CString	CString::mNewline(OSSTR("\n"));
 const	CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
@@ -57,12 +58,24 @@ const	CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
+CString::CString(const char chars[])
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Init
+	init();
+
+	// Finish setting up
+	*this = CString(chars, (UInt32) ::strlen(chars), kEncodingASCII);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CString::CString(UInt64 value, SpecialFormattingOptions options) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Init
 	init();
 
+	// Check options
 	if (options & kSpecialFormattingOptionsBytesDecimal) {
 		// Bytes - Decimal
 		if (options & kSpecialFormattingOptionsBytesDecimalDoEasyRead) {
@@ -245,69 +258,80 @@ CString::CString(UInt64 value, SpecialFormattingOptions options) : CHashable()
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CData& data, Encoding encoding)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Init
+	init();
+
+	// Finish setting up
+	*this = CString(data.getBytePtr(), (UInt32) data.getByteCount(), encoding);
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt8 CString::getSInt8(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (SInt8) ::strtol(*getCString(), nil, base);
+	return (SInt8) ::strtol(*getUTF8String(), nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt16 CString::getSInt16(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (SInt16) ::strtol(*getCString(), nil, base);
+	return (SInt16) ::strtol(*getUTF8String(), nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt32 CString::getSInt32(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (SInt32) ::strtol(*getCString(), nil, base);
+	return (SInt32) ::strtol(*getUTF8String(), nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt64 CString::getSInt64(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::strtoll(*getCString(), nil, base);
+	return ::strtoll(*getUTF8String(), nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt8 CString::getUInt8(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (UInt8) ::strtoul(*getCString(), nil, base);
+	return (UInt8) ::strtoul(*getUTF8String(), nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt16 CString::getUInt16(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (UInt16) ::strtoul(*getCString(), nil, base);
+	return (UInt16) ::strtoul(*getUTF8String(), nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 CString::getUInt32(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return (UInt32) ::strtoul(*getCString(), nil, base);
+	return (UInt32) ::strtoul(*getUTF8String(), nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OSType CString::getOSType() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return EndianU32_BtoN(*((UInt32*) *getCString()));
+	return EndianU32_BtoN(*((UInt32*) *getUTF8String()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt64 CString::getUInt64(UInt8 base) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::strtoull(*getCString(), nil, base);
+	return ::strtoull(*getUTF8String(), nil, base);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -316,20 +340,27 @@ UInt64 CString::getAsByteCount() const
 {
 	CString	string = uppercased();
 
-	if (string.contains(CString(OSSTR("GIB")), kCompareFlagsCaseInsensitive))
+	if (string.contains(CString(OSSTR("GIB")), kContainsOptionsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0 * 1024.0 * 1024.0);
-	if (string.contains(CString(OSSTR("GB")), kCompareFlagsCaseInsensitive))
+	if (string.contains(CString(OSSTR("GB")), kContainsOptionsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0 * 1000.0 * 1000.0);
-	else if (string.contains(CString(OSSTR("MIB")), kCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("MIB")), kContainsOptionsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0 * 1024.0);
-	else if (string.contains(CString(OSSTR("MB")), kCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("MB")), kContainsOptionsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0 * 1000.0);
-	else if (string.contains(CString(OSSTR("KIB")), kCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("KIB")), kContainsOptionsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1024.0);
-	else if (string.contains(CString(OSSTR("KB")), kCompareFlagsCaseInsensitive))
+	else if (string.contains(CString(OSSTR("KB")), kContainsOptionsCaseInsensitive))
 		return (UInt64) (getFloat64() * 1000.0);
 	else
 		return getUInt64();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CData CString::getUTF8Data() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return *getData(kEncodingUTF8);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -385,7 +416,8 @@ TArray<CString> CString::componentsRespectingQuotes(const CString& separator) co
 	bool	inQuotes = false;
 	CString	tempString;
 	for (CharIndex i = 0; i < getLength();) {
-		if (getCharacterAtIndex(i) == '\"') {
+		// Check what to do
+		if (getSubString(i, 1) == mDoubleQuote) {
 			// Found quote
 			inQuotes = !inQuotes;
 			i++;
@@ -410,10 +442,10 @@ TArray<CString> CString::componentsRespectingQuotes(const CString& separator) co
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::compare(const CString& string1, const CString& string2, void* compareFlags)
+bool CString::compare(const CString& string1, const CString& string2, void* compareToOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return string1.compareTo(string2, *((CompareFlags*) compareFlags));
+	return string1.compareTo(string2, *((CompareToOptions*) compareToOptions));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -448,23 +480,13 @@ CString CString::capitalizingFirstLetter() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CString::containsOnly(CharacterSet characterSet) const
+CString CString::removingAllWhitespace() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	Length	length = getLength();
-	TBuffer<UTF32Char>	buffer(length);
-	get(*buffer, length);
-
-	// Check
-	for (CharIndex i = 0; i < length; i++) {
-		// Check character
-		if (!isCharacterInSet(buffer[i], characterSet))
-			// Nope
-			return false;
-	}
-
-	return true;
+	return this->replacingSubStrings(CString::mSpace)
+			.replacingSubStrings(CString::mTab)
+			.replacingSubStrings(CString::mNewline)
+			.replacingSubStrings(CString::mLinefeed);
 }
 
 // MARK: Class methods
@@ -481,6 +503,13 @@ CString CString::uppercase(const CString* string, void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return string->uppercased();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CString::fromPascal(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CString((const char*) data.getBytePtr() + 1, (UInt32) data.getByteCount() - 1, kEncodingMacRoman);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

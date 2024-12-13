@@ -274,7 +274,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 	SAudio::ProcessingFormat	currentAudioProcessingFormat(audioProcessingFormats.mDestinationAudioProcessingFormat);
 	OV<SError>					error;
 	if (!audioProcessingFormats.doBitsMatch() || !audioProcessingFormats.doSampleRatesMatch() ||
-			!audioProcessingFormats.doEndiansMatch()) {
+			!audioProcessingFormats.doSampleTypesMatch() || !audioProcessingFormats.doEndiansMatch()) {
 		// Requires Audio Converter
 		I<CAudioConverter>	audioConverter = createAudioConverter();
 

@@ -85,12 +85,25 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size)
+I<CGPUTexture> CGPU::registerTexture(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
 	mInternals->mProcs.acquireContext();
-	I<CGPUTexture>	gpuTexture = I<CGPUTexture>(new COpenGLTexture(data, dataFormat, size));
+	I<CGPUTexture>	gpuTexture = I<CGPUTexture>(new COpenGLTexture(bitmap, gpuTextureDataFormat));
+	mInternals->mProcs.releaseContext();
+
+	return gpuTexture;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CGPUTexture> CGPU::registerTexture(const CData& data, const S2DSizeU16& dimensions,
+		CGPUTexture::DataFormat gpuTextureDataFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Register texture
+	mInternals->mProcs.acquireContext();
+	I<CGPUTexture>	gpuTexture = I<CGPUTexture>(new COpenGLTexture(data, dimensions, gpuTextureDataFormat));
 	mInternals->mProcs.releaseContext();
 
 	return gpuTexture;

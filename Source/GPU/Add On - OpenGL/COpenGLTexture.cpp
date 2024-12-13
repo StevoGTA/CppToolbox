@@ -16,18 +16,91 @@
 
 class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size) :
+		Internals(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat) :
 			TReferenceCountableAutoDelete(),
 					mTextureTarget(GL_TEXTURE_2D),
-					mUsedPixelsSize(size),
-					mTotalPixelsSize(S2DSizeU16(SNumber::getNextPowerOf2(size.mWidth),
-							SNumber::getNextPowerOf2(size.mHeight)))
+					mUsedPixelsSize(bitmap.getSize().mWidth, bitmap.getSize().mHeight),
+					mTotalPixelsSize(
+							S2DSizeU16(SNumber::getNextPowerOf2(bitmap.getSize().mWidth),
+									SNumber::getNextPowerOf2(bitmap.getSize().mHeight)))
 			{
 				// Setup
 //				GLint	format = (gpuTextureDataFormat == CGPUTexture::kDataFormatRGB565) ? GL_RGB : GL_RGBA;
 				GLint	format = GL_RGBA;
 				GLenum	pixelFormat;
-				switch (dataFormat) {
+				UInt16	bytesPerPixel;
+				switch (gpuTextureDataFormat) {
+//					case CGPUTexture::kDataFormatRGB565:	mPixelFormat = GL_UNSIGNED_SHORT_5_6_5;		break;
+//					case CGPUTexture::kDataFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;	break;
+//					case CGPUTexture::kDataFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;	break;
+
+					case CGPUTexture::kDataFormatRGBA8888:
+						// RGBA8888
+						mHasTransparency = true;
+						pixelFormat = GL_UNSIGNED_BYTE;
+						bytesPerPixel = 4;
+						break;
+				}
+
+				// Setup GL texture
+				glGenTextures(1, &mTextureName);
+				glBindTexture(mTextureTarget, mTextureName);
+
+				if (mUsedPixelsSize == mTotalPixelsSize)
+					// Width and height are powers of 2 so use all
+					glTexImage2D(mTextureTarget, 0, format, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, 0, format,
+							pixelFormat, bitmap.getPixelData().getBytePtr());
+				else {
+					// Width or height is not a power of 2 so expand texture space and use what we need
+					UInt8*	empty = (UInt8*) ::calloc(mTotalPixelsSize.mWidth * mTotalPixelsSize.mHeight, bytesPerPixel);
+					glTexImage2D(mTextureTarget, 0, format, mTotalPixelsSize.mWidth, mTotalPixelsSize.mHeight, 0,
+							format, pixelFormat, empty);
+					::free(empty);
+
+					UInt16	textureBytesPerRow = mUsedPixelsSize.mWidth * bytesPerPixel;
+					if (textureBytesPerRow < bitmap.getBytesPerRow()) {
+						// Bitmap is not tighlty packed, so must make it so
+						CData&	pixelData = bitmap.getPixelData();
+						UInt8*	buffer = (UInt8*) ::malloc(textureBytesPerRow * mUsedPixelsSize.mHeight);
+						for (int y = 0; y < mUsedPixelsSize.mHeight; y++) {
+							// Setup
+							const	UInt8*	srcPtr =
+													(const UInt8*) pixelData.getBytePtr() + y * bitmap.getBytesPerRow();
+									UInt8*	dstPtr = buffer + y * textureBytesPerRow;
+							::memcpy(dstPtr, srcPtr, textureBytesPerRow);
+						}
+
+						// Load texture
+						glTexSubImage2D(mTextureTarget, 0, 0, 0, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight,
+								format, pixelFormat, buffer);
+
+						// Cleanup
+						::free(buffer);
+					} else
+						// Bitmap is already tightly packed
+						glTexSubImage2D(mTextureTarget, 0, 0, 0, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight,
+								format, pixelFormat, bitmap.getPixelData().getBytePtr());
+				}
+
+				// Finish up the rest of the GL setup
+				glTexParameteri(mTextureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(mTextureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+				glTexParameteri(mTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(mTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			}
+		Internals(const CData& data, const S2DSizeU16& dimensions, CGPUTexture::DataFormat gpuTextureDataFormat) :
+			TReferenceCountableAutoDelete(),
+					mTextureTarget(GL_TEXTURE_2D), mUsedPixelsSize(dimensions),
+					mTotalPixelsSize(
+							S2DSizeU16(SNumber::getNextPowerOf2(dimensions.mWidth),
+									SNumber::getNextPowerOf2(dimensions.mHeight)))
+			{
+				// Setup
+//				GLint	format = (gpuTextureDataFormat == CGPUTexture::kDataFormatRGB565) ? GL_RGB : GL_RGBA;
+				GLint	format = GL_RGBA;
+				GLenum	pixelFormat;
+				switch (gpuTextureDataFormat) {
 //					case CGPUTexture::kDataFormatRGB565:	mPixelFormat = GL_UNSIGNED_SHORT_5_6_5;		break;
 //					case CGPUTexture::kDataFormatRGBA4444:	mPixelFormat = GL_UNSIGNED_SHORT_4_4_4_4;	break;
 //					case CGPUTexture::kDataFormatRGBA5551:	mPixelFormat = GL_UNSIGNED_SHORT_5_5_5_1;	break;
@@ -49,10 +122,10 @@ class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals
 							pixelFormat, data.getBytePtr());
 				else {
 					// Width or height is not a power of 2 so expand texture space and use what we need
-					UInt8*	empty = (UInt8*) calloc(mTotalPixelsSize.mWidth * mTotalPixelsSize.mHeight, 4);
+					UInt8*	empty = (UInt8*) ::calloc(mTotalPixelsSize.mWidth * mTotalPixelsSize.mHeight, 4);
 					glTexImage2D(mTextureTarget, 0, format, mTotalPixelsSize.mWidth, mTotalPixelsSize.mHeight, 0,
 							format, pixelFormat, empty);
-					free(empty);
+					::free(empty);
 
 					glTexSubImage2D(mTextureTarget, 0, 0, 0, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, format,
 							pixelFormat, data.getBytePtr());
@@ -212,11 +285,18 @@ class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-COpenGLTexture::COpenGLTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size) :
-		CGPUTexture()
+COpenGLTexture::COpenGLTexture(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat) : CGPUTexture()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(data, dataFormat, size);
+	mInternals = new Internals(bitmap, gpuTextureDataFormat);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+COpenGLTexture::COpenGLTexture(const CData& data, const S2DSizeU16& dimensions,
+		CGPUTexture::DataFormat gpuTextureDataFormat) : CGPUTexture()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(data, dimensions, gpuTextureDataFormat);
 }
 
 #if defined(TARGET_OS_IOS)

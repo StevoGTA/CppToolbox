@@ -5,7 +5,6 @@
 #include "CFilesystemPath.h"
 
 #include "CReferenceCountable.h"
-#include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
@@ -259,16 +258,13 @@ CFilesystemPath& CFilesystemPath::operator=(const CFilesystemPath& other)
 CString CFilesystemPath::makeLegalFilename(const CString& string, MakeLegalFilenameOptions makeLegalFilenameOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get length of string
-	CString::Length	length = string.getLength();
 
 	// Extract characters
-	TBuffer<UTF32Char>	buffer(length);
-	string.get(*buffer, length);
+	TBuffer<UTF32Char>	buffer = string.getUTF32Chars();
 
 	// Replace "illegal" ones with '_'
 	UTF32Char*	p = *buffer;
-	for (CString::Length i = 0; i < length; i++, p++) {
+	for (CString::Length i = 0; i < buffer.getCount(); i++, p++) {
 		if ((*p < 0x20) || (*p == ':') || (*p == 0x7F))
 			// Replace with _
 			*p = '_';
@@ -277,7 +273,7 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, MakeLegalFilen
 			*p = '_';
 	}
 
-	return CString(*buffer, length);
+	return CString(buffer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

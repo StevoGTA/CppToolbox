@@ -221,18 +221,23 @@ CBPLReader::CBPLReader(const I<CRandomAccessDataSource>& randomAccessDataSource,
 			// Error
 			continue;
 
-		// Get string content
-		TVResult<CData>	dataResult = mByteReader.readData(count);
-		if (dataResult.hasError()) {
-			// Error
-			mError = OV<SError>(dataResult.getError());
-			continue;
-		}
+		// Check for string content
+		if (count > 0) {
+			// Get string content
+			TVResult<CData>	dataResult = mByteReader.readData(count);
+			if (dataResult.hasError()) {
+				// Error
+				mError = OV<SError>(dataResult.getError());
+				continue;
+			}
 
-		// Create string
-		mStrings[i] =
-				new CString(*dataResult,
-						(marker == kMarkerTypeStringASCII) ? CString::kEncodingASCII : CString::kEncodingUTF16BE);
+			// Create string
+			mStrings[i] =
+					new CString(*dataResult,
+							(marker == kMarkerTypeStringASCII) ? CString::kEncodingASCII : CString::kEncodingUTF16BE);
+		} else
+			// Empty string
+			mStrings[i] = new CString();
 	}
 }
 

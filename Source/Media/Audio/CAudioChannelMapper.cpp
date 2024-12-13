@@ -203,13 +203,13 @@ TArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
 	// Add our setup description
 	setupDescriptions +=
 			indent + CString(OSSTR("Channel Mapper from ")) +
-					CString::mDoubleQuotes +
+					CString::mDoubleQuote +
 							mInternals->mInputAudioProcessingFormat->getChannelMap().getDisplayString() +
-							CString::mDoubleQuotes +
+							CString::mDoubleQuote +
 					CString(OSSTR(" to ")) +
-					CString::mDoubleQuotes +
+					CString::mDoubleQuote +
 							mOutputAudioProcessingFormat->getChannelMap().getDisplayString() +
-							CString::mDoubleQuotes;
+							CString::mDoubleQuote;
 
 	return setupDescriptions;
 }

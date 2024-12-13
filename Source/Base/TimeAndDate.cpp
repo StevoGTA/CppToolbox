@@ -238,12 +238,8 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
 			//	2021-03-23T22:54:13.922-0700
 
-			// Setup
-			CString::Length	length = string.getLength();
-			TBuffer<char>	buffer(length + 1);
-			string.get(*buffer, length + 1);
-
 			// Check for required characters
+			TBuffer<char>	buffer = string.getUTF8Chars();
 			if ((buffer[4] != '-') || (buffer[7] != '-') || (buffer[10] != 'T') || (buffer[13] != ':') ||
 					(buffer[16] != ':'))
 				// Required characters not in their respective positions

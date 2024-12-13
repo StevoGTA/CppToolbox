@@ -42,9 +42,8 @@ class CFileWriter {
 						OV<SError>		write(const void* buffer, UInt64 byteCount) const;
 						OV<SError>		write(const CData& data) const
 											{ return write(data.getBytePtr(), data.getByteCount()); }
-						OV<SError>		write(const CString& string,
-												CString::Encoding stringEncoding = CString::kEncodingTextDefault) const
-											{ return write(string.getData(stringEncoding)); }
+						OV<SError>		write(const CString& string) const
+											{ return write(string.getUTF8Data()); }
 						OV<SError>		write(SInt8 value) const
 											{ return write(&value, sizeof(SInt8)); }
 						OV<SError>		write(SInt16 value) const

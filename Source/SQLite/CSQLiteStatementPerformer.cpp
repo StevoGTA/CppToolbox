@@ -47,7 +47,7 @@ class CSQLiteStatement {
 						{
 							// Prepare
 							sqlite3_stmt*	statement;
-							if (sqlite3_prepare_v2(database, *mString.getCString(), -1, &statement, nil) !=
+							if (sqlite3_prepare_v2(database, *mString.getUTF8String(), -1, &statement, nil) !=
 									SQLITE_OK) {
 								// Error
 								CLogServices::logError(
@@ -82,7 +82,7 @@ class CSQLiteStatement {
 
 									case SSQLiteValue::kTypeString:
 										// String
-										sqlite3_bind_text(statement, i + 1, *value.getString().getCString(), -1,
+										sqlite3_bind_text(statement, i + 1, *value.getString().getUTF8String(), -1,
 												SQLITE_TRANSIENT);
 										break;
 
