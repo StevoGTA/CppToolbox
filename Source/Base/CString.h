@@ -373,6 +373,7 @@ class CString : public CHashable {
 		static	const	CString		mDoubleQuote;
 		static	const	CString		mEqualSign;
 		static	const	CString		mHyphen;
+		static	const	CString		mNull;
 		static	const	CString		mParenthesisClose;
 		static	const	CString		mParenthesisOpen;
 		static	const	CString		mPercent;

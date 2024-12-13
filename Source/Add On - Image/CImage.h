@@ -46,6 +46,8 @@ class CImage {
 										{ return CImage(data).getBitmap(); }
 		static	TVResult<CBitmap>	getBitmap(const CData& data, Type type)
 										{ return CImage(data, OV<Type>(type)).getBitmap(); }
+		static	TVResult<CBitmap>	getBitmap(const CData& data, const OV<Type>& type)
+										{ return CImage(data, type).getBitmap(); }
 		static	TVResult<CData>		getData(const CBitmap& bitmap, Type type);
 
 	// Properties
