@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CNotificationCenter.h"
-#include "CQueue.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDeferredNotificationCenter
@@ -17,18 +16,17 @@ class CDeferredNotificationCenter : public CNotificationCenter {
 
 	// Methods
 	public:
-							// Lifecycle methods
-							CDeferredNotificationCenter();
-							~CDeferredNotificationCenter();
+				// Lifecycle methods
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+				CDeferredNotificationCenter();
+#elif defined(TARGET_OS_WINDOWS)
+				CDeferredNotificationCenter();
+#endif
+				~CDeferredNotificationCenter();
 
-							// CNotificationCenter methods
-		void				queue(const CString& notificationName, const Sender& sender, const CDictionary& info);
-		void				queue(const CString& notificationName, const CDictionary& info);
-
-							// Instance methods
-		CSRSWMessageQueue&	getMessageQueue() const;
-
-		void				flush();
+				// CNotificationCenter methods
+		void	post(const CString& notificationName, const Sender& sender, const CDictionary& info);
+		void	post(const CString& notificationName, const CDictionary& info);
 
 	// Properties
 	private:

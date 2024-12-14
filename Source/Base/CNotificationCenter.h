@@ -160,12 +160,12 @@ class CNotificationCenter {
 				void	unregisterObserver(const CString& notificationName, Observer::Ref observerRef);
 				void	unregisterObserver(Observer::Ref observerRef);
 
-		virtual	void	queue(const CString& notificationName, const Sender& sender, const CDictionary& info) = 0;
-				void	queue(const CString& notificationName, const Sender& sender)
-							{ queue(notificationName, sender, CDictionary::mEmpty); }
-		virtual	void	queue(const CString& notificationName, const CDictionary& info) = 0;
-				void	queue(const CString& notificationName)
-							{ queue(notificationName, CDictionary::mEmpty); }
+		virtual	void	post(const CString& notificationName, const Sender& sender, const CDictionary& info) = 0;
+				void	post(const CString& notificationName, const Sender& sender)
+							{ post(notificationName, sender, CDictionary::mEmpty); }
+		virtual	void	post(const CString& notificationName, const CDictionary& info) = 0;
+				void	post(const CString& notificationName)
+							{ post(notificationName, CDictionary::mEmpty); }
 
 	protected:
 						// Lifcycle methods
@@ -189,12 +189,12 @@ class CImmediateNotificationCenter : public CNotificationCenter {
 				CImmediateNotificationCenter() {}
 
 				// CNotificationCenter methods
-		void	queue(const CString& notificationName, const Sender& sender, const CDictionary& info)
+		void	post(const CString& notificationName, const Sender& sender, const CDictionary& info)
 					{ send(notificationName, OR<Sender>((Sender&) sender), info); }
-		void	queue(const CString& notificationName, const Sender& sender)
-					{ CNotificationCenter::queue(notificationName, sender); }
-		void	queue(const CString& notificationName, const CDictionary& info)
+		void	post(const CString& notificationName, const Sender& sender)
+					{ CNotificationCenter::post(notificationName, sender); }
+		void	post(const CString& notificationName, const CDictionary& info)
 					{ send(notificationName, OR<Sender>(), info); }
-		void	queue(const CString& notificationName)
-					{ CNotificationCenter::queue(notificationName); }
+		void	post(const CString& notificationName)
+					{ CNotificationCenter::post(notificationName); }
 };

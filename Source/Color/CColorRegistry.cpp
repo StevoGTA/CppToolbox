@@ -452,8 +452,8 @@ void CColorRegistry::setAsCurrent(const CColorSet& colorSet)
 	// Save to prefs
 	mInternals->writeToPrefs();
 
-	// Queue notification
-	mInternals->mNotificationCenter.queue(mColorSetChangedNotificationName,
+	// Post notification
+	mInternals->mNotificationCenter.post(mColorSetChangedNotificationName,
 			CNotificationCenter::RSender<CColorRegistry>(*this));
 }
 
@@ -472,8 +472,8 @@ void CColorRegistry::setCurrentColorSetColor(OSType groupID, OSType colorID, con
 	info.set(CString(OSSTR("colorID")), colorID);
 	info.set(CString(OSSTR("color")), &color);
 
-	// Queue notification
-	mInternals->mNotificationCenter.queue(mColorChangedNotificationName,
+	// Post notification
+	mInternals->mNotificationCenter.post(mColorChangedNotificationName,
 			CNotificationCenter::RSender<CColorRegistry>(*this), info);
 }
 

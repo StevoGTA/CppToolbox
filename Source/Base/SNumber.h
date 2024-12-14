@@ -99,6 +99,8 @@ template <typename T> class TNumber : public CHashable {
 				// Instance methods
 		T		operator*() const
 					{ return mValue; }
+		bool	operator==(T value) const
+					{ return mValue == value; }
 
 	// Properties
 	private:

@@ -4,7 +4,14 @@
 
 #include "CDeferredNotificationCenter.h"
 
-#include "TLockingArray.h"
+#include "ConcurrencyPrimitives.h"
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+	#include "CThread.h"
+
+	#include <dispatch/dispatch.h>
+#elif defined(TARGET_OS_WINDOWS)
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDeferredNotificationCenter::Internals
@@ -27,18 +34,95 @@ class CDeferredNotificationCenter::Internals {
 			CDictionary	mInfo;
 		};
 
-						Internals(CDeferredNotificationCenter& deferredNotificationCenter) :
-							mDeferredNotificationCenter(deferredNotificationCenter), mMessageQueue(10 * 1024)
-							{}
+				Internals(CDeferredNotificationCenter& deferredNotificationCenter) :
+					mQueueArmed(false), mDeferredNotificationCenter(deferredNotificationCenter)
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+							, mMainThreadRef(CThread::getCurrentRef())
+#elif defined(TARGET_OS_WINDOWS)
+#endif
+					{ mActiveInternals += this; }
+				~Internals()
+					{ mActiveInternals -= this; }
 
-		static	void	flush(CSRSWMessageQueue::ProcMessage& message,
-								CDeferredNotificationCenter* deferredNotificationCenter)
-							{ deferredNotificationCenter->flush(); }
+		void	post(const Info& info)
+					{
+						// Check if on UI thread
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+						if (CThread::getCurrentRef() == mMainThreadRef)
+#elif defined(TARGET_OS_WINDOWS)
+#endif
+							// On UI thread
+							send(info);
+						else {
+							// Lock
+							mLock.lock();
 
-		CDeferredNotificationCenter&	mDeferredNotificationCenter;
-		CSRSWMessageQueue				mMessageQueue;
-		TNLockingArray<Info>			mInfos;
+							// Add
+							mInfos += info;
+
+							// Check if queue is armed
+							if (!mQueueArmed) {
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+								dispatch_async(dispatch_get_main_queue(), ^{
+									// Check if active
+									if (mActiveInternals.contains(this))
+										// Send notifications
+										send();
+								});
+#elif defined(TARGET_OS_WINDOWS)
+#endif
+								// Queue is now armed
+								mQueueArmed = true;
+							}
+
+							// Unlock
+							mLock.unlock();
+						}
+					}
+		void	send()
+					{
+						// Lock
+						mLock.lock();
+
+						// Send notifications
+						for (TIteratorD<Info> iterator = mInfos.getIterator(); iterator.hasValue();
+								iterator.advance())
+							// Send
+							send(*iterator);
+						mInfos.removeAll();
+
+						// Queue is no longer armed
+						mQueueArmed = false;
+
+						// Unlock
+						mLock.unlock();
+					}
+		void	send(const Info& info) const
+					{
+						// Check for sender
+						if (info.mSender.hasInstance())
+							// Have sender
+							mDeferredNotificationCenter.send(info.mNotificationName, OR<Sender>(*info.mSender),
+									info.mInfo);
+						else
+							// Don't have sender
+							mDeferredNotificationCenter.send(info.mNotificationName, OR<Sender>(), info.mInfo);
+					}
+
+				bool							mQueueArmed;
+				CDeferredNotificationCenter&	mDeferredNotificationCenter;
+				CLock							mLock;
+				CThread::Ref					mMainThreadRef;
+				TNArray<Info>					mInfos;
+
+		static	TNumberArray<void*>				mActiveInternals;
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+#elif defined(TARGET_OS_WINDOWS)
+#endif
 };
+
+TNumberArray<void*>	CDeferredNotificationCenter::Internals::mActiveInternals;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -63,53 +147,15 @@ CDeferredNotificationCenter::~CDeferredNotificationCenter()
 // MARK: CNotificationCenter methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDeferredNotificationCenter::queue(const CString& notificationName, const Sender& sender, const CDictionary& info)
+void CDeferredNotificationCenter::post(const CString& notificationName, const Sender& sender, const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Add
-	mInternals->mInfos += Internals::Info(notificationName, sender, info);
-
-	// Submit message
-	mInternals->mMessageQueue.submit(
-			CSRSWMessageQueue::ProcMessage((CSRSWMessageQueue::ProcMessage::Proc) Internals::flush, this));
+	mInternals->post(Internals::Info(notificationName, sender, info));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CDeferredNotificationCenter::queue(const CString& notificationName, const CDictionary& info)
+void CDeferredNotificationCenter::post(const CString& notificationName, const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Add
-	mInternals->mInfos += Internals::Info(notificationName, info);
-
-	// Submit message
-	mInternals->mMessageQueue.submit(
-			CSRSWMessageQueue::ProcMessage((CSRSWMessageQueue::ProcMessage::Proc) Internals::flush, this));
-}
-
-// MARK: Instance methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CSRSWMessageQueue& CDeferredNotificationCenter::getMessageQueue() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mMessageQueue;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CDeferredNotificationCenter::flush()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Send all
-	while (mInternals->mInfos.getCount() > 0) {
-		// Pop first
-		Internals::Info	info = mInternals->mInfos.popFirst();
-
-		// Send
-		if (info.mSender.hasInstance())
-			// Have sender
-			send(info.mNotificationName, OR<Sender>(*info.mSender), info.mInfo);
-		else
-			// Don't have sender
-			send(info.mNotificationName, OR<Sender>(), info.mInfo);
-	}
+	mInternals->post(Internals::Info(notificationName, info));
 }

@@ -137,8 +137,22 @@ template <typename T> class TNumberArray : public CArray {
 				TNumberArray<T>&			add(T value)
 												{ CArray::add(new TNumber<T>(value)); return *this; }
 
-				T							getAt(ItemIndex index) const
-												{ return ((TNumber<T>*) getItemAt(index))->mValue; }
+				bool						contains(T value) const
+												{ return getIndexOf(value).hasValue(); }
+
+				OV<ItemIndex>				getIndexOf(T value) const
+												{
+													// Iterate all
+													ItemCount	count = getCount();
+													for (ItemIndex i = 0; i < count; i++) {
+														// Check if same
+														if (getAt(i) == value)
+															// Match
+															return OV<ItemIndex>(i);
+													}
+
+													return OV<ItemIndex>();
+												}
 
 				TNumberArray<T>&			removeAll()
 												{ CArray::removeAll(); return *this; }
@@ -153,6 +167,20 @@ template <typename T> class TNumberArray : public CArray {
 												}
 
 											// Instance methods
+				T							getAt(ItemIndex index) const
+												{ return **((TNumber<T>*) getItemAt(index)); }
+
+				TNumberArray<T>&			remove(T value)
+												{
+													// Check if found
+													OV<CArray::ItemIndex>	index = TNumberArray<T>::getIndexOf(value);
+													if (index.hasValue())
+														// Remove
+														removeAtIndex(*index);
+
+													return *this;
+												}
+
 				T							popFirst()
 												{
 													// Get first item
@@ -199,6 +227,8 @@ template <typename T> class TNumberArray : public CArray {
 												}
 				TNumberArray<T>&			operator+=(T value)
 												{ CArray::add(new TNumber<T>(value)); return *this; }
+				TNumberArray<T>&			operator-=(T value)
+												{ return remove(value); }
 
 											// Class methods
 		static	T							getValue(ItemRef itemRef)
