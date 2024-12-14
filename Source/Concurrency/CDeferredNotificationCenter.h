@@ -6,6 +6,12 @@
 
 #include "CNotificationCenter.h"
 
+#if defined(TARGET_OS_WINDOWS)
+	#include "winrt\Microsoft.UI.Dispatching.h"
+
+	using namespace winrt::Microsoft::UI::Dispatching;
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDeferredNotificationCenter
 
@@ -20,7 +26,7 @@ class CDeferredNotificationCenter : public CNotificationCenter {
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
 				CDeferredNotificationCenter();
 #elif defined(TARGET_OS_WINDOWS)
-				CDeferredNotificationCenter();
+				CDeferredNotificationCenter(const DispatcherQueue& dispatcherQueue);
 #endif
 				~CDeferredNotificationCenter();
 

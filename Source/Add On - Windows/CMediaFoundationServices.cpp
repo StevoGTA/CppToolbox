@@ -176,7 +176,7 @@ OV<SError> CMediaFoundationServices::setInputType(IMFTransform* transform, const
 				continue;
 		} else if (result == MF_E_ATTRIBUTENOTFOUND) {
 			// Set
-			result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, sampleRate);
+			result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) sampleRate);
 			if (result != S_OK)
 				// Unable to set
 				continue;
@@ -365,7 +365,7 @@ OV<SError> CMediaFoundationServices::setOutputType(IMFTransform* transform, cons
 				continue;
 		} else if (result == MF_E_ATTRIBUTENOTFOUND) {
 			// Set
-			result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, sampleRate);
+			result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) sampleRate);
 			if (result != S_OK)
 				// Unable to set
 				continue;

@@ -5,12 +5,14 @@
 #include "CDeferredNotificationCenter.h"
 
 #include "ConcurrencyPrimitives.h"
+#include "CThread.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-	#include "CThread.h"
-
 	#include <dispatch/dispatch.h>
 #elif defined(TARGET_OS_WINDOWS)
+	#include "winrt\Microsoft.UI.Dispatching.h"
+
+	using namespace winrt::Microsoft::UI::Dispatching;
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -34,11 +36,16 @@ class CDeferredNotificationCenter::Internals {
 			CDictionary	mInfo;
 		};
 
-				Internals(CDeferredNotificationCenter& deferredNotificationCenter) :
-					mQueueArmed(false), mDeferredNotificationCenter(deferredNotificationCenter)
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-							, mMainThreadRef(CThread::getCurrentRef())
+				Internals(CDeferredNotificationCenter& deferredNotificationCenter) :
 #elif defined(TARGET_OS_WINDOWS)
+				Internals(CDeferredNotificationCenter& deferredNotificationCenter,
+						const DispatcherQueue& dispatcherQueue) :
+#endif
+					mQueueArmed(false), mDeferredNotificationCenter(deferredNotificationCenter),
+							mUIThreadRef(CThread::getCurrentRef())
+#if defined(TARGET_OS_WINDOWS)
+							, mDispatcherQueue(dispatcherQueue)
 #endif
 					{ mActiveInternals += this; }
 				~Internals()
@@ -47,10 +54,7 @@ class CDeferredNotificationCenter::Internals {
 		void	post(const Info& info)
 					{
 						// Check if on UI thread
-#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-						if (CThread::getCurrentRef() == mMainThreadRef)
-#elif defined(TARGET_OS_WINDOWS)
-#endif
+						if (CThread::getCurrentRef() == mUIThreadRef)
 							// On UI thread
 							send(info);
 						else {
@@ -70,6 +74,12 @@ class CDeferredNotificationCenter::Internals {
 										send();
 								});
 #elif defined(TARGET_OS_WINDOWS)
+								mDispatcherQueue.TryEnqueue([this]() {
+									// Check if active
+									if (mActiveInternals.contains(this))
+										// Send notifications
+										send();
+								});
 #endif
 								// Queue is now armed
 								mQueueArmed = true;
@@ -112,14 +122,14 @@ class CDeferredNotificationCenter::Internals {
 				bool							mQueueArmed;
 				CDeferredNotificationCenter&	mDeferredNotificationCenter;
 				CLock							mLock;
-				CThread::Ref					mMainThreadRef;
+				CThread::Ref					mUIThreadRef;
 				TNArray<Info>					mInfos;
 
-		static	TNumberArray<void*>				mActiveInternals;
-
-#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-#elif defined(TARGET_OS_WINDOWS)
+#if defined(TARGET_OS_WINDOWS)
+				DispatcherQueue					mDispatcherQueue;
 #endif
+
+		static	TNumberArray<void*>				mActiveInternals;
 };
 
 TNumberArray<void*>	CDeferredNotificationCenter::Internals::mActiveInternals;
@@ -130,12 +140,21 @@ TNumberArray<void*>	CDeferredNotificationCenter::Internals::mActiveInternals;
 
 // MARK: Lifecycle methods
 
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
 //----------------------------------------------------------------------------------------------------------------------
 CDeferredNotificationCenter::CDeferredNotificationCenter()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new Internals(*this);
 }
+#elif defined(TARGET_OS_WINDOWS)
+//----------------------------------------------------------------------------------------------------------------------
+CDeferredNotificationCenter::CDeferredNotificationCenter(const DispatcherQueue& dispatcherQueue)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(*this, dispatcherQueue);
+}
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 CDeferredNotificationCenter::~CDeferredNotificationCenter()
