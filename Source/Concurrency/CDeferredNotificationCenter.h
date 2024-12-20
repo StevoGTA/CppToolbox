@@ -26,7 +26,11 @@ class CDeferredNotificationCenter : public CNotificationCenter {
 
 				// CNotificationCenter methods
 		void	post(const CString& notificationName, const Sender& sender, const CDictionary& info);
+		void	post(const CString& notificationName, const Sender& sender)
+					{ CNotificationCenter::post(notificationName, sender); }
 		void	post(const CString& notificationName, const CDictionary& info);
+		void	post(const CString& notificationName)
+					{ CNotificationCenter::post(notificationName); }
 
 	// Properties
 	private:
