@@ -373,6 +373,7 @@ class CString : public CHashable {
 		static	const	CString		mDoubleQuote;
 		static	const	CString		mEqualSign;
 		static	const	CString		mHyphen;
+		static	const	CString		mNull;
 		static	const	CString		mParenthesisClose;
 		static	const	CString		mParenthesisOpen;
 		static	const	CString		mPercent;
@@ -397,3 +398,12 @@ class CString : public CHashable {
 						std::basic_string<TCHAR>	mString;
 #endif
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Macros
+
+#define CSTRING_LAZYILY_LOCALIZED(localizationGroup, localizationKey)				\
+	static	CString*	sString = nil;												\
+	if (sString == nil)																\
+		sString = new CString(localizationGroup, CString(OSSTR(localizationKey)));	\
+	return *sString;

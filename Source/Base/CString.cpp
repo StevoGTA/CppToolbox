@@ -31,6 +31,7 @@ const	CString	CString::mComma(OSSTR(","));
 const	CString	CString::mDoubleQuote(OSSTR("\""));
 const	CString	CString::mEqualSign(OSSTR("="));
 const	CString	CString::mHyphen(OSSTR("-"));
+const	CString	CString::mNull(OSSTR("\0"));
 const	CString	CString::mParenthesisClose(OSSTR(")"));
 const	CString	CString::mParenthesisOpen(OSSTR("("));
 const	CString	CString::mPercent(OSSTR("%"));
