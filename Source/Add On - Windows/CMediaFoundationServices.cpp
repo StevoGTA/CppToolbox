@@ -176,7 +176,7 @@ OV<SError> CMediaFoundationServices::setInputType(IMFTransform* transform, const
 				continue;
 		} else if (result == MF_E_ATTRIBUTENOTFOUND) {
 			// Set
-			result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, sampleRate);
+			result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) sampleRate);
 			if (result != S_OK)
 				// Unable to set
 				continue;
@@ -365,7 +365,7 @@ OV<SError> CMediaFoundationServices::setOutputType(IMFTransform* transform, cons
 				continue;
 		} else if (result == MF_E_ATTRIBUTENOTFOUND) {
 			// Set
-			result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, sampleRate);
+			result = mediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, (UINT32) sampleRate);
 			if (result != S_OK)
 				// Unable to set
 				continue;
@@ -955,7 +955,7 @@ done:
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void LogUINT32AsUINT64(const PROPVARIANT& var)
+static void sLogUINT32AsUINT64(const PROPVARIANT& var)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	UINT32 uHigh = 0, uLow = 0;
@@ -971,7 +971,7 @@ float OffsetToFloat(const MFOffset& offset)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-HRESULT LogVideoArea(const PROPVARIANT& var)
+static HRESULT sLogVideoArea(const PROPVARIANT& var)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	if (var.caub.cElems < sizeof(MFVideoArea))
@@ -995,14 +995,14 @@ HRESULT sSpecialCaseAttributeValue(GUID guid, const PROPVARIANT& var)
 		(guid == MF_MT_PIXEL_ASPECT_RATIO))
 	{
 		// Attributes that contain two packed 32-bit values.
-		::LogUINT32AsUINT64(var);
+		::sLogUINT32AsUINT64(var);
 	}
 	else if ((guid == MF_MT_GEOMETRIC_APERTURE) || 
 			 (guid == MF_MT_MINIMUM_DISPLAY_APERTURE) || 
 			 (guid == MF_MT_PAN_SCAN_APERTURE))
 	{
 		// Attributes that an MFVideoArea structure.
-		return ::LogVideoArea(var);
+		return ::sLogVideoArea(var);
 	}
 	else
 	{

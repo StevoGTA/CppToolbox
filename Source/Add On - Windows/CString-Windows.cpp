@@ -538,9 +538,9 @@ TBuffer<UTF32Char> CString::getUTF32Chars() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Collect characters
-	TBuffer<UTF32Char>	buffer(mString.length());
-	::WideCharToMultiByte(sGetCodePageForCStringEncoding(kEncodingUTF32Native), 0, mString.c_str(), mString.length(),
-			(char*) *buffer, mString.length() * 4, NULL, NULL);
+	TBuffer<UTF32Char>	buffer((UInt32) mString.length());
+	::WideCharToMultiByte(sGetCodePageForCStringEncoding(kEncodingUTF32Native), 0, mString.c_str(),
+			(int) mString.length(), (char*) *buffer, (int) mString.length() * 4, NULL, NULL);
 
 	return buffer;
 }

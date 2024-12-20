@@ -19,6 +19,8 @@
 #include <winrt/Windows.Storage.Streams.h>
 
 typedef DWORD SHGDNF;
+typedef void CMINVOKECOMMANDINFO;
+typedef void CMINVOKECOMMANDINFOEX_REMOTE;
 #include "windowsstoragecom.h"
 
 using namespace winrt::Windows::Storage;

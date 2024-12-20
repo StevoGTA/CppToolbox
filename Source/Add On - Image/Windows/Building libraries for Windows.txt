@@ -2,7 +2,18 @@ Building libraries for Windows
 
 libjpeg-turbo
 -------------
-Install-Package libjpeg-msvc-x64
+git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git
+rename libjpeg-turbo libjpegturbo-{version}
+Launch CMake (cmake-gui)
+Open libjpegturbo-{version}
+Set "Where to build binaries" to libjpegturbo-{version}/build
+Click Configure
+Set CMAKE_INSTALL_PREFIX to libjpegturbo-{version}/build
+If deploying for Universal Windows, Turn on WITH_CRT_DLL
+Click Generate
+Click Open Project
+Change to Release
+Build Solution
 
 libpng
 ------

@@ -116,7 +116,15 @@ void CThread::start()
 CThread::Ref CThread::getCurrentRef()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::GetCurrentThread();
+	// Duplicate the "fake" handle to get a real handle
+	HANDLE	handle = NULL;
+	::DuplicateHandle(GetCurrentProcess(), ::GetCurrentThread(), GetCurrentProcess(), &handle, 0,
+			FALSE, DUPLICATE_SAME_ACCESS);
+	if (handle != NULL)
+		// Close
+		::CloseHandle(handle);
+
+	return handle;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

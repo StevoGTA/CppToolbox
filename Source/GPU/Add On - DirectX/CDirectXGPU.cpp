@@ -660,14 +660,30 @@ CGPU::~CGPU()
 // MARK: CGPU methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CGPUTexture> CGPU::registerTexture(const CData& data, CGPUTexture::DataFormat dataFormat, const S2DSizeU16& size)
+I<CGPUTexture> CGPU::registerTexture(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Register texture
 	mInternals->mD3DDeviceContextLock.lock();
 	CGPUTexture*	gpuTexture =
 							new CDirectXTexture(*mInternals->mD3DDeviceComPtr.Get(),
-									*mInternals->mD3DDeviceContextComPtr.Get(), data, DXGI_FORMAT_R8G8B8A8_UNORM, size);
+									*mInternals->mD3DDeviceContextComPtr.Get(), bitmap, DXGI_FORMAT_R8G8B8A8_UNORM);
+	mInternals->mD3DDeviceContextLock.unlock();
+
+	return I<CGPUTexture>(gpuTexture);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CGPUTexture> CGPU::registerTexture(const CData& data, const S2DSizeU16& dimensions,
+		CGPUTexture::DataFormat gpuTextureDataFormat)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Register texture
+	mInternals->mD3DDeviceContextLock.lock();
+	CGPUTexture*	gpuTexture =
+							new CDirectXTexture(*mInternals->mD3DDeviceComPtr.Get(),
+									*mInternals->mD3DDeviceContextComPtr.Get(), data, DXGI_FORMAT_R8G8B8A8_UNORM,
+									dimensions);
 	mInternals->mD3DDeviceContextLock.unlock();
 
 	return I<CGPUTexture>(gpuTexture);

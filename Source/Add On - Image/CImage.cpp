@@ -328,7 +328,7 @@ TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 	jpegErrorInfo.error_exit = sJPEGErrorExit;
 
 	// Specify data source
-	jpeg_source_mgr	jpegSourceInfo;
+	jpeg_source_mgr	jpegSourceInfo = {0};
 	jpegSourceInfo.next_input_byte = nil;
 	jpegSourceInfo.bytes_in_buffer = 0;
 	jpegSourceInfo.init_source = sJPEGSourceInit;
@@ -387,7 +387,7 @@ TVResult<CData> sEncodeJPEGData(const CBitmap& bitmap)
 	// Specify data destination
 	CData	data(bitmap.getPixelData().getByteCount());
 
-	jpeg_destination_mgr	jpegDestinationManager;
+	jpeg_destination_mgr	jpegDestinationManager = {0};
 	jpegDestinationManager.next_output_byte = (JOCTET*) data.getMutableBytePtr();
 	jpegDestinationManager.free_in_buffer = data.getByteCount();
 	jpegDestinationManager.init_destination = sJPEGDestinationInit;
@@ -440,7 +440,7 @@ TVResult<CData> sEncodeJPEGData(const CBitmap& bitmap)
 	JSAMPLE*	image_buffer = (JSAMPLE*) bitmap.getPixelData().getBytePtr();
 	while (jpegCompressInfo.next_scanline < jpegCompressInfo.image_height) {
 		// Do the compression
-		JSAMPROW 	row_pointer[1];
+		JSAMPROW 	row_pointer[1] = {0};
 		row_pointer[0] = &image_buffer[jpegCompressInfo.next_scanline * row_stride];
 		jpeg_write_scanlines(&jpegCompressInfo, row_pointer, 1);
 	}

@@ -99,6 +99,9 @@ class CFolder : public CHashable {
 		static	const	CFolder&			userDesktop();
 		static	const	CFolder&			localApplicationData();
 	#endif
+	#if WINAPI_FAMILY == WINAPI_FAMILY_PC_APP
+		static	const	CFolder&			applicationFolder();
+	#endif
 #endif
 
 	private:

@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CMediaFoundationVideoCodec.cpp			©2021 Stevo Brock	All rights reserved.
+//	CMediaFoundationDecodeVideoCodec.cpp			©2021 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CMediaFoundationVideoCodec.h"
+#include "CMediaFoundationDecodeVideoCodec.h"
 
 #include "CLogServices-Windows.h"
 #include "CMediaFoundationServices.h"
@@ -11,7 +11,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-static	CString	sErrorDomain(OSSTR("CMediaFoundationVideoCodecs"));
+static	CString	sErrorDomain(OSSTR("CMediaFoundationDecodeVideoCodec"));
 static	SError	sSetupDidNotCompleteError(sErrorDomain, 1, CString(OSSTR("Setup did not complete")));
 static	SError	sNoMatchingOutputMediaTypes(sErrorDomain, 2, CString(OSSTR("No matching output media types")));
 
