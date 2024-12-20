@@ -13,7 +13,7 @@
 	#include "SError-Apple.h"
 #elif defined(TARGET_OS_WINDOWS)
 	#include "CMediaFoundationServices.h"
-	#include "CMediaFoundationVideoCodec.h"
+	#include "CMediaFoundationDecodeVideoCodec.h"
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------

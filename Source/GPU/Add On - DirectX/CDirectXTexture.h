@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CBitmap.h"
 #include "CGPUTexture.h"
 #include "TWrappers-Windows.h"
 
@@ -23,8 +24,11 @@ class CDirectXTexture : public CGPUTexture {
 	public:
 														// Lifecycle methods
 														CDirectXTexture(ID3D11Device& device,
+																ID3D11DeviceContext& deviceContext,
+																const CBitmap& bitmap, DXGI_FORMAT format);
+														CDirectXTexture(ID3D11Device& device,
 																ID3D11DeviceContext& deviceContext, const CData& data,
-																DXGI_FORMAT format, const S2DSizeU16& size);
+																DXGI_FORMAT format, const S2DSizeU16& dimensions);
 														CDirectXTexture(const CDirectXTexture& other);
 														~CDirectXTexture();
 
