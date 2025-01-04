@@ -509,7 +509,6 @@ Float64 CString::getFloat64() const
 	return std::stod(mString);
 }
 
-
 //----------------------------------------------------------------------------------------------------------------------
 TBuffer<char> CString::getUTF8Chars() const
 //----------------------------------------------------------------------------------------------------------------------
@@ -807,7 +806,7 @@ bool CString::containsOnly(CharacterSet characterSet) const
 
 	case kCharacterSetWhitespace:
 		// Whitespace
-		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch) { return ch == L' ' || ch == L'\t'; });
+		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch) { return (ch == L' ') || (ch == L'\t'); });
 
 	case kCharacterSetWhitespaceAndNewline:
 		// Whitespace and newline
@@ -816,6 +815,10 @@ bool CString::containsOnly(CharacterSet characterSet) const
 	case kCharacterSetDecimalDigit:
 		// Decimal digit
 		return std::all_of(mString.begin(), mString.end(), ::isdigit);
+
+	case kCharacterSetFloatingPoint:
+		// Floating Point
+		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch) { return ::isdigit(ch) || (ch == L'.'); });
 
 	case kCharacterSetLetter:
 		// Letter

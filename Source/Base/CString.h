@@ -88,7 +88,8 @@ class CString : public CHashable {
 												//	CHARACTER TABULATION
 			kCharacterSetWhitespaceAndNewline,	// Whitespace and Newline character set (Unicode General Category Z*,
 												//	U000A ~ U000D, and U0085)
-			kCharacterSetDecimalDigit,			// Decimal digit character set
+			kCharacterSetDecimalDigit,			// 0 - 9
+			kCharacterSetFloatingPoint,			// 0 - 9 and .
 			kCharacterSetLetter,				// Letter character set (Unicode General Category L* & M*)
 			kCharacterSetLowercaseLetter,		// Lowercase character set (Unicode General Category Ll)
 			kCharacterSetUppercaseLetter,		// Uppercase character set (Unicode General Category Lu and Lt)
@@ -263,34 +264,44 @@ class CString : public CHashable {
 						Float32				getFloat32() const;
 						void				getValue(Float32& value) const
 												{ value = getFloat32(); }
+						OV<Float32>			getOVFloat32() const;
 						Float64				getFloat64() const;
 						void				getValue(Float64& value) const
 												{ value = getFloat64(); }
+						OV<Float64>			getOVFloat64() const;
 						SInt8				getSInt8(UInt8 base = 10) const;
 						void				getValue(SInt8& value, UInt8 base = 10) const
 												{ value = getSInt8(base); }
+						OV<SInt8>			getOVSInt8() const;
 						SInt16				getSInt16(UInt8 base = 10) const;
 						void				getValue(SInt16& value, UInt8 base = 10) const
 												{ value = getSInt16(base); }
+						OV<SInt16>			getOVSInt16() const;
 						SInt32				getSInt32(UInt8 base = 10) const;
 						void				getValue(SInt32& value, UInt8 base = 10) const
 												{ value = getSInt32(base); }
+						OV<SInt32>			getOVSInt32() const;
 						SInt64				getSInt64(UInt8 base = 10) const;
 						void				getValue(SInt64& value, UInt8 base = 10) const
 												{ value = getSInt64(base); }
+						OV<SInt64>			getOVSInt64() const;
 						UInt8				getUInt8(UInt8 base = 10) const;
 						void				getValue(UInt8& value, UInt8 base = 10) const
 												{ value = getUInt8(base); }
+						OV<UInt8>			getOVUInt8() const;
 						UInt16				getUInt16(UInt8 base = 10) const;
 						void				getValue(UInt16& value, UInt8 base = 10) const
 												{ value = getUInt16(base); }
+						OV<UInt16>			getOVUInt16() const;
 						UInt32				getUInt32(UInt8 base = 10) const;
 						void				getValue(UInt32& value, UInt8 base = 10) const
 												{ value = getUInt32(base); }
+						OV<UInt32>			getOVUInt32() const;
 						OSType				getOSType() const;
 						UInt64				getUInt64(UInt8 base = 10) const;
 						void				getValue(UInt64& value, UInt8 base = 10) const
 												{ value = getUInt64(base); }
+						OV<UInt64>			getOVUInt64() const;
 						UInt64				getAsByteCount() const;
 						
 						TBuffer<char>		getUTF8Chars() const;
