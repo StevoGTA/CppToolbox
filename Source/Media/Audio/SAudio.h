@@ -137,6 +137,8 @@ struct SAudio {
 			static			ChannelMap	fromRawValue(UInt16 rawValue)
 											{ return ChannelMap(rawValue); }
 
+			static			bool		compare(const ChannelMap& testChannelMap, void* channelMap)
+											{ return testChannelMap == *((const ChannelMap*) channelMap); }
 			static			bool		compareValue(const ChannelMap& channelMap1,
 												const ChannelMap& channelMap2, void* userData)
 											{ return channelMap1.mValue <= channelMap2.mValue; }
