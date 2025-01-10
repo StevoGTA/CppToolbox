@@ -101,6 +101,7 @@ void CIMAADPCMCoder::StateInfo::decodeDeltaCodes(const UInt8* deltaCodesPtr, SIn
 			mSample = -0x7FFF;
 		else
 			mSample = (SInt16) sample;
+		*samplePtr = mSample;
 		samplePtr += channelCount;
 	}
 }

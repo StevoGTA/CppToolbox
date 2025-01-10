@@ -58,30 +58,35 @@ CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding) : CHashab
 	// Parameter check
 	AssertNotNil(ptr);
 
+	// Check for UTF16 encoding
+	if (encoding == kEncodingUTF16) {
+		// Determine byte order
+		AssertFailIf(byteCount < 2);
+		if (byteCount < 2)
+			return;
+
+		// Check first 2 bytes
+		const	UInt8*	bytePtr = (const UInt8*) ptr;
+		if ((bytePtr[0] == 0xFF) && (bytePtr[1] == 0xFE)) {
+			// Big-endian
+			ptr = bytePtr + 2;
+			byteCount -= 2;
+			encoding = kEncodingUTF16BE;
+		} else if ((bytePtr[0] == 0xFE) && (bytePtr[1] == 0xFF)) {
+			// Little-endian
+			ptr = bytePtr + 2;
+			byteCount -= 2;
+			encoding = kEncodingUTF16LE;
+		} else {
+			// Unknown
+			AssertFail();
+
+			return;
+		}
+	}
+
 	// Check length
 	if (byteCount > 0) {
-		// Check encoding
-		if (encoding == kEncodingUTF16) {
-			// Determine byte order
-			AssertFailIf(byteCount < 2);
-
-			// Check first 2 bytes
-			const	UInt8*	bytePtr = (const UInt8*) ptr;
-			if ((bytePtr[0] == 0xFE) && (bytePtr[1] == 0xFF)) {
-				// Big-endian
-				ptr = bytePtr + 2;
-				byteCount -= 2;
-				encoding = kEncodingUTF16BE;
-			} else if ((bytePtr[0] == 0xFF) && (bytePtr[1] == 0xFE)) {
-				// Little-endian
-				ptr = bytePtr + 2;
-				byteCount -= 2;
-				encoding = kEncodingUTF16LE;
-			} else
-				// Unknown
-				AssertFail();
-		}
-
 		// Resize
 		mString.resize(byteCount);
 
