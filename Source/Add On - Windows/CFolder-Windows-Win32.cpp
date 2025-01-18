@@ -2,11 +2,11 @@
 //	CFolder-Windows-Win32.cpp			©2020 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
+#include "shlobj.h"
+
 #include "CFolder.h"
 
 #include "SError-Windows.h"
-
-#include "shlobj.h"
 
 #pragma comment(lib, "shell32")
 
