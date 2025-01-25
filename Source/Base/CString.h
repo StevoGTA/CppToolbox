@@ -413,8 +413,10 @@ class CString : public CHashable {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
-#define CSTRING_LAZYILY_LOCALIZED(localizationGroup, localizationKey)				\
-	static	CString*	sString = nil;												\
-	if (sString == nil)																\
-		sString = new CString(localizationGroup, CString(OSSTR(localizationKey)));	\
-	return *sString;
+#define CSTRING_LAZYILY_LOCALIZED(localizationGroup, localizationKey)					\
+	{																					\
+		static	CString*	sString = nil;												\
+		if (sString == nil)																\
+			sString = new CString(localizationGroup, CString(OSSTR(localizationKey)));	\
+		return *sString;																\
+	}
