@@ -10,40 +10,111 @@
 // MARK: STimecode
 
 struct STimecode {
-	// Base
+	// Framerate
 	public:
-		enum Base {
-			kBase24FPSNonDropFrame	= 24,	// film, ATSC, 2k, 4k, 6k
-//			kBase25FPSNonDropFrame	= 25,	// PAL (used in Europe, Uruguay, Argentina, Australia), SECAM, DVB, ATSC
-//			kBase29_97FPSDropFrame	= 2997,	// 30 ÷ 1.001 fps - NTSC American System (US, Canada, Mexico, Colombia, etc.), ATSC, PAL-M (Brazil)
-//			kBase30FPSNonDropFrame	= 30,	// ATSC
+		struct Framerate {
+			// Kind
+			public:
+				enum Kind {
+					kKindNonDropFrame	= 0,
+					kKindDropFrame2997	= 2997,
+					kKindDropFrame5994	= 5994,
+				};
+
+			// Methods
+			public:
+										// Lifecycle methods
+										Framerate(const Framerate& other) :
+											mKind(other.mKind), mNonDropFrameBase(other.mNonDropFrameBase)
+											{}
+
+										// Instance methods
+						Kind			getKind() const
+											{ return mKind; }
+						bool			isDropFrame() const
+											{ return mKind != kKindNonDropFrame; }
+						UInt32			getBase() const
+											{
+												// Check Kind
+												switch (mKind) {
+													case kKindNonDropFrame:		return *mNonDropFrameBase;
+													case kKindDropFrame2997:	return 30;
+													case kKindDropFrame5994:	return 60;
+												}
+											}
+
+						CDictionary		getInfo() const;
+
+						bool			operator==(const Framerate& other) const
+											{ return (mKind == other.mKind) &&
+													(mNonDropFrameBase == other.mNonDropFrameBase); }
+						bool			operator!=(const Framerate& other) const
+											{ return (mKind != other.mKind) ||
+													(mNonDropFrameBase != other.mNonDropFrameBase); }
+
+										// Class methods
+				static	Framerate		forNonDropFrame(UInt32 base)
+											{ return Framerate(kKindNonDropFrame, base); }
+				static	Framerate		forDropFrame2997()
+											{ return Framerate(kKindDropFrame2997); }
+				static	Framerate		forDropFrame5994()
+											{ return Framerate(kKindDropFrame5994); }
+
+				static	OV<Framerate>	fromInfo(const CDictionary& info);
+
+			private:
+										// Lifecycle methods
+										Framerate(Kind kind, UInt32 nonDropFrameBase) :
+											mKind(kind), mNonDropFrameBase(nonDropFrameBase)
+											{}
+										Framerate(Kind kind) : mKind(kind) {}
+
+			// Properties
+			public:
+				static	Framerate	mDefault;
+
+			private:
+						Kind		mKind;
+						OV<UInt32>	mNonDropFrameBase;
 		};
 
 	// Methods
 	public:
-					// Lifecycle methods
-					STimecode(SInt32 frameIndex, Base base) : mFrameIndex(frameIndex), mBase(base) {}
-					STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames, Base base);
-					STimecode(const CString& string, Base base);
-					STimecode(const STimecode& other) : mFrameIndex(other.mFrameIndex), mBase(other.mBase) {}
+								// Lifecycle methods
+								STimecode(SInt32 frameIndex,
+										const Framerate& framerate = Framerate::forNonDropFrame(24)) :
+									mFrameIndex(frameIndex), mFramerate(framerate)
+									{}
+								STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames,
+										const Framerate& framerate = Framerate::forNonDropFrame(24));
+								STimecode(const STimecode& other) :
+									mFrameIndex(other.mFrameIndex), mFramerate(other.mFramerate)
+									{}
 
-					// Instance methods
-		UInt32		getFrameIndex() const
-						{ return mFrameIndex; }
-		Base		getBase() const
-						{ return mBase; }
-		CString		getDisplayString() const;
+								// Instance methods
+				UInt32			getFrameIndex() const
+									{ return mFrameIndex; }
+				CString			getDisplayString() const;
 
-		STimecode	addingFrames(SInt32 frameCount) const
-						{ return STimecode(mFrameIndex + frameCount, mBase); }
+				STimecode		addingFrames(SInt32 frameCount) const
+									{ return STimecode(mFrameIndex + frameCount, mFramerate); }
 
-		bool		operator==(const STimecode& other) const
-						{ return (mFrameIndex == other.mFrameIndex) && (mBase == other.mBase); }
-		bool		operator!=(const STimecode& other) const
-						{ return (mFrameIndex != other.mFrameIndex) || (mBase != other.mBase); }
+				Float64			getSeconds() const;
+
+				CDictionary		getInfo() const;
+
+				bool			operator==(const STimecode& other) const
+									{ return (mFrameIndex == other.mFrameIndex) && (mFramerate == other.mFramerate); }
+				bool			operator!=(const STimecode& other) const
+									{ return (mFrameIndex != other.mFrameIndex) || (mFramerate != other.mFramerate); }
+
+								// Class methods
+		static	OV<STimecode>	fromInfo(const CDictionary& info);
+		static	OV<STimecode>	fromString(const CString& string,
+										const Framerate& framerate = Framerate::forNonDropFrame(24));
 
 	// Properties
 	private:
-		SInt32	mFrameIndex;
-		Base	mBase;
+		SInt32		mFrameIndex;
+		Framerate	mFramerate;
 };
