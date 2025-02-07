@@ -150,18 +150,6 @@ CString STimecode::getDisplayString() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-Float64 STimecode::getSeconds() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check framerate
-	switch (mFramerate.getKind()) {
-		case Framerate::kKindNonDropFrame:	return (Float64) mFrameIndex / (Float64) mFramerate.getBase();
-		case Framerate::kKindDropFrame2997:	return (Float64) mFrameIndex / (30000 / 1001);
-		case Framerate::kKindDropFrame5994:	return (Float64) mFrameIndex / (60000 / 1001);
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CDictionary STimecode::getInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {

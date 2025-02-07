@@ -42,6 +42,15 @@ struct STimecode {
 													case kKindDropFrame5994:	return 60;
 												}
 											}
+						Float32			getFramerate() const
+											{
+												// Check kind
+												switch (mKind) {
+													case kKindNonDropFrame:		return *mNonDropFrameBase;
+													case kKindDropFrame2997:	return 30000.0f / 1001.0f;
+													case kKindDropFrame5994:	return 60000.0f / 1001.0f;
+												}
+											}
 
 						CDictionary		getInfo() const;
 
@@ -99,7 +108,8 @@ struct STimecode {
 				STimecode		addingFrames(SInt32 frameCount) const
 									{ return STimecode(mFrameIndex + frameCount, mFramerate); }
 
-				Float64			getSeconds() const;
+				Float64			getSeconds() const
+									{ return (Float64) mFrameIndex / (Float64) mFramerate.getFramerate(); }
 
 				CDictionary		getInfo() const;
 
