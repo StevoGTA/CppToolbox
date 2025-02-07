@@ -15,8 +15,10 @@ class CFilesystem {
 	// Types
 	public:
 		// Application Object (representing an Application on the target system)
+		typedef	CFolder	MacOSApplication;
+
 #if defined(TARGET_OS_MACOS)
-		typedef	CFolder	Application;
+		typedef	MacOSApplication	Application;
 #endif
 
 	// Methods
