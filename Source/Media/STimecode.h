@@ -40,15 +40,21 @@ struct STimecode {
 													case kKindNonDropFrame:		return *mNonDropFrameBase;
 													case kKindDropFrame2997:	return 30;
 													case kKindDropFrame5994:	return 60;
+#if defined(TARGET_OS_WINDOWS)
+													default:					return 0;
+#endif
 												}
 											}
 						Float32			getFramerate() const
 											{
 												// Check kind
 												switch (mKind) {
-													case kKindNonDropFrame:		return *mNonDropFrameBase;
+													case kKindNonDropFrame:		return (Float32) *mNonDropFrameBase;
 													case kKindDropFrame2997:	return 30000.0f / 1001.0f;
 													case kKindDropFrame5994:	return 60000.0f / 1001.0f;
+#if defined(TARGET_OS_WINDOWS)
+													default:					return 0.0;
+#endif
 												}
 											}
 

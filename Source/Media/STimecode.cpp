@@ -118,7 +118,7 @@ CString STimecode::getDisplayString() const
 		return CString::make(OSSTR("%02d:%02d:%02d:%02d"), hours, minutes, seconds, frames);
 	} else {
 		// Drop Frame
-		Float32	framerate = (mFramerate.getKind() == Framerate::kKindDropFrame2997) ? 29.97 : 59.94;
+		Float32	framerate = (mFramerate.getKind() == Framerate::kKindDropFrame2997) ? 29.97f : 59.94f;
 
 		// From https://www.davidheidelberger.com/2010/06/10/drop-frame-timecode/
 		SInt32	dropFrames = (SInt32) round(framerate * 0.066666);
