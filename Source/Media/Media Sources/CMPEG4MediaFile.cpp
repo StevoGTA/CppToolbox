@@ -573,7 +573,9 @@ TArray<SMedia::PacketAndLocation> CMPEG4MediaFile::composePacketAndLocations(con
 				UInt32						sttsChunkPacketDuration = sttsChunk.getPacketDuration();
 
 		// Iterate packets
-		for (UInt32 packetIndex = 0; packetIndex < sttsChunkPacketCount; packetIndex++, stszPacketByteCountIndex++) {
+		for (UInt32 packetIndex = 0;
+				(packetIndex < sttsChunkPacketCount) && (currentByteOffset < internals.mAtomReader.getByteCount());
+				packetIndex++, stszPacketByteCountIndex++) {
 			// Get info
 			UInt32	packetByteCount = stszAtomPayload.getPacketByteCount(stszPacketByteCountIndex);
 
