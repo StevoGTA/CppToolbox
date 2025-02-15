@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	STimecode.cpp			©20223 Stevo Brock	All rights reserved.
+//	STimecode.cpp			©2023 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #include "STimecode.h"
@@ -65,6 +65,29 @@ OV<STimecode::Framerate> STimecode::Framerate::fromInfo(const CDictionary& info)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+const TArray<STimecode::Framerate>& STimecode::Framerate::getStandard()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	TSArray<Framerate>*	sArray = nil;
+	if (sArray == nil) {
+		// Setup
+		static	Framerate	sFramerates[] =
+									{
+										Framerate(kKindNonDropFrame, 24),
+										Framerate(kKindNonDropFrame, 25),
+										Framerate(kKindDropFrame2997),
+										Framerate(kKindNonDropFrame, 30),
+										Framerate(kKindDropFrame5994),
+										Framerate(kKindNonDropFrame, 60),
+									};
+		sArray = new TSARRAY_FROM_C_ARRAY(Framerate, sFramerates);
+	}
+
+	return *sArray;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - STimecode
 
@@ -101,7 +124,7 @@ STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString STimecode::getDisplayString() const
+STimecode::HMSF STimecode::getHMSF() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -115,7 +138,7 @@ CString STimecode::getDisplayString() const
 		SInt32	seconds = (mFrameIndex / base) % 60;
 		SInt32	frames = mFrameIndex % base;
 
-		return CString::make(OSSTR("%02d:%02d:%02d:%02d"), hours, minutes, seconds, frames);
+		return HMSF(hours, minutes, seconds, frames);
 	} else {
 		// Drop Frame
 		Float32	framerate = (mFramerate.getKind() == Framerate::kKindDropFrame2997) ? 29.97f : 59.94f;
@@ -145,8 +168,22 @@ CString STimecode::getDisplayString() const
 		SInt32	seconds = (frameIndex / base) % 60;
 		SInt32	frames = frameIndex % base;
 
-		return CString::make(OSSTR("%02d:%02d:%02d;%02d"), hours, minutes, seconds, frames);
+		return HMSF(hours, minutes, seconds, frames);
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString STimecode::getDisplayString() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	HMSF	hmsf = getHMSF();
+
+	return !mFramerate.isDropFrame() ?
+			CString::make(OSSTR("%02d:%02d:%02d:%02d"), hmsf.getHours(), hmsf.getMinutes(), hmsf.getSeconds(),
+					hmsf.getFrames()) :
+			CString::make(OSSTR("%02d:%02d:%02d;%02d"), hmsf.getHours(), hmsf.getMinutes(), hmsf.getSeconds(),
+					hmsf.getFrames());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
