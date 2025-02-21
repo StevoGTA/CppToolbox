@@ -131,40 +131,49 @@ struct STimecode {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								STimecode(SInt32 frameIndex,
-										const Framerate& framerate = Framerate::forNonDropFrame(24)) :
-									mFrameIndex(frameIndex), mFramerate(framerate)
-									{}
-								STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames,
-										const Framerate& framerate = Framerate::forNonDropFrame(24));
-								STimecode(const STimecode& other) :
-									mFrameIndex(other.mFrameIndex), mFramerate(other.mFramerate)
-									{}
+										// Lifecycle methods
+										STimecode(SInt32 frameIndex,
+												const Framerate& framerate = Framerate::forNonDropFrame(24)) :
+											mFrameIndex(frameIndex), mFramerate(framerate)
+											{}
+										STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames,
+												const Framerate& framerate = Framerate::forNonDropFrame(24));
+										STimecode(const STimecode& other) :
+											mFrameIndex(other.mFrameIndex), mFramerate(other.mFramerate)
+											{}
 
-								// Instance methods
-				UInt32			getFrameIndex() const
-									{ return mFrameIndex; }
-				HMSF			getHMSF() const;
-				CString			getDisplayString() const;
+										// Instance methods
+						UInt32			getFrameIndex() const
+											{ return mFrameIndex; }
+				const	Framerate&		getFramerate() const
+											{ return mFramerate; }
 
-				STimecode		addingFrames(SInt32 frameCount) const
-									{ return STimecode(mFrameIndex + frameCount, mFramerate); }
+						HMSF			getHMSF() const;
+						CString			getDisplayString() const;
 
-				Float64			getSeconds() const
-									{ return (Float64) mFrameIndex / (Float64) mFramerate.getFramerate(); }
+						STimecode		addingFrames(SInt32 frameCount) const
+											{ return STimecode(mFrameIndex + frameCount, mFramerate); }
+						STimecode		addingSeconds(Float64 seconds)
+											{ return STimecode(
+													mFrameIndex + (SInt32) (seconds * mFramerate.getFramerate()),
+													mFramerate); }
 
-				CDictionary		getInfo() const;
+						Float64			getSeconds() const
+											{ return (Float64) mFrameIndex / (Float64) mFramerate.getFramerate(); }
 
-				bool			operator==(const STimecode& other) const
-									{ return (mFrameIndex == other.mFrameIndex) && (mFramerate == other.mFramerate); }
-				bool			operator!=(const STimecode& other) const
-									{ return (mFrameIndex != other.mFrameIndex) || (mFramerate != other.mFramerate); }
+						CDictionary		getInfo() const;
 
-								// Class methods
-		static	OV<STimecode>	fromInfo(const CDictionary& info);
-		static	OV<STimecode>	fromString(const CString& string,
-										const Framerate& framerate = Framerate::forNonDropFrame(24));
+						bool			operator==(const STimecode& other) const
+											{ return (mFrameIndex == other.mFrameIndex) &&
+													(mFramerate == other.mFramerate); }
+						bool			operator!=(const STimecode& other) const
+											{ return (mFrameIndex != other.mFrameIndex) ||
+													(mFramerate != other.mFramerate); }
+
+										// Class methods
+		static			OV<STimecode>	fromInfo(const CDictionary& info);
+		static			OV<STimecode>	fromString(const CString& string,
+												const Framerate& framerate = Framerate::forNonDropFrame(24));
 
 	// Properties
 	private:
