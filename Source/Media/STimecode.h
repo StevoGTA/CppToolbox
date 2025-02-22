@@ -138,6 +138,8 @@ struct STimecode {
 											{}
 										STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames,
 												const Framerate& framerate = Framerate::forNonDropFrame(24));
+										STimecode(SInt32 hours, SInt32 minutes, Float32 seconds,
+												const Framerate& framerate = Framerate::forNonDropFrame(24));
 										STimecode(const STimecode& other) :
 											mFrameIndex(other.mFrameIndex), mFramerate(other.mFramerate)
 											{}

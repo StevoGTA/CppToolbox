@@ -121,6 +121,33 @@ STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+STimecode::STimecode(SInt32 hours, SInt32 minutes, Float32 seconds, const Framerate& framerate) : mFramerate(framerate)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	SInt32	base = (SInt32) mFramerate.getBase();
+
+	// Check Framerate
+	if (!mFramerate.isDropFrame())
+		// Non-Drop Frame
+		mFrameIndex = (((hours * 60) + minutes) * 60) * base + (SInt32) (::round(seconds * (Float32) base));
+	else {
+		// Drop Frame
+		// From https://www.davidheidelberger.com/2010/06/10/drop-frame-timecode/
+		SInt32	dropFrames =
+						(SInt32)
+								round(((mFramerate.getKind() == Framerate::kKindDropFrame2997) ? 29.97 : 59.94) / 15.0);
+
+		SInt32	hourFrames = base * 60 * 60;
+		SInt32	minuteFrames = base * 60;
+		SInt32	totalMinutes = hours * 60 + minutes;
+		mFrameIndex =
+				hours * hourFrames + minutes * minuteFrames + (SInt32) (::round(seconds * (Float32) base)) -
+						(dropFrames * (totalMinutes - (totalMinutes / 10)));
+	}
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
