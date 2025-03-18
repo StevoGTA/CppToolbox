@@ -540,6 +540,20 @@ template <typename T> class TNDictionary : public TMDictionary<T> {
 								return dictionary;
 							}
 
+		TNSet<T>		getValues() const
+							{
+								// Setup
+								TNSet<T>	values;
+
+								// Iterate values
+								for (TIteratorS<CDictionary::Item> iterator = CDictionary::getIterator();
+										iterator.hasValue(); iterator.advance())
+									// Add value
+									values += *((T*) iterator->mValue.getOpaque());
+
+								return values;
+							}
+
 	private:
 						// Class methods
 		static	T*		copy(SValue::Opaque opaque)

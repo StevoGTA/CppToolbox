@@ -758,7 +758,7 @@ TVResult<SInt64> CSQLiteTable::sum(const CSQLiteTableColumn& tableColumn, const 
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CDictionary> CSQLiteTable::sum(const TArray<CSQLiteTableColumn>& tableColumns,
-		const OR<CSQLiteInnerJoin>& innerJoin, const OR<CSQLiteWhere>& where) const
+		const OR<CSQLiteInnerJoin>& innerJoin, const OR<CSQLiteWhere>& where, bool includeCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -784,7 +784,16 @@ TVResult<CDictionary> CSQLiteTable::sum(const TArray<CSQLiteTableColumn>& tableC
 								&sInt64ResultByTableColumnName);
 	ReturnValueIfError(error, TVResult<CDictionary>(*error));
 
-	return TVResult<CDictionary>(sInt64ResultByTableColumnName.getResultByTableColumnName());
+	// Check if including count
+	if (includeCount) {
+		// Add count
+		CDictionary	results = sInt64ResultByTableColumnName.getResultByTableColumnName();
+		results.set(CString(OSSTR("count")), count(where));
+
+		return TVResult<CDictionary>(results);
+	} else
+		// Return results
+		return TVResult<CDictionary>(sInt64ResultByTableColumnName.getResultByTableColumnName());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
