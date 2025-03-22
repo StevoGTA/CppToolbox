@@ -9,11 +9,65 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SLocalization
 
-// See https://www.loc.gov/standards/iso639-2/php/code_list.php
-// See https://iso639-3.sil.org
-
 struct SLocalization {
+	// Currency
+	// See https://www.iso.org/iso-4217-currency-codes.html
+	// See https://www.six-group.com/en/products-services/financial-information/data-standards.html
+	public:
+		struct Currency {
+			// Format
+			public:
+				enum Format {
+					kFormatSymbol,			// $123.45
+					kFormatCode,			// 123.45 USD
+					kFormatNameAsNoValue,	// 0.00 Dollars
+					kFormatNameAsSingle,	// 1.00 Dollar
+					kFormatNameAsMultiple,	// 2.34 Dollars
+				};
+
+			// Methods
+			public:
+													// Lifecycle methods
+													Currency(const Currency& other) :
+														mISO4217Code(other.mISO4217Code), mIsCommon(other.mIsCommon)
+														{}
+
+													// Instance methods
+						const	CString&			getISO4217Code() const
+														{ return mISO4217Code; }
+
+								bool				isCommon() const
+														{ return mIsCommon; }
+
+								CString				getDisplayName() const;
+								CString				getCodeAndDisplayName() const;
+								CString				getFormatted(const CString& value, Format format) const;
+
+								bool				operator==(const Currency& other) const
+														{ return mISO4217Code == other.mISO4217Code; }
+								bool				operator!=(const Currency& other) const
+														{ return mISO4217Code != other.mISO4217Code; }
+
+													// Class methods
+				static			TArray<Currency>&	getAll();
+				static			OV<Currency>		getFor(const CString& iso4217Code);
+				static	const	Currency&			getDefault();
+
+			private:
+													// Lifecycle methods
+													Currency(const CString& iso4217Code, bool isCommon) :
+														mISO4217Code(iso4217Code), mIsCommon(isCommon)
+														{}
+
+			// Properties
+			private:
+				CString	mISO4217Code;
+				bool	mIsCommon;
+		};
+
 	// Language
+	// See https://www.loc.gov/standards/iso639-2/php/code_list.php
+	// See https://iso639-3.sil.org
 	public:
 		struct Language {
 			// Methods
@@ -29,6 +83,7 @@ struct SLocalization {
 								CString				getISO639_2_CodeAsString() const
 														{ return CString(getISO639_2_Code(), true, false)
 																.getSubString(0, 3); }
+
 								bool				isCommon() const
 														{ return mIsCommon; }
 

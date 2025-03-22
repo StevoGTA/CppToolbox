@@ -186,6 +186,10 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 			// yyyy-MM-dd
 			return CString::make(OSSTR("%04u-%02u-%02"), mYear, mMonth, mDay);
 
+		case kStringStyleYYYYMMDD:
+			// yyyyMMdd
+			return CString::make(OSSTR("%04u%02u%02"), mYear, mMonth, mDay);
+
 		case kStringStyleYYYY_MM:
 			// yyyy-MM
 			return CString::make(OSSTR("%04u-%02u"), mYear, mMonth);
@@ -331,6 +335,16 @@ OV<SGregorianDate::Components> SGregorianDate::getComponentsFrom(const CString& 
 			return OV<Components>(
 					Components(string.getSubString(0, 4).getUInt32(), string.getSubString(5, 2).getUInt8(),
 							string.getSubString(8, 2).getUInt8()));
+
+		case kStringStyleYYYYMMDD:
+			// yyyyMMdd
+			if (string.getLength() != 8)
+				// Must be 8 characters
+				return OV<Components>();
+
+			return OV<Components>(
+					Components(string.getSubString(0, 4).getUInt32(), string.getSubString(4, 2).getUInt8(),
+							string.getSubString(6, 2).getUInt8()));
 
 		case kStringStyleYYYY_MM:
 			// yyyy-MM
@@ -513,6 +527,16 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 			return OV<SGregorianDate>(
 					SGregorianDate(string.getSubString(0, 4).getUInt32(), string.getSubString(5, 2).getUInt8(),
 							string.getSubString(8, 2).getUInt8()));
+
+		case kStringStyleYYYYMMDD:
+			// yyyyMMdd
+			if (string.getLength() != 8)
+				// Must be 10 characters
+				return OV<SGregorianDate>();
+
+			return OV<SGregorianDate>(
+					SGregorianDate(string.getSubString(0, 4).getUInt32(), string.getSubString(4, 2).getUInt8(),
+							string.getSubString(6, 2).getUInt8()));
 
 		case kStringStyleYYYY_MM:
 			// yyyy-MM

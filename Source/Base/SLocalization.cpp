@@ -16,6 +16,405 @@ static CString sGetDisplayNameForLocalizationLanguage(SLocalization::Language* l
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - SLocalization::Currency
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SLocalization::Currency>& SLocalization::Currency::getAll()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static	Currency			sCurrencyAED(CString(OSSTR("AED")), false);
+	static	Currency			sCurrencyAFN(CString(OSSTR("AFN")), false);
+	static	Currency			sCurrencyALL(CString(OSSTR("ALL")), false);
+	static	Currency			sCurrencyAMD(CString(OSSTR("AMD")), false);
+	static	Currency			sCurrencyANG(CString(OSSTR("ANG")), false);
+	static	Currency			sCurrencyAOA(CString(OSSTR("AOA")), false);
+	static	Currency			sCurrencyARS(CString(OSSTR("ARS")), false);
+	static	Currency			sCurrencyAUD(CString(OSSTR("AUD")), true);
+	static	Currency			sCurrencyAWG(CString(OSSTR("AWG")), false);
+	static	Currency			sCurrencyAZN(CString(OSSTR("AZN")), false);
+	static	Currency			sCurrencyBAM(CString(OSSTR("BAM")), false);
+	static	Currency			sCurrencyBBD(CString(OSSTR("BBD")), false);
+	static	Currency			sCurrencyBDT(CString(OSSTR("BDT")), false);
+	static	Currency			sCurrencyBGN(CString(OSSTR("BGN")), false);
+	static	Currency			sCurrencyBHD(CString(OSSTR("BHD")), false);
+	static	Currency			sCurrencyBIF(CString(OSSTR("BIF")), false);
+	static	Currency			sCurrencyBMD(CString(OSSTR("BMD")), false);
+	static	Currency			sCurrencyBND(CString(OSSTR("BND")), false);
+	static	Currency			sCurrencyBOB(CString(OSSTR("BOB")), false);
+	static	Currency			sCurrencyBOV(CString(OSSTR("BOV")), false);
+	static	Currency			sCurrencyBRL(CString(OSSTR("BRL")), false);
+	static	Currency			sCurrencyBSD(CString(OSSTR("BSD")), false);
+	static	Currency			sCurrencyBTN(CString(OSSTR("BTN")), false);
+	static	Currency			sCurrencyBWP(CString(OSSTR("BWP")), false);
+	static	Currency			sCurrencyBYN(CString(OSSTR("BYN")), false);
+	static	Currency			sCurrencyBZD(CString(OSSTR("BZD")), false);
+	static	Currency			sCurrencyCAD(CString(OSSTR("CAD")), true);
+	static	Currency			sCurrencyCDF(CString(OSSTR("CDF")), false);
+	static	Currency			sCurrencyCHE(CString(OSSTR("CHE")), false);
+	static	Currency			sCurrencyCHF(CString(OSSTR("CHF")), false);
+	static	Currency			sCurrencyCHW(CString(OSSTR("CHW")), false);
+	static	Currency			sCurrencyCLF(CString(OSSTR("CLF")), false);
+	static	Currency			sCurrencyCLP(CString(OSSTR("CLP")), false);
+	static	Currency			sCurrencyCNY(CString(OSSTR("CNY")), true);
+	static	Currency			sCurrencyCOP(CString(OSSTR("COP")), false);
+	static	Currency			sCurrencyCOU(CString(OSSTR("COU")), false);
+	static	Currency			sCurrencyCRC(CString(OSSTR("CRC")), false);
+	static	Currency			sCurrencyCUP(CString(OSSTR("CUP")), false);
+	static	Currency			sCurrencyCVE(CString(OSSTR("CVE")), false);
+	static	Currency			sCurrencyCZK(CString(OSSTR("CZK")), false);
+	static	Currency			sCurrencyDJF(CString(OSSTR("DJF")), false);
+	static	Currency			sCurrencyDKK(CString(OSSTR("DKK")), false);
+	static	Currency			sCurrencyDOP(CString(OSSTR("DOP")), false);
+	static	Currency			sCurrencyDZD(CString(OSSTR("DZD")), false);
+	static	Currency			sCurrencyEGP(CString(OSSTR("EGP")), false);
+	static	Currency			sCurrencyERN(CString(OSSTR("ERN")), false);
+	static	Currency			sCurrencyETB(CString(OSSTR("ETB")), false);
+	static	Currency			sCurrencyEUR(CString(OSSTR("EUR")), true);
+	static	Currency			sCurrencyFJD(CString(OSSTR("FJD")), false);
+	static	Currency			sCurrencyFKP(CString(OSSTR("FKP")), false);
+	static	Currency			sCurrencyGBP(CString(OSSTR("GBP")), false);
+	static	Currency			sCurrencyGEL(CString(OSSTR("GEL")), false);
+	static	Currency			sCurrencyGHS(CString(OSSTR("GHS")), false);
+	static	Currency			sCurrencyGIP(CString(OSSTR("GIP")), false);
+	static	Currency			sCurrencyGMD(CString(OSSTR("GMD")), false);
+	static	Currency			sCurrencyGNF(CString(OSSTR("GNF")), false);
+	static	Currency			sCurrencyGTQ(CString(OSSTR("GTQ")), false);
+	static	Currency			sCurrencyGYD(CString(OSSTR("GYD")), false);
+	static	Currency			sCurrencyHKD(CString(OSSTR("HKD")), true);
+	static	Currency			sCurrencyHNL(CString(OSSTR("HNL")), false);
+	static	Currency			sCurrencyHTG(CString(OSSTR("HTG")), false);
+	static	Currency			sCurrencyHUF(CString(OSSTR("HUF")), false);
+	static	Currency			sCurrencyIDR(CString(OSSTR("IDR")), false);
+	static	Currency			sCurrencyILS(CString(OSSTR("ILS")), false);
+	static	Currency			sCurrencyINR(CString(OSSTR("INR")), true);
+	static	Currency			sCurrencyIQD(CString(OSSTR("IQD")), false);
+	static	Currency			sCurrencyIRR(CString(OSSTR("IRR")), false);
+	static	Currency			sCurrencyISK(CString(OSSTR("ISK")), false);
+	static	Currency			sCurrencyJMD(CString(OSSTR("JMD")), false);
+	static	Currency			sCurrencyJOD(CString(OSSTR("JOD")), false);
+	static	Currency			sCurrencyJPY(CString(OSSTR("JPY")), true);
+	static	Currency			sCurrencyKES(CString(OSSTR("KES")), false);
+	static	Currency			sCurrencyKGS(CString(OSSTR("KGS")), false);
+	static	Currency			sCurrencyKHR(CString(OSSTR("KHR")), false);
+	static	Currency			sCurrencyKMF(CString(OSSTR("KMF")), false);
+	static	Currency			sCurrencyKPW(CString(OSSTR("KPW")), false);
+	static	Currency			sCurrencyKRW(CString(OSSTR("KRW")), true);
+	static	Currency			sCurrencyKWD(CString(OSSTR("KWD")), false);
+	static	Currency			sCurrencyKYD(CString(OSSTR("KYD")), false);
+	static	Currency			sCurrencyKZT(CString(OSSTR("KZT")), false);
+	static	Currency			sCurrencyLAK(CString(OSSTR("LAK")), false);
+	static	Currency			sCurrencyLBP(CString(OSSTR("LBP")), false);
+	static	Currency			sCurrencyLKR(CString(OSSTR("LKR")), false);
+	static	Currency			sCurrencyLRD(CString(OSSTR("LRD")), false);
+	static	Currency			sCurrencyLSL(CString(OSSTR("LSL")), false);
+	static	Currency			sCurrencyLYD(CString(OSSTR("LYD")), false);
+	static	Currency			sCurrencyMAD(CString(OSSTR("MAD")), false);
+	static	Currency			sCurrencyMDL(CString(OSSTR("MDL")), false);
+	static	Currency			sCurrencyMGA(CString(OSSTR("MGA")), false);
+	static	Currency			sCurrencyMKD(CString(OSSTR("MKD")), false);
+	static	Currency			sCurrencyMMK(CString(OSSTR("MMK")), false);
+	static	Currency			sCurrencyMNT(CString(OSSTR("MNT")), false);
+	static	Currency			sCurrencyMOP(CString(OSSTR("MOP")), false);
+	static	Currency			sCurrencyMRU(CString(OSSTR("MRU")), false);
+	static	Currency			sCurrencyMUR(CString(OSSTR("MUR")), false);
+	static	Currency			sCurrencyMVR(CString(OSSTR("MVR")), false);
+	static	Currency			sCurrencyMWK(CString(OSSTR("MWK")), false);
+	static	Currency			sCurrencyMXN(CString(OSSTR("MXN")), false);
+	static	Currency			sCurrencyMXV(CString(OSSTR("MXV")), false);
+	static	Currency			sCurrencyMYR(CString(OSSTR("MYR")), false);
+	static	Currency			sCurrencyMZN(CString(OSSTR("MZN")), false);
+	static	Currency			sCurrencyNAD(CString(OSSTR("NAD")), false);
+	static	Currency			sCurrencyNGN(CString(OSSTR("NGN")), false);
+	static	Currency			sCurrencyNIO(CString(OSSTR("NIO")), false);
+	static	Currency			sCurrencyNOK(CString(OSSTR("NOK")), false);
+	static	Currency			sCurrencyNPR(CString(OSSTR("NPR")), false);
+	static	Currency			sCurrencyNZD(CString(OSSTR("NZD")), false);
+	static	Currency			sCurrencyOMR(CString(OSSTR("OMR")), false);
+	static	Currency			sCurrencyPAB(CString(OSSTR("PAB")), false);
+	static	Currency			sCurrencyPEN(CString(OSSTR("PEN")), false);
+	static	Currency			sCurrencyPGK(CString(OSSTR("PGK")), false);
+	static	Currency			sCurrencyPHP(CString(OSSTR("PHP")), false);
+	static	Currency			sCurrencyPKR(CString(OSSTR("PKR")), false);
+	static	Currency			sCurrencyPLN(CString(OSSTR("PLN")), false);
+	static	Currency			sCurrencyPYG(CString(OSSTR("PYG")), false);
+	static	Currency			sCurrencyQAR(CString(OSSTR("QAR")), false);
+	static	Currency			sCurrencyRON(CString(OSSTR("RON")), false);
+	static	Currency			sCurrencyRSD(CString(OSSTR("RSD")), false);
+	static	Currency			sCurrencyRUB(CString(OSSTR("RUB")), false);
+	static	Currency			sCurrencyRWF(CString(OSSTR("RWF")), false);
+	static	Currency			sCurrencySAR(CString(OSSTR("SAR")), false);
+	static	Currency			sCurrencySBD(CString(OSSTR("SBD")), false);
+	static	Currency			sCurrencySCR(CString(OSSTR("SCR")), false);
+	static	Currency			sCurrencySDG(CString(OSSTR("SDG")), false);
+	static	Currency			sCurrencySEK(CString(OSSTR("SEK")), false);
+	static	Currency			sCurrencySGD(CString(OSSTR("SGD")), false);
+	static	Currency			sCurrencySHP(CString(OSSTR("SHP")), false);
+	static	Currency			sCurrencySLE(CString(OSSTR("SLE")), false);
+	static	Currency			sCurrencySOS(CString(OSSTR("SOS")), false);
+	static	Currency			sCurrencySRD(CString(OSSTR("SRD")), false);
+	static	Currency			sCurrencySSP(CString(OSSTR("SSP")), false);
+	static	Currency			sCurrencySTN(CString(OSSTR("STN")), false);
+	static	Currency			sCurrencySVC(CString(OSSTR("SVC")), false);
+	static	Currency			sCurrencySYP(CString(OSSTR("SYP")), false);
+	static	Currency			sCurrencySZL(CString(OSSTR("SZL")), false);
+	static	Currency			sCurrencyTHB(CString(OSSTR("THB")), false);
+	static	Currency			sCurrencyTJS(CString(OSSTR("TJS")), false);
+	static	Currency			sCurrencyTMT(CString(OSSTR("TMT")), false);
+	static	Currency			sCurrencyTND(CString(OSSTR("TND")), false);
+	static	Currency			sCurrencyTOP(CString(OSSTR("TOP")), false);
+	static	Currency			sCurrencyTRY(CString(OSSTR("TRY")), false);
+	static	Currency			sCurrencyTTD(CString(OSSTR("TTD")), false);
+	static	Currency			sCurrencyTWD(CString(OSSTR("TWD")), true);
+	static	Currency			sCurrencyTZS(CString(OSSTR("TZS")), false);
+	static	Currency			sCurrencyUAH(CString(OSSTR("UAH")), false);
+	static	Currency			sCurrencyUGX(CString(OSSTR("UGX")), false);
+	static	Currency			sCurrencyUSD(CString(OSSTR("USD")), true);
+	static	Currency			sCurrencyUYI(CString(OSSTR("UYI")), false);
+	static	Currency			sCurrencyUYU(CString(OSSTR("UYU")), false);
+	static	Currency			sCurrencyUYW(CString(OSSTR("UYW")), false);
+	static	Currency			sCurrencyUZS(CString(OSSTR("UZS")), false);
+	static	Currency			sCurrencyVED(CString(OSSTR("VED")), false);
+	static	Currency			sCurrencyVES(CString(OSSTR("VES")), false);
+	static	Currency			sCurrencyVND(CString(OSSTR("VND")), false);
+	static	Currency			sCurrencyVUV(CString(OSSTR("VUV")), false);
+	static	Currency			sCurrencyWST(CString(OSSTR("WST")), false);
+	static	Currency			sCurrencyXAF(CString(OSSTR("XAF")), false);
+	static	Currency			sCurrencyXAG(CString(OSSTR("XAG")), false);
+	static	Currency			sCurrencyXAU(CString(OSSTR("XAU")), false);
+	static	Currency			sCurrencyXBA(CString(OSSTR("XBA")), false);
+	static	Currency			sCurrencyXBB(CString(OSSTR("XBB")), false);
+	static	Currency			sCurrencyXBC(CString(OSSTR("XBC")), false);
+	static	Currency			sCurrencyXBD(CString(OSSTR("XBD")), false);
+	static	Currency			sCurrencyXCD(CString(OSSTR("XCD")), false);
+	static	Currency			sCurrencyXDR(CString(OSSTR("XDR")), false);
+	static	Currency			sCurrencyXOF(CString(OSSTR("XOF")), false);
+	static	Currency			sCurrencyXPD(CString(OSSTR("XPD")), false);
+	static	Currency			sCurrencyXPF(CString(OSSTR("XPF")), false);
+	static	Currency			sCurrencyXPT(CString(OSSTR("XPT")), false);
+	static	Currency			sCurrencyXSU(CString(OSSTR("XSU")), false);
+	static	Currency			sCurrencyXTS(CString(OSSTR("XTS")), false);
+	static	Currency			sCurrencyXUA(CString(OSSTR("XUA")), false);
+	static	Currency			sCurrencyYER(CString(OSSTR("YER")), false);
+	static	Currency			sCurrencyZAR(CString(OSSTR("ZAR")), false);
+	static	Currency			sCurrencyZMW(CString(OSSTR("ZMW")), false);
+	static	Currency			sCurrencyZWG(CString(OSSTR("ZWG")), false);
+	static	Currency			sAll[] =
+									{
+										// Common
+										sCurrencyAUD,
+										sCurrencyCAD,
+										sCurrencyCNY,
+										sCurrencyEUR,
+										sCurrencyHKD,
+										sCurrencyINR,
+										sCurrencyJPY,
+										sCurrencyKRW,
+										sCurrencyTWD,
+										sCurrencyUSD,
+
+										// Not common
+										sCurrencyAED,
+										sCurrencyAFN,
+										sCurrencyALL,
+										sCurrencyAMD,
+										sCurrencyANG,
+										sCurrencyAOA,
+										sCurrencyARS,
+										sCurrencyAWG,
+										sCurrencyAZN,
+										sCurrencyBAM,
+										sCurrencyBBD,
+										sCurrencyBDT,
+										sCurrencyBGN,
+										sCurrencyBHD,
+										sCurrencyBIF,
+										sCurrencyBMD,
+										sCurrencyBND,
+										sCurrencyBOB,
+										sCurrencyBOV,
+										sCurrencyBRL,
+										sCurrencyBSD,
+										sCurrencyBTN,
+										sCurrencyBWP,
+										sCurrencyBYN,
+										sCurrencyBZD,
+										sCurrencyCDF,
+										sCurrencyCHE,
+										sCurrencyCHF,
+										sCurrencyCHW,
+										sCurrencyCLF,
+										sCurrencyCLP,
+										sCurrencyCOP,
+										sCurrencyCOU,
+										sCurrencyCRC,
+										sCurrencyCUP,
+										sCurrencyCVE,
+										sCurrencyCZK,
+										sCurrencyDJF,
+										sCurrencyDKK,
+										sCurrencyDOP,
+										sCurrencyDZD,
+										sCurrencyEGP,
+										sCurrencyERN,
+										sCurrencyETB,
+										sCurrencyFJD,
+										sCurrencyFKP,
+										sCurrencyGBP,
+										sCurrencyGEL,
+										sCurrencyGHS,
+										sCurrencyGIP,
+										sCurrencyGMD,
+										sCurrencyGNF,
+										sCurrencyGTQ,
+										sCurrencyGYD,
+										sCurrencyHNL,
+										sCurrencyHTG,
+										sCurrencyHUF,
+										sCurrencyIDR,
+										sCurrencyILS,
+										sCurrencyIQD,
+										sCurrencyIRR,
+										sCurrencyISK,
+										sCurrencyJMD,
+										sCurrencyJOD,
+										sCurrencyKES,
+										sCurrencyKGS,
+										sCurrencyKHR,
+										sCurrencyKMF,
+										sCurrencyKPW,
+										sCurrencyKWD,
+										sCurrencyKYD,
+										sCurrencyKZT,
+										sCurrencyLAK,
+										sCurrencyLBP,
+										sCurrencyLKR,
+										sCurrencyLRD,
+										sCurrencyLSL,
+										sCurrencyLYD,
+										sCurrencyMAD,
+										sCurrencyMDL,
+										sCurrencyMGA,
+										sCurrencyMKD,
+										sCurrencyMMK,
+										sCurrencyMNT,
+										sCurrencyMOP,
+										sCurrencyMRU,
+										sCurrencyMUR,
+										sCurrencyMVR,
+										sCurrencyMWK,
+										sCurrencyMXN,
+										sCurrencyMXV,
+										sCurrencyMYR,
+										sCurrencyMZN,
+										sCurrencyNAD,
+										sCurrencyNGN,
+										sCurrencyNIO,
+										sCurrencyNOK,
+										sCurrencyNPR,
+										sCurrencyNZD,
+										sCurrencyOMR,
+										sCurrencyPAB,
+										sCurrencyPEN,
+										sCurrencyPGK,
+										sCurrencyPHP,
+										sCurrencyPKR,
+										sCurrencyPLN,
+										sCurrencyPYG,
+										sCurrencyQAR,
+										sCurrencyRON,
+										sCurrencyRSD,
+										sCurrencyRUB,
+										sCurrencyRWF,
+										sCurrencySAR,
+										sCurrencySBD,
+										sCurrencySCR,
+										sCurrencySDG,
+										sCurrencySEK,
+										sCurrencySGD,
+										sCurrencySHP,
+										sCurrencySLE,
+										sCurrencySOS,
+										sCurrencySRD,
+										sCurrencySSP,
+										sCurrencySTN,
+										sCurrencySVC,
+										sCurrencySYP,
+										sCurrencySZL,
+										sCurrencyTHB,
+										sCurrencyTJS,
+										sCurrencyTMT,
+										sCurrencyTND,
+										sCurrencyTOP,
+										sCurrencyTRY,
+										sCurrencyTTD,
+										sCurrencyTZS,
+										sCurrencyUAH,
+										sCurrencyUGX,
+										sCurrencyUYI,
+										sCurrencyUYU,
+										sCurrencyUYW,
+										sCurrencyUZS,
+										sCurrencyVED,
+										sCurrencyVES,
+										sCurrencyVND,
+										sCurrencyVUV,
+										sCurrencyWST,
+										sCurrencyXAF,
+										sCurrencyXAG,
+										sCurrencyXAU,
+										sCurrencyXBA,
+										sCurrencyXBB,
+										sCurrencyXBC,
+										sCurrencyXBD,
+										sCurrencyXCD,
+										sCurrencyXDR,
+										sCurrencyXOF,
+										sCurrencyXPD,
+										sCurrencyXPF,
+										sCurrencyXPT,
+										sCurrencyXSU,
+										sCurrencyXTS,
+										sCurrencyXUA,
+										sCurrencyYER,
+										sCurrencyZAR,
+										sCurrencyZMW,
+										sCurrencyZWG,
+									};
+	static	TArray<Currency>	sAllArray = TSARRAY_FROM_C_ARRAY(Currency, sAll);
+
+	return sAllArray;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SLocalization::Currency> SLocalization::Currency::getFor(const CString& iso4217Code)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all
+	for (TIteratorD<Currency> iterator = getAll().getIterator(); iterator.hasValue(); iterator.advance()) {
+		// Check
+		if (iterator->getISO4217Code() == iso4217Code)
+			// Found
+			return OV<Currency>(*iterator);
+	}
+
+	return OV<Currency>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const SLocalization::Currency& SLocalization::Currency::getDefault()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static	Currency	sCurrencyUSD(CString(OSSTR("USD")), true);
+
+	return sCurrencyUSD;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - SLocalization::Language
 
 // MARK: Class methods
@@ -908,7 +1307,7 @@ const SLocalization::Language& SLocalization::Language::getDefault()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static	Language	sLanguageENG(MAKE_OSTYPE('e', 'n', 'g', 0), false);
+	static	Language	sLanguageENG(MAKE_OSTYPE('e', 'n', 'g', 0), true);
 
 	return sLanguageENG;
 }
