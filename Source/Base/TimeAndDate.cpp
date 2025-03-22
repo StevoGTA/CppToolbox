@@ -403,7 +403,7 @@ OV<SGregorianDate::Components> SGregorianDate::getComponentsFrom(const CString& 
 
 #if defined(TARGET_OS_WINDOWS)
 		// Unnessary, but making the compiler happy
-		default:	return OV<SGregorianDate>();
+		default:	return OV<Components>();
 #endif
 	}
 }
