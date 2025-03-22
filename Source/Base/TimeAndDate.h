@@ -96,6 +96,9 @@ struct SGregorianDate {
 			// yyyy-MM-dd
 			kStringStyleYYYY_MM_DD,
 
+			// yyyyMMdd
+			kStringStyleYYYYMMDD,
+
 			// yyyy-MM
 			kStringStyleYYYY_MM,
 
@@ -157,16 +160,28 @@ struct SGregorianDate {
 												{}
 
 											// Instance methods
+							bool			hasYear() const
+												{ return mYear.hasValue(); }
 					const	OV<UInt32>&		getYear() const
 												{ return mYear; }
+							bool			hasMonth() const
+												{ return mMonth.hasValue(); }
 					const	OV<UInt8>&		getMonth() const
 												{ return mMonth; }
+							bool			hasDay() const
+												{ return mDay.hasValue(); }
 					const	OV<UInt8>&		getDay() const
 												{ return mDay; }
+							bool			hasHour() const
+												{ return mHour.hasValue(); }
 					const	OV<UInt8>&		getHour() const
 												{ return mHour; }
+							bool			hasMinute() const
+												{ return mMinute.hasValue(); }
 					const	OV<UInt8>&		getMinute() const
 												{ return mMinute; }
+							bool			hasSecond() const
+												{ return mSecond.hasValue(); }
 					const	OV<Float32>&	getSecond() const
 												{ return mSecond; }
 
@@ -241,6 +256,8 @@ struct SGregorianDate {
 				UInt8					getDayOfWeek() const
 											{ return mDayOfWeek; }
 
+				Components				getComponents() const
+											{ return Components(mYear, mMonth, mDay, mHour, mMinute, mSecond); }
 				UniversalTime			getUniversalTime() const;
 
 				CString					getMonthString(bool abbrieviated = false) const

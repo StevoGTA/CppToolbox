@@ -133,6 +133,8 @@ class CSQLiteTable {
 						UInt32						count(const CSQLiteWhere& where) const
 														{ return count(OR<CSQLiteInnerJoin>(),
 																OR<CSQLiteWhere>((CSQLiteWhere&) where)); }
+						UInt32						count(const OR<CSQLiteWhere>& where) const
+														{ return count(OR<CSQLiteInnerJoin>(), where); }
 
 						void						create(bool ifNotExists = true) const;
 
@@ -191,6 +193,16 @@ class CSQLiteTable {
 																OR<CSQLiteOrderBy>((CSQLiteOrderBy&) orderBy),
 																OR<CSQLiteLimit>((CSQLiteLimit&) limit), resultsRowProc,
 																userData); }
+						OV<SError>					select(const TArray<CSQLiteTableColumn>& tableColumns,
+															const CSQLiteInnerJoin& innerJoin,
+															const CSQLiteWhere& where,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(tableColumns,
+																OR<CSQLiteInnerJoin>((CSQLiteInnerJoin&) innerJoin),
+																OR<CSQLiteWhere>((CSQLiteWhere&) where),
+																OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(),
+																resultsRowProc, userData); }
 						OV<SError>					select(const TArray<CSQLiteTableColumn>& tableColumns,
 															const CSQLiteWhere& where,
 															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
@@ -267,13 +279,16 @@ class CSQLiteTable {
 															const OR<CSQLiteWhere>& where) const;
 						TVResult<CDictionary>		sum(const TArray<CSQLiteTableColumn>& tableColumns,
 															const OR<CSQLiteInnerJoin>& innerJoin,
-															const OR<CSQLiteWhere>& where) const;
+															const OR<CSQLiteWhere>& where,
+															bool includeCount = false) const;
 						TVResult<CDictionary>		sum(const TArray<CSQLiteTableColumn>& tableColumns,
 															const CSQLiteInnerJoin& innerJoin,
-															const CSQLiteWhere& where) const
+															const CSQLiteWhere& where,
+															bool includeCount = false) const
 														{ return sum(tableColumns,
 																OR<CSQLiteInnerJoin>((CSQLiteInnerJoin&) innerJoin),
-																OR<CSQLiteWhere>((CSQLiteWhere&) where)); }
+																OR<CSQLiteWhere>((CSQLiteWhere&) where),
+																includeCount); }
 
 				const	CSQLiteTableColumn&			getTableColumn(const CString& name) const;
 						TArray<CSQLiteTableColumn>	getTableColumns(const TArray<CString>& names) const;
