@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "CSet.h"
 #include "SValue.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -127,7 +128,7 @@ struct SSQLiteValue {
 													}
 
 												// Class methods
-		static			TMArray<SSQLiteValue>	valuesFrom(const TArray<CString>& values)
+		static			TArray<SSQLiteValue>	valuesFrom(const TArray<CString>& values)
 													{
 														// Convert array
 														TNArray<SSQLiteValue>	sqliteValues;
@@ -138,7 +139,7 @@ struct SSQLiteValue {
 
 														return sqliteValues;
 													}
-		static			TMArray<SSQLiteValue>	valuesFrom(const TNumberArray<SInt64>& values)
+		static			TArray<SSQLiteValue>	valuesFrom(const TNumberArray<SInt64>& values)
 													{
 														// Convert array
 														TNArray<SSQLiteValue>	sqliteValues;
@@ -146,6 +147,17 @@ struct SSQLiteValue {
 														for (CArray::ItemIndex i = 0; i < count; i++)
 															// Add value
 															sqliteValues += SSQLiteValue(values[i]);
+
+														return sqliteValues;
+													}
+		static			TArray<SSQLiteValue>	valuesFrom(const TSet<CString>& values)
+													{
+														// Convert array
+														TNArray<SSQLiteValue>	sqliteValues;
+														for (TIteratorS<CString> iterator = values.getIterator();
+																iterator.hasValue(); iterator.advance())
+															// Add value
+															sqliteValues += SSQLiteValue(*iterator);
 
 														return sqliteValues;
 													}
