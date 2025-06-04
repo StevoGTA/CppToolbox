@@ -7,7 +7,7 @@
 #include <CoreText/CoreText.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
+// MARK: SRGBInterpolateColorInfo
 
 struct SRGBInterpolateColorInfo {
 	public:
