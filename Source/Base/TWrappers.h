@@ -392,4 +392,5 @@ template <typename T> struct OV {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Macros
 
+#define ReturnValueIf(condition, value)			{ if (condition) return value; }
 #define	ReturnValueIfNoValue(instance, value)	{ if (!instance.hasValue()) return value; }

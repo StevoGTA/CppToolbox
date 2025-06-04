@@ -49,24 +49,30 @@ struct SUniversalTime {
 // MARK: - SGregorianDate
 
 struct SGregorianDate {
-	// ComponentStyle
+	// DateStyle
 	public:
-		// The exact formatted result for these styles depends on the locale and OS, but generally:
-		enum ComponentStyle {
-			// Do not process this component
-			kComponentStyleNone,
+		enum DateStyle {
+			kDateStyleNone,			// Nothing
 
-			// Completely numeric, such as "1/1/52" or "3:30pm"
-			kComponentStyleShort,
+			kDateStyleMDYShort,		// 1/1/52
+			kDateStyleMDYMedium,	// Jan 12, 1952
+			kDateStyleMDYLong,		// January 12, 1952
 
-			// Longer, such as "Jan 12, 1952"
-			kComponentStyleMedium,
+			kDateStyleY,			// 1952
 
-			// Even longer, such as "January 12, 1952" or "3:30:32pm"
-			kComponentStyleLong,
+			kDateStyleMDShort,		// 1/1
+			kDateStyleMDMedium,		// Jan 12
+			kDateStyleMDLong,		// January 12
+		};
 
-			// Pretty complete; e.g. "Tuesday, April 12, 1952 AD" or "3:30:42pm PST"
-			kComponentStyleFull,
+	// TimeStyle
+	public:
+		enum TimeStyle {
+			kTimeStyleNone,			// Nothing
+			kTimeStyleHMAMPM,		// 3:30pm
+			kTimeStyleHM24,			// 15:30
+			kTimeStyleHMSAMPM,		// 3:30:32pm
+			kTimeStyleHMS24,		// 15:30:32
 		};
 
 	// StringStyle
@@ -126,73 +132,82 @@ struct SGregorianDate {
 			struct Components {
 				// Methods
 				public:
-											// Lifecycle methods
-											Components(const OV<UInt32>& year = OV<UInt32>(),
-													const OV<UInt8>& month = OV<UInt8>(),
-													const OV<UInt8>& day = OV<UInt8>(),
-													const OV<UInt8>& hour = OV<UInt8>(),
-													const OV<UInt8>& minute = OV<UInt8>(),
-													const OV<Float32>& second = OV<Float32>()) :
-												mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute),
-														mSecond(second)
-												{}
-											Components(UInt32 year, UInt8 month, UInt8 day, UInt8 hour, UInt8 minute,
-													Float32 second) :
-												mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute),
-														mSecond(second)
-												{}
-											Components(UInt32 year, UInt8 month, UInt8 day, UInt8 hour, UInt8 minute) :
-												mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute)
-												{}
-											Components(UInt32 year, UInt8 month, UInt8 day, UInt8 hour) :
-												mYear(year), mMonth(month), mDay(day), mHour(hour)
-												{}
-											Components(UInt32 year, UInt8 month, UInt8 day) :
-												mYear(year), mMonth(month), mDay(day)
-												{}
-											Components(UInt32 year, UInt8 month) : mYear(year), mMonth(month) {}
-											Components(UInt32 year) : mYear(year) {}
-											Components(const CDictionary& info);
-											Components(const Components& other) :
-												mYear(other.mYear), mMonth(other.mMonth), mDay(other.mDay),
-														mHour(other.mHour), mMinute(other.mMinute),
-														mSecond(other.mSecond)
-												{}
+													// Lifecycle methods
+													Components(const OV<UInt32>& year = OV<UInt32>(),
+															const OV<UInt8>& month = OV<UInt8>(),
+															const OV<UInt8>& day = OV<UInt8>(),
+															const OV<UInt8>& hour = OV<UInt8>(),
+															const OV<UInt8>& minute = OV<UInt8>(),
+															const OV<Float32>& second = OV<Float32>()) :
+														mYear(year), mMonth(month), mDay(day), mHour(hour),
+																mMinute(minute), mSecond(second)
+														{}
+													Components(UInt32 year, UInt8 month, UInt8 day, UInt8 hour,
+															UInt8 minute, Float32 second) :
+														mYear(year), mMonth(month), mDay(day), mHour(hour),
+																mMinute(minute), mSecond(second)
+														{}
+													Components(UInt32 year, UInt8 month, UInt8 day, UInt8 hour,
+															UInt8 minute) :
+														mYear(year), mMonth(month), mDay(day), mHour(hour),
+																mMinute(minute)
+														{}
+													Components(UInt32 year, UInt8 month, UInt8 day, UInt8 hour) :
+														mYear(year), mMonth(month), mDay(day), mHour(hour)
+														{}
+													Components(UInt32 year, UInt8 month, UInt8 day) :
+														mYear(year), mMonth(month), mDay(day)
+														{}
+													Components(UInt32 year, UInt8 month) : mYear(year), mMonth(month) {}
+													Components(UInt32 year) : mYear(year) {}
+													Components(const Components& other) :
+														mYear(other.mYear), mMonth(other.mMonth), mDay(other.mDay),
+																mHour(other.mHour), mMinute(other.mMinute),
+																mSecond(other.mSecond)
+														{}
 
-											// Instance methods
-							bool			hasYear() const
-												{ return mYear.hasValue(); }
-					const	OV<UInt32>&		getYear() const
-												{ return mYear; }
-							bool			hasMonth() const
-												{ return mMonth.hasValue(); }
-					const	OV<UInt8>&		getMonth() const
-												{ return mMonth; }
-							bool			hasDay() const
-												{ return mDay.hasValue(); }
-					const	OV<UInt8>&		getDay() const
-												{ return mDay; }
-							bool			hasHour() const
-												{ return mHour.hasValue(); }
-					const	OV<UInt8>&		getHour() const
-												{ return mHour; }
-							bool			hasMinute() const
-												{ return mMinute.hasValue(); }
-					const	OV<UInt8>&		getMinute() const
-												{ return mMinute; }
-							bool			hasSecond() const
-												{ return mSecond.hasValue(); }
-					const	OV<Float32>&	getSecond() const
-												{ return mSecond; }
+													// Instance methods
+									bool			hasYear() const
+														{ return mYear.hasValue(); }
+							const	OV<UInt32>&		getYear() const
+														{ return mYear; }
+									bool			hasMonth() const
+														{ return mMonth.hasValue(); }
+							const	OV<UInt8>&		getMonth() const
+														{ return mMonth; }
+									bool			hasDay() const
+														{ return mDay.hasValue(); }
+							const	OV<UInt8>&		getDay() const
+														{ return mDay; }
+									bool			hasHour() const
+														{ return mHour.hasValue(); }
+							const	OV<UInt8>&		getHour() const
+														{ return mHour; }
+									bool			hasMinute() const
+														{ return mMinute.hasValue(); }
+							const	OV<UInt8>&		getMinute() const
+														{ return mMinute; }
+									bool			hasSecond() const
+														{ return mSecond.hasValue(); }
+							const	OV<Float32>&	getSecond() const
+														{ return mSecond; }
 
-							CDictionary		getInfo() const;
+									CString			getString(DateStyle dateStyle, TimeStyle timeStyle) const;
 
-							bool			operator==(const Components& other) const
-												{ return (mYear == other.mYear) && (mMonth == other.mMonth) &&
-														(mDay == other.mDay) && (mHour == other.mHour) &&
-														(mMinute == other.mMinute) && (mSecond == other.mSecond); }
-							bool			operator!=(const Components& other) const
-												{ return !(*this == other); }
+									CDictionary		getInfo() const;
+
+									bool			operator==(const Components& other) const
+														{ return (mYear == other.mYear) && (mMonth == other.mMonth) &&
+																(mDay == other.mDay) && (mHour == other.mHour) &&
+																(mMinute == other.mMinute) &&
+																(mSecond == other.mSecond); }
+									bool			operator!=(const Components& other) const
+														{ return !(*this == other); }
+
+													// Class methods
+					static			OV<Components>	getFrom(const CDictionary& info);
+					static			OV<Components>	getFrom(const CString& string,
+															StringStyle stringStyle = kStringStyleRFC339Extended);
 
 				// Properties
 				private:
@@ -264,8 +279,7 @@ struct SGregorianDate {
 											{ return getMonthString(mMonth, abbrieviated); }
 				CString					getDayOfWeekString(bool abbrieviated = false) const;
 				CString					getHourString(bool use24HourFormat = false) const;
-				CString					getString(ComponentStyle dateComponentStyle,
-												ComponentStyle timeComponentStyle) const;
+				CString					getString(DateStyle dateStyle, TimeStyle timeStyle) const;
 				CString					getString(StringStyle stringStyle = kStringStyleRFC339Extended) const;
 
 				bool					operator==(const SGregorianDate& other) const
@@ -287,24 +301,12 @@ struct SGregorianDate {
 		static	CString					getAMString();
 		static	CString					getPMString();
 
-		static	OV<Components>			getComponentsFrom(const CString& string,
-												StringStyle stringStyle = kStringStyleRFC339Extended);
-
-		static	OV<SGregorianDate>		getFrom(const CString& string, ComponentStyle dateComponentStyle,
-												ComponentStyle timeComponentStyle);
 		static	OV<SGregorianDate>		getFrom(const CString& string,
 												StringStyle stringStyle = kStringStyleRFC339Extended);
 		static	OV<SGregorianDate>		getFrom(const OR<CString>& string,
 												StringStyle stringStyle = kStringStyleRFC339Extended)
 											{ return (string.hasReference()) ?
 													getFrom(*string, stringStyle) : OV<SGregorianDate>(); }
-
-		static	SGregorianDate			forMonthDay(UInt8 month, UInt8 day)
-											{ return SGregorianDate(0, month, day, 0, 0, 0.0); }
-		static	SGregorianDate			forHourMinuteSecond(UInt8 hour, UInt8 minute, Float32 second)
-											{ return SGregorianDate(0, 0, 0, hour, minute, second); }
-		static	SGregorianDate			forHourMinute(UInt8 hour, UInt8 minute)
-											{ return SGregorianDate(0, 0, 0, hour, minute, 0.0); }
 
 		static	CString					getCurrentTimeZoneName();
 		static	UniversalTimeInterval	getCurrentTimeZoneOffset();

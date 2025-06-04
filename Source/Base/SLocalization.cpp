@@ -1276,6 +1276,16 @@ TArray<SLocalization::Language>& SLocalization::Language::getAll()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+const SLocalization::Language& SLocalization::Language::getDefault()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static	Language	sLanguageENG(MAKE_OSTYPE('e', 'n', 'g', 0), true);
+
+	return sLanguageENG;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SLocalization::Language> SLocalization::Language::getFor(OSType iso639_2_Code)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -1303,13 +1313,20 @@ OV<SLocalization::Language> SLocalization::Language::getFor(const CString& iso63
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const SLocalization::Language& SLocalization::Language::getDefault()
+TArray<SLocalization::Language> SLocalization::Language::getFor(const TArray<CString>& iso639_2_CodeStrings)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static	Language	sLanguageENG(MAKE_OSTYPE('e', 'n', 'g', 0), true);
+	TNArray<Language>	languages;
+	for (TIteratorD<CString> iterator = iso639_2_CodeStrings.getIterator(); iterator.hasValue(); iterator.advance()) {
+		// Get language
+		OV<Language>	language = getFor(*iterator);
+		if (language.hasValue())
+			// Add
+			languages += *language;
+	}
 
-	return sLanguageENG;
+	return languages;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1317,24 +1334,4 @@ CString SLocalization::Language::getDisplayName(const TArray<Language>& language
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return CString(TNArray<CString>(languages, (TNArray<CString>::MapProc) sGetDisplayNameForLocalizationLanguage));
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-bool SLocalization::Language::equals(const TArray<Language>& languages1, const TArray<Language>& languages2)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check count
-	if (languages1.getCount() != languages2.getCount())
-		// Counts differ
-		return false;
-
-	// Check items
-	for (CArray::ItemIndex i = 0; i < languages1.getCount(); i++) {
-		// Check item
-		if (!(languages1[i] == languages2[i]))
-			// Differ
-			return false;
-	}
-
-	return true;
 }

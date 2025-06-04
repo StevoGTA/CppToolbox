@@ -96,14 +96,13 @@ struct SLocalization {
 
 													// Class methods
 				static			TArray<Language>&	getAll();
-				static			OV<Language>		getFor(OSType iso639_2_Code);
-				static			OV<Language>		getFor(const CString& iso639_2_CodeString);
 				static	const	Language&			getDefault();
 
-				static			CString				getDisplayName(const TArray<Language>& languages);
+				static			OV<Language>		getFor(OSType iso639_2_Code);
+				static			OV<Language>		getFor(const CString& iso639_2_CodeString);
+				static			TArray<Language>	getFor(const TArray<CString>& iso639_2_CodeStrings);
 
-				static			bool				equals(const TArray<Language>& languages1,
-															const TArray<Language>& languages2);
+				static			CString				getDisplayName(const TArray<Language>& languages);
 
 			private:
 													// Lifecycle methods
