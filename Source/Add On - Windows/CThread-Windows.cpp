@@ -20,7 +20,7 @@ class CThread::Internals {
 								const CString& name) :
 							mIsRunning(true), mThreadProc(threadProc), mThreadProcUserData(userData), mThreadName(name),
 									mThread(thread),
-									mWindowsThreadHandle(NULL)
+									mThreadRef(::GetCurrentThreadId()), mThreadHandle(nullptr)
 							{}
 
 		static	DWORD	threadProc(void* userData)
@@ -43,7 +43,8 @@ class CThread::Internals {
 		CString				mThreadName;
 		CThread&			mThread;
 
-		HANDLE				mWindowsThreadHandle;
+		Ref					mThreadRef;
+		HANDLE				mThreadHandle;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,7 +92,7 @@ CThread::~CThread()
 CThread::Ref CThread::getRef() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mWindowsThreadHandle;
+	return mInternals->mThreadRef;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -106,8 +107,8 @@ void CThread::start()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create thread
-	mInternals->mWindowsThreadHandle = ::CreateThread(NULL, 0, Internals::threadProc, mInternals, 0, NULL);
-	::SetThreadDescription(mInternals->mWindowsThreadHandle, mInternals->mThreadName.getOSString());
+	mInternals->mThreadHandle = ::CreateThread(NULL, 0, Internals::threadProc, mInternals, 0, NULL);
+	::SetThreadDescription(mInternals->mThreadHandle, mInternals->mThreadName.getOSString());
 }
 
 // MARK: Class methods
@@ -116,15 +117,7 @@ void CThread::start()
 CThread::Ref CThread::getCurrentRef()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Duplicate the "fake" handle to get a real handle
-	HANDLE	handle = NULL;
-	::DuplicateHandle(GetCurrentProcess(), ::GetCurrentThread(), GetCurrentProcess(), &handle, 0,
-			FALSE, DUPLICATE_SAME_ACCESS);
-	if (handle != NULL)
-		// Close
-		::CloseHandle(handle);
-
-	return handle;
+	return ::GetCurrentThreadId();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -13,7 +13,11 @@
 class CThread {
 	// Types
 	public:
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		typedef	void*	Ref;
+#elif defined(TARGET_OS_WINDOWS)
+		typedef	DWORD	Ref;
+#endif
 
 	// Procs:
 	public:
@@ -49,7 +53,13 @@ class CThread {
 								// Class methods
 		static			Ref		getCurrentRef();
 		static			CString	getCurrentRefAsString()
-									{ return CString(getCurrentRef()); }
+									{
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+										return CString(getCurrentRef());
+#elif defined(TARGET_OS_WINDOWS)
+										return CString(getCurrentRef(), false);
+#endif
+									}
 		static			void	sleepFor(UniversalTimeInterval universalTimeInterval);
 
 	protected:

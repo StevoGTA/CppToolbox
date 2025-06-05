@@ -125,6 +125,7 @@ class CDictionary : public CEquatable {
 						OV<TArray<CString> >		getOVArrayOfStrings(const CString& key) const;
 				const	CData&						getData(const CString& key,
 															const CData& defaultValue = CData::mEmpty) const;
+						OV<CData>					getOVData(const CString& key) const;
 				const	CDictionary&				getDictionary(const CString& key,
 															const CDictionary& defaultValue = mEmpty) const;
 						OV<CDictionary>				getOVDictionary(const CString& key) const;

@@ -347,6 +347,28 @@ template <typename T> class TArray : public CArray {
 									{ return *((T*) getItemAt(index)); }
 		TArray<T>				operator+(const TArray<T>& other) const
 									{ TArray<T> array(*this); array += other; return array; }
+		bool					operator==(const TArray<T>& other) const
+									{
+										// Setup
+										ItemCount	count = getCount();
+
+										// Check count
+										if (count != other.getCount())
+											// Nope
+											return false;
+
+										// Iterate all items
+										for (ItemIndex i = 0; i < count; i++) {
+											// Check if equal
+											if (!(getAt(i) == other.getAt(i)))
+												// Nope
+												return false;
+										}
+
+										return true;
+									}
+		bool					operator!=(const TArray<T>& other) const
+									{ return !(*this == other); }
 
 	protected:
 								// Lifecycle methods

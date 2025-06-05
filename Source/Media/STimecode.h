@@ -147,15 +147,15 @@ struct STimecode {
 										// Instance methods
 						UInt32			getFrameIndex() const
 											{ return mFrameIndex; }
+						HMSF			getHMSF() const;
 				const	Framerate&		getFramerate() const
 											{ return mFramerate; }
 
-						HMSF			getHMSF() const;
 						CString			getDisplayString() const;
 
 						STimecode		addingFrames(SInt32 frameCount) const
 											{ return STimecode(mFrameIndex + frameCount, mFramerate); }
-						STimecode		addingSeconds(Float64 seconds)
+						STimecode		addingSeconds(Float64 seconds) const
 											{ return STimecode(
 													mFrameIndex + (SInt32) (seconds * mFramerate.getFramerate()),
 													mFramerate); }
@@ -171,6 +171,9 @@ struct STimecode {
 						bool			operator!=(const STimecode& other) const
 											{ return (mFrameIndex != other.mFrameIndex) ||
 													(mFramerate != other.mFramerate); }
+						STimecode&		operator=(const STimecode& other)
+											{ mFrameIndex = other.mFrameIndex; mFramerate = other.mFramerate;
+													return *this; }
 
 										// Class methods
 		static			OV<STimecode>	fromInfo(const CDictionary& info);
