@@ -262,7 +262,7 @@ void CStandardDictionaryInternals::set(const CString& key, const SValue& value)
 	} else {
 		// Did find a match
 		currentItemInfo->disposeValue(mOpaqueDisposeProc);
-		currentItemInfo->mItem.mValue = value;
+		currentItemInfo->mItem.mValue = SValue(value, mOpaqueCopyProc);
 	}
 }
 

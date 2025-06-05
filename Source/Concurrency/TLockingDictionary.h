@@ -63,6 +63,18 @@ template <typename T> class TLockingDictionary : public CDictionary {
 
 										return value;
 									}
+				T			get(const CString& key, const T& defaultValue) const
+									{
+										// Get
+										mLock.lockForReading();
+										OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+										OR<T>				value =
+																	opaque.hasValue() ?
+																			OR<T>(*((T*) *opaque)) : OR<T>();
+										mLock.unlockForReading();
+
+										return value.hasReference() ? *value : defaultValue;
+									}
 
 		const	OR<T>			operator[](const CString& key) const
 									{ return get(key); }

@@ -211,6 +211,12 @@ class CSQLiteTable {
 																OR<CSQLiteWhere>((CSQLiteWhere&) where),
 																OR<CSQLiteOrderBy>(), OR<CSQLiteLimit>(),
 																resultsRowProc, userData); }
+						OV<SError>					select(const TArray<CSQLiteTableColumn>& tableColumns,
+															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
+															const
+														{ return select(tableColumns, OR<CSQLiteInnerJoin>(),
+																OR<CSQLiteWhere>(), OR<CSQLiteOrderBy>(),
+																OR<CSQLiteLimit>(), resultsRowProc, userData); }
 						OV<SError>					select(const CSQLiteInnerJoin& innerJoin, const CSQLiteWhere& where,
 															CSQLiteResultsRow::Proc resultsRowProc, void* userData)
 															const
