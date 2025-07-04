@@ -498,7 +498,7 @@ template <typename T> class T2DPath : public C2DPath {
 												// midY   1 9              5
 												// maxY    8       7       6
 												T2DPath	path;
-												path.moveToPoint(T2DPoint<T>(minX, midY))
+												path.addMoveTo(T2DPoint<T>(minX, midY))
 														.addArcTo(cornerRadius, cornerRadius, M_PI / 2.0, false, true,
 																T2DPoint<T>(midX, minY))
 														.addArcTo(cornerRadius, cornerRadius, M_PI / 2.0, false, true,
