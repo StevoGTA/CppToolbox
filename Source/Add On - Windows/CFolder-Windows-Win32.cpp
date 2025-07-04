@@ -34,33 +34,71 @@ OV<SError> CFolder::rename(const CString& string)
 	// Compose new filesystem path
 	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(string);
 
-	// Rename
-	AssertFailUnimplemented();
-return OV<SError>();
+    // Rename
+    if (!::MoveFile(getFilesystemPath().getString().getOSString(), filesystemPath.getString().getOSString()))
+		// Failed to rename
+		CFolderReportErrorAndReturnError(SErrorFromWindowsError(::GetLastError()),
+				CString(OSSTR("Failed to rename folder")));
+
+    // Update
+    update(filesystemPath);
+
+    return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFolder::create(bool createIntermediateFolders) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Check if exists
+	if (doesExist())
+		// Exists
+		return OV<SError>();
+
+	// Check if creating intermediate folders
+	if (createIntermediateFolders) {
+		// Create parent
+		OV<SError>	error = getParentFolder().create(true);
+		ReturnErrorIfError(error);
+	}
+
+	// Create
+	if (!::CreateDirectory(getFilesystemPath().getString().getOSString(), NULL))
+		// Error
+		CFolderReportErrorAndReturnError(SErrorFromWindowsError(::GetLastError()),
+				CString(OSSTR("Failed to create folder")));
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Try to remove directory
+	if (!::RemoveDirectory(getFilesystemPath().getString().getOSString())) {
+		// Check error
+		DWORD	errorCode = ::GetLastError();
+		if ((errorCode != ERROR_FILE_NOT_FOUND) && (errorCode != ERROR_PATH_NOT_FOUND))
+			// Error
+			CFolderReportErrorAndReturnError(SErrorFromWindowsError(errorCode),
+					CString(OSSTR("Failed to remove folder")));
+	}
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CFolder::doesExist() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return false;
+	// Get attributes
+	DWORD	attributes = ::GetFileAttributes(getFilesystemPath().getString().getOSString());
+	if (attributes == INVALID_FILE_ATTRIBUTES)
+		// Not found
+		return false;
+
+	return (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)

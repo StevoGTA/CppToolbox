@@ -33,14 +33,14 @@ OV<SError> CFolder::rename(const CString& string)
 	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(string);
 
 	// Rename
-	if (::rename(*getFilesystemPath().getString().getUTF8String(), *filesystemPath.getString().getUTF8String()) == 0) {
-		// Success
-		update(filesystemPath);
-
-		return OV<SError>();
-	} else
+	if (!::rename(*getFilesystemPath().getString().getUTF8String(), *filesystemPath.getString().getUTF8String()) == 0)
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "renaming");
+
+	// Update
+	update(filesystemPath);
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -48,36 +48,34 @@ OV<SError> CFolder::create(bool createIntermediateFolders) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if exists
-	if (!doesExist()) {
-		// Check if creating intermediate folders
-		if (createIntermediateFolders) {
-			// Create parent
-			OV<SError>	error = getParentFolder().create(true);
-			ReturnErrorIfError(error);
-		}
-
-		// Create
-		if (::mkdir(*getFilesystemPath().getString().getUTF8String(), 0777) == 0)
-			// Success
-			return OV<SError>();
-		else
-			// Error
-			CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "creating");
-	} else
+	if (doesExist())
 		// Exists
 		return OV<SError>();
+
+	// Check if creating intermediate folders
+	if (createIntermediateFolders) {
+		// Create parent
+		OV<SError>	error = getParentFolder().create(true);
+		ReturnErrorIfError(error);
+	}
+
+	// Create
+	if (!::mkdir(*getFilesystemPath().getString().getUTF8String(), 0777) == 0)
+		// Error
+		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "creating");
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (::unlink(*getFilesystemPath().getString().getUTF8String()) == 0)
-		// Success
-		return OV<SError>();
-	else
+	if (!::unlink(*getFilesystemPath().getString().getUTF8String()) == 0)
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "removing");
+
+	return OV<SError>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
