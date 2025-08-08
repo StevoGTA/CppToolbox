@@ -102,7 +102,7 @@ CVideoProcessor::PerformResult CVideoDecoder::perform()
 	ReturnValueIfResultError(videoFrame, PerformResult(videoFrame.getError()));
 
 	// Update
-	setCurrentTimeInterval(currentTimeInterval + 1.0 / mInternals->mVideoProcessorFormat->getFramerate());
+	setCurrentTimeInterval(currentTimeInterval + 1.0 / mInternals->mVideoProcessorFormat->getFrameRate());
 
 	return PerformResult(currentTimeInterval, *videoFrame);
 }

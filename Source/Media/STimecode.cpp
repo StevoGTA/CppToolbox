@@ -8,16 +8,16 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: STimecode::Framerate
+// MARK: STimecode::FrameRate
 
 // MARK: Properties
 
-STimecode::Framerate	STimecode::Framerate::mDefault(kKindNonDropFrame, 24);
+STimecode::FrameRate	STimecode::FrameRate::mDefault(kKindNonDropFrame, 24);
 
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary STimecode::Framerate::getInfo() const
+CDictionary STimecode::FrameRate::getInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -32,14 +32,14 @@ CDictionary STimecode::Framerate::getInfo() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<STimecode::Framerate> STimecode::Framerate::fromInfo(const CDictionary& info)
+OV<STimecode::FrameRate> STimecode::FrameRate::fromInfo(const CDictionary& info)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get info
 	OV<UInt16>	kind = info.getOVUInt16(CString(OSSTR("kind")));
 	if (!kind.hasValue())
 		// No kind
-		return OV<Framerate>();
+		return OV<FrameRate>();
 
 	// Check kind
 	switch (*kind) {
@@ -47,41 +47,41 @@ OV<STimecode::Framerate> STimecode::Framerate::fromInfo(const CDictionary& info)
 			// Non-Drop Frame
 			OV<UInt32>	base = info.getOVUInt32(CString(OSSTR("base")));
 
-			return base.hasValue() ? OV<Framerate>(Framerate(kKindNonDropFrame, *base)) : OV<Framerate>();
+			return base.hasValue() ? OV<FrameRate>(FrameRate(kKindNonDropFrame, *base)) : OV<FrameRate>();
 		}
 
 		case kKindDropFrame2997:
 			// 29.97 Drop Frame
-			return OV<Framerate>(forDropFrame2997());
+			return OV<FrameRate>(forDropFrame2997());
 
 		case kKindDropFrame5994:
 			// 59.94 Drop Frame
-			return OV<Framerate>(forDropFrame5994());
+			return OV<FrameRate>(forDropFrame5994());
 
 		default:
 			// Sorry
-			return OV<Framerate>();
+			return OV<FrameRate>();
 	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TArray<STimecode::Framerate>& STimecode::Framerate::getStandard()
+const TArray<STimecode::FrameRate>& STimecode::FrameRate::getStandard()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	TSArray<Framerate>*	sArray = nil;
+	const	TSArray<FrameRate>*	sArray = nil;
 	if (sArray == nil) {
 		// Setup
-		static	Framerate	sFramerates[] =
+		static	FrameRate	sFrameRates[] =
 									{
-										Framerate(kKindNonDropFrame, 24),
-										Framerate(kKindNonDropFrame, 25),
-										Framerate(kKindDropFrame2997),
-										Framerate(kKindNonDropFrame, 30),
-										Framerate(kKindDropFrame5994),
-										Framerate(kKindNonDropFrame, 60),
+										FrameRate(kKindNonDropFrame, 24),
+										FrameRate(kKindNonDropFrame, 25),
+										FrameRate(kKindDropFrame2997),
+										FrameRate(kKindNonDropFrame, 30),
+										FrameRate(kKindDropFrame5994),
+										FrameRate(kKindNonDropFrame, 60),
 									};
-		sArray = new TSARRAY_FROM_C_ARRAY(Framerate, sFramerates);
+		sArray = new TSARRAY_FROM_C_ARRAY(FrameRate, sFrameRates);
 	}
 
 	return *sArray;
@@ -94,15 +94,15 @@ const TArray<STimecode::Framerate>& STimecode::Framerate::getStandard()
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames, const Framerate& framerate) :
-	mFramerate(framerate)
+STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames, const FrameRate& frameRate) :
+	mFrameRate(frameRate)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SInt32	base = (SInt32) mFramerate.getBase();
+	SInt32	base = (SInt32) mFrameRate.getBase();
 
-	// Check Framerate
-	if (!mFramerate.isDropFrame())
+	// Check FrameRate
+	if (!mFrameRate.isDropFrame())
 		// Non-Drop Frame
 		mFrameIndex = (((hours * 60) + minutes) * 60 + seconds) * base + frames;
 	else {
@@ -110,7 +110,7 @@ STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames
 		// From https://www.davidheidelberger.com/2010/06/10/drop-frame-timecode/
 		SInt32	dropFrames =
 						(SInt32)
-								round(((mFramerate.getKind() == Framerate::kKindDropFrame2997) ? 29.97 : 59.94) / 15.0);
+								round(((mFrameRate.getKind() == FrameRate::kKindDropFrame2997) ? 29.97 : 59.94) / 15.0);
 
 		SInt32	hourFrames = base * 60 * 60;
 		SInt32	minuteFrames = base * 60;
@@ -122,14 +122,14 @@ STimecode::STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-STimecode::STimecode(SInt32 hours, SInt32 minutes, Float32 seconds, const Framerate& framerate) : mFramerate(framerate)
+STimecode::STimecode(SInt32 hours, SInt32 minutes, Float32 seconds, const FrameRate& frameRate) : mFrameRate(frameRate)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SInt32	base = (SInt32) mFramerate.getBase();
+	SInt32	base = (SInt32) mFrameRate.getBase();
 
-	// Check Framerate
-	if (!mFramerate.isDropFrame())
+	// Check FrameRate
+	if (!mFrameRate.isDropFrame())
 		// Non-Drop Frame
 		mFrameIndex = (((hours * 60) + minutes) * 60) * base + (SInt32) (::round(seconds * (Float32) base));
 	else {
@@ -137,7 +137,7 @@ STimecode::STimecode(SInt32 hours, SInt32 minutes, Float32 seconds, const Framer
 		// From https://www.davidheidelberger.com/2010/06/10/drop-frame-timecode/
 		SInt32	dropFrames =
 						(SInt32)
-								round(((mFramerate.getKind() == Framerate::kKindDropFrame2997) ? 29.97 : 59.94) / 15.0);
+								round(((mFrameRate.getKind() == FrameRate::kKindDropFrame2997) ? 29.97 : 59.94) / 15.0);
 
 		SInt32	hourFrames = base * 60 * 60;
 		SInt32	minuteFrames = base * 60;
@@ -155,10 +155,10 @@ STimecode::HMSF STimecode::getHMSF() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	SInt32	base = (SInt32) mFramerate.getBase();
+	SInt32	base = (SInt32) mFrameRate.getBase();
 
-	// Check Framerate
-	if (!mFramerate.isDropFrame()) {
+	// Check FrameRate
+	if (!mFrameRate.isDropFrame()) {
 		// Non-Drop Frame
 		SInt32	hours = mFrameIndex / (60 * 60 * base);
 		SInt32	minutes = (mFrameIndex / (60 * base)) % 60;
@@ -168,7 +168,7 @@ STimecode::HMSF STimecode::getHMSF() const
 		return HMSF(hours, minutes, seconds, frames);
 	} else {
 		// Drop Frame
-		Float32	framerate = (mFramerate.getKind() == Framerate::kKindDropFrame2997) ? 29.97f : 59.94f;
+		Float32	framerate = (mFrameRate.getKind() == FrameRate::kKindDropFrame2997) ? 29.97f : 59.94f;
 
 		// From https://www.davidheidelberger.com/2010/06/10/drop-frame-timecode/
 		SInt32	dropFrames = (SInt32) round(framerate * 0.066666);
@@ -206,7 +206,7 @@ CString STimecode::getDisplayString() const
 	// Setup
 	HMSF	hmsf = getHMSF();
 
-	return !mFramerate.isDropFrame() ?
+	return !mFrameRate.isDropFrame() ?
 			CString::make(OSSTR("%02d:%02d:%02d:%02d"), hmsf.getHours(), hmsf.getMinutes(), hmsf.getSeconds(),
 					hmsf.getFrames()) :
 			CString::make(OSSTR("%02d:%02d:%02d;%02d"), hmsf.getHours(), hmsf.getMinutes(), hmsf.getSeconds(),
@@ -220,7 +220,7 @@ CDictionary STimecode::getInfo() const
 	// Setup
 	CDictionary	info;
 	info.set(CString(OSSTR("frameIndex")), mFrameIndex);
-	info.set(CString(OSSTR("framerate")), mFramerate.getInfo());
+	info.set(CString(OSSTR("framerate")), mFrameRate.getInfo());
 
 	return info;
 }
@@ -233,14 +233,14 @@ OV<STimecode> STimecode::fromInfo(const CDictionary& info)
 {
 	// Setup
 	OV<SInt32>		frameIndex = info.getOVSInt32(CString(OSSTR("frameIndex")));
-	OV<Framerate>	framerate = Framerate::fromInfo(info.getDictionary(CString(OSSTR("framerate"))));
+	OV<FrameRate>	frameRate = FrameRate::fromInfo(info.getDictionary(CString(OSSTR("frameRate"))));
 
-	return (frameIndex.hasValue() && framerate.hasValue()) ?
-			OV<STimecode>(STimecode(*frameIndex, *framerate)) : OV<STimecode>();
+	return (frameIndex.hasValue() && frameRate.hasValue()) ?
+			OV<STimecode>(STimecode(*frameIndex, *frameRate)) : OV<STimecode>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<STimecode> STimecode::fromString(const CString& string, const Framerate& framerate)
+OV<STimecode> STimecode::fromString(const CString& string, const FrameRate& frameRate)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -286,5 +286,5 @@ OV<STimecode> STimecode::fromString(const CString& string, const Framerate& fram
 			return OV<STimecode>();
 	}
 
-	return OV<STimecode>(STimecode(hours, minutes, seconds, frames, framerate));
+	return OV<STimecode>(STimecode(hours, minutes, seconds, frames, frameRate));
 }

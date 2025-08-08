@@ -13,11 +13,11 @@ struct SVideo {
 	// Format
 	struct Format {
 							// Lifecycle methods
-							Format(OSType codecID, const S2DSizeU16& frameSize, Float32 framerate) :
-								mCodecID(codecID), mFrameSize(frameSize), mFramerate(framerate)
+							Format(OSType codecID, const S2DSizeU16& frameSize, Float32 frameRate) :
+								mCodecID(codecID), mFrameSize(frameSize), mFrameRate(frameRate)
 								{}
 							Format(const Format& other) :
-								mCodecID(other.mCodecID), mFrameSize(other.mFrameSize), mFramerate(other.mFramerate)
+								mCodecID(other.mCodecID), mFrameSize(other.mFrameSize), mFrameRate(other.mFrameRate)
 								{}
 
 							// Instance methods
@@ -25,8 +25,8 @@ struct SVideo {
 								{ return mCodecID; }
 		const	S2DSizeU16&	getFrameSize() const
 								{ return mFrameSize; }
-				Float32		getFramerate() const
-								{ return mFramerate; }
+				Float32		getFrameRate() const
+								{ return mFrameRate; }
 
 				CString		getDescription() const
 								{
@@ -37,7 +37,7 @@ struct SVideo {
 											CString(mFrameSize.mWidth) + CString(OSSTR("x")) +
 													CString(mFrameSize.mHeight);
 									description +=
-											CString(OSSTR(" at ")) + CString(mFramerate, 0, 3) + CString(OSSTR("fps"));
+											CString(OSSTR(" at ")) + CString(mFrameRate, 0, 3) + CString(OSSTR("fps"));
 
 									return description;
 								}
@@ -46,6 +46,6 @@ struct SVideo {
 		private:
 			OSType		mCodecID;
 			S2DSizeU16	mFrameSize;
-			Float32		mFramerate;
+			Float32		mFrameRate;
 	};
 };

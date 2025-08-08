@@ -698,7 +698,7 @@ TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
 
 			// Compose packet and locations
 			TArray<SMedia::PacketAndLocation>	mediaPacketAndLocations = composePacketAndLocations(internals);
-			Float32								framerate =
+			Float32								frameRate =
 														(Float32) mediaPacketAndLocations.getCount() /
 																(Float32) duration;
 			UInt64								byteCount =
@@ -709,7 +709,7 @@ TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
 			SVideo::Format		videoFormat =
 										CH264VideoCodec::composeVideoTrackFormat(
 												S2DSizeU16(h264Description.getWidth(), h264Description.getHeight()),
-												framerate);
+												frameRate);
 			SMedia::SegmentInfo	mediaSegmentInfo(duration, byteCount);
 
 			// Add video track

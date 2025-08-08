@@ -103,11 +103,11 @@ void CCoreMediaDecodeVideoCodec::seek(UniversalTimeInterval timeInterval)
 	// Seek
 	mInternals->mCurrentFrameIndex =
 			mInternals->mMediaPacketSource->seekToKeyframe(
-					(UInt32) (timeInterval * mInternals->mVideoProcessorFormat->getFramerate() + 0.5),
+					(UInt32) (timeInterval * mInternals->mVideoProcessorFormat->getFrameRate() + 0.5),
 					mInternals->mKeyframeIndexes);
 	seek(
 			(UInt64) ((UniversalTimeInterval) mInternals->mCurrentFrameIndex /
-					mInternals->mVideoProcessorFormat->getFramerate() *
+					mInternals->mVideoProcessorFormat->getFrameRate() *
 					(UniversalTimeInterval) mInternals->mTimeScale));
 }
 

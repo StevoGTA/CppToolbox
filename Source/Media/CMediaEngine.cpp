@@ -79,7 +79,7 @@ I<CVideoSource> CMediaEngine::getVideoSource(const SMediaSource::Tracks::VideoTr
 	return I<CVideoSource>(
 			new CVideoDecoder(videoTrack.getMediaTrackFormat(), *videoTrack.getDecodeCodec(),
 					CVideoProcessor::Format(videoTrack.getMediaTrackFormat().getFrameSize(),
-							videoTrack.getMediaTrackFormat().getFramerate()),
+							videoTrack.getMediaTrackFormat().getFrameRate()),
 					identifier));
 }
 

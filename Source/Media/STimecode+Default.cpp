@@ -5,12 +5,12 @@
 #include "STimecode.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: STimecode::Framerate
+// MARK: STimecode::FrameRate
 
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString STimecode::Framerate::getDisplayString() const
+CString STimecode::FrameRate::getDisplayString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value
