@@ -168,14 +168,14 @@ STimecode::HMSF STimecode::getHMSF() const
 		return HMSF(hours, minutes, seconds, frames);
 	} else {
 		// Drop Frame
-		Float32	framerate = (mFrameRate.getKind() == FrameRate::kKindDropFrame2997) ? 29.97f : 59.94f;
+		Float32	frameRate = (mFrameRate.getKind() == FrameRate::kKindDropFrame2997) ? 29.97f : 59.94f;
 
 		// From https://www.davidheidelberger.com/2010/06/10/drop-frame-timecode/
-		SInt32	dropFrames = (SInt32) round(framerate * 0.066666);
-		SInt32	framesPerHour = (SInt32) round(framerate * 60.0 * 60.0);
+		SInt32	dropFrames = (SInt32) round(frameRate * 0.066666);
+		SInt32	framesPerHour = (SInt32) round(frameRate * 60.0 * 60.0);
 		SInt32	framesPer24Hours = framesPerHour * 24;
-		SInt32	framesPer10Minutes = (SInt32) round(framerate * 60.0 * 10.0);
-		SInt32	framesPerMinute = (SInt32) round(framerate) * 60 - dropFrames;
+		SInt32	framesPer10Minutes = (SInt32) round(frameRate * 60.0 * 10.0);
+		SInt32	framesPerMinute = (SInt32) round(frameRate) * 60 - dropFrames;
 
 		// Get frameIndex as a positive number within 0 - 24 hours
 		SInt32	frameIndex = mFrameIndex;
@@ -220,7 +220,7 @@ CDictionary STimecode::getInfo() const
 	// Setup
 	CDictionary	info;
 	info.set(CString(OSSTR("frameIndex")), mFrameIndex);
-	info.set(CString(OSSTR("framerate")), mFrameRate.getInfo());
+	info.set(CString(OSSTR("frameRate")), mFrameRate.getInfo());
 
 	return info;
 }
