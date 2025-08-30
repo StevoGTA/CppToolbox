@@ -299,12 +299,22 @@ template <typename T> struct T2DRect {
 
 	inline	T2DPoint<T>	getTopLeft() const
 							{ return T2DPoint<T>(getMinX(), getMinY()); }
+	inline	T2DPoint<T>	getTopMid() const
+							{ return T2DPoint<T>(getMidX(), getMinY()); }
 	inline	T2DPoint<T>	getTopRight() const
 							{ return T2DPoint<T>(getMaxX(), getMinY()); }
 	inline	T2DPoint<T>	getBottomLeft() const
 							{ return T2DPoint<T>(getMinX(), getMaxY()); }
+	inline	T2DPoint<T>	getBottomMid() const
+							{ return T2DPoint<T>(getMidX(), getMaxY()); }
 	inline	T2DPoint<T>	getBottomRight() const
 							{ return T2DPoint<T>(getMaxX(), getMaxY()); }
+	inline	T2DPoint<T>	getMidLeft() const
+							{ return T2DPoint<T>(getMinX(), getMidY()); }
+	inline	T2DPoint<T>	getMidRight() const
+							{ return T2DPoint<T>(getMaxX(), getMidY()); }
+	inline	T2DPoint<T>	getCenter() const
+							{ return T2DPoint<T>(getMidX(), getMidY()); }
 
 	inline	T2DRect<T>	inset(T value) const
 							{ return T2DRect<T>(mOrigin.mX + value, mOrigin.mY + value, mSize.mWidth - value * 2,

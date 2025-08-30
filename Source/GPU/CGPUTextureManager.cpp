@@ -284,7 +284,7 @@ class CBitmapGPUTextureReferenceInternals : public CGPULoadableTextureReferenceI
 													if (!mGPUTextureDataFormat.hasValue())
 														// Set value
 														mGPUTextureDataFormat =
-																resolvedGPUTextureDataFormat(bitmapUse->getFormat());
+																resolvedGPUTextureDataFormat(bitmapUseFormat);
 
 													CBitmap::Format	bitmapUseResolvedBitmapFormat =
 																			resolvedBitmapFormat(*mGPUTextureDataFormat,
