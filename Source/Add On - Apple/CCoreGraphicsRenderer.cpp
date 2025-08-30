@@ -60,8 +60,19 @@ class CCoreGraphicsRenderer::Internals {
 						::CGBitmapContextCreate(bitmap.getPixelData().getMutableBytePtr(), size.mWidth, size.mHeight, 8,
 								bitmap.getBytesPerRow(), colorSpaceRef, bitmapInfo);
 				::CGColorSpaceRelease(colorSpaceRef);
+
+				::CGContextTranslateCTM(mContextRef, 0.0, size.mHeight);
+				::CGContextScaleCTM(mContextRef, 1.0, -1.0);
+				::CGContextSetTextMatrix(mContextRef, CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, -size.mHeight));
 			}
-		Internals(CGContextRef contextRef) : mContextRef(::CGContextRetain(contextRef)) {}
+		Internals(CGContextRef contextRef, CGFloat height) :
+			mContextRef(::CGContextRetain(contextRef))
+			{
+				// Setup contextRef
+				::CGContextTranslateCTM(mContextRef, 0.0, height);
+				::CGContextScaleCTM(mContextRef, 1.0, -1.0);
+				::CGContextSetTextMatrix(contextRef, CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, 0.0));
+			}
 		~Internals()
 			{
 				::CGContextRelease(mContextRef);
@@ -86,10 +97,10 @@ CCoreGraphicsRenderer::CCoreGraphicsRenderer(CBitmap& bitmap)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CCoreGraphicsRenderer::CCoreGraphicsRenderer(CGContextRef contextRef)
+CCoreGraphicsRenderer::CCoreGraphicsRenderer(CGContextRef contextRef, CGFloat height)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(contextRef);
+	mInternals = new Internals(contextRef, height);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

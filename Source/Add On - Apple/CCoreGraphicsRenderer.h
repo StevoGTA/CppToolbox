@@ -19,7 +19,7 @@ class CCoreGraphicsRenderer : public C2DRenderer {
 	public:
 					// Lifecycle methods
 					CCoreGraphicsRenderer(CBitmap& bitmap);
-					CCoreGraphicsRenderer(CGContextRef contextRef);
+					CCoreGraphicsRenderer(CGContextRef contextRef, CGFloat height);
 					~CCoreGraphicsRenderer();
 
 					// C2DRenderer methods

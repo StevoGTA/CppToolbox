@@ -307,9 +307,13 @@ template <typename T> struct OR {
 		bool	operator==(const OR<T>& other) const
 					{ return (hasReference() == other.hasReference()) &&
 							(!hasReference() || (*mReference == *other.mReference)); }
+		bool	operator==(const T& other) const
+					{ return hasReference() && (*mReference == other); }
 		bool	operator!=(const OR<T>& other) const
 					{ return (hasReference() != other.hasReference()) ||
 							(hasReference() && !(*mReference == *other.mReference)); }
+		bool	operator!=(const T& other) const
+					{ return hasReference() && !(*mReference == other); }
 
 	// Properties
 	private:
@@ -381,8 +385,12 @@ template <typename T> struct OV {
 
 		bool	operator==(const OV<T>& other) const
 					{ return (hasValue() == other.hasValue()) && (!hasValue() || (*mValue == *other.mValue)); }
+		bool	operator==(const T& other) const
+					{ return hasValue() && (*mValue == other); }
 		bool	operator!=(const OV<T>& other) const
 					{ return (hasValue() != other.hasValue()) || (hasValue() && !(*mValue == *other.mValue)); }
+		bool	operator!=(const T& other) const
+					{ return hasValue() && !(*mValue == other); }
 
 	// Properties
 	private:
