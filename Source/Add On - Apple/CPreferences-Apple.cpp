@@ -14,54 +14,46 @@
 class CPreferences::Internals {
 	public:
 					Internals() :
-						mApplicationID(kCFPreferencesCurrentApplication), mDelayWriteCount(0)
+						mApplicationIDStringRef(kCFPreferencesCurrentApplication), mDelayWriteCount(0)
 						{}
 					Internals(const CPreferences::Reference& reference) :
-						mApplicationID(reference.mApplicationID.getOSString()), mDelayWriteCount(0)
+						mApplicationIDStringRef(reference.getApplicationIDStringRef()), mDelayWriteCount(0)
 						{}
 
-		CFTypeRef	copyFrom(const CPreferences::Pref& pref)
+		CFTypeRef	copyFrom(CFStringRef keyStringRef)
 						{
-							// Check for no key
-							if (pref.mKeyString == nil)
-								return nil;
-
 							// Setup
 							CFTypeRef	typeRef;
 
-							::CFPreferencesAppSynchronize(mApplicationID);
-							typeRef = ::CFPreferencesCopyAppValue(pref.mKeyString, mApplicationID);
+							::CFPreferencesAppSynchronize(mApplicationIDStringRef);
+							typeRef = ::CFPreferencesCopyAppValue(keyStringRef, mApplicationIDStringRef);
 
 							// Did we get it?
 							if ((typeRef == nil) && mAlternatePreferencesReference.hasValue())
 								// Try to get from old prefs file
 								typeRef =
-										::CFPreferencesCopyAppValue(pref.mKeyString,
-												mAlternatePreferencesReference->mApplicationID.getOSString());
+										::CFPreferencesCopyAppValue(keyStringRef,
+												mAlternatePreferencesReference->getApplicationIDStringRef());
 
 							return typeRef;
 						}
-		void		setTo(const CPreferences::Pref& pref, CFTypeRef valueTypeRef)
+		void		setTo(CFStringRef keyStringRef, CFTypeRef valueTypeRef)
 						{
-							// Check for no key
-							if (pref.mKeyString == nil)
-								return;
-
 							// Store
-							::CFPreferencesSetAppValue(pref.mKeyString, valueTypeRef, mApplicationID);
+							::CFPreferencesSetAppValue(keyStringRef, valueTypeRef, mApplicationIDStringRef);
 
 							if (mDelayWriteCount == 0)
-								::CFPreferencesAppSynchronize(mApplicationID);
+								::CFPreferencesAppSynchronize(mApplicationIDStringRef);
 						}
 		void		beginGroupSet()
 						{ mDelayWriteCount++; }
 		void		endGroupSet()
 						{
 							if (--mDelayWriteCount == 0)
-								::CFPreferencesAppSynchronize(mApplicationID);
+								::CFPreferencesAppSynchronize(mApplicationIDStringRef);
 						}
 
-		CFStringRef					mApplicationID;
+		CFStringRef					mApplicationIDStringRef;
 		OV<CPreferences::Reference>	mAlternatePreferencesReference;
 		UInt32						mDelayWriteCount;
 };
@@ -103,7 +95,7 @@ CPreferences::~CPreferences()
 bool CPreferences::hasValue(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFTypeRef	typeRef = mInternals->copyFrom(pref);
+	CFTypeRef	typeRef = mInternals->copyFrom(pref.getKeyString());
 	bool		flag = typeRef != nil;
 	
 	if (typeRef != nil)
@@ -117,7 +109,7 @@ OV<TArray<CData> > CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref);
+	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have array
 	if (arrayRef != nil) {
@@ -138,7 +130,7 @@ OV<TArray<CDictionary> > CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref);
+	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have array
 	if (arrayRef != nil) {
@@ -159,7 +151,7 @@ OV<TNumberArray<OSType> > CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref);
+	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have array
 	if (arrayRef != nil) {
@@ -190,7 +182,7 @@ OV<CData> CPreferences::getData(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFDataRef	dataRef = (CFDataRef) mInternals->copyFrom(pref);
+	CFDataRef	dataRef = (CFDataRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have data
 	if (dataRef != nil) {
@@ -207,7 +199,7 @@ OV<CDictionary> CPreferences::getDictionary(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) mInternals->copyFrom(pref);
+	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have dictionary
 	if (dictionaryRef != nil) {
@@ -224,7 +216,7 @@ CString CPreferences::getString(const StringPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFStringRef	stringRef = (CFStringRef) mInternals->copyFrom(pref);
+	CFStringRef	stringRef = (CFStringRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have string
 	if (stringRef != nil) {
@@ -233,7 +225,7 @@ CString CPreferences::getString(const StringPref& pref)
 		
 		return string;
 	} else
-		return CString(pref.mDefaultValue);
+		return CString(pref.getDefaultValue());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -241,7 +233,7 @@ Float32 CPreferences::getFloat32(const Float32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have number
 	if (numberRef != nil) {
@@ -251,7 +243,7 @@ Float32 CPreferences::getFloat32(const Float32Pref& pref)
 		
 		return value;
 	} else
-		return pref.mDefaultValue;
+		return pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -259,7 +251,7 @@ Float64 CPreferences::getFloat64(const Float64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have number
 	if (numberRef != nil) {
@@ -269,7 +261,7 @@ Float64 CPreferences::getFloat64(const Float64Pref& pref)
 		
 		return value;
 	} else
-		return pref.mDefaultValue;
+		return pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -277,7 +269,7 @@ SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have number
 	if (numberRef != nil) {
@@ -287,7 +279,7 @@ SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 
 		return (SInt32) value;
 	} else
-		return pref.mDefaultValue;
+		return pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -295,7 +287,7 @@ UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have number
 	if (numberRef != nil) {
@@ -305,7 +297,7 @@ UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 		
 		return (UInt32) value;
 	} else
-		return pref.mDefaultValue;
+		return pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -313,7 +305,7 @@ UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have number
 	if (numberRef != nil) {
@@ -323,7 +315,7 @@ UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 
 		return (UInt64) value;
 	} else
-		return pref.mDefaultValue;
+		return pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -331,7 +323,7 @@ UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTime
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref);
+	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
 
 	// Check if have number
 	if (numberRef != nil) {
@@ -341,7 +333,7 @@ UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTime
 
 		return value;
 	} else
-		return pref.mDefaultValue;
+		return pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -360,7 +352,7 @@ void CPreferences::set(const Pref& pref, const TArray<CData>& array)
 	}
 
 	// Store
-	mInternals->setTo(pref, arrayRef);
+	mInternals->setTo(pref.getKeyString(), arrayRef);
 
 	// Cleanup
 	::CFRelease(arrayRef);
@@ -382,7 +374,7 @@ void CPreferences::set(const Pref& pref, const TArray<CDictionary>& array)
 	}
 
 	// Store
-	mInternals->setTo(pref, arrayRef);
+	mInternals->setTo(pref.getKeyString(), arrayRef);
 
 	// Cleanup
 	::CFRelease(arrayRef);
@@ -405,7 +397,7 @@ void CPreferences::set(const Pref& pref, const TNumberArray<OSType>& array)
 	}
 
 	// Store
-	mInternals->setTo(pref, arrayRef);
+	mInternals->setTo(pref.getKeyString(), arrayRef);
 
 	// Cleanup
 	::CFRelease(arrayRef);
@@ -416,7 +408,7 @@ void CPreferences::set(const Pref& pref, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDataRef	dataRef = CCoreFoundation::createDataRefFrom(data);
-	mInternals->setTo(pref, dataRef);
+	mInternals->setTo(pref.getKeyString(), dataRef);
 	::CFRelease(dataRef);
 }
 
@@ -425,7 +417,7 @@ void CPreferences::set(const Pref& pref, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	CFDictionaryRef	dictionaryRef = CCoreFoundation::createDictionaryRefFrom(dictionary);
-	mInternals->setTo(pref, dictionaryRef);
+	mInternals->setTo(pref.getKeyString(), dictionaryRef);
 	::CFRelease(dictionaryRef);
 }
 
@@ -433,7 +425,7 @@ void CPreferences::set(const Pref& pref, const CDictionary& dictionary)
 void CPreferences::set(const StringPref& pref, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->setTo(pref, string.getOSString());
+	mInternals->setTo(pref.getKeyString(), string.getOSString());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -444,7 +436,7 @@ void CPreferences::set(const Float32Pref& pref, Float32 value)
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &value);
 
 	// Write
-	mInternals->setTo(pref, numberRef);
+	mInternals->setTo(pref.getKeyString(), numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -456,7 +448,7 @@ void CPreferences::set(const Float64Pref& pref, Float64 value)
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value);
 
 	// Write
-	mInternals->setTo(pref, numberRef);
+	mInternals->setTo(pref.getKeyString(), numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -469,7 +461,7 @@ void CPreferences::set(const SInt32Pref& pref, SInt32 value)
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
 
 	// Write
-	mInternals->setTo(pref, numberRef);
+	mInternals->setTo(pref.getKeyString(), numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -482,7 +474,7 @@ void CPreferences::set(const UInt32Pref& pref, UInt32 value)
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
 
 	// Write
-	mInternals->setTo(pref, numberRef);
+	mInternals->setTo(pref.getKeyString(), numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -495,7 +487,7 @@ void CPreferences::set(const UInt64Pref& pref, UInt64 value)
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
 
 	// Write
-	mInternals->setTo(pref, numberRef);
+	mInternals->setTo(pref.getKeyString(), numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -507,7 +499,7 @@ void CPreferences::set(const UniversalTimeIntervalPref& pref, UniversalTimeInter
 	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value);
 
 	// Write
-	mInternals->setTo(pref, numberRef);
+	mInternals->setTo(pref.getKeyString(), numberRef);
 	::CFRelease(numberRef);
 }
 
@@ -515,7 +507,7 @@ void CPreferences::set(const UniversalTimeIntervalPref& pref, UniversalTimeInter
 void CPreferences::remove(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->setTo(pref, nil);
+	mInternals->setTo(pref.getKeyString(), nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -209,17 +209,21 @@ class CPreferences {
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 			// Methods
 			public:
-										// Lifecycle methods
-										Reference(const OSStringType applicationID) : mApplicationID(applicationID) {}
-										Reference(const Reference& other) : mApplicationID(other.mApplicationID) {}
+									// Lifecycle methods
+									Reference(CFStringRef applicationIDStringRef) :
+										mApplicationIDStringRef(applicationIDStringRef)
+										{}
+									Reference(const Reference& other) :
+										mApplicationIDStringRef(other.mApplicationIDStringRef)
+										{}
 
-										// Instance methods
-				const	OSStringType	getApplicationID() const
-											{ return mApplicationID; }
+									// Instance methods
+				const	CFStringRef	getApplicationIDStringRef() const
+										{ return mApplicationIDStringRef; }
 
 			// Properties
 			private:
-				OSStringType	mApplicationID;
+				CFStringRef	mApplicationIDStringRef;
 #else
 			// Methods
 			public:
