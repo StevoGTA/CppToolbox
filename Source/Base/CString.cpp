@@ -510,6 +510,25 @@ TArray<CString> CString::componentsRespectingQuotes(const CString& separator) co
 	return array;
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+void CString::toPascal(UInt8 buffer[], UInt8 bufferByteCount) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	::memset(buffer, 0x00, bufferByteCount);
+
+	// Get encoded bytes
+	OV<CData>	data = getData(kEncodingMacRoman);
+	if (!data.hasValue())
+		// Unable to encode
+		return;
+
+	// Copy to buffer
+	buffer[0] = std::max<UInt8>((UInt8) data->getByteCount(), bufferByteCount - 1);
+	::memcpy(&buffer[1], data->getBytePtr(), buffer[0]);
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -559,8 +578,6 @@ CString CString::removingAllWhitespace() const
 			.replacingSubStrings(CString::mNewline)
 			.replacingSubStrings(CString::mLinefeed);
 }
-
-// MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
 CString CString::lowercase(const CString* string, void* userData)
