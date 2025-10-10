@@ -64,24 +64,17 @@ CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding)
 	// Parameter check
 	AssertNotNil(ptr);
 
-	// Check situation
-	if (ptr == nil)
-		// No initial string
-		mStringRef = CFSTR("");
-	else {
-		// Use only the length specified
-		char	buffer[byteCount + 1];
-		::memmove(buffer, ptr, byteCount);
-		buffer[byteCount] = 0;
-		mStringRef =
-				::CFStringCreateWithCString(kCFAllocatorDefault, buffer,
-						sGetCFStringEncodingForCStringEncoding(encoding));
-	}
+	// Compose string
+	mStringRef =
+			(ptr != nil) ?
+					::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*) ptr, byteCount,
+							sGetCFStringEncodingForCStringEncoding(encoding), true) :
+					CFSTR("");
 
 	// Validate we have something
 	if (mStringRef == nil) {
 		// Have something
-		LogError(sCreateFailedError, "creating CFStringRef from C string");
+		LogError(sCreateFailedError, "creating CFStringRef from bytes");
 		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
 	}
 }
@@ -484,7 +477,7 @@ OV<CData> CString::getData(Encoding encoding) const
 	// Compose dataRef
 	CFDataRef	dataRef =
 						::CFStringCreateExternalRepresentation(kCFAllocatorDefault, mStringRef,
-								sGetCFStringEncodingForCStringEncoding(encoding), '_');
+								sGetCFStringEncodingForCStringEncoding(encoding), 0);
 	if (dataRef != nil) {
 		// Create data
 		CData	data(::CFDataGetBytePtr(dataRef), (CData::ByteCount) ::CFDataGetLength(dataRef));

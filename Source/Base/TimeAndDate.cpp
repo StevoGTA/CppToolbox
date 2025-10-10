@@ -549,11 +549,11 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 
 		case kStringStyleYYYY_MM_DD:
 			// yyyy-MM-dd
-			return CString::make(OSSTR("%04u-%02u-%02"), mYear, mMonth, mDay);
+			return CString::make(OSSTR("%04u-%02u-%02u"), mYear, mMonth, mDay);
 
 		case kStringStyleYYYYMMDD:
 			// yyyyMMdd
-			return CString::make(OSSTR("%04u%02u%02"), mYear, mMonth, mDay);
+			return CString::make(OSSTR("%04u%02u%02u"), mYear, mMonth, mDay);
 
 		case kStringStyleYYYY_MM:
 			// yyyy-MM
