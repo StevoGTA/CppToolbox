@@ -250,12 +250,20 @@ OV<CImage::Type> CImage::getTypeFromMIMEType(const CString& MIMEType)
 OV<CImage::Type> CImage::getTypeFromData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Setup
 	const	void*	bytePtr = data.getBytePtr();
-	if ((data.getByteCount() >= 8) && (EndianU32_BtoN(*((const UInt32*) ((const UInt8*) bytePtr + 6))) == 'JFIF'))
-		// JPEG
+
+	// Check for signatures
+	// See https://stackoverflow.com/questions/4550296/how-to-identify-contents-of-a-byte-is-a-jpeg
+	// BMP: 42 4D
+	// GIF: 47 49 46 38
+	if ((data.getByteCount() >= 2) && (*((UInt8*) bytePtr) == 0xFF) && (*((UInt8*) bytePtr + 1) == 0xD8))
+		// JPEG Raw:	FF D8 FF DB
+		// JFIF:		FF D8 FF E0
+		// EXIF:		FF D8 FF E1
 		return OV<Type>(kTypeJPEG);
 	else if ((data.getByteCount() >= 4) && (EndianU32_BtoN(*((const UInt32*) bytePtr)) == 0x89504E47))
-		// PNG
+		// PNG : 89 50 4E 47
 		return OV<Type>(kTypePNG);
 	else
 		// Unknown

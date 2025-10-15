@@ -100,3 +100,31 @@ template <typename A, typename B> struct TRCR {
 				A&	mA;
 		const	B&	mB;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: TOV2
+
+template <typename A, typename B> struct TOV2 {
+	// Methods
+	public:
+						// Lifecycle methods
+						TOV2() {}
+						TOV2(const A& a, const B& b) : mA(a), mB(b) {}
+						TOV2(const TOV2& other) : mA(other.mA), mB(other.mB) {}
+
+						// Instamce methods
+		const	OV<A>&	getA() const
+							{ return mA; }
+		const	OV<B>&	getB() const
+							{ return mB; }
+
+				void	setValues(const A& a, const B& b)
+							{ mA.setValue(a); mB.setValue(b); }
+				void	removeValues()
+							{ mA.removeValue(); mB.removeValue(); }
+
+	// Properties
+	private:
+		OV<A>	mA;
+		OV<B>	mB;
+};
