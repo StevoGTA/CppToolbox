@@ -33,7 +33,7 @@ OV<SError> CFolder::rename(const CString& string)
 	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(string);
 
 	// Rename
-	if (!::rename(*getFilesystemPath().getString().getUTF8String(), *filesystemPath.getString().getUTF8String()) == 0)
+	if (::rename(*getFilesystemPath().getString().getUTF8String(), *filesystemPath.getString().getUTF8String()) != 0)
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "renaming");
 
@@ -60,7 +60,7 @@ OV<SError> CFolder::create(bool createIntermediateFolders) const
 	}
 
 	// Create
-	if (!::mkdir(*getFilesystemPath().getString().getUTF8String(), 0777) == 0)
+	if (::mkdir(*getFilesystemPath().getString().getUTF8String(), 0777) != 0)
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "creating");
 
@@ -71,7 +71,7 @@ OV<SError> CFolder::create(bool createIntermediateFolders) const
 OV<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (!::unlink(*getFilesystemPath().getString().getUTF8String()) == 0)
+	if (::unlink(*getFilesystemPath().getString().getUTF8String()) != 0)
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "removing");
 

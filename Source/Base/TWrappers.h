@@ -348,7 +348,7 @@ template <typename T> struct OV {
 	public:
 				// Lifecycle methods
 				OV() : mValue(nil) {}
-				OV(T value) : mValue(new T(value)) {}
+				OV(const T& value) : mValue(new T(value)) {}
 				OV(const OV& other) : mValue((other.mValue != nil) ? new T(*other.mValue) : nil) {}
 				~OV() { Delete(mValue); }
 
@@ -357,9 +357,9 @@ template <typename T> struct OV {
 					{ return mValue != nil; }
 		T&		getValue() const
 					{ AssertFailIf(mValue == nil); return *mValue; }
-		T		getValue(T defaultValue) const
+		T		getValue(const T& defaultValue) const
 					{ return (mValue != nil) ? *mValue : defaultValue; }
-		void	setValue(T value)
+		void	setValue(const T& value)
 					{ if (mValue != nil) *mValue = value; else mValue = new T(value); }
 		void	setValue(const OV<T>& value)
 					{
@@ -382,7 +382,7 @@ template <typename T> struct OV {
 		T*		operator->() const
 					{ AssertFailIf(mValue == nil); return mValue; }
 
-		OV<T>&	operator=(T value)
+		OV<T>&	operator=(const T& value)
 					{ setValue(value); return *this; }
 		OV<T>&	operator=(const OV<T>& value)
 					{ setValue(value); return *this; }

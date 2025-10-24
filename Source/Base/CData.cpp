@@ -376,8 +376,8 @@ CData CData::subData(ByteIndex byteIndex, const OV<ByteCount>& byteCount, bool c
 	if (byteIndex >= mInternals->mBufferByteCount)
 		return mEmpty;
 
-	AssertFailIf(byteCount.hasValue() && (byteIndex + *byteCount) >= mInternals->mBufferByteCount);
-	if (byteCount.hasValue() && (byteIndex + *byteCount) >= mInternals->mBufferByteCount)
+	AssertFailIf(byteCount.hasValue() && (byteIndex + *byteCount) > mInternals->mBufferByteCount);
+	if (byteCount.hasValue() && (byteIndex + *byteCount) > mInternals->mBufferByteCount)
 		return mEmpty;
 
 	return CData((UInt8*) mInternals->mBuffer + byteIndex,

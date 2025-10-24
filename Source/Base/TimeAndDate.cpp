@@ -334,8 +334,7 @@ OV<SGregorianDate::Components> SGregorianDate::Components::getFrom(const CString
 				return OV<Components>();
 
 			return OV<Components>(
-					Components(string.getSubString(0, 4).getUInt32(), string.getSubString(5, 2).getUInt8(),
-							string.getSubString(8, 2).getUInt8()));
+					Components(string.getSubString(0, 4).getUInt32(), string.getSubString(5, 2).getUInt8()));
 
 		case kStringStyleYYYY:
 			// yyyy
@@ -482,7 +481,7 @@ CString SGregorianDate::getString(DateStyle dateStyle, TimeStyle timeStyle) cons
 		case kTimeStyleHMAMPM:
 			// 3:30pm
 			if (!string.isEmpty())
-				string += CString::mSpace;
+				string += CString(OSSTR(", "));
 			string +=
 					CString(hour) + CString::mColon + CString(mMinute, 2, true) +
 							((mHour >= 12) ? getPMString() : getAMString());
@@ -491,14 +490,14 @@ CString SGregorianDate::getString(DateStyle dateStyle, TimeStyle timeStyle) cons
 		case kTimeStyleHM24:
 			// 15:30pm
 			if (!string.isEmpty())
-				string += CString::mSpace;
+				string += CString(OSSTR(", "));
 			string += CString(mHour, 2, true) + CString::mColon + CString(mMinute, 2, true);
 			break;
 
 		case kTimeStyleHMSAMPM:
 			// 3:30:32pm
 			if (!string.isEmpty())
-				string += CString::mSpace;
+				string += CString(OSSTR(", "));
 			string +=
 					CString(hour) + CString::mColon + CString(mMinute, 2, true) + CString::mColon +
 							CString((UInt16) mSecond, 2, true) + ((mHour >= 12) ? getPMString() : getAMString());
@@ -507,7 +506,7 @@ CString SGregorianDate::getString(DateStyle dateStyle, TimeStyle timeStyle) cons
 		case kTimeStyleHMS24:
 			// 15:30:32
 			if (!string.isEmpty())
-				string += CString::mSpace;
+				string += CString(OSSTR(", "));
 			string +=
 					CString(mHour, 2, true) + CString::mColon + CString(mMinute, 2, true) + CString::mColon +
 							CString((UInt16) mSecond, 2, true);
@@ -537,23 +536,23 @@ CString SGregorianDate::getString(StringStyle stringStyle) const
 
 		case kStringStyleYYYY_MM_DDTHH_MM_SS:
 			// yyyy-MM-ddTHH:mm:ss
-			return CString::make(OSSTR("%04u-%02u-%02T$02u:%02u:%02.0f"), mYear, mMonth, mDay, mHour, mMinute, mSecond);
+			return CString::make(OSSTR("%04u-%02u-%02uT%02u:%02u:%02.0f"), mYear, mMonth, mDay, mHour, mMinute, mSecond);
 
 		case kStringStyleYYYY_MM_DDTHH_MM:
 			// yyyy-MM-ddTHH:mm
-			return CString::make(OSSTR("%04u-%02u-%02T$02u:%02u"), mYear, mMonth, mDay, mHour, mMinute);
+			return CString::make(OSSTR("%04u-%02u-%02uT%02u:%02u"), mYear, mMonth, mDay, mHour, mMinute);
 
 		case kStringStyleYYYY_MM_DDTHH:
 			// yyyy-MM-ddTHH
-			return CString::make(OSSTR("%04u-%02u-%02T$02u"), mYear, mMonth, mDay, mHour);
+			return CString::make(OSSTR("%04u-%02u-%02uT%02u"), mYear, mMonth, mDay, mHour);
 
 		case kStringStyleYYYY_MM_DD:
 			// yyyy-MM-dd
-			return CString::make(OSSTR("%04u-%02u-%02"), mYear, mMonth, mDay);
+			return CString::make(OSSTR("%04u-%02u-%02u"), mYear, mMonth, mDay);
 
 		case kStringStyleYYYYMMDD:
 			// yyyyMMdd
-			return CString::make(OSSTR("%04u%02u%02"), mYear, mMonth, mDay);
+			return CString::make(OSSTR("%04u%02u%02u"), mYear, mMonth, mDay);
 
 		case kStringStyleYYYY_MM:
 			// yyyy-MM

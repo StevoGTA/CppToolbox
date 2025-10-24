@@ -11,111 +11,227 @@
 // MARK: CPreferences
 
 class CPreferences {
-	// Structs
+	// Pref
 	public:
 		struct Pref {
-			// Lifecycle methods
-			Pref() : mKeyString(nil) {}
-			Pref(OSStringType keyString) : mKeyString(keyString) {}
-			Pref(const Pref& other) : mKeyString(other.mKeyString) {}
+			// Methods
+			public:
+								// Lifecycle methods
+								Pref(OSStringType keyString) : mKeyString(keyString) {}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
 
 			// Properties
-			OSStringType	mKeyString;	// "key"
+			private:
+				OSStringType	mKeyString;
 		};
 
-		struct StringPref : public Pref {
-			// Lifecycle methods
-			StringPref() : Pref(nil), mDefaultValue(OSSTR("")) {}
-			StringPref(OSStringType keyString, OSStringVar(defaultValue) = OSSTR("")) :
-				Pref(keyString), mDefaultValue(defaultValue)
-				{}
+	// BoolPref
+	public:
+		struct BoolPref {
+			// Methods
+			public:
+								// Lifecycle methods
+								BoolPref(OSStringType keyString, bool defaultValue = false) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				bool			getDefaultValue() const
+									{ return mDefaultValue; }
 
 			// Properties
-			CString	mDefaultValue;
+			private:
+				OSStringType	mKeyString;
+				bool			mDefaultValue;
 		};
 
-		struct Float32Pref : public Pref {
-			// Lifecycle methods
-			Float32Pref() : Pref(nil), mDefaultValue(0.0) {}
-			Float32Pref(OSStringType keyString, Float32 defaultValue = 0.0) :
-				Pref(keyString), mDefaultValue(defaultValue)
-				{}
+	// StringPref
+	public:
+		struct StringPref {
+			// Methods
+			public:
+										// Lifecycle methods
+										StringPref(OSStringType keyString, OSStringVar(defaultValue) = OSSTR("")) :
+											mKeyString(keyString), mDefaultValue(defaultValue)
+											{}
+
+										// Instance methods
+						OSStringType	getKeyString() const
+											{ return mKeyString; }
+				const	CString&		getDefaultValue() const
+											{ return mDefaultValue; }
 
 			// Properties
-			Float32	mDefaultValue;		// 32.0
+			private:
+				OSStringType	mKeyString;
+				CString			mDefaultValue;
 		};
 
-		struct Float64Pref : public Pref {
-			// Lifecycle methods
-			Float64Pref() : Pref(nil), mDefaultValue(0.0) {}
-			Float64Pref(OSStringType keyString, Float64 defaultValue = 0.0) :
-				Pref(keyString), mDefaultValue(defaultValue)
-				{}
+	// Float32Pref
+	public:
+		struct Float32Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								Float32Pref(OSStringType keyString, Float32 defaultValue = 0.0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				Float32			getDefaultValue() const
+									{ return mDefaultValue; }
 
 			// Properties
-			Float64	mDefaultValue;		// 64.0
+			private:
+				OSStringType	mKeyString;
+				Float32			mDefaultValue;
 		};
 
-		struct SInt32Pref : public Pref {
-			// Lifecycle methods
-			SInt32Pref() : Pref(nil), mDefaultValue(0) {}
-			SInt32Pref(OSStringType keyString, SInt32 defaultValue = 0) :
-				Pref(keyString), mDefaultValue(defaultValue)
-				{}
+	// Float64Pref
+	public:
+		struct Float64Pref {
+								// Lifecycle methods
+								Float64Pref(OSStringType keyString, Float64 defaultValue = 0.0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				Float64			getDefaultValue() const
+									{ return mDefaultValue; }
 
 			// Properties
-			SInt32	mDefaultValue;		// 32
+			private:
+				OSStringType	mKeyString;
+				Float64			mDefaultValue;
 		};
 
-		struct UInt32Pref : public Pref {
-			// Lifecycle methods
-			UInt32Pref() : Pref(nil), mDefaultValue(0) {}
-			UInt32Pref(OSStringType keyString, UInt32 defaultValue = 0) :
-				Pref(keyString), mDefaultValue(defaultValue)
-				{}
+	// SInt32Pref
+	public:
+		struct SInt32Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								SInt32Pref(OSStringType keyString, SInt32 defaultValue = 0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				SInt32			getDefaultValue() const
+									{ return mDefaultValue; }
 
 			// Properties
-			UInt32	mDefaultValue;		// 32
+			private:
+				OSStringType	mKeyString;
+				SInt32			mDefaultValue;
 		};
 
-		struct UInt64Pref : public Pref {
-			// Lifecycle methods
-			UInt64Pref() : Pref(nil), mDefaultValue(0) {}
-			UInt64Pref(OSStringType keyString, UInt32 defaultValue = 0) :
-				Pref(keyString), mDefaultValue(defaultValue)
-				{}
+	// UInt32Pref
+	public:
+		struct UInt32Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								UInt32Pref(OSStringType keyString, UInt32 defaultValue = 0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				UInt32			getDefaultValue() const
+									{ return mDefaultValue; }
 
 			// Properties
-			UInt64	mDefaultValue;		// 32
+			private:
+				OSStringType	mKeyString;
+				UInt32			mDefaultValue;
 		};
 
-		struct UniversalTimeIntervalPref : public Pref {
-			// Lifecycle methods
-			UniversalTimeIntervalPref() : Pref(nil), mDefaultValue(0.0) {}
-			UniversalTimeIntervalPref(OSStringType keyString, Float64 defaultValue = 0.0) :
-				Pref(keyString), mDefaultValue(defaultValue)
-				{}
+	// UInt64Pref
+	public:
+		struct UInt64Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								UInt64Pref(OSStringType keyString, UInt32 defaultValue = 0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				UInt64			getDefaultValue() const
+									{ return mDefaultValue; }
 
 			// Properties
-			UniversalTimeInterval	mDefaultValue;		// 64.0
+			private:
+				OSStringType	mKeyString;
+				UInt64			mDefaultValue;
 		};
 
+	// UniversalTimeIntervalPref
+	public:
+		struct UniversalTimeIntervalPref {
+			// Methods
+			public:
+										// Lifecycle methods
+										UniversalTimeIntervalPref(OSStringType keyString,
+												UniversalTimeInterval defaultValue = 0.0) :
+											mKeyString(keyString), mDefaultValue(defaultValue)
+											{}
+
+										// Instance methods
+				OSStringType			getKeyString() const
+											{ return mKeyString; }
+				UniversalTimeInterval	getDefaultValue() const
+											{ return mDefaultValue; }
+
+			// Properties
+			private:
+				OSStringType			mKeyString;
+				UniversalTimeInterval	mDefaultValue;
+		};
+
+	// Reference
+	public:
+		struct Reference {
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
-		struct Reference {
-			// Lifecycle methods
-			Reference(const CString& applicationID) : mApplicationID(applicationID) {}
-			Reference(const Reference& other) : mApplicationID(other.mApplicationID) {}
+			// Methods
+			public:
+									// Lifecycle methods
+									Reference(CFStringRef applicationIDStringRef) :
+										mApplicationIDStringRef(applicationIDStringRef)
+										{}
+									Reference(const Reference& other) :
+										mApplicationIDStringRef(other.mApplicationIDStringRef)
+										{}
+
+									// Instance methods
+				const	CFStringRef	getApplicationIDStringRef() const
+										{ return mApplicationIDStringRef; }
 
 			// Properties
-			CString	mApplicationID;
-		};
+			private:
+				CFStringRef	mApplicationIDStringRef;
 #else
-		struct Reference {
-			// Lifecycle methods
-			Reference(UInt32 dummy) {}
-			Reference(const Reference& other) {}
-		};
+			// Methods
+			public:
+				// Lifecycle methods
+				Reference(UInt32 dummy) {}
+				Reference(const Reference& other) {}
 #endif
+		};
 
 	// Classes
 	private:
@@ -131,31 +247,35 @@ class CPreferences {
 									// Instance methods
 		bool						hasValue(const Pref& pref);
 
+		bool						getBool(const BoolPref& boolPref);
 		OV<TArray<CData> >			getDataArray(const Pref& pref);
 		OV<TArray<CDictionary> >	getDictionaryArray(const Pref& pref);
 		OV<TNumberArray<OSType> >	getOSTypeArray(const Pref& pref);
 		OV<CData>					getData(const Pref& pref);
 		OV<CDictionary>				getDictionary(const Pref& pref);
-		CString						getString(const StringPref& pref);
-		Float32						getFloat32(const Float32Pref& pref);
-		Float64						getFloat64(const Float64Pref& pref);
-		SInt32						getSInt32(const SInt32Pref& pref);
-		UInt32						getUInt32(const UInt32Pref& pref);
-		UInt64						getUInt64(const UInt64Pref& pref);
-		UniversalTimeInterval		getUniversalTimeInterval(const UniversalTimeIntervalPref& pref);
+		CString						getString(const StringPref& stringPref);
+		Float32						getFloat32(const Float32Pref& float32Pref);
+		Float64						getFloat64(const Float64Pref& float64Pref);
+		SInt32						getSInt32(const SInt32Pref& sInt32Pref);
+		UInt32						getUInt32(const UInt32Pref& uInt32Pref);
+		UInt64						getUInt64(const UInt64Pref& uInt64Pref);
+		UniversalTimeInterval		getUniversalTimeInterval(
+											const UniversalTimeIntervalPref& universalTimeIntervalPref);
 
+		void						set(const BoolPref& boolPref, bool value);
 		void						set(const Pref& pref, const TArray<CData>& array);
 		void						set(const Pref& pref, const TArray<CDictionary>& array);
 		void						set(const Pref& pref, const TNumberArray<OSType>& array);
 		void						set(const Pref& pref, const CData& data);
 		void						set(const Pref& pref, const CDictionary& dictionary);
-		void						set(const StringPref& pref, const CString& string);
-		void						set(const Float32Pref& pref, Float32 value);
-		void						set(const Float64Pref& pref, Float64 value);
-		void						set(const SInt32Pref& pref, SInt32 value);
-		void						set(const UInt32Pref& pref, UInt32 value);
-		void						set(const UInt64Pref& pref, UInt64 value);
-		void						set(const UniversalTimeIntervalPref& pref, UniversalTimeInterval value);
+		void						set(const StringPref& stringPref, const CString& string);
+		void						set(const Float32Pref& float32Pref, Float32 value);
+		void						set(const Float64Pref& float64Pref, Float64 value);
+		void						set(const SInt32Pref& sInt32Pref, SInt32 value);
+		void						set(const UInt32Pref& uInt32Pref, UInt32 value);
+		void						set(const UInt64Pref& uInt64Pref, UInt64 value);
+		void						set(const UniversalTimeIntervalPref& universalTimeIntervalPref,
+											UniversalTimeInterval value);
 
 		void						remove(const Pref& pref);
 		
@@ -166,14 +286,8 @@ class CPreferences {
 
 	// Properties
 	public:
-		static			CPreferences	mDefault;
-
-		static	const	Pref			mNoPref;
-		static	const	StringPref		mNoStringPref;
-		static	const	Float32Pref		mNoFloat32Pref;
-		static	const	Float64Pref		mNoFloat64Pref;
-		static	const	UInt32Pref		mNoUInt32Pref;
+		static	CPreferences	mDefault;
 
 	private:
-						Internals*		mInternals;
+				Internals*		mInternals;
 };
