@@ -41,7 +41,8 @@ class CCoreGraphicsRenderer : public C2DRenderer {
 
 		S2DSizeF32	getTextSize(const CString& string, const Font& font) const;
 		void		strokeText(const CString& string, const Font& font, const S2DPointF32& point,
-							TextPositioning textPositioning = kTextPositioningCenter) const;
+							TextPositioning textPositioning = kTextPositioningCenter,
+							const OV<Float32>& outlineWidth = OV<Float32>()) const;
 
 	// Properties
 	private:

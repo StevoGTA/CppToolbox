@@ -298,6 +298,10 @@ template <typename T> struct OR {
 					{ return mReference != nil; }
 		T&		getReference() const
 					{ AssertFailIf(mReference == nil); return *mReference; }
+		void	setReference(T& reference)
+					{ mReference = &reference; }
+		void	removeReference()
+					{ mReference = nil; }
 
 		T&		operator*() const
 					{ AssertFailIf(mReference == nil); return *mReference; }

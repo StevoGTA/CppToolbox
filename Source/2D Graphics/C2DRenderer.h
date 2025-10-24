@@ -86,7 +86,8 @@ class C2DRenderer {
 
 		virtual	S2DSizeF32	getTextSize(const CString& string, const Font& font) const = 0;
 		virtual	void		strokeText(const CString& string, const Font& font, const S2DPointF32& point,
-									TextPositioning textPositioning = kTextPositioningCenter) const = 0;
+									TextPositioning textPositioning = kTextPositioningCenter,
+									const OV<Float32>& outlineWidth = OV<Float32>()) const = 0;
 
 	protected:
 							// Lifecycle methods
