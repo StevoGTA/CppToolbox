@@ -707,7 +707,7 @@ struct CQuickTimeMediaFile::Internals {
 	const	SQTsttsAtomPayload&			mSTTSAtomPayload;
 	const	SQTstscAtomPayload&			mSTSCAtomPayload;
 	const	SQTstszAtomPayload&			mSTSZAtomPayload;
-	const	OR<SQTstcoAtomPayload>&		mSTCOAtomPayload;
+	const	OR<SQTstcoAtomPayload>		mSTCOAtomPayload;
 //	const	OR<SQTco64AtomPayload>&		mCO64AtomPayload;
 };
 

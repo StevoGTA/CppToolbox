@@ -160,15 +160,14 @@ template <typename T> struct OI {
 						// Store
 						mInstance = instance;
 
-						// Finish setup
+						// Check if have instance
 						if (mInstance != nil) {
 							// Have instance
 							mReferenceCount = new UInt32;
 							*mReferenceCount = 1;
-						} else {
-							// Don't have instance
-							Delete(mReferenceCount);
-						}
+						} else
+							// No instance
+							mReferenceCount = nil;
 					}
 
 		T&		operator*() const
@@ -189,8 +188,9 @@ template <typename T> struct OI {
 						mInstance = other.mInstance;
 						mReferenceCount = other.mReferenceCount;
 
-						// Note additional reference if have reference
+						// Check if have instance
 						if (mInstance != nil)
+							// Have instance
 							(*mReferenceCount)++;
 
 						return *this;

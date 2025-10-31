@@ -85,9 +85,6 @@ class CGPURenderObject2D : public CGPURenderObject {
 										const RenderInfo& renderInfo =
 												RenderInfo()) const;
 
-								// Deprecated methods
-		const	TArray<CGPUTextureReference>&	getGPUTextureReferences() const;
-
 	// Properties
 	private:
 		Internals*	mInternals;

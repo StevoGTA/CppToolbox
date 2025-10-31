@@ -18,11 +18,13 @@ class CProcWorkItem : public CWorkItem {
 	// Methods
 	public:
 				// Lifecycle methods
-				CProcWorkItem(Proc proc, void* userData) : CWorkItem(), mProc(proc), mUserData(userData) {}
+				CProcWorkItem(Proc proc, void* userData, const OV<CString>& reference) :
+					CWorkItem(CUUID().getBase64String(), reference),
+							mProc(proc), mUserData(userData) {}
 
 				// CWorkItem methods
 		void	perform(const I<CWorkItem>& workItem)
-					{ mProc(workItem, mUserData); }
+					{ mProc(workItem, mUserData); } 
 
 	// Properties
 	private:
@@ -52,10 +54,13 @@ class CWorkItemQueue::WorkItemInfo : public CEquatable {
 					{ return this == &other; }
 
 				// Instance methods
-		void	transitionTo(CWorkItem::State state)
-					{ mWorkItem->transitionTo(state); }
 		void	perform()
 					{ mWorkItem->perform(mWorkItem); }
+
+		void	transitionTo(CWorkItem::State state)
+					{ mWorkItem->transitionTo(state); }
+		void	cancel()
+					{ mWorkItem->cancel(); }
 
 		// Properties
 				Internals&			mOwningWorkItemQueueInternals;
@@ -184,7 +189,7 @@ class CWorkItemQueue::Internals {
 												if (isMatchProc(*iterator, userData))
 													// Transition to cancelled.  We do not remove from the array as
 													//	by definition, this work item is in progress.
-													iterator->transitionTo(CWorkItem::kStateCancelled);
+													iterator->cancel();
 											}
 
 											// Process idle work item infos
@@ -195,7 +200,7 @@ class CWorkItemQueue::Internals {
 												// Check for match
 												if (isMatchProc(workItemInfo, userData)) {
 													// Transition to cancelled
-													workItemInfo.transitionTo(CWorkItem::kStateCancelled);
+													workItemInfo.cancel();
 
 													// Remove
 													mIdleWorkItemInfos.removeAtIndex(i - 1);
@@ -543,11 +548,12 @@ void CWorkItemQueue::add(const I<CWorkItem>& workItem, CWorkItem::Priority prior
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CWorkItem> CWorkItemQueue::add(CWorkItem::Proc proc, void* userData, CWorkItem::Priority priority)
+I<CWorkItem> CWorkItemQueue::add(CWorkItem::Proc proc, void* userData, const OV<CString>& reference,
+		CWorkItem::Priority priority)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	I<CWorkItem>	workItem(new CProcWorkItem(proc, userData));
+	I<CWorkItem>	workItem(new CProcWorkItem(proc, userData, reference));
 
 	// Add
 	add(workItem, priority);

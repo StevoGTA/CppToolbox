@@ -15,7 +15,7 @@ class CWorkItem::Internals {
 				CWorkItem::CancelledProc cancelledProc, void* userData) :
 			mID(id), mReference(reference), mCompletedProc(completedProc), mCancelledProc(cancelledProc),
 					mUserData(userData),
-					mState(CWorkItem::kStateWaiting)
+					mIsCancelled(false), mState(CWorkItem::kStateWaiting)
 			{}
 
  		CString						mID;
@@ -24,6 +24,7 @@ class CWorkItem::Internals {
  		CWorkItem::CancelledProc	mCancelledProc;
  		void*						mUserData;
 
+		bool						mIsCancelled;
 		CWorkItem::State			mState;
 		CLock						mStateLock;
 };
@@ -73,6 +74,49 @@ CWorkItem::State CWorkItem::getState() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+bool CWorkItem::isWaiting() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Determine value
+	mInternals->mStateLock.lock();
+	bool	isWaiting = !mInternals->mIsCancelled && (mInternals->mState == kStateWaiting);
+	mInternals->mStateLock.unlock();
+
+	return isWaiting;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CWorkItem::isActive() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Determine value
+	mInternals->mStateLock.lock();
+	bool	isWaiting = !mInternals->mIsCancelled && (mInternals->mState == kStateActive);
+	mInternals->mStateLock.unlock();
+
+	return isWaiting;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CWorkItem::isCompleted() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Determine value
+	mInternals->mStateLock.lock();
+	bool	isWaiting = !mInternals->mIsCancelled && (mInternals->mState == kStateCompleted);
+	mInternals->mStateLock.unlock();
+
+	return isWaiting;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+bool CWorkItem::isCancelled() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mIsCancelled;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CWorkItem::transitionTo(State state)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -102,17 +146,15 @@ void CWorkItem::transitionTo(State state)
 					completed();
 				break;
 
-			case kStateCancelled:
-				// Cancelled
-				if (mInternals->mCancelledProc != nil)
-					// Call proc
-					mInternals->mCancelledProc(*this, mInternals->mUserData);
-				else
-					// Call subclass
-					cancelled();
-				break;
-
 			default:
 				break;
 		}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CWorkItem::cancel()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Update
+	mInternals->mIsCancelled = true;
 }
