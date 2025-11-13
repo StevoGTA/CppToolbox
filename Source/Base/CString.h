@@ -343,7 +343,9 @@ class CString : public CHashable {
 													ContainsOptions containsOptions = kContainsOptionsDefault) const;
 						bool				equals(const CString& other,
 													ContainsOptions containsOptions = kContainsOptionsDefault) const;
+
 						bool				containsOnly(CharacterSet characterSet) const;
+						CString				filteredUsing(CharacterSet characterSet) const;
 
 						void				toPascal(UInt8 buffer[], UInt8 bufferByteCount) const;
 

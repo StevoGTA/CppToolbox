@@ -8,6 +8,7 @@
 #include "SError.h"
 #include "TBuffer.h"
 
+#include <iterator>
 #include <vector>
 
 #undef Delete
@@ -811,7 +812,7 @@ bool CString::containsOnly(CharacterSet characterSet) const
 
 	case kCharacterSetWhitespace:
 		// Whitespace
-		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch) { return (ch == L' ') || (ch == L'\t'); });
+		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch){ return (ch == L' ') || (ch == L'\t'); });
 
 	case kCharacterSetWhitespaceAndNewline:
 		// Whitespace and newline
@@ -823,7 +824,7 @@ bool CString::containsOnly(CharacterSet characterSet) const
 
 	case kCharacterSetFloatingPoint:
 		// Floating Point
-		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch) { return ::isdigit(ch) || (ch == L'.'); });
+		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch){ return ::isdigit(ch) || (ch == L'.'); });
 
 	case kCharacterSetLetter:
 		// Letter
@@ -850,6 +851,70 @@ bool CString::containsOnly(CharacterSet characterSet) const
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CString CString::filteredUsing(CharacterSet characterSet) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CString	string;
+
+	// Check character set
+	switch (characterSet) {
+		case kCharacterSetControl:
+			// Control
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::iscntrl);
+			break;
+
+		case kCharacterSetWhitespace:
+			// Whitespace
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString),
+					[](TCHAR ch){ return (ch == L' ') || (ch == L'\t'); });
+			break;
+
+		case kCharacterSetWhitespaceAndNewline:
+			// Whitespace and newline
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::isspace);
+			break;
+
+		case kCharacterSetDecimalDigit:
+			// Decimal digit
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::isdigit);
+			break;
+
+		case kCharacterSetFloatingPoint:
+			// Floating Point
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString),
+					[](TCHAR ch){ return ::isdigit(ch) || (ch == L'.'); });
+			break;
+
+		case kCharacterSetLetter:
+			// Letter
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::isalpha);
+			break;
+
+		case kCharacterSetLowercaseLetter:
+			// Lowercase letter
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::islower);
+			break;
+
+		case kCharacterSetUppercaseLetter:
+			// Uppercase letter
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::isupper);
+			break;
+
+		case kCharacterSetAlphaNumeric:
+			// Alpha numeric
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::isalnum);
+			break;
+
+		case kCharacterSetPunctuation:
+			// Puncuation
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::ispunct);
+			break;
+	}
+
+	return string;
+}
 // MARK: Convenience operators
 
 //----------------------------------------------------------------------------------------------------------------------
