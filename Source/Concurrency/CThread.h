@@ -16,7 +16,7 @@ class CThread {
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		typedef	void*	Ref;
 #elif defined(TARGET_OS_WINDOWS)
-		typedef	DWORD	Ref;
+		typedef	unsigned long	Ref;
 #endif
 
 	// Procs:

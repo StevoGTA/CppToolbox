@@ -601,21 +601,19 @@ CGPUTextureManager::~CGPUTextureManager()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitmap, const OV<CString>& reference,
+CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitmap, const CString& reference,
 		ReferenceOptions referenceOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if we have a reference
-	if (reference.hasValue())
-		// Look for file in already loaded render material images
-		for (TIteratorD<CGPUTextureReference> iterator =
-						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-				iterator.hasValue(); iterator.advance()) {
-			// Check this one
-			if (iterator->getReference() == reference)
-				// Found existing
-				return *iterator;
-		}
+	// Look for file in already loaded render material images
+	for (TIteratorD<CGPUTextureReference> iterator =
+					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
+			iterator.hasValue(); iterator.advance()) {
+		// Check this one
+		if (iterator->getReference() == reference)
+			// Found existing
+			return *iterator;
+	}
 
 	// Create new
 	CGPULoadableTextureReferenceInternals*	gpuLoadableTextureReferenceInternals =
@@ -633,20 +631,18 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 
 //----------------------------------------------------------------------------------------------------------------------
 CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitmap,
-		CGPUTexture::DataFormat gpuTextureDataFormat, const OV<CString>& reference, ReferenceOptions referenceOptions)
+		CGPUTexture::DataFormat gpuTextureDataFormat, const CString& reference, ReferenceOptions referenceOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if we have a reference
-	if (reference.hasValue())
-		// Look for file in already loaded render material images
-		for (TIteratorD<CGPUTextureReference> iterator =
-						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-				iterator.hasValue(); iterator.advance()) {
-			// Check this one
-			if (iterator->getReference() == reference)
-				// Found existing
-				return *iterator;
-		}
+	// Look for file in already loaded render material images
+	for (TIteratorD<CGPUTextureReference> iterator =
+					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
+			iterator.hasValue(); iterator.advance()) {
+		// Check this one
+		if (iterator->getReference() == reference)
+			// Found existing
+			return *iterator;
+	}
 
 	// Create new
 	CGPULoadableTextureReferenceInternals*	gpuLoadableTextureReferenceInternals =
@@ -664,20 +660,18 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 
 //----------------------------------------------------------------------------------------------------------------------
 CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
-		const OV<CString>& reference, ReferenceOptions referenceOptions)
+		const CString& reference, ReferenceOptions referenceOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if we have a reference
-	if (reference.hasValue())
-		// Look for file in already loaded render material images
-		for (TIteratorD<CGPUTextureReference> iterator =
-						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-				iterator.hasValue(); iterator.advance()) {
-			// Check this one
-			if (iterator->getReference() == reference)
-				// Found existing
-				return *iterator;
-		}
+	// Look for file in already loaded render material images
+	for (TIteratorD<CGPUTextureReference> iterator =
+					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
+			iterator.hasValue(); iterator.advance()) {
+		// Check this one
+		if (iterator->getReference() == reference)
+			// Found existing
+			return *iterator;
+	}
 
 	// Create new
 	CGPULoadableTextureReferenceInternals*	gpuLoadableTextureReferenceInternals =
@@ -695,20 +689,18 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CDataSource
 
 //----------------------------------------------------------------------------------------------------------------------
 CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
-		CGPUTexture::DataFormat gpuTextureDataFormat, const OV<CString>& reference, ReferenceOptions referenceOptions)
+		CGPUTexture::DataFormat gpuTextureDataFormat, const CString& reference, ReferenceOptions referenceOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if we have a reference
-	if (reference.hasValue())
-		// Look for file in already loaded render material images
-		for (TIteratorD<CGPUTextureReference> iterator =
-						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-				iterator.hasValue(); iterator.advance()) {
-			// Check this one
-			if (iterator->getReference() == reference)
-				// Found existing
-				return *iterator;
-		}
+	// Look for file in already loaded render material images
+	for (TIteratorD<CGPUTextureReference> iterator =
+					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
+			iterator.hasValue(); iterator.advance()) {
+		// Check this one
+		if (iterator->getReference() == reference)
+			// Found existing
+			return *iterator;
+	}
 
 	// Create new
 	CGPULoadableTextureReferenceInternals*	gpuLoadableTextureReferenceInternals =
@@ -728,20 +720,18 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CDataSource
 
 //----------------------------------------------------------------------------------------------------------------------
 CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CDataSource>& dataSource, S2DSizeU16 dimensions,
-		CGPUTexture::DataFormat gpuTextureDataFormat, const OV<CString>& reference, ReferenceOptions referenceOptions)
+		CGPUTexture::DataFormat gpuTextureDataFormat, const CString& reference, ReferenceOptions referenceOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check if we have a reference
-	if (reference.hasValue())
-		// Look for file in already loaded render material images
-		for (TIteratorD<CGPUTextureReference> iterator =
-						mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-				iterator.hasValue(); iterator.advance()) {
-			// Check this one
-			if (iterator->getReference() == reference)
-				// Found existing
-				return *iterator;
-		}
+	// Look for file in already loaded render material images
+	for (TIteratorD<CGPUTextureReference> iterator =
+					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
+			iterator.hasValue(); iterator.advance()) {
+		// Check this one
+		if (iterator->getReference() == reference)
+			// Found existing
+			return *iterator;
+	}
 
 	// Create new
 	CGPULoadableTextureReferenceInternals*	gpuLoadableTextureReferenceInternals =

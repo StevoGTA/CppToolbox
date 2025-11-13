@@ -69,21 +69,19 @@ class CGPUTextureManager {
 								~CGPUTextureManager();
 
 								// Instance methods
-		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, const OV<CString>& reference = OV<CString>(),
+		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, const CString& reference,
 										ReferenceOptions referenceOptions = kReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat,
-										const OV<CString>& reference = OV<CString>(),
+										const CString& reference,
 										ReferenceOptions referenceOptions = kReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
-										const OV<CString>& reference = OV<CString>(),
+										const CString& reference,
 										ReferenceOptions referenceOptions = kReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
-										CGPUTexture::DataFormat gpuTextureDataFormat,
-										const OV<CString>& reference = OV<CString>(),
+										CGPUTexture::DataFormat gpuTextureDataFormat, const CString& reference,
 										ReferenceOptions referenceOptions = kReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, S2DSizeU16 dimensions,
-										CGPUTexture::DataFormat gpuTextureDataFormat,
-										const OV<CString>& reference = OV<CString>(),
+										CGPUTexture::DataFormat gpuTextureDataFormat, const CString& reference,
 										ReferenceOptions referenceOptions = kReferenceOptionsNone);
 		CGPUTextureReference	gpuTextureReference(const I<CGPUTexture>& gpuTexture);
 
