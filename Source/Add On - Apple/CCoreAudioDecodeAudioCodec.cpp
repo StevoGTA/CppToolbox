@@ -142,7 +142,7 @@ OV<SError> CCoreAudioDecodeAudioCodec::setup(const SAudio::ProcessingFormat& aud
 			!audioProcessingFormat.getIsInterleaved());
 
 	OSStatus	status = ::AudioConverterNew(&sourceABSD, &destinationASBD, &mInternals->mAudioConverterRef);
-	ReturnErrorIfFailed(status, OSSTR("AudioConverterNew"));
+	ReturnErrorIfFailed(status, CString(OSSTR("AudioConverterNew")));
 
 	// Set magic cookie
 	OV<SError>	error = setMagicCookie(mInternals->mAudioConverterRef);

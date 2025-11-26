@@ -98,7 +98,7 @@ OV<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 {
 	// Startup Media Foundation
 	HRESULT	result = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
-	ReturnErrorIfFailed(result, OSSTR("MFStartup()"));
+	ReturnErrorIfFailed(result, CString(OSSTR("MFStartup()")));
 
 	// Store
 	mInternals->mInputAudioProcessingFormat.setValue(audioProcessingFormat);
@@ -106,26 +106,26 @@ OV<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 	// Setup transform
 	IUnknown*	unknown;
 	result = CoCreateInstance(CLSID_CResamplerMediaObject, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&unknown));
-	ReturnErrorIfFailed(result, OSSTR("CoCreateInstance"));
+	ReturnErrorIfFailed(result, CString(OSSTR("CoCreateInstance")));
 
 	// Query Transform
 	IMFTransform*	transform;
 	result = unknown->QueryInterface(IID_PPV_ARGS(&transform));
 	OCI<IMFTransform>	audioResampler(transform);
-	ReturnErrorIfFailed(result, OSSTR("Querying Resampler Transform"));
+	ReturnErrorIfFailed(result, CString(OSSTR("Querying Resampler Transform")));
 
 	// Query Resampler Property Store
 	IPropertyStore*	propertyStore;
 	result = unknown->QueryInterface(IID_PPV_ARGS(&propertyStore));
 	OCI<IPropertyStore>	resamplerPropertyStore(propertyStore);
-	ReturnErrorIfFailed(result, OSSTR("Querying Resampler Property Store"));
+	ReturnErrorIfFailed(result, CString(OSSTR("Querying Resampler Property Store")));
 
 	// Configure
 	PROPVARIANT	pv;
 	pv.vt = VT_I4;
 	pv.intVal = 60;
 	result = propertyStore->SetValue(MFPKEY_WMRESAMP_FILTERQUALITY, pv);
-	ReturnErrorIfFailed(result, OSSTR("Setting Filter Quality"));
+	ReturnErrorIfFailed(result, CString(OSSTR("Setting Filter Quality")));
 
 	// Setup input media type
 	OV<SError>	error = CMediaFoundationServices::setInputType(transform, audioProcessingFormat);
@@ -140,7 +140,7 @@ OV<SError> CMediaFoundationResampler::connectInput(const I<CAudioProcessor>& aud
 
 	// Begin streaming!
 	result = mInternals->mResamplerTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-	ReturnErrorIfFailed(result, OSSTR("ProcessMessage to begin streaming"));
+	ReturnErrorIfFailed(result, CString(OSSTR("ProcessMessage to begin streaming")));
 
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
 }

@@ -41,7 +41,7 @@ SError	SErrorFromWindowsGetLastError();
 					if (FAILED(result)) {												\
 						SError	_error = SErrorFromHRESULT(result);						\
 						CLogServices::logError(											\
-								CString(method) + CString(OSSTR(" returned ")) +		\
+								method + CString(OSSTR(" returned ")) +					\
 										_error.getDefaultLocalizedDescription());		\
 																						\
 						return OV<SError>(_error);										\
@@ -52,7 +52,7 @@ SError	SErrorFromWindowsGetLastError();
 					if (FAILED(result)) {												\
 						SError	_error = SErrorFromHRESULT(result);						\
 						CLogServices::logError(											\
-								CString(method) + CString(OSSTR(" returned ")) +		\
+								method + CString(OSSTR(" returned ")) +					\
 										_error.getDefaultLocalizedDescription());		\
 																						\
 						return value;													\

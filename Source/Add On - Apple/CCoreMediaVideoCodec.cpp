@@ -143,7 +143,7 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 						&mInternals->mDecompressionSessionRef);
 		::CFRelease(destinationImageBufferAttributes);
 		::CFRelease(videoDecoderSpecification);
-		LogOSStatusIfFailedAndReturnValue(status, OSSTR("VTDecompressionSessionCreate"),
+		LogOSStatusIfFailedAndReturnValue(status, CString(OSSTR("VTDecompressionSessionCreate")),
 				TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 	}
 
@@ -162,7 +162,7 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 	status =
 			::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) data.getBytePtr(), data.getByteCount(),
 					kCFAllocatorNull, nil, 0, data.getByteCount(), 0, &blockBufferRef);
-	LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMBlockBufferCreateWithMemoryBlock"),
+	LogOSStatusIfFailedAndReturnValue(status, CString(OSSTR("CMBlockBufferCreateWithMemoryBlock")),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
 	size_t				sampleSize = data.getByteCount();
@@ -171,7 +171,7 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 			::CMSampleBufferCreate(kCFAllocatorDefault, blockBufferRef, true, nil, nil,
 					mInternals->mFormatDescriptionRef, 1, 1, &*sampleTimingInfo, 1, &sampleSize, &sampleBufferRef);
 	::CFRelease(blockBufferRef);
-	LogOSStatusIfFailedAndReturnValue(status, OSSTR("CMSampleBufferCreate"),
+	LogOSStatusIfFailedAndReturnValue(status, CString(OSSTR("CMSampleBufferCreate")),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
 	// Decode frame
@@ -181,7 +181,7 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 			::VTDecompressionSessionDecodeFrame(mInternals->mDecompressionSessionRef, sampleBufferRef, 0,
 					&imageBufferRef, &decodeInfoFlags);
 	::CFRelease(sampleBufferRef);
-	LogOSStatusIfFailedAndReturnValue(status, OSSTR("VTDecompressionSessionDecodeFrame"),
+	LogOSStatusIfFailedAndReturnValue(status, CString(OSSTR("VTDecompressionSessionDecodeFrame")),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
 	// Prepare return info

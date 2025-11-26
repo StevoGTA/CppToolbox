@@ -462,7 +462,7 @@ TVResult<CMFormatDescriptionRef> CH264DecodeVideoCodec::composeFormatDescription
 			::CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, spsCount + ppsCount,
 					parameterSetPointers, parameterSetSizes, getNALUHeaderLengthSize(),
 					&formatDescriptionRef);
-	ReturnValueIfFailed(status, OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets"),
+	ReturnValueIfFailed(status, CString(OSSTR("CMVideoFormatDescriptionCreateFromH264ParameterSets")),
 			TVResult<CMFormatDescriptionRef>(SErrorFromOSStatus(status)));
 
 	// Finish setup
@@ -542,10 +542,10 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 	ReturnValueIfResultError(sample, sample);
 
 	HRESULT	result = sample.getInstance()->SetSampleTime(times->mPresentationTime * 10000 / videoCodec.getTimeScale());
-	ReturnValueIfFailed(result, OSSTR("SetSampleTime"), TCIResult<IMFSample>(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, CString(OSSTR("SetSampleTime")), TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	result = sample.getInstance()->SetSampleDuration(dataInfo->getDuration());
-	ReturnValueIfFailed(result, OSSTR("SetSampleDuration"), TCIResult<IMFSample>(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, CString(OSSTR("SetSampleDuration")), TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	return sample;
 }

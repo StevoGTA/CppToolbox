@@ -158,7 +158,7 @@ OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 
 	// Create Audio Converter
 	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
-	LogOSStatusIfFailed(status, OSSTR("AudioConverterNew"));
+	LogOSStatusIfFailed(status, CString(OSSTR("AudioConverterNew")));
 
 	if (audioProcessingFormat.getSampleRate() != mOutputAudioProcessingFormat->getSampleRate()) {
 		// Highest quality SRC
@@ -166,7 +166,7 @@ OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 		status =
 				::AudioConverterSetProperty(mInternals->mAudioConverterRef, kAudioConverterSampleRateConverterQuality,
 						sizeof(UInt32), &value);
-		LogOSStatusIfFailed(status, OSSTR("AudioConverterSetProperty"));
+		LogOSStatusIfFailed(status, CString(OSSTR("AudioConverterSetProperty")));
 	}
 
 	// Create Audio Buffer List

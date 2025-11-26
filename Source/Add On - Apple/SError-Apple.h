@@ -22,19 +22,19 @@
 #define LogOSStatusIfFailed(status, method)															\
 				if (status != noErr)																\
 					CLogServices::logError(															\
-							CString(method) + CString(OSSTR(" returned ")) +						\
+							method + CString(OSSTR(" returned ")) +									\
 									SErrorFromOSStatus(status).getDefaultLocalizedDescription());
 #define LogOSStatusIfFailedAndReturn(status, method)												\
 				if (status != noErr) {																\
 					CLogServices::logError(															\
-							CString(method) + CString(OSSTR(" returned ")) +						\
+							method + CString(OSSTR(" returned ")) +									\
 									SErrorFromOSStatus(status).getDefaultLocalizedDescription());	\
 					return;																			\
 				}
 #define LogOSStatusIfFailedAndReturnValue(status, method, value)									\
 				if (status != noErr) {																\
 					CLogServices::logError(															\
-							CString(method) + CString(OSSTR(" returned ")) +						\
+							method + CString(OSSTR(" returned ")) +									\
 									SErrorFromOSStatus(status).getDefaultLocalizedDescription());	\
 					return value;																	\
 				}
@@ -43,7 +43,7 @@
 				if (status != noErr) {												\
 					SError	_error = SErrorFromOSStatus(status);					\
 					CLogServices::logError(											\
-							CString(method) + CString(OSSTR(" returned ")) +		\
+							method + CString(OSSTR(" returned ")) +					\
 									_error.getDefaultLocalizedDescription());		\
 																					\
 					return OV<SError>(_error);										\
@@ -52,7 +52,7 @@
 				if (status != noErr) {												\
 					SError	_error = SErrorFromOSStatus(status);					\
 					CLogServices::logError(											\
-							CString(method) + CString(OSSTR(" returned ")) +		\
+							method + CString(OSSTR(" returned ")) +					\
 									_error.getDefaultLocalizedDescription());		\
 																					\
 					return value;													\

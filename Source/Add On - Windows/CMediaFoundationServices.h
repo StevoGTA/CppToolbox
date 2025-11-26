@@ -65,7 +65,8 @@ class CMediaFoundationServices {
 												IMFMediaBuffer*	mediaBuffer;
 												HRESULT			result =
 																		mInputSample->GetBufferByIndex(0, &mediaBuffer);
-												ReturnValueIfFailed(result, OSSTR("GetBufferByIndex for inputSample"),
+												ReturnValueIfFailed(result,
+														CString(OSSTR("GetBufferByIndex for inputSample")),
 														TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 												// Call proc

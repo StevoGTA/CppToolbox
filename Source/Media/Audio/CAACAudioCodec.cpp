@@ -255,7 +255,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 																							.getByteCount(),
 																			mInfo.getMagicCookie().getBytePtr());
 												ReturnErrorIfFailed(status,
-														OSSTR("AudioConverterSetProperty for magic cookie"));
+														CString(OSSTR("AudioConverterSetProperty for magic cookie")));
 
 												return OV<SError>();
 											}
