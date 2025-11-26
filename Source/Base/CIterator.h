@@ -30,16 +30,19 @@ class CIterator {
 
 	// Methods
 	public:
-						// Instance methods
-		virtual	bool	hasValue() const = 0;
-		virtual	UInt32	getIndex() const = 0;
-				bool	isFirstValue() const
-							{ return getIndex() == 0; }
-		virtual	bool	advance() = 0;
+							// Instance methods
+		virtual	bool		hasValue() const = 0;
+		virtual	UInt32		getIndex() const = 0;
+				bool		isFirstValue() const
+								{ return getIndex() == 0; }
+		virtual	bool		advance() = 0;
+
+		virtual	AdvanceProc	getAdvanceProc() const = 0;
+		virtual	Info&		getInfo() const = 0;
 
 	protected:
-						// Lifecycle methods
-		virtual			~CIterator() {}
+							// Lifecycle methods
+		virtual				~CIterator() {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -48,38 +51,47 @@ class CIterator {
 template <typename T> class TIteratorS : public CIterator {
 	// Methods
 	public:
-				// Lifecycle methods
-				TIteratorS(T* firstValue, AdvanceProc advanceProc, Info& info) :
-					mAdvanceProc(advanceProc), mInfo(info), mCurrentValue(firstValue), mIndex(0)
-					{}
-				TIteratorS(const TIteratorS* other) :
-					mAdvanceProc(other->mAdvanceProc), mInfo(*other->mInfo.copy()), mCurrentValue(other->mCurrentValue),
-							mIndex(other->mIndex)
-					{}
-				~TIteratorS()
-					{ Info* info = &mInfo; Delete(info); }
+					// Lifecycle methods
+					TIteratorS(T* firstValue, AdvanceProc advanceProc, Info& info) :
+						mAdvanceProc(advanceProc), mInfo(info), mCurrentValue(firstValue), mIndex(0)
+						{}
+					TIteratorS(const TIteratorS& other) :
+						mAdvanceProc(other.mAdvanceProc), mInfo(*other.mInfo.copy()),
+								mCurrentValue(other.mCurrentValue), mIndex(other.mIndex)
+						{}
+					~TIteratorS()
+						{ Info* info = &mInfo; Delete(info); }
 
-				// Instance methods
-		bool	hasValue() const
-					{ return mCurrentValue != nil; }
-		UInt32	getIndex() const
-					{ return mIndex; }
-		bool	advance()
-					{
-						// Advance
-						mCurrentValue = (T*) mAdvanceProc(mInfo);
-						mIndex++;
+					// Instance methods
+		bool		hasValue() const
+						{ return mCurrentValue != nil; }
+		UInt32		getIndex() const
+						{ return mIndex; }
+		bool		advance()
+						{
+							// Advance
+							mCurrentValue = (T*) mAdvanceProc(mInfo);
+							mIndex++;
 
-						return mCurrentValue != nil;
-					}
+							return mCurrentValue != nil;
+						}
 
-		T&		getValue() const
-					{ return *mCurrentValue; }
+		T&			getValue() const
+						{ return *mCurrentValue; }
+		T*			getRawValue() const
+						{ return mCurrentValue; }
 
-		T&		operator*() const
-					{ return *mCurrentValue; }
-		T*		operator->() const
-					{ return mCurrentValue; }
+		T&			operator*() const
+						{ return *mCurrentValue; }
+		T*			operator->() const
+						{ return mCurrentValue; }
+
+	protected:
+					// CIterator methods
+		AdvanceProc	getAdvanceProc() const
+						{ return mAdvanceProc; }
+		Info&		getInfo() const
+						{ return mInfo; }
 
 	// Properties
 	private:
@@ -95,38 +107,42 @@ template <typename T> class TIteratorS : public CIterator {
 template <typename T> class TIteratorD : public CIterator {
 	// Methods
 	public:
-				// Lifecycle methods
-				TIteratorD(T** firstValue, AdvanceProc advanceProc, Info& info) :
-					mAdvanceProc(advanceProc), mInfo(info), mCurrentValue(firstValue), mIndex(0)
-					{}
-				TIteratorD(const TIteratorD* other) :
-					mAdvanceProc(other->mAdvanceProc), mInfo(*other->mInfo.copy()),
-							mCurrentValue(other->mCurrentValue), mIndex(other->mIndex)
-					{}
-				~TIteratorD()
-					{ Info* info = &mInfo; Delete(info); }
+					// Lifecycle methods
+					TIteratorD(const CIterator& other, T** currentValue) :
+						mAdvanceProc(other.getAdvanceProc()), mInfo(*other.getInfo().copy()),
+								mCurrentValue(currentValue), mIndex(other.getIndex())
+						{}
+					~TIteratorD()
+						{ Info* info = &mInfo; Delete(info); }
 
-				// Instance methods
-		bool	hasValue() const
-					{ return mCurrentValue != nil; }
-		UInt32	getIndex() const
-					{ return mIndex; }
-		bool	advance()
-					{
-						// Advance
-						mCurrentValue = (T**) mAdvanceProc(mInfo);
-						mIndex++;
+					// Instance methods
+		bool		hasValue() const
+						{ return mCurrentValue != nil; }
+		UInt32		getIndex() const
+						{ return mIndex; }
+		bool		advance()
+						{
+							// Advance
+							mCurrentValue = (T**) mAdvanceProc(mInfo);
+							mIndex++;
 
-						return mCurrentValue != nil;
-					}
+							return mCurrentValue != nil;
+						}
 
-		T&		getValue() const
-					{ return **mCurrentValue; }
+		T&			getValue() const
+						{ return **mCurrentValue; }
 
-		T&		operator*() const
-					{ return **mCurrentValue; }
-		T*		operator->() const
-					{ return *mCurrentValue; }
+		T&			operator*() const
+						{ return **mCurrentValue; }
+		T*			operator->() const
+						{ return *mCurrentValue; }
+
+	protected:
+					// CIterator methods
+		AdvanceProc	getAdvanceProc() const
+						{ return mAdvanceProc; }
+		Info&		getInfo() const
+						{ return mInfo; }
 
 	// Properties
 	private:
@@ -142,37 +158,40 @@ template <typename T> class TIteratorD : public CIterator {
 template <typename K, typename T> class TIteratorM : public CIterator {
 	// Methods
 	public:
-				// Lifecycle methods
-				TIteratorM(K** firstRawValue, T (mapProc)(K** rawValue), AdvanceProc advanceProc, Info& info) :
-					mAdvanceProc(advanceProc), mInfo(info), mCurrentRawValue(firstRawValue), mMapProc(mapProc),
-							mIndex(0)
-					{}
-				TIteratorM(const TIteratorM* other, T (mapProc)(K** rawValue)) :
-					mAdvanceProc(other->mAdvanceProc), mInfo(*other->mInfo.copy()),
-							mCurrentRawValue(other->mCurrentRawValue), mMapProc(mapProc), mIndex(other->mIndex)
-					{}
-				~TIteratorM()
-					{ Info*	info = &mInfo; Delete(info); }
+					// Lifecycle methods
+					TIteratorM(const CIterator& other, K** currentRawValue, T (mapProc)(K** rawValue)) :
+						mAdvanceProc(other.getAdvanceProc()), mInfo(*other.getInfo().copy()),
+								mCurrentRawValue(currentRawValue), mMapProc(mapProc), mIndex(other.getIndex())
+						{}
+					~TIteratorM()
+						{ Info*	info = &mInfo; Delete(info); }
 
-				// Instance methods
-		bool	hasValue() const
-					{ return mCurrentRawValue != nil; }
-		UInt32	getIndex() const
-					{ return mIndex; }
-		bool	advance()
-					{
-						// Advance
-						mCurrentRawValue = (K**) mAdvanceProc(mInfo);
-						mIndex++;
+					// Instance methods
+		bool		hasValue() const
+						{ return mCurrentRawValue != nil; }
+		UInt32		getIndex() const
+						{ return mIndex; }
+		bool		advance()
+						{
+							// Advance
+							mCurrentRawValue = (K**) mAdvanceProc(mInfo);
+							mIndex++;
 
-						return mCurrentRawValue != nil;
-					}
+							return mCurrentRawValue != nil;
+						}
 
-		T		getValue() const
-					{ return mMapProc(mCurrentRawValue); }
+		T			getValue() const
+						{ return mMapProc(mCurrentRawValue); }
 
-		T		operator*() const
-					{ return mMapProc(mCurrentRawValue); }
+		T			operator*() const
+						{ return mMapProc(mCurrentRawValue); }
+
+	protected:
+					// CIterator methods
+		AdvanceProc	getAdvanceProc() const
+						{ return mAdvanceProc; }
+		Info&		getInfo() const
+						{ return mInfo; }
 
 	// Properties
 	private:

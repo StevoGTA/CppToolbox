@@ -159,10 +159,11 @@ template <typename T> class TNumberArray : public CArray {
 
 				TIteratorM<TNumber<T>, T>	getIterator() const
 												{
+													// Setup
 													TIteratorS<ItemRef> iterator = CArray::getIterator();
 
-													return TIteratorM<TNumber<T>, T>(
-															(TIteratorM<TNumber<T>, T>*) &iterator,
+													return TIteratorM<TNumber<T>, T>(iterator,
+															(TNumber<T>**) iterator.getRawValue(),
 															getValueForRawValue);
 												}
 
@@ -289,7 +290,7 @@ template <typename T> class TArray : public CArray {
 
 		TIteratorD<T>			getIterator() const
 									{ TIteratorS<ItemRef> iterator = CArray::getIterator();
-										return TIteratorD<T>((TIteratorD<T>*) &iterator); }
+											return TIteratorD<T>(iterator, (T**) iterator.getRawValue()); }
 
 								// Instance methods
 		T&						getAt(ItemIndex index) const

@@ -141,7 +141,7 @@ CGPURenderObject2D::~CGPURenderObject2D()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-S2DPointF32 CGPURenderObject2D::getAnchorPoint() const
+const S2DPointF32& CGPURenderObject2D::getAnchorPoint() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAnchorPoint;
@@ -155,7 +155,7 @@ void CGPURenderObject2D::setAnchorPoint(const S2DPointF32& anchorPoint)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-S2DPointF32 CGPURenderObject2D::getScreenPositionPoint() const
+const S2DPointF32& CGPURenderObject2D::getScreenPositionPoint() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mScreenPositionPoint;
@@ -197,7 +197,7 @@ void CGPURenderObject2D::setAlpha(Float32 alpha)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-S2DPointF32 CGPURenderObject2D::getScale() const
+const S2DPointF32& CGPURenderObject2D::getScale() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mScale;
@@ -226,13 +226,6 @@ void CGPURenderObject2D::finishLoading() const
 			iterator.hasValue(); iterator.advance())
 		// Finish loading
 		iterator->finishLoading();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-const TArray<CGPUTextureReference>& CGPURenderObject2D::getGPUTextureReferences() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mGPUTextureReferences;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

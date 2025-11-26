@@ -56,7 +56,7 @@ bool CPreferences::hasValue(const Pref& pref)
 {
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	return ApplicationData::Current->LocalSettings->Values->HasKey(ref new String(pref.mKeyString));
+	return ApplicationData::Current->LocalSettings->Values->HasKey(ref new String(pref.getKeyString()));
 #else
 	// C++/WinRT
 	return ApplicationData::Current().LocalSettings().Values().HasKey(hstring(pref.getKeyString()));
@@ -262,7 +262,7 @@ void CPreferences::set(const BoolPref& boolPref, bool value)
 	// Set
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(boolPref.getKeyString()),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateUInt32(value ? 1 : 0)));
 #else
 	// C++/WinRT
@@ -307,108 +307,109 @@ void CPreferences::set(const Pref& pref, const CDictionary& dictionary)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const StringPref& pref, const CString& string)
+void CPreferences::set(const StringPref& stringPref, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(stringPref.getKeyString()),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateString(ref new String(string.getOSString()))));
 #else
 	// C++/WinRT
-	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()),
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(stringPref.getKeyString()),
 			box_value(hstring(string.getOSString())));
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const Float32Pref& pref, Float32 value)
+void CPreferences::set(const Float32Pref& float32Pref, Float32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(float32Pref.getKeyString()),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateSingle(value)));
 #else
 	// C++/WinRT
-	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()), box_value(value));
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(float32Pref.getKeyString()), box_value(value));
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const Float64Pref& pref, Float64 value)
+void CPreferences::set(const Float64Pref& float64Pref, Float64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(float64Pref.getKeyString()),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateDouble(value)));
 #else
 	// C++/WinRT
-	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()), box_value(value));
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(float64Pref.getKeyString()), box_value(value));
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const SInt32Pref& pref, SInt32 value)
+void CPreferences::set(const SInt32Pref& sInt32Pref, SInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(sInt32Pref.getKeyString()),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateInt32(value)));
 #else
 	// C++/WinRT
-	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()), box_value(value));
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(sInt32Pref.getKeyString()), box_value(value));
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const UInt32Pref& pref, UInt32 value)
+void CPreferences::set(const UInt32Pref& uInt32Pref, UInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(uInt32Pref.getKeyString()),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateUInt32(value)));
 #else
 	// C++/WinRT
-	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()), box_value(value));
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(uInt32Pref.getKeyString()), box_value(value));
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const UInt64Pref& pref, UInt64 value)
+void CPreferences::set(const UInt64Pref& uInt64Pref, UInt64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(uInt64Pref.getKeyString()),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateUInt64(value)));
 #else
 	// C++/WinRT
-	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()), box_value(value));
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(uInt64Pref.getKeyString()), box_value(value));
 #endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CPreferences::set(const UniversalTimeIntervalPref& pref, UniversalTimeInterval value)
+void CPreferences::set(const UniversalTimeIntervalPref& universalTimeIntervalPref, UniversalTimeInterval value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.mKeyString),
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(universalTimeIntervalPref.getKeyString()),
 			dynamic_cast<PropertyValue^>(PropertyValue::CreateDouble(value)));
 #else
 	// C++/WinRT
-	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()), box_value(value));
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(universalTimeIntervalPref.getKeyString()),
+			box_value(value));
 #endif
 }
 
@@ -419,7 +420,7 @@ void CPreferences::remove(const Pref& pref)
 	// Remove
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	ApplicationData::Current->LocalSettings->Values->Remove(ref new String(pref.mKeyString));
+	ApplicationData::Current->LocalSettings->Values->Remove(ref new String(pref.getKeyString()));
 #else
 	// C++/WinRT
 	ApplicationData::Current().LocalSettings().Values().Remove(hstring(pref.getKeyString()));

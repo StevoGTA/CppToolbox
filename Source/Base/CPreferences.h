@@ -246,6 +246,22 @@ class CPreferences {
 
 									// Instance methods
 		bool						hasValue(const Pref& pref);
+		bool						hasValue(const BoolPref& boolPref)
+										{ return hasValue(Pref(boolPref.getKeyString())); }
+		bool						hasValue(const StringPref& stringPref)
+										{ return hasValue(Pref(stringPref.getKeyString())); }
+		bool						hasValue(const Float32Pref& float32Pref)
+										{ return hasValue(Pref(float32Pref.getKeyString())); }
+		bool						hasValue(const Float64Pref& float64Pref)
+										{ return hasValue(Pref(float64Pref.getKeyString())); }
+		bool						hasValue(const SInt32Pref& sInt32Pref)
+										{ return hasValue(Pref(sInt32Pref.getKeyString())); }
+		bool						hasValue(const UInt32Pref& uInt32Pref)
+										{ return hasValue(Pref(uInt32Pref.getKeyString())); }
+		bool						hasValue(const UInt64Pref& uInt64Pref)
+										{ return hasValue(Pref(uInt64Pref.getKeyString())); }
+		bool						hasValue(const UniversalTimeIntervalPref& universalTimeIntervalPref)
+										{ return hasValue(Pref(universalTimeIntervalPref.getKeyString())); }
 
 		bool						getBool(const BoolPref& boolPref);
 		OV<TArray<CData> >			getDataArray(const Pref& pref);
@@ -278,7 +294,23 @@ class CPreferences {
 											UniversalTimeInterval value);
 
 		void						remove(const Pref& pref);
-		
+		void						remove(const BoolPref& boolPref)
+										{ remove(Pref(boolPref.getKeyString())); }
+		void						remove(const StringPref& stringPref)
+										{ remove(Pref(stringPref.getKeyString())); }
+		void						remove(const Float32Pref& float32Pref)
+										{ remove(Pref(float32Pref.getKeyString())); }
+		void						remove(const Float64Pref& float64Pref)
+										{ remove(Pref(float64Pref.getKeyString())); }
+		void						remove(const SInt32Pref& sInt32Pref)
+										{ remove(Pref(sInt32Pref.getKeyString())); }
+		void						remove(const UInt32Pref& uInt32Pref)
+										{ remove(Pref(uInt32Pref.getKeyString())); }
+		void						remove(const UInt64Pref& uInt64Pref)
+										{ remove(Pref(uInt64Pref.getKeyString())); }
+		void						remove(const UniversalTimeIntervalPref& universalTimeIntervalPref)
+										{ remove(Pref(universalTimeIntervalPref.getKeyString())); }
+
 		void						beginGroupSet();
 		void						endGroupSet();
 

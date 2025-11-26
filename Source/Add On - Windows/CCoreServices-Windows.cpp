@@ -86,6 +86,7 @@ UInt64 CCoreServices::getPhysicalMemoryByteCount()
 	if (sPhysicalMemoryByteCount == 0)
 		// Get info
 #ifdef __cplusplus_winrt
+		(void) sPhysicalMemoryByteCount;
 #else
 		sPhysicalMemoryByteCount =
 				SystemDiagnosticInfo::GetForCurrentSystem().MemoryUsage().GetReport().TotalPhysicalSizeInBytes();

@@ -108,7 +108,7 @@ template <typename T> class TSet : public CSet {
 											}
 						TIteratorS<T>	getIterator() const
 											{ TIteratorS<CHashable> iterator = CSet::getIterator();
-													return TIteratorS<T>((TIteratorS<T>*) &iterator); }
+													return *((TIteratorS<T>*) &iterator); }
 
 										// Class methods
 		static			bool			containsItem(const T& item, TSet<T>* set)

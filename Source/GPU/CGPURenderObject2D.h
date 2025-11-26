@@ -42,46 +42,48 @@ class CGPURenderObject2D : public CGPURenderObject {
 
 	// Methods
 	public:
-					// Lifecycle methods
-					CGPURenderObject2D(CGPU& gpu, const Item& item, const CGPUTextureReference& gpuTextureReference,
-							CGPUFragmentShader::Proc fragmentShaderProc = CGPUFragmentShader::getRGBAMultiTexture);
-					CGPURenderObject2D(CGPU& gpu, const Item& item,
-							const TArray<CGPUTextureReference>& gpuTextureReferences,
-							CGPUFragmentShader::Proc fragmentShaderProc = CGPUFragmentShader::getRGBAMultiTexture);
-					CGPURenderObject2D(CGPU& gpu, const TArray<Item>& items,
-							const TArray<CGPUTextureReference>& gpuTextureReferences,
-							CGPUFragmentShader::Proc fragmentShaderProc = CGPUFragmentShader::getRGBAMultiTexture);
-					CGPURenderObject2D(const CGPURenderObject2D& other);
-					~CGPURenderObject2D();
+								// Lifecycle methods
+								CGPURenderObject2D(CGPU& gpu, const Item& item,
+										const CGPUTextureReference& gpuTextureReference,
+										CGPUFragmentShader::Proc fragmentShaderProc =
+												CGPUFragmentShader::getRGBAMultiTexture);
+								CGPURenderObject2D(CGPU& gpu, const Item& item,
+										const TArray<CGPUTextureReference>& gpuTextureReferences,
+										CGPUFragmentShader::Proc fragmentShaderProc =
+												CGPUFragmentShader::getRGBAMultiTexture);
+								CGPURenderObject2D(CGPU& gpu, const TArray<Item>& items,
+										const TArray<CGPUTextureReference>& gpuTextureReferences,
+										CGPUFragmentShader::Proc fragmentShaderProc =
+												CGPUFragmentShader::getRGBAMultiTexture);
+								CGPURenderObject2D(const CGPURenderObject2D& other);
+								~CGPURenderObject2D();
 
-					// Instance methods
-		S2DPointF32	getAnchorPoint() const;
-		void		setAnchorPoint(const S2DPointF32& anchorPoint);
+								// Instance methods
+		const	S2DPointF32&	getAnchorPoint() const;
+				void			setAnchorPoint(const S2DPointF32& anchorPoint);
 
-		S2DPointF32	getScreenPositionPoint() const;
-		void		setScreenPositionPoint(const S2DPointF32& screenPositionPoint);
+		const	S2DPointF32&	getScreenPositionPoint() const;
+				void			setScreenPositionPoint(const S2DPointF32& screenPositionPoint);
 
-		Float32		getAngleAsRadians() const;
-		void		setAngleAsRadians(Float32 angleRadians);
-		Float32		getAngleAsDegrees() const
-						{ return T2DUtilities<Float32>::toDegrees(getAngleAsRadians()); }
-		void		setAngleAsDegrees(Float32 angleDegrees)
-						{ setAngleAsRadians(T2DUtilities<Float32>::toRadians(angleDegrees)); }
+				Float32			getAngleAsRadians() const;
+				void			setAngleAsRadians(Float32 angleRadians);
+				Float32			getAngleAsDegrees() const
+									{ return T2DUtilities<Float32>::toDegrees(getAngleAsRadians()); }
+				void			setAngleAsDegrees(Float32 angleDegrees)
+									{ setAngleAsRadians(T2DUtilities<Float32>::toRadians(angleDegrees)); }
 
-		Float32		getAlpha() const;
-		void		setAlpha(Float32 alpha);
+				Float32			getAlpha() const;
+				void			setAlpha(Float32 alpha);
 
-		S2DPointF32	getScale() const;
-		void		setScale(const S2DPointF32& scale);
-		void		setScale(Float32 scale);
+		const	S2DPointF32&	getScale() const;
+				void			setScale(const S2DPointF32& scale);
+				void			setScale(Float32 scale);
 
-		void		finishLoading() const;
+				void			finishLoading() const;
 
-		void		render(const Indexes& indexes,
-							const CGPURenderObject::RenderInfo& renderInfo = CGPURenderObject::RenderInfo()) const;
-
-					// Deprecated methods
-		const	TArray<CGPUTextureReference>&	getGPUTextureReferences() const;
+				void			render(const Indexes& indexes,
+										const RenderInfo& renderInfo =
+												RenderInfo()) const;
 
 	// Properties
 	private:

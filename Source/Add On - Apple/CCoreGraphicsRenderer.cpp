@@ -274,13 +274,13 @@ S2DSizeF32 CCoreGraphicsRenderer::getTextSize(const CString& string, const Font&
 
 //----------------------------------------------------------------------------------------------------------------------
 void CCoreGraphicsRenderer::strokeText(const CString& string, const Font& font, const S2DPointF32& point,
-		TextPositioning textPositioning) const
+		TextPositioning textPositioning, const OV<Float32>& outlineWidth) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CTFontRef			fontRef = ::CTFontCreateWithName(font.getName().getOSString(), font.getSize(), nil);
 
-	CColor::RGBValues	rgbValues = mInternals->mStrokeColor.getValue(CColor::mBlack).getRGBValues();
+	CColor::RGBValues	rgbValues = mInternals->mFillColor.getValue(CColor::mBlack).getRGBValues();
 	CGColorRef			colorRef =
 								::CGColorCreateGenericRGB(rgbValues.getRed(), rgbValues.getGreen(), rgbValues.getBlue(),
 										rgbValues.getAlpha());
@@ -311,58 +311,74 @@ void CCoreGraphicsRenderer::strokeText(const CString& string, const Font& font, 
 	::CFRelease(attributedStringRef);
 
 	CGRect	imageBounds = ::CTLineGetImageBounds(lineRef, mInternals->mContextRef);
+	CGPoint	textPosition;
 	switch (textPositioning) {
 		case kTextPositioningTowardTrailingAbove:
 			// Toward trailing, above
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX, point.mY);
+			textPosition = CGPointMake(point.mX + imageBounds.origin.x + outlineWidth.getValue(0.0), point.mY);
 			break;
 
 		case kTextPositioningTowardTrailingCenter:
 			// Toward trailing, center
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX, point.mY + imageBounds.size.height / 2.0);
+			textPosition = CGPointMake(point.mX + imageBounds.origin.x + outlineWidth.getValue(0.0),
+					point.mY + imageBounds.size.height / 2.0);
 			break;
 
 		case kTextPositioningTowardTrailingBelow:
 			// Toward trailing, below
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX, point.mY + imageBounds.size.height);
+			textPosition = CGPointMake(point.mX + imageBounds.origin.x + outlineWidth.getValue(0.0),
+					point.mY + imageBounds.size.height);
 			break;
 
 		case kTextPositioningCenterAbove:
 			// Center, above
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX - imageBounds.size.width / 2.0, point.mY);
+			textPosition = CGPointMake(point.mX - imageBounds.size.width / 2.0, point.mY);
 			break;
 
 		case kTextPositioningCenter:
 			// Center, center
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX - imageBounds.size.width / 2.0,
+			textPosition = CGPointMake(point.mX - imageBounds.size.width / 2.0,
 					point.mY + imageBounds.size.height / 2.0);
 			break;
 
 		case kTextPositioningCenterBelow:
 			// Center, below
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX - imageBounds.size.width / 2.0,
-					point.mY + imageBounds.size.height);
+			textPosition = CGPointMake(point.mX - imageBounds.size.width / 2.0, point.mY + imageBounds.size.height);
 			break;
 
 		case kTextPositioningTowardLeadingAbove:
 			// Toward leading, above
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX - imageBounds.size.width, point.mY);
+			textPosition = CGPointMake(point.mX - imageBounds.size.width, point.mY);
 			break;
 
 		case kTextPositioningTowardLeadingCenter:
 			// Toward leading, center
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX - imageBounds.size.width,
-					point.mY + imageBounds.size.height / 2.0);
+			textPosition = CGPointMake(point.mX - imageBounds.size.width, point.mY + imageBounds.size.height / 2.0);
 			break;
 
 		case kTextPositioningTowardLeadingBelow:
 			// Toward leading, below
-			::CGContextSetTextPosition(mInternals->mContextRef, point.mX - imageBounds.size.width,
-					point.mY + imageBounds.size.height);
+			textPosition = CGPointMake(point.mX - imageBounds.size.width, point.mY + imageBounds.size.height);
 			break;
 	}
 
 	// Draw
-	::CTLineDraw(lineRef, mInternals->mContextRef);
+	if (mInternals->mStrokeColor.hasValue() && (mInternals->mStrokeColor->getRGBValues().getAlpha() > 0.0) &&
+			outlineWidth.hasValue()) {
+		// Stroke
+		::CGContextSetTextPosition(mInternals->mContextRef, textPosition.x, textPosition.y);
+		::CGContextSetTextDrawingMode(mInternals->mContextRef, kCGTextStroke);
+		::CGContextSetLineWidth(mInternals->mContextRef, *outlineWidth);
+		::CTLineDraw(lineRef, mInternals->mContextRef);
+	}
+
+	if (mInternals->mFillColor.hasValue() && (mInternals->mFillColor->getRGBValues().getAlpha() > 0.0)) {
+		// Fill
+		::CGContextSetTextPosition(mInternals->mContextRef, textPosition.x, textPosition.y);
+		::CGContextSetTextDrawingMode(mInternals->mContextRef, kCGTextFill);
+		::CTLineDraw(lineRef, mInternals->mContextRef);
+	}
+
+	// Cleanup
 	::CFRelease(lineRef);
 }

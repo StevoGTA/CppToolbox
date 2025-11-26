@@ -160,15 +160,14 @@ template <typename T> struct OI {
 						// Store
 						mInstance = instance;
 
-						// Finish setup
+						// Check if have instance
 						if (mInstance != nil) {
 							// Have instance
 							mReferenceCount = new UInt32;
 							*mReferenceCount = 1;
-						} else {
-							// Don't have instance
-							Delete(mReferenceCount);
-						}
+						} else
+							// No instance
+							mReferenceCount = nil;
 					}
 
 		T&		operator*() const
@@ -189,8 +188,9 @@ template <typename T> struct OI {
 						mInstance = other.mInstance;
 						mReferenceCount = other.mReferenceCount;
 
-						// Note additional reference if have reference
+						// Check if have instance
 						if (mInstance != nil)
+							// Have instance
 							(*mReferenceCount)++;
 
 						return *this;
@@ -298,6 +298,10 @@ template <typename T> struct OR {
 					{ return mReference != nil; }
 		T&		getReference() const
 					{ AssertFailIf(mReference == nil); return *mReference; }
+		void	setReference(T& reference)
+					{ mReference = &reference; }
+		void	removeReference()
+					{ mReference = nil; }
 
 		T&		operator*() const
 					{ AssertFailIf(mReference == nil); return *mReference; }
@@ -344,7 +348,7 @@ template <typename T> struct OV {
 	public:
 				// Lifecycle methods
 				OV() : mValue(nil) {}
-				OV(T value) : mValue(new T(value)) {}
+				OV(const T& value) : mValue(new T(value)) {}
 				OV(const OV& other) : mValue((other.mValue != nil) ? new T(*other.mValue) : nil) {}
 				~OV() { Delete(mValue); }
 
@@ -353,9 +357,9 @@ template <typename T> struct OV {
 					{ return mValue != nil; }
 		T&		getValue() const
 					{ AssertFailIf(mValue == nil); return *mValue; }
-		T		getValue(T defaultValue) const
+		T		getValue(const T& defaultValue) const
 					{ return (mValue != nil) ? *mValue : defaultValue; }
-		void	setValue(T value)
+		void	setValue(const T& value)
 					{ if (mValue != nil) *mValue = value; else mValue = new T(value); }
 		void	setValue(const OV<T>& value)
 					{
@@ -378,7 +382,7 @@ template <typename T> struct OV {
 		T*		operator->() const
 					{ AssertFailIf(mValue == nil); return mValue; }
 
-		OV<T>&	operator=(T value)
+		OV<T>&	operator=(const T& value)
 					{ setValue(value); return *this; }
 		OV<T>&	operator=(const OV<T>& value)
 					{ setValue(value); return *this; }

@@ -22,7 +22,6 @@ class CWorkItem : public CHashable {
 			kStateWaiting,
 			kStateActive,
 			kStateCompleted,
-			kStateCancelled,
 		};
 
 	// Types
@@ -56,20 +55,17 @@ class CWorkItem : public CHashable {
 				const	OV<CString>&	getReference() const;
 
 						State			getState() const;
-						bool			isWaiting() const
-											{ return getState() == kStateWaiting; }
-						bool			isActive() const
-											{ return getState() == kStateActive; }
-						bool			isCompleted() const
-											{ return getState() == kStateCompleted; }
-						bool			isCancelled() const
-											{ return getState() == kStateCancelled; }
+						bool			isWaiting() const;
+						bool			isActive() const;
+						bool			isCompleted() const;
+						bool			isCancelled() const;
 
 										// Subclass methods
 		virtual			void			perform(const I<CWorkItem>& workItem) = 0;
 
 										// Internal-use only methods
 						void			transitionTo(State state);
+						void			cancel();
 
 	protected:
 										// Subclass methods
