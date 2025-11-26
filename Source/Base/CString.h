@@ -211,7 +211,7 @@ class CString : public CHashable {
 											CString();
 											CString(const CString& other);
 											CString(OSStringVar(initialString));
-											CString(const char chars[]);
+											CString(const char chars[], CString::Length maxLength, Encoding encoding);
 											CString(const void* ptr, UInt32 byteCount, Encoding encoding);
 											CString(const TBuffer<UTF32Char>& buffer);
 
@@ -381,6 +381,8 @@ class CString : public CHashable {
 	public:
 		static	const	CString		mEmpty;
 
+		static	const	CString		mBraceOpen;
+		static	const	CString		mBraceClose;
 		static	const	CString		mColon;
 		static	const	CString		mComma;
 		static	const	CString		mDoubleQuote;

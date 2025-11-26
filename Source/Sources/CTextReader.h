@@ -19,7 +19,8 @@ class CTextReader {
 	// Methods
 	public:
 							// Lifecycle methods
-							CTextReader(const I<CRandomAccessDataSource>& randomAccessDataSource);
+							CTextReader(const I<CRandomAccessDataSource>& randomAccessDataSource,
+									CString::Encoding stringEncoding);
 							CTextReader(const CTextReader& other);
 							~CTextReader();
 

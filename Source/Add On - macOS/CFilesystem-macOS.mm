@@ -15,19 +15,25 @@
 
 #define	CFilesystemReportErrorFileFolderX1(error, message, fileFolder)								\
 				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 				}
 #define	CFilesystemReportErrorFileFolderX1AndReturnError(error, message, fileFolder)				\
 				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 																									\
 					return OV<SError>(error);														\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
@@ -46,7 +52,8 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 {
 	// Parameter check
 	if (!file.doesExist())
-		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mDoesNotExistError, "checking source file", file);
+		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mDoesNotExistError,
+				CString(OSSTR("checking source file")), file);
 
 	// Setup
 	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
@@ -54,7 +61,8 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 		// Destination file already exists
 		OV<SError>	error = destinationFile.remove();
 		if (error.hasValue())
-			CFilesystemReportErrorFileFolderX1AndReturnError(*error, "removing destination file", destinationFile);
+			CFilesystemReportErrorFileFolderX1AndReturnError(*error, CString(OSSTR("removing destination file")),
+					destinationFile);
 	}
 
 	// Setup
@@ -75,7 +83,7 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 		return OV<SError>();
 	} else
 		// Error
-		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), "copying file", file,
+		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), CString(OSSTR("copying file")), file,
 				destinationFolder);
 }
 
@@ -115,8 +123,8 @@ OV<SError> CFilesystem::open(const TArray<CFile>& files, const Application& appl
 		return OV<SError>();
 	else
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(openURLsError), "opening files with",
-				application);
+		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(openURLsError),
+				CString(OSSTR("opening files with")), application);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -132,7 +140,8 @@ void CFilesystem::moveToTrash(const TArray<CFile>& files, TMArray<CFile>& outUnt
 		NSError*	error;
 		if (![[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error]) {
 			// Failed
-			CFilesystemReportErrorFileFolderX1(SErrorFromNSError(error), "moving file to trash", files[i]);
+			CFilesystemReportErrorFileFolderX1(SErrorFromNSError(error), CString(OSSTR("moving file to trash")),
+					files[i]);
 
 			// Add to out array
 			outUntrashedFiles += files[i];
@@ -157,7 +166,7 @@ OV<SError> CFilesystem::moveToTrash(const TArray<CFile>& files)
 		if (![[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error]) {
 			// Failed
 			sError = SErrorFromNSError(error);
-			CFilesystemReportErrorFileFolderX1(*sError, "moving file to trash", files[i]);
+			CFilesystemReportErrorFileFolderX1(*sError, CString(OSSTR("moving file to trash")), files[i]);
 		}
 	}
 
@@ -175,8 +184,8 @@ OV<SError> CFilesystem::revealInFinder(const CFolder& folder)
 	if ([[NSWorkspace sharedWorkspace] openURL:url])
 		return OV<SError>();
 	else
-		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mUnableToRevealInFinderError, "revealing in Finder",
-				folder);
+		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mUnableToRevealInFinderError,
+				CString(OSSTR("revealing in Finder")), folder);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

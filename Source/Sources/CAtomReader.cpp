@@ -46,7 +46,7 @@ TVResult<CAtomReader::Atom> CAtomReader::readAtom(const Atom& atom, SInt64 offse
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	OV<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos + offset);
+	OV<SError>	error = setPos(kPositionFromBeginning, atom.getPayloadPosition() + offset);
 	ReturnValueIfError(error, TVResult<CAtomReader::Atom>(*error));
 
 	return readAtom();
@@ -57,10 +57,10 @@ TVResult<CData> CAtomReader::readAtomPayload(const Atom& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	OV<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos);
+	OV<SError>	error = setPos(kPositionFromBeginning, atom.getPayloadPosition());
 	ReturnValueIfError(error, TVResult<CData>(*error));
 
-	return readData(atom.mPayloadByteCount);
+	return readData(atom.getPayloadByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ TVResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom() const
 		ReturnValueIfResultError(childAtom, TVResult<ContainerAtom>(childAtom.getError()));
 
 		// Check for terminator atom
-		if ((childAtom->mType == 0) || (childAtom->mPayloadByteCount == 0))
+		if ((childAtom->getType() == 0) || (childAtom->getPayloadByteCount() == 0))
 			// Done
 			break;
 
@@ -102,18 +102,18 @@ TVResult<CAtomReader::ContainerAtom> CAtomReader::readContainerAtom(const Atom& 
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Move to
-	OV<SError>	error = setPos(kPositionFromBeginning, atom.mPayloadPos);
+	OV<SError>	error = setPos(kPositionFromBeginning, atom.getPayloadPosition());
 	ReturnValueIfError(error, TVResult<ContainerAtom>(*error));
 
 	// Read Atoms
 	TNArray<Atom>	atoms;
-	while (getPos() < (atom.mPayloadPos + atom.mPayloadByteCount)) {
+	while (getPos() < (atom.getPayloadPosition() + atom.getPayloadByteCount())) {
 		// Get atom info
 		TVResult<Atom>	childAtom = readAtom();
 		ReturnValueIfResultError(childAtom, TVResult<ContainerAtom>(childAtom.getError()));
 
 		// Check for terminator atom
-		if ((childAtom->mType == 0) || (childAtom->mPayloadByteCount == 0))
+		if ((childAtom->getType() == 0) || (childAtom->getPayloadByteCount() == 0))
 			// Done
 			break;
 
@@ -140,9 +140,9 @@ OV<SError> CAtomReader::seekToNextAtom(const Atom& atom) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can set pos
-	if ((atom.mPayloadPos + atom.mPayloadByteCount) <= getByteCount())
+	if ((atom.getPayloadPosition() + atom.getPayloadByteCount()) <= getByteCount())
 		// Set pos
-		return setPos(kPositionFromBeginning, atom.mPayloadPos + atom.mPayloadByteCount);
+		return setPos(kPositionFromBeginning, atom.getPayloadPosition() + atom.getPayloadByteCount());
 	else
 		// Nope
 		return OV<SError>(SError::mEndOfData);

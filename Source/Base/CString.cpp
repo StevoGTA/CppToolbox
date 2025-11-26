@@ -26,6 +26,8 @@ const	UInt64	kDisplayAsGiBThreshHold = 1024 * 1024 * 1024;
 
 const	CString	CString::mEmpty;
 
+const	CString	CString::mBraceOpen(OSSTR("{"));
+const	CString	CString::mBraceClose(OSSTR("}"));
 const	CString	CString::mColon(OSSTR(":"));
 const	CString	CString::mComma(OSSTR(","));
 const	CString	CString::mDoubleQuote(OSSTR("\""));
@@ -59,14 +61,14 @@ const	CString	CString::mNewlineLinefeed(OSSTR("\n\r"));
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const char chars[])
+CString::CString(const char chars[], CString::Length maxLength, Encoding encoding)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Init
 	init();
 
 	// Finish setting up
-	*this = CString(chars, (UInt32) ::strlen(chars), kEncodingASCII);
+	*this = CString((const void*) chars, (UInt32) ::strnlen(chars, maxLength), encoding);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -525,7 +527,7 @@ void CString::toPascal(UInt8 buffer[], UInt8 bufferByteCount) const
 		return;
 
 	// Copy to buffer
-	buffer[0] = std::max<UInt8>((UInt8) data->getByteCount(), bufferByteCount - 1);
+	buffer[0] = std::min<UInt8>((UInt8) data->getByteCount(), bufferByteCount - 1);
 	::memcpy(&buffer[1], data->getBytePtr(), buffer[0]);
 }
 
@@ -597,7 +599,8 @@ CString CString::uppercase(const CString* string, void* userData)
 CString CString::fromPascal(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CString((const char*) data.getBytePtr() + 1, (UInt32) data.getByteCount() - 1, kEncodingMacRoman);
+	return CString((const void*) (((const UInt8*) data.getBytePtr()) + 1), (UInt32) data.getByteCount() - 1,
+			kEncodingMacRoman);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

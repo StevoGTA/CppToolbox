@@ -397,8 +397,7 @@ TVResult<CString> sReadString(const SInt8*& charPtr)
 			charPtr++;
 
 			return TVResult<CString>(
-					CString((char*) startCharPtr, (CString::Length) (charPtr - startCharPtr - 1),
-									CString::kEncodingUTF8)
+					CString((const void*) startCharPtr, (UInt32) (charPtr - startCharPtr - 1), CString::kEncodingUTF8)
 							.replacingSubStrings(CString(OSSTR("\\\"")), CString(OSSTR("\"")))
 							.replacingSubStrings(CString(OSSTR("\\/")), CString(OSSTR("/")))
 							.replacingSubStrings(CString(OSSTR("\\b")), CString(OSSTR("\b")))
@@ -532,14 +531,10 @@ TVResult<SValue> sReadValue(const SInt8*& charPtr)
 		// Skip whitespace
 		sSkipWhitespace(charPtr);
 
-		if (isFloat)
-			// Float
-			return TVResult<SValue>(
-					SValue(CString((char*) startCharPtr, (CString::Length) (charPtr - startCharPtr)).getFloat64()));
-		else
-			// Integer
-			return TVResult<SValue>(
-					SValue(CString((char*) startCharPtr, (CString::Length) (charPtr - startCharPtr)).getSInt64()));
+		// Compose string
+		CString	string((const void*) startCharPtr, (UInt32) (charPtr - startCharPtr), CString::kEncodingUTF8);
+
+		return TVResult<SValue>(isFloat ? SValue(string.getFloat64()) : SValue(string.getSInt64()));
 	}
 }
 

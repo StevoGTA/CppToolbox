@@ -11,12 +11,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFolderReportErrorAndReturnError(error, message)									\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
-																							\
-					return error;															\
+#define	CFolderReportErrorAndReturnError(error, message)											\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					logAsError(CString::mSpaceX4);													\
+																									\
+					return error;																	\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -35,7 +37,7 @@ OV<SError> CFolder::rename(const CString& string)
 	// Rename
 	if (::rename(*getFilesystemPath().getString().getUTF8String(), *filesystemPath.getString().getUTF8String()) != 0)
 		// Error
-		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "renaming");
+		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("renaming")));
 
 	// Update
 	update(filesystemPath);
@@ -62,7 +64,7 @@ OV<SError> CFolder::create(bool createIntermediateFolders) const
 	// Create
 	if (::mkdir(*getFilesystemPath().getString().getUTF8String(), 0777) != 0)
 		// Error
-		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "creating");
+		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("creating")));
 
 	return OV<SError>();
 }
@@ -73,7 +75,7 @@ OV<SError> CFolder::remove() const
 {
 	if (::unlink(*getFilesystemPath().getString().getUTF8String()) != 0)
 		// Error
-		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "removing");
+		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("removing")));
 
 	return OV<SError>();
 }

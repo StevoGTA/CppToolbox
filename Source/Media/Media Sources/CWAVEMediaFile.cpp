@@ -42,7 +42,7 @@ OI<CChunkReader> CWAVEMediaFile::createChunkReader(const I<CRandomAccessDataSour
 
 //----------------------------------------------------------------------------------------------------------------------
 I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
-		const CChunkReader::ChunkInfo& formatChunkInfo, const CChunkReader::ChunkInfo& dataChunkInfo,
+		const CChunkReader::ChunkInfo& formatChunkInfo, UInt64 dataChunkPosition, UInt64 dataChunkByteCount,
 		const TArray<CChunkReader::ChunkInfo>& otherChunkInfos, UInt32 options) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -68,11 +68,6 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 		return I<SMediaSource::ImportResult>(
 				new SMediaSource::ImportResult(
 						CCodec::unsupportedConfigurationError(CString(waveFormat.getFormatTag(), 4, true, true))));
-
-	// Process Data chunk
-	UInt64	dataChunkByteCount =
-					std::min<SInt64>(dataChunkInfo.getByteCount(),
-							chunkReader.getByteCount() - dataChunkInfo.getThisChunkPos());
 
 	// Process by format tag
 	OV<SAudio::Format>			audioFormat;
@@ -100,7 +95,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 				// Create
 				decodeAudioCodec =
 						CPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
-								dataChunkInfo.getThisChunkPos(), dataChunkByteCount,
+								dataChunkPosition, dataChunkByteCount,
 								(*audioFormat->getBits() > 8) ?
 										CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitUnsigned);
 			break;
@@ -121,7 +116,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 				// Create
 				decodeAudioCodec =
 						CPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
-								dataChunkInfo.getThisChunkPos(), dataChunkByteCount,
+								dataChunkPosition, dataChunkByteCount,
 								(*audioFormat->getBits() > 8) ?
 										CPCMAudioCodec::kFormatLittleEndian : CPCMAudioCodec::kFormat8BitUnsigned);
 			break;
@@ -137,7 +132,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 				// Create
 				decodeAudioCodec =
 						CDVIIntelIMAADPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
-								dataChunkInfo.getThisChunkPos(), dataChunkByteCount, waveFormat.getBlockAlign());
+								dataChunkPosition, dataChunkByteCount, waveFormat.getBlockAlign());
 			break;
 
 		default:
@@ -180,22 +175,25 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 			// Done reading chunks
 			break;
 
+		// Preprocess
+		CChunkReader::ChunkInfo	chunkInfoUse = waveMediaFile->preprocessChunk(*chunkInfo);
+
 		// Check if have payload
-		if (chunkInfo->getByteCount() > 0) {
+		if (chunkInfoUse.getByteCount() > 0) {
 			// Check chunk type
-			if (waveMediaFile->isFormatChunk(*chunkInfo))
+			if (waveMediaFile->isFormatChunk(chunkInfoUse))
 				// Format chunk
-				formatChunkInfo = OV<CChunkReader::ChunkInfo>(*chunkInfo);
-			else if (waveMediaFile->isDataChunk(*chunkInfo))
+				formatChunkInfo.setValue(chunkInfoUse);
+			else if (waveMediaFile->isDataChunk(chunkInfoUse))
 				// Data chunk
-				dataChunkInfo = OV<CChunkReader::ChunkInfo>(*chunkInfo);
+				dataChunkInfo.setValue(chunkInfoUse);
 			else
 				// Other chunk
-				otherChunkInfos += *chunkInfo;
+				otherChunkInfos += chunkInfoUse;
 		}
 
 		// Seek to next chunk
-		error = chunkReader->seekToNext(*chunkInfo);
+		error = chunkReader->seekToNext(chunkInfoUse);
 		if (error.hasValue())
 			// Done reading chunks
 			break;
@@ -206,6 +204,8 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 		// Did not get requisite format chunk or data chunk
 		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mInvalidWAVEFileError));
 
-	return waveMediaFile->import(*chunkReader, *formatChunkInfo, *dataChunkInfo, otherChunkInfos,
-			importSetup.getOptions());
+	return waveMediaFile->import(*chunkReader, *formatChunkInfo, dataChunkInfo->getThisChunkPos(),
+			std::min<SInt64>(dataChunkInfo->getByteCount(),
+					chunkReader->getByteCount() - dataChunkInfo->getThisChunkPos()),
+			otherChunkInfos, importSetup.getOptions());
 }

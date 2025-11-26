@@ -28,13 +28,15 @@ class CWAVEMediaFile {
 												// Instance methods
 		virtual	OI<CChunkReader>				createChunkReader(
 														const I<CRandomAccessDataSource>& randomAccessDataSource);
+		virtual	CChunkReader::ChunkInfo			preprocessChunk(const CChunkReader::ChunkInfo& chunkInfo) const
+													{ return chunkInfo; }
 		virtual	bool							isFormatChunk(const CChunkReader::ChunkInfo& chunkInfo) const
 													{ return chunkInfo.getID() == kWAVEFormatChunkID; }
 		virtual	bool							isDataChunk(const CChunkReader::ChunkInfo& chunkInfo) const
 													{ return chunkInfo.getID() == kWAVEDataChunkID; }
 		virtual	I<SMediaSource::ImportResult>	import(CChunkReader& chunkReader,
 														const CChunkReader::ChunkInfo& formatChunkInfo,
-														const CChunkReader::ChunkInfo& dataChunkInfo,
+														UInt64 dataChunkPosition, UInt64 dataChunkByteCount,
 														const TArray<CChunkReader::ChunkInfo>& otherChunkInfos,
 														UInt32 options) const;
 

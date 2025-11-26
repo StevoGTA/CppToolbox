@@ -76,18 +76,3 @@ class CFileWriter {
 	private:
 		Internals*	mInternals;
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAtomFileWriter
-
-class CAtomFileWriter : public CFileWriter {
-	// Methods
-	public:
-					// Lifecycle methods
-					CAtomFileWriter(const CFile& file);
-					CAtomFileWriter(const CAtomFileWriter& other);
-
-					// Instance methods
-		OV<SError>	writeAtom(OSType id, const CData& payload);
-		OV<SError>	writeAtomHeader(OSType id, UInt64 payloadByteCount, bool force64BitByteCount = false);
-};

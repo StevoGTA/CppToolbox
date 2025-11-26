@@ -236,7 +236,7 @@ void CCoreAudioAudioConverter::reset()
 	OSStatus	status = ::AudioConverterReset(mInternals->mAudioConverterRef);
 	if (status != noErr) {
 		// Log
-		LogError(SErrorFromOSStatus(status), "calling AudioConverterReset");
+		LogError(SErrorFromOSStatus(status), CString(OSSTR("calling AudioConverterReset")));
 
 		return;
 	}

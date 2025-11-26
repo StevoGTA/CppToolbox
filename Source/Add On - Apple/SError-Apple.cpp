@@ -14,7 +14,10 @@ SError SErrorFromOSStatus(OSStatus status)
 		// Negative integer
 		const	char*	string = ::GetMacOSStatusCommentString(status);
 
-		return SError(CString(OSSTR("OSStatus")), status, (string != nil) ? CString(string) : CString(status));
+		return SError(CString(OSSTR("OSStatus")), status,
+				(string != nil) ?
+						CString(string, (UInt32) ::strlen(string), CString::kEncodingMacRoman) :
+						CString(status));
 	} else {
 		// OSType
 		return SError(CString(OSSTR("OSStatus")), status, CString((UInt32) status, true, false));

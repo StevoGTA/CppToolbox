@@ -12,19 +12,23 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFileReportErrorAndReturnError(error, message)										\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
-																							\
-					return error;															\
+#define	CFileReportErrorAndReturnError(error, message)												\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					logAsError(CString::mSpaceX4);													\
+																									\
+					return error;																	\
 				}
-#define	CFileReportErrorAndReturnValue(error, message, value)								\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
-																							\
-					return value;															\
+#define	CFileReportErrorAndReturnValue(error, message, value)										\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					logAsError(CString::mSpaceX4);													\
+																									\
+					return value;																	\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,7 +65,7 @@ UniversalTime CFile::getCreationUniversalTime() const
 		return date.timeIntervalSinceReferenceDate;
 	else
 		// Didn't succeed
-		CFileReportErrorAndReturnValue(SErrorFromNSError(error), "getting creation date", 0.0);
+		CFileReportErrorAndReturnValue(SErrorFromNSError(error), CString(OSSTR("getting creation date")), 0.0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -79,7 +83,7 @@ UniversalTime CFile::getModificationUniversalTime() const
 		return date.timeIntervalSinceReferenceDate;
 	else
 		// Didn't succeed
-		CFileReportErrorAndReturnValue(SErrorFromNSError(error), "getting modification date", 0.0);
+		CFileReportErrorAndReturnValue(SErrorFromNSError(error), CString(OSSTR("getting modification date")), 0.0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -13,12 +13,16 @@
 
 #define	CFilesystemReportErrorFileFolderX1(error, message, fileFolder)								\
 				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
 					fileFolder.logAsError(CString::mSpaceX4);										\
 				}
 #define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
 				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
 					fileFolder1.logAsError(CString::mSpaceX4);										\
 					fileFolder2.logAsError(CString::mSpaceX4);										\
 																									\
@@ -66,7 +70,7 @@ TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
-		CFilesystemReportErrorFileFolderX1(sError, "getting folders and files", folder);
+		CFilesystemReportErrorFileFolderX1(sError, CString(OSSTR("getting folders and files")), folder);
 
 		return TVResult<SFoldersFiles>(sError);
 	}
@@ -107,7 +111,7 @@ TVResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool d
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
-		CFilesystemReportErrorFileFolderX1(sError, "getting folders", folder);
+		CFilesystemReportErrorFileFolderX1(sError, CString(OSSTR("getting folders")), folder);
 
 		return TVResult<TArray<CFolder> >(sError);
 	}
@@ -148,7 +152,7 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
-		CFilesystemReportErrorFileFolderX1(sError, "getting files", folder);
+		CFilesystemReportErrorFileFolderX1(sError, CString(OSSTR("getting files")), folder);
 
 		return TVResult<TArray<CFile> >(sError);
 	}
@@ -174,6 +178,6 @@ OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 		return OV<SError>();
 	else
 		// Error
-		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), "replacing file", sourceFile,
-				destinationFile);
+		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), CString(OSSTR("replacing file")),
+				sourceFile, destinationFile);
 }

@@ -17,9 +17,8 @@ template <typename T> struct T3DPoint {
 							{
 								// "{0.0,0.0,0.0}" => ",0.0,0.0,0.0}" => ["", "0.0", "0.0", "0.0}"]
 								TArray<CString>	array =
-														string.replacingSubStrings(CString(OSSTR("{")),
-																		CString(OSSTR(",")))
-																.components(CString(OSSTR(",")));
+														string.replacingSubStrings(CString::mBraceOpen, CString::mComma)
+																.components(CString::mComma);
 								if (array.getCount() >= 4) {
 									// Extract values
 									mX = array[1].getFloat32();
@@ -62,8 +61,8 @@ template <typename T> struct T3DPoint {
 
 	inline	CString		asString() const
 							{
-								return CString("{") + CString(mX, 5, 3) + CString(",") + CString(mY, 5, 3) +
-										CString(",") + CString(mZ, 5, 3) + CString("}");
+								return CString::mBraceOpen + CString(mX, 5, 3) + CString::mComma + CString(mY, 5, 3) +
+										CString::mComma + CString(mZ, 5, 3) + CString::mBraceClose;
 							}
 
 	// Properties

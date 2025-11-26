@@ -10,11 +10,13 @@
 #include <execinfo.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-void eAssertHandleProc(const SError& error, const char* file, const char* proc, UInt32 line)
+void eAssertHandleProc(const SError& error, const char* file, UInt32 fileByteCount, const char* func,
+		UInt32 funcByteCount, UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Log error
-	CLogServices::logError(error, CString::mEmpty, file, proc, line);
+	CLogServices::logError(error, CString::mEmpty, CString(file, fileByteCount, CString::kEncodingUTF8),
+			CString(func, funcByteCount, CString::kEncodingUTF8), line);
 
 	// Log stack trace
 	void*	array[256];
@@ -24,7 +26,7 @@ void eAssertHandleProc(const SError& error, const char* file, const char* proc, 
 		// Log symbols
 		for (int i = 0; i < size; i++)
 			// Log this symbol
-			CLogServices::logMessage(CString(symbols[i]));
+			CLogServices::logMessage(CString(symbols[i], 1024, CString::kEncodingUTF8));
 		::free(symbols);
 	} else
 		// Unable to log symbols

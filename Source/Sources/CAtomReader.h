@@ -13,23 +13,37 @@ class CAtomReader : public CByteReader {
 	// Atom
 	public:
 		struct Atom {
-			// Lifecycle methods
-			Atom(OSType type, UInt64 payloadPos, UInt64 payloadByteCount) :
-				mType(type), mPayloadPos(payloadPos), mPayloadByteCount(payloadByteCount)
-				{}
-			Atom(const Atom& other) :
-				mType(other.mType), mPayloadPos(other.mPayloadPos), mPayloadByteCount(other.mPayloadByteCount)
-				{}
+			// Methods
+			public:
+						// Lifecycle methods
+						Atom(OSType type, UInt64 payloadPosition, UInt64 payloadByteCount) :
+							mType(type), mPayloadPosition(payloadPosition), mPayloadByteCount(payloadByteCount)
+							{}
+						Atom(const Atom& other) :
+							mType(other.mType), mPayloadPosition(other.mPayloadPosition),
+									mPayloadByteCount(other.mPayloadByteCount)
+							{}
+
+						// Instance mehtods
+				OSType	getType() const
+							{ return mType; }
+				UInt64	getPayloadPosition() const
+							{ return mPayloadPosition; }
+				UInt64	getPayloadByteCount() const
+							{ return mPayloadByteCount; }
 
 			// Properties
-			OSType	mType;
-			UInt64	mPayloadPos;
-			UInt64	mPayloadByteCount;
+			private:
+				OSType	mType;
+				UInt64	mPayloadPosition;
+				UInt64	mPayloadByteCount;
 		};
 
 	// AtomGroup
 	public:
 		struct ContainerAtom {
+			// Methods
+			public:
 										// Lifecycle methods
 										ContainerAtom(const TArray<Atom>& atoms) : mAtoms(atoms) {}
 										ContainerAtom(const ContainerAtom& other) : mAtoms(other.mAtoms) {}
@@ -42,10 +56,11 @@ class CAtomReader : public CByteReader {
 
 										// Class methods
 			static	bool				compareType(const Atom& atom, OSType* type)
-											{ return atom.mType == *type; }
+											{ return atom.getType() == *type; }
 
 			// Properties
-			TArray<Atom>	mAtoms;
+			private:
+				TArray<Atom>	mAtoms;
 		};
 
 	// Methods

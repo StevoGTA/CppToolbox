@@ -732,10 +732,10 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 			break;
 
 		// Check atom type
-		if (atom->mType == MAKE_OSTYPE('m', 'o', 'o', 'v'))
+		if (atom->getType() == MAKE_OSTYPE('m', 'o', 'o', 'v'))
 			// moov
 			moovAtom = OV<CAtomReader::Atom>(*atom);
-		else if (atom->mType == MAKE_OSTYPE('m', 'd', 'a', 't'))
+		else if (atom->getType() == MAKE_OSTYPE('m', 'd', 'a', 't'))
 			// mdat
 			mdatAtom = OV<CAtomReader::Atom>(*atom);
 
@@ -759,7 +759,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 	for (TIteratorD<CAtomReader::Atom> moovIterator = moovContainerAtom->getIterator();
 			moovIterator.hasValue(); moovIterator.advance()) {
 		// Check type
-		if (moovIterator->mType == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
+		if (moovIterator->getType() == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
 			// Track
 			TVResult<CAtomReader::ContainerAtom>	trakContainerAtom = atomReader.readContainerAtom(*moovIterator);
 			if (trakContainerAtom.hasError()) continue;
@@ -907,7 +907,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 					// Error
 					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(*error));
 			}
-		} else if (moovIterator->mType == MAKE_OSTYPE('m', 'e', 't', 'a')) {
+		} else if (moovIterator->getType() == MAKE_OSTYPE('m', 'e', 't', 'a')) {
 			// Process file metadata
 			TVResult<CData>	metaAtomPayload = atomReader.readAtomPayload(*moovIterator);
 			if (metaAtomPayload.hasValue())
@@ -1172,7 +1172,7 @@ TVResult<SMediaSource::Tracks::VideoTrack> CQuickTimeMediaFile::composeVideoTrac
 				if (avcCAtom.hasValue())
 					// Seek to next atom
 					atomReader.seekToNextAtom(*avcCAtom);
-			} while (!avcCAtom.hasError() && (avcCAtom->mType != MAKE_OSTYPE('a', 'v', 'c', 'C')));
+			} while (!avcCAtom.hasError() && (avcCAtom->getType() != MAKE_OSTYPE('a', 'v', 'c', 'C')));
 			ReturnValueIfResultError(avcCAtom,
 					TVResult<SMediaSource::Tracks::VideoTrack>(
 							CCodec::unsupportedConfigurationError(CString(type, true))));

@@ -602,11 +602,11 @@ TVResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::Frame
 			// SEI
 		} else
 			// Unhandled
-			CLogServices::logMessage(CString("Unhandled NALU type: ") + CString(naluType));
+			CLogServices::logMessage(CString(OSSTR("Unhandled NALU type: ")) + CString(naluType));
 
 		// Next NALU
 		OV<SError>	error = bitReader.setPos(CBitReader::kPositionFromBeginning, pos + *size);
-		LogIfErrorAndReturnValue(error, "reading next NALU", TVResult<Times>(*error));
+		LogIfErrorAndReturnValue(error, CString(OSSTR("reading next NALU")), TVResult<Times>(*error));
 	}
 
 	// Handle results

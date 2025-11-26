@@ -104,14 +104,14 @@ void CLogServices::logDebugMessage(const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CLogServices::logWarning(const CString& warning, const CString& when, const char* file, const char* proc,
+void CLogServices::logWarning(const CString& warning, const CString& when, const CString& file, const CString& func,
 		UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logWarning(*CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - warning ")) +
+	logWarning(*CFilesystemPath(file).getLastComponent() + CString(OSSTR(" - warning ")) +
 			CString(OSSTR("\"")) + warning + CString(OSSTR("\"")) +
 			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
-			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +
+			CString(OSSTR(", in ")) + func + CString(OSSTR("()")) +
 			((line != 0) ? CString(OSSTR(", line: ")) + CString(line) : CString::mEmpty));
 }
 
@@ -145,13 +145,13 @@ void CLogServices::logWarning(const CString& string)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CLogServices::logError(const CString& error, const CString& when, const char* file, const char* proc, UInt32 line)
+void CLogServices::logError(const CString& error, const CString& when, const CString& file, const CString& func, UInt32 line)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	logError(*CFilesystemPath(CString(file)).getLastComponent() + CString(OSSTR(" - error ")) +
+	logError(*CFilesystemPath(file).getLastComponent() + CString(OSSTR(" - error ")) +
 			CString(OSSTR("\"")) + error + CString(OSSTR("\"")) +
 			(!when.isEmpty() ? CString(OSSTR(" when ")) + when : CString::mEmpty) +
-			CString(OSSTR(", in ")) + CString(proc) + CString(OSSTR("()")) +
+			CString(OSSTR(", in ")) + func + CString(OSSTR("()")) +
 			((line != 0) ? CString(OSSTR(", line: ")) + CString(line) : CString::mEmpty));
 }
 

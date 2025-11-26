@@ -11,19 +11,23 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFileReportErrorAndReturnError(error, message)										\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
-																							\
-					return error;															\
+#define	CFileReportErrorAndReturnError(error, message)												\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					logAsError(CString::mSpaceX4);													\
+																									\
+					return error;																	\
 				}
-#define	CFileReportErrorAndReturnValue(error, message, value)								\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
-																							\
-					return value;															\
+#define	CFileReportErrorAndReturnValue(error, message, value)										\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					logAsError(CString::mSpaceX4);													\
+																									\
+					return value;																	\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -47,7 +51,7 @@ OV<SError> CFile::rename(const CString& string)
 		return OV<SError>();
 	} else
 		// Error
-		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "renaming file");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("renaming file")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,7 +65,7 @@ UInt64 CFile::getByteCount() const
 		return statInfo.st_size;
 	else
 		// Error
-		CFileReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), "getting byte count", 0);
+		CFileReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), CString(OSSTR("getting byte count")), 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,7 +78,7 @@ OV<SError> CFile::remove() const
 		return OV<SError>();
 	else
 		// Error
-		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "removing file");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("removing file")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -102,13 +106,14 @@ OV<SError> CFile::setLocked(bool lockFile) const
 	struct	stat	statInfo;
 	if (::stat(*getFilesystemPath().getString().getUTF8String(), &statInfo) != 0)
 		// Error
-		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "getting flags when setting locked");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno),
+				CString(OSSTR("getting flags when setting locked")));
 
 	// Update flags
 	statInfo.st_flags = lockFile ? (statInfo.st_flags | UF_IMMUTABLE) : (statInfo.st_flags & ~UF_IMMUTABLE);
 	if (::chflags(*getFilesystemPath().getString().getUTF8String(), statInfo.st_flags) != 0)
 		// Error
-		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting locked");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting locked")));
 
 	return OV<SError>();
 }
@@ -134,6 +139,6 @@ OV<SError> CFile::setPermissions(UInt16 permissions) const
 		return OV<SError>();
 	else
 		// Error
-		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting permissions");
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting permissions")));
 }
 #endif

@@ -104,12 +104,12 @@ void CThread::start()
 	pthread_attr_t	attr;
 	result = ::pthread_attr_init(&attr);
 	if (result != 0)
-		LogError(SErrorFromPOSIXerror(result), "initing pthread attrs");
+		LogError(SErrorFromPOSIXerror(result), CString(OSSTR("initing pthread attrs")));
 	AssertFailIf(result != 0);
 
 	result = ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	if (result != 0) {
-		LogError(SErrorFromPOSIXerror(result), "setting pthread detached state");
+		LogError(SErrorFromPOSIXerror(result), CString(OSSTR("setting pthread detached state")));
 		::pthread_attr_destroy(&attr);
 	}
 
@@ -117,7 +117,7 @@ void CThread::start()
 	result = ::pthread_create(&mInternals->mPThread, &attr, (void* (*)(void*)) Internals::threadProc, mInternals);
 	::pthread_attr_destroy(&attr);
 	if (result != 0)
-		LogError(SErrorFromPOSIXerror(result), "creating pthread");
+		LogError(SErrorFromPOSIXerror(result), CString(OSSTR("creating pthread")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -346,7 +346,9 @@ TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 	// Establish setjmp return context
 	if (setjmp(jpegErrorInfo.mSetjmpBuffer)) {
 		// If we get here, the JPEG code has signaled an error.
-		SError	error(sErrorDomain, -1, CString(jpegErrorInfo.mErrorMessage));
+		SError	error(sErrorDomain, -1,
+						CString(jpegErrorInfo.mErrorMessage, sizeof(jpegErrorInfo.mErrorMessage),
+								CString::kEncodingASCII));
 		jpeg_destroy_decompress(&jpegDecompressInfo);
 
 		return TVResult<CBitmap>(error);

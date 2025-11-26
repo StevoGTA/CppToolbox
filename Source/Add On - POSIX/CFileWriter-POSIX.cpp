@@ -10,19 +10,23 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFileWriterReportErrorAndReturnError(error, message)								\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					mInternals->mFile.logAsError(CString::mSpaceX4);						\
-																							\
-					return error;															\
+#define	CFileWriterReportErrorAndReturnError(error, message)										\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					mInternals->mFile.logAsError(CString::mSpaceX4);								\
+																									\
+					return error;																	\
 				}
-#define	CFileWriterReportErrorAndReturnValue(error, message, value)							\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					mInternals->mFile.logAsError(CString::mSpaceX4);						\
-																							\
-					return value;															\
+#define	CFileWriterReportErrorAndReturnValue(error, message, value)									\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					mInternals->mFile.logAsError(CString::mSpaceX4);								\
+																									\
+					return value;																	\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -151,7 +155,7 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 				return OV<SError>();
 			else
 				// Unable to open
-				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening buffered");
+				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("opening buffered")));
 		} else
 			// Already open, reset to beginning of file
 			return setPosition(kPositionFromBeginning, 0);
@@ -174,7 +178,8 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 				return OV<SError>();
 			else
 				// Unable to open
-				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "opening non-buffered");
+				CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno),
+						CString(OSSTR("opening non-buffered")));
 		} else
 			// Already open, reset to beginning of file
 			return setPosition(kPositionFromBeginning, 0);
@@ -196,9 +201,8 @@ TVResult<CData> CFileWriter::read(CData::ByteCount byteCount) const
 		if (bytesRead != (ssize_t) byteCount) {
 			// Error
 			SError	error = SErrorFromPOSIXerror(errno);
-			CLogServices::logError(error, "reading data buffered", __FILE__, __func__, __LINE__);
-
-			return TVResult<CData>(error);
+			CFileWriterReportErrorAndReturnValue(error, CString(OSSTR("reading data buffered")),
+					TVResult<CData>(error));
 		}
 	} else {
 		// file
@@ -207,9 +211,8 @@ TVResult<CData> CFileWriter::read(CData::ByteCount byteCount) const
 		if (bytesRead == -1) {
 			// Error
 			SError	error = SErrorFromPOSIXerror(errno);
-			CLogServices::logError(error, "reading data non-buffered", __FILE__, __func__, __LINE__);
-
-			return TVResult<CData>(error);
+			CFileWriterReportErrorAndReturnValue(error, CString(OSSTR("reading data non-buffered")),
+					TVResult<CData>(error));
 		}
 	}
 
@@ -226,7 +229,7 @@ OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 		return OV<SError>();
 	else
 		// Error
-		CFileWriterReportErrorAndReturnError(*error, "writing");
+		CFileWriterReportErrorAndReturnError(*error, CString(OSSTR("writing")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -245,10 +248,10 @@ UInt64 CFileWriter::getPosition() const
 			return filePos;
 		else
 			// Unable to get position
-			CFileWriterReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), "getting position", 0);
+			CFileWriterReportErrorAndReturnValue(SErrorFromPOSIXerror(errno), CString(OSSTR("getting position")), 0);
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnValue(CFile::mNotOpenError, "getting position", 0);
+		CFileWriterReportErrorAndReturnValue(CFile::mNotOpenError, CString(OSSTR("getting position")), 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -272,7 +275,7 @@ OV<SError> CFileWriter::setPosition(Position position, SInt64 newPos) const
 			return OV<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting position");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting position")));
 	} else if (mInternals->mFD != -1) {
 		// file
 		SInt32	posMode;
@@ -289,10 +292,10 @@ OV<SError> CFileWriter::setPosition(Position position, SInt64 newPos) const
 			return OV<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting position");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting position")));
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, "setting position");
+		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, CString(OSSTR("setting position")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -307,7 +310,7 @@ OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 			return OV<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting size");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting size")));
 	} else if (mInternals->mFD != -1) {
 		// file
 		if (::ftruncate(mInternals->mFD, byteCount) == 0)
@@ -315,10 +318,10 @@ OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 			return OV<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "setting size");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting size")));
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, "setting size");
+		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, CString(OSSTR("setting size")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -333,7 +336,7 @@ OV<SError> CFileWriter::flush() const
 			return OV<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "flushing");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("flushing")));
 	} else if (mInternals->mFD != -1) {
 		// file
 		if (::fsync(mInternals->mFD) == 0)
@@ -341,10 +344,10 @@ OV<SError> CFileWriter::flush() const
 			return OV<SError>();
 		else
 			// Error
-			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), "flushing");
+			CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("flushing")));
 	} else
 		// File not open!
-		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, "flushing");
+		CFileWriterReportErrorAndReturnError(CFile::mNotOpenError, CString(OSSTR("flushing")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

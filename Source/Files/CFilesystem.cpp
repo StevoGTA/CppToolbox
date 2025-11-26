@@ -10,12 +10,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFilesystemReportErrorAndReturnError(error, message, folder)							\
-				{																				\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);		\
-					folder.logAsError(CString::mSpaceX4);										\
-																								\
-					return error;																\
+#define	CFilesystemReportErrorAndReturnError(error, message, folder)									\
+				{																						\
+					CLogServices::logError(error, message,												\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),				\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);		\
+					folder.logAsError(CString::mSpaceX4);												\
+																										\
+					return error;																		\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -89,13 +91,13 @@ OV<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destina
 {
 	// Parameter check
 	if (!sourceFolder.doesExist())
-		CFilesystemReportErrorAndReturnError(CFolder::mDoesNotExistError, "checking source folder when copying",
-				sourceFolder);
+		CFilesystemReportErrorAndReturnError(CFolder::mDoesNotExistError,
+				CString(OSSTR("checking source folder when copying")), sourceFolder);
 
 	// Internals check
 	if (!destinationFolder.doesExist())
-		CFilesystemReportErrorAndReturnError(CFolder::mDoesNotExistError, "checking destination folder when copying",
-				destinationFolder);
+		CFilesystemReportErrorAndReturnError(CFolder::mDoesNotExistError,
+				CString(OSSTR("checking destination folder when copying")), destinationFolder);
 
 	// Get contents of source folder
 	TVResult<SFoldersFiles>	foldersFilesResult = getFoldersFiles(sourceFolder, true);

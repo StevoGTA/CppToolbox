@@ -10,7 +10,18 @@
 #include <sys/mman.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFileDataSource::Internals
+// MARK: Macros
+
+#define	CFileDataSourceReportError(error, message)													\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+				}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CFileDataSource::Internals
 
 class CFileDataSource::Internals {
 	public:
@@ -28,7 +39,7 @@ class CFileDataSource::Internals {
 					if (mFILE == nil) {
 						// Unable to open
 						mError = OV<SError>(SErrorFromPOSIXerror(errno));
-						CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
+						CFileDataSourceReportError(*mError, CString(OSSTR("opening buffered")));
 					}
 				} else {
 					// Not buffered
@@ -36,7 +47,7 @@ class CFileDataSource::Internals {
 					if (mFD == -1) {
 						// Unable to open
 						mError = OV<SError>(SErrorFromPOSIXerror(errno));
-						CLogServices::logError(*mError, "opening non-buffered", __FILE__, __func__, __LINE__);
+						CFileDataSourceReportError(*mError, CString(OSSTR("opening non-buffered")));
 					}
 				}
 			}
@@ -114,12 +125,12 @@ OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 			if (bytesRead != (ssize_t) byteCount) {
 				// Error
 				error = OV<SError>(SErrorFromPOSIXerror(errno));
-				CLogServices::logError(*error, "reading data buffered", __FILE__, __func__, __LINE__);
+				CFileDataSourceReportError(*error, CString(OSSTR("reading data buffered")));
 			}
 		} else {
 			// Error
 			error = OV<SError>(SErrorFromPOSIXerror(errno));
-			CLogServices::logError(*error, "setting position buffered", __FILE__, __func__, __LINE__);
+			CFileDataSourceReportError(*error, CString(OSSTR("setting position buffered")));
 		}
 	} else {
 		// file
@@ -130,12 +141,12 @@ OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 			if (bytesRead == -1) {
 				// Error
 				error = OV<SError>(SErrorFromPOSIXerror(errno));
-				CLogServices::logError(*error, "reading data non-buffered", __FILE__, __func__, __LINE__);
+				CFileDataSourceReportError(*error, CString(OSSTR("reading data non-buffered")));
 			}
 		} else {
 			// Error
 			error = OV<SError>(SErrorFromPOSIXerror(errno));
-			CLogServices::logError(*error, "setting non-position buffered", __FILE__, __func__, __LINE__);
+			CFileDataSourceReportError(*error, CString(OSSTR("setting non-position buffered")));
 		}
 	}
 
@@ -174,14 +185,14 @@ class CMappedFileDataSource::Internals {
 						mBytePtr = nil;
 						mByteCount = 0;
 						mError = OV<SError>(SErrorFromPOSIXerror(errno));
-						CLogServices::logError(*mError, "mapping data", __FILE__, __func__, __LINE__);
+						CFileDataSourceReportError(*mError, CString(OSSTR("mapping data")));
 					}
 				} else {
 					// Unable to open
 					mBytePtr = nil;
 					mByteCount = 0;
 					mError = OV<SError>(SErrorFromPOSIXerror(errno));
-					CLogServices::logError(*mError, "opening", __FILE__, __func__, __LINE__);
+					CFileDataSourceReportError(*mError, CString(OSSTR("opening")));
 				}
 			}
 		~Internals()

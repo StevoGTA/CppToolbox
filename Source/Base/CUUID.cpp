@@ -8,18 +8,27 @@
 #include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: External functions
-
-extern	CUUID::Bytes	eCreateUUIDBytes();
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CUUID::Internals
+// MARK: CUUID::Internals
 
 class CUUID::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals() : TReferenceCountableAutoDelete(), mUUIDBytes(eCreateUUIDBytes()) {}
-		Internals(const CUUID::Bytes& uuidBytes) : TReferenceCountableAutoDelete(), mUUIDBytes(uuidBytes) {}
+		Internals() : TReferenceCountableAutoDelete()
+			{
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
+				// Create new UUID and get raw bytes
+				CFUUIDRef	uuidRef = ::CFUUIDCreate(kCFAllocatorDefault);
+				CFUUIDBytes	uuidBytes = ::CFUUIDGetUUIDBytes(uuidRef);
+				::CFRelease(uuidRef);
+
+				::memcpy(mBytes, &uuidBytes, sizeof(Bytes));
+#elif defined(TARGET_OS_WINDOWS)
+#endif
+			}
+		Internals(const Bytes& uuidBytes) :
+			TReferenceCountableAutoDelete()
+			{
+				::memcpy(mBytes, uuidBytes, sizeof(Bytes));
+			}
 		Internals(const CData& data) : TReferenceCountableAutoDelete()
 			{
 				// Check if data is correct size
@@ -28,10 +37,10 @@ class CUUID::Internals : public TReferenceCountableAutoDelete<Internals> {
 				// Check data size
 				if (data.getByteCount() == 16)
 					// Data is correct size
-					data.copyBytes(&mUUIDBytes);
+					data.copyBytes(&mBytes, 0, 16);
 				else
 					// Data is not correct size
-					mUUIDBytes = eCreateUUIDBytes();
+					::memcpy(&mBytes, "-Invalid data-", 14);
 			}
 		Internals(const CString& string) : TReferenceCountableAutoDelete()
 			{
@@ -39,18 +48,18 @@ class CUUID::Internals : public TReferenceCountableAutoDelete<Internals> {
 				if (string.getLength() == 36) {
 					// Hex string
 					//	Note only version 1 strings are supported currently
-					*((UInt32*) &mUUIDBytes.mBytes[0]) = EndianU32_NtoB(string.getSubString(0, 8).getUInt32(16));
-					*((UInt16*) &mUUIDBytes.mBytes[4]) = EndianU16_NtoB(string.getSubString(9, 4).getUInt16(16));
-					*((UInt16*) &mUUIDBytes.mBytes[6]) = EndianU16_NtoB(string.getSubString(14, 4).getUInt16(16));
-					*((UInt16*) &mUUIDBytes.mBytes[8]) = EndianU16_NtoB(string.getSubString(19, 4).getUInt16(16));
-					*((UInt32*) &mUUIDBytes.mBytes[10]) = EndianU32_NtoB(string.getSubString(24, 8).getUInt32(16));
-					*((UInt16*) &mUUIDBytes.mBytes[14]) = EndianU16_NtoB(string.getSubString(32, 4).getUInt16(16));
+					*((UInt32*) &mBytes[0]) = EndianU32_NtoB(string.getSubString(0, 8).getUInt32(16));
+					*((UInt16*) &mBytes[4]) = EndianU16_NtoB(string.getSubString(9, 4).getUInt16(16));
+					*((UInt16*) &mBytes[6]) = EndianU16_NtoB(string.getSubString(14, 4).getUInt16(16));
+					*((UInt16*) &mBytes[8]) = EndianU16_NtoB(string.getSubString(19, 4).getUInt16(16));
+					*((UInt32*) &mBytes[10]) = EndianU32_NtoB(string.getSubString(24, 8).getUInt32(16));
+					*((UInt16*) &mBytes[14]) = EndianU16_NtoB(string.getSubString(32, 4).getUInt16(16));
 				} else
 					// Unknown
-					::memcpy(&mUUIDBytes, "-Unknown Format-", 16);
+					::memcpy(&mBytes, "-Unknown Format-", 16);
 			}
 
-		CUUID::Bytes	mUUIDBytes;
+		Bytes	mBytes;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -110,31 +119,32 @@ CString CUUID::getHexString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return CString::make(OSSTR("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"),
-			mInternals->mUUIDBytes.mBytes[0], mInternals->mUUIDBytes.mBytes[1], mInternals->mUUIDBytes.mBytes[2],
-			mInternals->mUUIDBytes.mBytes[3], mInternals->mUUIDBytes.mBytes[4], mInternals->mUUIDBytes.mBytes[5],
-			mInternals->mUUIDBytes.mBytes[6], mInternals->mUUIDBytes.mBytes[7], mInternals->mUUIDBytes.mBytes[8],
-			mInternals->mUUIDBytes.mBytes[9], mInternals->mUUIDBytes.mBytes[10], mInternals->mUUIDBytes.mBytes[11],
-			mInternals->mUUIDBytes.mBytes[12], mInternals->mUUIDBytes.mBytes[13], mInternals->mUUIDBytes.mBytes[14],
-			mInternals->mUUIDBytes.mBytes[15]);
+			mInternals->mBytes[0], mInternals->mBytes[1], mInternals->mBytes[2],
+			mInternals->mBytes[3], mInternals->mBytes[4], mInternals->mBytes[5],
+			mInternals->mBytes[6], mInternals->mBytes[7], mInternals->mBytes[8],
+			mInternals->mBytes[9], mInternals->mBytes[10], mInternals->mBytes[11],
+			mInternals->mBytes[12], mInternals->mBytes[13], mInternals->mBytes[14],
+			mInternals->mBytes[15]);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CData CUUID::getData() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CData(&mInternals->mUUIDBytes, sizeof(Bytes));
+	return CData(&mInternals->mBytes, sizeof(Bytes));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const CUUID::Bytes& CUUID::getBytes() const
+void CUUID::getBytes(Bytes& bytes) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mUUIDBytes;
+	// Copy
+	::memcpy(bytes, mInternals->mBytes, sizeof(Bytes));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CUUID::equals(const CUUID& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::memcmp(&mInternals->mUUIDBytes, &other.mInternals->mUUIDBytes, sizeof(Bytes)) == 0;
+	return ::memcmp(&mInternals->mBytes, &other.mInternals->mBytes, sizeof(Bytes)) == 0;
 }

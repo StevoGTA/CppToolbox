@@ -116,22 +116,6 @@ CData::CData(const void* buffer, ByteCount bufferByteCount, bool copySourceData)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData::CData(SInt8 value)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	mInternals = new Internals(sizeof(SInt8), &value);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CData::CData(UInt8 value)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	mInternals = new Internals(sizeof(UInt8), &value);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 CData::~CData()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -188,23 +172,20 @@ void* CData::getMutableBytePtr()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CData::copyBytes(void* destinationBuffer, ByteIndex startByteIndex, OV<ByteCount> byteCount) const
+void CData::copyBytes(void* destinationBuffer, ByteIndex startByteIndex, ByteCount byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	ByteCount	byteCountUse = byteCount.hasValue() ? *byteCount : getByteCount() - startByteIndex;
-
 	// Parameter check
 	AssertNotNil(destinationBuffer);
 	if (destinationBuffer == nil)
 		return;
 
-	AssertFailIf((startByteIndex + byteCountUse) > (ByteIndex) getByteCount());
-	if ((startByteIndex + byteCountUse) > (ByteIndex) getByteCount())
+	AssertFailIf((startByteIndex + byteCount) > (ByteIndex) getByteCount());
+	if ((startByteIndex + byteCount) > (ByteIndex) getByteCount())
 		return;
 
 	// Copy
-	::memcpy(destinationBuffer, (UInt8*) mInternals->mBuffer + startByteIndex, (size_t) byteCountUse);
+	::memcpy(destinationBuffer, (UInt8*) mInternals->mBuffer + startByteIndex, (size_t) byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -295,7 +276,7 @@ CString CData::getHexString(bool uppercase) const
 		buffer[i * 2 + 1] = table[*bytePtr & 0x0F];
 	}
 
-	return CString(*buffer, (CString::Length) getByteCount() * 2);
+	return CString((const void*) *buffer, (UInt32) getByteCount() * 2, CString::kEncodingASCII);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -364,7 +345,7 @@ CString CData::getBase64String(bool prettyPrint) const
 		// Add newline
 		*stringPtr++ = '\n';
 
-	return CString(*stringBuffer, stringLength, CString::kEncodingASCII);
+	return CString((const void*) *stringBuffer, stringLength, CString::kEncodingASCII);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -410,7 +391,7 @@ OV<SRange64> CData::findSubData(const CData& subData, ByteIndex startIndex, cons
 		// Look for first byte
 		const	void*	ptr =
 								::memchr((const char*) mInternals->mBuffer + startIndex,
-										*((const char* )subData.getBytePtr()), byteCount_);
+										*((const char*) subData.getBytePtr()), byteCount_);
 		if (ptr == nil)
 			// Not found
 			return OV<SRange64>();

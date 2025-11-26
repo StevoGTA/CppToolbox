@@ -74,7 +74,7 @@ CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding)
 	// Validate we have something
 	if (mStringRef == nil) {
 		// Have something
-		LogError(sCreateFailedError, "creating CFStringRef from bytes");
+		LogError(sCreateFailedError, CString(OSSTR("creating CFStringRef from bytes")));
 		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
 	}
 }
@@ -91,7 +91,7 @@ CString::CString(const TBuffer<UTF32Char>& buffer)
 	// Validate we have something
 	if (mStringRef == nil) {
 		// Have something
-		LogError(sCreateFailedError, "creating CFStringRef from bytes");
+		LogError(sCreateFailedError, CString(OSSTR("creating CFStringRef from bytes")));
 		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
 	}
 }
@@ -486,7 +486,7 @@ OV<CData> CString::getData(Encoding encoding) const
 		return OV<CData>(data);
 	} else {
 		// Failed
-		LogError(sCreateFailedError, "getting data");
+		LogError(sCreateFailedError, CString(OSSTR("getting data")));
 
 		return OV<CData>();
 	}

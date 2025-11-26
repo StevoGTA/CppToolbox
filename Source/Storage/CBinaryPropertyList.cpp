@@ -59,13 +59,13 @@ class CBPLReader : public TReferenceCountableAutoDelete<CBPLReader> {
 					~CBPLReader();
 
 					// Instance methods
-		void		readData(SInt64 offset, void* buffer, UInt64 byteCount, const char* errorWhen);
+		void		readData(SInt64 offset, void* buffer, UInt64 byteCount, const CString& errorWhen);
 		UInt8		readMarker(UInt64 objectIndex, OR<UInt64> count = OR<UInt64>());
 		UInt64		readIndex();
-		UInt64		readCount(const char* errorWhen);
+		UInt64		readCount(const CString& errorWhen);
 
-		UInt64		readValue(SInt64 offset, UInt8 fieldSize, const char* errorWhen);
-		UInt64		readValue(UInt8 fieldSize, const char* errorWhen);
+		UInt64		readValue(SInt64 offset, UInt8 fieldSize, const CString& errorWhen);
+		UInt64		readValue(UInt8 fieldSize, const CString& errorWhen);
 		CDictionary	readDictionary(UInt64 objectIndex);
 
 		SValue*		createDictionaryValue(UInt64 objectIndex);
@@ -207,7 +207,7 @@ CBPLReader::CBPLReader(const I<CRandomAccessDataSource>& randomAccessDataSource,
 	SInt64	offsetPosition = objectOffsetTableOffset;
 	for (UInt64 i = 0; i < mTotalObjectCount; i++, offsetPosition += objectOffsetFieldSize) {
 		// Update storage
-		mObjectOffsets[i] = readValue(offsetPosition, objectOffsetFieldSize, "reading objects");
+		mObjectOffsets[i] = readValue(offsetPosition, objectOffsetFieldSize, CString(OSSTR("reading objects")));
 
 		// Read info
 		UInt64	count;
@@ -254,7 +254,7 @@ CBPLReader::~CBPLReader()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CBPLReader::readData(SInt64 offset, void* buffer, UInt64 byteCount, const char* errorWhen)
+void CBPLReader::readData(SInt64 offset, void* buffer, UInt64 byteCount, const CString& errorWhen)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Set position
@@ -272,7 +272,7 @@ UInt8 CBPLReader::readMarker(UInt64 objectIndex, OR<UInt64> count)
 {
 	// Read marker
 	UInt8	marker = 0;
-	readData(mObjectOffsets[objectIndex], &marker, 1, "reading marker");
+	readData(mObjectOffsets[objectIndex], &marker, 1, CString(OSSTR("reading marker")));
 
 	// Check marker
 	switch (marker) {
@@ -294,7 +294,7 @@ UInt8 CBPLReader::readMarker(UInt64 objectIndex, OR<UInt64> count)
 				*count = marker & kMarkerCountMask;
 				if (*count == 15)
 					// Read count
-					*count = readCount("reading marker");
+					*count = readCount(CString(OSSTR("reading marker")));
 			}
 
 			return marker & ~kMarkerCountMask;
@@ -306,11 +306,11 @@ UInt64 CBPLReader::readIndex()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read index
-	return readValue(mObjectIndexFieldSize, "reading index");
+	return readValue(mObjectIndexFieldSize, CString(OSSTR("reading index")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CBPLReader::readCount(const char* errorWhen)
+UInt64 CBPLReader::readCount(const CString& errorWhen)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get count marker
@@ -331,7 +331,7 @@ UInt64 CBPLReader::readCount(const char* errorWhen)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CBPLReader::readValue(SInt64 offset, UInt8 fieldSize, const char* errorWhen)
+UInt64 CBPLReader::readValue(SInt64 offset, UInt8 fieldSize, const CString& errorWhen)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read value
@@ -343,7 +343,7 @@ UInt64 CBPLReader::readValue(SInt64 offset, UInt8 fieldSize, const char* errorWh
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt64 CBPLReader::readValue(UInt8 fieldSize, const char* errorWhen)
+UInt64 CBPLReader::readValue(UInt8 fieldSize, const CString& errorWhen)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read value
@@ -451,7 +451,7 @@ AssertFailUnimplemented();
 
 		case kMarkerTypeData:
 			// Data
-// TODO
+// TODO: Marker Type Data
 AssertFailUnimplemented();
 
 		case kMarkerTypeDictionary:
@@ -461,7 +461,7 @@ AssertFailUnimplemented();
 		case kMarkerTypeFloat32: {
 			// Float32
 			SwappableFloat32	swappableFloat32;
-			swappableFloat32.mStoredValue = (UInt32) readValue(4, "reading float32");
+			swappableFloat32.mStoredValue = (UInt32) readValue(4, CString(OSSTR("reading float32")));
 
 			return new SValue(swappableFloat32.mValue);
 			} break;
@@ -469,26 +469,26 @@ AssertFailUnimplemented();
 		case kMarkerTypeFloat64: {
 			// Float64
 			SwappableFloat64	swappableFloat64;
-			swappableFloat64.mStoredValue = readValue(8, "reading float64");
+			swappableFloat64.mStoredValue = readValue(8, CString(OSSTR("reading float64")));
 
 			return new SValue(swappableFloat64.mValue);
 			} break;
 
 		case kMarkerTypeInteger1Byte:
 			// Integer, 1 byte
-			return new SValue((SInt8) readValue(1, "reading integer, 1 byte"));
+			return new SValue((SInt8) readValue(1, CString(OSSTR("reading integer, 1 byte"))));
 
 		case kMarkerTypeInteger2Bytes:
 			// Integer, 2 bytes
-			return new SValue((SInt16) readValue(2, "reading integer, 2 bytes"));
+			return new SValue((SInt16) readValue(2, CString(OSSTR("reading integer, 2 bytes"))));
 
 		case kMarkerTypeInteger4Bytes:
 			// Integer, 4 bytes
-			return new SValue((SInt32) readValue(4, "reading integer, 4 bytes"));
+			return new SValue((SInt32) readValue(4, CString(OSSTR("reading integer, 4 bytes"))));
 
 		case kMarkerTypeInteger8Bytes:
 			// Integer, 8 bytes
-			return new SValue((SInt64) readValue(8, "reading integer, 8 bytes"));
+			return new SValue((SInt64) readValue(8, CString(OSSTR("reading integer, 8 bytes"))));
 
 		default:
 			// We should never get here
@@ -515,17 +515,18 @@ TVResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessD
 	// Check size
 	if (byteCount < (sBinaryPListV10Header.getByteCount() + sizeof(SBinaryPListTrailer))) {
 		// Too small to be a binary property list
-		LogErrorAndReturnValue(sUnknownFormatError, "checking data source size",
+		LogErrorAndReturnValue(sUnknownFormatError, CString(OSSTR("checking data source size")),
 				TVResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Validate header
 	CData	data(sBinaryPListV10Header.getByteCount());
 	error = randomAccessDataSource->readData(0, data.getMutableBytePtr(), sBinaryPListV10Header.getByteCount());
-	LogIfErrorAndReturnValue(error, "reading header", TVResult<CDictionary>(*error));
+	LogIfErrorAndReturnValue(error, CString(OSSTR("reading header")), TVResult<CDictionary>(*error));
 	if (data != sBinaryPListV10Header) {
 		// Header does not match
-		LogErrorAndReturnValue(sUnknownFormatError, "validating header", TVResult<CDictionary>(sUnknownFormatError));
+		LogErrorAndReturnValue(sUnknownFormatError, CString(OSSTR("validating header")),
+				TVResult<CDictionary>(sUnknownFormatError));
 	}
 
 	// Validate trailer
@@ -533,7 +534,7 @@ TVResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessD
 	error =
 			randomAccessDataSource->readData(byteCount - sizeof(SBinaryPListTrailer), &trailer,
 					sizeof(SBinaryPListTrailer));
-	LogIfErrorAndReturnValue(error, "reading trailer", TVResult<CDictionary>(*error));
+	LogIfErrorAndReturnValue(error, CString(OSSTR("reading trailer")), TVResult<CDictionary>(*error));
 
 	// Create CBPLReader
 	UInt8		objectOffsetFieldSize = trailer.mObjectOffsetFieldSize;
@@ -551,7 +552,7 @@ TVResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessD
 	if (marker != kMarkerTypeDictionary) {
 		// Top object is not a dictionary
 		Delete(bplReader);
-		LogErrorAndReturnValue(sUnknownFormatError, "top object is not a dictionary",
+		LogErrorAndReturnValue(sUnknownFormatError, CString(OSSTR("top object is not a dictionary")),
 				TVResult<CDictionary>(sUnknownFormatError));
 	}
 

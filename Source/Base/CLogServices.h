@@ -9,42 +9,55 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	LogWarning(warning, when)	CLogServices::logWarning(warning, when, __FILE__, __func__, __LINE__)
+#define	LogWarning(warning, when)																					\
+			CLogServices::logWarning(warning, when, CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),	\
+					CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__)
 
-#define	LogError(error, when)	CLogServices::logError(error, when, __FILE__, __func__, __LINE__)
+#define	LogError(error, when)																					\
+			CLogServices::logError(error, when, CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),	\
+					CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__)
 
-#define LogErrorAndReturnValue(error, when, value)										\
-			CLogServices::logError(error, when, __FILE__, __func__, __LINE__);			\
-			return value;																\
+#define LogErrorAndReturnValue(error, when, value)																\
+			CLogServices::logError(error, when, CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),	\
+					CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);						\
+			return value;																						\
 
-#define LogIfError(error, when)															\
-			{																			\
-				if (error.hasValue())													\
-					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
+#define LogIfError(error, when)																		\
+			{																						\
+				if (error.hasValue())																\
+					CLogServices::logError(*error, when,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
 			}
 
-#define	LogIfErrorAndReturn(error, when)												\
-			{																			\
-				if (error.hasValue()) {													\
-					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
-					return;																\
-				}																		\
+#define	LogIfErrorAndReturn(error, when)															\
+			{																						\
+				if (error.hasValue()) {																\
+					CLogServices::logError(*error, when,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					return;																			\
+				}																					\
 			}
 
-#define LogIfErrorAndReturnError(error, when)											\
-			{																			\
-				if (error.hasValue()) {													\
-					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
-					return error;														\
-				}																		\
+#define LogIfErrorAndReturnError(error, when)														\
+			{																						\
+				if (error.hasValue()) {																\
+					CLogServices::logError(*error, when,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					return error;																	\
+				}																					\
 			}
 
-#define	LogIfErrorAndReturnValue(error, when, value)									\
-			{																			\
-				if (error.hasValue()) {													\
-					CLogServices::logError(*error, when, __FILE__, __func__, __LINE__);	\
-					return value;														\
-				}																		\
+#define	LogIfErrorAndReturnValue(error, when, value)												\
+			{																						\
+				if (error.hasValue()) {																\
+					CLogServices::logError(*error, when,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					return value;																	\
+				}																					\
 			}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -62,15 +75,15 @@ class CLogServices {
 		static	void	logMessage(const CString& string);
 		static	void	logMessages(const TArray<CString>& strings);
 		static	void	logDebugMessage(const CString& string);
-		static	void	logWarning(const CString& warning, const CString& when, const char* file, const char* proc,
-								UInt32 line);
+		static	void	logWarning(const CString& warning, const CString& when, const CString& file,
+								const CString& func, UInt32 line);
 		static	void	logWarning(const CString& string);
-		static	void	logError(const CString& error, const CString& when, const char* file, const char* proc,
+		static	void	logError(const CString& error, const CString& when, const CString& file, const CString& func,
 								UInt32 line);
 		static	void	logError(const CString& string);
-		static	void	logError(const SError& error, const CString& message, const char* file, const char* proc,
+		static	void	logError(const SError& error, const CString& message, const CString& file, const CString& func,
 								UInt32 line)
-							{ logError(error.getDescription(), message, file, proc, line); }
+							{ logError(error.getDescription(), message, file, func, line); }
 
 		static	void	addLogMessageProc(LogProc logProc, void* userData = nil);
 		static	void	addLogWarningProc(LogProc logProc, void* userData = nil);

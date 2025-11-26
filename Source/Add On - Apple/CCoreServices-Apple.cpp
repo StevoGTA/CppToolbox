@@ -62,14 +62,19 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 		char	line[256];
 
 		::fgets(line, sizeof(line), file);
-		CString	productName = CString(line).components(CString::mTab, false)[1].removingLeadingAndTrailingWhitespace();
+		CString	productName =
+						CString(line, sizeof(line), CString::kEncodingASCII).components(CString::mTab, false)[1]
+								.removingLeadingAndTrailingWhitespace();
 
 		::fgets(line, sizeof(line), file);
 		TArray<CString>	components =
-								CString(line).components(CString::mTab, false)[1].components(CString::mPeriod);
+								CString(line, sizeof(line), CString::kEncodingASCII).components(CString::mTab, false)[1]
+										.components(CString::mPeriod);
 
 		::fgets(line, sizeof(line), file);
-		CString	buildVersion = CString(line).components(CString::mTab, false)[1].removingLeadingAndTrailingWhitespace();
+		CString	buildVersion =
+						CString(line, sizeof(line), CString::kEncodingASCII).components(CString::mTab, false)[1]
+								.removingLeadingAndTrailingWhitespace();
 
 		sVersionInfo =
 				new SSystemVersionInfo(productName, components[0].getUInt32(), components[1].getUInt32(),
@@ -126,7 +131,7 @@ const CString& CCoreServices::getProcessorInfo()
 		size_t	size = sizeof(buffer);
 		int		status = ::sysctlbyname("machdep.cpu.brand_string", &buffer, &size, nil, 0);
 		if (status == 0)
-			sProcessorInfoString = new CString(buffer);
+			sProcessorInfoString = new CString(buffer, sizeof(buffer), CString::kEncodingASCII);
 	}
 
     return (sProcessorInfoString != nil) ? *sProcessorInfoString : CString::mEmpty;

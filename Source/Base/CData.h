@@ -27,9 +27,8 @@ class CData {
 										// Lifecycle methods
 										CData(ByteCount initialByteCount = 0);
 										CData(const CData& other);
-										CData(const void* buffer, ByteCount bufferByteCount, bool copySourceData = true);
-										CData(SInt8 value);
-										CData(UInt8 value);
+										CData(const void* buffer, ByteCount bufferByteCount,
+												bool copySourceData = true);
 										~CData();
 
 										// Instance methods
@@ -41,8 +40,8 @@ class CData {
 
 				const	void*			getBytePtr() const;
 						void*			getMutableBytePtr();
-						void			copyBytes(void* destinationBuffer, ByteIndex startByteIndex = 0,
-												OV<ByteCount> byteCount = OV<ByteCount>()) const;
+						void			copyBytes(void* destinationBuffer, ByteIndex startByteIndex,
+												ByteCount byteCount) const;
 						void			appendBytes(const void* buffer, ByteCount bufferByteCount);
 						void			replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer,
 												ByteCount bufferByteCount);
@@ -71,6 +70,16 @@ class CData {
 
 										// Class methods
 		static			CData			fromBase64String(const CString& base64String);
+		static			CData			storing(SInt32 value, bool copyValue = true)
+											{ return CData(&value, sizeof(SInt32), copyValue); }
+		static			CData			storing(SInt8 value, bool copyValue = true)
+											{ return CData(&value, sizeof(SInt8), copyValue); }
+		static			CData			storing(UInt8 value, bool copyValue = true)
+											{ return CData(&value, sizeof(UInt8), copyValue); }
+		static			CData			storing(UInt16 value, bool copyValue = true)
+											{ return CData(&value, sizeof(UInt16), copyValue); }
+		static			CData			storing(UInt32 value, bool copyValue = true)
+											{ return CData(&value, sizeof(UInt32), copyValue); }
 
 	// Properties
 	public:

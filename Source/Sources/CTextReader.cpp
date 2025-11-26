@@ -13,13 +13,14 @@
 
 class CTextReader::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource) :
+		Internals(const I<CRandomAccessDataSource>& randomAccessDataSource, CString::Encoding stringEncoding) :
 			TReferenceCountableAutoDelete(),
-					mRandomAccessDataSource(randomAccessDataSource), mDataSourceOffset(0),
-					mByteCount(mRandomAccessDataSource->getByteCount())
+					mRandomAccessDataSource(randomAccessDataSource), mStringEncoding(stringEncoding),
+					mDataSourceOffset(0), mByteCount(mRandomAccessDataSource->getByteCount())
 			{}
 
 		I<CRandomAccessDataSource>	mRandomAccessDataSource;
+		CString::Encoding			mStringEncoding;
 		UInt64						mDataSourceOffset;
 		UInt64						mByteCount;
 };
@@ -31,10 +32,10 @@ class CTextReader::Internals : public TReferenceCountableAutoDelete<Internals> {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CTextReader::CTextReader(const I<CRandomAccessDataSource>& randomAccessDataSource)
+CTextReader::CTextReader(const I<CRandomAccessDataSource>& randomAccessDataSource, CString::Encoding stringEncoding)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(randomAccessDataSource);
+	mInternals = new Internals(randomAccessDataSource, stringEncoding);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -69,59 +70,58 @@ TVResult<CString> CTextReader::readStringToEOL()
 
 	bool	foundEnd = false;
 	while (!foundEnd) {
-		// First, read as much as we can
+		// Figure how many bytes to read
 		UInt64	bytesRead = std::min<UInt64>(1024, mInternals->mByteCount - mInternals->mDataSourceOffset);
 		if (bytesRead == 0)
 			// EOF
 			return outString.isEmpty() ? TVResult<CString>(SError::mEndOfData) : TVResult<CString>(outString);
 
-		// Read
+		// Read bytes
 		TBuffer<char>	buffer((UInt32) bytesRead + 1);
 		OV<SError>		error =
 								mInternals->mRandomAccessDataSource->readData(mInternals->mDataSourceOffset, *buffer,
 										bytesRead);
 		ReturnValueIfError(error, TVResult<CString>(*error));
 
+		// Update
 		mInternals->mDataSourceOffset += bytesRead;
 
-		// Did we actually read anything?
-		if (bytesRead > 0) {
-			// Prepare for resetting file position
-			SInt32	delta = -((SInt32) bytesRead);
+		// Prepare for resetting file position
+		SInt32	delta = -((SInt32) bytesRead);
 
-			// Go through destBuffer, searching for \r and \n
-			char*	p = *buffer;
-			while ((bytesRead > 0) && (*p != '\r') && (*p != '\n')) {
+		// Go through destBuffer, searching for \r and \n
+		char*			p = *buffer;
+		CString::Length	stringLength = 0;
+		while ((bytesRead > 0) && (*p != '\r') && (*p != '\n')) {
+			p++;
+			bytesRead--;
+			delta++;
+			stringLength++;
+		}
+
+		// Did we find any end of line chars?
+		if (bytesRead > 0) {
+			// Yes
+			foundEnd = true;
+
+			// End string
+			*p = 0;
+			p++;
+			delta++;
+
+			// Skip the rest of the end of line chars we find
+			while ((bytesRead > 0) && ((*p == '\r') || (*p == '\n'))) {
 				p++;
 				bytesRead--;
 				delta++;
 			}
+		}
 
-			// Did we find any end of line chars?
-			if (bytesRead > 0) {
-				// Yes
-				foundEnd = true;
+		// Seek to beginning of the next line
+		mInternals->mDataSourceOffset += delta;
 
-				// End string
-				*p = 0;
-				p++;
-				delta++;
-
-				// Skip the rest of the end of line chars we find
-				while ((bytesRead > 0) && ((*p == '\r') || (*p == '\n'))) {
-					p++;
-					bytesRead--;
-					delta++;
-				}
-			}
-
-			// Seek to beginning of the next line
-			mInternals->mDataSourceOffset += delta;
-
-			// Append the chars we found to the return string
-			outString += CString(*buffer);
-		} else
-			foundEnd = true;
+		// Append the chars we found to the return string
+		outString += CString(*buffer, stringLength, mInternals->mStringEncoding);
 	}
 
 	return TVResult<CString>(outString);
