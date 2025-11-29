@@ -85,13 +85,13 @@ OV<SError> CMediaFoundationDecodeVideoCodecInternals::noteFormatChanged(IMFMedia
 
 	// Update Media Type
 	HRESULT	result = mediaType->GetGUID(MF_MT_SUBTYPE, &internals.mOutputSampleDataFormatGUID);
-	ReturnErrorIfFailed(result, OSSTR("GetGUID for mediaType in CH264VideoCodecInternals::noteFormatChanged"));
+	ReturnErrorIfFailed(result, CString(OSSTR("GetGUID for mediaType in CH264VideoCodecInternals::noteFormatChanged")));
 
 	// Get Frame Size
 	UINT	width, height;
 	result = MFGetAttributeSize(mediaType, MF_MT_FRAME_SIZE, &width, &height);
 	ReturnErrorIfFailed(result,
-			OSSTR("MFGetAttributeSize for frame size in CH264VideoCodecInternals::noteFormatChanged"));
+			CString(OSSTR("MFGetAttributeSize for frame size in CH264VideoCodecInternals::noteFormatChanged")));
 	internals.mOutputSampleFrameSize = S2DSizeU16((UInt16) width, (UInt16) height);
 
 	// Try to get Geometric Aperture
@@ -118,7 +118,7 @@ OV<SError> CMediaFoundationDecodeVideoCodecInternals::noteFormatChanged(IMFMedia
 	// Get output stream info
 	MFT_OUTPUT_STREAM_INFO	outputStreamInfo;
 	result = internals.mVideoDecoder->GetOutputStreamInfo(0, &outputStreamInfo);
-	ReturnErrorIfFailed(result, OSSTR("GetOutputStreamInfo in CH264VideoCodecInternals::noteFormatChanged"));
+	ReturnErrorIfFailed(result, CString(OSSTR("GetOutputStreamInfo in CH264VideoCodecInternals::noteFormatChanged")));
 
 	// Store
 	internals.mOutputSampleRequiredByteCount = outputStreamInfo.cbSize;
@@ -178,7 +178,7 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 			::MFTEnumEx(MFT_CATEGORY_VIDEO_DECODER,
 					MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_LOCALMFT | MFT_ENUM_FLAG_SORTANDFILTER, &info, NULL,
 					&activates, &count);
-	ReturnErrorIfFailed(result, OSSTR("MFTEnumEx"));
+	ReturnErrorIfFailed(result, CString(OSSTR("MFTEnumEx")));
 
 	// Create the Video Decoder
 	IMFTransform*	transform;
@@ -190,26 +190,26 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 		activates[i]->Release();
 	::CoTaskMemFree(activates);
 
-	ReturnErrorIfFailed(result, OSSTR("ActivateObject"));
+	ReturnErrorIfFailed(result, CString(OSSTR("ActivateObject")));
 
 	// Setup input media type
 	IMFMediaType*	mediaType;
 	result = ::MFCreateMediaType(&mediaType);
-	ReturnErrorIfFailed(result, OSSTR("MFCreateMediaType"));
+	ReturnErrorIfFailed(result, CString(OSSTR("MFCreateMediaType")));
 	TCIResult<IMFMediaType>	inputMediaType(mediaType);
 
 	result = mediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-	ReturnErrorIfFailed(result, OSSTR("SetGUID of MF_MT_MAJOR_TYPE for input"));
+	ReturnErrorIfFailed(result, CString(OSSTR("SetGUID of MF_MT_MAJOR_TYPE for input")));
 
 	result = mediaType->SetGUID(MF_MT_SUBTYPE, *guid);
-	ReturnErrorIfFailed(result, OSSTR("SetGUID of MF_MT_SUBTYPE for input"));
+	ReturnErrorIfFailed(result, CString(OSSTR("SetGUID of MF_MT_SUBTYPE for input")));
 
 	const	S2DSizeU16	frameSize = videoProcessorFormat.getFrameSize();
 	result = ::MFSetAttributeSize(mediaType, MF_MT_FRAME_SIZE, frameSize.mWidth, frameSize.mHeight);
-	ReturnErrorIfFailed(result, OSSTR("MFSetAttributeSize for input"));
+	ReturnErrorIfFailed(result, CString(OSSTR("MFSetAttributeSize for input")));
 
 	result = transform->SetInputType(0, *(inputMediaType.getInstance()), 0);
-	ReturnErrorIfFailed(result, OSSTR("SetInputType"));
+	ReturnErrorIfFailed(result, CString(OSSTR("SetInputType")));
 
 	// Iterate output media types to find matching
 	DWORD	index = 0;
@@ -245,7 +245,7 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 	// Get output stream info
 	MFT_OUTPUT_STREAM_INFO	outputStreamInfo;
 	result = mInternals->mVideoDecoder->GetOutputStreamInfo(0, &outputStreamInfo);
-	ReturnErrorIfFailed(result, OSSTR("GetOutputStreamInfo"));
+	ReturnErrorIfFailed(result, CString(OSSTR("GetOutputStreamInfo")));
 
 	mInternals->mOutputSampleRequiredByteCount = outputStreamInfo.cbSize;
 
@@ -258,10 +258,10 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 
 	// Begin streaming!
 	result = mInternals->mVideoDecoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-	ReturnErrorIfFailed(result, OSSTR("ProcessMessage to begin streaming"));
+	ReturnErrorIfFailed(result, CString(OSSTR("ProcessMessage to begin streaming")));
 
 	result = mInternals->mVideoDecoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
-	ReturnErrorIfFailed(result, OSSTR("ProcessMessage to begin streaming"));
+	ReturnErrorIfFailed(result, CString(OSSTR("ProcessMessage to begin streaming")));
 
 	return OV<SError>();
 }
@@ -311,7 +311,7 @@ TIResult<CVideoFrame> CMediaFoundationDecodeVideoCodec::decode()
 	// Success
 	LONGLONG	sampleTime;
 	HRESULT		result = sample.getInstance()->GetSampleTime(&sampleTime);
-	ReturnValueIfFailed(result, OSSTR("GetSampleTime"), TIResult<CVideoFrame>(SErrorFromHRESULT(result)));
+	ReturnValueIfFailed(result, CString(OSSTR("GetSampleTime")), TIResult<CVideoFrame>(SErrorFromHRESULT(result)));
 
 	return TIResult<CVideoFrame>(
 			CVideoFrame((UniversalTimeInterval) sampleTime / 10000.0, currentFrameIndex, *sample.getInstance(),
