@@ -148,6 +148,44 @@ STimecode::STimecode(SInt32 hours, SInt32 minutes, Float32 seconds, const FrameR
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+STimecode::STimecode(UniversalTimeInterval timeInterval, const FrameRate& frameRate) : mFrameRate(frameRate)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	SInt32	hours = (SInt32) (timeInterval / 60.0 / 60.0);
+	timeInterval -= (UniversalTimeInterval) (hours * 60 * 60);
+
+	SInt32	minutes = (SInt32) (timeInterval / 60.0);
+	timeInterval -= (UniversalTimeInterval) (minutes * 60);
+
+	SInt32	seconds = (SInt32) timeInterval;
+	timeInterval -= (UniversalTimeInterval) seconds;
+
+	SInt32	base = (SInt32) mFrameRate.getBase();
+
+	SInt32	frames = (SInt32) (timeInterval * (UniversalTimeInterval) base);
+
+	// Check FrameRate
+	if (!mFrameRate.isDropFrame())
+		// Non-Drop Frame
+		mFrameIndex = (((hours * 60) + minutes) * 60 + seconds) * base + frames;
+	else {
+		// Drop Frame
+		// From https://www.davidheidelberger.com/2010/06/10/drop-frame-timecode/
+		SInt32	dropFrames =
+						(SInt32)
+								round(((mFrameRate.getKind() == FrameRate::kKindDropFrame2997) ? 29.97 : 59.94) / 15.0);
+
+		SInt32	hourFrames = base * 60 * 60;
+		SInt32	minuteFrames = base * 60;
+		SInt32	totalMinutes = hours * 60 + minutes;
+		mFrameIndex =
+				hours * hourFrames + minutes * minuteFrames + seconds * base + frames -
+						(dropFrames * (totalMinutes - (totalMinutes / 10)));
+	}
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------

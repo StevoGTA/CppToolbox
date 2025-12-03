@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CString.h"
+#include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: STimecode
@@ -139,6 +139,8 @@ struct STimecode {
 										STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames,
 												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
 										STimecode(SInt32 hours, SInt32 minutes, Float32 seconds,
+												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
+										STimecode(UniversalTimeInterval timeInterval,
 												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
 										STimecode(const STimecode& other) :
 											mFrameIndex(other.mFrameIndex), mFrameRate(other.mFrameRate)
