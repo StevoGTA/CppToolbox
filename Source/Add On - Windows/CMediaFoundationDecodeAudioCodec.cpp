@@ -92,7 +92,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 											MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_LOCALMFT |
 													MFT_ENUM_FLAG_SORTANDFILTER,
 											&info, NULL, &activates, &count);
-	ReturnErrorIfFailed(result, OSSTR("MFTEnumEx"));
+	ReturnErrorIfFailed(result, CString(OSSTR("MFTEnumEx")));
 
 	// Create the Audio Decoder
 	IMFTransform*	transform;
@@ -104,7 +104,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 		activates[i]->Release();
 	::CoTaskMemFree(activates);
 
-	ReturnErrorIfFailed(result, OSSTR("ActivateObject"));
+	ReturnErrorIfFailed(result, CString(OSSTR("ActivateObject")));
 
 	// Setup input media type
 	OV<SError>	error =
@@ -125,7 +125,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 	// Create output sample
 	MFT_OUTPUT_STREAM_INFO	outputStreamInfo;
 	result = mInternals->mAudioDecoderTransform->GetOutputStreamInfo(0, &outputStreamInfo);
-	ReturnErrorIfFailed(result, OSSTR("GetOutputStreamInfo"));
+	ReturnErrorIfFailed(result, CString(OSSTR("GetOutputStreamInfo")));
 
 	sample = CMediaFoundationServices::createSample(outputStreamInfo.cbSize);
 	ReturnErrorIfResultError(sample);
@@ -133,7 +133,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 
 	// Begin streaming!
 	result = mInternals->mAudioDecoderTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-	ReturnErrorIfFailed(result, OSSTR("ProcessMessage to begin streaming"));
+	ReturnErrorIfFailed(result, CString(OSSTR("ProcessMessage to begin streaming")));
 
 	return OV<SError>();
 }
