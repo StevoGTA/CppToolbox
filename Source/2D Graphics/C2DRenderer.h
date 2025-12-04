@@ -6,6 +6,7 @@
 
 #include "CColor.h"
 #include "C2DPath.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: C2DRenderer
@@ -47,6 +48,10 @@ class C2DRenderer {
 			kStrokeJoinStyleMiter,
 		};
 
+	// OutlineInfo
+	public:
+		typedef	TV2<Float32, const CColor> OutlineInfo;
+
 	// TextPositioning
 	public:
 		enum TextPositioning {
@@ -85,9 +90,9 @@ class C2DRenderer {
 									const S2DAffineTransformF32& affineTransform = S2DAffineTransformF32()) const = 0;
 
 		virtual	S2DSizeF32	getTextSize(const CString& string, const Font& font) const = 0;
-		virtual	void		strokeText(const CString& string, const Font& font, const S2DPointF32& point,
-									TextPositioning textPositioning = kTextPositioningCenter,
-									const OV<Float32>& outlineWidth = OV<Float32>()) const = 0;
+		virtual	void		drawText(const CString& string, const Font& font, const S2DPointF32& point,
+									const CColor& color, TextPositioning textPositioning = kTextPositioningCenter,
+									const OV<OutlineInfo>& outlineInfo = OV<OutlineInfo>()) const = 0;
 
 	protected:
 							// Lifecycle methods

@@ -40,9 +40,9 @@ class CCoreGraphicsRenderer : public C2DRenderer {
 							const S2DAffineTransformF32& affineTransform = S2DAffineTransformF32()) const;
 
 		S2DSizeF32	getTextSize(const CString& string, const Font& font) const;
-		void		strokeText(const CString& string, const Font& font, const S2DPointF32& point,
+		void		drawText(const CString& string, const Font& font, const S2DPointF32& point, const CColor& color,
 							TextPositioning textPositioning = kTextPositioningCenter,
-							const OV<Float32>& outlineWidth = OV<Float32>()) const;
+							const OV<OutlineInfo>& outlineInfo = OV<OutlineInfo>()) const;
 
 	// Properties
 	private:
