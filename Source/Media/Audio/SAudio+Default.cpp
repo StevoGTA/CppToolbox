@@ -96,3 +96,15 @@ CString SAudio::ChannelMap::getDisplayString() const
 	// Unknown
 	else								return CString(OSSTR("Unknown"));
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CString SAudio::ChannelMap::getChannelsDisplayString() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check channel count
+	switch (getChannelCount()) {
+		case 1:		return CString(OSSTR("Mono"));
+		case 2:		return CString(OSSTR("Stereo")):
+		default:	return CString(getChannelCount());
+	}
+}

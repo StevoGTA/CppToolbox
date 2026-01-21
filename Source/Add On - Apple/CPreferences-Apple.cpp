@@ -105,6 +105,24 @@ bool CPreferences::hasValue(const Pref& pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+bool CPreferences::getBool(const BoolPref& boolPref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFBooleanRef	booleanRef = (CFBooleanRef) mInternals->copyFrom(boolPref.getKeyString());
+
+	// Check if have number
+	if (booleanRef != nil) {
+		// Have value
+		bool	value = booleanRef == kCFBooleanTrue;
+		::CFRelease(booleanRef);
+		
+		return value;
+	} else
+		return boolPref.getDefaultValue();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<TArray<CData> > CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -186,6 +204,7 @@ OV<CData> CPreferences::getData(const Pref& pref)
 
 	// Check if have data
 	if (dataRef != nil) {
+		// Have value
 		CData	data = CCoreFoundation::dataFrom(dataRef);
 		::CFRelease(dataRef);
 
@@ -203,6 +222,7 @@ OV<CDictionary> CPreferences::getDictionary(const Pref& pref)
 
 	// Check if have dictionary
 	if (dictionaryRef != nil) {
+		// Have value
 		CDictionary	dictionary = CCoreFoundation::dictionaryFrom(dictionaryRef);
 		::CFRelease(dictionaryRef);
 
@@ -220,6 +240,7 @@ CString CPreferences::getString(const StringPref& pref)
 
 	// Check if have string
 	if (stringRef != nil) {
+		// Have value
 		CString	string(stringRef);
 		::CFRelease(stringRef);
 		
@@ -237,6 +258,7 @@ Float32 CPreferences::getFloat32(const Float32Pref& pref)
 
 	// Check if have number
 	if (numberRef != nil) {
+		// Have value
 		Float32	value;
 		::CFNumberGetValue(numberRef, kCFNumberFloat32Type, &value);
 		::CFRelease(numberRef);
@@ -255,6 +277,7 @@ Float64 CPreferences::getFloat64(const Float64Pref& pref)
 
 	// Check if have number
 	if (numberRef != nil) {
+		// Have value
 		Float64	value;
 		::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);
 		::CFRelease(numberRef);
@@ -273,6 +296,7 @@ SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 
 	// Check if have number
 	if (numberRef != nil) {
+		// Have value
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
 		::CFRelease(numberRef);
@@ -291,6 +315,7 @@ UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 
 	// Check if have number
 	if (numberRef != nil) {
+		// Have value
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
 		::CFRelease(numberRef);
@@ -309,6 +334,7 @@ UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 
 	// Check if have number
 	if (numberRef != nil) {
+		// Have value
 		SInt64	value;
 		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
 		::CFRelease(numberRef);
@@ -327,6 +353,7 @@ UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTime
 
 	// Check if have number
 	if (numberRef != nil) {
+		// Have value
 		Float64	value;
 		::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);
 		::CFRelease(numberRef);
@@ -334,6 +361,14 @@ UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTime
 		return value;
 	} else
 		return pref.getDefaultValue();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const BoolPref& boolPref, bool value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Write
+	mInternals->setTo(boolPref.getKeyString(), value ? kCFBooleanTrue : kCFBooleanFalse);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
