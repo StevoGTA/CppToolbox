@@ -7,6 +7,10 @@
 #include "CppToolboxAssert.h"
 #include "CReferenceCountable.h"
 
+#if defined(TARGET_OS_WINDOWS)
+	#include "Rpc.h"
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CUUID::Internals
 
@@ -22,6 +26,7 @@ class CUUID::Internals : public TReferenceCountableAutoDelete<Internals> {
 
 				::memcpy(mBytes, &uuidBytes, sizeof(Bytes));
 #elif defined(TARGET_OS_WINDOWS)
+				::UuidCreate((UUID*) &mBytes);
 #endif
 			}
 		Internals(const Bytes& uuidBytes) :

@@ -68,17 +68,23 @@ CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding) : CHashab
 
 		// Check first 2 bytes
 		const	UInt8*	bytePtr = (const UInt8*) ptr;
-		if ((bytePtr[0] == 0xFF) && (bytePtr[1] == 0xFE)) {
+		if ((bytePtr[0] == 0xFE) && (bytePtr[1] == 0xFF)) {
 			// Big-endian
 			ptr = bytePtr + 2;
 			byteCount -= 2;
 			encoding = kEncodingUTF16BE;
-		} else if ((bytePtr[0] == 0xFE) && (bytePtr[1] == 0xFF)) {
+		} else if ((bytePtr[0] == 0xFF) && (bytePtr[1] == 0xFE)) {
 			// Little-endian
 			ptr = bytePtr + 2;
 			byteCount -= 2;
 			encoding = kEncodingUTF16LE;
-		} else {
+		} else if (bytePtr[0] == 0x00)
+			// Assume Bit-endian
+			encoding = kEncodingUTF16BE;
+		else if (bytePtr[1] == 0x00)
+			// Assume Little-endian
+			encoding = kEncodingUTF16LE;
+		else {
 			// Unknown
 			AssertFail();
 
@@ -88,15 +94,30 @@ CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding) : CHashab
 
 	// Check length
 	if (byteCount > 0) {
-		// Resize
-		mString.resize(byteCount);
+		// Check encoding
+		if (encoding == kEncodingUTF16LE) {
+			// Can just copy
+			mString.resize(byteCount / 2);
+			::memcpy(&mString[0], ptr, byteCount);
+		} else if (encoding == kEncodingUTF16BE) {
+			// Can copy, but must byte-swap
+			mString.resize(byteCount / 2);
 
-		// Convert
-		int	count =
-				::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (const char*) ptr, byteCount,
-						&mString[0], byteCount);
-		AssertFailIf(count == 0);
-		mString.resize(count);
+			const	UTF16Char*	sourcePtr = (const UTF16Char*) ptr;
+					UTF16Char*	stringPtr = (UTF16Char*) &mString[0];
+			for (UInt32 i = 0; i < (byteCount / 2); i++)
+				stringPtr[i] = (UTF16Char) (((sourcePtr[i] & 0xFF00) >> 8) | ((sourcePtr[i] & 0x00FF) << 8));
+		} else {
+			// Resize
+			mString.resize(byteCount);
+
+			// Convert
+			int	count =
+					::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (const char*) ptr, byteCount,
+							&mString[0], byteCount);
+			AssertFailIf(count == 0);
+			mString.resize(count);
+		}
 	}
 }
 
