@@ -50,22 +50,18 @@ class CQuickTimeMediaFile {
 	protected:
 															// Instance methods
 		virtual	TVResult<SMediaSource::Tracks::AudioTrack>	composeAudioTrack(
-																	const I<CRandomAccessDataSource>&
-																			randomAccessDataSource,
-																	UInt32 options, OSType type,
-																	UniversalTimeInterval duration,
+																	const SMediaSource::ImportSetup& importSetup,
+																	OSType type, UniversalTimeInterval duration,
 																	const OV<CData>& metaAtomPayloadData,
 																	const Internals& internals);
 		virtual	TVResult<SMediaSource::Tracks::VideoTrack>	composeVideoTrack(
-																	const I<CRandomAccessDataSource>&
-																			randomAccessDataSource,
-																	UInt32 options, OSType type,
-																	UInt32 timeScale, UniversalTimeInterval duration,
+																	const SMediaSource::ImportSetup& importSetup,
+																	OSType type, UInt32 timeScale,
+																	UniversalTimeInterval duration,
 																	const OV<CData>& metaAtomPayloadData,
 																	const Internals& internals);
 		virtual	OV<SError>									importTrack(
-																	const I<CRandomAccessDataSource>&
-																			randomAccessDataSource,
+																	const SMediaSource::ImportSetup& importSetup,
 																	OSType type,
 																	const SstsdDescription& stsdDescription,
 																	const Internals& internals)

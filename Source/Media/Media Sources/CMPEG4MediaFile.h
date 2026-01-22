@@ -29,21 +29,15 @@ class CMPEG4MediaFile {
 	protected:
 															// Instance methods
 		virtual	TVResult<SMediaSource::Tracks::AudioTrack>	composeAudioTrack(
-																	const I<CRandomAccessDataSource>&
-																			randomAccessDataSource,
-																	UInt32 options, OSType type,
-																	UniversalTimeInterval duration,
+																	const SMediaSource::ImportSetup& importSetup,
+																	OSType type, UniversalTimeInterval duration,
 																	const Internals& internals);
 		virtual	TVResult<SMediaSource::Tracks::VideoTrack>	composeVideoTrack(
-																	const I<CRandomAccessDataSource>&
-																			randomAccessDataSource,
-																	UInt32 options, OSType type,
-																	UInt32 timeScale,
+																	const SMediaSource::ImportSetup& importSetup,
+																	OSType type, UInt32 timeScale,
 																	UniversalTimeInterval duration,
 																	const Internals& internals);
-		virtual	OV<SError>									importTrack(
-																	const I<CRandomAccessDataSource>&
-																			randomAccessDataSource,
+		virtual	OV<SError>									importTrack(const SMediaSource::ImportSetup& importSetup,
 																	OSType type,
 																	const SMPEG4::STSDDescriptionHeader&
 																			stsdDescriptionHeader,
