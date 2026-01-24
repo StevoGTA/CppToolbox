@@ -49,8 +49,10 @@ class CBitReader {
 		TVResult<UInt32>	readUInt32() const;	// Will ignore bits remaining in the current byte
 		TVResult<UInt32>	readUInt32(UInt8 bitCount) const;
 		TVResult<UInt64>	readUInt64() const;	// Will ignore bits remaining in the current byte
+		TVResult<UInt64>	readUInt64(UInt8 bitCount) const;
 
-		TVResult<UInt32>	readUEColumbusCode() const;
+		TVResult<SInt32>	readSEExpGolombCode() const;
+		TVResult<UInt32>	readUEExpGolombCode() const;
 
 	// Properties
 	private:
