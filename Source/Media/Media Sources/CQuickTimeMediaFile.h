@@ -15,6 +15,13 @@ class CQuickTimeMediaFile {
 	public:
 		struct Internals;
 
+#pragma pack(push,1)
+
+#if defined(TARGET_OS_WINDOWS)
+	#pragma warning(disable:4200)
+	#pragma warning(disable:4815)
+#endif
+
 	// SstsdDescription
 	public:
 		struct SstsdDescription {
@@ -33,6 +40,13 @@ class CQuickTimeMediaFile {
 				UInt16	mDataRefIndex;
 				UInt8	mPayload[];
 		};
+
+#if defined(TARGET_OS_WINDOWS)
+	#pragma warning(default:4200)
+	#pragma warning(default:4815)
+#endif
+
+#pragma pack(pop)
 
 	// Methods
 	public:
