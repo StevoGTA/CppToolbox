@@ -4,22 +4,18 @@
 
 #pragma once
 
-#include "CUUID.h"
+#include "CTableViewItem.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: COutlineViewItem
 
-class COutlineViewItem {
+class COutlineViewItem : public CTableViewItem {
 	// Methods
 	public:
+						// Lifecycle methods
+						COutlineViewItem() : CTableViewItem() {}
 
-									// Lifecycle methods
-									COutlineViewItem() {}
-		virtual						~COutlineViewItem() {}
-
-									// Subclass methods
-		virtual	const	CString&	getID() const = 0;
-		virtual			OSType		getType() const = 0;
-		virtual			bool		hasChildren() const
-										{ return false; }
+						// Instance methods
+		virtual	UInt32	getChildCount() const
+							{ return 0; }
 };

@@ -34,11 +34,11 @@ class CWAVEMediaFile {
 													{ return chunkInfo.getID() == kWAVEFormatChunkID; }
 		virtual	bool							isDataChunk(const CChunkReader::ChunkInfo& chunkInfo) const
 													{ return chunkInfo.getID() == kWAVEDataChunkID; }
-		virtual	I<SMediaSource::ImportResult>	import(CChunkReader& chunkReader,
+		virtual	I<SMediaSource::ImportResult>	import(const SMediaSource::ImportSetup& importSetup,
+														CChunkReader& chunkReader,
 														const CChunkReader::ChunkInfo& formatChunkInfo,
 														UInt64 dataChunkPosition, UInt64 dataChunkByteCount,
-														const TArray<CChunkReader::ChunkInfo>& otherChunkInfos,
-														UInt32 options) const;
+														const TArray<CChunkReader::ChunkInfo>& otherChunkInfos) const;
 
 	// Properties
 	public:

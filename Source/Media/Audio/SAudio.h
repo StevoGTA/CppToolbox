@@ -44,6 +44,7 @@ struct SAudio {
 							UInt8		getChannelCount() const
 											{ return mValue & 0x00FF; }
 							CString		getDisplayString() const;
+							CString		getChannelsDisplayString() const;
 
 							UInt16		getRawValue() const
 											{ return mValue; }

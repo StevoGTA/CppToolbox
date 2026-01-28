@@ -41,9 +41,9 @@ OI<CChunkReader> CWAVEMediaFile::createChunkReader(const I<CRandomAccessDataSour
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
-		const CChunkReader::ChunkInfo& formatChunkInfo, UInt64 dataChunkPosition, UInt64 dataChunkByteCount,
-		const TArray<CChunkReader::ChunkInfo>& otherChunkInfos, UInt32 options) const
+I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportSetup& importSetup,
+		CChunkReader& chunkReader, const CChunkReader::ChunkInfo& formatChunkInfo, UInt64 dataChunkPosition,
+		UInt64 dataChunkByteCount, const TArray<CChunkReader::ChunkInfo>& otherChunkInfos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Process Format chunk
@@ -91,7 +91,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 					CPCMAudioCodec::composeAudioFormat(false, (UInt8) sampleSize,
 							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannelCount()));
 			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
-			if (options & SMediaSource::kOptionsCreateDecoders)
+			if (importSetup.isCreatingDecoders())
 				// Create
 				decodeAudioCodec =
 						CPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
@@ -112,7 +112,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 					CPCMAudioCodec::composeAudioFormat(true, (UInt8) sampleSize,
 							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannelCount()));
 			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
-			if (options & SMediaSource::kOptionsCreateDecoders)
+			if (importSetup.isCreatingDecoders())
 				// Create
 				decodeAudioCodec =
 						CPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
@@ -128,7 +128,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(CChunkReader& chunkReader,
 			mediaSegmentInfo.setValue(
 					CDVIIntelIMAADPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount,
 							waveFormat.getBlockAlign()));
-			if (options & SMediaSource::kOptionsCreateDecoders)
+			if (importSetup.isCreatingDecoders())
 				// Create
 				decodeAudioCodec =
 						CDVIIntelIMAADPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
@@ -204,8 +204,8 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 		// Did not get requisite format chunk or data chunk
 		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mInvalidWAVEFileError));
 
-	return waveMediaFile->import(*chunkReader, *formatChunkInfo, dataChunkInfo->getThisChunkPos(),
+	return waveMediaFile->import(importSetup, *chunkReader, *formatChunkInfo, dataChunkInfo->getThisChunkPos(),
 			std::min<SInt64>(dataChunkInfo->getByteCount(),
 					chunkReader->getByteCount() - dataChunkInfo->getThisChunkPos()),
-			otherChunkInfos, importSetup.getOptions());
+			otherChunkInfos);
 }

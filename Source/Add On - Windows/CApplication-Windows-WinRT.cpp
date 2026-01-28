@@ -30,22 +30,24 @@ const CString& CApplication::getProductName()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const SVersionInfo& CApplication::getVersion()
+const CString& CApplication::getVersion()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static	SVersionInfo*	sVersionInfo = nil;
+	static	CString*	sVersion = nil;
 
 	// Check if have already set up
-	if (sVersionInfo == nil) {
+	if (sVersion == nil) {
 		// Get info
 		auto	version = Package::Current().Id().Version();
 
 		// Setup version
-		sVersionInfo = new SVersionInfo((UInt8) version.Major, (UInt8) version.Minor, (UInt8) version.Build);
+		sVersion =
+				new CString(
+						SVersionInfo((UInt8) version.Major, (UInt8) version.Minor, (UInt8) version.Build).getString());
 	}
 
-	return *sVersionInfo;
+	return *sVersion;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

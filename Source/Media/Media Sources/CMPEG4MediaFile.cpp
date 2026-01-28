@@ -237,9 +237,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 			if (hdlrAtomPayload.getSubType() == SMPEG4::HDLRAtomPayload::kSubTypeSound) {
 				// Audio track
 				TVResult<SMediaSource::Tracks::AudioTrack>	audioTrack =
-																	composeAudioTrack(
-																			importSetup.getRandomAccessDataSource(),
-																			importSetup.getOptions(),
+																	composeAudioTrack(importSetup,
 																			stsdDescriptionHeader.getType(), duration,
 																			internals);
 				ReturnValueIfResultError(audioTrack,
@@ -249,22 +247,22 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 				mediaSourceTracks.add(*audioTrack);
 			} else if (hdlrAtomPayload.getSubType() == SMPEG4::HDLRAtomPayload::kSubTypeVideo) {
 				// Video track
-				TVResult<SMediaSource::Tracks::VideoTrack>	videoTrack =
-																	composeVideoTrack(
-																			importSetup.getRandomAccessDataSource(),
-																			importSetup.getOptions(),
-																			stsdDescriptionHeader.getType(), timeScale,
-																			duration, internals);
-				ReturnValueIfResultError(videoTrack,
-						I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrack.getError())));
+				if (importSetup.isImportingVideoTracks()) {
+					// Compose video track
+					TVResult<SMediaSource::Tracks::VideoTrack>	videoTrack =
+																		composeVideoTrack(importSetup,
+																				stsdDescriptionHeader.getType(),
+																				timeScale, duration, internals);
+					ReturnValueIfResultError(videoTrack,
+							I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrack.getError())));
 
-				// Success
-				mediaSourceTracks.add(*videoTrack);
+					// Success
+					mediaSourceTracks.add(*videoTrack);
+				}
 			} else {
 				// Import track
 				error =
-						importTrack(importSetup.getRandomAccessDataSource(), hdlrAtomPayload.getSubType(),
-								stsdDescriptionHeader, internals);
+						importTrack(importSetup, hdlrAtomPayload.getSubType(), stsdDescriptionHeader, internals);
 				if (error.hasValue())
 					// Error
 					return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(*error));
@@ -363,8 +361,8 @@ TArray<SMedia::PacketAndLocation> CMPEG4MediaFile::composePacketAndLocations(con
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<SMediaSource::Tracks::AudioTrack> CMPEG4MediaFile::composeAudioTrack(
-		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, OSType type,
-		UniversalTimeInterval duration, const Internals& internals)
+		const SMediaSource::ImportSetup& importSetup, OSType type, UniversalTimeInterval duration,
+		const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check type
@@ -398,11 +396,12 @@ TVResult<SMediaSource::Tracks::AudioTrack> CMPEG4MediaFile::composeAudioTrack(
 			SMedia::SegmentInfo					mediaSegmentInfo(duration, byteCount);
 
 			// Add audio track
-			if (options & SMediaSource::kOptionsCreateDecoders)
+			if (importSetup.isCreatingDecoders())
 				// Add audio track with decode info
 				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						SMediaSource::Tracks::AudioTrack(audioFormat, mediaSegmentInfo,
-								CAACAudioCodec::create(*info, randomAccessDataSource, mediaPacketAndLocations)));
+								CAACAudioCodec::create(*info, importSetup.getRandomAccessDataSource(),
+										mediaPacketAndLocations)));
 			else
 				// Add audio track
 				return TVResult<SMediaSource::Tracks::AudioTrack>(
@@ -417,8 +416,8 @@ TVResult<SMediaSource::Tracks::AudioTrack> CMPEG4MediaFile::composeAudioTrack(
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
-		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt32 options, OSType type, UInt32 timeScale,
-		UniversalTimeInterval duration, const Internals& internals)
+		const SMediaSource::ImportSetup& importSetup, OSType type, UInt32 timeScale, UniversalTimeInterval duration,
+		const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check type
@@ -459,7 +458,7 @@ TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
 			SMedia::SegmentInfo	mediaSegmentInfo(duration, byteCount);
 
 			// Add video track
-			if (options & SMediaSource::kOptionsCreateDecoders) {
+			if (importSetup.isCreatingDecoders()) {
 				// Setup
 				const	SMPEG4::STSSAtomPayload&	stssAtomPayload =
 															*((SMPEG4::STSSAtomPayload*)
@@ -473,8 +472,8 @@ TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
 				// Add video track with decode info
 				return TVResult<SMediaSource::Tracks::VideoTrack>(
 						SMediaSource::Tracks::VideoTrack(videoFormat, mediaSegmentInfo,
-								CH264VideoCodec::create(randomAccessDataSource, mediaPacketAndLocations,
-										*configurationData, timeScale, keyframeIndexes)));
+								CH264VideoCodec::create(importSetup.getRandomAccessDataSource(),
+										mediaPacketAndLocations, *configurationData, timeScale, keyframeIndexes)));
 			} else
 				// Add video track
 				return TVResult<SMediaSource::Tracks::VideoTrack>(

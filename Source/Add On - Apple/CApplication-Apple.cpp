@@ -36,30 +36,21 @@ const CString& CApplication::getProductName()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const SVersionInfo& CApplication::getVersion()
+const CString& CApplication::getVersion()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	static	SVersionInfo*	sVersionInfo = nil;
+	static	CString*	sVersion = nil;
 
 	// Check if have already set up
-	if (sVersionInfo == nil) {
-		// Get info
-		CFStringRef		stringRef =
-								(CFStringRef) ::CFBundleGetValueForInfoDictionaryKey(::CFBundleGetMainBundle(),
-										CFSTR("CFBundleShortVersionString"));
-		TArray<CString>	array = CString(stringRef).components(CString::mPeriod);
-		UInt8			majorVersion = (array.getCount() > 0) ? array[0].getUInt8() : 0;
-		UInt8			minorVersion = (array.getCount() > 1) ? array[1].getUInt8() : 0;
-		UInt8			patchVersion = (array.getCount() > 2) ? array[2].getUInt8() : 0;
+	if (sVersion == nil)
+		// Setup
+		sVersion =
+				new CString((CFStringRef)
+						::CFBundleGetValueForInfoDictionaryKey(::CFBundleGetMainBundle(),
+								CFSTR("CFBundleShortVersionString")));
 
-		sVersionInfo =
-				(majorVersion != 0) ?
-						new SVersionInfo(majorVersion, minorVersion, patchVersion) :
-						new SVersionInfo(CString(stringRef));
-	}
-
-	return *sVersionInfo;
+	return *sVersion;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,7 +63,7 @@ const CString& CApplication::getProductNameAndVersion()
 	// Check if have already set up
 	if (sProductNameStringAndVersion == nil)
 		// Setup
-		sProductNameStringAndVersion = new CString(getProductName() + CString::mSpace + getVersion().getString());
+		sProductNameStringAndVersion = new CString(getProductName() + CString::mSpace + getVersion());
 
 	return *sProductNameStringAndVersion;
 }

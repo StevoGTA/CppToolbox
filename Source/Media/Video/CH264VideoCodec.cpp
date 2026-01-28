@@ -173,11 +173,15 @@ struct SH264SequenceParameterSetPayload {
 			// Setup
 			CBitReader	bitReader(I<CRandomAccessDataSource>(new CDataDataSource(data)), true);
 
-			// Decode
+			// NAL header
 			mForbiddenZero = *bitReader.readUInt8(1);
 			mNALRef = *bitReader.readUInt8(2);
 			mNALUnitType = (SH264NALUInfo::Type) *bitReader.readUInt8(5);
+
+			// Profile
 			mProfile = *bitReader.readUInt8();
+
+			// Constratins
 			mConstraintSet0Flag = *bitReader.readUInt8(1);
 			mConstraintSet1Flag = *bitReader.readUInt8(1);
 			mConstraintSet2Flag = *bitReader.readUInt8(1);
@@ -185,11 +189,80 @@ struct SH264SequenceParameterSetPayload {
 			mConstraintSet4Flag = *bitReader.readUInt8(1);
 			mConstraintSet5Flag = *bitReader.readUInt8(1);
 			mReserved2Bits = *bitReader.readUInt8(2);
+
+			// Level
 			mLevel = *bitReader.readUInt8();
-			mSPSID = (UInt8) *bitReader.readUEColumbusCode();
-			mFrameNumberBitCount = (UInt8) *bitReader.readUEColumbusCode() + 4;
-			mPicOrderCountType = (UInt8) *bitReader.readUEColumbusCode();
-			mPicOrderCountLSBBitCount = (UInt8) *bitReader.readUEColumbusCode() + 4;
+
+			// SPS ID
+			mSPSID = (UInt8) *bitReader.readUEExpGolombCode();
+
+			// Check profile
+			if ((mProfile == 44) || (mProfile == 83) || (mProfile == 86) || (mProfile == 100) || (mProfile == 110) ||
+					(mProfile == 118) || (mProfile == 122) ||	(mProfile == 128) || (mProfile == 244)) {
+				// Read high profile chroma format info
+				UInt8	chromaFormatIDC = *bitReader.readUEExpGolombCode();
+				if (chromaFormatIDC == 3)
+					// Read color plane flag
+					bitReader.readUInt8(1);
+
+				UInt8	bitDepthLumaMinus8 = *bitReader.readUEExpGolombCode();	(void) bitDepthLumaMinus8;
+				UInt8	bitDepthChromaMinus8 = *bitReader.readUEExpGolombCode();  (void) bitDepthChromaMinus8;
+				UInt8	qpprimeYZeroTransformBypassFlag = *bitReader.readUInt8(1); (void) qpprimeYZeroTransformBypassFlag;
+
+				UInt8	seqScalingMatrixPresentFlag = *bitReader.readUInt8(1);
+				if (seqScalingMatrixPresentFlag) {
+					// Read
+					UInt8	count  = (chromaFormatIDC != 3) ? 8 : 12;
+					for (UInt8 i = 0; i < count; i++) {
+						// Check if seq scaling list is present
+						if (*bitReader.readUInt8(1)) {
+							// Read
+							UInt8	listSize = (i < 6) ? 16 : 64;
+							UInt8	last = 8, next = 8;
+							for (UInt8 j = 0; j < listSize; j++) {
+								// Check next
+								if (next != 0) {
+									// Read
+									SInt8 delta = *bitReader.readSEExpGolombCode();
+
+									// Uupdate
+									next = (last + delta + 256) % 256;
+								}
+
+								// Update
+								last = (next == 0) ? last : next;
+							}
+						}
+					}
+				}
+			}
+
+			mFrameNumberBitCount = (UInt8) *bitReader.readUEExpGolombCode() + 4;
+
+			mPicOrderCountType = (UInt8) *bitReader.readUEExpGolombCode();
+			if (mPicOrderCountType == 0)
+				// Type 0, read lsb bit count
+				mPicOrderCountLSBBitCount = (UInt8) *bitReader.readUEExpGolombCode() + 4;
+			else if (mPicOrderCountType == 1) {
+				// Type 1
+				UInt8	deltaPicorderAlwaysZeroFlag = *bitReader.readUInt8(1);	(void) deltaPicorderAlwaysZeroFlag;
+				UInt8	offsetForNonRefPic = *bitReader.readSEExpGolombCode();	(void) offsetForNonRefPic;
+				UInt8	offsetForTopToBottomField = *bitReader.readSEExpGolombCode();	(void) offsetForTopToBottomField;
+				UInt32	numRefFramesInPicOrderCntCycle = *bitReader.readUEExpGolombCode();
+				for (UInt32 i = 0; i < numRefFramesInPicOrderCntCycle; i++) {
+					// Read offset
+					UInt32	offsetForRefFrame = *bitReader.readSEExpGolombCode();	(void) offsetForRefFrame;
+				}
+			} else
+				// n/a
+				mPicOrderCountLSBBitCount = 0;
+
+			UInt32	maxNumRefFrames = *bitReader.readUEExpGolombCode();	(void) maxNumRefFrames;
+			UInt8	gapsInFrameNumValueAllowedFlag = *bitReader.readUInt8(1);	(void) gapsInFrameNumValueAllowedFlag;
+			UInt32	picWidthInMBSMinus1 = *bitReader.readUEExpGolombCode();	(void) picWidthInMBSMinus1;
+			UInt32	picHeightInMapUnitsMinus1 = *bitReader.readUEExpGolombCode();	(void) picHeightInMapUnitsMinus1;
+
+			mFrameMbsOnlyFlag = *bitReader.readUInt8(1);
 		}
 
 	// Properties
@@ -209,6 +282,7 @@ struct SH264SequenceParameterSetPayload {
 	UInt8				mFrameNumberBitCount;
 	UInt8				mPicOrderCountType;
 	UInt8				mPicOrderCountLSBBitCount;
+	UInt8				mFrameMbsOnlyFlag;
 };
 
 enum ESliceType {
@@ -294,30 +368,123 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 			public:
 								// Lifecycle methods
 								FrameTiming(const SH264SequenceParameterSetPayload& spsPayload) :
-									mCurrentFrameNumberBitCount(spsPayload.mFrameNumberBitCount),
-											mCurrentPicOrderCountLSBBitCount(spsPayload.mPicOrderCountLSBBitCount),
-											mPicOrderCountMSBChangeThreshold(
-													1 << (mCurrentPicOrderCountLSBBitCount - 1)),
-											mPicOrderCountMSB(0), mPreviousPicOrderCountLSB(0), mLastIDRFrameTime(0),
-													mCurrentFrameTime(0), mNextFrameTime(0)
-									{}
+									mCurrentSPSID(spsPayload.mSPSID),
+											mFrameNumberBitCount(spsPayload.mFrameNumberBitCount),
+											mPicOrderCountType(spsPayload.mPicOrderCountType),
+											mPicOrderCountLSBBitCount(spsPayload.mPicOrderCountLSBBitCount),
+											mMaxPicOrderCntLSB(1ULL << spsPayload.mPicOrderCountLSBBitCount),
+											mPicOrderCountDivisor(0),
+											mFrameMbsOnlyFlag(spsPayload.mFrameMbsOnlyFlag),
+											mLastIDRFrameTime(0),
+											mCurrentFrameTime(0),
+											mNextFrameTime(0),
+											mHasReference(false)
+									{
+										// Initialize POC state
+										resetPOCState();
+									}
 
 								// Instance methods
 				void			seek(UInt64 frameTime)
-									{ mNextFrameTime = frameTime; }
+									{
+										// Update
+										mNextFrameTime = frameTime;
+
+										// Reset POC state
+										resetPOCState();
+									}
 				TVResult<Times>	updateFrom(const CMediaPacketSource::DataInfo& dataInfo);
+				void			updateSPS(const SH264SequenceParameterSetPayload& spsPayload)
+									{
+										// Check if SPS actually changed
+										if ((spsPayload.mSPSID != mCurrentSPSID) ||
+												(spsPayload.mPicOrderCountType != mPicOrderCountType) ||
+												(spsPayload.mFrameNumberBitCount != mFrameNumberBitCount) ||
+												(spsPayload.mPicOrderCountLSBBitCount != mPicOrderCountLSBBitCount)) {
+											// Update SPS parameters
+											mCurrentSPSID = spsPayload.mSPSID;
+
+											mFrameNumberBitCount = spsPayload.mFrameNumberBitCount;
+
+											mPicOrderCountType = spsPayload.mPicOrderCountType;
+											mPicOrderCountLSBBitCount = spsPayload.mPicOrderCountLSBBitCount;
+											mMaxPicOrderCntLSB = 1ULL << spsPayload.mPicOrderCountLSBBitCount;
+											mPicOrderCountDivisor = 0;
+
+											mFrameMbsOnlyFlag = spsPayload.mFrameMbsOnlyFlag;
+
+											// Reset POC state
+											resetPOCState();
+										}
+									}
+
+			private:
+								// Instance methods
+				UInt64			calculatePOCType0(bool isIDR, UInt64 picOrderCntLSB, bool isReference);
+				UInt64			calculatePOCType1(bool isIDR, UInt64 frameNum, bool isReference);
+				UInt64			calculatePOCType2(bool isIDR, UInt64 frameNum);
+
+				void			resetPOCState()
+									{
+										// Reset
+										mPOCState.mType0.mPicOrderCountMSB = 0;
+										mPOCState.mType0.mPreviousPicOrderCountLSB = 0;
+										mPOCState.mType0.mPreviousPicOrderCountMSB = 0;
+
+										mPOCState.mType1.mPreviousFrameNum = 0;
+										mPOCState.mType1.mPreviousFrameNumOffset = 0;
+										mPOCState.mType1.mFrameNumOffset = 0;
+
+										mPOCState.mType2.mPreviousFrameNum = 0;
+										mPOCState.mType2.mPreviousFrameNumOffset = 0;
+										mPOCState.mType2.mFrameNumOffset = 0;
+
+										mHasReference = false;
+									}
 
 			// Properties
 			private:
-				UInt8	mCurrentFrameNumberBitCount;
-				UInt8	mCurrentPicOrderCountLSBBitCount;
-				UInt8	mPicOrderCountMSBChangeThreshold;
+				// Current SPS tracking
+				UInt8	mCurrentSPSID;
 
-				UInt64	mPicOrderCountMSB;
-				UInt64	mPreviousPicOrderCountLSB;
+				// SPS parameters
+				UInt8	mFrameNumberBitCount;
+
+				UInt8	mPicOrderCountType;
+				UInt8	mPicOrderCountLSBBitCount;
+				UInt64	mMaxPicOrderCntLSB;
+				UInt64	mPicOrderCountDivisor;
+
+				UInt8	mFrameMbsOnlyFlag;
+
+				// POC state
+				union {
+					struct {
+						UInt64	mPicOrderCountMSB;
+						UInt64	mPreviousPicOrderCountLSB;
+						UInt64	mPreviousPicOrderCountMSB;
+					} mType0;
+
+					struct {
+						UInt64	mPreviousFrameNum;
+						UInt64	mPreviousFrameNumOffset;
+						UInt64	mFrameNumOffset;
+					} mType1;
+
+					struct {
+						UInt64	mPreviousFrameNum;
+						UInt64	mPreviousFrameNumOffset;
+						UInt64	mFrameNumOffset;
+					} mType2;
+				} mPOCState;
+
+				// Frame timing
 				UInt64	mLastIDRFrameTime;
 				UInt64	mCurrentFrameTime;
 				UInt64	mNextFrameTime;
+
+				// Reference tracking
+				bool	mHasReference;
 		};
 
 	// Methods
@@ -560,85 +727,278 @@ TVResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::Frame
 {
 	// Setup
 	CBitReader	bitReader(I<CRandomAccessDataSource>(new CDataDataSource(dataInfo.getData())), true);
-	UInt8		sliceType;
-	UInt8		picOrderCntLSB;
 
-	// Iterate NALUs
+	// Iterate NALUs to find the first slice
+	bool	isIDR = false;
+	bool	isReference = false;
+	UInt64	frameNum = 0;
+	UInt64	picOrderCntLSB = 0;
+	ESliceType	sliceType = (ESliceType) -1;
 	while (true) {
-		// Get info
-		OV<UInt32>			size = *bitReader.readUInt32();
-		UInt64				pos = bitReader.getPos();
+		// Get NALU info
+		UInt32	size = *bitReader.readUInt32();
+		UInt64	pos = bitReader.getPos();
 
-		OV<UInt8>			forbidden_zero_bit = *bitReader.readUInt8(1);	(void) forbidden_zero_bit;
-		OV<UInt8>			nal_ref_idc = *bitReader.readUInt8(2);	(void) nal_ref_idc;
-		OV<UInt8>			nal_unit_type = *bitReader.readUInt8(5);
-		SH264NALUInfo::Type	naluType = (SH264NALUInfo::Type) *nal_unit_type;
+		// Read NALU header
+		UInt8				forbiddenZeroBit = *bitReader.readUInt8(1);	(void) forbiddenZeroBit;
+		UInt8				nalRefIDC = *bitReader.readUInt8(2);
+		SH264NALUInfo::Type	naluType = (SH264NALUInfo::Type) *bitReader.readUInt8(5);
+
+		// Check if this is a reference picture (nal_ref_idc != 0)
+		isReference = (nalRefIDC != 0);
+
+		// Note: Slices reference PPS via pic_parameter_set_id, and PPS references SPS via seq_parameter_set_id.
+		// For a complete implementation, we would need to:
+		// 1. Parse and store all PPS NALUs with their seq_parameter_set_id
+		// 2. When we see a slice, look up its PPS to find which SPS is active
+		// 3. Update SPS parameters if the active SPS changed
+		// For now, we assume the SPS that appears in the stream is the active one.
 
 		// Check type
-		if (naluType == SH264NALUInfo::kTypeCodedSliceNonIDRPicture) {
-			// Coded Slice Non-IDR Picture
-			OV<UInt32>	first_mb_in_slice = *bitReader.readUEColumbusCode();	(void) first_mb_in_slice;
-			OV<UInt32>	slice_type = *bitReader.readUEColumbusCode();
-			OV<UInt32>	pic_parameter_set_id = *bitReader.readUEColumbusCode();	(void) pic_parameter_set_id;
-			OV<UInt8>	frame_num = *bitReader.readUInt8(mCurrentFrameNumberBitCount);	(void) frame_num;
-			OV<UInt8>	pic_order_cnt_lsb = *bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount);
+		bool	foundSPS = false;
+		UInt8	activeSPSID = 0xFF;
+		if (naluType == SH264NALUInfo::kTypeSequenceParameterSet) {
+			// Found an SPS - parse it to check if parameters changed
+			// This is important for handling SPS changes mid-stream
+			foundSPS = true;
 
-			sliceType = (UInt8) *slice_type;
-			picOrderCntLSB = *pic_order_cnt_lsb;
+			// Update SPS
+			bitReader.setPos(CBitReader::kPositionFromBeginning, pos);
+			updateSPS(SH264SequenceParameterSetPayload(*bitReader.readData(size)));
+		} else if (naluType == SH264NALUInfo::kTypeCodedSliceNonIDRPicture) {
+			// Non-IDR slice
+			UInt32	firstMBInSlice = *bitReader.readUEExpGolombCode();	(void) firstMBInSlice;
+			sliceType = (ESliceType) *bitReader.readUEExpGolombCode();
+			activeSPSID = (UInt8) *bitReader.readUEExpGolombCode();
+			frameNum = *bitReader.readUInt64(mFrameNumberBitCount);
+
+			// Check pic order type type
+			if (mPicOrderCountType == 0)
+				// Type 0
+				picOrderCntLSB = *bitReader.readUInt64(mPicOrderCountLSBBitCount);
+
+			isIDR = false;
 			break;
 		} else if (naluType == SH264NALUInfo::kTypeCodedSliceIDRPicture) {
-			// Coded Slice IDR Picture
-			OV<UInt32>	first_mb_in_slice = *bitReader.readUEColumbusCode();	(void) first_mb_in_slice;
-			OV<UInt32>	slice_type = *bitReader.readUEColumbusCode();
-			OV<UInt32>	pic_parameter_set_id = *bitReader.readUEColumbusCode();	(void) pic_parameter_set_id;
-			OV<UInt8>	frame_num = *bitReader.readUInt8(mCurrentFrameNumberBitCount);	(void) frame_num;
-			OV<UInt32>	idr_pic_id = *bitReader.readUEColumbusCode();	(void) idr_pic_id;
-			OV<UInt8>	pic_order_cnt_lsb = *bitReader.readUInt8(mCurrentPicOrderCountLSBBitCount);
+			// IDR slice
+			UInt32	firstMBInSlice = *bitReader.readUEExpGolombCode();	(void) firstMBInSlice;
+			sliceType = (ESliceType) *bitReader.readUEExpGolombCode();
+			activeSPSID = (UInt8) *bitReader.readUEExpGolombCode();
+			frameNum = *bitReader.readUInt64(mFrameNumberBitCount);
+			UInt32	idrPicID = *bitReader.readUEExpGolombCode();	(void) idrPicID;
 
-			sliceType = (UInt8) *slice_type;
-			picOrderCntLSB = *pic_order_cnt_lsb;
+			// Check pic order type type
+			if (mPicOrderCountType == 0)
+				// Type 0
+				picOrderCntLSB = *bitReader.readUInt64(mPicOrderCountLSBBitCount);
+
+			isIDR = true;
+			isReference = true;
 			break;
 		} else if (naluType == SH264NALUInfo::kTypeSupplementalEnhancementInformation) {
 			// SEI
+		} else if (naluType == SH264NALUInfo::kTypePictureParameterSet) {
+			// PPS - could parse to track PPS->SPS mapping, but skip for now
 		} else
 			// Unhandled
 			CLogServices::logMessage(CString(OSSTR("Unhandled NALU type: ")) + CString(naluType));
 
 		// Next NALU
-		OV<SError>	error = bitReader.setPos(CBitReader::kPositionFromBeginning, pos + *size);
+		OV<SError>	error = bitReader.setPos(CBitReader::kPositionFromBeginning, pos + size);
 		LogIfErrorAndReturnValue(error, CString(OSSTR("reading next NALU")), TVResult<Times>(*error));
 	}
 
-	// Handle results
-	if ((sliceType % 5) == kSliceTypeI) {
-		// IDR
-		mCurrentFrameTime = mNextFrameTime;
-		mPicOrderCountMSB = 0;
-		mPreviousPicOrderCountLSB = 0;
-		mLastIDRFrameTime = mNextFrameTime;
-	} else {
-		// Non-IDR
-		if ((picOrderCntLSB > mPreviousPicOrderCountLSB) &&
-				((picOrderCntLSB - mPreviousPicOrderCountLSB) > mPicOrderCountMSBChangeThreshold))
-			// Update
-			mPicOrderCountMSB -= (UInt64) 1 << mCurrentPicOrderCountLSBBitCount;
-		else if ((mPreviousPicOrderCountLSB > picOrderCntLSB) &&
-				((mPreviousPicOrderCountLSB - picOrderCntLSB) > mPicOrderCountMSBChangeThreshold))
-			// Update
-			mPicOrderCountMSB += (UInt64) 1 << mCurrentPicOrderCountLSBBitCount;
+	// Calculate POC
+	UInt64 picOrderCnt;
+	switch (mPicOrderCountType) {
+		case 0:
+			// Type 0: pic_order_cnt_lsb based
+			picOrderCnt = calculatePOCType0(isIDR, picOrderCntLSB, isReference);
+			break;
 
-		// Update
-		mPreviousPicOrderCountLSB = picOrderCntLSB;
-		mCurrentFrameTime = mLastIDRFrameTime + (mPicOrderCountMSB + picOrderCntLSB) / 2 * dataInfo.getDuration();
+		case 1:
+			// Type 1: frame_num based with offset
+			picOrderCnt = calculatePOCType1(isIDR, frameNum, isReference);
+			break;
+
+		case 2:
+			// Type 2: simple frame_num based (pictures in display order)
+			picOrderCnt = calculatePOCType2(isIDR, frameNum);
+			break;
+
+		default:
+			// Unsupported
+			CLogServices::logError(CString(OSSTR("Unsupported mPicOrderCountType: ")) + CString(mPicOrderCountType));
+
+			return TVResult<Times>(
+					SError(CString(OSSTR("CH264DecodeVideoCodec::FrameTiming")), 1,
+							CString(OSSTR("Unsupported mPicOrderCountType: ")) + CString(mPicOrderCountType)));
 	}
 
+	// Check if is IDR
+	if (isIDR)
+		// Update last IDR time
+		mLastIDRFrameTime = mNextFrameTime;
+
+	// Calculate presentation time from POC
+	// The correct formula depends on frame_mbs_only_flag from SPS:
+	//
+	// If frame_mbs_only_flag == 1 (progressive/frame coding):
+	//   - POC should increment by 2 per frame: 0, 2, 4, 6...
+	//   - Frame index = POC / 2
+	//
+	// If frame_mbs_only_flag == 0 (interlaced/field coding possible):
+	//   - POC increments by 1 per field: 0, 1, 2, 3...
+	//   - Each frame consists of 2 fields (top and bottom)
+	//   - Frame index = POC / 2
+	//
+	// HOWEVER, some encoders break the spec and use POC type 0 with POC incrementing
+	// by 1 even for progressive content (treating each frame as if it's a field).
+	// In this case, frame index = POC directly.
+	//
+	// We can detect this by checking if frame_mbs_only_flag == 1 but POC increments by 1.
+	UInt64	frameIndex;
+	if (mFrameMbsOnlyFlag == 1) {
+		// Progressive coding - POC should increment by 2
+		if (mPicOrderCountDivisor > 0)
+			// Have figured the divisor
+			frameIndex = picOrderCnt / mPicOrderCountDivisor;
+		else if (picOrderCnt > 0) {
+			// Can set the divisor
+			mPicOrderCountDivisor = picOrderCnt;
+			frameIndex = 1;
+		} else
+			// First frame
+			frameIndex = 0;
+	} else
+		// Field coding - POC increments by 1, divide by 2 to get frame index
+		frameIndex = picOrderCnt / 2;
+
+	mCurrentFrameTime = mLastIDRFrameTime + frameIndex * dataInfo.getDuration();
+
 	// Compose results
+	// Decode time: order packets arrive (sequential)
+	// Presentation time: order frames should be displayed (based on POC)
 	TVResult<Times>	times = TVResult<Times>(Times(mNextFrameTime, mCurrentFrameTime));
 
-	// Update
+	// Update decode time for next frame
 	mNextFrameTime += dataInfo.getDuration();
 
+	// Check if is reference
+	if (isReference)
+		// Has reference
+		mHasReference = true;
+
 	return times;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CH264DecodeVideoCodec::FrameTiming::calculatePOCType0(bool isIDR, UInt64 picOrderCntLSB, bool isReference)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt64 picOrderCnt;
+
+	// Check if is IDR
+	if (isIDR) {
+		// IDR frame - reset POC tracking
+		mPOCState.mType0.mPicOrderCountMSB = 0;
+		mPOCState.mType0.mPreviousPicOrderCountLSB = 0;
+		mPOCState.mType0.mPreviousPicOrderCountMSB = 0;
+
+		picOrderCnt = 0;
+	} else {
+		// Non-IDR, calculate PicOrderCntMsb as per H.264 spec 8.2.1.1
+		if ((picOrderCntLSB < mPOCState.mType0.mPreviousPicOrderCountLSB) &&
+				((mPOCState.mType0.mPreviousPicOrderCountLSB - picOrderCntLSB) >= (mMaxPicOrderCntLSB / 2)))
+			// Wrapped forward
+			mPOCState.mType0.mPicOrderCountMSB = mPOCState.mType0.mPreviousPicOrderCountMSB + mMaxPicOrderCntLSB;
+		else if ((picOrderCntLSB > mPOCState.mType0.mPreviousPicOrderCountLSB) &&
+			   ((picOrderCntLSB - mPOCState.mType0.mPreviousPicOrderCountLSB) > (mMaxPicOrderCntLSB / 2)))
+			// Wrapped backward
+			mPOCState.mType0.mPicOrderCountMSB = mPOCState.mType0.mPreviousPicOrderCountMSB - mMaxPicOrderCntLSB;
+		else
+			// No wrap
+			mPOCState.mType0.mPicOrderCountMSB = mPOCState.mType0.mPreviousPicOrderCountMSB;
+
+		// TopFieldOrderCnt for frame coding
+		picOrderCnt = mPOCState.mType0.mPicOrderCountMSB + picOrderCntLSB;
+	}
+
+	// Check if reference
+	if (isReference) {
+		// Update state for next frame
+		mPOCState.mType0.mPreviousPicOrderCountLSB = picOrderCntLSB;
+		mPOCState.mType0.mPreviousPicOrderCountMSB = mPOCState.mType0.mPicOrderCountMSB;
+	}
+
+	return picOrderCnt;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CH264DecodeVideoCodec::FrameTiming::calculatePOCType1(bool isIDR, UInt64 frameNum, bool isReference)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// POC Type 1 uses frame_num and FrameNumOffset
+	// This is a simplified implementation - full support requires SPS fields like
+	// num_ref_frames_in_pic_order_cnt_cycle, offset_for_ref_frame[], etc.
+	UInt64 maxFrameNum = 1ULL << mFrameNumberBitCount;
+
+	// Check if is IDR
+	if (isIDR) {
+		// IDR frame - reset POC tracking
+		mPOCState.mType1.mFrameNumOffset = 0;
+		mPOCState.mType1.mPreviousFrameNum = 0;
+	} else
+		// Non-IDR, calculate FrameNumOffset
+		mPOCState.mType1.mFrameNumOffset =
+				(mPOCState.mType1.mPreviousFrameNum > frameNum) ?
+						mPOCState.mType1.mPreviousFrameNumOffset + maxFrameNum :
+						mPOCState.mType1.mPreviousFrameNumOffset;
+
+	// Simplified POC calculation for type 1.  In practice, this requires additional SPS parameters
+	UInt64 picOrderCnt = (mPOCState.mType1.mFrameNumOffset + frameNum) * 2;
+
+	// Check if reference
+	if (isReference) {
+		// Update state for next frame
+		mPOCState.mType1.mPreviousFrameNum = frameNum;
+		mPOCState.mType1.mPreviousFrameNumOffset = mPOCState.mType1.mFrameNumOffset;
+	}
+
+	return picOrderCnt;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CH264DecodeVideoCodec::FrameTiming::calculatePOCType2(bool isIDR, UInt64 frameNum)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// POC Type 2: Simple frame number based ordering
+	UInt64 maxFrameNum = 1ULL << mFrameNumberBitCount;
+
+	// Check if is IDR
+	if (isIDR) {
+		// IDR frame - reset POC tracking
+		mPOCState.mType2.mFrameNumOffset = 0;
+		mPOCState.mType2.mPreviousFrameNum = frameNum;
+
+		return 0;
+	}
+
+	// Calculate FrameNumOffset
+	mPOCState.mType2.mFrameNumOffset =
+			(mPOCState.mType2.mPreviousFrameNum > frameNum) ?
+					mPOCState.mType2.mPreviousFrameNumOffset + maxFrameNum :
+					mPOCState.mType2.mPreviousFrameNumOffset;
+
+	// Pictures are in display order
+	UInt64 tempPicOrderCnt = 2 * (mPOCState.mType2.mFrameNumOffset + frameNum);
+
+	// Update state
+	mPOCState.mType2.mPreviousFrameNum = frameNum;
+	mPOCState.mType2.mPreviousFrameNumOffset = mPOCState.mType2.mFrameNumOffset;
+
+	return tempPicOrderCnt;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

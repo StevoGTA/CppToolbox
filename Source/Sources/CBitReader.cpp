@@ -336,22 +336,87 @@ TVResult<UInt64> CBitReader::readUInt64() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<UInt32> CBitReader::readUEColumbusCode() const
+TVResult<UInt64> CBitReader::readUInt64(UInt8 bitCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Preflight
+	AssertFailIf(bitCount > 64);
+
 	// Compose value
-	SInt8	leadingZeroBits = -1;
-	for (UInt8 b = 0; !b; leadingZeroBits++) {
+	UInt64	value = 0;
+	while (bitCount > 0) {
+		// Reload current byte
+		OV<SError>	error = mInternals->reloadCurrentByte();
+		ReturnValueIfError(error, TVResult<UInt64>(*error));
+
+		// Process
+		UInt8	bitsToProcess =
+						(bitCount < mInternals->mCurrentByteBitsAvailable) ?
+								bitCount : mInternals->mCurrentByteBitsAvailable;
+		bitCount -= bitsToProcess;
+		value = (value << bitsToProcess) | mInternals->readBits(bitsToProcess);
+	}
+
+	return TVResult<UInt64>(value);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<SInt32> CBitReader::readSEExpGolombCode() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read unsigned Exp-Golomb code
+	TVResult<UInt32>	ueValue = readUEExpGolombCode();
+	ReturnValueIfResultError(ueValue, TVResult<SInt32>(ueValue.getError()));
+
+	// Map unsigned code to signed value using the standard mapping:
+	// 0 -> 0
+	// 1 -> 1
+	// 2 -> -1
+	// 3 -> 2
+	// 4 -> -2
+	// 5 -> 3
+	// etc.
+	//
+	// Formula: (-1)^(k+1) * ceil(k/2)
+	// Equivalent to: (k & 1) ? ((k + 1) >> 1) : -((k + 1) >> 1)
+	// Or more efficiently: (k & 1) ? ((k + 1) >> 1) : -(SInt32)((k + 1) >> 1)
+	SInt32	signedValue = (*ueValue & 1) ? (SInt32) ((*ueValue + 1) >> 1) : -(SInt32) ((*ueValue + 1) >> 1);
+
+	return TVResult<SInt32>(signedValue);
+}
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<UInt32> CBitReader::readUEExpGolombCode() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Count leading zero bits
+	UInt8	leadingZeroBits = 0;
+	while (true) {
 		// Reload current byte
 		OV<SError>	error = mInternals->reloadCurrentByte();
 		ReturnValueIfError(error, TVResult<UInt32>(*error));
 
 		// Read bit
-		b = mInternals->readBits(1);
+		UInt8 b = mInternals->readBits(1);
+		if (b)
+			break;
+		
+		leadingZeroBits++;
+
+		// Check for overflow
+		if (leadingZeroBits > 31)
+			/// Overflow
+			return TVResult<UInt32>(
+					SError(CString(OSSTR("CBitReader")), 1, CString(OSSTR("overflow when reading Exp-Golomb code"))));
 	}
 
+	// Handle special case: code "1" represents 0
+	if (leadingZeroBits == 0)
+		// 0
+		return TVResult<UInt32>(0);
+
+	// Read the remaining bits
 	TVResult<UInt32>	value = readUInt32(leadingZeroBits);
 	ReturnValueIfResultError(value, TVResult<UInt32>(value.getError()));
 
-	return TVResult<UInt32>((1 << leadingZeroBits) - 1 + *value);
+	return TVResult<UInt32>((1U << leadingZeroBits) - 1 + *value);
 }

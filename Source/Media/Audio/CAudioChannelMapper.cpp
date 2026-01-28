@@ -29,7 +29,7 @@ class CAudioChannelMapper::Internals {
 								if (readInfoSegments.getCount() == 1) {
 									// Interleaved
 									const	UInt8*	sourcePtr = (const UInt8*) readInfoSegments[0];
-											UInt8*	destinationPtr = (UInt8*) writeInfo.getSegments()[0];
+											UInt8*	destinationPtr = (UInt8*) writeInfoSegments[0];
 									for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
 										// Copy frame
 										::memcpy(destinationPtr, sourcePtr, destinationBytesPerFrame);
@@ -38,7 +38,9 @@ class CAudioChannelMapper::Internals {
 									}
 								} else {
 									// Non-interleaved
-									AssertFailUnimplemented();
+									for (UInt32 i = 0; i < writeInfoSegments.getCount(); i++)
+										// Copy
+										::memcpy(writeInfoSegments[i], readInfoSegments[i], readInfo.getByteCount());
 								}
 
 								// Complete
@@ -281,7 +283,8 @@ TArray<SAudio::ProcessingSetup> CAudioChannelMapper::getOutputSetups() const
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CAudioChannelMapper::canPerform(const SAudio::ChannelMap& fromAudioChannelMap, const SAudio::ChannelMap& toAudioChannelMap)
+bool CAudioChannelMapper::canPerform(const SAudio::ChannelMap& fromAudioChannelMap,
+		const SAudio::ChannelMap& toAudioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return

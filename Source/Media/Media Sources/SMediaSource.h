@@ -15,12 +15,13 @@
 // MARK: SMediaSource
 
 struct SMediaSource {
-	// Types
+	// Options
 	enum Options {
-		kOptionsNone			= 0,
-		kOptionsCreateDecoders	= 1 << 1,
+		kOptionsNone				= 0,
+		kOptionsCreateDecoders		= 1 << 1,
+		kOptionsImportVideoTracks	= 1 << 2,
 
-		kOptionsLast			= kOptionsCreateDecoders,
+		kOptionsLast				= kOptionsImportVideoTracks,
 	};
 
 	// Identity
@@ -53,12 +54,12 @@ struct SMediaSource {
 											// Lifecycle methods
 											ImportSetup(const I<CRandomAccessDataSource>& randomAccessDataSource,
 													const OI<CAppleResourceManager>& appleResourceManager,
-													UInt32 options = SMediaSource::kOptionsNone) :
+													UInt32 options) :
 												mRandomAccessDataSource(randomAccessDataSource),
 														mAppleResourceManager(appleResourceManager), mOptions(options)
 												{}
 											ImportSetup(const I<CRandomAccessDataSource>& randomAccessDataSource,
-													UInt32 options = SMediaSource::kOptionsNone) :
+													UInt32 options) :
 												mRandomAccessDataSource(randomAccessDataSource), mOptions(options)
 												{}
 											ImportSetup(const ImportSetup& other) :
@@ -72,8 +73,13 @@ struct SMediaSource {
 												{ return mRandomAccessDataSource; }
 		const	OI<CAppleResourceManager>	getAppleResourceManager() const
 												{ return mAppleResourceManager; }
+
 				UInt32						getOptions() const
 												{ return mOptions; }
+				bool						isCreatingDecoders() const
+												{ return mOptions & kOptionsCreateDecoders; }
+				bool						isImportingVideoTracks() const
+												{ return mOptions & kOptionsImportVideoTracks; }
 
 		// Properties
 		private:
