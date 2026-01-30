@@ -64,7 +64,16 @@ CData SMPEG4::STSDAtomPayload::getData(const TArray<CData>& descriptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
+#if defined(TARGET_OS_WINDOWS)
+	#pragma warning(disable:4815)
+#endif
+
 	STSDAtomPayload	stsdAtomPayload(descriptions.getCount());
+
+#if defined(TARGET_OS_WINDOWS)
+	#pragma warning(default:4815)
+#endif
+
 	CData			data(&stsdAtomPayload, sizeof(STSDAtomPayload), false);
 
 	// Add descriptions
