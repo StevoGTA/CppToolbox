@@ -152,7 +152,8 @@ UError CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) con
 			// Open
 			mInternals->mFD =
 					::open(*mInternals->mFile.getFilesystemPath().getString().getCString(kStringEncodingUTF8),
-							!append ? (O_RDWR | O_CREAT | O_EXCL) : (O_RDWR | O_APPEND | O_EXLOCK), 0);
+							!append ? (O_RDWR | O_CREAT | O_EXCL) : (O_RDWR | O_CREAT | O_APPEND | O_EXLOCK),
+							S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 			if (mInternals->mFD != -1)
 				// Success
 				return kNoError;
