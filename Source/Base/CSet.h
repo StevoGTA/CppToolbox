@@ -353,6 +353,8 @@ template <typename T> class TNumberSet : public TMSet<TNumber<T> > {
 
 				TNumberSet<T>&	insert(T value)
 									{ TMSet<TNumber<T> >::insert(TNumber<T>(value)); return *this; }
+				TNumberSet<T>&	remove(T value)
+									{ TMSet<TNumber<T> >::remove(TNumber<T>(value)); return *this; }
 
 				TNumberArray<T>	getNumberArray() const
 									{
@@ -370,6 +372,8 @@ template <typename T> class TNumberSet : public TMSet<TNumber<T> > {
 
 				TNumberSet<T>&	operator+=(T value)
 									{ return insert(value); }
+				TNumberSet<T>&	operator-=(T value)
+									{ return remove(value); }
 
 	private:
 								// Class methods
