@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "CString.h"
+
 #if defined(TARGET_OS_WINDOWS)
 	#include "CFolder.h"
 #endif

@@ -4,6 +4,8 @@
 
 #include "CApplication.h"
 
+#include "SVersionInfo.h"
+
 #include <winrt/Windows.ApplicationModel.h>
 #include <winrt/Windows.Storage.h>
 
@@ -60,7 +62,7 @@ const CString& CApplication::getProductNameAndVersion()
 	// Check if have already set up
 	if (sProductNameStringAndVersion == nil)
 		// Setup
-		sProductNameStringAndVersion = new CString(getProductName() + CString(" ") + getVersion().getString());
+		sProductNameStringAndVersion = new CString(getProductName() + CString::mSpace + getVersion());
 
 	return *sProductNameStringAndVersion;
 }
