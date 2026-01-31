@@ -71,7 +71,6 @@ class CLogServices {
 	// Methods
 	public:
 						// Class methods
-
 		static	void	logMessage(const CString& string);
 		static	void	logMessages(const TArray<CString>& strings);
 		static	void	logDebugMessage(const CString& string);
