@@ -239,87 +239,87 @@ class CPreferences {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									CPreferences();
-									CPreferences(const Reference& reference);
-									~CPreferences();
+											// Lifecycle methods
+											CPreferences();
+											CPreferences(const Reference& reference);
+											~CPreferences();
 
-									// Instance methods
-		bool						hasValue(const Pref& pref);
-		bool						hasValue(const BoolPref& boolPref)
-										{ return hasValue(Pref(boolPref.getKeyString())); }
-		bool						hasValue(const StringPref& stringPref)
-										{ return hasValue(Pref(stringPref.getKeyString())); }
-		bool						hasValue(const Float32Pref& float32Pref)
-										{ return hasValue(Pref(float32Pref.getKeyString())); }
-		bool						hasValue(const Float64Pref& float64Pref)
-										{ return hasValue(Pref(float64Pref.getKeyString())); }
-		bool						hasValue(const SInt32Pref& sInt32Pref)
-										{ return hasValue(Pref(sInt32Pref.getKeyString())); }
-		bool						hasValue(const UInt32Pref& uInt32Pref)
-										{ return hasValue(Pref(uInt32Pref.getKeyString())); }
-		bool						hasValue(const UInt64Pref& uInt64Pref)
-										{ return hasValue(Pref(uInt64Pref.getKeyString())); }
-		bool						hasValue(const UniversalTimeIntervalPref& universalTimeIntervalPref)
-										{ return hasValue(Pref(universalTimeIntervalPref.getKeyString())); }
+											// Instance methods
+				bool						hasValue(const Pref& pref);
+				bool						hasValue(const BoolPref& boolPref)
+												{ return hasValue(Pref(boolPref.getKeyString())); }
+				bool						hasValue(const StringPref& stringPref)
+												{ return hasValue(Pref(stringPref.getKeyString())); }
+				bool						hasValue(const Float32Pref& float32Pref)
+												{ return hasValue(Pref(float32Pref.getKeyString())); }
+				bool						hasValue(const Float64Pref& float64Pref)
+												{ return hasValue(Pref(float64Pref.getKeyString())); }
+				bool						hasValue(const SInt32Pref& sInt32Pref)
+												{ return hasValue(Pref(sInt32Pref.getKeyString())); }
+				bool						hasValue(const UInt32Pref& uInt32Pref)
+												{ return hasValue(Pref(uInt32Pref.getKeyString())); }
+				bool						hasValue(const UInt64Pref& uInt64Pref)
+												{ return hasValue(Pref(uInt64Pref.getKeyString())); }
+				bool						hasValue(const UniversalTimeIntervalPref& universalTimeIntervalPref)
+												{ return hasValue(Pref(universalTimeIntervalPref.getKeyString())); }
 
-		bool						getBool(const BoolPref& boolPref);
-		OV<TArray<CData> >			getDataArray(const Pref& pref);
-		OV<TArray<CDictionary> >	getDictionaryArray(const Pref& pref);
-		OV<TNumberArray<OSType> >	getOSTypeArray(const Pref& pref);
-		OV<CData>					getData(const Pref& pref);
-		OV<CDictionary>				getDictionary(const Pref& pref);
-		CString						getString(const StringPref& stringPref);
-		Float32						getFloat32(const Float32Pref& float32Pref);
-		Float64						getFloat64(const Float64Pref& float64Pref);
-		SInt32						getSInt32(const SInt32Pref& sInt32Pref);
-		UInt32						getUInt32(const UInt32Pref& uInt32Pref);
-		UInt64						getUInt64(const UInt64Pref& uInt64Pref);
-		UniversalTimeInterval		getUniversalTimeInterval(
-											const UniversalTimeIntervalPref& universalTimeIntervalPref);
+				bool						getBool(const BoolPref& boolPref);
+				OV<TArray<CData> >			getDataArray(const Pref& pref);
+				OV<TArray<CDictionary> >	getDictionaryArray(const Pref& pref);
+				OV<TNumberArray<OSType> >	getOSTypeArray(const Pref& pref);
+				OV<CData>					getData(const Pref& pref);
+				OV<CDictionary>				getDictionary(const Pref& pref);
+				CString						getString(const StringPref& stringPref);
+				Float32						getFloat32(const Float32Pref& float32Pref);
+				Float64						getFloat64(const Float64Pref& float64Pref);
+				SInt32						getSInt32(const SInt32Pref& sInt32Pref);
+				UInt32						getUInt32(const UInt32Pref& uInt32Pref);
+				UInt64						getUInt64(const UInt64Pref& uInt64Pref);
+				UniversalTimeInterval		getUniversalTimeInterval(
+													const UniversalTimeIntervalPref& universalTimeIntervalPref);
 
-		void						set(const BoolPref& boolPref, bool value);
-		void						set(const Pref& pref, const TArray<CData>& array);
-		void						set(const Pref& pref, const TArray<CDictionary>& array);
-		void						set(const Pref& pref, const TNumberArray<OSType>& array);
-		void						set(const Pref& pref, const CData& data);
-		void						set(const Pref& pref, const CDictionary& dictionary);
-		void						set(const StringPref& stringPref, const CString& string);
-		void						set(const Float32Pref& float32Pref, Float32 value);
-		void						set(const Float64Pref& float64Pref, Float64 value);
-		void						set(const SInt32Pref& sInt32Pref, SInt32 value);
-		void						set(const UInt32Pref& uInt32Pref, UInt32 value);
-		void						set(const UInt64Pref& uInt64Pref, UInt64 value);
-		void						set(const UniversalTimeIntervalPref& universalTimeIntervalPref,
-											UniversalTimeInterval value);
+				void						set(const BoolPref& boolPref, bool value);
+				void						set(const Pref& pref, const TArray<CData>& array);
+				void						set(const Pref& pref, const TArray<CDictionary>& array);
+				void						set(const Pref& pref, const TNumberArray<OSType>& array);
+				void						set(const Pref& pref, const CData& data);
+				void						set(const Pref& pref, const CDictionary& dictionary);
+				void						set(const StringPref& stringPref, const CString& string);
+				void						set(const Float32Pref& float32Pref, Float32 value);
+				void						set(const Float64Pref& float64Pref, Float64 value);
+				void						set(const SInt32Pref& sInt32Pref, SInt32 value);
+				void						set(const UInt32Pref& uInt32Pref, UInt32 value);
+				void						set(const UInt64Pref& uInt64Pref, UInt64 value);
+				void						set(const UniversalTimeIntervalPref& universalTimeIntervalPref,
+													UniversalTimeInterval value);
 
-		void						remove(const Pref& pref);
-		void						remove(const BoolPref& boolPref)
-										{ remove(Pref(boolPref.getKeyString())); }
-		void						remove(const StringPref& stringPref)
-										{ remove(Pref(stringPref.getKeyString())); }
-		void						remove(const Float32Pref& float32Pref)
-										{ remove(Pref(float32Pref.getKeyString())); }
-		void						remove(const Float64Pref& float64Pref)
-										{ remove(Pref(float64Pref.getKeyString())); }
-		void						remove(const SInt32Pref& sInt32Pref)
-										{ remove(Pref(sInt32Pref.getKeyString())); }
-		void						remove(const UInt32Pref& uInt32Pref)
-										{ remove(Pref(uInt32Pref.getKeyString())); }
-		void						remove(const UInt64Pref& uInt64Pref)
-										{ remove(Pref(uInt64Pref.getKeyString())); }
-		void						remove(const UniversalTimeIntervalPref& universalTimeIntervalPref)
-										{ remove(Pref(universalTimeIntervalPref.getKeyString())); }
+				void						remove(const Pref& pref);
+				void						remove(const BoolPref& boolPref)
+												{ remove(Pref(boolPref.getKeyString())); }
+				void						remove(const StringPref& stringPref)
+												{ remove(Pref(stringPref.getKeyString())); }
+				void						remove(const Float32Pref& float32Pref)
+												{ remove(Pref(float32Pref.getKeyString())); }
+				void						remove(const Float64Pref& float64Pref)
+												{ remove(Pref(float64Pref.getKeyString())); }
+				void						remove(const SInt32Pref& sInt32Pref)
+												{ remove(Pref(sInt32Pref.getKeyString())); }
+				void						remove(const UInt32Pref& uInt32Pref)
+												{ remove(Pref(uInt32Pref.getKeyString())); }
+				void						remove(const UInt64Pref& uInt64Pref)
+												{ remove(Pref(uInt64Pref.getKeyString())); }
+				void						remove(const UniversalTimeIntervalPref& universalTimeIntervalPref)
+												{ remove(Pref(universalTimeIntervalPref.getKeyString())); }
 
-		void						beginGroupSet();
-		void						endGroupSet();
+				void						beginGroupSet();
+				void						endGroupSet();
 
-		void						setAlternate(const Reference& reference);
+				void						setAlternate(const Reference& reference);
+
+											// Class methods
+		static	CPreferences&				shared();
 
 	// Properties
-	public:
-		static	CPreferences	mDefault;
-
 	private:
-				Internals*		mInternals;
+		Internals*	mInternals;
 };

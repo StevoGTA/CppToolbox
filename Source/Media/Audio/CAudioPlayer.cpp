@@ -28,14 +28,14 @@ const	UniversalTimeInterval	CAudioPlayer::kPreviewDuration = 0.1;
 UniversalTimeInterval CAudioPlayer::getPlaybackBufferDuration()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CPreferences::mDefault.getUniversalTimeInterval(sPlaybackBufferDurationPref);
+	return CPreferences::shared().getUniversalTimeInterval(sPlaybackBufferDurationPref);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::setPlaybackBufferDuration(UniversalTimeInterval playbackBufferDuration)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CPreferences::mDefault.set(sPlaybackBufferDurationPref, playbackBufferDuration);
+	CPreferences::shared().set(sPlaybackBufferDurationPref, playbackBufferDuration);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
