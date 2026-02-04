@@ -24,10 +24,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CPreferences
 
-// MARK: Properties
-
-CPreferences	CPreferences::mDefault;
-
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -446,4 +442,21 @@ void CPreferences::setAlternate(const Reference& reference)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	AssertFailUnimplemented();
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CPreferences& CPreferences::shared()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static    CPreferences* sPreferences = nil;
+
+	// Check if first time
+	if (sPreferences == nil)
+		// Instantiate
+		sPreferences = new CPreferences();
+
+	return *sPreferences;
 }
