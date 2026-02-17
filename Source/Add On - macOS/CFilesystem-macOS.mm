@@ -2,13 +2,12 @@
 //	CFilesystem-macOS.mm			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CFilesystem.h"
+#import "CFilesystem.h"
 
-#include "CCoreFoundation.h"
-#include "SError-Apple.h"
+#import "CCoreFoundation.h"
+#import "SError-Apple.h"
 
-#include <Foundation/Foundation.h>
-#include <AppKit/AppKit.h>
+#import <AppKit/AppKit.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -88,7 +87,7 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFilesystem::open(const TArray<CFile>& files, const Application& application)
+OV<SError> CFilesystem::open(const TArray<CFile>& files, CFURLRef applicationURLRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -99,13 +98,10 @@ OV<SError> CFilesystem::open(const TArray<CFile>& files, const Application& appl
 						(NSURL*) CFBridgingRelease(
 								CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false))];
 
-	NSURL*	applicationURL =
-					(NSURL*) CFBridgingRelease(
-							CCoreFoundation::createURLRefFrom(application.getFilesystemPath(), true));
 	// Open
 			dispatch_semaphore_t	semaphore = dispatch_semaphore_create(0);
 	__block	NSError*				openURLsError = nil;
-	[[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:applicationURL
+	[[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:(__bridge NSURL*) applicationURLRef
 			configuration:[NSWorkspaceOpenConfiguration configuration]
 			completionHandler:^(NSRunningApplication* runningApplication, NSError* error) {
 		// Store error
@@ -121,10 +117,13 @@ OV<SError> CFilesystem::open(const TArray<CFile>& files, const Application& appl
 	if (openURLsError == nil)
 		// Success
 		return OV<SError>();
-	else
+	else {
 		// Error
-		CFilesystemReportErrorFileFolderX1AndReturnError(SErrorFromNSError(openURLsError),
-				CString(OSSTR("opening files with")), application);
+		OV<SError>	error(SErrorFromNSError(openURLsError));
+		LogError(*error, CString(OSSTR("opening files with")));
+
+		return error;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

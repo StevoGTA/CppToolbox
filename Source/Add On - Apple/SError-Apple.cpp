@@ -4,6 +4,22 @@
 
 #include "SError-Apple.h"
 
+//----------------------------------------------------------------------------------------------------------------------
+SError SErrorFromCFError(CFErrorRef errorRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFStringRef	descriptionStringRef = ::CFErrorCopyDescription(errorRef);
+
+	// Construct error
+	SError		error(CString(::CFErrorGetDomain(errorRef)), (SInt32) ::CFErrorGetCode(errorRef), descriptionStringRef);
+
+	// Cleanup
+	::CFRelease(descriptionStringRef);
+
+	return error;
+}
+
 #if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
 SError SErrorFromOSStatus(OSStatus status)

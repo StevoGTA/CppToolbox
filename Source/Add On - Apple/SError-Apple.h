@@ -7,17 +7,17 @@
 #include "CLogServices.h"
 #include "SError.h"
 
-#define SErrorFromNSError(e)												\
-		SError(CString((__bridge CFStringRef) e.domain), (SInt32) e.code,	\
-				CString((__bridge CFStringRef) e.localizedDescription))
+extern	SError	SErrorFromCFError(CFErrorRef errorRef);
 
-#if defined(TARGET_OS_IOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+#if defined(TARGET_OS_MACOS)
+	extern	SError	SErrorFromOSStatus(OSStatus status);
+#else
 	#define SErrorFromOSStatus(status)	SError(CString(OSSTR("OSStatus")), status, CString(status))
 #endif
 
-#if defined(TARGET_OS_MACOS)
-	extern SError SErrorFromOSStatus(OSStatus status);
-#endif
+#define SErrorFromNSError(e)												\
+		SError(CString((__bridge CFStringRef) e.domain), (SInt32) e.code,	\
+				CString((__bridge CFStringRef) e.localizedDescription))
 
 #define LogOSStatusIfFailed(status, method)															\
 				if (status != noErr)																\

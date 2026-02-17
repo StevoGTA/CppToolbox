@@ -240,8 +240,6 @@ class CPreferences {
 	// Methods
 	public:
 											// Lifecycle methods
-											CPreferences();
-											CPreferences(const Reference& reference);
 											~CPreferences();
 
 											// Instance methods
@@ -318,6 +316,11 @@ class CPreferences {
 
 											// Class methods
 		static	CPreferences&				shared();
+
+	private:
+											// Lifecycle methods
+											CPreferences();
+											CPreferences(const Reference& reference);
 
 	// Properties
 	private:

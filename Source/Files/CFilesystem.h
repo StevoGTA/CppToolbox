@@ -12,15 +12,6 @@
 // MARK: CFilesystem
 
 class CFilesystem {
-	// Types
-	public:
-		// Application Object (representing an Application on the target system)
-		typedef	CFolder	MacOSApplication;
-
-#if defined(TARGET_OS_MACOS)
-		typedef	MacOSApplication	Application;
-#endif
-
 	// Methods
 	public:
 												// Class methods
@@ -46,7 +37,7 @@ class CFilesystem {
 		static	OV<SError>						replace(const CFile& sourceFile, const CFile& destinationFile);
 
 #if defined(TARGET_OS_MACOS)
-		static	OV<SError>						open(const TArray<CFile>& files, const Application& application);
+		static	OV<SError>						open(const TArray<CFile>& files, CFURLRef applicationURLRef);
 		static	void							moveToTrash(const TArray<CFile>& files,
 														TMArray<CFile>& outUntrashedFiles);
 		static	OV<SError>						moveToTrash(const TArray<CFile>& files);
