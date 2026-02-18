@@ -6,7 +6,6 @@
 
 #include "CEquatable.h"
 #include "CIterator.h"
-#include "Compare.h"
 #include "SNumber.h"
 #include "TWrappers.h"
 

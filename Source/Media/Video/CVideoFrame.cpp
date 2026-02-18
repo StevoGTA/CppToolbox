@@ -289,5 +289,5 @@ bool CVideoFrame::comparePresentationTimeInterval(const CVideoFrame& videoFrame1
 		void* userData)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return eCompare(videoFrame1.getPresentationTimeInterval(), videoFrame2.getPresentationTimeInterval());
+	return videoFrame1.getPresentationTimeInterval() < videoFrame2.getPresentationTimeInterval();
 }
