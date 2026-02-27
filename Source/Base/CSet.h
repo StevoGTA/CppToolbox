@@ -15,51 +15,54 @@ class CSet {
 	public:
 		typedef	UInt32	ItemCount;
 
-	// Procs
-	public:
-		typedef	void		(*ApplyProc)(CHashable& hashable, void* userData);
+	// IteratorInfo
+	protected:
+		class IteratorInfo;
 
+	// Procs
 	protected:
 		typedef	CHashable*	(*CopyProc)(const CHashable& hashable);
 		typedef	void		(*DisposeProc)(const CHashable* hashable);
+
+		typedef	UInt32		(*IteratorGetCurrentIndexProc)(const I<IteratorInfo>& iteratorInfo);
+		typedef	CHashable*	(*IteratorGetCurrentItemProc)(const I<IteratorInfo>& iteratorInfo);
+		typedef	CHashable*	(*IteratorAdvanceProc)(const I<IteratorInfo>& iteratorInfo);
 
 	// Classes
 	private:
 		class Internals;
 
-	// Structs
-	private:
-		struct IteratorInfo;
-
 	// Methods
 	public:
-												// Lifecycle methods
-		virtual									~CSet();
+										// Instance methods
+						ItemCount		getCount() const;
+						bool			isEmpty() const
+											{ return getCount() == 0; }
 
-												// Instance methods
-						ItemCount				getCount() const;
-						bool					isEmpty() const
-													{ return getCount() == 0; }
-
-						bool					contains(const CHashable& hashable) const;
+						bool			contains(const CHashable& hashable) const;
 
 	protected:
-												// Lifecycle methods
-												CSet(CopyProc copyProc = nil, DisposeProc disposeProc = nil);
-												CSet(const CSet& other);
+										// Lifecycle methods
+										CSet(CopyProc copyProc = nil, DisposeProc disposeProc = nil);
+										CSet(const CSet& other);
+		virtual							~CSet();
 
-												// Instance methods
-						CSet&					insert(const CHashable& hashable);
+										// Instance methods
+						CSet&			insert(const CHashable& hashable);
 
-						CSet&					remove(const CHashable& hashable);
-						CSet&					removeAll();
+						CSet&			remove(const CHashable& hashable);
+						CSet&			removeAll();
 
-				const	OR<CHashable>			getAny() const;
-						TIteratorS<CHashable>	getIterator() const;
+				const	OR<CHashable>	getAny() const;
 
-						CSet&					apply(ApplyProc applyProc, void* userData = nil);
+						I<IteratorInfo>	getIteratorInfo() const;
 
-						CSet&					operator=(const CSet& other);
+						CSet&			operator=(const CSet& other);
+
+										// Class methods
+		static			UInt32			iteratorGetCurrentIndex(const I<IteratorInfo>& iteratorInfo);
+		static			CHashable*		iteratorGetCurrentItem(const I<IteratorInfo>& iteratorInfo);
+		static			CHashable*		iteratorAdvance(const I<IteratorInfo>& iteratorInfo);
 
 	// Properties
 	private:
@@ -77,50 +80,99 @@ template <typename T> class TSet : public CSet {
 	public:
 		typedef	bool	(*IsIncludedProc)(const T& item, void* userData);
 
+	// Iterator
+	public:
+		class Iterator : public CIterator {
+			// Methods
+			public:
+						// Lifecycle methods
+						Iterator(I<IteratorInfo> iteratorInfo, IteratorGetCurrentIndexProc iteratorGetCurrentIndexProc,
+								IteratorGetCurrentItemProc iteratorGetCurrentItemProc,
+								IteratorAdvanceProc iteratorAdvanceProc) :
+							CIterator(),
+									mIteratorInfo(iteratorInfo),
+									mIteratorGetCurrentIndexProc(iteratorGetCurrentIndexProc),
+									mIteratorAdvanceProc(iteratorAdvanceProc),
+									mCurrentItem((T*) iteratorGetCurrentItemProc(iteratorInfo))
+							{}
+						Iterator(const Iterator& other) :
+							CIterator(other),
+									mIteratorInfo(other.mIteratorInfo),
+									mIteratorGetCurrentIndexProc(other.mIteratorGetCurrentIndexProc),
+									mIteratorAdvanceProc(other.mIteratorAdvanceProc),
+									mCurrentItem(other.mCurrentItem)
+							{}
+
+						// CIterator methods
+				bool	isValid() const
+							{ return mCurrentItem != nil; }
+				UInt32	getIndex() const
+							{ return mIteratorGetCurrentIndexProc(mIteratorInfo); }
+				void	advance()
+							{ mCurrentItem = (T*) mIteratorAdvanceProc(mIteratorInfo); }
+
+						// Instance methods
+				T&		getItem() const
+							{ return *mCurrentItem; }
+
+				T&		operator*() const
+							{ return *mCurrentItem; }
+				T*		operator->() const
+							{ return mCurrentItem; }
+
+			// Properties
+			private:
+				I<IteratorInfo>				mIteratorInfo;
+				IteratorGetCurrentIndexProc	mIteratorGetCurrentIndexProc;
+				IteratorAdvanceProc			mIteratorAdvanceProc;
+
+				T*							mCurrentItem;
+		};
+
 	// Methods
 	public:
-										// Lifecycle methods
-										TSet(const TSet<T>& other) : CSet(other) {}
+									// Lifecycle methods
+									TSet(const TSet<T>& other) : CSet(other) {}
 
-										// Instance methods
-						bool			contains(const T& item) const
-											{ return CSet::contains(item); }
-						bool			intersects(const TSet<T>& other) const
-											{
-												// Iterate values
-												for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-														iterator.advance()) {
-													// Check if have value
-													if (CSet::contains(*iterator))
-														// Has value
-														return true;
-												}
-
-												return false;
+									// Instance methods
+						bool		contains(const T& item) const
+										{ return CSet::contains(item); }
+						bool		intersects(const TSet<T>& other) const
+										{
+											// Iterate values
+											for (typename TSet<T>::Iterator iterator = other.getIterator();
+													iterator; iterator++) {
+												// Check if have value
+												if (CSet::contains(*iterator))
+													// Has value
+													return true;
 											}
 
-				const	OR<T>			getAny() const
-											{
-												// Get item
-												const	OR<CHashable>	item = CSet::getAny();
+											return false;
+										}
 
-												return item.hasReference() ? OR<T>((T&) *item) : OR<T>();
-											}
-						TIteratorS<T>	getIterator() const
-											{ TIteratorS<CHashable> iterator = CSet::getIterator();
-													return *((TIteratorS<T>*) &iterator); }
+				const	OR<T>		getAny() const
+										{
+											// Get item
+											const	OR<CHashable>	item = CSet::getAny();
 
-										// Class methods
-		static			bool			containsItem(const T& item, TSet<T>* set)
-											{ return set->contains(item); }
-		static			bool			doesNotContainItem(const T& item, TSet<T>* set)
-											{ return !set->contains(item); }
+											return item.hasReference() ? OR<T>((T&) *item) : OR<T>();
+										}
+						Iterator	getIterator() const
+										{ return Iterator(getIteratorInfo(), iteratorGetCurrentIndex,
+												iteratorGetCurrentItem, iteratorAdvance); }
+
+									// Class methods
+		static			bool		containsItem(const T& item, TSet<T>* set)
+										{ return set->contains(item); }
+		static			bool		doesNotContainItem(const T& item, TSet<T>* set)
+										{ return !set->contains(item); }
 
 	protected:
-										// Lifecycle methods
-										TSet(CopyProc copyProc, DisposeProc disposeProc) :
-											CSet(copyProc, disposeProc)
-											{}
+									// Lifecycle methods
+									TSet(CopyProc copyProc, DisposeProc disposeProc) :
+										CSet(copyProc, disposeProc)
+										{}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -154,8 +206,7 @@ template <typename T> class TMSet : public TSet<T> {
 		TMSet<T>&	insertFrom(const TArray<T>& array)
 						{
 							// Iterate all
-							for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
-									iterator.advance())
+							for (typename TArray<T>::Iterator iterator = array.getIterator(); iterator; iterator++)
 								// Insert
 								CSet::insert(*iterator);
 
@@ -164,8 +215,7 @@ template <typename T> class TMSet : public TSet<T> {
 		TMSet<T>&	insertFrom(const TSet<T>& other)
 						{
 							// Iterate all
-							for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-									iterator.advance())
+							for (typename TSet<T>::Iterator iterator = other.getIterator(); iterator; iterator++)
 								// Insert
 								CSet::insert(*iterator);
 
@@ -174,8 +224,7 @@ template <typename T> class TMSet : public TSet<T> {
 		TMSet<T>&	removeFrom(const TArray<T>& array)
 						{
 							// Iterate all
-							for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
-									iterator.advance())
+							for (typename TArray<T>::Iterator iterator = array.getIterator(); iterator; iterator++)
 								// Remove
 								CSet::remove(*iterator);
 
@@ -184,8 +233,7 @@ template <typename T> class TMSet : public TSet<T> {
 		TMSet<T>&	removeFrom(const TSet<T>& other)
 						{
 							// Iterate all
-							for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-									iterator.advance())
+							for (typename TSet<T>::Iterator iterator = other.getIterator(); iterator; iterator++)
 								// Remove
 								CSet::remove(*iterator);
 
@@ -233,8 +281,8 @@ template <typename T> class TNSet : public TMSet<T> {
 								TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
 								{
 									// Iterate all
-									for (TIteratorD<T> iterator = array.getIterator(); iterator.hasValue();
-											iterator.advance())
+									for (typename TArray<T>::Iterator iterator = array.getIterator(); iterator;
+											iterator++)
 										// Insert
 										CSet::insert(*iterator);
 								}
@@ -255,8 +303,8 @@ template <typename T> class TNSet : public TMSet<T> {
 								TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
 								{
 									// Iterate all items
-									for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-											iterator.advance()) {
+									for (typename TSet<T>::Iterator iterator = other.getIterator(); iterator;
+											iterator++) {
 										// Call proc
 										if (isIncludedProc(*iterator, userData))
 											// Insert
@@ -270,8 +318,8 @@ template <typename T> class TNSet : public TMSet<T> {
 									TNArray<T>	array;
 
 									// Iterate all hashables
-									for (TIteratorS<T> iterator = TSet<T>::getIterator(); iterator.hasValue();
-											iterator.advance())
+									for (typename TSet<T>::Iterator iterator = TSet<T>::getIterator(); iterator;
+											iterator++)
 										// Add
 										array += *iterator;
 
@@ -284,8 +332,8 @@ template <typename T> class TNSet : public TMSet<T> {
 									TNSet<T>	items;
 
 									// Iterate values
-									for (TIteratorS<T> iterator = other.getIterator(); iterator.hasValue();
-											iterator.advance()) {
+									for (typename TSet<T>::Iterator iterator = other.getIterator(); iterator;
+											iterator++) {
 										// Check if have value
 										if (CSet::contains(*iterator))
 											// Has value
@@ -300,8 +348,8 @@ template <typename T> class TNSet : public TMSet<T> {
 									TNSet<T>	items;
 
 									// Iterate values
-									for (TIteratorS<T> iterator = TSet<T>::getIterator(); iterator.hasValue();
-											iterator.advance()) {
+									for (typename TSet<T>::Iterator iterator = TSet<T>::getIterator(); iterator;
+											iterator++) {
 										// Check if have value
 										if (!other.contains(*iterator))
 											// Has value
@@ -362,8 +410,9 @@ template <typename T> class TNumberSet : public TMSet<TNumber<T> > {
 										TNumberArray<T>	array;
 
 										// Iterate all hashables
-										for (TIteratorS<TNumber<T> > iterator = TMSet<TNumber<T> >::getIterator();
-												iterator.hasValue(); iterator.advance())
+										for (typename TSet<TNumber<T> >::Iterator iterator =
+														TSet<TNumber<T> >::getIterator();
+												iterator; iterator++)
 											// Add
 											array += **iterator;
 

@@ -150,8 +150,7 @@ TArray<CSQLiteWhere::ValueGroup> CSQLiteWhere::getValueGroups(UInt32 groupSize) 
 	if (!mInternals->mString.contains(sVariablePlaceholder)) {
 		// Single group
 		TNArray<SSQLiteValue>	values;
-		for (TIteratorD<TArray<SSQLiteValue> > iterator = mInternals->mValues.getIterator(); iterator.hasValue();
-				iterator.advance())
+		for (TArray<TArray<SSQLiteValue> >::Iterator iterator = mInternals->mValues.getIterator(); iterator; iterator++)
 			// Append
 			values += *iterator;
 		valueGroups += ValueGroup(mInternals->mString, values);
@@ -160,8 +159,8 @@ TArray<CSQLiteWhere::ValueGroup> CSQLiteWhere::getValueGroups(UInt32 groupSize) 
 		TNArray<SSQLiteValue>	preValueGroupValues;
 		TNArray<SSQLiteValue>	valueGroup;
 		TNArray<SSQLiteValue>	postValueGroupValues;
-		for (TIteratorD<TArray<SSQLiteValue> > iterator = mInternals->mValues.getIterator(); iterator.hasValue();
-				iterator.advance()) {
+		for (TArray<TArray<SSQLiteValue> >::Iterator iterator = mInternals->mValues.getIterator(); iterator;
+				iterator++) {
 			// Check count
 			if (iterator->getCount() == 1) {
 				// Single value
@@ -190,8 +189,7 @@ TArray<CSQLiteWhere::ValueGroup> CSQLiteWhere::getValueGroups(UInt32 groupSize) 
 		} else {
 			// Must perform in groups
 			TArray<TArray<SSQLiteValue> >	valuesChunks = TNArray<SSQLiteValue>::asChunksFrom(valueGroup, groupSize);
-			for (TIteratorD<TArray<SSQLiteValue> > iterator = valuesChunks.getIterator(); iterator.hasValue();
-					iterator.advance()) {
+			for (TArray<TArray<SSQLiteValue> >::Iterator iterator = valuesChunks.getIterator(); iterator; iterator++) {
 				// Setup
 				CString					string =
 												mInternals->mString.replacingSubStrings(sVariablePlaceholder,

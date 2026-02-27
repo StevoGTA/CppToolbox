@@ -50,20 +50,19 @@ class COpenGLProgram::Internals : public TReferenceCountableAutoDelete<Internals
 					} else {
 						// Setup
 						const	TArray<CString>&	attributeNames = mVertexShader.getAttributeNames();
-						for (TIteratorD<CString> iterator = attributeNames.getIterator(); iterator.hasValue();
-								iterator.advance())
+						for (TArray<CString>::Iterator iterator = attributeNames.getIterator(); iterator; iterator++)
 							// Store attribute location
 							mAttributeInfo.set(*iterator, glGetAttribLocation(mProgram, *iterator->getUTF8String()));
 
 						const	TArray<CString>&	vertexShaderUniformNames = mVertexShader.getUniformNames();
-						for (TIteratorD<CString> iterator = vertexShaderUniformNames.getIterator(); iterator.hasValue();
-								iterator.advance())
+						for (TArray<CString>::Iterator iterator = vertexShaderUniformNames.getIterator(); iterator;
+								iterator++)
 							// Store attribute location
 							mUniformInfo.set(*iterator, glGetUniformLocation(mProgram, *iterator->getUTF8String()));
 
 						const	TArray<CString>&	fragmentShaderuniformNames = mFragmentShader.getUniformNames();
-						for (TIteratorD<CString> iterator = fragmentShaderuniformNames.getIterator();
-								iterator.hasValue(); iterator.advance())
+						for (TArray<CString>::Iterator iterator = fragmentShaderuniformNames.getIterator(); iterator;
+								iterator++)
 							// Store attribute location
 							mUniformInfo.set(*iterator, glGetUniformLocation(mProgram, *iterator->getUTF8String()));
 					}

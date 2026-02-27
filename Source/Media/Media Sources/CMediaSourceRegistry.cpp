@@ -47,8 +47,8 @@ void CMediaSourceRegistry::registerMediaSource(const SMediaSource& mediaSource)
 
 	// Add info
 	sMediaSourceRegistryInternals->mMediaSources += mediaSource;
-	for (TIteratorD<SMediaSource::Identity> iterator = mediaSource.getIdentities().getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<SMediaSource::Identity>::Iterator iterator = mediaSource.getIdentities().getIterator(); iterator;
+			iterator++) {
 		// Add
 		sMediaSourceRegistryInternals->mMediaSourcesByID.set(iterator->getID(), mediaSource);
 		sMediaSourceRegistryInternals->mMediaSourceIdentitiesByID.set(iterator->getID(), *iterator);
@@ -82,8 +82,8 @@ TSet<CString> CMediaSourceRegistry::getAllMediaSourceExtensions() const
 {
 	// Collect all extensions
 	TNSet<CString>	extensions;
-	for (TIteratorD<SMediaSource> iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator();
-			iterator.hasValue(); iterator.advance())
+	for (TArray<SMediaSource>::Iterator iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator(); iterator;
+			iterator++)
 		// Add extensions
 		extensions += iterator->getExtensions();
 
@@ -101,8 +101,8 @@ I<SMediaSource::ImportResult> CMediaSourceRegistry::import(const SMediaSource::I
 		CString	extensionUse = extension->lowercased();
 
 		// Iterate media sources to check file extension
-		for (TIteratorD<SMediaSource> iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator();
-				iterator.hasValue(); iterator.advance()) {
+		for (TArray<SMediaSource>::Iterator iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator();
+				iterator; iterator++) {
 			// Check extensions
 			if (iterator->getExtensions().contains(extensionUse)) {
 				// Found by extension
@@ -115,8 +115,8 @@ I<SMediaSource::ImportResult> CMediaSourceRegistry::import(const SMediaSource::I
 	}
 
 	// Iterate media sources and just check
-	for (TIteratorD<SMediaSource> iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator();
-			iterator.hasValue(); iterator.advance()) {
+	for (TArray<SMediaSource>::Iterator iterator = sMediaSourceRegistryInternals->mMediaSources.getIterator(); iterator;
+			iterator++) {
 		// Check extension situation
 		if (!extension.hasValue() || !iterator->getExtensions().contains(*extension)) {
 			// Query tracks

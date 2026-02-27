@@ -51,7 +51,7 @@ const CString& CMediaDestination::getName() const
 UInt32 CMediaDestination::CMediaDestination::getAudioTrackCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mAudioDestinationByTrack.getKeyCount();
+	return mInternals->mAudioDestinationByTrack.getCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ void CMediaDestination::add(const I<CAudioDestination>& audioDestination, UInt32
 UInt32 CMediaDestination::CMediaDestination::getVideoTrackCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mVideoDestinationByTrack.getKeyCount();
+	return mInternals->mVideoDestinationByTrack.getCount();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -184,9 +184,8 @@ struct SMPEG4 {
 										data += STCOAtomPayload(packetGroupOffsets.getCount()).getData();
 
 										// Add packet group offsets
-										for (TIteratorM<TNumber<UInt32>, UInt32> iterator =
-														packetGroupOffsets.getIterator();
-												iterator.hasValue(); iterator.advance()) {
+										for (TNumberArray<UInt32>::Iterator iterator = packetGroupOffsets.getIterator();
+												iterator; iterator++) {
 											// Add packet group offset
 											UInt32	value = EndianU32_NtoB(*iterator);
 											data.appendBytes(&value, sizeof(UInt32));
@@ -291,9 +290,9 @@ struct SMPEG4 {
 																			.getData();
 
 															// Add Packet Group Infos
-															for (TIteratorD<PacketGroupInfo> iterator =
+															for (TArray<PacketGroupInfo>::Iterator iterator =
 																			packetGroupInfos.getIterator();
-																	iterator.hasValue(); iterator.advance())
+																	iterator; iterator++)
 																// Add Packet Group Info
 																data += iterator->getData();
 
@@ -504,9 +503,9 @@ struct SMPEG4 {
 										// Add packet byte counts
 										if (packetByteCounts.getCount() > 1) {
 											// Iterate Packet Byte Counts
-											for (TIteratorM<TNumber<UInt32>, UInt32> iterator =
+											for (TNumberArray<UInt32>::Iterator iterator =
 															packetByteCounts.getIterator();
-													iterator.hasValue(); iterator.advance()) {
+													iterator; iterator++) {
 												// Add Packet Byte Count
 												UInt32	value = EndianU32_NtoB(*iterator);
 												data.appendBytes(&value, sizeof(UInt32));
@@ -593,8 +592,8 @@ struct SMPEG4 {
 												data += STTSAtomPayload(chunks.getCount()).getData();
 
 												// Add chunks
-												for (TIteratorD<Chunk> iterator = chunks.getIterator();
-														iterator.hasValue(); iterator.advance())
+												for (TArray<Chunk>::Iterator iterator = chunks.getIterator(); iterator;
+														iterator++)
 													// Add chunk
 													data += iterator->getData();
 

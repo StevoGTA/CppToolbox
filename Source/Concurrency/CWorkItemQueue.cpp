@@ -183,8 +183,9 @@ class CWorkItemQueue::Internals {
 											mWorkItemInfosLock.lock();
 
 											// Process active work item infos
-											for (TIteratorD<WorkItemInfo> iterator = mActiveWorkItemInfos.getIterator();
-													iterator.hasValue(); iterator.advance()) {
+											for (TArray<WorkItemInfo>::Iterator iterator =
+															mActiveWorkItemInfos.getIterator();
+													iterator; iterator++) {
 												// Check for match
 												if (isMatchProc(*iterator, userData))
 													// Transition to cancelled.  We do not remove from the array as

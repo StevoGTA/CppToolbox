@@ -95,8 +95,7 @@ class CDeferredNotificationCenter::Internals {
 						mLock.lock();
 
 						// Send notifications
-						for (TIteratorD<Info> iterator = mInfos.getIterator(); iterator.hasValue();
-								iterator.advance())
+						for (TArray<Info>::Iterator iterator = mInfos.getIterator(); iterator; iterator++)
 							// Send
 							send(*iterator);
 						mInfos.removeAll();

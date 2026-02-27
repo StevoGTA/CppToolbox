@@ -65,8 +65,7 @@ void CLogServices::logMessage(const CString& string)
 	// Check if have procs
 	if (sLogMessageProcInfos != nil)
 		// Call procs
-		for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos->getIterator(); iterator.hasValue();
-				iterator.advance())
+		for (TArray<SLogProcInfo>::Iterator iterator = sLogMessageProcInfos->getIterator(); iterator; iterator++)
 			// Call proc
 			iterator->callProc(stringWithDate);
 }
@@ -87,8 +86,7 @@ void CLogServices::logMessages(const TArray<CString>& strings)
 	// Check if have procs
 	if (sLogMessageProcInfos != nil)
 		// Call procs
-		for (TIteratorD<SLogProcInfo> iterator = sLogMessageProcInfos->getIterator(); iterator.hasValue();
-				iterator.advance())
+		for (TArray<SLogProcInfo>::Iterator iterator = sLogMessageProcInfos->getIterator(); iterator; iterator++)
 			// Call proc
 			iterator->callProc(stringsWithDatesString);
 }
@@ -138,8 +136,7 @@ void CLogServices::logWarning(const CString& string)
 	// Check if have procs
 	if (sLogWarningProcInfos != nil)
 		// Call procs
-		for (TIteratorD<SLogProcInfo> iterator = sLogWarningProcInfos->getIterator(); iterator.hasValue();
-				iterator.advance())
+		for (TArray<SLogProcInfo>::Iterator iterator = sLogWarningProcInfos->getIterator(); iterator; iterator++)
 			// Call proc
 			iterator->callProc(compositeString);
 }
@@ -178,8 +175,7 @@ void CLogServices::logError(const CString& string)
 	// Check if have procs
 	if (sLogErrorProcInfos != nil)
 		// Call procs
-		for (TIteratorD<SLogProcInfo> iterator = sLogErrorProcInfos->getIterator(); iterator.hasValue();
-				iterator.advance())
+		for (TArray<SLogProcInfo>::Iterator iterator = sLogErrorProcInfos->getIterator(); iterator; iterator++)
 			// Call proc
 			iterator->callProc(compositeString);
 }

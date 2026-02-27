@@ -35,8 +35,8 @@ class CGPURenderObject2D::Internals : public TReferenceCountableAutoDelete<Inter
 														(CData::ByteCount) sizeof(SVertex2DMultitexture) *
 																items.getCount() * 6);
 						SVertex2DMultitexture*	vertexInfoPtr = (SVertex2DMultitexture*) vertexData.getMutableBytePtr();
-						for (TIteratorD<CGPURenderObject2D::Item> iterator = items.getIterator(); iterator.hasValue();
-								iterator.advance()) {
+						for (TArray<CGPURenderObject2D::Item>::Iterator iterator = items.getIterator(); iterator;
+								iterator++) {
 							// Setup
 							const	CGPURenderObject2D::Item&	item = *iterator;
 							const	S2DRectF32&					screenRect = item.mScreenRect;
@@ -222,8 +222,8 @@ void CGPURenderObject2D::finishLoading() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Finish loading all textures
-	for (TIteratorD<CGPUTextureReference> iterator = mInternals->mGPUTextureReferences.getIterator();
-			iterator.hasValue(); iterator.advance())
+	for (TArray<CGPUTextureReference>::Iterator iterator = mInternals->mGPUTextureReferences.getIterator(); iterator;
+			iterator++)
 		// Finish loading
 		iterator->finishLoading();
 }
@@ -267,19 +267,15 @@ void CGPURenderObject2D::render(const Indexes& indexes, const RenderInfo& render
 		gpuTextures += mInternals->mGPUTextureReferences[i].getGPUTexture();
 
 	// Draw
-	TArray<TIndexRange<UInt16> >		indexRanges = indexes.getRanges();
-	TIteratorD<TIndexRange<UInt16> >	iterator = indexRanges.getIterator();
-
-	CGPUVertexShader&					vertexShader =
-												renderInfo.mClipPlane.hasValue() ?
-														CGPUVertexShader::getClip2DMultiTexture(
-																*renderInfo.mClipPlane) :
-														CGPUVertexShader::getBasic2DMultiTexture();
-	CGPUFragmentShader&					fragmentShader = mInternals->mFragmentShaderProc(mInternals->mAlpha);
-	CGPURenderState						renderState(CGPURenderState::kMode2D, vertexShader, fragmentShader);
+	CGPUVertexShader&	vertexShader =
+								renderInfo.mClipPlane.hasValue() ?
+										CGPUVertexShader::getClip2DMultiTexture(*renderInfo.mClipPlane) :
+										CGPUVertexShader::getBasic2DMultiTexture();
+	CGPUFragmentShader&	fragmentShader = mInternals->mFragmentShaderProc(mInternals->mAlpha);
+	CGPURenderState		renderState(CGPURenderState::kMode2D, vertexShader, fragmentShader);
 
 	// Iterate index ranges
-	for (; iterator.hasValue(); iterator.advance()) {
+	for (TArray<TIndexRange<UInt16> >::Iterator	iterator = indexes.getRanges().getIterator(); iterator; iterator++) {
 		// Get index range
 		const	TIndexRange<UInt16>&	indexRange = *iterator;
 

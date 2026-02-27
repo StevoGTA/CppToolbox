@@ -469,8 +469,7 @@ void CSRSWMessageQueues::handleAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all
-	for (TIteratorD<CSRSWMessageQueue> iterator = mInternals->mMessageQueues.getIterator(); iterator.hasValue();
-			iterator.advance())
+	for (TArray<CSRSWMessageQueue>::Iterator iterator = mInternals->mMessageQueues.getIterator(); iterator; iterator++)
 		// Handle all
 		iterator->handleAll();
 }

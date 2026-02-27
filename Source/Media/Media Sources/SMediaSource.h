@@ -155,14 +155,14 @@ struct SMediaSource {
 											{
 												// Compose total duration
 												UniversalTimeInterval	duration = 0.0;
-												for (TIteratorD<AudioTrack> iterator = mAudioTracks.getIterator();
-														iterator.hasValue(); iterator.advance())
+												for (TArray<AudioTrack>::Iterator iterator = mAudioTracks.getIterator();
+														iterator; iterator++)
 													// Update duration
 													duration =
 															std::max<UniversalTimeInterval>(duration,
 																	iterator->getMediaSegmentInfo().getDuration());
-												for (TIteratorD<VideoTrack> iterator = mVideoTracks.getIterator();
-														iterator.hasValue(); iterator.advance())
+												for (TArray<VideoTrack>::Iterator iterator = mVideoTracks.getIterator();
+														iterator; iterator++)
 													// Update duration
 													duration =
 															std::max<UniversalTimeInterval>(duration,

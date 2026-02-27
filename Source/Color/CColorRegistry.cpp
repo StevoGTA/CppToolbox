@@ -218,17 +218,17 @@ CDictionary CColorSet::getInfo() const
 	info.set(CString(OSSTR("name")), mInternals->mName);
 
 	TNArray<CDictionary>	colorSetColorInfos;
-	for (TIteratorS<CDictionary::Item> iterator = mInternals->mColorsMap.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TKeyConvertibleDictionary<UInt64, CColor>::Iterator iterator = mInternals->mColorsMap.getIterator(); iterator;
+			iterator++) {
 		// Get info
-		UInt64	key = iterator->mKey.getUInt64();
+		UInt64	key = iterator.getKey();
 		OSType	groupID = (OSType) (key >> 32);
 		OSType	colorID = (OSType) (key & 0xFFFFFFFF);
 
 		CDictionary	colorSetColorInfo;
 		colorSetColorInfo.set(CString(OSSTR("groupID")), groupID);
 		colorSetColorInfo.set(CString(OSSTR("colorID")), colorID);
-		colorSetColorInfo.set(CString(OSSTR("color")), ((CColor*) iterator->mValue.getOpaque())->getInfo());
+		colorSetColorInfo.set(CString(OSSTR("color")), iterator.getValue().getInfo());
 
 		// Add to array
 		colorSetColorInfos += colorSetColorInfo;
@@ -381,10 +381,11 @@ TArray<CColorGroup> CColorRegistry::getColorGroups() const
 {
 	// Get color groups
 	TNArray<CColorGroup>	colorGroups;
-	for (TIteratorS<CDictionary::Item> iterator = mInternals->mColorGroupMap.getIterator();
-			iterator.hasValue(); iterator.advance())
+	for (TKeyConvertibleDictionary<OSType, CColorGroup>::ValueIterator iterator =
+					mInternals->mColorGroupMap.getValueIterator();
+			iterator; iterator++)
 		// Insert value
-		colorGroups += *((CColorGroup*) iterator->mValue.getOpaque());
+		colorGroups += *iterator;
 
 	// Sort by display index
 	colorGroups.sort(CColorGroup::compareDisplayIndexes);
@@ -510,8 +511,7 @@ OR<CColorSet> CColorRegistry::getFirstMatchingColorsOfCurrentColorSet() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Examine preset color sets first
-	for (TIteratorD<CColorSet> iterator = mInternals->mColorSetPresets.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<CColorSet>::Iterator iterator = mInternals->mColorSetPresets.getIterator(); iterator; iterator++) {
 		// Check this color set
 		if (iterator->matchesColorsOf(mInternals->getCurrentColorSet()))
 			// Match
@@ -519,8 +519,7 @@ OR<CColorSet> CColorRegistry::getFirstMatchingColorsOfCurrentColorSet() const
 	}
 
 	// Examine user defined color sets
-	for (TIteratorD<CColorSet> iterator = mInternals->mColorSets.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<CColorSet>::Iterator iterator = mInternals->mColorSets.getIterator(); iterator; iterator++) {
 		// Check this color set
 		if (iterator->matchesColorsOf(mInternals->getCurrentColorSet()))
 			// Match

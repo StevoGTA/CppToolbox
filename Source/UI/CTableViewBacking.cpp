@@ -15,8 +15,8 @@ class CTableViewBacking::Internals {
 //							mColumns(columns)
 //							{
 //								// Setup
-//								for (TIteratorD<I<Column> > iterator = columns.getIterator(); iterator.hasValue();
-//										iterator.advance())
+//								for (TArra6y<I<Column> >::Iterator iterator = columns.getIterator(); iterator;
+//										iterator++)
 //									// Store
 //									mColumnByIdentifier.set((*iterator)->getIdentifier(), *iterator);
 //							}

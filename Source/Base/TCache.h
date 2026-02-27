@@ -64,8 +64,8 @@ template <typename T> class TCache2D {
 									return;
 
 								// Iterate item identifiers
-								for (TIteratorS<CString> iterator = itemIdentifiersForColumn->getIterator();
-										iterator.hasValue(); iterator.advance())
+								for (TSet<CString>::Iterator iterator = itemIdentifiersForColumn->getIterator();
+										iterator; iterator++)
 									// Remove
 									mItemByIdentifier.remove(*iterator);
 							}
@@ -77,8 +77,8 @@ template <typename T> class TCache2D {
 									return;
 
 								// Iterate item identifiers
-								for (TIteratorS<CString> iterator = itemIdentifiersForRow->getIterator();
-										iterator.hasValue(); iterator.advance())
+								for (TSet<CString>::Iterator iterator = itemIdentifiersForRow->getIterator();
+										iterator; iterator++)
 									// Remove
 									mItemByIdentifier.remove(*iterator);
 							}

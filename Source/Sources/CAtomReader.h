@@ -44,19 +44,20 @@ class CAtomReader : public CByteReader {
 		struct ContainerAtom {
 			// Methods
 			public:
-										// Lifecycle methods
-										ContainerAtom(const TArray<Atom>& atoms) : mAtoms(atoms) {}
-										ContainerAtom(const ContainerAtom& other) : mAtoms(other.mAtoms) {}
+											// Lifecycle methods
+											ContainerAtom(const TArray<Atom>& atoms) : mAtoms(atoms) {}
+											ContainerAtom(const ContainerAtom& other) : mAtoms(other.mAtoms) {}
 
-										// Instance methods
-					TIteratorD<Atom>	getIterator() const
-											{ return mAtoms.getIterator(); }
-					OR<Atom>			getAtom(OSType type) const
-											{ return mAtoms.getFirst((TArray<Atom>::IsMatchProc) compareType, &type); }
+											// Instance methods
+					TArray<Atom>::Iterator	getIterator() const
+												{ return mAtoms.getIterator(); }
+					OR<Atom>				getAtom(OSType type) const
+												{ return mAtoms.getFirst((TArray<Atom>::IsMatchProc) compareType,
+														&type); }
 
-										// Class methods
-			static	bool				compareType(const Atom& atom, OSType* type)
-											{ return atom.getType() == *type; }
+											// Class methods
+			static	bool					compareType(const Atom& atom, OSType* type)
+												{ return atom.getType() == *type; }
 
 			// Properties
 			private:

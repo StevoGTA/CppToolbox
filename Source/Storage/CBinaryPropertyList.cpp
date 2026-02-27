@@ -86,105 +86,99 @@ class CBPLReader : public TReferenceCountableAutoDelete<CBPLReader> {
 
 class CBPLDictionaryInfo {
 	public:
-										// Lifecycle methods
-										CBPLDictionaryInfo(CBPLReader& bplReader, CDictionary::KeyCount keyCount) :
-											mBPLReader(bplReader), mKeyCount(keyCount)
-											{
-												// Setup
-												mKeyHashes = new UInt32[mKeyCount];
-												mKeys = new CString*[mKeyCount];
-												mValueIndexes = new UInt64[mKeyCount];
+									// Lifecycle methods
+									CBPLDictionaryInfo(CBPLReader& bplReader, CDictionary::Count count) :
+										mBPLReader(bplReader), mCount(count)
+										{
+											// Setup
+											mKeyHashes = new UInt32[mCount];
+											mKeys = new CString*[mCount];
+											mValueIndexes = new UInt64[mCount];
 
-												mDictionaryValues = new SValue*[mKeyCount];
-												::memset(mDictionaryValues, 0, sizeof(SValue*) * mKeyCount);
+											mDictionaryValues = new SValue*[mCount];
+											::memset(mDictionaryValues, 0, sizeof(SValue*) * mCount);
 
-												// Setup keys
-												for (CDictionary::KeyCount i = 0; i < mKeyCount; i++) {
-													// Setup key
-													UInt64	objectIndex = mBPLReader.readIndex();
-													mKeys[i] = mBPLReader.mStrings[objectIndex];
-													mKeyHashes[i] = mKeys[i]->getHashValue();
+											// Setup keys
+											for (CDictionary::Count i = 0; i < mCount; i++) {
+												// Setup key
+												UInt64	objectIndex = mBPLReader.readIndex();
+												mKeys[i] = mBPLReader.mStrings[objectIndex];
+												mKeyHashes[i] = mKeys[i]->getHashValue();
+											}
+
+											// Setup values
+											for (CDictionary::Count i = 0; i < mCount; i++)
+												// Read value index
+												mValueIndexes[i] = mBPLReader.readIndex();
+
+											// Add reference
+											mBPLReader.addReference();
+										}
+									~CBPLDictionaryInfo()
+										{
+											// Cleanup
+											DeleteArray(mKeyHashes);
+											DeleteArray(mKeys);
+											DeleteArray(mValueIndexes);
+
+											for (CDictionary::Count i = 0; i < mCount; i++) {
+												// Check if have value
+												if (mDictionaryValues[i] != nil) {
+													// Dispose
+													mDictionaryValues[i]->dispose(nil);
+													Delete(mDictionaryValues[i]);
 												}
-
-												// Setup values
-												for (CDictionary::KeyCount i = 0; i < mKeyCount; i++)
-													// Read value index
-													mValueIndexes[i] = mBPLReader.readIndex();
-
-												// Add reference
-												mBPLReader.addReference();
 											}
-										~CBPLDictionaryInfo()
-											{
-												// Cleanup
-												DeleteArray(mKeyHashes);
-												DeleteArray(mKeys);
-												DeleteArray(mValueIndexes);
+											DeleteArray(mDictionaryValues);
 
-												for (CDictionary::KeyCount i = 0; i < mKeyCount; i++) {
-													// Check if have value
-													if (mDictionaryValues[i] != nil) {
-														// Dispose
-														mDictionaryValues[i]->dispose(nil);
-														Delete(mDictionaryValues[i]);
-													}
+											mBPLReader.removeReference();
+										}
+
+									// Class methods
+		static	CDictionary			dictionaryWith(CBPLReader& bplDataSource, CDictionary::Count count)
+										{
+											return CDictionary(
+													CDictionary::Procs((CDictionary::Procs::GetCountProc) getCount,
+															(CDictionary::Procs::GetKeyAtIndexProc) getKeyAtIndex,
+															(CDictionary::Procs::GetValueProc) getValue, nil, nil, nil,
+															(CDictionary::Procs::DisposeUserDataProc) disposeUserData,
+															new CBPLDictionaryInfo(bplDataSource, count)));
+										}
+		static	CDictionary::Count	getCount(CBPLDictionaryInfo* bplDictionaryInfo)
+										{ return bplDictionaryInfo->mCount; }
+		static	CString				getKeyAtIndex(UInt32 index, CBPLDictionaryInfo* bplDictionaryInfo)
+										{ return *bplDictionaryInfo->mKeys[index]; }
+		static	OR<SValue>			getValue(const CString& key, CBPLDictionaryInfo* bplDictionaryInfo)
+										{
+											// Iterate keys
+											UInt32	keyHash = key.getHashValue();
+											for (CDictionary::Count i = 0; i < bplDictionaryInfo->mCount; i++) {
+												// Compare this key
+												if ((bplDictionaryInfo->mKeyHashes[i] == keyHash) &&
+														(*bplDictionaryInfo->mKeys[i] == key)) {
+													// Found
+													if (bplDictionaryInfo->mDictionaryValues[i] == nil)
+														// Construct value
+														bplDictionaryInfo->mDictionaryValues[i] =
+																bplDictionaryInfo->mBPLReader
+																		.createDictionaryValue(
+																				bplDictionaryInfo->mValueIndexes[i]);
+
+													return OR<SValue>(*bplDictionaryInfo->mDictionaryValues[i]);
 												}
-												DeleteArray(mDictionaryValues);
-
-												mBPLReader.removeReference();
 											}
 
-										// Class methods
-		static	CDictionary				dictionaryWith(CBPLReader& bplDataSource, CDictionary::KeyCount keyCount)
-											{
-												return CDictionary(
-														CDictionary::Procs(
-																(CDictionary::Procs::GetKeyCountProc) getKeyCount,
-																(CDictionary::Procs::GetKeyAtIndexProc) getKeyAtIndex,
-																(CDictionary::Procs::GetValueProc) getValue,
-																nil, nil, nil,
-																(CDictionary::Procs::DisposeUserDataProc)
-																		disposeUserData,
-																new CBPLDictionaryInfo(bplDataSource, keyCount)));
-											}
-		static	CDictionary::KeyCount	getKeyCount(CBPLDictionaryInfo* bplDictionaryInfo)
-											{ return bplDictionaryInfo->mKeyCount; }
-		static	CString					getKeyAtIndex(UInt32 index, CBPLDictionaryInfo* bplDictionaryInfo)
-											{ return *bplDictionaryInfo->mKeys[index]; }
-		static	OR<SValue>				getValue(const CString& key, CBPLDictionaryInfo* bplDictionaryInfo)
-											{
-												// Iterate keys
-												UInt32	keyHash = key.getHashValue();
-												for (CDictionary::KeyCount i = 0;
-														i < bplDictionaryInfo->mKeyCount; i++) {
-													// Compare this key
-													if ((bplDictionaryInfo->mKeyHashes[i] == keyHash) &&
-															(*bplDictionaryInfo->mKeys[i] == key)) {
-														// Found
-														if (bplDictionaryInfo->mDictionaryValues[i] == nil)
-															// Construct value
-															bplDictionaryInfo->mDictionaryValues[i] =
-																	bplDictionaryInfo->mBPLReader
-																			.createDictionaryValue(
-																					bplDictionaryInfo->
-																							mValueIndexes[i]);
+											return OR<SValue>();
+										}
+		static	void				disposeUserData(CBPLDictionaryInfo* bplDictionaryInfo)
+										{ Delete(bplDictionaryInfo); }
 
-														return OR<SValue>(
-																*bplDictionaryInfo->mDictionaryValues[i]);
-													}
-												}
-
-												return OR<SValue>();
-											}
-		static	void					disposeUserData(CBPLDictionaryInfo* bplDictionaryInfo)
-											{ Delete(bplDictionaryInfo); }
-
-		CBPLReader&				mBPLReader;
-		CDictionary::KeyCount	mKeyCount;
-		UInt32*					mKeyHashes;
-		CString**				mKeys;
-		UInt64*					mValueIndexes;
-		SValue**				mDictionaryValues;
+		CBPLReader&			mBPLReader;
+		CDictionary::Count	mCount;
+		UInt32*				mKeyHashes;
+		CString**			mKeys;
+		UInt64*				mValueIndexes;
+		SValue**			mDictionaryValues;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -362,7 +356,7 @@ CDictionary CBPLReader::readDictionary(UInt64 objectIndex)
 	UInt64	count = 0;
 	readMarker(objectIndex, OR<UInt64>(count));
 
-	return CBPLDictionaryInfo::dictionaryWith(*this, (CDictionary::KeyCount) count);
+	return CBPLDictionaryInfo::dictionaryWith(*this, (CDictionary::Count) count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

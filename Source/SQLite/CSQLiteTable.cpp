@@ -55,13 +55,11 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 														SInt64ResultByTableColumnName* int64ResultByTableColumnName)
 													{
 														// Iterate table columns
-														const	TSet<CString>	sumTableColumnNames =
-																						int64ResultByTableColumnName->
-																								mSumTableColumnsByTableColumnName
-																								.getKeys();
-														for (TIteratorS<CString> iterator =
-																		sumTableColumnNames.getIterator();
-																iterator.hasValue(); iterator.advance())
+														for (TDictionary<CSQLiteTableColumn>::KeyIterator iterator =
+																		int64ResultByTableColumnName->
+																				mSumTableColumnsByTableColumnName
+																						.getKeyIterator();
+																iterator; iterator++)
 															// Store value
 															int64ResultByTableColumnName->mResultByTableColumnName
 																	.set(*iterator,
@@ -154,15 +152,15 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 											mStatementPerformer(statementPerformer)
 									{
 										// Iterate all table columns
-										for (TIteratorD<CSQLiteTableColumn> iterator = tableColumns.getIterator();
-												iterator.hasValue(); iterator.advance())
+										for (TArray<CSQLiteTableColumn>::Iterator iterator = tableColumns.getIterator();
+												iterator; iterator++)
 											// Add to map
 											mTableColumnReferenceByName.set(iterator->getName(), *iterator);
 
 										// Iterate all table column references
-										for (TIteratorD<CSQLiteTableColumn::Reference> iterator =
+										for (TArray<CSQLiteTableColumn::Reference>::Iterator iterator =
 														references.getIterator();
-												iterator.hasValue(); iterator.advance())
+												iterator++; iterator++)
 											// Add to map
 											mTableColumnReferenceMap.set(iterator->getTableColumn().getName(),
 													*iterator);
@@ -222,8 +220,8 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 									{
 										// Setup
 										TNArray<CString>	strings;
-										for (TIteratorD<CSQLiteTableColumn> iterator = tableColumns.getIterator();
-												iterator.hasValue(); iterator.advance()) {
+										for (TArray<CSQLiteTableColumn>::Iterator iterator = tableColumns.getIterator();
+												iterator; iterator++) {
 											// Add string
 											if ((*iterator == CSQLiteTableColumn::mAll) ||
 													(*iterator == CSQLiteTableColumn::mRowID))
@@ -242,9 +240,9 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 									{
 										// Setup
 										TNArray<CString>	strings;
-										for (TIteratorD<TableColumnAndValue> iterator =
+										for (TArray<TableColumnAndValue>::Iterator iterator =
 														tableColumnAndValues.getIterator();
-												iterator.hasValue(); iterator.advance())
+												iterator; iterator++)
 											// Add string
 											strings +=
 													CString(OSSTR("`")) + iterator->getTableColumn().getName() +
@@ -256,9 +254,9 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 									{
 										// Setup
 										TNArray<CString>	strings;
-										for (TIteratorD<CSQLiteTable::TableAndTableColumn> iterator =
+										for (TArray<CSQLiteTable::TableAndTableColumn>::Iterator iterator =
 														tableAndTableColumns.getIterator();
-												iterator.hasValue(); iterator.advance())
+												iterator; iterator++)
 											// Add string
 											strings +=
 													CString(OSSTR("`")) + iterator->getTable().getName() +
@@ -272,9 +270,9 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 									{
 										// Collect values
 										TNArray<SSQLiteValue>	values;
-										for (TIteratorD<TableColumnAndValue> iterator =
+										for (TArray<TableColumnAndValue>::Iterator iterator =
 														tableColumnAndValues.getIterator();
-												iterator.hasValue(); iterator.advance())
+												iterator; iterator++)
 											// Add value
 											values += iterator->getValue();
 
@@ -294,9 +292,9 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 											TArray<CSQLiteWhere::ValueGroup>	valueGroups =
 																						where->getValueGroups(
 																								variableNumberLimit);
-											for (TIteratorD<CSQLiteWhere::ValueGroup> iterator =
+											for (TArray<CSQLiteWhere::ValueGroup>::Iterator iterator =
 															valueGroups.getIterator();
-													iterator.hasValue(); iterator.advance()) {
+													iterator; iterator++) {
 												// Compose statement
 												CString	statement =
 																CString(OSSTR("SELECT ")) + columnNames +
@@ -467,8 +465,8 @@ void CSQLiteTable::create(bool ifNotExists) const
 {
 	// Setup
 	TNArray<CString>	tableColumnInfos;
-	for (TIteratorD<CSQLiteTableColumn> iterator = mInternals->mTableColumns.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<CSQLiteTableColumn>::Iterator iterator = mInternals->mTableColumns.getIterator(); iterator;
+			iterator++) {
 		// Start with create string
 		CString	tableColumnInfo = mInternals->getCreateString(*iterator);
 
@@ -508,8 +506,7 @@ void CSQLiteTable::deleteRow(const CSQLiteWhere& where)
 	TArray<CSQLiteWhere::ValueGroup>	valueGroups =
 												where.getValueGroups(
 														mInternals->mStatementPerformer.getVariableNumberLimit());
-	for (TIteratorD<CSQLiteWhere::ValueGroup> iterator = valueGroups.getIterator(); iterator.hasValue();
-			iterator.advance())
+	for (TArray<CSQLiteWhere::ValueGroup>::Iterator iterator = valueGroups.getIterator(); iterator; iterator++)
 		// Add to transaction or perform
 		mInternals->mStatementPerformer.addToTransactionOrPerform(statement + iterator->getString(),
 				iterator->getValues());
@@ -525,8 +522,7 @@ void CSQLiteTable::deleteRows(const CSQLiteTableColumn& tableColumn, const TArra
 													mInternals->mStatementPerformer.getVariableNumberLimit());
 
 	// Iterate values chunks
-	for (TIteratorD<TArray<SSQLiteValue> > iterator = valuesChunks.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<TArray<SSQLiteValue> >::Iterator iterator = valuesChunks.getIterator(); iterator; iterator++) {
 		// Setup
 		CString	statement =
 					CString(OSSTR("DELETE FROM `")) + mInternals->mName + CString(OSSTR("` WHERE `")) +
@@ -639,8 +635,7 @@ void CSQLiteTable::insertOrReplaceRows(const CSQLiteTableColumn& tableColumn, co
 													mInternals->mStatementPerformer.getVariableNumberLimit());
 
 	// Iterate values chunks
-	for (TIteratorD<TArray<SSQLiteValue> > iterator = valuesChunks.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<TArray<SSQLiteValue> >::Iterator iterator = valuesChunks.getIterator(); iterator; iterator++) {
 		// Setup
 		CString	statement =
 					CString(OSSTR("INSERT OR REPLACE INTO `")) + mInternals->mName + CString(OSSTR("` (`")) +
@@ -764,8 +759,7 @@ TVResult<CDictionary> CSQLiteTable::sum(const TArray<CSQLiteTableColumn>& tableC
 	// Setup
 	TNDictionary<CSQLiteTableColumn>	tableColumnNameBySumTableColumnName;
 	TNArray<CString>					sumTableColumnNames;
-	for (TIteratorD<CSQLiteTableColumn> iterator = tableColumns.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<CSQLiteTableColumn>::Iterator iterator = tableColumns.getIterator(); iterator++; iterator++) {
 		// Setup
 		CSQLiteTableColumn	sumTableColumn = CSQLiteTableColumn::sum(*iterator);
 
@@ -809,7 +803,7 @@ TArray<CSQLiteTableColumn> CSQLiteTable::getTableColumns(const TArray<CString>& 
 {
 	// Setup
 	TNArray<CSQLiteTableColumn>	tableColumns;
-	for (TIteratorD<CString> iterator = names.getIterator(); iterator.hasValue(); iterator.advance())
+	for (TArray<CString>::Iterator iterator = names.getIterator(); iterator++; iterator++)
 		// Add table column
 		tableColumns += *mInternals->mTableColumnReferenceByName[*iterator];
 
@@ -832,8 +826,7 @@ void CSQLiteTable::update(const TArray<TableColumnAndValue>& tableColumnAndValue
 												mInternals->mStatementPerformer.getVariableNumberLimit() -
 														tableColumnAndValues.getCount();
 	TArray<CSQLiteWhere::ValueGroup>	valueGroups = where.getValueGroups(groupSize);
-	for (TIteratorD<CSQLiteWhere::ValueGroup> iterator = valueGroups.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<CSQLiteWhere::ValueGroup>::Iterator iterator = valueGroups.getIterator(); iterator++; iterator++) {
 		// Compose statement
 		CString					statement =
 										CString(OSSTR("UPDATE `")) + mInternals->mName + CString(OSSTR("` SET ")) +
@@ -857,7 +850,7 @@ TArray<CSQLiteTable> CSQLiteTable::getAll(CSQLiteStatementPerformer& statementPe
 
 	// Create Tables
 	TNArray<CSQLiteTable>	tables;
-	for (TIteratorD<CString> iterator = tableNames.getIterator(); iterator.hasValue(); iterator.advance())
+	for (TArray<CString>::Iterator iterator = tableNames.getIterator(); iterator; iterator++)
 		// Add Table
 		tables += CSQLiteTable(*iterator, statementPerformer);
 

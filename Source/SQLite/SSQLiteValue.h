@@ -154,8 +154,8 @@ struct SSQLiteValue {
 													{
 														// Convert array
 														TNArray<SSQLiteValue>	sqliteValues;
-														for (TIteratorS<CString> iterator = values.getIterator();
-																iterator.hasValue(); iterator.advance())
+														for (TSet<CString>::Iterator iterator = values.getIterator();
+																iterator; iterator++)
 															// Add value
 															sqliteValues += SSQLiteValue(*iterator);
 

@@ -17,8 +17,7 @@ TArray<CDictionary> SSortDescriptor::getInfos(const TArray<SSortDescriptor>& sor
 {
 	// Convert
 	TNArray<CDictionary>	infos;
-	for (TIteratorD<SSortDescriptor> iterator = sortDescriptors.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<SSortDescriptor>::Iterator iterator = sortDescriptors.getIterator(); iterator; iterator++) {
 		// Add info
 		CDictionary	info;
 		info.set(CString(OSSTR("identifier")), iterator->getIdentifier());
@@ -35,7 +34,7 @@ TArray<SSortDescriptor> SSortDescriptor::getSortDescriptors(const TArray<CDictio
 {
 	// Convert
 	TNArray<SSortDescriptor>	sortDescriptors;
-	for (TIteratorD<CDictionary> iterator = infos.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<CDictionary>::Iterator iterator = infos.getIterator(); iterator; iterator++) {
 		// Get info
 		OV<CString>	identifier = iterator->getOVString(CString(OSSTR("identifier")));
 		OV<bool>	isAscending = iterator->getOVBool(CString(OSSTR("isAscending")));

@@ -52,8 +52,9 @@ struct SMedia {
 										UInt64	byteCount = 0;
 
 										// Iterate
-										for (TIteratorD<PacketAndLocation> iterator = packetAndLocations.getIterator();
-												iterator.hasValue(); iterator.advance())
+										for (TArray<PacketAndLocation>::Iterator iterator =
+														packetAndLocations.getIterator();
+												iterator; iterator++)
 											// Update byte count
 											byteCount += iterator->mPacket.getByteCount();
 

@@ -74,8 +74,8 @@ class CCoreAudioDecodeAudioCodec::Internals {
 										*outDataPacketDescription = packetDescription;
 
 									SInt64	offset = 0;
-									for (TIteratorD<SMedia::Packet> iterator = mediaPackets.getIterator();
-											iterator.hasValue(); iterator.advance(), packetDescription++) {
+									for (TArray<SMedia::Packet>::Iterator iterator = mediaPackets.getIterator();
+											iterator; iterator++, packetDescription++) {
 										// Update
 										packetDescription->mStartOffset = offset;
 										packetDescription->mVariableFramesInPacket = iterator->getDuration();

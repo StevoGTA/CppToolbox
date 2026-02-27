@@ -85,7 +85,7 @@ OR<CData> CAppleResourceManager::get(OSType resourceType, UInt16 resourceID) con
 		return OR<CData>();
 
 	// Search for resource by ID
-	for (TIteratorD<Resource> iterator = resources->getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<Resource>::Iterator iterator = resources->getIterator(); iterator; iterator++) {
 		// Check ID
 		if (iterator->mID == resourceID)
 			// Found
@@ -164,22 +164,22 @@ TVResult<CData> CAppleResourceManager::getAsData()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CData			dataData, typeListData, resourceListData, nameListData;
-	TSet<CString>	types = mInternals->mResourceMap.getKeys();
-	UInt32			uInt32Zero = 0;
+	CData	dataData, typeListData, resourceListData, nameListData;
+	UInt32	uInt32Zero = 0;
 
 	// Start type list data
-	SInt16	lastTypeIndex = EndianS16_NtoB((SInt16) types.getCount() - 1);
+	UInt16	typesCount = (UInt16) mInternals->mResourceMap.getCount();
+	SInt16	lastTypeIndex = EndianS16_NtoB((SInt16) typesCount - 1);
 	typeListData.appendBytes((const UInt8*) &lastTypeIndex, sizeof(SInt16));
 
 	// Iterate resource types
-	for (TIteratorS<CString> iterator = types.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TDictionary<TNArray<Resource> >::Iterator resourcesIterator = mInternals->mResourceMap.getIterator();
+			resourcesIterator; resourcesIterator++) {
 		// Get info
-		CString&			type = *iterator;
-		TArray<Resource>	resources = *mInternals->mResourceMap[type];
+		TArray<Resource>&	resources = resourcesIterator.getValue();
 
 		// Type ID
-		OSType	typeID = EndianU32_NtoB(type.getOSType());
+		OSType	typeID = EndianU32_NtoB(resourcesIterator.getKey().getOSType());
 		typeListData.appendBytes((const UInt8*) &typeID, sizeof(OSType));
 
 		// Last resource index
@@ -187,14 +187,14 @@ TVResult<CData> CAppleResourceManager::getAsData()
 		typeListData.appendBytes((const UInt8*) &lastResourceIndex, sizeof(UInt16));
 
 		// Resource list offset
-		UInt16	resourceListOffset =
-						EndianU16_NtoB((UInt16) (resourceListData.getByteCount() + 2 + 8 * types.getCount()));
+		UInt16	resourceListOffset = EndianU16_NtoB((UInt16) (resourceListData.getByteCount() + 2 + 8 * typesCount));
 		typeListData.appendBytes((const UInt8*) &resourceListOffset, sizeof(UInt16));
 
 		// Iterate resources for this type
-		for (CArray::ItemIndex resourceIndex = 0; resourceIndex < resources.getCount(); resourceIndex++) {
+		for (TArray<Resource>::Iterator resourceIterator = resources.getIterator(); resourceIterator;
+				resourceIterator++) {
 			// Get this apple resource
-			const	Resource&	resource = resources[resourceIndex];
+			const	Resource&	resource = *resourceIterator;
 
 			// ID
 			UInt16	resourceID = EndianU16_NtoB(resource.mID);

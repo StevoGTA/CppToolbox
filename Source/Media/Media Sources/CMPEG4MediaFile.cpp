@@ -129,8 +129,8 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 
 	// Iterate moov atom
 	SMediaSource::Tracks	mediaSourceTracks;
-	for (TIteratorD<CAtomReader::Atom> moovIterator = moovContainerAtom->getIterator();
-			moovIterator.hasValue(); moovIterator.advance()) {
+	for (TArray<CAtomReader::Atom>::Iterator moovIterator = moovContainerAtom->getIterator(); moovIterator;
+			moovIterator++) {
 		// Check type
 		if (moovIterator->getType() == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
 			// Track

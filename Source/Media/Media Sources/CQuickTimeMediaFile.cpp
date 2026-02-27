@@ -756,8 +756,8 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(moovContainerAtom.getError())));
 
 	SMediaSource::Tracks	mediaSourceTracks;
-	for (TIteratorD<CAtomReader::Atom> moovIterator = moovContainerAtom->getIterator();
-			moovIterator.hasValue(); moovIterator.advance()) {
+	for (TArray<CAtomReader::Atom>::Iterator moovIterator = moovContainerAtom->getIterator(); moovIterator;
+			moovIterator++) {
 		// Check type
 		if (moovIterator->getType() == MAKE_OSTYPE('t', 'r', 'a', 'k')) {
 			// Track

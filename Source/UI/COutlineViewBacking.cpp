@@ -98,7 +98,7 @@ COutlineViewBacking::~COutlineViewBacking()
 //{
 //	// Collect outline view items
 //	TNArray<I<COutlineViewItem> >	outlineViewItems;
-//	for (TIteratorD<CString> iterator = itemIDs.getIterator(); iterator.hasValue(); iterator.advance())
+//	for (TArray<CString>::Iterator iterator = itemIDs.getIterator(); iterator; iterator++)
 //		// Add tree item
 //		outlineViewItems += mInternals->mItemByItemID[*iterator]->mOutlineViewItem;
 //
@@ -118,7 +118,7 @@ COutlineViewBacking::~COutlineViewBacking()
 //		// Child
 //		Internals::Item& item = *mInternals->mItemByItemID[*parentItemID];
 //
-//		for (TIteratorD<CString> iterator = item.mChildItemIDs.getIterator(); iterator.hasValue(); iterator.advance())
+//		for (TArray<CString>::Iterator iterator = item.mChildItemIDs.getIterator(); iterator; iterator++)
 //			// Remove
 //			mInternals->mItemByItemID.remove(*iterator);
 //	}
@@ -134,8 +134,7 @@ COutlineViewBacking::~COutlineViewBacking()
 //	// Check level
 //	if (!parentItemID.hasValue()) {
 //		// Top level
-//		for (TIteratorD<I<COutlineViewItem> > iterator = outlineViewItems.getIterator(); iterator.hasValue();
-//				iterator.advance()) {
+//		for (TArray<I<COutlineViewItem> >::Iterator iterator = outlineViewItems.getIterator(); iterator; iterator++) {
 //			// Add
 //			mInternals->mItemByItemID.set((*iterator)->getID(), Internals::Item(*iterator));
 //			mInternals->mTopLevelItemIDs += (*iterator)->getID();
@@ -143,8 +142,7 @@ COutlineViewBacking::~COutlineViewBacking()
 //	} else {
 //		// Child
 //		Internals::Item& item = *mInternals->mItemByItemID[*parentItemID];
-//		for (TIteratorD<I<COutlineViewItem> > iterator = outlineViewItems.getIterator(); iterator.hasValue();
-//				iterator.advance()) {
+//		for (TArray<I<COutlineViewItem> >::Iterator iterator = outlineViewItems.getIterator(); iterator; iterator++) {
 //			// Add
 //			mInternals->mItemByItemID.set((*iterator)->getID(), Internals::Item(*iterator));
 //			item.mChildItemIDs += (*iterator)->getID();

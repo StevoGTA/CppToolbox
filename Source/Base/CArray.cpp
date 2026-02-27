@@ -8,41 +8,19 @@
 #include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: SArraySortInfo
+// MARK: CArray::IteratorInfo:
 
-struct SArraySortInfo {
-	// Properties
-	CArray::CompareProc	mCompareProc;
-	void*				mUserData;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CArray::IteratorInfo
-
-class CArray::IteratorInfo : public CIterator::Info {
-	// Methods
+class CArray::IteratorInfo {
 	public:
-						// Lifecycle methods
-						IteratorInfo(const Internals& internals, UInt32 initialReference) :
-							CIterator::Info(),
-									mInternals(internals), mInitialReference(initialReference), mCurrentIndex(0)
-							{}
+		IteratorInfo(const Internals& internals, UInt32 initialReference) :
+			mInternals(internals),
+					mInitialReference(initialReference), mCurrentIndex(0)
+			{}
 
-						// CIterator::Info methods
-	CIterator::Info*	copy()
-							{
-								// Make copy
-								IteratorInfo*	iteratorInfo = new IteratorInfo(mInternals, mInitialReference);
-								iteratorInfo->mCurrentIndex = mCurrentIndex;
+		const	Internals&	mInternals;
 
-								return iteratorInfo;
-							}
-
-	// Properties
-	const	Internals&	mInternals;
-			UInt32		mInitialReference;
-			UInt32		mCurrentIndex;
+				UInt32		mInitialReference;
+				UInt32		mCurrentIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,170 +29,154 @@ class CArray::IteratorInfo : public CIterator::Info {
 
 class CArray::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 	public:
-											Internals(ItemCount initialCapacity, CopyProc copyProc,
-													DisposeProc disposeProc) :
-												TCopyOnWriteReferenceCountable(),
-														mCapacity(std::max(initialCapacity, (UInt32) 10)), mCount(0),
-														mItemRefs((ItemRef*) ::calloc(mCapacity, sizeof(ItemRef))),
-														mCopyProc(copyProc),
-														mDisposeProc(disposeProc), mReference(0)
-												{}
-											Internals(const Internals& other) :
-												TCopyOnWriteReferenceCountable(),
-														mCapacity(other.mCount), mCount(other.mCount),
-														mItemRefs((ItemRef*) ::calloc(mCapacity, sizeof(ItemRef))),
-														mCopyProc(other.mCopyProc), mDisposeProc(other.mDisposeProc),
-														mReference(0)
-												{
-													// Check if have copy proc
-													if (mCopyProc != nil) {
-														// Copy each item
-														for (ItemIndex i = 0; i < mCount; i++)
-															// Copy item
-															mItemRefs[i] = mCopyProc(other.mItemRefs[i]);
-													} else
-														// Copy item refs
-														::memcpy(mItemRefs, other.mItemRefs, mCount * sizeof(ItemRef));
-												}
-											~Internals()
-												{
-													// Remove all
-													removeAllInternal();
+		struct SortInfo {
+			public:
+				CompareProc	mCompareProc;
+				void*		mUserData;
+		};
 
-													// Cleanup
-													::free(mItemRefs);
-												}
+	public:
+								Internals(ItemCount initialCapacity, CopyProc copyProc,
+										DisposeProc disposeProc) :
+									TCopyOnWriteReferenceCountable(),
+											mCapacity(std::max(initialCapacity, (UInt32) 10)), mCount(0),
+											mItemRefs((ItemRef*) ::calloc(mCapacity, sizeof(ItemRef))),
+											mCopyProc(copyProc), mDisposeProc(disposeProc), mReference(0)
+									{}
+								Internals(const Internals& other) :
+									TCopyOnWriteReferenceCountable(),
+											mCapacity(other.mCount), mCount(other.mCount),
+											mItemRefs((ItemRef*) ::calloc(mCapacity, sizeof(ItemRef))),
+											mCopyProc(other.mCopyProc), mDisposeProc(other.mDisposeProc),
+											mReference(0)
+									{
+										// Check if have copy proc
+										if (mCopyProc != nil) {
+											// Copy each item
+											for (ItemIndex i = 0; i < mCount; i++)
+												// Copy item
+												mItemRefs[i] = mCopyProc(other.mItemRefs[i]);
+										} else
+											// Copy item refs
+											::memcpy(mItemRefs, other.mItemRefs, mCount * sizeof(ItemRef));
+									}
+								~Internals()
+									{
+										// Remove all
+										removeAllInternal();
 
-				OV<CArray::ItemIndex>		getIndexOf(const ItemRef itemRef) const
-												{
-													// Scan
-													ItemIndex	itemIndex = 0;
-													for (ItemRef* testItemRef = mItemRefs; itemIndex < mCount;
-															itemIndex++, testItemRef++) {
-														// Check test item ref
-														if (*testItemRef == itemRef)
-															// Found
-															return OV<ItemIndex>(itemIndex);
-													}
+										// Cleanup
+										::free(mItemRefs);
+									}
 
-													return OV<ItemIndex>();
-												}
+				OV<ItemIndex>	getIndexOf(const ItemRef itemRef) const
+									{
+										// Scan
+										ItemIndex	itemIndex = 0;
+										for (ItemRef* testItemRef = mItemRefs; itemIndex < mCount;
+												itemIndex++, testItemRef++) {
+											// Check test item ref
+											if (*testItemRef == itemRef)
+												// Found
+												return OV<ItemIndex>(itemIndex);
+										}
 
-				void						append(const ItemRef* itemRefs, ItemCount count, CopyProc copyProc)
-												{
-													// Setup
-													ItemCount	neededCount = mCount + count;
+										return OV<ItemIndex>();
+									}
 
-													// Check storage
-													if (neededCount > mCapacity) {
-														// Expand storage
-														mCapacity = std::max(neededCount, mCapacity * 2);
-														mItemRefs =
-																(ItemRef*)
-																		::realloc(mItemRefs,
-																				mCapacity * sizeof(ItemRef));
-													}
+				void			append(const ItemRef* itemRefs, ItemCount count, CopyProc copyProc)
+									{
+										// Setup
+										ItemCount	neededCount = mCount + count;
 
-													// Check if have copy proc
-													if (copyProc != nil) {
-														// Copy each item
-														for (ItemIndex i = 0; i < count; i++)
-															// Copy item
-															mItemRefs[mCount + i] = copyProc(itemRefs[i]);
-													} else
-														// Append itemRefs into place
-														::memcpy(mItemRefs + mCount, itemRefs, count * sizeof(ItemRef));
-													mCount = neededCount;
+										// Check storage
+										if (neededCount > mCapacity) {
+											// Expand storage
+											mCapacity = std::max(neededCount, mCapacity * 2);
+											mItemRefs = (ItemRef*) ::realloc(mItemRefs, mCapacity * sizeof(ItemRef));
+										}
 
-													// Update info
-													mReference++;
-												}
-				void						insertAtIndex(const ItemRef itemRef, ItemIndex itemIndex, CopyProc copyProc)
-												{
-													// Setup
-													ItemCount	neededCount = mCount + 1;
+										// Check if have copy proc
+										if (copyProc != nil) {
+											// Copy each item
+											for (ItemIndex i = 0; i < count; i++)
+												// Copy item
+												mItemRefs[mCount + i] = copyProc(itemRefs[i]);
+										} else
+											// Append itemRefs into place
+											::memcpy(mItemRefs + mCount, itemRefs, count * sizeof(ItemRef));
 
-													// Check storage
-													if (neededCount > mCapacity) {
-														// Expand storage
-														mCapacity = std::max(neededCount, mCapacity * 2);
-														mItemRefs =
-																(ItemRef*)
-																		::realloc(mItemRefs,
-																				mCapacity * sizeof(ItemRef));
-													}
+										// Update info
+										mCount = neededCount;
+										mReference++;
+									}
+				void			insertAtIndex(const ItemRef itemRef, ItemIndex itemIndex, CopyProc copyProc)
+									{
+										// Setup
+										ItemCount	neededCount = mCount + 1;
 
-													// Move following itemRefs back
-													::memmove(mItemRefs + itemIndex + 1, mItemRefs + itemIndex,
-															(mCount - itemIndex) * sizeof(ItemRef));
+										// Check storage
+										if (neededCount > mCapacity) {
+											// Expand storage
+											mCapacity = std::max(neededCount, mCapacity * 2);
+											mItemRefs = (ItemRef*) ::realloc(mItemRefs, mCapacity * sizeof(ItemRef));
+										}
 
-													// Check if have copy proc
-													if (copyProc != nil)
-														// Copy item
-														mItemRefs[itemIndex] = copyProc(itemRef);
-													else
-														// Store new itemRef
-														mItemRefs[itemIndex] = itemRef;
-													mCount++;
+										// Move following itemRefs back
+										::memmove(mItemRefs + itemIndex + 1, mItemRefs + itemIndex,
+												(mCount - itemIndex) * sizeof(ItemRef));
 
-													// Update info
-													mReference++;
-												}
-				void						removeAtIndex(ItemIndex itemIndex, bool performDispose)
-												{
-													// Check if owns items
-													if (performDispose && (mDisposeProc != nil))
-														// Dispose
-														mDisposeProc(mItemRefs[itemIndex]);
+										// Update info
+										mCount++;
+										mItemRefs[itemIndex] = (copyProc != nil) ? copyProc(itemRef) : itemRef;
+										mReference++;
+									}
+				void			removeAtIndex(ItemIndex itemIndex, bool performDispose)
+									{
+										// Check if owns items
+										if (performDispose && (mDisposeProc != nil))
+											// Dispose
+											mDisposeProc(mItemRefs[itemIndex]);
 
-													// Move following itemRefs forward
-													::memmove(mItemRefs + itemIndex, mItemRefs + itemIndex + 1,
-															(mCount - itemIndex - 1) * sizeof(ItemRef));
+										// Move following itemRefs forward
+										::memmove(mItemRefs + itemIndex, mItemRefs + itemIndex + 1,
+												(mCount - itemIndex - 1) * sizeof(ItemRef));
 
-													// Update info
-													mCount--;
-													mReference++;
-												}
-				void						removeAll()
-												{
-													// Remove all
-													removeAllInternal();
+										// Update info
+										mCount--;
+										mReference++;
+									}
+				void			removeAll()
+									{
+										// Remove all
+										removeAllInternal();
 
-													// Update info
-													mCount = 0;
-													mReference++;
-												}
+										// Update info
+										mCount = 0;
+										mReference++;
+									}
 
-				TIteratorS<CArray::ItemRef>	getIterator() const
-												{
-													// Setup
-													IteratorInfo*	iteratorInfo = new IteratorInfo(*this, mReference);
+		static	int				sort(void* info, const void* itemRef1, const void* itemRef2)
+									{
+										SortInfo*	sortInfo = (SortInfo*) info;
 
-													return TIteratorS<ItemRef>((mCount > 0) ? mItemRefs : nil,
-															(CIterator::AdvanceProc) iteratorAdvance, *iteratorInfo);
-												}
-
-		static	void*						iteratorAdvance(IteratorInfo& arrayIteratorInfo)
-												{
-													return (++arrayIteratorInfo.mCurrentIndex <
-																	arrayIteratorInfo.mInternals.mCount) ?
-															arrayIteratorInfo.mInternals.mItemRefs +
-																	arrayIteratorInfo.mCurrentIndex :
-															nil;
-												}
+										return sortInfo->mCompareProc(*((ItemRef*) itemRef1), *((ItemRef*) itemRef2),
+														sortInfo->mUserData) ?
+												-1 : 1;
+									}
 
 	private:
-				void						removeAllInternal()
-												{
-													// Check if have item dispose proc
-													if (mDisposeProc != nil) {
-														// Dispose each item
-														for (ItemIndex i = 0; i < mCount; i++) {
-															// Dispose
-															mDisposeProc(mItemRefs[i]);
-														}
-													}
-												}
+				void			removeAllInternal()
+									{
+										// Check if have item dispose proc
+										if (mDisposeProc != nil) {
+											// Dispose each item
+											for (ItemIndex i = 0; i < mCount; i++) {
+												// Dispose
+												mDisposeProc(mItemRefs[i]);
+											}
+										}
+									}
 
 	public:
 		ItemCount	mCapacity;
@@ -224,12 +186,6 @@ class CArray::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 		DisposeProc	mDisposeProc;
 		UInt32		mReference;
 };
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc declarations
-
-static	int sSortProc(void* info, const void* itemRef1, const void* itemRef2);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -501,10 +457,10 @@ bool CArray::equals(const CArray& other) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TIteratorS<CArray::ItemRef> CArray::getIterator() const
+I<CArray::IteratorInfo> CArray::getIteratorInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->getIterator();
+	return I<IteratorInfo>(new IteratorInfo(*mInternals, mInternals->mReference));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -529,15 +485,15 @@ CArray& CArray::sort(CompareProc compareProc, void* userData)
 	// Sort
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	// BSD platforms
-	SArraySortInfo	sortInfo = {compareProc, userData};
-	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), &sortInfo, sSortProc);
+	Internals::SortInfo	sortInfo = {compareProc, userData};
+	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), &sortInfo, Internals::sort);
 #elif defined(TARGET_OS_LINUX)
 	// GLibc platforms
-	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), sSortProc, userData);
+	qsort_r(mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), Internals::sort, userData);
 #elif defined(TARGET_OS_WINDOWS)
 	// Windows platforms
-	SArraySortInfo	sortInfo = {compareProc, userData};
-	qsort_s((void*) mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), sSortProc, &sortInfo);
+	Internals::SortInfo	sortInfo = {compareProc, userData};
+	qsort_s((void*) mInternals->mItemRefs, mInternals->mCount, sizeof(ItemRef), Internals::sort, &sortInfo);
 #else
 	// Unknown platform
 	AssertFailUnimplemented();
@@ -594,16 +550,26 @@ CArray& CArray::operator=(const CArray& other)
 	return *this;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local proc definitions
+// MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-int sSortProc(void* info, const void* itemRef1, const void* itemRef2)
+UInt32 CArray::iteratorGetCurrentIndex(const I<IteratorInfo>& iteratorInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	SArraySortInfo*	sortInfo = (SArraySortInfo*) info;
+	return iteratorInfo->mCurrentIndex;
+}
 
-	return sortInfo->mCompareProc(*((CArray::ItemRef*) itemRef1), *((CArray::ItemRef*) itemRef2), sortInfo->mUserData) ?
-			-1 : 1;
+//----------------------------------------------------------------------------------------------------------------------
+CArray::ItemRef CArray::iteratorAdvance(const I<IteratorInfo>& iteratorInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Integrity check
+	AssertFailIf(iteratorInfo->mInitialReference != iteratorInfo->mInternals.mReference);
+
+	if (iteratorInfo->mCurrentIndex < iteratorInfo->mInternals.mCount)
+		// Increement index
+		iteratorInfo->mCurrentIndex++;
+
+	return (iteratorInfo->mCurrentIndex < iteratorInfo->mInternals.mCount) ?
+			iteratorInfo->mInternals.mItemRefs[iteratorInfo->mCurrentIndex] : nil;
 }

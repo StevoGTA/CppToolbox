@@ -95,9 +95,9 @@ OV<SError> sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array
 	data.appendBytes("[", 1);
 
 	// Iterate array
-	for (TIteratorD<CDictionary> iterator = array.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<CDictionary>::Iterator iterator = array.getIterator(); iterator; iterator++) {
 		// Check if first
-		if (!iterator.isFirstValue())
+		if (!iterator.isFirst())
 			// Add comma
 			data.appendBytes(",", 1);
 
@@ -119,9 +119,9 @@ OV<SError> sAddArrayOfStrings(CData& data, const TArray<CString>& array)
 	data.appendBytes("[", 1);
 
 	// Iterate array
-	for (TIteratorD<CString> iterator = array.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<CString>::Iterator iterator = array.getIterator(); iterator; iterator++) {
 		// Check if first
-		if (!iterator.isFirstValue())
+		if (!iterator.isFirst())
 			// Add comma
 			data.appendBytes(",", 1);
 
@@ -143,21 +143,21 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 	data.appendBytes("{", 1);
 
 	// Iterate dictionary
-	for (TIteratorS<CDictionary::Item> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (CDictionary::Iterator iterator = dictionary.getIterator(); iterator; iterator++) {
 		// Check if first
-		if (!iterator.isFirstValue())
+		if (!iterator.isFirst())
 			// Add comma
 			data.appendBytes(",", 1);
 
 		// Add key
-		sAddString(data, iterator->mKey);
+		sAddString(data, iterator.getKey());
 
 		// Add colon
 		data.appendBytes(":", 1);
 
 		// Add value
 		OV<SError>	error;
-		switch (iterator->mValue.getType()) {
+		switch (iterator.getValue().getType()) {
 			case SValue::kTypeEmpty:
 				// Empty (null)
 				data.appendBytes("null", 4);
@@ -165,19 +165,19 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 
 			case SValue::kTypeArrayOfDictionaries:
 				// Array of dictionaries
-				error = sAddArrayOfDictionaries(data, iterator->mValue.getArrayOfDictionaries());
+				error = sAddArrayOfDictionaries(data, iterator.getValue().getArrayOfDictionaries());
 				ReturnErrorIfError(error);
 				break;
 
 			case SValue::kTypeArrayOfStrings:
 				// Array of strings
-				error = sAddArrayOfStrings(data, iterator->mValue.getArrayOfStrings());
+				error = sAddArrayOfStrings(data, iterator.getValue().getArrayOfStrings());
 				ReturnErrorIfError(error);
 				break;
 
 			case SValue::kTypeBool:
 				// Add bool
-				if (iterator->mValue.getBool())
+				if (iterator.getValue().getBool())
 					// True
 					data.appendBytes("true", 4);
 				else
@@ -187,63 +187,63 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 
 			case SValue::kTypeDictionary:
 				// Add dictionary
-				error = sAddDictionary(data, iterator->mValue.getDictionary());
+				error = sAddDictionary(data, iterator.getValue().getDictionary());
 				ReturnErrorIfError(error);
 				break;
 
 			case SValue::kTypeString:
 				// String
-				sAddString(data, iterator->mValue.getString());
+				sAddString(data, iterator.getValue().getString());
 				break;
 
 			case SValue::kTypeFloat32:
 				// Float32
-				data += CString(iterator->mValue.getFloat32()).getUTF8Data();
+				data += CString(iterator.getValue().getFloat32()).getUTF8Data();
 				break;
 
 			case SValue::kTypeFloat64:
 				// Float64
-				data += CString(iterator->mValue.getFloat64()).getUTF8Data();
+				data += CString(iterator.getValue().getFloat64()).getUTF8Data();
 				break;
 
 			case SValue::kTypeSInt8:
 				// SInt8
-				data += CString(iterator->mValue.getSInt8()).getUTF8Data();
+				data += CString(iterator.getValue().getSInt8()).getUTF8Data();
 				break;
 
 			case SValue::kTypeSInt16:
 				// SInt16
-				data += CString(iterator->mValue.getSInt16()).getUTF8Data();
+				data += CString(iterator.getValue().getSInt16()).getUTF8Data();
 				break;
 
 			case SValue::kTypeSInt32:
 				// SInt32
-				data += CString(iterator->mValue.getSInt32()).getUTF8Data();
+				data += CString(iterator.getValue().getSInt32()).getUTF8Data();
 				break;
 
 			case SValue::kTypeSInt64:
 				// SInt64
-				data += CString(iterator->mValue.getSInt64()).getUTF8Data();
+				data += CString(iterator.getValue().getSInt64()).getUTF8Data();
 				break;
 
 			case SValue::kTypeUInt8:
 				// UInt8
-				data += CString(iterator->mValue.getUInt8()).getUTF8Data();
+				data += CString(iterator.getValue().getUInt8()).getUTF8Data();
 				break;
 
 			case SValue::kTypeUInt16:
 				// UInt16
-				data += CString(iterator->mValue.getUInt16()).getUTF8Data();
+				data += CString(iterator.getValue().getUInt16()).getUTF8Data();
 				break;
 
 			case SValue::kTypeUInt32:
 				// UInt32
-				data += CString(iterator->mValue.getUInt32()).getUTF8Data();
+				data += CString(iterator.getValue().getUInt32()).getUTF8Data();
 				break;
 
 			case SValue::kTypeUInt64:
 				// UInt64
-				data += CString(iterator->mValue.getUInt64()).getUTF8Data();
+				data += CString(iterator.getValue().getUInt64()).getUTF8Data();
 				break;
 
 			case SValue::kTypeData:

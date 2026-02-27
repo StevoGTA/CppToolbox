@@ -77,7 +77,7 @@ CData SMPEG4::STSDAtomPayload::getData(const TArray<CData>& descriptions)
 	CData			data(&stsdAtomPayload, sizeof(STSDAtomPayload), false);
 
 	// Add descriptions
-	for (TIteratorD<CData> iterator = descriptions.getIterator(); iterator.hasValue(); iterator.advance())
+	for (TArray<CData>::Iterator iterator = descriptions.getIterator(); iterator; iterator++)
 		// Add description
 		data += *iterator;
 

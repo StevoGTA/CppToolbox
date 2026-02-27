@@ -146,7 +146,7 @@ TArray<CString> CFile::getFilesystemPaths(const TArray<CFile>& files, CFilesyste
 {
 	// Collect filesystem paths
 	TNArray<CString>	filesystemPaths;
-	for (TIteratorD<CFile> iterator = files.getIterator(); iterator.hasValue(); iterator.advance())
+	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++)
 		// Add filesystem path
 		filesystemPaths += iterator->getFilesystemPath().getString(filesystemPathStyle);
 

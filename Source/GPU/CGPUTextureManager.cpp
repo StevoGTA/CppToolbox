@@ -606,9 +606,9 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Look for file in already loaded render material images
-	for (TIteratorD<CGPUTextureReference> iterator =
+	for (TArray<CGPUTextureReference>::Iterator iterator =
 					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-			iterator.hasValue(); iterator.advance()) {
+			iterator; iterator++) {
 		// Check this one
 		if (iterator->getReference() == reference)
 			// Found existing
@@ -635,9 +635,9 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const CBitmap& bitm
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Look for file in already loaded render material images
-	for (TIteratorD<CGPUTextureReference> iterator =
+	for (TArray<CGPUTextureReference>::Iterator iterator =
 					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-			iterator.hasValue(); iterator.advance()) {
+			iterator; iterator++) {
 		// Check this one
 		if (iterator->getReference() == reference)
 			// Found existing
@@ -664,9 +664,9 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CDataSource
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Look for file in already loaded render material images
-	for (TIteratorD<CGPUTextureReference> iterator =
+	for (TArray<CGPUTextureReference>::Iterator iterator =
 					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-			iterator.hasValue(); iterator.advance()) {
+			iterator; iterator++) {
 		// Check this one
 		if (iterator->getReference() == reference)
 			// Found existing
@@ -693,9 +693,9 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CDataSource
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Look for file in already loaded render material images
-	for (TIteratorD<CGPUTextureReference> iterator =
+	for (TArray<CGPUTextureReference>::Iterator iterator =
 					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-			iterator.hasValue(); iterator.advance()) {
+			iterator; iterator++) {
 		// Check this one
 		if (iterator->getReference() == reference)
 			// Found existing
@@ -724,9 +724,9 @@ CGPUTextureReference CGPUTextureManager::gpuTextureReference(const I<CDataSource
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Look for file in already loaded render material images
-	for (TIteratorD<CGPUTextureReference> iterator =
+	for (TArray<CGPUTextureReference>::Iterator iterator =
 					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-			iterator.hasValue(); iterator.advance()) {
+			iterator; iterator++) {
 		// Check this one
 		if (iterator->getReference() == reference)
 			// Found existing
@@ -766,9 +766,9 @@ void CGPUTextureManager::loadAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all
-	for (TIteratorD<CGPUTextureReference> iterator =
+	for (TArray<CGPUTextureReference>::Iterator iterator =
 					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-			iterator.hasValue(); iterator.advance())
+			iterator; iterator++)
 		// Start loading
 		iterator->load();
 }
@@ -794,9 +794,9 @@ void CGPUTextureManager::unloadAll()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all
-	for (TIteratorD<CGPUTextureReference> iterator =
+	for (TArray<CGPUTextureReference>::Iterator iterator =
 					mInternals->mGPUTextureManagerInfo.mGPUTextureReferences.getIterator();
-			iterator.hasValue(); iterator.advance())
+			iterator; iterator++)
 		// Unload
 		iterator->unload();
 }

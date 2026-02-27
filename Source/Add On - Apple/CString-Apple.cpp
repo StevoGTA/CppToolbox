@@ -326,27 +326,26 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 		::CFRelease(mStringRef);
 		mStringRef = stringRef;
 
-		for (TIteratorS<CDictionary::Item> iterator = localizationInfo.getIterator(); iterator.hasValue();
-				iterator.advance()) {
+		for (CDictionary::Iterator iterator = localizationInfo.getIterator(); iterator; iterator++) {
 			// Compose value
 			CString	replacement;
-			switch (iterator->mValue.getType()) {
+			switch (iterator.getValue().getType()) {
 				case SValue::kTypeBool:
 					// Bool
-					replacement = iterator->mValue.getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
+					replacement = iterator.getValue().getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
 					break;
 
-				case SValue::kTypeString:	replacement = iterator->mValue.getString();				break;
-				case SValue::kTypeFloat32:	replacement = CString(iterator->mValue.getFloat32());	break;
-				case SValue::kTypeFloat64:	replacement = CString(iterator->mValue.getFloat64());	break;
-				case SValue::kTypeSInt8:	replacement = CString(iterator->mValue.getSInt8());		break;
-				case SValue::kTypeSInt16:	replacement = CString(iterator->mValue.getSInt16());	break;
-				case SValue::kTypeSInt32:	replacement = CString(iterator->mValue.getSInt32());	break;
-				case SValue::kTypeSInt64:	replacement = CString(iterator->mValue.getSInt64());	break;
-				case SValue::kTypeUInt8:	replacement = CString(iterator->mValue.getUInt8());		break;
-				case SValue::kTypeUInt16:	replacement = CString(iterator->mValue.getUInt16());	break;
-				case SValue::kTypeUInt32:	replacement = CString(iterator->mValue.getUInt32());	break;
-				case SValue::kTypeUInt64:	replacement = CString(iterator->mValue.getUInt64());	break;
+				case SValue::kTypeString:	replacement = iterator.getValue().getString();				break;
+				case SValue::kTypeFloat32:	replacement = CString(iterator.getValue().getFloat32());	break;
+				case SValue::kTypeFloat64:	replacement = CString(iterator.getValue().getFloat64());	break;
+				case SValue::kTypeSInt8:	replacement = CString(iterator.getValue().getSInt8());		break;
+				case SValue::kTypeSInt16:	replacement = CString(iterator.getValue().getSInt16());	break;
+				case SValue::kTypeSInt32:	replacement = CString(iterator.getValue().getSInt32());	break;
+				case SValue::kTypeSInt64:	replacement = CString(iterator.getValue().getSInt64());	break;
+				case SValue::kTypeUInt8:	replacement = CString(iterator.getValue().getUInt8());		break;
+				case SValue::kTypeUInt16:	replacement = CString(iterator.getValue().getUInt16());	break;
+				case SValue::kTypeUInt32:	replacement = CString(iterator.getValue().getUInt32());	break;
+				case SValue::kTypeUInt64:	replacement = CString(iterator.getValue().getUInt64());	break;
 
 				case SValue::kTypeEmpty:
 				case SValue::kTypeArrayOfDictionaries:
@@ -360,7 +359,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 			}
 
 			// Replace
-			::CFStringFindAndReplace(stringRef, iterator->mKey.mStringRef, replacement.mStringRef,
+			::CFStringFindAndReplace(stringRef, iterator.getKey().mStringRef, replacement.mStringRef,
 					::CFRangeMake(0, ::CFStringGetLength(mStringRef)), 0);
 		}
 	} else

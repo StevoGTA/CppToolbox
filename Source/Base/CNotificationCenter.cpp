@@ -71,8 +71,7 @@ class CNotificationCenter::Internals {
 					{
 						// Iterate all notification names
 						TSet<CString>	keys = mInfo.getKeys();
-						for (TIteratorS<CString> iterator = keys.getIterator(); iterator.hasValue();
-								iterator.advance()) {
+						for (TSet<CString>::Iterator iterator = keys.getIterator(); iterator; iterator++) {
 							// Get existing observer infos
 							OR<TNArray<ObserverInfo> >	observerInfos = mInfo[*iterator];
 
@@ -170,8 +169,7 @@ void CNotificationCenter::send(const CString& notificationName, const OR<Sender>
 		return;
 
 	// Iterate observer infos
-	for (TIteratorD<Internals::ObserverInfo> iterator = observerInfos->getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TArray<Internals::ObserverInfo>::Iterator iterator = observerInfos->getIterator(); iterator; iterator++) {
 		// Get info
 		const	Internals::ObserverInfo&	observerInfo = *iterator;
 

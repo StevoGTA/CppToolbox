@@ -15,8 +15,7 @@ UInt32 CMediaPacketSource::seekToKeyframe(UInt32 initialFrameIndex, const TNumbe
 {
 	// Iterate through keyframes to find target one
 	UInt32	packetIndex = 0;
-	for (TIteratorM<TNumber<UInt32>, UInt32> iterator = keyframeIndexes.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TNumberArray<UInt32>::Iterator iterator = keyframeIndexes.getIterator(); iterator; iterator++) {
 		// Check this keyframe
 		if (*iterator <= initialFrameIndex)
 			// Is the same or before initial frame index
@@ -195,8 +194,8 @@ UInt32 CSeekableVaryingMediaPacketSource::seekToDuration(UInt32 duration)
 {
 	// Find packet index
 	mInternals->mNextPacketIndex = 0;
-	for (TIteratorD<SMedia::PacketAndLocation> iterator = mInternals->mMediaPacketAndLocations.getIterator();
-			iterator.hasValue(); iterator.advance()) {
+	for (TArray<SMedia::PacketAndLocation>::Iterator iterator = mInternals->mMediaPacketAndLocations.getIterator();
+			iterator; iterator++) {
 		// Check if can advance past this packet
 		if (duration >= iterator->getPacket().getDuration()) {
 			// Advance

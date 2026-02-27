@@ -393,7 +393,7 @@ OV<SLocalization::Currency> SLocalization::Currency::getFor(const CString& iso42
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all
-	for (TIteratorD<Currency> iterator = getAll().getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<Currency>::Iterator iterator = getAll().getIterator(); iterator; iterator++) {
 		// Check
 		if (iterator->getISO4217Code() == iso4217Code)
 			// Found
@@ -1290,7 +1290,7 @@ OV<SLocalization::Language> SLocalization::Language::getFor(OSType iso639_2_Code
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate all
-	for (TIteratorD<Language> iterator = getAll().getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<Language>::Iterator iterator = getAll().getIterator(); iterator; iterator++) {
 		// Check
 		if (iterator->getISO639_2_Code() == iso639_2_Code)
 			// Found
@@ -1318,7 +1318,7 @@ TArray<SLocalization::Language> SLocalization::Language::getFor(const TArray<CSt
 {
 	// Setup
 	TNArray<Language>	languages;
-	for (TIteratorD<CString> iterator = iso639_2_CodeStrings.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<CString>::Iterator iterator = iso639_2_CodeStrings.getIterator(); iterator; iterator++) {
 		// Get language
 		OV<Language>	language = getFor(*iterator);
 		if (language.hasValue())

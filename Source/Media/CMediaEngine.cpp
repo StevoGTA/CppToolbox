@@ -416,8 +416,8 @@ OV<SAudio::ProcessingFormat> sDetermineCommonAudioProcessingFormat(
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Iterate source audio processing setups
-	for (TIteratorD<SAudio::ProcessingSetup> sourceIterator = sourceAudioProcessingSetups.getIterator();
-			sourceIterator.hasValue(); sourceIterator.advance()) {
+	for (TArray<SAudio::ProcessingSetup>::Iterator sourceIterator = sourceAudioProcessingSetups.getIterator();
+			sourceIterator; sourceIterator++) {
 		// Setup
 		const	SAudio::ProcessingSetup&					sourceAudioProcessingSetup = *sourceIterator;
 		const	SAudio::ProcessingSetup::BitsInfo&			sourceBitsInfo = sourceAudioProcessingSetup.getBitsInfo();
@@ -433,8 +433,9 @@ OV<SAudio::ProcessingFormat> sDetermineCommonAudioProcessingFormat(
 																	sourceAudioProcessingSetup.getInterleavedOption();
 
 		// Iterate destination audio processing setups
-		for (TIteratorD<SAudio::ProcessingSetup> destinationIterator = destinationAudioProcessingSetups.getIterator();
-				destinationIterator.hasValue(); destinationIterator.advance()) {
+		for (TArray<SAudio::ProcessingSetup>::Iterator destinationIterator =
+						destinationAudioProcessingSetups.getIterator();
+				destinationIterator; destinationIterator++) {
 			// Setup
 			const	SAudio::ProcessingSetup&					destinationAudioProcessingSetup = *destinationIterator;
 			const	SAudio::ProcessingSetup::BitsInfo&			destinationBitsInfo =

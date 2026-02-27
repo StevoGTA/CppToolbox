@@ -184,7 +184,7 @@ OV<SError> CFilesystem::revealInFileExplorer(const TArray<CFile>& files)
 {
 	// Iterate files
 	OV<SError>	error;
-	for (TIteratorD<CFile> iterator = files.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++) {
 		// Explore file
 		HINSTANCE	result =
 							ShellExecuteW(NULL, L"explore",

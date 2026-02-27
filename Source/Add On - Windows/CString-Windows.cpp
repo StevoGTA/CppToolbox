@@ -430,8 +430,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 					.mString;
 
 	// Replace values
-	for (TIteratorS<CDictionary::Item> iterator = localizationInfo.getIterator(); iterator.hasValue();
-			iterator.advance()) {
+	for (TIteratorS<CDictionary::Item> iterator = localizationInfo.getIterator(); iterator; iterator++) {
 		// Compose value
 		CString	replacement;
 		switch (iterator->mValue.getType()) {
@@ -1004,7 +1003,7 @@ void CString::setupLocalization(const CData& stringsFileData)
 							CString(stringsFileData, kEncodingUTF8)
 									.replacingSubStrings(CString(OSSTR("\\U00B5")), CString(OSSTR("\u00B5")))
 									.components(CString::mPlatformDefaultNewline);
-	for (TIteratorD<CString> iterator = lines.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (TArray<CString>::Iterator iterator = lines.getIterator(); iterator; iterator++) {
 		// Process line
 		TArray<CString>	components = iterator->components(CString(OSSTR(" = ")));
 		if (components.getCount() == 2)

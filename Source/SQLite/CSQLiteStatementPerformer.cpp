@@ -249,8 +249,7 @@ void CSQLiteStatementPerformer::performAsTransaction(TransactionProc transaction
 		sqliteStatements += CSQLiteStatement(CString(OSSTR("COMMIT")));
 
 		// Perform
-		for (TIteratorD<CSQLiteStatement> iterator = sqliteStatements.getIterator(); iterator.hasValue();
-				iterator.advance())
+		for (TArray<CSQLiteStatement>::Iterator iterator = sqliteStatements.getIterator(); iterator; iterator++)
 			// Perform
 			iterator->perform(mInternals->mDatabase);
 	} else {

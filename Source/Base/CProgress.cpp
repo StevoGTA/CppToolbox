@@ -411,10 +411,11 @@ CTimeIntervalProgress& CAggregateTimeIntervalProgress::addTimeIntervalProgress(U
 		mInternals->mTotalTimeInterval = 0.0;
 
 		// Iterate existing items
-		for (TIteratorS<CDictionary::Item> iterator = mInternals->mInfoByID.getIterator(); iterator.hasValue();
-				iterator.advance()) {
+		for (typename TDictionary<I<Internals::Info> >::ValueIterator iterator =
+						mInternals->mInfoByID.getValueIterator();
+				iterator; iterator++) {
 			// Setup
-			const	Internals::Info&	_info = **((I<Internals::Info>*) iterator->mValue.getOpaque());
+			const	Internals::Info&	_info = **iterator;
 
 			// Update metrics
 			currentTimeInterval += _info.mPreviousTimeInterval;

@@ -276,13 +276,13 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 											&kCFTypeDictionaryValueCallBacks);
 
 	// Copy all items
-	for (TIteratorS<CDictionary::Item> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance()) {
+	for (CDictionary::Iterator iterator = dictionary.getIterator(); iterator; iterator++) {
 		// Get info
-		const	CString&	key = iterator->mKey;
+		const	CString&	key = iterator.getKey();
 				CFStringRef	keyStringRef = key.getOSString();
 
 		// Store value in dictionary
-		const	SValue&	value = iterator->mValue;
+		const	SValue&	value = iterator.getValue();
 		switch (value.getType()) {
 			case SValue::kTypeEmpty:
 				// Empty (null)
@@ -427,10 +427,9 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const TDictionary<CStri
 											&kCFTypeDictionaryValueCallBacks);
 
 	// Copy all items
-	for (TIteratorS<CDictionary::Item> iterator = dictionary.getIterator(); iterator.hasValue(); iterator.advance())
+	for (TDictionary<CString>::Iterator iterator = dictionary.getIterator(); iterator; iterator++)
 		// Store value in dictionary
-		::CFDictionarySetValue(dictionaryRef, iterator->mKey.getOSString(),
-				((const CString*) iterator->mValue.getOpaque())->getOSString());
+		::CFDictionarySetValue(dictionaryRef, iterator.getKey().getOSString(), iterator.getValue().getOSString());
 
 	return dictionaryRef;
 }

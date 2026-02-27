@@ -126,26 +126,27 @@ struct SH264NALUInfo {
 													CData	data;
 
 													// Add SPS
-													for (TIteratorD<SH264NALUInfo> iterator =
+													for (TArray<SH264NALUInfo>::Iterator iterator =
 																	spsNALUInfos.getIterator();
-															iterator.hasValue(); iterator.advance())
+															iterator; iterator++)
 														data +=
 																mAnnexBMarker +
 																		CData(iterator->getBytePtr(),
 																				iterator->getByteCount(), false);
 
 													// Add PPS
-													for (TIteratorD<SH264NALUInfo> iterator =
+													for (TArray<SH264NALUInfo>::Iterator iterator =
 																	ppsNALUInfos.getIterator();
-															iterator.hasValue(); iterator.advance())
+															iterator; iterator++)
 														data +=
 																mAnnexBMarker +
 																		CData(iterator->getBytePtr(),
 																				iterator->getByteCount(), false);
 
 													// Add NALUs
-													for (TIteratorD<SH264NALUInfo> iterator = naluInfos.getIterator();
-															iterator.hasValue(); iterator.advance())
+													for (TArray<SH264NALUInfo>::Iterator iterator =
+																	naluInfos.getIterator();
+															iterator; iterator++)
 														data +=
 																mAnnexBMarker +
 																		CData(iterator->getBytePtr(),

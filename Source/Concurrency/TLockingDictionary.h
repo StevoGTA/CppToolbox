@@ -22,14 +22,14 @@ template <typename T> class TLockingDictionary : public CDictionary {
 								TLockingDictionary(const TLockingDictionary<T>& other) : CDictionary(other) {}
 
 								// CDictionary methods
-				KeyCount		getKeyCount() const
+				Count			getCount() const
 									{
 										// Get
 										mLock.lockForReading();
-										KeyCount	keyCount = CDictionary::getKeyCount();
+										Count	count = CDictionary::getCount();
 										mLock.unlockForReading();
 
-										return keyCount;
+										return count;
 									}
 				TSet<CString>	getKeys() const
 									{
@@ -63,7 +63,7 @@ template <typename T> class TLockingDictionary : public CDictionary {
 
 										return value;
 									}
-				T			get(const CString& key, const T& defaultValue) const
+				T				get(const CString& key, const T& defaultValue) const
 									{
 										// Get
 										mLock.lockForReading();
@@ -158,8 +158,8 @@ template <typename T> class TNLockingDictionary : public TLockingDictionary<T> {
 
 												// Update
 												TLockingDictionary<T>::mLock.lockForWriting();
-												for (TIteratorS<CString> iterator = keys.getIterator();
-														iterator.hasValue(); iterator.advance())
+												for (TSet<CString>::Iterator iterator = keys.getIterator(); iterator;
+														iterator++)
 													// Update
 													CDictionary::set(*iterator, new T(*other[*iterator]));
 												TLockingDictionary<T>::mLock.unlockForWriting();
