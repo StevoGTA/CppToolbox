@@ -430,26 +430,26 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 					.mString;
 
 	// Replace values
-	for (TIteratorS<CDictionary::Item> iterator = localizationInfo.getIterator(); iterator; iterator++) {
+	for (CDictionary::Iterator iterator = localizationInfo.getIterator(); iterator; iterator++) {
 		// Compose value
 		CString	replacement;
-		switch (iterator->mValue.getType()) {
+		switch (iterator.getValue().getType()) {
 			case SValue::kTypeBool:
 				// Bool
-				replacement = iterator->mValue.getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
+				replacement = iterator.getValue().getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
 				break;
 
-			case SValue::kTypeString:	replacement = iterator->mValue.getString();				break;
-			case SValue::kTypeFloat32:	replacement = CString(iterator->mValue.getFloat32());	break;
-			case SValue::kTypeFloat64:	replacement = CString(iterator->mValue.getFloat64());	break;
-			case SValue::kTypeSInt8:	replacement = CString(iterator->mValue.getSInt8());		break;
-			case SValue::kTypeSInt16:	replacement = CString(iterator->mValue.getSInt16());	break;
-			case SValue::kTypeSInt32:	replacement = CString(iterator->mValue.getSInt32());	break;
-			case SValue::kTypeSInt64:	replacement = CString(iterator->mValue.getSInt64());	break;
-			case SValue::kTypeUInt8:	replacement = CString(iterator->mValue.getUInt8());		break;
-			case SValue::kTypeUInt16:	replacement = CString(iterator->mValue.getUInt16());	break;
-			case SValue::kTypeUInt32:	replacement = CString(iterator->mValue.getUInt32());	break;
-			case SValue::kTypeUInt64:	replacement = CString(iterator->mValue.getUInt64());	break;
+			case SValue::kTypeString:	replacement = iterator.getValue().getString();				break;
+			case SValue::kTypeFloat32:	replacement = CString(iterator.getValue().getFloat32());	break;
+			case SValue::kTypeFloat64:	replacement = CString(iterator.getValue().getFloat64());	break;
+			case SValue::kTypeSInt8:	replacement = CString(iterator.getValue().getSInt8());		break;
+			case SValue::kTypeSInt16:	replacement = CString(iterator.getValue().getSInt16());		break;
+			case SValue::kTypeSInt32:	replacement = CString(iterator.getValue().getSInt32());		break;
+			case SValue::kTypeSInt64:	replacement = CString(iterator.getValue().getSInt64());		break;
+			case SValue::kTypeUInt8:	replacement = CString(iterator.getValue().getUInt8());		break;
+			case SValue::kTypeUInt16:	replacement = CString(iterator.getValue().getUInt16());		break;
+			case SValue::kTypeUInt32:	replacement = CString(iterator.getValue().getUInt32());		break;
+			case SValue::kTypeUInt64:	replacement = CString(iterator.getValue().getUInt64());		break;
 
 			case SValue::kTypeEmpty:
 			case SValue::kTypeArrayOfDictionaries:
@@ -464,9 +464,9 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 
 		// Replace
 		size_t	offset;
-		while ((offset = mString.find(iterator->mKey.mString.c_str(), 0)) != std::basic_string<TCHAR>::npos)
+		while ((offset = mString.find(iterator.getKey().mString.c_str(), 0)) != std::basic_string<TCHAR>::npos)
 			// Replace this substring
-			mString.replace(offset, iterator->mKey.mString.length(), replacement.mString.c_str());
+			mString.replace(offset, iterator.getKey().mString.length(), replacement.mString.c_str());
 	}
 }
 
