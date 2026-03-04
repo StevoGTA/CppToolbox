@@ -39,7 +39,7 @@ struct SAudio {
 										ChannelMap(const ChannelMap& other) : mValue(other.mValue) {}
 
 										// Instance methods
-							bool		hasUnknownOrder() const
+							bool		hasUnspecifiedOrder() const
 											{ return (mValue & 0xFF00) == 0x0000; }
 							UInt8		getChannelCount() const
 											{ return mValue & 0x00FF; }
@@ -68,7 +68,7 @@ struct SAudio {
 //			static	const	ChannelMap&	_2_0_Option6();		// Binaural Stereo (L R)
 
 										// 3 Channels
-			static	const	ChannelMap&	_3_0_Unknown();		// Unknown
+			static	const	ChannelMap&	_3_0_Unspecified();	// Unspecified
 			static	const	ChannelMap&	_2_1_Option1();		// L R LFE
 			static	const	ChannelMap&	_3_0_Option1();		// L R C
 			static	const	ChannelMap&	_3_0_Option2();		// C L R
@@ -76,7 +76,7 @@ struct SAudio {
 			static	const	ChannelMap&	_3_0_Option4();		// L C R
 
 										// 4 Channels
-			static	const	ChannelMap&	_4_0_Unknown();		// Unknown
+			static	const	ChannelMap&	_4_0_Unspecified();	// Unspecified
 			static	const	ChannelMap&	_3_1_Option1();		// L R LFE Cs
 			static	const	ChannelMap&	_3_1_Option2();		// L R C LFE
 			static	const	ChannelMap&	_3_1_Option3();		// L C R LFE
@@ -88,7 +88,7 @@ struct SAudio {
 //			static	const	ChannelMap&	_4_0_Option5();		// Ambisonic B (W X Y Z)
 
 										// 5 Channels
-			static	const	ChannelMap&	_5_0_Unknown();		// Unknown
+			static	const	ChannelMap&	_5_0_Unspecified();	// Unspecified
 			static	const	ChannelMap&	_4_1_Option1();		// L R LFE Ls Rs
 			static	const	ChannelMap&	_4_1_Option2();		// L R C LFE Cs
 			static	const	ChannelMap&	_4_1_Option3();		// L R Ls Rs LFE
@@ -99,7 +99,7 @@ struct SAudio {
 			static	const	ChannelMap&	_5_0_Option4();		// C L R Ls Rs
 
 										// 6 Channels
-			static	const	ChannelMap&	_6_0_Unknown();		// Unknown
+			static	const	ChannelMap&	_6_0_Unspecified();	// Unspecified
 			static	const	ChannelMap&	_5_1_Option1();		// L R C LFE Ls Rs
 			static	const	ChannelMap&	_5_1_Option2();		// L R Ls Rs C LFE
 			static	const	ChannelMap&	_5_1_Option3();		// L C R Ls Rs LFE
@@ -108,7 +108,7 @@ struct SAudio {
 			static	const	ChannelMap&	_6_0_Option2();		// C L R Ls Rs Cs
 
 										// 7 Channels
-			static	const	ChannelMap&	_7_0_Unknown();		// Unknown
+			static	const	ChannelMap&	_7_0_Unspecified();	// Unspecified
 			static	const	ChannelMap&	_6_1_Option1();		// L R C LFE Ls Rs Cs
 			static	const	ChannelMap&	_6_1_Option2();		// C L R Ls Rs Cs LFE
 			static	const	ChannelMap&	_6_1_Option3();		// L C R Ls Cs Rs LFE
@@ -117,32 +117,33 @@ struct SAudio {
 			static	const	ChannelMap&	_7_0_Option3();		// L R Ls Rs C Lc Rc
 
 										// 8 Channels
-			static	const	ChannelMap&	_8_0_Unknown();		// Unknown
+			static	const	ChannelMap&	_8_0_Unspecified();	// Unspecified
 			static	const	ChannelMap&	_7_1_Option1();		// L R C LFE Ls Rs Lc Rc
 			static	const	ChannelMap&	_7_1_Option2();		// C Lc Rc L R Ls Rs LFE (doc: IS-13818-7 MPEG2-AAC Table 3.1)
 			static	const	ChannelMap&	_7_1_Option3();		// L R C LFE Ls Rs Rls Rrs
 			static	const	ChannelMap&	_7_1_Option4();		// L R Ls Rs C LFE Lc Rc (Emagic Default 7.1)
 			static	const	ChannelMap&	_7_1_Option5();		// L R C LFE Ls Rs Lt Rt (SMPTE DTV)
 			static	const	ChannelMap&	_7_1_Option6();		// L Lc C Rc R Ls Rs LFE
+			static	const	ChannelMap&	_7_1_Option7();		// C L R Ls Rs LFE Lt Rt (From Fotokem)
 			static	const	ChannelMap&	_8_0_Option1();		// L R Ls Rs C Cs Lw Rw (Octagonal)
 			static	const	ChannelMap&	_8_0_Option2();		// C L R Ls Rs Rls Rrs Cs
 //			static	const	ChannelMap&	_8_0_Option2();		// L R Ls Rs topLeft topRight topRearLeft topRearRight (Cube)
-			static	const	ChannelMap&	_7_1_Option7();		// C L R Ls Rs LFE Lt Rt (From Fotokem)
 
 										// 9 Channels
-			static	const	ChannelMap&	_9_0_Unknown();		// Unknown
+			static	const	ChannelMap&	_9_0_Unspecified();	// Unspecified
 
 										// 10 Channels
-			static	const	ChannelMap&	_10_0_Unknown();	// Unknown
+			static	const	ChannelMap&	_10_0_Unspecified();// Unspecified
 
 			static			ChannelMap	fromRawValue(UInt16 rawValue)
 											{ return ChannelMap(rawValue); }
+			static			UInt8		channelCountFromRawValue(UInt16 rawValue)
+											{ return rawValue & 0x00FF; }
 
 			static			bool		compare(const ChannelMap& testChannelMap, void* channelMap)
 											{ return testChannelMap == *((const ChannelMap*) channelMap); }
 			static			bool		compareValue(const ChannelMap& channelMap1,
-												const ChannelMap& channelMap2, void* userData)
-											{ return channelMap1.mValue <= channelMap2.mValue; }
+												const ChannelMap& channelMap2, void* userData);
 			static			void		sort(TMArray<ChannelMap>& channelMaps)
 											{ channelMaps.sort((TMArray<ChannelMap>::CompareProc) compareValue, nil); }
 

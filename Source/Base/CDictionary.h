@@ -873,4 +873,21 @@ template <typename K, typename T> class TNArrayKeyConvertibleDictionary :
 							// First one
 							TNKeyConvertibleDictionary<K, TNArray<T> >::set(key, TNArray<T>(item));
 					}
+		void	remove(K key, const T& item)
+					{
+						// Setup
+						CString	keyString(key);
+
+						// Update
+						const	OR<TNArray<T> >	array = TNKeyConvertibleDictionary<K, TNArray<T> >::get(key);
+						if (array.hasReference()) {
+							// Already have array
+							*array -= item;
+
+							// Check if removing the last one
+							if (array->isEmpty())
+								// Remove array
+								CDictionary::remove(keyString);
+						}
+					}
 };

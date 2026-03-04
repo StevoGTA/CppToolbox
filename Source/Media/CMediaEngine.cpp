@@ -152,7 +152,7 @@ SAudio::ProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudio
 		// Setup
 		const	SAudio::ChannelMap&	destinationAudioChannelMap =
 											audioDestinationFirstAudioProcessingSetup.getChannelMapInfo().getValue();
-		if (audioSourceChannelMap.hasUnknownOrder() || destinationAudioChannelMap.hasUnknownOrder() ||
+		if (audioSourceChannelMap.hasUnspecifiedOrder() || destinationAudioChannelMap.hasUnspecifiedOrder() ||
 				(audioSourceChannelMap == destinationAudioChannelMap) ||
 				CAudioChannelMapper::canPerform(audioSourceChannelMap, destinationAudioChannelMap))
 			// Use source
@@ -509,14 +509,14 @@ OV<SAudio::ProcessingFormat> sDetermineCommonAudioProcessingFormat(
 				const	SAudio::ChannelMap&	destinationAudioChannelMap = destinationChannelMapInfo.getValue();
 				if (sourceAudioChannelMap.getChannelCount() == destinationAudioChannelMap.getChannelCount()) {
 					// Channel counts match
-					if (sourceAudioChannelMap.hasUnknownOrder() && destinationAudioChannelMap.hasUnknownOrder())
-						// Both source and destination have unknown order
+					if (sourceAudioChannelMap.hasUnspecifiedOrder() && destinationAudioChannelMap.hasUnspecifiedOrder())
+						// Both source and destination have Unspecified order
 						audioChannelMap = sourceAudioChannelMap;
-					else if (sourceAudioChannelMap.hasUnknownOrder())
-						// Source has unknown order
+					else if (sourceAudioChannelMap.hasUnspecifiedOrder())
+						// Source has unspecified order
 						audioChannelMap = destinationAudioChannelMap;
-					else if (destinationAudioChannelMap.hasUnknownOrder())
-						// Destination has unknown order
+					else if (destinationAudioChannelMap.hasUnspecifiedOrder())
+						// Destination has unspecified order
 						audioChannelMap = sourceAudioChannelMap;
 					else if (sourceAudioChannelMap == destinationAudioChannelMap)
 						// Channel maps match
