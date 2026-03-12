@@ -524,12 +524,12 @@ template <typename T> class TDictionary : public CDictionary {
 
 	// ValueIterator
 	public:
-		class ValueIterator : public CDictionary::Iterator {
+		class ValueIterator : public CDictionary::ValueIterator {
 			// Methods
 			public:
 					// Lifecycle methods
-					ValueIterator(const I<IteratorInfo>& iteratorInfo) : CDictionary::Iterator(iteratorInfo) {}
-					ValueIterator(const ValueIterator& other) : CDictionary::Iterator(other) {}
+					ValueIterator(const I<IteratorInfo>& iteratorInfo) : CDictionary::ValueIterator(iteratorInfo) {}
+					ValueIterator(const ValueIterator& other) : CDictionary::ValueIterator(other) {}
 
 					// Instance methods
 				T&	operator*() const
@@ -790,22 +790,48 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public TNDic
 						{ return *((T*) CDictionary::Iterator::getValue().getOpaque()); }
 		};
 
+	// KeyIterator
+	public:
+		class KeyIterator : public CDictionary::KeyIterator {
+			// Methods
+			public:
+					// Lifecycle methods
+					KeyIterator(const I<CDictionary::IteratorInfo>& iteratorInfo) :
+						CDictionary::KeyIterator(iteratorInfo)
+						{}
+					KeyIterator(const KeyIterator& other) : CDictionary::KeyIterator(other) {}
+
+					// Instance methods
+				K	operator*() const
+						{
+							// Get key
+							const	CString& 	key = CDictionary::Iterator::getKey();
+
+							// Get value
+							K	value;
+							key.getValue(value);
+
+							return value;
+						}
+		};
+
+
 	// ValueIterator
 	public:
-		class ValueIterator : public CDictionary::Iterator {
+		class ValueIterator : public CDictionary::ValueIterator {
 			// Methods
 			public:
 					// Lifecycle methods
 					ValueIterator(const I<CDictionary::IteratorInfo>& iteratorInfo) :
-						CDictionary::Iterator(iteratorInfo)
+						CDictionary::ValueIterator(iteratorInfo)
 						{}
-					ValueIterator(const ValueIterator& other) : CDictionary::Iterator(other) {}
+					ValueIterator(const ValueIterator& other) : CDictionary::ValueIterator(other) {}
 
 					// Instance methods
 				T&	operator*() const
-						{ return *((T*) CDictionary::Iterator::getValue().getOpaque()); }
+						{ return *((T*) CDictionary::ValueIterator::getValue().getOpaque()); }
 				T*	operator->() const
-						{ return (T*) CDictionary::Iterator::getValue().getOpaque(); }
+						{ return (T*) CDictionary::ValueIterator::getValue().getOpaque(); }
 		};
 
 	// Methods
@@ -816,6 +842,8 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public TNDic
 
 				Iterator		getIterator() const
 									{ return Iterator(CDictionary::getIteratorInfo()); }
+				KeyIterator		getKeyIterator() const
+									{ return KeyIterator(CDictionary::getIteratorInfo()); }
 				ValueIterator	getValueIterator() const
 									{ return ValueIterator(CDictionary::getIteratorInfo()); }
 
