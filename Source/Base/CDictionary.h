@@ -16,8 +16,6 @@ class CDictionary : public CEquatable {
 	public:
 		typedef	UInt32	Count;
 
-				class	IteratorInfo;
-
 	// Item
 	public:
 		struct Item {
@@ -104,6 +102,19 @@ class CDictionary : public CEquatable {
 
 	// Iterators
 	public:
+		class IteratorInfo {
+			// Methods
+			public:
+											// Lifecycle methods
+				virtual						~IteratorInfo() {}
+
+											// Instance methods
+				virtual			UInt32		getCurrentIndex() const = 0;
+				virtual	const	CString&	getCurrentKey() const = 0;
+				virtual			SValue*		getCurrentValue() const = 0;
+				virtual			void		advance() = 0;
+		};
+
 		class Iterator : public CIterator {
 			// Methods
 			public:

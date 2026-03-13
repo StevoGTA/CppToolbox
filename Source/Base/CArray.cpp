@@ -8,26 +8,39 @@
 #include "CReferenceCountable.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CArray::IteratorInfo:
-
-class CArray::IteratorInfo {
-	public:
-		IteratorInfo(const Internals& internals, UInt32 initialReference) :
-			mInternals(internals),
-					mInitialReference(initialReference), mCurrentIndex(0)
-			{}
-
-		const	Internals&	mInternals;
-
-				UInt32		mInitialReference;
-				UInt32		mCurrentIndex;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CArray::Internals
+// MARK: CArray::Internals
 
 class CArray::Internals : public TCopyOnWriteReferenceCountable<Internals> {
+	public:
+		class IteratorInfo : public CArray::IteratorInfo {
+			public:
+						IteratorInfo(const Internals& internals, UInt32 initialReference) :
+							mInternals(internals),
+									mInitialReference(initialReference), mCurrentIndex(0)
+							{}
+
+				UInt32	getCurrentIndex() const
+							{ return mCurrentIndex; }
+				ItemRef	getCurrentItem() const
+							{ return (mCurrentIndex < mInternals.mCount) ? mInternals.mItemRefs[mCurrentIndex] : nil; }
+				ItemRef	advance()
+							{
+								// Integrity check
+								AssertFailIf(mInitialReference != mInternals.mReference);
+
+								if (mCurrentIndex < mInternals.mCount)
+									// Increement index
+									mCurrentIndex++;
+
+								return (mCurrentIndex < mInternals.mCount) ? mInternals.mItemRefs[mCurrentIndex] : nil;
+							}
+
+				const	Internals&	mInternals;
+
+						UInt32		mInitialReference;
+						UInt32		mCurrentIndex;
+		};
+
 	public:
 		struct SortInfo {
 			public:
@@ -460,7 +473,7 @@ bool CArray::equals(const CArray& other) const
 I<CArray::IteratorInfo> CArray::getIteratorInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<IteratorInfo>(new IteratorInfo(*mInternals, mInternals->mReference));
+	return I<IteratorInfo>(new Internals::IteratorInfo(*mInternals, mInternals->mReference));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -548,28 +561,4 @@ CArray& CArray::operator=(const CArray& other)
 	mInternals = other.mInternals->addReference();
 
 	return *this;
-}
-
-// MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-UInt32 CArray::iteratorGetCurrentIndex(const I<IteratorInfo>& iteratorInfo)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return iteratorInfo->mCurrentIndex;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CArray::ItemRef CArray::iteratorAdvance(const I<IteratorInfo>& iteratorInfo)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Integrity check
-	AssertFailIf(iteratorInfo->mInitialReference != iteratorInfo->mInternals.mReference);
-
-	if (iteratorInfo->mCurrentIndex < iteratorInfo->mInternals.mCount)
-		// Increement index
-		iteratorInfo->mCurrentIndex++;
-
-	return (iteratorInfo->mCurrentIndex < iteratorInfo->mInternals.mCount) ?
-			iteratorInfo->mInternals.mItemRefs[iteratorInfo->mCurrentIndex] : nil;
 }

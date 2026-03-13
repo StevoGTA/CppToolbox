@@ -40,20 +40,6 @@ class CDictionary::Internals : public TDictionaryInternals<CDictionary::Internal
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CDictionary::Internals
-
-class CDictionary::IteratorInfo {
-	public:
-		virtual						~IteratorInfo() {}
-
-		virtual			UInt32		getCurrentIndex() const = 0;
-		virtual	const	CString&	getCurrentKey() const = 0;
-		virtual			SValue*		getCurrentValue() const = 0;
-		virtual			void		advance() = 0;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CDictionary::Iterator
 
 // MARK: Lifecycle methods

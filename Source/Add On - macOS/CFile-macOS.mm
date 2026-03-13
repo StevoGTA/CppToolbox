@@ -143,7 +143,8 @@ OV<SError> CFile::setComments(const CString& string) const
 	// Compose AppleScript
 	NSMutableString*	appleScriptString = [NSMutableString string];
 	[appleScriptString appendString:@"TELL APPLICATION \"FINDER\"\n"];
-	[appleScriptString appendFormat:@"SET filePath TO \"%@\" AS POSIX FILE\n", (__bridge NSString*) stringRef];
+	[appleScriptString appendFormat:@"SET filePath TO \"%@\" AS POSIX FILE\n",
+			(__bridge NSString*) getFilesystemPath().getString().getOSString()];
 	[appleScriptString appendFormat:@"SET COMMENT OF (filePath AS ALIAS) TO \"%@\"\n", stringRef];
 	[appleScriptString appendString:@"END TELL"];
 

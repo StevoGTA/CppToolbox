@@ -21,7 +21,17 @@ class CArray : public CEquatable {
 
 	// IteratorInfo
 	protected:
-		class IteratorInfo;
+		class IteratorInfo {
+			// Methods
+			public:
+								// Lifecycle methods
+				virtual			~IteratorInfo() {}
+
+								// Instance methods
+				virtual	UInt32	getCurrentIndex() const = 0;
+				virtual	ItemRef	getCurrentItem() const = 0;
+				virtual	ItemRef	advance() = 0;
+		};
 
 	// Procs:
 	protected:
@@ -30,9 +40,6 @@ class CArray : public CEquatable {
 		typedef	ItemRef	(*CopyProc)(ItemRef itemRef);
 		typedef	void	(*DisposeProc)(ItemRef itemRef);
 		typedef bool	(*IsMatchProc)(ItemRef itemRef, void* userData);
-
-		typedef	UInt32	(*IteratorGetCurrentIndexProc)(const I<IteratorInfo>& iteratorInfo);
-		typedef	ItemRef	(*IteratorAdvanceProc)(const I<IteratorInfo>& iteratorInfo);
 
 	// Classes
 	private:
@@ -97,10 +104,6 @@ class CArray : public CEquatable {
 				CArray&			operator+=(const CArray& other)
 									{ return addFrom(other); }
 
-								// Class methods
-		static	UInt32			iteratorGetCurrentIndex(const I<IteratorInfo>& iteratorInfo);
-		static	ItemRef			iteratorAdvance(const I<IteratorInfo>& iteratorInfo);
-
 	// Properties
 	private:
 		Internals*	mInternals;
@@ -120,19 +123,14 @@ template <typename T> class TNumberArray : public CArray {
 			// Methods
 			public:
 						// Lifecycle methods
-						Iterator(I<IteratorInfo> iteratorInfo, IteratorGetCurrentIndexProc iteratorGetCurrentIndexProc,
-								IteratorAdvanceProc iteratorAdvanceProc, TNumber<T>* initialValue) :
+						Iterator(I<IteratorInfo> iteratorInfo) :
 							CIterator(),
 									mIteratorInfo(iteratorInfo),
-									mIteratorGetCurrentIndexProc(iteratorGetCurrentIndexProc),
-									mIteratorAdvanceProc(iteratorAdvanceProc),
-									mCurrentValue(initialValue)
+									mCurrentValue((TNumber<T>*) iteratorInfo->getCurrentItem())
 							{}
 						Iterator(const Iterator& other) :
 							CIterator(other),
 									mIteratorInfo(other.mIteratorInfo),
-									mIteratorGetCurrentIndexProc(other.mIteratorGetCurrentIndexProc),
-									mIteratorAdvanceProc(other.mIteratorAdvanceProc),
 									mCurrentValue(other.mCurrentValue)
 							{}
 
@@ -140,9 +138,9 @@ template <typename T> class TNumberArray : public CArray {
 				bool	isValid() const
 							{ return mCurrentValue != nil; }
 				UInt32	getIndex() const
-							{ return mIteratorGetCurrentIndexProc(mIteratorInfo); }
+							{ return mIteratorInfo->getCurrentIndex(); }
 				void	advance()
-							{ mCurrentValue = (TNumber<T>*) mIteratorAdvanceProc(mIteratorInfo); }
+							{ mCurrentValue = (TNumber<T>*) mIteratorInfo->advance(); }
 
 						// Instance methods
 				T		getValue() const
@@ -153,11 +151,9 @@ template <typename T> class TNumberArray : public CArray {
 
 			// Properties
 			private:
-				I<IteratorInfo>				mIteratorInfo;
-				IteratorGetCurrentIndexProc	mIteratorGetCurrentIndexProc;
-				IteratorAdvanceProc			mIteratorAdvanceProc;
+				I<IteratorInfo>	mIteratorInfo;
 
-				TNumber<T>*					mCurrentValue;
+				TNumber<T>*		mCurrentValue;
 		};
 
 	// Methods
@@ -209,8 +205,7 @@ template <typename T> class TNumberArray : public CArray {
 										{ CArray::removeAll(); return *this; }
 
 				Iterator			getIterator() const
-										{ return Iterator(getIteratorInfo(), iteratorGetCurrentIndex, iteratorAdvance,
-												!isEmpty() ? (TNumber<T>*) CArray::getFirst() : nil); }
+										{ return Iterator(getIteratorInfo()); }
 
 									// Instance methods
 				T					getAt(ItemIndex index) const
@@ -310,19 +305,14 @@ template <typename T> class TArray : public CArray {
 			// Methods
 			public:
 						// Lifecycle methods
-						Iterator(I<IteratorInfo> iteratorInfo, IteratorGetCurrentIndexProc iteratorGetCurrentIndexProc,
-								IteratorAdvanceProc iteratorAdvanceProc, T* initialItem) :
+						Iterator(I<IteratorInfo> iteratorInfo) :
 							CIterator(),
 									mIteratorInfo(iteratorInfo),
-									mIteratorGetCurrentIndexProc(iteratorGetCurrentIndexProc),
-									mIteratorAdvanceProc(iteratorAdvanceProc),
-									mCurrentItem(initialItem)
+									mCurrentItem((T*) iteratorInfo->getCurrentItem())
 							{}
 						Iterator(const Iterator& other) :
 							CIterator(other),
 									mIteratorInfo(other.mIteratorInfo),
-									mIteratorGetCurrentIndexProc(other.mIteratorGetCurrentIndexProc),
-									mIteratorAdvanceProc(other.mIteratorAdvanceProc),
 									mCurrentItem(other.mCurrentItem)
 							{}
 
@@ -330,9 +320,9 @@ template <typename T> class TArray : public CArray {
 				bool	isValid() const
 							{ return mCurrentItem != nil; }
 				UInt32	getIndex() const
-							{ return mIteratorGetCurrentIndexProc(mIteratorInfo); }
+							{ return mIteratorInfo->getCurrentIndex(); }
 				void	advance()
-							{ mCurrentItem = (T*) mIteratorAdvanceProc(mIteratorInfo); }
+							{ mCurrentItem = (T*) mIteratorInfo->advance(); }
 
 						// Instance methods
 				T&		getItem() const
@@ -346,8 +336,6 @@ template <typename T> class TArray : public CArray {
 			// Properties
 			private:
 				I<IteratorInfo>				mIteratorInfo;
-				IteratorGetCurrentIndexProc	mIteratorGetCurrentIndexProc;
-				IteratorAdvanceProc			mIteratorAdvanceProc;
 
 				T*							mCurrentItem;
 		};
@@ -380,8 +368,7 @@ template <typename T> class TArray : public CArray {
 									}
 
 		Iterator				getIterator() const
-									{ return Iterator(getIteratorInfo(), iteratorGetCurrentIndex, iteratorAdvance,
-											!isEmpty() ? (T*) CArray::getFirst() : nil); }
+									{ return Iterator(getIteratorInfo()); }
 
 								// Instance methods
 		T&						getAt(ItemIndex index) const

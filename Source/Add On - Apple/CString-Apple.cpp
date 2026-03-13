@@ -311,6 +311,62 @@ CString::CString(const TArray<CString>& components, const CString& separator) : 
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CString& localizationGroup, const CString& localizationKey, const CString& replacementString,
+		const SValue& replacementValue)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	mStringRef =
+			::CFBundleCopyLocalizedString(::CFBundleGetMainBundle(), localizationKey.mStringRef,
+					localizationKey.mStringRef, localizationGroup.mStringRef);
+
+	// Check situation
+	if (mStringRef != nil) {
+		// Replace values
+		CFMutableStringRef	stringRef = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mStringRef);
+		::CFRelease(mStringRef);
+		mStringRef = stringRef;
+
+		// Compose value
+		CString	replacement;
+		switch (replacementValue.getType()) {
+			case SValue::kTypeBool:
+				// Bool
+				replacement = replacementValue.getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
+				break;
+
+			case SValue::kTypeString:	replacement = replacementValue.getString();				break;
+			case SValue::kTypeFloat32:	replacement = CString(replacementValue.getFloat32());	break;
+			case SValue::kTypeFloat64:	replacement = CString(replacementValue.getFloat64());	break;
+			case SValue::kTypeSInt8:	replacement = CString(replacementValue.getSInt8());		break;
+			case SValue::kTypeSInt16:	replacement = CString(replacementValue.getSInt16());	break;
+			case SValue::kTypeSInt32:	replacement = CString(replacementValue.getSInt32());	break;
+			case SValue::kTypeSInt64:	replacement = CString(replacementValue.getSInt64());	break;
+			case SValue::kTypeUInt8:	replacement = CString(replacementValue.getUInt8());		break;
+			case SValue::kTypeUInt16:	replacement = CString(replacementValue.getUInt16());	break;
+			case SValue::kTypeUInt32:	replacement = CString(replacementValue.getUInt32());	break;
+			case SValue::kTypeUInt64:	replacement = CString(replacementValue.getUInt64());	break;
+
+			case SValue::kTypeEmpty:
+			case SValue::kTypeArrayOfDictionaries:
+			case SValue::kTypeArrayOfStrings:
+			case SValue::kTypeOpaque:
+			case SValue::kTypeData:
+			case SValue::kTypeDictionary:
+				// Unhandled
+				replacement = CString(OSSTR("->UNHANDLED<-"));
+				break;
+		}
+
+		// Replace
+		::CFStringFindAndReplace(stringRef, replacementString.mStringRef, replacement.mStringRef,
+				::CFRangeMake(0, ::CFStringGetLength(mStringRef)), 0);
+	} else
+		// Not found
+		mStringRef = (localizationGroup + mColon + localizationKey).getOSString();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CString::CString(const CString& localizationGroup, const CString& localizationKey, const CDictionary& localizationInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -339,13 +395,13 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 				case SValue::kTypeFloat32:	replacement = CString(iterator.getValue().getFloat32());	break;
 				case SValue::kTypeFloat64:	replacement = CString(iterator.getValue().getFloat64());	break;
 				case SValue::kTypeSInt8:	replacement = CString(iterator.getValue().getSInt8());		break;
-				case SValue::kTypeSInt16:	replacement = CString(iterator.getValue().getSInt16());	break;
-				case SValue::kTypeSInt32:	replacement = CString(iterator.getValue().getSInt32());	break;
-				case SValue::kTypeSInt64:	replacement = CString(iterator.getValue().getSInt64());	break;
+				case SValue::kTypeSInt16:	replacement = CString(iterator.getValue().getSInt16());		break;
+				case SValue::kTypeSInt32:	replacement = CString(iterator.getValue().getSInt32());		break;
+				case SValue::kTypeSInt64:	replacement = CString(iterator.getValue().getSInt64());		break;
 				case SValue::kTypeUInt8:	replacement = CString(iterator.getValue().getUInt8());		break;
-				case SValue::kTypeUInt16:	replacement = CString(iterator.getValue().getUInt16());	break;
-				case SValue::kTypeUInt32:	replacement = CString(iterator.getValue().getUInt32());	break;
-				case SValue::kTypeUInt64:	replacement = CString(iterator.getValue().getUInt64());	break;
+				case SValue::kTypeUInt16:	replacement = CString(iterator.getValue().getUInt16());		break;
+				case SValue::kTypeUInt32:	replacement = CString(iterator.getValue().getUInt32());		break;
+				case SValue::kTypeUInt64:	replacement = CString(iterator.getValue().getUInt64());		break;
 
 				case SValue::kTypeEmpty:
 				case SValue::kTypeArrayOfDictionaries:

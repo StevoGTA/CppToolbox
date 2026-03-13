@@ -27,6 +27,59 @@ class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 		};
 
 	public:
+		class IteratorInfo : public CSet::IteratorInfo {
+			public:
+							IteratorInfo(const Internals& internals, UInt32 initialReference, UInt32 itemInfosIndex,
+									Internals::ItemInfo* initialItemInfo) :
+								mInternals(internals),
+										mInitialReference(initialReference), mCurrentItemInfoIndex(itemInfosIndex),
+										mCurrentItemInfo(initialItemInfo),
+										mCurrentIndex(0)
+								{}
+
+				UInt32		getCurrentIndex() const
+								{ return mCurrentIndex; }
+				CHashable*	getCurrentItem() const
+								{ return (mCurrentItemInfo != nil) ? mCurrentItemInfo->mHashable : nil; }
+				CHashable*	advance()
+								{
+									// Internals check
+									AssertFailIf(mInitialReference != mInternals.mReference);
+
+									// Check for additional item info in linked list
+									if (mCurrentItemInfo->mNextItemInfo != nil) {
+										// Have next item info
+										mCurrentItemInfo = mCurrentItemInfo->mNextItemInfo;
+										mCurrentIndex++;
+									} else {
+										// End of item info linked list
+										while ((++mCurrentItemInfoIndex < mInternals.mItemInfosCount) &&
+												(mInternals.mItemInfos[mCurrentItemInfoIndex] == nil)) ;
+
+										// Check if found another item info
+										if (mCurrentItemInfoIndex < mInternals.mItemInfosCount) {
+											// Found another item info
+											mCurrentItemInfo = mInternals.mItemInfos[mCurrentItemInfoIndex];
+											mCurrentIndex++;
+										} else
+											// No more item infos
+											mCurrentItemInfo = nil;
+									}
+
+									return (mCurrentItemInfo != nil) ? mCurrentItemInfo->mHashable : nil;
+								}
+
+				const	Internals&				mInternals;
+
+						UInt32					mInitialReference;
+						UInt32					mCurrentItemInfoIndex;
+						Internals::ItemInfo*	mCurrentItemInfo;
+
+						UInt32					mCurrentIndex;
+		};
+
+
+	public:
 										Internals(CSet::CopyProc copyProc, CSet::DisposeProc disposeProc) :
 											TCopyOnWriteReferenceCountable(),
 													mCopyProc(copyProc), mDisposeProc(disposeProc),
@@ -234,29 +287,6 @@ class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CSet::IteratorInfo
-
-struct CSet::IteratorInfo {
-	public:
-		IteratorInfo(const Internals& internals, UInt32 initialReference, UInt32 itemInfosIndex,
-				Internals::ItemInfo* initialItemInfo) :
-			mInternals(internals),
-					mInitialReference(initialReference), mCurrentItemInfoIndex(itemInfosIndex),
-					mCurrentItemInfo(initialItemInfo),
-					mCurrentIndex(0)
-			{}
-
-		const	Internals&				mInternals;
-
-				UInt32					mInitialReference;
-				UInt32					mCurrentItemInfoIndex;
-				Internals::ItemInfo*	mCurrentItemInfo;
-
-				UInt32					mCurrentIndex;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSet
 
 // MARK: Lifecycle methods
@@ -356,10 +386,11 @@ I<CSet::IteratorInfo> CSet::getIteratorInfo() const
 		// Check if have item in this slot
 		if (mInternals->mItemInfos[i] != nil)
 			// Found first item
-			return I<IteratorInfo>(new IteratorInfo(*mInternals, mInternals->mReference, i, mInternals->mItemInfos[i]));
+			return I<IteratorInfo>(
+					new Internals::IteratorInfo(*mInternals, mInternals->mReference, i, mInternals->mItemInfos[i]));
 	}
 
-	return I<IteratorInfo>(new IteratorInfo(*mInternals, mInternals->mReference, 0, nil));
+	return I<IteratorInfo>(new Internals::IteratorInfo(*mInternals, mInternals->mReference, 0, nil));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -377,50 +408,4 @@ CSet& CSet::operator=(const CSet& other)
 	mInternals = other.mInternals->addReference();
 
 	return *this;
-}
-
-// MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-UInt32 CSet::iteratorGetCurrentIndex(const I<IteratorInfo>& iteratorInfo)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return iteratorInfo->mCurrentIndex;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CHashable* CSet::iteratorGetCurrentItem(const I<IteratorInfo>& iteratorInfo)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return (iteratorInfo->mCurrentItemInfo != nil) ? iteratorInfo->mCurrentItemInfo->mHashable : nil;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CHashable* CSet::iteratorAdvance(const I<IteratorInfo>& iteratorInfo)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Internals check
-	AssertFailIf(iteratorInfo->mInitialReference != iteratorInfo->mInternals.mReference);
-
-	// Check for additional item info in linked list
-	if (iteratorInfo->mCurrentItemInfo->mNextItemInfo != nil) {
-		// Have next item info
-		iteratorInfo->mCurrentItemInfo = iteratorInfo->mCurrentItemInfo->mNextItemInfo;
-		iteratorInfo->mCurrentIndex++;
-	} else {
-		// End of item info linked list
-		while ((++iteratorInfo->mCurrentItemInfoIndex < iteratorInfo->mInternals.mItemInfosCount) &&
-				(iteratorInfo->mInternals.mItemInfos[iteratorInfo->mCurrentItemInfoIndex] == nil)) ;
-
-		// Check if found another item info
-		if (iteratorInfo->mCurrentItemInfoIndex < iteratorInfo->mInternals.mItemInfosCount) {
-			// Found another item info
-			iteratorInfo->mCurrentItemInfo = iteratorInfo->mInternals.mItemInfos[iteratorInfo->mCurrentItemInfoIndex];
-			iteratorInfo->mCurrentIndex++;
-		} else
-			// No more item infos
-			iteratorInfo->mCurrentItemInfo = nil;
-	}
-
-	return (iteratorInfo->mCurrentItemInfo != nil) ? iteratorInfo->mCurrentItemInfo->mHashable : nil;
 }

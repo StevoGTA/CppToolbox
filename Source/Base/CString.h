@@ -28,6 +28,8 @@
 class CData;
 class CDictionary;
 
+struct SValue;
+
 class CString : public CHashable {
 	// CompareToOptions
 	public:
@@ -240,6 +242,8 @@ class CString : public CHashable {
 											CString(const TArray<CString>& components,
 													const CString& separator = CString(OSSTR(", ")));
 
+											CString(const CString& localizationGroup, const CString& localizationKey,
+													const CString& replacementString, const SValue& replacementValue);
 											CString(const CString& localizationGroup, const CString& localizationKey,
 													const CDictionary& localizationInfo);
 											CString(const CString& localizationGroup, const CString& localizationKey);

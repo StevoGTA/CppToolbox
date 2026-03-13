@@ -17,16 +17,22 @@ class CSet {
 
 	// IteratorInfo
 	protected:
-		class IteratorInfo;
+		class IteratorInfo {
+			// Methods
+			public:
+									// Lifecycle methods
+				virtual				~IteratorInfo() {}
+
+									// Instance methods
+				virtual	UInt32		getCurrentIndex() const = 0;
+				virtual	CHashable*	getCurrentItem() const = 0;
+				virtual	CHashable*	advance() = 0;
+		};
 
 	// Procs
 	protected:
 		typedef	CHashable*	(*CopyProc)(const CHashable& hashable);
 		typedef	void		(*DisposeProc)(const CHashable* hashable);
-
-		typedef	UInt32		(*IteratorGetCurrentIndexProc)(const I<IteratorInfo>& iteratorInfo);
-		typedef	CHashable*	(*IteratorGetCurrentItemProc)(const I<IteratorInfo>& iteratorInfo);
-		typedef	CHashable*	(*IteratorAdvanceProc)(const I<IteratorInfo>& iteratorInfo);
 
 	// Classes
 	private:
@@ -59,11 +65,6 @@ class CSet {
 
 						CSet&			operator=(const CSet& other);
 
-										// Class methods
-		static			UInt32			iteratorGetCurrentIndex(const I<IteratorInfo>& iteratorInfo);
-		static			CHashable*		iteratorGetCurrentItem(const I<IteratorInfo>& iteratorInfo);
-		static			CHashable*		iteratorAdvance(const I<IteratorInfo>& iteratorInfo);
-
 	// Properties
 	private:
 		Internals*	mInternals;
@@ -86,20 +87,14 @@ template <typename T> class TSet : public CSet {
 			// Methods
 			public:
 						// Lifecycle methods
-						Iterator(I<IteratorInfo> iteratorInfo, IteratorGetCurrentIndexProc iteratorGetCurrentIndexProc,
-								IteratorGetCurrentItemProc iteratorGetCurrentItemProc,
-								IteratorAdvanceProc iteratorAdvanceProc) :
+						Iterator(I<IteratorInfo> iteratorInfo) :
 							CIterator(),
 									mIteratorInfo(iteratorInfo),
-									mIteratorGetCurrentIndexProc(iteratorGetCurrentIndexProc),
-									mIteratorAdvanceProc(iteratorAdvanceProc),
-									mCurrentItem((T*) iteratorGetCurrentItemProc(iteratorInfo))
+									mCurrentItem((T*) iteratorInfo->getCurrentItem())
 							{}
 						Iterator(const Iterator& other) :
 							CIterator(other),
 									mIteratorInfo(other.mIteratorInfo),
-									mIteratorGetCurrentIndexProc(other.mIteratorGetCurrentIndexProc),
-									mIteratorAdvanceProc(other.mIteratorAdvanceProc),
 									mCurrentItem(other.mCurrentItem)
 							{}
 
@@ -107,9 +102,9 @@ template <typename T> class TSet : public CSet {
 				bool	isValid() const
 							{ return mCurrentItem != nil; }
 				UInt32	getIndex() const
-							{ return mIteratorGetCurrentIndexProc(mIteratorInfo); }
+							{ return mIteratorInfo->getCurrentIndex(); }
 				void	advance()
-							{ mCurrentItem = (T*) mIteratorAdvanceProc(mIteratorInfo); }
+							{ mCurrentItem = (T*) mIteratorInfo->advance(); }
 
 						// Instance methods
 				T&		getItem() const
@@ -122,11 +117,9 @@ template <typename T> class TSet : public CSet {
 
 			// Properties
 			private:
-				I<IteratorInfo>				mIteratorInfo;
-				IteratorGetCurrentIndexProc	mIteratorGetCurrentIndexProc;
-				IteratorAdvanceProc			mIteratorAdvanceProc;
+				I<IteratorInfo>	mIteratorInfo;
 
-				T*							mCurrentItem;
+				T*				mCurrentItem;
 		};
 
 	// Methods
@@ -159,8 +152,7 @@ template <typename T> class TSet : public CSet {
 											return item.hasReference() ? OR<T>((T&) *item) : OR<T>();
 										}
 						Iterator	getIterator() const
-										{ return Iterator(getIteratorInfo(), iteratorGetCurrentIndex,
-												iteratorGetCurrentItem, iteratorAdvance); }
+										{ return Iterator(getIteratorInfo()); }
 
 									// Class methods
 		static			bool		containsItem(const T& item, TSet<T>* set)
