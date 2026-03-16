@@ -420,6 +420,55 @@ CString::CString(const TArray<CString>& components, const CString& separator) : 
 	}
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const CString& localizationGroup, const CString& localizationKey, const CString& replacementString,
+		const SValue& replacementValue)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Retrieve from info
+	mString =
+			sLocalizationInfo.getString(localizationGroup + CString::mPeriod + localizationKey, localizationKey)
+					.mString;
+
+	// Replace value
+	CString	replacement;
+	switch (replacementValue.getType()) {
+		case SValue::kTypeBool:
+			// Bool
+			replacement = replacementValue.getBool() ? CString(OSSTR("true")) : CString(OSSTR("false"));
+			break;
+
+		case SValue::kTypeString:	replacement = replacementValue.getString();				break;
+		case SValue::kTypeFloat32:	replacement = CString(replacementValue.getFloat32());	break;
+		case SValue::kTypeFloat64:	replacement = CString(replacementValue.getFloat64());	break;
+		case SValue::kTypeSInt8:	replacement = CString(replacementValue.getSInt8());		break;
+		case SValue::kTypeSInt16:	replacement = CString(replacementValue.getSInt16());	break;
+		case SValue::kTypeSInt32:	replacement = CString(replacementValue.getSInt32());	break;
+		case SValue::kTypeSInt64:	replacement = CString(replacementValue.getSInt64());	break;
+		case SValue::kTypeUInt8:	replacement = CString(replacementValue.getUInt8());		break;
+		case SValue::kTypeUInt16:	replacement = CString(replacementValue.getUInt16());	break;
+		case SValue::kTypeUInt32:	replacement = CString(replacementValue.getUInt32());	break;
+		case SValue::kTypeUInt64:	replacement = CString(replacementValue.getUInt64());	break;
+
+		case SValue::kTypeEmpty:
+		case SValue::kTypeArrayOfDictionaries:
+		case SValue::kTypeArrayOfStrings:
+		case SValue::kTypeOpaque:
+		case SValue::kTypeData:
+		case SValue::kTypeDictionary:
+			// Unhandled
+			replacement = CString(OSSTR("->UNHANDLED<-"));
+			break;
+	}
+
+	// Replace
+	size_t	offset;
+	while ((offset = mString.find(replacementString.mString.c_str(), 0)) != std::basic_string<TCHAR>::npos)
+		// Replace this substring
+		mString.replace(offset, replacementString.mString.length(), replacement.mString.c_str());
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 CString::CString(const CString& localizationGroup, const CString& localizationKey, const CDictionary& localizationInfo)
 //----------------------------------------------------------------------------------------------------------------------
