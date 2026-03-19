@@ -4,8 +4,8 @@
 
 #include "CCoreServices.h"
 
+#include "CFilesystem.h"
 #include "CFolder.h"
-#include "CCoreFoundation.h"
 
 #include <sys/sysctl.h>
 
@@ -95,12 +95,11 @@ const SVersionInfo& CCoreServices::getCoreAudioVersion()
 
 	if (sVersionInfo == nil) {
 		// Get info
-		CFURLRef	urlRef =
-							CCoreFoundation::createURLRefFrom(
-									CFolder::systemFrameworks().getFilesystemPath()
-											.appendingComponent(CString(OSSTR("CoreAudio.framework"))), true);
-		CFBundleRef	bundleRef = ::CFBundleCreate(kCFAllocatorDefault, urlRef);
-		::CFRelease(urlRef);
+		CFBundleRef	bundleRef =
+							::CFBundleCreate(kCFAllocatorDefault,
+									*CFilesystem::getURLRefFor(
+											CFolder::systemFrameworks()
+													.getChildFolder(CString(OSSTR("CoreAudio.framework")))));
 		CFStringRef	stringRef =
 							(CFStringRef) ::CFBundleGetValueForInfoDictionaryKey(bundleRef,
 									OSSTR("CFBundleShortVersionString"));

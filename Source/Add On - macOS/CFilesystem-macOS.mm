@@ -4,7 +4,7 @@
 
 #import "CFilesystem.h"
 
-#import "CCoreFoundation.h"
+#import "CLogServices.h"
 #import "SError-Apple.h"
 
 #import <AppKit/AppKit.h>
@@ -12,31 +12,35 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFilesystemReportErrorFileFolderX1(error, message, fileFolder)								\
+#define	CFilesystemReportFolderError(error, message, folder)										\
 				{																					\
 					CLogServices::logError(error, message,											\
 							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
 							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
-					fileFolder.logAsError(CString::mSpaceX4);										\
+					CLogServices::logError(															\
+							CString::mSpaceX4 + CString(OSSTR("Folder: ")) +						\
+									folder.getFilesystemPath().getString());						\
 				}
-#define	CFilesystemReportErrorFileFolderX1AndReturnError(error, message, fileFolder)				\
-				{																					\
-					CLogServices::logError(error, message,											\
-							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
-							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
-					fileFolder.logAsError(CString::mSpaceX4);										\
-																									\
-					return OV<SError>(error);														\
+#define	CFilesystemReportFileError(error, message, file)															\
+				{																									\
+					CLogServices::logError(error, message,															\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),							\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);					\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + file.getFilesystemPath().getString());	\
 				}
-#define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
-				{																					\
-					CLogServices::logError(error, message,											\
-							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
-							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
-					fileFolder1.logAsError(CString::mSpaceX4);										\
-					fileFolder2.logAsError(CString::mSpaceX4);										\
-																									\
-					return OV<SError>(error);														\
+#define	CFilesystemReportFileFolderErrorAndReturnError(error, message, file, folder)								\
+				{																									\
+					CLogServices::logError(error, message,															\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),							\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);					\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + file.getFilesystemPath().getString());	\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("Folder: ")) +										\
+									folder.getFilesystemPath().getString());										\
+																													\
+					return OV<SError>(error);																		\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,8 +55,7 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 {
 	// Parameter check
 	if (!file.doesExist())
-		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mDoesNotExistError,
-				CString(OSSTR("checking source file")), file);
+		CFilesystemReportFileError(CFile::mDoesNotExistError, CString(OSSTR("checking source file")), file);
 
 	// Setup
 	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
@@ -60,19 +63,17 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 		// Destination file already exists
 		OV<SError>	error = destinationFile.remove();
 		if (error.hasValue())
-			CFilesystemReportErrorFileFolderX1AndReturnError(*error, CString(OSSTR("removing destination file")),
-					destinationFile);
+			CFilesystemReportFileError(*error, CString(OSSTR("removing destination file")), destinationFile);
 	}
 
 	// Setup
-	NSURL*	sourceURL = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(file.getFilesystemPath(), false));
-	NSURL*	destinationURL =
-					(NSURL*) CFBridgingRelease(
-							CCoreFoundation::createURLRefFrom(destinationFile.getFilesystemPath(), false));
+	CCoreFoundation::O<CFURLRef>	sourceURLRef = getURLRefFor(file);
+	CCoreFoundation::O<CFURLRef>	destinationURLRef = getURLRefFor(destinationFolder);
 
 	// Do the copy
 	NSError*	error;
-	if ([[NSFileManager defaultManager] copyItemAtURL:sourceURL toURL:destinationURL error:&error]) {
+	if ([[NSFileManager defaultManager] copyItemAtURL:(__bridge NSURL*) *sourceURLRef
+			toURL:(__bridge NSURL*) *destinationURLRef error:&error]) {
 		// Copy comments
 		OV<CString>	comments = file.getComments();
 		if (comments.hasValue())
@@ -82,7 +83,7 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 		return OV<SError>();
 	} else
 		// Error
-		CFilesystemReportErrorFileFolderX2AndReturnError(SErrorFromNSError(error), CString(OSSTR("copying file")), file,
+		CFilesystemReportFileFolderErrorAndReturnError(SErrorFromNSError(error), CString(OSSTR("copying file")), file,
 				destinationFolder);
 }
 
@@ -92,11 +93,9 @@ OV<SError> CFilesystem::open(const TArray<CFile>& files, CFURLRef applicationURL
 {
 	// Setup
 	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
-	for (CArray::ItemIndex i = 0; i < files.getCount(); i++)
-		[urls
-				addObject:
-						(NSURL*) CFBridgingRelease(
-								CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false))];
+	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++)
+		// Add URL
+		[urls addObject: (__bridge NSURL*) *getURLRefFor(*iterator)];
 
 	// Open
 			dispatch_semaphore_t	semaphore = dispatch_semaphore_create(0);
@@ -111,6 +110,7 @@ OV<SError> CFilesystem::open(const TArray<CFile>& files, CFURLRef applicationURL
 		dispatch_semaphore_signal(semaphore);
 	}];
 	while (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW))
+		// Run current RunLoop
 		[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
 
 	// Handle results
@@ -127,64 +127,46 @@ OV<SError> CFilesystem::open(const TArray<CFile>& files, CFURLRef applicationURL
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CFilesystem::moveToTrash(const TArray<CFile>& files, TMArray<CFile>& outUntrashedFiles)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Iterate files
-	for (CArray::ItemIndex i = 0; i < files.getCount(); i++) {
-		// Move this file to the trash
-		NSURL*		url =
-							(NSURL*) CFBridgingRelease(
-									CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false));
-		NSError*	error;
-		if (![[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error]) {
-			// Failed
-			CFilesystemReportErrorFileFolderX1(SErrorFromNSError(error), CString(OSSTR("moving file to trash")),
-					files[i]);
-
-			// Add to out array
-			outUntrashedFiles += files[i];
-		}
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFilesystem::moveToTrash(const TArray<CFile>& files)
+TArray<CFilesystem::FileResult> CFilesystem::moveToTrash(const TArray<CFile>& files)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	OV<SError>	sError;
+	TNArray<FileResult>	fileResults;
 
 	// Iterate files
-	for (CArray::ItemIndex i = 0; i < files.getCount(); i++) {
+	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++) {
 		// Move this file to the trash
-		NSURL*		url =
-							(NSURL*) CFBridgingRelease(
-									CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false));
 		NSError*	error;
-		if (![[NSFileManager defaultManager] trashItemAtURL:url resultingItemURL:nil error:&error]) {
+		if (![[NSFileManager defaultManager]
+				trashItemAtURL:(__bridge NSURL*) *getURLRefFor(*iterator)
+				resultingItemURL:nil error:&error]) {
 			// Failed
-			sError = SErrorFromNSError(error);
-			CFilesystemReportErrorFileFolderX1(*sError, CString(OSSTR("moving file to trash")), files[i]);
+			SError	sError = SErrorFromNSError(error);
+			CFilesystemReportFileError(sError, CString(OSSTR("moving file to trash")), (*iterator));
+
+			// Add entry
+			fileResults += FileResult(*iterator, sError);
 		}
 	}
 
-	return sError;
+	return fileResults;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFilesystem::revealInFinder(const CFolder& folder)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(folder.getFilesystemPath(), false));
-
 	// Reveal in Finder
-	if ([[NSWorkspace sharedWorkspace] openURL:url])
+	if ([[NSWorkspace sharedWorkspace] openURL:(__bridge NSURL*) *getURLRefFor(folder)])
+		// Success
 		return OV<SError>();
-	else
-		CFilesystemReportErrorFileFolderX1AndReturnError(CFile::mUnableToRevealInFinderError,
+	else {
+		// Error
+		CFilesystemReportFolderError(CFile::mUnableToRevealInFinderError,
 				CString(OSSTR("revealing in Finder")), folder);
+
+		return CFile::mUnableToRevealInFinderError;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -193,14 +175,13 @@ OV<SError> CFilesystem::revealInFinder(const TArray<CFile>& files)
 {
 	// Setup
 	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
-	for (CArray::ItemIndex i = 0; i < files.getCount(); i++)
-		[urls
-				addObject:
-						(NSURL*) CFBridgingRelease(
-								CCoreFoundation::createURLRefFrom(files[i].getFilesystemPath(), false))];
+	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++)
+		// Add URL
+		[urls addObject:(__bridge NSURL*) *getURLRefFor(*iterator)];
 
 	// Reveal in Finder
 	[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:urls];
 
 	return OV<SError>();
 }
+

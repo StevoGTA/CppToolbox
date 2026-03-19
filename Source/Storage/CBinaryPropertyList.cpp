@@ -5,7 +5,7 @@
 #include "CBinaryPropertyList.h"
 
 #include "CByteReader.h"
-#include "CppToolboxAssert.h"
+#include "CLogServices.h"
 #include "CReferenceCountable.h"
 #include "TBuffer.h"
 

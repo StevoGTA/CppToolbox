@@ -114,6 +114,50 @@ class CPreferences {
 				Float64			mDefaultValue;
 		};
 
+	// SInt8Pref
+	public:
+		struct SInt8Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								SInt8Pref(OSStringType keyString, SInt8 defaultValue = 0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				SInt8			getDefaultValue() const
+									{ return mDefaultValue; }
+
+			// Properties
+			private:
+				OSStringType	mKeyString;
+				SInt8			mDefaultValue;
+		};
+
+	// SInt16Pref
+	public:
+		struct SInt16Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								SInt16Pref(OSStringType keyString, SInt16 defaultValue = 0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				SInt16			getDefaultValue() const
+									{ return mDefaultValue; }
+
+			// Properties
+			private:
+				OSStringType	mKeyString;
+				SInt16			mDefaultValue;
+		};
+
 	// SInt32Pref
 	public:
 		struct SInt32Pref {
@@ -134,6 +178,72 @@ class CPreferences {
 			private:
 				OSStringType	mKeyString;
 				SInt32			mDefaultValue;
+		};
+
+	// SInt64Pref
+	public:
+		struct SInt64Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								SInt64Pref(OSStringType keyString, SInt64 defaultValue = 0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				SInt64			getDefaultValue() const
+									{ return mDefaultValue; }
+
+			// Properties
+			private:
+				OSStringType	mKeyString;
+				SInt64			mDefaultValue;
+		};
+
+	// UInt8Pref
+	public:
+		struct UInt8Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								UInt8Pref(OSStringType keyString, UInt8 defaultValue = 0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				UInt8			getDefaultValue() const
+									{ return mDefaultValue; }
+
+			// Properties
+			private:
+				OSStringType	mKeyString;
+				UInt8			mDefaultValue;
+		};
+
+	// UInt16Pref
+	public:
+		struct UInt16Pref {
+			// Methods
+			public:
+								// Lifecycle methods
+								UInt16Pref(OSStringType keyString, UInt16 defaultValue = 0) :
+									mKeyString(keyString), mDefaultValue(defaultValue)
+									{}
+
+								// Instance methods
+				OSStringType	getKeyString() const
+									{ return mKeyString; }
+				UInt16			getDefaultValue() const
+									{ return mDefaultValue; }
+
+			// Properties
+			private:
+				OSStringType	mKeyString;
+				UInt16			mDefaultValue;
 		};
 
 	// UInt32Pref
@@ -252,8 +362,18 @@ class CPreferences {
 												{ return hasValue(Pref(float32Pref.getKeyString())); }
 				bool						hasValue(const Float64Pref& float64Pref)
 												{ return hasValue(Pref(float64Pref.getKeyString())); }
+				bool						hasValue(const SInt8Pref& sInt8Pref)
+												{ return hasValue(Pref(sInt8Pref.getKeyString())); }
+				bool						hasValue(const SInt16Pref& sInt16Pref)
+												{ return hasValue(Pref(sInt16Pref.getKeyString())); }
 				bool						hasValue(const SInt32Pref& sInt32Pref)
 												{ return hasValue(Pref(sInt32Pref.getKeyString())); }
+				bool						hasValue(const SInt64Pref& sInt64Pref)
+												{ return hasValue(Pref(sInt64Pref.getKeyString())); }
+				bool						hasValue(const UInt8Pref& uInt8Pref)
+												{ return hasValue(Pref(uInt8Pref.getKeyString())); }
+				bool						hasValue(const UInt16Pref& uInt16Pref)
+												{ return hasValue(Pref(uInt16Pref.getKeyString())); }
 				bool						hasValue(const UInt32Pref& uInt32Pref)
 												{ return hasValue(Pref(uInt32Pref.getKeyString())); }
 				bool						hasValue(const UInt64Pref& uInt64Pref)
@@ -270,7 +390,12 @@ class CPreferences {
 				CString						getString(const StringPref& stringPref);
 				Float32						getFloat32(const Float32Pref& float32Pref);
 				Float64						getFloat64(const Float64Pref& float64Pref);
+				SInt8						getSInt8(const SInt8Pref& sInt8Pref);
+				SInt16						getSInt16(const SInt16Pref& sInt16Pref);
 				SInt32						getSInt32(const SInt32Pref& sInt32Pref);
+				SInt64						getSInt64(const SInt64Pref& sInt64Pref);
+				UInt8						getUInt8(const UInt8Pref& uInt8Pref);
+				UInt16						getUInt16(const UInt16Pref& uInt16Pref);
 				UInt32						getUInt32(const UInt32Pref& uInt32Pref);
 				UInt64						getUInt64(const UInt64Pref& uInt64Pref);
 				UniversalTimeInterval		getUniversalTimeInterval(
@@ -285,7 +410,12 @@ class CPreferences {
 				void						set(const StringPref& stringPref, const CString& string);
 				void						set(const Float32Pref& float32Pref, Float32 value);
 				void						set(const Float64Pref& float64Pref, Float64 value);
+				void						set(const SInt8Pref& sInt8Pref, SInt8 value);
+				void						set(const SInt16Pref& sInt16Pref, SInt16 value);
 				void						set(const SInt32Pref& sInt32Pref, SInt32 value);
+				void						set(const SInt64Pref& sInt64Pref, SInt64 value);
+				void						set(const UInt8Pref& uInt8Pref, UInt8 value);
+				void						set(const UInt16Pref& uInt16Pref, UInt16 value);
 				void						set(const UInt32Pref& uInt32Pref, UInt32 value);
 				void						set(const UInt64Pref& uInt64Pref, UInt64 value);
 				void						set(const UniversalTimeIntervalPref& universalTimeIntervalPref,
@@ -300,8 +430,18 @@ class CPreferences {
 												{ remove(Pref(float32Pref.getKeyString())); }
 				void						remove(const Float64Pref& float64Pref)
 												{ remove(Pref(float64Pref.getKeyString())); }
+				void						remove(const SInt8Pref& sInt8Pref)
+												{ remove(Pref(sInt8Pref.getKeyString())); }
+				void						remove(const SInt16Pref& sInt16Pref)
+												{ remove(Pref(sInt16Pref.getKeyString())); }
 				void						remove(const SInt32Pref& sInt32Pref)
 												{ remove(Pref(sInt32Pref.getKeyString())); }
+				void						remove(const SInt64Pref& sInt64Pref)
+												{ remove(Pref(sInt64Pref.getKeyString())); }
+				void						remove(const UInt8Pref& uInt8Pref)
+												{ remove(Pref(uInt8Pref.getKeyString())); }
+				void						remove(const UInt16Pref& uInt16Pref)
+												{ remove(Pref(uInt16Pref.getKeyString())); }
 				void						remove(const UInt32Pref& uInt32Pref)
 												{ remove(Pref(uInt32Pref.getKeyString())); }
 				void						remove(const UInt64Pref& uInt64Pref)

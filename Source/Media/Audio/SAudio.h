@@ -36,6 +36,7 @@ struct SAudio {
 		public:
 										// Lifecycle methods
 										ChannelMap(UInt8 channelCount) : mValue(channelCount) {}
+										ChannelMap(UInt16 rawValue) : mValue(rawValue) {}
 										ChannelMap(const ChannelMap& other) : mValue(other.mValue) {}
 
 										// Instance methods
@@ -135,8 +136,6 @@ struct SAudio {
 										// 10 Channels
 			static	const	ChannelMap&	_10_0_Unspecified();// Unspecified
 
-			static			ChannelMap	fromRawValue(UInt16 rawValue)
-											{ return ChannelMap(rawValue); }
 			static			UInt8		channelCountFromRawValue(UInt16 rawValue)
 											{ return rawValue & 0x00FF; }
 
@@ -146,10 +145,6 @@ struct SAudio {
 												const ChannelMap& channelMap2, void* userData);
 			static			void		sort(TMArray<ChannelMap>& channelMaps)
 											{ channelMaps.sort((TMArray<ChannelMap>::CompareProc) compareValue, nil); }
-
-		private:
-										// Lifecycle methods
-										ChannelMap(UInt16 value) : mValue(value) {}
 
 		// Properties
 		private:

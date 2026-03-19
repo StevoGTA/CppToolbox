@@ -6,6 +6,7 @@
 
 #include "CDotUnderscoreReader.h"
 #include "CFileDataSource.h"
+#include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -15,7 +16,9 @@
 					CLogServices::logError(error, message,												\
 							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),				\
 							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);		\
-					folder.logAsError(CString::mSpaceX4);												\
+					CLogServices::logError(																\
+							CString::mSpaceX4 + CString(OSSTR("Folder: ")) +							\
+									folder.getFilesystemPath().getString());							\
 																										\
 					return error;																		\
 				}

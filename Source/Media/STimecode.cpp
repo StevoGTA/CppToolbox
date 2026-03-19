@@ -14,6 +14,16 @@
 
 STimecode::FrameRate	STimecode::FrameRate::mDefault(kKindNonDropFrame, 24);
 
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+STimecode::FrameRate::FrameRate(const CDictionary& info) :
+		mKind((Kind) info.getUInt16(CString(OSSTR("kind")))),
+		mNonDropFrameBase(info.getOVUInt32(CString(OSSTR("nonDropFrameBase"))))
+//----------------------------------------------------------------------------------------------------------------------
+{
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -30,39 +40,6 @@ CDictionary STimecode::FrameRate::getInfo() const
 }
 
 // MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-OV<STimecode::FrameRate> STimecode::FrameRate::fromInfo(const CDictionary& info)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get info
-	OV<UInt16>	kind = info.getOVUInt16(CString(OSSTR("kind")));
-	if (!kind.hasValue())
-		// No kind
-		return OV<FrameRate>();
-
-	// Check kind
-	switch (*kind) {
-		case kKindNonDropFrame: {
-			// Non-Drop Frame
-			OV<UInt32>	base = info.getOVUInt32(CString(OSSTR("base")));
-
-			return base.hasValue() ? OV<FrameRate>(FrameRate(kKindNonDropFrame, *base)) : OV<FrameRate>();
-		}
-
-		case kKindDropFrame2997:
-			// 29.97 Drop Frame
-			return OV<FrameRate>(forDropFrame2997());
-
-		case kKindDropFrame5994:
-			// 59.94 Drop Frame
-			return OV<FrameRate>(forDropFrame5994());
-
-		default:
-			// Sorry
-			return OV<FrameRate>();
-	}
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 const TArray<STimecode::FrameRate>& STimecode::FrameRate::getStandard()
@@ -186,6 +163,14 @@ STimecode::STimecode(UniversalTimeInterval timeInterval, const FrameRate& frameR
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+STimecode::STimecode(const CDictionary& info) :
+		mFrameIndex(info.getSInt32(CString(OSSTR("frameIndex")))),
+		mFrameRate(info.getDictionary(CString(OSSTR("frameRate"))))
+//----------------------------------------------------------------------------------------------------------------------
+{
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -264,18 +249,6 @@ CDictionary STimecode::getInfo() const
 }
 
 // MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-OV<STimecode> STimecode::fromInfo(const CDictionary& info)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	OV<SInt32>		frameIndex = info.getOVSInt32(CString(OSSTR("frameIndex")));
-	OV<FrameRate>	frameRate = FrameRate::fromInfo(info.getDictionary(CString(OSSTR("frameRate"))));
-
-	return (frameIndex.hasValue() && frameRate.hasValue()) ?
-			OV<STimecode>(STimecode(*frameIndex, *frameRate)) : OV<STimecode>();
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<STimecode> STimecode::fromString(const CString& string, const FrameRate& frameRate)

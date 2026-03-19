@@ -2,11 +2,11 @@
 //	CFolder-macOS.mm			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CFolder.h"
+#import "CFolder.h"
 
-#include "CCoreFoundation.h"
+#import "CFilesystem.h"
 
-#include <Foundation/Foundation.h>
+#import <Foundation/Foundation.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFolder
@@ -17,13 +17,10 @@
 bool CFolder::isPackage() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
-
 	// Get info
 	NSNumber*	number;
 
-	return [url getResourceValue:&number forKey:NSURLIsPackageKey error:nil] && number.boolValue;
+	return [(__bridge NSURL*) *CFilesystem::getURLRefFor(*this) getResourceValue:&number forKey:NSURLIsPackageKey error:nil] && number.boolValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

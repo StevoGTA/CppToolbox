@@ -24,6 +24,7 @@ struct STimecode {
 			// Methods
 			public:
 													// Lifecycle methods
+													FrameRate(const CDictionary& info);
 													FrameRate(const FrameRate& other) :
 														mKind(other.mKind), mNonDropFrameBase(other.mNonDropFrameBase)
 														{}
@@ -76,8 +77,6 @@ struct STimecode {
 														{ return FrameRate(kKindDropFrame2997); }
 				static			FrameRate			forDropFrame5994()
 														{ return FrameRate(kKindDropFrame5994); }
-
-				static			OV<FrameRate>		fromInfo(const CDictionary& info);
 
 				static	const	TArray<FrameRate>&	getStandard();
 
@@ -142,6 +141,7 @@ struct STimecode {
 												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
 										STimecode(UniversalTimeInterval timeInterval,
 												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
+										STimecode(const CDictionary& info);
 										STimecode(const STimecode& other) :
 											mFrameIndex(other.mFrameIndex), mFrameRate(other.mFrameRate)
 											{}
@@ -178,7 +178,6 @@ struct STimecode {
 													return *this; }
 
 										// Class methods
-		static			OV<STimecode>	fromInfo(const CDictionary& info);
 		static			OV<STimecode>	fromString(const CString& string,
 												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
 

@@ -13,7 +13,7 @@
 // MARK: Array methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CData> CCoreFoundation::arrayOfDatasFrom(CFArrayRef arrayRef)
+TArray<CData> CCoreFoundation::dataArrayFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -31,7 +31,7 @@ TArray<CData> CCoreFoundation::arrayOfDatasFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CDictionary> CCoreFoundation::arrayOfDictionariesFrom(CFArrayRef arrayRef)
+TArray<CDictionary> CCoreFoundation::dictionaryArrayFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -43,13 +43,32 @@ TArray<CDictionary> CCoreFoundation::arrayOfDictionariesFrom(CFArrayRef arrayRef
 	::CFArrayGetValues(arrayRef, CFRangeMake(0, count), (const void**) &dictionaryRefs);
 	for (CFIndex i = 0; i < count; i++)
 		// Add dictionary
-		array += CDictionary(dictionaryFrom(dictionaryRefs[i]));
+		array += dictionaryFrom(dictionaryRefs[i]);
 
 	return array;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CCoreFoundation::arrayOfStringsFrom(CFArrayRef arrayRef)
+TNumberArray<OSType> CCoreFoundation::osTypeArrayFrom(CFArrayRef arrayRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNumberArray<OSType>	array;
+
+	// Get values
+	CFIndex		count = ::CFArrayGetCount(arrayRef);
+	CFNumberRef	numberRefs[count];
+	::CFArrayGetValues(arrayRef, CFRangeMake(0, count), (const void**) &numberRefs);
+
+	for (CFIndex i = 0; i < count; i++)
+		// Add number
+		array += (OSType) uInt32From(numberRefs[i]);
+
+	return array;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<CString> CCoreFoundation::stringArrayFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -67,34 +86,59 @@ TArray<CString> CCoreFoundation::arrayOfStringsFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFArrayRef CCoreFoundation::createArrayRefFrom(const TArray<CDictionary>& array)
+CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CFMutableArrayRef	arrayRef =
 								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
-	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
-		// Add dictionary
-		CFDictionaryRef	dictionaryRef = createDictionaryRefFrom(array[i]);
-		::CFArrayAppendValue(arrayRef, dictionaryRef);
-		::CFRelease(dictionaryRef);
-	}
+	for (TArray<CData>::Iterator iterator = array.getIterator(); iterator; iterator++)
+		// Add data
+		::CFArrayAppendValue(arrayRef, *dataRefFrom(*iterator));
 
-	return arrayRef;
+	return O<CFArrayRef>(arrayRef);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFArrayRef CCoreFoundation::createArrayRefFrom(const TArray<CString>& array)
+CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TArray<CDictionary>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CFMutableArrayRef	arrayRef =
 								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
-	for (CArray::ItemIndex i = 0; i < array.getCount(); i++)
-		// Add string
-		::CFArrayAppendValue(arrayRef, array[i].getOSString());
+	for (TArray<CDictionary>::Iterator iterator = array.getIterator(); iterator; iterator++)
+		// Add dictionary
+		::CFArrayAppendValue(arrayRef, *dictionaryRefFrom(*iterator));
 
-	return arrayRef;
+	return O<CFArrayRef>(arrayRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TNumberArray<OSType>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFMutableArrayRef	arrayRef =
+								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
+	for (TNumberArray<OSType>::Iterator iterator = array.getIterator(); iterator; iterator++)
+		// Add string
+		::CFArrayAppendValue(arrayRef, *numberRefFrom(*iterator));
+
+	return O<CFArrayRef>(arrayRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TArray<CString>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFMutableArrayRef	arrayRef =
+								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
+	for (TArray<CString>::Iterator iterator = array.getIterator(); iterator; iterator++)
+		// Add string
+		::CFArrayAppendValue(arrayRef, iterator->getOSString());
+
+	return O<CFArrayRef>(arrayRef);
 }
 
 // MARK: Data methods
@@ -107,10 +151,10 @@ CData CCoreFoundation::dataFrom(CFDataRef dataRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFDataRef CCoreFoundation::createDataRefFrom(const CData& data)
+CCoreFoundation::O<CFDataRef> CCoreFoundation::dataRefFrom(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return ::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getByteCount());
+	return O<CFDataRef>(::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getByteCount()));
 }
 
 // MARK: Dictionary methods
@@ -134,7 +178,7 @@ CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
 		CFTypeRef	valueTypeRef = valueTypeRefs[i];
 		if (::CFGetTypeID(valueTypeRef) == ::CFBooleanGetTypeID())
 			// Boolean
-			dictionary.set(CString(keyStringRefs[i]), valueTypeRef == ::kCFBooleanTrue);
+			dictionary.set(CString(keyStringRefs[i]), (CFBooleanRef) valueTypeRef == ::kCFBooleanTrue);
 		else if (::CFGetTypeID(valueTypeRef) == ::CFArrayGetTypeID()) {
 			// Array
 			CFArrayRef	arrayRef = (CFArrayRef) valueTypeRef;
@@ -143,10 +187,10 @@ CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
 				CFTypeID	arrayElementTypeRef = ::CFGetTypeID(::CFArrayGetValueAtIndex(arrayRef, 0));
 				if (arrayElementTypeRef == ::CFDictionaryGetTypeID())
 					// Array of dictionaries
-					dictionary.set(CString(keyStringRefs[i]), arrayOfDictionariesFrom(arrayRef));
+					dictionary.set(CString(keyStringRefs[i]), dictionaryArrayFrom(arrayRef));
 				else if (arrayElementTypeRef == ::CFStringGetTypeID())
 					// Array of strings
-					dictionary.set(CString(keyStringRefs[i]), arrayOfStringsFrom(arrayRef));
+					dictionary.set(CString(keyStringRefs[i]), stringArrayFrom(arrayRef));
 				else
 					// Uh oh
 					CCoreServices::stopInDebugger();
@@ -161,65 +205,41 @@ CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
 			// Number
 			switch (::CFNumberGetType((CFNumberRef) valueTypeRef)) {
 				case kCFNumberFloat32Type:
-				case kCFNumberFloatType: {
+				case kCFNumberFloatType:
 					// Float 32
-					Float32	float32;
-					::CFNumberGetValue((CFNumberRef) valueTypeRef, kCFNumberFloat32Type, &float32);
-					dictionary.set(CString(keyStringRefs[i]), float32);
-				} break;
+					dictionary.set(CString(keyStringRefs[i]), float32From((CFNumberRef) valueTypeRef));
+					break;
 
 				case kCFNumberFloat64Type:
-				case kCFNumberDoubleType: {
+				case kCFNumberDoubleType:
 					// Float 64
-					Float64	float64;
-					::CFNumberGetValue((CFNumberRef) valueTypeRef, kCFNumberFloat64Type, &float64);
-					dictionary.set(CString(keyStringRefs[i]), float64);
-				} break;
+					dictionary.set(CString(keyStringRefs[i]), float64From((CFNumberRef) valueTypeRef));
+					break;
 
 				case kCFNumberSInt8Type:
-				case kCFNumberSInt16Type:
-				case kCFNumberSInt32Type:
-				case kCFNumberSInt64Type:
 				case kCFNumberCharType:
+					// SInt8
+					dictionary.set(CString(keyStringRefs[i]), sInt8From((CFNumberRef) valueTypeRef));
+					break;
+
+				case kCFNumberSInt16Type:
 				case kCFNumberShortType:
+					// SInt16
+					dictionary.set(CString(keyStringRefs[i]), sInt16From((CFNumberRef) valueTypeRef));
+					break;
+
+				case kCFNumberSInt32Type:
 				case kCFNumberIntType:
+					// SInt32
+					dictionary.set(CString(keyStringRefs[i]), sInt32From((CFNumberRef) valueTypeRef));
+					break;
+
+				case kCFNumberSInt64Type:
 				case kCFNumberLongType:
-				case kCFNumberLongLongType: {
-					// Integer
-					switch (::CFNumberGetByteSize((CFNumberRef) valueTypeRef)) {
-						case 1: {
-							// SInt8
-							SInt8	sInt8;
-							::CFNumberGetValue((CFNumberRef) valueTypeRef, kCFNumberSInt8Type, &sInt8);
-							dictionary.set(CString(keyStringRefs[i]), sInt8);
-						} break;
-
-						case 2: {
-							// SInt16
-							SInt16	sInt16;
-							::CFNumberGetValue((CFNumberRef) valueTypeRef, kCFNumberSInt16Type, &sInt16);
-							dictionary.set(CString(keyStringRefs[i]), sInt16);
-						} break;
-
-						case 4: {
-							// SInt32
-							SInt32	sInt32;
-							::CFNumberGetValue((CFNumberRef) valueTypeRef, kCFNumberSInt32Type, &sInt32);
-							dictionary.set(CString(keyStringRefs[i]), sInt32);
-						} break;
-
-						case 8: {
-							// SInt64
-							SInt64	sInt64;
-							::CFNumberGetValue((CFNumberRef) valueTypeRef, kCFNumberSInt64Type, &sInt64);
-							dictionary.set(CString(keyStringRefs[i]), sInt64);
-						} break;
-
-						default:
-							// Uh oh
-							CCoreServices::stopInDebugger();
-					}
-				} break;
+				case kCFNumberLongLongType:
+					// SInt64
+					dictionary.set(CString(keyStringRefs[i]), sInt64From((CFNumberRef) valueTypeRef));
+					break;
 
 				default:
 					// The rest are unsupported (unseen actually)
@@ -267,7 +287,7 @@ TDictionary<CString> CCoreFoundation::dictionaryOfStringsFrom(CFDictionaryRef di
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dictionary)
+CCoreFoundation::O<CFDictionaryRef> CCoreFoundation::dictionaryRefFrom(const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -291,122 +311,83 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 
 			case SValue::kTypeBool:
 				// Bool
-				::CFDictionarySetValue(dictionaryRef, keyStringRef,
-						value.getBool() ? kCFBooleanTrue : kCFBooleanFalse);
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, value.getBool() ? kCFBooleanTrue : kCFBooleanFalse);
 				break;
 
-			case SValue::kTypeArrayOfDictionaries: {
+			case SValue::kTypeArrayOfDictionaries:
 				// Array of dictionaries
-				CFArrayRef	arrayRef = createArrayRefFrom(value.getArrayOfDictionaries());
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, arrayRef);
-				::CFRelease(arrayRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *arrayRefFrom(value.getArrayOfDictionaries()));
+				break;
 
-			case SValue::kTypeArrayOfStrings: {
+			case SValue::kTypeArrayOfStrings:
 				// Array of strings
-				CFArrayRef	arrayRef = createArrayRefFrom(value.getArrayOfStrings());
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, arrayRef);
-				::CFRelease(arrayRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *arrayRefFrom(value.getArrayOfStrings()));
+				break;
 
-			case SValue::kTypeData: {
+			case SValue::kTypeData:
 				// Data
-				CFDataRef	dataRef = createDataRefFrom(value.getData());
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, dataRef);
-				::CFRelease(dataRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *dataRefFrom(value.getData()));
+				break;
 
-			case SValue::kTypeDictionary: {
+			case SValue::kTypeDictionary:
 				// Dictionary
-				CFDictionaryRef	valueDictionaryRef = createDictionaryRefFrom(value.getDictionary());
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, valueDictionaryRef);
-				::CFRelease(valueDictionaryRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *dictionaryRefFrom(value.getDictionary()));
+				break;
 
 			case SValue::kTypeString:
 				// String
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, value.getString().getOSString());
 				break;
 
-			case SValue::kTypeFloat32: {
+			case SValue::kTypeFloat32:
 				// Float32
-				Float32		float32	= value.getFloat32();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &float32);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getFloat32()));
+				break;
 
-			case SValue::kTypeFloat64: {
+			case SValue::kTypeFloat64:
 				// Float64
-				Float64		float64 = value.getFloat64();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &float64);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getFloat64()));
+				break;
 
-			case SValue::kTypeSInt8: {
+			case SValue::kTypeSInt8:
 				// SInt8
-				SInt8		sInt8 = value.getSInt8();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, &sInt8);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getSInt8()));
+				break;
 
-			case SValue::kTypeSInt16: {
+			case SValue::kTypeSInt16:
 				// SInt16
-				SInt16		sInt16 = value.getSInt16();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &sInt16);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getSInt16()));
+				break;
 
-			case SValue::kTypeSInt32: {
+			case SValue::kTypeSInt32:
 				// SInt32
-				SInt32		sInt32 = value.getSInt32();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &sInt32);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getSInt32()));
+				break;
 
-			case SValue::kTypeSInt64: {
+			case SValue::kTypeSInt64:
 				// SInt64
-				SInt64		sInt64 = value.getSInt64();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getSInt64()));
+				break;
 
-			case SValue::kTypeUInt8: {
+			case SValue::kTypeUInt8:
 				// UInt8
-				SInt64		sInt64 = value.getUInt8();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getUInt8()));
+				break;
 
-			case SValue::kTypeUInt16: {
+			case SValue::kTypeUInt16:
 				// UInt16
-				SInt64		sInt64 = value.getUInt16();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getUInt16()));
+				break;
 
-			case SValue::kTypeUInt32: {
+			case SValue::kTypeUInt32:
 				// UInt32
-				SInt64		sInt64 = value.getUInt32();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getUInt32()));
+				break;
 
-			case SValue::kTypeUInt64: {
+			case SValue::kTypeUInt64:
 				// UInt64
-				SInt64		sInt64 = value.getUInt64();
-				CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64);
-				::CFDictionarySetValue(dictionaryRef, keyStringRef, numberRef);
-				::CFRelease(numberRef);
-				} break;
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *numberRefFrom(value.getUInt64()));
+				break;
 
 			case SValue::kTypeOpaque:
 				// Something else that cannot be represented by Core Foundation
@@ -418,7 +399,7 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const CDictionary& dict
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const TDictionary<CString>& dictionary)
+CCoreFoundation::O<CFDictionaryRef> CCoreFoundation::dictionaryRefFrom(const TDictionary<CString>& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -431,7 +412,201 @@ CFDictionaryRef CCoreFoundation::createDictionaryRefFrom(const TDictionary<CStri
 		// Store value in dictionary
 		::CFDictionarySetValue(dictionaryRef, iterator.getKey().getOSString(), iterator.getValue().getOSString());
 
-	return dictionaryRef;
+	return O<CFDictionaryRef>(dictionaryRef);
+}
+
+// MAKR: Number methods
+
+//----------------------------------------------------------------------------------------------------------------------
+Float32 CCoreFoundation::float32From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	Float32	value;
+	::CFNumberGetValue(numberRef, kCFNumberFloat32Type, &value);
+
+	return value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+Float64 CCoreFoundation::float64From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	Float64	value;
+	::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);
+
+	return value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt8 CCoreFoundation::sInt8From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SInt8	value;
+	::CFNumberGetValue(numberRef, kCFNumberSInt8Type, &value);
+
+	return value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt16 CCoreFoundation::sInt16From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SInt16	value;
+	::CFNumberGetValue(numberRef, kCFNumberSInt16Type, &value);
+
+	return value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt32 CCoreFoundation::sInt32From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SInt32	value;
+	::CFNumberGetValue(numberRef, kCFNumberSInt32Type, &value);
+
+	return value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt64 CCoreFoundation::sInt64From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SInt64	value;
+	::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
+
+	return value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt8 CCoreFoundation::uInt8From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SInt64	value;
+	::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
+
+	return (UInt8) value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt16 CCoreFoundation::uInt16From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SInt64	value;
+	::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
+
+	return (UInt16) value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CCoreFoundation::uInt32From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SInt64	value;
+	::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
+
+	return (UInt32) value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CCoreFoundation::uInt64From(CFNumberRef numberRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	SInt64	value;
+	::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
+
+	return (UInt64) value;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(Float32 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(Float64 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(SInt8 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt8Type, &value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(SInt16 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(SInt32 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(SInt64 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(UInt8 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Cast
+	SInt64	sInt64Value = value;
+
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(UInt16 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Cast
+	SInt64	sInt64Value = value;
+
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(UInt32 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Cast
+	SInt64	sInt64Value = value;
+
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFNumberRef> CCoreFoundation::numberRefFrom(UInt64 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Cast
+	SInt64	sInt64Value = value;
+
+	return O<CFNumberRef>(::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value));
 }
 
 // MARK: Set methods
@@ -452,15 +627,4 @@ TSet<CString> CCoreFoundation::setOfStringsFrom(const CFSetRef setRef)
 		set += CString(stringRefs[i]);
 
 	return set;
-}
-
-// MARK: FilesystemPath methods
-
-//----------------------------------------------------------------------------------------------------------------------
-CFURLRef CCoreFoundation::createURLRefFrom(const CFilesystemPath& filesystemPath, bool isFolder)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Create URLRef
-	return ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, filesystemPath.getString().getOSString(),
-			kCFURLPOSIXPathStyle, isFolder);
 }

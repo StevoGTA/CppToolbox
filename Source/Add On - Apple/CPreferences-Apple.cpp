@@ -13,49 +13,60 @@
 
 class CPreferences::Internals {
 	public:
-					Internals() :
-						mApplicationIDStringRef(kCFPreferencesCurrentApplication), mDelayWriteCount(0)
-						{}
-					Internals(const CPreferences::Reference& reference) :
-						mApplicationIDStringRef(reference.getApplicationIDStringRef()), mDelayWriteCount(0)
-						{}
+										Internals() :
+											mApplicationIDStringRef(kCFPreferencesCurrentApplication),
+													mDelaySynchronizeCount(0)
+											{}
+										Internals(const CPreferences::Reference& reference) :
+											mApplicationIDStringRef(reference.getApplicationIDStringRef()),
+													mDelaySynchronizeCount(0)
+											{}
 
-		CFTypeRef	copyFrom(CFStringRef keyStringRef)
-						{
-							// Setup
-							CFTypeRef	typeRef;
+		CCoreFoundation::OO<CFTypeRef>	get(CFStringRef keyStringRef)
+											{
+												// Setup
+												CFTypeRef	typeRef;
 
-							::CFPreferencesAppSynchronize(mApplicationIDStringRef);
-							typeRef = ::CFPreferencesCopyAppValue(keyStringRef, mApplicationIDStringRef);
+												::CFPreferencesAppSynchronize(mApplicationIDStringRef);
+												typeRef =
+														::CFPreferencesCopyAppValue(keyStringRef,
+																mApplicationIDStringRef);
+												if (typeRef != nil)
+													// Found
+													return CCoreFoundation::OO<CFTypeRef>(typeRef);
 
-							// Did we get it?
-							if ((typeRef == nil) && mAlternatePreferencesReference.hasValue())
-								// Try to get from old prefs file
-								typeRef =
-										::CFPreferencesCopyAppValue(keyStringRef,
-												mAlternatePreferencesReference->getApplicationIDStringRef());
+												// Did we get it?
+												if (mAlternatePreferencesReference.hasValue())
+													// Try to get from old prefs file
+													return CCoreFoundation::OO<CFTypeRef>(
+															::CFPreferencesCopyAppValue(keyStringRef,
+																	mAlternatePreferencesReference->
+																			getApplicationIDStringRef()));
 
-							return typeRef;
-						}
-		void		setTo(CFStringRef keyStringRef, CFTypeRef valueTypeRef)
-						{
-							// Store
-							::CFPreferencesSetAppValue(keyStringRef, valueTypeRef, mApplicationIDStringRef);
+												return CCoreFoundation::OO<CFTypeRef>();
+											}
+		void							set(CFStringRef keyStringRef, CFTypeRef valueTypeRef)
+											{
+												// Store
+												::CFPreferencesSetAppValue(keyStringRef, valueTypeRef,
+														mApplicationIDStringRef);
 
-							if (mDelayWriteCount == 0)
-								::CFPreferencesAppSynchronize(mApplicationIDStringRef);
-						}
-		void		beginGroupSet()
-						{ mDelayWriteCount++; }
-		void		endGroupSet()
-						{
-							if (--mDelayWriteCount == 0)
-								::CFPreferencesAppSynchronize(mApplicationIDStringRef);
-						}
+												// Check if synchronizing now
+												if (mDelaySynchronizeCount == 0)
+													// Syncshronize
+													::CFPreferencesAppSynchronize(mApplicationIDStringRef);
+											}
+		void							beginGroupSet()
+											{ mDelaySynchronizeCount++; }
+		void							endGroupSet()
+											{
+												if (--mDelaySynchronizeCount == 0)
+													::CFPreferencesAppSynchronize(mApplicationIDStringRef);
+											}
 
 		CFStringRef					mApplicationIDStringRef;
 		OV<CPreferences::Reference>	mAlternatePreferencesReference;
-		UInt32						mDelayWriteCount;
+		UInt32						mDelaySynchronizeCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -91,73 +102,40 @@ CPreferences::~CPreferences()
 bool CPreferences::hasValue(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFTypeRef	typeRef = mInternals->copyFrom(pref.getKeyString());
-	bool		flag = typeRef != nil;
-	
-	if (typeRef != nil)
-		::CFRelease(typeRef);
-	
-	return flag;
+	return mInternals->get(pref.getKeyString()).hasObject();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 bool CPreferences::getBool(const BoolPref& boolPref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFBooleanRef	booleanRef = (CFBooleanRef) mInternals->copyFrom(boolPref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	booleanRef = mInternals->get(boolPref.getKeyString());
 
-	// Check if have number
-	if (booleanRef != nil) {
-		// Have value
-		bool	value = booleanRef == kCFBooleanTrue;
-		::CFRelease(booleanRef);
-		
-		return value;
-	} else
-		return boolPref.getDefaultValue();
+	return booleanRef.hasObject() ? (CFBooleanRef) *booleanRef == kCFBooleanTrue : boolPref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<TArray<CData> > CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	arrayRef = mInternals->get(pref.getKeyString());
 
-	// Check if have array
-	if (arrayRef != nil) {
-		// Setup array
-		TNArray<CData>	array = CCoreFoundation::arrayOfDatasFrom(arrayRef);
-
-		// Cleanup
-		::CFRelease(arrayRef);
-
-		return OV<TArray<CData> >(array);
-	} else
-		// Not found
-		return OV<TArray<CData> >();
+	return arrayRef.hasObject() ?
+			OV<TArray<CData> >(CCoreFoundation::dataArrayFrom((CFArrayRef) *arrayRef)) : OV<TArray<CData> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<TArray<CDictionary> > CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	arrayRef = mInternals->get(pref.getKeyString());
 
-	// Check if have array
-	if (arrayRef != nil) {
-		// Setup array
-		TNArray<CDictionary>	array = CCoreFoundation::arrayOfDictionariesFrom(arrayRef);
-
-		// Cleanup
-		::CFRelease(arrayRef);
-
-		return OV<TArray<CDictionary> >(array);
-	} else
-		// Not found
-		return OV<TArray<CDictionary> >();
+	return arrayRef.hasObject() ?
+			OV<TArray<CDictionary> >(CCoreFoundation::dictionaryArrayFrom((CFArrayRef) *arrayRef)) :
+			OV<TArray<CDictionary> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -165,380 +143,285 @@ OV<TNumberArray<OSType> > CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CFArrayRef	arrayRef = (CFArrayRef) mInternals->copyFrom(pref.getKeyString());
+	CCoreFoundation::OO<CFTypeRef>	arrayRef = mInternals->get(pref.getKeyString());
 
-	// Check if have array
-	if (arrayRef != nil) {
-		// Iterate all items
-		TNumberArray<OSType>	array;
-		for (CFIndex i = 0; i < ::CFArrayGetCount(arrayRef); i++) {
-			// Get value
-			CFNumberRef	numberRef = (CFNumberRef) ::CFArrayGetValueAtIndex(arrayRef, i);
-
-			SInt64	value;
-			::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
-
-			// Add to array
-			array += (OSType) value;
-		}
-
-		// Cleanup
-		::CFRelease(arrayRef);
-
-		return OV<TNumberArray<OSType> >(array);
-	} else
-		// Not found
-		return OV<TNumberArray<OSType> >();
+	return arrayRef.hasObject() ?
+			OV<TNumberArray<OSType> >(CCoreFoundation::osTypeArrayFrom((CFArrayRef) *arrayRef)) :
+			OV<TNumberArray<OSType> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<CData> CPreferences::getData(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFDataRef	dataRef = (CFDataRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	dataRef = mInternals->get(pref.getKeyString());
 
-	// Check if have data
-	if (dataRef != nil) {
-		// Have value
-		CData	data = CCoreFoundation::dataFrom(dataRef);
-		::CFRelease(dataRef);
-
-		return OV<CData>(data);
-	} else
-		return OV<CData>();
+	return dataRef.hasObject() ? OV<CData>(CCoreFoundation::dataFrom((CFDataRef) *dataRef)) : OV<CData>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<CDictionary> CPreferences::getDictionary(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFDictionaryRef	dictionaryRef = (CFDictionaryRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	dictionaryRef = mInternals->get(pref.getKeyString());
 
-	// Check if have dictionary
-	if (dictionaryRef != nil) {
-		// Have value
-		CDictionary	dictionary = CCoreFoundation::dictionaryFrom(dictionaryRef);
-		::CFRelease(dictionaryRef);
-
-		return OV<CDictionary>(dictionary);
-	} else
-		return OV<CDictionary>();
+	return dictionaryRef.hasObject() ?
+			OV<CDictionary>(CCoreFoundation::dictionaryFrom((CFDictionaryRef) *dictionaryRef)) : OV<CDictionary>();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CString CPreferences::getString(const StringPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFStringRef	stringRef = (CFStringRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	stringRef = mInternals->get(pref.getKeyString());
 
-	// Check if have string
-	if (stringRef != nil) {
-		// Have value
-		CString	string(stringRef);
-		::CFRelease(stringRef);
-		
-		return string;
-	} else
-		return CString(pref.getDefaultValue());
+	return stringRef.hasObject() ? CString(*stringRef) : pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 Float32 CPreferences::getFloat32(const Float32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
 
-	// Check if have number
-	if (numberRef != nil) {
-		// Have value
-		Float32	value;
-		::CFNumberGetValue(numberRef, kCFNumberFloat32Type, &value);
-		::CFRelease(numberRef);
-		
-		return value;
-	} else
-		return pref.getDefaultValue();
+	return numberRef.hasObject() ? CCoreFoundation::float32From((CFNumberRef) *numberRef) : pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 Float64 CPreferences::getFloat64(const Float64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
 
-	// Check if have number
-	if (numberRef != nil) {
-		// Have value
-		Float64	value;
-		::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);
-		::CFRelease(numberRef);
-		
-		return value;
-	} else
-		return pref.getDefaultValue();
+	return numberRef.hasObject() ? CCoreFoundation::float32From((CFNumberRef) *numberRef) : pref.getDefaultValue();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt8 CPreferences::getSInt8(const SInt8Pref& pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
+
+	return numberRef.hasObject() ? CCoreFoundation::sInt8From((CFNumberRef) *numberRef) : pref.getDefaultValue();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt16 CPreferences::getSInt16(const SInt16Pref& pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
+
+	return numberRef.hasObject() ? CCoreFoundation::sInt16From((CFNumberRef) *numberRef) : pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 SInt32 CPreferences::getSInt32(const SInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
 
-	// Check if have number
-	if (numberRef != nil) {
-		// Have value
-		SInt64	value;
-		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
-		::CFRelease(numberRef);
+	return numberRef.hasObject() ? CCoreFoundation::sInt32From((CFNumberRef) *numberRef) : pref.getDefaultValue();
+}
 
-		return (SInt32) value;
-	} else
-		return pref.getDefaultValue();
+//----------------------------------------------------------------------------------------------------------------------
+SInt64 CPreferences::getSInt64(const SInt64Pref& pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
+
+	return numberRef.hasObject() ? CCoreFoundation::sInt64From((CFNumberRef) *numberRef) : pref.getDefaultValue();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt8 CPreferences::getUInt8(const UInt8Pref& pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
+
+	return numberRef.hasObject() ? CCoreFoundation::uInt8From((CFNumberRef) *numberRef) : pref.getDefaultValue();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt16 CPreferences::getUInt16(const UInt16Pref& pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
+
+	return numberRef.hasObject() ? CCoreFoundation::uInt16From((CFNumberRef) *numberRef) : pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 CPreferences::getUInt32(const UInt32Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
 
-	// Check if have number
-	if (numberRef != nil) {
-		// Have value
-		SInt64	value;
-		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
-		::CFRelease(numberRef);
-		
-		return (UInt32) value;
-	} else
-		return pref.getDefaultValue();
+	return numberRef.hasObject() ? CCoreFoundation::uInt32From((CFNumberRef) *numberRef) : pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UInt64 CPreferences::getUInt64(const UInt64Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
 
-	// Check if have number
-	if (numberRef != nil) {
-		// Have value
-		SInt64	value;
-		::CFNumberGetValue(numberRef, kCFNumberSInt64Type, &value);
-		::CFRelease(numberRef);
-
-		return (UInt64) value;
-	} else
-		return pref.getDefaultValue();
+	return numberRef.hasObject() ? CCoreFoundation::uInt64From((CFNumberRef) *numberRef) : pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UniversalTimeInterval CPreferences::getUniversalTimeInterval(const UniversalTimeIntervalPref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFNumberRef	numberRef = (CFNumberRef) mInternals->copyFrom(pref.getKeyString());
+	// Get value
+	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
 
-	// Check if have number
-	if (numberRef != nil) {
-		// Have value
-		Float64	value;
-		::CFNumberGetValue(numberRef, kCFNumberFloat64Type, &value);
-		::CFRelease(numberRef);
-
-		return value;
-	} else
-		return pref.getDefaultValue();
+	return numberRef.hasObject() ? CCoreFoundation::float64From((CFNumberRef) *numberRef) : pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const BoolPref& boolPref, bool value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Write
-	mInternals->setTo(boolPref.getKeyString(), value ? kCFBooleanTrue : kCFBooleanFalse);
+	mInternals->set(boolPref.getKeyString(), value ? kCFBooleanTrue : kCFBooleanFalse);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFMutableArrayRef	arrayRef = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-
-	// Iterate items
-	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
-		// Add data
-		CFDataRef	dataRef = CCoreFoundation::createDataRefFrom(array[i]);
-		::CFArrayAppendValue(arrayRef, dataRef);
-		::CFRelease(dataRef);
-	}
-
-	// Store
-	mInternals->setTo(pref.getKeyString(), arrayRef);
-
-	// Cleanup
-	::CFRelease(arrayRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::arrayRefFrom(array));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const TArray<CDictionary>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFMutableArrayRef	arrayRef = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-
-	// Iterate items
-	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
-		// Add dictionary
-		CFDictionaryRef	dictionaryRef = CCoreFoundation::createDictionaryRefFrom(array[i]);
-		::CFArrayAppendValue(arrayRef, dictionaryRef);
-		::CFRelease(dictionaryRef);
-	}
-
-	// Store
-	mInternals->setTo(pref.getKeyString(), arrayRef);
-
-	// Cleanup
-	::CFRelease(arrayRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::arrayRefFrom(array));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const TNumberArray<OSType>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CFMutableArrayRef	arrayRef = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-
-	// Iterate items
-	for (CArray::ItemIndex i = 0; i < array.getCount(); i++) {
-		// Add data
-		SInt64		sInt64Value = array[i];
-		CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
-		::CFArrayAppendValue(arrayRef, numberRef);
-		::CFRelease(numberRef);
-	}
-
-	// Store
-	mInternals->setTo(pref.getKeyString(), arrayRef);
-
-	// Cleanup
-	::CFRelease(arrayRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::arrayRefFrom(array));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFDataRef	dataRef = CCoreFoundation::createDataRefFrom(data);
-	mInternals->setTo(pref.getKeyString(), dataRef);
-	::CFRelease(dataRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::dataRefFrom(data));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	CFDictionaryRef	dictionaryRef = CCoreFoundation::createDictionaryRefFrom(dictionary);
-	mInternals->setTo(pref.getKeyString(), dictionaryRef);
-	::CFRelease(dictionaryRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::dictionaryRefFrom(dictionary));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const StringPref& pref, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->setTo(pref.getKeyString(), string.getOSString());
+	mInternals->set(pref.getKeyString(), string.getOSString());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Float32Pref& pref, Float32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create storage
-	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &value);
-
-	// Write
-	mInternals->setTo(pref.getKeyString(), numberRef);
-	::CFRelease(numberRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Float64Pref& pref, Float64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create storage
-	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
+}
 
-	// Write
-	mInternals->setTo(pref.getKeyString(), numberRef);
-	::CFRelease(numberRef);
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SInt8Pref& pref, SInt8 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SInt16Pref& pref, SInt16 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const SInt32Pref& pref, SInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create storage
-	SInt64		sInt64Value = value;
-	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
+}
 
-	// Write
-	mInternals->setTo(pref.getKeyString(), numberRef);
-	::CFRelease(numberRef);
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SInt64Pref& pref, SInt64 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const UInt8Pref& pref, UInt8 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const UInt16Pref& pref, UInt16 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const UInt32Pref& pref, UInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create storage
-	SInt64		sInt64Value = value;
-	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
-
-	// Write
-	mInternals->setTo(pref.getKeyString(), numberRef);
-	::CFRelease(numberRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const UInt64Pref& pref, UInt64 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create storage
-	SInt64		sInt64Value = value;
-	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &sInt64Value);
-
-	// Write
-	mInternals->setTo(pref.getKeyString(), numberRef);
-	::CFRelease(numberRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const UniversalTimeIntervalPref& pref, UniversalTimeInterval value)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Create storage
-	CFNumberRef	numberRef = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat64Type, &value);
-
-	// Write
-	mInternals->setTo(pref.getKeyString(), numberRef);
-	::CFRelease(numberRef);
+	mInternals->set(pref.getKeyString(), *CCoreFoundation::numberRefFrom(value));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::remove(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->setTo(pref.getKeyString(), nil);
+	mInternals->set(pref.getKeyString(), nil);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -6,6 +6,7 @@
 
 #include "CFile.h"
 #include "CReferenceCountable.h"
+#include "SError.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data

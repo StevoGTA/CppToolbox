@@ -4,6 +4,7 @@
 
 #include "CFolder.h"
 
+#include "CLogServices.h"
 #include "SError-POSIX.h"
 
 #include <sys/stat.h>
@@ -11,14 +12,15 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFolderReportErrorAndReturnError(error, message)											\
-				{																					\
-					CLogServices::logError(error, message,											\
-							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
-							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
-					logAsError(CString::mSpaceX4);													\
-																									\
-					return error;																	\
+#define	CFolderReportErrorAndReturnError(error, message)														\
+				{																								\
+					CLogServices::logError(error, message,														\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),						\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);				\
+					CLogServices::logError(																		\
+							CString::mSpaceX4 + CString(OSSTR("Folder: ")) + getFilesystemPath().getString());	\
+																												\
+					return error;																				\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------

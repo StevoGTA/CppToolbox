@@ -54,28 +54,6 @@ class CFile : public CHashable {
 
 						bool				equals(const CFile& other) const;
 
-						void				logAsMessage(const CString& prefix = CString::mEmpty) const
-												{
-													// Log
-													CLogServices::logMessage(
-															prefix + CString(OSSTR("File: ")) +
-																	getFilesystemPath().getString());
-												}
-						void				logAsWarning(const CString& prefix = CString::mEmpty) const
-												{
-													// Log
-													CLogServices::logWarning(
-															prefix + CString(OSSTR("File: ")) +
-																	getFilesystemPath().getString());
-												}
-						void				logAsError(const CString& prefix = CString::mEmpty) const
-												{
-													// Log
-													CLogServices::logError(
-															prefix + CString(OSSTR("File: ")) +
-																	getFilesystemPath().getString());
-												}
-
 						CFile&				operator=(const CFile& other);
 
 #if defined(TARGET_OS_MACOS) || defined(TARGET_OS_LINUX)

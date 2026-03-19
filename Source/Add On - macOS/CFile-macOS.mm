@@ -2,33 +2,35 @@
 //	CFile-macOS.mm			©2019 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
-#include "CFile.h"
+#import "CFile.h"
 
-#include "CCoreFoundation.h"
-#include "SError-Apple.h"
+#import "CFilesystem.h"
+#import "SError-Apple.h"
 
-#include <Foundation/Foundation.h>
+#import <Foundation/Foundation.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFileReportErrorAndReturnError(error, message)												\
-				{																					\
-					CLogServices::logError(error, message,											\
-							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
-							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
-					logAsError(CString::mSpaceX4);													\
-																									\
-					return error;																	\
+#define	CFileReportErrorAndReturnError(error, message)															\
+				{																								\
+					CLogServices::logError(error, message,														\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),						\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);				\
+					CLogServices::logError(																		\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + getFilesystemPath().getString());	\
+																												\
+					return error;																				\
 				}
-#define	CFileReportErrorAndReturnValue(error, message, value)										\
-				{																					\
-					CLogServices::logError(error, message,											\
-							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
-							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
-					logAsError(CString::mSpaceX4);													\
-																									\
-					return value;																	\
+#define	CFileReportErrorAndReturnValue(error, message, value)													\
+				{																								\
+					CLogServices::logError(error, message,														\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),						\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);				\
+					CLogServices::logError(																		\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + getFilesystemPath().getString());	\
+																												\
+					return value;																				\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -41,26 +43,23 @@
 bool CFile::isHidden() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
-
 	// Get info
 	NSNumber*	number;
 
-	return [url getResourceValue:&number forKey:NSURLIsHiddenKey error:nil] && number.boolValue;
+	return [(__bridge NSURL*) *CFilesystem::getURLRefFor(*this) getResourceValue:&number forKey:NSURLIsHiddenKey
+					error:nil] &&
+			number.boolValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 UniversalTime CFile::getCreationUniversalTime() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
-
 	// Get info
 	NSDate*		date;
 	NSError*	error;
-	if ([url getResourceValue:&date forKey:NSURLCreationDateKey error:&error])
+	if ([(__bridge NSURL*) *CFilesystem::getURLRefFor(*this) getResourceValue:&date forKey:NSURLCreationDateKey
+			error:&error])
 		// Got date
 		return date.timeIntervalSinceReferenceDate;
 	else
@@ -72,13 +71,11 @@ UniversalTime CFile::getCreationUniversalTime() const
 UniversalTime CFile::getModificationUniversalTime() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
-
 	// Get info
 	NSDate*		date;
 	NSError*	error;
-	if ([url getResourceValue:&date forKey:NSURLContentModificationDateKey error:&error])
+	if ([(__bridge NSURL*) *CFilesystem::getURLRefFor(*this) getResourceValue:&date
+			forKey:NSURLContentModificationDateKey error:&error])
 		// Got date
 		return date.timeIntervalSinceReferenceDate;
 	else
@@ -90,13 +87,10 @@ UniversalTime CFile::getModificationUniversalTime() const
 bool CFile::isAlias() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
-
 	// Get info
 	CFBooleanRef	booleanRef;
 	bool			isAlias =
-							::CFURLCopyResourcePropertyForKey((__bridge CFURLRef) url, kCFURLIsAliasFileKey,
+							::CFURLCopyResourcePropertyForKey(*CFilesystem::getURLRefFor(*this), kCFURLIsAliasFileKey,
 											&booleanRef, nil) &&
 									::CFBooleanGetValue(booleanRef);
 	if (booleanRef != nil)
@@ -109,11 +103,8 @@ bool CFile::isAlias() const
 OV<CString> CFile::getComments() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get URL
-	NSURL*	url = (NSURL*) CFBridgingRelease(CCoreFoundation::createURLRefFrom(getFilesystemPath(), false));
-
 	// Get info
-	MDItemRef	itemRef = ::MDItemCreateWithURL(kCFAllocatorDefault, (__bridge CFURLRef) url);
+	MDItemRef	itemRef = ::MDItemCreateWithURL(kCFAllocatorDefault, *CFilesystem::getURLRefFor(*this));
 	if (itemRef != nil) {
 		// Got itemRef
 		CFStringRef	stringRef = (CFStringRef) ::MDItemCopyAttribute(itemRef, kMDItemFinderComment);

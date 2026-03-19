@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CFilesystemPath.h"
-#include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFolder
@@ -52,28 +51,6 @@ class CFolder : public CHashable {
 #endif
 
 						bool				equals(const CFolder& other) const;
-
-						void				logAsMessage(const CString& prefix = CString::mEmpty) const
-												{
-													// Log
-													CLogServices::logMessage(
-															prefix + CString(OSSTR("Folder: ")) +
-																	getFilesystemPath().getString());
-												}
-						void				logAsWarning(const CString& prefix = CString::mEmpty) const
-												{
-													// Log
-													CLogServices::logWarning(
-															prefix + CString(OSSTR("Folder: ")) +
-																	getFilesystemPath().getString());
-												}
-						void				logAsError(const CString& prefix = CString::mEmpty) const
-												{
-													// Log
-													CLogServices::logError(
-															prefix + CString(OSSTR("Folder: ")) +
-																	getFilesystemPath().getString());
-												}
 
 						CFolder&			operator=(const CFolder& other);
 

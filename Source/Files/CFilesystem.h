@@ -4,14 +4,54 @@
 
 #pragma once
 
+#include "CCoreFoundation.h"
 #include "CDataSource.h"
 #include "SFoldersFiles.h"
 #include "TResult.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFilesystem
 
 class CFilesystem {
+	// FileResult
+	public:
+		struct FileResult : public TV2<CFile, SError> {
+			// Methods
+			public:
+								// Lifecycle methods
+								FileResult(const CFile& file, const SError& error) : TV2(file, error) {}
+								FileResult(const FileResult& other) : TV2(other) {}
+
+								// Instamce methods
+				const	CFile&	getFile() const { return getA(); }
+				const	SError&	getError() const { return getB(); }
+		};
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+	// SecurityScopedResourceAccess
+	public:
+		class SecurityScopedResourceAccess {
+			// Methods
+			public:
+															// Lifecycle methods
+															SecurityScopedResourceAccess(CFURLRef urlRef);
+															~SecurityScopedResourceAccess();
+
+															// Instance methods
+				OV<SError>									start();
+				void										stop();
+
+															// Class methods
+		static	TVResult<I<SecurityScopedResourceAccess> >	fromStorageData(const CData& storageData);
+
+			// Properties
+			private:
+				bool		mIsActive;
+				CFURLRef	mURLRef;
+		};
+#endif
+
 	// Methods
 	public:
 												// Class methods
@@ -36,11 +76,15 @@ class CFilesystem {
 												// Will replace destinationFile with sourceFile and remove sourceFile
 		static	OV<SError>						replace(const CFile& sourceFile, const CFile& destinationFile);
 
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+		static	CCoreFoundation::O<CFURLRef>	getURLRefFor(const CFolder& folder);
+		static	CCoreFoundation::O<CFURLRef>	getURLRefFor(const CFile& file);
+		static	CCoreFoundation::OO<CFURLRef>	getURLRefFrom(const CData& storageData);
+		static	TVResult<CData>					getStorageDataFor(CFURLRef urlRef);
+#endif
 #if defined(TARGET_OS_MACOS)
 		static	OV<SError>						open(const TArray<CFile>& files, CFURLRef applicationURLRef);
-		static	void							moveToTrash(const TArray<CFile>& files,
-														TMArray<CFile>& outUntrashedFiles);
-		static	OV<SError>						moveToTrash(const TArray<CFile>& files);
+		static	TArray<FileResult>				moveToTrash(const TArray<CFile>& files);
 
 		static	OV<SError>						revealInFinder(const CFolder& folder);
 		static	OV<SError>						revealInFinder(const TArray<CFile>& files);

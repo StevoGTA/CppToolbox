@@ -4,6 +4,7 @@
 
 #include "CFileDataSource.h"
 
+#include "CLogServices.h"
 #include "ConcurrencyPrimitives.h"
 #include "SError-POSIX.h"
 
