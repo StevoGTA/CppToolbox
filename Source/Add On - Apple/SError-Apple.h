@@ -19,41 +19,39 @@ extern	SError	SErrorFromCFError(CFErrorRef errorRef);
 		SError(CString((__bridge CFStringRef) e.domain), (SInt32) e.code,	\
 				CString((__bridge CFStringRef) e.localizedDescription))
 
-#define LogOSStatusIfFailed(status, method)															\
-				if (status != noErr)																\
-					CLogServices::logError(															\
-							method + CString(OSSTR(" returned ")) +									\
-									SErrorFromOSStatus(status).getDefaultLocalizedDescription());
-#define LogOSStatusIfFailedAndReturn(status, method)												\
-				if (status != noErr) {																\
-					CLogServices::logError(															\
-							method + CString(OSSTR(" returned ")) +									\
-									SErrorFromOSStatus(status).getDefaultLocalizedDescription());	\
-					return;																			\
+#define LogOSStatusIfFailed(status, method)													\
+				if (status != noErr)														\
+					CLogServices::logError(													\
+							method + CString(OSSTR(" returned ")) +							\
+									SErrorFromOSStatus(status).getInternalDescription());
+#define LogOSStatusIfFailedAndReturn(status, method)										\
+				if (status != noErr) {														\
+					CLogServices::logError(													\
+							method + CString(OSSTR(" returned ")) +							\
+									SErrorFromOSStatus(status).getInternalDescription());	\
+					return;																	\
 				}
-#define LogOSStatusIfFailedAndReturnValue(status, method, value)									\
-				if (status != noErr) {																\
-					CLogServices::logError(															\
-							method + CString(OSSTR(" returned ")) +									\
-									SErrorFromOSStatus(status).getDefaultLocalizedDescription());	\
-					return value;																	\
+#define LogOSStatusIfFailedAndReturnValue(status, method, value)							\
+				if (status != noErr) {														\
+					CLogServices::logError(													\
+							method + CString(OSSTR(" returned ")) +							\
+									SErrorFromOSStatus(status).getInternalDescription());	\
+					return value;															\
 				}
 
-#define	ReturnErrorIfFailed(status, method)											\
-				if (status != noErr) {												\
-					SError	_error = SErrorFromOSStatus(status);					\
-					CLogServices::logError(											\
-							method + CString(OSSTR(" returned ")) +					\
-									_error.getDefaultLocalizedDescription());		\
-																					\
-					return OV<SError>(_error);										\
+#define	ReturnErrorIfFailed(status, method)																\
+				if (status != noErr) {																	\
+					SError	_error = SErrorFromOSStatus(status);										\
+					CLogServices::logError(																\
+							method + CString(OSSTR(" returned ")) + _error.getInternalDescription());	\
+																										\
+					return OV<SError>(_error);															\
 				}
-#define	ReturnValueIfFailed(status, method, value)									\
-				if (status != noErr) {												\
-					SError	_error = SErrorFromOSStatus(status);					\
-					CLogServices::logError(											\
-							method + CString(OSSTR(" returned ")) +					\
-									_error.getDefaultLocalizedDescription());		\
-																					\
-					return value;													\
+#define	ReturnValueIfFailed(status, method, value)														\
+				if (status != noErr) {																	\
+					SError	_error = SErrorFromOSStatus(status);										\
+					CLogServices::logError(																\
+							method + CString(OSSTR(" returned ")) +	 _error.getInternalDescription());	\
+																										\
+					return value;																		\
 				}

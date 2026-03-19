@@ -378,6 +378,8 @@ class CString : public CHashable {
 #if defined(TARGET_OS_WINDOWS)
 		static			void				setupLocalization(const CData& stringsFileData);
 #endif
+		static			bool				hasLocalizationFor(const CString& localizationGroup,
+													const CString& localizationKey);
 
 	protected:
 											// Internal methods

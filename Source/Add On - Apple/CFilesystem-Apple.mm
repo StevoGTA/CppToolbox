@@ -9,17 +9,7 @@
 #import "SError-Apple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: Local data
-
-static	const	CString	sErrorDomain(OSSTR("Filesystem-Apple"));
-static			SError	sSecurityScopedResourceAccessCouldNotResolveStorageDataError(sErrorDomain, 1,
-								CString(OSSTR("Could not resolve storage data")));
-static			SError	sSecurityScopedResourceAccessFailedToStartError(sErrorDomain, 2,
-								CString(OSSTR("Failed to start")));
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - Macros
+// MARK: Macros
 
 #define	CFilesystemReportFolderError(error, message, folder)										\
 				{																					\
@@ -79,7 +69,7 @@ OV<SError> CFilesystem::SecurityScopedResourceAccess::start()
 		Boolean	result = ::CFURLStartAccessingSecurityScopedResource(mURLRef);
 		if (!result)
 			// Error
-			return OV<SError>(sSecurityScopedResourceAccessFailedToStartError);
+			return OV<SError>(mSecurityScopedResourceAccessFailedToStartError);
 
 		// Now active
 		mIsActive = true;
@@ -116,7 +106,7 @@ TVResult<I<CFilesystem::SecurityScopedResourceAccess> > CFilesystem::SecuritySco
 	if (!urlRef.hasObject())
 		// Could not resolve
 		return TVResult<I<CFilesystem::SecurityScopedResourceAccess> >(
-				sSecurityScopedResourceAccessCouldNotResolveStorageDataError);
+				mSecurityScopedResourceAccessCouldNotResolveStorageDataError);
 
 	return TVResult<I<SecurityScopedResourceAccess> >(
 			I<SecurityScopedResourceAccess>(new SecurityScopedResourceAccess(*urlRef)));
@@ -125,6 +115,12 @@ TVResult<I<CFilesystem::SecurityScopedResourceAccess> > CFilesystem::SecuritySco
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFilesystem
+
+// MARK :Properties
+
+SError	CFilesystem::mSecurityScopedResourceAccessCouldNotResolveStorageDataError(mErrorDomain, 100);
+SError	CFilesystem::mSecurityScopedResourceAccessCouldNotComposeStorageDataError(mErrorDomain, 101);
+SError	CFilesystem::mSecurityScopedResourceAccessFailedToStartError(mErrorDomain, 102);
 
 // MARK: Class methods
 

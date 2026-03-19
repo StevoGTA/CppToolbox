@@ -94,4 +94,14 @@ class CFilesystem {
 		static	OV<SError>						revealInFileExplorer(const TArray<CFile>& files);
 	#endif
 #endif
+
+	// Properties
+	public:
+		static	const	CString	mErrorDomain;
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+		static			SError	mSecurityScopedResourceAccessCouldNotResolveStorageDataError;
+		static			SError	mSecurityScopedResourceAccessCouldNotComposeStorageDataError;
+		static			SError	mSecurityScopedResourceAccessFailedToStartError;
+#endif
 };

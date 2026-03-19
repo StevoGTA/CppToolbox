@@ -886,6 +886,19 @@ CString CString::make(OSStringType format, va_list args)
 	return string;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+bool CString::hasLocalizationFor(const CString& localizationGroup, const CString& localizationKey)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CCoreFoundation::OO<CFStringRef>	stringRef(
+												::CFBundleCopyLocalizedString(::CFBundleGetMainBundle(),
+														localizationKey.mStringRef, localizationKey.mStringRef,
+														localizationGroup.mStringRef));
+
+	return stringRef.hasObject();
+}
+
 // MARK: Internal methods
 
 //----------------------------------------------------------------------------------------------------------------------

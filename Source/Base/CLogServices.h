@@ -82,7 +82,7 @@ class CLogServices {
 		static	void	logError(const CString& string);
 		static	void	logError(const SError& error, const CString& message, const CString& file, const CString& func,
 								UInt32 line)
-							{ logError(error.getDescription(), message, file, func, line); }
+							{ logError(error.getInternalDescription(), message, file, func, line); }
 
 		static	void	addLogMessageProc(LogProc logProc, void* userData = nil);
 		static	void	addLogWarningProc(LogProc logProc, void* userData = nil);
