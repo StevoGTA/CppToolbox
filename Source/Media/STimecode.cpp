@@ -18,8 +18,11 @@ STimecode::FrameRate	STimecode::FrameRate::mDefault(kKindNonDropFrame, 24);
 
 //----------------------------------------------------------------------------------------------------------------------
 STimecode::FrameRate::FrameRate(const CDictionary& info) :
-		mKind((Kind) info.getUInt16(CString(OSSTR("kind")))),
-		mNonDropFrameBase(info.getOVUInt32(CString(OSSTR("nonDropFrameBase"))))
+		mKind((Kind) info.getUInt16(CString(OSSTR("kind")), kKindNonDropFrame)),
+		mNonDropFrameBase(
+				(mKind == kKindNonDropFrame) ?
+						OV<UInt32>(info.getUInt32(CString(OSSTR("nonDropFrameBase")), mDefault.getBase())) :
+						OV<UInt32>())
 //----------------------------------------------------------------------------------------------------------------------
 {
 }
