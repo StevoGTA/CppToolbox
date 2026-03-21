@@ -4,13 +4,27 @@
 
 #include "CFileDataSource.h"
 
+#include "CLogServices.h"
 #include "ConcurrencyPrimitives.h"
 #include "SError-Windows.h"
 
 #undef THIS
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CFileDataSource::Internals
+// MARK: Macros
+
+#define	CFileDataSourceReportError(error, message, file)															\
+				{																									\
+					CLogServices::logError(error, message,															\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),							\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);					\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + file.getFilesystemPath().getString());	\
+				}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CFileDataSource::Internals
 
 class CFileDataSource::Internals {
 	public:
@@ -28,8 +42,7 @@ class CFileDataSource::Internals {
 				if (mFileHandle == INVALID_HANDLE_VALUE) {
 					// Unable to open
 					mError.setValue(SErrorFromWindowsGetLastError());
-					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
-					mFile.logAsError(CString::mSpaceX4);
+					CFileDataSourceReportError(*mError, CString(OSSTR("opening buffered")), file);
 				}
 			}
 		~Internals()
@@ -105,14 +118,12 @@ OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteC
 		if (!result) {
 			// Error
 			mInternals->mError.setValue(SErrorFromWindowsGetLastError());
-			CLogServices::logError(*mInternals->mError, "reading data buffered", __FILE__, __func__, __LINE__);
-			mInternals->mFile.logAsError(CString::mSpaceX4);
+			CFileDataSourceReportError(*mInternals->mError, CString(OSSTR("reading data buffered")), mInternals->mFile);
 		}
 	} else {
 		// Error
 		mInternals->mError.setValue(SErrorFromWindowsGetLastError());
-		CLogServices::logError(*mInternals->mError, "setting position buffered", __FILE__, __func__, __LINE__);
-		mInternals->mFile.logAsError(CString::mSpaceX4);
+		CFileDataSourceReportError(*mInternals->mError, CString(OSSTR("setting position buffered")), mInternals->mFile);
 	}
 
 	// Done
@@ -159,16 +170,14 @@ class CMappedFileDataSource::Internals {
 							// Failed
 							mByteCount = 0;
 							mError.setValue(SErrorFromWindowsGetLastError());
-							CLogServices::logError(*mError, "creating file view", __FILE__, __func__, __LINE__);
-							mFile.logAsError(CString::mSpaceX4);
+							CFileDataSourceReportError(*mError, CString(OSSTR("creating file view")), file);
 						}
 					} else {
 						// Error
 						mBytePtr = NULL;
 						mByteCount = 0;
 						mError.setValue(SErrorFromWindowsGetLastError());
-						CLogServices::logError(*mError, "creating file mapping", __FILE__, __func__, __LINE__);
-						mFile.logAsError(CString::mSpaceX4);
+						CFileDataSourceReportError(*mError, CString(OSSTR("creating file mapping")), file);
 					}
 				} else {
 					// Unable to open
@@ -176,8 +185,7 @@ class CMappedFileDataSource::Internals {
 					mBytePtr = NULL;
 					mByteCount = 0;
 					mError.setValue(SErrorFromWindowsGetLastError());
-					CLogServices::logError(*mError, "opening buffered", __FILE__, __func__, __LINE__);
-					mFile.logAsError(CString::mSpaceX4);
+					CFileDataSourceReportError(*mError, CString(OSSTR("opening buffered")), file);
 				}
 			}
 		~Internals()

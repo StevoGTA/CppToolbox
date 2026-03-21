@@ -4,11 +4,14 @@
 
 #pragma once
 
-#include "CCoreFoundation.h"
 #include "CDataSource.h"
 #include "SFoldersFiles.h"
 #include "TResult.h"
 #include "Tuple.h"
+
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+	#include "CCoreFoundation.h"
+#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFilesystem

@@ -4,25 +4,32 @@
 
 #include "CFileWriter.h"
 
+#include "CLogServices.h"
 #include "CReferenceCountable.h"
 #include "SError-Windows.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFileWriterReportErrorAndReturnError(error, message)								\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					mInternals->mFile.logAsError(CString::mSpaceX4);						\
-																							\
-					return OV<SError>(error);												\
+#define	CFileWriterReportErrorAndReturnError(error, message, file)													\
+				{																									\
+					CLogServices::logError(error, message,															\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),							\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);					\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + file.getFilesystemPath().getString());	\
+																													\
+					return OV<SError>(error);																					\
 				}
-#define	CFileWriterReportErrorAndReturnValue(error, message, value)							\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					mInternals->mFile.logAsError(CString::mSpaceX4);						\
-																							\
-					return value;															\
+#define	CFileWriterReportErrorAndReturnValue(error, message, file, value)											\
+				{																									\
+					CLogServices::logError(error, message,															\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),							\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);					\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + file.getFilesystemPath().getString());	\
+																													\
+					return value;																					\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -111,7 +118,8 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 						append ? OPEN_ALWAYS : CREATE_NEW, &extendedParameters);
 		if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
 			// Unable to open
-			CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "opening");
+			CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("opening")),
+					mInternals->mFile);
 
 		// Check if appending
 		if (append) {
@@ -119,7 +127,8 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 			auto	result = ::SetFilePointer(mInternals->mFileHandle, {0}, NULL, FILE_END);
 			if (!result)
 				// Error
-				CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "setting position");
+				CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(),
+						CString(OSSTR("setting position")), mInternals->mFile);
 		}
 
 		return OV<SError>();
@@ -143,7 +152,8 @@ TVResult<CData> CFileWriter::read(CData::ByteCount byteCount) const
 	if (!result) {
 		// Error
 		SError	error = SErrorFromWindowsGetLastError();
-		CFileWriterReportErrorAndReturnValue(error, "reading", TVResult<CData>(error))
+		CFileWriterReportErrorAndReturnValue(error, CString(OSSTR("reading")), mInternals->mFile,
+				TVResult<CData>(error));
 	}
 
 	return TVResult<CData>(data);
@@ -163,7 +173,8 @@ OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 	auto	result = ::WriteFile(mInternals->mFileHandle, buffer, (DWORD) byteCount, &bytesWritten, NULL);
 	if (!result)
 		// Error
-		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "writing");
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("writing")),
+				mInternals->mFile);
 
 	return OV<SError>();
 }
@@ -216,7 +227,8 @@ OV<SError> CFileWriter::setPosition(Position position, SInt64 newPos) const
 	}
 	if (!result)
 		// Error
-		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "setting position");
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("setting position")),
+				mInternals->mFile);
 
 	return OV<SError>();
 }
@@ -237,13 +249,15 @@ OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 	auto	result = ::SetFilePointerEx(mInternals->mFileHandle, position, NULL, FILE_BEGIN);
 	if (!result)
 		// Error
-		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "setting position");
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("setting position")),
+				mInternals->mFile);
 
 	// Set End of File
 	result = ::SetEndOfFile(mInternals->mFileHandle);
 	if (!result)
 		// Error
-		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "setting end of file");
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("setting end of file")),
+				mInternals->mFile);
 
 	return OV<SError>();
 }
@@ -261,7 +275,8 @@ OV<SError> CFileWriter::flush() const
 	auto	result = ::FlushFileBuffers(mInternals->mFileHandle);
 	if (!result)
 		// Error
-		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), "flushing");
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("flushing")),
+				mInternals->mFile);
 
 	return OV<SError>();
 }
@@ -282,12 +297,8 @@ OV<SError> CFileWriter::close() const
 	if (result)
 		// Success
 		return OV<SError>();
-	else {
+	else
 		// Error
-		SError	error = SErrorFromWindowsGetLastError();
-		CLogServices::logError(error, "closing", __FILE__, __func__, __LINE__);
-		mInternals->mFile.logAsError(CString::mSpaceX4);
-
-		return OV<SError>(error);
-	}
+		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("closing")),
+				mInternals->mFile);
 }

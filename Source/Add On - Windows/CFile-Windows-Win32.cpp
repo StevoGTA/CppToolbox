@@ -4,29 +4,39 @@
 
 #include "CFile.h"
 
+#include "CLogServices.h"
 #include "SError-Windows.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFileReportError(error, message)													\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
+#define	CFileReportError(error, message)																		\
+				{																								\
+					CLogServices::logError(error, message,														\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),						\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);				\
+					CLogServices::logError(																		\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + getFilesystemPath().getString());	\
 				}
-#define	CFileReportErrorAndReturnError(error, message)										\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
-																							\
-					return OV<SError>(error);												\
+#define	CFileReportErrorAndReturnError(error, message)															\
+				{																								\
+					CLogServices::logError(error, message,														\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),						\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);				\
+					CLogServices::logError(																		\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + getFilesystemPath().getString());	\
+																												\
+					return OV<SError>(error);																				\
 				}
-#define	CFileReportErrorAndReturnValue(error, message, value)								\
-				{																			\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);	\
-					logAsError(CString::mSpaceX4);											\
-																							\
-					return OV<SError>(value);												\
+#define	CFileReportErrorAndReturnValue(error, message, value)													\
+				{																								\
+					CLogServices::logError(error, message,														\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),						\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);				\
+					CLogServices::logError(																		\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + getFilesystemPath().getString());	\
+																												\
+					return value;																				\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -46,13 +56,9 @@ OV<SError> CFile::rename(const CString& string)
 	if (::MoveFile(getFilesystemPath().getString().getOSString(), filesystemPath.getString().getOSString()))
 		// Success
 		return OV<SError>();
-	else {
+	else
 		// Error
-		OV<SError>	error(SErrorFromWindowsGetLastError());
-		CLogServices::logError(*error, "renaming file", __FILE__, __func__, __LINE__);
-
-		return error;
-	}
+		CFileReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("renaming file")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -69,12 +75,9 @@ UInt64 CFile::getByteCount() const
 		byteCount.LowPart = fileAttributeData.nFileSizeLow;
 
 		return byteCount.QuadPart;
-	} else {
+	} else
 		// Error
-		CFileReportError(SErrorFromWindowsGetLastError(), "GetFileAttributexEx");
-
-		return 0;
-	}
+		CFileReportErrorAndReturnValue(SErrorFromWindowsGetLastError(), CString(OSSTR("GetFileAttributexEx")), 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,13 +88,9 @@ OV<SError> CFile::remove() const
 	if (::DeleteFile(getFilesystemPath().getString().getOSString()))
 		// Success
 		return OV<SError>();
-	else {
+	else
 		// Error
-		OV<SError>	error(SErrorFromWindowsGetLastError());
-		CLogServices::logError(*error, "removing file", __FILE__, __func__, __LINE__);
-
-		return error;
-	}
+		CFileReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("removing file")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -127,13 +126,9 @@ OV<SError> CFile::setLocked(bool lockFile) const
 {
 	// Get attributes
 	DWORD	attributes = ::GetFileAttributes(getFilesystemPath().getString().getOSString());
-	if (attributes == INVALID_FILE_ATTRIBUTES) {
+	if (attributes == INVALID_FILE_ATTRIBUTES)
 		// Error
-		OV<SError>	error(SErrorFromWindowsGetLastError());
-		CLogServices::logError(*error, "setting file locked", __FILE__, __func__, __LINE__);
-
-		return error;
-	}
+		CFileReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("setting file locked")));
 
 	// Update
 	if (lockFile)
@@ -147,12 +142,9 @@ OV<SError> CFile::setLocked(bool lockFile) const
 	if (::SetFileAttributes(getFilesystemPath().getString().getOSString(), attributes))
 		// Success
 		return OV<SError>();
-	else {
-		OV<SError>	error(SErrorFromWindowsGetLastError());
-		CLogServices::logError(*error, "setting file locked", __FILE__, __func__, __LINE__);
-
-		return error;
-	}
+	else
+		// Error
+		CFileReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("setting file locked")));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -169,12 +161,9 @@ UniversalTime CFile::getCreationUniversalTime() const
 		dateTime.HighPart = fileAttributeData.ftCreationTime.dwHighDateTime;
 
 		return (UniversalTime) dateTime.QuadPart / (UniversalTime) 10000000ULL - 12622780800LL;
-	} else {
+	} else
 		// Error
-		CFileReportError(SErrorFromWindowsGetLastError(), "GetFileAttributexEx");
-
-		return 0;
-	}
+		CFileReportErrorAndReturnValue(SErrorFromWindowsGetLastError(), CString(OSSTR("GetFileAttributexEx")), 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -191,10 +180,7 @@ UniversalTime CFile::getModificationUniversalTime() const
 		dateTime.HighPart = fileAttributeData.ftLastWriteTime.dwHighDateTime;
 
 		return (UniversalTime)dateTime.QuadPart / (UniversalTime)10000000ULL - 12622780800LL;
-	} else {
+	} else
 		// Error
-		CFileReportError(SErrorFromWindowsGetLastError(), "GetFileAttributexEx");
-
-		return 0;
-	}
+		CFileReportErrorAndReturnValue(SErrorFromWindowsGetLastError(), CString(OSSTR("GetFileAttributexEx")), 0);
 }

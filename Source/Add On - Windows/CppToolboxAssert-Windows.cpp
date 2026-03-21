@@ -21,7 +21,7 @@ void eAssertHandleProc(const SError& error, const char* file, UInt32 fileByteCou
 
 #if defined(DEBUG)
 	// Stop in debugger so we can analyze stuffs
-	CString	description = error.getDefaultLocalizedDescription();
+	CString	description = error.getInternalDescription();
 	CCoreServices::stopInDebugger(error.getCode(), description.getOSString());
 #else
 	// Trigger the crash reporting system so we can collect info

@@ -20,7 +20,7 @@
 					CLogServices::logError(																		\
 							CString::mSpaceX4 + CString(OSSTR("File: ")) + getFilesystemPath().getString());	\
 																												\
-					return error;																				\
+					return OV<SError>(error);																	\
 				}
 #define	CFileReportErrorAndReturnValue(error, message, value)													\
 				{																								\
@@ -128,8 +128,7 @@ UInt16 CFile::getPermissions() const
 {
 	struct	stat	statInfo;
 
-	return (::stat(*getFilesystemPath().getString().getUTF8String(), &statInfo) == 0) ?
-			statInfo.st_mode : 0;
+	return (::stat(*getFilesystemPath().getString().getUTF8String(), &statInfo) == 0) ? statInfo.st_mode : 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

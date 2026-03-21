@@ -20,7 +20,7 @@
 							CString::mSpaceX4 + CString(OSSTR("File: ")) +							\
 									mInternals->mFile.getFilesystemPath().getString());				\
 																									\
-					return error;																	\
+					return OV<SError>(error);														\
 				}
 #define	CFileWriterReportErrorAndReturnValue(error, message, value)									\
 				{																					\
