@@ -345,7 +345,9 @@ class CPreferences {
 
 	// Classes
 	private:
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		class Internals;
+#endif
 
 	// Methods
 	public:
@@ -464,5 +466,7 @@ class CPreferences {
 
 	// Properties
 	private:
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		Internals*	mInternals;
+#endif
 };

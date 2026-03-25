@@ -174,6 +174,42 @@ Float64 CPreferences::getFloat64(const Float64Pref& float64Pref)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+SInt8 CPreferences::getSInt8(const SInt8Pref& sInt8Pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(sInt8Pref.getKeyString()));
+
+	return (object != nullptr) ? safe_cast<SInt8>(object) : sInt8Pref.getDefaultValue();
+#else
+	// C++/WinRT
+	auto	object = ApplicationData::Current().LocalSettings().Values().Lookup(hstring(sInt8Pref.getKeyString()));
+
+	return (object != nullptr) ? unbox_value<SInt8>(object) : sInt8Pref.getDefaultValue();
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt16 CPreferences::getSInt16(const SInt16Pref& sInt16Pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(sInt16Pref.getKeyString()));
+
+	return (object != nullptr) ? safe_cast<SInt16>(object) : sInt16Pref.getDefaultValue();
+#else
+	// C++/WinRT
+	auto	object = ApplicationData::Current().LocalSettings().Values().Lookup(hstring(sInt16Pref.getKeyString()));
+
+	return (object != nullptr) ? unbox_value<SInt16>(object) : sInt16Pref.getDefaultValue();
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 SInt32 CPreferences::getSInt32(const SInt32Pref& sInt32Pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -188,6 +224,60 @@ SInt32 CPreferences::getSInt32(const SInt32Pref& sInt32Pref)
 	auto	object = ApplicationData::Current().LocalSettings().Values().Lookup(hstring(sInt32Pref.getKeyString()));
 
 	return (object != nullptr) ? unbox_value<SInt32>(object) : sInt32Pref.getDefaultValue();
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+SInt64 CPreferences::getSInt64(const SInt64Pref& sInt64Pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(sInt64Pref.getKeyString()));
+
+	return (object != nullptr) ? safe_cast<SInt64>(object) : sInt64Pref.getDefaultValue();
+#else
+	// C++/WinRT
+	auto	object = ApplicationData::Current().LocalSettings().Values().Lookup(hstring(sInt64Pref.getKeyString()));
+
+	return (object != nullptr) ? unbox_value<SInt64>(object) : sInt64Pref.getDefaultValue();
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt8 CPreferences::getUInt8(const UInt8Pref& uInt8Pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(uInt8Pref.getKeyString()));
+
+	return (object != nullptr) ? safe_cast<UInt8>(object) : uInt8Pref.getDefaultValue();
+#else
+	// C++/WinRT
+	auto	object = ApplicationData::Current().LocalSettings().Values().Lookup(hstring(uInt8Pref.getKeyString()));
+
+	return (object != nullptr) ? unbox_value<UInt8>(object) : uInt8Pref.getDefaultValue();
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt16 CPreferences::getUInt16(const UInt16Pref& uInt16Pref)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(uInt16Pref.getKeyString()));
+
+	return (object != nullptr) ? safe_cast<UInt16>(object) : uInt16Pref.getDefaultValue();
+#else
+	// C++/WinRT
+	auto	object = ApplicationData::Current().LocalSettings().Values().Lookup(hstring(uInt16Pref.getKeyString()));
+
+	return (object != nullptr) ? unbox_value<UInt16>(object) : uInt16Pref.getDefaultValue();
 #endif
 }
 
@@ -349,6 +439,36 @@ void CPreferences::set(const Float64Pref& float64Pref, Float64 value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SInt8Pref& sInt8Pref, SInt8 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Set
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(sInt8Pref.getKeyString()),
+			dynamic_cast<PropertyValue^>(PropertyValue::CreateInt8(value)));
+#else
+	// C++/WinRT
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(sInt8Pref.getKeyString()), box_value(value));
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SInt16Pref& sInt16Pref, SInt16 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Set
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(sInt16Pref.getKeyString()),
+			dynamic_cast<PropertyValue^>(PropertyValue::CreateInt16(value)));
+#else
+	// C++/WinRT
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(sInt16Pref.getKeyString()), box_value(value));
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const SInt32Pref& sInt32Pref, SInt32 value)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -360,6 +480,51 @@ void CPreferences::set(const SInt32Pref& sInt32Pref, SInt32 value)
 #else
 	// C++/WinRT
 	ApplicationData::Current().LocalSettings().Values().Insert(hstring(sInt32Pref.getKeyString()), box_value(value));
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const SInt64Pref& sInt64Pref, SInt64 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Set
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(sInt64Pref.getKeyString()),
+			dynamic_cast<PropertyValue^>(PropertyValue::CreateInt64(value)));
+#else
+	// C++/WinRT
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(sInt64Pref.getKeyString()), box_value(value));
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const UInt8Pref& uInt8Pref, UInt8 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Set
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(uInt8Pref.getKeyString()),
+			dynamic_cast<PropertyValue^>(PropertyValue::CreateUInt8(value)));
+#else
+	// C++/WinRT
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(uInt8Pref.getKeyString()), box_value(value));
+#endif
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CPreferences::set(const UInt16Pref& uInt16Pref, UInt16 value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Set
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(uInt16Pref.getKeyString()),
+			dynamic_cast<PropertyValue^>(PropertyValue::CreateUInt16(value)));
+#else
+	// C++/WinRT
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(uInt16Pref.getKeyString()), box_value(value));
 #endif
 }
 
