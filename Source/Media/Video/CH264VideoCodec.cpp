@@ -712,7 +712,7 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 	HRESULT	result = sample.getInstance()->SetSampleTime(times->mPresentationTime * 10000 / videoCodec.getTimeScale());
 	ReturnValueIfFailed(result, CString(OSSTR("SetSampleTime")), TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
-	result = sample.getInstance()->SetSampleDuration(dataInfo->getDuration());
+	result = sample.getInstance()->SetSampleDuration(mediaPacketData->getDuration());
 	ReturnValueIfFailed(result, CString(OSSTR("SetSampleDuration")), TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	return sample;

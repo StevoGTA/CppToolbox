@@ -88,7 +88,7 @@ UInt64 CFileDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, UInt64 byteCount)
+OV<SError> CFileDataSource::read(UInt64 position, void* buffer, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
@@ -245,7 +245,7 @@ UInt64 CMappedFileDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, UInt64 byteCount)
+OV<SError> CMappedFileDataSource::read(UInt64 position, void* buffer, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
@@ -281,4 +281,22 @@ TVResult<CData> CMappedFileDataSource::readData(UInt64 position, CData::ByteCoun
 		return TVResult<CData>(SError::mEndOfData);
 
 	return TVResult<CData>(CData((UInt8*) mInternals->mBytePtr + position, byteCount));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<TBuffer<UInt8> > CMappedFileDataSource::readUInt8Buffer(UInt64 position, UInt64 byteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for error
+	if (mInternals->mError.hasValue())
+		// Error
+		return TVResult<TBuffer<UInt8> >(*mInternals->mError);
+
+	// Preflight
+	AssertFailIf((position + byteCount) > mInternals->mByteCount);
+	if ((position + byteCount) > mInternals->mByteCount)
+		// Attempting to ready beyond end of data
+		return TVResult<TBuffer<UInt8> >(SError::mEndOfData);
+
+	return TVResult<TBuffer<UInt8> >(TBuffer<UInt8>((UInt8*) mInternals->mBytePtr + position, byteCount));
 }
