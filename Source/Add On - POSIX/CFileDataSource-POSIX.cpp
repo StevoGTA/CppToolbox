@@ -13,11 +13,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFileDataSourceReportError(error, message)													\
-				{																					\
-					CLogServices::logError(error, message,											\
-							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
-							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+#define	CFileDataSourceReportError(error, message, file)															\
+				{																									\
+					CLogServices::logError(error, message,															\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),							\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);					\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + file.getFilesystemPath().getString());	\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -27,7 +29,8 @@
 class CFileDataSource::Internals {
 	public:
 		Internals(const CFile& file, bool buffered) :
-			mByteCount(file.getByteCount()), mFILE(nil), mFD(-1)
+			mFile(file),
+					mByteCount(file.getByteCount()), mFILE(nil), mFD(-1)
 			{
 				// Setup
 				CString::C	path = file.getFilesystemPath().getString().getUTF8String();
@@ -40,7 +43,7 @@ class CFileDataSource::Internals {
 					if (mFILE == nil) {
 						// Unable to open
 						mError = OV<SError>(SErrorFromPOSIXerror(errno));
-						CFileDataSourceReportError(*mError, CString(OSSTR("opening buffered")));
+						CFileDataSourceReportError(*mError, CString(OSSTR("opening buffered")), file);
 					}
 				} else {
 					// Not buffered
@@ -48,7 +51,7 @@ class CFileDataSource::Internals {
 					if (mFD == -1) {
 						// Unable to open
 						mError = OV<SError>(SErrorFromPOSIXerror(errno));
-						CFileDataSourceReportError(*mError, CString(OSSTR("opening non-buffered")));
+						CFileDataSourceReportError(*mError, CString(OSSTR("opening non-buffered")), file);
 					}
 				}
 			}
@@ -59,6 +62,8 @@ class CFileDataSource::Internals {
 				if (mFD != -1)
 					::close(mFD);
 			}
+
+		CFile		mFile;
 
 		UInt64		mByteCount;
 		CLock		mLock;
@@ -126,12 +131,12 @@ OV<SError> CFileDataSource::read(UInt64 position, void* buffer, UInt64 byteCount
 			if (bytesRead != (ssize_t) byteCount) {
 				// Error
 				error = OV<SError>(SErrorFromPOSIXerror(errno));
-				CFileDataSourceReportError(*error, CString(OSSTR("reading data buffered")));
+				CFileDataSourceReportError(*error, CString(OSSTR("reading data buffered")), mInternals->mFile);
 			}
 		} else {
 			// Error
 			error = OV<SError>(SErrorFromPOSIXerror(errno));
-			CFileDataSourceReportError(*error, CString(OSSTR("setting position buffered")));
+			CFileDataSourceReportError(*error, CString(OSSTR("setting position buffered")), mInternals->mFile);
 		}
 	} else {
 		// file
@@ -142,12 +147,12 @@ OV<SError> CFileDataSource::read(UInt64 position, void* buffer, UInt64 byteCount
 			if (bytesRead == -1) {
 				// Error
 				error = OV<SError>(SErrorFromPOSIXerror(errno));
-				CFileDataSourceReportError(*error, CString(OSSTR("reading data non-buffered")));
+				CFileDataSourceReportError(*error, CString(OSSTR("reading data non-buffered")), mInternals->mFile);
 			}
 		} else {
 			// Error
 			error = OV<SError>(SErrorFromPOSIXerror(errno));
-			CFileDataSourceReportError(*error, CString(OSSTR("setting non-position buffered")));
+			CFileDataSourceReportError(*error, CString(OSSTR("setting non-position buffered")), mInternals->mFile);
 		}
 	}
 
@@ -186,14 +191,14 @@ class CMappedFileDataSource::Internals {
 						mBytePtr = nil;
 						mByteCount = 0;
 						mError = OV<SError>(SErrorFromPOSIXerror(errno));
-						CFileDataSourceReportError(*mError, CString(OSSTR("mapping data")));
+						CFileDataSourceReportError(*mError, CString(OSSTR("mapping data")), file);
 					}
 				} else {
 					// Unable to open
 					mBytePtr = nil;
 					mByteCount = 0;
 					mError = OV<SError>(SErrorFromPOSIXerror(errno));
-					CFileDataSourceReportError(*mError, CString(OSSTR("opening")));
+					CFileDataSourceReportError(*mError, CString(OSSTR("opening")), file);
 				}
 			}
 		~Internals()

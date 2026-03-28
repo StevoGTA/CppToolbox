@@ -32,6 +32,17 @@
 																													\
 					return OV<SError>(error);																		\
 				}
+#define	CFilesystemReportFolderErrorAndReturnValue(error, message, folder, value)					\
+				{																					\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					CLogServices::logError(															\
+							CString::mSpaceX4 + CString(OSSTR("Folder: ")) +						\
+									folder.getFilesystemPath().getString());						\
+																									\
+					return value;																	\
+				}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -159,9 +170,8 @@ TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
-		CFilesystemReportFolderError(sError, CString(OSSTR("getting folders and files")), folder);
-
-		return TVResult<SFoldersFiles>(sError);
+		CFilesystemReportFolderErrorAndReturnValue(sError, CString(OSSTR("getting folders and files")), folder,
+				TVResult<SFoldersFiles>(sError));
 	}
 }
 
@@ -200,9 +210,8 @@ TVResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool d
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
-		CFilesystemReportFolderError(sError, CString(OSSTR("getting folders")), folder);
-
-		return TVResult<TArray<CFolder> >(sError);
+		CFilesystemReportFolderErrorAndReturnValue(sError, CString(OSSTR("getting folders")), folder,
+				TVResult<TArray<CFolder> >(sError));
 	}
 }
 
@@ -241,9 +250,8 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 	else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
-		CFilesystemReportFolderError(sError, CString(OSSTR("getting files")), folder);
-
-		return TVResult<TArray<CFile> >(sError);
+		CFilesystemReportFolderErrorAndReturnValue(sError, CString(OSSTR("getting files")), folder,
+				TVResult<TArray<CFile> >(sError));
 	}
 }
 

@@ -119,7 +119,7 @@ void CMediaFoundationServices::iterateOutputMediaTypes(IMFTransform* transform,
 			continue;
 
 		// Call proc
-		mediaTypeProc(mediaType, (Float32) sampleRate, SAudio::ChannelMap::fromRawValue((UInt16) channels), bitrate);
+		mediaTypeProc(mediaType, (Float32) sampleRate, SAudio::ChannelMap((UInt16) channels), bitrate);
 	}
 }
 

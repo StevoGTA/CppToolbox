@@ -20,7 +20,7 @@
 					CLogServices::logError(																		\
 							CString::mSpaceX4 + CString(OSSTR("Folder: ")) + getFilesystemPath().getString());	\
 																												\
-					return error;																				\
+					return OV<SError>(error);																	\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------

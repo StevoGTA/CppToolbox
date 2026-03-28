@@ -4,6 +4,7 @@
 
 #include "CFilesystem.h"
 
+#include "CLogServices.h"
 #include "SError-Windows.h"
 
 #include <shellapi.h>
@@ -13,25 +14,16 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
 
-#define	CFilesystemReportErrorFileFolderX1(error, message, fileFolder)								\
+#define	CFilesystemReportFolderErrorAndReturnValue(error, message, folder, value)					\
 				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
-					fileFolder.logAsError(CString::mSpaceX4);										\
-				}
-#define	CFilesystemReportErrorFileFolderX1AndReturnError(error, message, fileFolder)				\
-				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
-					fileFolder.logAsError(CString::mSpaceX4);										\
+					CLogServices::logError(error, message,											\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					CLogServices::logError(															\
+							CString::mSpaceX4 + CString(OSSTR("Folder: ")) +						\
+									folder.getFilesystemPath().getString());						\
 																									\
-					return OV<SError>(error);														\
-				}
-#define	CFilesystemReportErrorFileFolderX2AndReturnError(error, message, fileFolder1, fileFolder2)	\
-				{																					\
-					CLogServices::logError(error, message, __FILE__, __func__, __LINE__);			\
-					fileFolder1.logAsError(CString::mSpaceX4);										\
-					fileFolder2.logAsError(CString::mSpaceX4);										\
-																									\
-					return OV<SError>(error);														\
+					return value;																	\
 				}
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -96,9 +88,8 @@ TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 	} else {
 		// Error
 		SError	error = SErrorFromWindowsGetLastError();
-		CFilesystemReportErrorFileFolderX1(error, "calling FindFirstFile()", folder);
-
-		return TVResult<SFoldersFiles>(error);
+		CFilesystemReportFolderErrorAndReturnValue(error, CString(OSSTR("calling FindFirstFile()")), folder,
+				TVResult<SFoldersFiles>(error));
 	}
 }
 
@@ -155,9 +146,8 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 	} else {
 		// Error
 		SError	error = SErrorFromWindowsGetLastError();
-		CFilesystemReportErrorFileFolderX1(error, "calling FindFirstFile()", folder);
-
-		return TVResult<TArray<CFile>>(error);
+		CFilesystemReportFolderErrorAndReturnValue(error, CString(OSSTR("calling FindFirstFile()")), folder,
+				TVResult<TArray<CFile>>(error));
 	}
 }
 

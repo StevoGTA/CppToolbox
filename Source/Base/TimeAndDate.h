@@ -27,6 +27,7 @@ typedef Float64 UniversalTime;
 const	UniversalTime			kUniversalTimeDistantFuture = 64092211200.0;
 const	UniversalTime			kUniversalTimeDistantPast = -62135769600.0;
 
+const	UniversalTimeInterval	kUniversalTimeInterval1601To2001	= 12622780800.0;
 const	UniversalTimeInterval	kUniversalTimeInterval1904To2001	= 3061152000.0;
 const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
 
