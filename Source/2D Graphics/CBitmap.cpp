@@ -37,48 +37,51 @@ class RowWriterRGBA8888 : public CBitmap::RowWriter {
 
 class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 	public:
-						Internals(const S2DSizeS32& size, CBitmap::Format format,
-								const CData& pixelData = CData::mEmpty,
-								const OV<UInt16>& bytesPerRow = OV<UInt16>()) :
+						Internals(const S2DSizeS32& size, CBitmap::Format format, const OV<UInt16>& bytesPerRow) :
 							TCopyOnWriteReferenceCountable(),
-									mSize(size), mFormat(format)
+									mSize(size), mFormat(format), mBytesPerPixel(calculateBytesPerPixel(mFormat)),
+									mBytesPerRow(
+											bytesPerRow.hasValue() ?
+													*bytesPerRow : calculateBytesPerRow(mSize, mBytesPerPixel)),
+									mPixelData(mBytesPerRow * mSize.mHeight)
+							{}
+						Internals(const S2DSizeS32& size, Format format, const TBuffer<UInt8>& pixelData,
+								UInt16 bytesPerRow) :
+							TCopyOnWriteReferenceCountable(),
+									mSize(size), mFormat(format), mBytesPerPixel(calculateBytesPerPixel(mFormat)),
+									mBytesPerRow(bytesPerRow), mPixelData(pixelData)
+							{}
+						Internals(const Internals& other) :
+							TCopyOnWriteReferenceCountable(),
+									mSize(other.mSize), mFormat(other.mFormat), mBytesPerPixel(other.mBytesPerPixel),
+									mBytesPerRow(other.mBytesPerRow), mPixelData(other.mPixelData)
+							{}
+
+				UInt16	calculateBytesPerPixel(Format format)
 							{
-								// Finish setup
 								switch (mFormat) {
 									case CBitmap::kFormatRGBA4444:
 									case CBitmap::kFormatRGBA5551:
 									case CBitmap::kFormatRGB565:
-										mBytesPerPixel = 2;
-										break;
+										return 2;
 
 									case CBitmap::kFormatRGB888:
-										mBytesPerPixel = 3;
-										break;
+										return 3;
 
 									case CBitmap::kFormatRGBA8888:
 									case CBitmap::kFormatARGB8888:
-										mBytesPerPixel = 4;
-										break;
+										return 4;
 								}
-
-								if (bytesPerRow.hasValue())
-									// Have value
-									mBytesPerRow = *bytesPerRow;
-								else {
-									// Calculate and round up to a 16 byte boundary
-									mBytesPerRow = (UInt16) (mSize.mWidth * mBytesPerPixel);
-									if ((mBytesPerRow % 0x10) != 0)
-										mBytesPerRow += 0x10 - (mBytesPerRow & 0x0F);
-								}
-								mPixelData =
-										!pixelData.isEmpty() ?
-												pixelData : CData((CData::ByteCount) mBytesPerRow * mSize.mHeight);
 							}
-						Internals(const Internals& other) :
-							TCopyOnWriteReferenceCountable(),
-									mFormat(other.mFormat), mSize(other.mSize), mPixelData(other.mPixelData),
-									mBytesPerPixel(other.mBytesPerPixel), mBytesPerRow(other.mBytesPerRow)
-							{}
+				UInt16	calculateBytesPerRow(const S2DSizeS32& size, UInt16 bytesPerPixel)
+							{
+								// Calculate and round up to a 16 byte boundary
+								UInt16	bytesPerRow = (UInt16) (size.mWidth * bytesPerPixel);
+								if ((bytesPerRow % 0x10) != 0)
+									bytesPerRow += 0x10 - (bytesPerRow & 0x0F);
+
+								return bytesPerRow;
+							}
 
 		static	void	convertRGB565ToRGB888(const Internals& sourceBitmapInternals,
 								Internals& destinationBitmapInternals)
@@ -87,12 +90,9 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{
 								// Setup
-								const	UInt8*	sourcePixelData =
-														(const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+								const	UInt8*	sourcePixelData = *sourceBitmapInternals.mPixelData;
 										UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-										UInt8*	destinationPixelData =
-														(UInt8*) destinationBitmapInternals.mPixelData
-																.getMutableBytePtr();
+										UInt8*	destinationPixelData = *destinationBitmapInternals.mPixelData;
 										UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 								// Loop on vertical
@@ -126,12 +126,9 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{
 								// Setup
-								const	UInt8*	sourcePixelData =
-														(const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+								const	UInt8*	sourcePixelData = *sourceBitmapInternals.mPixelData;
 										UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-										UInt8*	destinationPixelData =
-														(UInt8*) destinationBitmapInternals.mPixelData
-																.getMutableBytePtr();
+										UInt8*	destinationPixelData = *destinationBitmapInternals.mPixelData;
 										UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 								// Loop on vertical
@@ -166,12 +163,9 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{
 								// Setup
-								const	UInt8*	sourcePixelData =
-														(const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+								const	UInt8*	sourcePixelData = *sourceBitmapInternals.mPixelData;
 										UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-										UInt8*	destinationPixelData =
-														(UInt8*) destinationBitmapInternals.mPixelData
-																.getMutableBytePtr();
+										UInt8*	destinationPixelData = *destinationBitmapInternals.mPixelData;
 										UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 								// Loop on vertical
@@ -215,12 +209,9 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{
 								// Setup
-								const	UInt8*	sourcePixelData =
-														(const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+								const	UInt8*	sourcePixelData = *sourceBitmapInternals.mPixelData;
 										UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-										UInt8*	destinationPixelData =
-														(UInt8*) destinationBitmapInternals.mPixelData
-																.getMutableBytePtr();
+										UInt8*	destinationPixelData = *destinationBitmapInternals.mPixelData;
 										UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 								// Loop on vertical
@@ -245,12 +236,9 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{
 								// Setup
-								const	UInt8*	sourcePixelData =
-														(const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+								const	UInt8*	sourcePixelData = *sourceBitmapInternals.mPixelData;
 										UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-										UInt8*	destinationPixelData =
-														(UInt8*) destinationBitmapInternals.mPixelData
-																.getMutableBytePtr();
+										UInt8*	destinationPixelData = *destinationBitmapInternals.mPixelData;
 										UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 								// Loop on vertical
@@ -276,12 +264,9 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{
 								// Setup
-								const	UInt8*	sourcePixelData =
-														(const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+								const	UInt8*	sourcePixelData = *sourceBitmapInternals.mPixelData;
 										UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-										UInt8*	destinationPixelData =
-														(UInt8*) destinationBitmapInternals.mPixelData
-																.getMutableBytePtr();
+										UInt8*	destinationPixelData = *destinationBitmapInternals.mPixelData;
 										UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 								// Loop on vertical
@@ -311,12 +296,9 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{
 								// Setup
-								const	UInt8*	sourcePixelData =
-														(const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+								const	UInt8*	sourcePixelData = *sourceBitmapInternals.mPixelData;
 										UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-										UInt8*	destinationPixelData =
-														(UInt8*) destinationBitmapInternals.mPixelData
-																.getMutableBytePtr();
+										UInt8*	destinationPixelData = *destinationBitmapInternals.mPixelData;
 										UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 								// Loop on vertical
@@ -347,12 +329,9 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{
 								// Setup
-								const	UInt8*	sourcePixelData =
-														(const UInt8*) sourceBitmapInternals.mPixelData.getBytePtr();
+								const	UInt8*	sourcePixelData = *sourceBitmapInternals.mPixelData;
 										UInt32	sourceBytesPerRow = sourceBitmapInternals.mBytesPerRow;
-										UInt8*	destinationPixelData =
-														(UInt8*) destinationBitmapInternals.mPixelData
-																.getMutableBytePtr();
+										UInt8*	destinationPixelData = *destinationBitmapInternals.mPixelData;
 										UInt32	destinationBytesPerRow = destinationBitmapInternals.mBytesPerRow;
 
 								// Loop on vertical
@@ -394,11 +373,11 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 								Internals& destinationBitmapInternals)
 							{ AssertFailUnimplemented(); }
 
-		CBitmap::Format	mFormat;
 		S2DSizeS32		mSize;
-		CData			mPixelData;
+		CBitmap::Format	mFormat;
 		UInt16			mBytesPerPixel;
 		UInt16			mBytesPerRow;
+		TBuffer<UInt8>	mPixelData;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -416,13 +395,11 @@ CBitmap::CBitmap(const S2DSizeS32& size, Format format, const OV<UInt16>& bytesP
 	AssertFailIf(size.mHeight < 1);
 
 	// Setup
-	mInternals =
-			new Internals(S2DSizeS32(std::max(1, size.mWidth), std::max(1, size.mHeight)), format,
-					CData::mEmpty, bytesPerRow);
+	mInternals = new Internals(S2DSizeS32(std::max(1, size.mWidth), std::max(1, size.mHeight)), format, bytesPerRow);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CBitmap::CBitmap(const S2DSizeS32& size, Format format, const CData& pixelData, UInt16 bytesPerRow)
+CBitmap::CBitmap(const S2DSizeS32& size, Format format, const TBuffer<UInt8>& pixelData, UInt16 bytesPerRow)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -430,9 +407,7 @@ CBitmap::CBitmap(const S2DSizeS32& size, Format format, const CData& pixelData, 
 	AssertFailIf(size.mHeight < 1);
 
 	// Setup
-	mInternals =
-			new Internals(S2DSizeS32(std::max(1, size.mWidth), std::max(1, size.mHeight)), format, pixelData,
-					OV<UInt16>(bytesPerRow));
+	mInternals = new Internals(size, format, pixelData, bytesPerRow);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -440,7 +415,7 @@ CBitmap::CBitmap(const CBitmap& other, Format format)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new Internals(other.mInternals->mSize, format);
+	mInternals = new Internals(other.mInternals->mSize, format, OV<UInt16>());
 
 	// Convert
 	switch (other.mInternals->mFormat) {
@@ -615,7 +590,7 @@ CBitmap::CBitmap(const CBitmap& other, RotationOperation rotationOperation)
 			break;
 	}
 
-	mInternals = new Internals(newSize, other.mInternals->mFormat);
+	mInternals = new Internals(newSize, other.mInternals->mFormat, OV<UInt16>());
 
 	// Rotate
 	// bytePtr = A * y + B * x + C
@@ -698,8 +673,8 @@ CBitmap::CBitmap(const CBitmap& other, RotationOperation rotationOperation)
 	}
 
 	// Loop on vertical
-	const	UInt8*	sourcePixelData = (const UInt8*) other.mInternals->mPixelData.getBytePtr();
-			UInt8*	destinationPixelData = (UInt8*) mInternals->mPixelData.getMutableBytePtr();
+	const	UInt8*	sourcePixelData = *other.mInternals->mPixelData;
+			UInt8*	destinationPixelData = *mInternals->mPixelData;
 	for (SInt32 y = 0; y < size.mHeight; y++) {
 		// Get source ptr
 		const	UInt8*	srcPtr = sourcePixelData + other.mInternals->mBytesPerRow * y;
@@ -739,7 +714,7 @@ const S2DSizeS32& CBitmap::getSize() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CData& CBitmap::getPixelData() const
+TBuffer<UInt8>& CBitmap::getPixelData() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mPixelData;
@@ -774,7 +749,7 @@ I<CBitmap::RowWriter> CBitmap::getRowWriter(SInt32 y) const
 	AssertFailIf(y >= mInternals->mSize.mHeight);
 
 	// Setup
-	void*	bytePtr = (UInt8*) mInternals->mPixelData.getBytePtr() + y * mInternals->mBytesPerRow;
+	void*	bytePtr = *mInternals->mPixelData + y * mInternals->mBytesPerRow;
 
 	// Check format
 	switch (mInternals->mFormat) {
@@ -802,8 +777,8 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 	// Update pixel data
 	CColor::RGBValues	rgbValues = color.getRGBValues();
 	void*				pixelDataPtr =
-								(UInt8*) mInternals->mPixelData.getMutableBytePtr() +
-										point.mY * mInternals->mBytesPerRow + point.mX * mInternals->mBytesPerPixel;
+								*mInternals->mPixelData + point.mY * mInternals->mBytesPerRow +
+										point.mX * mInternals->mBytesPerPixel;
 	switch (mInternals->mFormat) {
 		case kFormatRGBA4444: {
 			// RGBA4444

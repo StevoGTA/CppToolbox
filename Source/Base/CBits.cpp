@@ -79,12 +79,12 @@ CBits::CBits(UInt32 count, bool initialValue)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CBits::CBits(const CDictionary& info)
+CBits::CBits(const CDictionary& storageInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
-			new Internals(info.getUInt32(CString(OSSTR("used"))),
-					CData::fromBase64String(info.getString(CString(OSSTR("data")))));
+			new Internals(storageInfo.getUInt32(CString(OSSTR("used"))),
+					CData::fromBase64String(storageInfo.getString(CString(OSSTR("data")))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -131,17 +131,16 @@ CBits& CBits::set(UInt32 index, bool value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CBits::getInfo() const
+CDictionary CBits::getStorageInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CDictionary	info;
+	// Compose Storage info
+	CDictionary	storageInfo;
+	storageInfo.set(CString(OSSTR("data")),
+			CData(mInternals->mStorage, mInternals->mAvailable / 8, false).getBase64String());
+	storageInfo.set(CString(OSSTR("used")), mInternals->mUsed);
 
-	// Store
-	info.set(CString(OSSTR("data")), CData(mInternals->mStorage, mInternals->mAvailable / 8, false).getBase64String());
-	info.set(CString(OSSTR("used")), mInternals->mUsed);
-
-	return info;
+	return storageInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

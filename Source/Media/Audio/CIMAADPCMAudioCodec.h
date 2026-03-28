@@ -102,7 +102,7 @@ class CDVIIntelIMAADPCMAudioCodec {
 												const SAudio::ChannelMap& audioChannelMap);
 		static	SMedia::SegmentInfo		composeMediaSegmentInfo(const SAudio::Format& audioFormat, UInt64 byteCount,
 												UInt16 blockAlign);
-		static	I<CDecodeAudioCodec>	create(const SAudio::Format& audioFormat,
+		static	I<CDecodeAudioCodec>	createDecodeAudioCodec(const SAudio::Format& audioFormat,
 												const I<CRandomAccessDataSource>& randomAccessDataSource,
 												UInt64 startByteOffset, UInt64 byteCount, UInt16 blockAlign);
 

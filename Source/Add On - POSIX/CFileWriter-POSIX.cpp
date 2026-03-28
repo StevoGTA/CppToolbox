@@ -202,7 +202,7 @@ TVResult<CData> CFileWriter::read(CData::ByteCount byteCount) const
 	if (mInternals->mFILE != nil) {
 		// FILE
 		// Read
-		ssize_t	bytesRead = ::fread(data.getMutableBytePtr(), 1, (size_t) byteCount, mInternals->mFILE);
+		ssize_t	bytesRead = ::fread(*data.getMutableBuffer(byteCount), 1, (size_t) byteCount, mInternals->mFILE);
 		if (bytesRead != (ssize_t) byteCount) {
 			// Error
 			SError	error = SErrorFromPOSIXerror(errno);
@@ -212,7 +212,7 @@ TVResult<CData> CFileWriter::read(CData::ByteCount byteCount) const
 	} else {
 		// file
 		// Read
-		ssize_t bytesRead = ::read(mInternals->mFD, data.getMutableBytePtr(), (size_t) byteCount);
+		ssize_t bytesRead = ::read(mInternals->mFD, *data.getMutableBuffer(byteCount), (size_t) byteCount);
 		if (bytesRead == -1) {
 			// Error
 			SError	error = SErrorFromPOSIXerror(errno);

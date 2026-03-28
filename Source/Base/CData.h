@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "TBuffer.h"
 #include "TRange.h"
 #include "TWrappers.h"
 
@@ -25,40 +26,49 @@ class CData {
 	// Methods
 	public:
 										// Lifecycle methods
-										CData(ByteCount initialByteCount = 0);
-										CData(const CData& other);
+										CData(ByteCount preallocatedByteCount = 1024);
+										CData(ByteCount byteCount, UInt8 fillValue);
 										CData(const void* buffer, ByteCount bufferByteCount,
 												bool copySourceData = true);
+										CData(const CData& other);
 										~CData();
 
 										// Instance methods
 						ByteCount		getByteCount() const;
-						void			setByteCount(ByteCount byteCount);
-						void			increaseByteCountBy(ByteCount byteCount);
 						bool			isEmpty() const
 											{ return getByteCount() == 0; }
 
 				const	void*			getBytePtr() const;
-						void*			getMutableBytePtr();
 						void			copyBytes(void* destinationBuffer, ByteIndex startByteIndex,
 												ByteCount byteCount) const;
-						void			appendBytes(const void* buffer, ByteCount bufferByteCount);
-						void			replaceBytes(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer,
-												ByteCount bufferByteCount);
 
 						CString			getBase64String(bool prettyPrint = false) const;
 						CString			getHexString(bool uppercase = false) const;
 
-						CData			subData(ByteIndex byteIndex, const OV<ByteCount>& byteCount = OV<ByteCount>(),
-												bool copySourceData = true) const;
-						CData			subData(ByteIndex byteIndex, ByteCount byteCount, bool copySourceData = true)
-												const
-											{ return subData(byteIndex, OV<ByteCount>(byteCount), copySourceData); }
-						CData			subData(const OV<ByteCount>& byteCount = OV<ByteCount>(),
-												bool copySourceData = true) const
-											{ return subData(0, byteCount, copySourceData); }
+						CData			subData(ByteIndex byteIndex, ByteCount byteCount) const;
+						CData			subData(ByteIndex byteIndex) const;
 						OV<SRange64>	findSubData(const CData& subData, ByteIndex startIndex = 0,
 												const OV<ByteCount>& byteCount = OV<ByteCount>()) const;
+
+						TBuffer<UInt8>	getMutableBuffer(ByteIndex byteIndex, ByteCount byteCount);
+						TBuffer<UInt8>	getMutableBuffer(ByteCount byteCount);
+						CData&			append(const void* buffer, ByteCount bufferByteCount);
+						CData&			append(const CData& data)
+											{ return append(data.getBytePtr(), data.getByteCount()); }
+						CData&			append(SInt16 value)
+											{ return append(&value, sizeof(SInt16)); }
+						CData&			append(UInt16 value)
+											{ return append(&value, sizeof(UInt16)); }
+						CData&			append(UInt32 value)
+											{ return append(&value, sizeof(UInt32)); }
+						CData&			replace(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer,
+												ByteCount bufferByteCount);
+						CData&			replace(ByteIndex startByteIndex, const CData& data)
+											{ return replace(startByteIndex, data.getByteCount(),
+													data.getBytePtr(), data.getByteCount()); }
+						CData&			replace(ByteIndex startByteIndex, UInt32 value)
+											{ return replace(startByteIndex, sizeof(UInt32), &value,
+													sizeof(UInt32)); }
 
 						CData&			operator=(const CData& other);
 						bool			operator==(const CData& other) const;
@@ -66,7 +76,7 @@ class CData {
 											{ return !operator==(other); }
 						CData			operator+(const CData& other) const;
 						CData&			operator+=(const CData& other)
-											{ appendBytes(other.getBytePtr(), other.getByteCount()); return *this; }
+											{ return append(other.getBytePtr(), other.getByteCount()); }
 
 										// Class methods
 		static			CData			fromBase64String(const CString& base64String);

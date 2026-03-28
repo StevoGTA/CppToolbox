@@ -566,6 +566,7 @@ template <typename T> class TDictionary : public CDictionary {
 
 										return opaque.hasValue() ? *((T*) *opaque) : defaultValue;
 									}
+
 				Iterator		getIterator() const
 									{ return Iterator(getIteratorInfo()); }
 				ValueIterator	getValueIterator() const
@@ -632,6 +633,21 @@ template <typename T> class TNDictionary : public TMDictionary<T> {
 						TNDictionary(const TDictionary<T>& other) : TMDictionary<T>(other) {}
 
 						// Instance methods
+		TNSet<T>		getValues() const
+							{
+								// Setup
+								TNSet<T>	values;
+
+								// Iterate values
+								for (typename TDictionary<T>::ValueIterator iterator =
+												TDictionary<T>::getValueIterator();
+										iterator; iterator++)
+									// Add value
+									values += *iterator;
+
+								return values;
+							}
+
 		void			set(const CString& key, const T& item)
 							{ CDictionary::set(key, new T(item)); }
 		void			set(const CString& key, const OV<T>& item)
@@ -660,21 +676,6 @@ template <typename T> class TNDictionary : public TMDictionary<T> {
 								}
 
 								return dictionary;
-							}
-
-		TNSet<T>		getValues() const
-							{
-								// Setup
-								TNSet<T>	values;
-
-								// Iterate values
-								for (typename TDictionary<T>::ValueIterator iterator =
-												TDictionary<T>::getValueIterator();
-										iterator; iterator++)
-									// Add value
-									values += *iterator;
-
-								return values;
 							}
 
 	private:

@@ -17,11 +17,11 @@ STimecode::FrameRate	STimecode::FrameRate::mDefault(kKindNonDropFrame, 24);
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-STimecode::FrameRate::FrameRate(const CDictionary& info) :
-		mKind((Kind) info.getUInt16(CString(OSSTR("kind")), kKindNonDropFrame)),
+STimecode::FrameRate::FrameRate(const CDictionary& storageInfo) :
+		mKind((Kind) storageInfo.getUInt16(CString(OSSTR("kind")), kKindNonDropFrame)),
 		mNonDropFrameBase(
 				(mKind == kKindNonDropFrame) ?
-						OV<UInt32>(info.getUInt32(CString(OSSTR("nonDropFrameBase")), mDefault.getBase())) :
+						OV<UInt32>(storageInfo.getUInt32(CString(OSSTR("nonDropFrameBase")), mDefault.getBase())) :
 						OV<UInt32>())
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -30,16 +30,15 @@ STimecode::FrameRate::FrameRate(const CDictionary& info) :
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary STimecode::FrameRate::getInfo() const
+CDictionary STimecode::FrameRate::getStorageInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CDictionary	info;
+	// Compose Storage info
+	CDictionary	storageInfo;
+	storageInfo.set(CString(OSSTR("kind")), mKind);
+	storageInfo.set(CString(OSSTR("base")), mNonDropFrameBase);
 
-	info.set(CString(OSSTR("kind")), mKind);
-	info.set(CString(OSSTR("base")), mNonDropFrameBase);
-
-	return info;
+	return storageInfo;
 }
 
 // MARK: Class methods
@@ -167,9 +166,9 @@ STimecode::STimecode(UniversalTimeInterval timeInterval, const FrameRate& frameR
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-STimecode::STimecode(const CDictionary& info) :
-		mFrameIndex(info.getSInt32(CString(OSSTR("frameIndex")))),
-		mFrameRate(info.getDictionary(CString(OSSTR("frameRate"))))
+STimecode::STimecode(const CDictionary& storageInfo) :
+		mFrameIndex(storageInfo.getSInt32(CString(OSSTR("frameIndex")))),
+		mFrameRate(storageInfo.getDictionary(CString(OSSTR("frameRate"))))
 //----------------------------------------------------------------------------------------------------------------------
 {
 }
@@ -240,15 +239,15 @@ CString STimecode::getDisplayString() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary STimecode::getInfo() const
+CDictionary STimecode::getStorageInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CDictionary	info;
-	info.set(CString(OSSTR("frameIndex")), mFrameIndex);
-	info.set(CString(OSSTR("frameRate")), mFrameRate.getInfo());
+	// Compose Storage info
+	CDictionary	storageInfo;
+	storageInfo.set(CString(OSSTR("frameIndex")), mFrameIndex);
+	storageInfo.set(CString(OSSTR("frameRate")), mFrameRate.getStorageInfo());
 
-	return info;
+	return storageInfo;
 }
 
 // MARK: Class methods

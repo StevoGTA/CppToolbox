@@ -149,15 +149,16 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 
 	// Get next packet
 	UInt32	currentFrameIndex = mInternals->mCurrentFrameIndex++;
-	TVResult<CMediaPacketSource::DataInfo>	dataInfo = mInternals->mMediaPacketSource->readNext();
-	ReturnValueIfResultError(dataInfo, TIResult<CVideoFrame>(dataInfo.getError()));
+	TVResult<SMedia::PacketData>	mediaPacketData = mInternals->mMediaPacketSource->readNext();
+	ReturnValueIfResultError(mediaPacketData, TIResult<CVideoFrame>(mediaPacketData.getError()));
 
 	// Compose sample timing info
-	TVResult<CMSampleTimingInfo>	sampleTimingInfo = composeSampleTimingInfo(*dataInfo, mInternals->mTimeScale);
+	TVResult<CMSampleTimingInfo>	sampleTimingInfo =
+											composeSampleTimingInfo(*mediaPacketData, mInternals->mTimeScale);
 	ReturnValueIfResultError(sampleTimingInfo, TIResult<CVideoFrame>(sampleTimingInfo.getError()));
 
 	// Setup sample buffer
-	const	CData&				data = dataInfo->getData();
+	const	CData&				data = mediaPacketData->getData();
 			CMBlockBufferRef	blockBufferRef;
 	status =
 			::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) data.getBytePtr(), data.getByteCount(),

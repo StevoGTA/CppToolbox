@@ -165,8 +165,8 @@ class CString : public CHashable {
 
 	// Types
 	public:
-		typedef	UInt32	CharIndex;
-		typedef	UInt32	Length;
+		typedef	UInt64	CharIndex;
+		typedef	UInt64	Length;
 
 	// Structs
 	public:
@@ -214,7 +214,7 @@ class CString : public CHashable {
 											CString(const CString& other);
 											CString(OSStringVar(initialString));
 											CString(const char chars[], CString::Length maxLength, Encoding encoding);
-											CString(const void* ptr, UInt32 byteCount, Encoding encoding);
+											CString(const void* ptr, UInt64 byteCount, Encoding encoding);
 											CString(const TBuffer<UTF32Char>& buffer);
 
 											CString(Float32 value, UInt32 fieldSize = 0,

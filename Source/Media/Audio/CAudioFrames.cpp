@@ -14,7 +14,15 @@ class CAudioFrames::Internals {
 		Internals(UInt32 segmentCount, UInt32 segmentByteCount, UInt32 allocatedFrameCount,
 				UInt32 bytesPerFramePerSegment) :
 			mSegmentCount(segmentCount), mSegmentByteCount(segmentByteCount), mAllocatedFrameCount(allocatedFrameCount),
-					mCurrentFrameCount(0), mBytesPerFramePerSegment(bytesPerFramePerSegment)
+					mCurrentFrameCount(0), mBytesPerFramePerSegment(bytesPerFramePerSegment),
+					mOwnsBuffer(true), mBuffer(::calloc(1, (size_t) segmentCount * segmentByteCount)),
+					mBufferByteCount(segmentCount * segmentByteCount)
+			{}
+		Internals(UInt32 segmentCount, UInt32 segmentByteCount, UInt32 allocatedFrameCount,
+				UInt32 bytesPerFramePerSegment, void* buffer) :
+			mSegmentCount(segmentCount), mSegmentByteCount(segmentByteCount), mAllocatedFrameCount(allocatedFrameCount),
+					mCurrentFrameCount(0), mBytesPerFramePerSegment(bytesPerFramePerSegment),
+					mOwnsBuffer(false), mBuffer(buffer), mBufferByteCount(segmentCount * segmentByteCount)
 			{}
 
 		UInt32	mSegmentCount;
@@ -22,6 +30,10 @@ class CAudioFrames::Internals {
 		UInt32	mAllocatedFrameCount;
 		UInt32	mCurrentFrameCount;
 		UInt32	mBytesPerFramePerSegment;
+
+		bool	mOwnsBuffer;
+		void*	mBuffer;
+		UInt32	mBufferByteCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -31,16 +43,14 @@ class CAudioFrames::Internals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::CAudioFrames(UInt32 bytesPerFrame, UInt32 frameCount) :
-		CData((CData::ByteCount) (bytesPerFrame * frameCount))
+CAudioFrames::CAudioFrames(UInt32 bytesPerFrame, UInt32 frameCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new Internals(1, bytesPerFrame * frameCount, frameCount, bytesPerFrame);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment) :
-		CData((CData::ByteCount) (segmentCount * bytesPerFramePerSegment * frameCountPerSegment))
+CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, UInt32 frameCountPerSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =
@@ -50,20 +60,20 @@ CAudioFrames::CAudioFrames(UInt32 segmentCount, UInt32 bytesPerFramePerSegment, 
 
 //----------------------------------------------------------------------------------------------------------------------
 CAudioFrames::CAudioFrames(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount, UInt32 frameCount,
-		UInt32 bytesPerFramePerSegment) : CData(buffer, segmentCount * segmentByteCount, false)
+		UInt32 bytesPerFramePerSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(segmentCount, segmentByteCount, frameCount, bytesPerFramePerSegment);
+	mInternals = new Internals(segmentCount, segmentByteCount, frameCount, bytesPerFramePerSegment, buffer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::CAudioFrames(const Info& info, UInt32 segmentIndex, bool isRead) :
-		CData(info.getSegments()[segmentIndex], info.getByteCount(), false)
+CAudioFrames::CAudioFrames(const Info& info, UInt32 segmentIndex, bool isRead)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	mInternals =
-			new Internals(1, info.getByteCount(), info.getFrameCount(), info.getByteCount() / info.getFrameCount());
+			new Internals(1, info.getByteCount(), info.getFrameCount(), info.getByteCount() / info.getFrameCount(),
+					info.getSegments()[segmentIndex]);
 
 	// Check if read
 	if (isRead)
@@ -102,7 +112,7 @@ CAudioFrames::Info CAudioFrames::getReadInfo() const
 	TNumberArray<void*>	segments;
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
 		// Update
-		segments += (void*) ((UInt8*) getBytePtr() + mInternals->mSegmentByteCount * i);
+		segments += (void*) ((UInt8*) mInternals->mBuffer + mInternals->mSegmentByteCount * i);
 
 	return Info(mInternals->mCurrentFrameCount, mInternals->mSegmentByteCount, segments);
 }
@@ -116,7 +126,7 @@ CAudioFrames::Info CAudioFrames::getWriteInfo()
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
 		// Update
 		segments +=
-				(void*) ((UInt8*) getMutableBytePtr() +
+				(void*) ((UInt8*) mInternals->mBuffer +
 						mInternals->mSegmentByteCount * i +
 						mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment);
 
@@ -148,12 +158,12 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& s
 	// Check what to do
 	if ((mInternals->mSegmentCount == 1) && (sampleBuffersCount == 1))
 		// Interleaved and Interleaved coming in
-		::memcpy((UInt8*) getMutableBytePtr() + mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment,
+		::memcpy((UInt8*) mInternals->mBuffer + mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment,
 				sampleBufferPtrs[0], frameCount * mInternals->mBytesPerFramePerSegment);
 	else if (mInternals->mSegmentCount == 1) {
 		// Interleaved and Non-interleaved coming in
 		UInt8*	destinationStartPtr =
-						(UInt8*) getMutableBytePtr() +
+						(UInt8*) mInternals->mBuffer +
 								mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment;
 		for (UInt32 sampleBufferIndex = 0; sampleBufferIndex < sampleBuffersCount; sampleBufferIndex++) {
 			// Check bytes per sample
@@ -221,7 +231,7 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& s
 		for (UInt32 sampleBufferIndex = 0; sampleBufferIndex < sampleBuffersCount; sampleBufferIndex++)
 			// Copy samples
 			::memcpy(
-					(UInt8*) getMutableBytePtr() + mInternals->mSegmentByteCount * sampleBufferIndex +
+					(UInt8*) mInternals->mBuffer + mInternals->mSegmentByteCount * sampleBufferIndex +
 							mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment,
 					sampleBufferPtrs[sampleBufferIndex],
 					frameCount * mInternals->mBytesPerFramePerSegment);
@@ -240,7 +250,7 @@ UInt32 CAudioFrames::getAsRead(AudioBufferList& audioBufferList) const
 	AssertFailIf(audioBufferList.mNumberBuffers != mInternals->mSegmentCount);
 
 	// Setup
-	const	UInt8*	buffer = (const UInt8*) getBytePtr();
+	const	UInt8*	buffer = (const UInt8*) mInternals->mBuffer;
 
 	// Update AudioBufferList
 	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++) {
@@ -261,7 +271,7 @@ UInt32 CAudioFrames::getAsWrite(AudioBufferList& audioBufferList)
 	AssertFailIf(audioBufferList.mNumberBuffers != mInternals->mSegmentCount);
 
 	// Setup
-	UInt8*	buffer = (UInt8*) getMutableBytePtr();
+	UInt8*	buffer = (UInt8*) mInternals->mBuffer;
 	UInt32	frameCount = mInternals->mAllocatedFrameCount - mInternals->mCurrentFrameCount;
 
 	// Update AudioBufferList
@@ -297,13 +307,13 @@ void CAudioFrames::toggleEndianness(UInt8 bits)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CData::ByteCount	byteCount = getByteCount();
+	UInt32	byteCount = mInternals->mBufferByteCount;
 
 	// Check bits
 	switch (bits) {
 		case 16: {
 			// 16 bits
-			UInt16*	buffer = (UInt16*) getMutableBytePtr();
+			UInt16*	buffer = (UInt16*) mInternals->mBuffer;
 			for (UInt32 i = 0; i < byteCount / sizeof(UInt16); i++, buffer++)
 				// Swap
 				*buffer = Endian16_Swap(*buffer);
@@ -311,7 +321,7 @@ void CAudioFrames::toggleEndianness(UInt8 bits)
 
 		case 24: {
 			// 24 bits
-			UInt8*	buffer = (UInt8*) getMutableBytePtr();
+			UInt8*	buffer = (UInt8*) mInternals->mBuffer;
 			for (UInt32 i = 0; i < byteCount / 3; i++, buffer += 3) {
 				// Swap 24 bits
 				UInt8	temp = *buffer;
@@ -322,7 +332,7 @@ void CAudioFrames::toggleEndianness(UInt8 bits)
 
 		case 32: {
 			// 32 bits
-			UInt32*	buffer = (UInt32*) getMutableBytePtr();
+			UInt32*	buffer = (UInt32*) mInternals->mBuffer;
 			for (UInt32 i = 0; i < byteCount / sizeof(UInt32); i++, buffer++)
 				// Swap
 				*buffer = Endian32_Swap(*buffer);
@@ -339,8 +349,8 @@ void CAudioFrames::toggle8BitSignedUnsigned()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt8*				buffer = (UInt8*) getMutableBytePtr();
-	CData::ByteCount	byteCount = getByteCount();
+	UInt8*	buffer = (UInt8*) mInternals->mBuffer;
+	UInt32	byteCount = mInternals->mBufferByteCount;
 
 	// Do 8 byte chunks first
 	while (byteCount >= 8) {

@@ -58,7 +58,7 @@ CString::CString(const OSStringVar(initialString)) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding)
+CString::CString(const void* ptr, UInt64 byteCount, Encoding encoding)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -499,14 +499,14 @@ TBuffer<char> CString::getUTF8Chars() const
 	// Check length
 	if (length > 0) {
 		// Setup
-		TBuffer<char>	buffer((UInt32) length * 4);
+		TBuffer<char>	buffer((UInt64) (length * 4));
 
 		// Convert
 		CFIndex	count =
 						::CFStringGetBytes(mStringRef, CFRangeMake(0, length), kCFStringEncodingUTF8, 0, false,
 								(UInt8*) *buffer, length * 4, nil);
 
-		return TBuffer<char>(buffer, (UInt32) count);
+		return TBuffer<char>(buffer, (UInt64) count);
 	} else
 		// Empty
 		return TBuffer<char>(0);

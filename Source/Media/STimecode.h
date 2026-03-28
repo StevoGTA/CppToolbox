@@ -24,7 +24,7 @@ struct STimecode {
 			// Methods
 			public:
 													// Lifecycle methods
-													FrameRate(const CDictionary& info);
+													FrameRate(const CDictionary& storageInfo);
 													FrameRate(const FrameRate& other) :
 														mKind(other.mKind), mNonDropFrameBase(other.mNonDropFrameBase)
 														{}
@@ -59,7 +59,7 @@ struct STimecode {
 															}
 														}
 
-								CDictionary			getInfo() const;
+								CDictionary			getStorageInfo() const;
 
 								CString				getDisplayString() const;
 
@@ -141,7 +141,7 @@ struct STimecode {
 												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
 										STimecode(UniversalTimeInterval timeInterval,
 												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
-										STimecode(const CDictionary& info);
+										STimecode(const CDictionary& storageInfo);
 										STimecode(const STimecode& other) :
 											mFrameIndex(other.mFrameIndex), mFrameRate(other.mFrameRate)
 											{}
@@ -165,7 +165,7 @@ struct STimecode {
 						Float64			getSeconds() const
 											{ return (Float64) mFrameIndex / (Float64) mFrameRate.getFrameRate(); }
 
-						CDictionary		getInfo() const;
+						CDictionary		getStorageInfo() const;
 
 						bool			operator==(const STimecode& other) const
 											{ return (mFrameIndex == other.mFrameIndex) &&

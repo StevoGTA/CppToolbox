@@ -596,17 +596,17 @@ OV<SError> CMediaFoundationServices::load(IMFMediaBuffer* mediaBuffer, CMediaPac
 	ReturnErrorIfFailed(result, CString(OSSTR("Lock")));
 
 	// Read next media packet
-	CData								data(mediaBufferBytePtr, mediaBufferByteCount, false);
-	TVResult<TArray<SMedia::Packet> >	mediaPackets = mediaPacketSource.readNextInto(data, 1);
-	if (mediaPackets.hasError()) {
+	TBuffer<UInt8>				buffer(mediaBufferBytePtr, mediaBufferByteCount);
+	TVResult<SMedia::Packet>	mediaPacket = mediaPacketSource.readNextInto(buffer);
+	if (mediaPacket.hasError()) {
 		// Unlock
 		mediaBuffer->Unlock();
 
-		return OV<SError>(mediaPackets.getError());
+		return OV<SError>(mediaPacket.getError());
 	}
 
 	// Update current length
-	result = mediaBuffer->SetCurrentLength((DWORD) (*mediaPackets)[0].getByteCount());
+	result = mediaBuffer->SetCurrentLength((DWORD) mediaPacket->getByteCount());
 	if (FAILED(result)) {
 		// Unlock
 		mediaBuffer->Unlock();

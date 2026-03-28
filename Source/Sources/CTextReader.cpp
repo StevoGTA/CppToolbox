@@ -79,7 +79,7 @@ TVResult<CString> CTextReader::readStringToEOL()
 		// Read bytes
 		TBuffer<char>	buffer((UInt32) bytesRead + 1);
 		OV<SError>		error =
-								mInternals->mRandomAccessDataSource->readData(mInternals->mDataSourceOffset, *buffer,
+								mInternals->mRandomAccessDataSource->read(mInternals->mDataSourceOffset, *buffer,
 										bytesRead);
 		ReturnValueIfError(error, TVResult<CString>(*error));
 

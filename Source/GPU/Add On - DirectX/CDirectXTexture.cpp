@@ -49,7 +49,7 @@ class CDirectXTexture::Internals : public TReferenceCountableAutoDelete<Internal
 
 				// Setup subresource data
 				D3D11_SUBRESOURCE_DATA	subresourceData = {0};
-				subresourceData.pSysMem = bitmap.getPixelData().getBytePtr();
+				subresourceData.pSysMem = *bitmap.getPixelData();
 				subresourceData.SysMemPitch = bitmap.getBytesPerRow();
 				subresourceData.SysMemSlicePitch = 0;
 

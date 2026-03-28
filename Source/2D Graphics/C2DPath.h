@@ -101,8 +101,8 @@ template <typename T> class T2DPath : public C2DPath {
 											{
 												// Prepare data
 												CData	data;
-												data.appendBytes((const UInt8*) &controlPoint, sizeof(controlPoint));
-												data.appendBytes((const UInt8*) &point, sizeof(point));
+												data.append((const UInt8*) &controlPoint, sizeof(controlPoint));
+												data.append((const UInt8*) &point, sizeof(point));
 
 												// Add
 												C2DPath::addQuadCurveTo(data);
@@ -117,9 +117,9 @@ template <typename T> class T2DPath : public C2DPath {
 											{
 												// Prepare data
 												CData	data;
-												data.appendBytes((const UInt8*) &controlPoint1, sizeof(controlPoint1));
-												data.appendBytes((const UInt8*) &controlPoint2, sizeof(controlPoint2));
-												data.appendBytes((const UInt8*) &point, sizeof(point));
+												data.append((const UInt8*) &controlPoint1, sizeof(controlPoint1));
+												data.append((const UInt8*) &controlPoint2, sizeof(controlPoint2));
+												data.append((const UInt8*) &point, sizeof(point));
 
 												// Add
 												C2DPath::addCubicCurveTo(data);
@@ -134,11 +134,11 @@ template <typename T> class T2DPath : public C2DPath {
 											{
 												// Prepare data
 												CData	data;
-												data.appendBytes((const UInt8*) &radiusX, sizeof(radiusX));
-												data.appendBytes((const UInt8*) &radiusY, sizeof(radiusY));
-												data.appendBytes((const UInt8*) &rotationAngleRadians,
+												data.append((const UInt8*) &radiusX, sizeof(radiusX));
+												data.append((const UInt8*) &radiusY, sizeof(radiusY));
+												data.append((const UInt8*) &rotationAngleRadians,
 														sizeof(rotationAngleRadians));
-												data.appendBytes((const UInt8*) &point, sizeof(point));
+												data.append((const UInt8*) &point, sizeof(point));
 
 												// Add
 												if (!useLargerArc && !isClockwise)

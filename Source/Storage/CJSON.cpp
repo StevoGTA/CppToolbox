@@ -92,21 +92,21 @@ OV<SError> sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Start
-	data.appendBytes("[", 1);
+	data.append("[", 1);
 
 	// Iterate array
 	for (TArray<CDictionary>::Iterator iterator = array.getIterator(); iterator; iterator++) {
 		// Check if first
 		if (!iterator.isFirst())
 			// Add comma
-			data.appendBytes(",", 1);
+			data.append(",", 1);
 
 		// Add value
 		sAddDictionary(data, *iterator);
 	}
 
 	// End
-	data.appendBytes("]", 1);
+	data.append("]", 1);
 
 	return OV<SError>();
 }
@@ -116,21 +116,21 @@ OV<SError> sAddArrayOfStrings(CData& data, const TArray<CString>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Start
-	data.appendBytes("[", 1);
+	data.append("[", 1);
 
 	// Iterate array
 	for (TArray<CString>::Iterator iterator = array.getIterator(); iterator; iterator++) {
 		// Check if first
 		if (!iterator.isFirst())
 			// Add comma
-			data.appendBytes(",", 1);
+			data.append(",", 1);
 
 		// Add value
 		sAddString(data, *iterator);
 	}
 
 	// End
-	data.appendBytes("]", 1);
+	data.append("]", 1);
 
 	return OV<SError>();
 }
@@ -140,27 +140,27 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Start
-	data.appendBytes("{", 1);
+	data.append("{", 1);
 
 	// Iterate dictionary
 	for (CDictionary::Iterator iterator = dictionary.getIterator(); iterator; iterator++) {
 		// Check if first
 		if (!iterator.isFirst())
 			// Add comma
-			data.appendBytes(",", 1);
+			data.append(",", 1);
 
 		// Add key
 		sAddString(data, iterator.getKey());
 
 		// Add colon
-		data.appendBytes(":", 1);
+		data.append(":", 1);
 
 		// Add value
 		OV<SError>	error;
 		switch (iterator.getValue().getType()) {
 			case SValue::kTypeEmpty:
 				// Empty (null)
-				data.appendBytes("null", 4);
+				data.append("null", 4);
 				break;
 
 			case SValue::kTypeArrayOfDictionaries:
@@ -179,10 +179,10 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 				// Add bool
 				if (iterator.getValue().getBool())
 					// True
-					data.appendBytes("true", 4);
+					data.append("true", 4);
 				else
 					// False
-					data.appendBytes("false", 5);
+					data.append("false", 5);
 				break;
 
 			case SValue::kTypeDictionary:
@@ -254,7 +254,7 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 	}
 
 	// End
-	data.appendBytes("}", 1);
+	data.append("}", 1);
 
 	return OV<SError>();
 }
@@ -263,7 +263,7 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 void sAddString(CData& data, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	data.appendBytes("\"", 1);
+	data.append("\"", 1);
 	data +=
 			string
 					.replacingSubStrings(CString(OSSTR("\\")), CString(OSSTR("\\\\")))
@@ -275,7 +275,7 @@ void sAddString(CData& data, const CString& string)
 					.replacingSubStrings(CString(OSSTR("/")), CString(OSSTR("\\/")))
 					.replacingSubStrings(CString(OSSTR("\"")), CString(OSSTR("\\\"")))
 					.getUTF8Data();
-	data.appendBytes("\"", 1);
+	data.append("\"", 1);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

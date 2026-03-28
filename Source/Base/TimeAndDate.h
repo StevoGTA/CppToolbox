@@ -160,6 +160,7 @@ struct SGregorianDate {
 														{}
 													Components(UInt32 year, UInt8 month) : mYear(year), mMonth(month) {}
 													Components(UInt32 year) : mYear(year) {}
+													Components(const CDictionary& storageInfo);
 													Components(const Components& other) :
 														mYear(other.mYear), mMonth(other.mMonth), mDay(other.mDay),
 																mHour(other.mHour), mMinute(other.mMinute),
@@ -194,7 +195,7 @@ struct SGregorianDate {
 
 									CString			getString(DateStyle dateStyle, TimeStyle timeStyle) const;
 
-									CDictionary		getInfo() const;
+									CDictionary		getStorageInfo() const;
 
 									bool			operator==(const Components& other) const
 														{ return (mYear == other.mYear) && (mMonth == other.mMonth) &&
@@ -205,7 +206,6 @@ struct SGregorianDate {
 														{ return !(*this == other); }
 
 													// Class methods
-					static			OV<Components>	getFrom(const CDictionary& info);
 					static			OV<Components>	getFrom(const CString& string,
 															StringStyle stringStyle = kStringStyleRFC339Extended);
 

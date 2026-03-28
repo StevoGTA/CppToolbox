@@ -188,7 +188,7 @@ struct SMPEG4 {
 												iterator; iterator++) {
 											// Add packet group offset
 											UInt32	value = EndianU32_NtoB(*iterator);
-											data.appendBytes(&value, sizeof(UInt32));
+											data.append(&value, sizeof(UInt32));
 										}
 
 										return data;
@@ -508,7 +508,7 @@ struct SMPEG4 {
 													iterator; iterator++) {
 												// Add Packet Byte Count
 												UInt32	value = EndianU32_NtoB(*iterator);
-												data.appendBytes(&value, sizeof(UInt32));
+												data.append(&value, sizeof(UInt32));
 											}
 										}
 

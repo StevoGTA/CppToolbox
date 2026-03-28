@@ -76,7 +76,7 @@ class CBitReader::Internals : public TReferenceCountableAutoDelete<Internals> {
 								return OV<SError>(SError::mEndOfData);
 
 							// Read
-							OV<SError>	error = mRandomAccessDataSource->readData(mDataSourceOffset, buffer, byteCount);
+							OV<SError>	error = mRandomAccessDataSource->read(mDataSourceOffset, buffer, byteCount);
 							ReturnErrorIfError(error);
 
 							// Update
@@ -183,7 +183,7 @@ TVResult<CData> CBitReader::readData(CData::ByteCount byteCount) const
 {
 	// Read
 	CData		data(byteCount);
-	OV<SError>	error = mInternals->readData(data.getMutableBytePtr(), byteCount);
+	OV<SError>	error = mInternals->readData(*data.getMutableBuffer(byteCount), byteCount);
 	ReturnValueIfError(error, TVResult<CData>(*error));
 
 	return TVResult<CData>(data);

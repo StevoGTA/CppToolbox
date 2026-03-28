@@ -5,8 +5,6 @@
 #pragma once
 
 #include "CArray.h"
-#include "CData.h"
-#include "TWrappers.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	#include <CoreAudioTypes/CoreAudioTypes.h>
@@ -30,7 +28,7 @@
 			segments for each collection of samples.
 */
 
-class CAudioFrames : private CData {
+class CAudioFrames {
 	// Requirements
 	public:
 		struct Requirements {

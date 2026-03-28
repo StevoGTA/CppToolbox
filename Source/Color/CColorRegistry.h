@@ -52,7 +52,7 @@ class CColorSet {
 							// Lifecycle methods
 							CColorSet(const CString& name);	// Can modify
 							CColorSet(OSType id);			// Cannot modify
-							CColorSet(const CDictionary& info);
+							CColorSet(const CDictionary& storageInfo);
 							CColorSet(const CColorSet& other);
 							~CColorSet();
 
@@ -66,7 +66,7 @@ class CColorSet {
 				void		setColor(OSType groupID, OSType colorID, const CColor& color);
 				void		setColorsFrom(const CColorSet& other);
 
-				CDictionary	getInfo() const;
+				CDictionary	getStorageInfo() const;
 
 				bool		matchesColorsOf(const CColorSet& other) const;
 

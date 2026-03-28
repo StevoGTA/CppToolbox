@@ -70,6 +70,9 @@ struct SMedia {
 	// Packet Data
 	struct PacketData {
 						// Lifecycle methods
+						PacketData(UInt32 duration, const TBuffer<UInt8>& data) :
+							mDuration(duration), mData(*data, data.getByteCount())
+							{}
 						PacketData(UInt32 duration, const CData& data) : mDuration(duration), mData(data) {}
 						PacketData(const PacketData& other) : mDuration(other.mDuration), mData(other.mData) {}
 

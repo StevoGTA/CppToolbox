@@ -6,47 +6,48 @@
 
 #include "CDataSource.h"
 #include "SMedia.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaPacketSource
 
 class CMediaPacketSource {
-	// DataInfo
+	// MediaPacketsAndBuffer
 	public:
-		struct DataInfo {
-								// Methods
-								DataInfo(const CData& data, UInt32 duration) : mData(data), mDuration(duration) {}
-								DataInfo(const DataInfo& other) : mData(other.mData), mDuration(other.mDuration) {}
+		struct MediaPacketsAndBuffer : public TV2<TArray<SMedia::Packet>, TBuffer<UInt8> > {
+			// Methods
+			public:
+												// Lifecycle methods
+												MediaPacketsAndBuffer(const TArray<SMedia::Packet>& mediaPackets,
+														const TBuffer<UInt8>& buffer) :
+													TV2<TArray<SMedia::Packet>, TBuffer<UInt8>>(mediaPackets, buffer)
+													{}
 
-				const	CData&	getData() const
-									{ return mData; }
-						UInt32	getDuration() const
-									{ return mDuration; }
-
-			// Properties
-			private:
-				CData	mData;
-				UInt32	mDuration;
+												// Instance methods
+				const	TArray<SMedia::Packet>&	getMediaPackets() const
+													{ return getA(); }
+				const	TBuffer<UInt8>&			getBuffer() const
+													{ return getB(); }
 		};
 
 	// Methods
 	public:
-													// Lifecycle methods
-		virtual										~CMediaPacketSource() {}
+												// Lifecycle methods
+		virtual									~CMediaPacketSource() {}
 
-													// Instance methods
-		virtual	UInt32								seekToDuration(UInt32 duration) = 0;
-		virtual	void								seekToPacket(UInt32 packetIndex) = 0;
-				UInt32								seekToKeyframe(UInt32 initialFrameIndex,
-															const TNumberArray<UInt32>& keyframeIndexes);
+												// Instance methods
+		virtual	UInt32							seekToDuration(UInt32 duration) = 0;
+		virtual	void							seekToPacket(UInt32 packetIndex) = 0;
+				UInt32							seekToKeyframe(UInt32 initialFrameIndex,
+														const TNumberArray<UInt32>& keyframeIndexes);
 
-		virtual	TVResult<DataInfo>					readNext() = 0;
-		virtual	TVResult<TArray<SMedia::Packet> >	readNextInto(CData& data,
-															const OV<UInt32>& maxPacketCount = OV<UInt32>()) = 0;
+		virtual	TVResult<SMedia::PacketData>	readNext() = 0;
+		virtual	TVResult<MediaPacketsAndBuffer>	readNext(UInt64 maxByteCount) = 0;
+		virtual	TVResult<SMedia::Packet>		readNextInto(TBuffer<UInt8>& buffer) = 0;
 
 	protected:
-													// Lifecycle methods
-													CMediaPacketSource() {}
+												// Lifecycle methods
+												CMediaPacketSource() {}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -59,21 +60,21 @@ class CSeekableUniformMediaPacketSource : public CMediaPacketSource {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CSeekableUniformMediaPacketSource(
-														const I<CRandomAccessDataSource>& randomAccessDataSource,
-														UInt64 byteOffset, UInt64 byteCount, UInt32 bytesPerPacket,
-														UInt32 durationPerPacket);
-												~CSeekableUniformMediaPacketSource();
+										// Lifecycle methods
+										CSeekableUniformMediaPacketSource(
+												const I<CRandomAccessDataSource>& randomAccessDataSource,
+												UInt64 byteOffset, UInt64 byteCount, UInt32 bytesPerPacket,
+												UInt32 durationPerPacket);
+										~CSeekableUniformMediaPacketSource();
 
-												// CMediaPacketSource methods
-		UInt32									seekToDuration(UInt32 duration);
-		void									seekToPacket(UInt32 packetIndex)
-													{ AssertFailUnimplemented(); }
+										// CMediaPacketSource methods
+		UInt32							seekToDuration(UInt32 duration);
+		void							seekToPacket(UInt32 packetIndex)
+											{ AssertFailUnimplemented(); }
 
-		TVResult<CMediaPacketSource::DataInfo>	readNext();
-		TVResult<TArray<SMedia::Packet> >		readNextInto(CData& data,
-														const OV<UInt32>& maxPacketCount = OV<UInt32>());
+		TVResult<SMedia::PacketData>	readNext();
+		TVResult<MediaPacketsAndBuffer>	readNext(UInt64 maxByteCount);
+		TVResult<SMedia::Packet>		readNextInto(TBuffer<UInt8>& buffer);
 
 	// Properties
 	private:
@@ -90,19 +91,19 @@ class CSeekableVaryingMediaPacketSource : public CMediaPacketSource {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CSeekableVaryingMediaPacketSource(
-														const I<CRandomAccessDataSource>& randomAccessDataSource,
-														const TArray<SMedia::PacketAndLocation>& mediaPacketAndLocations);
-												~CSeekableVaryingMediaPacketSource();
+										// Lifecycle methods
+										CSeekableVaryingMediaPacketSource(
+												const I<CRandomAccessDataSource>& randomAccessDataSource,
+												const TArray<SMedia::PacketAndLocation>& mediaPacketAndLocations);
+										~CSeekableVaryingMediaPacketSource();
 
-												// CMediaPacketSource methods
-		UInt32									seekToDuration(UInt32 duration);
-		void									seekToPacket(UInt32 packetIndex);
+										// CMediaPacketSource methods
+		UInt32							seekToDuration(UInt32 duration);
+		void							seekToPacket(UInt32 packetIndex);
 
-		TVResult<CMediaPacketSource::DataInfo>	readNext();
-		TVResult<TArray<SMedia::Packet> >		readNextInto(CData& data,
-														const OV<UInt32>& maxPacketCount = OV<UInt32>());
+		TVResult<SMedia::PacketData>	readNext();
+		TVResult<MediaPacketsAndBuffer>	readNext(UInt64 maxByteCount);
+		TVResult<SMedia::Packet>		readNextInto(TBuffer<UInt8>& buffer);
 
 	// Properties
 	private:

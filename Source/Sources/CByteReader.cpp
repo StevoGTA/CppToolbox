@@ -147,7 +147,7 @@ OV<SError> CByteReader::readData(void* buffer, UInt64 byteCount) const
 
 	// Read
 	OV<SError>	error =
-						mInternals->mRandomAccessDataSource->readData(mInternals->mCurrentDataSourceOffset, buffer,
+						mInternals->mRandomAccessDataSource->read(mInternals->mCurrentDataSourceOffset, buffer,
 								byteCount);
 	ReturnErrorIfError(error);
 
@@ -161,12 +161,22 @@ OV<SError> CByteReader::readData(void* buffer, UInt64 byteCount) const
 TVResult<CData> CByteReader::readData(CData::ByteCount byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Read
-	CData		data(byteCount);
-	OV<SError>	error = readData(data.getMutableBytePtr(), byteCount);
-	ReturnValueIfError(error, TVResult<CData>(*error));
+	// Check if can perform read
+	if ((mInternals->mCurrentDataSourceOffset - mInternals->mInitialDataSourceOffset + byteCount) >
+			mInternals->mByteCount)
+		// Can't read that many bytes
+		return TVResult<CData>(SError::mEndOfData);
 
-	return TVResult<CData>(data);
+	// Read
+	TVResult<CData>	data =
+							mInternals->mRandomAccessDataSource->readData(mInternals->mCurrentDataSourceOffset,
+									byteCount);
+	ReturnResultIfResultError(data);
+
+	// Update
+	mInternals->mCurrentDataSourceOffset += byteCount;
+
+	return data;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

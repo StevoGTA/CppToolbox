@@ -36,9 +36,6 @@ CGImageRef CCoreGraphics::newImageRef(const CBitmap& bitmap)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	S2DSizeS32&	size = bitmap.getSize();
-	const	CData&		data = bitmap.getPixelData();
-
 	CGBitmapInfo	bitmapInfo;
 	switch (bitmap.getFormat()) {
 		case CBitmap::kFormatRGB888:	bitmapInfo = kCGImageAlphaNone;					break;
@@ -49,13 +46,13 @@ CGImageRef CCoreGraphics::newImageRef(const CBitmap& bitmap)
 
 	CGColorSpaceRef		colorSpaceRef = ::CGColorSpaceCreateDeviceRGB();
 	CGDataProviderRef	dataProviderRef =
-								::CGDataProviderCreateWithData(nil, data.getBytePtr(),
-										bitmap.getBytesPerRow() * size.mHeight, nil);
+								::CGDataProviderCreateWithData(nil, *bitmap.getPixelData(),
+										bitmap.getBytesPerRow() * bitmap.getSize().mHeight, nil);
 
 	CGImageRef	imageRef =
-						::CGImageCreate(size.mWidth, size.mHeight, 8, bitmap.getBytesPerPixel() * 8,
-								bitmap.getBytesPerRow(), colorSpaceRef, bitmapInfo, dataProviderRef, nil, 1,
-								kCGRenderingIntentDefault);
+						::CGImageCreate(bitmap.getSize().mWidth, bitmap.getSize().mHeight, 8,
+								bitmap.getBytesPerPixel() * 8, bitmap.getBytesPerRow(), colorSpaceRef, bitmapInfo,
+								dataProviderRef, nil, 1, kCGRenderingIntentDefault);
 	::CGDataProviderRelease(dataProviderRef);
 	::CGColorSpaceRelease(colorSpaceRef);
 

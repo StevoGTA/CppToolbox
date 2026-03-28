@@ -49,7 +49,7 @@ class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals
 				if (mUsedPixelsSize == mTotalPixelsSize)
 					// Width and height are powers of 2 so use all
 					glTexImage2D(mTextureTarget, 0, format, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, 0, format,
-							pixelFormat, bitmap.getPixelData().getBytePtr());
+							pixelFormat, *bitmap.getPixelData());
 				else {
 					// Width or height is not a power of 2 so expand texture space and use what we need
 					UInt8*	empty = (UInt8*) ::calloc(mTotalPixelsSize.mWidth * mTotalPixelsSize.mHeight, bytesPerPixel);
@@ -60,15 +60,12 @@ class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals
 					UInt16	textureBytesPerRow = mUsedPixelsSize.mWidth * bytesPerPixel;
 					if (textureBytesPerRow < bitmap.getBytesPerRow()) {
 						// Bitmap is not tighlty packed, so must make it so
-						CData&	pixelData = bitmap.getPixelData();
 						UInt8*	buffer = (UInt8*) ::malloc(textureBytesPerRow * mUsedPixelsSize.mHeight);
-						for (int y = 0; y < mUsedPixelsSize.mHeight; y++) {
-							// Setup
-							const	UInt8*	srcPtr =
-													(const UInt8*) pixelData.getBytePtr() + y * bitmap.getBytesPerRow();
-									UInt8*	dstPtr = buffer + y * textureBytesPerRow;
-							::memcpy(dstPtr, srcPtr, textureBytesPerRow);
-						}
+						for (int y = 0; y < mUsedPixelsSize.mHeight; y++)
+							// Copy
+							::memcpy(buffer + y * textureBytesPerRow,
+									(const UInt8*) *bitmap.getPixelData() + y * bitmap.getBytesPerRow(),
+									textureBytesPerRow);
 
 						// Load texture
 						glTexSubImage2D(mTextureTarget, 0, 0, 0, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight,
@@ -79,7 +76,7 @@ class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals
 					} else
 						// Bitmap is already tightly packed
 						glTexSubImage2D(mTextureTarget, 0, 0, 0, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight,
-								format, pixelFormat, bitmap.getPixelData().getBytePtr());
+								format, pixelFormat, *bitmap.getPixelData());
 				}
 
 				// Finish up the rest of the GL setup

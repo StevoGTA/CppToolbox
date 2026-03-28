@@ -37,8 +37,7 @@ class CCoreMediaDecodeVideoCodec : public CDecodeVideoCodec {
 													// Subclass methods
 		virtual	void								seek(UInt64 frameTime) {}
 		virtual	TVResult<CMFormatDescriptionRef>	composeFormatDescription() = 0;
-		virtual	TVResult<CMSampleTimingInfo>		composeSampleTimingInfo(
-															const CMediaPacketSource::DataInfo& dataInfo,
+		virtual	TVResult<CMSampleTimingInfo>		composeSampleTimingInfo(const SMedia::PacketData& mediaPacketData,
 															UInt32 timeScale) = 0;
 
 	private:

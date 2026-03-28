@@ -346,10 +346,10 @@ void CIMAADPCMDecoder::decodeUngrouped(const UInt8* packetPtr, UInt32 channelHea
 class CDVIIntelIMAADPCMDecodeAudioCodec : public CDecodeAudioCodec {
 	public:
 										// Lifecycle methods
-										CDVIIntelIMAADPCMDecodeAudioCodec(UInt32 framesPerPacket,
+										CDVIIntelIMAADPCMDecodeAudioCodec(UInt32 framesPerPacket, UInt64 bytesPerPacket,
 												const I<CMediaPacketSource>& mediaPacketSource) :
-											mFramesPerPacket(framesPerPacket), mMediaPacketSource(mediaPacketSource),
-													mDecodeFramesToIgnore(0)
+											mFramesPerPacket(framesPerPacket), mBytesPerPacket(bytesPerPacket),
+													mMediaPacketSource(mediaPacketSource), mDecodeFramesToIgnore(0)
 											{}
 
 										// CAudioCodec methods - Decoding
@@ -363,6 +363,7 @@ class CDVIIntelIMAADPCMDecodeAudioCodec : public CDecodeAudioCodec {
 
 	private:
 		UInt32							mFramesPerPacket;
+		UInt64							mBytesPerPacket;
 		I<CMediaPacketSource>			mMediaPacketSource;
 
 		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
@@ -413,22 +414,23 @@ OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 	CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
 	UInt32				remainingFrames = writeInfo.getFrameCount();
 	SInt16*				bufferPtr = (SInt16*) writeInfo.getSegments()[0];
+	TBuffer<UInt8>		packetBuffer(mBytesPerPacket);
 	UInt32				decodedFrameCount = 0;
 	while (remainingFrames >= mFramesPerPacket) {
 		// Get next packet
-		TVResult<CMediaPacketSource::DataInfo>	dataInfo = mMediaPacketSource->readNext();
-		if (dataInfo.hasError()) {
+		TVResult<SMedia::Packet>	mediaPacket = mMediaPacketSource->readNextInto(packetBuffer);
+		if (mediaPacket.hasError()) {
 			// Check situation
 			if (decodedFrameCount > 0)
 				// EOF, but have decoded frames
 				break;
 			else
 				// EOF, no decoded frames
-				return OV<SError>(dataInfo.getError());
+				return OV<SError>(mediaPacket.getError());
 		}
 
 		// Decode packet
-		const	UInt8*	packetPtr = (const UInt8*) dataInfo->getData().getBytePtr();
+		const	UInt8*	packetPtr = *packetBuffer;
 
 		// Setup IMA/ADPCM decoder
 		CIMAADPCMDecoder	imaADCPMDecoder(bufferPtr, channels);
@@ -493,7 +495,7 @@ SMedia::SegmentInfo CDVIIntelIMAADPCMAudioCodec::composeMediaSegmentInfo(const S
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CDecodeAudioCodec> CDVIIntelIMAADPCMAudioCodec::create(const SAudio::Format& audioFormat,
+I<CDecodeAudioCodec> CDVIIntelIMAADPCMAudioCodec::createDecodeAudioCodec(const SAudio::Format& audioFormat,
 		const I<CRandomAccessDataSource>& randomAccessDataSource, UInt64 startByteOffset, UInt64 byteCount,
 		UInt16 blockAlign)
 //----------------------------------------------------------------------------------------------------------------------
@@ -504,7 +506,8 @@ I<CDecodeAudioCodec> CDVIIntelIMAADPCMAudioCodec::create(const SAudio::Format& a
 							sizeof(CDVIIntelIMAADPCMAudioCodec::ChannelHeader)) * 2 + 1;
 
 	return I<CDecodeAudioCodec>(
-			new CDVIIntelIMAADPCMDecodeAudioCodec(framesPerPacket,
-					new CSeekableUniformMediaPacketSource(randomAccessDataSource, startByteOffset, byteCount,
-							blockAlign, framesPerPacket)));
+			new CDVIIntelIMAADPCMDecodeAudioCodec(framesPerPacket, blockAlign,
+					I<CMediaPacketSource>(
+							new CSeekableUniformMediaPacketSource(randomAccessDataSource, startByteOffset, byteCount,
+									blockAlign, framesPerPacket))));
 }

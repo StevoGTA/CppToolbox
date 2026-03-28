@@ -394,23 +394,27 @@ CColor::CColor(const CString& rgbHexString)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColor::CColor(const CDictionary& info)
+CColor::CColor(const CDictionary& storageInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get type
-	Internals::Type	type = (Internals::Type) info.getUInt8(CString(OSSTR("type")));
+	Internals::Type	type = (Internals::Type) storageInfo.getUInt8(CString(OSSTR("type")));
 	if (type == Internals::kTypeRGB)
 		// RGB
 		mInternals =
 				new Internals(
-						RGBValues(info.getFloat32(CString(OSSTR("r"))), info.getFloat32(CString(OSSTR("g"))),
-								info.getFloat32(CString(OSSTR("b"))), info.getFloat32(CString(OSSTR("a")))));
+						RGBValues(storageInfo.getFloat32(CString(OSSTR("r"))),
+								storageInfo.getFloat32(CString(OSSTR("g"))),
+								storageInfo.getFloat32(CString(OSSTR("b"))),
+								storageInfo.getFloat32(CString(OSSTR("a")))));
 	else
 		// HSV
 		mInternals =
 				new Internals(
-						HSVValues(info.getFloat32(CString(OSSTR("h"))), info.getFloat32(CString(OSSTR("s"))),
-								info.getFloat32(CString(OSSTR("v"))), info.getFloat32(CString(OSSTR("a")))));
+						HSVValues(storageInfo.getFloat32(CString(OSSTR("h"))),
+								storageInfo.getFloat32(CString(OSSTR("s"))),
+								storageInfo.getFloat32(CString(OSSTR("v"))),
+								storageInfo.getFloat32(CString(OSSTR("a")))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -465,29 +469,27 @@ CColor::HSVValues CColor::getHSVValues() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CColor::getInfo() const
+CDictionary CColor::getStorageInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CDictionary	info;
-
-	// Store
-	info.set(CString(OSSTR("type")), (UInt8) mInternals->mType);
+	// Compose Storage info
+	CDictionary	storageInfo;
+	storageInfo.set(CString(OSSTR("type")), (UInt8) mInternals->mType);
 	if (mInternals->mType == Internals::kTypeRGB) {
 		// RGB
-		info.set(CString(OSSTR("r")), mInternals->_.mRGBValues->getRed());
-		info.set(CString(OSSTR("g")), mInternals->_.mRGBValues->getGreen());
-		info.set(CString(OSSTR("b")), mInternals->_.mRGBValues->getBlue());
-		info.set(CString(OSSTR("a")), mInternals->_.mRGBValues->getAlpha());
+		storageInfo.set(CString(OSSTR("r")), mInternals->_.mRGBValues->getRed());
+		storageInfo.set(CString(OSSTR("g")), mInternals->_.mRGBValues->getGreen());
+		storageInfo.set(CString(OSSTR("b")), mInternals->_.mRGBValues->getBlue());
+		storageInfo.set(CString(OSSTR("a")), mInternals->_.mRGBValues->getAlpha());
 	} else {
 		// HSV
-		info.set(CString(OSSTR("h")), mInternals->_.mHSVValues->getHue());
-		info.set(CString(OSSTR("s")), mInternals->_.mHSVValues->getSaturation());
-		info.set(CString(OSSTR("v")), mInternals->_.mHSVValues->getValue());
-		info.set(CString(OSSTR("a")), mInternals->_.mHSVValues->getAlpha());
+		storageInfo.set(CString(OSSTR("h")), mInternals->_.mHSVValues->getHue());
+		storageInfo.set(CString(OSSTR("s")), mInternals->_.mHSVValues->getSaturation());
+		storageInfo.set(CString(OSSTR("v")), mInternals->_.mHSVValues->getValue());
+		storageInfo.set(CString(OSSTR("a")), mInternals->_.mHSVValues->getAlpha());
 	}
 
-	return info;
+	return storageInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

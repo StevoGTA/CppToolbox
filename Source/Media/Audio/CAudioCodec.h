@@ -9,6 +9,7 @@
 #include "CDataSource.h"
 #include "SAudio.h"
 #include "TimeAndDate.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioCodec
@@ -28,69 +29,109 @@ class CAudioCodec : public CCodec {
 // MARK: - CDecodeAudioCodec
 
 class CDecodeAudioCodec : public CAudioCodec {
-	// FrameSourceDecodeInfo
+	// FrameSource
 	public:
-		class FrameSourceDecodeInfo {
+		class FrameSource {
+			// FrameCountAndBuffer
+			public:
+				template <typename T> struct DecodeInfo : public TV2<UInt32, TBuffer<T> > {
+					// Methods
+					public:
+											// Lifecycle methods
+											DecodeInfo(UInt32 frameCount, const TBuffer<T>& buffer) :
+												TV2<UInt32, TBuffer<T> >(frameCount, buffer)
+												{}
+
+											// Instance methods
+								UInt32		getFrameCount() const
+												{ return TV2<UInt32, TBuffer<T> >::getA(); }
+						const	TBuffer<T>&	getBuffer() const
+												{ return TV2<UInt32, TBuffer<T> >::getB(); }
+				};
+
 			// Methods
 			public:
-										// Lifecycle methods
-										FrameSourceDecodeInfo(const I<CRandomAccessDataSource>& randomAccessDataSource,
-												UInt64 startByteOffset, UInt64 byteCount, UInt8 frameByteCount) :
-											mRandomAccessDataSource(randomAccessDataSource),
-													mStartByteOffset(startByteOffset), mByteCount(byteCount),
-													mFrameByteCount(frameByteCount),
-													mCurrentPosition(mStartByteOffset)
-											{}
+												// Lifecycle methods
+												FrameSource(const I<CRandomAccessDataSource>& randomAccessDataSource,
+														UInt64 startByteOffset, UInt64 byteCount,
+														UInt8 frameByteCount) :
+													mRandomAccessDataSource(randomAccessDataSource),
+															mStartByteOffset(startByteOffset), mByteCount(byteCount),
+															mFrameByteCount(frameByteCount),
+															mCurrentPosition(mStartByteOffset)
+													{}
 
-										// Instance methods
-					UInt8				getFrameByteCount() const
-											{ return mFrameByteCount; }
+												// Instance methods
+				UInt8							getFrameByteCount() const
+													{ return mFrameByteCount; }
 
-					void				seek(UInt64 frameIndex)
-											{ mCurrentPosition = mStartByteOffset + frameIndex * mFrameByteCount; }
-					TVResult<UInt32>	readInto(void* buffer, UInt32 frameCount)
-											{
-												// Check situation
-												UInt64	framesRemaining =
-																(mStartByteOffset + mByteCount - mCurrentPosition) /
-																		mFrameByteCount;
-												if (framesRemaining < frameCount)
-													// Limit frame count to what is left
-													frameCount = (UInt32) framesRemaining;
-												if (frameCount > 0) {
-													// Read
-													OV<SError>	error =
-																		mRandomAccessDataSource->readData(
-																				mCurrentPosition, buffer,
-																				(UInt64) frameCount *
-																						(UInt64) mFrameByteCount);
-													ReturnValueIfError(error, TVResult<UInt32>(*error));
+				void							seek(UInt64 frameIndex)
+													{ mCurrentPosition =
+															mStartByteOffset + frameIndex * mFrameByteCount; }
+				TVResult<UInt32>				readInto(CAudioFrames& audioFrames)
+													{
+														// Read
+														CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
 
-													// Success
-													mCurrentPosition += (UInt64) frameCount * (UInt64) mFrameByteCount;
+														// Check situation
+														UInt32	frameCount =
+																		std::min(writeInfo.getFrameCount(),
+																				(UInt32) (mStartByteOffset +
+																						mByteCount - mCurrentPosition) /
+																						mFrameByteCount);
+														if (frameCount > 0) {
+															// Read frames
+															OV<SError>	error =
+																				mRandomAccessDataSource->read(
+																						mCurrentPosition,
+																						(UInt8*) writeInfo
+																								.getSegments()[0],
+																						(UInt64) frameCount *
+																								mFrameByteCount);
+															ReturnValueIfError(error, TVResult<UInt32>(*error));
 
-													return TVResult<UInt32>(frameCount);
-												} else
-													// End of data
-													return TVResult<UInt32>(SError::mEndOfData);
-											}
-					TVResult<UInt32>	readInto(CAudioFrames& audioFrames)
-											{
-												// Read
-												CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
-												UInt8*				buffer = (UInt8*) writeInfo.getSegments()[0];
-												TVResult<UInt32>	frameCount =
-																			readInto(buffer, writeInfo.getFrameCount());
-												ReturnResultIfResultError(frameCount);
+															// Success
+															mCurrentPosition +=
+																	(UInt64) frameCount * (UInt64) mFrameByteCount;
 
-												// Complete write
-												audioFrames.completeWrite(*frameCount);
+															// Complete write
+															audioFrames.completeWrite(frameCount);
 
-												return frameCount;
-											}
-					TVResult<UInt32>	readInto(CData& data)
-											{ return readInto(data.getMutableBytePtr(),
-													(UInt32) data.getByteCount() / mFrameByteCount); }
+															return TVResult<UInt32>(frameCount);
+														} else
+															// End of data
+															return TVResult<UInt32>(SError::mEndOfData);
+													}
+				TVResult<DecodeInfo<UInt8> >	readUInt8Frames(UInt32 frameCount)
+													{
+														// Check situation
+														frameCount =
+																std::min(frameCount,
+																		(UInt32) (mStartByteOffset + mByteCount -
+																				mCurrentPosition) / mFrameByteCount);
+														if (frameCount > 0) {
+															// Read frames
+															TBuffer<UInt8>	buffer(frameCount * mFrameByteCount);
+
+															OV<SError>	error =
+																				mRandomAccessDataSource->read(
+																						mCurrentPosition,
+																						*buffer,
+																						(UInt64) frameCount *
+																								mFrameByteCount);
+															ReturnValueIfError(error,
+																	TVResult<DecodeInfo<UInt8> >(*error));
+
+															// Success
+															mCurrentPosition +=
+																	(UInt64) frameCount * (UInt64) mFrameByteCount;
+
+															return TVResult<DecodeInfo<UInt8> >(
+																	DecodeInfo<UInt8>(frameCount, buffer));
+														} else
+															// End of data
+															return TVResult<DecodeInfo<UInt8> >(SError::mEndOfData);
+													}
 
 			// Properties
 			private:

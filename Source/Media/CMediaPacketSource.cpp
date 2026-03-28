@@ -87,57 +87,52 @@ UInt32 CSeekableUniformMediaPacketSource::seekToDuration(UInt32 duration)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMediaPacketSource::DataInfo> CSeekableUniformMediaPacketSource::readNext()
+TVResult<SMedia::PacketData> CSeekableUniformMediaPacketSource::readNext()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can read next packet
 	if (mInternals->mNextPacketIndex < mInternals->mPacketCount) {
 		// Copy packet data
-		CData		data((CData::ByteCount) mInternals->mBytesPerPacket);
-		UInt64		byteOffset = mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
-		OV<SError>	error =
-							mInternals->mRandomAccessDataSource->readData(byteOffset, data.getMutableBytePtr(),
-									mInternals->mBytesPerPacket);
-		ReturnValueIfError(error, TVResult<CMediaPacketSource::DataInfo>(*error));
+		UInt64			byteOffset =
+								mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
+		TVResult<CData>	data = mInternals->mRandomAccessDataSource->readData(byteOffset, mInternals->mBytesPerPacket);
+		ReturnValueIfResultError(data, TVResult<SMedia::PacketData>(data.getError()));
 
 		// Update
 		mInternals->mNextPacketIndex++;
 
-		return TVResult<CMediaPacketSource::DataInfo>(
-				CMediaPacketSource::DataInfo(data, mInternals->mDurationPerPacket));
+		return TVResult<SMedia::PacketData>(SMedia::PacketData(mInternals->mDurationPerPacket, *data));
 	} else
 		// End of data
-		return TVResult<CMediaPacketSource::DataInfo>(SError::mEndOfData);
+		return TVResult<SMedia::PacketData>(SError::mEndOfData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<TArray<SMedia::Packet> > CSeekableUniformMediaPacketSource::readNextInto(CData& data,
-		const OV<UInt32>& maxPacketCount)
+TVResult<CMediaPacketSource::MediaPacketsAndBuffer> CSeekableUniformMediaPacketSource::readNext(UInt64 maxByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add packets
-	UInt32					dataByteCountRemaining = (UInt32) data.getByteCount();
-	UInt8*					packetDataPtr = (UInt8*) data.getMutableBytePtr();
-	UInt32					packetCount = maxPacketCount.hasValue() ? *maxPacketCount : ~0;
+	UInt64					byteCountRemaining = maxByteCount;
+	TBuffer<UInt8>			buffer(maxByteCount);
+	UInt8*					packetDataPtr = *buffer;
 	TNArray<SMedia::Packet>	mediaPackets;
-	while ((packetCount > 0) && (mInternals->mNextPacketIndex < mInternals->mPacketCount)) {
+	while (mInternals->mNextPacketIndex < mInternals->mPacketCount) {
 		// Check if have space
-		if (mInternals->mBytesPerPacket <= dataByteCountRemaining) {
+		if (mInternals->mBytesPerPacket <= byteCountRemaining) {
 			// Copy packet data
 			UInt64		byteOffset =
 								mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
 			OV<SError>	error =
-								mInternals->mRandomAccessDataSource->readData(byteOffset, packetDataPtr,
+								mInternals->mRandomAccessDataSource->read(byteOffset, packetDataPtr,
 											mInternals->mBytesPerPacket);
-			ReturnValueIfError(error, TVResult<TArray<SMedia::Packet> >(*error));
+			ReturnValueIfError(error, TVResult<MediaPacketsAndBuffer>(*error));
 
 			// Update
 			mInternals->mNextPacketIndex++;
 
 			// Update info
-			dataByteCountRemaining -= mInternals->mBytesPerPacket;
+			byteCountRemaining -= mInternals->mBytesPerPacket;
 			packetDataPtr += mInternals->mBytesPerPacket;
-			packetCount--;
 			mediaPackets += SMedia::Packet(mInternals->mDurationPerPacket, mInternals->mBytesPerPacket);
 		} else
 			// No more space
@@ -145,7 +140,29 @@ TVResult<TArray<SMedia::Packet> > CSeekableUniformMediaPacketSource::readNextInt
 	}
 
 	return !mediaPackets.isEmpty() ?
-			TVResult<TArray<SMedia::Packet> >(mediaPackets) : TVResult<TArray<SMedia::Packet> >(SError::mEndOfData);
+			TVResult<MediaPacketsAndBuffer>(
+					MediaPacketsAndBuffer(mediaPackets, TBuffer<UInt8>(buffer, maxByteCount - byteCountRemaining))) :
+			TVResult<MediaPacketsAndBuffer>(SError::mEndOfData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<SMedia::Packet> CSeekableUniformMediaPacketSource::readNextInto(TBuffer<UInt8>& buffer)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if can read next packet
+	if (mInternals->mNextPacketIndex < mInternals->mPacketCount) {
+		// Copy packet data
+		UInt64		byteOffset = mInternals->mByteOffset + mInternals->mNextPacketIndex * mInternals->mBytesPerPacket;
+		OV<SError>	error = mInternals->mRandomAccessDataSource->read(byteOffset, *buffer, buffer.getByteCount());
+		ReturnValueIfError(error, TVResult<SMedia::Packet>(*error));
+
+		// Update
+		mInternals->mNextPacketIndex++;
+
+		return TVResult<SMedia::Packet>(SMedia::Packet(mInternals->mDurationPerPacket, mInternals->mBytesPerPacket));
+	} else
+		// End of data
+		return TVResult<SMedia::Packet>(SError::mEndOfData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -160,16 +177,17 @@ class CSeekableVaryingMediaPacketSource::Internals {
 					mNextPacketIndex(0)
 			{}
 
-		I<CRandomAccessDataSource>		mRandomAccessDataSource;
+		I<CRandomAccessDataSource>			mRandomAccessDataSource;
 		TArray<SMedia::PacketAndLocation>	mMediaPacketAndLocations;
-		UInt32							mNextPacketIndex;
+		UInt32								mNextPacketIndex;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSeekableVaryingMediaPacketSource
 
-// Lifecycle methods
+// MARK: Lifecycle methods
+
 //----------------------------------------------------------------------------------------------------------------------
 CSeekableVaryingMediaPacketSource::CSeekableVaryingMediaPacketSource(
 		const I<CRandomAccessDataSource>& randomAccessDataSource,
@@ -218,7 +236,7 @@ void CSeekableVaryingMediaPacketSource::seekToPacket(UInt32 packetIndex)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::readNext()
+TVResult<SMedia::PacketData> CSeekableVaryingMediaPacketSource::readNext()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if can read next packet
@@ -228,52 +246,49 @@ TVResult<CMediaPacketSource::DataInfo> CSeekableVaryingMediaPacketSource::readNe
 											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
 
 		// Copy packet data
-		CData		data((CData::ByteCount) mediaPacketAndLocation.getPacket().getByteCount());
-		OV<SError>	error =
-							mInternals->mRandomAccessDataSource->readData(mediaPacketAndLocation.getByteOffset(),
-									data.getMutableBytePtr(), mediaPacketAndLocation.getPacket().getByteCount());
-		ReturnValueIfError(error, TVResult<CMediaPacketSource::DataInfo>(*error));
+		TVResult<CData>	data =
+								mInternals->mRandomAccessDataSource->readData(mediaPacketAndLocation.getByteOffset(),
+										mediaPacketAndLocation.getPacket().getByteCount());
+		ReturnValueIfResultError(data, TVResult<SMedia::PacketData>(data.getError()));
 
 		// Update
 		mInternals->mNextPacketIndex++;
 
-		return TVResult<CMediaPacketSource::DataInfo>(
-				CMediaPacketSource::DataInfo(data, mediaPacketAndLocation.getPacket().getDuration()));
+		return TVResult<SMedia::PacketData>(
+				SMedia::PacketData(mediaPacketAndLocation.getPacket().getDuration(), *data));
 	} else
 		// End of data
-		return TVResult<CMediaPacketSource::DataInfo>(SError::mEndOfData);
+		return TVResult<SMedia::PacketData>(SError::mEndOfData);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<TArray<SMedia::Packet> > CSeekableVaryingMediaPacketSource::readNextInto(CData& data,
-		const OV<UInt32>& maxPacketCount)
+TVResult<CMediaPacketSource::MediaPacketsAndBuffer> CSeekableVaryingMediaPacketSource::readNext(UInt64 maxByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Add packets
-	UInt32					dataByteCountRemaining = (UInt32) data.getByteCount();
-	UInt8*					packetDataPtr = (UInt8*) data.getMutableBytePtr();
-	UInt32					packetCount = maxPacketCount.hasValue() ? *maxPacketCount : ~0;
+	UInt64					byteCountRemaining = maxByteCount;
+	TBuffer<UInt8>			buffer(maxByteCount);
+	UInt8*					packetDataPtr = *buffer;
 	TNArray<SMedia::Packet>	mediaPackets;
-	while ((packetCount > 0) && (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount())) {
+	while (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
 		// Setup
 		SMedia::PacketAndLocation&	mediaPacketAndLocation =
 											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
 
 		// Check if have space
-		if (mediaPacketAndLocation.getPacket().getByteCount() <= dataByteCountRemaining) {
+		if (mediaPacketAndLocation.getPacket().getByteCount() <= byteCountRemaining) {
 			// Copy packet data
 			OV<SError>	error =
-								mInternals->mRandomAccessDataSource->readData(mediaPacketAndLocation.getByteOffset(),
+								mInternals->mRandomAccessDataSource->read(mediaPacketAndLocation.getByteOffset(),
 										packetDataPtr, mediaPacketAndLocation.getPacket().getByteCount());
-			ReturnValueIfError(error, TVResult<TArray<SMedia::Packet> >(*error));
+			ReturnValueIfError(error, TVResult<MediaPacketsAndBuffer>(*error));
 
 			// Update
 			mInternals->mNextPacketIndex++;
 
 			// Update info
-			dataByteCountRemaining -= mediaPacketAndLocation.getPacket().getByteCount();
+			byteCountRemaining -= mediaPacketAndLocation.getPacket().getByteCount();
 			packetDataPtr += mediaPacketAndLocation.getPacket().getByteCount();
-			packetCount--;
 			mediaPackets += mediaPacketAndLocation.getPacket();
 		} else
 			// No more space
@@ -281,5 +296,32 @@ TVResult<TArray<SMedia::Packet> > CSeekableVaryingMediaPacketSource::readNextInt
 	}
 
 	return !mediaPackets.isEmpty() ?
-			TVResult<TArray<SMedia::Packet> >(mediaPackets) : TVResult<TArray<SMedia::Packet> >(SError::mEndOfData);
+			TVResult<MediaPacketsAndBuffer>(
+					MediaPacketsAndBuffer(mediaPackets, TBuffer<UInt8>(buffer, maxByteCount - byteCountRemaining))) :
+			TVResult<MediaPacketsAndBuffer>(SError::mEndOfData);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<SMedia::Packet> CSeekableVaryingMediaPacketSource::readNextInto(TBuffer<UInt8>& buffer)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if can read next packet
+	if (mInternals->mNextPacketIndex < mInternals->mMediaPacketAndLocations.getCount()) {
+		// Setup
+		SMedia::PacketAndLocation&	mediaPacketAndLocation =
+											mInternals->mMediaPacketAndLocations.getAt(mInternals->mNextPacketIndex);
+
+		// Copy packet data
+		OV<SError>	error =
+							mInternals->mRandomAccessDataSource->read(mediaPacketAndLocation.getByteOffset(),
+									*buffer, buffer.getByteCount());
+		ReturnValueIfError(error, TVResult<SMedia::Packet>(*error));
+
+		// Update
+		mInternals->mNextPacketIndex++;
+
+		return TVResult<SMedia::Packet>(mediaPacketAndLocation.getPacket());
+	} else
+		// End of data
+		return TVResult<SMedia::Packet>(SError::mEndOfData);
 }

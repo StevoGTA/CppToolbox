@@ -125,17 +125,17 @@ CColorSet::CColorSet(OSType id)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CColorSet::CColorSet(const CDictionary& info)
+CColorSet::CColorSet(const CDictionary& storageInfo)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Retrieve name
-	CString		name = info.getString(CString(OSSTR("name")));
+	CString		name = storageInfo.getString(CString(OSSTR("name")));
 
 	// Setup
 	mInternals = new Internals(name);
 
 	// Setup colors
-	TArray<CDictionary>	colorSetColorInfos = info.getArrayOfDictionaries(CString(OSSTR("colors")));
+	TArray<CDictionary>	colorSetColorInfos = storageInfo.getArrayOfDictionaries(CString(OSSTR("colors")));
 	for (CArray::ItemIndex j = 0; j < colorSetColorInfos.getCount(); j++) {
 		// Get color set color info
 		const	CDictionary&	colorSetColorInfo = colorSetColorInfos[j];
@@ -209,13 +209,13 @@ void CColorSet::setColorsFrom(const CColorSet& other)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary CColorSet::getInfo() const
+CDictionary CColorSet::getStorageInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CDictionary	info;
+	// Compose Storage info
+	CDictionary	storageInfo;
 
-	info.set(CString(OSSTR("name")), mInternals->mName);
+	storageInfo.set(CString(OSSTR("name")), mInternals->mName);
 
 	TNArray<CDictionary>	colorSetColorInfos;
 	for (TKeyConvertibleDictionary<UInt64, CColor>::Iterator iterator = mInternals->mColorsMap.getIterator(); iterator;
@@ -228,14 +228,14 @@ CDictionary CColorSet::getInfo() const
 		CDictionary	colorSetColorInfo;
 		colorSetColorInfo.set(CString(OSSTR("groupID")), groupID);
 		colorSetColorInfo.set(CString(OSSTR("colorID")), colorID);
-		colorSetColorInfo.set(CString(OSSTR("color")), iterator.getValue().getInfo());
+		colorSetColorInfo.set(CString(OSSTR("color")), iterator.getValue().getStorageInfo());
 
 		// Add to array
 		colorSetColorInfos += colorSetColorInfo;
 	}
-	info.set(CString(OSSTR("colors")), colorSetColorInfos);
+	storageInfo.set(CString(OSSTR("colors")), colorSetColorInfos);
 
-	return info;
+	return storageInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -266,22 +266,23 @@ class CColorRegistry::Internals {
 						{
 							// Check if have pref
 							if (mPref.hasInstance()) {
-								// Setup
-								CDictionary	info;
+								// Compose Storage info
+								CDictionary	storageInfo;
 
 								// Collect info
 								TNArray<CDictionary>	colorSetInfos;
 								for (CArray::ItemIndex i = 0; i < mColorSets.getCount(); i++)
 									// Add info
-									colorSetInfos += mColorSets[i].getInfo();
-								info.set(CString(OSSTR("presets")), colorSetInfos);
+									colorSetInfos += mColorSets[i].getStorageInfo();
+								storageInfo.set(CString(OSSTR("presets")), colorSetInfos);
 
 								if (mCurrentColorSet.hasInstance())
 									// Add current color set
-									info.set(CString(OSSTR("currentColorSet")), mCurrentColorSet->getInfo());
+									storageInfo.set(CString(OSSTR("currentColorSet")),
+											mCurrentColorSet->getStorageInfo());
 
 								// Write
-								CPreferences::shared().set(*mPref, info);
+								CPreferences::shared().set(*mPref, storageInfo);
 							}
 						}
 

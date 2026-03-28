@@ -373,7 +373,7 @@ TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 					CBitmap::kFormatRGB888);
 
 	// Decompress the image
-	JSAMPLE*	bytePtr = (JSAMPLE*) bitmap.getPixelData().getMutableBytePtr();
+	JSAMPLE*	bytePtr = (JSAMPLE*) *bitmap.getPixelData();
 	UInt16		bytesPerRow = bitmap.getBytesPerRow();
 	while (jpegDecompressInfo.output_scanline < jpegDecompressInfo.output_height) {
 		// Do the work
@@ -398,8 +398,8 @@ TVResult<CData> sEncodeJPEGData(const CBitmap& bitmap)
 	CData	data(bitmap.getPixelData().getByteCount());
 
 	jpeg_destination_mgr	jpegDestinationManager = {0};
-	jpegDestinationManager.next_output_byte = (JOCTET*) data.getMutableBytePtr();
-	jpegDestinationManager.free_in_buffer = data.getByteCount();
+	jpegDestinationManager.next_output_byte = (JOCTET*) *data.getMutableBuffer(bitmap.getPixelData().getByteCount());
+	jpegDestinationManager.free_in_buffer = bitmap.getPixelData().getByteCount();
 	jpegDestinationManager.init_destination = sJPEGDestinationInit;
 	jpegDestinationManager.empty_output_buffer = sJPEGDestinationEmptyBuffer;
 	jpegDestinationManager.term_destination = sJPEGDestinationTerminate;
@@ -447,7 +447,7 @@ TVResult<CData> sEncodeJPEGData(const CBitmap& bitmap)
 
 	// Encode all scanlines
 	int			row_stride = bitmap.getBytesPerRow();
-	JSAMPLE*	image_buffer = (JSAMPLE*) bitmap.getPixelData().getBytePtr();
+	JSAMPLE*	image_buffer = (JSAMPLE*) *bitmap.getPixelData();
 	while (jpegCompressInfo.next_scanline < jpegCompressInfo.image_height) {
 		// Do the compression
 		JSAMPROW 	row_pointer[1] = {0};
@@ -457,12 +457,11 @@ TVResult<CData> sEncodeJPEGData(const CBitmap& bitmap)
 
 	// Finish compression
 	jpeg_finish_compress(&jpegCompressInfo);
-	data.setByteCount(data.getByteCount() - jpegDestinationManager.free_in_buffer);
 
 	// Cleanup
 	jpeg_destroy_compress(&jpegCompressInfo);
 
-	return TVResult<CData>(data);
+	return TVResult<CData>(data.subData(0, data.getByteCount() - jpegDestinationManager.free_in_buffer));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -673,8 +672,7 @@ TVResult<CBitmap> sDecodePNGData(const CData& data)
 	}
 
 	CBitmap	bitmap(S2DSizeS32(pngImage.width, pngImage.height), bitmapFormat);
-	if (png_image_finish_read(&pngImage, nil, bitmap.getPixelData().getMutableBytePtr(), bitmap.getBytesPerRow(), nil)
-			== 0)
+	if (png_image_finish_read(&pngImage, nil, *bitmap.getPixelData(), bitmap.getBytesPerRow(), nil) == 0)
 		// Something went wrong
 		return TVResult<CBitmap>(sErrorUnableToDecode);
 
@@ -713,15 +711,11 @@ TVResult<CData> sEncodePNGData(const CBitmap& bitmap)
 			return TVResult<CData>(sErrorUnableToEncode);
 	}
 
-	CData	data(bitmap.getPixelData().getByteCount());
-
 	// Write
+	CData				data(bitmap.getPixelData().getByteCount());
 	png_alloc_size_t	byteCount = data.getByteCount();
-	png_image_write_to_memory(&pngImage, data.getMutableBytePtr(), &byteCount, 0, bitmap.getPixelData().getBytePtr(),
-			bitmap.getBytesPerRow(), nil);
+	png_image_write_to_memory(&pngImage, *data.getMutableBuffer(bitmap.getPixelData().getByteCount()), &byteCount, 0,
+			*bitmap.getPixelData(), bitmap.getBytesPerRow(), nil);
 
-	// Finish up
-	data.setByteCount(byteCount);
-
-	return TVResult<CData>(data);
+	return TVResult<CData>(data.subData(0, byteCount));
 }

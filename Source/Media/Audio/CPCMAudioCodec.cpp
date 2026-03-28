@@ -6,6 +6,8 @@
 
 #include "CCodecRegistry.h"
 
+using FrameSource = CDecodeAudioCodec::FrameSource;
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CPCMDecodeAudioCodec
 
@@ -15,7 +17,7 @@ class CPCMDecodeAudioCodec : public CDecodeAudioCodec {
 										CPCMDecodeAudioCodec(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												UInt64 startByteOffset, UInt64 byteCount, UInt8 frameByteCount,
 												CPCMAudioCodec::Format format) :
-											mFrameSourceDecodeInfo(randomAccessDataSource, startByteOffset, byteCount,
+											mFrameSource(randomAccessDataSource, startByteOffset, byteCount,
 															frameByteCount),
 													mFormat(format)
 											{}
@@ -27,7 +29,7 @@ class CPCMDecodeAudioCodec : public CDecodeAudioCodec {
 		OV<SError>						decodeInto(CAudioFrames& audioFrames);
 
 	private:
-		FrameSourceDecodeInfo			mFrameSourceDecodeInfo;
+		FrameSource						mFrameSource;
 		CPCMAudioCodec::Format			mFormat;
 
 		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
@@ -64,7 +66,7 @@ void CPCMDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Seek
-	mFrameSourceDecodeInfo.seek((UInt64) (timeInterval * mAudioProcessingFormat->getSampleRate()));
+	mFrameSource.seek((UInt64) (timeInterval * mAudioProcessingFormat->getSampleRate()));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,7 +74,7 @@ OV<SError> CPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read
-	TVResult<UInt32>	frameCount = mFrameSourceDecodeInfo.readInto(audioFrames);
+	TVResult<UInt32>	frameCount = mFrameSource.readInto(audioFrames);
 	ReturnErrorIfResultError(frameCount);
 
 	// Check if need to convert unsigned 8 bit samples to signed 8 bit samples

@@ -10,6 +10,18 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SGregorianDate::Components
 
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+SGregorianDate::Components::Components(const CDictionary& storageInfo) :
+		mYear(storageInfo.getOVUInt32(CString(OSSTR("year")))), mMonth(storageInfo.getOVUInt8(CString(OSSTR("month")))),
+		mDay(storageInfo.getOVUInt8(CString(OSSTR("day")))), mHour(storageInfo.getOVUInt8(CString(OSSTR("hour")))),
+		mMinute(storageInfo.getOVUInt8(CString(OSSTR("minute")))),
+		mSecond(storageInfo.getOVFloat32(CString(OSSTR("second"))))
+//----------------------------------------------------------------------------------------------------------------------
+{
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -191,43 +203,19 @@ CString SGregorianDate::Components::getString(DateStyle dateStyle, TimeStyle tim
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDictionary SGregorianDate::Components::getInfo() const
+CDictionary SGregorianDate::Components::getStorageInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CDictionary	info;
+	// Compose Storage info
+	CDictionary	storageInfo;
+	storageInfo.set(CString(OSSTR("year")), mYear);
+	storageInfo.set(CString(OSSTR("month")), mMonth);
+	storageInfo.set(CString(OSSTR("day")), mDay);
+	storageInfo.set(CString(OSSTR("hour")), mHour);
+	storageInfo.set(CString(OSSTR("minute")), mMinute);
+	storageInfo.set(CString(OSSTR("second")), mSecond);
 
-	if (mYear.hasValue())
-		info.set(CString(OSSTR("year")), *mYear);
-	if (mMonth.hasValue())
-		info.set(CString(OSSTR("month")), *mMonth);
-	if (mDay.hasValue())
-		info.set(CString(OSSTR("day")), *mDay);
-	if (mHour.hasValue())
-		info.set(CString(OSSTR("hour")), *mHour);
-	if (mMinute.hasValue())
-		info.set(CString(OSSTR("minute")), *mMinute);
-	if (mSecond.hasValue())
-		info.set(CString(OSSTR("second")), *mSecond);
-
-	return info;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OV<SGregorianDate::Components> SGregorianDate::Components::getFrom(const CDictionary& info)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	OV<UInt32>	year = info.getOVUInt32(CString(OSSTR("year")));
-	OV<UInt8>	month = info.getOVUInt8(CString(OSSTR("month")));
-	OV<UInt8>	day = info.getOVUInt8(CString(OSSTR("day")));
-	OV<UInt8>	hour = info.getOVUInt8(CString(OSSTR("hour")));
-	OV<UInt8>	minute = info.getOVUInt8(CString(OSSTR("minute")));
-	OV<Float32>	second = info.getOVFloat32(CString(OSSTR("second")));
-
-	return (year.hasValue() || month.hasValue() || day.hasValue() || hour.hasValue() || minute.hasValue() ||
-					second.hasValue()) ?
-			OV<Components>(Components(year, month, day, hour, minute, second)) : OV<Components>();
+	return storageInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

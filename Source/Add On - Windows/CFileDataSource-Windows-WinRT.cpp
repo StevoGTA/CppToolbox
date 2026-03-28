@@ -88,7 +88,7 @@ UInt64 CFileDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
+OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
@@ -271,7 +271,7 @@ UInt64 CMappedFileDataSource::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, CData::ByteCount byteCount)
+OV<SError> CMappedFileDataSource::readData(UInt64 position, void* buffer, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
@@ -306,5 +306,5 @@ TVResult<CData> CMappedFileDataSource::readData(UInt64 position, CData::ByteCoun
 		// Attempting to ready beyond end of data
 		return TVResult<CData>(SError::mEndOfData);
 
-	return TVResult<CData>(CData((UInt8*) mInternals->mBytePtr + position, byteCount, false));
+	return TVResult<CData>(CData((UInt8*) mInternals->mBytePtr + position, byteCount));
 }

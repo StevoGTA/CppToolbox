@@ -57,7 +57,7 @@ class CCoreGraphicsRenderer::Internals {
 						CGColorSpaceRef	colorSpaceRef = ::CGColorSpaceCreateDeviceRGB();
 
 				mContextRef =
-						::CGBitmapContextCreate(bitmap.getPixelData().getMutableBytePtr(), size.mWidth, size.mHeight, 8,
+						::CGBitmapContextCreate(*bitmap.getPixelData(), size.mWidth, size.mHeight, 8,
 								bitmap.getBytesPerRow(), colorSpaceRef, bitmapInfo);
 				::CGColorSpaceRelease(colorSpaceRef);
 

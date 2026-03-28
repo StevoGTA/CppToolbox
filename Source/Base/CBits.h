@@ -20,7 +20,7 @@ class CBits {
 	public:
 					// Lifecycle methods
 					CBits(UInt32 count = 8, bool initialValue = false);
-					CBits(const CDictionary& info);
+					CBits(const CDictionary& storageInfo);
 					CBits(const CBits& other);
 					~CBits();
 
@@ -31,7 +31,7 @@ class CBits {
 		CBits&		clear(UInt32 index)
 						{ return set(index, false); }
 
-		CDictionary	getInfo() const;
+		CDictionary	getStorageInfo() const;
 
 		CBits&		operator=(const CBits& other);
 		bool		operator[](UInt32 index)

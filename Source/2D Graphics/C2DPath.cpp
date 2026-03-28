@@ -29,7 +29,7 @@ class C2DPath::Internals {
 		void	appendPathSegment(E2DPathSegmentType pathSegmentType, const CData& data)
 					{
 						// Append
-						mPathSegmentData.appendBytes((const UInt8*) &pathSegmentType, sizeof(E2DPathSegmentType));
+						mPathSegmentData.append((const UInt8*) &pathSegmentType, sizeof(E2DPathSegmentType));
 						mPathSegmentData += data;
 					}
 

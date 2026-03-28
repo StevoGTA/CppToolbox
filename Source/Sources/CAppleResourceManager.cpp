@@ -146,7 +146,7 @@ OV<SError> CAppleResourceManager::set(OSType resourceType, UInt16 resourceID, co
 
 	// Construct data
 	CData	data;
-	data.appendBytes(&length, sizeof(UInt8));
+	data.append(&length, sizeof(UInt8));
 
 	OV<CData>	pascalStringData = pascalString.getData(CString::kEncodingMacRoman);
 	if (!pascalStringData.hasValue())
@@ -169,8 +169,7 @@ TVResult<CData> CAppleResourceManager::getAsData()
 
 	// Start type list data
 	UInt16	typesCount = (UInt16) mInternals->mResourceMap.getCount();
-	SInt16	lastTypeIndex = EndianS16_NtoB((SInt16) typesCount - 1);
-	typeListData.appendBytes((const UInt8*) &lastTypeIndex, sizeof(SInt16));
+	typeListData.append(EndianS16_NtoB((SInt16) typesCount - 1));
 
 	// Iterate resource types
 	for (TDictionary<TNArray<Resource> >::Iterator resourcesIterator = mInternals->mResourceMap.getIterator();
@@ -179,16 +178,13 @@ TVResult<CData> CAppleResourceManager::getAsData()
 		TArray<Resource>&	resources = resourcesIterator.getValue();
 
 		// Type ID
-		OSType	typeID = EndianU32_NtoB(resourcesIterator.getKey().getOSType());
-		typeListData.appendBytes((const UInt8*) &typeID, sizeof(OSType));
+		typeListData.append(EndianU32_NtoB(resourcesIterator.getKey().getOSType()));
 
 		// Last resource index
-		UInt16	lastResourceIndex = EndianU16_NtoB((UInt16) (resources.getCount() - 1));
-		typeListData.appendBytes((const UInt8*) &lastResourceIndex, sizeof(UInt16));
+		typeListData.append(EndianU16_NtoB((UInt16) (resources.getCount() - 1)));
 
 		// Resource list offset
-		UInt16	resourceListOffset = EndianU16_NtoB((UInt16) (resourceListData.getByteCount() + 2 + 8 * typesCount));
-		typeListData.appendBytes((const UInt8*) &resourceListOffset, sizeof(UInt16));
+		typeListData.append(EndianU16_NtoB((UInt16) (resourceListData.getByteCount() + 2 + 8 * typesCount)));
 
 		// Iterate resources for this type
 		for (TArray<Resource>::Iterator resourceIterator = resources.getIterator(); resourceIterator;
@@ -197,38 +193,32 @@ TVResult<CData> CAppleResourceManager::getAsData()
 			const	Resource&	resource = *resourceIterator;
 
 			// ID
-			UInt16	resourceID = EndianU16_NtoB(resource.mID);
-			resourceListData.appendBytes((const UInt8*) &resourceID, sizeof(UInt16));
+			resourceListData.append(EndianU16_NtoB(resource.mID));
 
 			// Name
 			UInt8	nameLength = resource.mName.hasValue() ? (UInt8) resource.mName->getLength() : 0;
 			if (nameLength > 0) {
 				// Have name
-				UInt16	nameOffset = EndianU16_NtoB((UInt16) nameListData.getByteCount());
-				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
+				resourceListData.append(EndianU16_NtoB((UInt16) nameListData.getByteCount()));
 
-				nameListData.appendBytes((const UInt8*) &nameLength, sizeof(UInt8));
+				nameListData.append((const UInt8*) &nameLength, sizeof(UInt8));
 
 				OV<CData>	nameData = resource.mName->getData(CString::kEncodingMacRoman);
 				if (!nameData.hasValue())
 					return TVResult<CData>(sInvalidResourceName);
 				nameListData += *nameData;
-			} else {
+			} else
 				// No name
-				UInt16	nameOffset = EndianU16_NtoB(0xFFFF);
-				resourceListData.appendBytes((const UInt8*) &nameOffset, sizeof(UInt16));
-			}
+				resourceListData.append(EndianU16_NtoB(0xFFFF));
 
 			// Attributes + data offset
-			UInt32	attributesAndDataOffset = EndianU32_NtoB((0 << 24) | (UInt32) dataData.getByteCount());
-			resourceListData.appendBytes((const UInt8*) &attributesAndDataOffset, sizeof(UInt32));
+			resourceListData.append(EndianU32_NtoB((0 << 24) | (UInt32) dataData.getByteCount()));
 
 			// Resource handle placeholder
-			resourceListData.appendBytes((const UInt8*) &uInt32Zero, sizeof(UInt32));
+			resourceListData.append(uInt32Zero);
 
 			// Data
-			UInt32	dataByteCount = EndianU32_NtoB((UInt16) resource.mData.getByteCount());
-			dataData.appendBytes((const UInt8*) &dataByteCount, sizeof(UInt32));
+			dataData.append(EndianU32_NtoB((UInt16) resource.mData.getByteCount()));
 			dataData += resource.mData;
 		}
 	}
@@ -248,29 +238,31 @@ TVResult<CData> CAppleResourceManager::getAsData()
 	return
 			TVResult<CData>(
 					// Header
-					CData(&dataOffset, sizeof(dataOffset)) +
-					CData(&mapOffset, sizeof(mapOffset)) +
-					CData(&dataByteCount, sizeof(dataByteCount)) +
-					CData(&mapSize, sizeof(mapSize)) +
+					CData::storing(dataOffset) +
+					CData::storing(mapOffset) +
+					CData::storing(dataByteCount) +
+					CData::storing(mapSize) +
 					CData(
 							(CData::ByteCount)
-									(256 - sizeof(dataOffset) - sizeof(mapOffset) -sizeof(dataByteCount) - sizeof(mapSize))) +
+									(256 - sizeof(dataOffset) - sizeof(mapOffset) -sizeof(dataByteCount) -
+											sizeof(mapSize)),
+							0) +
 
 					// Data
 					dataData +
 
 					// Map
-					CData(&dataOffset, sizeof(dataOffset)) +	// File header copy
-					CData(&mapOffset, sizeof(mapOffset)) +
-					CData(&dataByteCount, sizeof(dataByteCount)) +
-					CData(&mapSize, sizeof(mapSize)) +
-					CData(&uInt32Zero, sizeof(uInt32Zero)) +	// Next resource map placeholder
-					CData(&uInt16Zero, sizeof(uInt16Zero)) +	// File ref num placeholder
-					CData(&uInt16Zero, sizeof(uInt16Zero)) +	// File attributes
+					CData::storing(dataOffset) +				// File header copy
+					CData::storing(mapOffset) +
+					CData::storing(dataByteCount) +
+					CData::storing(mapSize) +
+					CData::storing(uInt32Zero) +				// Next resource map placeholder
+					CData::storing(uInt16Zero) +				// File ref num placeholder
+					CData::storing(uInt16Zero) +				// File attributes
 
-					CData(&typeListOffset, sizeof(typeListOffset)) +
+					CData::storing(typeListOffset) +
 
-					CData(&nameListOffset, sizeof(nameListOffset)) +
+					CData::storing(nameListOffset) +
 
 					// Type list
 					typeListData +

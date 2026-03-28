@@ -52,7 +52,7 @@ class CMetalTexture::Internals : public TReferenceCountableAutoDelete<Internals>
 
 				// Load image data
 				MTLRegion	region = {{0, 0, 0}, {mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, 1}};
-				[mTexture replaceRegion:region mipmapLevel:0 withBytes:bitmap.getPixelData().getBytePtr()
+				[mTexture replaceRegion:region mipmapLevel:0 withBytes:*bitmap.getPixelData()
 						bytesPerRow:bitmap.getBytesPerRow()];
 			}
 		Internals(id<MTLDevice> device, const CData& data, const S2DSizeU16& dimensions,

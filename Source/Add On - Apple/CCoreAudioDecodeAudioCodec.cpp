@@ -6,6 +6,8 @@
 
 #include "SError-Apple.h"
 
+using MediaPacketsAndBuffer = CMediaPacketSource::MediaPacketsAndBuffer;
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreAudioDecodeAudioCodec::Internals
 
@@ -13,9 +15,7 @@ class CCoreAudioDecodeAudioCodec::Internals {
 	public:
 							Internals(OSType codecID, const I<CMediaPacketSource>& mediaPacketSource) :
 								mCodecID(codecID), mMediaPacketSource(mediaPacketSource),
-										mAudioConverterRef(nil), mDecodeFramesToIgnore(0),
-										mInputPacketData((CData::ByteCount) 10 * 1024),
-										mInputPacketDescriptionsData((CData::ByteCount) 1 * 1024)
+										mAudioConverterRef(nil), mDecodeFramesToIgnore(0)
 								{}
 							~Internals()
 								{
@@ -33,74 +33,76 @@ class CCoreAudioDecodeAudioCodec::Internals {
 									Internals&	internals = *((Internals*) inUserData);
 
 									// Read packets
-									TVResult<TArray<SMedia::Packet> >	mediaPacketsResult =
-																				internals.mMediaPacketSource->
-																						readNextInto(
-																								internals
-																										.mInputPacketData);
-									if (mediaPacketsResult.hasError()) {
+									TVResult<MediaPacketsAndBuffer>	mediaPacketsAndBuffer =
+																			internals
+																					.mMediaPacketSource->
+																							readNext(10 * 1024);
+									if (mediaPacketsAndBuffer.hasError()) {
 										// Check error
-										if (mediaPacketsResult.getError() == SError::mEndOfData) {
+										if (mediaPacketsAndBuffer.getError() == SError::mEndOfData) {
 											// End of data
+											ioBufferList->mBuffers[0].mData = nil;
+											ioBufferList->mBuffers[0].mDataByteSize = 0;
+
 											*ioNumberDataPackets = 0;
 
 											return noErr;
 										} else {
 											// Other error
-											internals.mFillBufferDataError = mediaPacketsResult.getError();
+											internals.mFillBufferDataError = mediaPacketsAndBuffer.getError();
 
 											return -1;
 										}
 									}
 
-									// Prepare return info
-									const	TArray<SMedia::Packet>&	mediaPackets = *mediaPacketsResult;
+									// Store data
+									internals.mMediaPacketsBuffer.setValue(mediaPacketsAndBuffer->getBuffer());
 
-									*ioNumberDataPackets = mediaPackets.getCount();
-
-									if ((*ioNumberDataPackets * sizeof(AudioStreamPacketDescription)) >
-											internals.mInputPacketDescriptionsData.getByteCount())
-										// Increase packet descriptions data size
-										internals.mInputPacketDescriptionsData.setByteCount(
-												*ioNumberDataPackets * sizeof(AudioStreamPacketDescription));
-
-									AudioStreamPacketDescription*	packetDescription =
-																			(AudioStreamPacketDescription*)
-																					internals
-																							.mInputPacketDescriptionsData
-																							.getMutableBytePtr();
-									if (outDataPacketDescription != nil)
-										//
-										*outDataPacketDescription = packetDescription;
+									// Process packets
+									const	TArray<SMedia::Packet>&	mediaPackets =
+																			mediaPacketsAndBuffer->getMediaPackets();
+									internals.mAudioStreamPacketDescriptions.setValue(
+											TBuffer<AudioStreamPacketDescription>(mediaPackets.getCount()));
 
 									SInt64	offset = 0;
 									for (TArray<SMedia::Packet>::Iterator iterator = mediaPackets.getIterator();
-											iterator; iterator++, packetDescription++) {
+											iterator; iterator++) {
 										// Update
-										packetDescription->mStartOffset = offset;
-										packetDescription->mVariableFramesInPacket = iterator->getDuration();
-										packetDescription->mDataByteSize = iterator->getByteCount();
+										AudioStreamPacketDescription&	audioStreamPacketDescription =
+																				(*internals.mAudioStreamPacketDescriptions)
+																						[iterator.getIndex()];
+										audioStreamPacketDescription.mStartOffset = offset;
+										audioStreamPacketDescription.mVariableFramesInPacket = iterator->getDuration();
+										audioStreamPacketDescription.mDataByteSize = iterator->getByteCount();
 
 										offset += iterator->getByteCount();
 									}
 
+									// Prepare return info
+									*ioNumberDataPackets = mediaPackets.getCount();
+
 									ioBufferList->mNumberBuffers = 1;
-									ioBufferList->mBuffers[0].mData = internals.mInputPacketData.getMutableBytePtr();
-									ioBufferList->mBuffers[0].mDataByteSize = (UInt32) offset;
+									ioBufferList->mBuffers[0].mData = **internals.mMediaPacketsBuffer;
+									ioBufferList->mBuffers[0].mDataByteSize =
+											(UInt32) internals.mMediaPacketsBuffer->getByteCount();
+
+									if (outDataPacketDescription != nil)
+										// Pass back
+										*outDataPacketDescription = **internals.mAudioStreamPacketDescriptions;
 
 									return noErr;
 								}
 
-		OSType							mCodecID;
-		I<CMediaPacketSource>			mMediaPacketSource;
+		OSType										mCodecID;
+		I<CMediaPacketSource>						mMediaPacketSource;
 
-		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
+		OV<SAudio::ProcessingFormat>				mAudioProcessingFormat;
 
-		AudioConverterRef				mAudioConverterRef;
-		UInt32							mDecodeFramesToIgnore;
-		CData							mInputPacketData;
-		CData							mInputPacketDescriptionsData;
-		OV<SError>						mFillBufferDataError;
+		AudioConverterRef							mAudioConverterRef;
+		UInt32										mDecodeFramesToIgnore;
+		OV<TBuffer<UInt8> >							mMediaPacketsBuffer;
+		OV<TBuffer<AudioStreamPacketDescription> >	mAudioStreamPacketDescriptions;
+		OV<SError>									mFillBufferDataError;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

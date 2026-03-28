@@ -258,7 +258,7 @@ class CColor : public CEquatable {
 									CColor(const RGBValues& rgbValues);
 									CColor(const HSVValues& hsvValues);
 									CColor(const CString& rgbHexString);
-									CColor(const CDictionary& info);
+									CColor(const CDictionary& storageInfo);
 									CColor(const CColor& other);
 									~CColor();
 
@@ -269,7 +269,7 @@ class CColor : public CEquatable {
 				RGBValues			getRGBValues() const;
 				HSVValues			getHSVValues() const;
 
-				CDictionary			getInfo() const;
+				CDictionary			getStorageInfo() const;
 
 				CColor				operator*(const RGBColorTransform& transform) const
 										{ return CColor(transform.apply(getRGBValues())); }

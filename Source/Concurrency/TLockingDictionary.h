@@ -10,6 +10,71 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TLockingDictionary
 template <typename T> class TLockingDictionary : public CDictionary {
+	// IteratorInfo
+	protected:
+		class LockingIteratorInfo : public IteratorInfo {
+			// Methods
+			public:
+									// Lifecycle methods
+									LockingIteratorInfo(const I<IteratorInfo>& iteratorInfo,
+											CReadPreferringLock& lock) :
+										mIteratorInfo(iteratorInfo), mLock(lock)
+										{
+											// Lock
+											mLock.lockForReading();
+										}
+									~LockingIteratorInfo()
+										{
+											// Unlock
+											mLock.unlockForReading();
+										}
+
+									// Iterator methods
+						UInt32		getCurrentIndex() const
+										{ return mIteratorInfo->getCurrentIndex(); }
+				const	CString&	getCurrentKey() const
+										{ return mIteratorInfo->getCurrentKey(); }
+						SValue*		getCurrentValue() const
+										{ return mIteratorInfo->getCurrentValue(); }
+						void		advance()
+										{ mIteratorInfo->advance(); }
+
+			// Properties
+			private:
+				I<IteratorInfo>			mIteratorInfo;
+				CReadPreferringLock&	mLock;
+		};
+
+	// Iterator
+	public:
+		class Iterator : public CDictionary::Iterator {
+			// Methods
+			public:
+					// Lifecycle methods
+					Iterator(const I<IteratorInfo>& iteratorInfo) : CDictionary::Iterator(iteratorInfo) {}
+					Iterator(const Iterator& other) : CDictionary::Iterator(other) {}
+
+					// Instance methods
+				T&	getValue() const
+						{ return *((T*) CDictionary::Iterator::getValue().getOpaque()); }
+		};
+
+	// ValueIterator
+	public:
+		class ValueIterator : public CDictionary::ValueIterator {
+			// Methods
+			public:
+					// Lifecycle methods
+					ValueIterator(const I<IteratorInfo>& iteratorInfo) : CDictionary::ValueIterator(iteratorInfo) {}
+					ValueIterator(const ValueIterator& other) : CDictionary::ValueIterator(other) {}
+
+					// Instance methods
+				T&	operator*() const
+						{ return *((T*) getValue().getOpaque()); }
+				T*	operator->() const
+						{ return (T*) getValue().getOpaque(); }
+		};
+
 	// Methods
 	public:
 								// Lifecycle methods
@@ -76,6 +141,17 @@ template <typename T> class TLockingDictionary : public CDictionary {
 										return value.hasReference() ? *value : defaultValue;
 									}
 
+				Iterator		getIterator() const
+									{ return Iterator(
+											I<IteratorInfo>(
+													new LockingIteratorInfo(getIteratorInfo(),
+															(CReadPreferringLock&) mLock))); }
+				ValueIterator	getValueIterator() const
+									{ return ValueIterator(
+											I<IteratorInfo>(
+													new LockingIteratorInfo(getIteratorInfo(),
+															(CReadPreferringLock&) mLock))); }
+
 		const	OR<T>			operator[](const CString& key) const
 									{ return get(key); }
 
@@ -101,6 +177,23 @@ template <typename T> class TNLockingDictionary : public TLockingDictionary<T> {
 											{}
 
 										// Instance methods
+				TNSet<T>				getValues() const
+											{
+												// Setup
+												TNSet<T>	values;
+
+												// Iterate values
+												TLockingDictionary<T>::mLock.lockForReading();
+												for (typename TLockingDictionary<T>::ValueIterator iterator =
+																TLockingDictionary<T>::getValueIterator();
+														iterator; iterator++)
+													// Add value
+													values += *iterator;
+												TLockingDictionary<T>::mLock.unlockForReading();
+
+												return values;
+											}
+
 				void					set(const CString& key, const T& item)
 											{
 												// Store
@@ -176,9 +269,14 @@ template <typename T> class TNLockingDictionary : public TLockingDictionary<T> {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: TLockingArrayDictionary
+
+template <typename T> class TLockingArrayDictionary : public TLockingDictionary<TNArray<T> > {};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TNLockingArrayDictionary
 
-template <typename T> class TNLockingArrayDictionary : public TNLockingDictionary<TNArray<T> > {
+template <typename T> class TNLockingArrayDictionary : public TLockingArrayDictionary<T> {
 	// Methods
 	public:
 				// Instance methods
@@ -195,6 +293,23 @@ template <typename T> class TNLockingArrayDictionary : public TNLockingDictionar
 						else
 							// First one
 							CDictionary::set(key, new TNArray<T>(item));
+
+						// Unlock
+						TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
+					}
+		void	add(const CString& key, const TArray<T>& items)
+					{
+						// Lock
+						TLockingDictionary<TNArray<T> >::mLock.lockForWriting();
+
+						// Update
+						OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+						if (opaque.hasValue())
+							// Already have array
+							*((TNArray<T>*) *opaque) += items;
+						else
+							// First one
+							CDictionary::set(key, new TNArray<T>(items));
 
 						// Unlock
 						TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();

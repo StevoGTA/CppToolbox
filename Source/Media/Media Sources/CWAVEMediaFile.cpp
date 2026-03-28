@@ -22,7 +22,7 @@ OI<CChunkReader> CWAVEMediaFile::createChunkReader(const I<CRandomAccessDataSour
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Verify it's a WAVE Media Source
-	if (!randomAccessDataSource->canReadData(0, sizeof(SWAVEFORMChunk32)))
+	if (!randomAccessDataSource->canRead(0, sizeof(SWAVEFORMChunk32)))
 		return OI<CChunkReader>();
 	TVResult<CData>	data = randomAccessDataSource->readData(0, sizeof(SWAVEFORMChunk32));
 	ReturnValueIfResultError(data, OI<CChunkReader>());
@@ -131,8 +131,9 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 			if (importSetup.isCreatingDecoders())
 				// Create
 				decodeAudioCodec =
-						CDVIIntelIMAADPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
-								dataChunkPosition, dataChunkByteCount, waveFormat.getBlockAlign());
+						CDVIIntelIMAADPCMAudioCodec::createDecodeAudioCodec(*audioFormat,
+								chunkReader.getRandomAccessDataSource(), dataChunkPosition, dataChunkByteCount,
+								waveFormat.getBlockAlign());
 			break;
 
 		default:

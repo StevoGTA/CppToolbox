@@ -124,7 +124,7 @@ class CBitmap {
 										CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1),
 												Format format = kFormatRGBA8888,
 												const OV<UInt16>& bytesPerRow = OV<UInt16>());
-										CBitmap(const S2DSizeS32& size, Format format, const CData& pixelData,
+										CBitmap(const S2DSizeS32& size, Format format, const TBuffer<UInt8>& pixelData,
 												UInt16 bytesPerRow);
 										CBitmap(const CBitmap& other, Format format);
 										CBitmap(const CBitmap& other, RotationOperation rotationOperation);
@@ -134,7 +134,7 @@ class CBitmap {
 										// Instance methods
 				const	S2DSizeS32&		getSize() const;
 
-						CData&			getPixelData() const;
+						TBuffer<UInt8>&	getPixelData() const;
 						Format			getFormat() const;
 						UInt16			getBytesPerRow() const;
 						UInt16			getBytesPerPixel() const;

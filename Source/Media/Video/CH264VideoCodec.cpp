@@ -394,7 +394,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 										// Reset POC state
 										resetPOCState();
 									}
-				TVResult<Times>	updateFrom(const CMediaPacketSource::DataInfo& dataInfo);
+				TVResult<Times>	updateFrom(const SMedia::PacketData& mediaPacketData);
 				void			updateSPS(const SH264SequenceParameterSetPayload& spsPayload)
 									{
 										// Check if SPS actually changed
@@ -506,7 +506,7 @@ class CH264DecodeVideoCodec : public CMediaFoundationDecodeVideoCodec {
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
 				TVResult<CMFormatDescriptionRef>	composeFormatDescription();
 				TVResult<CMSampleTimingInfo>		composeSampleTimingInfo(
-															const CMediaPacketSource::DataInfo& dataInfo,
+															const SMedia::PacketData& mediaPacketData,
 															UInt32 timeScale);
 #elif defined(TARGET_OS_WINDOWS)
 				OV<SError>							setup(const CVideoProcessor::Format& videoProcessorFormat);
@@ -643,17 +643,17 @@ TVResult<CMFormatDescriptionRef> CH264DecodeVideoCodec::composeFormatDescription
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<CMSampleTimingInfo> CH264DecodeVideoCodec::composeSampleTimingInfo(
-		const CMediaPacketSource::DataInfo& dataInfo, UInt32 timeScale)
+TVResult<CMSampleTimingInfo> CH264DecodeVideoCodec::composeSampleTimingInfo(const SMedia::PacketData& mediaPacketData,
+		UInt32 timeScale)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update frame timing
-	TVResult<FrameTiming::Times>	times = mFrameTiming->updateFrom(dataInfo);
+	TVResult<FrameTiming::Times>	times = mFrameTiming->updateFrom(mediaPacketData);
 	ReturnValueIfResultError(times, TVResult<CMSampleTimingInfo>(times.getError()));
 
 	// Compose sample timing info
 	CMSampleTimingInfo	sampleTimingInfo;
-	sampleTimingInfo.duration = ::CMTimeMake(dataInfo.getDuration(), timeScale);
+	sampleTimingInfo.duration = ::CMTimeMake(mediaPacketData.getDuration(), timeScale);
 	sampleTimingInfo.decodeTimeStamp = ::CMTimeMake(times->mDecodeTime, timeScale);
 	sampleTimingInfo.presentationTimeStamp = ::CMTimeMake(times->mPresentationTime, timeScale);
 
@@ -693,15 +693,15 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 	CH264DecodeVideoCodec&	videoCodec = (CH264DecodeVideoCodec&) mediaFoundationDecodeVideoCodec;
 
 	// Get next packet
-	TVResult<CMediaPacketSource::DataInfo>	dataInfo = videoCodec.mMediaPacketSource->readNext();
-	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(dataInfo.getError()));
+	TVResult<SMedia::PacketData>	mediaPacketData = videoCodec.mMediaPacketSource->readNext();
+	ReturnValueIfResultError(mediaPacketData, TCIResult<IMFSample>(mediaPacketData.getError()));
 
 	// Update frame timing
-	TVResult<FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(*dataInfo);
-	ReturnValueIfResultError(dataInfo, TCIResult<IMFSample>(times.getError()));
+	TVResult<FrameTiming::Times>	times = videoCodec.mFrameTiming->updateFrom(*mediaPacketData);
+	ReturnValueIfResultError(times, TCIResult<IMFSample>(times.getError()));
 
 	// Create input sample
-	TArray<SH264NALUInfo>	naluInfos = SH264NALUInfo::getNALUInfos(dataInfo->getData());
+	TArray<SH264NALUInfo>	naluInfos = SH264NALUInfo::getNALUInfos(mediaPacketData->getData());
 	CData					annexBData =
 									SH264NALUInfo::composeAnnexB(
 											videoCodec.mCurrentSPSPPSInfo->getSPSNALUInfos(),
@@ -723,11 +723,11 @@ TCIResult<IMFSample> CH264DecodeVideoCodec::readInputSample(
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::FrameTiming::updateFrom(
-		const CMediaPacketSource::DataInfo& dataInfo)
+		const SMedia::PacketData& mediaPacketData)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CBitReader	bitReader(I<CRandomAccessDataSource>(new CDataDataSource(dataInfo.getData())), true);
+	CBitReader	bitReader(I<CRandomAccessDataSource>(new CDataDataSource(mediaPacketData.getData())), true);
 
 	// Iterate NALUs to find the first slice
 	bool	isIDR = false;
@@ -875,7 +875,7 @@ TVResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::Frame
 		// Field coding - POC increments by 1, divide by 2 to get frame index
 		frameIndex = picOrderCnt / 2;
 
-	mCurrentFrameTime = mLastIDRFrameTime + frameIndex * dataInfo.getDuration();
+	mCurrentFrameTime = mLastIDRFrameTime + frameIndex * mediaPacketData.getDuration();
 
 	// Compose results
 	// Decode time: order packets arrive (sequential)
@@ -883,7 +883,7 @@ TVResult<CH264DecodeVideoCodec::FrameTiming::Times> CH264DecodeVideoCodec::Frame
 	TVResult<Times>	times = TVResult<Times>(Times(mNextFrameTime, mCurrentFrameTime));
 
 	// Update decode time for next frame
-	mNextFrameTime += dataInfo.getDuration();
+	mNextFrameTime += mediaPacketData.getDuration();
 
 	// Check if is reference
 	if (isReference)

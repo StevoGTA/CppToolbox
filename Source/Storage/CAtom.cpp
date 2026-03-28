@@ -14,26 +14,18 @@ CAtom::CAtom(OSType type) : CData(sizeof(UInt32) + sizeof(OSType))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32*	bytePtr = ((UInt32*) getMutableBytePtr());
-
-	// Set data
-	*(bytePtr++) = EndianU32_NtoB((UInt32) getByteCount());
-	*bytePtr = EndianU32_NtoB(type);
+	append(EndianU32_NtoB((UInt32) (sizeof(UInt32) + sizeof(OSType))));
+	append((UInt32) EndianU32_NtoB(type));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAtom::CAtom(OSType type, const CData& payload) : CData(sizeof(UInt32) + sizeof(OSType))
+CAtom::CAtom(OSType type, const CData& payload) : CData(sizeof(UInt32) + sizeof(OSType) + payload.getByteCount())
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	UInt32*	bytePtr = ((UInt32*) getMutableBytePtr());
-
-	// Set data
-	*(bytePtr++) = EndianU32_NtoB((UInt32) (getByteCount() + payload.getByteCount()));
-	*bytePtr = EndianU32_NtoB(type);
-
-	// Add payload
-	((CData&) *this) += payload;
+	append((UInt32) (EndianU32_NtoB(sizeof(UInt32) + sizeof(OSType) + payload.getByteCount())));
+	append((UInt32) EndianU32_NtoB(type));
+	append(payload);
 }
 
 // MARK: Instance methods
@@ -46,8 +38,7 @@ CAtom& CAtom::operator+=(const CAtom& atom)
 	((CData&) *this) += atom;
 
 	// Update byte count
-	UInt32*	bytePtr = ((UInt32*) getMutableBytePtr());
-	*bytePtr = EndianU32_NtoB((UInt32) getByteCount());
+	replace(0, (UInt32) EndianU32_NtoB((UInt32) getByteCount()));
 
 	return *this;
 }
