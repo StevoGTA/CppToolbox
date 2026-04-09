@@ -34,7 +34,7 @@ template <typename T> class I : public CHashable {
 	// Methods
 	public:
 						// Lifecycle methods
-						I(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+						I(T* instance) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
 						I(const I<T>& other) :
 							mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
 							{ (*mReferenceCount)++; }
@@ -57,6 +57,9 @@ template <typename T> class I : public CHashable {
 							{ hashableHashCollector.add((const UInt8*) mInstance, sizeof(T*)); }
 
 						// Instance methods
+				UInt32	getReferenceCount() const
+							{ return mReferenceCount->load(); }
+
 				T&		operator*() const
 							{ return *mInstance; }
 				T*		operator->() const
@@ -86,8 +89,8 @@ template <typename T> class I : public CHashable {
 
 	// Properties
 	private:
-		T*		mInstance;
-		UInt32*	mReferenceCount;
+		T*						mInstance;
+		std::atomic<UInt32>*	mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -125,8 +128,8 @@ template <typename T> struct OI {
 	public:
 				// Lifecycle methods
 				OI() : mInstance(nil), mReferenceCount(nil) {}
-				OI(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
-				OI(const T& instance) : mInstance(new T(instance)), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+				OI(T* instance) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
+				OI(const T& instance) : mInstance(new T(instance)), mReferenceCount(new std::atomic<UInt32>(1)) {}
 				OI(const OI<T>& other) :
 					mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
 					{
@@ -163,8 +166,7 @@ template <typename T> struct OI {
 						// Check if have instance
 						if (mInstance != nil) {
 							// Have instance
-							mReferenceCount = new UInt32;
-							*mReferenceCount = 1;
+							mReferenceCount = new std::atomic<UInt32>(1);
 						} else
 							// No instance
 							mReferenceCount = nil;
@@ -205,8 +207,8 @@ template <typename T> struct OI {
 
 	// Properties
 	private:
-		T*		mInstance;
-		UInt32*	mReferenceCount;
+		T*						mInstance;
+		std::atomic<UInt32>*	mReferenceCount;
  };
 
 //----------------------------------------------------------------------------------------------------------------------

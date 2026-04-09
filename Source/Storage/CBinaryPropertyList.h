@@ -16,5 +16,7 @@ class CBinaryPropertyList {
 	// Methods
 	public:
 										// Class methods
-		static	TVResult<CDictionary>	dictionaryFrom(const I<CRandomAccessDataSource>& randomAccessDataSource);
+		static	TVResult<CDictionary>	dictionaryFrom(const I<CRandomAccessDataSource>& randomAccessDataSource,
+												bool composeStandardDictionary = false);
+		static	OV<SError>				write(const CDictionary& dictionary, const CFile& file);
 };

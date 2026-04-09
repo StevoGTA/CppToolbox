@@ -13,7 +13,7 @@
 // MARK: Array methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CData> CCoreFoundation::dataArrayFrom(CFArrayRef arrayRef)
+TArray<CData> CCoreFoundation::arrayOfDatasFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -31,7 +31,7 @@ TArray<CData> CCoreFoundation::dataArrayFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CDictionary> CCoreFoundation::dictionaryArrayFrom(CFArrayRef arrayRef)
+TArray<CDictionary> CCoreFoundation::arrayOfDictionariesFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -49,7 +49,7 @@ TArray<CDictionary> CCoreFoundation::dictionaryArrayFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TNumberArray<OSType> CCoreFoundation::osTypeArrayFrom(CFArrayRef arrayRef)
+TNumberArray<OSType> CCoreFoundation::arrayOfOSTypesFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -68,7 +68,7 @@ TNumberArray<OSType> CCoreFoundation::osTypeArrayFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CCoreFoundation::stringArrayFrom(CFArrayRef arrayRef)
+TArray<CString> CCoreFoundation::arrayOfStringsFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -187,10 +187,10 @@ CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
 				CFTypeID	arrayElementTypeRef = ::CFGetTypeID(::CFArrayGetValueAtIndex(arrayRef, 0));
 				if (arrayElementTypeRef == ::CFDictionaryGetTypeID())
 					// Array of dictionaries
-					dictionary.set(CString(keyStringRefs[i]), dictionaryArrayFrom(arrayRef));
+					dictionary.set(CString(keyStringRefs[i]), arrayOfDictionariesFrom(arrayRef));
 				else if (arrayElementTypeRef == ::CFStringGetTypeID())
 					// Array of strings
-					dictionary.set(CString(keyStringRefs[i]), stringArrayFrom(arrayRef));
+					dictionary.set(CString(keyStringRefs[i]), arrayOfStringsFrom(arrayRef));
 				else
 					// Uh oh
 					CCoreServices::stopInDebugger();

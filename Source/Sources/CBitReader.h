@@ -36,7 +36,7 @@ class CBitReader {
 		UInt64				getPos() const;	// Will return next byte pos if bits still to read in current byte
 		OV<SError>			setPos(Position position, SInt64 newPos) const;	// kPositionFromCurrent of 0 advances to next byte boundary
 
-		OV<SError>			readData(void* buffer, UInt64 byteCount) const;
+		OV<SError>			read(void* buffer, UInt64 byteCount) const;
 		TVResult<CData>		readData(CData::ByteCount byteCount) const;
 
 		TVResult<SInt8>		readSInt8() const;	// Will ignore bits remaining in the current byte

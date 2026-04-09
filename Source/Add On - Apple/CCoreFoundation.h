@@ -52,10 +52,10 @@ class CCoreFoundation {
 	// Methods
 	public:
 										// Array methods
-		static	TArray<CData>			dataArrayFrom(CFArrayRef arrayRef);
-		static	TArray<CDictionary>		dictionaryArrayFrom(CFArrayRef arrayRef);
-		static	TNumberArray<OSType>	osTypeArrayFrom(CFArrayRef arrayRef);
-		static	TArray<CString>			stringArrayFrom(CFArrayRef arrayRef);
+		static	TArray<CData>			arrayOfDatasFrom(CFArrayRef arrayRef);
+		static	TArray<CDictionary>		arrayOfDictionariesFrom(CFArrayRef arrayRef);
+		static	TNumberArray<OSType>	arrayOfOSTypesFrom(CFArrayRef arrayRef);
+		static	TArray<CString>			arrayOfStringsFrom(CFArrayRef arrayRef);
 		static	O<CFArrayRef>			arrayRefFrom(const TArray<CData>& array);
 		static	O<CFArrayRef>			arrayRefFrom(const TArray<CDictionary>& array);
 		static	O<CFArrayRef>			arrayRefFrom(const TNumberArray<OSType>& array);

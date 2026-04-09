@@ -16,11 +16,10 @@ template <typename T> struct TBuffer {
 					TBuffer(UInt64 count)
 						{
 							// Setup
-							mStorage = new T[count];
+							mStorage = new T[count]();
 							mByteCount = count * sizeof(T);
 
-							mReferenceCount = new UInt32;
-							*mReferenceCount = 1;
+							mReferenceCount = new std::atomic<UInt32>(1);
 						}
 					TBuffer(T* buffer, UInt64 count) :
 						mStorage(buffer), mByteCount(count * sizeof(T)), mReferenceCount(nil)
@@ -90,7 +89,7 @@ template <typename T> struct TBuffer {
 
 	// Properties
 	private:
-		T*		mStorage;
-		UInt64	mByteCount;
-		UInt32*	mReferenceCount;
+		T*						mStorage;
+		UInt64					mByteCount;
+		std::atomic<UInt32>*	mReferenceCount;
 };

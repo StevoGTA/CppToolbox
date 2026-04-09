@@ -46,60 +46,6 @@ class CDictionary : public CEquatable {
 				SValue	mValue;
 		};
 
-	// Procs
-	public:
-		struct Procs {
-			// Procs
-			public:
-				typedef	Count		(*GetCountProc)(void* userData);
-				typedef	CString		(*GetKeyAtIndexProc)(UInt32 index, void* userData);
-				typedef	OR<SValue>	(*GetValueProc)(const CString& key, void* userData);
-				typedef	void		(*SetProc)(const CString& key, const SValue& value, void* userData);
-				typedef	void		(*RemoveKeysProc)(const TSet<CString>& keys, void* userData);
-				typedef	void		(*RemoveAllProc)(void* userData);
-				typedef	void		(*DisposeUserDataProc)(void* userData);
-
-			// Methods
-			public:
-							// Lifecycle methods
-							Procs(GetCountProc getCountProc, GetKeyAtIndexProc getKeyAtIndexProc,
-									GetValueProc getValueProc, SetProc setProc, RemoveKeysProc removeKeysProc,
-									RemoveAllProc removeAllProc, DisposeUserDataProc disposeUserDataProc,
-											void* userData) :
-								mGetCountProc(getCountProc), mGetKeyAtIndexProc(getKeyAtIndexProc),
-										mGetValueProc(getValueProc), mSetProc(setProc), mRemoveKeysProc(removeKeysProc),
-										mRemoveAllProc(removeAllProc), mDisposeUserDataProc(disposeUserDataProc),
-										mUserData(userData)
-								{}
-
-							// Instance methods
-				Count		getCount() const
-								{ return mGetCountProc(mUserData); }
-				CString		getKeyAtIndex(UInt32 index) const
-								{ return mGetKeyAtIndexProc(index, mUserData); }
-				OR<SValue>	getValue(const CString& key) const
-								{ return mGetValueProc(key, mUserData); }
-				void		set(const CString& key, const SValue& value)
-								{ mSetProc(key, value, mUserData); }
-				void		removeKeys(const TSet<CString>& keys)
-								{ mRemoveKeysProc(keys, mUserData); }
-				void		removeAll()
-								{ mRemoveAllProc(mUserData); }
-				void		disposeUserData() const
-								{ return mDisposeUserDataProc(mUserData); }
-
-			// Properties
-			private:
-				GetCountProc		mGetCountProc;
-				GetKeyAtIndexProc	mGetKeyAtIndexProc;
-				GetValueProc		mGetValueProc;
-				SetProc				mSetProc;
-				RemoveKeysProc		mRemoveKeysProc;
-				RemoveAllProc		mRemoveAllProc;
-				DisposeUserDataProc	mDisposeUserDataProc;
-				void*				mUserData;
-		};
-
 	// Iterators
 	public:
 		class IteratorInfo {
@@ -109,9 +55,10 @@ class CDictionary : public CEquatable {
 				virtual						~IteratorInfo() {}
 
 											// Instance methods
+				virtual			UInt32		getCount() const = 0;
 				virtual			UInt32		getCurrentIndex() const = 0;
 				virtual	const	CString&	getCurrentKey() const = 0;
-				virtual			SValue*		getCurrentValue() const = 0;
+				virtual			SValue&		getCurrentValue() const = 0;
 				virtual			void		advance() = 0;
 		};
 
@@ -160,9 +107,27 @@ class CDictionary : public CEquatable {
 							{ return getValue(); }
 		};
 
-	// Internals
-	protected:
-		class Internals;
+	// Backing
+	public:
+		class Backing {
+			public:
+													// Lifecycle methods
+													Backing() {}
+				virtual								~Backing() {}
+
+													// Instance methods
+				virtual	CDictionary::Count			getCount() const = 0;
+				virtual	OR<SValue>					getValue(const CString& key) const = 0;
+				virtual	void						set(const CString& key, const SValue& value) = 0;
+				virtual	void						remove(const CString& key) = 0;
+				virtual	void						remove(const TSet<CString>& keys) = 0;
+				virtual	void						removeAll() = 0;
+
+				virtual	I<IteratorInfo>				getIteratorInfo() const = 0;
+
+				virtual	I<Backing>					prepareForWrite() = 0;
+				virtual	SValue::OpaqueEqualsProc	getOpaqueEqualsProc() const = 0;
+		};
 
 	// Procs:
 	protected:
@@ -177,7 +142,7 @@ class CDictionary : public CEquatable {
 													CDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
 															SValue::OpaqueEqualsProc opaqueEqualsProc = nil,
 															SValue::OpaqueDisposeProc opaqueDisposeProc = nil);
-													CDictionary(const Procs& procs);
+													CDictionary(const I<Backing>& backing);
 													CDictionary(const CDictionary& other);
 		virtual										~CDictionary();
 
@@ -512,7 +477,7 @@ class CDictionary : public CEquatable {
 		static	const	CDictionary	mEmpty;
 
 	private:
-						Internals*	mInternals;
+						I<Backing>	mBacking;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

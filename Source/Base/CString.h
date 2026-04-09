@@ -178,8 +178,7 @@ class CString : public CHashable {
 							mBuffer = new char[std::max<Length>(length, 1)];
 							mBuffer[0] = 0;
 
-							mReferenceCount = new UInt32;
-							*mReferenceCount = 1;
+							mReferenceCount = new std::atomic<UInt32>(1);
 						}
 					C(const C& other) :
 						mBuffer(other.mBuffer), mReferenceCount(other.mReferenceCount)
@@ -203,8 +202,8 @@ class CString : public CHashable {
 
 			// Properties
 			private:
-				char*	mBuffer;
-				UInt32*	mReferenceCount;
+				char*					mBuffer;
+				std::atomic<UInt32>*	mReferenceCount;
 		};
 
 	// Methods
@@ -215,6 +214,7 @@ class CString : public CHashable {
 											CString(OSStringVar(initialString));
 											CString(const char chars[], CString::Length maxLength, Encoding encoding);
 											CString(const void* ptr, UInt64 byteCount, Encoding encoding);
+											CString(const TBuffer<UInt8>& buffer, Encoding encoding);
 											CString(const TBuffer<UTF32Char>& buffer);
 
 											CString(Float32 value, UInt32 fieldSize = 0,
@@ -310,7 +310,7 @@ class CString : public CHashable {
 						
 						TBuffer<char>		getUTF8Chars() const;
 						TBuffer<UTF32Char>	getUTF32Chars() const;
-						OV<CData>			getData(Encoding encoding) const;
+						OV<CData>			getData(Encoding encoding, bool okToFail = false) const;
 						CData				getUTF8Data() const;
 
 						CString				getSubString(CharIndex startIndex, OV<Length> length = OV<Length>()) const;

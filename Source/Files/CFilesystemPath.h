@@ -72,6 +72,7 @@ class CFilesystemPath : public CHashable {
 				CFilesystemPath		appendingComponent(const CString& component, Style style = kStylePlatformDefault)
 											const;
 				CFilesystemPath		deletingLastComponent() const;
+				CFilesystemPath		deletingExtension() const;
 				CFilesystemPath		appendingExtension(const CString& extension) const;
 
 				bool				equals(const CFilesystemPath& other) const

@@ -16,11 +16,18 @@
 #define	LogError(error, when)																					\
 			CLogServices::logError(error, when, CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),	\
 					CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__)
-
-#define LogErrorAndReturnValue(error, when, value)																\
-			CLogServices::logError(error, when, CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),	\
-					CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);						\
-			return value;																						\
+#define LogErrorAndReturnError(error, when)																			\
+			{																										\
+				CLogServices::logError(error, when, CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),	\
+						CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);						\
+				return error;																						\
+			}
+#define LogErrorAndReturnValue(error, when, value)																	\
+			{																										\
+				CLogServices::logError(error, when, CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),	\
+						CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);						\
+				return value;																						\
+			}
 
 #define LogIfError(error, when)																		\
 			{																						\

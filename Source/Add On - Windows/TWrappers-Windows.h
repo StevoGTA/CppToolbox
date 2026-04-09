@@ -9,7 +9,7 @@
 
 template <typename T> struct CI {
 			// Lifecycle methods
-			CI(T* instance) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+			CI(T* instance) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
 			CI(const CI<T>& other) :
 				mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
 				{ (*mReferenceCount)++; }
@@ -50,8 +50,8 @@ template <typename T> struct CI {
 
 	// Properties
 	private:
-		T*		mInstance;
-		UInt32*	mReferenceCount;
+		T*						mInstance;
+		std::atomic<UInt32>*	mReferenceCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ template <typename T> struct CI {
 
 template <typename T> struct OCI {
 			// Lifecycle methods
-			OCI(T* instance = nullptr) : mInstance(instance), mReferenceCount(new UInt32) { *mReferenceCount = 1; }
+			OCI(T* instance = nullptr) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
 			OCI(const OCI<T>& other) :
 				mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
 				{
@@ -114,6 +114,6 @@ template <typename T> struct OCI {
 
 	// Properties
 	private:
-		T*		mInstance;
-		UInt32*	mReferenceCount;
+		T*						mInstance;
+		std::atomic<UInt32>*	mReferenceCount;
  };

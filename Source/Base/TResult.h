@@ -51,7 +51,7 @@ template <typename T> struct TVResult {
 					// Instance Methods
 			bool	hasValue() const
 						{ return mValue.hasValue(); }
-	const	T&		getValue() const
+			T&		getValue() const
 						{ return *mValue; }
 
 			bool	hasError() const
@@ -59,9 +59,9 @@ template <typename T> struct TVResult {
 	const	SError&	getError() const
 						{ AssertFailIf(!mError.hasValue()); return *mError; }
 
-	const	T&		operator*() const
+			T&		operator*() const
 						{ AssertFailIf(!mValue.hasValue()); return *mValue; }
-	const	T*		operator->() const
+			T*		operator->() const
 						{ AssertFailIf(!mValue.hasValue()); return &(*mValue); }
 
 	private:

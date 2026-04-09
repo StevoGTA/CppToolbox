@@ -123,7 +123,7 @@ OV<TArray<CData> > CPreferences::getDataArray(const Pref& pref)
 	CCoreFoundation::OO<CFTypeRef>	arrayRef = mInternals->get(pref.getKeyString());
 
 	return arrayRef.hasObject() ?
-			OV<TArray<CData> >(CCoreFoundation::dataArrayFrom((CFArrayRef) *arrayRef)) : OV<TArray<CData> >();
+			OV<TArray<CData> >(CCoreFoundation::arrayOfDatasFrom((CFArrayRef) *arrayRef)) : OV<TArray<CData> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ OV<TArray<CDictionary> > CPreferences::getDictionaryArray(const Pref& pref)
 	CCoreFoundation::OO<CFTypeRef>	arrayRef = mInternals->get(pref.getKeyString());
 
 	return arrayRef.hasObject() ?
-			OV<TArray<CDictionary> >(CCoreFoundation::dictionaryArrayFrom((CFArrayRef) *arrayRef)) :
+			OV<TArray<CDictionary> >(CCoreFoundation::arrayOfDictionariesFrom((CFArrayRef) *arrayRef)) :
 			OV<TArray<CDictionary> >();
 }
 
@@ -146,7 +146,7 @@ OV<TNumberArray<OSType> > CPreferences::getOSTypeArray(const Pref& pref)
 	CCoreFoundation::OO<CFTypeRef>	arrayRef = mInternals->get(pref.getKeyString());
 
 	return arrayRef.hasObject() ?
-			OV<TNumberArray<OSType> >(CCoreFoundation::osTypeArrayFrom((CFArrayRef) *arrayRef)) :
+			OV<TNumberArray<OSType> >(CCoreFoundation::arrayOfOSTypesFrom((CFArrayRef) *arrayRef)) :
 			OV<TNumberArray<OSType> >();
 }
 

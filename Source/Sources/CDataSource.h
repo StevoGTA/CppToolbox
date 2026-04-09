@@ -7,11 +7,6 @@
 #include "CData.h"
 #include "TResult.h"
 
-/*
-Notes:
-	readData(...) returns a CData object that may live after the Data 
-*/
-
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDataSource
 

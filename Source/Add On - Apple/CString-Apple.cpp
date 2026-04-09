@@ -80,6 +80,23 @@ CString::CString(const void* ptr, UInt64 byteCount, Encoding encoding)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CString::CString(const TBuffer<UInt8>& buffer, Encoding encoding)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Compose string
+	mStringRef =
+			::CFStringCreateWithBytes(kCFAllocatorDefault, *buffer, buffer.getByteCount(),
+					sGetCFStringEncodingForCStringEncoding(encoding), true);
+
+	// Validate we have something
+	if (mStringRef == nil) {
+		// Have something
+		LogError(sCreateFailedError, CString(OSSTR("creating CFStringRef from buffer")));
+		mStringRef = OSSTR("<Unable to create string - likely bad characters or incorrect encoding>");
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CString::CString(const TBuffer<UTF32Char>& buffer)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -526,7 +543,7 @@ TBuffer<UTF32Char> CString::getUTF32Chars() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CData> CString::getData(Encoding encoding) const
+OV<CData> CString::getData(Encoding encoding, bool okToFail) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose dataRef
@@ -541,7 +558,9 @@ OV<CData> CString::getData(Encoding encoding) const
 		return OV<CData>(data);
 	} else {
 		// Failed
-		LogError(sCreateFailedError, CString(OSSTR("getting data")));
+		if (!okToFail)
+			// More efficient encodings bay be tried for which it's ok to fail
+			LogError(sCreateFailedError, CString(OSSTR("getting data")));
 
 		return OV<CData>();
 	}
@@ -553,7 +572,7 @@ CString CString::getSubString(CharIndex startIndex, OV<Length> length) const
 {
 	// Check if need to limit length
 	CFIndex	lengthUse;
-	if (length.hasValue() && ((startIndex + *length) <= ::CFStringGetLength(mStringRef)))
+	if (length.hasValue() && ((startIndex + *length) <= (Length) ::CFStringGetLength(mStringRef)))
 		// Use requested
 		lengthUse = *length;
 	else
@@ -590,7 +609,7 @@ CString CString::replacingCharacters(CharIndex startIndex, OV<Length> length, co
 {
 	// Check if need to limit length
 	CFIndex	lengthUse;
-	if (length.hasValue() && ((startIndex + *length) <= ::CFStringGetLength(mStringRef)))
+	if (length.hasValue() && ((startIndex + *length) <= (Length) ::CFStringGetLength(mStringRef)))
 		// Use requested
 		lengthUse = *length;
 	else
@@ -612,7 +631,7 @@ OV<SRange32> CString::findSubString(const CString& subString, CharIndex startInd
 {
 	// Get length to check
 	CFIndex	lengthUse =
-					(length.hasValue() && ((startIndex + *length) <= ::CFStringGetLength(mStringRef))) ?
+					(length.hasValue() && ((startIndex + *length) <= (Length) ::CFStringGetLength(mStringRef))) ?
 							*length : ::CFStringGetLength(mStringRef) - startIndex;
 
 	// Find

@@ -30,11 +30,13 @@ template <typename T> class TLockingDictionary : public CDictionary {
 										}
 
 									// Iterator methods
+						UInt32		getCount() const
+										{ return mIteratorInfo->getCount(); }
 						UInt32		getCurrentIndex() const
 										{ return mIteratorInfo->getCurrentIndex(); }
 				const	CString&	getCurrentKey() const
 										{ return mIteratorInfo->getCurrentKey(); }
-						SValue*		getCurrentValue() const
+						SValue&		getCurrentValue() const
 										{ return mIteratorInfo->getCurrentValue(); }
 						void		advance()
 										{ mIteratorInfo->advance(); }
@@ -83,7 +85,6 @@ template <typename T> class TLockingDictionary : public CDictionary {
 										SValue::OpaqueDisposeProc opaqueDisposeProc = nil) :
 									CDictionary(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
 									{}
-								TLockingDictionary(const Procs& procs) : CDictionary(procs) {}
 								TLockingDictionary(const TLockingDictionary<T>& other) : CDictionary(other) {}
 
 								// CDictionary methods
