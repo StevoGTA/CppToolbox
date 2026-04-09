@@ -148,7 +148,9 @@ TVResult<CData> CFileWriter::read(CData::ByteCount byteCount) const
 	CData	data(byteCount);
 
 	// Read
-	BOOL	result = ::ReadFile(mInternals->mFileHandle, data.getMutableBytePtr(), (DWORD) byteCount, NULL, NULL);
+	BOOL	result =
+					::ReadFile(mInternals->mFileHandle, *data.getMutableBuffer(byteCount), (DWORD) byteCount, NULL,
+							NULL);
 	if (!result) {
 		// Error
 		SError	error = SErrorFromWindowsGetLastError();

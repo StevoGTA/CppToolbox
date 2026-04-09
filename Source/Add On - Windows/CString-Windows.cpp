@@ -53,7 +53,7 @@ CString::CString(OSStringVar(initialString)) : CHashable()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const void* ptr, UInt32 byteCount, Encoding encoding) : CHashable()
+CString::CString(const void* ptr, UInt64 byteCount, Encoding encoding) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
@@ -627,20 +627,17 @@ OV<CData> CString::getData(Encoding encoding) const
 	int	length = (int) mString.length();
 	if (length > 0) {
 		// Setup
-		CData	data((CData::ByteCount) length * 4);
 		UINT	codePage = sGetCodePageForCStringEncoding((encoding == kEncodingUTF16) ? kEncodingUTF16LE : encoding);
 
 		// Convert
-		int	count =
-					::WideCharToMultiByte(codePage, 0, mString.c_str(), length, (char*) data.getMutableBytePtr(),
-							length * 4, NULL, NULL);
-		data.setByteCount(count);
+		TBuffer<UInt8>	buffer((UInt32) length * 4);
+		int				count =
+								::WideCharToMultiByte(codePage, 0, mString.c_str(), length, (char*) *buffer, length * 4,
+										NULL, NULL);
 
-		if (encoding == kEncodingUTF16)
-			// Add BOM
-			data = CData((UInt8) 0xFF) + CData((UInt8) 0xFE) + data;
-
-		return OV<CData>(data);
+		return (encoding == kEncodingUTF16) ?
+				OV<CData>(CData((UInt8) 0xFF) + CData((UInt8) 0xFE) + CData(*buffer, count, false)) :
+				OV<CData>(CData(*buffer, count));
 	} else
 		// Empty
 		return OV<CData>(CData::mEmpty);
