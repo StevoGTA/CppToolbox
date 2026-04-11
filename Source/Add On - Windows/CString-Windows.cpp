@@ -620,7 +620,7 @@ TBuffer<UTF32Char> CString::getUTF32Chars() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CData> CString::getData(Encoding encoding) const
+OV<CData> CString::getData(Encoding encoding, bool okToFail) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check length
