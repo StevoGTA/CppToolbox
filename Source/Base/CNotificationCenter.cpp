@@ -169,7 +169,8 @@ void CNotificationCenter::send(const CString& notificationName, const OR<Sender>
 		return;
 
 	// Iterate observer infos
-	for (TArray<Internals::ObserverInfo>::Iterator iterator = observerInfos->getIterator(); iterator; iterator++) {
+	TArray<Internals::ObserverInfo>	observerInfos_(*observerInfos);
+	for (TArray<Internals::ObserverInfo>::Iterator iterator = observerInfos_.getIterator(); iterator; iterator++) {
 		// Get info
 		const	Internals::ObserverInfo&	observerInfo = *iterator;
 
