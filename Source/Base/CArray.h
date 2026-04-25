@@ -648,6 +648,18 @@ template <typename T> class TNArray : public TMArray<T> {
 									TNArray(const TArray<T>& other) :
 										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
 										{ TMArray<T>::addFrom(other); }
+									TNArray(const TArray<T>& other, IsMatchProc isMatchProc, void* userData = nil) :
+										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
+										{
+											ItemCount	itemCount = CArray::getCount();
+											for (CArray::ItemIndex i = 0; i < itemCount; i++) {
+												// Check if match
+												const	T&	item = (*this)[i];
+												if (isMatchProc(item, userData))
+													// Not a match
+													TMArray<T>::add(item);
+											}
+										}
 									TNArray(const CArray& other, MapProc mapProc, void* userData = nil) :
 										TMArray<T>((CArray::CopyProc) copy, (CArray::DisposeProc) dispose)
 										{

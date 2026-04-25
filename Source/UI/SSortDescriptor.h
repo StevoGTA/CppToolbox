@@ -26,6 +26,6 @@ struct SSortDescriptor : public TV2<CString, bool> {
 													{ return getB(); }
 
 												// Class methods
-		static			TArray<CDictionary>		getInfos(const TArray<SSortDescriptor>& sortDescriptors);
-		static			TArray<SSortDescriptor>	getSortDescriptors(const TArray<CDictionary>& infos);
+		static			TArray<CDictionary>		getStorageInfos(const TArray<SSortDescriptor>& sortDescriptors);
+		static			TArray<SSortDescriptor>	getSortDescriptors(const TArray<CDictionary>& sotrageInfos);
 };

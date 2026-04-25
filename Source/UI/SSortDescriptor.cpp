@@ -12,29 +12,29 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CDictionary> SSortDescriptor::getInfos(const TArray<SSortDescriptor>& sortDescriptors)
+TArray<CDictionary> SSortDescriptor::getStorageInfos(const TArray<SSortDescriptor>& sortDescriptors)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert
-	TNArray<CDictionary>	infos;
+	TNArray<CDictionary>	sotrageInfos;
 	for (TArray<SSortDescriptor>::Iterator iterator = sortDescriptors.getIterator(); iterator; iterator++) {
 		// Add info
 		CDictionary	info;
 		info.set(CString(OSSTR("identifier")), iterator->getIdentifier());
 		info.set(CString(OSSTR("isAscending")), iterator->getIsAscending());
-		infos += info;
+		sotrageInfos += info;
 	}
 
-	return infos;
+	return sotrageInfos;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SSortDescriptor> SSortDescriptor::getSortDescriptors(const TArray<CDictionary>& infos)
+TArray<SSortDescriptor> SSortDescriptor::getSortDescriptors(const TArray<CDictionary>& sotrageInfos)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Convert
 	TNArray<SSortDescriptor>	sortDescriptors;
-	for (TArray<CDictionary>::Iterator iterator = infos.getIterator(); iterator; iterator++) {
+	for (TArray<CDictionary>::Iterator iterator = sotrageInfos.getIterator(); iterator; iterator++) {
 		// Get info
 		OV<CString>	identifier = iterator->getOVString(CString(OSSTR("identifier")));
 		OV<bool>	isAscending = iterator->getOVBool(CString(OSSTR("isAscending")));

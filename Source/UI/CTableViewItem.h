@@ -58,11 +58,14 @@ class CTableViewItem {
 	// Methods
 	public:
 
-									// Lifecycle methods
-									CTableViewItem() {}
-		virtual						~CTableViewItem() {}
+										// Lifecycle methods
+										CTableViewItem() {}
+		virtual							~CTableViewItem() {}
 
-									// Instance methods
-		virtual	const	CString&	getID() const = 0;
-		virtual			OSType		getType() const = 0;
+										// Instance methods
+		virtual	const	CString&		getID() const = 0;
+		virtual			OSType			getType() const = 0;
+
+										// Class methods
+		static			TArray<CString>	getIDs(const TArray<I<CTableViewItem> >& tableViewItems);
 };
