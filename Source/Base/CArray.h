@@ -671,7 +671,7 @@ template <typename T> class TNArray : public TMArray<T> {
 										}
 
 									// CArray methods
-				TNArray<T>			filtered(IsMatchProc isMatchProc, void* userData = nil)
+				TNArray<T>			filtered(IsMatchProc isMatchProc, void* userData = nil) const
 										{
 											// Setup
 											TNArray<T>	array;

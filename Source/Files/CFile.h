@@ -68,6 +68,9 @@ class CFile : public CHashable {
 						OV<SError>			setComments(const CString& string) const;
 #endif
 
+											// Class methods
+		static			TArray<CFile>		getExistingFiles(const TArray<CFile>& files);
+
 		static			TArray<CString>		getFilesystemPaths(const TArray<CFile>& files,
 													CFilesystemPath::Style filesystemPathStyle =
 															CFilesystemPath::kStylePlatformDefault);
