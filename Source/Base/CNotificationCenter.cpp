@@ -180,3 +180,24 @@ void CNotificationCenter::send(const CString& notificationName, const OR<Sender>
 			observerInfo.mObserver.callProc(notificationName, sender, info);
 	}
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CImmediateNotificationCenter
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CNotificationCenter& CImmediateNotificationCenter::shared()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static	CImmediateNotificationCenter*	sNotificationCenter = nil;
+
+	// Check if have notification center already
+	if (sNotificationCenter == nil)
+		// Create
+		sNotificationCenter = new CImmediateNotificationCenter();
+
+	return *sNotificationCenter;
+}

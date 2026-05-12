@@ -185,16 +185,20 @@ class CNotificationCenter {
 class CImmediateNotificationCenter : public CNotificationCenter {
 	// Methods
 	public:
-				// Lifecycle methods
-				CImmediateNotificationCenter() {}
+										// Lifecycle methods
+										CImmediateNotificationCenter() {}
 
-				// CNotificationCenter methods
-		void	post(const CString& notificationName, const Sender& sender, const CDictionary& info)
-					{ send(notificationName, OR<Sender>((Sender&) sender), info); }
-		void	post(const CString& notificationName, const Sender& sender)
-					{ CNotificationCenter::post(notificationName, sender); }
-		void	post(const CString& notificationName, const CDictionary& info)
-					{ send(notificationName, OR<Sender>(), info); }
-		void	post(const CString& notificationName)
-					{ CNotificationCenter::post(notificationName); }
+										// CNotificationCenter methods
+				void					post(const CString& notificationName, const Sender& sender,
+												const CDictionary& info)
+											{ send(notificationName, OR<Sender>((Sender&) sender), info); }
+				void					post(const CString& notificationName, const Sender& sender)
+											{ CNotificationCenter::post(notificationName, sender); }
+				void					post(const CString& notificationName, const CDictionary& info)
+											{ send(notificationName, OR<Sender>(), info); }
+				void					post(const CString& notificationName)
+											{ CNotificationCenter::post(notificationName); }
+
+										// Class methods
+		static	CNotificationCenter&	shared();
 };

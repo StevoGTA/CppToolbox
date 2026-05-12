@@ -102,7 +102,7 @@ OV<SError> CFilesystem::open(const TArray<CFile>& files, CFURLRef applicationURL
 	__block	NSError*				openURLsError = nil;
 	[[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:(__bridge NSURL*) applicationURLRef
 			configuration:[NSWorkspaceOpenConfiguration configuration]
-			completionHandler:^(NSRunningApplication* runningApplication, NSError* error) {
+			completionHandler:^(NSRunningApplication* runningApplication, NSError* error){
 		// Store error
 		openURLsError = error;
 

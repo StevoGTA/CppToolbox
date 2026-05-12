@@ -703,6 +703,17 @@ template <typename T> class TNArray : public TMArray<T> {
 				OV<T>				popFirst(IsMatchProc isMatchProc, void* userData = nil)
 										{ return TMArray<T>::popFirst(isMatchProc, userData); }
 
+				TNArray<T>			sorted(typename TMArray<T>::CompareProc compareProc, void* userData = nil) const
+										{
+											// Make a copy
+											TNArray<T>	array(*this);
+
+											// Sort
+											array.sort(compareProc, userData);
+
+											return array;
+										}
+
 									// Class methods
 		static	TArray<TArray<T> >	asChunksFrom(const TArray<T>& other, ItemCount chunkSize)
 										{
