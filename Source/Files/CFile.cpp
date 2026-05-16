@@ -12,6 +12,24 @@
 
 static	CString	sErrorDomain(OSSTR("CFile"));
 
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local procs
+
+//----------------------------------------------------------------------------------------------------------------------
+static	CString	sGetFilesystemPathString(const CFile& file, CFilesystemPath::Style* filesystemPathStyle)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return file.getFilesystemPath().getString(*filesystemPathStyle);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+static bool sDoesFileExist(const CFile& file, void* userData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return file.doesExist();
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFile::Internals
@@ -142,14 +160,15 @@ void CFile::update(const CFilesystemPath& filesystemPath)
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
+TArray<CFile> CFile::getExistingFiles(const TArray<CFile>& files)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TNArray<CFile>(files, sDoesFileExist);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TArray<CString> CFile::getFilesystemPaths(const TArray<CFile>& files, CFilesystemPath::Style filesystemPathStyle)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Collect filesystem paths
-	TNArray<CString>	filesystemPaths;
-	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++)
-		// Add filesystem path
-		filesystemPaths += iterator->getFilesystemPath().getString(filesystemPathStyle);
-
-	return filesystemPaths;
+	return TNArray<CString>(files, (TNArray<CString>::MapProc) sGetFilesystemPathString, (void*) &filesystemPathStyle);
 }

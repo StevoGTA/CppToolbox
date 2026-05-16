@@ -384,7 +384,7 @@ void CGPU::renderEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup for command completion
-	[mInternals->mCurrentCommandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
+	[mInternals->mCurrentCommandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer){
 		// We're done
 		mInternals->mSharedResourceBuffers.release();
 	}];
