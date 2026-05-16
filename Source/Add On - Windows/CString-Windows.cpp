@@ -113,8 +113,77 @@ CString::CString(const void* ptr, UInt64 byteCount, Encoding encoding) : CHashab
 
 			// Convert
 			int	count =
-					::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (const char*) ptr, byteCount,
-							&mString[0], byteCount);
+					::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (const char*) ptr,
+							(int) byteCount, &mString[0], (int) byteCount);
+			AssertFailIf(count == 0);
+			mString.resize(count);
+		}
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const TBuffer<UInt8>& buffer, Encoding encoding)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	const	UInt8*	bytePtr = *buffer;
+			UInt64	byteCount = buffer.getByteCount();
+
+	// Check for UTF16 encoding
+	if (encoding == kEncodingUTF16) {
+		// Determine byte order
+		AssertFailIf(byteCount < 2);
+		if (byteCount < 2)
+			return;
+
+		// Check first 2 bytes
+		if ((bytePtr[0] == 0xFE) && (bytePtr[1] == 0xFF)) {
+			// Big-endian
+			bytePtr += 2;
+			byteCount -= 2;
+			encoding = kEncodingUTF16BE;
+		} else if ((bytePtr[0] == 0xFF) && (bytePtr[1] == 0xFE)) {
+			// Little-endian
+			bytePtr += 2;
+			byteCount -= 2;
+			encoding = kEncodingUTF16LE;
+		} else if (bytePtr[0] == 0x00)
+			// Assume Bit-endian
+			encoding = kEncodingUTF16BE;
+		else if (bytePtr[1] == 0x00)
+			// Assume Little-endian
+			encoding = kEncodingUTF16LE;
+		else {
+			// Unknown
+			AssertFail();
+
+			return;
+		}
+	}
+
+	// Check length
+	if (byteCount > 0) {
+		// Check encoding
+		if (encoding == kEncodingUTF16LE) {
+			// Can just copy
+			mString.resize(byteCount / 2);
+			::memcpy(&mString[0], bytePtr, byteCount);
+		} else if (encoding == kEncodingUTF16BE) {
+			// Can copy, but must byte-swap
+			mString.resize(byteCount / 2);
+
+			const	UTF16Char*	sourcePtr = (const UTF16Char*) bytePtr;
+					UTF16Char*	stringPtr = (UTF16Char*) &mString[0];
+			for (UInt32 i = 0; i < (byteCount / 2); i++)
+				stringPtr[i] = (UTF16Char) (((sourcePtr[i] & 0xFF00) >> 8) | ((sourcePtr[i] & 0x00FF) << 8));
+		} else {
+			// Resize
+			mString.resize(byteCount);
+
+			// Convert
+			int	count =
+					::MultiByteToWideChar(sGetCodePageForCStringEncoding(encoding), 0, (const char*) bytePtr,
+							(int) byteCount, &mString[0], (int) byteCount);
 			AssertFailIf(count == 0);
 			mString.resize(count);
 		}
@@ -126,7 +195,7 @@ CString::CString(const TBuffer<UTF32Char>& buffer) : CHashable()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check length
-	UInt32	charCount = buffer.getCount();
+	UInt32	charCount = (UInt32) buffer.getCount();
 	if (charCount > 0) {
 		// Setup string
 		mString.resize(charCount);

@@ -6,6 +6,12 @@
 
 #include "CFilesystemPath.h"
 
+#if defined(TARGET_OS_WINDOWS)
+	#undef Delete
+	#include <Windows.h>
+	#define Delete(x)		{ delete x; x = nil; }
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFolder
 

@@ -8,7 +8,9 @@
 #include "CReferenceCountable.h"
 
 #if defined(TARGET_OS_WINDOWS)
+	#undef Delete
 	#include "Rpc.h"
+	#define Delete(x)	{ delete x; x = nil; }
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
