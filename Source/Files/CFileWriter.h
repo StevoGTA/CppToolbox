@@ -34,6 +34,7 @@ class CFileWriter {
 										// Instance methods
 				const	CFile&			getFile() const;
 
+						bool			isOpen() const;
 						OV<SError>		open(bool append = false, bool buffered = false, bool removeIfNotClosed = false)
 												const;
 

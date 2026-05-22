@@ -40,11 +40,11 @@
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFile::rename(const CString& string)
+OV<SError> CFile::rename(const CString& name)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose new filesystem path
-	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(string);
+	CFilesystemPath	filesystemPath = getFilesystemPath().deletingLastComponent().appendingComponent(name);
 
 	// Rename
 	if (::rename(*getFilesystemPath().getString().getUTF8String(), *filesystemPath.getString().getUTF8String()) == 0) {

@@ -36,7 +36,7 @@ class CFile : public CHashable {
 						CString				getName() const;
 						CString				getNameDeletingExtension() const;
 						CString				getNameForDisplay() const;
-						OV<SError>			rename(const CString& string);
+						OV<SError>			rename(const CString& name);
 
 						UInt64				getByteCount() const;
 
