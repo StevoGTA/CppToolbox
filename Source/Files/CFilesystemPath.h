@@ -5,6 +5,8 @@
 #pragma once
 
 #include "CString.h"
+#include "SError.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFilesystemPath
@@ -88,4 +90,24 @@ class CFilesystemPath : public CHashable {
 	// Properties
 	private:
 		Internals*	mInternals;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SFilesystemPathAndError
+
+struct SFilesystemPathAndError : public TV2<CFilesystemPath, SError> {
+	// Methods
+	public:
+									// Lifecycle methods
+									SFilesystemPathAndError(const CFilesystemPath& filesystemPath,
+											const SError& error) :
+										TV2(filesystemPath, error)
+										{}
+									SFilesystemPathAndError(const SFilesystemPathAndError& other) : TV2(other) {}
+
+									// Instance methods
+		const	CFilesystemPath&	getFilesystemPath() const
+										{ return getA(); }
+		const	SError&				getError() const
+										{ return getB(); }
 };

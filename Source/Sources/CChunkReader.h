@@ -83,6 +83,7 @@ class CChunkReader : public CByteReader {
 		enum Format {
 			kFormat32BitBigEndian,
 			kFormat32BitLittleEndian,
+			kFormat64BitBigEndian,
 			kFormat64BitLittleEndian,
 		};
 

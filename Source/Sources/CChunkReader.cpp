@@ -22,7 +22,8 @@ class CChunkReader::Internals {
 
 //----------------------------------------------------------------------------------------------------------------------
 CChunkReader::CChunkReader(const I<CRandomAccessDataSource>& randomAccessDataSource, Format format) :
-		CByteReader(randomAccessDataSource, format == kFormat32BitBigEndian)
+		CByteReader(randomAccessDataSource,
+				(format == kFormat32BitBigEndian) || (format == kFormat64BitBigEndian))
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new Internals(format);
@@ -52,6 +53,20 @@ TVResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 			TVResult<UInt32>	_byteCount = readUInt32();
 			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::ChunkInfo>(_byteCount.getError()));
 			UInt32	byteCount = *_byteCount;
+
+			UInt64	nextChunkPos = getPos() + byteCount + (byteCount % 0x02);
+
+			return TVResult<ChunkInfo>(ChunkInfo(*id, byteCount, getPos(), nextChunkPos));
+			}
+
+		case kFormat64BitBigEndian: {
+			// Read 64-bit big-endian header (e.g. DSDIFF)
+			TVResult<OSType>	id = readOSType();
+			ReturnValueIfResultError(id, TVResult<CChunkReader::ChunkInfo>(id.getError()));
+
+			TVResult<UInt64>	_byteCount = readUInt64();
+			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::ChunkInfo>(_byteCount.getError()));
+			UInt64	byteCount = *_byteCount;
 
 			UInt64	nextChunkPos = getPos() + byteCount + (byteCount % 0x02);
 
@@ -94,6 +109,26 @@ TVResult<CChunkReader::Chunk> CChunkReader::readChunk() const
 			TVResult<UInt32>	_byteCount = readUInt32();
 			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
 			UInt32	byteCount = *_byteCount;
+
+			UInt64	nextChunkPos = getPos() + byteCount;
+			if ((nextChunkPos & 1) != 0)
+				// Align
+				nextChunkPos += 1;
+
+			TVResult<CData>	data = CByteReader::readData(byteCount);
+			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+
+			return TVResult<Chunk>(Chunk(*id, *data, nextChunkPos));
+			}
+
+		case kFormat64BitBigEndian: {
+			// Read 64-bit big-endian header (e.g. DSDIFF)
+			TVResult<OSType>	id = readOSType();
+			ReturnValueIfResultError(id, TVResult<CChunkReader::Chunk>(id.getError()));
+
+			TVResult<UInt64>	_byteCount = readUInt64();
+			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+			UInt64	byteCount = *_byteCount;
 
 			UInt64	nextChunkPos = getPos() + byteCount;
 			if ((nextChunkPos & 1) != 0)

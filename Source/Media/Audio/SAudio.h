@@ -33,6 +33,7 @@ struct SAudio {
 		//		Lt - left matrix total. for matrix encoded stereo.
 		//		Rt - right matrix total. for matrix encoded stereo.
 	struct ChannelMap {
+		// Methods
 		public:
 										// Lifecycle methods
 										ChannelMap(UInt8 channelCount) : mValue(channelCount) {}
@@ -153,54 +154,76 @@ struct SAudio {
 
 	// Format
 	struct Format {
-					// Lifecycle methods
-					Format(OSType codecID, UInt8 bits, Float32 sampleRate, const ChannelMap& channelMap) :
-						mCodecID(codecID), mBits(bits), mSampleRate(sampleRate), mChannelMap(channelMap)
-						{}
-					Format(OSType codecID, Float32 sampleRate, const ChannelMap& channelMap) :
-						mCodecID(codecID), mSampleRate(sampleRate), mChannelMap(channelMap)
-						{}
-					Format(const Format& other, const ChannelMap& channelMap) :
-						mCodecID(other.mCodecID), mBits(other.mBits), mSampleRate(other.mSampleRate),
-								mChannelMap(channelMap)
-						{}
-					Format(const Format& other) :
-						mCodecID(other.mCodecID), mBits(other.mBits), mSampleRate(other.mSampleRate),
-								mChannelMap(other.mChannelMap)
-						{}
+		// Methods
+		public:
+									// Lifecycle methods
+									Format(OSType codecID, UInt8 bits, Float32 sampleRate,
+											const ChannelMap& channelMap) :
+										mCodecID(codecID), mBits(bits), mSampleRate(sampleRate), mChannelMap(channelMap)
+										{}
+									Format(OSType codecID, Float32 sampleRate, Float32 effectiveSampleRate,
+											const ChannelMap& channelMap) :
+										mCodecID(codecID), mSampleRate(sampleRate),
+												mEffectiveSampleRate(effectiveSampleRate), mChannelMap(channelMap)
+										{}
+									Format(OSType codecID, Float32 sampleRate, const ChannelMap& channelMap) :
+										mCodecID(codecID), mSampleRate(sampleRate), mChannelMap(channelMap)
+										{}
+									Format(const Format& other, const ChannelMap& channelMap) :
+										mCodecID(other.mCodecID), mBits(other.mBits), mSampleRate(other.mSampleRate),
+												mChannelMap(channelMap)
+										{}
+									Format(const Format& other) :
+										mCodecID(other.mCodecID), mBits(other.mBits), mSampleRate(other.mSampleRate),
+												mEffectiveSampleRate(other.mEffectiveSampleRate),
+												mChannelMap(other.mChannelMap)
+										{}
 
-					// Instance methods
-		OSType		getCodecID() const
-						{ return mCodecID; }
-		OV<UInt8>	getBits() const
-						{ return mBits; }
-		Float32		getSampleRate() const
-						{ return mSampleRate; }
-		ChannelMap	getChannelMap() const
-						{ return mChannelMap; }
+									// Instance methods
+					OSType			getCodecID() const
+										{ return mCodecID; }
+					OV<UInt8>		getBits() const
+										{ return mBits; }
+					Float32			getSampleRate() const
+										{ return mSampleRate; }
+			const	OV<Float32>&	getEffectiveSampleRate() const
+										{ return mEffectiveSampleRate; }
+					ChannelMap		getChannelMap() const
+										{ return mChannelMap; }
 
-		CString		getDescription() const
-						{
-							// Compose description
-							CString	description;
+					CString			getDescription() const
+										{
+											// Compose description
+											CString	description;
 
-							description +=
-									mBits.hasValue() ?
-											CString(*mBits) + CString(OSSTR(", ")) :
-											CString(OSSTR("n/a, "));
-							description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
-							description +=
-									CString(mChannelMap.getChannelCount()) + CString(OSSTR(" (")) +
-											mChannelMap.getDisplayString() + CString(OSSTR(")"));
+											description +=
+													mBits.hasValue() ?
+															CString(*mBits) + CString(OSSTR(", ")) :
+															CString(OSSTR("n/a, "));
+											if (mEffectiveSampleRate.hasValue())
+												// Have effective sample rate
+												description +=
+														CString(mSampleRate, 0, 0) +
+																CString(OSSTR("Hz (effectively ")) +
+																CString(*mEffectiveSampleRate, 0, 0) +
+																CString(OSSTR("Hz), "));
+											else
+												// No effective sample rate
+												description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
 
-							return description;
-						}
+											description +=
+													CString(mChannelMap.getChannelCount()) + CString(OSSTR(" (")) +
+															mChannelMap.getDisplayString() + CString(OSSTR(")"));
+
+											return description;
+										}
 
 		// Properties
 		private:
 			OSType		mCodecID;
 			OV<UInt8>	mBits;
 			Float32		mSampleRate;
+			OV<Float32>	mEffectiveSampleRate;
 			ChannelMap	mChannelMap;
 	};
 
@@ -229,6 +252,8 @@ struct SAudio {
 			kNonInterleaved,
 		};
 
+		// Methods
+		public:
 									// Lifecycle methods
 									ProcessingFormat(UInt8 bits, Float32 sampleRate, const ChannelMap& channelMap,
 											SampleType sampleType = kSampleTypeSignedInteger,
@@ -464,46 +489,48 @@ struct SAudio {
 			kInterleavedUnspecified,
 		};
 
-									// Lifecycle methods
-									ProcessingSetup(const BitsInfo& bitsInfo, const SampleRateInfo& sampleRateInfo,
-											const ChannelMapInfo& channelMapInfo, SampleTypeOption sampleTypeOption,
-											EndianOption endianOption, InterleavedOption interleavedOption) :
-										mBitsInfo(bitsInfo), mSampleRateInfo(sampleRateInfo),
-												mChannelMapInfo(channelMapInfo), mSampleTypeOption(sampleTypeOption),
-												mEndianOption(endianOption), mInterleavedOption(interleavedOption)
-										{}
-									ProcessingSetup(UInt8 bits, Float32 sampleRate,
-											const ChannelMap& audioChannelMap,
-											SampleTypeOption sampleTypeOption = kSampleTypeSignedInteger,
-											EndianOption endianOption = kEndianNative,
-											InterleavedOption interleavedOption = kInterleaved) :
-										mBitsInfo(bits), mSampleRateInfo(sampleRate),
-												mChannelMapInfo(audioChannelMap),
-												mSampleTypeOption(sampleTypeOption), mEndianOption(endianOption),
-												mInterleavedOption(
-														(audioChannelMap == ChannelMap::_1_0()) ?
-																kInterleaved : interleavedOption)
-										{}
+		// Methods
+		public:
+										// Lifecycle methods
+										ProcessingSetup(const BitsInfo& bitsInfo, const SampleRateInfo& sampleRateInfo,
+												const ChannelMapInfo& channelMapInfo, SampleTypeOption sampleTypeOption,
+												EndianOption endianOption, InterleavedOption interleavedOption) :
+											mBitsInfo(bitsInfo), mSampleRateInfo(sampleRateInfo),
+													mChannelMapInfo(channelMapInfo), mSampleTypeOption(sampleTypeOption),
+													mEndianOption(endianOption), mInterleavedOption(interleavedOption)
+											{}
+										ProcessingSetup(UInt8 bits, Float32 sampleRate,
+												const ChannelMap& audioChannelMap,
+												SampleTypeOption sampleTypeOption = kSampleTypeSignedInteger,
+												EndianOption endianOption = kEndianNative,
+												InterleavedOption interleavedOption = kInterleaved) :
+											mBitsInfo(bits), mSampleRateInfo(sampleRate),
+													mChannelMapInfo(audioChannelMap),
+													mSampleTypeOption(sampleTypeOption), mEndianOption(endianOption),
+													mInterleavedOption(
+															(audioChannelMap == ChannelMap::_1_0()) ?
+																	kInterleaved : interleavedOption)
+											{}
 
-									// Instance methods
-		const	BitsInfo&			getBitsInfo() const
-										{ return mBitsInfo; }
-		const	SampleRateInfo&		getSampleRateInfo() const
-										{ return mSampleRateInfo; }
-		const	ChannelMapInfo&		getChannelMapInfo() const
-										{ return mChannelMapInfo; }
-				bool				isSampleTypeOptionSpecified() const
-										{ return mSampleTypeOption != kSampleTypeUnspecified; }
-				SampleTypeOption	getSampleTypeOption() const
-										{ return mSampleTypeOption; }
-				bool				isEndianOptionSpecified() const
-										{ return mEndianOption != kEndianUnspecified; }
-				EndianOption		getEndianOption() const
-										{ return mEndianOption; }
-				bool				isInterleavedOptionSpecified() const
-										{ return mInterleavedOption != kInterleavedUnspecified; }
-				InterleavedOption	getInterleavedOption() const
-										{ return mInterleavedOption; }
+										// Instance methods
+			const	BitsInfo&			getBitsInfo() const
+											{ return mBitsInfo; }
+			const	SampleRateInfo&		getSampleRateInfo() const
+											{ return mSampleRateInfo; }
+			const	ChannelMapInfo&		getChannelMapInfo() const
+											{ return mChannelMapInfo; }
+					bool				isSampleTypeOptionSpecified() const
+											{ return mSampleTypeOption != kSampleTypeUnspecified; }
+					SampleTypeOption	getSampleTypeOption() const
+											{ return mSampleTypeOption; }
+					bool				isEndianOptionSpecified() const
+											{ return mEndianOption != kEndianUnspecified; }
+					EndianOption		getEndianOption() const
+											{ return mEndianOption; }
+					bool				isInterleavedOptionSpecified() const
+											{ return mInterleavedOption != kInterleavedUnspecified; }
+					InterleavedOption	getInterleavedOption() const
+											{ return mInterleavedOption; }
 
 		// Properties
 		public:
