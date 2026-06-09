@@ -910,12 +910,15 @@ bool CString::hasLocalizationFor(const CString& localizationGroup, const CString
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	CCoreFoundation::OO<CFStringRef>	stringRef(
-												::CFBundleCopyLocalizedString(::CFBundleGetMainBundle(),
-														localizationKey.mStringRef, localizationKey.mStringRef,
-														localizationGroup.mStringRef));
+    static	CFStringRef	sSentinel = CFSTR("\x01__missing__\x01");
 
-	return stringRef.hasObject();
+    // Get value
+    CCoreFoundation::O<CFStringRef>	stringRef(
+											::CFBundleCopyLocalizedString(::CFBundleGetMainBundle(),
+													localizationKey.mStringRef, sSentinel,
+													localizationGroup.mStringRef));
+
+	return !::CFEqual(*stringRef, sSentinel);
 }
 
 // MARK: Internal methods

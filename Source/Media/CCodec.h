@@ -67,5 +67,6 @@ class CCodec {
 
 	// Properties
 	public:
+		static	const	CString	mErrorDomain;
 		static	const	SError	mErrorNoCodec;
 };
