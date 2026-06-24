@@ -45,6 +45,8 @@ class CData {
 						CString			getBase64String(bool prettyPrint = false) const;
 						CString			getHexString(bool uppercase = false) const;
 
+						TBuffer<UInt8>	getUInt8Buffer(ByteIndex byteIndex, ByteCount byteCount) const;
+						TBuffer<UInt8>	getUInt8Buffer(ByteIndex byteIndex = 0) const;
 						CData			subData(ByteIndex byteIndex, ByteCount byteCount) const;
 						CData			subData(ByteIndex byteIndex) const;
 						OV<SRange64>	findSubData(const CData& subData, ByteIndex startIndex = 0,
@@ -99,3 +101,9 @@ class CData {
 	private:
 						Internals*	mInternals;
 };
+
+/*
+TODOs:
+	Remove getBytePtr()
+	Remove subData(...) - replace with getUInt8Buffer(...) once owning-slice callers are migrated
+*/
