@@ -271,13 +271,11 @@ CData CData::subData(ByteIndex byteIndex, ByteCount byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	AssertFailIf((byteIndex + byteCount) >= mInternals->mBufferUsedByteCount);
-	if ((byteIndex + byteCount) >= mInternals->mBufferUsedByteCount)
+	AssertFailIf((byteIndex + byteCount) > mInternals->mBufferUsedByteCount);
+	if ((byteIndex + byteCount) > mInternals->mBufferUsedByteCount)
 		return mEmpty;
 
-	return (byteIndex == 0) ?
-			CData((UInt8*) mInternals->mBuffer, byteCount, false) :
-			CData((UInt8*) mInternals->mBuffer + byteIndex, byteCount);
+	return CData((UInt8*) mInternals->mBuffer + byteIndex, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
