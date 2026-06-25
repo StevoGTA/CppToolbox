@@ -80,7 +80,7 @@ CString::CString(const void* ptr, UInt64 byteCount, Encoding encoding)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString::CString(const TBuffer<UInt8>& buffer, Encoding encoding)
+CString::CString(const TBuffer<const UInt8>& buffer, Encoding encoding)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Compose string

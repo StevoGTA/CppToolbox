@@ -272,6 +272,17 @@ CString::CString(const CData& data, Encoding encoding)
 	*this = CString(data.getBytePtr(), (UInt32) data.getByteCount(), encoding);
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CString::CString(const TBuffer<UInt8>& buffer, Encoding encoding)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Init
+	init();
+
+	// Finish setting up
+	*this = CString(TBuffer<const UInt8>(*buffer, buffer.getByteCount()), encoding);
+}
+
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------

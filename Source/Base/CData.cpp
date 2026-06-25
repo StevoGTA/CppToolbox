@@ -267,23 +267,24 @@ CString CData::getBase64String(bool prettyPrint) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TBuffer<UInt8> CData::getUInt8Buffer(ByteIndex byteIndex, ByteCount byteCount) const
+TBuffer<const UInt8> CData::getUInt8Buffer(ByteIndex byteIndex, ByteCount byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
 	AssertFailIf((byteIndex + byteCount) > mInternals->mBufferUsedByteCount);
 
-	return TBuffer<UInt8>((UInt8*) mInternals->mBuffer + byteIndex, byteCount);
+	return TBuffer<const UInt8>((const UInt8*) mInternals->mBuffer + byteIndex, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TBuffer<UInt8> CData::getUInt8Buffer(ByteIndex byteIndex) const
+TBuffer<const UInt8> CData::getUInt8Buffer(ByteIndex byteIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
 	AssertFailIf(byteIndex > mInternals->mBufferUsedByteCount);
 
-	return TBuffer<UInt8>((UInt8*) mInternals->mBuffer + byteIndex, mInternals->mBufferUsedByteCount - byteIndex);
+	return TBuffer<const UInt8>((const UInt8*) mInternals->mBuffer + byteIndex,
+			mInternals->mBufferUsedByteCount - byteIndex);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
