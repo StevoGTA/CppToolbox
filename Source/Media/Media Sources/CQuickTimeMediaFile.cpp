@@ -192,7 +192,7 @@ struct SQThdlrAtomPayload {
 //	UInt64	getDuration() const
 //				{
 //					// Setup
-//					const	Payload&	payload = *((Payload*) mData.getBytePtr());
+//					const	Payload&	payload = *((const Payload*) *mData.getUInt8Buffer());
 //
 //					return (payload.mVersion == 0) ?
 //							EndianU32_BtoN(payload._.mInfoV0.mDuration) :
@@ -227,14 +227,14 @@ struct SQTmdhdAtomPayload {
 	UInt32	getTimeScale() const
 				{
 					// Setup
-					const	Payload&	payload = *((Payload*) mData.getBytePtr());
+					const	Payload&	payload = *((const Payload*) *mData.getUInt8Buffer());
 
 					return EndianU32_BtoN(payload.mTimeScale);
 				}
 	UInt32	getDuration() const
 				{
 					// Setup
-					const	Payload&	payload = *((Payload*) mData.getBytePtr());
+					const	Payload&	payload = *((const Payload*) *mData.getUInt8Buffer());
 
 					return EndianU32_BtoN(payload.mDuration);
 				}
@@ -647,11 +647,11 @@ struct CQuickTimeMediaFile::Internals {
 											{}
 
 	const	SQTAudioSampleDescription&	getAudioSampleDescription() const
-											{ return *((SQTAudioSampleDescription*)
-													mSTSDDescription.getSampleDescriptionPayload().getBytePtr()); }
+											{ return *((const SQTAudioSampleDescription*)
+													*mSTSDDescription.getSampleDescriptionPayload().getUInt8Buffer()); }
 	const	SQTVideoSampleDescription&	getVideoSampleDescription() const
-											{ return *((SQTVideoSampleDescription*)
-													mSTSDDescription.getSampleDescriptionPayload().getBytePtr()); }
+											{ return *((const SQTVideoSampleDescription*)
+													*mSTSDDescription.getSampleDescriptionPayload().getUInt8Buffer()); }
 
 			TVResult<CData>				getAudioDecompressionData() const
 											{
@@ -789,7 +789,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('h', 'd', 'l', 'r')));
 			if (hdlrAtomPayloadData.hasError()) continue;
 			const	SQThdlrAtomPayload&	hdlrAtomPayload =
-												*((SQThdlrAtomPayload*) hdlrAtomPayloadData->getBytePtr());
+												*((const SQThdlrAtomPayload*) *hdlrAtomPayloadData->getUInt8Buffer());
 
 			// Media Information
 			TVResult<CAtomReader::ContainerAtom>	minfContainerAtom =
@@ -811,7 +811,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 			TVResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
 			if (error.hasValue()) continue;
 			const	SQTstsdAtomPayload&	stsdAtomPayload =
-												*((SQTstsdAtomPayload*) stsdAtomPayloadData->getBytePtr());
+												*((const SQTstsdAtomPayload*) *stsdAtomPayloadData->getUInt8Buffer());
 			const	SstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
 
 			// Sample Table Time-to-Sample
@@ -820,7 +820,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 't', 's')));
 			if (sttsAtomPayloadData.hasError()) continue;
 			const	SQTsttsAtomPayload&	sttsAtomPayload =
-												*((SQTsttsAtomPayload*) sttsAtomPayloadData->getBytePtr());
+												*((const SQTsttsAtomPayload*) *sttsAtomPayloadData->getUInt8Buffer());
 
 			// Sample Table Sample Blocks
 			TVResult<CData>	stscAtomPayloadData =
@@ -828,7 +828,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'c')));
 			if (stscAtomPayloadData.hasError()) continue;
 			const	SQTstscAtomPayload&	stscAtomPayload =
-												*((SQTstscAtomPayload*) stscAtomPayloadData->getBytePtr());
+												*((const SQTstscAtomPayload*) *stscAtomPayloadData->getUInt8Buffer());
 
 			// Sample Table Packet Sizes
 			TVResult<CData>	stszAtomPayloadData =
@@ -836,7 +836,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'z')));
 			if (stszAtomPayloadData.hasError()) continue;
 			const	SQTstszAtomPayload&	stszAtomPayload =
-												*((SQTstszAtomPayload*) stszAtomPayloadData->getBytePtr());
+												*((const SQTstszAtomPayload*) *stszAtomPayloadData->getUInt8Buffer());
 
 			// Sample Table Block offsets
 			TVResult<CData>	stcoAtomPayloadData =
@@ -1208,7 +1208,8 @@ TVResult<SMediaSource::Tracks::VideoTrack> CQuickTimeMediaFile::composeVideoTrac
 						TVResult<SMediaSource::Tracks::VideoTrack>(stssAtomPayloadData.getError()));
 
 				const	SQTstssAtomPayload&		stssAtomPayload =
-														*((SQTstssAtomPayload*) stssAtomPayloadData->getBytePtr());
+														*((const SQTstssAtomPayload*)
+																*stssAtomPayloadData->getUInt8Buffer());
 						UInt32					keyframesCount = stssAtomPayload.getKeyframesCount();
 						TNumberArray<UInt32>	keyframeIndexes;
 				for (UInt32 i = 0; i < keyframesCount; i++)
