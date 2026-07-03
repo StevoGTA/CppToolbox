@@ -261,7 +261,7 @@ OV<CImage::Type> CImage::getTypeFromData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	void*	bytePtr = data.getBytePtr();
+	const	void*	bytePtr = *data.getUInt8Buffer();
 
 	// Check for signatures
 	// See https://stackoverflow.com/questions/4550296/how-to-identify-contents-of-a-byte-is-a-jpeg
@@ -541,7 +541,7 @@ boolean sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr)
 		// 1st time, point to data
 		CData*	data = (CData*) jpegInfoPtr->client_data;
 
-		jpegInfoPtr->src->next_input_byte = (const JOCTET*) data->getBytePtr();
+		jpegInfoPtr->src->next_input_byte = (const JOCTET*) *data->getUInt8Buffer();
 		jpegInfoPtr->src->bytes_in_buffer = data->getByteCount();
 
 		return TRUE;
@@ -587,7 +587,7 @@ void sDecodeNV12Data(const CData& data, const S2DSizeS32& size, CBitmap& bitmap,
 	I<CBitmap::RowWriter>	rowWriter1 = bitmap.getRowWriter(1);
 
 	// Loop vertially
-	const UInt8* y0Ptr = (UInt8*) data.getBytePtr();
+	const UInt8* y0Ptr = *data.getUInt8Buffer();
 	const UInt8* y1Ptr = y0Ptr + size.mWidth;
 	const UInt8* uvPtr = y0Ptr + size.mWidth * size.mHeight;
 	for (SInt32 y = 0; y < size.mHeight; y += 2, y0Ptr += size.mWidth, y1Ptr += size.mWidth) {
@@ -684,7 +684,7 @@ TVResult<CBitmap> sDecodePNGData(const CData& data)
 	png_image	pngImage;
 	memset(&pngImage, 0, sizeof(png_image));
 	pngImage.version = PNG_IMAGE_VERSION;
-	if (png_image_begin_read_from_memory(&pngImage, data.getBytePtr(), data.getByteCount()) == 0)
+	if (png_image_begin_read_from_memory(&pngImage, *data.getUInt8Buffer(), data.getByteCount()) == 0)
 		// Nope!
 		return TVResult<CBitmap>(sErrorUnableToDecode);
 

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CData.h"
+#include "TResult.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CData_ZIPExtensions
@@ -12,7 +13,7 @@
 class CData_ZIPExtensions {
 	// Methods
 	public:
-						// Class methods
-		static	CData	uncompressDataAsZIP(const CData& data,
-								OV<CData::ByteCount> uncompressedDataByteCount = OV<CData::ByteCount>());
+								// Class methods
+		static	TVResult<CData>	uncompressDataAsZIP(const CData& data,
+										OV<CData::ByteCount> uncompressedDataByteCount = OV<CData::ByteCount>());
 };

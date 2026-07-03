@@ -21,28 +21,28 @@ CString SHash::valueFor(const CData& data, Type type, bool uppercase)
 	switch (type) {
 		case xxHash32: {
 			// xxHash32
-			XXH32_hash_t	hash = XXH32(data.getBytePtr(), data.getByteCount(), 0);
+			XXH32_hash_t	hash = XXH32(*data.getUInt8Buffer(), data.getByteCount(), 0);
 
 			return CData(&hash, sizeof(XXH32_hash_t), false).getHexString(uppercase);
 		}
 
 		case xxHash64: {
 			// xxHash64
-			XXH64_hash_t	hash = XXH64(data.getBytePtr(), data.getByteCount(), 0);
+			XXH64_hash_t	hash = XXH64(*data.getUInt8Buffer(), data.getByteCount(), 0);
 
 			return CData(&hash, sizeof(XXH64_hash_t), false).getHexString(uppercase);
 		}
 
 		case xxHash3_64: {
 			// xxHash3 64 bits
-			XXH64_hash_t	hash = XXH3_64bits(data.getBytePtr(), data.getByteCount());
+			XXH64_hash_t	hash = XXH3_64bits(*data.getUInt8Buffer(), data.getByteCount());
 
 			return CData(&hash, sizeof(XXH64_hash_t), false).getHexString(uppercase);
 		}
 
 		case xxHash3_128: {
 			// xxHash3 128 bits
-			XXH128_hash_t	hash = XXH3_128bits(data.getBytePtr(), data.getByteCount());
+			XXH128_hash_t	hash = XXH3_128bits(*data.getUInt8Buffer(), data.getByteCount());
 
 			return CData(&hash, sizeof(XXH128_hash_t), false).getHexString(uppercase);
 		}

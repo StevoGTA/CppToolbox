@@ -636,7 +636,7 @@ struct CQuickTimeMediaFile::Internals {
 												const SQTsttsAtomPayload& sttsAtomPayload,
 												const SQTstscAtomPayload& stscAtomPayload,
 												const SQTstszAtomPayload& stszAtomPayload,
-												const OR<SQTstcoAtomPayload>& stcoAtomPayload) :
+												const OR<const SQTstcoAtomPayload>& stcoAtomPayload) :
 											mAtomReader(atomReader), mSTSDAtom(stsdAtom),
 													mSTBLContainerAtom(stblContainerAtom),
 													mSTSDDescription(stsdDescription),
@@ -700,15 +700,15 @@ struct CQuickTimeMediaFile::Internals {
 												return mSTCOAtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex);
 											}
 
-	const	CAtomReader&				mAtomReader;
-	const	CAtomReader::Atom&			mSTSDAtom;
-	const	CAtomReader::ContainerAtom&	mSTBLContainerAtom;
-	const	SstsdDescription&			mSTSDDescription;
-	const	SQTsttsAtomPayload&			mSTTSAtomPayload;
-	const	SQTstscAtomPayload&			mSTSCAtomPayload;
-	const	SQTstszAtomPayload&			mSTSZAtomPayload;
-	const	OR<SQTstcoAtomPayload>		mSTCOAtomPayload;
-//	const	OR<SQTco64AtomPayload>&		mCO64AtomPayload;
+	const	CAtomReader&					mAtomReader;
+	const	CAtomReader::Atom&				mSTSDAtom;
+	const	CAtomReader::ContainerAtom&		mSTBLContainerAtom;
+	const	SstsdDescription&				mSTSDDescription;
+	const	SQTsttsAtomPayload&				mSTTSAtomPayload;
+	const	SQTstscAtomPayload&				mSTSCAtomPayload;
+	const	SQTstszAtomPayload&				mSTSZAtomPayload;
+	const	OR<const SQTstcoAtomPayload>	mSTCOAtomPayload;
+//	const	OR<const SQTco64AtomPayload>&	mCO64AtomPayload;
 };
 
 // MARK: Instance methods
@@ -846,16 +846,20 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
 			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
-			SQTstcoAtomPayload*	stcoAtomPayload =
-										stcoAtomPayloadData.hasValue() ?
-												(SQTstcoAtomPayload*) stcoAtomPayloadData->getBytePtr() : nil;
-//			Sco64AtomPayload*	co64AtomPayload =
-//										co64AtomPayloadData.hasValue() ?
-//												(Sco64AtomPayload*) co64AtomPayloadData->getBytePtr() : nil;
+			const	SQTstcoAtomPayload*	stcoAtomPayload =
+												stcoAtomPayloadData.hasValue() ?
+														(const SQTstcoAtomPayload*)
+																*stcoAtomPayloadData->getUInt8Buffer() :
+														nil;
+//			const	SQTco64AtomPayload*	co64AtomPayload =
+//												co64AtomPayloadData.hasValue() ?
+//														(const SQTco64AtomPayload*)
+//																*co64AtomPayloadData->getUInt8Buffer() :
+//														nil;
 
 			// Internals
 			Internals	internals(atomReader, *stsdAtom, *stblContainerAtom, stsdDescription, sttsAtomPayload,
-								stscAtomPayload, stszAtomPayload, OR<SQTstcoAtomPayload>(*stcoAtomPayload));
+								stscAtomPayload, stszAtomPayload, OR<const SQTstcoAtomPayload>(*stcoAtomPayload));
 
 			// Metadata
 			OR<CAtomReader::Atom>	metaAtom = trakContainerAtom->getAtom(MAKE_OSTYPE('m', 'e', 't', 'a'));

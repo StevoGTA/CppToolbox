@@ -116,7 +116,7 @@ class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals
 				if (mUsedPixelsSize == mTotalPixelsSize)
 					// Width and height are powers of 2 so use all
 					glTexImage2D(mTextureTarget, 0, format, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, 0, format,
-							pixelFormat, data.getBytePtr());
+							pixelFormat, *data.getUInt8Buffer());
 				else {
 					// Width or height is not a power of 2 so expand texture space and use what we need
 					UInt8*	empty = (UInt8*) ::calloc(mTotalPixelsSize.mWidth * mTotalPixelsSize.mHeight, 4);
@@ -125,7 +125,7 @@ class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals
 					::free(empty);
 
 					glTexSubImage2D(mTextureTarget, 0, 0, 0, mUsedPixelsSize.mWidth, mUsedPixelsSize.mHeight, format,
-							pixelFormat, data.getBytePtr());
+							pixelFormat, *data.getUInt8Buffer());
 				}
 
 				// Finish up the rest of the GL setup

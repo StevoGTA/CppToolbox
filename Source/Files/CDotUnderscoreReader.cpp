@@ -132,7 +132,7 @@ TIResult<CDotUnderscoreReader> CDotUnderscoreReader::from(const I<CRandomAccessD
 	TVResult<CData>		data = byteReader.readData(sizeof(SDotUnderscoreHeader));
 	ReturnValueIfResultError(data, TIResult<CDotUnderscoreReader>(data.getError()));
 
-	const	SDotUnderscoreHeader&	header = *((const SDotUnderscoreHeader*) data->getBytePtr());
+	const	SDotUnderscoreHeader&	header = *((const SDotUnderscoreHeader*) *data->getUInt8Buffer());
 	if ((header.getMagic() != 0x00051607) || (header.getVersion() != 2))
 		// Don't know how to read this data
 		return TIResult<CDotUnderscoreReader>(sInvalidData);
@@ -145,7 +145,7 @@ TIResult<CDotUnderscoreReader> CDotUnderscoreReader::from(const I<CRandomAccessD
 	data = byteReader.readData(sizeof(SDotUnderscoreATTR));
 	ReturnValueIfResultError(data, TIResult<CDotUnderscoreReader>(data.getError()));
 
-	const	SDotUnderscoreATTR&	attr = *((const SDotUnderscoreATTR*) data->getBytePtr());
+	const	SDotUnderscoreATTR&	attr = *((const SDotUnderscoreATTR*) *data->getUInt8Buffer());
 	UInt32	resourceForkOffset = attr.getResourceForkOffset();
 
 	// Read attributes

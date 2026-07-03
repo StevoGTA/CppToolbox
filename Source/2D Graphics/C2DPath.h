@@ -164,7 +164,7 @@ template <typename T> class T2DPath : public C2DPath {
 												UInt32	byteCount = sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	void*		bytePtr = data.getBytePtr();
+													const	void*		bytePtr = *data.getUInt8Buffer();
 															T2DPoint<T>	point = *((T2DPoint<T>*) bytePtr);
 													if (point != mCurrentPoint)
 														// Close
@@ -198,7 +198,7 @@ template <typename T> class T2DPath : public C2DPath {
 												UInt32	byteCount = sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	UInt8*		bytePtr = (const UInt8*) data.getBytePtr();
+													const	UInt8*		bytePtr = *data.getUInt8Buffer();
 															T2DPoint<T>	point = *((T2DPoint<T>*) bytePtr);
 													bytePtr += sizeof(T2DPoint<T>);
 
@@ -219,7 +219,7 @@ template <typename T> class T2DPath : public C2DPath {
 												UInt32	byteCount = sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	UInt8*		bytePtr = (const UInt8*) data.getBytePtr();
+													const	UInt8*		bytePtr = *data.getUInt8Buffer();
 															T2DPoint<T>	point = *((T2DPoint<T>*) bytePtr);
 													bytePtr += sizeof(T2DPoint<T>);
 
@@ -240,7 +240,7 @@ template <typename T> class T2DPath : public C2DPath {
 												UInt32	byteCount = sizeof(T2DPoint<T>) + sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	UInt8*		bytePtr = (const UInt8*) data.getBytePtr();
+													const	UInt8*		bytePtr = *data.getUInt8Buffer();
 															T2DPoint<T>	controlPoint = *((T2DPoint<T>*) bytePtr);
 													bytePtr += sizeof(T2DPoint<T>);
 															T2DPoint<T>	point = *((T2DPoint<T>*) bytePtr);
@@ -268,7 +268,7 @@ template <typename T> class T2DPath : public C2DPath {
 																		sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	UInt8*		bytePtr = (const UInt8*) data.getBytePtr();
+													const	UInt8*		bytePtr = *data.getUInt8Buffer();
 															T2DPoint<T>	controlPoint1 = *((T2DPoint<T>*) bytePtr);
 													bytePtr += sizeof(T2DPoint<T>);
 															T2DPoint<T>	controlPoint2 = *((T2DPoint<T>*) bytePtr);
@@ -300,7 +300,7 @@ template <typename T> class T2DPath : public C2DPath {
 																sizeof(T) + sizeof(T) + sizeof(T) + sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	UInt8*	bytePtr = (const UInt8*) data.getBytePtr();
+													const	UInt8*	bytePtr = *data.getUInt8Buffer();
 															T		radiusX = *((T*) bytePtr);
 													bytePtr += sizeof(T);
 															T		radiusY = *((T*) bytePtr);
@@ -335,7 +335,7 @@ template <typename T> class T2DPath : public C2DPath {
 																sizeof(T) + sizeof(T) + sizeof(T) + sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	UInt8*	bytePtr = (const UInt8*) data.getBytePtr();
+													const	UInt8*	bytePtr = *data.getUInt8Buffer();
 															T		radiusX = *((T*) bytePtr);
 													bytePtr += sizeof(T);
 															T		radiusY = *((T*) bytePtr);
@@ -370,7 +370,7 @@ template <typename T> class T2DPath : public C2DPath {
 																sizeof(T) + sizeof(T) + sizeof(T) + sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	UInt8*	bytePtr = (const UInt8*) data.getBytePtr();
+													const	UInt8*	bytePtr = *data.getUInt8Buffer();
 															T		radiusX = *((T*) bytePtr);
 													bytePtr += sizeof(T);
 															T		radiusY = *((T*) bytePtr);
@@ -405,7 +405,7 @@ template <typename T> class T2DPath : public C2DPath {
 																sizeof(T) + sizeof(T) + sizeof(T) + sizeof(T2DPoint<T>);
 												if (data.getByteCount() >= byteCount) {
 													// Decode
-													const	UInt8*		bytePtr = (const UInt8*) data.getBytePtr();
+													const	UInt8*		bytePtr = *data.getUInt8Buffer();
 															T			radiusX = *((T*) bytePtr);
 													bytePtr += sizeof(T);
 															T			radiusY = *((T*) bytePtr);

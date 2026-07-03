@@ -66,7 +66,7 @@ class CSQLiteStatement {
 								switch (value.getType()) {
 									case SSQLiteValue::kTypeData:
 										// Data
-										sqlite3_bind_blob(statement, i + 1, value.getData().getBytePtr(),
+										sqlite3_bind_blob(statement, i + 1, *value.getData().getUInt8Buffer(),
 												(int) value.getData().getByteCount(), SQLITE_STATIC);
 										break;
 
@@ -147,7 +147,7 @@ class CSQLiteStatementPerformer::Internals {
 
 		sqlite3*									mDatabase;
 		TNDictionary<TNArray<CSQLiteStatement> >	mTransactionsMap;
-		CReadPreferringLock							mTransacftionsMapLock;
+		CReadPreferringLock							mTransactionsMapLock;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -181,17 +181,17 @@ void CSQLiteStatementPerformer::addToTransactionOrPerform(const CString& stateme
 	CString				currentThreadRef = CThread::getCurrentRefAsString();
 
 	// Check for transaction
-	mInternals->mTransacftionsMapLock.lockForReading();
+	mInternals->mTransactionsMapLock.lockForReading();
 	OR<TNArray<CSQLiteStatement> >	sqliteStatements = mInternals->mTransactionsMap[currentThreadRef];
-	mInternals->mTransacftionsMapLock.unlockForReading();
+	mInternals->mTransactionsMapLock.unlockForReading();
 
 	if (sqliteStatements.hasReference()) {
 		// In transaction
 		*sqliteStatements += sqliteStatement;
 
-		mInternals->mTransacftionsMapLock.lockForWriting();
+		mInternals->mTransactionsMapLock.lockForWriting();
 		mInternals->mTransactionsMap.set(currentThreadRef, *sqliteStatements);
-		mInternals->mTransacftionsMapLock.unlockForWriting();
+		mInternals->mTransactionsMapLock.unlockForWriting();
 	} else
 		// Perform
 		sqliteStatement.perform(mInternals->mDatabase);
@@ -216,9 +216,9 @@ void CSQLiteStatementPerformer::performAsTransaction(TransactionProc transaction
 	CString	currentThreadRef = CThread::getCurrentRefAsString();
 
 	// Internals check
-	mInternals->mTransacftionsMapLock.lockForReading();
+	mInternals->mTransactionsMapLock.lockForReading();
 	bool	inTransaction = mInternals->mTransactionsMap[currentThreadRef].hasReference();
-	mInternals->mTransacftionsMapLock.unlockForReading();
+	mInternals->mTransactionsMapLock.unlockForReading();
 	if (inTransaction) {
 		// Error
 		CLogServices::logError(
@@ -227,18 +227,18 @@ void CSQLiteStatementPerformer::performAsTransaction(TransactionProc transaction
 	}
 
 	// Start transaction
-	mInternals->mTransacftionsMapLock.lockForWriting();
+	mInternals->mTransactionsMapLock.lockForWriting();
 	mInternals->mTransactionsMap.set(currentThreadRef,
 			TNArray<CSQLiteStatement>(CSQLiteStatement(CString(OSSTR("BEGIN TRANSACTION")))));
-	mInternals->mTransacftionsMapLock.unlockForWriting();
+	mInternals->mTransactionsMapLock.unlockForWriting();
 
 	// Call proc and check result
 	if (transactionProc(userData) == kTransactionResultCommit) {
 		// End transaction
-		mInternals->mTransacftionsMapLock.lockForWriting();
+		mInternals->mTransactionsMapLock.lockForWriting();
 		TNArray<CSQLiteStatement>	sqliteStatements = *mInternals->mTransactionsMap[currentThreadRef];
 		mInternals->mTransactionsMap.remove(currentThreadRef);
-		mInternals->mTransacftionsMapLock.unlockForWriting();
+		mInternals->mTransactionsMapLock.unlockForWriting();
 
 		// Check for empty transaction
 		if (sqliteStatements.getCount() == 1)
@@ -254,9 +254,9 @@ void CSQLiteStatementPerformer::performAsTransaction(TransactionProc transaction
 			iterator->perform(mInternals->mDatabase);
 	} else {
 		// No longer in transaction
-		mInternals->mTransacftionsMapLock.lockForWriting();
+		mInternals->mTransactionsMapLock.lockForWriting();
 		mInternals->mTransactionsMap.remove(currentThreadRef);
-		mInternals->mTransacftionsMapLock.unlockForWriting();
+		mInternals->mTransactionsMapLock.unlockForWriting();
 	}
 }
 

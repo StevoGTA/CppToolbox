@@ -83,7 +83,7 @@ struct SH264NALUInfo {
 					Type					getType() const
 												{ return (Type) (*((const UInt8*) getBytePtr()) & 0x1F); }
 			const	UInt8*					getBytePtr() const
-												{ return (UInt8*) mData.getBytePtr() + mOffset; }
+												{ return *mData.getUInt8Buffer() + mOffset; }
 					CData::ByteCount		getByteCount() const
 												{ return mByteCount; }
 
@@ -93,9 +93,7 @@ struct SH264NALUInfo {
 													// Setup
 													TNArray<SH264NALUInfo>		naluInfos;
 
-													const	UInt8*				bytePtr =
-																						(const UInt8*)
-																								data.getBytePtr();
+													const	UInt8*				bytePtr = *data.getUInt8Buffer();
 															UInt32				offset = 0;
 															CData::ByteCount	bytesRemaining = data.getByteCount();
 													while (bytesRemaining > 0) {
@@ -550,7 +548,7 @@ CH264DecodeVideoCodec::SPSPPSInfo CH264DecodeVideoCodec::getSPSPPSInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	Configuration&			configuration = *((Configuration*) mConfigurationData.getBytePtr());
+	const	Configuration&			configuration = *((const Configuration*) *mConfigurationData.getUInt8Buffer());
 	const	UInt8*					bytePtr = &configuration.mSPSPPSInfo[0];
 			UInt32					offset = sizeof(Configuration);
 
@@ -593,7 +591,7 @@ UInt32 CH264DecodeVideoCodec::getNALUHeaderLengthSize() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	Configuration&	configuration = *((Configuration*) mConfigurationData.getBytePtr());
+	const	Configuration&	configuration = *((const Configuration*) *mConfigurationData.getUInt8Buffer());
 
 	return (configuration.mLengthCoded & ~0xFC) + 1;
 }

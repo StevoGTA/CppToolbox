@@ -27,7 +27,7 @@ OI<CChunkReader> CWAVEMediaFile::createChunkReader(const I<CRandomAccessDataSour
 	TVResult<CData>	data = randomAccessDataSource->readData(0, sizeof(SWAVEFORMChunk32));
 	ReturnValueIfResultError(data, OI<CChunkReader>());
 
-	const	SWAVEFORMChunk32&	formChunk32 = *((SWAVEFORMChunk32*) data->getBytePtr());
+	const	SWAVEFORMChunk32&	formChunk32 = *((const SWAVEFORMChunk32*) *data->getUInt8Buffer());
 	if ((formChunk32.getID() == kWAVEFORMChunkID) && (formChunk32.getFormType() == kWAVEFORMType)) {
 		// Success
 		OI<CChunkReader>	chunkReader(
@@ -51,11 +51,11 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 	ReturnValueIfResultError(payload,
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(payload.getError())));
 
-	const	SWAVEFORMAT&	waveFormat = *((SWAVEFORMAT*) payload->getBytePtr());
+	const	SWAVEFORMAT&	waveFormat = *((const SWAVEFORMAT*) *payload->getUInt8Buffer());
 			UInt16			sampleSize;
 	if (payload->getByteCount() >= sizeof(SWAVEFORMATEX)) {
 		// Have WAVEFORMATEX
-		const	SWAVEFORMATEX&	waveFormatEx = *((SWAVEFORMATEX*) payload->getBytePtr());
+		const	SWAVEFORMATEX&	waveFormatEx = *((const SWAVEFORMATEX*) *payload->getUInt8Buffer());
 		sampleSize = waveFormatEx.getBitsPerSample();
 	} else if ((waveFormat.getChannelCount() > 0) && (waveFormat.getSamplesPerSecond() > 0) &&
 			(waveFormat.getAverageBytesPerSec() > 0))

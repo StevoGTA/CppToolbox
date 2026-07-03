@@ -94,7 +94,7 @@ class CMetalTexture::Internals : public TReferenceCountableAutoDelete<Internals>
 
 				// Load image data
 				MTLRegion	region = {{0, 0, 0}, {dimensions.mWidth, dimensions.mHeight, 1}};
-				[mTexture replaceRegion:region mipmapLevel:0 withBytes:data.getBytePtr() bytesPerRow:bytesPerRow];
+				[mTexture replaceRegion:region mipmapLevel:0 withBytes:*data.getUInt8Buffer() bytesPerRow:bytesPerRow];
 			}
 		Internals(CVMetalTextureCacheRef metalTextureCacheRef, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
 			TReferenceCountableAutoDelete(),

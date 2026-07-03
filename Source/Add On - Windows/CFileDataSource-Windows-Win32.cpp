@@ -284,19 +284,20 @@ TVResult<CData> CMappedFileDataSource::readData(UInt64 position, CData::ByteCoun
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<TBuffer<UInt8> > CMappedFileDataSource::readUInt8Buffer(UInt64 position, UInt64 byteCount)
+TVResult<TBuffer<const UInt8> > CMappedFileDataSource::readUInt8Buffer(UInt64 position, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for error
 	if (mInternals->mError.hasValue())
 		// Error
-		return TVResult<TBuffer<UInt8> >(*mInternals->mError);
+		return TVResult<TBuffer<const UInt8> >(*mInternals->mError);
 
 	// Preflight
 	AssertFailIf((position + byteCount) > mInternals->mByteCount);
 	if ((position + byteCount) > mInternals->mByteCount)
 		// Attempting to ready beyond end of data
-		return TVResult<TBuffer<UInt8> >(SError::mEndOfData);
+		return TVResult<TBuffer<const UInt8> >(SError::mEndOfData);
 
-	return TVResult<TBuffer<UInt8> >(TBuffer<UInt8>((UInt8*) mInternals->mBytePtr + position, byteCount));
+	return TVResult<TBuffer<const UInt8> >(
+			TBuffer<const UInt8>((const UInt8*) mInternals->mBytePtr + position, byteCount));
 }

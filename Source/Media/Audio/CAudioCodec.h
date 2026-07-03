@@ -8,7 +8,6 @@
 #include "CCodec.h"
 #include "CDataSource.h"
 #include "SAudio.h"
-#include "TimeAndDate.h"
 #include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------

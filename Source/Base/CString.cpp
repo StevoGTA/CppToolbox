@@ -269,7 +269,7 @@ CString::CString(const CData& data, Encoding encoding)
 	init();
 
 	// Finish setting up
-	*this = CString(data.getBytePtr(), (UInt32) data.getByteCount(), encoding);
+	*this = CString(*data.getUInt8Buffer(), (UInt32) data.getByteCount(), encoding);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -539,7 +539,7 @@ void CString::toPascal(UInt8 buffer[], UInt8 bufferByteCount) const
 
 	// Copy to buffer
 	buffer[0] = std::min<UInt8>((UInt8) data->getByteCount(), bufferByteCount - 1);
-	::memcpy(&buffer[1], data->getBytePtr(), buffer[0]);
+	data->copyBytes(&buffer[1], buffer[0]);
 }
 
 // MARK: Class methods
@@ -610,8 +610,7 @@ CString CString::uppercase(const CString* string, void* userData)
 CString CString::fromPascal(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CString((const void*) (((const UInt8*) data.getBytePtr()) + 1), (UInt32) data.getByteCount() - 1,
-			kEncodingMacRoman);
+	return CString((const void*) (*data.getUInt8Buffer() + 1), (UInt32) data.getByteCount() - 1, kEncodingMacRoman);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

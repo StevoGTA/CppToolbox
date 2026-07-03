@@ -759,9 +759,10 @@ TVResult<CDictionary> CBPLReader::getDictionary(const I<CRandomAccessDataSource>
 				TVResult<CDictionary>(sUnknownFormatError));
 
 	// Validate trailer
-	TVResult<TBuffer<UInt8> >	trailerBuffer =
-										randomAccessDataSource->readUInt8Buffer(byteCount - sizeof(SBinaryPListTrailer),
-												sizeof(SBinaryPListTrailer));
+	TVResult<TBuffer<const UInt8> >	trailerBuffer =
+											randomAccessDataSource->readUInt8Buffer(
+													byteCount - sizeof(SBinaryPListTrailer),
+													sizeof(SBinaryPListTrailer));
 	LogIfResultErrorAndReturnValue(trailerBuffer, CString(OSSTR("reading trailer")),
 				TVResult<CDictionary>(trailerBuffer.getError()));
 
@@ -770,9 +771,10 @@ TVResult<CDictionary> CBPLReader::getDictionary(const I<CRandomAccessDataSource>
 			UInt64					totalObjectCount = trailer.getTotalObjectCount();
 
 	// Read object offsets
-	TVResult<TBuffer<UInt8> >	objectOffsetBuffer =
-										randomAccessDataSource->readUInt8Buffer(trailer.getObjectOffsetTableOffset(),
-												totalObjectCount * objectOffsetByteCount);
+	TVResult<TBuffer<const UInt8> >	objectOffsetBuffer =
+											randomAccessDataSource->readUInt8Buffer(
+													trailer.getObjectOffsetTableOffset(),
+													totalObjectCount * objectOffsetByteCount);
 	LogIfResultErrorAndReturnValue(objectOffsetBuffer, CString(OSSTR("reading object indexes")),
 			TVResult<CDictionary>(objectOffsetBuffer.getError()));
 

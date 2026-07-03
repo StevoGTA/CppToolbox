@@ -732,7 +732,7 @@ SGPUVertexBuffer CGPU::allocateVertexBuffer(UInt32 perVertexByteCount, const CDa
 {
 	// Setup
 	CD3D11_BUFFER_DESC		bufferDesc((UINT) data.getByteCount(), D3D11_BIND_VERTEX_BUFFER);
-	D3D11_SUBRESOURCE_DATA	subresourceData = {data.getBytePtr(), 0, 0};
+	D3D11_SUBRESOURCE_DATA	subresourceData = {*data.getUInt8Buffer(), 0, 0};
 	ID3D11Buffer*			d3dBuffer = NULL;
 	HRESULT					result =
 									mInternals->mD3DDeviceComPtr->CreateBuffer(&bufferDesc, &subresourceData,
@@ -748,7 +748,7 @@ SGPUBuffer CGPU::allocateIndexBuffer(const CData& data)
 {
 	// Setup
 	CD3D11_BUFFER_DESC		bufferDesc((UINT) data.getByteCount(), D3D11_BIND_INDEX_BUFFER);
-	D3D11_SUBRESOURCE_DATA	subresourceData = {data.getBytePtr(), 0, 0};
+	D3D11_SUBRESOURCE_DATA	subresourceData = {*data.getUInt8Buffer(), 0, 0};
 	ID3D11Buffer*			d3dBuffer = NULL;
 	HRESULT					result =
 									mInternals->mD3DDeviceComPtr->CreateBuffer(&bufferDesc, &subresourceData,

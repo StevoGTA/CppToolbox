@@ -31,7 +31,7 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						// Setup
 						mAvailable = (UInt32) data.getByteCount() * 8;
 						mStorage = (UInt8*) ::malloc(mAvailable);
-						::memcpy(mStorage, data.getBytePtr(), data.getByteCount());
+						data.copyBytes(mStorage);
 					}
 				~Internals()
 					{

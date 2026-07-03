@@ -27,22 +27,22 @@ class CDataSource {
 class CRandomAccessDataSource : public CDataSource {
 	// Methods
 	public:
-											// Lifecycle methods
-											CRandomAccessDataSource() : CDataSource() {}
+												// Lifecycle methods
+												CRandomAccessDataSource() : CDataSource() {}
 
-											// CDataSource methods
-				TVResult<CData>				readData()
-												{ return readData(0, getByteCount()); }
+												// CDataSource methods
+				TVResult<CData>					readData()
+													{ return readData(0, getByteCount()); }
 
-											// Instance methods
-		virtual	UInt64						getByteCount() const = 0;
+												// Instance methods
+		virtual	UInt64							getByteCount() const = 0;
 
-				bool						canRead(UInt64 position, CData::ByteCount byteCount)
-												{ return (position + byteCount) <= getByteCount(); }
+				bool							canRead(UInt64 position, CData::ByteCount byteCount)
+													{ return (position + byteCount) <= getByteCount(); }
 
-		virtual	OV<SError>					read(UInt64 position, void* buffer, UInt64 byteCount) = 0;
-		virtual	TVResult<CData>				readData(UInt64 position, CData::ByteCount byteCount) = 0;
-		virtual	TVResult<TBuffer<UInt8> >	readUInt8Buffer(UInt64 position, UInt64 byteCount) = 0;
+		virtual	OV<SError>						read(UInt64 position, void* buffer, UInt64 byteCount) = 0;
+		virtual	TVResult<CData>					readData(UInt64 position, CData::ByteCount byteCount) = 0;
+		virtual	TVResult<TBuffer<const UInt8> >	readUInt8Buffer(UInt64 position, UInt64 byteCount) = 0;
 
 	// Properties
 	public:
@@ -60,16 +60,16 @@ class CDataDataSource : public CRandomAccessDataSource {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									CDataDataSource(const CData& data);
-									~CDataDataSource();
+										// Lifecycle methods
+										CDataDataSource(const CData& data);
+										~CDataDataSource();
 
-									// CRandomAccessDataSource methods
-		UInt64						getByteCount() const;
+										// CRandomAccessDataSource methods
+		UInt64							getByteCount() const;
 
-		OV<SError>					read(UInt64 position, void* buffer, UInt64 byteCount);
-		TVResult<CData>				readData(UInt64 position, CData::ByteCount byteCount);
-		TVResult<TBuffer<UInt8> >	readUInt8Buffer(UInt64 position, UInt64 byteCount);
+		OV<SError>						read(UInt64 position, void* buffer, UInt64 byteCount);
+		TVResult<CData>					readData(UInt64 position, CData::ByteCount byteCount);
+		TVResult<TBuffer<const UInt8> >	readUInt8Buffer(UInt64 position, UInt64 byteCount);
 
 	// Properties
 	private:

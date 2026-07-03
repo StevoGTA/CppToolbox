@@ -232,7 +232,7 @@ OV<SError> CMediaFoundationServices::setInputType(IMFTransform* transform, const
 		if (userData.hasValue()) {
 			// Set User Data
 			result =
-					mediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
+					mediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) *userData->getUInt8Buffer(),
 							(UINT32) userData->getByteCount());
 			ReturnErrorIfFailed(result, CString(OSSTR("SetBlob of MF_MT_USER_DATA")));
 		}
@@ -281,7 +281,7 @@ OV<SError> CMediaFoundationServices::setInputType(IMFTransform* transform, const
 
 	if (userData.hasValue()) {
 		result =
-				mediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) userData->getBytePtr(),
+				mediaType->SetBlob(MF_MT_USER_DATA, (const UINT8*) *userData->getUInt8Buffer(),
 						(UINT32) userData->getByteCount());
 		ReturnErrorIfFailed(result, CString(OSSTR("SetBlob of MF_MT_USER_DATA")));
 	}
@@ -496,7 +496,7 @@ TCIResult<IMFSample> CMediaFoundationServices::createSample(const CData& data)
 			TCIResult<IMFSample>(SErrorFromHRESULT(result)));
 
 	// Copy data
-	::memcpy(bytePtr, data.getBytePtr(), (size_t) data.getByteCount());
+	data.copyBytes(bytePtr);
 
 	// Set current length
 	result = tempMediaBuffer->SetCurrentLength((DWORD) data.getByteCount());

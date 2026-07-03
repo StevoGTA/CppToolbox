@@ -151,13 +151,6 @@ CData::ByteCount CData::getByteCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const void* CData::getBytePtr() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mBuffer;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 void CData::copyBytes(void* destinationBuffer, ByteIndex startByteIndex, ByteCount byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -175,26 +168,19 @@ void CData::copyBytes(void* destinationBuffer, ByteIndex startByteIndex, ByteCou
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CString CData::getHexString(bool uppercase) const
+bool CData::compareBytes(const void* buffer, ByteCount byteCount, ByteIndex startByteIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Statics
-	static	const	char	sTableLowercase[] =
-									{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-	static	const	char	sTableUppercase[] =
-									{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+	// Parameter check
+	AssertNotNil(buffer);
+	if (buffer == nil)
+		return false;
 
-	// Setup
-			TBuffer<char>	buffer(mInternals->mBufferUsedByteCount * 2);
-	const	UInt8*			bytePtr = (const UInt8*) getBytePtr();
-	const	char*			table = uppercase ? sTableUppercase : sTableLowercase;
-	for (ByteIndex i = 0; i <  mInternals->mBufferUsedByteCount; i++, bytePtr++) {
-		// Store
-		buffer[i * 2] = table[(*bytePtr & 0xF0) >> 4];
-		buffer[i * 2 + 1] = table[*bytePtr & 0x0F];
-	}
+	AssertFailIf((startByteIndex + byteCount) > (ByteIndex) mInternals->mBufferUsedByteCount);
+	if ((startByteIndex + byteCount) > (ByteIndex) mInternals->mBufferUsedByteCount)
+		return false;
 
-	return CString((const void*) *buffer, mInternals->mBufferUsedByteCount* 2, CString::kEncodingASCII);
+	return ::memcmp((const UInt8*) mInternals->mBuffer + startByteIndex, buffer, (size_t) byteCount) == 0;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -264,6 +250,50 @@ CString CData::getBase64String(bool prettyPrint) const
 		*stringPtr++ = '\n';
 
 	return CString((const void*) *stringBuffer, stringLength, CString::kEncodingASCII);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CData::getHexString(bool uppercase) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Statics
+	static	const	char	sTableLowercase[] =
+									{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+	static	const	char	sTableUppercase[] =
+									{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+	// Setup
+			TBuffer<char>	buffer(mInternals->mBufferUsedByteCount * 2);
+	const	UInt8*			bytePtr = (const UInt8*) mInternals->mBuffer;
+	const	char*			table = uppercase ? sTableUppercase : sTableLowercase;
+	for (ByteIndex i = 0; i <  mInternals->mBufferUsedByteCount; i++, bytePtr++) {
+		// Store
+		buffer[i * 2] = table[(*bytePtr & 0xF0) >> 4];
+		buffer[i * 2 + 1] = table[*bytePtr & 0x0F];
+	}
+
+	return CString((const void*) *buffer, mInternals->mBufferUsedByteCount* 2, CString::kEncodingASCII);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TBuffer<const SInt8> CData::getSInt8Buffer(ByteIndex byteIndex, ByteCount byteCount) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertFailIf((byteIndex + byteCount) > mInternals->mBufferUsedByteCount);
+
+	return TBuffer<const SInt8>((const SInt8*) mInternals->mBuffer + byteIndex, byteCount);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TBuffer<const SInt8> CData::getSInt8Buffer(ByteIndex byteIndex) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Parameter check
+	AssertFailIf(byteIndex > mInternals->mBufferUsedByteCount);
+
+	return TBuffer<const SInt8>((const SInt8*) mInternals->mBuffer + byteIndex,
+			mInternals->mBufferUsedByteCount - byteIndex);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -339,7 +369,7 @@ OV<SRange64> CData::findSubData(const CData& subData, ByteIndex startIndex, cons
 		// Look for first byte
 		const	void*	ptr =
 								::memchr((const char*) mInternals->mBuffer + startIndex,
-										*((const char*) subData.getBytePtr()), byteCount_);
+										*((const char*) subData.mInternals->mBuffer), byteCount_);
 		if (ptr == nil)
 			// Not found
 			return OV<SRange64>();
@@ -418,6 +448,13 @@ CData& CData::append(const void* buffer, ByteCount bufferByteCount)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CData& CData::append(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return append(data.mInternals->mBuffer, data.getByteCount());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CData& CData::replace(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer, ByteCount bufferByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -468,6 +505,13 @@ CData& CData::replace(ByteIndex startByteIndex, ByteCount byteCount, const void*
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CData& CData::replace(ByteIndex startByteIndex, const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return replace(startByteIndex, data.getByteCount(), data.mInternals->mBuffer, data.getByteCount());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CData& CData::operator=(const CData& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -505,6 +549,13 @@ CData CData::operator+(const CData& other) const
 	data.mInternals->mBufferUsedByteCount = mInternals->mBufferUsedByteCount + other.mInternals->mBufferUsedByteCount;
 
 	return data;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CData& CData::operator+=(const CData& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return append(other.mInternals->mBuffer, other.getByteCount());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

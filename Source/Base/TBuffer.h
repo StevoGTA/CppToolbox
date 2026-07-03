@@ -10,6 +10,9 @@
 // MARK: TBuffer
 
 template <typename T> struct TBuffer {
+	// Friends
+	template <typename U> friend struct TBuffer;
+
 	// Methods
 	public:
 					// Lifecycle methods
@@ -43,6 +46,16 @@ template <typename T> struct TBuffer {
 								// Add reference
 								(*mReferenceCount)++;
 						}
+
+					template <typename U> TBuffer(const TBuffer<U>& other) :
+						mStorage(other.mStorage), mByteCount(other.mByteCount), mReferenceCount(other.mReferenceCount)
+						{
+							// Check for reference count
+							if (mReferenceCount != nil)
+								// Add reference
+								(*mReferenceCount)++;
+						}
+
 					~TBuffer()
 						{
 							// Check if need to cleanup
