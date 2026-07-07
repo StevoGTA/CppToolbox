@@ -55,6 +55,12 @@ class CSQLiteDatabase::Internals {
 																			case kTransactionResultRollback:
 																					return CSQLiteStatementPerformer::
 																							kTransactionResultRollback;
+
+#if defined(TARGET_OS_WINDOWS)
+																			default:
+																					return CSQLiteStatementPerformer::
+																							kTransactionResultRollback;
+#endif
 																		}
 																	}
 

@@ -361,26 +361,27 @@ OV<SRange64> CData::findSubData(const CData& subData, ByteIndex startIndex, cons
 		return OV<SRange64>();
 
 	// Setup
-	ByteCount	byteCount_ = byteCount.hasValue() ? *byteCount : mInternals->mBufferUsedByteCount - startIndex;
+	ByteCount	subByteCount = subData.mInternals->mBufferUsedByteCount;
+	ByteIndex	searchEndIndex = byteCount.hasValue() ? (startIndex + *byteCount) : mInternals->mBufferUsedByteCount;
 
 	// Search
-	while ((startIndex < mInternals->mBufferUsedByteCount) &&
-			((startIndex + subData.mInternals->mBufferUsedByteCount) < mInternals->mBufferUsedByteCount)) {
-		// Look for first byte
+	while ((startIndex + subByteCount) <= searchEndIndex) {
+		// Look for first byte within the window where the full sub-data can still fit
 		const	void*	ptr =
 								::memchr((const char*) mInternals->mBuffer + startIndex,
-										*((const char*) subData.mInternals->mBuffer), byteCount_);
+										*((const char*) subData.mInternals->mBuffer),
+										searchEndIndex - startIndex - subByteCount + 1);
 		if (ptr == nil)
-			// Not found
+			// First byte not present in remaining window
 			return OV<SRange64>();
 
-		// Check if data matches
-		int	result =
-					::memcmp((const char*) mInternals->mBuffer + startIndex, subData.mInternals->mBuffer,
-							subData.mInternals->mBufferUsedByteCount);
-		if (result == 0)
+		// Advance to the located first byte
+		startIndex = (ByteIndex) ((const char*) ptr - (const char*) mInternals->mBuffer);
+
+		// Check if data matches at this position
+		if (::memcmp(ptr, subData.mInternals->mBuffer, subByteCount) == 0)
 			// Found
-			return OV<SRange64>(SRange64(startIndex, subData.mInternals->mBufferUsedByteCount));
+			return OV<SRange64>(SRange64(startIndex, subByteCount));
 
 		// Start with next byte
 		startIndex++;
