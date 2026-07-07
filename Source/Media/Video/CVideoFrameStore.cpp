@@ -295,18 +295,11 @@ void CVideoFrameStore::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CVideoFrameStore::reset()
+void CVideoFrameStore::stop()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Reset thread
-	mInternals->mVideoFrameStoreThread.seek(
-			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0);
-
-	// Reset
-	CVideoDestination::reset();
-
-	// Resume
-	mInternals->mVideoFrameStoreThread.resume();
+	// Seek to the begining of the media segment, or beginning beginning
+	seek(mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0);
 }
 
 // MARK: CVideoDestination methods

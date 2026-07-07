@@ -83,16 +83,6 @@ CVideoProcessor::PerformResult CVideoProcessor::perform()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CVideoProcessor::reset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Check for instance
-	if (mInternals->mVideoProcessor != nil)
-		// Reset
-		(*mInternals->mVideoProcessor)->reset();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CVideoSource::Internals
 
@@ -158,15 +148,6 @@ void CVideoSource::seek(UniversalTimeInterval timeInterval)
 
 	// Update
 	mInternals->mCurrentTimeInterval = timeInterval;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CVideoSource::reset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Reset
-	mInternals->mCurrentTimeInterval =
-			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0;
 }
 
 // MARK: Instance methods

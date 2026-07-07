@@ -31,8 +31,6 @@ class CAudioDecoder : public CAudioSource {
 
 		TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
 
-		void							reset();
-
 		TArray<SAudio::ProcessingSetup>	getOutputSetups() const;
 		OV<SError>						setOutputFormat(const SAudio::ProcessingFormat& audioProcessingFormat);
 

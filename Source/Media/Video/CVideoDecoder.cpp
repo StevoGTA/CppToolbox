@@ -106,14 +106,3 @@ CVideoProcessor::PerformResult CVideoDecoder::perform()
 
 	return PerformResult(currentTimeInterval, *videoFrame);
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-void CVideoDecoder::reset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Do super
-	CVideoSource::reset();
-
-	// Update codec
-	mInternals->mVideoCodec->seek(getCurrentTimeInterval());
-}

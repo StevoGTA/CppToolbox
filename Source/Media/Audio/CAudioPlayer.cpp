@@ -20,7 +20,7 @@ static	CPreferences::UniversalTimeIntervalPref	sPlaybackBufferDurationPref(
 
 // MARK: Properties
 
-const	UniversalTimeInterval	CAudioPlayer::kPreviewDuration = 0.1;
+const	UniversalTimeInterval	CAudioPlayer::mPreviewDuration = 0.1;
 
 // MARK: Class methods
 

@@ -50,8 +50,6 @@ class CAudioProcessor {
 
 		virtual	TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
 
-		virtual	void							reset();
-
 												// Subclass methods
 		virtual	TArray<SAudio::ProcessingSetup>	getInputSetups() const = 0;
 		virtual	void							setInputFormat(const SAudio::ProcessingFormat& audioProcessingFormat)
@@ -87,8 +85,6 @@ class CAudioSource : public CAudioProcessor {
 
 		void							setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 		void							seek(UniversalTimeInterval timeInterval);
-
-		void							reset();
 
 		TArray<SAudio::ProcessingSetup>	getInputSetups() const
 											{ AssertFailUnimplemented(); return TNArray<SAudio::ProcessingSetup>(); }

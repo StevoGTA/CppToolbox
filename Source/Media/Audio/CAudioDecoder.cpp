@@ -109,17 +109,6 @@ TVResult<CAudioProcessor::SourceInfo> CAudioDecoder::performInto(CAudioFrames& a
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioDecoder::reset()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Do super
-	CAudioSource::reset();
-
-	// Update codec
-	mInternals->mDecodeAudioCodec->seek(getCurrentTimeInterval());
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 TArray<SAudio::ProcessingSetup> CAudioDecoder::getOutputSetups() const
 //----------------------------------------------------------------------------------------------------------------------
 {

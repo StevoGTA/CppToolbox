@@ -280,6 +280,8 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 
 												return OV<CData>(CData(&userData, sizeof(UserData)));
 											}
+		UInt32							getPrimingFrameCount() const
+											{ return 2112; }
 #endif
 
 	private:

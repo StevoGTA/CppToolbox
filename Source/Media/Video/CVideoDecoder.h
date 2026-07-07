@@ -30,7 +30,6 @@ class CVideoDecoder : public CVideoSource {
 		void				seek(UniversalTimeInterval timeInterval);
 
 		PerformResult		perform();
-		void				reset();
 
 	// Properties
 	private:

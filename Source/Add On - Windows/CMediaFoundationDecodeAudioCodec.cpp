@@ -23,7 +23,7 @@ class CMediaFoundationDecodeAudioCodec::Internals {
 	public:
 							Internals(OSType codecID, const I<CMediaPacketSource>& mediaPacketSource) :
 								mCodecID(codecID), mMediaPacketSource(mediaPacketSource),
-										mDecodeFramesToIgnore(0)
+										mPrimingFrameCount(0), mDecodeFramesToIgnore(0)
 								{}
 
 		static	OV<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
@@ -135,6 +135,9 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 	result = mInternals->mAudioDecoderTransform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
 	ReturnErrorIfFailed(result, CString(OSSTR("ProcessMessage to begin streaming")));
 
+	// Initialize priming frame discard
+	mInternals->mDecodeFramesToIgnore = getPrimingFrameCount();
+
 	return OV<SError>();
 }
 
@@ -150,10 +153,17 @@ void CMediaFoundationDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 	// Flush
 	mInternals->mAudioDecoderTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
 
-	// Seek
-	mInternals->mDecodeFramesToIgnore =
-			mInternals->mMediaPacketSource->seekToDuration(
-					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
+	// Seek - round to the nearest frame, never truncate, so this lands on the same whole frame the rest of the
+	//	pipeline accounts for (see the detailed rationale in CAudioSource::calculateMaxFrames)
+	if (timeInterval == 0.0) {
+		// Rewind the packet reader to the start, then discard the encoder-delay priming frames.
+		mInternals->mMediaPacketSource->seekToDuration(0);
+		mInternals->mDecodeFramesToIgnore = getPrimingFrameCount();
+	} else
+		// Seek to desired point
+		mInternals->mDecodeFramesToIgnore =
+				mInternals->mMediaPacketSource->seekToDuration(
+						(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate() + 0.5));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -76,7 +76,6 @@ class CVideoProcessor {
 		virtual	void				seek(UniversalTimeInterval timeInterval);
 
 		virtual	PerformResult		perform();
-		virtual	void				reset();
 
 	// Properties
 	private:
@@ -103,8 +102,6 @@ class CVideoSource : public CVideoProcessor {
 
 		void					setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 		void					seek(UniversalTimeInterval timeInterval);
-
-		void					reset();
 
 	protected:
 								// Instance methods

@@ -7,6 +7,85 @@
 #include "CAudioPlayer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: CMediaPlayer implementation notes
+/*
+	The header (CMediaPlayer.h) is the behavioral contract - what a caller should expect.  These notes are how that is
+	achieved, for someone maintaining this file.
+
+	CMediaPlayer turns the low-level primitives of its CAudioPlayers (and CVideoFrameStores) into those flows.  The
+	primitives it leans on (see CAudioPlayer):
+
+		play()			render unbounded from the current buffered position; report positionUpdated as it advances;
+						report endOfData -> finished() only when the source truly reaches its end.
+		pause()			stop sending frames, keep position.
+		seek(t)			flush, reposition the source to t, report positionUpdated(t).  While NOT playing it renders a
+						short mPreviewDuration "burst" (an audition) from t; while playing it continues unbounded.  A
+						burst that finishes mid-source goes silent WITHOUT reporting endOfData - reaching the actual
+						source end is what reports it.  While seeking, the streaming position crawl is suppressed.
+		startSeek()		enter preview mode: stop sending frames, remember the current position, and stop reporting
+						endOfData (so an audition that runs off the source end is not mistaken for finishing).
+		finishSeek()	flush, reposition to the last seek target, restore endOfData reporting, resume iff playing.
+
+	Interactions come in two brackets, both wrapped by beginInteraction() / endInteraction():
+		Playhead (kMovingPlayhead):
+			startSeek()...
+			seek(t) [0..n]...
+			finishSeek()
+		Segment (kChangingMediaSegment):
+			mediaSegmentWillChange()...
+			setMediaSegment(seg) [0..n]...
+			mediaSegmentDidChange()
+
+		beginInteraction() remembers whether real playback was active (mInteractionWasPlaying), then SUSPENDS it -
+			startSeek()s the players AND pause()s them.  Paused, each subsequent seek() auditions a mPreviewDuration
+			burst instead of continuing, the crawl is suppressed, and the audition's end is not reported.
+
+		endInteraction(repositionToTarget) restores.  It re-seeks to the last auditioned target when repositionToTarget
+			is set, or when NOT resuming (to park there).  Otherwise - resuming a playhead interaction, whose source
+			scope is unchanged - it SKIPS the re-seek and simply play()s, letting the last audition flow straight into
+			playback.  That is what avoids "double audio": re-seeking would replay the ~mPreviewDuration the audition
+			just played.  Because play() resumes from the current buffered position and finishes only at the true source
+			end, a mid-file audition continues to the end of the source, while an audition that reached the source end
+			finishes (its tail heard once).
+
+	setMediaSegment(seg):
+		- Inside a segment interaction: record the RAW in-progress segment (normalized only on commit) and audition its
+			start when the start moves, pushing a transient [start, mPreviewDuration] window straight to the source so
+			the audition is never clipped by a momentarily-tiny selection.
+		- Outside one (a direct/programmatic call): a positive-duration segment commits
+			(CMediaDestination::setMediaSegment) then seek()s its start; a zero-duration point (a waveform click - a
+			seek, not a selection) clears the segment then seek()s the point; no segment just clears, keeping the
+			position.  seek() does the work - a preview burst when paused, a reposition-and-continue when playing - so
+			no one-shot bracket is used here (a bracket's finishSeek() would flush the burst before it sounds).
+
+		mediaSegmentDidChange() commits with endInteraction(true): the commit swaps the source scope out from under the
+			audition (transient window -> committed segment), so the buffer must be reconciled with a re-seek.
+
+	play() / pause() / seek() / startSeek() / stop() each first commit any open segment interaction
+		(mediaSegmentDidChange()) as a safety net, so a stray transport/position call never operates on the transient
+		preview window.
+
+	stop() halts the players and returns the playhead to the segment start (the audio players release their engine
+		slot and clear their playing flag).  restart() is the loop primitive: while playing, it seek()s to the segment
+		start, so playback continues seamlessly from the top with no engine teardown - the players stay engaged, the
+		reader's end-of-data latch is cleared by the seek's reader resume(), and, being a seek-while-playing, no preview
+		burst sounds.
+
+	Events (via Info) come straight from the players: positionUpdated -> audioPositionUpdated (only targets during a
+		bracket, since the crawl is suppressed); endOfData -> aggregated into finished() (suppressed during a bracket).
+*/
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local Data
+
+enum InteractionState {
+	kInteractionStateNone,
+	kInteractionStateMovingPlayhead,
+	kInteractionStateChangingMediaSegment,
+};
+
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: CMediaPlayerAudioPlayer
 
 class CMediaPlayerAudioPlayer : public CAudioPlayer {
@@ -86,8 +165,62 @@ class CMediaPlayer::Internals {
 						Internals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
 								const CMediaPlayer::Info& info) :
 							mMediaPlayer(mediaPlayer), mMessageQueues(messageQueues), mInfo(info),
-									mCurrentTimeInterval(0.0), mEndOfDataCount(0), mCurrentLoopCount(0)
+									mCurrentTimeInterval(0.0), mEndOfDataCount(0), mCurrentLoopCount(0),
+									mInteractionState(kInteractionStateNone), mInteractionWasPlaying(false)
 							{}
+
+				void	beginInteraction()
+							{
+								// Store is playing for use in endInteraction()
+								mInteractionWasPlaying = mMediaPlayer.isPlaying();
+
+								// Iterate all audio tracks
+								for (UInt32 i = 0; i < mMediaPlayer.getAudioTrackCount(); i++) {
+									// Start Seek
+									mMediaPlayer.getAudioDestination(i)->startSeek();
+
+									// Pause
+									mMediaPlayer.getAudioDestination(i)->pause();
+								}
+
+								// Iterate all video tracks
+								for (UInt32 i = 0; i < mMediaPlayer.getVideoTrackCount(); i++) {
+									// Start Seek
+									mMediaPlayer.getVideoDestination(i)->startSeek();
+
+									// Pause
+									mMediaPlayer.getVideoDestination(i)->pause();
+								}
+							}
+
+				void	endInteraction(bool repositionToTarget)
+							{
+								// Check if need to finish seeking
+								if (repositionToTarget || !mInteractionWasPlaying) {
+									// Iterate all audio tracks
+									for (UInt32 i = 0; i < mMediaPlayer.getAudioTrackCount(); i++)
+										// Finish seek
+										mMediaPlayer.getAudioDestination(i)->finishSeek();
+
+									// Iterate all video tracks
+									for (UInt32 i = 0; i < mMediaPlayer.getVideoTrackCount(); i++)
+										// Finish seek
+										mMediaPlayer.getVideoDestination(i)->finishSeek();
+								}
+
+								// Check if was playing before interaction
+								if (mInteractionWasPlaying) {
+									// Iterate all audio tracks
+									for (UInt32 i = 0; i < mMediaPlayer.getAudioTrackCount(); i++)
+										// Play
+										mMediaPlayer.getAudioDestination(i)->play();
+
+									// Iterate all video tracks
+									for (UInt32 i = 0; i < mMediaPlayer.getVideoTrackCount(); i++)
+										// Play
+										mMediaPlayer.getVideoDestination(i)->resume();
+								}
+							}
 
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
 								void* userData)
@@ -132,6 +265,11 @@ class CMediaPlayer::Internals {
 								if (!mActiveInternals.contains(*internals))
 									return;
 
+								// End-of-data only means a finish while actually playing - a not-playing audition (a
+								//	preview burst) can run off the source end too, and must not be mistaken for one.
+								if (!internals->mMediaPlayer.isPlaying())
+									return;
+
 								// One more at end
 								if (++internals->mEndOfDataCount == internals->mMediaPlayer.getAudioTrackCount()) {
 									// All at the end
@@ -141,20 +279,11 @@ class CMediaPlayer::Internals {
 									if (internals->mLoopCount.hasValue() &&
 											((*internals->mLoopCount == 0) ||
 													(internals->mCurrentLoopCount < *internals->mLoopCount))) {
-										// Reset and go again
+										// Loop again
 										internals->mEndOfDataCount = 0;
 
-										// Reset and start playback again
-										for (UInt32 i = 0; i < internals->mMediaPlayer.getAudioTrackCount(); i++) {
-											// Reset and play
-											internals->mMediaPlayer.getAudioDestination(i)->reset();
-											internals->mMediaPlayer.getAudioDestination(i)->play();
-										}
-										for (UInt32 i = 0; i < internals->mMediaPlayer.getVideoTrackCount(); i++) {
-											// Reset and resume
-											internals->mMediaPlayer.getVideoDestination(i)->reset();
-											internals->mMediaPlayer.getVideoDestination(i)->resume();
-										}
+										// Seamlessly replay from the segment start (players stay engaged - no teardown)
+										internals->mMediaPlayer.restart();
 									} else {
 										// Finished
 										internals->mEndOfDataCount = 0;
@@ -216,12 +345,15 @@ class CMediaPlayer::Internals {
 				CSRSWMessageQueues&		mMessageQueues;
 				CMediaPlayer::Info		mInfo;
 
-				OV<SMedia::Segment>		mMediaSegment;
 				UniversalTimeInterval	mCurrentTimeInterval;
 				OV<UInt32>				mCurrentFrameIndex;
 				UInt32					mEndOfDataCount;
 				OV<UInt32>				mLoopCount;
 				UInt32					mCurrentLoopCount;
+
+				InteractionState		mInteractionState;
+				OV<SMedia::Segment>		mPendingMediaSegment;
+				bool					mInteractionWasPlaying;
 
 		static	TNArray<R<Internals> >	mActiveInternals;
 };
@@ -300,32 +432,74 @@ void CMediaPlayer::add(const I<CVideoDestination>& videoDestination, UInt32 trac
 void CMediaPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	bool	performSeek =
-					mediaSegment.hasValue() &&
-							(mediaSegment->getStartTimeInterval() != mInternals->mCurrentTimeInterval);
+	// Check if current interaction is changing the media segment (a bracketed drag)
+	if (mInternals->mInteractionState != kInteractionStateChangingMediaSegment) {
+		// Apply change immediately - check situation
+		OV<SMedia::Segment>	mediaSegmentUse =
+									(mediaSegment.hasValue() && (mediaSegment->getDurationTimeInterval() > 0.0)) ?
+											mediaSegment : OV<SMedia::Segment>();
+		
+		// Check situation
+		if (mediaSegmentUse.hasValue()) {
+			// A real (positive-duration) segment - set the media segment
+			CMediaDestination::setMediaSegment(mediaSegmentUse);
 
-	// Check Media Segment
-	if (mediaSegment.hasValue() && (mediaSegment->getDurationTimeInterval() > 0.0))
-		// Store
-		mInternals->mMediaSegment = mediaSegment;
-	else
-		// Clear
-		mInternals->mMediaSegment.removeValue();
+			// Seek to media segment start
+			seek(mediaSegmentUse->getStartTimeInterval());
+		} else if (mediaSegment.hasValue()) {
+			// A zero-duration segment could be the start of a selection , or a discrete playhead seek.  We don't know
+			//	at this time, but we want to preview regardless.
+			CMediaDestination::setMediaSegment(OV<SMedia::Segment>());
+			seek(mediaSegment->getStartTimeInterval());
+		} else
+			// No segment: clear, keeping the current position.
+			CMediaDestination::setMediaSegment(OV<SMedia::Segment>());
+	} else {
+		// In the middle of an interaction.
+		OV<SMedia::Segment>	previousPendingMediaSegment = mInternals->mPendingMediaSegment;
 
-	// Do super
-	CMediaDestination::setMediaSegment(mInternals->mMediaSegment);
+		// Update pending media segment
+		mInternals->mPendingMediaSegment = mediaSegment;
 
-	// Check for seek
-	if (performSeek)
-		// Seek
-		seek(mediaSegment->getStartTimeInterval());
+		// Check situation
+		if (mediaSegment.hasValue() &&
+				(!previousPendingMediaSegment.hasValue() ||
+						(previousPendingMediaSegment->getStartTimeInterval() !=
+								mediaSegment->getStartTimeInterval()))) {
+			// The media segment start is changing - preview the new start.
+			mInternals->mCurrentTimeInterval = mediaSegment->getStartTimeInterval();
+
+			// Prepare to update all audio and video destinations
+			SMedia::Segment	previewMediaSegment(mInternals->mCurrentTimeInterval, CAudioPlayer::mPreviewDuration);
+
+			// Update all audio destinations
+			for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
+				// Set the preview media segment
+				getAudioDestination(i)->setMediaSegment(OV<SMedia::Segment>(previewMediaSegment));
+
+				// Seek
+				getAudioDestination(i)->seek(mInternals->mCurrentTimeInterval);
+			}
+
+			// Update all video destinations
+			for (UInt32 i = 0; i < getVideoTrackCount(); i++) {
+				// Set the preview media segment
+				getVideoDestination(i)->setMediaSegment(OV<SMedia::Segment>(previewMediaSegment));
+
+				// Seek
+				getVideoDestination(i)->seek(mInternals->mCurrentTimeInterval);
+			}
+		}
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Commit any in-progress media-segment interaction
+	mediaSegmentDidChange();
+
 	// Do super
 	TMediaDestination<CAudioPlayer, CVideoFrameStore>::seek(timeInterval);
 
@@ -375,13 +549,6 @@ void CMediaPlayer::setLoopCount(OV<UInt32> loopCount)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const OV<SMedia::Segment>& CMediaPlayer::getMediaSegment() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return mInternals->mMediaSegment;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 UniversalTimeInterval CMediaPlayer::getCurrentTimeInterval() const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -399,6 +566,9 @@ const OV<UInt32>& CMediaPlayer::getCurrentFrameIndex() const
 void CMediaPlayer::play()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Commit any in-progress media-segment interaction
+	mediaSegmentDidChange();
+
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Play
@@ -414,6 +584,9 @@ void CMediaPlayer::play()
 void CMediaPlayer::pause()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Commit any in-progress media-segment interaction
+	mediaSegmentDidChange();
+
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Pause
@@ -444,52 +617,90 @@ bool CMediaPlayer::isPlaying() const
 void CMediaPlayer::startSeek()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Iterate all audio tracks
-	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
-		// Start seek
-		getAudioDestination(i)->startSeek();
+	// Commit any in-progress media-segment interaction, then begin a playhead interaction (suspend + preview)
+	mediaSegmentDidChange();
 
-	// Iterate all video tracks
-	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
-		// Start seek
-		getVideoDestination(i)->startSeek();
+	mInternals->mInteractionState = kInteractionStateMovingPlayhead;
+	mInternals->beginInteraction();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::finishSeek()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Iterate all audio tracks
-	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
-		// Finish seek
-		getAudioDestination(i)->finishSeek();
+	// End the playhead interaction: resume seamlessly from the audition (no re-seek), or park at the target
+	mInternals->endInteraction(false);
 
-	// Iterate all video tracks
-	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
-		// Finish seek
-		getVideoDestination(i)->finishSeek();
+	mInternals->mInteractionState = kInteractionStateNone;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::reset()
+void CMediaPlayer::mediaSegmentWillChange()
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Idempotent - begin at most once per interaction
+	if (mInternals->mInteractionState == kInteractionStateChangingMediaSegment)
+		return;
+
+	// Enter an interactive media-segment change: seed the in-progress segment from the committed one and put the
+	//	players into seek/preview mode (which remembers whether playback was active, to be restored on commit)
+	mInternals->mInteractionState = kInteractionStateChangingMediaSegment;
+	mInternals->mPendingMediaSegment = getMediaSegment();
+	mInternals->beginInteraction();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::mediaSegmentDidChange()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Idempotent - only commit an in-progress interaction
+	if (mInternals->mInteractionState != kInteractionStateChangingMediaSegment)
+		return;
+	mInternals->mInteractionState = kInteractionStateNone;
+
+	// Commit the in-progress segment (store + propagate to the source), replacing the transient preview window.
+	//	Normalize here - a zero-duration click point commits as no segment (the whole source), so a click seeks without
+	//	leaving a spurious empty selection.
+	CMediaDestination::setMediaSegment(
+			(mInternals->mPendingMediaSegment.hasValue() &&
+							(mInternals->mPendingMediaSegment->getDurationTimeInterval() > 0.0)) ?
+					mInternals->mPendingMediaSegment : OV<SMedia::Segment>());
+
+	// End the interaction: the commit changed the source scope, so re-seek to the auditioned start, then restore
+	mInternals->endInteraction(true);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::stop()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Commit any in-progress media-segment interaction so it takes effect before this call
+	mediaSegmentDidChange();
+
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
-		// Reset
-		getAudioDestination(i)->reset();
+		// Stop
+		getAudioDestination(i)->stop();
 
 	// Iterate all video tracks
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
-		// Reset
-		getVideoDestination(i)->reset();
+		// Stop
+		getVideoDestination(i)->stop();
 
 	// Update internals
 	mInternals->mCurrentTimeInterval =
-			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0;
+			getMediaSegment().hasValue() ? getMediaSegment()->getStartTimeInterval() : 0.0;
 	mInternals->mCurrentFrameIndex.removeValue();
 	mInternals->mEndOfDataCount = 0;
 
 	// Call proc
 	mInternals->mInfo.audioPositionUpdated(mInternals->mCurrentTimeInterval);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::restart()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Seek to the begining of the media segment, or beginning beginning
+	seek(getMediaSegment().hasValue() ? getMediaSegment()->getStartTimeInterval() : 0.0);
 }

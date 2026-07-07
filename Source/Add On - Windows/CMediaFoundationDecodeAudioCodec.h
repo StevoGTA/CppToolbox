@@ -40,6 +40,8 @@ class CMediaFoundationDecodeAudioCodec : public CDecodeAudioCodec {
 		virtual	OR<const GUID>	getGUID(OSType codecID) const = 0;
 		virtual	OV<CData>		getUserData() const
 									{ return OV<CData>(); }
+		virtual	UInt32			getPrimingFrameCount() const
+									{ return 0; }
 
 	// Properties
 	private:

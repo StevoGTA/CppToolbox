@@ -22,7 +22,7 @@ class CMediaFoundationResampler : public CAudioConverter {
 		TArray<CString>					getSetupDescription(const CString& indent);
 
 		TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
-		void							reset();
+		void							seek(UniversalTimeInterval timeInterval);
 
 		TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 
