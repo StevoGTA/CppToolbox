@@ -362,6 +362,44 @@ TNArray<R<CMediaPlayer::Internals> >	CMediaPlayer::Internals::mActiveInternals;
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - CMediaPlayer::AudioSetup
+
+// MARK: CAudioDestination::Setup methods
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CAudioDestination> CMediaPlayer::AudioSetup::create(const CString& identifier, UInt32 trackIndex) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create audio player
+	I<CAudioPlayer>	audioPlayer =
+							mMediaPlayer.newAudioPlayer(
+									identifier + CString(OSSTR(", Audio Track ")) + CString(trackIndex + 1),
+											trackIndex);
+
+	return *((I<CAudioDestination>*) &audioPlayer);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CMediaPlayer::VideoSetup
+
+// MARK: CVideoDestination::Setup methods
+
+//----------------------------------------------------------------------------------------------------------------------
+I<CVideoDestination> CMediaPlayer::VideoSetup::create(const CString& identifier, UInt32 trackIndex) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create video frame store
+	I<CVideoFrameStore>	videoFrameStore =
+							mMediaPlayer.newVideoFrameStore(
+									identifier + CString(OSSTR(", Video Track ")) + CString(trackIndex + 1),
+											trackIndex);
+
+	return *((I<CVideoDestination>*) &videoFrameStore);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMediaPlayer
 
 // MARK: Lifecycle methods

@@ -117,6 +117,20 @@ class CVideoSource : public CVideoProcessor {
 // MARK: - CVideoDestination
 
 class CVideoDestination : public CVideoProcessor {
+	// Setup
+	public:
+		class Setup {
+			// Methods
+			public:
+												// Instance methods
+				virtual	I<CVideoDestination>	create(const CString& identifier, UInt32 trackIndex) const = 0;
+
+			protected:
+												// Lifecycle methods
+												Setup() {}
+				virtual							~Setup() {}
+		};
+
 	// Methods
 	public:
 						// Lifecycle methods

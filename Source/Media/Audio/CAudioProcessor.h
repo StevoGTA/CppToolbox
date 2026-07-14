@@ -107,6 +107,20 @@ class CAudioSource : public CAudioProcessor {
 // MARK: - CAudioDestination
 
 class CAudioDestination : public CAudioProcessor {
+	// Setup
+	public:
+		class Setup {
+			// Methods
+			public:
+												// Instance methods
+				virtual	I<CAudioDestination>	create(const CString& identifier, UInt32 trackIndex) const = 0;
+
+			protected:
+												// Lifecycle methods
+												Setup() {}
+				virtual							~Setup() {}
+		};
+
 	// Methods
 	public:
 												// Lifecycle methods

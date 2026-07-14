@@ -117,6 +117,42 @@
 */
 
 class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
+	// AudioSetup
+	public:
+		class AudioSetup : public CAudioDestination::Setup {
+			// Methods
+			public:
+										// Lifecycle methods
+										AudioSetup(CMediaPlayer& mediaPlayer) :
+											CAudioDestination::Setup(), mMediaPlayer(mediaPlayer)
+											{}
+
+										// CAudioDestination::Setup methods
+				I<CAudioDestination>	create(const CString& identifier, UInt32 trackIndex) const;
+
+			// Properties
+			private:
+				CMediaPlayer&	mMediaPlayer;
+		};
+
+	// VideoSetup
+	public:
+		class VideoSetup : public CVideoDestination::Setup {
+			// Methods
+			public:
+										// Lifecycle methods
+										VideoSetup(CMediaPlayer& mediaPlayer) :
+											CVideoDestination::Setup(), mMediaPlayer(mediaPlayer)
+											{}
+
+										// CVideoDestination::Setup methods
+				I<CVideoDestination>	create(const CString& identifier, UInt32 trackIndex) const;
+
+			// Properties
+			private:
+				CMediaPlayer&	mMediaPlayer;
+		};
+
 	// Info
 	public:
 		struct Info {
