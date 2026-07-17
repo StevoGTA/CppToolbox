@@ -14,18 +14,22 @@ class CProgress {
 	public:
 		struct UpdateInfo {
 			// Types
-			typedef	void	(*Proc)(const CProgress& progress, void* userData);
+			public:
+				typedef	void	(*Proc)(const CProgress& progress, void* userData);
 
-					// Methods
-					UpdateInfo(Proc proc, void* userData) :
-						mProc(proc), mUserData(userData)
-						{}
-					UpdateInfo(const UpdateInfo& other) :
-						mProc(other.mProc), mUserData(other.mUserData)
-						{}
+			// Methods
+			public:
+						// Lifecycle methods
+						UpdateInfo(Proc proc, void* userData) :
+							mProc(proc), mUserData(userData)
+							{}
+						UpdateInfo(const UpdateInfo& other) :
+							mProc(other.mProc), mUserData(other.mUserData)
+							{}
 
-			void	notify(const CProgress& progress)
-						{ mProc(progress, mUserData); }
+						// Instance methods
+				void	notify(const CProgress& progress) const
+							{ mProc(progress, mUserData); }
 
 			// Properties
 			private:
