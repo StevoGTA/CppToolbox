@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CArray.h"
+#include "TimeAndDate.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 	#include <CoreAudioTypes/CoreAudioTypes.h>
@@ -66,6 +67,9 @@ class CAudioFrames {
 											// Instance methods
 					UInt32					getFrameCount() const
 												{ return mFrameCount; }
+					UniversalTimeInterval	getDurationTimeInterval(Float32 sampleRate) const
+												{ return (UniversalTimeInterval) mFrameCount /
+														(UniversalTimeInterval) sampleRate; }
 					UInt32					getByteCount() const
 												{ return mByteCount; }
 			const	TNumberArray<void*>&	getSegments() const

@@ -253,7 +253,7 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 																			(UInt32)
 																					mInfo.getMagicCookie()
 																							.getByteCount(),
-																			mInfo.getMagicCookie().getBytePtr());
+																			*mInfo.getMagicCookie().getUInt8Buffer());
 												ReturnErrorIfFailed(status,
 														CString(OSSTR("AudioConverterSetProperty for magic cookie")));
 
@@ -280,6 +280,8 @@ class CAACDecodeAudioCodec : public CMediaFoundationDecodeAudioCodec {
 
 												return OV<CData>(CData(&userData, sizeof(UserData)));
 											}
+		UInt32							getPrimingFrameCount() const
+											{ return 2112; }
 #endif
 
 	private:
@@ -302,12 +304,14 @@ OV<CAACAudioCodec::Info> CAACAudioCodec::composeInfo(const CData& configurationD
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	SesdsAtomPayload&				esdsAtomPayload = *((SesdsAtomPayload*) configurationData.getBytePtr());
+	const	SesdsAtomPayload&				esdsAtomPayload =
+													*((const SesdsAtomPayload*) *configurationData.getUInt8Buffer());
 	const	SesdsDecoderConfigDescriptor&	esdsDecoderConfigDescriptor = esdsAtomPayload.getDecoderConfigDescriptor();
 	const	SesdsDecoderSpecificDescriptor&	esdsDecoderSpecificDescriptor =
 													esdsDecoderConfigDescriptor.getDecoderSpecificDescriptor();
 			CData							startCodesData = esdsDecoderSpecificDescriptor.getStartCodes();
-			UInt16							startCodes = EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()));
+			UInt16							startCodes =
+													EndianU16_BtoN(*((const UInt16*) *startCodesData.getUInt8Buffer()));
 
 	// See https://wiki.multimedia.cx/index.php/MPEG-4_Audio
 	// Codec ID
@@ -365,8 +369,8 @@ OV<CAACAudioCodec::Info> CAACAudioCodec::composeInfo(const CData& configurationD
 
 	return OV<Info>(
 			Info(codecID, sampleRate, *audioChannelMap,
-					CData((UInt8*) configurationData.getBytePtr() + 4, configurationData.getByteCount() - 4),
-					EndianU16_BtoN(*((UInt16*) startCodesData.getBytePtr()))));
+					CData(*configurationData.getUInt8Buffer() + 4, configurationData.getByteCount() - 4),
+					EndianU16_BtoN(*((const UInt16*) *startCodesData.getUInt8Buffer()))));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -201,14 +201,14 @@ TVResult<CAudioProcessor::SourceInfo> CSecretRabbitCodeAudioConverter::performIn
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CSecretRabbitCodeAudioConverter::reset()
+void CSecretRabbitCodeAudioConverter::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
 	mInternals->mSourceHasMoreToRead = true;
 
 	// Do super
-	CAudioProcessor::reset();
+	CAudioProcessor::seek(timeInterval);
 
 	// Reset
 	src_reset(mInternals->mSRCState);

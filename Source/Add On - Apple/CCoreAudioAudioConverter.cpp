@@ -223,14 +223,14 @@ TVResult<CAudioProcessor::SourceInfo> CCoreAudioAudioConverter::performInto(CAud
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreAudioAudioConverter::reset()
+void CCoreAudioAudioConverter::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
 	mInternals->mSourceHasMoreToRead = true;
 
 	// Do super
-	CAudioProcessor::reset();
+	CAudioProcessor::seek(timeInterval);
 
 	// Reset AudioConverter
 	OSStatus	status = ::AudioConverterReset(mInternals->mAudioConverterRef);

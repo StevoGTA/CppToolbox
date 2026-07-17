@@ -68,7 +68,7 @@ OV<SError> CDataDataSource::read(UInt64 position, void* buffer, UInt64 byteCount
 		return OV<SError>(SError::mEndOfData);
 
 	// Copy bytes
-	::memcpy(buffer, (UInt8*) mInternals->mData.getBytePtr() + position, (size_t) byteCount);
+	mInternals->mData.copyBytes(buffer, position, byteCount);
 
 	return OV<SError>();
 }
@@ -83,18 +83,19 @@ TVResult<CData> CDataDataSource::readData(UInt64 position, CData::ByteCount byte
 		// Attempting to ready beyond end of data
 		return TVResult<CData>(SError::mEndOfData);
 
-	return TVResult<CData>(CData((UInt8*) mInternals->mData.getBytePtr() + position, byteCount));
+	return TVResult<CData>(CData(*mInternals->mData.getUInt8Buffer() + position, byteCount));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TVResult<TBuffer<UInt8> > CDataDataSource::readUInt8Buffer(UInt64 position, UInt64 byteCount)
+TVResult<TBuffer<const UInt8> > CDataDataSource::readUInt8Buffer(UInt64 position, UInt64 byteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
 	AssertFailIf((position + byteCount) > mInternals->mData.getByteCount());
 	if ((position + byteCount) > mInternals->mData.getByteCount())
 		// Attempting to ready beyond end of data
-		return TVResult<TBuffer<UInt8> >(SError::mEndOfData);
+		return TVResult<TBuffer<const UInt8> >(SError::mEndOfData);
 
-	return TVResult<TBuffer<UInt8> >(TBuffer<UInt8>((UInt8*) mInternals->mData.getBytePtr() + position, byteCount));
+	return TVResult<TBuffer<const UInt8> >(
+			TBuffer<const UInt8>(*mInternals->mData.getUInt8Buffer() + position, byteCount));
 }

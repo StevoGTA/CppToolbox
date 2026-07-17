@@ -211,11 +211,11 @@ TVResult<CAudioProcessor::SourceInfo> CMediaFoundationResampler::performInto(CAu
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CMediaFoundationResampler::reset()
+void CMediaFoundationResampler::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Do super
-	__super::reset();
+	__super::seek(timeInterval);
 
 	// Reset Resampler
     mInternals->mResamplerTransform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);

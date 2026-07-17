@@ -4,53 +4,93 @@
 
 #include "CData-ZIPExtensions.h"
 
+#define ZLIB_CONST
 #include <zlib.h>
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CData_ZIPExtensions
+// MARK: Local data
+
+static	CString	sErrorDomain(OSSTR("CData_ZIPExtensions"));
 
 //----------------------------------------------------------------------------------------------------------------------
-CData CData_ZIPExtensions::uncompressDataAsZIP(const CData& data, OV<CData::ByteCount> uncompressedDataByteCount)
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local procs
+
+//----------------------------------------------------------------------------------------------------------------------
+static SError sZIPError(const CString& context, int zLibStatus, const char* msg)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	CData::ByteCount	sourceByteCount = data.getByteCount();
-	CData				decompressedData(
-								uncompressedDataByteCount.hasValue() ?
-										*uncompressedDataByteCount : sourceByteCount + sourceByteCount / 2);
+	// Prefer the stream's specific message, fall back to the status text
+	const	char*	text = (msg != nil) ? msg : zError(zLibStatus);
 
-	z_stream	strm;
-	strm.next_in = (Bytef*) data.getBytePtr();
+	return SError(sErrorDomain, (SInt32) zLibStatus,
+			context + CString(OSSTR(": ")) + CString(text, (UInt32) ::strlen(text), CString::kEncodingASCII));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CData_ZIPExtensions
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> CData_ZIPExtensions::uncompressDataAsZIP(const CData& data,
+		OV<CData::ByteCount> uncompressedDataByteCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup write buffer
+	CData::ByteCount	sourceByteCount = data.getByteCount();
+	CData::ByteCount	capacity =
+								uncompressedDataByteCount.hasValue() ?
+										*uncompressedDataByteCount : sourceByteCount + sourceByteCount / 2;
+
+	CData				decompressedData(capacity);
+	TBuffer<UInt8>		outBuffer = decompressedData.getMutableBuffer(capacity);
+
+	// Initialize
+	z_stream		strm = {0};
+	strm.next_in = *data.getUInt8Buffer();
 	strm.avail_in = (uInt) sourceByteCount;
-	strm.total_out = 0;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
 
-	if (inflateInit(&strm) != Z_OK)
-		return CData::mEmpty;
-
-	int	zLibStatus = Z_OK;
-	while (zLibStatus == Z_OK) {
-		strm.next_out = (Bytef*) decompressedData.getMutableBytePtr() + strm.total_out;
-		strm.avail_out = (uInt) (decompressedData.getByteCount() - strm.total_out);
-
-		// Inflate another chunk.
-		zLibStatus = inflate(&strm, Z_SYNC_FLUSH);
-		
-		// We need more space?
-		if (strm.avail_out == 0)
-			decompressedData.increaseByteCountBy(sourceByteCount / 2);
-	}
-	
-	if (zLibStatus == Z_STREAM_END)
-		zLibStatus = inflateEnd(&strm);
-	else
-		inflateEnd(&strm);
-	
+	int	zLibStatus = inflateInit(&strm);
 	if (zLibStatus != Z_OK)
-		return CData::mEmpty;
+		// inflateInit failed
+		return TVResult<CData>(sZIPError(CString(OSSTR("inflateInit")), zLibStatus, strm.msg));
 
-	decompressedData.setByteCount((CData::ByteCount) strm.total_out);
-	
-	return decompressedData;
+	// Inflate
+	while (zLibStatus == Z_OK) {
+		// Aim at the unused tail of the output buffer
+		strm.next_out = (Bytef*) *outBuffer + strm.total_out;
+		strm.avail_out = (uInt) (capacity - strm.total_out);
+
+		// Inflate another chunk
+		zLibStatus = inflate(&strm, Z_SYNC_FLUSH);
+
+		// Check if out of available space
+		if (strm.avail_out == 0) {
+			// Grow if the output buffer filled (reallocate preserves existing contents)
+			capacity += sourceByteCount / 2;
+			outBuffer = decompressedData.getMutableBuffer(capacity);
+		}
+	}
+
+	// Check for failure
+	if (zLibStatus != Z_STREAM_END) {
+		// Decompression failed (compose the error before inflateEnd releases the stream)
+		SError	error = sZIPError(CString(OSSTR("inflate")), zLibStatus, strm.msg);
+		inflateEnd(&strm);
+
+		return TVResult<CData>(error);
+	}
+
+	// Finalize
+	zLibStatus = inflateEnd(&strm);
+	if (zLibStatus != Z_OK)
+		// inflateEnd failed
+		return TVResult<CData>(sZIPError(CString(OSSTR("inflateEnd")), zLibStatus, strm.msg));
+
+	// Trim to the actual decompressed size
+	decompressedData.getMutableBuffer((CData::ByteCount) strm.total_out);
+
+	return TVResult<CData>(decompressedData);
 }

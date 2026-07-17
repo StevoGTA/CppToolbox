@@ -51,8 +51,8 @@ struct CMPEG4MediaFile::Internals {
 										const SMPEG4::STTSAtomPayload& sttsAtomPayload,
 										const SMPEG4::STSCAtomPayload& stscAtomPayload,
 										const SMPEG4::STSZAtomPayload& stszAtomPayload,
-										SMPEG4::STCOAtomPayload* stcoAtomPayload,
-										SMPEG4::CO64AtomPayload* co64AtomPayload) :
+										const SMPEG4::STCOAtomPayload* stcoAtomPayload,
+										const SMPEG4::CO64AtomPayload* co64AtomPayload) :
 									mAtomReader(atomReader), mSTSDAtom(stsdAtom), mSTBLContainerAtom(stblContainerAtom),
 											mSTSDDescriptionHeader(stsdDescriptionHeader),
 											mSTTSAtomPayload(sttsAtomPayload), mSTSCAtomPayload(stscAtomPayload),
@@ -92,8 +92,8 @@ struct CMPEG4MediaFile::Internals {
 	const	SMPEG4::STTSAtomPayload&		mSTTSAtomPayload;
 	const	SMPEG4::STSCAtomPayload&		mSTSCAtomPayload;
 	const	SMPEG4::STSZAtomPayload&		mSTSZAtomPayload;
-			SMPEG4::STCOAtomPayload* 		mSTCOAtomPayload;
-			SMPEG4::CO64AtomPayload*		mCO64AtomPayload;
+	const	SMPEG4::STCOAtomPayload* 		mSTCOAtomPayload;
+	const	SMPEG4::CO64AtomPayload*		mCO64AtomPayload;
 };
 
 // MARK: Instance methods
@@ -150,7 +150,8 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('m', 'd', 'h', 'd')));
 			if (mdhdAtomPayloadData.hasError()) continue;
 			const	SMPEG4::MDHDAtomPayload&	mdhdAtomPayload =
-														*((SMPEG4::MDHDAtomPayload*) mdhdAtomPayloadData->getBytePtr());
+														*((const SMPEG4::MDHDAtomPayload*)
+																*mdhdAtomPayloadData->getUInt8Buffer());
 					UInt32						timeScale = mdhdAtomPayload.getTimeScale();
 					UniversalTimeInterval		duration =
 														(UniversalTimeInterval) mdhdAtomPayload.getDuration() /
@@ -162,7 +163,8 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 											mdiaContainerAtom->getAtom(MAKE_OSTYPE('h', 'd', 'l', 'r')));
 			if (hdlrAtomPayloadData.hasError()) continue;
 			const	SMPEG4::HDLRAtomPayload&	hdlrAtomPayload =
-														*((SMPEG4::HDLRAtomPayload*) hdlrAtomPayloadData->getBytePtr());
+														*((const SMPEG4::HDLRAtomPayload*)
+																*hdlrAtomPayloadData->getUInt8Buffer());
 
 			// Media Information
 			TVResult<CAtomReader::ContainerAtom>	minfContainerAtom =
@@ -184,8 +186,8 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 			TVResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
 			if (error.hasValue()) continue;
 			const	SMPEG4::STSDAtomPayload&		stsdAtomPayload =
-															*((SMPEG4::STSDAtomPayload*)
-																	stsdAtomPayloadData->getBytePtr());
+															*((const SMPEG4::STSDAtomPayload*)
+																	*stsdAtomPayloadData->getUInt8Buffer());
 			const	SMPEG4::STSDDescriptionHeader&	stsdDescriptionHeader = stsdAtomPayload.getFirstDescriptionHeader();
 
 			// Sample Table Time-to-Sample
@@ -194,7 +196,8 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 't', 's')));
 			if (sttsAtomPayloadData.hasError()) continue;
 			const	SMPEG4::STTSAtomPayload&	sttsAtomPayload =
-														*((SMPEG4::STTSAtomPayload*) sttsAtomPayloadData->getBytePtr());
+														*((const SMPEG4::STTSAtomPayload*)
+																*sttsAtomPayloadData->getUInt8Buffer());
 
 			// Sample Table Sample Blocks
 			TVResult<CData>	stscAtomPayloadData =
@@ -202,7 +205,8 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'c')));
 			if (stscAtomPayloadData.hasError()) continue;
 			const	SMPEG4::STSCAtomPayload&	stscAtomPayload =
-														*((SMPEG4::STSCAtomPayload*) stscAtomPayloadData->getBytePtr());
+														*((const SMPEG4::STSCAtomPayload*)
+																*stscAtomPayloadData->getUInt8Buffer());
 
 			// Sample Table Packet Sizes
 			TVResult<CData>	stszAtomPayloadData =
@@ -210,7 +214,8 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 											stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'z')));
 			if (stszAtomPayloadData.hasError()) continue;
 			const	SMPEG4::STSZAtomPayload&	stszAtomPayload =
-														*((SMPEG4::STSZAtomPayload*) stszAtomPayloadData->getBytePtr());
+														*((const SMPEG4::STSZAtomPayload*)
+																*stszAtomPayloadData->getUInt8Buffer());
 
 			// Sample Table Block offsets
 			TVResult<CData>	stcoAtomPayloadData =
@@ -220,14 +225,16 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
 			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
-			SMPEG4::STCOAtomPayload*	stcoAtomPayload =
-												stcoAtomPayloadData.hasValue() ?
-														(SMPEG4::STCOAtomPayload*) stcoAtomPayloadData->getBytePtr() :
-														nil;
-			SMPEG4::CO64AtomPayload*	co64AtomPayload =
-												co64AtomPayloadData.hasValue() ?
-														(SMPEG4::CO64AtomPayload*) co64AtomPayloadData->getBytePtr() :
-														nil;
+			const	SMPEG4::STCOAtomPayload*	stcoAtomPayload =
+														stcoAtomPayloadData.hasValue() ?
+																(const SMPEG4::STCOAtomPayload*)
+																		*stcoAtomPayloadData->getUInt8Buffer() :
+																nil;
+			const	SMPEG4::CO64AtomPayload*	co64AtomPayload =
+														co64AtomPayloadData.hasValue() ?
+																(const SMPEG4::CO64AtomPayload*)
+																		*co64AtomPayloadData->getUInt8Buffer() :
+																nil;
 
 			// Internals
 			Internals	internals(atomReader, *stsdAtom, *stblContainerAtom, stsdDescriptionHeader, sttsAtomPayload,
@@ -461,8 +468,8 @@ TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
 			if (importSetup.isCreatingDecoders()) {
 				// Setup
 				const	SMPEG4::STSSAtomPayload&	stssAtomPayload =
-															*((SMPEG4::STSSAtomPayload*)
-																	stssAtomPayloadData->getBytePtr());
+															*((const SMPEG4::STSSAtomPayload*)
+																	*stssAtomPayloadData->getUInt8Buffer());
 						UInt32					keyframesCount = stssAtomPayload.getKeyframesCount();
 						TNumberArray<UInt32>	keyframeIndexes;
 				for (UInt32 i = 0; i < keyframesCount; i++)

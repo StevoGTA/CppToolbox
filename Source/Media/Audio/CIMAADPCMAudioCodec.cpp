@@ -395,9 +395,10 @@ OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::setup(const SAudio::ProcessingForm
 void CDVIIntelIMAADPCMDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Seek
+	// Seek - round to the nearest frame, never truncate, so this lands on the same whole frame the rest of the
+	//	pipeline accounts for (see the detailed rationale in CAudioSource::calculateMaxFrames)
 	mDecodeFramesToIgnore =
-			mMediaPacketSource->seekToDuration((UInt32) (timeInterval * mAudioProcessingFormat->getSampleRate()));
+			mMediaPacketSource->seekToDuration((UInt32) (timeInterval * mAudioProcessingFormat->getSampleRate() + 0.5));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -451,12 +452,23 @@ OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 		// Decode packet
 		imaADCPMDecoder.decodeGrouped(packetPtr, sizeof(CDVIIntelIMAADPCMAudioCodec::ChannelHeader), 8,
 				(mFramesPerPacket - 1) / 8);
-		audioFrames.completeWrite(mFramesPerPacket);
+
+		// Calculate how many frames that were decoded are actually tob be used
+		UInt32	framesToCommit = mFramesPerPacket - mDecodeFramesToIgnore;
+
+		// Check if ignoring any frames
+		if (mDecodeFramesToIgnore > 0)
+			// Move the return frames to the front of the buffer
+			::memmove(bufferPtr, bufferPtr + mDecodeFramesToIgnore * channels,
+					framesToCommit * channels * sizeof(SInt16));
+		
+		// Complete write
+		audioFrames.completeWrite(framesToCommit);
 
 		// Update
-		bufferPtr += mFramesPerPacket * channels;
-		decodedFrameCount += mFramesPerPacket;
-		remainingFrames -= mFramesPerPacket;
+		bufferPtr += framesToCommit * channels;
+		decodedFrameCount += framesToCommit;
+		remainingFrames -= framesToCommit;
 		mDecodeFramesToIgnore = 0;
 	}
 

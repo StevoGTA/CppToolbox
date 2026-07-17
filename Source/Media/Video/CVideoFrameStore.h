@@ -56,7 +56,7 @@ class CVideoFrameStore : public CVideoDestination {
 				void				setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 				void				seek(UniversalTimeInterval timeInterval);
 
-				void				reset();
+				void				stop();
 
 									// CVideoDestination methods
 				void				setupComplete();

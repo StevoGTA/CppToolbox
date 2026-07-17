@@ -214,6 +214,7 @@ class CString : public CHashable {
 											CString(OSStringVar(initialString));
 											CString(const char chars[], CString::Length maxLength, Encoding encoding);
 											CString(const void* ptr, UInt64 byteCount, Encoding encoding);
+											CString(const TBuffer<const UInt8>& buffer, Encoding encoding);
 											CString(const TBuffer<UInt8>& buffer, Encoding encoding);
 											CString(const TBuffer<UTF32Char>& buffer);
 

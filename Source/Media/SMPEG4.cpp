@@ -96,7 +96,7 @@ TVResult<CData> SMPEG4::STSDMP4ADescription::getData(Float32 sampleRate,
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Decode Magic Cookie
-	const	UInt8*					constBytePtr = (const UInt8*) magicCookie.getBytePtr();
+	const	UInt8*					constBytePtr = *magicCookie.getUInt8Buffer();
 			CData::ByteCount		byteCount = magicCookie.getByteCount();
 	const	SMPEG4AudioFormatAtom&	audioFormatAtom = *((const SMPEG4AudioFormatAtom*) constBytePtr);
 			CData					magicCookieData;

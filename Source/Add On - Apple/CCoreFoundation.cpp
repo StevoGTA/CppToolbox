@@ -154,7 +154,7 @@ CData CCoreFoundation::dataFrom(CFDataRef dataRef)
 CCoreFoundation::O<CFDataRef> CCoreFoundation::dataRefFrom(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return O<CFDataRef>(::CFDataCreate(kCFAllocatorDefault, (const UInt8*) data.getBytePtr(), data.getByteCount()));
+	return O<CFDataRef>(::CFDataCreate(kCFAllocatorDefault, *data.getUInt8Buffer(), data.getByteCount()));
 }
 
 // MARK: Dictionary methods

@@ -161,8 +161,8 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 	const	CData&				data = mediaPacketData->getData();
 			CMBlockBufferRef	blockBufferRef;
 	status =
-			::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) data.getBytePtr(), data.getByteCount(),
-					kCFAllocatorNull, nil, 0, data.getByteCount(), 0, &blockBufferRef);
+			::CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault, (void*) *data.getUInt8Buffer(),
+					data.getByteCount(), kCFAllocatorNull, nil, 0, data.getByteCount(), 0, &blockBufferRef);
 	LogOSStatusIfFailedAndReturnValue(status, CString(OSSTR("CMBlockBufferCreateWithMemoryBlock")),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 

@@ -14,8 +14,11 @@ class CMediaDestination::Internals {
 		Internals(const CString& name) : mName(name) {}
 
 		CString														mName;
+
 		TNKeyConvertibleDictionary<UInt32, I<CAudioDestination> >	mAudioDestinationByTrack;
 		TNKeyConvertibleDictionary<UInt32, I<CVideoDestination> >	mVideoDestinationByTrack;
+
+		OV<SMedia::Segment>											mMediaSegment;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -81,6 +84,9 @@ void CMediaDestination::add(const I<CVideoDestination>& videoDestination, UInt32
 void CMediaDestination::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Store
+	mInternals->mMediaSegment = mediaSegment;
+
 	// Iterate all audio tracks
 	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
 		// Set window
@@ -90,6 +96,13 @@ void CMediaDestination::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++)
 		// Seek
 		(*mInternals->mVideoDestinationByTrack[i])->setMediaSegment(mediaSegment);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const OV<SMedia::Segment>& CMediaDestination::getMediaSegment() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mMediaSegment;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

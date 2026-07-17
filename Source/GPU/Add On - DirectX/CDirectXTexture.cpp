@@ -138,7 +138,7 @@ class CDirectXTexture::Internals : public TReferenceCountableAutoDelete<Internal
 
 				// Setup subresource data
 				D3D11_SUBRESOURCE_DATA	subresourceData = {0};
-				subresourceData.pSysMem = data.getBytePtr();
+				subresourceData.pSysMem = *data.getUInt8Buffer();
 				subresourceData.SysMemPitch = bytesPerRow;
 				subresourceData.SysMemSlicePitch = 0;
 

@@ -65,8 +65,9 @@ OV<SError> CPCMDecodeAudioCodec::setup(const SAudio::ProcessingFormat& audioProc
 void CPCMDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Seek
-	mFrameSource.seek((UInt64) (timeInterval * mAudioProcessingFormat->getSampleRate()));
+	// Seek - round to the nearest frame, never truncate, so this lands on the same whole frame the rest of the
+	//	pipeline accounts for (see the detailed rationale in CAudioSource::calculateMaxFrames)
+	mFrameSource.seek((UInt64) (timeInterval * mAudioProcessingFormat->getSampleRate() + 0.5));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -127,7 +127,7 @@ void C2DPath::iterateSegments(bool constructing)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	UInt8*				bytePtr = (const UInt8*) mInternals->mPathSegmentData.getBytePtr();
+	const	UInt8*				bytePtr = *mInternals->mPathSegmentData.getUInt8Buffer();
 			CData::ByteCount	bytesRemaining = mInternals->mPathSegmentData.getByteCount();
 	
 	while (bytesRemaining >= (SInt32) sizeof(E2DPathSegmentType)) {
@@ -214,7 +214,7 @@ CData C2DPath::getInitialSegmentData() const
 	CData::ByteCount	byteCount = mInternals->mPathSegmentData.getByteCount();
 	if (byteCount >= sizeof(E2DPathSegmentType)) {
 		// Return the rest of the data
-		return CData((const UInt8*) mInternals->mPathSegmentData.getBytePtr() + sizeof(E2DPathSegmentType),
+		return CData(*mInternals->mPathSegmentData.getUInt8Buffer() + sizeof(E2DPathSegmentType),
 				byteCount - sizeof(E2DPathSegmentType));
 	} else
 		// No data

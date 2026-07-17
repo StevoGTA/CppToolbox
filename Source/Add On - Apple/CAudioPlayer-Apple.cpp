@@ -574,8 +574,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	// Reset buffer
 	mInternals->mQueue->reset();
 
-	// Reset and seek
-	CAudioDestination::reset();
+	// Seek
 	CAudioDestination::seek(timeInterval);
 
 	// Update stuffs
@@ -585,7 +584,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 
 	mInternals->mRenderProcFrameIndex = 0;
 	mInternals->mRenderProcFrameCount =
-			!mInternals->mIsPlaying ? (UInt32) (*mInternals->mSampleRate * CAudioPlayer::kPreviewDuration) : ~0;
+			!mInternals->mIsPlaying ? (UInt32) (*mInternals->mSampleRate * CAudioPlayer::mPreviewDuration) : ~0;
 
 	// Resume
 	mInternals->mAudioPlayerBufferThread->resume();
@@ -601,7 +600,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::reset()
+void CAudioPlayer::stop()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Stop sending frames
@@ -626,8 +625,9 @@ void CAudioPlayer::reset()
 	// Reset buffer
 	mInternals->mQueue->reset();
 
-	// Reset the pipeline
-	CAudioDestination::reset();
+	// Seek to the start of the segment if present, or start
+	CAudioDestination::seek(
+			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0);
 
 	// Reset
 	mInternals->mCurrentPlaybackTimeInterval =
@@ -786,7 +786,6 @@ void CAudioPlayer::finishSeek()
 	mInternals->mQueue->reset();
 
 	// Seek to the last seek time interval
-	CAudioDestination::reset();
 	CAudioDestination::seek(mInternals->mLastSeekTimeInterval);
 
 	// Reset stuffs

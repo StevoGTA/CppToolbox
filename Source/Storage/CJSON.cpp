@@ -67,20 +67,20 @@ TVResult<CData> CJSON::dataFrom(const CDictionary& dictionary)
 TVResult<TArray<CDictionary> > CJSON::arrayOfDictionariesFrom(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Read array of dictionaries
-	const	SInt8*	charPtr = (const SInt8*) data.getBytePtr();
+	// Setup
+	const SInt8*	ptr = *data.getSInt8Buffer();
 
-	return sReadArrayOfDictionaries(charPtr);
+	return sReadArrayOfDictionaries(ptr);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CDictionary> CJSON::dictionaryFrom(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Read dictionary
-	const	SInt8*	charPtr = (const SInt8*) data.getBytePtr();
+	// Setup
+	const SInt8*	ptr = *data.getSInt8Buffer();
 
-	return sReadDictionary(charPtr);
+	return sReadDictionary(ptr);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

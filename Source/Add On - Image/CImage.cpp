@@ -31,6 +31,16 @@ struct SJPEGErrorInfo : public jpeg_error_mgr {
 	char	mErrorMessage[JMSG_LENGTH_MAX];
 };
 
+// JPEG encode output is accumulated into a growing CData via a fixed-size scratch window that libjpeg writes into.
+//	Because the CData is owned by a function-local in sEncodeJPEGData, it is released deterministically on the setjmp
+//	error path (e.g. out of memory) without any manual cleanup.
+struct SJPEGDataDestination {
+	// Properties
+	jpeg_destination_mgr	mManager;	// Must be first - libjpeg casts j_compress_ptr->dest to/from this
+	CData*					mData;
+	JOCTET					mBuffer[16 * 1024];
+};
+
 static	CString	sErrorDomain(OSSTR("CImage"));
 static	SError	sErrorUnknownType(sErrorDomain, 1, CString(OSSTR("Unknown type")));
 static	SError	sErrorMissingSize(sErrorDomain, 2, CString(OSSTR("Missing size")));
@@ -251,7 +261,7 @@ OV<CImage::Type> CImage::getTypeFromData(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	const	void*	bytePtr = data.getBytePtr();
+	const	void*	bytePtr = *data.getUInt8Buffer();
 
 	// Check for signatures
 	// See https://stackoverflow.com/questions/4550296/how-to-identify-contents-of-a-byte-is-a-jpeg
@@ -333,7 +343,6 @@ TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 {
 	// Setup
 	SJPEGErrorInfo			jpegErrorInfo;
-	jpegErrorInfo.error_exit = sJPEGErrorExit;
 
 	// Specify data source
 	jpeg_source_mgr	jpegSourceInfo = {0};
@@ -348,6 +357,7 @@ TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 	jpeg_decompress_struct	jpegDecompressInfo;
 	jpeg_create_decompress(&jpegDecompressInfo);
 	jpegDecompressInfo.err = jpeg_std_error(&jpegErrorInfo);
+	jpegErrorInfo.error_exit = sJPEGErrorExit;
 	jpegDecompressInfo.client_data = (void*) &data;
 	jpegDecompressInfo.src = &jpegSourceInfo;
 
@@ -394,53 +404,57 @@ TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 TVResult<CData> sEncodeJPEGData(const CBitmap& bitmap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Specify data destination
-	CData	data(bitmap.getPixelData().getByteCount());
+	// Validate dimensions (libjpeg rejects empty images and images larger than JPEG_MAX_DIMENSION)
+	if ((bitmap.getSize().mWidth < 1) || (bitmap.getSize().mWidth > JPEG_MAX_DIMENSION) ||
+			(bitmap.getSize().mHeight < 1) || (bitmap.getSize().mHeight > JPEG_MAX_DIMENSION))
+		// Can't encode
+		return TVResult<CData>(sErrorUnableToEncode);
 
-	jpeg_destination_mgr	jpegDestinationManager = {0};
-	jpegDestinationManager.next_output_byte = (JOCTET*) *data.getMutableBuffer(bitmap.getPixelData().getByteCount());
-	jpegDestinationManager.free_in_buffer = bitmap.getPixelData().getByteCount();
-	jpegDestinationManager.init_destination = sJPEGDestinationInit;
-	jpegDestinationManager.empty_output_buffer = sJPEGDestinationEmptyBuffer;
-	jpegDestinationManager.term_destination = sJPEGDestinationTerminate;
+	// Compose color setup
+	int				inputComponents;
+	J_COLOR_SPACE	inColorSpace;
+	switch (bitmap.getFormat()) {
+		case CBitmap::kFormatRGB888:	inputComponents = 3; inColorSpace = JCS_RGB; break;
+		case CBitmap::kFormatRGBA8888:	inputComponents = 4; inColorSpace = JCS_EXT_RGBA; break;
+		case CBitmap::kFormatARGB8888:	inputComponents = 4; inColorSpace = JCS_EXT_ARGB; break;
+		default:						return TVResult<CData>(sErrorUnableToEncode);
+	}
+
+	// Specify data destination (accumulate into a growing CData; the scratch window is inline in the context)
+	CData					data;
+	SJPEGDataDestination	jpegDestination;
+	jpegDestination.mManager.init_destination = sJPEGDestinationInit;
+	jpegDestination.mManager.empty_output_buffer = sJPEGDestinationEmptyBuffer;
+	jpegDestination.mManager.term_destination = sJPEGDestinationTerminate;
+	jpegDestination.mData = &data;
 
 	// Setup JPEG compression object
-	jpeg_error_mgr jerr;
+	SJPEGErrorInfo			jpegErrorInfo;
 
 	jpeg_compress_struct	jpegCompressInfo;
 	jpeg_create_compress(&jpegCompressInfo);
-	jpegCompressInfo.err = jpeg_std_error(&jerr);
+	jpegCompressInfo.err = jpeg_std_error(&jpegErrorInfo);
+	jpegErrorInfo.error_exit = sJPEGErrorExit;
 	jpegCompressInfo.client_data = nil;
-	jpegCompressInfo.dest = &jpegDestinationManager;
+	jpegCompressInfo.dest = &jpegDestination.mManager;
+
+	// Establish setjmp return context
+	if (setjmp(jpegErrorInfo.mSetjmpBuffer)) {
+		// If we get here, the JPEG code has signaled an error (e.g. out of memory)
+		SError	error(sErrorDomain, -1,
+						CString(jpegErrorInfo.mErrorMessage, sizeof(jpegErrorInfo.mErrorMessage),
+								CString::kEncodingASCII));
+		jpeg_destroy_compress(&jpegCompressInfo);
+
+		return TVResult<CData>(error);
+	}
 
 	// Set parameters for compression
 	jpegCompressInfo.image_width = bitmap.getSize().mWidth;
 	jpegCompressInfo.image_height = bitmap.getSize().mHeight;
-	switch (bitmap.getFormat()) {
-		case CBitmap::kFormatRGB888:
-			// RGB 8888
-			jpegCompressInfo.input_components = 3;
-			jpegCompressInfo.in_color_space = JCS_RGB;
-			break;
-
-		case CBitmap::kFormatRGBA8888:
-			// RGBA 8888
-			jpegCompressInfo.input_components = 4;
-			jpegCompressInfo.in_color_space = JCS_EXT_RGBA;
-			break;
-
-		case CBitmap::kFormatARGB8888:
-			// ARGB 8888
-			jpegCompressInfo.input_components = 4;
-			jpegCompressInfo.in_color_space = JCS_EXT_ARGB;
-			break;
-
-		default:
-			// Can't encode
-			return TVResult<CData>(sErrorUnableToEncode);
-	}
+	jpegCompressInfo.input_components = inputComponents;
+	jpegCompressInfo.in_color_space = inColorSpace;
 	jpeg_set_defaults(&jpegCompressInfo);
-//	jpeg_set_quality(&jpegCompressInfo, 75, TRUE /* limit to baseline-JPEG values */);
 
 	// Start compressor
 	jpeg_start_compress(&jpegCompressInfo, TRUE);
@@ -461,26 +475,41 @@ TVResult<CData> sEncodeJPEGData(const CBitmap& bitmap)
 	// Cleanup
 	jpeg_destroy_compress(&jpegCompressInfo);
 
-	return TVResult<CData>(data.subData(0, data.getByteCount() - jpegDestinationManager.free_in_buffer));
+	return TVResult<CData>(data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void sJPEGDestinationInit(j_compress_ptr jpegInfoPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Point libjpeg at our scratch window
+	SJPEGDataDestination*	destination = (SJPEGDataDestination*) jpegInfoPtr->dest;
+	destination->mManager.next_output_byte = destination->mBuffer;
+	destination->mManager.free_in_buffer = sizeof(destination->mBuffer);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 boolean sJPEGDestinationEmptyBuffer(j_compress_ptr jpegInfoPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return true;
+	// Scratch window is full - append all of it to the accumulator and reset the window
+	SJPEGDataDestination*	destination = (SJPEGDataDestination*) jpegInfoPtr->dest;
+	destination->mData->append(destination->mBuffer, sizeof(destination->mBuffer));
+	destination->mManager.next_output_byte = destination->mBuffer;
+	destination->mManager.free_in_buffer = sizeof(destination->mBuffer);
+
+	return TRUE;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void sJPEGDestinationTerminate(j_compress_ptr jpegInfoPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Append whatever remains in the scratch window to the accumulator
+	SJPEGDataDestination*	destination = (SJPEGDataDestination*) jpegInfoPtr->dest;
+	CData::ByteCount		byteCount = sizeof(destination->mBuffer) - destination->mManager.free_in_buffer;
+	if (byteCount > 0)
+		destination->mData->append(destination->mBuffer, byteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -512,7 +541,7 @@ boolean sJPEGFillInputBuffer(j_decompress_ptr jpegInfoPtr)
 		// 1st time, point to data
 		CData*	data = (CData*) jpegInfoPtr->client_data;
 
-		jpegInfoPtr->src->next_input_byte = (const JOCTET*) data->getBytePtr();
+		jpegInfoPtr->src->next_input_byte = (const JOCTET*) *data->getUInt8Buffer();
 		jpegInfoPtr->src->bytes_in_buffer = data->getByteCount();
 
 		return TRUE;
@@ -558,7 +587,7 @@ void sDecodeNV12Data(const CData& data, const S2DSizeS32& size, CBitmap& bitmap,
 	I<CBitmap::RowWriter>	rowWriter1 = bitmap.getRowWriter(1);
 
 	// Loop vertially
-	const UInt8* y0Ptr = (UInt8*) data.getBytePtr();
+	const UInt8* y0Ptr = *data.getUInt8Buffer();
 	const UInt8* y1Ptr = y0Ptr + size.mWidth;
 	const UInt8* uvPtr = y0Ptr + size.mWidth * size.mHeight;
 	for (SInt32 y = 0; y < size.mHeight; y += 2, y0Ptr += size.mWidth, y1Ptr += size.mWidth) {
@@ -655,7 +684,7 @@ TVResult<CBitmap> sDecodePNGData(const CData& data)
 	png_image	pngImage;
 	memset(&pngImage, 0, sizeof(png_image));
 	pngImage.version = PNG_IMAGE_VERSION;
-	if (png_image_begin_read_from_memory(&pngImage, data.getBytePtr(), data.getByteCount()) == 0)
+	if (png_image_begin_read_from_memory(&pngImage, *data.getUInt8Buffer(), data.getByteCount()) == 0)
 		// Nope!
 		return TVResult<CBitmap>(sErrorUnableToDecode);
 
@@ -712,10 +741,16 @@ TVResult<CData> sEncodePNGData(const CBitmap& bitmap)
 	}
 
 	// Write
-	CData				data(bitmap.getPixelData().getByteCount());
-	png_alloc_size_t	byteCount = data.getByteCount();
-	png_image_write_to_memory(&pngImage, *data.getMutableBuffer(bitmap.getPixelData().getByteCount()), &byteCount, 0,
-			*bitmap.getPixelData(), bitmap.getBytesPerRow(), nil);
+	// Note: allocate libpng's guaranteed upper bound for the PNG stream rather than the raw pixel byte count.
+	//	For small images, PNG container overhead can exceed the uncompressed pixel size, so sizing to the pixel
+	//	byte count would be too small.  PNG_IMAGE_PNG_SIZE_MAX(...) is always larger than the source image and is
+	//	never fully filled, so a single write call always succeeds.
+	png_alloc_size_t	allocatedByteCount = PNG_IMAGE_PNG_SIZE_MAX(pngImage);
+	CData				data(allocatedByteCount);
+	TBuffer<UInt8>		dataBuffer = data.getMutableBuffer(allocatedByteCount);
+	png_alloc_size_t	byteCount = dataBuffer.getByteCount();
+	png_image_write_to_memory(&pngImage, *dataBuffer, &byteCount, 0, *bitmap.getPixelData(), bitmap.getBytesPerRow(),
+			nil);
 
 	return TVResult<CData>(data.subData(0, byteCount));
 }

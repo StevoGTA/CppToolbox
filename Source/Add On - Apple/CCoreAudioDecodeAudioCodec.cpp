@@ -15,7 +15,7 @@ class CCoreAudioDecodeAudioCodec::Internals {
 	public:
 							Internals(OSType codecID, const I<CMediaPacketSource>& mediaPacketSource) :
 								mCodecID(codecID), mMediaPacketSource(mediaPacketSource),
-										mAudioConverterRef(nil), mDecodeFramesToIgnore(0)
+										mAudioConverterRef(nil), mPrimingFrameCount(0), mDecodeFramesToIgnore(0)
 								{}
 							~Internals()
 								{
@@ -99,6 +99,7 @@ class CCoreAudioDecodeAudioCodec::Internals {
 		OV<SAudio::ProcessingFormat>				mAudioProcessingFormat;
 
 		AudioConverterRef							mAudioConverterRef;
+		UInt32										mPrimingFrameCount;
 		UInt32										mDecodeFramesToIgnore;
 		OV<TBuffer<UInt8> >							mMediaPacketsBuffer;
 		OV<TBuffer<AudioStreamPacketDescription> >	mAudioStreamPacketDescriptions;
@@ -150,6 +151,14 @@ OV<SError> CCoreAudioDecodeAudioCodec::setup(const SAudio::ProcessingFormat& aud
 	OV<SError>	error = setMagicCookie(mInternals->mAudioConverterRef);
 	ReturnErrorIfError(error);
 
+	// Query encoder delay
+	AudioConverterPrimeInfo	primeInfo = {};
+	UInt32					primeInfoByteCount = sizeof(primeInfo);
+	::AudioConverterGetProperty(mInternals->mAudioConverterRef, kAudioConverterPrimeInfo, &primeInfoByteCount,
+			&primeInfo);
+	mInternals->mPrimingFrameCount = primeInfo.leadingFrames;
+	mInternals->mDecodeFramesToIgnore = primeInfo.leadingFrames;
+
 	return OV<SError>();
 }
 
@@ -160,10 +169,17 @@ void CCoreAudioDecodeAudioCodec::seek(UniversalTimeInterval timeInterval)
 	// Reset audio converter
 	::AudioConverterReset(mInternals->mAudioConverterRef);
 
-	// Seek
-	mInternals->mDecodeFramesToIgnore =
-			mInternals->mMediaPacketSource->seekToDuration(
-					(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate()));
+	// Seek - round to the nearest frame, never truncate, so this lands on the same whole frame the rest of the
+	//	pipeline accounts for (see the detailed rationale in CAudioSource::calculateMaxFrames)
+	if (timeInterval == 0.0) {
+		// Rewind the packet reader to the start, then discard the encoder-delay priming frames.
+		mInternals->mMediaPacketSource->seekToDuration(0);
+		mInternals->mDecodeFramesToIgnore = mInternals->mPrimingFrameCount;
+	} else
+		// Seek to desired point
+		mInternals->mDecodeFramesToIgnore =
+				mInternals->mMediaPacketSource->seekToDuration(
+						(UInt32) (timeInterval * mInternals->mAudioProcessingFormat->getSampleRate() + 0.5));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

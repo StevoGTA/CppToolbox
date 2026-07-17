@@ -68,7 +68,7 @@ class CAudioPlayer : public CAudioDestination {
 						void							setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 						void							seek(UniversalTimeInterval timeInterval);
 
-						void							reset();
+						void							stop();
 
 						TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 
@@ -96,9 +96,10 @@ class CAudioPlayer : public CAudioDestination {
 																UniversalTimeInterval playbackBufferDuration);
 
 	// Properties
-	private:
-		static	const	UniversalTimeInterval	kPreviewDuration;
+	public:
+		static	const	UniversalTimeInterval	mPreviewDuration;
 
+	private:
 						Internals*				mInternals;
 };
 

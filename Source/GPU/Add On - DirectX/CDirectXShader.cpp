@@ -72,7 +72,7 @@ void CDirectXVertexShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& 
 		// Create Vertex Shader
 		HRESULT	result;	
 		result =
-				d3dDevice.CreateVertexShader(data.getValue().getBytePtr(), (SIZE_T) data.getValue().getByteCount(),
+				d3dDevice.CreateVertexShader(*data.getValue().getUInt8Buffer(), (SIZE_T) data.getValue().getByteCount(),
 						NULL, &mInternals->mShader);
 		AssertFailIf(FAILED(result));
 
@@ -156,7 +156,7 @@ void CDirectXPixelShader::setup(ID3D11Device& d3dDevice, ID3D11DeviceContext3& d
 
 		// Create Pixel Shader
 		HRESULT	result =
-						d3dDevice.CreatePixelShader(data.getValue().getBytePtr(),
+						d3dDevice.CreatePixelShader(*data.getValue().getUInt8Buffer(),
 								(SIZE_T) data.getValue().getByteCount(), NULL, &mInternals->mShader);
 		AssertFailIf(FAILED(result));
 
