@@ -23,7 +23,7 @@ class CMediaFoundationDecodeAudioCodec::Internals {
 	public:
 							Internals(OSType codecID, const I<CMediaPacketSource>& mediaPacketSource) :
 								mCodecID(codecID), mMediaPacketSource(mediaPacketSource),
-										mPrimingFrameCount(0), mDecodeFramesToIgnore(0)
+										mDecodeFramesToIgnore(0)
 								{}
 
 		static	OV<SError>	fillInputBuffer(IMFSample* sample, IMFMediaBuffer* mediaBuffer, void* userData)
