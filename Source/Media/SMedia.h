@@ -99,6 +99,17 @@ struct SMedia {
 											mStartTimeInterval(startTimeInterval),
 													mDurationTimeInterval(durationTimeInterval)
 											{}
+										Segment(UniversalTimeInterval startTimeInterval,
+												UniversalTimeInterval durationTimeInterval,
+												UniversalTimeInterval inHandleTimeInterval,
+												UniversalTimeInterval outHandleTimeInterval,
+												UniversalTimeInterval totalDurationTimeInterval) :
+											mStartTimeInterval(std::max(0.0, startTimeInterval - inHandleTimeInterval)),
+													mDurationTimeInterval(
+															std::min(totalDurationTimeInterval,
+																	startTimeInterval + durationTimeInterval +
+																			outHandleTimeInterval) - mStartTimeInterval)
+											{}
 										Segment(const Segment& other) :
 											mStartTimeInterval(other.mStartTimeInterval),
 													mDurationTimeInterval(other.mDurationTimeInterval)
