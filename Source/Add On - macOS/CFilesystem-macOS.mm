@@ -88,45 +88,6 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFilesystem::open(const TArray<CFile>& files, CFURLRef applicationURLRef)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
-	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++)
-		// Add URL
-		[urls addObject: (__bridge NSURL*) *getURLRefFor(*iterator)];
-
-	// Open
-			dispatch_semaphore_t	semaphore = dispatch_semaphore_create(0);
-	__block	NSError*				openURLsError = nil;
-	[[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:(__bridge NSURL*) applicationURLRef
-			configuration:[NSWorkspaceOpenConfiguration configuration]
-			completionHandler:^(NSRunningApplication* runningApplication, NSError* error){
-		// Store error
-		openURLsError = error;
-
-		// Done
-		dispatch_semaphore_signal(semaphore);
-	}];
-	while (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW))
-		// Run current RunLoop
-		[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
-
-	// Handle results
-	if (openURLsError == nil)
-		// Success
-		return OV<SError>();
-	else {
-		// Error
-		OV<SError>	error(SErrorFromNSError(openURLsError));
-		LogError(*error, CString(OSSTR("opening files with")));
-
-		return error;
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 TArray<CFilesystem::FileResult> CFilesystem::moveToTrash(const TArray<CFile>& files)
 //----------------------------------------------------------------------------------------------------------------------
 {

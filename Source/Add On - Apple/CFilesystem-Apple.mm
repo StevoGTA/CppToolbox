@@ -4,6 +4,7 @@
 
 #import "CFilesystem.h"
 
+#import "CCoreFoundation.h"
 #import "CLogServices.h"
 #import "NSURL+C++.h"
 #import "SError-Apple.h"

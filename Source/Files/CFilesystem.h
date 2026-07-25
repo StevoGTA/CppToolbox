@@ -86,7 +86,6 @@ class CFilesystem {
 		static	TVResult<CData>					getStorageDataFor(CFURLRef urlRef);
 #endif
 #if defined(TARGET_OS_MACOS)
-		static	OV<SError>						open(const TArray<CFile>& files, CFURLRef applicationURLRef);
 		static	TArray<FileResult>				moveToTrash(const TArray<CFile>& files);
 
 		static	OV<SError>						revealInFinder(const CFolder& folder);

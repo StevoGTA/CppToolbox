@@ -6,6 +6,8 @@
 
 #include "SError.h"
 
+#include <vector>
+
 #if defined(__cplusplus_winrt)
 	// C++/CX
 	#include "CPlatform.h"
@@ -81,15 +83,47 @@ bool CPreferences::getBool(const BoolPref& boolPref)
 OV<TArray<CData> > CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<TArray<CData> >();
+	// Get value (stored as an array of Base64 strings)
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.getKeyString()));
+	if (object == nullptr)
+		// No value
+		return OV<TArray<CData> >();
+
+	// Decode
+	Platform::Array<String^>^	strings = safe_cast<IPropertyValue^>(object)->GetStringArray();
+	TNArray<CData>				datas;
+	for (unsigned int i = 0; i < strings->Length; i++)
+		// Add data
+		datas += CData::fromBase64String(CPlatform::stringFrom(strings[i]));
+
+	return OV<TArray<CData> >(datas);
+#else
+	// C++/WinRT
+	auto	object = ApplicationData::Current().LocalSettings().Values().Lookup(hstring(pref.getKeyString()));
+	if (object == nullptr)
+		// No value
+		return OV<TArray<CData> >();
+
+	// Decode
+	com_array<hstring>	strings;
+	object.as<Windows::Foundation::IPropertyValue>().GetStringArray(strings);
+
+	TNArray<CData>	datas;
+	for (const hstring& string : strings)
+		// Add data
+		datas += CData::fromBase64String(CString(string.c_str()));
+
+	return OV<TArray<CData> >(datas);
+#endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<TArray<CDictionary> > CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	//AssertFailUnimplemented();
 return OV<TArray<CDictionary> >();
 }
 
@@ -113,7 +147,7 @@ return OV<CData>();
 OV<CDictionary> CPreferences::getDictionary(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	//AssertFailUnimplemented();
 return OV<CDictionary>();
 }
 
@@ -361,7 +395,25 @@ void CPreferences::set(const BoolPref& boolPref, bool value)
 void CPreferences::set(const Pref& pref, const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Set (stored as an array of Base64 strings)
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	Platform::Array<String^>^	strings = ref new Platform::Array<String^>(array.getCount());
+	UInt32						i = 0;
+	for (TArray<CData>::Iterator iterator = array.getIterator(); iterator; iterator++, i++)
+		// Store Base64 string
+		strings[i] = ref new String(iterator->getBase64String().getOSString());
+	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.getKeyString()),
+			dynamic_cast<PropertyValue^>(PropertyValue::CreateStringArray(strings)));
+#else
+	// C++/WinRT
+	std::vector<hstring>	strings;
+	for (TArray<CData>::Iterator iterator = array.getIterator(); iterator; iterator++)
+		// Store Base64 string
+		strings.push_back(hstring(iterator->getBase64String().getOSString()));
+	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()),
+			Windows::Foundation::PropertyValue::CreateStringArray(strings));
+#endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
