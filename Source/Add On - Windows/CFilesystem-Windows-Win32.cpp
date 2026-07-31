@@ -177,7 +177,7 @@ OV<SError> CFilesystem::revealInFileExplorer(const TArray<CFile>& files)
 	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++) {
 		// Explore file
 		HINSTANCE	result =
-							ShellExecuteW(NULL, L"explore",
+							::ShellExecuteW(NULL, L"explore",
 									iterator->getFolder().getFilesystemPath().getString().getOSString(), NULL, NULL,
 									SW_SHOW);
 		if (((INT_PTR) result) < 32)

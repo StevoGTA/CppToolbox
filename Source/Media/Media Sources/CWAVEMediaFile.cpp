@@ -91,7 +91,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 					CPCMAudioCodec::composeAudioFormat(false, (UInt8) sampleSize,
 							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannelCount()));
 			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
-			if (importSetup.isCreatingDecoders())
+			if (importSetup.isCreatingAudioDecoder(0))
 				// Create
 				decodeAudioCodec =
 						CPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
@@ -112,7 +112,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 					CPCMAudioCodec::composeAudioFormat(true, (UInt8) sampleSize,
 							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannelCount()));
 			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
-			if (importSetup.isCreatingDecoders())
+			if (importSetup.isCreatingAudioDecoder(0))
 				// Create
 				decodeAudioCodec =
 						CPCMAudioCodec::create(*audioFormat, chunkReader.getRandomAccessDataSource(),
@@ -128,7 +128,7 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 			mediaSegmentInfo.setValue(
 					CDVIIntelIMAADPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount,
 							waveFormat.getBlockAlign()));
-			if (importSetup.isCreatingDecoders())
+			if (importSetup.isCreatingAudioDecoder(0))
 				// Create
 				decodeAudioCodec =
 						CDVIIntelIMAADPCMAudioCodec::createDecodeAudioCodec(*audioFormat,

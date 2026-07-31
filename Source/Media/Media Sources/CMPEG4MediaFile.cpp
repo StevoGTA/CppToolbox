@@ -245,6 +245,8 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 				// Audio track
 				TVResult<SMediaSource::Tracks::AudioTrack>	audioTrack =
 																	composeAudioTrack(importSetup,
+																			mediaSourceTracks.getAudioTracks()
+																					.getCount(),
 																			stsdDescriptionHeader.getType(), duration,
 																			internals);
 				ReturnValueIfResultError(audioTrack,
@@ -254,18 +256,17 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 				mediaSourceTracks.add(*audioTrack);
 			} else if (hdlrAtomPayload.getSubType() == SMPEG4::HDLRAtomPayload::kSubTypeVideo) {
 				// Video track
-				if (importSetup.isImportingVideoTracks()) {
-					// Compose video track
-					TVResult<SMediaSource::Tracks::VideoTrack>	videoTrack =
-																		composeVideoTrack(importSetup,
-																				stsdDescriptionHeader.getType(),
-																				timeScale, duration, internals);
-					ReturnValueIfResultError(videoTrack,
-							I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrack.getError())));
+				TVResult<SMediaSource::Tracks::VideoTrack>	videoTrack =
+																	composeVideoTrack(importSetup,
+																			mediaSourceTracks.getVideoTracks()
+																					.getCount(),
+																			stsdDescriptionHeader.getType(), timeScale,
+																			duration, internals);
+				ReturnValueIfResultError(videoTrack,
+						I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(videoTrack.getError())));
 
-					// Success
-					mediaSourceTracks.add(*videoTrack);
-				}
+				// Success
+				mediaSourceTracks.add(*videoTrack);
 			} else {
 				// Import track
 				error =
@@ -368,8 +369,8 @@ TArray<SMedia::PacketAndLocation> CMPEG4MediaFile::composePacketAndLocations(con
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<SMediaSource::Tracks::AudioTrack> CMPEG4MediaFile::composeAudioTrack(
-		const SMediaSource::ImportSetup& importSetup, OSType type, UniversalTimeInterval duration,
-		const Internals& internals)
+		const SMediaSource::ImportSetup& importSetup, UInt32 audioTrackIndex, OSType type,
+		UniversalTimeInterval duration, const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check type
@@ -403,7 +404,7 @@ TVResult<SMediaSource::Tracks::AudioTrack> CMPEG4MediaFile::composeAudioTrack(
 			SMedia::SegmentInfo					mediaSegmentInfo(duration, byteCount);
 
 			// Add audio track
-			if (importSetup.isCreatingDecoders())
+			if (importSetup.isCreatingAudioDecoder(audioTrackIndex))
 				// Add audio track with decode info
 				return TVResult<SMediaSource::Tracks::AudioTrack>(
 						SMediaSource::Tracks::AudioTrack(audioFormat, mediaSegmentInfo,
@@ -423,8 +424,8 @@ TVResult<SMediaSource::Tracks::AudioTrack> CMPEG4MediaFile::composeAudioTrack(
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
-		const SMediaSource::ImportSetup& importSetup, OSType type, UInt32 timeScale, UniversalTimeInterval duration,
-		const Internals& internals)
+		const SMediaSource::ImportSetup& importSetup, UInt32 videoTrackIndex, OSType type, UInt32 timeScale,
+		UniversalTimeInterval duration, const Internals& internals)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check type
@@ -465,7 +466,7 @@ TVResult<SMediaSource::Tracks::VideoTrack> CMPEG4MediaFile::composeVideoTrack(
 			SMedia::SegmentInfo	mediaSegmentInfo(duration, byteCount);
 
 			// Add video track
-			if (importSetup.isCreatingDecoders()) {
+			if (importSetup.isCreatingVideoDecoder(videoTrackIndex)) {
 				// Setup
 				const	SMPEG4::STSSAtomPayload&	stssAtomPayload =
 															*((const SMPEG4::STSSAtomPayload*)
