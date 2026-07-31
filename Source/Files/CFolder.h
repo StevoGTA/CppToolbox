@@ -9,6 +9,7 @@
 #if defined(TARGET_OS_WINDOWS)
 	#undef Delete
 	#include <Windows.h>
+	#undef GetCurrentTime	// winuser.h macro collides with WinUI Timeline::GetCurrentTime() - C4002
 	#define Delete(x)		{ delete x; x = nil; }
 #endif
 
