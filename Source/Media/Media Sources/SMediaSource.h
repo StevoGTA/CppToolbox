@@ -15,13 +15,14 @@
 // MARK: SMediaSource
 
 struct SMediaSource {
+	// Types
+	using	TrackIndexes = TNumberArray<UInt32>;
+
 	// Options
 	enum Options {
-		kOptionsNone				= 0,
-		kOptionsCreateDecoders		= 1 << 1,
-		kOptionsImportVideoTracks	= 1 << 2,
+		kOptionsNone	= 0,
 
-		kOptionsLast				= kOptionsImportVideoTracks,
+		kOptionsLast	= 1 << 0,	// Reserved as the ceiling for these options - extensions begin above
 	};
 
 	// Identity
@@ -54,18 +55,28 @@ struct SMediaSource {
 											// Lifecycle methods
 											ImportSetup(const I<CRandomAccessDataSource>& randomAccessDataSource,
 													const OI<CAppleResourceManager>& appleResourceManager,
-													UInt32 options) :
+													UInt32 options,
+													const TrackIndexes& audioTrackIndexes = TrackIndexes(),
+													const TrackIndexes& videoTrackIndexes = TrackIndexes()) :
 												mRandomAccessDataSource(randomAccessDataSource),
-														mAppleResourceManager(appleResourceManager), mOptions(options)
+														mAppleResourceManager(appleResourceManager), mOptions(options),
+														mAudioTrackIndexes(audioTrackIndexes),
+														mVideoTrackIndexes(videoTrackIndexes)
 												{}
 											ImportSetup(const I<CRandomAccessDataSource>& randomAccessDataSource,
-													UInt32 options) :
-												mRandomAccessDataSource(randomAccessDataSource), mOptions(options)
+													UInt32 options,
+													const TrackIndexes& audioTrackIndexes = TrackIndexes(),
+													const TrackIndexes& videoTrackIndexes = TrackIndexes()) :
+												mRandomAccessDataSource(randomAccessDataSource), mOptions(options),
+														mAudioTrackIndexes(audioTrackIndexes),
+														mVideoTrackIndexes(videoTrackIndexes)
 												{}
 											ImportSetup(const ImportSetup& other) :
 												mRandomAccessDataSource(other.mRandomAccessDataSource),
 														mAppleResourceManager(other.mAppleResourceManager),
-														mOptions(other.mOptions)
+														mOptions(other.mOptions),
+														mAudioTrackIndexes(other.mAudioTrackIndexes),
+														mVideoTrackIndexes(other.mVideoTrackIndexes)
 												{}
 
 											// Instance methods
@@ -76,16 +87,19 @@ struct SMediaSource {
 
 				UInt32						getOptions() const
 												{ return mOptions; }
-				bool						isCreatingDecoders() const
-												{ return mOptions & kOptionsCreateDecoders; }
-				bool						isImportingVideoTracks() const
-												{ return mOptions & kOptionsImportVideoTracks; }
+
+				bool						isCreatingAudioDecoder(UInt32 audioTrackIndex) const
+												{ return mAudioTrackIndexes.contains(audioTrackIndex); }
+				bool						isCreatingVideoDecoder(UInt32 videoTrackIndex) const
+												{ return mVideoTrackIndexes.contains(videoTrackIndex); }
 
 		// Properties
 		private:
 			I<CRandomAccessDataSource>	mRandomAccessDataSource;
 			OI<CAppleResourceManager>	mAppleResourceManager;
 			UInt32						mOptions;
+			TrackIndexes				mAudioTrackIndexes;
+			TrackIndexes				mVideoTrackIndexes;
 	};
 
 	// Track
