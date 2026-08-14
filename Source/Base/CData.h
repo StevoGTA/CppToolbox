@@ -73,6 +73,7 @@ class CData {
 											{ return append(&value, sizeof(UInt16)); }
 				CData&					append(UInt32 value)
 											{ return append(&value, sizeof(UInt32)); }
+				CData&					appendFill(ByteCount byteCount, UInt8 fillValue = 0);
 				CData&					replace(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer,
 												ByteCount bufferByteCount);
 				CData&					replace(ByteIndex startByteIndex, const CData& data);

@@ -456,6 +456,27 @@ CData& CData::append(const CData& data)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CData& CData::appendFill(ByteCount byteCount, UInt8 fillValue)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Punt if no actual bytes to append
+	if (byteCount == 0)
+		return *this;
+
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
+	// Ensure we have space
+	mInternals->reallocate(mInternals->mBufferUsedByteCount + byteCount);
+
+	// Fill
+	::memset((UInt8*) mInternals->mBuffer + mInternals->mBufferUsedByteCount, fillValue, (size_t) byteCount);
+	mInternals->mBufferUsedByteCount += byteCount;
+
+	return  *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CData& CData::replace(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer, ByteCount bufferByteCount)
 //----------------------------------------------------------------------------------------------------------------------
 {

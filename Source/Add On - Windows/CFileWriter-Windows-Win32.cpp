@@ -4,6 +4,7 @@
 
 #include "CFileWriter.h"
 
+#include "CFilesystem.h"
 #include "CLogServices.h"
 #include "CReferenceCountable.h"
 #include "SError-Windows.h"
@@ -310,4 +311,22 @@ OV<SError> CFileWriter::close() const
 		// Error
 		CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("closing")),
 				mInternals->mFile);
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFileWriter::write(const CFile& file, const CFile::AppleMetadata& appleMetadata)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFile	dotUnderscoreFile = CFilesystem::getDotUnderscoreFile(file);
+
+	// Check if anything to write
+	if (appleMetadata.getResourceForkData().hasValue() || appleMetadata.getIdentity().hasValue())
+		// Write the AppleDouble companion
+		return write(dotUnderscoreFile, appleMetadata.toAppleDouble());
+	else
+		// Nothing to write, so leave nothing behind
+		return dotUnderscoreFile.doesExist() ? dotUnderscoreFile.remove() : OV<SError>();
 }

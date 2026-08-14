@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "CAppleResourceManager.h"
 #include "CAudioCodec.h"
 #include "CDataSource.h"
+#include "CFile.h"
 #include "CVideoCodec.h"
 #include "SMedia.h"
 #include "SVideo.h"
@@ -54,26 +54,17 @@ struct SMediaSource {
 	struct ImportSetup {
 											// Lifecycle methods
 											ImportSetup(const I<CRandomAccessDataSource>& randomAccessDataSource,
-													const OI<CAppleResourceManager>& appleResourceManager,
-													UInt32 options,
+													const FileAppleMetadatas& appleMetadatas, UInt32 options,
 													const TrackIndexes& audioTrackIndexes = TrackIndexes(),
 													const TrackIndexes& videoTrackIndexes = TrackIndexes()) :
 												mRandomAccessDataSource(randomAccessDataSource),
-														mAppleResourceManager(appleResourceManager), mOptions(options),
-														mAudioTrackIndexes(audioTrackIndexes),
-														mVideoTrackIndexes(videoTrackIndexes)
-												{}
-											ImportSetup(const I<CRandomAccessDataSource>& randomAccessDataSource,
-													UInt32 options,
-													const TrackIndexes& audioTrackIndexes = TrackIndexes(),
-													const TrackIndexes& videoTrackIndexes = TrackIndexes()) :
-												mRandomAccessDataSource(randomAccessDataSource), mOptions(options),
+														mAppleMetadatas(appleMetadatas), mOptions(options),
 														mAudioTrackIndexes(audioTrackIndexes),
 														mVideoTrackIndexes(videoTrackIndexes)
 												{}
 											ImportSetup(const ImportSetup& other) :
 												mRandomAccessDataSource(other.mRandomAccessDataSource),
-														mAppleResourceManager(other.mAppleResourceManager),
+														mAppleMetadatas(other.mAppleMetadatas),
 														mOptions(other.mOptions),
 														mAudioTrackIndexes(other.mAudioTrackIndexes),
 														mVideoTrackIndexes(other.mVideoTrackIndexes)
@@ -82,8 +73,8 @@ struct SMediaSource {
 											// Instance methods
 		const	I<CRandomAccessDataSource>&	getRandomAccessDataSource() const
 												{ return mRandomAccessDataSource; }
-		const	OI<CAppleResourceManager>	getAppleResourceManager() const
-												{ return mAppleResourceManager; }
+		const	FileAppleMetadatas&			getAppleMetadatas() const
+												{ return mAppleMetadatas; }
 
 				UInt32						getOptions() const
 												{ return mOptions; }
@@ -96,7 +87,7 @@ struct SMediaSource {
 		// Properties
 		private:
 			I<CRandomAccessDataSource>	mRandomAccessDataSource;
-			OI<CAppleResourceManager>	mAppleResourceManager;
+			FileAppleMetadatas			mAppleMetadatas;
 			UInt32						mOptions;
 			TrackIndexes				mAudioTrackIndexes;
 			TrackIndexes				mVideoTrackIndexes;

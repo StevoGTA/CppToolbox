@@ -50,8 +50,8 @@ class CFileDataSource : public CRandomAccessDataSource {
 
 												// Class methods
 		static	TVResult<CData>					readData(const CFile& file)
-													{ return CFileDataSource(file).CRandomAccessDataSource::
-																readData(); }
+													{ return CFileDataSource(file)
+															.CRandomAccessDataSource::readData(); }
 
 	// Properties
 	private:

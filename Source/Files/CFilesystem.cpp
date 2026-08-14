@@ -4,8 +4,6 @@
 
 #include "CFilesystem.h"
 
-#include "CDotUnderscoreReader.h"
-#include "CFileDataSource.h"
 #include "CLogServices.h"
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -49,7 +47,7 @@ CFile CFilesystem::getDotUnderscoreFile(const CFile& file)
 
 #if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
-CFile CFilesystem::getResourceFork(const CFile& file)
+CFile CFilesystem::getResourceForkFile(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Try {file}/..namedfork/rsrc
@@ -59,38 +57,6 @@ CFile CFilesystem::getResourceFork(const CFile& file)
 					.appendingComponent(CString(OSSTR("rsrc"))));
 }
 #endif
-
-//----------------------------------------------------------------------------------------------------------------------
-OI<I<CRandomAccessDataSource> > CFilesystem::getResourceDataSource(const CFile& file)
-//----------------------------------------------------------------------------------------------------------------------
-{
-#if defined(TARGET_OS_MACOS)
-	// Try resource file
-	CFile	resourceFile = getResourceFork(file);
-	if (resourceFile.doesExist() && (resourceFile.getByteCount() > 0))
-		// Success
-		return OI<I<CRandomAccessDataSource> >(I<CRandomAccessDataSource>(new CMappedFileDataSource(resourceFile)));
-#endif
-
-	// Try ._ file
-	CFile	dotUnderscoreFile = getDotUnderscoreFile(file);
-	if (dotUnderscoreFile.doesExist()) {
-		// Was able to load ._ file
-		TIResult<CDotUnderscoreReader>	dotUnderscoreReader =
-												CDotUnderscoreReader::from(
-														I<CRandomAccessDataSource>(
-																new CMappedFileDataSource(dotUnderscoreFile)));
-		if (dotUnderscoreReader.hasInstance()) {
-			// Get resource fork
-			OR<CData>	resourceFork = dotUnderscoreReader->getResourceFork();
-			if (resourceFork.hasReference())
-				// Success
-				return OI<I<CRandomAccessDataSource> >(I<CRandomAccessDataSource>(new CDataDataSource(*resourceFork)));
-		}
-	}
-
-	return OI<I<CRandomAccessDataSource> >();
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFilesystem::copy(const CFolder& sourceFolder, const CFolder& destinationFolder)

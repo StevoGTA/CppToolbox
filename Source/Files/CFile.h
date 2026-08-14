@@ -4,13 +4,139 @@
 
 #pragma once
 
+#include "CData.h"
 #include "CFolder.h"
+#include "TBuffer.h"
 #include "TimeAndDate.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CFile
 
 class CFile : public CHashable {
+	// AppleMetadata
+	public:
+		struct AppleMetadata {
+			// Identigy
+			public:
+				struct Identity : public TV2<OSType, OV<OSType> > {
+					// Methods
+					public:
+											// Lifecycle methods
+											Identity(OSType fileType, const OV<OSType>& fileCreator) :
+												TV2(fileType, fileCreator)
+												{}
+											Identity(const Identity& other) : TV2(other) {}
+
+											// Instance methods
+								OSType		getFileType() const
+												{ return getA(); }
+						const	OV<OSType>&	getFileCreator() const
+												{ return getB(); }
+				};
+
+			// Methods
+			public:
+											// Lifecycle methods
+											AppleMetadata(const CData& resourceForkData, OSType fileType,
+													OSType fileCreator) :
+												mResourceForkData(resourceForkData),
+													mIdentity(Identity(fileType, OV<OSType>(fileCreator)))
+												{}
+											AppleMetadata(const CData& resourceForkData, OSType fileType) :
+												mResourceForkData(resourceForkData),
+													mIdentity(Identity(fileType, OV<OSType>()))
+												{}
+											AppleMetadata(const CData& resourceForkData) :
+												mResourceForkData(resourceForkData)
+												{}
+											AppleMetadata(const Identity& identity) : mIdentity(identity) {}
+											AppleMetadata(const AppleMetadata& other) :
+												mResourceForkData(other.mResourceForkData), mIdentity(other.mIdentity)
+												{}
+
+											// Instance methods
+				const	OV<CData>&			getResourceForkData() const
+												{ return mResourceForkData; }
+				const	OV<Identity>&		getIdentity() const
+												{ return mIdentity; }
+
+						CData				toAppleDouble() const;
+
+											// Class methods
+				static	OV<AppleMetadata>	fromAppleDouble(const CData& data);
+
+			private:
+											// Lifecycle methods
+											AppleMetadata(const OV<CData>& resourceForkData,
+													const OV<Identity>& identity) :
+												mResourceForkData(resourceForkData), mIdentity(identity)
+												{}
+
+			// Properties
+			private:
+				OV<CData>		mResourceForkData;
+				OV<Identity>	mIdentity;
+		};
+
+	// FinderInfo
+	public:
+#pragma pack(push, 1)
+		struct FinderInfo {
+			// Methods
+			public:
+										// Lifecycle methods
+										FinderInfo(OSType fileType, OSType fileCreator) :
+											mFileType(EndianU32_NtoB(fileType)),
+													mFileCreator(EndianU32_NtoB(fileCreator)), mFlags(0), mLocationV(0),
+													mLocationH(0), mFolder(0), mIconID(0), mReserved{}, mScript(0),
+													mXFlags(0), mCommentID(0), mPutAwayFolderID(0)
+											{}
+										FinderInfo() :
+											mFileType(0), mFileCreator(0), mFlags(0), mLocationV(0), mLocationH(0),
+													mFolder(0), mIconID(0), mReserved{}, mScript(0), mXFlags(0),
+													mCommentID(0), mPutAwayFolderID(0)
+											{}
+
+										// Instance methods
+				OSType					getFileType() const
+											{ return EndianU32_BtoN(mFileType); }
+				void					setFileType(OSType fileType)
+											{ mFileType = EndianU32_NtoB(fileType); }
+				OSType					getFileCreator() const
+											{ return EndianU32_BtoN(mFileCreator); }
+				void					setFileCreator(OSType fileCreator)
+											{ mFileCreator = EndianU32_NtoB(fileCreator); }
+
+				bool					hasIdentity() const
+											{ return mFileType != 0; }
+				AppleMetadata::Identity	getIdentity() const
+											{ return CFile::AppleMetadata::Identity(getFileType(),
+													(mFileCreator != 0) ?
+															OV<OSType>(EndianU32_BtoN(mFileCreator)) : OV<OSType>()); }
+				CData					getData() const
+											{ return CData(this, sizeof(FinderInfo)); }
+
+			// Properties (in storage endian)
+			private:
+				// FInfo
+				OSType	mFileType;
+				OSType	mFileCreator;
+				UInt16	mFlags;
+				SInt16	mLocationV;
+				SInt16	mLocationH;
+				SInt16	mFolder;
+
+				// FXInfo
+				SInt16	mIconID;
+				SInt16	mReserved[3];
+				SInt8	mScript;
+				SInt8	mXFlags;
+				SInt16	mCommentID;
+				SInt32	mPutAwayFolderID;
+		};
+#pragma pack(pop)
+
 	// Classes
 	private:
 		class Internals;
@@ -85,6 +211,8 @@ class CFile : public CHashable {
 
 	// Properties
 	public:
+		static	const	UInt64		mMaximumResourceForkByteCount;
+
 		static	const	SError		mDoesNotExistError;
 		static	const	SError		mIsOpenError;
 		static	const	SError		mNotOpenError;
@@ -96,3 +224,5 @@ class CFile : public CHashable {
 	private:
 						Internals*	mInternals;
 };
+
+using FileAppleMetadatas = TArray<CFile::AppleMetadata>;

@@ -72,6 +72,7 @@ class CFileWriter {
 
 										// Class methods
 		static			OV<SError>		write(const CFile& file, const CData& data);
+		static			OV<SError>		write(const CFile& file, const CFile::AppleMetadata& appleMetadata);
 
 	// Properties
 	private:
