@@ -277,6 +277,13 @@ TVResult<CData> CAppleResourceManager::getAsData()
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
+TIResult<CAppleResourceManager> CAppleResourceManager::from(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return from(I<CRandomAccessDataSource>(new CDataDataSource(data)));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAccessDataSource>& randomAccessDataSource)
 //----------------------------------------------------------------------------------------------------------------------
 {

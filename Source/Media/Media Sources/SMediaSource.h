@@ -54,17 +54,17 @@ struct SMediaSource {
 	struct ImportSetup {
 											// Lifecycle methods
 											ImportSetup(const I<CRandomAccessDataSource>& randomAccessDataSource,
-													const FileAppleMetadatas& appleMetadatas, UInt32 options,
+													const FileAppleMetadatas& fileAppleMetadatas, UInt32 options,
 													const TrackIndexes& audioTrackIndexes = TrackIndexes(),
 													const TrackIndexes& videoTrackIndexes = TrackIndexes()) :
 												mRandomAccessDataSource(randomAccessDataSource),
-														mAppleMetadatas(appleMetadatas), mOptions(options),
+														mFileAppleMetadatas(fileAppleMetadatas), mOptions(options),
 														mAudioTrackIndexes(audioTrackIndexes),
 														mVideoTrackIndexes(videoTrackIndexes)
 												{}
 											ImportSetup(const ImportSetup& other) :
 												mRandomAccessDataSource(other.mRandomAccessDataSource),
-														mAppleMetadatas(other.mAppleMetadatas),
+														mFileAppleMetadatas(other.mFileAppleMetadatas),
 														mOptions(other.mOptions),
 														mAudioTrackIndexes(other.mAudioTrackIndexes),
 														mVideoTrackIndexes(other.mVideoTrackIndexes)
@@ -73,8 +73,8 @@ struct SMediaSource {
 											// Instance methods
 		const	I<CRandomAccessDataSource>&	getRandomAccessDataSource() const
 												{ return mRandomAccessDataSource; }
-		const	FileAppleMetadatas&			getAppleMetadatas() const
-												{ return mAppleMetadatas; }
+		const	FileAppleMetadatas&			getFileAppleMetadatas() const
+												{ return mFileAppleMetadatas; }
 
 				UInt32						getOptions() const
 												{ return mOptions; }
@@ -87,7 +87,7 @@ struct SMediaSource {
 		// Properties
 		private:
 			I<CRandomAccessDataSource>	mRandomAccessDataSource;
-			FileAppleMetadatas			mAppleMetadatas;
+			FileAppleMetadatas			mFileAppleMetadatas;
 			UInt32						mOptions;
 			TrackIndexes				mAudioTrackIndexes;
 			TrackIndexes				mVideoTrackIndexes;

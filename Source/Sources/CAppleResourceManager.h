@@ -34,6 +34,7 @@ class CAppleResourceManager {
 				TVResult<CData>					getAsData();
 
 												// Class methods
+		static	TIResult<CAppleResourceManager>	from(const CData& data);
 		static	TIResult<CAppleResourceManager>	from(const I<CRandomAccessDataSource>& randomAccessDataSource);
 
 	private:
