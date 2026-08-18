@@ -181,7 +181,7 @@ CFileReader::AppleMetadataInfo CFileReader::readAppleMetadata(const CFile& file)
 
 #if defined(TARGET_OS_WINDOWS)
 	// NTFS keeps Macintosh forks in alternate data streams.  The identity is the live, authoritative one, so
-	//	AFP_AfpInfo is taken before any companion; AFP_Resource holds a raw fork.
+	//	AFP_AfpInfo is taken before any companion.
 	OV<CData>	afpInfoData = sReadAlternateDataStream(file, CString(OSSTR("AFP_AfpInfo")));
 	if (afpInfoData.hasValue() && (afpInfoData->getByteCount() >= sizeof(SAFPInfo))) {
 		// The AFP info block is the identity, not a fork - like the macOS Finder Info attribute it does not count
@@ -191,14 +191,16 @@ CFileReader::AppleMetadataInfo CFileReader::readAppleMetadata(const CFile& file)
 			appleMetadatas += CFile::AppleMetadata(afpInfo.getFinderInfo().getIdentity());
 	}
 
-	// AFP_Resource holds a raw fork, as on macOS - count its bytes toward the total
+	// AFP_Resource holds either a raw fork or an AppleDouble-wrapped one depending on the producer, so sniff the
+	//	AppleDouble magic rather than assume - exactly as the .rsrc sibling does below
 	OV<CData>	afpResource = sReadAlternateDataStream(file, CString(OSSTR("AFP_Resource")));
 	if (afpResource.hasValue()) {
 		// Update resource byte count
 		resourceByteCount += afpResource->getByteCount();
 
-		// Add AppleMetadata
-		appleMetadatas += CFile::AppleMetadata(*afpResource);
+		// Add either translated AppleMetadata or raw data
+		OV<CFile::AppleMetadata>	appleMetadata = CFile::AppleMetadata::fromAppleDouble(*afpResource);
+		appleMetadatas += appleMetadata.hasValue() ? *appleMetadata : CFile::AppleMetadata(*afpResource);
 	}
 #endif
 
