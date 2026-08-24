@@ -91,36 +91,6 @@ bool CFile::doesExist() const
 	return ::access(*getFilesystemPath().getString().getUTF8String(), F_OK) != -1;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-bool CFile::getLocked() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	struct	stat	statInfo;
-
-	return (::stat(*getFilesystemPath().getString().getUTF8String(), &statInfo) == 0) &&
-			((statInfo.st_flags & UF_IMMUTABLE) != 0);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFile::setLocked(bool lockFile) const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Get flags
-	struct	stat	statInfo;
-	if (::stat(*getFilesystemPath().getString().getUTF8String(), &statInfo) != 0)
-		// Error
-		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno),
-				CString(OSSTR("getting flags when setting locked")));
-
-	// Update flags
-	statInfo.st_flags = lockFile ? (statInfo.st_flags | UF_IMMUTABLE) : (statInfo.st_flags & ~UF_IMMUTABLE);
-	if (::chflags(*getFilesystemPath().getString().getUTF8String(), statInfo.st_flags) != 0)
-		// Error
-		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting locked")));
-
-	return OV<SError>();
-}
-
 #if defined(TARGET_OS_MACOS) || defined(TARGET_OS_LINUX)
 //----------------------------------------------------------------------------------------------------------------------
 UInt16 CFile::getPermissions() const

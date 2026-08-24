@@ -55,6 +55,26 @@ class CFilesystem {
 		};
 #endif
 
+	// VolumeInfo
+	public:
+		struct VolumeInfo : public TV3<CString, bool, bool> {
+			// Methods
+			public:
+									// Lifecycle methods
+									VolumeInfo(const CString& filesystemTypeName, bool isLocal, bool isReadOnly) :
+										TV3(filesystemTypeName, isLocal, isReadOnly)
+										{}
+									VolumeInfo(const VolumeInfo& other) : TV3(other) {}
+
+									// Instance methods
+				const	CString&	getFilesystemTypeName() const
+										{ return getA(); }
+						bool		isLocal() const
+										{ return getB(); }
+						bool		isReadOnly() const
+										{ return getC(); }
+		};
+
 	// Methods
 	public:
 												// Class methods
@@ -65,6 +85,9 @@ class CFilesystem {
 #if defined(TARGET_OS_MACOS)
 		static	CFile							getResourceForkFile(const CFile& file);
 #endif
+
+		static	TVResult<VolumeInfo>			getVolumeInfo(const CFile& file);
+		static	TVResult<VolumeInfo>			getVolumeInfo(const CFolder& folder);
 
 												// Will copy sourceFolder *into* destinationFolder
 		static	OV<SError>						copy(const CFolder& sourceFolder, const CFolder& destinationFolder);

@@ -143,6 +143,22 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TVResult<CFilesystem::VolumeInfo> CFilesystem::getVolumeInfo(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented();
+return TVResult<CFilesystem::VolumeInfo>(SError::mUnimplemented);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CFilesystem::VolumeInfo> CFilesystem::getVolumeInfo(const CFolder& folder)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	AssertFailUnimplemented();
+return TVResult<CFilesystem::VolumeInfo>(SError::mUnimplemented);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {

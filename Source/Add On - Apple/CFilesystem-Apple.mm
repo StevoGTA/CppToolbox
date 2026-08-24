@@ -8,6 +8,9 @@
 #import "CLogServices.h"
 #import "NSURL+C++.h"
 #import "SError-Apple.h"
+#import "SError-POSIX.h"
+
+#import <sys/mount.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -44,6 +47,26 @@
 																									\
 					return value;																	\
 				}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local procs
+
+//----------------------------------------------------------------------------------------------------------------------
+static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& filesystemPath)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get volume info
+	CString::C		path = filesystemPath.getString().getUTF8String();
+	struct statfs	statfsInfo;
+	if (::statfs(*path, &statfsInfo) != 0)
+		// Error
+		return TVResult<CFilesystem::VolumeInfo>(SErrorFromPOSIXerror(errno));
+
+	return TVResult<CFilesystem::VolumeInfo>(
+			CFilesystem::VolumeInfo(CString(statfsInfo.f_fstypename, MFSTYPENAMELEN, CString::kEncodingUTF8),
+					(statfsInfo.f_flags & MNT_LOCAL) != 0, (statfsInfo.f_flags & MNT_RDONLY) != 0));
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -254,6 +277,22 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 		CFilesystemReportFolderErrorAndReturnValue(sError, CString(OSSTR("getting files")), folder,
 				TVResult<TArray<CFile> >(sError));
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CFilesystem::VolumeInfo> CFilesystem::getVolumeInfo(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get Volume Info
+	return sGetVolumeInfo(file.getFilesystemPath());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CFilesystem::VolumeInfo> CFilesystem::getVolumeInfo(const CFolder& folder)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get Volume Info
+	return sGetVolumeInfo(folder.getFilesystemPath());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -28,6 +28,33 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local procs
+
+//----------------------------------------------------------------------------------------------------------------------
+static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& filesystemPath)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// GetVolumeInformation() wants the volume's mount point rather than an arbitrary path below it, so resolve
+	//	that first.  This is also what makes a UNC path work, where the mount point is "\\server\share\".
+	WCHAR	volumePath[MAX_PATH];
+	if (!::GetVolumePathNameW(filesystemPath.getString().getOSString(), volumePath, MAX_PATH))
+		// Error
+		return TVResult<CFilesystem::VolumeInfo>(SErrorFromWindowsGetLastError());
+
+	// Get the filesystem name ("NTFS", "exFAT", "FAT32", ...) and the flags carrying read-only
+	WCHAR	filesystemName[MAX_PATH];
+	DWORD	filesystemFlags;
+	if (!::GetVolumeInformationW(volumePath, NULL, 0, NULL, NULL, &filesystemFlags, filesystemName, MAX_PATH))
+		// Error
+		return TVResult<CFilesystem::VolumeInfo>(SErrorFromWindowsGetLastError());
+
+	return TVResult<CFilesystem::VolumeInfo>(
+			CFilesystem::VolumeInfo(CString(filesystemName), ::GetDriveTypeW(volumePath) != DRIVE_REMOTE,
+					(filesystemFlags & FILE_READ_ONLY_VOLUME) != 0));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - CFilesystem
 
 // MARK: Class methods
@@ -149,6 +176,22 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 		CFilesystemReportFolderErrorAndReturnValue(error, CString(OSSTR("calling FindFirstFile()")), folder,
 				TVResult<TArray<CFile>>(error));
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CFilesystem::VolumeInfo> CFilesystem::getVolumeInfo(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get Volume Info
+	return sGetVolumeInfo(file.getFilesystemPath());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CFilesystem::VolumeInfo> CFilesystem::getVolumeInfo(const CFolder& folder)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get Volume Info
+	return sGetVolumeInfo(folder.getFilesystemPath());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -75,7 +75,7 @@ OV<SError> CFolder::create(bool createIntermediateFolders) const
 OV<SError> CFolder::remove() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	if (::unlink(*getFilesystemPath().getString().getUTF8String()) != 0)
+	if (::rmdir(*getFilesystemPath().getString().getUTF8String()) != 0)
 		// Error
 		CFolderReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("removing")));
 
