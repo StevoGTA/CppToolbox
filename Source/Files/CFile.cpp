@@ -101,6 +101,13 @@ struct SAppleDoubleEntryDescriptor {
 // MARK: - Local procs
 
 //----------------------------------------------------------------------------------------------------------------------
+static	CFilesystemPath	sGetFilesystemPath(const CFile& file, void* userData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return file.getFilesystemPath();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 static	CString	sGetFilesystemPathString(const CFile& file, CFilesystemPath::Style* filesystemPathStyle)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -375,8 +382,17 @@ TArray<CFile> CFile::getExistingFiles(const TArray<CFile>& files)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<CString> CFile::getFilesystemPaths(const TArray<CFile>& files, CFilesystemPath::Style filesystemPathStyle)
+TArray<CFilesystemPath> CFile::getFilesystemPaths(const TArray<CFile>& files)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return TNArray<CString>(files, (TNArray<CString>::MapProc) sGetFilesystemPathString, (void*) &filesystemPathStyle);
+	return TNArray<CFilesystemPath>(files, (TNArray<CFilesystemPath>::MapProc) sGetFilesystemPath);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CFile::getFilesystemPathsForDisplay(const TArray<CFile>& files, CFilesystemPath::Style filesystemPathStyle)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CString(
+			TNArray<CString>(files, (TNArray<CString>::MapProc) sGetFilesystemPathString,
+					(void*) &filesystemPathStyle));
 }

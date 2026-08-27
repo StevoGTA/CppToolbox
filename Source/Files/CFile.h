@@ -143,71 +143,68 @@ class CFile : public CHashable {
 
 	// Methods
 	public:
-											// Lifecycle methods
-											CFile(const CFilesystemPath& filesystemPath);
-											CFile(const CFile& other);
-											~CFile();
+												// Lifecycle methods
+												CFile(const CFilesystemPath& filesystemPath);
+												CFile(const CFile& other);
+												~CFile();
 
-											// CEquatable methods
-						bool				operator==(const CEquatable& other) const
-												{ return equals((const CFile&) other); }
+												// CEquatable methods
+						bool					operator==(const CEquatable& other) const
+													{ return equals((const CFile&) other); }
 
-											// CHashable methods
-						void				hashInto(CHashable::HashCollector& hashableHashCollector) const
-												{ getFilesystemPath().hashInto(hashableHashCollector); }
+												// CHashable methods
+						void					hashInto(CHashable::HashCollector& hashableHashCollector) const
+													{ getFilesystemPath().hashInto(hashableHashCollector); }
 
-											// Instance methods
-				const	CFilesystemPath&	getFilesystemPath() const;
+												// Instance methods
+				const	CFilesystemPath&		getFilesystemPath() const;
 
-						CString				getName() const;
-						CString				getNameDeletingExtension() const;
-						CString				getNameForDisplay() const;
-						OV<SError>			rename(const CString& name);
+						CString					getName() const;
+						CString					getNameDeletingExtension() const;
+						CString					getNameForDisplay() const;
+						OV<SError>				rename(const CString& name);
 
-						UInt64				getByteCount() const;
+						UInt64					getByteCount() const;
 
-						OV<SError>			remove() const;
-						bool				doesExist() const;
+						OV<SError>				remove() const;
+						bool					doesExist() const;
 
-						CFolder				getFolder() const;
-						bool				isHidden() const;
+						CFolder					getFolder() const;
+						bool					isHidden() const;
 
-						bool				getLocked() const;
-						OV<SError>			setLocked(bool lockFile) const;
+						bool					getLocked() const;
+						OV<SError>				setLocked(bool lockFile) const;
 
-						UniversalTime		getCreationUniversalTime() const;
-						UniversalTime		getModificationUniversalTime() const;
+						UniversalTime			getCreationUniversalTime() const;
+						UniversalTime			getModificationUniversalTime() const;
 
-						bool				equals(const CFile& other) const;
+						bool					equals(const CFile& other) const;
 
-						CFile&				operator=(const CFile& other);
+						CFile&					operator=(const CFile& other);
 
 #if defined(TARGET_OS_MACOS) || defined(TARGET_OS_LINUX)
-						UInt16				getPermissions() const;
-						OV<SError>			setPermissions(UInt16 permissions) const;
+						UInt16					getPermissions() const;
+						OV<SError>				setPermissions(UInt16 permissions) const;
 #endif
 
 #if defined(TARGET_OS_MACOS)
-						bool				isAlias() const;
+						bool					isAlias() const;
 
-						OV<CString>			getComments() const;
-						OV<SError>			setComments(const CString& string) const;
+						OV<CString>				getComments() const;
+						OV<SError>				setComments(const CString& string) const;
 #endif
 
-											// Class methods
-		static			TArray<CFile>		getExistingFiles(const TArray<CFile>& files);
+												// Class methods
+		static			TArray<CFile>			getExistingFiles(const TArray<CFile>& files);
 
-		static			TArray<CString>		getFilesystemPaths(const TArray<CFile>& files,
-													CFilesystemPath::Style filesystemPathStyle =
-															CFilesystemPath::kStylePlatformDefault);
-		static			CString				getFilesystemPathsForDisplay(const TArray<CFile>& files,
-													CFilesystemPath::Style filesystemPathStyle =
-															CFilesystemPath::kStylePlatformDefault)
-												{ return CString(getFilesystemPaths(files, filesystemPathStyle)); }
+		static			TArray<CFilesystemPath>	getFilesystemPaths(const TArray<CFile>& files);
+		static			CString					getFilesystemPathsForDisplay(const TArray<CFile>& files,
+														CFilesystemPath::Style filesystemPathStyle =
+																CFilesystemPath::kStylePlatformDefault);
 
 	private:
-											// Instance methods
-						void				update(const CFilesystemPath& filesystemPath);
+												// Instance methods
+						void					update(const CFilesystemPath& filesystemPath);
 
 	// Properties
 	public:
