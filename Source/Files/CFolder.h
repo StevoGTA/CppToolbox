@@ -42,6 +42,7 @@ class CFolder : public CHashable {
 				const	CFilesystemPath&	getFilesystemPath() const;
 
 						CString				getName() const;
+						CString				getNameForDisplay() const;
 						OV<SError>			rename(const CString& string);
 
 						OV<SError>			create(bool createIntermediateFolders = false) const;

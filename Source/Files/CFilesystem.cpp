@@ -32,6 +32,26 @@ const	CString	CFilesystem::mErrorDomain(OSSTR("Filesystem"));
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
+TVResult<TArray<CFile> > CFilesystem::getFiles(const TArray<CFolder>& folders, bool deep)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNArray<CFile>	files;
+
+	// Iterate folders
+	for (TArray<CFolder>::Iterator iterator = folders.getIterator(); iterator; iterator++) {
+		// Get files for this folder
+		TVResult<TArray<CFile> >	files_ = getFiles(*iterator, deep);
+		ReturnResultIfResultError(files_);
+
+		// Add
+		files += *files_;
+	}
+
+	return TVResult<TArray<CFile> >(files);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CFile CFilesystem::getDotUnderscoreFile(const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {

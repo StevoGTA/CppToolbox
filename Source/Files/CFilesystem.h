@@ -81,6 +81,7 @@ class CFilesystem {
 		static	TVResult<SFoldersFiles>			getFoldersFiles(const CFolder& folder, bool deep = false);
 		static	TVResult<TArray<CFolder> >		getFolders(const CFolder& folder, bool deep = false);
 		static	TVResult<TArray<CFile> >		getFiles(const CFolder& folder, bool deep = false);
+		static	TVResult<TArray<CFile> >		getFiles(const TArray<CFolder>& folders, bool deep = false);
 		static	CFile							getDotUnderscoreFile(const CFile& file);
 #if defined(TARGET_OS_MACOS)
 		static	CFile							getResourceForkFile(const CFile& file);
