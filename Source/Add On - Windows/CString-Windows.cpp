@@ -1130,6 +1130,13 @@ void CString::setupLocalization(const CData& stringsFileData)
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+bool CString::hasLocalizationFor(const CString& localizationGroup, const CString& localizationKey)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return sLocalizationInfo.contains(localizationGroup + CString::mPeriod + localizationKey);
+}
+
 // MARK: Internal methods
 
 //----------------------------------------------------------------------------------------------------------------------
