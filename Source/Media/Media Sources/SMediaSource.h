@@ -209,6 +209,7 @@ struct SMediaSource {
 									// Instance methods
 		const	Result				getResult() const
 										{ return mResult; }
+
 				OSType				getMediaSourceID() const
 										{ return *mMediaSourceID; }
 		const	Tracks&				getTracks() const
@@ -253,8 +254,11 @@ struct SMediaSource {
 									{ return mImportProc(importSetup); }
 
 	// Properties
+	public:
+		static	const	SError				mSourceMismatchError;
+
 	private:
-		TNArray<Identity>	mIdentities;
-		TNSet<CString>		mExtensions;
-		ImportProc			mImportProc;
+						TNArray<Identity>	mIdentities;
+						TNSet<CString>		mExtensions;
+						ImportProc			mImportProc;
 };
