@@ -15,6 +15,7 @@ struct SChipInfo {
 		enum Style {
 			kStyleOutlined,
 			kStyleFilled,
+			kStyleAccented,
 		};
 
 	// Symbol

@@ -22,18 +22,17 @@ OV<SError> CFileWriter::write(const CFile& file, const CFile::AppleMetadata& app
 	// Setup
 	CString::C	path = file.getFilesystemPath().getString().getUTF8String();
 
+	// Remove any existing resource fork.  The fork cannot be unlinked - the named fork path is not a directory entry -
+	//	so it is removed as the extended attribute it actually is.
+	if ((::removexattr(*path, XATTR_RESOURCEFORK_NAME, 0) != 0) && (errno != ENOATTR))
+		// Error
+		return OV<SError>(SErrorFromPOSIXerror(errno));
+
 	// Write the resource fork data, if any
-	CFile	resourceForkFile = CFilesystem::getResourceForkFile(file);
 	if (appleMetadata.getResourceForkData().hasValue()) {
 		// Write the fork
-		OV<SError>	error = write(resourceForkFile, *appleMetadata.getResourceForkData());
+		OV<SError>	error = write(CFilesystem::getResourceForkFile(file), *appleMetadata.getResourceForkData());
 		ReturnErrorIfError(error);
-	} else {
-		// Try to remove anything existing
-		if ((::removexattr(*path, XATTR_RESOURCEFORK_NAME, 0) != 0) && (errno != ENOATTR))
-			// The fork cannot be unlinked - the named fork path is not a directory entry - so it is removed as the
-			//	extended attribute it actually is.
-			return OV<SError>(SErrorFromPOSIXerror(errno));
 	}
 
 	// Read any existing Finder Info

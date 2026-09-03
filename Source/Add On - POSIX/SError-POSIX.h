@@ -6,4 +6,7 @@
 
 #include "SError.h"
 
-#define SErrorFromPOSIXerror(e)	SError(CString(OSSTR("POSIX")), e, CString(e))
+#include <cstring>
+
+#define SErrorFromPOSIXerror(e)	\
+		SError(CString(OSSTR("POSIX")), e, CString(::strerror(e), ::strlen(::strerror(e)), CString::kEncodingUTF8))

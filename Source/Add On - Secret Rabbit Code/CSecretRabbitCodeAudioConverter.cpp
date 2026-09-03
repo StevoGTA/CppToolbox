@@ -9,7 +9,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local data
 
-#define SErrorFromSRC(error)			SError(CString(OSSTR("SRC")), error, CString(src_strerror(error)))
+#define SErrorFromSRC(error)			SError(CString(OSSTR("SRC")), error, \
+												CString(src_strerror(error), ::strlen(src_strerror(error)), \
+														CString::kEncodingUTF8))
 #define ReturnErrorIfSRCError(error)	if (error != 0) return OV<SError>(SErrorFromSRC(error));
 
 //----------------------------------------------------------------------------------------------------------------------
