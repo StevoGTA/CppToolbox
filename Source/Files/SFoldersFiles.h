@@ -16,6 +16,9 @@ struct SFoldersFiles {
 								SFoldersFiles(const TArray<CFolder>& folders, const TArray<CFile>& files) :
 									mFolders(folders), mFiles(files)
 									{}
+								SFoldersFiles(const TArray<CFile>& files) :
+									mFiles(files)
+									{}
 								SFoldersFiles(const SFoldersFiles& other) :
 									mFolders(other.mFolders), mFiles(other.mFiles)
 									{}
