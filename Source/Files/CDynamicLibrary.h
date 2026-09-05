@@ -25,34 +25,30 @@ class CDynamicLibrary {
 
 	// Methods
 	public:
-																			// Lifecycle methods
-																			CDynamicLibrary(
-																					const CDynamicLibrary& other);
-																			~CDynamicLibrary();
+													// Lifecycle methods
+													CDynamicLibrary(const CDynamicLibrary& other);
+													~CDynamicLibrary();
 
-																			// Instance methods
-				const							CFile&						getFile() const;
+													// Instance methods
+				const	CFile&						getFile() const;
 
-												OV<void*>					getSymbolAddress(const CString& name) const;
-						template <typename T>	OV<T>						getSymbol(const CString& name) const
-																				{
-																					// Get address
-																					OV<void*>	address =
-																										getSymbolAddress(
-																												name);
+						OV<void*>					getSymbolAddress(const CString& name) const;
 
-																					return address.hasValue() ?
-																							OV<T>((T) *address) :
-																							OV<T>();
-																				}
+						template <typename T>
+						OV<T>						getSymbol(const CString& name) const
+														{
+															// Get address
+															OV<void*>	address = getSymbolAddress(name);
 
-																			// Class methods
-		static									TVResult<CDynamicLibrary>	load(const CFile& file);
+															return address.hasValue() ? OV<T>((T) *address) : OV<T>();
+														}
+
+													// Class methods
+		static			TVResult<CDynamicLibrary>	load(const CFile& file);
 
 	private:
-																			// Lifecycle methods
-																			CDynamicLibrary(const CFile& file,
-																					Handle handle);
+													// Lifecycle methods
+													CDynamicLibrary(const CFile& file, Handle handle);
 
 	// Properties
 	private:
