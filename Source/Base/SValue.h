@@ -19,6 +19,8 @@ struct SValue {
 			kTypeEmpty,
 			kTypeArrayOfDictionaries,
 			kTypeArrayOfStrings,
+			kTypeArrayOfFloat32s,
+			kTypeArrayOfUInt32s,
 			kTypeBool,
 			kTypeData,
 			kTypeDictionary,
@@ -82,6 +84,8 @@ struct SValue {
 												// Lifecycle methods
 												SValue(const TArray<CDictionary>& value);
 												SValue(const TArray<CString>& value);
+												SValue(const TNumberArray<Float32>& value);
+												SValue(const TNumberArray<UInt32>& value);
 												SValue(bool value);
 												SValue(const CData& value);
 												SValue(const CDictionary& value);
@@ -108,6 +112,12 @@ struct SValue {
 																TNArray<CDictionary>()) const;
 				const	TArray<CString>&		getArrayOfStrings(
 														const TArray<CString>& defaultValue = TNArray<CString>()) const;
+				const	TNumberArray<Float32>&	getArrayOfFloat32s(
+														const TNumberArray<Float32>& defaultValue =
+																TNumberArray<Float32>()) const;
+				const	TNumberArray<UInt32>&	getArrayOfUInt32s(
+														const TNumberArray<UInt32>& defaultValue =
+																TNumberArray<UInt32>()) const;
 						bool					getBool(bool defaultValue = false) const;
 						void					getValue(bool& value, bool defaultValue = false) const
 													{ value = getBool(defaultValue); }
@@ -171,6 +181,8 @@ struct SValue {
 							// Lifecycle methods
 							ValueValue(TArray<CDictionary>* value) : mArrayOfDictionaries(value) {}
 							ValueValue(TArray<CString>* value) : mArrayOfStrings(value) {}
+							ValueValue(TNumberArray<Float32>* value) : mArrayOfFloat32s(value) {}
+							ValueValue(TNumberArray<UInt32>* value) : mArrayOfUInt32s(value) {}
 							ValueValue(bool value) : mBool(value) {}
 							ValueValue(CData* value) : mData(value) {}
 							ValueValue(CDictionary* value) : mDictionary(value) {}
@@ -190,6 +202,8 @@ struct SValue {
 							// Properties
 							TArray<CDictionary>*	mArrayOfDictionaries;
 							TArray<CString>*		mArrayOfStrings;
+							TNumberArray<Float32>*	mArrayOfFloat32s;
+							TNumberArray<UInt32>*	mArrayOfUInt32s;
 							bool					mBool;
 							CData*					mData;
 							CDictionary*			mDictionary;

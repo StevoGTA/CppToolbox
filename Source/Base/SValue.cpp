@@ -26,12 +26,24 @@ SValue::SValue(bool value) : mType(kTypeBool), mValue(value)
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
-SValue::SValue(const TArray<CDictionary>& value) : mType(kTypeArrayOfDictionaries), mValue(new TArray<CDictionary>(value))
+SValue::SValue(const TArray<CDictionary>& value) :
+		mType(kTypeArrayOfDictionaries), mValue(new TArray<CDictionary>(value))
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
 SValue::SValue(const TArray<CString>& value) : mType(kTypeArrayOfStrings), mValue(new TArray<CString>(value))
+//----------------------------------------------------------------------------------------------------------------------
+{}
+
+//----------------------------------------------------------------------------------------------------------------------
+SValue::SValue(const TNumberArray<Float32>& value) :
+		mType(kTypeArrayOfFloat32s), mValue(new TNumberArray<Float32>(value))
+//----------------------------------------------------------------------------------------------------------------------
+{}
+
+//----------------------------------------------------------------------------------------------------------------------
+SValue::SValue(const TNumberArray<UInt32>& value) : mType(kTypeArrayOfUInt32s), mValue(new TNumberArray<UInt32>(value))
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
@@ -119,6 +131,16 @@ SValue::SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc) : mType(other
 		case kTypeArrayOfStrings:
 			// Array of strings
 			mValue.mArrayOfStrings = new TArray<CString>(*other.mValue.mArrayOfStrings);
+			break;
+
+		case kTypeArrayOfFloat32s:
+			// Array of Float32s
+			mValue.mArrayOfFloat32s = new TNumberArray<Float32>(*other.mValue.mArrayOfFloat32s);
+			break;
+
+		case kTypeArrayOfUInt32s:
+			// Array of UInt32s
+			mValue.mArrayOfUInt32s = new TNumberArray<UInt32>(*other.mValue.mArrayOfUInt32s);
 			break;
 
 		case kTypeData:
@@ -241,6 +263,26 @@ const TArray<CString>& SValue::getArrayOfStrings(const TArray<CString>& defaultV
 	AssertFailIf(mType != kTypeArrayOfStrings);
 
 	return (mType == kTypeArrayOfStrings) ? *mValue.mArrayOfStrings : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const TNumberArray<Float32>& SValue::getArrayOfFloat32s(const TNumberArray<Float32>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Verify value type
+	AssertFailIf(mType != kTypeArrayOfFloat32s);
+
+	return (mType == kTypeArrayOfFloat32s) ? *mValue.mArrayOfFloat32s : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const TNumberArray<UInt32>& SValue::getArrayOfUInt32s(const TNumberArray<UInt32>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Verify value type
+	AssertFailIf(mType != kTypeArrayOfUInt32s);
+
+	return (mType == kTypeArrayOfUInt32s) ? *mValue.mArrayOfUInt32s : defaultValue;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -574,6 +616,14 @@ bool SValue::equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc) cons
 			// Array of Strings
 			return *mValue.mArrayOfStrings == *other.mValue.mArrayOfStrings;
 
+		case kTypeArrayOfFloat32s:
+			// Array of Float32s
+			return *mValue.mArrayOfFloat32s == *other.mValue.mArrayOfFloat32s;
+
+		case kTypeArrayOfUInt32s:
+			// Array of UInt32s
+			return *mValue.mArrayOfUInt32s == *other.mValue.mArrayOfUInt32s;
+
 		case kTypeData:
 			// Data
 			return *mValue.mData == *other.mValue.mData;
@@ -650,6 +700,12 @@ void SValue::dispose(OpaqueDisposeProc opaqueDisposeProc)
 	} else if (mType == kTypeArrayOfStrings) {
 		// Array of strings
 		Delete(mValue.mArrayOfStrings);
+	} else if (mType == kTypeArrayOfFloat32s) {
+		// Array of Float32s
+		Delete(mValue.mArrayOfFloat32s);
+	} else if (mType == kTypeArrayOfUInt32s) {
+		// Array of UInt32s
+		Delete(mValue.mArrayOfUInt32s);
 	} else if (mType == kTypeData) {
 		// Data
 		Delete(mValue.mData);
@@ -682,6 +738,16 @@ SValue& SValue::operator=(const SValue& other)
 		case kTypeArrayOfStrings:
 			// Array of strings
 			mValue.mArrayOfStrings = new TArray<CString>(*other.mValue.mArrayOfStrings);
+			break;
+
+		case kTypeArrayOfFloat32s:
+			// Array of Float32s
+			mValue.mArrayOfFloat32s = new TNumberArray<Float32>(*other.mValue.mArrayOfFloat32s);
+			break;
+
+		case kTypeArrayOfUInt32s:
+			// Array of UInt32s
+			mValue.mArrayOfUInt32s = new TNumberArray<UInt32>(*other.mValue.mArrayOfUInt32s);
 			break;
 
 		case kTypeData:

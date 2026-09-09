@@ -521,6 +521,49 @@ OV<TArray<CString> > CDictionary::getOVArrayOfStrings(const CString& key) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+const TNumberArray<Float32>& CDictionary::getArrayOfFloat32s(const CString& key,
+		const TNumberArray<Float32>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? value->getArrayOfFloat32s(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<TNumberArray<Float32> > CDictionary::getOVArrayOfFloat32s(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ?
+			OV<TNumberArray<Float32> >(value->getArrayOfFloat32s()) : OV<TNumberArray<Float32> >();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const TNumberArray<UInt32>& CDictionary::getArrayOfUInt32s(const CString& key,
+		const TNumberArray<UInt32>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? value->getArrayOfUInt32s(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<TNumberArray<UInt32> > CDictionary::getOVArrayOfUInt32s(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? OV<TNumberArray<UInt32> >(value->getArrayOfUInt32s()) : OV<TNumberArray<UInt32> >();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const CData& CDictionary::getData(const CString& key, const CData& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -818,6 +861,32 @@ void CDictionary::set(const CString& key, const TArray<CDictionary>& value)
 
 //----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const TArray<CString>& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check backing reference count
+	if (mBacking.getReferenceCount() > 1)
+		// Prepare for write
+		mBacking = mBacking->prepareForWrite();
+
+	// Set
+	mBacking->set(key, SValue(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDictionary::set(const CString& key, const TNumberArray<Float32>& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check backing reference count
+	if (mBacking.getReferenceCount() > 1)
+		// Prepare for write
+		mBacking = mBacking->prepareForWrite();
+
+	// Set
+	mBacking->set(key, SValue(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDictionary::set(const CString& key, const TNumberArray<UInt32>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check backing reference count

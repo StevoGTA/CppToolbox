@@ -170,6 +170,14 @@ class CDictionary : public CEquatable {
 															const TArray<CString>& defaultValue = TNArray<CString>())
 															const;
 						OV<TArray<CString> >		getOVArrayOfStrings(const CString& key) const;
+				const	TNumberArray<Float32>&		getArrayOfFloat32s(const CString& key,
+															const TNumberArray<Float32>& defaultValue =
+																	TNumberArray<Float32>()) const;
+						OV<TNumberArray<Float32> >	getOVArrayOfFloat32s(const CString& key) const;
+				const	TNumberArray<UInt32>&		getArrayOfUInt32s(const CString& key,
+															const TNumberArray<UInt32>& defaultValue =
+																	TNumberArray<UInt32>()) const;
+						OV<TNumberArray<UInt32> >	getOVArrayOfUInt32s(const CString& key) const;
 				const	CData&						getData(const CString& key,
 															const CData& defaultValue = CData::mEmpty) const;
 						OV<CData>					getOVData(const CString& key) const;
@@ -283,6 +291,8 @@ class CDictionary : public CEquatable {
 																// Don't have value
 																remove(key);
 														}
+						void						set(const CString& key, const TNumberArray<Float32>& value);
+						void						set(const CString& key, const TNumberArray<UInt32>& value);
 						void						set(const CString& key, const CData& value);
 						void						set(const CString& key, const OV<CData>& value)
 														{
