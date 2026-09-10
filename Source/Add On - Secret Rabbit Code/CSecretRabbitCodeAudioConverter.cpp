@@ -84,15 +84,15 @@ class CSecretRabbitCodeAudioConverter::Internals {
 																				getWriteInfo();
 											if (internals.mInputAudioProcessingFormat->getBits() == 16)
 												// Convert SInt16 => Float32
-												src_short_to_float_array((short*) readInfo.getSegments()[0],
-														(float*) writeInfo.getSegments()[0],
+												src_short_to_float_array((short*) readInfo.getSegment(0),
+														(float*) writeInfo.getSegment(0),
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->
 																		getChannelMap().getChannelCount());
 											else
 												// Convert SInt32 => Float32
-												src_int_to_float_array((int*) readInfo.getSegments()[0],
-														(float*) writeInfo.getSegments()[0],
+												src_int_to_float_array((int*) readInfo.getSegment(0),
+														(float*) writeInfo.getSegment(0),
 														internals.mInputAudioFrames->getCurrentFrameCount() *
 																internals.mInputAudioProcessingFormat->
 																		getChannelMap().getChannelCount());
@@ -108,10 +108,10 @@ class CSecretRabbitCodeAudioConverter::Internals {
 								// Prepare return info
 								if (internals.mInputFloatAudioFrames.hasInstance())
 									// Use converted float
-									*data = (float*) internals.mInputFloatAudioFrames->getWriteInfo().getSegments()[0];
+									*data = (float*) internals.mInputFloatAudioFrames->getWriteInfo().getSegment(0);
 								else
 									// Use input float
-									*data = (float*) readInfo.getSegments()[0];
+									*data = (float*) readInfo.getSegment(0);
 
 								return internals.mInputAudioFrames->getCurrentFrameCount();
 							}
@@ -193,7 +193,7 @@ TVResult<CAudioProcessor::SourceInfo> CSecretRabbitCodeAudioConverter::performIn
 							mInternals->mInputAudioProcessingFormat->getSampleRate();
 	UInt32	frameCount =
 					src_callback_read(mInternals->mSRCState, srcRatio, audioFrames.getAllocatedFrameCount(),
-							(float*) audioFrames.getWriteInfo().getSegments()[0]);
+							(float*) audioFrames.getWriteInfo().getSegment(0));
 	if (frameCount == 0) return TVResult<SourceInfo>(SError::mEndOfData);
 
 	// Update

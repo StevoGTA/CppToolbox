@@ -747,7 +747,7 @@ TVResult<UInt32> CMediaFoundationServices::completeWrite(IMFSample* sample, UInt
 		// Copy
 		UInt32				copyByteCount = mediaBufferByteCount - copyByteOffset;
 		CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
-		::memcpy(writeInfo.getSegments()[0], mediaBufferBytePtr + copyByteOffset, copyByteCount);
+		::memcpy(writeInfo.getSegment(0), mediaBufferBytePtr + copyByteOffset, copyByteCount);
 
 		// Complete write
 		audioFrames.completeWrite(copyByteCount / audioProcessingFormat.getBytesPerFrame());

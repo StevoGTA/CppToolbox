@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "CArray.h"
 #include "TimeAndDate.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
@@ -33,53 +32,65 @@ class CAudioFrames {
 	// Requirements
 	public:
 		struct Requirements {
-					// Lifecycle methods
-					Requirements(UInt32 frameCountInterval, UInt32 frameCountMinimum) :
-						mFrameCountInterval(frameCountInterval), mFrameCountMinimum(frameCountMinimum)
-						{}
-					Requirements(const Requirements& other) :
-						mFrameCountInterval(other.mFrameCountInterval), mFrameCountMinimum(other.mFrameCountMinimum)
-						{}
+			// Methods
+			public:
+						// Lifecycle methods
+						Requirements(UInt32 frameCountInterval, UInt32 frameCountMinimum) :
+							mFrameCountInterval(frameCountInterval), mFrameCountMinimum(frameCountMinimum)
+							{}
+						Requirements(const Requirements& other) :
+							mFrameCountInterval(other.mFrameCountInterval), mFrameCountMinimum(other.mFrameCountMinimum)
+							{}
 
-					// Instance methods
-			UInt32	getFrameCount(UInt32 minimumFrameCount)
-						{ return std::max<UInt32>(mFrameCountMinimum,
-								((minimumFrameCount - 1) / mFrameCountInterval + 1) * mFrameCountInterval); }
-
-			// Properties
-			UInt32	mFrameCountInterval;
-			UInt32	mFrameCountMinimum;
-		};
-
-	// ReadInfo
-	public:
-		struct Info {
-											// Lifecycle methods
-											Info(UInt32 frameCount, UInt32 byteCount,
-													const TNumberArray<void*>& segments) :
-												mFrameCount(frameCount), mByteCount(byteCount), mSegments(segments)
-												{}
-											Info(const Info& other) :
-												mFrameCount(other.mFrameCount), mByteCount(other.mByteCount),
-														mSegments(other.mSegments)
-												{}
-
-											// Instance methods
-					UInt32					getFrameCount() const
-												{ return mFrameCount; }
-					UniversalTimeInterval	getDurationTimeInterval(Float32 sampleRate) const
-												{ return (UniversalTimeInterval) mFrameCount /
-														(UniversalTimeInterval) sampleRate; }
-					UInt32					getByteCount() const
-												{ return mByteCount; }
-			const	TNumberArray<void*>&	getSegments() const
-												{ return mSegments; }
+						// Instance methods
+				UInt32	getFrameCountInterval() const
+							{ return mFrameCountInterval; }
+				UInt32	getFrameCount(UInt32 minimumFrameCount)
+							{ return std::max<UInt32>(mFrameCountMinimum,
+									((minimumFrameCount - 1) / mFrameCountInterval + 1) * mFrameCountInterval); }
 
 			// Properties
 			private:
-				UInt32				mFrameCount;
-				UInt32				mByteCount;
-				TNumberArray<void*>	mSegments;
+				UInt32	mFrameCountInterval;
+				UInt32	mFrameCountMinimum;
+		};
+
+	// Info
+	public:
+		struct Info {
+			// Methods
+			public:
+										// Lifecycle methods
+										Info(void* buffer, UInt32 segmentCount, UInt32 segmentByteCount,
+												UInt32 frameCount) :
+											mBuffer(buffer), mSegmentCount(segmentCount),
+													mSegmentByteCount(segmentByteCount), mFrameCount(frameCount)
+											{}
+										Info(const Info& other) :
+											mBuffer(other.mBuffer), mSegmentCount(other.mSegmentCount),
+													mSegmentByteCount(other.mSegmentByteCount),
+													mFrameCount(other.mFrameCount)
+											{}
+
+										// Instance methods
+				UInt32					getFrameCount() const
+											{ return mFrameCount; }
+				UniversalTimeInterval	getDurationTimeInterval(Float32 sampleRate) const
+											{ return (UniversalTimeInterval) mFrameCount /
+													(UniversalTimeInterval) sampleRate; }
+				UInt32					getSegmentCount() const
+											{ return mSegmentCount; }
+				UInt32					getSegmentByteCount() const
+											{ return mSegmentByteCount; }
+				void*					getSegment(UInt32 index) const
+											{ return (UInt8*) mBuffer + (UInt64) mSegmentByteCount * index; }
+
+			// Properties
+			private:
+				void*	mBuffer;
+				UInt32	mSegmentCount;
+				UInt32	mSegmentByteCount;
+				UInt32	mFrameCount;
 		};
 
 	// Classes
@@ -104,9 +115,10 @@ class CAudioFrames {
 
 		Info	getWriteInfo();
 		void	completeWrite(const CAudioFrames& other)
-					{ completeWrite(other.getCurrentFrameCount(), other.getReadInfo().getSegments()); }
+					{ completeWrite(other.getCurrentFrameCount(), other.getReadInfo()); }
 		void	completeWrite(UInt32 frameCount);
-		void	completeWrite(UInt32 frameCount, const TNumberArray<void*>& sampleBufferPtrs);
+		void	completeWrite(UInt32 frameCount, const Info& info);
+		void	completeWrite(UInt32 frameCount, void* const* sampleBufferPtrs, UInt32 sampleBufferCount);
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 				// Apple methods

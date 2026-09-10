@@ -5,6 +5,7 @@
 #include "CAudioFrames.h"
 
 #include "SError.h"
+#include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioFrames::Internals
@@ -72,8 +73,8 @@ CAudioFrames::CAudioFrames(const Info& info, UInt32 segmentIndex, bool isRead)
 {
 	// Setup
 	mInternals =
-			new Internals(1, info.getByteCount(), info.getFrameCount(), info.getByteCount() / info.getFrameCount(),
-					info.getSegments()[segmentIndex]);
+			new Internals(1, info.getSegmentByteCount(), info.getFrameCount(),
+					info.getSegmentByteCount() / info.getFrameCount(), info.getSegment(segmentIndex));
 
 	// Check if read
 	if (isRead)
@@ -108,30 +109,17 @@ UInt32 CAudioFrames::getCurrentFrameCount() const
 CAudioFrames::Info CAudioFrames::getReadInfo() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	TNumberArray<void*>	segments;
-	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
-		// Update
-		segments += (void*) ((UInt8*) mInternals->mBuffer + mInternals->mSegmentByteCount * i);
-
-	return Info(mInternals->mCurrentFrameCount, mInternals->mSegmentByteCount, segments);
+	return Info(mInternals->mBuffer, mInternals->mSegmentCount, mInternals->mSegmentByteCount,
+			mInternals->mCurrentFrameCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 CAudioFrames::Info CAudioFrames::getWriteInfo()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	TNumberArray<void*>	segments;
-	for (UInt32 i = 0; i < mInternals->mSegmentCount; i++)
-		// Update
-		segments +=
-				(void*) ((UInt8*) mInternals->mBuffer +
-						mInternals->mSegmentByteCount * i +
-						mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment);
-
-	return Info(mInternals->mAllocatedFrameCount - mInternals->mCurrentFrameCount, mInternals->mSegmentByteCount,
-			segments);
+	return Info((UInt8*) mInternals->mBuffer + mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment,
+			mInternals->mSegmentCount, mInternals->mSegmentByteCount,
+			mInternals->mAllocatedFrameCount - mInternals->mCurrentFrameCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -146,17 +134,27 @@ void CAudioFrames::completeWrite(UInt32 frameCount)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& sampleBufferPtrs)
+void CAudioFrames::completeWrite(UInt32 frameCount, const Info& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Collect segment pointers
+	TBuffer<void*>	sampleBufferPtrs(info.getSegmentCount());
+	for (UInt32 i = 0; i < info.getSegmentCount(); i++)
+		// Store
+		sampleBufferPtrs[i] = info.getSegment(i);
+
+	completeWrite(frameCount, *sampleBufferPtrs, info.getSegmentCount());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::completeWrite(UInt32 frameCount, void* const* sampleBufferPtrs, UInt32 sampleBufferCount)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check
 	AssertFailIf((mInternals->mCurrentFrameCount + frameCount) > mInternals->mAllocatedFrameCount);
 
-	// Setup
-	CArray::ItemCount	sampleBuffersCount = sampleBufferPtrs.getCount();
-
 	// Check what to do
-	if ((mInternals->mSegmentCount == 1) && (sampleBuffersCount == 1))
+	if ((mInternals->mSegmentCount == 1) && (sampleBufferCount == 1))
 		// Interleaved and Interleaved coming in
 		::memcpy((UInt8*) mInternals->mBuffer + mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment,
 				sampleBufferPtrs[0], frameCount * mInternals->mBytesPerFramePerSegment);
@@ -165,15 +163,17 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& s
 		UInt8*	destinationStartPtr =
 						(UInt8*) mInternals->mBuffer +
 								mInternals->mCurrentFrameCount * mInternals->mBytesPerFramePerSegment;
-		for (UInt32 sampleBufferIndex = 0; sampleBufferIndex < sampleBuffersCount; sampleBufferIndex++) {
+		for (UInt32 sampleBufferIndex = 0; sampleBufferIndex < sampleBufferCount; sampleBufferIndex++) {
 			// Check bytes per sample
-			switch (mInternals->mBytesPerFramePerSegment / sampleBuffersCount) {
+			switch (mInternals->mBytesPerFramePerSegment / sampleBufferCount) {
 				case 8: {
 					// 8 bytes per sample
 					const	UInt64*	sourcePtr = (UInt64*) sampleBufferPtrs[sampleBufferIndex];
 							UInt64*	destinationPtr = (UInt64*) destinationStartPtr + sampleBufferIndex;
+
+					// Perform
 					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
-							destinationPtr += sampleBuffersCount)
+							destinationPtr += sampleBufferCount)
 						// Copy sample
 						*destinationPtr = (*sourcePtr++);
 					} break;
@@ -182,8 +182,10 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& s
 					// 4 bytes per sample
 					const	UInt32*	sourcePtr = (UInt32*) sampleBufferPtrs[sampleBufferIndex];
 							UInt32*	destinationPtr = (UInt32*) destinationStartPtr + sampleBufferIndex;
+
+					// Perform
 					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
-							destinationPtr += sampleBuffersCount)
+							destinationPtr += sampleBufferCount)
 						// Copy sample
 						*destinationPtr = (*sourcePtr++);
 					} break;
@@ -192,8 +194,10 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& s
 					// 3 bytes per sample
 					const	UInt8*	sourcePtr = (UInt8*) sampleBufferPtrs[sampleBufferIndex];
 							UInt8*	destinationPtr = destinationStartPtr + sampleBufferIndex;
+
+					// Perform
 					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
-							destinationPtr += sampleBuffersCount * 3) {
+							destinationPtr += sampleBufferCount * 3) {
 						// Copy sample
 						*destinationPtr = (*sourcePtr++);
 						*(destinationPtr + 1) = (*sourcePtr++);
@@ -204,8 +208,10 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& s
 					// 2 bytes per sample
 					const	UInt16*	sourcePtr = (UInt16*) sampleBufferPtrs[sampleBufferIndex];
 							UInt16*	destinationPtr = (UInt16*) destinationStartPtr + sampleBufferIndex;
+
+					// Perform
 					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
-							destinationPtr += sampleBuffersCount)
+							destinationPtr += sampleBufferCount)
 						// Copy sample
 						*destinationPtr = (*sourcePtr++);
 					} break;
@@ -214,21 +220,23 @@ void CAudioFrames::completeWrite(UInt32 frameCount, const TNumberArray<void*>& s
 					// 1 byte per sample
 					const	UInt8*	sourcePtr = (UInt8*) sampleBufferPtrs[sampleBufferIndex];
 							UInt8*	destinationPtr = destinationStartPtr + sampleBufferIndex;
+
+					// Perform
 					for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++,
-							destinationPtr += sampleBuffersCount)
+							destinationPtr += sampleBufferCount)
 						// Copy sample
 						*destinationPtr = (*sourcePtr++);
 					} break;
 			}
 		}
-	} else if (sampleBuffersCount == 1) {
+	} else if (sampleBufferCount == 1) {
 		// Non-interleaved and Interleaved coming in
 		AssertFailUnimplemented();
 	} else {
 		// Non-interleaved and Non-interleaved coming in
-		AssertFailIf(mInternals->mSegmentCount != sampleBuffersCount);
+		AssertFailIf(mInternals->mSegmentCount != sampleBufferCount);
 
-		for (UInt32 sampleBufferIndex = 0; sampleBufferIndex < sampleBuffersCount; sampleBufferIndex++)
+		for (UInt32 sampleBufferIndex = 0; sampleBufferIndex < sampleBufferCount; sampleBufferIndex++)
 			// Copy samples
 			::memcpy(
 					(UInt8*) mInternals->mBuffer + mInternals->mSegmentByteCount * sampleBufferIndex +

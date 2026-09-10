@@ -414,7 +414,7 @@ OV<SError> CDVIIntelIMAADPCMDecodeAudioCodec::decodeInto(CAudioFrames& audioFram
 	// Decode packets
 	CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
 	UInt32				remainingFrames = writeInfo.getFrameCount();
-	SInt16*				bufferPtr = (SInt16*) writeInfo.getSegments()[0];
+	SInt16*				bufferPtr = (SInt16*) writeInfo.getSegment(0);
 	TBuffer<UInt8>		packetBuffer(mBytesPerPacket);
 	UInt32				decodedFrameCount = 0;
 	while (remainingFrames >= mFramesPerPacket) {
