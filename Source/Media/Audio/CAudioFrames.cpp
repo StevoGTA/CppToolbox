@@ -4,11 +4,187 @@
 
 #include "CAudioFrames.h"
 
+#include "CReferenceCountable.h"
 #include "SError.h"
-#include "TBuffer.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioFrames::Internals
+// MARK: CAudioFrames::SourceQueue::Internals
+
+class CAudioFrames::SourceQueue::Internals : public TReferenceCountableAutoDelete<Internals> {
+	public:
+		Internals(UInt32 channelCount) :
+			TReferenceCountableAutoDelete(),
+					mBuffer(0), mChannelCount(channelCount), mFirstBufferedFrameIndex(0), mBufferedFrameCount(0),
+					mConsumedFrameCount(0)
+			{}
+
+		TBuffer<Float32>	mBuffer;
+		UInt32				mChannelCount;
+		UInt64				mFirstBufferedFrameIndex;
+		UInt32				mBufferedFrameCount;
+		UInt32				mConsumedFrameCount;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioFrames::SourceQueue
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::SourceQueue::SourceQueue(UInt32 channelCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(channelCount);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::SourceQueue::SourceQueue(const SourceQueue& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = other.mInternals->addReference();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::SourceQueue::~SourceQueue()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals->removeReference();
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CAudioFrames::SourceQueue::getStartFrameIndex() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mFirstBufferedFrameIndex + mInternals->mConsumedFrameCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt64 CAudioFrames::SourceQueue::getEndFrameIndex() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mFirstBufferedFrameIndex + mInternals->mBufferedFrameCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+UInt32 CAudioFrames::SourceQueue::getFrameCount() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mBufferedFrameCount - mInternals->mConsumedFrameCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TBuffer<Float32> CAudioFrames::SourceQueue::getFrames() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TBuffer<Float32>(*mInternals->mBuffer + (UInt64) mInternals->mConsumedFrameCount * mInternals->mChannelCount,
+			(UInt64) getFrameCount() * mInternals->mChannelCount);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::SourceQueue::add(const CAudioFrames& audioFrames)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	Info	readInfo = audioFrames.getReadInfo();
+	UInt32	frameCount = readInfo.getFrameCount();
+	AssertFailIf(readInfo.getSegmentCount() != 1);
+
+	// Calculate needed capacity
+	UInt32	capacityFrameCount = (UInt32) (mInternals->mBuffer.getCount() / mInternals->mChannelCount);
+
+	// Check if have capacity
+	if ((capacityFrameCount - mInternals->mBufferedFrameCount) < frameCount) {
+		// Compact if possible and grow if necessary
+		Float32*	availableSamplePtr =
+							*mInternals->mBuffer +
+									(UInt64) mInternals->mConsumedFrameCount * mInternals->mChannelCount;
+		UInt32		availableFrameCount = mInternals->mBufferedFrameCount - mInternals->mConsumedFrameCount;
+		size_t		availableByteCount = (size_t) availableFrameCount * mInternals->mChannelCount * sizeof(Float32);
+		UInt32		frameCountNeeded = availableFrameCount + frameCount;
+		if (frameCountNeeded > capacityFrameCount) {
+			// Need to grow
+			capacityFrameCount = std::max<UInt32>(capacityFrameCount * 2, frameCountNeeded);
+
+			TBuffer<Float32>	buffer((UInt64) capacityFrameCount * mInternals->mChannelCount);
+			::memcpy(*buffer, availableSamplePtr, availableByteCount);
+			mInternals->mBuffer = buffer;
+		} else
+			// Compact only
+			::memmove(*mInternals->mBuffer, availableSamplePtr, availableByteCount);
+		mInternals->mFirstBufferedFrameIndex += mInternals->mConsumedFrameCount;
+		mInternals->mBufferedFrameCount = availableFrameCount;
+		mInternals->mConsumedFrameCount = 0;
+	}
+
+	// Append
+	::memcpy(*mInternals->mBuffer + (UInt64) mInternals->mBufferedFrameCount * mInternals->mChannelCount,
+			readInfo.getSegment(0), (size_t) frameCount * mInternals->mChannelCount * sizeof(Float32));
+	mInternals->mBufferedFrameCount += frameCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::SourceQueue::consumeInto(CAudioFrames& audioFrames, UInt32 frameCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check
+	AssertFailIf(frameCount > getFrameCount());
+
+	// Copy
+	audioFrames.reset();
+	::memcpy(audioFrames.getWriteInfo().getSegment(0),
+			*mInternals->mBuffer + (UInt64) mInternals->mConsumedFrameCount * mInternals->mChannelCount,
+			(size_t) frameCount * mInternals->mChannelCount * sizeof(Float32));
+	audioFrames.completeWrite(frameCount);
+
+	// Consumed
+	mInternals->mConsumedFrameCount += frameCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::SourceQueue::noteConsumedBefore(UInt64 frameIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if any available frames are before the given frame
+	if (frameIndex > getStartFrameIndex())
+		// Consume them
+		mInternals->mConsumedFrameCount +=
+				(UInt32) std::min<UInt64>(frameIndex - getStartFrameIndex(), getFrameCount());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::SourceQueue::noteIgnoredAfter(UInt64 frameIndex)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if any available frames are at or after the given frame
+	if (frameIndex < getEndFrameIndex())
+		// Free them
+		mInternals->mBufferedFrameCount -=
+				(UInt32) std::min<UInt64>(getEndFrameIndex() - frameIndex, getFrameCount());
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioFrames::SourceQueue& CAudioFrames::SourceQueue::operator=(const SourceQueue& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioFrames::Internals
 
 class CAudioFrames::Internals {
 	public:

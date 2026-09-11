@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "TBuffer.h"
 #include "TimeAndDate.h"
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
@@ -31,30 +32,6 @@
 class CAudioFrames {
 	// Requirements
 	public:
-		struct Requirements {
-			// Methods
-			public:
-						// Lifecycle methods
-						Requirements(UInt32 frameCountInterval, UInt32 frameCountMinimum) :
-							mFrameCountInterval(frameCountInterval), mFrameCountMinimum(frameCountMinimum)
-							{}
-						Requirements(const Requirements& other) :
-							mFrameCountInterval(other.mFrameCountInterval), mFrameCountMinimum(other.mFrameCountMinimum)
-							{}
-
-						// Instance methods
-				UInt32	getFrameCountInterval() const
-							{ return mFrameCountInterval; }
-				UInt32	getFrameCount(UInt32 minimumFrameCount)
-							{ return std::max<UInt32>(mFrameCountMinimum,
-									((minimumFrameCount - 1) / mFrameCountInterval + 1) * mFrameCountInterval); }
-
-			// Properties
-			private:
-				UInt32	mFrameCountInterval;
-				UInt32	mFrameCountMinimum;
-		};
-
 	// Info
 	public:
 		struct Info {
@@ -91,6 +68,62 @@ class CAudioFrames {
 				UInt32	mSegmentCount;
 				UInt32	mSegmentByteCount;
 				UInt32	mFrameCount;
+		};
+
+		struct Requirements {
+			// Methods
+			public:
+						// Lifecycle methods
+						Requirements(UInt32 frameCountInterval, UInt32 frameCountMinimum) :
+							mFrameCountInterval(frameCountInterval), mFrameCountMinimum(frameCountMinimum)
+							{}
+						Requirements(const Requirements& other) :
+							mFrameCountInterval(other.mFrameCountInterval), mFrameCountMinimum(other.mFrameCountMinimum)
+							{}
+
+						// Instance methods
+				UInt32	getFrameCountInterval() const
+							{ return mFrameCountInterval; }
+				UInt32	getFrameCount(UInt32 minimumFrameCount)
+							{ return std::max<UInt32>(mFrameCountMinimum,
+									((minimumFrameCount - 1) / mFrameCountInterval + 1) * mFrameCountInterval); }
+
+			// Properties
+			private:
+				UInt32	mFrameCountInterval;
+				UInt32	mFrameCountMinimum;
+		};
+
+	// SourceQueue
+	public:
+		class SourceQueue {
+			// Classes
+			private:
+				class Internals;
+
+			// Methods
+			public:
+									// Lifecycle methods
+									SourceQueue(UInt32 channelCount);
+									SourceQueue(const SourceQueue& other);
+									~SourceQueue();
+
+									// Instance methods
+				UInt64				getStartFrameIndex() const;
+				UInt64				getEndFrameIndex() const;
+				UInt32				getFrameCount() const;
+				TBuffer<Float32>	getFrames() const;
+
+				void				add(const CAudioFrames& audioFrames);
+				void				consumeInto(CAudioFrames& audioFrames, UInt32 frameCount);
+				void				noteConsumedBefore(UInt64 frameIndex);
+				void				noteIgnoredAfter(UInt64 frameIndex);
+
+				SourceQueue&		operator=(const SourceQueue& other);
+
+			// Properties
+			private:
+				Internals*	mInternals;
 		};
 
 	// Classes
