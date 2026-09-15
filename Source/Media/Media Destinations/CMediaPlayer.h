@@ -122,13 +122,13 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 		class AudioSetup : public CAudioDestination::Setup {
 			// Methods
 			public:
-										// Lifecycle methods
-										AudioSetup(CMediaPlayer& mediaPlayer) :
-											CAudioDestination::Setup(), mMediaPlayer(mediaPlayer)
-											{}
+												// Lifecycle methods
+												AudioSetup(CMediaPlayer& mediaPlayer) :
+													CAudioDestination::Setup(), mMediaPlayer(mediaPlayer)
+													{}
 
-										// CAudioDestination::Setup methods
-				I<CAudioDestination>	create(const CString& identifier, UInt32 trackIndex) const;
+												// CAudioDestination::Setup methods
+				TVResult<I<CAudioDestination> >	create(const CString& identifier, UInt32 trackIndex) const;
 
 			// Properties
 			private:
@@ -244,44 +244,43 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info);
-												~CMediaPlayer();
+													// Lifecycle methods
+													CMediaPlayer(CSRSWMessageQueues& messageQueues, const Info& info);
+													~CMediaPlayer();
 
-												// CMediaDestination methods
-						void					add(const I<CAudioDestination>& audioDestination, UInt32 trackIndex);
+													// CMediaDestination methods
+						void						add(const I<CVideoDestination>& videoDestination,
+															UInt32 trackIndex);
 
-						void					add(const I<CVideoDestination>& videoDestination, UInt32 trackIndex);
+						void						setMediaSegment(
+															const OV<SMedia::Segment>& mediaSegment =
+																	OV<SMedia::Segment>());
 
-						void					setMediaSegment(
-														const OV<SMedia::Segment>& mediaSegment =
-																OV<SMedia::Segment>());
+						void						seek(UniversalTimeInterval timeInterval);
 
-						void					seek(UniversalTimeInterval timeInterval);
+													// Instance methods
+		virtual			TVResult<I<CAudioPlayer> >	newAudioPlayer(const CString& identifier, UInt32 trackIndex);
+		virtual			void						setAudioGain(Float32 audioGain);
 
-												// Instance methods
-		virtual			I<CAudioPlayer>			newAudioPlayer(const CString& identifier, UInt32 trackIndex);
-		virtual			void					setAudioGain(Float32 audioGain);
+		virtual			I<CVideoFrameStore>			newVideoFrameStore(const CString& identifier, UInt32 trackIndex);
 
-		virtual			I<CVideoFrameStore>		newVideoFrameStore(const CString& identifier, UInt32 trackIndex);
+		virtual			void						setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
 
-		virtual			void					setLoopCount(OV<UInt32> loopCount = OV<UInt32>());
+						UniversalTimeInterval		getCurrentTimeInterval() const;
+				const	OV<UInt32>&					getCurrentFrameIndex() const;
 
-						UniversalTimeInterval	getCurrentTimeInterval() const;
-				const	OV<UInt32>&				getCurrentFrameIndex() const;
+		virtual			void						play();
+		virtual			void						pause();
+		virtual			bool						isPlaying() const;
 
-		virtual			void					play();
-		virtual			void					pause();
-		virtual			bool					isPlaying() const;
+						void						startSeek();
+						void						finishSeek();
 
-						void					startSeek();
-						void					finishSeek();
+						void						mediaSegmentWillChange();
+						void						mediaSegmentDidChange();
 
-						void					mediaSegmentWillChange();
-						void					mediaSegmentDidChange();
-
-						void					stop();
-						void					restart();
+						void						stop();
+						void						restart();
 
 	// Properties
 	private:

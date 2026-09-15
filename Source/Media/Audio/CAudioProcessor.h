@@ -112,21 +112,31 @@ class CAudioDestination : public CAudioProcessor {
 		class Setup {
 			// Methods
 			public:
-												// Instance methods
-				virtual	I<CAudioDestination>	create(const CString& identifier, UInt32 trackIndex) const = 0;
+														// Instance methods
+				virtual	TVResult<I<CAudioDestination> >	create(const CString& identifier, UInt32 trackIndex) const = 0;
 
 			protected:
-												// Lifecycle methods
-												Setup() {}
-				virtual							~Setup() {}
+														// Lifecycle methods
+														Setup() {}
+				virtual									~Setup() {}
 		};
+
+	// Classes
+	private:
+		class Internals;
 
 	// Methods
 	public:
 												// Lifecycle methods
-												CAudioDestination() : CAudioProcessor() {}
+												CAudioDestination(
+														const TArray<SAudio::ProcessingSetup>& audioProcessingSetups);
+												CAudioDestination(
+														const SAudio::ProcessingSetup& audioProcessingSetup);
+												~CAudioDestination();
 
 												// CAudioProcessor methods
+				TArray<SAudio::ProcessingSetup>	getInputSetups() const;
+
 				TArray<SAudio::ProcessingSetup>	getOutputSetups() const
 													{ AssertFailUnimplemented();
 															return TNArray<SAudio::ProcessingSetup>(); }
@@ -136,6 +146,10 @@ class CAudioDestination : public CAudioProcessor {
 												// Instance methods
 		virtual	void							setupComplete()
 													{}
+
+	// Properties
+	private:
+		Internals*	mInternals;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
