@@ -65,6 +65,8 @@ class CAudioProcessor {
 		Internals*	mInternals;
 };
 
+using CAudioProcessors = TArray<I<CAudioProcessor> >;
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CAudioSource
 
