@@ -19,6 +19,8 @@ static	SError	sInvalidTokenError(sErrorDomain, 2, CString(OSSTR("Invalid Token")
 
 static	OV<SError>						sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array);
 static	OV<SError>						sAddArrayOfStrings(CData& data, const TArray<CString>& array);
+static	OV<SError>						sAddArrayOfFloat32s(CData& data, const TNumberArray<Float32>& array);
+static	OV<SError>						sAddArrayOfUInt32s(CData& data, const TNumberArray<UInt32>& array);
 static	OV<SError>						sAddDictionary(CData& data, const CDictionary& dictionary);
 static	void							sAddString(CData& data, const CString& string);
 
@@ -136,6 +138,54 @@ OV<SError> sAddArrayOfStrings(CData& data, const TArray<CString>& array)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<SError> sAddArrayOfFloat32s(CData& data, const TNumberArray<Float32>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Start
+	data.append("[", 1);
+
+	// Iterate array
+	for (TNumberArray<Float32>::Iterator iterator = array.getIterator(); iterator; iterator++) {
+		// Check if first
+		if (!iterator.isFirst())
+			// Add comma
+			data.append(",", 1);
+
+		// Add value
+		data += CString(*iterator).getUTF8Data();
+	}
+
+	// End
+	data.append("]", 1);
+
+	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> sAddArrayOfUInt32s(CData& data, const TNumberArray<UInt32>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Start
+	data.append("[", 1);
+
+	// Iterate array
+	for (TNumberArray<UInt32>::Iterator iterator = array.getIterator(); iterator; iterator++) {
+		// Check if first
+		if (!iterator.isFirst())
+			// Add comma
+			data.append(",", 1);
+
+		// Add value
+		data += CString(*iterator).getUTF8Data();
+	}
+
+	// End
+	data.append("]", 1);
+
+	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -172,6 +222,18 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 			case SValue::kTypeArrayOfStrings:
 				// Array of strings
 				error = sAddArrayOfStrings(data, iterator.getValue().getArrayOfStrings());
+				ReturnErrorIfError(error);
+				break;
+
+			case SValue::kTypeArrayOfFloat32s:
+				// Array of Float32s
+				error = sAddArrayOfFloat32s(data, iterator.getValue().getArrayOfFloat32s());
+				ReturnErrorIfError(error);
+				break;
+
+			case SValue::kTypeArrayOfUInt32s:
+				// Array of UInt32s
+				error = sAddArrayOfUInt32s(data, iterator.getValue().getArrayOfUInt32s());
 				ReturnErrorIfError(error);
 				break;
 
@@ -478,6 +540,49 @@ TVResult<SValue> sReadValue(const SInt8*& charPtr)
 					sSkipWhitespace(charPtr);
 
 					return TVResult<SValue>(SValue(array));
+				} else
+					// Invalid token
+					return TVResult<SValue>(sInvalidTokenError);
+			}
+		} else if ((*charPtr == '-') || ((*charPtr >= '0') && (*charPtr <= '9'))) {
+			// Array of numbers
+			TNArray<CString>	strings;
+			bool				isFloat = false;
+			while (true) {
+				// Read number
+				const	SInt8*	startCharPtr = charPtr;
+				while ((*charPtr != ',') && (*charPtr != ']') && (*charPtr != ' ') && (*charPtr != '\t') &&
+						(*charPtr != '\n') && (*charPtr != '\r')) {
+					// Still in number
+					isFloat |= (*charPtr == '.');
+					charPtr++;
+				}
+				strings +=
+						CString((const void*) startCharPtr, (UInt32) (charPtr - startCharPtr), CString::kEncodingUTF8);
+
+				// Skip whitespace
+				sSkipWhitespace(charPtr);
+
+				// Check token
+				if (*charPtr == ',') {
+					// More values
+					charPtr++;
+
+					// Skip whitespace
+					sSkipWhitespace(charPtr);
+				} else if (*charPtr == ']') {
+					// End of array
+					charPtr++;
+
+					// Skip whitespace
+					sSkipWhitespace(charPtr);
+
+					return TVResult<SValue>(
+							isFloat ?
+									SValue(TNumberArray<Float32>(strings,
+											(TNumberArray<Float32>::MapProc) CString::getFloat32)) :
+									SValue(TNumberArray<UInt32>(strings,
+											(TNumberArray<UInt32>::MapProc) CString::getUInt32)));
 				} else
 					// Invalid token
 					return TVResult<SValue>(sInvalidTokenError);

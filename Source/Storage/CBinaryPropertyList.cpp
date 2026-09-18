@@ -433,16 +433,16 @@ TVResult<SValue> CBPLReader::getValue(I<CBPLReader>& bplReader, UInt64 objectInd
 
 			switch (markerAndCount->getA()) {
 				case kMarkerTypeArray:
-					// Array (unimplemented)
+					// Array
 AssertFailUnimplemented();
 
 				case kMarkerTypeBooleanTrue:
 				case kMarkerTypeBooleanFalse:
-					// Boolean (unimplemented)
+					// Boolean
 AssertFailUnimplemented();
 
 				case kMarkerTypeData:
-					// Data (unimplemented)
+					// Data
 AssertFailUnimplemented();
 
 				case kMarkerTypeDictionary: {
@@ -455,16 +455,50 @@ AssertFailUnimplemented();
 					return TVResult<SValue>(*array);
 				}
 
-				case kMarkerTypeFloat32:
+				case kMarkerTypeFloat32: {
+					// Float32s
+					TNumberArray<Float32>	array;
+					for (UInt64 i = 0; i < count; i++) {
+						// Get value
+						TVResult<SValue>	value =
+												getValue(bplReader, (*objectIndexes)[i], composeStandardDictionary);
+						ReturnValueIfResultError(value, TVResult<SValue>(value.getError()));
+
+						array += value->getFloat32();
+					}
+
+					return TVResult<SValue>(SValue(array));
+				}
+
 				case kMarkerTypeFloat64:
-					// Float (unimplemented)
+					// Float64
 AssertFailUnimplemented();
 
 				case kMarkerTypeInteger1Byte:
+					// Integer, 1 byte
+AssertFailUnimplemented();
+
 				case kMarkerTypeInteger2Bytes:
-				case kMarkerTypeInteger4Bytes:
+					// Integer, 2 bytes
+AssertFailUnimplemented();
+
+				case kMarkerTypeInteger4Bytes: {
+					// Integer, 4 bytes
+					TNumberArray<UInt32>	array;
+					for (UInt64 i = 0; i < count; i++) {
+						// Get value
+						TVResult<SValue>	value =
+												getValue(bplReader, (*objectIndexes)[i], composeStandardDictionary);
+						ReturnValueIfResultError(value, TVResult<SValue>(value.getError()));
+
+						array += value->getUInt32();
+					}
+
+					return TVResult<SValue>(SValue(array));
+				}
+
 				case kMarkerTypeInteger8Bytes:
-					// Integer (unimplemented)
+					// Integer, 8 bytes
 AssertFailUnimplemented();
 
 				case kMarkerTypeStringASCII:
@@ -849,6 +883,20 @@ class CBPLWriter {
 													}
 													break;
 
+												case SValue::kTypeArrayOfFloat32s:
+													// Array of Float32s - will only store if have at least 1 item
+													if (value.getArrayOfFloat32s().getCount() > 0)
+														// Will store the array and each number
+														objectCount += 1 + value.getArrayOfFloat32s().getCount();
+													break;
+
+												case SValue::kTypeArrayOfUInt32s:
+													// Array of UInt32s - will only store if have at least 1 item
+													if (value.getArrayOfUInt32s().getCount() > 0)
+														// Will store the array and each number
+														objectCount += 1 + value.getArrayOfUInt32s().getCount();
+													break;
+
 												case SValue::kTypeBool:
 												case SValue::kTypeData:
 												case SValue::kTypeFloat32:
@@ -1074,6 +1122,72 @@ class CBPLWriter {
 
 										return TVResult<ObjectInfo>(objectInfo);
 									}
+		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const TNumberArray<Float32>& array)
+									{
+										// Setup
+										CData	indexesData(array.getCount() * mObjectIndexByteCount);
+
+										// Iterate values
+										for (TNumberArray<Float32>::Iterator iterator = array.getIterator(); iterator;
+												iterator++) {
+											// Write number
+											TVResult<ObjectInfo>	result = write(fileWriter, *iterator);
+											ReturnResultIfResultError(result);
+
+											// Add index
+											addIndex(indexesData, result->getA());
+										}
+
+										// Get object info
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										mObjectInfos += objectInfo;
+
+										// Write marker and count
+										OV<SError>	error =
+																writeMarkerAndCount(fileWriter, kMarkerTypeArray,
+																		array.getCount());
+										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+
+										// Write indexes
+										error = fileWriter.write(indexesData);
+										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+
+										return TVResult<ObjectInfo>(objectInfo);
+									}
+		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const TNumberArray<UInt32>& array)
+									{
+										// Setup
+										CData	indexesData(array.getCount() * mObjectIndexByteCount);
+
+										// Iterate values
+										for (TNumberArray<UInt32>::Iterator iterator = array.getIterator(); iterator;
+												iterator++) {
+											// Write number
+											TVResult<ObjectInfo>	result =
+																			write(fileWriter, (UInt64) *iterator,
+																					getIntegerByteCount(*iterator));
+											ReturnResultIfResultError(result);
+
+											// Add index
+											addIndex(indexesData, result->getA());
+										}
+
+										// Get object info
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										mObjectInfos += objectInfo;
+
+										// Write marker and count
+										OV<SError>	error =
+																writeMarkerAndCount(fileWriter, kMarkerTypeArray,
+																		array.getCount());
+										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+
+										// Write indexes
+										error = fileWriter.write(indexesData);
+										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+
+										return TVResult<ObjectInfo>(objectInfo);
+									}
 		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, bool value)
 									{
 										// Setup
@@ -1150,6 +1264,32 @@ class CBPLWriter {
 																	mObjectIndexByString.getUInt64(iterator.getKey()));
 															result.setValue(write(fileWriter,
 																	value.getArrayOfStrings()));
+															break;
+														} else
+															// Will not write
+															continue;
+
+													case SValue::kTypeArrayOfFloat32s:
+														// Array of Float32s - only store if have at least 1 item
+														if (value.getArrayOfFloat32s().getCount() > 0) {
+															// Write
+															addIndex(keyIndexesData,
+																	mObjectIndexByString.getUInt64(iterator.getKey()));
+															result.setValue(write(fileWriter,
+																	value.getArrayOfFloat32s()));
+															break;
+														} else
+															// Will not write
+															continue;
+
+													case SValue::kTypeArrayOfUInt32s:
+														// Array of UInt32s - only store if have at least 1 item
+														if (value.getArrayOfUInt32s().getCount() > 0) {
+															// Write
+															addIndex(keyIndexesData,
+																	mObjectIndexByString.getUInt64(iterator.getKey()));
+															result.setValue(write(fileWriter,
+																	value.getArrayOfUInt32s()));
 															break;
 														} else
 															// Will not write

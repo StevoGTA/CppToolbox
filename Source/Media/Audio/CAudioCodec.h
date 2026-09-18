@@ -84,7 +84,7 @@ class CDecodeAudioCodec : public CAudioCodec {
 																				mRandomAccessDataSource->read(
 																						mCurrentPosition,
 																						(UInt8*) writeInfo
-																								.getSegments()[0],
+																								.getSegment(0),
 																						(UInt64) frameCount *
 																								mFrameByteCount);
 															ReturnValueIfError(error, TVResult<UInt32>(*error));

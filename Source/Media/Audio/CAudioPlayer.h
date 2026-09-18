@@ -8,6 +8,10 @@
 #include "CQueue.h"
 #include "CThread.h"
 
+#if defined(TARGET_OS_WINDOWS)
+	class CAudioPlayerAudioClient;
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CAudioPlayer
 
@@ -56,44 +60,52 @@ class CAudioPlayer : public CAudioDestination {
 
 	// Methods
 	public:
-														// Lifecycle methods
-														CAudioPlayer(const CString& identifier, const Info& info);
-														~CAudioPlayer();
+													// Lifecycle methods
+													~CAudioPlayer();
 
-														// CAudioProcessor methods
-						OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-																const SAudio::ProcessingFormat& audioProcessingFormat);
-						TArray<CString>					getSetupDescription(const CString& indent);
+													// CAudioProcessor methods
+						OV<SError>					connectInput(const I<CAudioProcessor>& audioProcessor,
+															const SAudio::ProcessingFormat& audioProcessingFormat);
+						TArray<CString>				getSetupDescription(const CString& indent);
 
-						void							setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
-						void							seek(UniversalTimeInterval timeInterval);
+						void						setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
+						void						seek(UniversalTimeInterval timeInterval);
 
-						void							stop();
+						void						stop();
 
-						TArray<SAudio::ProcessingSetup>	getInputSetups() const;
+													// CAudioDestination methods
+						void						setupComplete();
 
-														// CAudioDestination methods
-						void							setupComplete();
+													// Instance methods
+				const	CString&					getIdentifier() const;
 
-														// Instance methods
-				const	CString&						getIdentifier() const;
+													// gain applies to any channel not referenced by channelGains
+						void						setGain(Float32 gain);
+						void						setGain(const TNumberArray<Float32>& channelGains);
 
-														// gain applies to any channel not referenced by channelGains
-						void							setGain(Float32 gain);
-						void							setGain(const TNumberArray<Float32>& channelGains);
+						void						play();
+						void						pause();
+						bool						isPlaying() const;
 
-						void							play();
-						void							pause();
-						bool							isPlaying() const;
+						void						startSeek();
+						void						finishSeek();
 
-						void							startSeek();
-						void							finishSeek();
+													// Class methods
+		static			TVResult<I<CAudioPlayer> >	create(const CString& identifier, const Info& info);
 
-														// Class methods
-		static			void							setMaxAudioPlayers(UInt32 maxAudioPlayers);
-		static			UniversalTimeInterval			getPlaybackBufferDuration();
-		static			void							setPlaybackBufferDuration(
-																UniversalTimeInterval playbackBufferDuration);
+		static			void						setMaxAudioPlayers(UInt32 maxAudioPlayers);
+		static			UniversalTimeInterval		getPlaybackBufferDuration();
+		static			void						setPlaybackBufferDuration(
+															UniversalTimeInterval playbackBufferDuration);
+
+	private:
+													// Lifecycle methods
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
+													CAudioPlayer(const CString& identifier, const Info& info);
+#elif defined(TARGET_OS_WINDOWS)
+													CAudioPlayer(const CString& identifier, const Info& info,
+															const CAudioPlayerAudioClient& audioClient);
+#endif
 
 	// Properties
 	public:

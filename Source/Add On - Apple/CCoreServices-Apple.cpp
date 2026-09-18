@@ -50,10 +50,10 @@ UInt64 CCoreServices::getPhysicalMemoryByteCount()
 
 #if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
-const SSystemVersionInfo& CCoreServices::getSystemVersion()
+const SVersionInfo& CCoreServices::getSystemVersion()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	static	SSystemVersionInfo*	sVersionInfo = nil;
+	static	SVersionInfo*	sVersionInfo = nil;
 
 	if (sVersionInfo == nil) {
 		// Get info
@@ -77,7 +77,7 @@ const SSystemVersionInfo& CCoreServices::getSystemVersion()
 								.removingLeadingAndTrailingWhitespace();
 
 		sVersionInfo =
-				new SSystemVersionInfo(productName, components[0].getUInt32(), components[1].getUInt32(),
+				new SVersionInfo(productName, components[0].getUInt32(), components[1].getUInt32(),
 						(components.getCount() == 3) ? components[2].getUInt32() : 0, buildVersion);
 
 		// Cleanup

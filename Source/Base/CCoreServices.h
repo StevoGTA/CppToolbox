@@ -12,17 +12,17 @@
 class CCoreServices {
 	// Methods
 	public:
-											// Info methods
-		static			UInt32				getTotalProcessorCoresCount();
-		static			UInt64				getPhysicalMemoryByteCount();
+										// Info methods
+		static			UInt32			getTotalProcessorCoresCount();
+		static			UInt64			getPhysicalMemoryByteCount();
 
 #if defined(TARGET_OS_MACOS)
-		static	const	SSystemVersionInfo&	getSystemVersion();
-		static	const	SVersionInfo&		getCoreAudioVersion();
-		static	const	CString&			getProcessorInfo();
-		static			UInt32				getPhysicalMemoryPageSize();
+		static	const	SVersionInfo&	getSystemVersion();
+		static	const	SVersionInfo&	getCoreAudioVersion();
+		static	const	CString&		getProcessorInfo();
+		static			UInt32			getPhysicalMemoryPageSize();
 #endif
 
-											// Debugger methods
-		static			void				stopInDebugger(SInt32 code = 0, OSStringVar(message) = OSSTR(""));
+										// Debugger methods
+		static			void			stopInDebugger(SInt32 code = 0, OSStringVar(message) = OSSTR(""));
 };

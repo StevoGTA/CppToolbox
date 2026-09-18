@@ -405,6 +405,55 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TVResult<TBuffer<Float32> > CMediaEngine::loadFrames(const SMediaSource::Tracks::AudioTrack& audioTrack,
+		Float32 sampleRate, const SAudio::ChannelMap& channelMap) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	I<CAudioSource>						audioSource = getAudioSource(audioTrack, CString(OSSTR("loadFrames")));
+	I<CAudioDestination>				audioDestination(
+												new CAudioDestination(
+														SAudio::ProcessingSetup(32, sampleRate, channelMap,
+																SAudio::ProcessingSetup::kSampleTypeFloat,
+																SAudio::ProcessingSetup::kEndianNative,
+																SAudio::ProcessingSetup::kInterleaved)));
+	TVResult<SAudio::ProcessingFormat>	connectResult =
+												connect((I<CAudioProcessor>&) audioSource,
+														(I<CAudioProcessor>&) audioDestination,
+														composeAudioProcessingFormat(*audioSource, *audioDestination,
+																OV<Float32>(sampleRate)));
+	ReturnValueIfResultError(connectResult, TVResult<TBuffer<Float32> >(connectResult.getError()));
+	audioDestination->setupComplete();
+
+	// Load all frames
+	UInt32			bytesPerFrame = connectResult->getBytesPerFrame();
+	CAudioFrames	audioFrames(bytesPerFrame, audioDestination->queryRequirements().getFrameCount(4096));
+	CData			data;
+	while (true) {
+		// Read next collection of frames
+		audioFrames.reset();
+
+		TVResult<CAudioProcessor::SourceInfo>	sourceInfo = audioDestination->performInto(audioFrames);
+		if (sourceInfo.hasError()) {
+			// Check error
+			if (sourceInfo.getError() != SError::mEndOfData)
+				// Error
+				return TVResult<TBuffer<Float32> >(sourceInfo.getError());
+
+			// Done
+			TBuffer<Float32>	frames(data.getByteCount() / sizeof(Float32));
+			data.copyBytes(*frames);
+
+			return TVResult<TBuffer<Float32> >(frames);
+		}
+
+		// Collect
+		CAudioFrames::Info	readInfo = audioFrames.getReadInfo();
+		data += CData(readInfo.getSegment(0), readInfo.getFrameCount() * bytesPerFrame, false);
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
 

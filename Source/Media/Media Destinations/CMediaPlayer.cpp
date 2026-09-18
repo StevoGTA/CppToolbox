@@ -76,28 +76,6 @@
 */
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - Local Data
-
-enum InteractionState {
-	kInteractionStateNone,
-	kInteractionStateMovingPlayhead,
-	kInteractionStateChangingMediaSegment,
-};
-
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: CMediaPlayerAudioPlayer
-
-class CMediaPlayerAudioPlayer : public CAudioPlayer {
-	public:
-		CMediaPlayerAudioPlayer(const CString& identifier, const Info& info) :
-			CAudioPlayer(identifier, info), mMessageQueue(10 * 1024)
-			{}
-
-		CSRSWMessageQueue	mMessageQueue;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CMediaPlayerVideoFrameStore
 
@@ -115,6 +93,13 @@ class CMediaPlayerVideoFrameStore : public CVideoFrameStore {
 // MARK: - CMediaPlayer::Internals
 
 class CMediaPlayer::Internals {
+	public:
+		enum InteractionState {
+			kInteractionStateNone,
+			kInteractionStateMovingPlayhead,
+			kInteractionStateChangingMediaSegment,
+		};
+
 	public:
 		class AudioPlayerPositionUpdatedMessage : public CSRSWMessageQueue::ProcMessage {
 			public:
@@ -160,6 +145,15 @@ class CMediaPlayer::Internals {
 
 				const	CVideoFrameStore&	mVideoFrameStore;
 						SError				mError;
+		};
+
+		class AudioPlayerMessageQueue : public CSRSWMessageQueue {
+			public:
+				AudioPlayerMessageQueue(CMediaPlayer::Internals& internals) :
+					CSRSWMessageQueue(10 * 1024), mInternals(internals)
+					{}
+
+				CMediaPlayer::Internals&	mInternals;
 		};
 
 						Internals(CMediaPlayer& mediaPlayer, CSRSWMessageQueues& messageQueues,
@@ -223,14 +217,11 @@ class CMediaPlayer::Internals {
 							}
 
 		static	void	audioPlayerPositionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position,
-								void* userData)
-							{
-								// Queue message
-								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
-										AudioPlayerPositionUpdatedMessage(
-												(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerPositionUpdated,
-												userData, audioPlayer, position));
-							}
+								AudioPlayerMessageQueue* audioPlayerMessageQueue)
+							{ audioPlayerMessageQueue->submit(
+									AudioPlayerPositionUpdatedMessage(
+											(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerPositionUpdated,
+											&audioPlayerMessageQueue->mInternals, audioPlayer, position)); }
 		static	void	handleAudioPlayerPositionUpdated(
 								AudioPlayerPositionUpdatedMessage& audioPlayerPositionUpdatedMessage,
 								Internals* internals)
@@ -251,14 +242,12 @@ class CMediaPlayer::Internals {
 								// Call proc
 								internals->mInfo.audioPositionUpdated(audioPlayerPositionUpdatedMessage.mPosition);
 							}
-		static	void	audioPlayerEndOfData(const CAudioPlayer& audioPlayer, void* userData)
-							{
-								// Submit
-								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
-										AudioPlayerEndOfDataMessage(
-												(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerEndOfData,
-												userData, audioPlayer));
-							}
+		static	void	audioPlayerEndOfData(const CAudioPlayer& audioPlayer,
+								AudioPlayerMessageQueue* audioPlayerMessageQueue)
+							{ audioPlayerMessageQueue->submit(
+									AudioPlayerEndOfDataMessage(
+											(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerEndOfData,
+											&audioPlayerMessageQueue->mInternals, audioPlayer)); }
 		static	void	handleAudioPlayerEndOfData(CSRSWMessageQueue::ProcMessage& message, Internals* internals)
 							{
 								// Setup
@@ -293,14 +282,12 @@ class CMediaPlayer::Internals {
 									}
 								}
 							}
-		static	void	audioPlayerError(const CAudioPlayer& audioPlayer, const SError& error, void* userData)
-							{
-								// Submit
-								((CMediaPlayerAudioPlayer&) audioPlayer).mMessageQueue.submit(
-										AudioPlayerErrorMessage(
-												(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerError, userData,
-												audioPlayer, error));
-							}
+		static	void	audioPlayerError(const CAudioPlayer& audioPlayer, const SError& error,
+								AudioPlayerMessageQueue* audioPlayerMessageQueue)
+							{ audioPlayerMessageQueue->submit(
+									AudioPlayerErrorMessage(
+											(CSRSWMessageQueue::ProcMessage::Proc) handleAudioPlayerError,
+											&audioPlayerMessageQueue->mInternals, audioPlayer, error)); }
 		static	void	handleAudioPlayerError(CSRSWMessageQueue::ProcMessage& message, Internals* internals)
 							{
 								// Setup
@@ -341,21 +328,22 @@ class CMediaPlayer::Internals {
 								internals->mInfo.videoError(errorMessage.mError);
 							}
 
-				CMediaPlayer&			mMediaPlayer;
-				CSRSWMessageQueues&		mMessageQueues;
-				CMediaPlayer::Info		mInfo;
+				CMediaPlayer&							mMediaPlayer;
+				CSRSWMessageQueues&						mMessageQueues;
+				CMediaPlayer::Info						mInfo;
+				TNArray<I<AudioPlayerMessageQueue> >	mAudioPlayerMessageQueues;
 
-				UniversalTimeInterval	mCurrentTimeInterval;
-				OV<UInt32>				mCurrentFrameIndex;
-				UInt32					mEndOfDataCount;
-				OV<UInt32>				mLoopCount;
-				UInt32					mCurrentLoopCount;
+				UniversalTimeInterval					mCurrentTimeInterval;
+				OV<UInt32>								mCurrentFrameIndex;
+				UInt32									mEndOfDataCount;
+				OV<UInt32>								mLoopCount;
+				UInt32									mCurrentLoopCount;
 
-				InteractionState		mInteractionState;
-				OV<SMedia::Segment>		mPendingMediaSegment;
-				bool					mInteractionWasPlaying;
+				InteractionState						mInteractionState;
+				OV<SMedia::Segment>						mPendingMediaSegment;
+				bool									mInteractionWasPlaying;
 
-		static	TNArray<R<Internals> >	mActiveInternals;
+		static	TNArray<R<Internals> >					mActiveInternals;
 };
 
 TNArray<R<CMediaPlayer::Internals> >	CMediaPlayer::Internals::mActiveInternals;
@@ -367,16 +355,18 @@ TNArray<R<CMediaPlayer::Internals> >	CMediaPlayer::Internals::mActiveInternals;
 // MARK: CAudioDestination::Setup methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CAudioDestination> CMediaPlayer::AudioSetup::create(const CString& identifier, UInt32 trackIndex) const
+TVResult<I<CAudioDestination> > CMediaPlayer::AudioSetup::create(const CString& identifier, UInt32 trackIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create audio player
-	I<CAudioPlayer>	audioPlayer =
-							mMediaPlayer.newAudioPlayer(
-									identifier + CString(OSSTR(", Audio Track ")) + CString(trackIndex + 1),
+	TVResult<I<CAudioPlayer> >	audioPlayer =
+									mMediaPlayer.newAudioPlayer(
+											identifier + CString(OSSTR(", Audio Track ")) + CString(trackIndex + 1),
 											trackIndex);
 
-	return *((I<CAudioDestination>*) &audioPlayer);
+	return audioPlayer.hasValue() ?
+			TVResult<I<CAudioDestination> >(*((I<CAudioDestination>*) &*audioPlayer)) :
+			TVResult<I<CAudioDestination> >(audioPlayer.getError());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -424,11 +414,9 @@ CMediaPlayer::~CMediaPlayer()
 	Internals::mActiveInternals -= R<Internals>(*mInternals);
 
 	// Cleanup
-	for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
+	for (UInt32 i = 0; i < mInternals->mAudioPlayerMessageQueues.getCount(); i++)
 		// Remove message queue
-		CMediaPlayerAudioPlayer&	audioPlayer = (CMediaPlayerAudioPlayer&) *getAudioDestination(i);
-		mInternals->mMessageQueues.remove(audioPlayer.mMessageQueue);
-	}
+		mInternals->mMessageQueues.remove(*mInternals->mAudioPlayerMessageQueues[i]);
 	removeAllAudioDestinations();
 
 	for (UInt32 i = 0; i < getVideoTrackCount(); i++) {
@@ -443,17 +431,6 @@ CMediaPlayer::~CMediaPlayer()
 }
 
 // MARK: CMediaDestination methods
-
-//----------------------------------------------------------------------------------------------------------------------
-void CMediaPlayer::add(const I<CAudioDestination>& audioDestination, UInt32 trackIndex)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Do super
-	TMediaDestination<CAudioPlayer, CVideoFrameStore>::add(audioDestination, trackIndex);
-
-	// Add message queue
-	mInternals->mMessageQueues.add(((const I<CMediaPlayerAudioPlayer>&) audioDestination)->mMessageQueue);
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CMediaPlayer::add(const I<CVideoDestination>& videoDestination, UInt32 trackIndex)
@@ -471,7 +448,7 @@ void CMediaPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if current interaction is changing the media segment (a bracketed drag)
-	if (mInternals->mInteractionState != kInteractionStateChangingMediaSegment) {
+	if (mInternals->mInteractionState != Internals::kInteractionStateChangingMediaSegment) {
 		// Apply change immediately - check situation
 		OV<SMedia::Segment>	mediaSegmentUse =
 									(mediaSegment.hasValue() && (mediaSegment->getDurationTimeInterval() > 0.0)) ?
@@ -548,13 +525,25 @@ void CMediaPlayer::seek(UniversalTimeInterval timeInterval)
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-I<CAudioPlayer> CMediaPlayer::newAudioPlayer(const CString& identifier, UInt32 trackIndex)
+TVResult<I<CAudioPlayer> > CMediaPlayer::newAudioPlayer(const CString& identifier, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return I<CAudioPlayer>(
-			new CMediaPlayerAudioPlayer(identifier,
-					CAudioPlayer::Info(Internals::audioPlayerPositionUpdated, Internals::audioPlayerEndOfData,
-							Internals::audioPlayerError, mInternals)));
+	// Setup
+	I<Internals::AudioPlayerMessageQueue>	audioPlayerMessageQueue(
+													new Internals::AudioPlayerMessageQueue(*mInternals));
+
+	// Create audio player
+	CAudioPlayer::Info	info((CAudioPlayer::Info::PositionUpdatedProc) Internals::audioPlayerPositionUpdated,
+								(CAudioPlayer::Info::EndOfDataProc) Internals::audioPlayerEndOfData,
+								(CAudioPlayer::Info::ErrorProc) Internals::audioPlayerError, &*audioPlayerMessageQueue);
+	TVResult<I<CAudioPlayer> >	audioPlayer = CAudioPlayer::create(identifier, info);
+	if (audioPlayer.hasValue()) {
+		// Keep message queue
+		mInternals->mAudioPlayerMessageQueues += audioPlayerMessageQueue;
+		mInternals->mMessageQueues.add(*audioPlayerMessageQueue);
+	}
+
+	return audioPlayer;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -658,7 +647,7 @@ void CMediaPlayer::startSeek()
 	// Commit any in-progress media-segment interaction, then begin a playhead interaction (suspend + preview)
 	mediaSegmentDidChange();
 
-	mInternals->mInteractionState = kInteractionStateMovingPlayhead;
+	mInternals->mInteractionState = Internals::kInteractionStateMovingPlayhead;
 	mInternals->beginInteraction();
 }
 
@@ -669,7 +658,7 @@ void CMediaPlayer::finishSeek()
 	// End the playhead interaction: resume seamlessly from the audition (no re-seek), or park at the target
 	mInternals->endInteraction(false);
 
-	mInternals->mInteractionState = kInteractionStateNone;
+	mInternals->mInteractionState = Internals::kInteractionStateNone;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -677,12 +666,12 @@ void CMediaPlayer::mediaSegmentWillChange()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Idempotent - begin at most once per interaction
-	if (mInternals->mInteractionState == kInteractionStateChangingMediaSegment)
+	if (mInternals->mInteractionState == Internals::kInteractionStateChangingMediaSegment)
 		return;
 
 	// Enter an interactive media-segment change: seed the in-progress segment from the committed one and put the
 	//	players into seek/preview mode (which remembers whether playback was active, to be restored on commit)
-	mInternals->mInteractionState = kInteractionStateChangingMediaSegment;
+	mInternals->mInteractionState = Internals::kInteractionStateChangingMediaSegment;
 	mInternals->mPendingMediaSegment = getMediaSegment();
 	mInternals->beginInteraction();
 }
@@ -692,9 +681,9 @@ void CMediaPlayer::mediaSegmentDidChange()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Idempotent - only commit an in-progress interaction
-	if (mInternals->mInteractionState != kInteractionStateChangingMediaSegment)
+	if (mInternals->mInteractionState != Internals::kInteractionStateChangingMediaSegment)
 		return;
-	mInternals->mInteractionState = kInteractionStateNone;
+	mInternals->mInteractionState = Internals::kInteractionStateNone;
 
 	// Commit the in-progress segment (store + propagate to the source), replacing the transient preview window.
 	//	Normalize here - a zero-duration click point commits as no segment (the whole source), so a click seeks without

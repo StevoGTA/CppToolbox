@@ -114,13 +114,27 @@ template <typename T> struct TOVResult {
 #define LogIfResultError(result, when)																\
 			{																						\
 				if (result.hasError())																\
-					CLogServices::logError(result.getError(), when, __FILE__, __func__, __LINE__);	\
+					CLogServices::logError(result.getError(), when,									\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+			}
+
+#define	LogIfResultErrorAndContinue(result, when)													\
+			{																						\
+				if (result.hasError()) {															\
+					CLogServices::logError(result.getError(), when,									\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					continue;																		\
+				}																					\
 			}
 
 #define	LogIfResultErrorAndReturn(result, when)														\
 			{																						\
 				if (result.hasError()) {															\
-					CLogServices::logError(result.getError(), when, __FILE__, __func__, __LINE__);	\
+					CLogServices::logError(result.getError(), when,									\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
 					return;																			\
 				}																					\
 			}
@@ -128,15 +142,19 @@ template <typename T> struct TOVResult {
 #define LogIfResultErrorAndReturnError(result, when)												\
 			{																						\
 				if (result.hasError()) {															\
-					CLogServices::logError(result.getError(), when, __FILE__, __func__, __LINE__);	\
-					return error;																	\
+					CLogServices::logError(result.getError(), when,									\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
+					return OV<SError>(result.getError());											\
 				}																					\
 			}
 
 #define	LogIfResultErrorAndReturnValue(result, when, value)											\
 			{																						\
 				if (result.hasError()) {															\
-					CLogServices::logError(result.getError(), when, __FILE__, __func__, __LINE__);	\
+					CLogServices::logError(result.getError(), when,									\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),			\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);	\
 					return value;																	\
 				}																					\
 			}

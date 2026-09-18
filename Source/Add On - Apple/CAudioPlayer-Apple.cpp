@@ -24,7 +24,7 @@ class CAudioEngine {
 														mMaxOutputFrames(0), mMaxAudioPlayers(8)
 												{}
 
-				AudioStreamBasicDescription	getInputFormat();
+				SAudio::ProcessingSetup		getAudioProcessingSetup();
 
 				UInt32						getMaxOutputFrames();
 
@@ -52,7 +52,7 @@ CAudioEngine	CAudioEngine::mShared;
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-AudioStreamBasicDescription CAudioEngine::getInputFormat()
+SAudio::ProcessingSetup CAudioEngine::getAudioProcessingSetup()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
@@ -140,7 +140,15 @@ AudioStreamBasicDescription CAudioEngine::getInputFormat()
 		LogOSStatusIfFailed(status, CString(OSSTR("AudioUnitSetProperty(MixerAudioUnit, StreamFormat)")));
 	}
 
-	return mASBD;
+	return SAudio::ProcessingSetup(mASBD.mBitsPerChannel, mASBD.mSampleRate,
+			SAudio::ChannelMap((UInt8) mASBD.mChannelsPerFrame),
+			((mASBD.mFormatFlags & kAudioFormatFlagIsFloat) != 0) ?
+					SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeFloat :
+					SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeSignedInteger,
+			SAudio::ProcessingSetup::EndianOption::kEndianNative,
+			(mASBD.mFormatFlags & kAudioFormatFlagIsNonInterleaved) ?
+					SAudio::ProcessingSetup::InterleavedOption::kNonInterleaved :
+					SAudio::ProcessingSetup::InterleavedOption::kInterleaved);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -454,7 +462,8 @@ class CAudioPlayer::Internals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayer::CAudioPlayer(const CString& identifier, const Info& info) : CAudioDestination()
+CAudioPlayer::CAudioPlayer(const CString& identifier, const Info& info) :
+		CAudioDestination(CAudioEngine::mShared.getAudioProcessingSetup())
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals = new Internals(*this, identifier, info);
@@ -640,30 +649,6 @@ void CAudioPlayer::stop()
 	mInternals->mAudioPlayerBufferThread->resume();
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-TArray<SAudio::ProcessingSetup> CAudioPlayer::getInputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup if necessary
-	static	SAudio::ProcessingSetup*	sAudioProcessingSetup = nil;
-	if (sAudioProcessingSetup == nil) {
-		// Compose SAudio::ProcessingSetup
-		AudioStreamBasicDescription	asbd = CAudioEngine::mShared.getInputFormat();
-		sAudioProcessingSetup =
-				new SAudio::ProcessingSetup(asbd.mBitsPerChannel, asbd.mSampleRate,
-						SAudio::ChannelMap((UInt8) asbd.mChannelsPerFrame),
-						((asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0) ?
-								SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeFloat :
-								SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeSignedInteger,
-						SAudio::ProcessingSetup::EndianOption::kEndianNative,
-						(asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) ?
-								SAudio::ProcessingSetup::InterleavedOption::kNonInterleaved :
-								SAudio::ProcessingSetup::InterleavedOption::kInterleaved);
-	}
-
-	return TNArray<SAudio::ProcessingSetup>(*sAudioProcessingSetup);
-}
-
 // MARK: CAudioDestination methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -804,6 +789,13 @@ void CAudioPlayer::finishSeek()
 }
 
 // MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<I<CAudioPlayer> > CAudioPlayer::create(const CString& identifier, const Info& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return TVResult<I<CAudioPlayer> >(I<CAudioPlayer>(new CAudioPlayer(identifier, info)));
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::setMaxAudioPlayers(UInt32 maxAudioPlayers)

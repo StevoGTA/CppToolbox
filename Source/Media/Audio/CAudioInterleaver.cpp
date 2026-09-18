@@ -9,22 +9,22 @@
 
 class CAudioInterleaver::Internals {
 	public:
-		typedef	void	(*PerformProc)(const TNumberArray<void*> readAudioFramesSegments,
-								const TNumberArray<void*> writeAudioFramesSegments, UInt32 frameCount);
+		typedef	void	(*PerformProc)(const CAudioFrames::Info& readInfo,
+								const CAudioFrames::Info& writeInfo, UInt32 frameCount);
 
 						Internals() : mPerformProc(nil) {}
 
-		static	void	perform8BytesPerFrame(const TNumberArray<void*> readAudioFramesSegments,
-								const TNumberArray<void*> writeAudioFramesSegments, UInt32 frameCount)
+		static	void	perform8BytesPerFrame(const CAudioFrames::Info& readInfo, const CAudioFrames::Info& writeInfo,
+								UInt32 frameCount)
 							{
 								// Setup
-								CArray::ItemCount	segmentCount = readAudioFramesSegments.getCount();
+								UInt32	segmentCount = readInfo.getSegmentCount();
 
 								// Iterate read audio frames segments
-								for (CArray::ItemIndex i = 0; i < segmentCount; i++) {
+								for (UInt32 i = 0; i < segmentCount; i++) {
 									// Setup
-									const	UInt64*	sourcePtr = (const UInt64*) readAudioFramesSegments[i];
-											UInt64*	destinationPtr = ((UInt64*) writeAudioFramesSegments[0]) + i;
+									const	UInt64*	sourcePtr = (const UInt64*) readInfo.getSegment(i);
+											UInt64*	destinationPtr = ((UInt64*) writeInfo.getSegment(0)) + i;
 
 									// Iterate frames
 									for (UInt32 j = 0; j < frameCount; j++, sourcePtr++, destinationPtr += segmentCount)
@@ -32,17 +32,17 @@ class CAudioInterleaver::Internals {
 										*destinationPtr = *sourcePtr;
 								}
 							}
-		static	void	perform4BytesPerFrame(const TNumberArray<void*> readAudioFramesSegments,
-								const TNumberArray<void*> writeAudioFramesSegments, UInt32 frameCount)
+		static	void	perform4BytesPerFrame(const CAudioFrames::Info& readInfo, const CAudioFrames::Info& writeInfo,
+								UInt32 frameCount)
 							{
 								// Setup
-								CArray::ItemCount	segmentCount = readAudioFramesSegments.getCount();
+								UInt32	segmentCount = readInfo.getSegmentCount();
 
 								// Iterate read audio frames segments
-								for (CArray::ItemIndex i = 0; i < segmentCount; i++) {
+								for (UInt32 i = 0; i < segmentCount; i++) {
 									// Setup
-									const	UInt32*	sourcePtr = (const UInt32*) readAudioFramesSegments[i];
-											UInt32*	destinationPtr = ((UInt32*) writeAudioFramesSegments[0]) + i;
+									const	UInt32*	sourcePtr = (const UInt32*) readInfo.getSegment(i);
+											UInt32*	destinationPtr = ((UInt32*) writeInfo.getSegment(0)) + i;
 
 									// Iterate frames
 									for (UInt32 j = 0; j < frameCount; j++, sourcePtr++, destinationPtr += segmentCount)
@@ -50,17 +50,17 @@ class CAudioInterleaver::Internals {
 										*destinationPtr = *sourcePtr;
 								}
 							}
-		static	void	perform3BytesPerFrame(const TNumberArray<void*> readAudioFramesSegments,
-								const TNumberArray<void*> writeAudioFramesSegments, UInt32 frameCount)
+		static	void	perform3BytesPerFrame(const CAudioFrames::Info& readInfo, const CAudioFrames::Info& writeInfo,
+								UInt32 frameCount)
 							{
 								// Setup
-								CArray::ItemCount	segmentCount = readAudioFramesSegments.getCount();
+								UInt32	segmentCount = readInfo.getSegmentCount();
 
 								// Iterate read audio frames segments
-								for (CArray::ItemIndex i = 0; i < segmentCount; i++) {
+								for (UInt32 i = 0; i < segmentCount; i++) {
 									// Setup
-									const	UInt8*	sourcePtr = (const UInt8*) readAudioFramesSegments[i];
-											UInt8*	destinationPtr = ((UInt8*) writeAudioFramesSegments[0]) + i * 3;
+									const	UInt8*	sourcePtr = (const UInt8*) readInfo.getSegment(i);
+											UInt8*	destinationPtr = ((UInt8*) writeInfo.getSegment(0)) + i * 3;
 
 									// Iterate frames
 									for (UInt32 j = 0; j < frameCount; j++, destinationPtr += (segmentCount - 1) * 3) {
@@ -71,17 +71,17 @@ class CAudioInterleaver::Internals {
 									}
 								}
 							}
-		static	void	perform2BytesPerFrame(const TNumberArray<void*> readAudioFramesSegments,
-								const TNumberArray<void*> writeAudioFramesSegments, UInt32 frameCount)
+		static	void	perform2BytesPerFrame(const CAudioFrames::Info& readInfo, const CAudioFrames::Info& writeInfo,
+								UInt32 frameCount)
 							{
 								// Setup
-								CArray::ItemCount	segmentCount = readAudioFramesSegments.getCount();
+								UInt32	segmentCount = readInfo.getSegmentCount();
 
 								// Iterate read audio frames segments
-								for (CArray::ItemIndex i = 0; i < segmentCount; i++) {
+								for (UInt32 i = 0; i < segmentCount; i++) {
 									// Setup
-									const	UInt16*	sourcePtr = (const UInt16*) readAudioFramesSegments[i];
-											UInt16*	destinationPtr = ((UInt16*) writeAudioFramesSegments[0]) + i;
+									const	UInt16*	sourcePtr = (const UInt16*) readInfo.getSegment(i);
+											UInt16*	destinationPtr = ((UInt16*) writeInfo.getSegment(0)) + i;
 
 									// Iterate frames
 									for (UInt32 j = 0; j < frameCount; j++, sourcePtr++, destinationPtr += segmentCount)
@@ -89,17 +89,17 @@ class CAudioInterleaver::Internals {
 										*destinationPtr = *sourcePtr;
 								}
 							}
-		static	void	perform1BytePerFrame(const TNumberArray<void*> readAudioFramesSegments,
-								const TNumberArray<void*> writeAudioFramesSegments, UInt32 frameCount)
+		static	void	perform1BytePerFrame(const CAudioFrames::Info& readInfo, const CAudioFrames::Info& writeInfo,
+								UInt32 frameCount)
 							{
 								// Setup
-								CArray::ItemCount	segmentCount = readAudioFramesSegments.getCount();
+								UInt32	segmentCount = readInfo.getSegmentCount();
 
 								// Iterate read audio frames segments
-								for (CArray::ItemIndex i = 0; i < segmentCount; i++) {
+								for (UInt32 i = 0; i < segmentCount; i++) {
 									// Setup
-									const	UInt8*	sourcePtr = (const UInt8*) readAudioFramesSegments[i];
-											UInt8*	destinationPtr = ((UInt8*) writeAudioFramesSegments[0]) + i;
+									const	UInt8*	sourcePtr = (const UInt8*) readInfo.getSegment(i);
+											UInt8*	destinationPtr = ((UInt8*) writeInfo.getSegment(0)) + i;
 
 									// Iterate frames
 									for (UInt32 j = 0; j < frameCount; j++, sourcePtr++, destinationPtr += segmentCount)
@@ -193,7 +193,7 @@ TVResult<CAudioProcessor::SourceInfo> CAudioInterleaver::performInto(CAudioFrame
 	// Perform
 	CAudioFrames::Info	readAudioFramesInfo = mInternals->mInputAudioFrames->getReadInfo();
 	CAudioFrames::Info	writeAudioFramesInfo = audioFrames.getWriteInfo();
-	mInternals->mPerformProc(readAudioFramesInfo.getSegments(), writeAudioFramesInfo.getSegments(),
+	mInternals->mPerformProc(readAudioFramesInfo, writeAudioFramesInfo,
 			mInternals->mInputAudioFrames->getCurrentFrameCount());
 	audioFrames.completeWrite(mInternals->mInputAudioFrames->getCurrentFrameCount());
 

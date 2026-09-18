@@ -19,17 +19,14 @@ class CAudioChannelMapper::Internals {
 								UInt32 destinationBytesPerFrame)
 							{
 								// Setup
-										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
-								const	TNumberArray<void*>	readInfoSegments = readInfo.getSegments();
-
-										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
-								const	TNumberArray<void*>	writeInfoSegments = writeInfo.getSegments();
+								CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
+								CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
 
 								// Check interleaved
-								if (readInfoSegments.getCount() == 1) {
+								if (readInfo.getSegmentCount() == 1) {
 									// Interleaved
-									const	UInt8*	sourcePtr = (const UInt8*) readInfoSegments[0];
-											UInt8*	destinationPtr = (UInt8*) writeInfoSegments[0];
+									const	UInt8*	sourcePtr = (const UInt8*) readInfo.getSegment(0);
+											UInt8*	destinationPtr = (UInt8*) writeInfo.getSegment(0);
 									for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
 										// Copy frame
 										::memcpy(destinationPtr, sourcePtr, destinationBytesPerFrame);
@@ -38,9 +35,10 @@ class CAudioChannelMapper::Internals {
 									}
 								} else {
 									// Non-interleaved
-									for (UInt32 i = 0; i < writeInfoSegments.getCount(); i++)
+									for (UInt32 i = 0; i < writeInfo.getSegmentCount(); i++)
 										// Copy
-										::memcpy(writeInfoSegments[i], readInfoSegments[i], readInfo.getByteCount());
+										::memcpy(writeInfo.getSegment(i), readInfo.getSegment(i),
+												readInfo.getSegmentByteCount());
 								}
 
 								// Complete
@@ -56,20 +54,19 @@ class CAudioChannelMapper::Internals {
 								UInt32 sourceBytesPerSample, UInt32 destinationBytesPerSample)
 							{
 								// Setup
-										CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
-								const	TNumberArray<void*>	readInfoSegments = readInfo.getSegments();
-
-										CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
-								const	TNumberArray<void*>	writeInfoSegments = writeInfo.getSegments();
+								CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
+								CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
 
 								// Check interleaved
-								if (readInfoSegments.getCount() == 1) {
+								if (readInfo.getSegmentCount() == 1) {
 									// Interleaved
 									switch (sourceBytesPerSample) {
 										case 8: {
 											// 8 bytes per sample
-											const	UInt64*	sourcePtr = (const UInt64*) readInfoSegments[0];
-													UInt64*	destinationPtr = (UInt64*) writeInfoSegments[0];
+											const	UInt64*	sourcePtr = (const UInt64*) readInfo.getSegment(0);
+													UInt64*	destinationPtr = (UInt64*) writeInfo.getSegment(0);
+
+											// Perform
 											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
 												// Copy sample
 												(*destinationPtr++) = *sourcePtr;
@@ -79,8 +76,10 @@ class CAudioChannelMapper::Internals {
 
 										case 4: {
 											// 4 bytes per sample
-											const	UInt32*	sourcePtr = (const UInt32*) readInfoSegments[0];
-													UInt32*	destinationPtr = (UInt32*) writeInfoSegments[0];
+											const	UInt32*	sourcePtr = (const UInt32*) readInfo.getSegment(0);
+													UInt32*	destinationPtr = (UInt32*) writeInfo.getSegment(0);
+
+											// Perform
 											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
 												// Copy sample
 												(*destinationPtr++) = *sourcePtr;
@@ -90,8 +89,10 @@ class CAudioChannelMapper::Internals {
 
 										case 3: {
 											// 3 bytes per sample
-											const	UInt8*	sourcePtr = (const UInt8*) readInfoSegments[0];
-													UInt8*	destinationPtr = (UInt8*) writeInfoSegments[0];
+											const	UInt8*	sourcePtr = (const UInt8*) readInfo.getSegment(0);
+													UInt8*	destinationPtr = (UInt8*) writeInfo.getSegment(0);
+
+											// Perform
 											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
 												// Copy sample
 												(*destinationPtr++) = *sourcePtr;
@@ -105,8 +106,8 @@ class CAudioChannelMapper::Internals {
 
 										case 2: {
 											// 2 bytes per sample
-											const	UInt16*	sourcePtr = (const UInt16*) readInfoSegments[0];
-													UInt16*	destinationPtr = (UInt16*) writeInfoSegments[0];
+											const	UInt16*	sourcePtr = (const UInt16*) readInfo.getSegment(0);
+													UInt16*	destinationPtr = (UInt16*) writeInfo.getSegment(0);
 
 											// Perform
 											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
@@ -118,8 +119,10 @@ class CAudioChannelMapper::Internals {
 
 										case 1: {
 											// 1 byte per sample
-											const	UInt8*	sourcePtr = (const UInt8*) readInfoSegments[0];
-													UInt8*	destinationPtr = (UInt8*) writeInfoSegments[0];
+											const	UInt8*	sourcePtr = (const UInt8*) readInfo.getSegment(0);
+													UInt8*	destinationPtr = (UInt8*) writeInfo.getSegment(0);
+
+											// Perform
 											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
 												// Copy sample
 												(*destinationPtr++) = *sourcePtr;

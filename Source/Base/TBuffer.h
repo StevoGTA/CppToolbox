@@ -71,7 +71,7 @@ template <typename T> struct TBuffer {
 						{ return mByteCount / sizeof(T); }
 		UInt64		getByteCount() const
 						{ return mByteCount; }
-		void		clear() const
+		void		clear()
 						{ ::memset(mStorage, 0, mByteCount); }
 
 		T*			operator*() const

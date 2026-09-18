@@ -213,3 +213,55 @@ TVResult<UInt32> CAudioSource::calculateMaxFrames(Float32 sampleRate) const
 		// No segment - no limit
 		return TVResult<UInt32>((UInt32) ~0);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioDestination::Internals
+
+class CAudioDestination::Internals {
+	public:
+		Internals(const TArray<SAudio::ProcessingSetup>& audioProcessingSetups) :\
+			mAudioProcessingSetups(audioProcessingSetups)
+			{}
+		Internals(const SAudio::ProcessingSetup& audioProcessingSetup) :
+			mAudioProcessingSetups(audioProcessingSetup)
+			{}
+
+		TNArray<SAudio::ProcessingSetup>	mAudioProcessingSetups;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioDestination
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioDestination::CAudioDestination(const TArray<SAudio::ProcessingSetup>& audioProcessingSetups) : CAudioProcessor()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(audioProcessingSetups);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioDestination::CAudioDestination(const SAudio::ProcessingSetup& audioProcessingSetup) : CAudioProcessor()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(audioProcessingSetup);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioDestination::~CAudioDestination()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	Delete(mInternals);
+}
+
+// MARK: CAudioProcessor methods
+
+//----------------------------------------------------------------------------------------------------------------------
+TArray<SAudio::ProcessingSetup> CAudioDestination::getInputSetups() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mAudioProcessingSetups;
+}

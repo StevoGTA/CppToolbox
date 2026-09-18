@@ -31,13 +31,227 @@ using namespace Microsoft::WRL;
 #pragma comment(lib, "mfuuid.lib")
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioPlayerImplementation
+// MARK: CAudioPlayerAudioClient
 
-class CAudioPlayerImplementation :
+class CAudioPlayerAudioClient {
+	public:
+										// Lifecycle methods
+										CAudioPlayerAudioClient(IAudioClient3* audioClient,
+												IAudioRenderClient* audioRenderClient,
+												ISimpleAudioVolume* simpleAudioVolume, WAVEFORMATEX* mixFormat,
+												UINT32 bufferFrames, UINT32 maxPeriodInFrames) :
+											mAudioClient(audioClient), mAudioRenderClient(audioRenderClient),
+													mSimpleAudioVolume(simpleAudioVolume), mMixFormat(mixFormat),
+													mBufferFrames(bufferFrames),
+													mMaxPeriodInFrames(maxPeriodInFrames)
+											{}
+										CAudioPlayerAudioClient(const CAudioPlayerAudioClient& other) :
+											mAudioClient(other.mAudioClient),
+													mAudioRenderClient(other.mAudioRenderClient),
+													mSimpleAudioVolume(other.mSimpleAudioVolume),
+													mMixFormat(other.mMixFormat),
+													mBufferFrames(other.mBufferFrames),
+													mMaxPeriodInFrames(other.mMaxPeriodInFrames)
+											{}
+
+										// Instance methods
+			SAudio::ProcessingSetup		getAudioProcessingSetup() const
+											{ return SAudio::ProcessingSetup((UInt8) mMixFormat->wBitsPerSample,
+													(Float32) mMixFormat->nSamplesPerSec,
+													SAudio::ChannelMap((UInt8) mMixFormat->nChannels),
+													SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeFloat,
+													SAudio::ProcessingSetup::EndianOption::kEndianNative,
+													SAudio::ProcessingSetup::InterleavedOption::kInterleaved); }
+
+		IAudioClient3*		mAudioClient;
+		IAudioRenderClient*	mAudioRenderClient;
+		ISimpleAudioVolume*	mSimpleAudioVolume;
+		WAVEFORMATEX*		mMixFormat;
+		UINT32				mBufferFrames;
+		UINT32				mMaxPeriodInFrames;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioPlayerAudioClientActivation
+
+class CAudioPlayerAudioClientActivation :
 		public RuntimeClass<RuntimeClassFlags<ClassicCom>, FtmBase, IActivateAudioInterfaceCompletionHandler> {
 	public:
+													// Lifecycle methods
+													CAudioPlayerAudioClientActivation() :
+														mAudioClient(nullptr), mAudioRenderClient(nullptr),
+																mSimpleAudioVolume(nullptr), mMixFormat(nullptr),
+																mBufferFrames(0), mMaxPeriodInFrames(0),
+																mIsComplete(false)
+														{}
+
+													// IActivateAudioInterfaceCompletionHandler methods
+				HRESULT								ActivateCompleted(
+															IActivateAudioInterfaceAsyncOperation*
+																	activateAudioInterfaceAsyncOperation);
+
+													// Instance methods
+				void								processHRESULT(HRESULT result, OSStringType method);
+
+													// Class methods
+		static	TVResult<CAudioPlayerAudioClient>	activate();
+
+		IAudioClient3*		mAudioClient;
+		IAudioRenderClient*	mAudioRenderClient;
+		ISimpleAudioVolume*	mSimpleAudioVolume;
+		WAVEFORMATEX*		mMixFormat;
+		UINT32				mBufferFrames;
+		UINT32				mMaxPeriodInFrames;
+		OV<SError>			mError;
+		bool				mIsComplete;
+};
+
+// MARK: IActivateAudioInterfaceCompletionHandler methods
+
+//----------------------------------------------------------------------------------------------------------------------
+HRESULT CAudioPlayerAudioClientActivation::ActivateCompleted(
+		IActivateAudioInterfaceAsyncOperation* activateAudioInterfaceAsyncOperation)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	HRESULT	result;
+
+	// Check activation result
+	HRESULT		activationResult;
+	IUnknown*	audioInterface;
+	result = activateAudioInterfaceAsyncOperation->GetActivateResult(&activationResult, &audioInterface);
+	if (FAILED(result))
+		// Query failed
+		processHRESULT(result, OSSTR("GetActivateResult()"));
+	else if (FAILED(activationResult))
+		// Activation failed
+		processHRESULT(activationResult, OSSTR("checking status in ActivateCompleted()"));
+	else {
+		// Get the Audio Client
+		audioInterface->QueryInterface(IID_PPV_ARGS(&mAudioClient));
+
+		// Configure
+		AudioClientProperties	audioClientProperties = {0};
+		audioClientProperties.cbSize = sizeof(AudioClientProperties);
+		audioClientProperties.eCategory = AudioCategory_Media;
+		result = mAudioClient->SetClientProperties(&audioClientProperties);
+		processHRESULT(result, OSSTR("SetClientProperties()"));
+
+		if (!mError.hasValue()) {
+			// Get Mix Format
+			result = mAudioClient->GetMixFormat(&mMixFormat);
+			processHRESULT(result, OSSTR("GetMixFormat()"));
+		}
+
+		if (!mError.hasValue()) {
+			// Get periods
+			UINT32	defaultPeriodInFrames, fundamentalPeriodInFrames, minPeriodInFrames;
+			result =
+					mAudioClient->GetSharedModeEnginePeriod(mMixFormat, &defaultPeriodInFrames,
+							&fundamentalPeriodInFrames, &minPeriodInFrames, &mMaxPeriodInFrames);
+			processHRESULT(result, OSSTR("GetSharedModeEnginePeriod()"));
+		}
+
+		if (!mError.hasValue()) {
+			// Initialize
+			result =
+					mAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
+							AUDCLNT_STREAMFLAGS_EVENTCALLBACK | AUDCLNT_STREAMFLAGS_NOPERSIST, 0, 0, mMixFormat,
+							nullptr);
+			processHRESULT(result, OSSTR("Initialize()"));
+		}
+
+		if (!mError.hasValue()) {
+			// Get the buffer size
+			result = mAudioClient->GetBufferSize(&mBufferFrames);
+			processHRESULT(result, OSSTR("GetBufferSize()"));
+		}
+
+		if (!mError.hasValue()) {
+			// Get the Render Client
+			result = mAudioClient->GetService(__uuidof(IAudioRenderClient), (void**) &mAudioRenderClient);
+			processHRESULT(result, OSSTR("GetService() for IAudioRenderClient"));
+		}
+
+		if (!mError.hasValue()) {
+			// Get Simple Audio Volume
+			result = mAudioClient->GetService(__uuidof(ISimpleAudioVolume), (void**) &mSimpleAudioVolume);
+			processHRESULT(result, OSSTR("GetService() for ISimpleAudioVolume"));
+		}
+	}
+
+	// Done
+	mIsComplete = true;
+
+	return S_OK;
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioPlayerAudioClientActivation::processHRESULT(HRESULT result, OSStringType method)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check result
+	if (FAILED(result)) {
+		// Error
+		mError = OV<SError>(SErrorFromHRESULT(result));
+		CLogServices::logError(CString(method) + CString(OSSTR(" returned ")) + mError->getInternalDescription());
+	}
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CAudioPlayerAudioClient> CAudioPlayerAudioClientActivation::activate()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	ComPtr<CAudioPlayerAudioClientActivation>	activation = Make<CAudioPlayerAudioClientActivation>();
+
+	// Get Audio Render ID
+	auto	audioRenderID = MediaDevice::GetDefaultAudioRenderId(AudioDeviceRole::Default);
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	auto	audioRenderIDString = audioRenderID->Data();
+#else
+	// C++/WinRT
+	auto	audioRenderIDString = audioRenderID.data();
+#endif
+
+	// Activate Audio Interface
+	IActivateAudioInterfaceAsyncOperation*	activateAudioInterfaceAsyncOperation;
+	HRESULT									result =
+													ActivateAudioInterfaceAsync(audioRenderIDString,
+															__uuidof(IAudioClient3), nullptr, activation.Get(),
+															&activateAudioInterfaceAsyncOperation);
+	activation->processHRESULT(result, OSSTR("ActivateAudioInterfaceAsync()"));
+	if (activation->mError.hasValue())
+		// Error
+		return TVResult<CAudioPlayerAudioClient>(*activation->mError);
+	activateAudioInterfaceAsyncOperation->Release();
+
+	// Wait until complete
+	while (!activation->mIsComplete)
+		// Sleep
+		CThread::sleepFor(0.001);
+
+	return !activation->mError.hasValue() ?
+			TVResult<CAudioPlayerAudioClient>(
+					CAudioPlayerAudioClient(activation->mAudioClient, activation->mAudioRenderClient,
+							activation->mSimpleAudioVolume, activation->mMixFormat, activation->mBufferFrames,
+							activation->mMaxPeriodInFrames)) :
+			TVResult<CAudioPlayerAudioClient>(*activation->mError);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioPlayerImplementation
+
+class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<ClassicCom>, FtmBase> {
+	public:
 		enum State {
-			kInitializing,
 			kInitialized,
 			kPlaybackStarting,
 			kPlaying,
@@ -47,16 +261,19 @@ class CAudioPlayerImplementation :
 		};
 
 						CAudioPlayerImplementation(CAudioPlayer& audioPlayer, const CString& identifier,
-								const CAudioPlayer::Info& info) :
+								const CAudioPlayer::Info& info, const CAudioPlayerAudioClient& audioClient) :
 							mAudioPlayer(audioPlayer), mIdentifier(identifier), mInfo(info),
-									mFinishSeekShouldPause(false), mAudioClient(nullptr), mAudioRenderClient(nullptr),
-									mFillBufferAsyncResult(nullptr), mSimpleAudioVolume(nullptr), mFillBufferKey(0),
-									mState(kInitializing), mFillBufferAsyncCallback(*this, onFillBuffer),
+									mFinishSeekShouldPause(false),
+									mFillBufferEvent(CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS)),
+									mAudioClient(audioClient.mAudioClient),
+									mAudioRenderClient(audioClient.mAudioRenderClient), mFillBufferAsyncResult(nullptr),
+									mSimpleAudioVolume(audioClient.mSimpleAudioVolume), mFillBufferKey(0),
+									mState(kInitialized), mFillBufferAsyncCallback(*this, onFillBuffer),
 									mPlayAsyncCallback(*this, onPlay), mResetAsyncCallback(*this, onReset),
-									mBufferFrames(0), mDefaultPeriodInFrames(0), mFundamentalPeriodInFrames(0),
-									mMaxPeriodInFrames(0), mMinPeriodInFrames(0),  mMixFormat(nullptr),
-									mIsPlaying(false), mIsSeeking(false), mLastSeekTimeInterval(0.0),
-									mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
+									mBufferFrames(audioClient.mBufferFrames),
+									mMaxPeriodInFrames(audioClient.mMaxPeriodInFrames),
+									mMixFormat(audioClient.mMixFormat), mIsPlaying(false), mIsSeeking(false),
+									mLastSeekTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
 									mOnFillBufferShouldSendFrames(true), mOnFillBufferIsSendingFrames(false),
 									mOnFillBufferShouldNotifyEndOfData(false), mOnFillBufferPreviousFrameCount(0),
 									mOnFillBufferFrameIndex(0), mOnFillBufferFrameCount(~0U)
@@ -64,8 +281,7 @@ class CAudioPlayerImplementation :
 								// Setup
 								HRESULT	result;
 
-								// Create sample ready event
-								mFillBufferEvent = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+								// Check sample ready event
 								if (mFillBufferEvent == nullptr)
 									// Error
 									processWindowsError(OSSTR("CreateEventEx() for sample ready event"));
@@ -75,126 +291,18 @@ class CAudioPlayerImplementation :
 								processHRESULT(result, OSSTR("MFStartup()"));
 
 								if (mState != kError) {
-									// Get Audio Render ID
-									auto	audioRenderID =
-													MediaDevice::GetDefaultAudioRenderId(AudioDeviceRole::Default);
-#if defined(__cplusplus_winrt)
-									// C++/CX
-									auto	audioRenderIDString = audioRenderID->Data();
-#else
-									// C++/WinRT
-									auto	audioRenderIDString = audioRenderID.data();
-#endif
-									// Activate Audio Interface
-									IActivateAudioInterfaceAsyncOperation*	activateAudioInterfaceAsyncOperation;
+									// Create async callback for sample events
 									result =
-											ActivateAudioInterfaceAsync(audioRenderIDString, __uuidof(IAudioClient3),
-													nullptr, this, &activateAudioInterfaceAsyncOperation);
-									processHRESULT(result, OSSTR("ActivateAudioInterfaceAsync"));
-									if (activateAudioInterfaceAsyncOperation != nullptr)
-										// Release
-										activateAudioInterfaceAsyncOperation->Release();
+											MFCreateAsyncResult(nullptr, &mFillBufferAsyncCallback, nullptr,
+													&mFillBufferAsyncResult);
+									processHRESULT(result, OSSTR("MFCreateAsyncResult()"));
 								}
-							}
 
-				HRESULT	ActivateCompleted(IActivateAudioInterfaceAsyncOperation* activateAudioInterfaceAsyncOperation)
-							{
-								// Check state
-								if (mState == kError)
-									return S_OK;
-
-								// Setup
-								HRESULT	result;
-
-								// Check activation result
-								HRESULT		activationResult;
-								IUnknown*	audioInterface;
-								result =
-										activateAudioInterfaceAsyncOperation->GetActivateResult(&activationResult,
-												&audioInterface);
-								if (SUCCEEDED(result) && SUCCEEDED(activationResult)) {
-									// Get the Audio Client
-									audioInterface->QueryInterface(IID_PPV_ARGS(&mAudioClient));
-
-									// Configure
-									AudioClientProperties	audioClientProperties = {0};
-									audioClientProperties.cbSize = sizeof(AudioClientProperties);
-									audioClientProperties.eCategory = AudioCategory_Media;
-									result = mAudioClient->SetClientProperties(&audioClientProperties);
-									processHRESULT(result, OSSTR("SetClientProperties("));
-
-									if (mState != kError) {
-										// Get Mix Format
-										result = mAudioClient->GetMixFormat(&mMixFormat);
-										processHRESULT(result, OSSTR("GetMixFormat()"));
-									}
-
-									if (mState != kError) {
-										// Get periods
-										result =
-												mAudioClient->GetSharedModeEnginePeriod(mMixFormat,
-														&mDefaultPeriodInFrames, &mFundamentalPeriodInFrames,
-														&mMinPeriodInFrames, &mMaxPeriodInFrames);
-										processHRESULT(result, OSSTR("GetSharedModeEnginePeriod()"));
-									}
-
-									if (mState != kError) {
-										// Initialize
-										result =
-												mAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
-														AUDCLNT_STREAMFLAGS_EVENTCALLBACK |
-																AUDCLNT_STREAMFLAGS_NOPERSIST,
-														0, 0, mMixFormat, nullptr);
-										processHRESULT(result, OSSTR("Initialize()"));
-									}
-
-									if (mState != kError) {
-										// Get the buffer size
-										result = mAudioClient->GetBufferSize(&mBufferFrames);
-										processHRESULT(result, OSSTR("GetBufferSize()"));
-									}
-
-									if (mState != kError) {
-										// Get the Render Client
-										result =
-												mAudioClient->GetService(__uuidof(IAudioRenderClient),
-														(void**) &mAudioRenderClient);
-										processHRESULT(result, OSSTR("GetService() for IAudioRenderClient"));
-									}
-
-									if (mState != kError) {
-										// Create async callback for sample events
-										result =
-												MFCreateAsyncResult(nullptr, &mFillBufferAsyncCallback, nullptr,
-														&mFillBufferAsyncResult);
-										processHRESULT(result, OSSTR("MFCreateAsyncResult()"));
-									}
-
-									if (mState != kError) {
-										// Set Event Handler
-										result = mAudioClient->SetEventHandle(mFillBufferEvent);
-										processHRESULT(result, OSSTR("SetEventHandle()"));
-									}
-
-									if (mState != kError) {
-										// Get Simple Audio Volume
-										result =
-												mAudioClient->GetService(__uuidof(ISimpleAudioVolume),
-														(void**) &mSimpleAudioVolume);
-										processHRESULT(result, OSSTR("GetService() for ISimpleAudioVolume"));
-									}
-
-									// Done
-									if (mState != kError)
-										mState = kInitialized;
-								} else if (FAILED(activationResult))
-									// Activation failed
-									processHRESULT(activationResult, OSSTR("checking status in ActivateCompleted()"));
-								else
-									// Query failed
-									processHRESULT(result, OSSTR("GetActivateResult()"));
-
-								return S_OK;
+								if (mState != kError) {
+									// Set Event Handler
+									result = mAudioClient->SetEventHandle(mFillBufferEvent);
+									processHRESULT(result, OSSTR("SetEventHandle()"));
+								}
 							}
 
 				HRESULT	onFillBuffer(__RPC__in_opt IMFAsyncResult& asyncResult)
@@ -441,20 +549,18 @@ class CAudioPlayerImplementation :
 								if (FAILED(result)) {
 									// Error
 									mState = kError;
-									mError = OV<SError>(SErrorFromHRESULT(result));
 									CLogServices::logError(
 											CString(method) + CString(OSSTR(" returned ")) +
-													mError->getInternalDescription());
+													SErrorFromHRESULT(result).getInternalDescription());
 								}
 							}
 				void	processWindowsError(OSStringType method)
 							{
 								// Error
 								mState = kError;
-								mError = OV<SError>(SErrorFromWindowsGetLastError());
 								CLogServices::logError(
 										CString(method) + CString(OSSTR(" returned ")) +
-												mError->getInternalDescription());
+												SErrorFromWindowsGetLastError().getInternalDescription());
 							}
 
 		static	HRESULT	onFillBuffer(__RPC__in_opt IMFAsyncResult& asyncResult,
@@ -478,16 +584,12 @@ class CAudioPlayerImplementation :
 		MFWORKITEM_KEY									mFillBufferKey;
 		OI<CAudioPlayerBufferThread>					mAudioPlayerBufferThread;
 		OI<CSRSWBIPSegmentedQueue>						mQueue;
-		OV<SError>										mError;
 		State											mState;
 		TMFAsyncCallback<CAudioPlayerImplementation>	mFillBufferAsyncCallback;
 		TMFAsyncCallback<CAudioPlayerImplementation>	mPlayAsyncCallback;
 		TMFAsyncCallback<CAudioPlayerImplementation>	mResetAsyncCallback;
 		UINT32											mBufferFrames;
-		UINT32											mDefaultPeriodInFrames;
-		UINT32											mFundamentalPeriodInFrames;
 		UINT32											mMaxPeriodInFrames;
-		UINT32											mMinPeriodInFrames;
 		WAVEFORMATEX*									mMixFormat;
 
 		bool											mIsPlaying;
@@ -512,10 +614,12 @@ class CAudioPlayerImplementation :
 
 class CAudioPlayer::Internals {
 	public:
-						Internals(CAudioPlayer& audioPlayer, const CString& identifier,
-									const CAudioPlayer::Info& info) :
+						Internals(CAudioPlayer& audioPlayer, const CString& identifier, const CAudioPlayer::Info& info,
+								const CAudioPlayerAudioClient& audioClient) :
 							mAudioPlayer(audioPlayer), mInfo(info),
-									mImplementation(Make<CAudioPlayerImplementation>(audioPlayer, identifier, info))
+									mImplementation(
+											Make<CAudioPlayerImplementation>(audioPlayer, identifier, info,
+													audioClient))
 							{}
 						~Internals()
 							{
@@ -539,15 +643,16 @@ class CAudioPlayer::Internals {
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioProcessor
+// MARK: - CAudioPlayer
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayer::CAudioPlayer(const CString& identifier, const Info& info) : CAudioDestination()
+CAudioPlayer::CAudioPlayer(const CString& identifier, const Info& info, const CAudioPlayerAudioClient& audioClient) :
+		CAudioDestination(audioClient.getAudioProcessingSetup())
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(*this, identifier, info);
+	mInternals = new Internals(*this, identifier, info, audioClient);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -575,34 +680,6 @@ CAudioPlayer::~CAudioPlayer()
 // MARK: CAudioProcessor methods
 
 //----------------------------------------------------------------------------------------------------------------------
-TArray<SAudio::ProcessingSetup> CAudioPlayer::getInputSetups() const
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup if necessary
-	static	SAudio::ProcessingSetup*	sAudioProcessingSetup = nil;
-	if (sAudioProcessingSetup == nil) {
-		// Wait until initialized
-		while (mInternals->mImplementation->mState == CAudioPlayerImplementation::kInitializing)
-			// Sleep
-			CThread::sleepFor(0.001);
-
-		if (!mInternals->mImplementation->mError.hasValue()) {
-			// Compose SAudio::ProcessingSetup
-			WAVEFORMATEX&	format = *mInternals->mImplementation->mMixFormat;
-			sAudioProcessingSetup =
-					new SAudio::ProcessingSetup((UInt8) format.wBitsPerSample, (Float32) format.nSamplesPerSec,
-							SAudio::ChannelMap((UInt8) format.nChannels),
-							SAudio::ProcessingSetup::SampleTypeOption::kSampleTypeFloat,
-							SAudio::ProcessingSetup::EndianOption::kEndianNative,
-							SAudio::ProcessingSetup::InterleavedOption::kInterleaved);
-		}
-	}
-
-	return (sAudioProcessingSetup != nullptr) ?
-			TNArray<SAudio::ProcessingSetup>(*sAudioProcessingSetup) : TNArray<SAudio::ProcessingSetup>();
-}
-
-//----------------------------------------------------------------------------------------------------------------------
 OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 		const SAudio::ProcessingFormat& audioProcessingFormat)
 //----------------------------------------------------------------------------------------------------------------------
@@ -610,11 +687,6 @@ OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 	// Store
 	mInternals->mAudioProcessingFormat.setValue(audioProcessingFormat);
 	
-	// Wait until initialized
-	while (mInternals->mImplementation->mState == CAudioPlayerImplementation::kInitializing)
-		// Sleep
-		CThread::sleepFor(0.001);
-
 	// Setup
 	UInt32	frameCount = (UInt32) (CAudioPlayer::getPlaybackBufferDuration() * audioProcessingFormat.getSampleRate());
 	mInternals->mImplementation->mQueue =
@@ -775,11 +847,6 @@ void CAudioPlayer::setGain(const TNumberArray<Float32>& channelGains)
 void CAudioPlayer::play()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Wait until initialized
-	while (mInternals->mImplementation->mState == CAudioPlayerImplementation::kInitializing)
-		// Sleep
-		CThread::sleepFor(0.001);
-
 	// We are now playing
 	mInternals->mImplementation->mIsPlaying = true;
 	mInternals->mImplementation->mIsSeeking = false;
@@ -862,6 +929,18 @@ void CAudioPlayer::finishSeek()
 }
 
 // MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<I<CAudioPlayer> > CAudioPlayer::create(const CString& identifier, const Info& info)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Activate audio client
+	TVResult<CAudioPlayerAudioClient>	audioClient = CAudioPlayerAudioClientActivation::activate();
+
+	return audioClient.hasValue() ?
+			TVResult<I<CAudioPlayer> >(I<CAudioPlayer>(new CAudioPlayer(identifier, info, *audioClient))) :
+			TVResult<I<CAudioPlayer> >(audioClient.getError());
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::setMaxAudioPlayers(UInt32 maxAudioPlayers)
