@@ -118,7 +118,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 	ReturnErrorIfError(error);
 
 	// Create input sample
-	TCIResult<IMFSample>	sample = CMediaFoundationServices::createSample(10 * requirements.mFrameCountInterval);
+	TCIResult<IMFSample>	sample = CMediaFoundationServices::createSample(10 * requirements.getFrameCountInterval());
 	ReturnErrorIfResultError(sample);
 	mInternals->mInputSample = sample.getInstance();
 
@@ -174,7 +174,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrame
 	CAudioFrames::Requirements	requirements = getRequirements();
 
 	// Preflight
-	AssertFailIf(audioFrames.getAllocatedFrameCount() < requirements.mFrameCountMinimum);
+	AssertFailIf(audioFrames.getAllocatedFrameCount() < requirements.getFrameCount(1));
 
 	if (!mInternals->mAudioDecoderTransform.hasInstance() || !mInternals->mInputSample.hasInstance() ||
 			!mInternals->mOutputSample.hasInstance())
@@ -182,7 +182,7 @@ OV<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrame
 		return OV<SError>(sSetupDidNotCompleteError);
 
 	// Fill audio frames as much as we can
-	while (audioFrames.getAllocatedFrameCount() >= requirements.mFrameCountInterval) {
+	while (audioFrames.getAllocatedFrameCount() >= requirements.getFrameCountInterval()) {
 		// Process output
 		OV<SError>	error =
 							CMediaFoundationServices::processOutput(*mInternals->mAudioDecoderTransform,
