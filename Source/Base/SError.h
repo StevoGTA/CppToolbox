@@ -26,6 +26,7 @@ struct SError {
 								mDomain(domain), mCode(code),
 										mInternalDescription(internalDescription)
 								{}
+							SError(const CDictionary& storageInfo);
 							SError(const SError& other) :
 								mDomain(other.mDomain), mCode(other.mCode),
 										mLocalizationInfo(other.mLocalizationInfo),
@@ -47,6 +48,8 @@ struct SError {
 												*mInternalDescription :
 												CString(mDomain, CString(mCode), mLocalizationInfo)) +
 										CString(OSSTR(")")); }
+
+				CDictionary	getStorageInfo() const;
 
 				bool		operator==(const SError& other) const
 								{ return (mDomain == other.mDomain) && (mCode == other.mCode); }
