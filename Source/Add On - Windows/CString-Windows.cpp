@@ -457,6 +457,13 @@ CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 
 	mString.resize(4);
 	::MultiByteToWideChar(sGetCodePageForCStringEncoding(kEncodingASCII), 0, (char*) &osType, 4, &mString[0], 4);
+
+	// Check if including quotes
+	if (includeQuotes) {
+		// Wrap in quotes
+		mString.insert(0, _TEXT("\'"));
+		mString += _TEXT("\'");
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

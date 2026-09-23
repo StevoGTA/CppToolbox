@@ -294,7 +294,7 @@ CString::CString(OSType osType, bool isOSType, bool includeQuotes) : CHashable()
 	// Setup
 	mStringRef =
 			::CFStringCreateWithFormat(kCFAllocatorDefault, nil,
-					includeQuotes ? CFSTR("\'%c%c%c%c\'") : CFSTR("%c%c%c"), (osType >> 24) & 0xFF,
+					includeQuotes ? CFSTR("\'%c%c%c%c\'") : CFSTR("%c%c%c%c"), (osType >> 24) & 0xFF,
 					(osType >> 16) & 0xFF, (osType >> 8) & 0xFF, osType & 0xFF);
 }
 
