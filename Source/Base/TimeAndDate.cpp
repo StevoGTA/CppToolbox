@@ -619,6 +619,7 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSX"
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
 			//	2021-03-23T22:54:13.922-0700
+			//	2027-06-15T00:00:00.000Z
 
 			// Check for required characters
 			TBuffer<char>	buffer = string.getUTF8Chars();
@@ -630,14 +631,18 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 			// Check for timezone offset sign
 			OV<SRange32>	timezoneOffsetMinusRange = string.findSubString(CString(OSSTR("-")), 17);
 			OV<SRange32>	timezoneOffsetPlusRange = string.findSubString(CString(OSSTR("+")), 17);
-			if (!timezoneOffsetMinusRange.hasValue() && !timezoneOffsetPlusRange.hasValue())
-				// Did not find timezone offset sign
+			OV<SRange32>	timezoneZuluRange = string.findSubString(CString(OSSTR("Z")), 17);
+			if (!timezoneOffsetMinusRange.hasValue() && !timezoneOffsetPlusRange.hasValue() &&
+					!timezoneZuluRange.hasValue())
+				// Did not find timezone
 				return OV<SGregorianDate>();
 
 			CString::CharIndex	timezoneOffsetSignCharIndex =
 										timezoneOffsetMinusRange.hasValue() ?
 												timezoneOffsetMinusRange->getStart() :
-												timezoneOffsetPlusRange->getStart();
+												timezoneOffsetPlusRange.hasValue() ?
+														timezoneOffsetPlusRange->getStart() :
+														timezoneZuluRange->getStart();
 
 			// Compose gregorian date
 			SGregorianDate	gregorianDate;
@@ -648,9 +653,11 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 			gregorianDate.mMinute = string.getSubString(14, 2).getUInt8();
 			gregorianDate.mSecond = string.getSubString(17, timezoneOffsetSignCharIndex - 17).getFloat32();
 
-			// Compose timezone offset
+			// Compose timezone offset ("Z" is UTC)
 			SInt32					timezoneOffsetRaw =
-											string.getSubString(timezoneOffsetSignCharIndex + 1).getSInt32();
+											timezoneZuluRange.hasValue() ?
+													0 :
+													string.getSubString(timezoneOffsetSignCharIndex + 1).getSInt32();
 			SInt32					timezoneOffsetHours = timezoneOffsetRaw / 100;
 			SInt32					timezoneOffsetMinutes = timezoneOffsetRaw % 100;
 			UniversalTimeInterval	timezoneOffset =

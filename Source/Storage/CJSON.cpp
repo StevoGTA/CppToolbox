@@ -411,8 +411,8 @@ TVResult<CDictionary> sReadDictionary(const SInt8*& charPtr)
 			TVResult<SValue>	valueResult = sReadValue(charPtr);
 			ReturnValueIfResultError(valueResult, TVResult<CDictionary>(valueResult.getError()));
 
-			// Check if got value
-			if (valueResult.hasValue())
+			// Ensure we have a value
+			if (valueResult->getType() != SValue::kTypeEmpty)
 				// Store
 				dictionary.set(*keyResult, *valueResult);
 
