@@ -23,6 +23,8 @@
 #include <Windows.h>
 #define Delete(x)	{ delete x; x = nil; }
 
+#pragma comment(lib, "advapi32")
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Local proc declarations
 
@@ -93,6 +95,25 @@ UInt64 CCoreServices::getPhysicalMemoryByteCount()
 #endif
 
 	return sPhysicalMemoryByteCount;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CString& CCoreServices::getMachineUUIDString()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CString*	sMachineUUIDString = nil;
+
+	if (sMachineUUIDString == nil) {
+		// Get info (64-bit registry view so 32-bit builds see the same value)
+		TCHAR	buffer[64];
+		DWORD	byteCount = sizeof(buffer);
+		::RegGetValue(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\Cryptography"), TEXT("MachineGuid"),
+				RRF_RT_REG_SZ | RRF_SUBKEY_WOW6464KEY, NULL, buffer, &byteCount);
+
+		sMachineUUIDString = new CString(buffer);
+	}
+
+	return *sMachineUUIDString;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

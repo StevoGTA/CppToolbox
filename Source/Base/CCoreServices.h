@@ -23,6 +23,10 @@ class CCoreServices {
 		static			UInt32			getPhysicalMemoryPageSize();
 #endif
 
+#if defined(TARGET_OS_MACOS) || defined(TARGET_OS_WINDOWS)
+		static	const	CString&		getMachineUUIDString();
+#endif
+
 										// Debugger methods
 		static			void			stopInDebugger(SInt32 code = 0, OSStringVar(message) = OSSTR(""));
 };

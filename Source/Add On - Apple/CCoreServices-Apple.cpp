@@ -9,6 +9,10 @@
 
 #include <sys/sysctl.h>
 
+#if defined(TARGET_OS_MACOS)
+	#include <IOKit/IOKitLib.h>
+#endif
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CCoreServices
 
@@ -147,6 +151,29 @@ UInt32 CCoreServices::getPhysicalMemoryPageSize()
 		sPhysicalMemoryPageSize = (UInt32) ::sysconf(_SC_PAGE_SIZE);
 
 	return sPhysicalMemoryPageSize;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CString& CCoreServices::getMachineUUIDString()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CString*	sMachineUUIDString = nil;
+
+	if (sMachineUUIDString == nil) {
+		// Get info (MACH_PORT_NULL selects the default port on every macOS version)
+		io_service_t	service =
+								::IOServiceGetMatchingService(MACH_PORT_NULL,
+										::IOServiceMatching("IOPlatformExpertDevice"));
+		CFStringRef		stringRef =
+								(CFStringRef) ::IORegistryEntryCreateCFProperty(service, CFSTR(kIOPlatformUUIDKey),
+										kCFAllocatorDefault, 0);
+		::IOObjectRelease(service);
+
+		sMachineUUIDString = new CString(stringRef);
+		::CFRelease(stringRef);
+	}
+
+	return *sMachineUUIDString;
 }
 #endif
 
