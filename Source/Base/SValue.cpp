@@ -16,7 +16,7 @@ const	SValue	SValue::mEmpty;
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SValue::SValue() : mType(kTypeEmpty), mValue(false)
+SValue::SValue(Type type) : mType(type), mValue(false)
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
@@ -159,6 +159,7 @@ SValue::SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc) : mType(other
 			break;
 
 		case kTypeEmpty:
+		case kTypeArrayEmpty:
 		case kTypeBool:
 		case kTypeFloat32:
 		case kTypeFloat64:
@@ -249,40 +250,100 @@ bool SValue::canCoerceToType(Type type) const
 const TArray<CDictionary>& SValue::getArrayOfDictionaries(const TArray<CDictionary>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Verify value type
-	AssertFailIf(mType != kTypeArrayOfDictionaries);
+	// Setup
+	static	const	TNArray<CDictionary>	sEmptyArrayOfDictionaries;
 
-	return (mType == kTypeArrayOfDictionaries) ? *mValue.mArrayOfDictionaries : defaultValue;
+	// Check type
+	switch (mType) {
+		case kTypeArrayEmpty:
+			// Empty array
+			return sEmptyArrayOfDictionaries;
+
+		case kTypeArrayOfDictionaries:
+			// Array of Dictionaries
+			return *mValue.mArrayOfDictionaries;
+
+		default:
+			// Everything else
+			AssertFail();
+
+			return defaultValue;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 const TArray<CString>& SValue::getArrayOfStrings(const TArray<CString>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Verify value type
-	AssertFailIf(mType != kTypeArrayOfStrings);
+	// Setup
+	static	const	TNArray<CString>	sEmptyArrayOfStrings;
 
-	return (mType == kTypeArrayOfStrings) ? *mValue.mArrayOfStrings : defaultValue;
+	// Check type
+	switch (mType) {
+		case kTypeArrayEmpty:
+			// Empty array
+			return sEmptyArrayOfStrings;
+
+		case kTypeArrayOfStrings:
+			// Array of Strings
+			return *mValue.mArrayOfStrings;
+
+		default:
+			// Everything else
+			AssertFail();
+
+			return defaultValue;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 const TNumberArray<Float32>& SValue::getArrayOfFloat32s(const TNumberArray<Float32>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Verify value type
-	AssertFailIf(mType != kTypeArrayOfFloat32s);
+	// Setup
+	static	const	TNumberArray<Float32>	sEmptyArrayOfFloat32s;
 
-	return (mType == kTypeArrayOfFloat32s) ? *mValue.mArrayOfFloat32s : defaultValue;
+	// Check type
+	switch (mType) {
+		case kTypeArrayEmpty:
+			// Empty array
+			return sEmptyArrayOfFloat32s;
+
+		case kTypeArrayOfFloat32s:
+			// Array of Float32s
+			return *mValue.mArrayOfFloat32s;
+
+		default:
+			// Everything else
+			AssertFail();
+
+			return defaultValue;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 const TNumberArray<UInt32>& SValue::getArrayOfUInt32s(const TNumberArray<UInt32>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Verify value type
-	AssertFailIf(mType != kTypeArrayOfUInt32s);
+	// Setup
+	static	const	TNumberArray<UInt32>	sEmptyArrayOfUInt32s;
 
-	return (mType == kTypeArrayOfUInt32s) ? *mValue.mArrayOfUInt32s : defaultValue;
+	// Check type
+	switch (mType) {
+		case kTypeArrayEmpty:
+			// Empty array
+			return sEmptyArrayOfUInt32s;
+
+		case kTypeArrayOfUInt32s:
+			// Array of UInt32s
+			return *mValue.mArrayOfUInt32s;
+
+		default:
+			// Everything else
+			AssertFail();
+
+			return defaultValue;
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -595,13 +656,33 @@ bool SValue::equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc) cons
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check value type
-	if (mType != other.mType)
-		// Mismatch
+	if (mType == kTypeArrayEmpty) {
+		// Empty array, check other type
+		switch (other.mType) {
+			case kTypeArrayEmpty:			return true;
+			case kTypeArrayOfDictionaries:	return other.mValue.mArrayOfDictionaries->isEmpty();
+			case kTypeArrayOfStrings:		return other.mValue.mArrayOfStrings->isEmpty();
+			case kTypeArrayOfFloat32s:		return other.mValue.mArrayOfFloat32s->isEmpty();
+			case kTypeArrayOfUInt32s:		return other.mValue.mArrayOfUInt32s->isEmpty();
+			default:						return false;
+		}
+	} else if (other.mType == kTypeArrayEmpty) {
+		// Other is empty array, check type
+		switch (mType) {
+			case kTypeArrayOfDictionaries:	return mValue.mArrayOfDictionaries->isEmpty();
+			case kTypeArrayOfStrings:		return mValue.mArrayOfStrings->isEmpty();
+			case kTypeArrayOfFloat32s:		return mValue.mArrayOfFloat32s->isEmpty();
+			case kTypeArrayOfUInt32s:		return mValue.mArrayOfUInt32s->isEmpty();
+			default:						return false;
+		}
+	} else if (mType != other.mType)
+		// Not the same type
 		return false;
 
 	switch (mType) {
 		case kTypeEmpty:
-			// Empty
+		case kTypeArrayEmpty:
+			// Nothing to compare
 			return true;
 
 		case kTypeBool:
@@ -766,6 +847,7 @@ SValue& SValue::operator=(const SValue& other)
 			break;
 
 		case kTypeEmpty:
+		case kTypeArrayEmpty:
 		case kTypeBool:
 		case kTypeFloat32:
 		case kTypeFloat64:
@@ -784,6 +866,15 @@ SValue& SValue::operator=(const SValue& other)
 	}
 
 	return *this;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+SValue SValue::emptyArray()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return SValue(kTypeArrayEmpty);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

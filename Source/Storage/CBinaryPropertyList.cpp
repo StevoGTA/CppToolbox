@@ -417,8 +417,8 @@ TVResult<SValue> CBPLReader::getValue(I<CBPLReader>& bplReader, UInt64 objectInd
 		case kMarkerTypeArray: {
 			// Array
 			if (count == 0)
-				// Unable to determine type
-				return TVResult<SValue>(sUnableToDetermineObjectTypeError);
+				// Empty array
+				return TVResult<SValue>(SValue::emptyArray());
 
 			// Read object indexes
 			TVResult<TBuffer<UInt64> >	objectIndexes = readObjectIndexes(count);

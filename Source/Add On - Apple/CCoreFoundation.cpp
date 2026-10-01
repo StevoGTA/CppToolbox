@@ -252,7 +252,9 @@ CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
 				else
 					// Uh oh
 					CCoreServices::stopInDebugger();
-			}
+			} else
+				// Empty array
+				dictionary.set(CString(keyStringRefs[i]), SValue::emptyArray());
 		} else if (::CFGetTypeID(valueTypeRef) == ::CFDataGetTypeID())
 			// Data
 			dictionary.set(CString(keyStringRefs[i]), dataFrom((CFDataRef) valueTypeRef));
@@ -365,6 +367,12 @@ CCoreFoundation::O<CFDictionaryRef> CCoreFoundation::dictionaryRefFrom(const CDi
 			case SValue::kTypeEmpty:
 				// Empty (null)
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, kCFNull);
+				break;
+
+			case SValue::kTypeArrayEmpty:
+				// Empty array
+				::CFDictionarySetValue(dictionaryRef, keyStringRef,
+						::CFArrayCreate(kCFAllocatorDefault, nil, 0, &kCFTypeArrayCallBacks));
 				break;
 
 			case SValue::kTypeBool:

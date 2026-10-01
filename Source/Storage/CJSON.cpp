@@ -213,6 +213,11 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 				data.append("null", 4);
 				break;
 
+			case SValue::kTypeArrayEmpty:
+				// Empty array
+				data.append("[]", 2);
+				break;
+
 			case SValue::kTypeArrayOfDictionaries:
 				// Array of dictionaries
 				error = sAddArrayOfDictionaries(data, iterator.getValue().getArrayOfDictionaries());
@@ -594,7 +599,7 @@ TVResult<SValue> sReadValue(const SInt8*& charPtr)
 			// Skip whitespace
 			sSkipWhitespace(charPtr);
 
-			return TVResult<SValue>(SValue(TNArray<CDictionary>()));
+			return TVResult<SValue>(SValue::emptyArray());
 		} else
 			// Invalid token
 			return TVResult<SValue>(sInvalidTokenError);

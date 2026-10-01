@@ -528,6 +528,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 		case SValue::kTypeUInt64:	replacement = CString(replacementValue.getUInt64());	break;
 
 		case SValue::kTypeEmpty:
+		case SValue::kTypeArrayEmpty:
 		case SValue::kTypeArrayOfDictionaries:
 		case SValue::kTypeArrayOfStrings:
 		case SValue::kTypeArrayOfFloat32s:
@@ -579,6 +580,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 			case SValue::kTypeUInt64:	replacement = CString(iterator.getValue().getUInt64());		break;
 
 			case SValue::kTypeEmpty:
+			case SValue::kTypeArrayEmpty:
 			case SValue::kTypeArrayOfDictionaries:
 			case SValue::kTypeArrayOfStrings:
 			case SValue::kTypeArrayOfFloat32s:

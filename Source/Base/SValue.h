@@ -17,6 +17,7 @@ struct SValue {
 	public:
 		enum Type {
 			kTypeEmpty,
+			kTypeArrayEmpty,
 			kTypeArrayOfDictionaries,
 			kTypeArrayOfStrings,
 			kTypeArrayOfFloat32s,
@@ -104,7 +105,8 @@ struct SValue {
 												SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc = nil);
 
 												// Instance methods
-						Type					getType() const { return mType; }
+						Type					getType() const
+													{ return mType; }
 						bool					canCoerceToType(Type type) const;
 
 				const	TArray<CDictionary>&	getArrayOfDictionaries(
@@ -164,9 +166,12 @@ struct SValue {
 
 						SValue&					operator=(const SValue& other);
 
+												// Class methods
+		static			SValue					emptyArray();
+
 	private:
 												// Lifecycle methods
-												SValue();
+												SValue(Type type = kTypeEmpty);
 
 												// Class methods
 		static	const	CDictionary&			getEmptyDictionary();
