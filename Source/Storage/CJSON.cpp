@@ -643,8 +643,15 @@ TVResult<SValue> sReadValue(const SInt8*& charPtr)
 
 		// Compose string
 		CString	string((const void*) startCharPtr, (UInt32) (charPtr - startCharPtr), CString::kEncodingUTF8);
-
-		return TVResult<SValue>(isFloat ? SValue(string.getFloat64()) : SValue(string.getSInt64()));
+		if (isFloat)
+			// Float
+			return TVResult<SValue>(SValue(string.getFloat64()));
+		else if (*startCharPtr == '-')
+			// Negative integer
+			return TVResult<SValue>(SValue(string.getSInt64()));
+		else
+			// Non-negative integer
+			return TVResult<SValue>(SValue(string.getUInt64()));
 	}
 }
 
