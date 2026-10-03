@@ -107,7 +107,7 @@ bool CFileWriter::isOpen() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
+OV<SError> CFileWriter::open(Mode mode, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
@@ -116,21 +116,28 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 	// Check if open
 	if (mInternals->mFileHandle == INVALID_HANDLE_VALUE) {
 		// Open
+		DWORD	creationDisposition;
+		switch (mode) {
+			case kModeCreate:	creationDisposition = CREATE_NEW;		break;
+			case kModeReplace:	creationDisposition = CREATE_ALWAYS;	break;
+			case kModeAppend:	creationDisposition = OPEN_ALWAYS;		break;
+			default:			creationDisposition = CREATE_NEW;		break;
+		}
+
 		CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
 		extendedParameters.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
 		extendedParameters.dwFileAttributes = buffered ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_WRITE_THROUGH;
 		extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS;
 		mInternals->mFileHandle =
 				::CreateFile2(mInternals->mFile.getFilesystemPath().getString().getOSString(),
-						GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ,
-						append ? OPEN_ALWAYS : CREATE_NEW, &extendedParameters);
+						GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, creationDisposition, &extendedParameters);
 		if (mInternals->mFileHandle == INVALID_HANDLE_VALUE)
 			// Unable to open
 			CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("opening")),
 					mInternals->mFile);
 
 		// Check if appending
-		if (append) {
+		if (mode == kModeAppend) {
 			// Skip to the end
 			auto	result = ::SetFilePointer(mInternals->mFileHandle, {0}, NULL, FILE_END);
 			if (!result)

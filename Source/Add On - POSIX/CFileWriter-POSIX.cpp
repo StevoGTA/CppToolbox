@@ -141,11 +141,16 @@ bool CFileWriter::isOpen() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
+OV<SError> CFileWriter::open(Mode mode, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mRemoveIfNotClosed = removeIfNotClosed;
+
+	// Check if creating and the file already exists (fopen has no exclusive mode)
+	if ((mode == kModeCreate) && !isOpen() && mInternals->mFile.doesExist())
+		// Exists
+		CFileWriterReportErrorAndReturnError(SErrorFromPOSIXerror(EEXIST), CString(OSSTR("opening")));
 
 	// Check buffered
 	if (buffered) {
@@ -160,7 +165,7 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 			// Open
 			mInternals->mFILE =
 					::fopen(*mInternals->mFile.getFilesystemPath().getString().getUTF8String(),
-							!append ? "wb+" : "ab+");
+							(mode != kModeAppend) ? "wb+" : "ab+");
 
 			if (mInternals->mFILE != nil)
 				// Success
@@ -183,7 +188,10 @@ OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed)
 			// Open
 			mInternals->mFD =
 					::open(*mInternals->mFile.getFilesystemPath().getString().getUTF8String(),
-							!append ? (O_RDWR | O_CREAT | O_EXCL) : (O_RDWR | O_CREAT | O_APPEND | O_EXLOCK),
+							(mode == kModeCreate) ?
+									(O_RDWR | O_CREAT | O_EXCL) :
+									(mode == kModeReplace) ?
+											(O_RDWR | O_CREAT | O_TRUNC) : (O_RDWR | O_CREAT | O_APPEND | O_EXLOCK),
 							S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH);
 			if (mInternals->mFD != -1)
 				// Success

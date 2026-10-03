@@ -14,6 +14,12 @@
 class CFileWriter {
 	// Enums
 	public:
+		enum Mode {
+			kModeCreate,
+			kModeReplace,
+			kModeAppend,
+		};
+
 		enum Position {
 			kPositionFromBeginning,
 			kPositionFromCurrent,
@@ -35,8 +41,8 @@ class CFileWriter {
 				const	CFile&			getFile() const;
 
 						bool			isOpen() const;
-						OV<SError>		open(bool append = false, bool buffered = false, bool removeIfNotClosed = false)
-												const;
+						OV<SError>		open(Mode mode = kModeCreate, bool buffered = false,
+												bool removeIfNotClosed = false) const;
 
 						TVResult<CData>	read(CData::ByteCount byteCount) const;
 

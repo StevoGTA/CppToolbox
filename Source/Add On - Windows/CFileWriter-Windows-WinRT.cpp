@@ -49,7 +49,7 @@ class CFileWriter::Internals : public TReferenceCountableAutoDelete<Internals> {
 		~Internals()
 			{
 				// Check if have Random Access Stream
-				if (mRandomAccessStream.CanWrite()) {
+				if (mRandomAccessStream != nullptr) {
 					// Close
 					mRandomAccessStream.Close();
 
@@ -103,27 +103,47 @@ const CFile& CFileWriter::getFile() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFileWriter::open(bool append, bool buffered, bool removeIfNotClosed) const
+bool CFileWriter::isOpen() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return mInternals->mRandomAccessStream != nullptr;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFileWriter::open(Mode mode, bool buffered, bool removeIfNotClosed) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
 	mInternals->mRemoveIfNotClosed = removeIfNotClosed;
 
 	// Check if open
-	if (mInternals->mRandomAccessStream.CanWrite()) {
+	if (!isOpen()) {
 		// Open
 		try {
 			// Setup
+			CreationCollisionOption	creationCollisionOption;
+			switch (mode) {
+				case kModeCreate:	creationCollisionOption = CreationCollisionOption::FailIfExists;	break;
+				case kModeReplace:	creationCollisionOption = CreationCollisionOption::ReplaceExisting;	break;
+				case kModeAppend:	creationCollisionOption = CreationCollisionOption::OpenIfExists;	break;
+				default:			creationCollisionOption = CreationCollisionOption::FailIfExists;	break;
+			}
+
 			auto	storageFolder =
 							StorageFolder::GetFolderFromPathAsync(
 									mInternals->mFile.getFolder().getFilesystemPath().getString().getOSString()).get();
 			auto	storageFile =
 							storageFolder.CreateFileAsync(mInternals->mFile.getName().getOSString(),
-									CreationCollisionOption::ReplaceExisting).get();
+									creationCollisionOption).get();
 
 			// Create Random Access Stream
 			mInternals->mRandomAccessStream =
 					storageFile.OpenAsync(FileAccessMode::ReadWrite, StorageOpenOptions::None).get();
+
+			// Check if appending
+			if (mode == kModeAppend)
+				// Skip to the end
+				mInternals->mRandomAccessStream.Seek(mInternals->mRandomAccessStream.Size());
 
 			return OV<SError>();
 		} catch (const hresult_error& exception) {
@@ -146,7 +166,7 @@ OV<SError> CFileWriter::write(const void* buffer, UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if open
-	if (!mInternals->mRandomAccessStream.CanWrite())
+	if (!isOpen())
 		// Not open
 		return OV<SError>(CFile::mNotOpenError);
 
@@ -197,7 +217,7 @@ OV<SError> CFileWriter::setPos(Position position, SInt64 newPos) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if open
-	if (!mInternals->mRandomAccessStream.CanWrite())
+	if (!isOpen())
 		// Not open
 		return OV<SError>(CFile::mNotOpenError);
 
@@ -227,7 +247,7 @@ OV<SError> CFileWriter::setByteCount(UInt64 byteCount) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if open
-	if (!mInternals->mRandomAccessStream.CanWrite())
+	if (!isOpen())
 		// Not open
 		return OV<SError>(CFile::mNotOpenError);
 
@@ -242,7 +262,7 @@ OV<SError> CFileWriter::flush() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if open
-	if (!mInternals->mRandomAccessStream.CanWrite())
+	if (!isOpen())
 		// Not open
 		return OV<SError>(CFile::mNotOpenError);
 
@@ -257,7 +277,7 @@ OV<SError> CFileWriter::close() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check if open
-	if (!mInternals->mRandomAccessStream.CanWrite())
+	if (!isOpen())
 		// Not open
 		return OV<SError>(CFile::mNotOpenError);
 

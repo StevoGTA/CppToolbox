@@ -90,6 +90,10 @@ class CData {
 
 										// Class methods
 		static	CData					fromBase64String(const CString& base64String);
+		static	CData					fromBase64StringPtr(const CString* base64StringPtr, void* userData = nil)
+											{ return fromBase64String(*base64StringPtr); }
+		static	CString					toBase64String(const CData* data, void* userData = nil);
+
 		static	CData					storing(SInt32 value, bool copyValue = true)
 											{ return CData(&value, sizeof(SInt32), copyValue); }
 		static	CData					storing(SInt8 value, bool copyValue = true)

@@ -638,3 +638,10 @@ CData CData::fromBase64String(const CString& base64String)
 
 	return data;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CString CData::toBase64String(const CData* data, void* userData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return data->getBase64String();
+}

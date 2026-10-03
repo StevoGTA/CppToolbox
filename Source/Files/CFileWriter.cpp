@@ -17,7 +17,7 @@ OV<SError> CFileWriter::write(const CFile& file, const CData& data)
 	CFileWriter	fileWriter(file);
 
 	// Open
-	OV<SError>	error = fileWriter.open(false, false, true);
+	OV<SError>	error = fileWriter.open(kModeReplace, false, true);
 	ReturnErrorIfError(error);
 
 	// Write

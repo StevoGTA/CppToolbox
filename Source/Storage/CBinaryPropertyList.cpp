@@ -967,7 +967,7 @@ class CBPLWriter {
 									{
 										// Open file for writing
 										CFileWriter	fileWriter(file);
-										OV<SError>	error = fileWriter.open(false, false, true);
+										OV<SError>	error = fileWriter.open(CFileWriter::kModeCreate, false, true);
 										ReturnErrorIfError(error);
 
 										// Write header

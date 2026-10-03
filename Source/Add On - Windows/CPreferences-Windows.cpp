@@ -4,9 +4,11 @@
 
 #include "CPreferences.h"
 
+#include "CFileDataSource.h"
+#include "CFileWriter.h"
+#include "CFolder.h"
+#include "CJSON.h"
 #include "SError.h"
-
-#include <vector>
 
 #if defined(__cplusplus_winrt)
 	// C++/CX
@@ -24,7 +26,26 @@
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CPreferences
+// MARK: Local data
+
+// Structured values (data, dictionaries, and arrays of them) are stored as files in the local folder since the
+//	settings container only takes WinRT base types and limits each value to 8 KB.
+static	const	CString	sPreferencesFolderName(OSSTR("Preferences"));
+static	const	CString	sJSONExtension(OSSTR("json"));
+static	const	CString	sDataExtension(OSSTR("data"));
+static	const	CString	sValuesKey(OSSTR("values"));
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local method declarations
+
+static	CFile		sFileFor(const CString& key, const CString& extension);
+static	OV<CData>	sReadData(const CString& key, const CString& extension);
+static	void		sWriteData(const CString& key, const CString& extension, const CData& data);
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CPreferences
 
 // MARK: Lifecycle methods
 
@@ -52,13 +73,20 @@ CPreferences::~CPreferences()
 bool CPreferences::hasValue(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check settings
 #if defined(__cplusplus_winrt)
 	// C++/CX
-	return ApplicationData::Current->LocalSettings->Values->HasKey(ref new String(pref.getKeyString()));
+	if (ApplicationData::Current->LocalSettings->Values->HasKey(ref new String(pref.getKeyString())))
+		return true;
 #else
 	// C++/WinRT
-	return ApplicationData::Current().LocalSettings().Values().HasKey(hstring(pref.getKeyString()));
+	if (ApplicationData::Current().LocalSettings().Values().HasKey(hstring(pref.getKeyString())))
+		return true;
 #endif
+
+	// Check files
+	return sFileFor(pref.getKeyString(), sJSONExtension).doesExist() ||
+			sFileFor(pref.getKeyString(), sDataExtension).doesExist();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -83,72 +111,72 @@ bool CPreferences::getBool(const BoolPref& boolPref)
 OV<TArray<CData> > CPreferences::getDataArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Get value (stored as an array of Base64 strings)
-#if defined(__cplusplus_winrt)
-	// C++/CX
-	Object^	object = ApplicationData::Current->LocalSettings->Values->Lookup(ref new String(pref.getKeyString()));
-	if (object == nullptr)
+	// Get dictionary (stored as an array of Base64 strings)
+	OV<CDictionary>	dictionary = getDictionary(pref);
+	if (!dictionary.hasValue())
 		// No value
 		return OV<TArray<CData> >();
 
 	// Decode
-	Platform::Array<String^>^	strings = safe_cast<IPropertyValue^>(object)->GetStringArray();
-	TNArray<CData>				datas;
-	for (unsigned int i = 0; i < strings->Length; i++)
-		// Add data
-		datas += CData::fromBase64String(CPlatform::stringFrom(strings[i]));
-
-	return OV<TArray<CData> >(datas);
-#else
-	// C++/WinRT
-	auto	object = ApplicationData::Current().LocalSettings().Values().Lookup(hstring(pref.getKeyString()));
-	if (object == nullptr)
-		// No value
-		return OV<TArray<CData> >();
-
-	// Decode
-	com_array<hstring>	strings;
-	object.as<Windows::Foundation::IPropertyValue>().GetStringArray(strings);
-
-	TNArray<CData>	datas;
-	for (const hstring& string : strings)
-		// Add data
-		datas += CData::fromBase64String(CString(string.c_str()));
-
-	return OV<TArray<CData> >(datas);
-#endif
+	return OV<TArray<CData> >(
+			TNArray<CData>(dictionary->getArrayOfStrings(sValuesKey),
+					(TNArray<CData>::MapProc) CData::fromBase64StringPtr));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<TArray<CDictionary> > CPreferences::getDictionaryArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	//AssertFailUnimplemented();
-return OV<TArray<CDictionary> >();
+	// Read file
+	OV<CData>	data = sReadData(pref.getKeyString(), sJSONExtension);
+	if (!data.hasValue())
+		// No value
+		return OV<TArray<CDictionary> >();
+
+	// Decode
+	TVResult<TArray<CDictionary> >	result = CJSON::arrayOfDictionariesFrom(*data);
+	if (!result.hasValue())
+		// No value
+		return OV<TArray<CDictionary> >();
+
+	return OV<TArray<CDictionary> >(*result);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<TNumberArray<OSType> > CPreferences::getOSTypeArray(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<TNumberArray<OSType> >();
+	// Get dictionary (stored as an array of UInt32s)
+	OV<CDictionary>	dictionary = getDictionary(pref);
+
+	return dictionary.hasValue() ? dictionary->getOVArrayOfUInt32s(sValuesKey) : OV<TNumberArray<OSType> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<CData> CPreferences::getData(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<CData>();
+	// Read file
+	return sReadData(pref.getKeyString(), sDataExtension);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<CDictionary> CPreferences::getDictionary(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	//AssertFailUnimplemented();
-return OV<CDictionary>();
+	// Read file
+	OV<CData>	data = sReadData(pref.getKeyString(), sJSONExtension);
+	if (!data.hasValue())
+		// No value
+		return OV<CDictionary>();
+
+	// Decode
+	TVResult<CDictionary>	result = CJSON::dictionaryFrom(*data);
+	if (!result.hasValue())
+		// No value
+		return OV<CDictionary>();
+
+	return OV<CDictionary>(*result);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -395,53 +423,48 @@ void CPreferences::set(const BoolPref& boolPref, bool value)
 void CPreferences::set(const Pref& pref, const TArray<CData>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Set (stored as an array of Base64 strings)
-#if defined(__cplusplus_winrt)
-	// C++/CX
-	Platform::Array<String^>^	strings = ref new Platform::Array<String^>(array.getCount());
-	UInt32						i = 0;
-	for (TArray<CData>::Iterator iterator = array.getIterator(); iterator; iterator++, i++)
-		// Store Base64 string
-		strings[i] = ref new String(iterator->getBase64String().getOSString());
-	ApplicationData::Current->LocalSettings->Values->Insert(ref new String(pref.getKeyString()),
-			dynamic_cast<PropertyValue^>(PropertyValue::CreateStringArray(strings)));
-#else
-	// C++/WinRT
-	std::vector<hstring>	strings;
-	for (TArray<CData>::Iterator iterator = array.getIterator(); iterator; iterator++)
-		// Store Base64 string
-		strings.push_back(hstring(iterator->getBase64String().getOSString()));
-	ApplicationData::Current().LocalSettings().Values().Insert(hstring(pref.getKeyString()),
-			Windows::Foundation::PropertyValue::CreateStringArray(strings));
-#endif
+	// Compose dictionary (stored as an array of Base64 strings)
+	CDictionary	dictionary;
+	dictionary.set(sValuesKey, TNArray<CString>(array, (TNArray<CString>::MapProc) CData::toBase64String));
+
+	// Set
+	set(pref, dictionary);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const TArray<CDictionary>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Write file
+	sWriteData(pref.getKeyString(), sJSONExtension, *CJSON::dataFrom(array));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const TNumberArray<OSType>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Compose dictionary (stored as an array of UInt32s)
+	CDictionary	dictionary;
+	dictionary.set(sValuesKey, array);
+
+	// Set
+	set(pref, dictionary);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Write file
+	sWriteData(pref.getKeyString(), sDataExtension, data);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CPreferences::set(const Pref& pref, const CDictionary& dictionary)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
+	// Write file
+	sWriteData(pref.getKeyString(), sJSONExtension, *CJSON::dataFrom(dictionary));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -630,7 +653,7 @@ void CPreferences::set(const UniversalTimeIntervalPref& universalTimeIntervalPre
 void CPreferences::remove(const Pref& pref)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Remove
+	// Remove from settings
 #if defined(__cplusplus_winrt)
 	// C++/CX
 	ApplicationData::Current->LocalSettings->Values->Remove(ref new String(pref.getKeyString()));
@@ -638,6 +661,15 @@ void CPreferences::remove(const Pref& pref)
 	// C++/WinRT
 	ApplicationData::Current().LocalSettings().Values().Remove(hstring(pref.getKeyString()));
 #endif
+
+	// Remove files
+	CFile	jsonFile = sFileFor(pref.getKeyString(), sJSONExtension);
+	if (jsonFile.doesExist())
+		jsonFile.remove();
+
+	CFile	dataFile = sFileFor(pref.getKeyString(), sDataExtension);
+	if (dataFile.doesExist())
+		dataFile.remove();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -676,4 +708,59 @@ CPreferences& CPreferences::shared()
 		sPreferences = new CPreferences();
 
 	return *sPreferences;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - Local method definitions
+
+//----------------------------------------------------------------------------------------------------------------------
+CFile sFileFor(const CString& key, const CString& extension)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+#if defined(__cplusplus_winrt)
+	// C++/CX
+	CString	localFolderPath = CPlatform::stringFrom(ApplicationData::Current->LocalFolder->Path);
+#else
+	// C++/WinRT
+	CString	localFolderPath(ApplicationData::Current().LocalFolder().Path().c_str());
+#endif
+
+	return CFolder(CFilesystemPath(localFolderPath).appendingComponent(sPreferencesFolderName))
+			.getFile(key + CString(OSSTR(".")) + extension);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<CData> sReadData(const CString& key, const CString& extension)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check file
+	CFile	file = sFileFor(key, extension);
+	if (!file.doesExist())
+		// No value
+		return OV<CData>();
+
+	// Read file
+	TVResult<CData>	result = CFileDataSource::readData(file);
+	if (!result.hasValue())
+		// No value
+		return OV<CData>();
+
+	return OV<CData>(*result);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void sWriteData(const CString& key, const CString& extension, const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Write file
+	CFile		file = sFileFor(key, extension);
+	OV<SError>	error = file.getFolder().create(true);
+	if (!error.hasValue())
+		// Write
+		error = CFileWriter::write(file, data);
+	if (error.hasValue())
+		// Error
+		AssertFailWith(*error);
 }
