@@ -332,7 +332,8 @@ class CString : public CHashable {
 						CString				removingLeadingAndTrailingWhitespace() const;
 						CString				removingAllWhitespace() const;
 						CString				removingLeadingAndTrailingQuotes() const;
-	
+						CString				percentEncodedForURLQuery(bool encodePlusCharacter = false) const;
+
 						bool				isValidEmailAddress() const;
 						CString				getCommonPrefix(const CString& other) const;
 					

@@ -99,13 +99,14 @@ template <typename T> struct TLockingNumeric {
 						// Unlock
 						mLock.unlockForWriting();
 					}
-		void	add(T value)
+		T		add(T value)
 					{
 						// Lock
 						mLock.lockForWriting();
 
 						// Update value
 						mValueInternal += value;
+						T	newValue = mValueInternal;
 
 						// Check if have semaphore
 						if (mSemaphore.hasInstance())
@@ -114,14 +115,17 @@ template <typename T> struct TLockingNumeric {
 
 						// Unlock
 						mLock.unlockForWriting();
+
+						return newValue;
 					}
-		void	subtract(T value)
+		T		subtract(T value)
 					{
 						// Lock
 						mLock.lockForWriting();
 
 						// Update value
 						mValueInternal -= value;
+						T	newValue = mValueInternal;
 
 						// Check if have semaphore
 						if (mSemaphore.hasInstance())
@@ -130,6 +134,8 @@ template <typename T> struct TLockingNumeric {
 
 						// Unlock
 						mLock.unlockForWriting();
+
+						return newValue;
 					}
 
 		void	wait(T value = 0)

@@ -490,6 +490,38 @@ bool CString::isValidEmailAddress() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CString CString::percentEncodedForURLQuery(bool encodePlusCharacter) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	static	const	char					sHexDigits[] = "0123456789ABCDEF";
+
+					CData					utf8Data = getUTF8Data();
+					TBuffer<const UInt8>	utf8Buffer = utf8Data.getUInt8Buffer();
+					TBuffer<char>			encodedBuffer((CArray::ItemCount) utf8Data.getByteCount() * 3);
+					char*					encodedPtr = *encodedBuffer;
+
+	// Encode everything but RFC 3986 unreserved characters (and '+' unless asked)
+	for (UInt64 i = 0; i < utf8Buffer.getCount(); i++) {
+		// Check character
+		UInt8	byte = (*utf8Buffer)[i];
+		if (((byte >= 'A') && (byte <= 'Z')) || ((byte >= 'a') && (byte <= 'z')) || ((byte >= '0') && (byte <= '9')) ||
+				(byte == '-') || (byte == '.') || (byte == '_') || (byte == '~') || ((byte == '+') &&
+				!encodePlusCharacter))
+			// As is
+			*encodedPtr++ = (char) byte;
+		else {
+			// Percent encode
+			*encodedPtr++ = '%';
+			*encodedPtr++ = sHexDigits[byte >> 4];
+			*encodedPtr++ = sHexDigits[byte & 0x0F];
+		}
+	}
+
+	return CString(*encodedBuffer, (Length) (encodedPtr - *encodedBuffer), kEncodingASCII);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TArray<CString> CString::componentsRespectingQuotes(const CString& separator) const
 //----------------------------------------------------------------------------------------------------------------------
 {
