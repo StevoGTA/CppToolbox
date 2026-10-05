@@ -160,14 +160,21 @@ class CAudioDestination : public CAudioProcessor {
 class CBasicAudioProcessor : public CAudioProcessor {
 	// Methods
 	public:
-					// CAudioProcessor methods
-		OV<SError>	setOutputFormat(const SAudio::ProcessingFormat& audioProcessingFormat)
-						{
-							// Store
-							mOutputAudioProcessingFormat.setValue(audioProcessingFormat);
+							// CAudioProcessor methods
+				OV<SError>	setOutputFormat(const SAudio::ProcessingFormat& audioProcessingFormat)
+								{
+									// Store
+									mOutputAudioProcessingFormat.setValue(audioProcessingFormat);
 
-							return OV<SError>();
-						}
+									return OV<SError>();
+								}
+
+							// Subclass methods
+		virtual	bool		isAlwaysActive() const
+								{ return true; }
+		virtual	bool		isActive() const
+								{ return true; }
+		virtual	void		setIsActive(bool isActive) {}
 
 	// Properties
 	protected:
