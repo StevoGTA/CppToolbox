@@ -16,7 +16,7 @@ struct SLockingBoolean {
 				SLockingBoolean(bool initialValue = false) : mValueInternal(initialValue) {}
 
 				// Instance methods
-		void	set(bool value)
+		void	set(bool value = true)
 					{
 						// Lock
 						mLock.lockForWriting();
@@ -176,4 +176,48 @@ template <typename T> struct TLockingNumeric {
 		CReadPreferringLock	mLock;
 		T					mValueInternal;
 		OI<CSemaphore>		mSemaphore;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TLockingValue
+
+template <typename T> struct TLockingValue {
+	// Methods
+	public:
+				// Lifecycle methods
+				TLockingValue(const T& initialValue) : mValueInternal(initialValue) {}
+
+				// Instance methods
+		void	set(const T& value)
+					{
+						// Lock
+						mLock.lockForWriting();
+
+						// Update value
+						mValueInternal = value;
+
+						// Unlock
+						mLock.unlockForWriting();
+					}
+
+		T		operator*()
+					{
+						// Lock
+						mLock.lockForReading();
+
+						// Copy value
+						T	value(mValueInternal);
+
+						// Unlock
+						mLock.unlockForReading();
+
+						return value;
+					}
+		void	operator=(const T& value)
+					{ set(value); }
+
+	// Properties
+	private:
+		CReadPreferringLock	mLock;
+		T					mValueInternal;
 };
