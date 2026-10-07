@@ -16,11 +16,15 @@ class CMediaPlaybackQueue {
 		class Item {
 			// Methods
 			public:
-													Item() {}
+													// Lifecycle methods
 				virtual								~Item() {}
 
-				virtual	TVResult<I<CMediaPlayer> >	prepare() = 0;
-						void						cancel() {}
+													// Subclass methods
+				virtual	TVResult<I<CMediaPlayer> >	createMediaPlayer() = 0;
+			
+			protected:
+													// Lifecycle methods
+													Item() {}
 		};
 
 	// Info

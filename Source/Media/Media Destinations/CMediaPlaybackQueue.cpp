@@ -84,8 +84,8 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 												StartedMessage((CSRSWMessageQueue::ProcMessage::Proc) handleStarted,
 														this, *item));
 
-										// Prepare
-										TVResult<I<CMediaPlayer> >	mediaPlayer = (*item)->prepare();
+										// Create media player
+										TVResult<I<CMediaPlayer> >	mediaPlayer = (*item)->createMediaPlayer();
 
 										// Check cancelled
 										if (!mCancelled)
@@ -125,7 +125,6 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 								if (mItem.hasReference()) {
 									// Cancel
 									mCancelled = true;
-									(*mItem)->cancel();
 
 									itemHasReference = true;
 								}
