@@ -36,7 +36,7 @@ struct SLockingBoolean {
 		void	wait(bool value = true)
 					{
 						// Setup
-						mSemaphore = OI<CSemaphore>(new CSemaphore());
+						mSemaphore.setInstance(new CSemaphore());
 
 						// Check value
 						while (**this != value)
@@ -44,10 +44,10 @@ struct SLockingBoolean {
 							mSemaphore->waitFor();
 
 						// Cleanup
-						mSemaphore = OI<CSemaphore>();
+						mSemaphore.setInstance();
 					}
 
-		bool	operator*()
+		bool	operator*() const
 					{
 						// Setup
 						bool value;
@@ -141,7 +141,7 @@ template <typename T> struct TLockingNumeric {
 		void	wait(T value = 0)
 					{
 						// Setup
-						mSemaphore = OI<CSemaphore>(new CSemaphore());
+						mSemaphore.setInstance(new CSemaphore());
 
 						// Check value
 						while (**this != value)
@@ -149,10 +149,10 @@ template <typename T> struct TLockingNumeric {
 							mSemaphore->waitFor();
 
 						// Cleanup
-						mSemaphore = OI<CSemaphore>();
+						mSemaphore.setInstance();
 					}
 
-		T		operator*()
+		T		operator*() const
 					{
 						// Setup
 						T value;
@@ -200,7 +200,7 @@ template <typename T> struct TLockingValue {
 						mLock.unlockForWriting();
 					}
 
-		T		operator*()
+		T		operator*() const
 					{
 						// Lock
 						mLock.lockForReading();
