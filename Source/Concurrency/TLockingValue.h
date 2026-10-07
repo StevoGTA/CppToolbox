@@ -213,6 +213,19 @@ template <typename T> struct TLockingValue {
 
 						return value;
 					}
+		bool	operator==(const T& value) const
+					{
+						// Lock
+						mLock.lockForReading();
+
+						// Compare
+						bool	isEqual = mValueInternal == value;
+
+						// Unlock
+						mLock.unlockForReading();
+
+						return isEqual;
+					}
 		void	operator=(const T& value)
 					{ set(value); }
 

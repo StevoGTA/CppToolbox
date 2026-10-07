@@ -104,7 +104,7 @@ class CAudioFrames {
 			// Methods
 			public:
 									// Lifecycle methods
-									SourceQueue(UInt32 channelCount);
+									SourceQueue(UInt32 channelCount, UInt64 startFrameIndex);
 									SourceQueue(const SourceQueue& other);
 									~SourceQueue();
 

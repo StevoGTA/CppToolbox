@@ -12,10 +12,10 @@
 
 class CAudioFrames::SourceQueue::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals(UInt32 channelCount) :
+		Internals(UInt32 channelCount, UInt64 startFrameIndex) :
 			TReferenceCountableAutoDelete(),
-					mBuffer(0), mChannelCount(channelCount), mFirstBufferedFrameIndex(0), mBufferedFrameCount(0),
-					mConsumedFrameCount(0)
+					mBuffer(0), mChannelCount(channelCount), mFirstBufferedFrameIndex(startFrameIndex),
+					mBufferedFrameCount(0), mConsumedFrameCount(0)
 			{}
 
 		TBuffer<Float32>	mBuffer;
@@ -32,10 +32,10 @@ class CAudioFrames::SourceQueue::Internals : public TReferenceCountableAutoDelet
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioFrames::SourceQueue::SourceQueue(UInt32 channelCount)
+CAudioFrames::SourceQueue::SourceQueue(UInt32 channelCount, UInt64 startFrameIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(channelCount);
+	mInternals = new Internals(channelCount, startFrameIndex);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
