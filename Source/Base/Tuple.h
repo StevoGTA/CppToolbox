@@ -80,6 +80,77 @@ template <typename A, typename B, typename C, typename D> struct TV4 {
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - TV5
+
+template <typename A, typename B, typename C, typename D, typename E> struct TV5 {
+	// Methods
+	public:
+					// Lifecycle methods
+					TV5(const A& a, const B& b, const C& c, const D& d, const E& e) :
+						mA(a), mB(b), mC(c), mD(d), mE(e)
+						{}
+					TV5(const TV5& other) : mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD), mE(other.mE) {}
+
+					// Instance methods
+		const	A&	getA() const
+						{ return mA; }
+		const	B&	getB() const
+						{ return mB; }
+		const	C&	getC() const
+						{ return mC; }
+		const	D&	getD() const
+						{ return mD; }
+		const	E&	getE() const
+						{ return mE; }
+
+	// Properties
+	private:
+		A	mA;
+		B	mB;
+		C	mC;
+		D	mD;
+		E	mE;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - TV6
+
+template <typename A, typename B, typename C, typename D, typename E, typename F> struct TV6 {
+	// Methods
+	public:
+					// Lifecycle methods
+					TV6(const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) :
+						mA(a), mB(b), mC(c), mD(d), mE(e), mF(f)
+						{}
+					TV6(const TV6& other) :
+						mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD), mE(other.mE), mF(other.mF)
+						{}
+
+					// Instance methods
+		const	A&	getA() const
+						{ return mA; }
+		const	B&	getB() const
+						{ return mB; }
+		const	C&	getC() const
+						{ return mC; }
+		const	D&	getD() const
+						{ return mD; }
+		const	E&	getE() const
+						{ return mE; }
+		const	F&	getF() const
+						{ return mF; }
+
+	// Properties
+	private:
+		A	mA;
+		B	mB;
+		C	mC;
+		D	mD;
+		E	mE;
+		F	mF;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TRCR
 
 template <typename A, typename B> struct TRCR {
