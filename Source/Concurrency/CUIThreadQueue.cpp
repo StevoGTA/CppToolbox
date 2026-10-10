@@ -87,11 +87,13 @@ void CUIThreadQueue::add(const std::function<void()>& proc, bool isRequired)
 			proc_();
 	});
 #elif defined(TARGET_OS_WINDOWS)
-	mInternals->mDispatcherQueue.TryEnqueue([isActive, proc, isRequired]() {
-		// Check if still active or required
-		if (*isActive || isRequired)
-			// Call proc
-			proc();
-	});
+	if (!mInternals->mDispatcherQueue.TryEnqueue([isActive, proc, isRequired](){
+				// Check if still active or required
+				if (*isActive || isRequired)
+					// Call proc
+					proc();
+			}) && isRequired)
+		// Unable to queue as the UI thread is shutting down, so call now as required calls must always happen
+		proc();
 #endif
 }

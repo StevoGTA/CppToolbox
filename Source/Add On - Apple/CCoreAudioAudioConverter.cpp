@@ -16,7 +16,7 @@ class CCoreAudioAudioConverter::Internals {
 							Internals(CAudioConverter& audioConverter) :
 								mAudioConverter(audioConverter),
 										mOutputAudioBufferList(nil), mAudioConverterRef(nil),
-										mSourceHasMoreToRead(true), mSourceTimeInterval(0.0)
+										mSourceHasMoreToRead(true), mOutputFrameCount(0)
 								{}
 							~Internals()
 								{
@@ -76,11 +76,17 @@ class CCoreAudioAudioConverter::Internals {
 										// Try to read
 										TVResult<CAudioProcessor::SourceInfo>	audioProcessorSourceInfo =
 																						internals.mAudioConverter.
-																								CAudioProcessor::performInto(
-																										*internals.mInputAudioFrames);
+																								CAudioProcessor::
+																										performInto(
+																												*internals
+																														.mInputAudioFrames);
 										if (audioProcessorSourceInfo.hasValue()) {
 											// Success
-											internals.mSourceTimeInterval = audioProcessorSourceInfo->getTimeInterval();
+											if (!internals.mOutputStartTimeInterval.hasValue())
+												// First input since start or seek, so the time of the first output
+												//	frame
+												internals.mOutputStartTimeInterval.setValue(
+														audioProcessorSourceInfo->getTimeInterval());
 											status = noErr;
 										} else if (audioProcessorSourceInfo.getError() == SError::mEndOfData) {
 											// End of data
@@ -111,7 +117,8 @@ class CCoreAudioAudioConverter::Internals {
 		OI<CAudioFrames>				mInputAudioFrames;
 		OV<SError>						mFillBufferDataError;
 		bool							mSourceHasMoreToRead;
-		UniversalTimeInterval			mSourceTimeInterval;
+		OV<UniversalTimeInterval>		mOutputStartTimeInterval;
+		UInt64							mOutputFrameCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -217,10 +224,17 @@ TVResult<CAudioProcessor::SourceInfo> CCoreAudioAudioConverter::performInto(CAud
 	if (status != noErr) return TVResult<SourceInfo>(*mInternals->mFillBufferDataError);
 	if (frameCount == 0) return TVResult<SourceInfo>(SError::mEndOfData);
 
+	// Compose source info for the first frame returned
+	SourceInfo	sourceInfo(
+						*mInternals->mOutputStartTimeInterval +
+								(UniversalTimeInterval) mInternals->mOutputFrameCount /
+										mOutputAudioProcessingFormat->getSampleRate());
+
 	// Update
 	audioFrames.completeWrite(*mInternals->mOutputAudioBufferList);
+	mInternals->mOutputFrameCount += frameCount;
 
-	return TVResult<SourceInfo>(SourceInfo(mInternals->mSourceTimeInterval));
+	return TVResult<SourceInfo>(sourceInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -229,6 +243,8 @@ void CCoreAudioAudioConverter::seek(UniversalTimeInterval timeInterval)
 {
 	// Update
 	mInternals->mSourceHasMoreToRead = true;
+	mInternals->mOutputStartTimeInterval.removeValue();
+	mInternals->mOutputFrameCount = 0;
 
 	// Do super
 	CAudioProcessor::seek(timeInterval);

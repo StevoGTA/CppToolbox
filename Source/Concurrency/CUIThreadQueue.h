@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "PlatformDefinitions.h"
+
 #include <functional>
 
 #if defined(TARGET_OS_WINDOWS)
@@ -35,8 +37,8 @@ class CUIThreadQueue {
 				~CUIThreadQueue();
 
 				// Instance methods
-		void	add(Proc proc, void* userData, bool isRequired);
-		void	add(const std::function<void()>& proc, bool isRequired);
+		void	add(Proc proc, void* userData = nil, bool isRequired = false);
+		void	add(const std::function<void()>& proc, bool isRequired = false);
 
 	// Properties
 	private:

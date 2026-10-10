@@ -22,7 +22,7 @@ class CSecretRabbitCodeAudioConverter::Internals {
 	public:
 						Internals(CAudioConverter& audioConverter) :
 								mAudioConverter(audioConverter),
-										mSRCState(nil), mSourceHasMoreToRead(true), mSourceTimeInterval(0.0)
+										mSRCState(nil), mSourceHasMoreToRead(true), mOutputFrameCount(0)
 							{}
 						~Internals()
 							{
@@ -72,7 +72,10 @@ class CSecretRabbitCodeAudioConverter::Internals {
 																							*internals.mInputAudioFrames);
 									if (audioProcessorSourceInfo.hasValue()) {
 										// Success
-										internals.mSourceTimeInterval = audioProcessorSourceInfo->getTimeInterval();
+										if (!internals.mOutputStartTimeInterval.hasValue())
+											// First input since start or seek, so the time of the first output frame
+											internals.mOutputStartTimeInterval.setValue(
+													audioProcessorSourceInfo->getTimeInterval());
 
 										// Check if need to convert
 										if (internals.mInputAudioProcessingFormat->getIsSignedInteger()) {
@@ -124,7 +127,8 @@ class CSecretRabbitCodeAudioConverter::Internals {
 		OI<CAudioFrames>				mInputFloatAudioFrames;
 		OV<SError>						mPerformError;
 		bool							mSourceHasMoreToRead;
-		UniversalTimeInterval			mSourceTimeInterval;
+		OV<UniversalTimeInterval>		mOutputStartTimeInterval;
+		UInt64							mOutputFrameCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -196,10 +200,17 @@ TVResult<CAudioProcessor::SourceInfo> CSecretRabbitCodeAudioConverter::performIn
 							(float*) audioFrames.getWriteInfo().getSegment(0));
 	if (frameCount == 0) return TVResult<SourceInfo>(SError::mEndOfData);
 
+	// Compose source info for the first frame returned
+	SourceInfo	sourceInfo(
+						*mInternals->mOutputStartTimeInterval +
+								(UniversalTimeInterval) mInternals->mOutputFrameCount /
+										mOutputAudioProcessingFormat->getSampleRate());
+
 	// Update
 	audioFrames.completeWrite(frameCount);
+	mInternals->mOutputFrameCount += frameCount;
 
-	return TVResult<SourceInfo>(SourceInfo(mInternals->mSourceTimeInterval));
+	return TVResult<SourceInfo>(sourceInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -208,6 +219,8 @@ void CSecretRabbitCodeAudioConverter::seek(UniversalTimeInterval timeInterval)
 {
 	// Update
 	mInternals->mSourceHasMoreToRead = true;
+	mInternals->mOutputStartTimeInterval.removeValue();
+	mInternals->mOutputFrameCount = 0;
 
 	// Do super
 	CAudioProcessor::seek(timeInterval);

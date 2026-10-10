@@ -31,7 +31,7 @@ class CMediaFoundationResamplerInternals {
 	public:
 							CMediaFoundationResamplerInternals(CAudioConverter& audioConverter) :
 								mAudioConverter(audioConverter),
-										mSourceTimeInterval(0.0)
+										mOutputFrameCount(0)
 								{}
 							~CMediaFoundationResamplerInternals()
 								{
@@ -54,8 +54,11 @@ class CMediaFoundationResamplerInternals {
 																							*internals.mInputAudioProcessingFormat);
 									ReturnErrorIfResultError(audioProcessorSourceInfo);
 
-									// Store
-									internals.mSourceTimeInterval = audioProcessorSourceInfo->getTimeInterval();
+									// Check if first input since start or seek
+									if (!internals.mOutputStartTimeInterval.hasValue())
+										// Store as the time of the first output frame
+										internals.mOutputStartTimeInterval.setValue(
+												audioProcessorSourceInfo->getTimeInterval());
 
 									return OV<SError>();
 								}
@@ -66,7 +69,8 @@ class CMediaFoundationResamplerInternals {
 		OCI<IMFTransform>				mResamplerTransform;
 
 		OCI<IMFSample>					mInputSample;
-		UniversalTimeInterval			mSourceTimeInterval;
+		OV<UniversalTimeInterval>		mOutputStartTimeInterval;
+		UInt64							mOutputFrameCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -183,6 +187,7 @@ TVResult<CAudioProcessor::SourceInfo> CMediaFoundationResampler::performInto(CAu
 	}
 
 	// Fill audio frames as much as we can
+	UInt32	startFrameCount = audioFrames.getCurrentFrameCount();
 	while (audioFrames.getCurrentFrameCount() < audioFrames.getAllocatedFrameCount()) {
 		// Create output sample
 		TCIResult<IMFSample>	sample =
@@ -207,13 +212,26 @@ TVResult<CAudioProcessor::SourceInfo> CMediaFoundationResampler::performInto(CAu
 		ReturnValueIfResultError(result, TVResult<SourceInfo>(result.getError()));
 	}
 
-	return TVResult<SourceInfo>(SourceInfo(mInternals->mSourceTimeInterval));
+	// Compose source info for the first frame returned
+	SourceInfo	sourceInfo(
+						*mInternals->mOutputStartTimeInterval +
+								(UniversalTimeInterval) mInternals->mOutputFrameCount /
+										mOutputAudioProcessingFormat->getSampleRate());
+
+	// Update
+	mInternals->mOutputFrameCount += audioFrames.getCurrentFrameCount() - startFrameCount;
+
+	return TVResult<SourceInfo>(sourceInfo);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void CMediaFoundationResampler::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Update
+	mInternals->mOutputStartTimeInterval.removeValue();
+	mInternals->mOutputFrameCount = 0;
+
 	// Do super
 	__super::seek(timeInterval);
 
