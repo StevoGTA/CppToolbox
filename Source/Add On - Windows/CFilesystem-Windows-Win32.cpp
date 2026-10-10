@@ -8,6 +8,7 @@
 #include "SError-Windows.h"
 
 #include <shellapi.h>
+#include <shlobj_core.h>
 
 #pragma comment(lib, "shell32")
 
@@ -215,17 +216,58 @@ return OV<SError>();
 OV<SError> CFilesystem::revealInFileExplorer(const TArray<CFile>& files)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Iterate files
+	// Group files by folder - each folder gets one File Explorer window with its files selected
+	TNArrayDictionary<CFile>	filesByFolderPath;
+	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++)
+		// Add file
+		filesByFolderPath.add(iterator->getFolder().getFilesystemPath().getString(), *iterator);
+
+	// Iterate folders
 	OV<SError>	error;
-	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++) {
-		// Explore file
-		HINSTANCE	result =
-							::ShellExecuteW(NULL, L"explore",
-									iterator->getFolder().getFilesystemPath().getString().getOSString(), NULL, NULL,
-									SW_SHOW);
-		if (((INT_PTR) result) < 32)
-			// Error
-			error.setValue(SErrorFromWindowsGetLastError());
+	for (TNArrayDictionary<CFile>::Iterator iterator = filesByFolderPath.getIterator(); iterator; iterator++) {
+		// Setup
+		const	CString&			folderPath = iterator.getKey();
+		const	TNArray<CFile>&		folderFiles = iterator.getValue();
+				PIDLIST_ABSOLUTE	folderPIDL = ::ILCreateFromPathW(folderPath.getOSString());
+				PIDLIST_ABSOLUTE*	filePIDLs = new PIDLIST_ABSOLUTE[folderFiles.getCount()];
+				PCUITEMID_CHILD*	childPIDLs = new PCUITEMID_CHILD[folderFiles.getCount()];
+				UINT				count = 0;
+
+		// Collect the files that can still be found - one that has gone away cannot be selected
+		if (folderPIDL != NULL)
+			for (TArray<CFile>::Iterator fileIterator = folderFiles.getIterator(); fileIterator; fileIterator++) {
+				// Get PIDL
+				PIDLIST_ABSOLUTE	filePIDL =
+											::ILCreateFromPathW(
+													fileIterator->getFilesystemPath().getString().getOSString());
+				if (filePIDL != NULL) {
+					// Add
+					filePIDLs[count] = filePIDL;
+					childPIDLs[count++] = (PCUITEMID_CHILD) ::ILFindLastID(filePIDL);
+				}
+			}
+
+		// Check situation
+		if (count > 0) {
+			// Open folder and select files
+			HRESULT	result = ::SHOpenFolderAndSelectItems(folderPIDL, count, childPIDLs, 0);
+			if (FAILED(result))
+				// Error
+				error.setValue(SErrorFromHRESULT(result));
+		} else {
+			// Nothing to select, so just open the folder
+			HINSTANCE	result = ::ShellExecuteW(NULL, L"explore", folderPath.getOSString(), NULL, NULL, SW_SHOW);
+			if (((INT_PTR) result) < 32)
+				// Error
+				error.setValue(SErrorFromWindowsGetLastError());
+		}
+
+		// Cleanup
+		for (UINT i = 0; i < count; i++)
+			::ILFree(filePIDLs[i]);
+		delete[] filePIDLs;
+		delete[] childPIDLs;
+		::ILFree(folderPIDL);
 	}
 
 	return error;
