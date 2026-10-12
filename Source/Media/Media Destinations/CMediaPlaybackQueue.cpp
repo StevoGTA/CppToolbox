@@ -14,22 +14,24 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 	public:
 		class StartedMessage : public CSRSWMessageQueue::ProcMessage {
 			public:
-						StartedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item) :
+						StartedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item,
+								UInt32 prepareID) :
 							CSRSWMessageQueue::ProcMessage(sizeof(StartedMessage), proc, userData),
-									mItem(new I<CMediaPlaybackQueue::Item>(item))
+									mItem(new I<CMediaPlaybackQueue::Item>(item)), mPrepareID(prepareID)
 							{}
 
 				void	cleanup()
 							{ Delete(mItem); }
 
 				I<CMediaPlaybackQueue::Item>*	mItem;
+				UInt32							mPrepareID;
 		};
 		class CompletedMessage : public CSRSWMessageQueue::ProcMessage {
 			public:
 						CompletedMessage(Proc proc, void* userData, const I<CMediaPlaybackQueue::Item>& item,
-								const TVResult<I<CMediaPlayer> >& mediaPlayer) :
+								UInt32 prepareID, const TVResult<I<CMediaPlayer> >& mediaPlayer) :
 							CSRSWMessageQueue::ProcMessage(sizeof(CompletedMessage), proc, userData),
-									mItem(new I<CMediaPlaybackQueue::Item>(item)),
+									mItem(new I<CMediaPlaybackQueue::Item>(item)), mPrepareID(prepareID),
 									mMediaPlayer(new TVResult<I<CMediaPlayer> >(mediaPlayer))
 							{}
 
@@ -40,6 +42,7 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 							}
 
 				I<CMediaPlaybackQueue::Item>*	mItem;
+				UInt32							mPrepareID;
 				TVResult<I<CMediaPlayer> >*		mMediaPlayer;
 		};
 
@@ -48,7 +51,7 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 							CThread(CString(OSSTR("CMediaPlaybackQueueItemPrepareThread"))),
 									mInfo(info), mMessageQueue(1024),
 									mShutdownRequested(false),
-									mCancelled(false)
+									mCurrentPrepareID(0)
 							{
 								// Setup
 								messageQueues.add(mMessageQueue);
@@ -64,6 +67,7 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 									// Get item
 									mItemLock.lock();
 									OR<I<CMediaPlaybackQueue::Item> >	item = mItem;
+									UInt32								prepareID = mCurrentPrepareID;
 									mItemLock.unlock();
 
 									// Check for item
@@ -74,6 +78,7 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 										// Get item
 										mItemLock.lock();
 										item = mItem;
+										prepareID = mCurrentPrepareID;
 										mItemLock.unlock();
 									}
 
@@ -82,19 +87,15 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 										// Queue message
 										mMessageQueue.submit(
 												StartedMessage((CSRSWMessageQueue::ProcMessage::Proc) handleStarted,
-														this, *item));
+														this, *item, prepareID));
 
 										// Create media player
 										TVResult<I<CMediaPlayer> >	mediaPlayer = (*item)->createMediaPlayer();
 
-										// Check cancelled
-										if (!mCancelled)
-											// Queue message
-											mMessageQueue.submit(
-													CompletedMessage(
-															(CSRSWMessageQueue::ProcMessage::Proc) handleCompleted,
-															this, *item,
-													mediaPlayer));
+										// Queue message
+										mMessageQueue.submit(
+												CompletedMessage((CSRSWMessageQueue::ProcMessage::Proc) handleCompleted,
+														this, *item, prepareID, mediaPlayer));
 
 										// Clear item
 										mItemLock.lock();
@@ -109,7 +110,6 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 								// Store
 								mItemLock.lock();
 								mItem = OR<I<CMediaPlaybackQueue::Item> >(item);
-								mCancelled = false;
 								mItemLock.unlock();
 
 								// Signal
@@ -117,17 +117,10 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 							}
 				void	cancelInflight()
 							{
-								// Setup
-								bool	itemHasReference = false;
-
-								// Cancel item if there is one
+								// Update current prepare ID so any messages from the in-flight prepare are ignored
 								mItemLock.lock();
-								if (mItem.hasReference()) {
-									// Cancel
-									mCancelled = true;
-
-									itemHasReference = true;
-								}
+								mCurrentPrepareID++;
+								bool	itemHasReference = mItem.hasReference();
 								mItemLock.unlock();
 
 								// Check if need to wait
@@ -159,8 +152,10 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 								// Setup
 								StartedMessage&	startedMessage = (StartedMessage&) message;
 
-								// Check if shutdown requested
-								if (!mediaPlaybackQueueItemPrepareThread->mShutdownRequested)
+								// Check if shutdown requested or no longer current
+								if (!mediaPlaybackQueueItemPrepareThread->mShutdownRequested &&
+										(startedMessage.mPrepareID ==
+												mediaPlaybackQueueItemPrepareThread->mCurrentPrepareID))
 									// Inform
 									mediaPlaybackQueueItemPrepareThread->mInfo.itemPrepareStarted(
 											*startedMessage.mItem);
@@ -171,8 +166,10 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 								// Setup
 								CompletedMessage&	completedMessage = (CompletedMessage&) message;
 
-								// Check if shutdown requested
-								if (!mediaPlaybackQueueItemPrepareThread->mShutdownRequested)
+								// Check if shutdown requested or no longer current
+								if (!mediaPlaybackQueueItemPrepareThread->mShutdownRequested &&
+										(completedMessage.mPrepareID ==
+												mediaPlaybackQueueItemPrepareThread->mCurrentPrepareID))
 									// Inform
 									mediaPlaybackQueueItemPrepareThread->mInfo.itemPrepareCompleted(
 											*completedMessage.mItem, *completedMessage.mMediaPlayer);
@@ -186,7 +183,7 @@ class CMediaPlaybackQueueItemPrepareThread : public CThread {
 		bool								mShutdownRequested;
 
 		OR<I<CMediaPlaybackQueue::Item> >	mItem;
-		bool								mCancelled;
+		UInt32								mCurrentPrepareID;
 		CLock								mItemLock;
 };
 
