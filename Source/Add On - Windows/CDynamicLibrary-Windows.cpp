@@ -4,20 +4,43 @@
 
 #include "CDynamicLibrary.h"
 
+#include "CFileDataSource.h"
 #include "CReferenceCountable.h"
 #include "SError-Windows.h"
+
+#pragma comment(lib, "Version.lib")
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CDynamicLibrary::Internals
 
 class CDynamicLibrary::Internals : public TReferenceCountableAutoDelete<Internals> {
 	public:
-		Internals(const CFile& file, CDynamicLibrary::Handle handle) :
-			TReferenceCountableAutoDelete(),
-					mFile(file), mHandle(handle)
-			{}
-		~Internals()
-			{ ::FreeLibrary(mHandle); }
+									Internals(const CFile& file, CDynamicLibrary::Handle handle) :
+										TReferenceCountableAutoDelete(),
+												mFile(file), mHandle(handle)
+										{}
+									~Internals()
+										{ ::FreeLibrary(mHandle); }
+
+		static	OV<TBuffer<UInt8> >	getVersionInfo(const CFile& file)
+										{
+											// Get byte count
+											DWORD	byteCount =
+															::GetFileVersionInfoSize(
+																	file.getFilesystemPath().getString().getOSString(),
+																	NULL);
+											if (byteCount == 0)
+												// No version info
+												return OV<TBuffer<UInt8> >();
+
+											// Get version info
+											TBuffer<UInt8>	buffer(byteCount);
+
+											return ::GetFileVersionInfo(
+															file.getFilesystemPath().getString().getOSString(), 0,
+															byteCount, *buffer)[] ?
+													OV<TBuffer<UInt8> >(buffer) : OV<TBuffer<UInt8> >();
+										}
 
 		CFile					mFile;
 		CDynamicLibrary::Handle	mHandle;
@@ -84,4 +107,92 @@ TVResult<CDynamicLibrary> CDynamicLibrary::load(const CFile& file)
 		return TVResult<CDynamicLibrary>(SErrorFromWindowsGetLastError());
 
 	return TVResult<CDynamicLibrary>(CDynamicLibrary(file, handle));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get version info
+	OV<TBuffer<UInt8> >	buffer = Internals::getVersionInfo(file);
+	if (!buffer.hasValue())
+		// No version info
+		return OV<SVersionInfo>();
+
+	// Get fixed file info
+	VS_FIXEDFILEINFO*	fixedFileInfo;
+	UINT				length;
+	if (!::VerQueryValue(**buffer, TEXT("\\"), (LPVOID*) &fixedFileInfo, &length) || (length == 0))
+		// No fixed file info
+		return OV<SVersionInfo>();
+
+	return OV<SVersionInfo>(
+			SVersionInfo(
+					CString((UInt32) HIWORD(fixedFileInfo->dwFileVersionMS)) + CString(OSSTR(".")) +
+							CString((UInt32) LOWORD(fixedFileInfo->dwFileVersionMS)) + CString(OSSTR(".")) +
+							CString((UInt32) HIWORD(fixedFileInfo->dwFileVersionLS)) + CString(OSSTR(".")) +
+							CString((UInt32) LOWORD(fixedFileInfo->dwFileVersionLS))));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<CString> CDynamicLibrary::getManufacturer(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get version info
+	OV<TBuffer<UInt8> >	buffer = Internals::getVersionInfo(file);
+	if (!buffer.hasValue())
+		// No version info
+		return OV<CString>();
+
+	// Get the first language and code page
+	WORD*	translation;
+	UINT	length;
+	if (!::VerQueryValue(**buffer, TEXT("\\VarFileInfo\\Translation"), (LPVOID*) &translation, &length) ||
+			(length < (2 * sizeof(WORD))))
+		// No translation
+		return OV<CString>();
+
+	// Get company name
+	LPCWSTR	companyName;
+	if (!::VerQueryValue(**buffer,
+					CString::make(OSSTR("\\StringFileInfo\\%04x%04x\\CompanyName"), translation[0], translation[1])
+							.getOSString(),
+					(LPVOID*) &companyName, &length) ||
+			(length <= 1))
+		// No company name
+		return OV<CString>();
+
+	return OV<CString>(CString(companyName));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CDynamicLibrary::Loadability CDynamicLibrary::getLoadability(const CFile& file)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Read the DOS and PE headers
+	CFileDataSource	fileDataSource(file);
+	UInt16			dosSignature;
+	UInt32			peHeaderOffset;
+	UInt32			peSignature;
+	UInt16			machine;
+	if (fileDataSource.read(0, &dosSignature, sizeof(UInt16)).hasValue() || (dosSignature != IMAGE_DOS_SIGNATURE) ||
+			fileDataSource.read(0x3C, &peHeaderOffset, sizeof(UInt32)).hasValue() ||
+			fileDataSource.read(peHeaderOffset, &peSignature, sizeof(UInt32)).hasValue() ||
+			(peSignature != IMAGE_NT_SIGNATURE) ||
+			fileDataSource.read(peHeaderOffset + 4, &machine, sizeof(UInt16)).hasValue())
+		// Not a library, or missing or damaged
+		return Loadability(Loadability::kStateUnreadable);
+
+	// Check for this process's architecture.  The PE header's OS version is not checked, as nearly every library
+	//	declares an old one, and nothing here quarantines libraries.
+#if defined(_M_ARM64)
+	return (machine == IMAGE_FILE_MACHINE_ARM64) ?
+			Loadability(Loadability::kStatePossible) : Loadability(Loadability::kStateWrongArchitecture);
+#elif defined(_M_X64)
+	return (machine == IMAGE_FILE_MACHINE_AMD64) ?
+			Loadability(Loadability::kStatePossible) : Loadability(Loadability::kStateWrongArchitecture);
+#elif defined(_M_IX86)
+	return (machine == IMAGE_FILE_MACHINE_I386) ?
+			Loadability(Loadability::kStatePossible) : Loadability(Loadability::kStateWrongArchitecture);
+#endif
 }
