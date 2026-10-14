@@ -795,7 +795,7 @@ bool CString::compareTo(const CString& other, CompareToOptions compareToOptions)
 	if (compareToOptions & CString::kCompareToOptionsNumerically)
 		compareFlags |= kCFCompareNumerically;
 	
-	return ::CFStringCompare(mStringRef, other.mStringRef, compareFlags) != kCFCompareGreaterThan;
+	return ::CFStringCompare(mStringRef, other.mStringRef, compareFlags) == kCFCompareLessThan;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

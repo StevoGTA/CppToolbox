@@ -66,6 +66,9 @@ struct SVersionInfo {
 		const	CString&	getString() const
 								{ return mString; }
 
+				bool		compareTo(const SVersionInfo& other) const
+								{ return mString.compareTo(other.mString, CString::kCompareToOptionsNumerically); }
+
 	// Properties
 	private:
 		UInt8	mMajorVersion;

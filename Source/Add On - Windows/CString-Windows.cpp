@@ -853,20 +853,20 @@ bool CString::compareTo(const CString& other, CompareToOptions compareToOptions)
 {
 	// Setup
 	DWORD	compareFlags = 0;
-	if (compareFlags & kCompareToOptionsCaseInsensitive)
+	if (compareToOptions & kCompareToOptionsCaseInsensitive)
 		// Case insensitive
 		compareFlags |= LINGUISTIC_IGNORECASE;
 
-	if (compareFlags & kCompareToOptionsNonliteral)
+	if (compareToOptions & kCompareToOptionsNonliteral)
 		// Non-literal
 		compareFlags |= LINGUISTIC_IGNOREDIACRITIC | NORM_IGNOREKANATYPE;
 
-	if (compareFlags & kCompareToOptionsNumerically)
+	if (compareToOptions & kCompareToOptionsNumerically)
 		// Numeric
 		compareFlags |= SORT_DIGITSASNUMBERS;
 
 	return ::CompareStringEx(LOCALE_NAME_USER_DEFAULT, compareFlags, mString.c_str(), (int) mString.length(),
-			other.mString.c_str(), (int) other.mString.length(), NULL, NULL, 0) != CSTR_GREATER_THAN;
+			other.mString.c_str(), (int) other.mString.length(), NULL, NULL, 0) == CSTR_LESS_THAN;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
