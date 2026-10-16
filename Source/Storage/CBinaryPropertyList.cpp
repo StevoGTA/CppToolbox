@@ -963,16 +963,15 @@ class CBPLWriter {
 											return 8;
 									}
 
-		OV<SError>				write(const CFile& file)
+		TVResult<CData>			getData()
 									{
-										// Open file for writing
-										CFileWriter	fileWriter(file);
-										OV<SError>	error = fileWriter.open(CFileWriter::kModeCreate, false, true);
-										ReturnErrorIfError(error);
+										// Setup
+										CData	data;
+										mObjectIndexByString.removeAll();
+										mObjectInfos.removeAll();
 
 										// Write header
-										error = fileWriter.write(sBinaryPListV10Header);
-										ReturnErrorIfError(error);
+										data += sBinaryPListV10Header;
 
 										// Preprocess
 										PreprocessResult	preprocessResult = preprocess(mDictionary);
@@ -983,62 +982,47 @@ class CBPLWriter {
 														preprocessResult.getA() + preprocessResult.getB().getCount());
 
 										for (TSet<CString>::Iterator iterator = preprocessResult.getB().getIterator();
-												iterator; iterator++) {
-											// Write
-											TVResult<ObjectInfo>	result = write(fileWriter, *iterator);
-											ReturnErrorIfResultError(result);
-
-											// Note index
-											mObjectIndexByString.set(*iterator, result->getA());
-										}
+												iterator; iterator++)
+											// Write and note index
+											mObjectIndexByString.set(*iterator, write(data, *iterator).getA());
 
 										// Write objects
-										TVResult<ObjectInfo>	result = write(fileWriter, mDictionary);
-										ReturnErrorIfResultError(result);
+										TVResult<ObjectInfo>	result = write(data, mDictionary);
+										ReturnValueIfResultError(result, TVResult<CData>(result.getError()));
 
 										// Get current state
 										UInt64	topObjectIndex = result->getA();
-										UInt8	objectOffsetByteCount = getIntegerByteCount(fileWriter.getPosition());
+										UInt8	objectOffsetByteCount = getIntegerByteCount(data.getByteCount());
 										UInt64	totalObjectCount = mObjectInfos.getCount();
-										UInt64	objectOffsetTableOffset = fileWriter.getPosition();
+										UInt64	objectOffsetTableOffset = data.getByteCount();
 
 										// Write object offsets
 										for (TArray<ObjectInfo>::Iterator iterator = mObjectInfos.getIterator();
 												iterator; iterator++) {
 											// Write offset
 											UInt64	swappedOffset = EndianU64_NtoB(iterator->getB());
-											error =
-													fileWriter.write(
-															(UInt8*) &swappedOffset + sizeof(UInt64) -
-																	objectOffsetByteCount,
-															objectOffsetByteCount);
-											ReturnErrorIfError(error);
+											data.append(
+													(UInt8*) &swappedOffset + sizeof(UInt64) - objectOffsetByteCount,
+													objectOffsetByteCount);
 										}
 
 										// Write trailer
 										SBinaryPListTrailer	trailer(objectOffsetByteCount, mObjectIndexByteCount,
 																	totalObjectCount, topObjectIndex,
 																	objectOffsetTableOffset);
-										error = fileWriter.write(&trailer, sizeof(SBinaryPListTrailer));
-										ReturnErrorIfError(error);
+										data.append(&trailer, sizeof(SBinaryPListTrailer));
 
-										// Close
-										error = fileWriter.close();
-										ReturnErrorIfError(error);
-
-										return OV<SError>();
+										return TVResult<CData>(data);
 									}
-		OV<SError>				writeMarkerAndCount(CFileWriter& fileWriter, UInt8 marker, UInt64 count)
+		void					writeMarkerAndCount(CData& data, UInt8 marker, UInt64 count)
 									{
 										// Check count
-										if (count < 15) {
+										if (count < 15)
 											// Simple marker
-											OV<SError>	error = fileWriter.write((UInt8) (marker | count));
-											ReturnErrorIfError(error);
-										} else {
+											data.append((UInt8) (marker | count));
+										else {
 											// Marker, then count
-											OV<SError>	error = fileWriter.write((UInt8) (marker | kMarkerCountMask));
-											ReturnErrorIfError(error);
+											data.append((UInt8) (marker | kMarkerCountMask));
 
 											// Write count marker
 											UInt8	countByteCount = getIntegerByteCount(count);
@@ -1049,21 +1033,15 @@ class CBPLWriter {
 												case 4:		countMarker = kMarkerTypeInteger4Bytes;	break;
 												default:	countMarker = kMarkerTypeInteger8Bytes;	break;
 											}
-											error = fileWriter.write(countMarker);
-											ReturnErrorIfError(error);
+											data.append(countMarker);
 
 											// Write count
-											UInt64	swwappedCount = EndianU64_NtoB(count);
-											error =
-													fileWriter.write(
-															(UInt8*) &swwappedCount + sizeof(UInt64) - countByteCount,
-															countByteCount);
-											ReturnErrorIfError(error);
+											UInt64	swappedCount = EndianU64_NtoB(count);
+											data.append((UInt8*) &swappedCount + sizeof(UInt64) - countByteCount,
+													countByteCount);
 										}
-
-										return OV<SError>();
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const TArray<CDictionary>& array)
+		TVResult<ObjectInfo>	write(CData& data, const TArray<CDictionary>& array)
 									{
 										// Setup
 										CData	indexesData(array.getCount() * mObjectIndexByteCount);
@@ -1072,7 +1050,7 @@ class CBPLWriter {
 										for (TArray<CDictionary>::Iterator iterator = array.getIterator(); iterator;
 												iterator++) {
 											// Add value
-											TVResult<ObjectInfo>	result = write(fileWriter, *iterator);
+											TVResult<ObjectInfo>	result = write(data, *iterator);
 											ReturnResultIfResultError(result);
 
 											// Add info
@@ -1080,22 +1058,18 @@ class CBPLWriter {
 										}
 
 										// Get object info
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker and count
-										OV<SError>	error =
-															writeMarkerAndCount(fileWriter, kMarkerTypeArray,
-																	array.getCount());
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										writeMarkerAndCount(data, kMarkerTypeArray, array.getCount());
 
 										// Write indexes
-										error = fileWriter.write(indexesData);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data += indexesData;
 
 										return TVResult<ObjectInfo>(objectInfo);
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const TArray<CString>& array)
+		ObjectInfo				write(CData& data, const TArray<CString>& array)
 									{
 										// Setup
 										CData	indexesData(array.getCount() * mObjectIndexByteCount);
@@ -1107,122 +1081,91 @@ class CBPLWriter {
 											addIndex(indexesData, mObjectIndexByString.getUInt64(*iterator));
 
 										// Get object info
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker and count
-										OV<SError>	error =
-															writeMarkerAndCount(fileWriter, kMarkerTypeArray,
-																	array.getCount());
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										writeMarkerAndCount(data, kMarkerTypeArray, array.getCount());
 
 										// Write indexes
-										error = fileWriter.write(indexesData);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data += indexesData;
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const TNumberArray<Float32>& array)
+		ObjectInfo				write(CData& data, const TNumberArray<Float32>& array)
 									{
 										// Setup
 										CData	indexesData(array.getCount() * mObjectIndexByteCount);
 
 										// Iterate values
 										for (TNumberArray<Float32>::Iterator iterator = array.getIterator(); iterator;
-												iterator++) {
-											// Write number
-											TVResult<ObjectInfo>	result = write(fileWriter, *iterator);
-											ReturnResultIfResultError(result);
-
-											// Add index
-											addIndex(indexesData, result->getA());
-										}
+												iterator++)
+											// Write number and add index
+											addIndex(indexesData, write(data, *iterator).getA());
 
 										// Get object info
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker and count
-										OV<SError>	error =
-																writeMarkerAndCount(fileWriter, kMarkerTypeArray,
-																		array.getCount());
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										writeMarkerAndCount(data, kMarkerTypeArray, array.getCount());
 
 										// Write indexes
-										error = fileWriter.write(indexesData);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data += indexesData;
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const TNumberArray<UInt32>& array)
+		ObjectInfo				write(CData& data, const TNumberArray<UInt32>& array)
 									{
 										// Setup
 										CData	indexesData(array.getCount() * mObjectIndexByteCount);
 
 										// Iterate values
 										for (TNumberArray<UInt32>::Iterator iterator = array.getIterator(); iterator;
-												iterator++) {
-											// Write number
-											TVResult<ObjectInfo>	result =
-																			write(fileWriter, (UInt64) *iterator,
-																					getIntegerByteCount(*iterator));
-											ReturnResultIfResultError(result);
-
-											// Add index
-											addIndex(indexesData, result->getA());
-										}
+												iterator++)
+											// Write number and add index
+											addIndex(indexesData,
+													write(data, (UInt64) *iterator,
+															getIntegerByteCount(*iterator)).getA());
 
 										// Get object info
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker and count
-										OV<SError>	error =
-																writeMarkerAndCount(fileWriter, kMarkerTypeArray,
-																		array.getCount());
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										writeMarkerAndCount(data, kMarkerTypeArray, array.getCount());
 
 										// Write indexes
-										error = fileWriter.write(indexesData);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data += indexesData;
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, bool value)
+		ObjectInfo				write(CData& data, bool value)
 									{
 										// Setup
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write
-										OV<SError>	error =
-															fileWriter.write(
-																	value ?
-																			kMarkerTypeBooleanTrue :
-																			kMarkerTypeBooleanFalse);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data.append(value ? kMarkerTypeBooleanTrue : kMarkerTypeBooleanFalse);
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const CData& data)
+		ObjectInfo				write(CData& data, const CData& value)
 									{
 										// Setup
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker and count
-										OV<SError>	error =
-															writeMarkerAndCount(fileWriter, kMarkerTypeData,
-																	data.getByteCount());
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										writeMarkerAndCount(data, kMarkerTypeData, value.getByteCount());
 
 										// Write data
-										error = fileWriter.write(data);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data += value;
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const CDictionary& dictionary)
+		TVResult<ObjectInfo>	write(CData& data, const CDictionary& dictionary)
 									{
 										// Setup
 										CData	keyIndexesData(dictionary.getCount() * mObjectIndexByteCount);
@@ -1249,8 +1192,8 @@ class CBPLWriter {
 															// Write
 															addIndex(keyIndexesData,
 																	mObjectIndexByString.getUInt64(iterator.getKey()));
-															result.setValue(write(fileWriter,
-																	value.getArrayOfDictionaries()));
+															result.setValue(
+																	write(data, value.getArrayOfDictionaries()));
 															break;
 														} else
 															// Will not write
@@ -1262,8 +1205,7 @@ class CBPLWriter {
 															// Write
 															addIndex(keyIndexesData,
 																	mObjectIndexByString.getUInt64(iterator.getKey()));
-															result.setValue(write(fileWriter,
-																	value.getArrayOfStrings()));
+															result.setValue(write(data, value.getArrayOfStrings()));
 															break;
 														} else
 															// Will not write
@@ -1275,8 +1217,7 @@ class CBPLWriter {
 															// Write
 															addIndex(keyIndexesData,
 																	mObjectIndexByString.getUInt64(iterator.getKey()));
-															result.setValue(write(fileWriter,
-																	value.getArrayOfFloat32s()));
+															result.setValue(write(data, value.getArrayOfFloat32s()));
 															break;
 														} else
 															// Will not write
@@ -1288,8 +1229,7 @@ class CBPLWriter {
 															// Write
 															addIndex(keyIndexesData,
 																	mObjectIndexByString.getUInt64(iterator.getKey()));
-															result.setValue(write(fileWriter,
-																	value.getArrayOfUInt32s()));
+															result.setValue(write(data, value.getArrayOfUInt32s()));
 															break;
 														} else
 															// Will not write
@@ -1299,35 +1239,35 @@ class CBPLWriter {
 														// Bool
 														addIndex(keyIndexesData,
 																mObjectIndexByString.getUInt64(iterator.getKey()));
-														result.setValue(write(fileWriter, value.getBool()));
+														result.setValue(write(data, value.getBool()));
 														break;
 
 													case SValue::kTypeData:
 														// Data
 														addIndex(keyIndexesData,
 																mObjectIndexByString.getUInt64(iterator.getKey()));
-														result.setValue(write(fileWriter, value.getData()));
+														result.setValue(write(data, value.getData()));
 														break;
 
 													case SValue::kTypeDictionary:
 														// Dictionary
 														addIndex(keyIndexesData,
 																mObjectIndexByString.getUInt64(iterator.getKey()));
-														result.setValue(write(fileWriter, value.getDictionary()));
+														result.setValue(write(data, value.getDictionary()));
 														break;
 
 													case SValue::kTypeFloat32:
 														// FLoat32
 														addIndex(keyIndexesData,
 																mObjectIndexByString.getUInt64(iterator.getKey()));
-														result.setValue(write(fileWriter, value.getFloat32()));
+														result.setValue(write(data, value.getFloat32()));
 														break;
 
 													case SValue::kTypeFloat64:
 														// Float64
 														addIndex(keyIndexesData,
 																mObjectIndexByString.getUInt64(iterator.getKey()));
-														result.setValue(write(fileWriter, value.getFloat64()));
+														result.setValue(write(data, value.getFloat64()));
 														break;
 
 													case SValue::kTypeSInt8:
@@ -1342,7 +1282,7 @@ class CBPLWriter {
 														addIndex(keyIndexesData,
 																mObjectIndexByString.getUInt64(iterator.getKey()));
 														result.setValue(
-																write(fileWriter, value.getUInt64(),
+																write(data, value.getUInt64(),
 																		getIntegerByteCount(value.getUInt64())));
 														break;
 
@@ -1358,58 +1298,50 @@ class CBPLWriter {
 										}
 
 										// Get object info
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker and count
-										OV<SError>	error =
-															writeMarkerAndCount(fileWriter, kMarkerTypeDictionary,
-																	keyIndexesData.getByteCount() /
-																			mObjectIndexByteCount);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										writeMarkerAndCount(data, kMarkerTypeDictionary,
+												keyIndexesData.getByteCount() / mObjectIndexByteCount);
 
 										// Write key indexes and value indexes
-										error = fileWriter.write(keyIndexesData + valueIndexesData);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data += keyIndexesData + valueIndexesData;
 
 										return TVResult<ObjectInfo>(objectInfo);
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, Float32 value)
+		ObjectInfo				write(CData& data, Float32 value)
 									{
 										// Setup
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker
-										OV<SError>	error = fileWriter.write(kMarkerTypeFloat32);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data.append(kMarkerTypeFloat32);
 
 										// Write value
-										error = fileWriter.write(EndianF32_NtoB(value));
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data.append(EndianF32_NtoB(value));
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, Float64 value)
+		ObjectInfo				write(CData& data, Float64 value)
 									{
 										// Setup
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker
-										OV<SError>	error = fileWriter.write(kMarkerTypeFloat64);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data.append(kMarkerTypeFloat64);
 
 										// Write value
-										error = fileWriter.write(EndianF64_NtoB(value));
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data.append(EndianF64_NtoB(value));
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, UInt64 value, UInt8 byteCount)
+		ObjectInfo				write(CData& data, UInt64 value, UInt8 byteCount)
 									{
 										// Setup
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Write marker
@@ -1420,47 +1352,39 @@ class CBPLWriter {
 											case 4:		marker = kMarkerTypeInteger4Bytes;	break;
 											default:	marker = kMarkerTypeInteger8Bytes;	break;
 										}
-										OV<SError>	error = fileWriter.write(marker);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data.append(marker);
 
 										// Write value
 										UInt64	swappedValue = EndianU64_NtoB(value);
-										error =
-												fileWriter.write((UInt8*) &swappedValue + sizeof(UInt64) - byteCount,
-														byteCount);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data.append((UInt8*) &swappedValue + sizeof(UInt64) - byteCount, byteCount);
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
-		TVResult<ObjectInfo>	write(CFileWriter& fileWriter, const CString& string)
+		ObjectInfo				write(CData& data, const CString& string)
 									{
 										// Setup
-										ObjectInfo	objectInfo(mObjectInfos.getCount(), fileWriter.getPosition());
+										ObjectInfo	objectInfo(mObjectInfos.getCount(), data.getByteCount());
 										mObjectInfos += objectInfo;
 
 										// Compose string info
-										OV<CData>	data = string.getData(CString::kEncodingASCII, true);
+										OV<CData>	stringData = string.getData(CString::kEncodingASCII, true);
 										UInt8		marker;
-										if (data.hasValue())
+										if (stringData.hasValue())
 											// ASCII
 											marker = kMarkerTypeStringASCII;
 										else {
 											// UTF16BE
 											marker = kMarkerTypeStringUnicode16;
-											data = string.getData(CString::kEncodingUTF16BE);
+											stringData = string.getData(CString::kEncodingUTF16BE);
 										}
 
 										// Write marker + count
-										OV<SError>	error =
-															writeMarkerAndCount(fileWriter, marker,
-																	data->getByteCount());
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										writeMarkerAndCount(data, marker, stringData->getByteCount());
 
 										// Write data
-										error = fileWriter.write(*data);
-										ReturnValueIfError(error, TVResult<ObjectInfo>(*error));
+										data += *stringData;
 
-										return TVResult<ObjectInfo>(objectInfo);
+										return objectInfo;
 									}
 
 		const	CDictionary&		mDictionary;
@@ -1485,8 +1409,35 @@ TVResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const I<CRandomAccessD
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TVResult<CDictionary> CBinaryPropertyList::dictionaryFrom(const CData& data, bool composeStandardDictionary)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return dictionaryFrom(I<CRandomAccessDataSource>(new CDataDataSource(data)), composeStandardDictionary);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CData> CBinaryPropertyList::dataFrom(const CDictionary& dictionary)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CBPLWriter(dictionary).getData();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> CBinaryPropertyList::write(const CDictionary& dictionary, const CFile& file)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CBPLWriter(dictionary).write(file);
+	// Compose data
+	TVResult<CData>	data = dataFrom(dictionary);
+	ReturnErrorIfResultError(data);
+
+	// Open file for writing
+	CFileWriter	fileWriter(file);
+	OV<SError>	error = fileWriter.open(CFileWriter::kModeCreate, false, true);
+	ReturnErrorIfError(error);
+
+	// Write
+	error = fileWriter.write(*data);
+	ReturnErrorIfError(error);
+
+	return fileWriter.close();
 }

@@ -213,33 +213,33 @@ return OV<SError>();
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFilesystem::revealInFileExplorer(const TArray<CFile>& files)
+OV<SError> CFilesystem::revealInFileExplorer(const TArray<CFilesystemPath>& filesystemPaths)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Group files by folder - each folder gets one File Explorer window with its files selected
-	TNArrayDictionary<CFile>	filesByFolderPath;
-	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++)
-		// Add file
-		filesByFolderPath.add(iterator->getFolder().getFilesystemPath().getString(), *iterator);
+	// Group items by folder - each folder gets one File Explorer window with its items selected
+	TNArrayDictionary<CFilesystemPath>	filesystemPathsByFolderPath;
+	for (TArray<CFilesystemPath>::Iterator iterator = filesystemPaths.getIterator(); iterator; iterator++)
+		// Add item
+		filesystemPathsByFolderPath.add(iterator->deletingLastComponent().getString(), *iterator);
 
 	// Iterate folders
 	OV<SError>	error;
-	for (TNArrayDictionary<CFile>::Iterator iterator = filesByFolderPath.getIterator(); iterator; iterator++) {
+	for (TNArrayDictionary<CFilesystemPath>::Iterator iterator = filesystemPathsByFolderPath.getIterator(); iterator;
+			iterator++) {
 		// Setup
-		const	CString&			folderPath = iterator.getKey();
-		const	TNArray<CFile>&		folderFiles = iterator.getValue();
-				PIDLIST_ABSOLUTE	folderPIDL = ::ILCreateFromPathW(folderPath.getOSString());
-				PIDLIST_ABSOLUTE*	filePIDLs = new PIDLIST_ABSOLUTE[folderFiles.getCount()];
-				PCUITEMID_CHILD*	childPIDLs = new PCUITEMID_CHILD[folderFiles.getCount()];
-				UINT				count = 0;
+		const	CString&					folderPath = iterator.getKey();
+		const	TNArray<CFilesystemPath>&	folderFilesystemPaths = iterator.getValue();
+				PIDLIST_ABSOLUTE			folderPIDL = ::ILCreateFromPathW(folderPath.getOSString());
+				PIDLIST_ABSOLUTE*			filePIDLs = new PIDLIST_ABSOLUTE[folderFilesystemPaths.getCount()];
+				PCUITEMID_CHILD*			childPIDLs = new PCUITEMID_CHILD[folderFilesystemPaths.getCount()];
+				UINT						count = 0;
 
-		// Collect the files that can still be found - one that has gone away cannot be selected
+		// Collect the items that can still be found
 		if (folderPIDL != NULL)
-			for (TArray<CFile>::Iterator fileIterator = folderFiles.getIterator(); fileIterator; fileIterator++) {
+			for (TArray<CFilesystemPath>::Iterator filesystemPathIterator = folderFilesystemPaths.getIterator();
+					filesystemPathIterator; filesystemPathIterator++) {
 				// Get PIDL
-				PIDLIST_ABSOLUTE	filePIDL =
-											::ILCreateFromPathW(
-													fileIterator->getFilesystemPath().getString().getOSString());
+				PIDLIST_ABSOLUTE	filePIDL = ::ILCreateFromPathW(filesystemPathIterator->getString().getOSString());
 				if (filePIDL != NULL) {
 					// Add
 					filePIDLs[count] = filePIDL;

@@ -22,12 +22,12 @@ class CDynamicLibrary::Internals : public TReferenceCountableAutoDelete<Internal
 									~Internals()
 										{ ::FreeLibrary(mHandle); }
 
-		static	OV<TBuffer<UInt8> >	getVersionInfo(const CFile& file)
+		static	OV<TBuffer<UInt8> >	getVersionInfo(const CFilesystemPath& filesystemPath)
 										{
 											// Get byte count
 											DWORD	byteCount =
 															::GetFileVersionInfoSize(
-																	file.getFilesystemPath().getString().getOSString(),
+																	filesystemPath.getString().getOSString(),
 																	NULL);
 											if (byteCount == 0)
 												// No version info
@@ -37,7 +37,7 @@ class CDynamicLibrary::Internals : public TReferenceCountableAutoDelete<Internal
 											TBuffer<UInt8>	buffer(byteCount);
 
 											return ::GetFileVersionInfo(
-															file.getFilesystemPath().getString().getOSString(), 0,
+															filesystemPath.getString().getOSString(), 0,
 															byteCount, *buffer)[] ?
 													OV<TBuffer<UInt8> >(buffer) : OV<TBuffer<UInt8> >();
 										}
@@ -110,11 +110,11 @@ TVResult<CDynamicLibrary> CDynamicLibrary::load(const CFile& file)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFile& file)
+OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFilesystemPath& filesystemPath)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get version info
-	OV<TBuffer<UInt8> >	buffer = Internals::getVersionInfo(file);
+	OV<TBuffer<UInt8> >	buffer = Internals::getVersionInfo(filesystemPath);
 	if (!buffer.hasValue())
 		// No version info
 		return OV<SVersionInfo>();
@@ -135,11 +135,11 @@ OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFile& file)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CString> CDynamicLibrary::getManufacturer(const CFile& file)
+OV<CString> CDynamicLibrary::getManufacturer(const CFilesystemPath& filesystemPath)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get version info
-	OV<TBuffer<UInt8> >	buffer = Internals::getVersionInfo(file);
+	OV<TBuffer<UInt8> >	buffer = Internals::getVersionInfo(filesystemPath);
 	if (!buffer.hasValue())
 		// No version info
 		return OV<CString>();
@@ -166,11 +166,11 @@ OV<CString> CDynamicLibrary::getManufacturer(const CFile& file)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDynamicLibrary::Loadability CDynamicLibrary::getLoadability(const CFile& file)
+CDynamicLibrary::Loadability CDynamicLibrary::getLoadability(const CFilesystemPath& filesystemPath)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read the DOS and PE headers
-	CFileDataSource	fileDataSource(file);
+	CFileDataSource	fileDataSource(CFile(filesystemPath));
 	UInt16			dosSignature;
 	UInt32			peHeaderOffset;
 	UInt32			peSignature;

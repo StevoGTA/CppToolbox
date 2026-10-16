@@ -131,14 +131,14 @@ OV<SError> CFilesystem::revealInFinder(const CFolder& folder)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<SError> CFilesystem::revealInFinder(const TArray<CFile>& files)
+OV<SError> CFilesystem::revealInFinder(const TArray<CFilesystemPath>& filesystemPaths)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	NSMutableArray<NSURL*>*	urls = [NSMutableArray array];
-	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++)
+	for (TArray<CFilesystemPath>::Iterator iterator = filesystemPaths.getIterator(); iterator; iterator++)
 		// Add URL
-		[urls addObject:(__bridge NSURL*) *getURLRefFor(*iterator)];
+		[urls addObject:[NSURL fileURLWithPath:(__bridge NSString*) iterator->getString().getOSString()]];
 
 	// Reveal in Finder
 	[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:urls];

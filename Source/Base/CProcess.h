@@ -1,17 +1,34 @@
 //----------------------------------------------------------------------------------------------------------------------
-//	CChildProcess.h			©2026 Stevo Brock	All rights reserved.
+//	CProcess.h				©2026 Stevo Brock	All rights reserved.
 //----------------------------------------------------------------------------------------------------------------------
 
 #pragma once
 
 #include "CFile.h"
-#include "TimeAndDate.h"
-#include "TResult.h"
+#include "CMessageChannel.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CChildProcess
+// MARK: CProcess
+
+class CProcess {
+	// Methods
+	public:
+											// Class methods
+		static	TIResult<CMessageChannel>	getMessageChannel();
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CChildProcess
 
 class CChildProcess {
+	// Types
+	public:
+#if defined(TARGET_OS_MACOS)
+		using	ProcessRef = int;	// pid_t
+#elif defined(TARGET_OS_WINDOWS)
+		using	ProcessRef = void*;	// HANDLE
+#endif
+
 	// Result
 	public:
 		struct Result {
@@ -56,9 +73,33 @@ class CChildProcess {
 				CData		mOutputData;
 		};
 
+	// Classes
+	private:
+		class Internals;
+
 	// Methods
 	public:
-									// Class methods
-		static	TVResult<Result>	run(const CFile& executableFile, const TArray<CString>& arguments,
-											UniversalTimeInterval timeout);
+											// Lifecycle methods
+											~CChildProcess();
+
+											// Instance methods
+				CMessageChannel&			getMessageChannel();
+
+				Result						finish(UniversalTimeInterval timeout);
+
+											// Class methods
+		static	TIResult<CChildProcess>		launch(const CFile& executableFile, const TArray<CString>& arguments);
+		static	TVResult<Result>			run(const CFile& executableFile, const TArray<CString>& arguments,
+													UniversalTimeInterval timeout);
+
+	private:
+											// Lifecycle methods
+											CChildProcess(ProcessRef processRef,
+													CMessageChannel::Handle outputReadHandle,
+													CMessageChannel::Handle messageChannelReadHandle,
+													CMessageChannel::Handle messageChannelWriteHandle);
+
+	// Properties
+	private:
+		Internals*	mInternals;
 };

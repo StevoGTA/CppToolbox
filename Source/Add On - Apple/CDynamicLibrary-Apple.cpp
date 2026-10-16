@@ -13,14 +13,49 @@
 
 // MARK: Class methods
 
+#if defined(TARGET_OS_MACOS)
 //----------------------------------------------------------------------------------------------------------------------
-OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFile& file)
+OV<CFile> CDynamicLibrary::getExecutableFile(const CFolder& bundleFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CFURLRef	urlRef =
 						::CFURLCreateWithFileSystemPath(kCFAllocatorDefault,
-								file.getFilesystemPath().getString().getOSString(), kCFURLPOSIXPathStyle, true);
+								bundleFolder.getFilesystemPath().getString().getOSString(), kCFURLPOSIXPathStyle,
+								true);
+	CFBundleRef	bundleRef = ::CFBundleCreate(kCFAllocatorDefault, urlRef);
+	::CFRelease(urlRef);
+	if (bundleRef == nil)
+		// Not a bundle
+		return OV<CFile>();
+
+	// Get executable
+	CFURLRef	executableURLRef = ::CFBundleCopyExecutableURL(bundleRef);
+	::CFRelease(bundleRef);
+	if (executableURLRef == nil)
+		// No executable
+		return OV<CFile>();
+
+	// Compose file
+	CFURLRef		absoluteExecutableURLRef = ::CFURLCopyAbsoluteURL(executableURLRef);
+	CFStringRef		pathStringRef = ::CFURLCopyFileSystemPath(absoluteExecutableURLRef, kCFURLPOSIXPathStyle);
+	CFilesystemPath	filesystemPath(CString(pathStringRef), CFilesystemPath::kStylePOSIX);
+	::CFRelease(pathStringRef);
+	::CFRelease(absoluteExecutableURLRef);
+	::CFRelease(executableURLRef);
+
+	return OV<CFile>(CFile(filesystemPath));
+}
+#endif
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFilesystemPath& filesystemPath)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFURLRef	urlRef =
+						::CFURLCreateWithFileSystemPath(kCFAllocatorDefault,
+								filesystemPath.getString().getOSString(), kCFURLPOSIXPathStyle, true);
 	CFBundleRef	bundleRef = ::CFBundleCreate(kCFAllocatorDefault, urlRef);
 	::CFRelease(urlRef);
 	if (bundleRef == nil)
@@ -40,13 +75,13 @@ OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFile& file)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OV<CString> CDynamicLibrary::getManufacturer(const CFile& file)
+OV<CString> CDynamicLibrary::getManufacturer(const CFilesystemPath& filesystemPath)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CFURLRef			urlRef =
 								::CFURLCreateWithFileSystemPath(kCFAllocatorDefault,
-										file.getFilesystemPath().getString().getOSString(), kCFURLPOSIXPathStyle, true);
+										filesystemPath.getString().getOSString(), kCFURLPOSIXPathStyle, true);
 	SecStaticCodeRef	staticCodeRef;
 	OSStatus			status = ::SecStaticCodeCreateWithPath(urlRef, kSecCSDefaultFlags, &staticCodeRef);
 	::CFRelease(urlRef);
@@ -92,13 +127,13 @@ OV<CString> CDynamicLibrary::getManufacturer(const CFile& file)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CDynamicLibrary::Loadability CDynamicLibrary::getLoadability(const CFile& file)
+CDynamicLibrary::Loadability CDynamicLibrary::getLoadability(const CFilesystemPath& filesystemPath)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
 	CFURLRef	urlRef =
 						::CFURLCreateWithFileSystemPath(kCFAllocatorDefault,
-								file.getFilesystemPath().getString().getOSString(), kCFURLPOSIXPathStyle, true);
+								filesystemPath.getString().getOSString(), kCFURLPOSIXPathStyle, true);
 	CFBundleRef	bundleRef = ::CFBundleCreate(kCFAllocatorDefault, urlRef);
 	::CFRelease(urlRef);
 	if (bundleRef == nil)
@@ -157,7 +192,7 @@ CDynamicLibrary::Loadability CDynamicLibrary::getLoadability(const CFile& file)
 	// Check quarantine.  The first field of the attribute is hex flags, where 0x0040 notes the user approved it.
 	char	quarantine[256];
 	ssize_t	quarantineByteCount =
-					::getxattr(*file.getFilesystemPath().getString().getUTF8String(), "com.apple.quarantine",
+					::getxattr(*filesystemPath.getString().getUTF8String(), "com.apple.quarantine",
 							quarantine, sizeof(quarantine) - 1, 0, 0);
 	if (quarantineByteCount > 0) {
 		// Have quarantine

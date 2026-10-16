@@ -69,10 +69,14 @@ class CData {
 				CData&					append(const CData& data);
 				CData&					append(SInt16 value)
 											{ return append(&value, sizeof(SInt16)); }
+				CData&					append(UInt8 value)
+											{ return append(&value, sizeof(UInt8)); }
 				CData&					append(UInt16 value)
 											{ return append(&value, sizeof(UInt16)); }
 				CData&					append(UInt32 value)
 											{ return append(&value, sizeof(UInt32)); }
+				CData&					append(UInt64 value)
+											{ return append(&value, sizeof(UInt64)); }
 				CData&					appendFill(ByteCount byteCount, UInt8 fillValue = 0);
 				CData&					replace(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer,
 												ByteCount bufferByteCount);

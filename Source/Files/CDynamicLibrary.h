@@ -82,10 +82,13 @@ class CDynamicLibrary {
 														}
 
 													// Class methods
-		static			OV<SVersionInfo>			getVersionInfo(const CFile& file);
-		static			OV<CString>					getManufacturer(const CFile& file);
+#if defined(TARGET_OS_MACOS)
+		static			OV<CFile>					getExecutableFile(const CFolder& bundleFolder);
+#endif
+		static			OV<SVersionInfo>			getVersionInfo(const CFilesystemPath& filesystemPath);
+		static			OV<CString>					getManufacturer(const CFilesystemPath& filesystemPath);
 
-		static			Loadability					getLoadability(const CFile& file);
+		static			Loadability					getLoadability(const CFilesystemPath& filesystemPath);
 		static			TVResult<CDynamicLibrary>	load(const CFile& file);
 
 	private:
