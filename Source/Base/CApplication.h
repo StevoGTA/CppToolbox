@@ -30,6 +30,7 @@ class CApplication {
 				CString				getVersion() const;
 				CString				getDisplayNameAndVersion() const;
 				OV<CString>			getCopyright() const;
+				CFilesystemPath		getFilesystemPath() const;
 				CFolder				getFolder() const;
 
 #if defined(TARGET_OS_MACOS) || defined(TARGET_OS_WINDOWS)

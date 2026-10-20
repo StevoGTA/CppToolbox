@@ -102,7 +102,7 @@ OV<CString> CApplication::getCopyright() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CFolder CApplication::getFolder() const
+CFilesystemPath CApplication::getFilesystemPath() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Derive from the application URL
@@ -110,7 +110,14 @@ CFolder CApplication::getFolder() const
 	CFilesystemPath	filesystemPath(CString(pathStringRef), CFilesystemPath::kStylePOSIX);
 	::CFRelease(pathStringRef);
 
-	return CFolder(filesystemPath.deletingLastComponent());
+	return filesystemPath;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CFolder CApplication::getFolder() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CFolder(getFilesystemPath().deletingLastComponent());
 }
 
 #if defined(TARGET_OS_MACOS)

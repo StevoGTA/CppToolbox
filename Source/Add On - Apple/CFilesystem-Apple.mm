@@ -6,10 +6,10 @@
 
 #import "CCoreFoundation.h"
 #import "CLogServices.h"
-#import "NSURL+C++.h"
 #import "SError-Apple.h"
 #import "SError-POSIX.h"
 
+#import <Foundation/Foundation.h>
 #import <sys/mount.h>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -188,10 +188,24 @@ TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 		[urls addObject:url];
 
 	// Check results
-	if (nsError == nil)
+	if (nsError == nil) {
 		// Have urls
-		return TVResult<SFoldersFiles>([NSURL foldersFilesFor:urls]);
-	else {
+		TNArray<CFolder>	folders;
+		TNArray<CFile>		files;
+
+		// Iterate NSURLs
+		for (NSURL* url in urls) {
+			// Check if directory
+			if (url.hasDirectoryPath)
+				// Folder
+				folders += CFolder(CFilesystemPath(CString((__bridge OSStringType) url.path)));
+			else
+				// File
+				files += CFile(CFilesystemPath(CString((__bridge OSStringType) url.path)));
+		}
+
+		return TVResult<SFoldersFiles>(SFoldersFiles(folders, files));
+	} else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportFolderErrorAndReturnValue(sError, CString(OSSTR("getting folders and files")), folder,
@@ -228,10 +242,20 @@ TVResult<TArray<CFolder> > CFilesystem::getFolders(const CFolder& folder, bool d
 		[urls addObject:url];
 
 	// Check results
-	if (nsError == nil)
+	if (nsError == nil) {
 		// Have urls
-		return TVResult<TArray<CFolder> >([NSURL foldersFor:urls]);
-	else {
+		TNArray<CFolder>	folders;
+
+		// Iterate NSURLs
+		for (NSURL* url in urls) {
+			// Check if directory
+			if (url.hasDirectoryPath)
+				// Folder
+				folders += CFolder(CFilesystemPath(CString((__bridge OSStringType) url.path)));
+		}
+
+		return TVResult<TArray<CFolder> >(folders);
+	} else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportFolderErrorAndReturnValue(sError, CString(OSSTR("getting folders")), folder,
@@ -268,10 +292,20 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 		[urls addObject:url];
 
 	// Check results
-	if (nsError == nil)
+	if (nsError == nil) {
 		// Have urls
-		return TVResult<TArray<CFile> >([NSURL filesFor:urls]);
-	else {
+		TNArray<CFile>	files;
+
+		// Iterate NSURLs
+		for (NSURL* url in urls) {
+			// Check if directory
+			if (!url.hasDirectoryPath)
+				// File
+				files += CFile(CFilesystemPath(CString((__bridge OSStringType) url.path)));
+		}
+
+		return TVResult<TArray<CFile> >(files);
+	} else {
 		// Error
 		SError	sError = SErrorFromNSError(nsError);
 		CFilesystemReportFolderErrorAndReturnValue(sError, CString(OSSTR("getting files")), folder,

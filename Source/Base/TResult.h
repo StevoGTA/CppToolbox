@@ -21,7 +21,7 @@ template <typename T> struct TIResult {
 						{ return mInstance.hasInstance(); }
 	const	OI<T>&	getOptionalInstance() const
 						{ return mInstance; }
-	const	T&		getInstance() const
+			T&		getInstance() const
 						{ AssertFailIf(!mInstance.hasInstance()); return *mInstance; }
 
 			bool	hasError() const
@@ -29,9 +29,9 @@ template <typename T> struct TIResult {
 	const	SError&	getError() const
 						{ AssertFailIf(!mError.hasValue()); return *mError; }
 
-	const	T&		operator*() const
+			T&		operator*() const
 						{ AssertFailIf(!mInstance.hasInstance()); return *mInstance; }
-	const	T*		operator->() const
+			T*		operator->() const
 						{ AssertFailIf(!mInstance.hasInstance()); return &(*mInstance); }
 
 	private:
