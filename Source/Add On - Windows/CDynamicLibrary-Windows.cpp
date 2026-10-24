@@ -38,7 +38,7 @@ class CDynamicLibrary::Internals : public TReferenceCountableAutoDelete<Internal
 
 											return ::GetFileVersionInfo(
 															filesystemPath.getString().getOSString(), 0,
-															byteCount, *buffer)[] ?
+															byteCount, *buffer) ?
 													OV<TBuffer<UInt8> >(buffer) : OV<TBuffer<UInt8> >();
 										}
 
@@ -170,7 +170,7 @@ CDynamicLibrary::Loadability CDynamicLibrary::getLoadability(const CFilesystemPa
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Read the DOS and PE headers
-	CFileDataSource	fileDataSource(CFile(filesystemPath));
+	CFileDataSource	fileDataSource(CFile(filesystemPath), false);
 	UInt16			dosSignature;
 	UInt32			peHeaderOffset;
 	UInt32			peSignature;

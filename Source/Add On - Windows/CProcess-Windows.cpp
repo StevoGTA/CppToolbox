@@ -301,19 +301,21 @@ TIResult<CChildProcess> CChildProcess::launch(const CFile& executableFile, const
 	HANDLE		messageChannelReadHandle;
 	HANDLE		childMessageChannelWriteHandle;
 	OV<SError>	error = sCreateMessageChannelPipe(true, messageChannelWriteHandle, childMessageChannelReadHandle);
-	if (!error.hasValue()) {
-		// Create pipe from the child
-		error = sCreateMessageChannelPipe(false, messageChannelReadHandle, childMessageChannelWriteHandle);
-		if (error.hasValue()) {
-			// Cleanup
-			::CloseHandle(messageChannelWriteHandle);
-			::CloseHandle(childMessageChannelReadHandle);
-		}
-	}
 	if (error.hasValue()) {
 		// Error
 		::CloseHandle(outputReadHandle);
 		::CloseHandle(outputWriteHandle);
+
+		return TIResult<CChildProcess>(*error);
+	}
+
+	error = sCreateMessageChannelPipe(false, messageChannelReadHandle, childMessageChannelWriteHandle);
+	if (error.hasValue()) {
+		// Error
+		::CloseHandle(outputReadHandle);
+		::CloseHandle(outputWriteHandle);
+		::CloseHandle(messageChannelWriteHandle);
+		::CloseHandle(childMessageChannelReadHandle);
 
 		return TIResult<CChildProcess>(*error);
 	}

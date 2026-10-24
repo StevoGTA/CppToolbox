@@ -501,7 +501,7 @@ void CColorRegistry::usePersistence(const CPreferences::Pref& pref)
 	CDictionary	info = CPreferences::shared().getDictionary(pref).getValue(CDictionary::mEmpty);
 
 	// Restore the User's Presets
-	const	TArray<CDictionary>&	presetInfos = info.getArrayOfDictionaries(CString(OSSTR("presets")));
+	TArray<CDictionary>	presetInfos(info.getArrayOfDictionaries(CString(OSSTR("presets"))));
 	for (TArray<CDictionary>::Iterator iterator = presetInfos.getIterator(); iterator; iterator++) {
 		// Add
 		Preset	preset(iterator->getString(CString(OSSTR("uniqueID"))), iterator->getString(CString(OSSTR("name"))));
