@@ -5,6 +5,7 @@
 #pragma once
 
 #include "TimeAndDate.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: STimecode
@@ -13,176 +14,96 @@ struct STimecode {
 	// FrameRate
 	public:
 		struct FrameRate {
-			// Kind
-			public:
-				enum Kind {
-					kKindNonDropFrame	= 0,
-					kKindDropFrame2997	= 2997,
-					kKindDropFrame5994	= 5994,
-				};
-
 			// Methods
 			public:
 													// Lifecycle methods
-													FrameRate(const CDictionary& storageInfo);
-													FrameRate(const FrameRate& other) :
-														mKind(other.mKind), mNonDropFrameBase(other.mNonDropFrameBase)
+													FrameRate(UInt32 numerator, UInt32 denominator, bool isDropFrame);
+													FrameRate(Float64 frameRate, bool isDropFrame = false) :
+														mFrameRate(frameRate), mIsDropFrame(isDropFrame)
 														{}
+													FrameRate(const CDictionary& storageInfo);
 
 													// Instance methods
-								Kind				getKind() const
-														{ return mKind; }
-								bool				isDropFrame() const
-														{ return mKind != kKindNonDropFrame; }
+								Float64				getFrameRate() const
+														{ return mFrameRate; }
 								UInt32				getBase() const
-														{
-															// Check Kind
-															switch (mKind) {
-																case kKindNonDropFrame:		return *mNonDropFrameBase;
-																case kKindDropFrame2997:	return 30;
-																case kKindDropFrame5994:	return 60;
-#if defined(TARGET_OS_WINDOWS)
-																default:					return 0;
-#endif
-															}
-														}
-								Float32				getFrameRate() const
-														{
-															// Check kind
-															switch (mKind) {
-																case kKindNonDropFrame:		return (Float32) *mNonDropFrameBase;
-																case kKindDropFrame2997:	return 30000.0f / 1001.0f;
-																case kKindDropFrame5994:	return 60000.0f / 1001.0f;
-#if defined(TARGET_OS_WINDOWS)
-																default:					return 0.0;
-#endif
-															}
-														}
-
-								CDictionary			getStorageInfo() const;
+														{ return (UInt32) ::round(mFrameRate); }
+								bool				isDropFrame() const
+														{ return mIsDropFrame; }
 
 								CString				getDisplayString() const;
 
+								CDictionary			getStorageInfo() const;
+
 								bool				operator==(const FrameRate& other) const
-														{ return (mKind == other.mKind) &&
-																(mNonDropFrameBase == other.mNonDropFrameBase); }
+														{ return (mFrameRate == other.mFrameRate) &&
+																(mIsDropFrame == other.mIsDropFrame); }
 								bool				operator!=(const FrameRate& other) const
-														{ return (mKind != other.mKind) ||
-																(mNonDropFrameBase != other.mNonDropFrameBase); }
+														{ return (mFrameRate != other.mFrameRate) ||
+																(mIsDropFrame != other.mIsDropFrame); }
 
 													// Class methods
-				static			FrameRate			forNonDropFrame(UInt32 base)
-														{ return FrameRate(kKindNonDropFrame, base); }
-				static			FrameRate			forDropFrame2997()
-														{ return FrameRate(kKindDropFrame2997); }
-				static			FrameRate			forDropFrame5994()
-														{ return FrameRate(kKindDropFrame5994); }
-
 				static	const	TArray<FrameRate>&	getStandard();
-
-			private:
-													// Lifecycle methods
-													FrameRate(Kind kind, UInt32 nonDropFrameBase) :
-														mKind(kind), mNonDropFrameBase(nonDropFrameBase)
-														{}
-													FrameRate(Kind kind) : mKind(kind) {}
 
 			// Properties
 			public:
-				static	FrameRate	mDefault;
+				static	const	FrameRate	_23_976;
+				static	const	FrameRate	_24;
+				static	const	FrameRate	_25;
+				static	const	FrameRate	_29_97;
+				static	const	FrameRate	_29_97DropFrame;
+				static	const	FrameRate	_30;
+				static	const	FrameRate	_30DropFrame;
+				static	const	FrameRate	_47_952;
+				static	const	FrameRate	_48;
+				static	const	FrameRate	_50;
+				static	const	FrameRate	_59_94;
+				static	const	FrameRate	_59_94DropFrame;
+				static	const	FrameRate	_60;
 
 			private:
-						Kind		mKind;
-						OV<UInt32>	mNonDropFrameBase;
+								Float64		mFrameRate;
+								bool		mIsDropFrame;
 		};
 
 	// HMSF
 	public:
-		struct HMSF {
+		struct HMSF : public TV5<SInt32, SInt32, SInt32, SInt32, bool> {
 			// Methods
 			public:
 						// Lifecycle methods
-						HMSF(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames) :
-							mHours(hours), mMinutes(minutes), mSeconds(seconds), mFrames(frames)
-							{}
-						HMSF(const HMSF& other) :
-							mHours(other.mHours), mMinutes(other.mMinutes), mSeconds(other.mSeconds),
-									mFrames(other.mFrames)
+						HMSF(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames, bool isDropFrame) :
+							TV5(hours, minutes, seconds, frames, isDropFrame)
 							{}
 
 						// Instance methods
 				SInt32	getHours() const
-							{ return mHours; }
+							{ return getA(); }
 				SInt32	getMinutes() const
-							{ return mMinutes; }
+							{ return getB(); }
 				SInt32	getSeconds() const
-							{ return mSeconds; }
+							{ return getC(); }
 				SInt32	getFrames() const
-							{ return mFrames; }
+							{ return getD(); }
+				bool	isDropFrame() const
+							{ return getE(); }
 
-			// Properties
-			private:
-				SInt32	mHours;
-				SInt32	mMinutes;
-				SInt32	mSeconds;
-				SInt32	mFrames;
+				CString	getDisplayString() const;
+
+				bool	operator==(const HMSF& other) const
+							{ return (getHours() == other.getHours()) && (getMinutes() == other.getMinutes()) &&
+									(getSeconds() == other.getSeconds()) && (getFrames() == other.getFrames()) &&
+									(isDropFrame() == other.isDropFrame()); }
+				bool	operator!=(const HMSF& other) const
+							{ return !(*this == other); }
 		};
 
 	// Methods
 	public:
-										// Lifecycle methods
-										STimecode(SInt32 frameIndex,
-												const FrameRate& frameRate = FrameRate::forNonDropFrame(24)) :
-											mFrameIndex(frameIndex), mFrameRate(frameRate)
-											{}
-										STimecode(SInt32 hours, SInt32 minutes, SInt32 seconds, SInt32 frames,
-												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
-										STimecode(SInt32 hours, SInt32 minutes, Float32 seconds,
-												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
-										STimecode(UniversalTimeInterval timeInterval,
-												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
-										STimecode(const CDictionary& storageInfo);
-										STimecode(const STimecode& other) :
-											mFrameIndex(other.mFrameIndex), mFrameRate(other.mFrameRate)
-											{}
-
-										// Instance methods
-						UInt32			getFrameIndex() const
-											{ return mFrameIndex; }
-						HMSF			getHMSF() const;
-				const	FrameRate&		getFrameRate() const
-											{ return mFrameRate; }
-
-						CString			getDisplayString() const;
-
-						STimecode		addingFrames(SInt32 frameCount) const
-											{ return STimecode(mFrameIndex + frameCount, mFrameRate); }
-						STimecode		addingSeconds(Float64 seconds) const
-											{ return STimecode(
-													mFrameIndex + (SInt32) (seconds * mFrameRate.getFrameRate()),
-													mFrameRate); }
-
-						Float64			getSeconds() const
-											{ return (Float64) mFrameIndex / (Float64) mFrameRate.getFrameRate(); }
-
-						CDictionary		getStorageInfo() const;
-
-						bool			operator==(const STimecode& other) const
-											{ return (mFrameIndex == other.mFrameIndex) &&
-													(mFrameRate == other.mFrameRate); }
-						bool			operator!=(const STimecode& other) const
-											{ return (mFrameIndex != other.mFrameIndex) ||
-													(mFrameRate != other.mFrameRate); }
-						STimecode&		operator=(const STimecode& other)
-											{ mFrameIndex = other.mFrameIndex; mFrameRate = other.mFrameRate;
-													return *this; }
-
 										// Class methods
-		static			OV<STimecode>	fromString(const CString& string,
-												const FrameRate& frameRate = FrameRate::forNonDropFrame(24));
-
-	// Properties
-	private:
-		SInt32		mFrameIndex;
-		FrameRate	mFrameRate;
+		static	HMSF					getHMSF(UniversalTimeInterval timeInterval, const FrameRate& frameRate);
+		static	HMSF					getEquivalentHMSF(const HMSF& hmsf, const FrameRate& frameRate);
+		static	UniversalTimeInterval	getTimeInterval(const HMSF& hmsf, const FrameRate& frameRate);
+		static	CString					getDisplayString(UniversalTimeInterval timeInterval,
+												const FrameRate& frameRate);
 };

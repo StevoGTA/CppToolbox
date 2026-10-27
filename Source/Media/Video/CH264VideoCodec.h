@@ -15,7 +15,8 @@ class CH264VideoCodec {
 	// Methods
 	public:
 										// Class methods
-		static	SVideo::Format			composeVideoTrackFormat(const S2DSizeU16& frameSize, Float32 frameRate);
+		static	SVideo::Format			composeVideoTrackFormat(const S2DSizeU16& frameSize, UInt32 frameCount,
+												UniversalTimeInterval duration);
 		static	I<CDecodeVideoCodec>	create(const I<CRandomAccessDataSource>& randomAccessDataSource,
 												const TArray<SMedia::PacketAndLocation>& packetAndLocations,
 												const CData& configurationData, UInt32 timeScale,

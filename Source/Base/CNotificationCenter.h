@@ -6,6 +6,7 @@
 
 #include "CDictionary.h"
 #include "CReferenceCountable.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: CNotificationCenter
@@ -201,4 +202,23 @@ class CImmediateNotificationCenter : public CNotificationCenter {
 
 										// Class methods
 		static	CNotificationCenter&	shared();
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SNotificationCenterAndName
+
+struct SNotificationCenterAndName : public TV2<CNotificationCenter&, const CString&> {
+	// Methods
+	public:
+										// Lifecycle methods
+										SNotificationCenterAndName(CNotificationCenter& notificationCenter,
+												const CString& notificationName) :
+											TV2(notificationCenter, notificationName)
+											{}
+
+										// Instance methods
+				CNotificationCenter&	getNotificationCenter() const
+											{ return getA(); }
+		const	CString&				getNotificationName() const
+											{ return getB(); }
 };

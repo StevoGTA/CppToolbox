@@ -5,47 +5,53 @@
 #pragma once
 
 #include "C2DGeometry.h"
+#include "TimeAndDate.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SVideo
 
 struct SVideo {
+	// FrameRate
+	struct FrameRate {
+		// Methods
+		public:
+							// Class methods
+			static	CString	getDisplayString(Float64 frameRate);
+	};
+
 	// Format
 	struct Format {
-							// Lifecycle methods
-							Format(OSType codecID, const S2DSizeU16& frameSize, Float32 frameRate) :
-								mCodecID(codecID), mFrameSize(frameSize), mFrameRate(frameRate)
-								{}
-							Format(const Format& other) :
-								mCodecID(other.mCodecID), mFrameSize(other.mFrameSize), mFrameRate(other.mFrameRate)
-								{}
+		// Methods
+		public:
+								// Lifecycle methods
+								Format(OSType codecID, const S2DSizeU16& frameSize, UInt32 frameCount,
+										UniversalTimeInterval duration) :
+									mCodecID(codecID), mFrameSize(frameSize),
+											mFrameRate((Float64) frameCount / duration)
+									{}
+								Format(OSType codecID, const S2DSizeU16& frameSize, UInt32 frameRateNumerator,
+										UInt32 frameRateDenominator) :
+									mCodecID(codecID), mFrameSize(frameSize),
+											mFrameRate((Float64) frameRateNumerator / (Float64) frameRateDenominator)
+									{}
+								Format(OSType codecID, const S2DSizeU16& frameSize, Float64 frameRate) :
+									mCodecID(codecID), mFrameSize(frameSize), mFrameRate(frameRate)
+									{}
 
-							// Instance methods
-				OSType		getCodecID() const
-								{ return mCodecID; }
-		const	S2DSizeU16&	getFrameSize() const
-								{ return mFrameSize; }
-				Float32		getFrameRate() const
-								{ return mFrameRate; }
+								// Instance methods
+					OSType		getCodecID() const
+									{ return mCodecID; }
+			const	S2DSizeU16&	getFrameSize() const
+									{ return mFrameSize; }
+					Float64		getFrameRate() const
+									{ return mFrameRate; }
 
-				CString		getDescription() const
-								{
-									// Compose description
-									CString	description;
-
-									description +=
-											CString(mFrameSize.mWidth) + CString(OSSTR("x")) +
-													CString(mFrameSize.mHeight);
-									description +=
-											CString(OSSTR(" at ")) + CString(mFrameRate, 0, 3) + CString(OSSTR("fps"));
-
-									return description;
-								}
+					CString		getDescription() const;
 
 		// Properties
 		private:
 			OSType		mCodecID;
 			S2DSizeU16	mFrameSize;
-			Float32		mFrameRate;
+			Float64		mFrameRate;
 	};
 };

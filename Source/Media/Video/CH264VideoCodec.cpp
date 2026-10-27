@@ -1012,10 +1012,11 @@ const	CString	CH264VideoCodec::mName(OSSTR("h.264"));
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
-SVideo::Format CH264VideoCodec::composeVideoTrackFormat(const S2DSizeU16& frameSize, Float32 frameRate)
+SVideo::Format CH264VideoCodec::composeVideoTrackFormat(const S2DSizeU16& frameSize, UInt32 frameCount,
+		UniversalTimeInterval duration)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return SVideo::Format(mID, frameSize, frameRate);
+	return SVideo::Format(mID, frameSize, frameCount, duration);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

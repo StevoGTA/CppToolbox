@@ -18,20 +18,20 @@ class CVideoProcessor {
 		struct Format {
 
 								// Lifecycle methods
-								Format(const S2DSizeU16& frameSize, Float32 frameRate) :
+								Format(const S2DSizeU16& frameSize, Float64 frameRate) :
 									mFrameSize(frameSize), mFrameRate(frameRate)
 									{}
 
 								// Instance methods
 			const	S2DSizeU16&	getFrameSize() const
 									{ return mFrameSize; }
-					Float32		getFrameRate() const
+					Float64		getFrameRate() const
 									{ return mFrameRate; }
 
 			// Properties
 			private:
 				S2DSizeU16	mFrameSize;
-				Float32		mFrameRate;
+				Float64		mFrameRate;
 		};
 
 	// PerformResult
