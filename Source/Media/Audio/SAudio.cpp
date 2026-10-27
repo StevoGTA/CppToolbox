@@ -4,6 +4,8 @@
 
 #include "SAudio.h"
 
+#include "CDictionary.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SAudio::ChannelMap
 
@@ -110,6 +112,42 @@ bool SAudio::ChannelMap::compareValue(const ChannelMap& channelMap1, const Chann
 	else
 		// Both have order
 		return channelMap1.mValue < channelMap2.mValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - SAudio::ProcessingFormat
+
+// MARK: Lifecycle methods
+
+//----------------------------------------------------------------------------------------------------------------------
+SAudio::ProcessingFormat::ProcessingFormat(const CDictionary& storageInfo) :
+		mBits(storageInfo.getUInt8(CString(OSSTR("bits")))),
+		mSampleRate(storageInfo.getFloat32(CString(OSSTR("sampleRate")))),
+		mChannelMap(storageInfo.getUInt16(CString(OSSTR("channelMap")))),
+		mSampleType((SampleType) storageInfo.getUInt32(CString(OSSTR("sampleType")))),
+		mEndian((Endian) storageInfo.getUInt32(CString(OSSTR("endian")))),
+		mInterleaved((Interleaved) storageInfo.getUInt32(CString(OSSTR("interleaved"))))
+//----------------------------------------------------------------------------------------------------------------------
+{
+}
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CDictionary SAudio::ProcessingFormat::getStorageInfo() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Compose storage info
+	CDictionary	storageInfo;
+	storageInfo.set(CString(OSSTR("bits")), mBits);
+	storageInfo.set(CString(OSSTR("sampleRate")), mSampleRate);
+	storageInfo.set(CString(OSSTR("channelMap")), mChannelMap.getRawValue());
+	storageInfo.set(CString(OSSTR("sampleType")), (UInt32) mSampleType);
+	storageInfo.set(CString(OSSTR("endian")), (UInt32) mEndian);
+	storageInfo.set(CString(OSSTR("interleaved")), (UInt32) mInterleaved);
+
+	return storageInfo;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

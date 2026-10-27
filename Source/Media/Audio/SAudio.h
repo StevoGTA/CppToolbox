@@ -231,14 +231,14 @@ struct SAudio {
 	struct ProcessingFormat {
 		// SampleType
 		enum SampleType {
-			kSampleTypeFloat,
-			kSampleTypeSignedInteger,
+			kSampleTypeFloat			= 0,
+			kSampleTypeSignedInteger	= 1,
 		};
 
 		// Endian
 		enum Endian {
-			kEndianBig,
-			kEndianLittle,
+			kEndianBig		= 0,
+			kEndianLittle	= 1,
 	#if TARGET_RT_BIG_ENDIAN
 			kEndianNative = kEndianBig,
 	#else
@@ -248,8 +248,8 @@ struct SAudio {
 
 		// Interleaved
 		enum Interleaved {
-			kInterleaved,
-			kNonInterleaved,
+			kInterleaved	= 0,
+			kNonInterleaved	= 1,
 		};
 
 		// Methods
@@ -263,6 +263,7 @@ struct SAudio {
 												mInterleaved(
 														(channelMap == ChannelMap::_1_0()) ? kInterleaved : interleaved)
 										{}
+									ProcessingFormat(const CDictionary& storageInfo);
 									ProcessingFormat(const ProcessingFormat& other) :
 										mBits(other.mBits), mSampleRate(other.mSampleRate),
 												mChannelMap(other.mChannelMap), mSampleType(other.mSampleType),
@@ -327,6 +328,8 @@ struct SAudio {
 
 											return description;
 										}
+
+				CDictionary			getStorageInfo() const;
 
 				ProcessingFormat&	operator=(const ProcessingFormat& other)
 										{
