@@ -82,7 +82,9 @@ class CFolder : public CHashable {
 #elif defined(TARGET_OS_WINDOWS)
 	#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 		static	const	CFolder&			userDesktop();
+		static	const	CFolder&			userDocuments();
 		static	const	CFolder&			localApplicationData();
+		static	const	CFolder&			programData();
 	#endif
 	#if WINAPI_FAMILY == WINAPI_FAMILY_PC_APP
 		static	const	CFolder&			applicationFolder();

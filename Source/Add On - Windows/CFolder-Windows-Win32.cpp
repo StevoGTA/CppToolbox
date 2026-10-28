@@ -129,6 +129,28 @@ const CFolder& CFolder::userDesktop()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+const CFolder& CFolder::userDocuments()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CFolder*	sFolder = nil;
+
+	if (sFolder == nil) {
+		// Setup
+		PWSTR	path = NULL;
+		auto	result = ::SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, NULL, &path);
+		if (SUCCEEDED(result)) {
+			// Success
+			sFolder = new CFolder(CFilesystemPath(CString(path)));
+			::CoTaskMemFree(path);
+		} else
+			// Error
+			LogFailedHRESULT(result, OSSTR("SHGetKnownFolderPath for FOLDERID_Documents"));
+	}
+
+	return *sFolder;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 const CFolder& CFolder::localApplicationData()
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -145,6 +167,28 @@ const CFolder& CFolder::localApplicationData()
 		} else
 			// Error
 			LogFailedHRESULT(result, OSSTR("SHGetKnownFolderPath for FOLDERID_LocalAppData"));
+	}
+
+	return *sFolder;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+const CFolder& CFolder::programData()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CFolder*	sFolder = nil;
+
+	if (sFolder == nil) {
+		// Setup
+		PWSTR	path = NULL;
+		auto	result = ::SHGetKnownFolderPath(FOLDERID_ProgramData, KF_FLAG_CREATE, NULL, &path);
+		if (SUCCEEDED(result)) {
+			// Success
+			sFolder = new CFolder(CFilesystemPath(CString(path)));
+			::CoTaskMemFree(path);
+		} else
+			// Error
+			LogFailedHRESULT(result, OSSTR("SHGetKnownFolderPath for FOLDERID_ProgramData"));
 	}
 
 	return *sFolder;
