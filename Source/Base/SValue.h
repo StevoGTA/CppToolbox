@@ -21,7 +21,10 @@ struct SValue {
 			kTypeArrayOfDictionaries,
 			kTypeArrayOfStrings,
 			kTypeArrayOfFloat32s,
+			kTypeArrayOfUInt8s,
+			kTypeArrayOfUInt16s,
 			kTypeArrayOfUInt32s,
+			kTypeArrayOfUInt64s,
 			kTypeBool,
 			kTypeData,
 			kTypeDictionary,
@@ -86,7 +89,10 @@ struct SValue {
 												SValue(const TArray<CDictionary>& value);
 												SValue(const TArray<CString>& value);
 												SValue(const TNumberArray<Float32>& value);
+												SValue(const TNumberArray<UInt8>& value);
+												SValue(const TNumberArray<UInt16>& value);
 												SValue(const TNumberArray<UInt32>& value);
+												SValue(const TNumberArray<UInt64>& value);
 												SValue(bool value);
 												SValue(const CData& value);
 												SValue(const CDictionary& value);
@@ -117,9 +123,18 @@ struct SValue {
 				const	TNumberArray<Float32>&	getArrayOfFloat32s(
 														const TNumberArray<Float32>& defaultValue =
 																TNumberArray<Float32>()) const;
-				const	TNumberArray<UInt32>&	getArrayOfUInt32s(
+						TNumberArray<UInt8>		getArrayOfUInt8s(
+														const TNumberArray<UInt8>& defaultValue =
+																TNumberArray<UInt8>()) const;
+						TNumberArray<UInt16>	getArrayOfUInt16s(
+														const TNumberArray<UInt16>& defaultValue =
+																TNumberArray<UInt16>()) const;
+						TNumberArray<UInt32>	getArrayOfUInt32s(
 														const TNumberArray<UInt32>& defaultValue =
 																TNumberArray<UInt32>()) const;
+						TNumberArray<UInt64>	getArrayOfUInt64s(
+														const TNumberArray<UInt64>& defaultValue =
+																TNumberArray<UInt64>()) const;
 						bool					getBool(bool defaultValue = false) const;
 						void					getValue(bool& value, bool defaultValue = false) const
 													{ value = getBool(defaultValue); }
@@ -187,7 +202,10 @@ struct SValue {
 							ValueValue(TArray<CDictionary>* value) : mArrayOfDictionaries(value) {}
 							ValueValue(TArray<CString>* value) : mArrayOfStrings(value) {}
 							ValueValue(TNumberArray<Float32>* value) : mArrayOfFloat32s(value) {}
+							ValueValue(TNumberArray<UInt8>* value) : mArrayOfUInt8s(value) {}
+							ValueValue(TNumberArray<UInt16>* value) : mArrayOfUInt16s(value) {}
 							ValueValue(TNumberArray<UInt32>* value) : mArrayOfUInt32s(value) {}
+							ValueValue(TNumberArray<UInt64>* value) : mArrayOfUInt64s(value) {}
 							ValueValue(bool value) : mBool(value) {}
 							ValueValue(CData* value) : mData(value) {}
 							ValueValue(CDictionary* value) : mDictionary(value) {}
@@ -208,7 +226,10 @@ struct SValue {
 							TArray<CDictionary>*	mArrayOfDictionaries;
 							TArray<CString>*		mArrayOfStrings;
 							TNumberArray<Float32>*	mArrayOfFloat32s;
+							TNumberArray<UInt8>*	mArrayOfUInt8s;
+							TNumberArray<UInt16>*	mArrayOfUInt16s;
 							TNumberArray<UInt32>*	mArrayOfUInt32s;
+							TNumberArray<UInt64>*	mArrayOfUInt64s;
 							bool					mBool;
 							CData*					mData;
 							CDictionary*			mDictionary;

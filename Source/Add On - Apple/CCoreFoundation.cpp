@@ -104,6 +104,42 @@ TNumberArray<OSType> CCoreFoundation::arrayOfOSTypesFrom(CFArrayRef arrayRef)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt8> CCoreFoundation::arrayOfUInt8sFrom(CFArrayRef arrayRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNumberArray<UInt8>	array;
+
+	// Get values
+	CFIndex		count = ::CFArrayGetCount(arrayRef);
+	CFNumberRef	numberRefs[count];
+	::CFArrayGetValues(arrayRef, CFRangeMake(0, count), (const void**) &numberRefs);
+	for (CFIndex i = 0; i < count; i++)
+		// Add number
+		array += uInt8From(numberRefs[i]);
+
+	return array;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt16> CCoreFoundation::arrayOfUInt16sFrom(CFArrayRef arrayRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNumberArray<UInt16>	array;
+
+	// Get values
+	CFIndex		count = ::CFArrayGetCount(arrayRef);
+	CFNumberRef	numberRefs[count];
+	::CFArrayGetValues(arrayRef, CFRangeMake(0, count), (const void**) &numberRefs);
+	for (CFIndex i = 0; i < count; i++)
+		// Add number
+		array += uInt16From(numberRefs[i]);
+
+	return array;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TNumberArray<UInt32> CCoreFoundation::arrayOfUInt32sFrom(CFArrayRef arrayRef)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -117,6 +153,24 @@ TNumberArray<UInt32> CCoreFoundation::arrayOfUInt32sFrom(CFArrayRef arrayRef)
 	for (CFIndex i = 0; i < count; i++)
 		// Add number
 		array += uInt32From(numberRefs[i]);
+
+	return array;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt64> CCoreFoundation::arrayOfUInt64sFrom(CFArrayRef arrayRef)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNumberArray<UInt64>	array;
+
+	// Get values
+	CFIndex		count = ::CFArrayGetCount(arrayRef);
+	CFNumberRef	numberRefs[count];
+	::CFArrayGetValues(arrayRef, CFRangeMake(0, count), (const void**) &numberRefs);
+	for (CFIndex i = 0; i < count; i++)
+		// Add number
+		array += uInt64From(numberRefs[i]);
 
 	return array;
 }
@@ -178,6 +232,34 @@ CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TNumberArray<
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TNumberArray<UInt8>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFMutableArrayRef	arrayRef =
+								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
+	for (TNumberArray<UInt8>::Iterator iterator = array.getIterator(); iterator; iterator++)
+		// Add number
+		::CFArrayAppendValue(arrayRef, *numberRefFrom(*iterator));
+
+	return O<CFArrayRef>(arrayRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TNumberArray<UInt16>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFMutableArrayRef	arrayRef =
+								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
+	for (TNumberArray<UInt16>::Iterator iterator = array.getIterator(); iterator; iterator++)
+		// Add number
+		::CFArrayAppendValue(arrayRef, *numberRefFrom(*iterator));
+
+	return O<CFArrayRef>(arrayRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TNumberArray<UInt32>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -185,6 +267,20 @@ CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TNumberArray<
 	CFMutableArrayRef	arrayRef =
 								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
 	for (TNumberArray<UInt32>::Iterator iterator = array.getIterator(); iterator; iterator++)
+		// Add number
+		::CFArrayAppendValue(arrayRef, *numberRefFrom(*iterator));
+
+	return O<CFArrayRef>(arrayRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CCoreFoundation::O<CFArrayRef> CCoreFoundation::arrayRefFrom(const TNumberArray<UInt64>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFMutableArrayRef	arrayRef =
+								::CFArrayCreateMutable(kCFAllocatorDefault, array.getCount(), &kCFTypeArrayCallBacks);
+	for (TNumberArray<UInt64>::Iterator iterator = array.getIterator(); iterator; iterator++)
 		// Add number
 		::CFArrayAppendValue(arrayRef, *numberRefFrom(*iterator));
 
@@ -244,8 +340,8 @@ CDictionary CCoreFoundation::dictionaryFrom(CFDictionaryRef dictionaryRef)
 						// Array of Float32s
 						dictionary.set(CString(keyStringRefs[i]), arrayOfFloat32sFrom(arrayRef));
 					else
-						// Array of UInt32s
-						dictionary.set(CString(keyStringRefs[i]), arrayOfUInt32sFrom(arrayRef));
+						// Array of UInt64s
+						dictionary.set(CString(keyStringRefs[i]), arrayOfUInt64sFrom(arrayRef));
 				} else if (arrayElementTypeRef == ::CFStringGetTypeID())
 					// Array of strings
 					dictionary.set(CString(keyStringRefs[i]), arrayOfStringsFrom(arrayRef));
@@ -395,9 +491,24 @@ CCoreFoundation::O<CFDictionaryRef> CCoreFoundation::dictionaryRefFrom(const CDi
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, *arrayRefFrom(value.getArrayOfFloat32s()));
 				break;
 
+			case SValue::kTypeArrayOfUInt8s:
+				// Array of UInt8s
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *arrayRefFrom(value.getArrayOfUInt8s()));
+				break;
+
+			case SValue::kTypeArrayOfUInt16s:
+				// Array of UInt16s
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *arrayRefFrom(value.getArrayOfUInt16s()));
+				break;
+
 			case SValue::kTypeArrayOfUInt32s:
 				// Array of UInt32s
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, *arrayRefFrom(value.getArrayOfUInt32s()));
+				break;
+
+			case SValue::kTypeArrayOfUInt64s:
+				// Array of UInt64s
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, *arrayRefFrom(value.getArrayOfUInt64s()));
 				break;
 
 			case SValue::kTypeData:

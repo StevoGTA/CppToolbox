@@ -543,8 +543,47 @@ OV<TNumberArray<Float32> > CDictionary::getOVArrayOfFloat32s(const CString& key)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TNumberArray<UInt32>& CDictionary::getArrayOfUInt32s(const CString& key,
-		const TNumberArray<UInt32>& defaultValue) const
+TNumberArray<UInt8> CDictionary::getArrayOfUInt8s(const CString& key, const TNumberArray<UInt8>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? value->getArrayOfUInt8s(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<TNumberArray<UInt8> > CDictionary::getOVArrayOfUInt8s(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? OV<TNumberArray<UInt8> >(value->getArrayOfUInt8s()) : OV<TNumberArray<UInt8> >();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt16> CDictionary::getArrayOfUInt16s(const CString& key, const TNumberArray<UInt16>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? value->getArrayOfUInt16s(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<TNumberArray<UInt16> > CDictionary::getOVArrayOfUInt16s(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? OV<TNumberArray<UInt16> >(value->getArrayOfUInt16s()) : OV<TNumberArray<UInt16> >();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt32> CDictionary::getArrayOfUInt32s(const CString& key, const TNumberArray<UInt32>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get value
@@ -561,6 +600,26 @@ OV<TNumberArray<UInt32> > CDictionary::getOVArrayOfUInt32s(const CString& key) c
 	OR<SValue>	value = mBacking->getValue(key);
 
 	return value.hasReference() ? OV<TNumberArray<UInt32> >(value->getArrayOfUInt32s()) : OV<TNumberArray<UInt32> >();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt64> CDictionary::getArrayOfUInt64s(const CString& key, const TNumberArray<UInt64>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? value->getArrayOfUInt64s(defaultValue) : defaultValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<TNumberArray<UInt64> > CDictionary::getOVArrayOfUInt64s(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get value
+	OR<SValue>	value = mBacking->getValue(key);
+
+	return value.hasReference() ? OV<TNumberArray<UInt64> >(value->getArrayOfUInt64s()) : OV<TNumberArray<UInt64> >();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -886,7 +945,46 @@ void CDictionary::set(const CString& key, const TNumberArray<Float32>& value)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CDictionary::set(const CString& key, const TNumberArray<UInt8>& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check backing reference count
+	if (mBacking.getReferenceCount() > 1)
+		// Prepare for write
+		mBacking = mBacking->prepareForWrite();
+
+	// Set
+	mBacking->set(key, SValue(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDictionary::set(const CString& key, const TNumberArray<UInt16>& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check backing reference count
+	if (mBacking.getReferenceCount() > 1)
+		// Prepare for write
+		mBacking = mBacking->prepareForWrite();
+
+	// Set
+	mBacking->set(key, SValue(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CDictionary::set(const CString& key, const TNumberArray<UInt32>& value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check backing reference count
+	if (mBacking.getReferenceCount() > 1)
+		// Prepare for write
+		mBacking = mBacking->prepareForWrite();
+
+	// Set
+	mBacking->set(key, SValue(value));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CDictionary::set(const CString& key, const TNumberArray<UInt64>& value)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check backing reference count

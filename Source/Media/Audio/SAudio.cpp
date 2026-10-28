@@ -12,6 +12,29 @@
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
+bool SAudio::ChannelMap::compareValue(const ChannelMap& channelMap1, const ChannelMap& channelMap2, void* userData)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt8	channelCount1 = channelMap1.getChannelCount();
+	UInt8	channelCount2 = channelMap2.getChannelCount();
+
+	// Check channel count
+	if (channelCount1 != channelCount2)
+		// Sort by channels first
+		return channelCount1 < channelCount2;
+	else if (channelMap1.hasUnspecifiedOrder())
+		// Order before unspecified order
+		return false;
+	else if (channelMap2.hasUnspecifiedOrder())
+		// Order before unspecified order
+		return true;
+	else
+		// Both have order
+		return channelMap1.mValue < channelMap2.mValue;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 #define CHANNELMAP(CM, F)								\
 	const	SAudio::ChannelMap&	F						\
 	{													\
@@ -90,29 +113,6 @@ CHANNELMAP((UInt16) 0x0808, SAudio::ChannelMap::_8_0_Option2())
 CHANNELMAP((UInt16) 0x0009, SAudio::ChannelMap::_9_0_Unspecified())
 
 CHANNELMAP((UInt16) 0x000A, SAudio::ChannelMap::_10_0_Unspecified())
-
-//----------------------------------------------------------------------------------------------------------------------
-bool SAudio::ChannelMap::compareValue(const ChannelMap& channelMap1, const ChannelMap& channelMap2, void* userData)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Setup
-	UInt8	channelCount1 = channelMap1.getChannelCount();
-	UInt8	channelCount2 = channelMap2.getChannelCount();
-
-	// Check channel count
-	if (channelCount1 != channelCount2)
-		// Sort by channels first
-		return channelCount1 < channelCount2;
-	else if (channelMap1.hasUnspecifiedOrder())
-		// Order before unspecified order
-		return false;
-	else if (channelMap2.hasUnspecifiedOrder())
-		// Order before unspecified order
-		return true;
-	else
-		// Both have order
-		return channelMap1.mValue < channelMap2.mValue;
-}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------

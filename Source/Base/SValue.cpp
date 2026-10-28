@@ -43,7 +43,22 @@ SValue::SValue(const TNumberArray<Float32>& value) :
 {}
 
 //----------------------------------------------------------------------------------------------------------------------
+SValue::SValue(const TNumberArray<UInt8>& value) : mType(kTypeArrayOfUInt8s), mValue(new TNumberArray<UInt8>(value))
+//----------------------------------------------------------------------------------------------------------------------
+{}
+
+//----------------------------------------------------------------------------------------------------------------------
+SValue::SValue(const TNumberArray<UInt16>& value) : mType(kTypeArrayOfUInt16s), mValue(new TNumberArray<UInt16>(value))
+//----------------------------------------------------------------------------------------------------------------------
+{}
+
+//----------------------------------------------------------------------------------------------------------------------
 SValue::SValue(const TNumberArray<UInt32>& value) : mType(kTypeArrayOfUInt32s), mValue(new TNumberArray<UInt32>(value))
+//----------------------------------------------------------------------------------------------------------------------
+{}
+
+//----------------------------------------------------------------------------------------------------------------------
+SValue::SValue(const TNumberArray<UInt64>& value) : mType(kTypeArrayOfUInt64s), mValue(new TNumberArray<UInt64>(value))
 //----------------------------------------------------------------------------------------------------------------------
 {}
 
@@ -138,9 +153,24 @@ SValue::SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc) : mType(other
 			mValue.mArrayOfFloat32s = new TNumberArray<Float32>(*other.mValue.mArrayOfFloat32s);
 			break;
 
+		case kTypeArrayOfUInt8s:
+			// Array of UInt8s
+			mValue.mArrayOfUInt8s = new TNumberArray<UInt8>(*other.mValue.mArrayOfUInt8s);
+			break;
+
+		case kTypeArrayOfUInt16s:
+			// Array of UInt16s
+			mValue.mArrayOfUInt16s = new TNumberArray<UInt16>(*other.mValue.mArrayOfUInt16s);
+			break;
+
 		case kTypeArrayOfUInt32s:
 			// Array of UInt32s
 			mValue.mArrayOfUInt32s = new TNumberArray<UInt32>(*other.mValue.mArrayOfUInt32s);
+			break;
+
+		case kTypeArrayOfUInt64s:
+			// Array of UInt64s
+			mValue.mArrayOfUInt64s = new TNumberArray<UInt64>(*other.mValue.mArrayOfUInt64s);
 			break;
 
 		case kTypeData:
@@ -322,24 +352,79 @@ const TNumberArray<Float32>& SValue::getArrayOfFloat32s(const TNumberArray<Float
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-const TNumberArray<UInt32>& SValue::getArrayOfUInt32s(const TNumberArray<UInt32>& defaultValue) const
+TNumberArray<UInt8> SValue::getArrayOfUInt8s(const TNumberArray<UInt8>& defaultValue) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Setup
-	static	const	TNumberArray<UInt32>	sEmptyArrayOfUInt32s;
-
-	// Check type
+	// Check value type
 	switch (mType) {
-		case kTypeArrayEmpty:
-			// Empty array
-			return sEmptyArrayOfUInt32s;
-
-		case kTypeArrayOfUInt32s:
-			// Array of UInt32s
-			return *mValue.mArrayOfUInt32s;
+		case kTypeArrayEmpty:		return TNumberArray<UInt8>();
+		case kTypeArrayOfUInt8s:	return *mValue.mArrayOfUInt8s;
+		case kTypeArrayOfUInt16s:	return TNumberArray<UInt8>(*mValue.mArrayOfUInt16s);
+		case kTypeArrayOfUInt32s:	return TNumberArray<UInt8>(*mValue.mArrayOfUInt32s);
+		case kTypeArrayOfUInt64s:	return TNumberArray<UInt8>(*mValue.mArrayOfUInt64s);
 
 		default:
-			// Everything else
+			// Cannot coerce value
+			AssertFail();
+
+			return defaultValue;
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt16> SValue::getArrayOfUInt16s(const TNumberArray<UInt16>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check value type
+	switch (mType) {
+		case kTypeArrayEmpty:		return TNumberArray<UInt16>();
+		case kTypeArrayOfUInt8s:	return TNumberArray<UInt16>(*mValue.mArrayOfUInt8s);
+		case kTypeArrayOfUInt16s:	return *mValue.mArrayOfUInt16s;
+		case kTypeArrayOfUInt32s:	return TNumberArray<UInt16>(*mValue.mArrayOfUInt32s);
+		case kTypeArrayOfUInt64s:	return TNumberArray<UInt16>(*mValue.mArrayOfUInt64s);
+
+		default:
+			// Cannot coerce value
+			AssertFail();
+
+			return defaultValue;
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt32> SValue::getArrayOfUInt32s(const TNumberArray<UInt32>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check value type
+	switch (mType) {
+		case kTypeArrayEmpty:		return TNumberArray<UInt32>();
+		case kTypeArrayOfUInt8s:	return TNumberArray<UInt32>(*mValue.mArrayOfUInt8s);
+		case kTypeArrayOfUInt16s:	return TNumberArray<UInt32>(*mValue.mArrayOfUInt16s);
+		case kTypeArrayOfUInt32s:	return *mValue.mArrayOfUInt32s;
+		case kTypeArrayOfUInt64s:	return TNumberArray<UInt32>(*mValue.mArrayOfUInt64s);
+
+		default:
+			// Cannot coerce value
+			AssertFail();
+
+			return defaultValue;
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<UInt64> SValue::getArrayOfUInt64s(const TNumberArray<UInt64>& defaultValue) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check value type
+	switch (mType) {
+		case kTypeArrayEmpty:		return TNumberArray<UInt64>();
+		case kTypeArrayOfUInt8s:	return TNumberArray<UInt64>(*mValue.mArrayOfUInt8s);
+		case kTypeArrayOfUInt16s:	return TNumberArray<UInt64>(*mValue.mArrayOfUInt16s);
+		case kTypeArrayOfUInt32s:	return TNumberArray<UInt64>(*mValue.mArrayOfUInt32s);
+		case kTypeArrayOfUInt64s:	return *mValue.mArrayOfUInt64s;
+
+		default:
+			// Cannot coerce value
 			AssertFail();
 
 			return defaultValue;
@@ -663,7 +748,10 @@ bool SValue::equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc) cons
 			case kTypeArrayOfDictionaries:	return other.mValue.mArrayOfDictionaries->isEmpty();
 			case kTypeArrayOfStrings:		return other.mValue.mArrayOfStrings->isEmpty();
 			case kTypeArrayOfFloat32s:		return other.mValue.mArrayOfFloat32s->isEmpty();
+			case kTypeArrayOfUInt8s:		return other.mValue.mArrayOfUInt8s->isEmpty();
+			case kTypeArrayOfUInt16s:		return other.mValue.mArrayOfUInt16s->isEmpty();
 			case kTypeArrayOfUInt32s:		return other.mValue.mArrayOfUInt32s->isEmpty();
+			case kTypeArrayOfUInt64s:		return other.mValue.mArrayOfUInt64s->isEmpty();
 			default:						return false;
 		}
 	} else if (other.mType == kTypeArrayEmpty) {
@@ -672,7 +760,10 @@ bool SValue::equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc) cons
 			case kTypeArrayOfDictionaries:	return mValue.mArrayOfDictionaries->isEmpty();
 			case kTypeArrayOfStrings:		return mValue.mArrayOfStrings->isEmpty();
 			case kTypeArrayOfFloat32s:		return mValue.mArrayOfFloat32s->isEmpty();
+			case kTypeArrayOfUInt8s:		return mValue.mArrayOfUInt8s->isEmpty();
+			case kTypeArrayOfUInt16s:		return mValue.mArrayOfUInt16s->isEmpty();
 			case kTypeArrayOfUInt32s:		return mValue.mArrayOfUInt32s->isEmpty();
+			case kTypeArrayOfUInt64s:		return mValue.mArrayOfUInt64s->isEmpty();
 			default:						return false;
 		}
 	} else if (mType != other.mType)
@@ -701,9 +792,21 @@ bool SValue::equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc) cons
 			// Array of Float32s
 			return *mValue.mArrayOfFloat32s == *other.mValue.mArrayOfFloat32s;
 
+		case kTypeArrayOfUInt8s:
+			// Array of UInt8s
+			return *mValue.mArrayOfUInt8s == *other.mValue.mArrayOfUInt8s;
+
+		case kTypeArrayOfUInt16s:
+			// Array of UInt16s
+			return *mValue.mArrayOfUInt16s == *other.mValue.mArrayOfUInt16s;
+
 		case kTypeArrayOfUInt32s:
 			// Array of UInt32s
 			return *mValue.mArrayOfUInt32s == *other.mValue.mArrayOfUInt32s;
+
+		case kTypeArrayOfUInt64s:
+			// Array of UInt64s
+			return *mValue.mArrayOfUInt64s == *other.mValue.mArrayOfUInt64s;
 
 		case kTypeData:
 			// Data
@@ -784,9 +887,18 @@ void SValue::dispose(OpaqueDisposeProc opaqueDisposeProc)
 	} else if (mType == kTypeArrayOfFloat32s) {
 		// Array of Float32s
 		Delete(mValue.mArrayOfFloat32s);
+	} else if (mType == kTypeArrayOfUInt8s) {
+		// Array of UInt8s
+		Delete(mValue.mArrayOfUInt8s);
+	} else if (mType == kTypeArrayOfUInt16s) {
+		// Array of UInt16s
+		Delete(mValue.mArrayOfUInt16s);
 	} else if (mType == kTypeArrayOfUInt32s) {
 		// Array of UInt32s
 		Delete(mValue.mArrayOfUInt32s);
+	} else if (mType == kTypeArrayOfUInt64s) {
+		// Array of UInt64s
+		Delete(mValue.mArrayOfUInt64s);
 	} else if (mType == kTypeData) {
 		// Data
 		Delete(mValue.mData);
@@ -826,9 +938,24 @@ SValue& SValue::operator=(const SValue& other)
 			mValue.mArrayOfFloat32s = new TNumberArray<Float32>(*other.mValue.mArrayOfFloat32s);
 			break;
 
+		case kTypeArrayOfUInt8s:
+			// Array of UInt8s
+			mValue.mArrayOfUInt8s = new TNumberArray<UInt8>(*other.mValue.mArrayOfUInt8s);
+			break;
+
+		case kTypeArrayOfUInt16s:
+			// Array of UInt16s
+			mValue.mArrayOfUInt16s = new TNumberArray<UInt16>(*other.mValue.mArrayOfUInt16s);
+			break;
+
 		case kTypeArrayOfUInt32s:
 			// Array of UInt32s
 			mValue.mArrayOfUInt32s = new TNumberArray<UInt32>(*other.mValue.mArrayOfUInt32s);
+			break;
+
+		case kTypeArrayOfUInt64s:
+			// Array of UInt64s
+			mValue.mArrayOfUInt64s = new TNumberArray<UInt64>(*other.mValue.mArrayOfUInt64s);
 			break;
 
 		case kTypeData:

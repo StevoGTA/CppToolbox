@@ -178,6 +178,17 @@ template <typename T> class TNumberArray : public CArray {
 											for (ItemIndex i = 0; i < count; i++)
 												TNumberArray<T>::add(mapProc(other.getItemAt(i), userData));
 										}
+
+									template <typename U>
+									TNumberArray(const TNumberArray<U>& other) :
+										CArray(0, (CArray::CopyProc) copy, dispose)
+										{
+											// Convert from other array
+											for (typename TNumberArray<U>::Iterator iterator = other.getIterator();
+													iterator; iterator++)
+												// Add
+												TNumberArray<T>::add((T) *iterator);
+										}
 									TNumberArray(const TNumberArray<T>& other) : CArray(other) {}
 
 									// CArray methods
@@ -245,7 +256,7 @@ template <typename T> class TNumberArray : public CArray {
 										}
 
 				T					operator[](ItemIndex index) const
-												{ return **((TNumber<T>*) getItemAt(index)); }
+										{ return **((TNumber<T>*) getItemAt(index)); }
 				TNumberArray<T>		operator+(const TNumberArray<T>& other) const
 										{
 											// Setup

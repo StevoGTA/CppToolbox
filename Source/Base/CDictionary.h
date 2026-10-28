@@ -174,10 +174,22 @@ class CDictionary : public CEquatable {
 															const TNumberArray<Float32>& defaultValue =
 																	TNumberArray<Float32>()) const;
 						OV<TNumberArray<Float32> >	getOVArrayOfFloat32s(const CString& key) const;
-				const	TNumberArray<UInt32>&		getArrayOfUInt32s(const CString& key,
+						TNumberArray<UInt8>			getArrayOfUInt8s(const CString& key,
+															const TNumberArray<UInt8>& defaultValue =
+																	TNumberArray<UInt8>()) const;
+						OV<TNumberArray<UInt8> >	getOVArrayOfUInt8s(const CString& key) const;
+						TNumberArray<UInt16>		getArrayOfUInt16s(const CString& key,
+															const TNumberArray<UInt16>& defaultValue =
+																	TNumberArray<UInt16>()) const;
+						OV<TNumberArray<UInt16> >	getOVArrayOfUInt16s(const CString& key) const;
+						TNumberArray<UInt32>		getArrayOfUInt32s(const CString& key,
 															const TNumberArray<UInt32>& defaultValue =
 																	TNumberArray<UInt32>()) const;
 						OV<TNumberArray<UInt32> >	getOVArrayOfUInt32s(const CString& key) const;
+						TNumberArray<UInt64>		getArrayOfUInt64s(const CString& key,
+															const TNumberArray<UInt64>& defaultValue =
+																	TNumberArray<UInt64>()) const;
+						OV<TNumberArray<UInt64> >	getOVArrayOfUInt64s(const CString& key) const;
 				const	CData&						getData(const CString& key,
 															const CData& defaultValue = CData::mEmpty) const;
 						OV<CData>					getOVData(const CString& key) const;
@@ -292,7 +304,60 @@ class CDictionary : public CEquatable {
 																remove(key);
 														}
 						void						set(const CString& key, const TNumberArray<Float32>& value);
+						void						set(const CString& key, const OV<TNumberArray<Float32> >& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, const TNumberArray<UInt8>& value);
+						void						set(const CString& key, const OV<TNumberArray<UInt8> >& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, const TNumberArray<UInt16>& value);
+						void						set(const CString& key, const OV<TNumberArray<UInt16> >& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
 						void						set(const CString& key, const TNumberArray<UInt32>& value);
+						void						set(const CString& key, const OV<TNumberArray<UInt32> >& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
+						void						set(const CString& key, const TNumberArray<UInt64>& value);
+						void						set(const CString& key, const OV<TNumberArray<UInt64> >& value)
+														{
+															// Check for value
+															if (value.hasValue())
+																// Have value
+																set(key, *value);
+															else
+																// Don't have value
+																remove(key);
+														}
 						void						set(const CString& key, const CData& value);
 						void						set(const CString& key, const OV<CData>& value)
 														{

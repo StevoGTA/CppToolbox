@@ -57,6 +57,17 @@ struct SAudio {
 											{ return mValue != other.mValue; }
 
 										// Class methods
+			static			UInt8		channelCountFromRawValue(UInt16 rawValue)
+											{ return rawValue & 0x00FF; }
+			static			CString		getChannelsDisplayString(const TNumberArray<UInt8>& channelCounts);
+
+			static			bool		compare(const ChannelMap& testChannelMap, void* channelMap)
+											{ return testChannelMap == *((const ChannelMap*) channelMap); }
+			static			bool		compareValue(const ChannelMap& channelMap1,
+												const ChannelMap& channelMap2, void* userData);
+			static			void		sort(TMArray<ChannelMap>& channelMaps)
+											{ channelMaps.sort((TMArray<ChannelMap>::CompareProc) compareValue, nil); }
+
 										// 1 Channel
 			static	const	ChannelMap&	_1_0();				// C
 
@@ -136,16 +147,6 @@ struct SAudio {
 
 										// 10 Channels
 			static	const	ChannelMap&	_10_0_Unspecified();// Unspecified
-
-			static			UInt8		channelCountFromRawValue(UInt16 rawValue)
-											{ return rawValue & 0x00FF; }
-
-			static			bool		compare(const ChannelMap& testChannelMap, void* channelMap)
-											{ return testChannelMap == *((const ChannelMap*) channelMap); }
-			static			bool		compareValue(const ChannelMap& channelMap1,
-												const ChannelMap& channelMap2, void* userData);
-			static			void		sort(TMArray<ChannelMap>& channelMaps)
-											{ channelMaps.sort((TMArray<ChannelMap>::CompareProc) compareValue, nil); }
 
 		// Properties
 		private:

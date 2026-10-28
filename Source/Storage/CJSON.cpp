@@ -20,7 +20,10 @@ static	SError	sInvalidTokenError(sErrorDomain, 2, CString(OSSTR("Invalid Token")
 static	OV<SError>						sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array);
 static	OV<SError>						sAddArrayOfStrings(CData& data, const TArray<CString>& array);
 static	OV<SError>						sAddArrayOfFloat32s(CData& data, const TNumberArray<Float32>& array);
+static	OV<SError>						sAddArrayOfUInt8s(CData& data, const TNumberArray<UInt8>& array);
+static	OV<SError>						sAddArrayOfUInt16s(CData& data, const TNumberArray<UInt16>& array);
 static	OV<SError>						sAddArrayOfUInt32s(CData& data, const TNumberArray<UInt32>& array);
+static	OV<SError>						sAddArrayOfUInt64s(CData& data, const TNumberArray<UInt64>& array);
 static	OV<SError>						sAddDictionary(CData& data, const CDictionary& dictionary);
 static	void							sAddString(CData& data, const CString& string);
 
@@ -162,6 +165,54 @@ OV<SError> sAddArrayOfFloat32s(CData& data, const TNumberArray<Float32>& array)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<SError> sAddArrayOfUInt8s(CData& data, const TNumberArray<UInt8>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Start
+	data.append("[", 1);
+
+	// Iterate array
+	for (TNumberArray<UInt8>::Iterator iterator = array.getIterator(); iterator; iterator++) {
+		// Check if first
+		if (!iterator.isFirst())
+			// Add comma
+			data.append(",", 1);
+
+		// Add value
+		data += CString(*iterator).getUTF8Data();
+	}
+
+	// End
+	data.append("]", 1);
+
+	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> sAddArrayOfUInt16s(CData& data, const TNumberArray<UInt16>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Start
+	data.append("[", 1);
+
+	// Iterate array
+	for (TNumberArray<UInt16>::Iterator iterator = array.getIterator(); iterator; iterator++) {
+		// Check if first
+		if (!iterator.isFirst())
+			// Add comma
+			data.append(",", 1);
+
+		// Add value
+		data += CString(*iterator).getUTF8Data();
+	}
+
+	// End
+	data.append("]", 1);
+
+	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> sAddArrayOfUInt32s(CData& data, const TNumberArray<UInt32>& array)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -170,6 +221,30 @@ OV<SError> sAddArrayOfUInt32s(CData& data, const TNumberArray<UInt32>& array)
 
 	// Iterate array
 	for (TNumberArray<UInt32>::Iterator iterator = array.getIterator(); iterator; iterator++) {
+		// Check if first
+		if (!iterator.isFirst())
+			// Add comma
+			data.append(",", 1);
+
+		// Add value
+		data += CString(*iterator).getUTF8Data();
+	}
+
+	// End
+	data.append("]", 1);
+
+	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> sAddArrayOfUInt64s(CData& data, const TNumberArray<UInt64>& array)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Start
+	data.append("[", 1);
+
+	// Iterate array
+	for (TNumberArray<UInt64>::Iterator iterator = array.getIterator(); iterator; iterator++) {
 		// Check if first
 		if (!iterator.isFirst())
 			// Add comma
@@ -236,9 +311,27 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 				ReturnErrorIfError(error);
 				break;
 
+			case SValue::kTypeArrayOfUInt8s:
+				// Array of UInt8s
+				error = sAddArrayOfUInt8s(data, iterator.getValue().getArrayOfUInt8s());
+				ReturnErrorIfError(error);
+				break;
+
+			case SValue::kTypeArrayOfUInt16s:
+				// Array of UInt16s
+				error = sAddArrayOfUInt16s(data, iterator.getValue().getArrayOfUInt16s());
+				ReturnErrorIfError(error);
+				break;
+
 			case SValue::kTypeArrayOfUInt32s:
 				// Array of UInt32s
 				error = sAddArrayOfUInt32s(data, iterator.getValue().getArrayOfUInt32s());
+				ReturnErrorIfError(error);
+				break;
+
+			case SValue::kTypeArrayOfUInt64s:
+				// Array of UInt64s
+				error = sAddArrayOfUInt64s(data, iterator.getValue().getArrayOfUInt64s());
 				ReturnErrorIfError(error);
 				break;
 
@@ -586,8 +679,8 @@ TVResult<SValue> sReadValue(const SInt8*& charPtr)
 							isFloat ?
 									SValue(TNumberArray<Float32>(strings,
 											(TNumberArray<Float32>::MapProc) CString::getFloat32)) :
-									SValue(TNumberArray<UInt32>(strings,
-											(TNumberArray<UInt32>::MapProc) CString::getUInt32)));
+									SValue(TNumberArray<UInt64>(strings,
+											(TNumberArray<UInt64>::MapProc) CString::getUInt64)));
 				} else
 					// Invalid token
 					return TVResult<SValue>(sInvalidTokenError);

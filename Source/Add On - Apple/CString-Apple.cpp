@@ -369,7 +369,10 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 			case SValue::kTypeArrayOfDictionaries:
 			case SValue::kTypeArrayOfStrings:
 			case SValue::kTypeArrayOfFloat32s:
+			case SValue::kTypeArrayOfUInt8s:
+			case SValue::kTypeArrayOfUInt16s:
 			case SValue::kTypeArrayOfUInt32s:
+			case SValue::kTypeArrayOfUInt64s:
 			case SValue::kTypeOpaque:
 			case SValue::kTypeData:
 			case SValue::kTypeDictionary:
@@ -428,7 +431,10 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 				case SValue::kTypeArrayOfDictionaries:
 				case SValue::kTypeArrayOfStrings:
 				case SValue::kTypeArrayOfFloat32s:
+				case SValue::kTypeArrayOfUInt8s:
+				case SValue::kTypeArrayOfUInt16s:
 				case SValue::kTypeArrayOfUInt32s:
+				case SValue::kTypeArrayOfUInt64s:
 				case SValue::kTypeOpaque:
 				case SValue::kTypeData:
 				case SValue::kTypeDictionary:

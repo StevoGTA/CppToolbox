@@ -366,6 +366,8 @@ class CString : public CHashable {
 												{ return ((const CString*) string)->getFloat32(); }
 		static			UInt32				getUInt32(const void* string, void* userData)
 												{ return ((const CString*) string)->getUInt32(); }
+		static			UInt64				getUInt64(const void* string, void* userData)
+												{ return ((const CString*) string)->getUInt64(); }
 
 		static			bool				compare(const CString& string1, const CString& string2,
 													void* compareToOptions);
