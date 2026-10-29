@@ -253,9 +253,9 @@ class CAudioPlayer::Internals {
 										mIsPlaying(false), mIsSeeking(false),
 										mLastSeekTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
 										mRenderProcShouldSendFrames(false), mRenderProcIsSendingFrames(false),
-										mRenderProcShouldNotifyEndOfData(false), mRenderProcPreviousReadByteCount(0),
-										mRenderProcPreviousFrameCount(0), mRenderProcFrameIndex(0),
-										mRenderProcFrameCount(~0)
+										mRenderProcIsReadingQueue(false), mRenderProcShouldNotifyEndOfData(false),
+										mRenderProcPreviousReadByteCount(0), mRenderProcPreviousFrameCount(0),
+										mRenderProcFrameIndex(0), mRenderProcFrameCount(~0)
 								{}
 
 		static	void		readerThreadError(const SError& error, Internals* internals)
@@ -268,6 +268,9 @@ class CAudioPlayer::Internals {
 									// Setup
 									Internals&	internals = *((Internals*) inRefCon);
 
+									// Note reading queue
+									internals.mRenderProcIsReadingQueue = true;
+
 									// Check if rendered any frames from the buffer
 									if (internals.mRenderProcPreviousReadByteCount > 0) {
 										// Commit previous read
@@ -279,9 +282,10 @@ class CAudioPlayer::Internals {
 									if (internals.mRenderProcPreviousFrameCount > 0) {
 										// Update info
 										internals.mRenderProcFrameIndex += internals.mRenderProcPreviousFrameCount;
-										internals.mCurrentPlaybackTimeInterval +=
-												(UniversalTimeInterval) internals.mRenderProcPreviousFrameCount /
-														*internals.mSampleRate;
+										internals.mCurrentPlaybackTimeInterval =
+												internals.mCurrentPlaybackTimeInterval +
+														(UniversalTimeInterval) internals.mRenderProcPreviousFrameCount /
+																*internals.mSampleRate;
 
 										internals.mRenderProcFrameCount -= internals.mRenderProcPreviousFrameCount;
 										internals.mRenderProcPreviousFrameCount = 0;
@@ -422,37 +426,39 @@ class CAudioPlayer::Internals {
 											::memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
 
 										internals.mRenderProcIsSendingFrames = false;
+										internals.mRenderProcIsReadingQueue = false;
 									}
 
 									return noErr;
 								}
 
-		CAudioPlayer&					mAudioPlayer;
-		CString							mIdentifier;
-		CAudioPlayer::Info				mInfo;
+		CAudioPlayer&						mAudioPlayer;
+		CString								mIdentifier;
+		CAudioPlayer::Info					mInfo;
 
-		OI<CAudioPlayerBufferThread>	mAudioPlayerBufferThread;
-		OI<CSRSWBIPSegmentedQueue>		mQueue;
-		OV<UInt32>						mAudioEngineIndex;
-		OV<SAudio::ProcessingFormat>	mAudioProcessingFormat;
-		OV<Float32>						mSampleRate;
-		OV<UInt32>						mBytesPerFrame;
+		OI<CAudioPlayerBufferThread>		mAudioPlayerBufferThread;
+		OI<CSRSWBIPSegmentedQueue>			mQueue;
+		OV<UInt32>							mAudioEngineIndex;
+		OV<SAudio::ProcessingFormat>		mAudioProcessingFormat;
+		OV<Float32>							mSampleRate;
+		OV<UInt32>							mBytesPerFrame;
 
-		bool							mIsPlaying;
-		bool							mIsSeeking;
-		OV<SMedia::Segment>				mMediaSegment;
-		UniversalTimeInterval			mLastSeekTimeInterval;
-		UniversalTimeInterval			mCurrentPlaybackTimeInterval;
-		Float32							mGain;
-		TNumberArray<Float32>			mChannelGains;
+		bool								mIsPlaying;
+		std::atomic<bool>					mIsSeeking;
+		OV<SMedia::Segment>					mMediaSegment;
+		UniversalTimeInterval				mLastSeekTimeInterval;
+		std::atomic<UniversalTimeInterval>	mCurrentPlaybackTimeInterval;
+		Float32								mGain;
+		TNumberArray<Float32>				mChannelGains;
 
-		bool							mRenderProcShouldSendFrames;
-		bool							mRenderProcIsSendingFrames;
-		bool							mRenderProcShouldNotifyEndOfData;
-		UInt32							mRenderProcPreviousReadByteCount;
-		UInt32							mRenderProcPreviousFrameCount;
-		UInt32							mRenderProcFrameIndex;
-		UInt32							mRenderProcFrameCount;
+		std::atomic<bool>					mRenderProcShouldSendFrames;
+		bool								mRenderProcIsSendingFrames;
+		std::atomic<bool>					mRenderProcIsReadingQueue;
+		std::atomic<bool>					mRenderProcShouldNotifyEndOfData;
+		UInt32								mRenderProcPreviousReadByteCount;
+		UInt32								mRenderProcPreviousFrameCount;
+		UInt32								mRenderProcFrameIndex;
+		std::atomic<UInt32>					mRenderProcFrameCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -475,7 +481,7 @@ CAudioPlayer::~CAudioPlayer()
 {
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsSendingFrames)
+	while (mInternals->mRenderProcIsReadingQueue)
 		// Sleep
 		CThread::sleepFor(0.001);
 
@@ -573,7 +579,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsSendingFrames)
+	while (mInternals->mRenderProcIsReadingQueue)
 		// Sleep
 		CThread::sleepFor(0.001);
 
@@ -614,7 +620,7 @@ void CAudioPlayer::stop()
 {
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsSendingFrames)
+	while (mInternals->mRenderProcIsReadingQueue)
 		// Sleep
 		CThread::sleepFor(0.001);
 
@@ -702,9 +708,9 @@ void CAudioPlayer::play()
 	mInternals->mIsSeeking = false;
 
 	// Send frames
-	mInternals->mRenderProcShouldSendFrames = true;
 	mInternals->mRenderProcShouldNotifyEndOfData = true;
 	mInternals->mRenderProcFrameCount = ~0;
+	mInternals->mRenderProcShouldSendFrames = true;
 
 	// Start the engine if not already started
 	CAudioEngine::mShared.play();
@@ -760,7 +766,7 @@ void CAudioPlayer::finishSeek()
 {
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsSendingFrames)
+	while (mInternals->mRenderProcIsReadingQueue)
 		// Sleep
 		CThread::sleepFor(0.001);
 
@@ -784,8 +790,8 @@ void CAudioPlayer::finishSeek()
 	mInternals->mAudioPlayerBufferThread->resume();
 
 	// Begin sending frames again
-	mInternals->mRenderProcShouldSendFrames = mInternals->mIsPlaying;
 	mInternals->mRenderProcShouldNotifyEndOfData = true;
+	mInternals->mRenderProcShouldSendFrames = mInternals->mIsPlaying;
 }
 
 // MARK: Class methods

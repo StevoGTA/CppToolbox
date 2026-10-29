@@ -116,12 +116,12 @@ class CAudioPlayerBufferThread::Internals {
 		void*								mProcsUserData;
 		OV<CAudioFrames::Requirements>		mRequirements;
 
-		bool								mPauseRequested;
-		bool								mResumeRequested;
-		bool								mShutdownRequested;
+		std::atomic<bool>					mPauseRequested;
+		std::atomic<bool>					mResumeRequested;
+		std::atomic<bool>					mShutdownRequested;
 		bool								mPerformedFirstFill;
-		bool								mReachedEnd;
-		State								mState;
+		std::atomic<bool>					mReachedEnd;
+		std::atomic<State>					mState;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -205,10 +205,10 @@ void CAudioPlayerBufferThread::resume()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
-	mInternals->mPauseRequested = false;
 	mInternals->mResumeRequested = true;
 	mInternals->mPerformedFirstFill = false;
 	mInternals->mReachedEnd = false;
+	mInternals->mPauseRequested = false;
 
 	// Signal
 	mInternals->mSemaphore.signal();

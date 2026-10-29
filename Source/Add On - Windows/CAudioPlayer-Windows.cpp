@@ -275,8 +275,9 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 									mMixFormat(audioClient.mMixFormat), mIsPlaying(false), mIsSeeking(false),
 									mLastSeekTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
 									mOnFillBufferShouldSendFrames(true), mOnFillBufferIsSendingFrames(false),
-									mOnFillBufferShouldNotifyEndOfData(false), mOnFillBufferPreviousFrameCount(0),
-									mOnFillBufferFrameIndex(0), mOnFillBufferFrameCount(~0U)
+									mOnFillBufferIsReadingQueue(false), mOnFillBufferShouldNotifyEndOfData(false),
+									mOnFillBufferPreviousFrameCount(0), mOnFillBufferFrameIndex(0),
+									mOnFillBufferFrameCount(~0U)
 							{
 								// Setup
 								HRESULT	result;
@@ -314,13 +315,17 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 								// Setup
 								HRESULT	result;
 
+								// Note reading queue
+								mOnFillBufferIsReadingQueue = true;
+
 								// Check if rendered any frames
 								if (mOnFillBufferPreviousFrameCount > 0) {
 									// Update info
 									mOnFillBufferFrameIndex += mOnFillBufferPreviousFrameCount;
-									mCurrentPlaybackTimeInterval +=
-											(UniversalTimeInterval) mOnFillBufferPreviousFrameCount /
-													(UniversalTimeInterval) mMixFormat->nSamplesPerSec;
+									mCurrentPlaybackTimeInterval =
+											mCurrentPlaybackTimeInterval +
+													(UniversalTimeInterval) mOnFillBufferPreviousFrameCount /
+															(UniversalTimeInterval) mMixFormat->nSamplesPerSec;
 
 									mOnFillBufferFrameCount -= mOnFillBufferPreviousFrameCount;
 									mOnFillBufferPreviousFrameCount = 0;
@@ -439,6 +444,7 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 
 									// Update
 									mOnFillBufferIsSendingFrames = false;
+									mOnFillBufferIsReadingQueue = false;
 								}
 
 								// Check if need to queue another call
@@ -593,19 +599,20 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 		WAVEFORMATEX*									mMixFormat;
 
 		bool											mIsPlaying;
-		bool											mIsSeeking;
+		std::atomic<bool>								mIsSeeking;
 		OV<SMedia::Segment>								mMediaSegment;
 		UniversalTimeInterval							mLastSeekTimeInterval;
-		UniversalTimeInterval							mCurrentPlaybackTimeInterval;
+		std::atomic<UniversalTimeInterval>				mCurrentPlaybackTimeInterval;
 		Float32											mGain;
 		TNumberArray<Float32>							mChannelGains;
 
-		bool											mOnFillBufferShouldSendFrames;
+		std::atomic<bool>								mOnFillBufferShouldSendFrames;
 		bool											mOnFillBufferIsSendingFrames;
-		bool											mOnFillBufferShouldNotifyEndOfData;
+		std::atomic<bool>								mOnFillBufferIsReadingQueue;
+		std::atomic<bool>								mOnFillBufferShouldNotifyEndOfData;
 		UInt32											mOnFillBufferPreviousFrameCount;
 		UInt32											mOnFillBufferFrameIndex;
-		UInt32											mOnFillBufferFrameCount;
+		std::atomic<UInt32>								mOnFillBufferFrameCount;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -661,7 +668,7 @@ CAudioPlayer::~CAudioPlayer()
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
+	while (mInternals->mImplementation->mOnFillBufferIsReadingQueue)
 		// Sleep
 		CThread::sleepFor(0.001);
 
@@ -733,7 +740,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
+	while (mInternals->mImplementation->mOnFillBufferIsReadingQueue)
 		// Sleep
 		CThread::sleepFor(0.001);
 
@@ -777,7 +784,7 @@ void CAudioPlayer::stop()
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
+	while (mInternals->mImplementation->mOnFillBufferIsReadingQueue)
 		// Sleep
 		CThread::sleepFor(0.001);
 
@@ -852,9 +859,9 @@ void CAudioPlayer::play()
 	mInternals->mImplementation->mIsSeeking = false;
 
 	// Send frames
-	mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
 	mInternals->mImplementation->mOnFillBufferShouldNotifyEndOfData = true;
 	mInternals->mImplementation->mOnFillBufferFrameCount = ~0U;
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = true;
 
 	// Start
 	mInternals->mImplementation->play();
@@ -900,7 +907,7 @@ void CAudioPlayer::finishSeek()
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsSendingFrames)
+	while (mInternals->mImplementation->mOnFillBufferIsReadingQueue)
 		// Sleep
 		CThread::sleepFor(0.001);
 
@@ -924,8 +931,8 @@ void CAudioPlayer::finishSeek()
 	mInternals->mImplementation->mAudioPlayerBufferThread->resume();
 
 	// Begin sending frames again
-	mInternals->mImplementation->mOnFillBufferShouldSendFrames = mInternals->mImplementation->mIsPlaying;
 	mInternals->mImplementation->mOnFillBufferShouldNotifyEndOfData = true;
+	mInternals->mImplementation->mOnFillBufferShouldSendFrames = mInternals->mImplementation->mIsPlaying;
 }
 
 // MARK: Class methods
