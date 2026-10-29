@@ -309,8 +309,12 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 				HRESULT	onFillBuffer(__RPC__in_opt IMFAsyncResult& asyncResult)
 							{
 								// Check state
-								if (mState == kError)
+								if (mState == kError) {
+									// Error
+									mOnFillBufferIsReadingQueue = false;
+
 									return S_OK;
+								}
 
 								// Setup
 								HRESULT	result;
@@ -455,6 +459,9 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 													&mFillBufferKey);
 									processHRESULT(result, OSSTR("MFPutWaitingWorkItem() for FillBuffer"));
 								}
+								if (mState != kPlaying)
+									// No more calls
+									mOnFillBufferIsReadingQueue = false;
 
 								return S_OK;
 							}
