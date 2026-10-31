@@ -70,7 +70,12 @@ const OV<CString>& CWorkItem::getReference() const
 CWorkItem::State CWorkItem::getState() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mState;
+	// Determine value
+	mInternals->mStateLock.lock();
+	State	state = mInternals->mState;
+	mInternals->mStateLock.unlock();
+
+	return state;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -113,7 +118,12 @@ bool CWorkItem::isCompleted() const
 bool CWorkItem::isCancelled() const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return mInternals->mIsCancelled;
+	// Determine value
+	mInternals->mStateLock.lock();
+	bool	isCancelled = mInternals->mIsCancelled;
+	mInternals->mStateLock.unlock();
+
+	return isCancelled;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -135,7 +145,7 @@ void CWorkItem::transitionTo(State state)
 	// Check if did change state
 	if (didChangeState)
 		// Check state
-		switch (mInternals->mState) {
+		switch (state) {
 			case kStateCompleted:
 				// Completed
 				if (mInternals->mCompletedProc != nil)
@@ -156,5 +166,7 @@ void CWorkItem::cancel()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
+	mInternals->mStateLock.lock();
 	mInternals->mIsCancelled = true;
+	mInternals->mStateLock.unlock();
 }

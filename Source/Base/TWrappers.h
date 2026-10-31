@@ -54,7 +54,7 @@ template <typename T> class I : public CHashable {
 
 						// CHashable methods
 				void	hashInto(CHashable::HashCollector& hashableHashCollector) const
-							{ hashableHashCollector.add((const UInt8*) mInstance, sizeof(T*)); }
+							{ hashableHashCollector.add((const UInt8*) &mInstance, sizeof(T*)); }
 
 						// Instance methods
 				UInt32	getReferenceCount() const

@@ -54,7 +54,7 @@ class CAudioDeinterleaver::Internals {
 								UInt32 frameCount)
 							{
 								// Setup
-								UInt32	segmentCount = readInfo.getSegmentCount();
+								UInt32	segmentCount = writeInfo.getSegmentCount();
 
 								// Iterate read audio frames segments
 								for (UInt32 i = 0; i < segmentCount; i++) {

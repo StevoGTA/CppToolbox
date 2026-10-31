@@ -126,8 +126,8 @@ OV<SError> CFileWriter::open(Mode mode, bool buffered, bool removeIfNotClosed) c
 
 		CREATEFILE2_EXTENDED_PARAMETERS	extendedParameters = {0};
 		extendedParameters.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
-		extendedParameters.dwFileAttributes = buffered ? FILE_ATTRIBUTE_NORMAL : FILE_FLAG_WRITE_THROUGH;
-		extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS;
+		extendedParameters.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+		extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS | (buffered ? 0 : FILE_FLAG_WRITE_THROUGH);
 		mInternals->mFileHandle =
 				::CreateFile2(mInternals->mFile.getFilesystemPath().getString().getOSString(),
 						GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, creationDisposition, &extendedParameters);
@@ -139,7 +139,7 @@ OV<SError> CFileWriter::open(Mode mode, bool buffered, bool removeIfNotClosed) c
 		// Check if appending
 		if (mode == kModeAppend) {
 			// Skip to the end
-			auto	result = ::SetFilePointer(mInternals->mFileHandle, {0}, NULL, FILE_END);
+			auto	result = ::SetFilePointerEx(mInternals->mFileHandle, {0}, NULL, FILE_END);
 			if (!result)
 				// Error
 				CFileWriterReportErrorAndReturnError(SErrorFromWindowsGetLastError(),

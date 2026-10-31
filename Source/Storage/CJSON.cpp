@@ -107,7 +107,8 @@ OV<SError> sAddArrayOfDictionaries(CData& data, const TArray<CDictionary>& array
 			data.append(",", 1);
 
 		// Add value
-		sAddDictionary(data, *iterator);
+		OV<SError>	error = sAddDictionary(data, *iterator);
+		ReturnErrorIfError(error);
 	}
 
 	// End

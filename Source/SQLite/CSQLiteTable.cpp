@@ -63,10 +63,11 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 															// Store value
 															int64ResultByTableColumnName->mResultByTableColumnName
 																	.set(*iterator,
-																			*resultsRow.getInteger(
+																			resultsRow.getInteger(
 																					*int64ResultByTableColumnName->
 																							mSumTableColumnsByTableColumnName[
-																									*iterator]));
+																									*iterator])
+																					.getValue(0));
 
 														return OV<SError>();
 													}
@@ -109,11 +110,11 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 														}
 
 			private:
-				static			void				process(const CSQLiteResultsRow& resultsRow,
+				static			OV<SError>			process(const CSQLiteResultsRow& resultsRow,
 															MigrationInfo* migrationInfo)
 														{
 															// Punt if error
-															ReturnIfError(migrationInfo->getError());
+															ReturnErrorIfError(migrationInfo->getError());
 
 															// Migrate this row
 															RowResult	rowResult =
@@ -132,6 +133,8 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 															else
 																// Error
 																migrationInfo->mError.setValue(rowResult.getError());
+
+															return OV<SError>();
 														}
 
 			private:
@@ -160,7 +163,7 @@ class CSQLiteTable::Internals : public TReferenceCountableAutoDelete<Internals> 
 										// Iterate all table column references
 										for (TArray<CSQLiteTableColumn::Reference>::Iterator iterator =
 														references.getIterator();
-												iterator++; iterator++)
+												iterator; iterator++)
 											// Add to map
 											mTableColumnReferenceMap.set(iterator->getTableColumn().getName(),
 													*iterator);
@@ -661,13 +664,14 @@ OV<SError> CSQLiteTable::migrate(ResultsRowMigrationProc resultsRowMigrationProc
 
 	// Migrate content
 	Internals::MigrationInfo	migrationInfo(
-										CString(OSSTR("INSERT INTO `")) + tempTableName + CString(OSSTR("` (`")) +
+										CString(OSSTR("INSERT INTO `")) + tempTableName + CString(OSSTR("` (")) +
 												mInternals->getColumnNames(mInternals->mTableColumns) +
 												CString(OSSTR(") VALUES (")) +
 												CString(
-														TSArray<CString>(CString(OSSTR("(?)")),
+														TSArray<CString>(CString(OSSTR("?")),
 																mInternals->mTableColumns.getCount()),
-														CString(OSSTR(","))),
+														CString(OSSTR(","))) +
+												CString(OSSTR(")")),
 										*this, resultsRowMigrationProc, userData);
 	mInternals->mStatementPerformer.performAsTransaction(
 			(CSQLiteStatementPerformer::TransactionProc) Internals::MigrationInfo::perform, &migrationInfo);
@@ -759,7 +763,7 @@ TVResult<CDictionary> CSQLiteTable::sum(const TArray<CSQLiteTableColumn>& tableC
 	// Setup
 	TNDictionary<CSQLiteTableColumn>	tableColumnNameBySumTableColumnName;
 	TNArray<CString>					sumTableColumnNames;
-	for (TArray<CSQLiteTableColumn>::Iterator iterator = tableColumns.getIterator(); iterator++; iterator++) {
+	for (TArray<CSQLiteTableColumn>::Iterator iterator = tableColumns.getIterator(); iterator; iterator++) {
 		// Setup
 		CSQLiteTableColumn	sumTableColumn = CSQLiteTableColumn::sum(*iterator);
 
@@ -803,7 +807,7 @@ TArray<CSQLiteTableColumn> CSQLiteTable::getTableColumns(const TArray<CString>& 
 {
 	// Setup
 	TNArray<CSQLiteTableColumn>	tableColumns;
-	for (TArray<CString>::Iterator iterator = names.getIterator(); iterator++; iterator++)
+	for (TArray<CString>::Iterator iterator = names.getIterator(); iterator; iterator++)
 		// Add table column
 		tableColumns += *mInternals->mTableColumnReferenceByName[*iterator];
 
@@ -826,7 +830,7 @@ void CSQLiteTable::update(const TArray<TableColumnAndValue>& tableColumnAndValue
 												mInternals->mStatementPerformer.getVariableNumberLimit() -
 														tableColumnAndValues.getCount();
 	TArray<CSQLiteWhere::ValueGroup>	valueGroups = where.getValueGroups(groupSize);
-	for (TArray<CSQLiteWhere::ValueGroup>::Iterator iterator = valueGroups.getIterator(); iterator++; iterator++) {
+	for (TArray<CSQLiteWhere::ValueGroup>::Iterator iterator = valueGroups.getIterator(); iterator; iterator++) {
 		// Compose statement
 		CString					statement =
 										CString(OSSTR("UPDATE `")) + mInternals->mName + CString(OSSTR("` SET ")) +

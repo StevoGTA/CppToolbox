@@ -78,7 +78,7 @@ void CBitmap::clearPixels(const S2DRectS32& rect)
 
 	// Clear pixels
 	::CGContextClearRect(bitmapContextRef,
-			::CGRectMake(rect.mOrigin.mX, rect.mOrigin.mY, rect.getWidth(), rect.getHeight()));
+			::CGRectMake(rect.mOrigin.mX, bitmapSize.mHeight - rect.mOrigin.mY, rect.getWidth(), -rect.getHeight()));
 	::CGContextRelease(bitmapContextRef);
 }
 

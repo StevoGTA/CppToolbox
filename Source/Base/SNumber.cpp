@@ -56,7 +56,7 @@ Float32 SNumber::randomFloat32(Float32 min, Float32 max)
 	// Setup
 	Float32	delta = max - min;
 
-	return (delta == 0.0) ? min : (::rand() % (UInt32) delta) + min;
+	return (Float32) (min + delta * ((Float64) ::rand() / ((Float64) RAND_MAX + 1.0)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

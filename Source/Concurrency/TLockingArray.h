@@ -104,7 +104,7 @@ template <typename T> class TNLockingArray : public TNArray<T> {
 									{
 										// Insert under lock
 										mLock.lockForWriting();
-										TNArray<T>::insertAtIndex(new T(item), itemIndex);
+										TNArray<T>::insertAtIndex(item, itemIndex);
 										mLock.unlockForWriting();
 
 										return *this;

@@ -13,6 +13,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TMFAsyncCallback
 
+#pragma warning(push)
 #pragma warning(disable:6011)
 template <typename T> struct TMFAsyncCallback : public IMFAsyncCallback {
 	// Types
@@ -71,3 +72,4 @@ template <typename T> struct TMFAsyncCallback : public IMFAsyncCallback {
 		DWORD		mQueueID;
 		InvokeProc	mInvokeProc;
 };
+#pragma warning(pop)

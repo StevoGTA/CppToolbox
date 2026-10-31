@@ -145,13 +145,8 @@ class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						void			insert(const CHashable& hashable)
 											{
 												// Setup
-												UInt32		hashValue = hashable.getHashValue();
-												UInt32		index = hashValue & (mItemInfosCount - 1);
-												ItemInfo*	itemInfo =
-																	new ItemInfo(hashValue,
-																			(mCopyProc != nil) ?
-																					mCopyProc(hashable) :
-																					(CHashable*) &hashable);
+												UInt32	hashValue = hashable.getHashValue();
+												UInt32	index = hashValue & (mItemInfosCount - 1);
 
 												// Find
 												ItemInfo*	previousItemInfo = nil;
@@ -166,6 +161,11 @@ class CSet::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 												// Check results
 												if (currentItemInfo == nil) {
 													// Did not find
+													ItemInfo*	itemInfo =
+																		new ItemInfo(hashValue,
+																				(mCopyProc != nil) ?
+																						mCopyProc(hashable) :
+																						(CHashable*) &hashable);
 													if (previousItemInfo == nil)
 														// First one
 														mItemInfos[index] = itemInfo;

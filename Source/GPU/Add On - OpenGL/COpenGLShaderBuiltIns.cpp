@@ -8,7 +8,7 @@
 // MARK: Local data
 
 #if defined(TARGET_OS_IOS)
-static	CString	sBasicVertexShaderString("#version 300 es			\
+static	CString	sBasicVertexShaderString("#version 300 es\n			\
 			uniform			mat4    modelViewProjectionMatrix;		\
 																	\
 			in				vec4    position;						\
@@ -21,7 +21,7 @@ static	CString	sBasicVertexShaderString("#version 300 es			\
 				fTextureCoordinate = textureCoordinate;				\
 			}														\
 		");
-static	CString	sClipVertexShaderString("#version 300 es									\
+static	CString	sClipVertexShaderString("#version 300 es\n									\
 			#extension GL_APPLE_clip_distance : require\n									\
 			uniform			mat4    modelMatrix;											\
 			uniform			mat4    viewMatrix;												\
@@ -40,7 +40,7 @@ static	CString	sClipVertexShaderString("#version 300 es									\
 				fTextureCoordinate = textureCoordinate;										\
 			}																				\
 		");
-static	CString	sBasicFragmentShaderString("#version 300 es												\
+static	CString	sBasicFragmentShaderString("#version 300 es\n											\
 			uniform			sampler2D   diffuseTexture[16];												\
 																										\
 			in		highp	vec3		fTextureCoordinate;												\
@@ -152,7 +152,7 @@ static	CString	sBasicFragmentShaderString("#version 300 es												\
 				fragColor = color;																		\
 			}																							\
 		");
-static	CString	sRGBAMultiTextureFragmentShaderString("#version 300 es									\
+static	CString	sRGBAMultiTextureFragmentShaderString("#version 300 es\n								\
 			uniform			sampler2D   diffuseTexture[16];												\
 			uniform lowp	float       opacity;														\
 																										\
@@ -267,7 +267,7 @@ static	CString	sRGBAMultiTextureFragmentShaderString("#version 300 es									\
 				fragColor = color;																		\
 			}																							\
 		");
-static	CString	sYCbCrFragmentShaderString("#version 300 es														\
+static	CString	sYCbCrFragmentShaderString("#version 300 es\n													\
 			uniform			sampler2D   yTexture;																\
 			uniform			sampler2D   uvTexture;																\
 			uniform lowp	float       opacity;																\
@@ -291,7 +291,7 @@ static	CString	sYCbCrFragmentShaderString("#version 300 es														\
 			}																									\
 		");
 #elif defined(TARGET_OS_MACOS)
-static	CString	sBasicVertexShaderString("#version 330 core			\
+static	CString	sBasicVertexShaderString("#version 330 core\n		\
 			uniform	mat4    modelViewProjectionMatrix;				\
 																	\
 			in		vec4    position;								\
@@ -304,7 +304,7 @@ static	CString	sBasicVertexShaderString("#version 330 core			\
 				fTextureCoordinate = textureCoordinate;				\
 			}														\
 		");
-static	CString	sClipVertexShaderString("#version 330 core									\
+static	CString	sClipVertexShaderString("#version 330 core\n								\
 			uniform	mat4	modelMatrix;													\
 			uniform	mat4	viewMatrix;														\
 			uniform	mat4	projectionMatrix;												\
@@ -322,7 +322,7 @@ static	CString	sClipVertexShaderString("#version 330 core									\
 				fTextureCoordinate = textureCoordinate;										\
 			}																				\
 		");
-static	CString	sBasicFragmentShaderString("#version 330 core											\
+static	CString	sBasicFragmentShaderString("#version 330 core\n											\
 			uniform	sampler2D   diffuseTexture[16];														\
 																										\
 			in		vec3		fTextureCoordinate;														\
@@ -338,7 +338,7 @@ static	CString	sBasicFragmentShaderString("#version 330 core											\
 				fragColor = color;																		\
 			}																							\
 		");
-static	CString	sRGBAMultiTextureFragmentShaderString("#version 330 core								\
+static	CString	sRGBAMultiTextureFragmentShaderString("#version 330 core\n								\
 			uniform	sampler2D   diffuseTexture[16];														\
 			uniform	float       opacity;																\
 																										\
@@ -357,7 +357,7 @@ static	CString	sRGBAMultiTextureFragmentShaderString("#version 330 core								\
 				fragColor = color;																		\
 			}																							\
 		");
-static	CString	sYCbCrFragmentShaderString("#version 330 core						\
+static	CString	sYCbCrFragmentShaderString("#version 330 core\n						\
 			uniform	sampler2DRect	yTexture;										\
 			uniform	sampler2DRect	uvTexture;										\
 			uniform	float			opacity;										\
@@ -410,7 +410,7 @@ class COpenGLVertexShaderBasic : public COpenGLVertexShader {
 										GLint	textureCoordinateAttributeLocation =
 														attributeInfo.getSInt32(mTextureCoordinateAttributeName);
 										glEnableVertexAttribArray(textureCoordinateAttributeLocation);
-										glVertexAttribPointer(textureCoordinateAttributeLocation, 2, GL_FLOAT, GL_FALSE,
+										glVertexAttribPointer(textureCoordinateAttributeLocation, 3, GL_FLOAT, GL_FALSE,
 												20, (GLvoid*) 8);
 									}
 
@@ -480,7 +480,7 @@ class COpenGLVertexShaderClip : public COpenGLVertexShader {
 										GLint	textureCoordinateAttributeLocation =
 														attributeInfo.getSInt32(mTextureCoordinateAttributeName);
 										glEnableVertexAttribArray(textureCoordinateAttributeLocation);
-										glVertexAttribPointer(textureCoordinateAttributeLocation, 2, GL_FLOAT, GL_FALSE,
+										glVertexAttribPointer(textureCoordinateAttributeLocation, 3, GL_FLOAT, GL_FALSE,
 												20, (GLvoid*) 8);
 									}
 

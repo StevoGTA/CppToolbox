@@ -38,8 +38,7 @@ class CSQLiteDatabase::Internals {
 																		sqlite3_close(mDatabase);
 																	}
 
-		static	CSQLiteStatementPerformer::TransactionResult	performAsTransaction(TransactionProc transactionProc,
-																		TransactionInfo* transactionInfo)
+		static	CSQLiteStatementPerformer::TransactionResult	performAsTransaction(TransactionInfo* transactionInfo)
 																	{
 																		// Perform
 																		TransactionResult	transactionResult =

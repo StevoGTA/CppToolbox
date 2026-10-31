@@ -218,7 +218,7 @@ TVResult<CData> CAppleResourceManager::getAsData()
 			resourceListData.append(uInt32Zero);
 
 			// Data
-			dataData.append(EndianU32_NtoB((UInt16) resource.mData.getByteCount()));
+			dataData.append(EndianU32_NtoB((UInt32) resource.mData.getByteCount()));
 			dataData += resource.mData;
 		}
 	}
@@ -308,7 +308,7 @@ TIResult<CAppleResourceManager> CAppleResourceManager::from(const I<CRandomAcces
 	TVResult<UInt32>	resourceMapByteCount = byteReader.readUInt32();
 	ReturnValueIfResultError(resourceMapByteCount, TIResult<CAppleResourceManager>(resourceMapByteCount.getError()));
 
-	if ((byteReader.getByteCount() < (*resourceDataOffset + *resourceDataByteCount)) ||
+	if ((byteReader.getByteCount() < ((UInt64) *resourceDataOffset + *resourceDataByteCount)) ||
 			(byteReader.getByteCount() < (*resourceMapOffset + *resourceMapByteCount)))
 		// Not big enough to read contents
 		return TIResult<CAppleResourceManager>(sInvalidResourceData);

@@ -88,7 +88,7 @@ bool CFile::isAlias() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Get info
-	CFBooleanRef	booleanRef;
+	CFBooleanRef	booleanRef = nil;
 	bool			isAlias =
 							::CFURLCopyResourcePropertyForKey(*CFilesystem::getURLRefFor(*this), kCFURLIsAliasFileKey,
 											&booleanRef, nil) &&

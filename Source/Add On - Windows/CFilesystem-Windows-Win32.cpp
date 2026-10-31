@@ -93,14 +93,17 @@ TVResult<SFoldersFiles> CFilesystem::getFoldersFiles(const CFolder& folder, bool
 
 					if (deep) {
 						// Get files for this folder
-						auto	result = getFoldersFiles(childFolder);
+						auto	result = getFoldersFiles(childFolder, deep);
 						if (result.hasValue()) {
 							// Success
 							folders += result->getFolders();
 							files += result->getFiles();
-						} else
+						} else {
 							// Error
+							::FindClose(findHandle);
+
 							return result;
+						}
 					}
 				}
 			} else {
@@ -148,22 +151,28 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 
 		// Iterate all files
 		do {
+			// Setup
+			CString	name(findData.cFileName);
+
 			// Check file attributes
 			if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				// Folder
-				if (deep) {
+				if (deep && (name != CString(OSSTR("."))) && (name != CString(OSSTR("..")))) {
 					// Get files for this folder
-					auto	result = getFiles(CFolder(filesystemPath.appendingComponent(CString(findData.cFileName))));
+					auto	result = getFiles(CFolder(filesystemPath.appendingComponent(name)), deep);
 					if (result.hasValue())
 						// Success
 						files += *result;
-					else
+					else {
 						// Error
+						::FindClose(findHandle);
+
 						return result;
+					}
 				}
 			} else {
 				// File
-				files += CFile(filesystemPath.appendingComponent(CString(findData.cFileName)));
+				files += CFile(filesystemPath.appendingComponent(name));
 			}
 		} while (::FindNextFile(findHandle, &findData) != 0);
 

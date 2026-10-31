@@ -242,7 +242,7 @@ CSQLiteWhere& CSQLiteWhere::addAnd(const CSQLiteTable& table, const CSQLiteTable
 	mInternals->mString +=
 			CString(OSSTR(" AND `")) + table.getName() + CString(OSSTR("`.`")) + tableColumn.getName() +
 					CString(OSSTR("`")) + CString(OSSTR(" IN (")) + sVariablePlaceholder + CString(OSSTR(")"));
-	mInternals->mValues = values;
+	mInternals->mValues += TNArray<SSQLiteValue>(values);
 
 	return *this;
 }
@@ -255,7 +255,7 @@ CSQLiteWhere& CSQLiteWhere::addAnd(const CSQLiteTableColumn& tableColumn, const 
 	mInternals->mString +=
 			CString(OSSTR(" AND `")) + tableColumn.getName() + CString(OSSTR("`")) + CString(OSSTR(" IN (")) +
 					sVariablePlaceholder + CString(OSSTR(")"));
-	mInternals->mValues = values;
+	mInternals->mValues += TNArray<SSQLiteValue>(values);
 
 	return *this;
 }

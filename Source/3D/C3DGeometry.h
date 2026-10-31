@@ -34,10 +34,10 @@ template <typename T> struct T3DPoint {
 
 						// Instance methods
 	inline	T3DPoint	offset(T offsetX, T offsetY, T offsetZ) const
-							{ return T3DPoint(mX + offsetX, mY + offsetY, mZ = offsetX.z); }
+							{ return T3DPoint(mX + offsetX, mY + offsetY, mZ + offsetZ); }
 	inline	T3DPoint	midpoint(const T3DPoint& point, T ratio) const
 							{ return T3DPoint(mX + (point.mX - mX) * ratio, mY + (point.mY - mY) * ratio,
-									mZ = (point.mZ - mZ) * ratio); }
+									mZ + (point.mZ - mZ) * ratio); }
 	inline	T3DPoint	reflectedBy(const T3DPoint& anchorPoint) const
 							{
 								return T3DPoint(anchorPoint.mX + (anchorPoint.mX - mX),

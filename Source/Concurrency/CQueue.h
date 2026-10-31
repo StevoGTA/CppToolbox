@@ -104,7 +104,8 @@ template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 										if (readBufferInfo.hasBuffer()) {
 											// Can read
 											mReadBuffer =
-													TBuffer<T>((T*) readBufferInfo.mBuffer, readBufferInfo.mByteCount);
+													TBuffer<T>((T*) readBufferInfo.mBuffer,
+															readBufferInfo.mByteCount / sizeof(T));
 
 											return OR<const TBuffer<T> >(mReadBuffer);
 										} else
@@ -123,7 +124,7 @@ template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 											// Can write
 											mWriteBuffer =
 													TBuffer<T>((T*) writeBufferInfo.mBuffer,
-															writeBufferInfo.mByteCount);
+															writeBufferInfo.mByteCount / sizeof(T));
 
 											return OR<TBuffer<T> >(mWriteBuffer);
 										} else

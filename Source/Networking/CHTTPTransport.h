@@ -80,5 +80,6 @@ class CHTTPTransport {
 		virtual			~CHTTPTransport() {}
 
 						// Instance methods
+		virtual	UInt32	getMaximumConcurrentRequests() const = 0;
 		virtual	I<Task>	perform(const Request& request, CompletionProc completionProc, void* userData) = 0;
 };

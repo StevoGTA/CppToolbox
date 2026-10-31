@@ -23,6 +23,10 @@ class CBitReader::Internals : public TReferenceCountableAutoDelete<Internals> {
 						{ return mDataSourceOffset; }
 		OV<SError>	setPos(CBitReader::Position position, SInt64 newPos)
 						{
+							// Reset bit reading
+							mCurrentByte = 0;
+							mCurrentByteBitsAvailable = 0;
+
 							// Compose position
 							SInt64	dataSourceOffset;
 							switch (position) {

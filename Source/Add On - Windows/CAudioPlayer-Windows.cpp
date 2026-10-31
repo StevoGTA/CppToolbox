@@ -355,6 +355,12 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 								BYTE*	data;
 								result = mAudioRenderClient->GetBuffer(framesAvailable, &data);
 								processHRESULT(result, OSSTR("GetBuffer()"));
+								if (FAILED(result)) {
+									// Error
+									mOnFillBufferIsReadingQueue = false;
+
+									return S_OK;
+								}
 
 								// Check if should send frames
 								if (mOnFillBufferShouldSendFrames) {

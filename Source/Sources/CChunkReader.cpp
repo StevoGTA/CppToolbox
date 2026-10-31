@@ -116,7 +116,7 @@ TVResult<CChunkReader::Chunk> CChunkReader::readChunk() const
 				nextChunkPos += 1;
 
 			TVResult<CData>	data = CByteReader::readData(byteCount);
-			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(data.getError()));
 
 			return TVResult<Chunk>(Chunk(*id, *data, nextChunkPos));
 			}
@@ -136,7 +136,7 @@ TVResult<CChunkReader::Chunk> CChunkReader::readChunk() const
 				nextChunkPos += 1;
 
 			TVResult<CData>	data = CByteReader::readData(byteCount);
-			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(data.getError()));
 
 			return TVResult<Chunk>(Chunk(*id, *data, nextChunkPos));
 			}
@@ -150,13 +150,10 @@ TVResult<CChunkReader::Chunk> CChunkReader::readChunk() const
 			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
 			UInt64	byteCount = *_byteCount - sizeof(CUUID::Bytes) - sizeof(UInt64);
 
-			UInt64	nextChunkPos = getPos() + byteCount;
-			if ((nextChunkPos & 8) != 0)
-				// Align
-				nextChunkPos += 7 - (nextChunkPos & 8);
+			UInt64	nextChunkPos = getPos() + byteCount + ((8 - (byteCount & 0x07)) % 0x08);
 
 			TVResult<CData>	data = CByteReader::readData(byteCount);
-			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(_byteCount.getError()));
+			ReturnValueIfResultError(data, TVResult<CChunkReader::Chunk>(data.getError()));
 
 			return TVResult<Chunk>(Chunk(*uuid, *data, nextChunkPos));
 			}

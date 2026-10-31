@@ -809,7 +809,7 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 			OR<CAtomReader::Atom>	stsdAtom = stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'd'));
 			if (!stsdAtom.hasReference()) continue;
 			TVResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
-			if (error.hasValue()) continue;
+			if (stsdAtomPayloadData.hasError()) continue;
 			const	SQTstsdAtomPayload&	stsdAtomPayload =
 												*((const SQTstsdAtomPayload*) *stsdAtomPayloadData->getUInt8Buffer());
 			const	SstsdDescription&	stsdDescription = stsdAtomPayload.getFirstDescription();
@@ -1279,7 +1279,7 @@ SMediaSource::Tracks::AudioTrack sComposePCMAudioTrackInfo(const CQuickTimeMedia
 														CPCMAudioCodec::composeAudioFormat(isFloat, bits, sampleRate,
 																channels);
 			SMedia::SegmentInfo					mediaSegmentInfo =
-														SAudio::composeMediaSegmentInfo(audioFormat, (UInt64) duration,
+														SAudio::composeMediaSegmentInfo(audioFormat, duration, 1,
 																bytesPerFrame);
 
 	// Compose audio track

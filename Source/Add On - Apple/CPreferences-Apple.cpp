@@ -198,7 +198,7 @@ Float64 CPreferences::getFloat64(const Float64Pref& pref)
 	// Get value
 	CCoreFoundation::OO<CFTypeRef>	numberRef = mInternals->get(pref.getKeyString());
 
-	return numberRef.hasObject() ? CCoreFoundation::float32From((CFNumberRef) *numberRef) : pref.getDefaultValue();
+	return numberRef.hasObject() ? CCoreFoundation::float64From((CFNumberRef) *numberRef) : pref.getDefaultValue();
 }
 
 //----------------------------------------------------------------------------------------------------------------------

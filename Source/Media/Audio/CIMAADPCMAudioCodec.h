@@ -17,7 +17,9 @@ class CIMAADPCMCoder {
 			public:
 					// Lifecycle methods
 					StateInfo() : mSample(0), mIndex(0) {}
-					StateInfo(SInt16 sample, SInt16 index) : mSample(sample), mIndex(index) {}
+					StateInfo(SInt16 sample, SInt16 index) :
+						mSample(sample), mIndex(std::min<SInt16>(std::max<SInt16>(index, 0), 88))
+						{}
 
 					// Instance methods
 			SInt16	getSample() const

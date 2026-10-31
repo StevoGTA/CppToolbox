@@ -11,10 +11,11 @@
 
 class CSQLiteOrderBy {
 	// Order
-	enum Order {
-		kOrderAscending,
-		kOrderDescending,
-	};
+	public:
+		enum Order {
+			kOrderAscending,
+			kOrderDescending,
+		};
 
 	// Classes
 	private:

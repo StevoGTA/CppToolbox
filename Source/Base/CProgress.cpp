@@ -439,7 +439,10 @@ void CAggregateTimeIntervalProgress::reset()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Remove all
+	mInternals->mInfoByIDLock.lockForWriting();
 	mInternals->mInfoByID.removeAll();
+	mInternals->mTotalTimeInterval = 0.0;
+	mInternals->mInfoByIDLock.unlockForWriting();
 
 	// Remove value
 	removeValue();

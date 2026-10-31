@@ -339,7 +339,7 @@ OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 
 	// Replace contents
 	NSError*	error;
-	if ([[NSFileManager defaultManager] replaceItemAtURL:(__bridge NSURL*) *destinationURLRef
+	if ([NSFileManager.defaultManager replaceItemAtURL:(__bridge NSURL*) *destinationURLRef
 			withItemAtURL:(__bridge NSURL*) *sourceURLRef backupItemName:nil options:0 resultingItemURL:nil
 			error:&error])
 		// Success
@@ -379,11 +379,10 @@ CCoreFoundation::OO<CFURLRef> CFilesystem::getURLRefFrom(const CData& storageDat
 
 	// Try to resolve as security-scoped bookmark
 	Boolean		cppIsStale;
-	CFErrorRef	errorRef;
 	CFURLRef	urlRef =
 						::CFURLCreateByResolvingBookmarkData(kCFAllocatorDefault, *storageDataRef,
 								kCFURLBookmarkResolutionWithoutUIMask | kCFURLBookmarkCreationWithSecurityScope, nil,
-								nil, &cppIsStale, &errorRef);
+								nil, &cppIsStale, nil);
 	if (urlRef != nil)
 		// Success
 		return CCoreFoundation::OO<CFURLRef>(urlRef);
@@ -391,7 +390,7 @@ CCoreFoundation::OO<CFURLRef> CFilesystem::getURLRefFrom(const CData& storageDat
 	// Try to resolve as bookmark
 	urlRef =
 			::CFURLCreateByResolvingBookmarkData(kCFAllocatorDefault, *storageDataRef,
-					kCFURLBookmarkResolutionWithoutUIMask, nil, nil, &cppIsStale, &errorRef);
+					kCFURLBookmarkResolutionWithoutUIMask, nil, nil, &cppIsStale, nil);
 	if (urlRef != nil)
 		// Success
 		return CCoreFoundation::OO<CFURLRef>(urlRef);
@@ -406,7 +405,7 @@ CCoreFoundation::OO<CFURLRef> CFilesystem::getURLRefFrom(const CData& storageDat
 		urlRef =
 				::CFURLCreateByResolvingBookmarkData(kCFAllocatorDefault, bookmarkDataRef,
 						kCFURLBookmarkResolutionWithoutUIMask | kCFURLBookmarkResolutionWithSecurityScope, nil, nil,
-						&cppIsStale, &errorRef);
+						&cppIsStale, nil);
 		if (urlRef != nil) {
 			// Success
 			::CFRelease(bookmarkDataRef);
@@ -417,15 +416,17 @@ CCoreFoundation::OO<CFURLRef> CFilesystem::getURLRefFrom(const CData& storageDat
 		// Try to resolve as bookmark
 		urlRef =
 				::CFURLCreateByResolvingBookmarkData(kCFAllocatorDefault, bookmarkDataRef,
-						kCFURLBookmarkResolutionWithoutUIMask, nil, nil, &cppIsStale, &errorRef);
+						kCFURLBookmarkResolutionWithoutUIMask, nil, nil, &cppIsStale, nil);
 		if (urlRef != nil) {
 			// Success
 			::CFRelease(bookmarkDataRef);
 
 			return CCoreFoundation::OO<CFURLRef>(urlRef);
 		}
+
+		// Cleanup
+		::CFRelease(bookmarkDataRef);
 	}
-	::CFRelease(bookmarkDataRef);
 
 	return CCoreFoundation::OO<CFURLRef>();
 }
@@ -445,7 +446,11 @@ TVResult<CData> CFilesystem::getStorageDataFor(CFURLRef urlRef)
 		::CFRelease(dataRef);
 
 		return TVResult<CData>(data);
-	} else
+	} else {
 		// Error
-		return TVResult<CData>(SErrorFromCFError(errorRef));
+		SError	error = SErrorFromCFError(errorRef);
+		::CFRelease(errorRef);
+
+		return TVResult<CData>(error);
+	}
 }

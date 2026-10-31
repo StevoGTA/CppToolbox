@@ -184,13 +184,11 @@ template <typename T> class TNLockingDictionary : public TLockingDictionary<T> {
 												TNSet<T>	values;
 
 												// Iterate values
-												TLockingDictionary<T>::mLock.lockForReading();
 												for (typename TLockingDictionary<T>::ValueIterator iterator =
 																TLockingDictionary<T>::getValueIterator();
 														iterator; iterator++)
 													// Add value
 													values += *iterator;
-												TLockingDictionary<T>::mLock.unlockForReading();
 
 												return values;
 											}

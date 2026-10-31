@@ -34,8 +34,8 @@ class COpenGLProgram::Internals : public TReferenceCountableAutoDelete<Internals
 					glGetProgramiv(mProgram, GL_LINK_STATUS, &status);
 					if (status == GL_FALSE) {
 						// Log error
-						GLint	logLength;
-						glGetShaderiv(mProgram, GL_INFO_LOG_LENGTH, &logLength);
+						GLint	logLength = 0;
+						glGetProgramiv(mProgram, GL_INFO_LOG_LENGTH, &logLength);
 						if (logLength > 0) {
 							char	log[logLength];
 							glGetProgramInfoLog(mProgram, logLength, &logLength, log);

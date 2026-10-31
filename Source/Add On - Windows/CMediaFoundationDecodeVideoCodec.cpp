@@ -215,7 +215,7 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 	DWORD	index = 0;
 	while (true) {
 		// Get next media type
-		result = transform->GetOutputAvailableType(0, index, &mediaType);
+		result = transform->GetOutputAvailableType(0, index++, &mediaType);
 		if (result != S_OK)
 			// No matching output media types
 			return OV<SError>(sNoMatchingOutputMediaTypes);
@@ -237,9 +237,6 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 				break;
 			}
 		}
-
-		// Next
-		index++;
 	}
 
 	// Get output stream info

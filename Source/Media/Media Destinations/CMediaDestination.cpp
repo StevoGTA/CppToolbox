@@ -51,7 +51,7 @@ const CString& CMediaDestination::getName() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CMediaDestination::CMediaDestination::getAudioTrackCount() const
+UInt32 CMediaDestination::getAudioTrackCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAudioDestinationByTrack.getCount();
@@ -66,7 +66,7 @@ void CMediaDestination::add(const I<CAudioDestination>& audioDestination, UInt32
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-UInt32 CMediaDestination::CMediaDestination::getVideoTrackCount() const
+UInt32 CMediaDestination::getVideoTrackCount() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mVideoDestinationByTrack.getCount();
@@ -121,7 +121,7 @@ void CMediaDestination::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OR<I<CAudioDestination> > CMediaDestination::CMediaDestination::getAudioDestination(UInt32 trackIndex) const
+OR<I<CAudioDestination> > CMediaDestination::getAudioDestination(UInt32 trackIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mAudioDestinationByTrack[trackIndex];
@@ -135,7 +135,7 @@ void CMediaDestination::removeAllAudioDestinations()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-OR<I<CVideoDestination> > CMediaDestination::CMediaDestination::getVideoDestination(UInt32 trackIndex) const
+OR<I<CVideoDestination> > CMediaDestination::getVideoDestination(UInt32 trackIndex) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mVideoDestinationByTrack[trackIndex];

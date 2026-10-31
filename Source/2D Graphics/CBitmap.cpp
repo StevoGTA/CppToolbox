@@ -59,7 +59,7 @@ class CBitmap::Internals : public TCopyOnWriteReferenceCountable<Internals>{
 
 				UInt16	calculateBytesPerPixel(Format format)
 							{
-								switch (mFormat) {
+								switch (format) {
 									case CBitmap::kFormatRGBA4444:
 									case CBitmap::kFormatRGBA5551:
 									case CBitmap::kFormatRGB565:

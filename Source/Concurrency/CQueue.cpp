@@ -184,7 +184,7 @@ void CSRSWBIPQueue::reset()
 	mInternals->mReadPtr = mInternals->mBuffer;
 
 	mInternals->mWritePtr = mInternals->mBuffer;
-	mInternals->mWriteWatermarkPtr = mInternals->mBuffer + mInternals->mByteCount;
+	mInternals->mWriteWatermarkPtr = mInternals->mBuffer;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -342,7 +342,7 @@ void CSRSWBIPSegmentedQueue::reset()
 	mInternals->mReadPtr = mInternals->mBuffer;
 
 	mInternals->mWritePtr = mInternals->mBuffer;
-	mInternals->mWriteWatermarkPtr = mInternals->mBuffer + mInternals->mSegmentByteCount;
+	mInternals->mWriteWatermarkPtr = mInternals->mBuffer;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -259,7 +259,8 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 		OV<SError>	error = audioProcessorSource->setOutputFormat(*commonAudioProcessingFormat);
 		ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
-		audioProcessorDestination->connectInput(audioProcessorSource, *commonAudioProcessingFormat);
+		error = audioProcessorDestination->connectInput(audioProcessorSource, *commonAudioProcessingFormat);
+		ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
 		return TVResult<SAudio::ProcessingFormat>(*commonAudioProcessingFormat);
 	}
@@ -357,7 +358,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 						currentAudioProcessingFormat.getInterleaved());
 	}
 
-	// Check if need Deinterleaver
+	// Check if need Interleaver
 	if (currentAudioProcessingFormat.getIsInterleaved() &&
 			!audioProcessingFormats.mSourceAudioProcessingFormat.getIsInterleaved()) {
 		// Create Audio Interleaver
@@ -377,7 +378,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 						currentAudioProcessingFormat.getEndian(), SAudio::ProcessingFormat::kNonInterleaved);
 	}
 
-	// Check if need Interleaver
+	// Check if need Deinterleaver
 	if (!currentAudioProcessingFormat.getIsInterleaved() &&
 			audioProcessingFormats.mSourceAudioProcessingFormat.getIsInterleaved()) {
 		// Create Audio Deinterleaver

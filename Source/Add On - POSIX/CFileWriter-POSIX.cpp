@@ -78,16 +78,18 @@ class CFileWriter::Internals : public TReferenceCountableAutoDelete<Internals> {
 						}
 		OV<SError>	close()
 						{
+							// Close
+							int	result = 0;
 							if (mFILE != nil) {
-								::fclose(mFILE);
+								result = ::fclose(mFILE);
 								mFILE = nil;
 							}
 							if (mFD != -1) {
-								::close(mFD);
+								result = ::close(mFD);
 								mFD = -1;
 							}
 
-							return OV<SError>();
+							return (result == 0) ? OV<SError>() : SErrorFromPOSIXerror(errno);
 						}
 
 		CFile	mFile;

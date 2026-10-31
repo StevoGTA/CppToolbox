@@ -100,7 +100,7 @@ CString SGregorianDate::Components::getString(DateStyle dateStyle, TimeStyle tim
 		case kDateStyleMDShort:
 			// 1/1
 			if (mMonth.hasValue() && mDay.hasValue())
-				string = CString(*mMonth) + CString::mSlash + CString(*mDay);;
+				string = CString(*mMonth) + CString::mSlash + CString(*mDay);
 			break;
 
 		case kDateStyleMDMedium:
@@ -114,7 +114,7 @@ CString SGregorianDate::Components::getString(DateStyle dateStyle, TimeStyle tim
 		case kDateStyleMDLong:
 			// January 12
 			if (mMonth.hasValue() && mDay.hasValue())
-				string =SGregorianDate:: getMonthString(*mMonth) + CString::mSpace + CString(*mDay);
+				string = SGregorianDate::getMonthString(*mMonth) + CString::mSpace + CString(*mDay);
 			else if (mMonth.hasValue())
 				string = SGregorianDate::getMonthString(*mMonth);
 			break;
@@ -236,6 +236,11 @@ OV<SGregorianDate::Components> SGregorianDate::Components::getFrom(const CString
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSX"
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
 			//	2021-03-23T22:54:13.922-0700
+
+			// Check length
+			if (string.getLength() < 20)
+				// Must be at least 20 characters
+				return OV<Components>();
 
 			// Check for required characters
 			TBuffer<char>	buffer = string.getUTF8Chars();
@@ -447,7 +452,7 @@ CString SGregorianDate::getString(DateStyle dateStyle, TimeStyle timeStyle) cons
 
 		case kDateStyleMDShort:
 			// 1/1
-			string = CString(mMonth) + CString::mSlash + CString(mDay);;
+			string = CString(mMonth) + CString::mSlash + CString(mDay);
 			break;
 
 		case kDateStyleMDMedium:
@@ -620,6 +625,11 @@ OV<SGregorianDate> SGregorianDate::getFrom(const CString& string, StringStyle st
 			// "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSzzz"
 			//	2021-03-23T22:54:13.922-0700
 			//	2027-06-15T00:00:00.000Z
+
+			// Check length
+			if (string.getLength() < 20)
+				// Must be at least 20 characters
+				return OV<SGregorianDate>();
 
 			// Check for required characters
 			TBuffer<char>	buffer = string.getUTF8Chars();

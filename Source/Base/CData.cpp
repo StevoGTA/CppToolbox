@@ -356,8 +356,8 @@ OV<SRange64> CData::findSubData(const CData& subData, ByteIndex startIndex, cons
 	if (startIndex >= mInternals->mBufferUsedByteCount)
 		return OV<SRange64>();
 
-	AssertFailIf(byteCount.hasValue() && ((startIndex + *byteCount) >= mInternals->mBufferUsedByteCount));
-	if (byteCount.hasValue() && ((startIndex + *byteCount) >= mInternals->mBufferUsedByteCount))
+	AssertFailIf(byteCount.hasValue() && ((startIndex + *byteCount) > mInternals->mBufferUsedByteCount));
+	if (byteCount.hasValue() && ((startIndex + *byteCount) > mInternals->mBufferUsedByteCount))
 		return OV<SRange64>();
 
 	// Setup
@@ -599,8 +599,8 @@ CData CData::fromBase64String(const CString& base64String)
 
 	// Setup
 	CString::Length	stringLength = base64String.getLength();
-	if (stringLength == 0)
-		// No string
+	if (stringLength < 2)
+		// Not enough characters
 		return CData();
 
 			CString::C		cString = base64String.getUTF8String();
@@ -618,8 +618,8 @@ CData CData::fromBase64String(const CString& base64String)
 	for (UInt32 i = 0; i < last; i += 4) {
 		// Convert these 4 characters to 3 bytes
 		UInt32	bytes =
-						(sMap[stringPtr[i]] << 18) | (sMap[stringPtr[i + 1]] << 12) | (sMap[stringPtr[i + 2]] << 6) |
-								sMap[stringPtr[i + 3]];
+						(sMap[(UInt8) stringPtr[i]] << 18) | (sMap[(UInt8) stringPtr[i + 1]] << 12) |
+								(sMap[(UInt8) stringPtr[i + 2]] << 6) | sMap[(UInt8) stringPtr[i + 3]];
 		*dataPtr++ = (UInt8) (bytes >> 16);
 		*dataPtr++ = bytes >> 8 & 0xFF;
 		*dataPtr++ = bytes & 0xFF;
@@ -627,11 +627,11 @@ CData CData::fromBase64String(const CString& base64String)
 
 	if (pad1) {
 		// Have extra bytes
-		UInt32	bytes = (sMap[stringPtr[last]] << 18) | (sMap[stringPtr[last + 1]] << 12);
+		UInt32	bytes = (sMap[(UInt8) stringPtr[last]] << 18) | (sMap[(UInt8) stringPtr[last + 1]] << 12);
 		*dataPtr++ = (UInt8) (bytes >> 16);
 		if (pad2) {
 			// One more byte
-			bytes |= sMap[stringPtr[last + 2]] << 6;
+			bytes |= sMap[(UInt8) stringPtr[last + 2]] << 6;
 			*dataPtr++ = bytes >> 8 & 0xFF;
 		}
 	}

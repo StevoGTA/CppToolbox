@@ -169,7 +169,8 @@ void CCoreGraphicsRenderer::strokeLines(const S2DPointF32* points, UInt32 count,
 
 	// Setup
 	CGPoint	pointsUse[count];
-	for (UInt32 i = 0; i < count; i++, pointsUse[i] = CGPointMake(points[i].mX, points[i].mY)) ;
+	for (UInt32 i = 0; i < count; i++)
+		pointsUse[i] = CGPointMake(points[i].mX, points[i].mY);
 
 	// Stroke lines
 	::CGContextAddLines(mInternals->mContextRef, pointsUse, count);

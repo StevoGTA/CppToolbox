@@ -47,7 +47,8 @@ class CHTTPEndpointClient {
 				// Lifecycle methods
 				CHTTPEndpointClient(const CString& serverPrefix, const I<CHTTPTransport>& transport,
 						Options options = kOptionsNone, UInt32 maximumURLLength = 1024,
-						UInt32 maximumConcurrentRequests = 6, LogOptions logOptions = kLogOptionsNone);
+						const OV<UInt32>& maximumConcurrentRequests = OV<UInt32>(),
+						LogOptions logOptions = kLogOptionsNone);
 				~CHTTPEndpointClient();
 
 				// Instance methods

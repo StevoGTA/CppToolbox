@@ -68,10 +68,10 @@ class CWorkItemQueue::WorkItemInfo : public CEquatable {
 				CWorkItem::Priority	mPriority;
 				UInt32				mIndex;
 
-		static	UInt32				mNextIndex;
+		static	std::atomic<UInt32>	mNextIndex;
 };
 
-UInt32	CWorkItemQueue::WorkItemInfo::mNextIndex = 0;
+std::atomic<UInt32>	CWorkItemQueue::WorkItemInfo::mNextIndex(0);
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -358,8 +358,8 @@ class CWorkItemQueue::Internals {
 											mWorkItemThreadsLock.unlock();
 										}
 
-		static	bool				workItemMatches(const I<WorkItemInfo>& workItemInfo, I<CWorkItem>* workItem)
-										{ return workItemInfo->mWorkItem == *workItem; }
+		static	bool				workItemMatches(const WorkItemInfo& workItemInfo, I<CWorkItem>* workItem)
+										{ return workItemInfo.mWorkItem == *workItem; }
 		static	bool				workItemInfoHasID(const WorkItemInfo& workItemInfo, TSet<CString>* workItemIDs)
 										{ return workItemIDs->contains(workItemInfo.mWorkItem->getID()); }
 		static	bool				workItemInfoHasReference(const WorkItemInfo& workItemInfo,
@@ -439,7 +439,7 @@ class CWorkItemQueue::Internals {
 				CWorkItemQueue&					mWorkItemQueue;
 				OR<CItemsProgress>				mItemsProgress;
 
-				bool							mIsPaused;
+				std::atomic<bool>				mIsPaused;
 
 				OR<Internals>					mTargetWorkItemQueueInternals;
 				UInt32							mMaximumConcurrentWorkItems;

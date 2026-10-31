@@ -182,7 +182,8 @@ OV<SError> CMediaFoundationDecodeAudioCodec::decodeInto(CAudioFrames& audioFrame
 		return OV<SError>(sSetupDidNotCompleteError);
 
 	// Fill audio frames as much as we can
-	while (audioFrames.getAllocatedFrameCount() >= requirements.getFrameCountInterval()) {
+	while ((audioFrames.getAllocatedFrameCount() - audioFrames.getCurrentFrameCount()) >=
+			requirements.getFrameCountInterval()) {
 		// Process output
 		OV<SError>	error =
 							CMediaFoundationServices::processOutput(*mInternals->mAudioDecoderTransform,

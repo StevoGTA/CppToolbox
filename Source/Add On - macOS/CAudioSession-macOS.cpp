@@ -62,30 +62,30 @@ void CAudioSession::logInfo()
 			CString(OSSTR("Found the following Audio Objects (")) + CString(count) + CString(OSSTR("): ")));
 	for (UInt32 i = 0; i < count; i++) {
 		// Collect info on this Audio Object
-		CFStringRef	nameStringRef;
+		CFStringRef	nameStringRef = nil;
 		dataSize = sizeof(CFStringRef);
 		propertyAddress.mSelector = kAudioObjectPropertyName;
 		status = ::AudioObjectGetPropertyData(deviceIDs[i], &propertyAddress, 0, nil, &dataSize, &nameStringRef);
 
-		CFStringRef	manufacturerStringRef;
+		CFStringRef	manufacturerStringRef = nil;
 		dataSize = sizeof(CFStringRef);
 		propertyAddress.mSelector = kAudioObjectPropertyManufacturer;
 		status =
 				::AudioObjectGetPropertyData(deviceIDs[i], &propertyAddress, 0, nil, &dataSize, &manufacturerStringRef);
 
-		CFStringRef	modelNameStringRef;
+		CFStringRef	modelNameStringRef = nil;
 		dataSize = sizeof(CFStringRef);
 		propertyAddress.mSelector = kAudioObjectPropertyModelName;
 		status = ::AudioObjectGetPropertyData(deviceIDs[i], &propertyAddress, 0, nil, &dataSize, &modelNameStringRef);
 
-		CFStringRef	firmwareVersionStringRef;
+		CFStringRef	firmwareVersionStringRef = nil;
 		dataSize = sizeof(CFStringRef);
 		propertyAddress.mSelector = kAudioObjectPropertyFirmwareVersion;
 		status =
 				::AudioObjectGetPropertyData(deviceIDs[i], &propertyAddress, 0, nil, &dataSize,
 						&firmwareVersionStringRef);
 
-		CFStringRef	serialNumberStringRef;
+		CFStringRef	serialNumberStringRef = nil;
 		dataSize = sizeof(CFStringRef);
 		propertyAddress.mSelector = kAudioObjectPropertySerialNumber;
 		status =
@@ -106,6 +106,17 @@ void CAudioSession::logInfo()
 			infoString += CString(OSSTR(", Default System Output Device"));
 		CLogServices::logMessage(
 				CString(OSSTR("    ")) + infoString + CString(OSSTR(", with the following streams:")));
+
+		// Cleanup
+		::CFRelease(nameStringRef);
+		if (manufacturerStringRef != nil)
+			::CFRelease(manufacturerStringRef);
+		if (modelNameStringRef != nil)
+			::CFRelease(modelNameStringRef);
+		if (firmwareVersionStringRef != nil)
+			::CFRelease(firmwareVersionStringRef);
+		if (serialNumberStringRef != nil)
+			::CFRelease(serialNumberStringRef);
 
 		// Log info on the input streams for this Audio Object
 		propertyAddress.mSelector = kAudioDevicePropertyStreamConfiguration;

@@ -184,7 +184,7 @@ I<SMediaSource::ImportResult> CMPEG4MediaFile::import(const SMediaSource::Import
 			OR<CAtomReader::Atom>	stsdAtom = stblContainerAtom->getAtom(MAKE_OSTYPE('s', 't', 's', 'd'));
 			if (!stsdAtom.hasReference()) continue;
 			TVResult<CData>	stsdAtomPayloadData = atomReader.readAtomPayload(*stsdAtom);
-			if (error.hasValue()) continue;
+			if (stsdAtomPayloadData.hasError()) continue;
 			const	SMPEG4::STSDAtomPayload&		stsdAtomPayload =
 															*((const SMPEG4::STSDAtomPayload*)
 																	*stsdAtomPayloadData->getUInt8Buffer());

@@ -50,6 +50,9 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 	TVResult<CData>	payload = chunkReader.readPayload(formatChunkInfo);
 	ReturnValueIfResultError(payload,
 			I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(payload.getError())));
+	if (payload->getByteCount() < sizeof(SWAVEFORMAT))
+		// Format chunk too small
+		return I<SMediaSource::ImportResult>(new SMediaSource::ImportResult(mInvalidWAVEFileError));
 
 	const	SWAVEFORMAT&	waveFormat = *((const SWAVEFORMAT*) *payload->getUInt8Buffer());
 			UInt16			sampleSize;
@@ -122,6 +125,15 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 			break;
 
 		case 0x0011:	// DVI/Intel ADPCM
+			if ((waveFormat.getChannelCount() == 0) ||
+					((waveFormat.getBlockAlign() / waveFormat.getChannelCount()) <=
+							sizeof(CDVIIntelIMAADPCMAudioCodec::ChannelHeader)))
+				// Nope
+				return I<SMediaSource::ImportResult>(
+						new SMediaSource::ImportResult(
+								CCodec::unsupportedConfigurationError(
+										CString(waveFormat.getFormatTag(), 4, true, true))));
+
 			audioFormat.setValue(
 					CDVIIntelIMAADPCMAudioCodec::composeAudioFormat((Float32) waveFormat.getSamplesPerSecond(),
 							SAudio::ChannelMap((UInt8) waveFormat.getChannelCount())));

@@ -570,7 +570,7 @@ void CString::toPascal(UInt8 buffer[], UInt8 bufferByteCount) const
 		return;
 
 	// Copy to buffer
-	buffer[0] = std::min<UInt8>((UInt8) data->getByteCount(), bufferByteCount - 1);
+	buffer[0] = (UInt8) std::min<UInt64>(data->getByteCount(), bufferByteCount - 1);
 	data->copyBytes(&buffer[1], buffer[0]);
 }
 

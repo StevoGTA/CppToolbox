@@ -181,7 +181,10 @@ CColor::Primaries CVideoFrame::getColorPrimaries() const
 	CFStringRef	stringRef =
 						(CFStringRef) ::CVBufferGetAttachment(mInternals->mImageBufferRef,
 								kCVImageBufferColorPrimariesKey, nil);
-	if (::CFStringCompare(stringRef, kCVImageBufferColorPrimaries_SMPTE_C, 0) == 0)
+	if (stringRef == nil)
+		// No attachment
+		return CColor::kPrimariesRec601;
+	else if (::CFStringCompare(stringRef, kCVImageBufferColorPrimaries_SMPTE_C, 0) == 0)
 		// Rec 601 / SMPTE C
 		return CColor::kPrimariesRec601;
 	else if (::CFStringCompare(stringRef, kCVImageBufferColorPrimaries_ITU_R_709_2, 0) == 0)
@@ -220,7 +223,10 @@ CColor::YCbCrConversionMatrix CVideoFrame::getYCbCrConversionMatrix() const
 	CFStringRef	stringRef =
 						(CFStringRef) ::CVBufferGetAttachment(mInternals->mImageBufferRef, kCVImageBufferYCbCrMatrixKey,
 								nil);
-	if (::CFStringCompare(stringRef, kCVImageBufferYCbCrMatrix_ITU_R_601_4, 0) == 0)
+	if (stringRef == nil)
+		// No attachment
+		return CColor::kYCbCrConversionMatrixRec601;
+	else if (::CFStringCompare(stringRef, kCVImageBufferYCbCrMatrix_ITU_R_601_4, 0) == 0)
 		// Rec 601
 		return CColor::kYCbCrConversionMatrixRec601;
 	else if (::CFStringCompare(stringRef, kCVImageBufferYCbCrMatrix_ITU_R_709_2, 0) == 0)
@@ -247,7 +253,10 @@ CColor::TransferFunction CVideoFrame::getColorTransferFunction() const
 	CFStringRef	stringRef =
 						(CFStringRef) ::CVBufferGetAttachment(mInternals->mImageBufferRef,
 								kCVImageBufferTransferFunctionKey, nil);
-	if (::CFStringCompare(stringRef, kCVImageBufferTransferFunction_ITU_R_709_2, 0) == 0)
+	if (stringRef == nil)
+		// No attachment
+		return CColor::kTransferFunctionRec709;
+	else if (::CFStringCompare(stringRef, kCVImageBufferTransferFunction_ITU_R_709_2, 0) == 0)
 		// Rec 601/Rec709
 		return CColor::kTransferFunctionRec709;
 	else if (::CFStringCompare(stringRef, kCVImageBufferTransferFunction_ITU_R_2020, 0) == 0)

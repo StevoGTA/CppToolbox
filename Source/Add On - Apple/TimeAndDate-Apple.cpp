@@ -60,10 +60,26 @@ SGregorianDate::SGregorianDate(UniversalTime time)
 {
 	// Setup
 	CFCalendarRef	calendarRef = ::CFCalendarCopyCurrent();
+
+	// Decompose
+	int				month;
+	int				day;
+	int				hour;
+	int				minute;
 	int				second;
-	::CFCalendarDecomposeAbsoluteTime(calendarRef, (CFAbsoluteTime) time, "yMdHmsE", &mYear, &mMonth, &mDay, &mHour,
-			&mMinute, &second, &mDayOfWeek);
+	int				dayOfWeek;
+	::CFCalendarDecomposeAbsoluteTime(calendarRef, (CFAbsoluteTime) time, "yMdHmsE", &mYear, &month, &day, &hour,
+			&minute, &second, &dayOfWeek);
+
+	// Store
+	mMonth = (UInt8) month;
+	mDay = (UInt8) day;
+	mHour = (UInt8) hour;
+	mMinute = (UInt8) minute;
 	mSecond = (Float32) second + time - floor(time);
+	mDayOfWeek = (UInt8) dayOfWeek;
+
+	// Cleanup
 	::CFRelease(calendarRef);
 }
 
@@ -96,8 +112,8 @@ SGregorianDate SGregorianDate::operator+(const Units& units) const
 	CFCalendarRef	calendarRef = ::CFCalendarCopyCurrent();
 	UniversalTime	time;
 	::CFCalendarComposeAbsoluteTime(calendarRef, &time, "yMdHms", mYear + units.mYears, mMonth + units.mMonths,
-			mDay + units.mDays, mHour + units.mHours, mMinute + units.mMinutes, seconds);
-	time += mSecond - floor(seconds);
+			mDay + units.mDays, mHour + units.mHours, mMinute + units.mMinutes, (int) seconds);
+	time += seconds - floor(seconds);
 	::CFRelease(calendarRef);
 
 	return SGregorianDate(time);

@@ -139,7 +139,7 @@ OV<SError> CApplication::open(const TArray<CFile>& files) const
 	// Open
 			dispatch_semaphore_t	semaphore = dispatch_semaphore_create(0);
 	__block	NSError*				openURLsError = nil;
-	[[NSWorkspace sharedWorkspace] openURLs:urls withApplicationAtURL:(__bridge NSURL*) mInternals->mURLRef
+	[NSWorkspace.sharedWorkspace openURLs:urls withApplicationAtURL:(__bridge NSURL*) mInternals->mURLRef
 			configuration:[NSWorkspaceOpenConfiguration configuration]
 			completionHandler:^(NSRunningApplication* runningApplication, NSError* error){
 		// Store error
@@ -150,7 +150,7 @@ OV<SError> CApplication::open(const TArray<CFile>& files) const
 	}];
 	while (dispatch_semaphore_wait(semaphore, DISPATCH_TIME_NOW))
 		// Run current RunLoop
-		[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
+		[NSRunLoop.currentRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
 
 	// Handle results
 	if (openURLsError == nil)
@@ -181,9 +181,13 @@ TVResult<CData> CApplication::getStorageData() const
 		::CFRelease(dataRef);
 
 		return TVResult<CData>(data);
-	} else
+	} else {
 		// Error
-		return TVResult<CData>(SErrorFromCFError(errorRef));
+		SError	error = SErrorFromCFError(errorRef);
+		::CFRelease(errorRef);
+
+		return TVResult<CData>(error);
+	}
 }
 
 // MARK: Class methods

@@ -386,7 +386,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 				::CFRangeMake(0, ::CFStringGetLength(mStringRef)), 0);
 	} else
 		// Not found
-		mStringRef = (localizationGroup + mColon + localizationKey).getOSString();
+		mStringRef = (CFStringRef) ::CFRetain((localizationGroup + mColon + localizationKey).getOSString());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -449,7 +449,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 		}
 	} else
 		// Not found
-		mStringRef = (localizationGroup + mColon + localizationKey).getOSString();
+		mStringRef = (CFStringRef) ::CFRetain((localizationGroup + mColon + localizationKey).getOSString());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -462,7 +462,7 @@ CString::CString(const CString& localizationGroup, const CString& localizationKe
 					localizationKey.mStringRef, localizationGroup.mStringRef);
 	if (mStringRef == nil)
 		// Not found
-		mStringRef = (localizationGroup + mColon + localizationKey).getOSString();
+		mStringRef = (CFStringRef) ::CFRetain((localizationGroup + mColon + localizationKey).getOSString());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -548,10 +548,11 @@ TBuffer<UTF32Char> CString::getUTF32Chars() const
 	// Collect characters
 	CFIndex				length = ::CFStringGetLength(mStringRef);
 	TBuffer<UTF32Char>	buffer((UInt32) length);
+	CFIndex				count;
 	::CFStringGetBytes(mStringRef, CFRangeMake(0, length), sGetCFStringEncodingForCStringEncoding(kEncodingUTF32Native),
-			0, false, (UInt8*) *buffer, length * sizeof(UTF32Char), nil);
+			0, false, (UInt8*) *buffer, length * sizeof(UTF32Char), &count);
 
-	return buffer;
+	return TBuffer<UTF32Char>(buffer, (UInt64) (count / sizeof(UTF32Char)));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -719,7 +720,7 @@ CString CString::removingLeadingAndTrailingQuotes() const
 
 	// Remove any trailing quotes
 	if (::CFStringHasSuffix(stringRef, CFSTR("\"")))
-		::CFStringDelete(stringRef, CFRangeMake(getLength() - 1, 1));
+		::CFStringDelete(stringRef, CFRangeMake(::CFStringGetLength(stringRef) - 1, 1));
 
 	CString	string(stringRef);
 	::CFRelease(stringRef);
@@ -741,7 +742,7 @@ CString CString::getCommonPrefix(const CString& other) const
 	::CFStringGetCharacters(other.mStringRef, CFRangeMake(0, length2), characters2);
 
 	// See if need to limit length
-	if (length2 > length1)
+	if (length1 > length2)
 		// Limit length
 		length1 = length2;
 

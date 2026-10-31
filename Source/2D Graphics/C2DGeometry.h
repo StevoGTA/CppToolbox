@@ -66,8 +66,11 @@ template <typename T> struct T2DPoint {
 
 	inline	T2DPoint&	applyTransform(const T2DAffineTransform<T>& affineTransform)
 							{
-								mX = mX * affineTransform.mA + mY * affineTransform.mC + affineTransform.mTX;
-								mY = mX * affineTransform.mB + mY * affineTransform.mD + affineTransform.mTY;
+								T	x = mX * affineTransform.mA + mY * affineTransform.mC + affineTransform.mTX;
+								T	y = mX * affineTransform.mB + mY * affineTransform.mD + affineTransform.mTY;
+
+								mX = x;
+								mY = y;
 								
 								return *this;
 							}
@@ -235,9 +238,9 @@ template <typename T> struct T2DVector {
 								{ return T2DVector<T>(mDX - other.mDX, mDY - other.mDY); }
 
 	inline	T2DVector<T>	operator*(T factor) const { return T2DVector<T>(mDX * factor, mDY * factor); }
-	inline	T2DVector<T>&	operator*=(T factor) { return mDX *= factor, mDY *= factor; return *this; }
+	inline	T2DVector<T>&	operator*=(T factor) { mDX *= factor, mDY *= factor; return *this; }
 	inline	T2DVector<T>	operator/(T factor) const { return T2DVector<T>(mDX / factor, mDY / factor); }
-	inline	T2DVector<T>&	operator/=(T factor) { return mDX /= factor, mDY /= factor; return *this; }
+	inline	T2DVector<T>&	operator/=(T factor) { mDX /= factor, mDY /= factor; return *this; }
 
 	// Properties
 	T	mDX;

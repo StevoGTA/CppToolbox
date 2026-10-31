@@ -119,10 +119,14 @@ class CHTTPEndpointClient::Internals {
 		};
 
 						Internals(const CString& serverPrefix, const I<CHTTPTransport>& transport, Options options,
-								UInt32 maximumURLLength, UInt32 maximumConcurrentRequests, LogOptions logOptions) :
+								UInt32 maximumURLLength, const OV<UInt32>& maximumConcurrentRequests,
+								LogOptions logOptions) :
 							mServerPrefix(serverPrefix), mTransport(transport), mOptions(options),
 									mMaximumURLLength(maximumURLLength),
-									mMaximumConcurrentRequests(maximumConcurrentRequests), mLogOptions(logOptions),
+									mMaximumConcurrentRequests(
+											maximumConcurrentRequests.getValue(
+													transport->getMaximumConcurrentRequests())),
+									mLogOptions(logOptions),
 									mNextIndex(0)
 							{}
 
@@ -482,7 +486,7 @@ void CHTTPEndpointClient::Internals::performInfoCompleted(PerformInfo& performIn
 
 //----------------------------------------------------------------------------------------------------------------------
 CHTTPEndpointClient::CHTTPEndpointClient(const CString& serverPrefix, const I<CHTTPTransport>& transport,
-		Options options, UInt32 maximumURLLength, UInt32 maximumConcurrentRequests, LogOptions logOptions)
+		Options options, UInt32 maximumURLLength, const OV<UInt32>& maximumConcurrentRequests, LogOptions logOptions)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals =

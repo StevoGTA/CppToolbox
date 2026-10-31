@@ -54,25 +54,33 @@ OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Parameter check
-	if (!file.doesExist())
+	if (!file.doesExist()) {
+		// Error
 		CFilesystemReportFileError(CFile::mDoesNotExistError, CString(OSSTR("checking source file")), file);
+
+		return CFile::mDoesNotExistError;
+	}
 
 	// Setup
 	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
 	if (destinationFile.doesExist()) {
 		// Destination file already exists
 		OV<SError>	error = destinationFile.remove();
-		if (error.hasValue())
+		if (error.hasValue()) {
+			// Error
 			CFilesystemReportFileError(*error, CString(OSSTR("removing destination file")), destinationFile);
+
+			return error;
+		}
 	}
 
 	// Setup
 	CCoreFoundation::O<CFURLRef>	sourceURLRef = getURLRefFor(file);
-	CCoreFoundation::O<CFURLRef>	destinationURLRef = getURLRefFor(destinationFolder);
+	CCoreFoundation::O<CFURLRef>	destinationURLRef = getURLRefFor(destinationFile);
 
 	// Do the copy
 	NSError*	error;
-	if ([[NSFileManager defaultManager] copyItemAtURL:(__bridge NSURL*) *sourceURLRef
+	if ([NSFileManager.defaultManager copyItemAtURL:(__bridge NSURL*) *sourceURLRef
 			toURL:(__bridge NSURL*) *destinationURLRef error:&error]) {
 		// Copy comments
 		OV<CString>	comments = file.getComments();
@@ -98,7 +106,7 @@ TArray<CFilesystem::FileResult> CFilesystem::moveToTrash(const TArray<CFile>& fi
 	for (TArray<CFile>::Iterator iterator = files.getIterator(); iterator; iterator++) {
 		// Move this file to the trash
 		NSError*	error;
-		if (![[NSFileManager defaultManager]
+		if (![NSFileManager.defaultManager
 				trashItemAtURL:(__bridge NSURL*) *getURLRefFor(*iterator)
 				resultingItemURL:nil error:&error]) {
 			// Failed
@@ -118,7 +126,7 @@ OV<SError> CFilesystem::revealInFinder(const CFolder& folder)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Reveal in Finder
-	if ([[NSWorkspace sharedWorkspace] openURL:(__bridge NSURL*) *getURLRefFor(folder)])
+	if ([NSWorkspace.sharedWorkspace openURL:(__bridge NSURL*) *getURLRefFor(folder)])
 		// Success
 		return OV<SError>();
 	else {
@@ -141,7 +149,7 @@ OV<SError> CFilesystem::revealInFinder(const TArray<CFilesystemPath>& filesystem
 		[urls addObject:[NSURL fileURLWithPath:(__bridge NSString*) iterator->getString().getOSString()]];
 
 	// Reveal in Finder
-	[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:urls];
+	[NSWorkspace.sharedWorkspace activateFileViewerSelectingURLs:urls];
 
 	return OV<SError>();
 }

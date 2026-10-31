@@ -117,7 +117,7 @@ TVResult<TArray<CFile> > CFilesystem::getFiles(const CFolder& folder, bool deep)
 			// Iterate folders
 			for (auto const& childStorageFolder : storageFolder.GetFoldersAsync().get()) {
 				// Get files for this folder
-				auto	result = getFiles(CFolder(CFilesystemPath(CString(childStorageFolder.Path().data()))));
+				auto	result = getFiles(CFolder(CFilesystemPath(CString(childStorageFolder.Path().data()))), deep);
 				if (result.hasValue())
 					// Success
 					files += *result;

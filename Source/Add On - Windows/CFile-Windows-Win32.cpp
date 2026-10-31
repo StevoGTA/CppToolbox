@@ -117,7 +117,7 @@ bool CFile::getLocked() const
 	// Get attributes
 	DWORD	attributes = ::GetFileAttributes(getFilesystemPath().getString().getOSString());
 
-	return (attributes & FILE_ATTRIBUTE_READONLY) != 0;
+	return (attributes != INVALID_FILE_ATTRIBUTES) && ((attributes & FILE_ATTRIBUTE_READONLY) != 0);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

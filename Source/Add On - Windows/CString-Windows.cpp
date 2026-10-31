@@ -845,8 +845,10 @@ TArray<CString> CString::components(const CString& delimiterString, bool include
 		endOffset = mString.find(delimiterString.mString.c_str(), startOffset);
 	}
 
-	// Add last
-	array += CString(mString.substr(startOffset, mString.length() - startOffset).c_str());
+	// Check if adding last
+	if (includeEmptyComponents || (startOffset < mString.length()))
+		// Add last
+		array += CString(mString.substr(startOffset, mString.length() - startOffset).c_str());
 
 	return array;
 }
@@ -1109,17 +1111,13 @@ CString CString::make(OSStringType format, va_list args)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	std::vector<TCHAR>::size_type	size = 256;
-	std::vector<TCHAR>				buffer;
+	va_list	argsCopy;
+	va_copy(argsCopy, args);
+	std::vector<TCHAR>	buffer(::_vscwprintf(format, argsCopy) + 1);
+	va_end(argsCopy);
 
-	// Try to write
-	do {
-		// Resize to given size
-		buffer.resize(size + 1);
-
-		// Try to write and get needed size
-		size = ::vswprintf_s(&buffer[0], buffer.size(), format, args);
-	} while ((size + 1) > buffer.size());
+	// Write
+	::vswprintf_s(&buffer[0], buffer.size(), format, args);
 
 	// Compose CString
 	CString	string;

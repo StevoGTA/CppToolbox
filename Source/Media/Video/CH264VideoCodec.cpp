@@ -96,7 +96,7 @@ struct SH264NALUInfo {
 													const	UInt8*				bytePtr = *data.getUInt8Buffer();
 															UInt32				offset = 0;
 															CData::ByteCount	bytesRemaining = data.getByteCount();
-													while (bytesRemaining > 0) {
+													while (bytesRemaining >= sizeof(UInt32)) {
 														// Get NALU size
 														CData::ByteCount	byteCount =
 																					EndianU32_BtoN(
@@ -104,6 +104,7 @@ struct SH264NALUInfo {
 														bytePtr += sizeof(UInt32);
 														offset += sizeof(UInt32);
 														bytesRemaining -= sizeof(UInt32);
+														if (byteCount > bytesRemaining) break;
 
 														// Add NALU
 														naluInfos += SH264NALUInfo(data, offset, byteCount);

@@ -465,11 +465,12 @@ CCoreFoundation::O<CFDictionaryRef> CCoreFoundation::dictionaryRefFrom(const CDi
 				::CFDictionarySetValue(dictionaryRef, keyStringRef, kCFNull);
 				break;
 
-			case SValue::kTypeArrayEmpty:
+			case SValue::kTypeArrayEmpty: {
 				// Empty array
-				::CFDictionarySetValue(dictionaryRef, keyStringRef,
-						::CFArrayCreate(kCFAllocatorDefault, nil, 0, &kCFTypeArrayCallBacks));
-				break;
+				CFArrayRef	arrayRef = ::CFArrayCreate(kCFAllocatorDefault, nil, 0, &kCFTypeArrayCallBacks);
+				::CFDictionarySetValue(dictionaryRef, keyStringRef, arrayRef);
+				::CFRelease(arrayRef);
+				} break;
 
 			case SValue::kTypeBool:
 				// Bool
@@ -602,7 +603,7 @@ CCoreFoundation::O<CFDictionaryRef> CCoreFoundation::dictionaryRefFrom(const TDi
 	return O<CFDictionaryRef>(dictionaryRef);
 }
 
-// MAKR: Number methods
+// MARK: Number methods
 
 //----------------------------------------------------------------------------------------------------------------------
 Float32 CCoreFoundation::float32From(CFNumberRef numberRef)

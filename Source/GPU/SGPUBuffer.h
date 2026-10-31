@@ -27,7 +27,10 @@ struct SGPUVertexBuffer : SGPUBuffer {
 	SGPUVertexBuffer(UInt32 perVertexByteCount, void* platformReference) :
 		SGPUBuffer(platformReference), mPerVertexByteCount(perVertexByteCount)
 		{}
-	SGPUVertexBuffer(const SGPUVertexBuffer& other) : SGPUBuffer(other) {}
+	SGPUVertexBuffer(const SGPUVertexBuffer& other) :
+		SGPUBuffer(other),
+				mPerVertexByteCount(other.mPerVertexByteCount)
+		{}
 
 	// Properties
 	UInt32	mPerVertexByteCount;

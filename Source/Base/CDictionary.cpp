@@ -1342,7 +1342,7 @@ CDictionary CDictionary::operator+(const CDictionary& other) const
 	// Iterate all items
 	for (Iterator iterator = other.getIterator(); iterator; iterator++)
 		// Set this value
-		dictionary.mBacking->set(iterator.getKey(), iterator.getValue());
+		dictionary.set(iterator.getKey(), iterator.getValue());
 
 	return dictionary;
 }
@@ -1354,7 +1354,7 @@ CDictionary& CDictionary::operator+=(const CDictionary& other)
 	// Iterate all items
 	for (Iterator iterator = other.getIterator(); iterator; iterator++)
 		// Set this value
-		mBacking->set(iterator.getKey(), iterator.getValue());
+		set(iterator.getKey(), iterator.getValue());
 
 	return *this;
 }

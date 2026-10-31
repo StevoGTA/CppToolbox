@@ -66,7 +66,9 @@ class CDecodeAudioCodec : public CAudioCodec {
 
 				void							seek(UInt64 frameIndex)
 													{ mCurrentPosition =
-															mStartByteOffset + frameIndex * mFrameByteCount; }
+															std::min<UInt64>(
+																	mStartByteOffset + frameIndex * mFrameByteCount,
+																	mStartByteOffset + mByteCount); }
 				TVResult<UInt32>				readInto(CAudioFrames& audioFrames)
 													{
 														// Read
@@ -74,9 +76,10 @@ class CDecodeAudioCodec : public CAudioCodec {
 
 														// Check situation
 														UInt32	frameCount =
-																		std::min(writeInfo.getFrameCount(),
-																				(UInt32) (mStartByteOffset +
-																						mByteCount - mCurrentPosition) /
+																		(UInt32) std::min<UInt64>(
+																				writeInfo.getFrameCount(),
+																				(mStartByteOffset + mByteCount -
+																						mCurrentPosition) /
 																						mFrameByteCount);
 														if (frameCount > 0) {
 															// Read frames
@@ -105,8 +108,8 @@ class CDecodeAudioCodec : public CAudioCodec {
 													{
 														// Check situation
 														frameCount =
-																std::min(frameCount,
-																		(UInt32) (mStartByteOffset + mByteCount -
+																(UInt32) std::min<UInt64>(frameCount,
+																		(mStartByteOffset + mByteCount -
 																				mCurrentPosition) / mFrameByteCount);
 														if (frameCount > 0) {
 															// Read frames

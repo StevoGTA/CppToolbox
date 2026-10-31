@@ -571,11 +571,12 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 	if (!mInternals->mAudioEngineIndex.hasValue()) {
 		// Add player
 		mInternals->mAudioEngineIndex = CAudioEngine::mShared.addAudioPlayer(Internals::renderProc, mInternals);
+		if (!mInternals->mAudioEngineIndex.hasValue())
+			// No available slots
+			return;
+
 		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
 	}
-	if (!mInternals->mAudioEngineIndex.hasValue())
-		// No available slots
-		return;
 
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
@@ -697,11 +698,12 @@ void CAudioPlayer::play()
 	if (!mInternals->mAudioEngineIndex.hasValue()) {
 		// Add player
 		mInternals->mAudioEngineIndex = CAudioEngine::mShared.addAudioPlayer(Internals::renderProc, mInternals);
+		if (!mInternals->mAudioEngineIndex.hasValue())
+			// No available slots
+			return;
+
 		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
 	}
-	if (!mInternals->mAudioEngineIndex.hasValue())
-		// No available slots
-		return;
 
 	// We are now playing
 	mInternals->mIsPlaying = true;
@@ -742,11 +744,12 @@ void CAudioPlayer::startSeek()
 	if (!mInternals->mAudioEngineIndex.hasValue()) {
 		// Add player
 		mInternals->mAudioEngineIndex = CAudioEngine::mShared.addAudioPlayer(Internals::renderProc, mInternals);
+		if (!mInternals->mAudioEngineIndex.hasValue())
+			// No available slots
+			return;
+
 		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
 	}
-	if (!mInternals->mAudioEngineIndex.hasValue())
-		// No available slots
-		return;
 
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;

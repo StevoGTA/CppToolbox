@@ -392,8 +392,9 @@ TVResult<CString> CBPLReader::getString(UInt64 objectIndex)
 		return TVResult<CString>(CString::mEmpty);
 
 	// Read bytes
-	TBuffer<UInt8>	buffer(count);
-	OV<SError>		error = read(*buffer, count, CString(OSSTR("reading string bytes")));
+	UInt64			byteCount = (markerAndCount->getA() == kMarkerTypeStringASCII) ? count : count * 2;
+	TBuffer<UInt8>	buffer(byteCount);
+	OV<SError>		error = read(*buffer, byteCount, CString(OSSTR("reading string bytes")));
 	ReturnValueIfError(error, TVResult<CString>(*error));
 
 	return TVResult<CString>(
@@ -851,6 +852,12 @@ TVResult<CDictionary> CBPLReader::getDictionary(const I<CRandomAccessDataSource>
 	const	SBinaryPListTrailer&	trailer = *((const SBinaryPListTrailer*) **trailerBuffer);
 			UInt8					objectOffsetByteCount = trailer.getObjectOffsetByteCount();
 			UInt64					totalObjectCount = trailer.getTotalObjectCount();
+
+	if ((objectOffsetByteCount == 0) || (objectOffsetByteCount > sizeof(UInt64)) ||
+			(trailer.getObjectIndexByteCount() == 0) || (trailer.getObjectIndexByteCount() > sizeof(UInt64)))
+		// Byte counts are out of range
+		LogErrorAndReturnValue(sUnknownFormatError, CString(OSSTR("validating trailer")),
+				TVResult<CDictionary>(sUnknownFormatError));
 
 	// Read object offsets
 	TVResult<TBuffer<const UInt8> >	objectOffsetBuffer =
@@ -1559,7 +1566,9 @@ class CBPLWriter {
 										}
 
 										// Write marker + count
-										writeMarkerAndCount(data, marker, stringData->getByteCount());
+										writeMarkerAndCount(data, marker,
+												(marker == kMarkerTypeStringASCII) ?
+														stringData->getByteCount() : stringData->getByteCount() / 2);
 
 										// Write data
 										data += *stringData;

@@ -640,7 +640,7 @@ template <typename T> class TMDictionary : public TDictionary<T> {
 						CDictionary::Item::IncludeProc itemIncludeProc, void* userData) :
 					TDictionary<T>(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
 					{
-						for (CDictionary::Iterator iterator = other.getIterator; iterator; iterator++) {
+						for (CDictionary::Iterator iterator = other.getIterator(); iterator; iterator++) {
 							// Call proc
 							if (itemIncludeProc(iterator.getKey(), iterator.getValue(), userData))
 								// Add item

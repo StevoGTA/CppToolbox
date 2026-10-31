@@ -308,7 +308,10 @@ bool CMediaPlaybackQueue::prepareNext()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Preflight
-	if (mInternals->mCurrentItemIndex == (mInternals->mItems.getCount() - 1))
+	if (mInternals->mItems.isEmpty())
+		// No items
+		return false;
+	else if (mInternals->mCurrentItemIndex == (mInternals->mItems.getCount() - 1))
 		// Already at the last
 		return false;
 

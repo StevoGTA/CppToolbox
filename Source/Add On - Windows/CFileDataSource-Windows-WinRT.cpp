@@ -157,7 +157,8 @@ OV<SError> CFileDataSource::readData(UInt64 position, void* buffer, UInt64 byteC
 class CMappedFileDataSource::Internals {
 	public:
 		Internals(const CFile& file, UInt64 byteOffset, UInt64 byteCount) :
-			mFile(file)
+			mFile(file),
+					mFileHandle(NULL), mFileMappingHandle(NULL), mBytePtr(NULL), mByteCount(0)
 			{
 				// Catch errors
 				try {
@@ -189,21 +190,16 @@ class CMappedFileDataSource::Internals {
 								mByteCount = byteCount;
 							else {
 								// Failed
-								mByteCount = 0;
 								mError = OV<SError>(SErrorFromWindowsGetLastError());
 								CLogServices::logError(*mError, "creating file view", __FILE__, __func__, __LINE__);
 							}
 						} else {
 							// Error
-							mBytePtr = NULL;
-							mByteCount = 0;
 							mError = OV<SError>(SErrorFromWindowsGetLastError());
 							CLogServices::logError(*mError, "creating file mapping", __FILE__, __func__, __LINE__);
 						}
 					} else {
 						// Unable to open
-						mBytePtr = NULL;
-						mByteCount = 0;
 						mError = OV<SError>(SErrorFromHRESULT(result));
 						CLogServices::logError(*mError, "getting handle of file", __FILE__, __func__, __LINE__);
 					}

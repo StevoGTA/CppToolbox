@@ -201,7 +201,7 @@ OV<SError> CMediaFoundationServices::setInputType(IMFTransform* transform, const
 			// Error
 			continue;
 
-		UINT32	preferWAVEFORMATEX;
+		UINT32	preferWAVEFORMATEX = 0;
 		result = mediaType->GetUINT32(MF_MT_AUDIO_PREFER_WAVEFORMATEX, &preferWAVEFORMATEX);
 		if ((result != S_OK) && (options & kCreateAudioMediaTypeOptionsPreferWAVEFORMATEX))
 			// Prefers WAVEFORMATEX but can't get property value

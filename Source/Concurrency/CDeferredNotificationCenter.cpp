@@ -73,16 +73,18 @@ class CDeferredNotificationCenter::Internals {
 										// Send notifications
 										send();
 								});
+
+								// Queue is now armed
+								mQueueArmed = true;
 #elif defined(TARGET_OS_WINDOWS)
-								mDispatcherQueue.TryEnqueue([this]() {
+								// Queue is now armed if enqueued
+								mQueueArmed = mDispatcherQueue.TryEnqueue([this]() {
 									// Check if active
 									if (mActiveInternals.contains(this))
 										// Send notifications
 										send();
 								});
 #endif
-								// Queue is now armed
-								mQueueArmed = true;
 							}
 
 							// Unlock

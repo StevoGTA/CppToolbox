@@ -196,7 +196,8 @@ class COpenGLTexture::Internals : public TReferenceCountableAutoDelete<Internals
 #endif
 #if defined(TARGET_OS_MACOS)
 		Internals(CGLContextObj context, CVImageBufferRef imageBufferRef, UInt32 planeIndex) :
-			TReferenceCountableAutoDelete()
+			TReferenceCountableAutoDelete(),
+					mHasTransparency(false)
 			{
 				// Setup
 				size_t	width = ::CVPixelBufferGetWidthOfPlane(imageBufferRef, planeIndex);

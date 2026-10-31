@@ -314,7 +314,9 @@ TVResult<SMedia::Packet> CSeekableVaryingMediaPacketSource::readNextInto(TBuffer
 		// Copy packet data
 		OV<SError>	error =
 							mInternals->mRandomAccessDataSource->read(mediaPacketAndLocation.getByteOffset(),
-									*buffer, buffer.getByteCount());
+									*buffer,
+									std::min<UInt64>(mediaPacketAndLocation.getPacket().getByteCount(),
+											buffer.getByteCount()));
 		ReturnValueIfError(error, TVResult<SMedia::Packet>(*error));
 
 		// Update
