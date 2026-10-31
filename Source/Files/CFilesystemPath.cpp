@@ -273,15 +273,55 @@ CString CFilesystemPath::makeLegalFilename(const CString& string, MakeLegalFilen
 	// Replace "illegal" ones with '_'
 	UTF32Char*	p = *buffer;
 	for (CString::Length i = 0; i < buffer.getCount(); i++, p++) {
-		if ((*p < 0x20) || (*p == ':') || (*p == 0x7F))
+		if ((*p < 0x20) || (*p == '/') || (*p == ':') || (*p == 0x7F))
 			// Replace with _
 			*p = '_';
+#if defined(TARGET_OS_WINDOWS)
+		else if ((*p == '\\') || (*p == '*') || (*p == '?') || (*p == '"') || (*p == '<') || (*p == '>') ||
+				(*p == '|'))
+			// Replace with _
+			*p = '_';
+#endif
 		else if ((makeLegalFilenameOptions & kMakeLegalFilenameOptionsDisallowSpaces) && (*p == ' '))
 			// Replace with _
 			*p = '_';
 	}
 
+#if defined(TARGET_OS_WINDOWS)
+	// Windows drops trailing spaces and periods, so replace them with '_'
+	for (CString::Length i = buffer.getCount(); (i > 0) && (((*buffer)[i - 1] == ' ') || ((*buffer)[i - 1] == '.'));
+			i--)
+		// Replace with _
+		(*buffer)[i - 1] = '_';
+
+	// Windows reserves the device names, with or without an extension, so follow one with '_'
+	static	const	CString	sReservedNames[] =
+								{
+									CString(OSSTR("AUX")),
+									CString(OSSTR("COM1")), CString(OSSTR("COM2")), CString(OSSTR("COM3")),
+									CString(OSSTR("COM4")), CString(OSSTR("COM5")), CString(OSSTR("COM6")),
+									CString(OSSTR("COM7")), CString(OSSTR("COM8")), CString(OSSTR("COM9")),
+									CString(OSSTR("CON")),
+									CString(OSSTR("LPT1")), CString(OSSTR("LPT2")), CString(OSSTR("LPT3")),
+									CString(OSSTR("LPT4")), CString(OSSTR("LPT5")), CString(OSSTR("LPT6")),
+									CString(OSSTR("LPT7")), CString(OSSTR("LPT8")), CString(OSSTR("LPT9")),
+									CString(OSSTR("NUL")),
+									CString(OSSTR("PRN")),
+								};
+	CString	filename(buffer);
+	CString	baseName = filename.components(CString::mPeriod).getFirst();
+	CString	baseNameUppercased = baseName.uppercased();
+	for (size_t i = 0; i < sizeof(sReservedNames) / sizeof(sReservedNames[0]); i++) {
+		// Check this name
+		if (baseNameUppercased == sReservedNames[i])
+			// Reserved
+			return baseName + CString::mUnderscore + filename.getSubString(baseName.getLength());
+	}
+
+	return filename;
+#else
 	return CString(buffer);
+#endif
 }
 
 //----------------------------------------------------------------------------------------------------------------------
