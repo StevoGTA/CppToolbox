@@ -78,6 +78,31 @@ OV<CString> CCredentialStore::getString(const CString& key) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<UniversalTime> CCredentialStore::getCreationTime(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CDictionary	query = mInternals->getQuery(key);
+	query.set(CString(kSecReturnAttributes), true);
+	query.set(CString(kSecMatchLimit), CString(kSecMatchLimitOne));
+
+	// Query
+	CFTypeRef	result = nil;
+	OSStatus	status = ::SecItemCopyMatching(*CCoreFoundation::dictionaryRefFrom(query), &result);
+	if (status != errSecSuccess)
+		// Not found
+		return OV<UniversalTime>();
+
+	// Get creation time
+	UniversalTime	creationTime =
+							::CFDateGetAbsoluteTime(
+									(CFDateRef) ::CFDictionaryGetValue((CFDictionaryRef) result, kSecAttrCreationDate));
+	::CFRelease(result);
+
+	return OV<UniversalTime>(creationTime);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> CCredentialStore::set(const CString& key, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {

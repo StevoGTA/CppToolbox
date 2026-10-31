@@ -66,6 +66,14 @@ OV<CString> CCredentialStore::getString(const CString& key) const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<UniversalTime> CCredentialStore::getCreationTime(const CString& key) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Credential Manager does not record when a credential was created (LastWritten changes on every write)
+	return OV<UniversalTime>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> CCredentialStore::set(const CString& key, const CString& string)
 //----------------------------------------------------------------------------------------------------------------------
 {
