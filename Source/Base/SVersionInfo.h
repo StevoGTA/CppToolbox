@@ -12,62 +12,84 @@
 struct SVersionInfo {
 	// Methods
 	public:
-							// Lifecycle methods
-							SVersionInfo(const CString& name, UInt8 majorVersion, UInt8 minorVersion,
-									UInt8 patchVersion, const CString& build) :
-								mMajorVersion(majorVersion), mMinorVersion(minorVersion), mPatchVersion(patchVersion),
-										mString(
-												(!name.isEmpty() ? name + CString::mSpace : CString::mEmpty) +
-												((mPatchVersion == 0) ?
-														CString(mMajorVersion) + CString(OSSTR(".")) +
-																CString(mMinorVersion) :
-														CString(mMajorVersion) + CString(OSSTR(".")) +
-																CString(mMinorVersion) + CString(OSSTR(".")) +
-																CString(mPatchVersion)) +
-												(!build.isEmpty() ?
-														CString::mSpace + CString(OSSTR("(")) + build +
-																CString(OSSTR(")")) :
-														CString::mEmpty))
-								{}
-							SVersionInfo(UInt8 majorVersion, UInt8 minorVersion, UInt8 patchVersion) :
-								mMajorVersion(majorVersion), mMinorVersion(minorVersion), mPatchVersion(patchVersion),
-										mString(
-												(mPatchVersion == 0) ?
-														CString(mMajorVersion) + CString(OSSTR(".")) +
-																CString(mMinorVersion) :
-														CString(mMajorVersion) + CString(OSSTR(".")) +
-																CString(mMinorVersion) + CString(OSSTR(".")) +
-																CString(mPatchVersion))
-								{}
-							SVersionInfo(UInt32 combinedVersion) :
-								mMajorVersion((combinedVersion >> 16) & 0xFF),
-										mMinorVersion((combinedVersion >> 8) & 0xFF),
-										mPatchVersion((combinedVersion >> 0) & 0xFF),
-										mString(
-												(mPatchVersion == 0) ?
-														CString(mMajorVersion) + CString(OSSTR(".")) +
-																CString(mMinorVersion) :
-														CString(mMajorVersion) + CString(OSSTR(".")) +
-																CString(mMinorVersion) + CString(OSSTR(".")) +
-																CString(mPatchVersion))
-								{}
-							SVersionInfo(const CString& string) :
-								mString(string), mMajorVersion(0), mMinorVersion(0), mPatchVersion(0)
-								{}
+										// Lifecycle methods
+										SVersionInfo(const CString& name, UInt8 majorVersion, UInt8 minorVersion,
+												UInt8 patchVersion, const CString& build) :
+											mMajorVersion(majorVersion), mMinorVersion(minorVersion),
+													mPatchVersion(patchVersion),
+													mString(
+															(!name.isEmpty() ?
+																	name + CString::mSpace : CString::mEmpty) +
+															((mPatchVersion == 0) ?
+																	CString(mMajorVersion) + CString(OSSTR(".")) +
+																			CString(mMinorVersion) :
+																	CString(mMajorVersion) + CString(OSSTR(".")) +
+																			CString(mMinorVersion) +
+																			CString(OSSTR(".")) +
+																			CString(mPatchVersion)) +
+															(!build.isEmpty() ?
+																	CString::mSpace + CString(OSSTR("(")) + build +
+																			CString(OSSTR(")")) :
+																	CString::mEmpty))
+											{}
+										SVersionInfo(UInt8 majorVersion, UInt8 minorVersion, UInt8 patchVersion) :
+											mMajorVersion(majorVersion), mMinorVersion(minorVersion),
+													mPatchVersion(patchVersion),
+													mString(
+															(mPatchVersion == 0) ?
+																	CString(mMajorVersion) + CString(OSSTR(".")) +
+																			CString(mMinorVersion) :
+																	CString(mMajorVersion) + CString(OSSTR(".")) +
+																			CString(mMinorVersion) +
+																			CString(OSSTR(".")) +
+																			CString(mPatchVersion))
+											{}
+										SVersionInfo(UInt32 combinedVersion) :
+											mMajorVersion((combinedVersion >> 16) & 0xFF),
+													mMinorVersion((combinedVersion >> 8) & 0xFF),
+													mPatchVersion((combinedVersion >> 0) & 0xFF),
+													mString(
+															(mPatchVersion == 0) ?
+																	CString(mMajorVersion) + CString(OSSTR(".")) +
+																			CString(mMinorVersion) :
+																	CString(mMajorVersion) + CString(OSSTR(".")) +
+																			CString(mMinorVersion) +
+																			CString(OSSTR(".")) +
+																			CString(mPatchVersion))
+											{}
+										SVersionInfo(const CString& string) :
+											mString(string), mMajorVersion(0), mMinorVersion(0), mPatchVersion(0)
+											{}
 
-							// Instance methods
-				UInt8		getMajorVersion() const
-								{ return mMajorVersion; }
-				UInt8		getMinorVersion() const
-								{ return mMinorVersion; }
-				UInt8		getPatchVersion() const
-								{ return mPatchVersion; }
+										// Instance methods
+						UInt8			getMajorVersion() const
+											{ return mMajorVersion; }
+						UInt8			getMinorVersion() const
+											{ return mMinorVersion; }
+						UInt8			getPatchVersion() const
+											{ return mPatchVersion; }
 
-		const	CString&	getString() const
-								{ return mString; }
+				const	CString&		getString() const
+											{ return mString; }
 
-				bool		compareTo(const SVersionInfo& other) const
-								{ return mString.compareTo(other.mString, CString::kCompareToOptionsNumerically); }
+						bool			compareTo(const SVersionInfo& other) const
+											{ return mString.compareTo(other.mString,
+													CString::kCompareToOptionsNumerically); }
+
+										// Class methods
+		static			SVersionInfo	getFrom(const CString& string)
+											{
+												// Setup - x.y.z, with any missing component as 0
+												TArray<CString>	components = string.components(CString(OSSTR(".")));
+
+												return SVersionInfo(
+														(components.getCount() > 0) ?
+																(UInt8) components[0].getUInt32() : 0,
+														(components.getCount() > 1) ?
+																(UInt8) components[1].getUInt32() : 0,
+														(components.getCount() > 2) ?
+																(UInt8) components[2].getUInt32() : 0);
+											}
 
 	// Properties
 	private:
