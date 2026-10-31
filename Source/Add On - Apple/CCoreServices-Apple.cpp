@@ -107,15 +107,7 @@ const SVersionInfo& CCoreServices::getCoreAudioVersion()
 		CFStringRef	stringRef =
 							(CFStringRef) ::CFBundleGetValueForInfoDictionaryKey(bundleRef,
 									OSSTR("CFBundleShortVersionString"));
-		TArray<CString>	array = CString(stringRef).components(CString(OSSTR(".")));
-		UInt8			majorVersion = (array.getCount() > 0) ? array[0].getUInt8() : 0;
-		UInt8			minorVersion = (array.getCount() > 1) ? array[1].getUInt8() : 0;
-		UInt8			patchVersion = (array.getCount() > 2) ? array[2].getUInt8() : 0;
-
-		sVersionInfo =
-				(majorVersion != 0) ?
-						new SVersionInfo(majorVersion, minorVersion, patchVersion) :
-						new SVersionInfo(CString(stringRef));
+		sVersionInfo = new SVersionInfo(SVersionInfo::getFrom(CString(stringRef)));
 		::CFRelease(bundleRef);
 	}
 

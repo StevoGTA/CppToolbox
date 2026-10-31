@@ -67,7 +67,7 @@ OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFilesystemPath& filesyst
 								::CFBundleGetValueForInfoDictionaryKey(bundleRef, CFSTR("CFBundleShortVersionString"));
 	OV<SVersionInfo>	versionInfo =
 								((typeRef != nil) && (::CFGetTypeID(typeRef) == ::CFStringGetTypeID())) ?
-										OV<SVersionInfo>(SVersionInfo(CString((CFStringRef) typeRef))) :
+										OV<SVersionInfo>(SVersionInfo::getFrom(CString((CFStringRef) typeRef))) :
 										OV<SVersionInfo>();
 	::CFRelease(bundleRef);
 
@@ -182,7 +182,7 @@ CDynamicLibrary::Loadability CDynamicLibrary::getLoadability(const CFilesystemPa
 							CString::kEncodingUTF8).getOSString(),
 					kCFCompareNumerically) == kCFCompareGreaterThan)) {
 		// Newer OS required
-		Loadability	loadability(SVersionInfo(CString((CFStringRef) minimumSystemVersionTypeRef)));
+		Loadability	loadability(SVersionInfo::getFrom(CString((CFStringRef) minimumSystemVersionTypeRef)));
 		::CFRelease(bundleRef);
 
 		return loadability;

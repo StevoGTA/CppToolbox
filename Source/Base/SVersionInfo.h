@@ -32,6 +32,12 @@ struct SVersionInfo {
 																			CString(OSSTR(")")) :
 																	CString::mEmpty))
 											{}
+										SVersionInfo(UInt8 majorVersion, UInt8 minorVersion, UInt8 patchVersion,
+												const CString& string) :
+											mMajorVersion(majorVersion), mMinorVersion(minorVersion),
+													mPatchVersion(patchVersion),
+													mString(string)
+											{}
 										SVersionInfo(UInt8 majorVersion, UInt8 minorVersion, UInt8 patchVersion) :
 											mMajorVersion(majorVersion), mMinorVersion(minorVersion),
 													mPatchVersion(patchVersion),
@@ -88,7 +94,8 @@ struct SVersionInfo {
 														(components.getCount() > 1) ?
 																(UInt8) components[1].getUInt32() : 0,
 														(components.getCount() > 2) ?
-																(UInt8) components[2].getUInt32() : 0);
+																(UInt8) components[2].getUInt32() : 0,
+														string);
 											}
 
 	// Properties

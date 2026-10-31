@@ -127,7 +127,8 @@ OV<SVersionInfo> CDynamicLibrary::getVersionInfo(const CFilesystemPath& filesyst
 		return OV<SVersionInfo>();
 
 	return OV<SVersionInfo>(
-			SVersionInfo(
+			SVersionInfo((UInt8) HIWORD(fixedFileInfo->dwFileVersionMS), (UInt8) LOWORD(fixedFileInfo->dwFileVersionMS),
+					(UInt8) HIWORD(fixedFileInfo->dwFileVersionLS),
 					CString((UInt32) HIWORD(fixedFileInfo->dwFileVersionMS)) + CString(OSSTR(".")) +
 							CString((UInt32) LOWORD(fixedFileInfo->dwFileVersionMS)) + CString(OSSTR(".")) +
 							CString((UInt32) HIWORD(fixedFileInfo->dwFileVersionLS)) + CString(OSSTR(".")) +
