@@ -408,6 +408,10 @@ OV<SError> sAddDictionary(CData& data, const CDictionary& dictionary)
 				break;
 
 			case SValue::kTypeData:
+				// Data, as a data URL
+				sAddString(data, CString(OSSTR("data:;base64,")) + iterator.getValue().getData().getBase64String());
+				break;
+
 			case SValue::kTypeOpaque:
 				// Invalid
 				return OV<SError>(sInvalidItemTypeError);
@@ -588,6 +592,16 @@ TVResult<SValue> sReadValue(const SInt8*& charPtr)
 
 		// Skip whitespace
 		sSkipWhitespace(charPtr);
+
+		// Check if has data prefix
+		if (result->hasPrefix(CString(OSSTR("data:;base64,")))) {
+			// Decode
+			CString	base64String = result->getSubString(CString(OSSTR("data:;base64,")).getLength());
+			CData	data = CData::fromBase64String(base64String);
+			if (data.getBase64String() == base64String)
+				// Data
+				return TVResult<SValue>(SValue(data));
+		}
 
 		return TVResult<SValue>(SValue(*result));
 	} else if (*charPtr == '{') {
