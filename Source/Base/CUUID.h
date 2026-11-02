@@ -29,30 +29,33 @@ class CUUID : public CHashable {
 
 	// Methods
 	public:
-						// Lifecycle methods
-						CUUID();
-						CUUID(const Bytes& bytes);
-						CUUID(const CData& data);
-						CUUID(const CString& string);
-						CUUID(const CUUID& other);
-						~CUUID();
+							// Lifecycle methods
+							CUUID();
+							CUUID(const Bytes& bytes);
+							CUUID(const CData& data);
+							CUUID(const CString& string);
+							CUUID(const CUUID& other);
+							~CUUID();
 
-						// CEquatable methods
-				bool	operator==(const CEquatable& other) const
-							{ return equals((const CUUID&) other); }
+							// CEquatable methods
+					bool	operator==(const CEquatable& other) const
+								{ return equals((const CUUID&) other); }
 
-						// CHashable methods
-				void	hashInto(CHashable::HashCollector& hashableHashCollector) const
-							{ getBase64String().hashInto(hashableHashCollector); }
+							// CHashable methods
+					void	hashInto(CHashable::HashCollector& hashableHashCollector) const
+								{ getBase64String().hashInto(hashableHashCollector); }
 
-						// Instance methods
-				CData	getData() const;
-				CString	getHexString() const;
-				CString	getBase64String() const
-							{ return getData().getBase64String().getSubString(0, 22); }
-				void	getBytes(Bytes& bytes) const;
+							// Instance methods
+					CData	getData() const;
+					CString	getHexString() const;
+					CString	getBase64String() const
+								{ return getData().getBase64String().getSubString(0, 22); }
+					void	getBytes(Bytes& bytes) const;
 
-				bool	equals(const CUUID& other) const;
+					bool	equals(const CUUID& other) const;
+
+							// Class methods
+		static	OV<CUUID>	getFrom(const CString& string);
 
 	// Properties
 	public:

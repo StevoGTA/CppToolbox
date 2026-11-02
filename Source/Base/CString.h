@@ -91,6 +91,7 @@ class CString : public CHashable {
 			kCharacterSetWhitespaceAndNewline,	// Whitespace and Newline character set (Unicode General Category Z*,
 												//	U000A ~ U000D, and U0085)
 			kCharacterSetDecimalDigit,			// 0 - 9
+			kCharacterSetHexDigit,				// 0 - 9, a - f, and A - F
 			kCharacterSetFloatingPoint,			// 0 - 9 and .
 			kCharacterSetLetter,				// Letter character set (Unicode General Category L* & M*)
 			kCharacterSetLowercaseLetter,		// Lowercase character set (Unicode General Category Ll)

@@ -978,6 +978,10 @@ bool CString::containsOnly(CharacterSet characterSet) const
 		// Decimal digit
 		return std::all_of(mString.begin(), mString.end(), ::isdigit);
 
+	case kCharacterSetHexDigit:
+		// Hex digit
+		return std::all_of(mString.begin(), mString.end(), ::isxdigit);
+
 	case kCharacterSetFloatingPoint:
 		// Floating Point
 		return std::all_of(mString.begin(), mString.end(), [](TCHAR ch){ return ::isdigit(ch) || (ch == L'.'); });
@@ -1035,6 +1039,11 @@ CString CString::filteredUsing(CharacterSet characterSet) const
 		case kCharacterSetDecimalDigit:
 			// Decimal digit
 			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::isdigit);
+			break;
+
+		case kCharacterSetHexDigit:
+			// Hex digit
+			std::copy_if(mString.begin(), mString.end(), std::back_inserter(string.mString), ::isxdigit);
 			break;
 
 		case kCharacterSetFloatingPoint:

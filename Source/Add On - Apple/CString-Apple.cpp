@@ -987,6 +987,9 @@ bool sIsCharacterInSet(UTF32Char utf32Char, CString::CharacterSet characterSet)
 	static	CFCharacterSetRef	sFloatingPointCharacterSet =
 										::CFCharacterSetCreateWithCharactersInString(kCFAllocatorDefault,
 												CFSTR("0123456789."));
+	static	CFCharacterSetRef	sHexDigitCharacterSet =
+										::CFCharacterSetCreateWithCharactersInString(kCFAllocatorDefault,
+												CFSTR("0123456789abcdefABCDEF"));
 	// Check character set
 	switch (characterSet) {
 		case CString::kCharacterSetControl:
@@ -1008,6 +1011,10 @@ bool sIsCharacterInSet(UTF32Char utf32Char, CString::CharacterSet characterSet)
 			// Decimal digit
 			return CFCharacterSetIsLongCharacterMember(
 					::CFCharacterSetGetPredefined(kCFCharacterSetDecimalDigit), utf32Char);
+
+		case CString::kCharacterSetHexDigit:
+			// Hex digit
+			return CFCharacterSetIsLongCharacterMember(sHexDigitCharacterSet, utf32Char);
 
 		case CString::kCharacterSetFloatingPoint:
 			// Floating point

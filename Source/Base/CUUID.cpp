@@ -73,7 +73,7 @@ class CUUID::Internals : public TReferenceCountableAutoDelete<Internals> {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CUUID
 
-const	CUUID	CUUID::mZero(CString(OSSTR("00000000-0000-0000-0000-000000000000")));
+const	CUUID	CUUID::mZero(CUUID::Bytes{});
 
 // MARK: Lifecycle methods
 
@@ -126,12 +126,10 @@ CString CUUID::getHexString() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return CString::make(OSSTR("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"),
-			mInternals->mBytes[0], mInternals->mBytes[1], mInternals->mBytes[2],
-			mInternals->mBytes[3], mInternals->mBytes[4], mInternals->mBytes[5],
-			mInternals->mBytes[6], mInternals->mBytes[7], mInternals->mBytes[8],
-			mInternals->mBytes[9], mInternals->mBytes[10], mInternals->mBytes[11],
-			mInternals->mBytes[12], mInternals->mBytes[13], mInternals->mBytes[14],
-			mInternals->mBytes[15]);
+			mInternals->mBytes[0], mInternals->mBytes[1], mInternals->mBytes[2], mInternals->mBytes[3],
+			mInternals->mBytes[4], mInternals->mBytes[5], mInternals->mBytes[6], mInternals->mBytes[7],
+			mInternals->mBytes[8], mInternals->mBytes[9], mInternals->mBytes[10], mInternals->mBytes[11],
+			mInternals->mBytes[12], mInternals->mBytes[13], mInternals->mBytes[14], mInternals->mBytes[15]);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -154,4 +152,20 @@ bool CUUID::equals(const CUUID& other) const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return ::memcmp(&mInternals->mBytes, &other.mInternals->mBytes, sizeof(Bytes)) == 0;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<CUUID> CUUID::getFrom(const CString& string)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup - groups of 8, 4, 4, 4, and 12 hex digits, separated by hyphens
+	TArray<CString>	components = string.components(CString::mHyphen);
+
+	return ((components.getCount() == 5) && (components[0].getLength() == 8) && (components[1].getLength() == 4) &&
+					(components[2].getLength() == 4) && (components[3].getLength() == 4) &&
+					(components[4].getLength() == 12) &&
+					CString(components, CString::mEmpty).containsOnly(CString::kCharacterSetHexDigit)) ?
+			OV<CUUID>(CUUID(string)) : OV<CUUID>();
 }
