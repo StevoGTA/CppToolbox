@@ -44,6 +44,7 @@ const	CString	CString::mSpace(OSSTR(" "));
 const	CString	CString::mSpaceX4(OSSTR("    "));
 const	CString	CString::mTab(OSSTR("\t"));
 const	CString	CString::mUnderscore(OSSTR("_"));
+const	CString	CString::mVerticalBar(OSSTR("|"));
 
 const	CString	CString::mLinefeed(OSSTR("\r"));
 const	CString	CString::mLineFeedNewline(OSSTR("\r\n"));

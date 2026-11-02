@@ -416,6 +416,7 @@ class CString : public CHashable {
 		static	const	CString		mSpaceX4;
 		static	const	CString		mTab;
 		static	const	CString		mUnderscore;
+		static	const	CString		mVerticalBar;
 
 		static	const	CString		mLinefeed;
 		static	const	CString		mLineFeedNewline;
