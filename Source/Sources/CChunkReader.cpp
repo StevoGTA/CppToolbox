@@ -54,7 +54,7 @@ TVResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::ChunkInfo>(_byteCount.getError()));
 			UInt32	byteCount = *_byteCount;
 
-			UInt64	nextChunkPos = getPos() + byteCount + (byteCount % 0x02);
+			UInt64	nextChunkPos = getPos() + byteCount + (byteCount & 1);
 
 			return TVResult<ChunkInfo>(ChunkInfo(*id, byteCount, getPos(), nextChunkPos));
 			}
@@ -68,7 +68,7 @@ TVResult<CChunkReader::ChunkInfo> CChunkReader::readChunkInfo() const
 			ReturnValueIfResultError(_byteCount, TVResult<CChunkReader::ChunkInfo>(_byteCount.getError()));
 			UInt64	byteCount = *_byteCount;
 
-			UInt64	nextChunkPos = getPos() + byteCount + (byteCount % 0x02);
+			UInt64	nextChunkPos = getPos() + byteCount + (byteCount & 1);
 
 			return TVResult<ChunkInfo>(ChunkInfo(*id, byteCount, getPos(), nextChunkPos));
 			}
