@@ -570,23 +570,23 @@ struct SQTstcoAtomPayload {
 		UInt32	mPacketGroupOffsets[];		// Offset to start of packet data from start of file
 };
 
-//// sample table Chunk Offset 64 Atom Payload
-//struct SQTco64AtomPayload {
-//			// Methods
-//	UInt32	getPacketGroupOffsetCount() const
-//				{ return EndianU32_BtoN(mPacketGroupOffsetCount); }
-//	UInt64	getPacketGroupOffset(UInt32 index) const
-//				{ return EndianU64_NtoB(mPacketGroupOffsets[index]); }
-//
-//	// Properties (in storage endian)
-//	private:
-//		UInt8	mVersion;
-//		UInt8	mFlags[3];
-//
-//		// For each packet group specified in the stsc Atom, the file offset is specified
-//		UInt32	mPacketGroupOffsetCount;
-//		UInt64	mPacketGroupOffsets[];		// Offset to start of packet data from start of file
-//};
+// Sample Table Chunk Offset 64 Atom Payload
+struct SQTco64AtomPayload {
+			// Methods
+	UInt32	getPacketGroupOffsetCount() const
+				{ return EndianU32_BtoN(mPacketGroupOffsetCount); }
+	UInt64	getPacketGroupOffset(UInt32 index) const
+				{ return EndianU64_BtoN(mPacketGroupOffsets[index]); }
+
+	// Properties (in storage endian)
+	private:
+		UInt8	mVersion;
+		UInt8	mFlags[3];
+
+		// For each packet group specified in the stsc Atom, the file offset is specified
+		UInt32	mPacketGroupOffsetCount;
+		UInt64	mPacketGroupOffsets[];		// Offset to start of packet data from start of file
+};
 
 //struct SQTmetaAtom {
 //	UInt8	mVersion;
@@ -636,14 +636,16 @@ struct CQuickTimeMediaFile::Internals {
 												const SQTsttsAtomPayload& sttsAtomPayload,
 												const SQTstscAtomPayload& stscAtomPayload,
 												const SQTstszAtomPayload& stszAtomPayload,
-												const OR<const SQTstcoAtomPayload>& stcoAtomPayload) :
+												const OR<const SQTstcoAtomPayload>& stcoAtomPayload,
+												const OR<const SQTco64AtomPayload>& co64AtomPayload) :
 											mAtomReader(atomReader), mSTSDAtom(stsdAtom),
 													mSTBLContainerAtom(stblContainerAtom),
 													mSTSDDescription(stsdDescription),
 													mSTTSAtomPayload(sttsAtomPayload),
 													mSTSCAtomPayload(stscAtomPayload),
 													mSTSZAtomPayload(stszAtomPayload),
-													mSTCOAtomPayload(stcoAtomPayload)
+													mSTCOAtomPayload(stcoAtomPayload),
+													mCO64AtomPayload(co64AtomPayload)
 											{}
 
 	const	SQTAudioSampleDescription&	getAudioSampleDescription() const
@@ -686,19 +688,13 @@ struct CQuickTimeMediaFile::Internals {
 											}
 
 			UInt32						getPacketGroupOffsetCount() const
-											{
-//												return (mSTCOAtomPayload != nil) ?
-//														mSTCOAtomPayload->getPacketGroupOffsetCount() :
-//														mCO64AtomPayload->getPacketGroupOffsetCount();
-												return mSTCOAtomPayload->getPacketGroupOffsetCount();
-											}
+											{ return mSTCOAtomPayload.hasReference() ?
+													mSTCOAtomPayload->getPacketGroupOffsetCount() :
+													mCO64AtomPayload->getPacketGroupOffsetCount(); }
 			UInt64						getPacketGroupOffset(UInt32 stcoBlockOffsetIndex) const
-											{
-//												return (mSTCOAtomPayload != nil) ?
-//														mSTCOAtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex) :
-//														mCO64AtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex);
-												return mSTCOAtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex);
-											}
+											{ return mSTCOAtomPayload.hasReference() ?
+													mSTCOAtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex) :
+													mCO64AtomPayload->getPacketGroupOffset(stcoBlockOffsetIndex); }
 
 	const	CAtomReader&					mAtomReader;
 	const	CAtomReader::Atom&				mSTSDAtom;
@@ -708,7 +704,7 @@ struct CQuickTimeMediaFile::Internals {
 	const	SQTstscAtomPayload&				mSTSCAtomPayload;
 	const	SQTstszAtomPayload&				mSTSZAtomPayload;
 	const	OR<const SQTstcoAtomPayload>	mSTCOAtomPayload;
-//	const	OR<const SQTco64AtomPayload>&	mCO64AtomPayload;
+	const	OR<const SQTco64AtomPayload>	mCO64AtomPayload;
 };
 
 // MARK: Instance methods
@@ -846,20 +842,22 @@ I<SMediaSource::ImportResult> CQuickTimeMediaFile::import(const SMediaSource::Im
 									atomReader.readAtomPayload(
 											stblContainerAtom->getAtom(MAKE_OSTYPE('c', 'o', '6', '4')));
 			if (!stcoAtomPayloadData.hasValue() && !co64AtomPayloadData.hasValue()) continue;
-			const	SQTstcoAtomPayload*	stcoAtomPayload =
-												stcoAtomPayloadData.hasValue() ?
-														(const SQTstcoAtomPayload*)
-																*stcoAtomPayloadData->getUInt8Buffer() :
-														nil;
-//			const	SQTco64AtomPayload*	co64AtomPayload =
-//												co64AtomPayloadData.hasValue() ?
-//														(const SQTco64AtomPayload*)
-//																*co64AtomPayloadData->getUInt8Buffer() :
-//														nil;
+			OR<const SQTstcoAtomPayload>	stcoAtomPayload =
+													stcoAtomPayloadData.hasValue() ?
+															OR<const SQTstcoAtomPayload>(
+																	*((const SQTstcoAtomPayload*)
+																			*stcoAtomPayloadData->getUInt8Buffer())) :
+															OR<const SQTstcoAtomPayload>();
+			OR<const SQTco64AtomPayload>	co64AtomPayload =
+													co64AtomPayloadData.hasValue() ?
+															OR<const SQTco64AtomPayload>(
+																	*((const SQTco64AtomPayload*)
+																			*co64AtomPayloadData->getUInt8Buffer())) :
+															OR<const SQTco64AtomPayload>();
 
 			// Internals
 			Internals	internals(atomReader, *stsdAtom, *stblContainerAtom, stsdDescription, sttsAtomPayload,
-								stscAtomPayload, stszAtomPayload, OR<const SQTstcoAtomPayload>(*stcoAtomPayload));
+								stscAtomPayload, stszAtomPayload, stcoAtomPayload, co64AtomPayload);
 
 			// Metadata
 			OR<CAtomReader::Atom>	metaAtom = trakContainerAtom->getAtom(MAKE_OSTYPE('m', 'e', 't', 'a'));

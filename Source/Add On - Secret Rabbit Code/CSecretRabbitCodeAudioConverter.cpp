@@ -198,7 +198,10 @@ TVResult<CAudioProcessor::SourceInfo> CSecretRabbitCodeAudioConverter::performIn
 	UInt32	frameCount =
 					src_callback_read(mInternals->mSRCState, srcRatio, audioFrames.getAllocatedFrameCount(),
 							(float*) audioFrames.getWriteInfo().getSegment(0));
-	if (frameCount == 0) return TVResult<SourceInfo>(SError::mEndOfData);
+	if (frameCount == 0)
+		// No frames
+		return TVResult<SourceInfo>(
+				mInternals->mPerformError.hasValue() ? *mInternals->mPerformError : SError::mEndOfData);
 
 	// Compose source info for the first frame returned
 	SourceInfo	sourceInfo(
@@ -218,6 +221,7 @@ void CSecretRabbitCodeAudioConverter::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
+	mInternals->mPerformError.removeValue();
 	mInternals->mSourceHasMoreToRead = true;
 	mInternals->mOutputStartTimeInterval.removeValue();
 	mInternals->mOutputFrameCount = 0;

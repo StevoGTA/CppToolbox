@@ -339,9 +339,8 @@ class CAggregateTimeIntervalProgress::Internals {
 		static	void	progressUpdated(const CAggregateableTimeIntervalProgress& progress, Internals* internals)
 							{
 								// Look up by id
-								internals->mInfoByIDLock.lockForReading();
+								internals->mInfoByIDLock.lockForWriting();
 								Info&	info = **internals->mInfoByID[progress.mID];
-								internals->mInfoByIDLock.unlockForReading();
 
 								// Update value
 								Float32	value =
@@ -356,6 +355,9 @@ class CAggregateTimeIntervalProgress::Internals {
 
 								// Update value
 								internals->mProgress.setValue(value);
+
+								// Done
+								internals->mInfoByIDLock.unlockForWriting();
 							}
 
 		CAggregateTimeIntervalProgress&	mProgress;

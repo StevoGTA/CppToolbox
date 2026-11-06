@@ -14,22 +14,26 @@
 
 class CCredentialStore::Internals {
 	public:
-					Internals(const CString& service) : mService(service) {}
+					Internals(const CString& service, const OV<CString>& group) : mService(service), mGroup(group) {}
 
 		CDictionary	getQuery(const CString& key) const
 						{
-							// Generic password item in the data protection keychain, so access is scoped by
-							//	signing identity rather than by user prompt
+							// Generic password item in the data protection keychain, so access is scoped by signing
+							//	identity rather than by user prompt
 							CDictionary	query;
 							query.set(CString(kSecClass), CString(kSecClassGenericPassword));
 							query.set(CString(kSecAttrService), mService);
 							query.set(CString(kSecAttrAccount), key);
 							query.set(CString(kSecUseDataProtectionKeychain), true);
+							if (mGroup.hasValue())
+								// Keychain access group
+								query.set(CString(kSecAttrAccessGroup), *mGroup);
 
 							return query;
 						}
 
-		CString	mService;
+		CString		mService;
+		OV<CString>	mGroup;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,10 +43,17 @@ class CCredentialStore::Internals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
+CCredentialStore::CCredentialStore(const CString& service, const CString& group)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	mInternals = new Internals(service, OV<CString>(group));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 CCredentialStore::CCredentialStore(const CString& service)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals(service);
+	mInternals = new Internals(service, OV<CString>());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

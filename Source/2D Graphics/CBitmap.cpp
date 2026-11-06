@@ -598,7 +598,7 @@ CBitmap::CBitmap(const CBitmap& other, RotationOperation rotationOperation)
 	SInt32		B = 0;
 	SInt32		C = 0;
 	SInt32		bytesPerPixel = (SInt32) other.mInternals->mBytesPerPixel;
-	SInt32		bytesPerRow = other.mInternals->mBytesPerRow;
+	SInt32		bytesPerRow = mInternals->mBytesPerRow;
 	S2DSizeS32	size = other.mInternals->mSize;
 	switch ((UInt32) rotationOperation) {
 		case kRotationOperationRotateNone:

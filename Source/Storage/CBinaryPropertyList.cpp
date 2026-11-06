@@ -559,6 +559,10 @@ AssertFailUnimplemented();
 					return TVResult<SValue>(*array);
 				}
 			}
+
+			// Invalid
+			LogErrorAndReturnValue(sInvalidMarkerError, CString(OSSTR("validating array element marker")),
+					TVResult<SValue>(sInvalidMarkerError));
 		}
 
 		case kMarkerTypeBooleanTrue:

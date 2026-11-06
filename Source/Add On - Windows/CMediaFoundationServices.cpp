@@ -57,6 +57,9 @@ TCIResult<IMFTransform> CMediaFoundationServices::createTransform(MFT_REGISTER_T
 	UINT32					count;
 	HRESULT					result = ::MFTEnumEx(guidCategory, flags, NULL, &registerTypeInfo, &activates, &count);
 	ReturnValueIfFailed(result, CString(OSSTR("MFTEnumEx")), TCIResult<IMFTransform>(SErrorFromHRESULT(result)));
+	if (count == 0)
+		// No matching transform
+		return TCIResult<IMFTransform>(SErrorFromHRESULT(MF_E_TOPO_CODEC_NOT_FOUND));
 
 	// Create the transform
 	IMFTransform*	transform;
@@ -98,6 +101,7 @@ void CMediaFoundationServices::iterateOutputMediaTypes(IMFTransform* transform,
 		if (result != S_OK)
 			// All done
 			break;
+		CI<IMFMediaType>	mediaTypeInstance(mediaType);
 
 		// Get details
 		UINT32	sampleRate;
@@ -320,6 +324,7 @@ OV<SError> CMediaFoundationServices::setOutputType(IMFTransform* transform, cons
 		if (result != S_OK)
 			// All done
 			return OV<SError>(sNoMatchingOutputMediaType);
+		CI<IMFMediaType>	mediaTypeInstance(mediaType);
 
 		// Check if is applicable
 		if (!isApplicableProc(mediaType))

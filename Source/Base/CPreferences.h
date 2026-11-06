@@ -274,7 +274,7 @@ class CPreferences {
 			// Methods
 			public:
 								// Lifecycle methods
-								UInt64Pref(OSStringType keyString, UInt32 defaultValue = 0) :
+								UInt64Pref(OSStringType keyString, UInt64 defaultValue = 0) :
 									mKeyString(keyString), mDefaultValue(defaultValue)
 									{}
 

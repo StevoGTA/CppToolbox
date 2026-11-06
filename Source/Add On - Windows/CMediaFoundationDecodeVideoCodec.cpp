@@ -179,6 +179,9 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 					MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_LOCALMFT | MFT_ENUM_FLAG_SORTANDFILTER, &info, NULL,
 					&activates, &count);
 	ReturnErrorIfFailed(result, CString(OSSTR("MFTEnumEx")));
+	if (count == 0)
+		// No matching decoder
+		return OV<SError>(CCodec::unsupportedError(CString(mInternals->mCodecID, true)));
 
 	// Create the Video Decoder
 	IMFTransform*	transform;
@@ -219,6 +222,7 @@ OV<SError> CMediaFoundationDecodeVideoCodec::setup(const CVideoProcessor::Format
 		if (result != S_OK)
 			// No matching output media types
 			return OV<SError>(sNoMatchingOutputMediaTypes);
+		CI<IMFMediaType>	outputMediaType(mediaType);
 
 		// Get info
 		GUID	codecSubType;

@@ -80,6 +80,10 @@ template <typename T> struct TBuffer {
 						{ return mStorage[index]; }
 		TBuffer<T>&	operator=(const TBuffer<T>& other)
 						{
+							// Check if assignment to self
+							if (this == &other)
+								return *this;
+
 							// Check if need to cleanup
 							if ((mReferenceCount != nil) && (--(*mReferenceCount) == 0)) {
 								// Cleanup

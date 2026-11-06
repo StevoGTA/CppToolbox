@@ -11,13 +11,15 @@
 class CTimer::Internals {
 	public:
 		Internals(CTimer& timer, UniversalTimeInterval interval, bool repeats, CTimer::Proc proc,
-				void* userData)
+				void* userData, CTimer::Options options)
 			{
-				// Setup
+				// Setup - a wall clock timer keeps counting through sleep and fires on wake when overdue
 				dispatch_source_t	dispatchSourceTimer =
 											dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,
 													dispatch_get_main_queue());
-				dispatch_source_set_timer(dispatchSourceTimer, DISPATCH_TIME_NOW, interval * NSEC_PER_SEC, 0);
+				dispatch_source_set_timer(dispatchSourceTimer,
+						(options & CTimer::kOptionsWallClock) ? dispatch_walltime(NULL, 0) : DISPATCH_TIME_NOW,
+						interval * NSEC_PER_SEC, 0);
 				dispatch_source_set_event_handler(dispatchSourceTimer, ^{
 					// Call proc
 					proc(timer, userData);
@@ -59,7 +61,7 @@ CTimer::CTimer(UniversalTimeInterval interval, Proc proc, void* userData, bool r
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Setup
-	mInternals = new Internals(*this, interval, repeats, proc, userData);
+	mInternals = new Internals(*this, interval, repeats, proc, userData, options);
 
 	// Check options
 	if (options & kOptionsAutoResume)

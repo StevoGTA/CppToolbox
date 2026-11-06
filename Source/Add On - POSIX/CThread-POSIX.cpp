@@ -108,10 +108,8 @@ void CThread::start()
 	AssertFailIf(result != 0);
 
 	result = ::pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	if (result != 0) {
+	if (result != 0)
 		LogError(SErrorFromPOSIXerror(result), CString(OSSTR("setting pthread detached state")));
-		::pthread_attr_destroy(&attr);
-	}
 
 	// Create thread
 	result = ::pthread_create(&mInternals->mPThread, &attr, (void* (*)(void*)) Internals::threadProc, mInternals);

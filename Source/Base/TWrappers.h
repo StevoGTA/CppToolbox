@@ -67,6 +67,10 @@ template <typename T> class I : public CHashable {
 
 				I<T>&	operator=(const I<T>& other)
 							{
+								// Check if assignment to self
+								if (this == &other)
+									return *this;
+
 								// Check for instance
 								if (--(*mReferenceCount) == 0) {
 									// All done
@@ -179,6 +183,10 @@ template <typename T> struct OI {
 
 		OI<T>&	operator=(const OI<T>& other)
 					{
+						// Check if assignment to self
+						if (this == &other)
+							return *this;
+
 						// Check for instance
 						if ((mInstance != nil) && (--(*mReferenceCount) == 0)) {
 							// All done

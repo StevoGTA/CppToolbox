@@ -129,22 +129,26 @@ HRESULT CAudioPlayerAudioClientActivation::ActivateCompleted(
 		processHRESULT(activationResult, OSSTR("checking status in ActivateCompleted()"));
 	else {
 		// Get the Audio Client
-		audioInterface->QueryInterface(IID_PPV_ARGS(&mAudioClient));
+		result = audioInterface->QueryInterface(IID_PPV_ARGS(&mAudioClient));
+		audioInterface->Release();
+		processHRESULT(result, OSSTR("QueryInterface() for IAudioClient3"));
 
-		// Configure
-		AudioClientProperties	audioClientProperties = {0};
-		audioClientProperties.cbSize = sizeof(AudioClientProperties);
-		audioClientProperties.eCategory = AudioCategory_Media;
-		result = mAudioClient->SetClientProperties(&audioClientProperties);
-		processHRESULT(result, OSSTR("SetClientProperties()"));
+		if (SUCCEEDED(result)) {
+			// Configure
+			AudioClientProperties	audioClientProperties = {0};
+			audioClientProperties.cbSize = sizeof(AudioClientProperties);
+			audioClientProperties.eCategory = AudioCategory_Media;
+			result = mAudioClient->SetClientProperties(&audioClientProperties);
+			processHRESULT(result, OSSTR("SetClientProperties()"));
+		}
 
-		if (!mError.hasValue()) {
+		if (SUCCEEDED(result)) {
 			// Get Mix Format
 			result = mAudioClient->GetMixFormat(&mMixFormat);
 			processHRESULT(result, OSSTR("GetMixFormat()"));
 		}
 
-		if (!mError.hasValue()) {
+		if (SUCCEEDED(result)) {
 			// Get periods
 			UINT32	defaultPeriodInFrames, fundamentalPeriodInFrames, minPeriodInFrames;
 			result =
@@ -153,7 +157,7 @@ HRESULT CAudioPlayerAudioClientActivation::ActivateCompleted(
 			processHRESULT(result, OSSTR("GetSharedModeEnginePeriod()"));
 		}
 
-		if (!mError.hasValue()) {
+		if (SUCCEEDED(result)) {
 			// Initialize
 			result =
 					mAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
@@ -162,19 +166,19 @@ HRESULT CAudioPlayerAudioClientActivation::ActivateCompleted(
 			processHRESULT(result, OSSTR("Initialize()"));
 		}
 
-		if (!mError.hasValue()) {
+		if (SUCCEEDED(result)) {
 			// Get the buffer size
 			result = mAudioClient->GetBufferSize(&mBufferFrames);
 			processHRESULT(result, OSSTR("GetBufferSize()"));
 		}
 
-		if (!mError.hasValue()) {
+		if (SUCCEEDED(result)) {
 			// Get the Render Client
 			result = mAudioClient->GetService(__uuidof(IAudioRenderClient), (void**) &mAudioRenderClient);
 			processHRESULT(result, OSSTR("GetService() for IAudioRenderClient"));
 		}
 
-		if (!mError.hasValue()) {
+		if (SUCCEEDED(result)) {
 			// Get Simple Audio Volume
 			result = mAudioClient->GetService(__uuidof(ISimpleAudioVolume), (void**) &mSimpleAudioVolume);
 			processHRESULT(result, OSSTR("GetService() for ISimpleAudioVolume"));

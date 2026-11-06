@@ -213,11 +213,11 @@ class CWorkItemQueue::Internals {
 												}
 											}
 
-											// Check empty
-											checkEmpty();
-
 											// All done
 											mWorkItemInfosLock.unlock();
+
+											// Check empty
+											checkEmpty();
 										}
 
 				void				pause()
@@ -295,11 +295,11 @@ class CWorkItemQueue::Internals {
 												mItemsProgress->addCompletedItemsCount(1);
 											mInFlightWorkItemsCount.subtract(1);
 
-											// Check empty
-											checkEmpty();
-
 											// All done
 											mWorkItemInfosLock.unlock();
+
+											// Check empty
+											checkEmpty();
 										}
 
 				void				checkEmpty()

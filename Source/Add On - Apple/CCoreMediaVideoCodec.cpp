@@ -39,7 +39,13 @@ class CCoreMediaDecodeVideoCodec::Internals {
 		static	void	decompressionOutputCallback(void* decompressionOutputUserData, void* sourceFrameUserData,
 								OSStatus status, VTDecodeInfoFlags decodeInfoFlags, CVImageBufferRef imageBufferRef,
 								CMTime presentationTime, CMTime presentationDuration)
-							{ *((CVImageBufferRef*) sourceFrameUserData) = (CVBufferRef) ::CFRetain(imageBufferRef); }
+							{
+								// Check for image buffer
+								if ((status == noErr) && (imageBufferRef != nil))
+									// Store
+									*((CVImageBufferRef*) sourceFrameUserData) =
+											(CVBufferRef) ::CFRetain(imageBufferRef);
+							}
 
 		OSType						mCodecID;
 		I<CMediaPacketSource>		mMediaPacketSource;
@@ -176,7 +182,7 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
 
 	// Decode frame
-	CVImageBufferRef	imageBufferRef;
+	CVImageBufferRef	imageBufferRef = nil;
 	VTDecodeInfoFlags	decodeInfoFlags;
 	status =
 			::VTDecompressionSessionDecodeFrame(mInternals->mDecompressionSessionRef, sampleBufferRef, 0,
@@ -184,6 +190,9 @@ TIResult<CVideoFrame> CCoreMediaDecodeVideoCodec::decode()
 	::CFRelease(sampleBufferRef);
 	LogOSStatusIfFailedAndReturnValue(status, CString(OSSTR("VTDecompressionSessionDecodeFrame")),
 			TIResult<CVideoFrame>(SErrorFromOSStatus(status)));
+	if (imageBufferRef == nil)
+		// No image buffer
+		return TIResult<CVideoFrame>(SErrorFromOSStatus(kVTVideoDecoderBadDataErr));
 
 	// Prepare return info
 	TIResult<CVideoFrame>	result(

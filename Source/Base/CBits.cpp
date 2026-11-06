@@ -21,9 +21,13 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						mStorage = (UInt8*) ::calloc(bytes, 1);
 
 						// Check initial value
-						if (initialValue)
+						if (initialValue) {
 							// Set all bits
 							::memset(mStorage, 0xFF, mUsed / 8);
+							if ((mUsed % 8) > 0)
+								// Set remaining bits
+								mStorage[mUsed / 8] = (UInt8) ((1 << (mUsed % 8)) - 1);
+						}
 					}
 				Internals(UInt32 count, const CData& data) :
 					TCopyOnWriteReferenceCountable(), mUsed(count)
@@ -32,6 +36,13 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						mAvailable = (UInt32) data.getByteCount() * 8;
 						mStorage = (UInt8*) ::malloc(mAvailable);
 						data.copyBytes(mStorage);
+					}
+				Internals(const Internals& other) :
+					TCopyOnWriteReferenceCountable(), mStorage((UInt8*) ::malloc(other.mAvailable / 8)),
+							mAvailable(other.mAvailable), mUsed(other.mUsed)
+					{
+						// Copy storage
+						::memcpy(mStorage, other.mStorage, mAvailable / 8);
 					}
 				~Internals()
 					{
@@ -44,8 +55,9 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						if (index >= mAvailable) {
 							// Resize
 							UInt32	bytes = (index + 8) / 8;
-							mAvailable = bytes * 8;
 							mStorage = (UInt8*) ::realloc(mStorage, bytes);
+							::memset(mStorage + mAvailable / 8, 0, bytes - mAvailable / 8);
+							mAvailable = bytes * 8;
 						}
 
 						// Setup
@@ -58,6 +70,10 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						else
 							// Clear
 							mStorage[byteIndex] &= ~(1 << bitIndex);
+
+						// Update used
+						if (index >= mUsed)
+							mUsed = index + 1;
 					}
 
 		UInt8*	mStorage;
@@ -124,6 +140,9 @@ bool CBits::get(UInt32 index) const
 CBits& CBits::set(UInt32 index, bool value)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
 	// Set
 	mInternals->set(index, value);
 

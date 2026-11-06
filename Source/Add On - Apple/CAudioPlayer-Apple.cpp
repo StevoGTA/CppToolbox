@@ -163,6 +163,7 @@ void CAudioEngine::setMaxAudioPlayers(UInt32 maxAudioPlayers)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mMaxAudioPlayers = maxAudioPlayers;
+	mConnectedAudioPlayers = CBits(maxAudioPlayers);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

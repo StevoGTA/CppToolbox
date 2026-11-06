@@ -18,6 +18,7 @@ class CCredentialStore {
 	// Methods
 	public:
 							// Lifecycle methods
+							CCredentialStore(const CString& service, const CString& group);
 							CCredentialStore(const CString& service);
 							~CCredentialStore();
 

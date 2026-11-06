@@ -253,6 +253,10 @@ CFilesystemPath CFilesystemPath::appendingExtension(const CString& extension) co
 CFilesystemPath& CFilesystemPath::operator=(const CFilesystemPath& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
 	// Change
 	mInternals->removeReference();
 	mInternals = other.mInternals->addReference();

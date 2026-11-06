@@ -643,7 +643,10 @@ CString CString::uppercase(const CString* string, void* userData)
 CString CString::fromPascal(const CData& data)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return CString((const void*) (*data.getUInt8Buffer() + 1), (UInt32) data.getByteCount() - 1, kEncodingMacRoman);
+	return !data.isEmpty() ?
+			CString((const void*) (*data.getUInt8Buffer() + 1),
+					std::min<UInt64>(data.getUInt8Buffer()[0], data.getByteCount() - 1), kEncodingMacRoman) :
+			mEmpty;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

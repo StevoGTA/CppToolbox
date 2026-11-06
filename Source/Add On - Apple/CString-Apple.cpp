@@ -861,6 +861,10 @@ bool CString::containsOnly(CharacterSet characterSet) const
 CString& CString::operator=(const CString& other)
 //----------------------------------------------------------------------------------------------------------------------
 {
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
 	// Bye bye to us
 	::CFRelease(mStringRef);
 

@@ -370,6 +370,9 @@ TVResult<CBitmap> sDecodeJPEGData(const CData& data)
 	// Read parameters
 	jpeg_read_header(&jpegDecompressInfo, TRUE);
 
+	// Output RGB
+	jpegDecompressInfo.out_color_space = JCS_RGB;
+
 	// Start the decompressor
 	jpeg_start_decompress(&jpegDecompressInfo);
 

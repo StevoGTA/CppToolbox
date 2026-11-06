@@ -9,11 +9,9 @@
 
 class CVideoProcessor::Internals {
 	public:
-		Internals() : mVideoProcessor(nil) {}
-		~Internals()
-			{ Delete(mVideoProcessor); }
+		Internals() {}
 
-		I<CVideoProcessor>*	mVideoProcessor;
+		OV<I<CVideoProcessor> >	mVideoProcessor;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -43,7 +41,7 @@ OV<SError> CVideoProcessor::connectInput(const I<CVideoProcessor>& videoProcesso
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Store
-	mInternals->mVideoProcessor = new I<CVideoProcessor>(videoProcessor);
+	mInternals->mVideoProcessor.setValue(videoProcessor);
 
 	return OV<SError>();
 }
@@ -60,7 +58,7 @@ void CVideoProcessor::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
-	if (mInternals->mVideoProcessor != nil)
+	if (mInternals->mVideoProcessor.hasValue())
 		// Set source window
 		(*mInternals->mVideoProcessor)->setMediaSegment(mediaSegment);
 }
@@ -70,7 +68,7 @@ void CVideoProcessor::seek(UniversalTimeInterval timeInterval)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Check for instance
-	if (mInternals->mVideoProcessor != nil)
+	if (mInternals->mVideoProcessor.hasValue())
 		// Seek
 		(*mInternals->mVideoProcessor)->seek(timeInterval);
 }

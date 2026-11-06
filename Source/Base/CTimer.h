@@ -20,7 +20,8 @@ class CTimer {
 	public:
 		enum Options {
 			kOptionsNone		= 0,
-			kOptionsAutoResume	= 1 << 0,
+			kOptionsWallClock	= 1 << 0,
+			kOptionsAutoResume	= 1 << 1,
 		};
 
 	// Classes

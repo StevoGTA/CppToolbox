@@ -25,6 +25,10 @@ template <typename T> struct CI {
 
 	CI<T>&	operator=(const CI<T>& other)
 				{
+					// Check if assignment to self
+					if (this == &other)
+						return *this;
+
 					// Check for instance
 					if (--(*mReferenceCount) == 0) {
 						// All done
@@ -82,6 +86,10 @@ template <typename T> struct OCI {
 
 	OCI<T>&	operator=(const OCI<T>& other)
 				{
+					// Check if assignment to self
+					if (this == &other)
+						return *this;
+
 					// One less reference
 					if (--(*mReferenceCount) == 0) {
 						// All done

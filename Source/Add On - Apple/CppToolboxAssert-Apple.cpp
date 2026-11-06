@@ -26,7 +26,7 @@ void eAssertHandleProc(const SError& error, const char* file, UInt32 fileByteCou
 		// Log symbols
 		for (int i = 0; i < size; i++)
 			// Log this symbol
-			CLogServices::logMessage(CString(symbols[i], 1024, CString::kEncodingUTF8));
+			CLogServices::logMessage(CString(symbols[i], ::strlen(symbols[i]), CString::kEncodingUTF8));
 		::free(symbols);
 	} else
 		// Unable to log symbols

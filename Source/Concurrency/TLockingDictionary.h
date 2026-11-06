@@ -270,7 +270,15 @@ template <typename T> class TNLockingDictionary : public TLockingDictionary<T> {
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: TLockingArrayDictionary
 
-template <typename T> class TLockingArrayDictionary : public TLockingDictionary<TNArray<T> > {};
+template <typename T> class TLockingArrayDictionary : public TLockingDictionary<TNArray<T> > {
+	// Methods
+	public:
+		// Lifecycle methods
+		TLockingArrayDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
+				SValue::OpaqueEqualsProc opaqueEqualsProc = nil, SValue::OpaqueDisposeProc opaqueDisposeProc = nil) :
+			TLockingDictionary<TNArray<T> >(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
+			{}
+};
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - TNLockingArrayDictionary
@@ -278,6 +286,11 @@ template <typename T> class TLockingArrayDictionary : public TLockingDictionary<
 template <typename T> class TNLockingArrayDictionary : public TLockingArrayDictionary<T> {
 	// Methods
 	public:
+				// Lifecycle methods
+				TNLockingArrayDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+					TLockingArrayDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc, dispose)
+					{}
+
 				// Instance methods
 		void	add(const CString& key, const T& item)
 					{
@@ -334,6 +347,13 @@ template <typename T> class TNLockingArrayDictionary : public TLockingArrayDicti
 						// Unlock
 						TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
 					}
+
+	private:
+								// Class methods
+		static	TNArray<T>*		copy(SValue::Opaque opaque)
+									{ return new TNArray<T>(*((TNArray<T>*) opaque)); }
+		static	void			dispose(SValue::Opaque opaque)
+									{ TNArray<T>* array = (TNArray<T>*) opaque; Delete(array); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

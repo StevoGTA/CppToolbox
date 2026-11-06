@@ -202,7 +202,10 @@ OV<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 		status =
 				::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, Internals::fillBufferData,
 						mInternals, &mInternals->mDecodeFramesToIgnore, &audioBufferList, nil);
-		if (status != noErr) return mInternals->mFillBufferDataError;
+		if (status != noErr)
+			// Error
+			return mInternals->mFillBufferDataError.hasValue() ?
+					mInternals->mFillBufferDataError : OV<SError>(SErrorFromOSStatus(status));
 		if (mInternals->mDecodeFramesToIgnore == 0) return OV<SError>(SError::mEndOfData);
 
 		// Done ignoring
@@ -214,7 +217,10 @@ OV<SError> CCoreAudioDecodeAudioCodec::decodeInto(CAudioFrames& audioFrames)
 	status =
 			::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, Internals::fillBufferData, mInternals,
 					&frameCount, &audioBufferList, nil);
-	if (status != noErr) return mInternals->mFillBufferDataError;
+	if (status != noErr)
+		// Error
+		return mInternals->mFillBufferDataError.hasValue() ?
+				mInternals->mFillBufferDataError : OV<SError>(SErrorFromOSStatus(status));
 	if (frameCount == 0) return OV<SError>(SError::mEndOfData);
 
 	// Update

@@ -27,7 +27,7 @@ struct SMPEG4 {
 				UInt32	getPacketGroupOffsetCount() const
 							{ return EndianU32_BtoN(mPacketGroupOffsetCount); }
 				UInt64	getPacketGroupOffset(UInt32 index) const
-							{ return EndianU64_NtoB(mPacketGroupOffsets[index]); }
+							{ return EndianU64_BtoN(mPacketGroupOffsets[index]); }
 
 			// Properties (in storage endian)
 			private:

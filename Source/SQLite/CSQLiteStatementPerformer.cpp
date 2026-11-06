@@ -106,8 +106,16 @@ class CSQLiteStatement {
 								while (sqlite3_step(statement) == SQLITE_ROW) {
 									// Call proc
 									OV<SError>	error = mSQLiteResultsRowProc(sqliteResultsRow, mUserData);
-									ReturnErrorIfError(error);
+									if (error.hasValue()) {
+										// Cleanup
+										sqlite3_finalize(statement);
+
+										return error;
+									}
 								}
+
+								// Cleanup
+								sqlite3_finalize(statement);
 
 								return OV<SError>();
 							} else {
@@ -125,6 +133,9 @@ class CSQLiteStatement {
 								if (mLastInsertRowIDProc != nil)
 									// Call proc
 									mLastInsertRowIDProc(sqlite3_last_insert_rowid(database), mUserData);
+
+								// Cleanup
+								sqlite3_finalize(statement);
 
 								return OV<SError>();
 							}

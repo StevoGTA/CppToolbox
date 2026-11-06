@@ -93,6 +93,9 @@ OV<SError> CMediaFoundationDecodeAudioCodec::setup(const SAudio::ProcessingForma
 													MFT_ENUM_FLAG_SORTANDFILTER,
 											&info, NULL, &activates, &count);
 	ReturnErrorIfFailed(result, CString(OSSTR("MFTEnumEx")));
+	if (count == 0)
+		// No matching decoder
+		return OV<SError>(CCodec::unsupportedError(CString(mInternals->mCodecID, true)));
 
 	// Create the Audio Decoder
 	IMFTransform*	transform;

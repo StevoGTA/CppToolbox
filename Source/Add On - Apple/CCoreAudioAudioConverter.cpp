@@ -166,7 +166,7 @@ OV<SError> CCoreAudioAudioConverter::connectInput(const I<CAudioProcessor>& audi
 
 	// Create Audio Converter
 	OSStatus	status = ::AudioConverterNew(&sourceFormat, &destinationFormat, &mInternals->mAudioConverterRef);
-	LogOSStatusIfFailed(status, CString(OSSTR("AudioConverterNew")));
+	ReturnErrorIfFailed(status, CString(OSSTR("AudioConverterNew")));
 
 	if (audioProcessingFormat.getSampleRate() != mOutputAudioProcessingFormat->getSampleRate()) {
 		// Highest quality SRC
@@ -221,7 +221,11 @@ TVResult<CAudioProcessor::SourceInfo> CCoreAudioAudioConverter::performInto(CAud
 	OSStatus	status =
 						::AudioConverterFillComplexBuffer(mInternals->mAudioConverterRef, Internals::fillBufferData,
 								mInternals, &frameCount, mInternals->mOutputAudioBufferList, nil);
-	if (status != noErr) return TVResult<SourceInfo>(*mInternals->mFillBufferDataError);
+	if (status != noErr)
+		// Error
+		return TVResult<SourceInfo>(
+				mInternals->mFillBufferDataError.hasValue() ?
+						*mInternals->mFillBufferDataError : SErrorFromOSStatus(status));
 	if (frameCount == 0) return TVResult<SourceInfo>(SError::mEndOfData);
 
 	// Compose source info for the first frame returned

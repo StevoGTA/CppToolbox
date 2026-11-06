@@ -20,8 +20,15 @@ class CThread::Internals {
 								const CString& name) :
 							mIsRunning(true), mThreadProc(threadProc), mThreadProcUserData(userData), mThreadName(name),
 									mThread(thread),
-									mThreadRef(::GetCurrentThreadId()), mThreadHandle(nullptr)
+									mThreadRef(0), mThreadHandle(nullptr)
 							{}
+						~Internals()
+							{
+								// Check if have thread handle
+								if (mThreadHandle != nullptr)
+									// Close
+									::CloseHandle(mThreadHandle);
+							}
 
 		static	DWORD	threadProc(void* userData)
 							{
@@ -107,7 +114,7 @@ void CThread::start()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Create thread
-	mInternals->mThreadHandle = ::CreateThread(NULL, 0, Internals::threadProc, mInternals, 0, NULL);
+	mInternals->mThreadHandle = ::CreateThread(NULL, 0, Internals::threadProc, mInternals, 0, &mInternals->mThreadRef);
 	::SetThreadDescription(mInternals->mThreadHandle, mInternals->mThreadName.getOSString());
 }
 
