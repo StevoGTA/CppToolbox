@@ -14,6 +14,7 @@ class CImage {
 	// Enums
 	public:
 		enum Type {
+			kTypeBMP	= MAKE_OSTYPE('B', 'M', 'P', ' '),
 			kTypeJPEG	= MAKE_OSTYPE('J', 'P', 'E', 'G'),
 			kTypePNG	= MAKE_OSTYPE('P', 'N', 'G', ' '),
 			kTypeNV12	= MAKE_OSTYPE('N', 'V', '1', '2'),

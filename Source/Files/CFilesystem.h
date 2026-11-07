@@ -115,8 +115,8 @@ class CFilesystem {
 		static	OV<SError>						revealInFinder(const TArray<CFilesystemPath>& filesystemPaths);
 		static	OV<SError>						revealInFinder(const TArray<CFile>& files)
 													{ return revealInFinder(CFile::getFilesystemPaths(files)); }
-		static	OV<SError>						revealInFinder(const CFile& file)
-													{ return revealInFinder(TSArray<CFile>(file)); }
+		static	OV<SError>						revealInFinder(const CFilesystemPath& filesystemPath)
+													{ return revealInFinder(TSArray<CFilesystemPath>(filesystemPath)); }
 #endif
 #if defined(TARGET_OS_WINDOWS)
 	#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
@@ -124,6 +124,9 @@ class CFilesystem {
 														const TArray<CFilesystemPath>& filesystemPaths);
 		static	OV<SError>						revealInFileExplorer(const TArray<CFile>& files)
 													{ return revealInFileExplorer(CFile::getFilesystemPaths(files)); }
+		static	OV<SError>						revealInFileExplorer(const CFilesystemPath& filesystemPath)
+													{ return revealInFileExplorer(
+															TSArray<CFilesystemPath>(filesystemPath)); }
 	#endif
 #endif
 

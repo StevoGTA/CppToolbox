@@ -46,6 +46,8 @@ static	SError	sErrorUnableToEncode(sErrorDomain, 4, CString(OSSTR("Unable to enc
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc declarations
 
+static	TVResult<CBitmap>	sDecodeBMPData(const CData& data);
+
 static	TVResult<CBitmap>	sDecodeJPEGData(const CData& data);
 static	TVResult<CData>		sEncodeJPEGData(const CBitmap& bitmap);
 static	void				sJPEGDestinationInit(j_compress_ptr jpegInfoPtr);
@@ -123,6 +125,10 @@ TVResult<CBitmap> CImage::getBitmap() const
 
 	// Check image type
 	switch (*mInternals->mType) {
+		case kTypeBMP:
+			// BMP
+			return sDecodeBMPData(mInternals->mData);
+
 		case kTypeJPEG:
 			// JPEG
 			return sDecodeJPEGData(mInternals->mData);
@@ -173,6 +179,12 @@ OV<SError> CImage::decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const
 
 	// Check image type
 	switch (*mInternals->mType) {
+		case kTypeBMP:
+			// BMP
+			AssertFailUnimplemented();
+
+			return OV<SError>(sErrorUnableToDecode);
+
 		case kTypeJPEG:
 			// JPEG
 			AssertFailUnimplemented();
@@ -214,7 +226,11 @@ OV<CImage::Type> CImage::getTypeFromResourceName(const CString& resourceName)
 	CString	resourceNameUse = resourceName.lowercased();
 
 	// Check name
-	if (resourceNameUse.hasSuffix(CString(OSSTR("jpg"))) ||
+	if (resourceNameUse.hasSuffix(CString(OSSTR("bmp"))) ||
+			resourceNameUse.hasSuffix(CString(OSSTR("dib"))))
+		// BMP
+		return OV<Type>(kTypeBMP);
+	else if (resourceNameUse.hasSuffix(CString(OSSTR("jpg"))) ||
 			resourceNameUse.hasSuffix(CString(OSSTR("jpeg"))) ||
 			resourceNameUse.hasSuffix(CString(OSSTR("jpe"))) ||
 			resourceNameUse.hasSuffix(CString(OSSTR("jif"))) ||
@@ -240,7 +256,10 @@ OV<CImage::Type> CImage::getTypeFromMIMEType(const CString& MIMEType)
 		MIMETypeUse = CString(OSSTR("image/")) + MIMETypeUse;
 
 	// Check MIME type
-	if ((MIMETypeUse == CString(OSSTR("image/jpeg"))) || (MIMETypeUse == CString(OSSTR("image/jpg"))))
+	if ((MIMETypeUse == CString(OSSTR("image/bmp"))) || (MIMETypeUse == CString(OSSTR("image/x-ms-bmp"))))
+		// BMP
+		return OV<Type>(kTypeBMP);
+	else if ((MIMETypeUse == CString(OSSTR("image/jpeg"))) || (MIMETypeUse == CString(OSSTR("image/jpg"))))
 		// JPEG
 		return OV<Type>(kTypeJPEG);
 	else if (MIMETypeUse == CString(OSSTR("image/png")))
@@ -260,9 +279,11 @@ OV<CImage::Type> CImage::getTypeFromData(const CData& data)
 
 	// Check for signatures
 	// See https://stackoverflow.com/questions/4550296/how-to-identify-contents-of-a-byte-is-a-jpeg
-	// BMP: 42 4D
 	// GIF: 47 49 46 38
-	if ((data.getByteCount() >= 2) && (*((UInt8*) bytePtr) == 0xFF) && (*((UInt8*) bytePtr + 1) == 0xD8))
+	if ((data.getByteCount() >= 2) && (*((UInt8*) bytePtr) == 0x42) && (*((UInt8*) bytePtr + 1) == 0x4D))
+		// BMP: 42 4D
+		return OV<Type>(kTypeBMP);
+	else if ((data.getByteCount() >= 2) && (*((UInt8*) bytePtr) == 0xFF) && (*((UInt8*) bytePtr + 1) == 0xD8))
 		// JPEG Raw:	FF D8 FF DB
 		// JFIF:		FF D8 FF E0
 		// EXIF:		FF D8 FF E1
@@ -281,6 +302,7 @@ OV<CString> CImage::getDefaultFilenameExtension(Type type)
 {
 	// Check image type
 	switch (type) {
+		case kTypeBMP:	return OV<CString>(CString(OSSTR("bmp")));
 		case kTypeJPEG:	return OV<CString>(CString(OSSTR("jpg")));
 		case kTypePNG:	return OV<CString>(CString(OSSTR("png")));
 		default:		return OV<CString>();
@@ -293,6 +315,7 @@ OV<CString> CImage::getMIMEType(Type type)
 {
 	// Check image type
 	switch (type) {
+		case kTypeBMP:	return OV<CString>(CString(OSSTR("image/bmp")));
 		case kTypeJPEG:	return OV<CString>(CString(OSSTR("image/jpeg")));
 		case kTypePNG:	return OV<CString>(CString(OSSTR("image/png")));
 		default:		return OV<CString>();
@@ -305,6 +328,12 @@ TVResult<CData> CImage::getData(const CBitmap& bitmap, Type type)
 {
 	// Check image type
 	switch (type) {
+		case kTypeBMP:
+			// BMP
+			AssertFailUnimplemented();
+
+			return TVResult<CData>(sErrorUnableToEncode);
+
 		case kTypeJPEG:
 			// JPEG
 			return sEncodeJPEGData(bitmap);
@@ -331,6 +360,224 @@ TVResult<CData> CImage::getData(const CBitmap& bitmap, Type type)
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - Local proc definitions
+
+//----------------------------------------------------------------------------------------------------------------------
+TVResult<CBitmap> sDecodeBMPData(const CData& data)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// See https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-storage
+	//	Supports uncompressed 1, 4, and 8 bit palettized and 16, 24, and 32 bit direct color.  Run-length encoded and
+	//	embedded JPEG/PNG data are not supported.
+
+	// Setup
+	struct SChannel {
+				SChannel(UInt32 mask) : mMask(mask), mShift(0), mMaxValue(0)
+					{
+						// Check if have mask
+						if (mMask != 0) {
+							// Compute shift and max value
+							while (((mMask >> mShift) & 1) == 0)
+								mShift++;
+							mMaxValue = mMask >> mShift;
+						}
+					}
+
+		UInt8	get(UInt32 pixel, UInt8 defaultValue) const
+					{
+						// Scale to 8 bits
+						return (mMaxValue != 0) ?
+								(UInt8) (((UInt64) ((pixel & mMask) >> mShift) * 255 + mMaxValue / 2) / mMaxValue) :
+								defaultValue;
+					}
+
+		// Properties
+		UInt32	mMask;
+		UInt32	mShift;
+		UInt32	mMaxValue;
+	};
+
+	const	UInt8*				bytePtr = *data.getUInt8Buffer();
+			CData::ByteCount	byteCount = data.getByteCount();
+
+	auto	readUInt16 =
+					[bytePtr](CData::ByteCount offset)
+						{ return (UInt16) ((UInt16) bytePtr[offset] | ((UInt16) bytePtr[offset + 1] << 8)); };
+	auto	readUInt32 =
+					[bytePtr](CData::ByteCount offset)
+						{ return (UInt32) bytePtr[offset] | ((UInt32) bytePtr[offset + 1] << 8) |
+								((UInt32) bytePtr[offset + 2] << 16) | ((UInt32) bytePtr[offset + 3] << 24); };
+
+	// Validate file header (14 bytes) and info header size
+	if ((byteCount < 18) || (bytePtr[0] != 0x42) || (bytePtr[1] != 0x4D))
+		// Not a BMP
+		return TVResult<CBitmap>(sErrorUnableToDecode);
+
+	UInt32	pixelDataOffset = readUInt32(10);
+	UInt32	infoHeaderByteCount = readUInt32(14);
+	if (((infoHeaderByteCount != 12) && (infoHeaderByteCount < 40)) ||
+			((14 + (CData::ByteCount) infoHeaderByteCount) > byteCount))
+		// Unsupported or truncated info header
+		return TVResult<CBitmap>(sErrorUnableToDecode);
+
+	// Read info header
+	SInt32				width, height;
+	UInt16				bitsPerPixel;
+	UInt32				compression = 0;
+	UInt32				paletteEntryCount = 0;
+	UInt32				paletteEntryByteCount = 4;
+	UInt32				masks[4] = {0, 0, 0, 0};
+	CData::ByteCount	paletteOffset = 14 + (CData::ByteCount) infoHeaderByteCount;
+	if (infoHeaderByteCount == 12) {
+		// BITMAPCOREHEADER
+		width = readUInt16(18);
+		height = readUInt16(20);
+		bitsPerPixel = readUInt16(24);
+		paletteEntryByteCount = 3;
+	} else {
+		// BITMAPINFOHEADER, or a later version that extends it
+		width = (SInt32) readUInt32(18);
+		height = (SInt32) readUInt32(22);
+		bitsPerPixel = readUInt16(28);
+		compression = readUInt32(30);
+		paletteEntryCount = readUInt32(46);
+
+		if (infoHeaderByteCount >= 52) {
+			// Have color masks
+			masks[0] = readUInt32(54);
+			masks[1] = readUInt32(58);
+			masks[2] = readUInt32(62);
+		}
+		if (infoHeaderByteCount >= 56)
+			// Have alpha mask
+			masks[3] = readUInt32(66);
+
+		if ((infoHeaderByteCount == 40) && ((compression == 3) || (compression == 6))) {
+			// BI_BITFIELDS or BI_ALPHABITFIELDS - masks follow the header
+			UInt32	maskCount = (compression == 6) ? 4 : 3;
+			if ((paletteOffset + maskCount * 4) > byteCount)
+				// Truncated
+				return TVResult<CBitmap>(sErrorUnableToDecode);
+
+			for (UInt32 i = 0; i < maskCount; i++)
+				masks[i] = readUInt32(paletteOffset + i * 4);
+			paletteOffset += maskCount * 4;
+		}
+	}
+
+	// Validate format
+	bool	isPalettized = (bitsPerPixel == 1) || (bitsPerPixel == 4) || (bitsPerPixel == 8);
+	bool	isMasked = (bitsPerPixel == 16) || (bitsPerPixel == 32);
+	if ((!isPalettized && !isMasked && (bitsPerPixel != 24)) ||
+			((compression != 0) && (!isMasked || ((compression != 3) && (compression != 6)))))
+		// Unsupported bit depth or compression
+		return TVResult<CBitmap>(sErrorUnableToDecode);
+
+	// Validate size - CBitmap rows are limited to 65535 bytes
+	UInt32	rowCount = (height < 0) ? (UInt32) -(SInt64) height : (UInt32) height;
+	if ((width < 1) || (rowCount < 1) || (rowCount > 0x7FFFFFFF) || (((UInt64) width * 4) > 0xFFFF))
+		// Unsupported size
+		return TVResult<CBitmap>(sErrorUnableToDecode);
+
+	// Setup palette
+	UInt32	maxPaletteEntryCount = isPalettized ? (1 << bitsPerPixel) : 0;
+	if (!isPalettized)
+		// No palette
+		paletteEntryCount = 0;
+	else if ((paletteEntryCount == 0) || (paletteEntryCount > maxPaletteEntryCount))
+		// Full palette
+		paletteEntryCount = maxPaletteEntryCount;
+	if ((paletteOffset + (CData::ByteCount) paletteEntryCount * paletteEntryByteCount) > byteCount)
+		// Truncated
+		return TVResult<CBitmap>(sErrorUnableToDecode);
+
+	// Setup masks - BI_RGB uses fixed color masks (writers that put real alpha in the 4th byte of 32 bit pixels say so
+	//	via the alpha mask, so keep it)
+	if (compression == 0) {
+		// BI_RGB
+		masks[0] = (bitsPerPixel == 16) ? 0x7C00 : 0x00FF0000;
+		masks[1] = (bitsPerPixel == 16) ? 0x03E0 : 0x0000FF00;
+		masks[2] = (bitsPerPixel == 16) ? 0x001F : 0x000000FF;
+	}
+
+	SChannel	red(masks[0]), green(masks[1]), blue(masks[2]), alpha(masks[3]);
+
+	auto		readPixel =
+						[bitsPerPixel, readUInt16, readUInt32](CData::ByteCount rowOffset, SInt32 x)
+							{ return (bitsPerPixel == 16) ?
+									(UInt32) readUInt16(rowOffset + (CData::ByteCount) x * 2) :
+									readUInt32(rowOffset + (CData::ByteCount) x * 4); };
+
+	// Validate pixel data - rows are padded to 4 bytes
+	CData::ByteCount	rowByteCount = (((CData::ByteCount) bitsPerPixel * width + 31) / 32) * 4;
+	if (((CData::ByteCount) pixelDataOffset + rowByteCount * rowCount) > byteCount)
+		// Truncated
+		return TVResult<CBitmap>(sErrorUnableToDecode);
+
+	// Check for alpha - an alpha mask with every alpha value 0 means alpha is not actually in use
+	bool	hasAlpha = false;
+	if (isMasked && (alpha.mMaxValue != 0))
+		// Check pixels
+		for (UInt32 y = 0; (y < rowCount) && !hasAlpha; y++)
+			for (SInt32 x = 0; (x < width) && !hasAlpha; x++)
+				hasAlpha = (readPixel(pixelDataOffset + y * rowByteCount, x) & alpha.mMask) != 0;
+
+	// Setup bitmap
+	CBitmap	bitmap(S2DSizeS32(width, (SInt32) rowCount),
+					hasAlpha ? CBitmap::kFormatRGBA8888 : CBitmap::kFormatRGB888);
+	UInt8*	bitmapBytePtr = (UInt8*) *bitmap.getPixelData();
+	UInt16	bitmapBytesPerRow = bitmap.getBytesPerRow();
+
+	// Decode - rows are stored bottom-up unless the height is negative
+	for (UInt32 y = 0; y < rowCount; y++) {
+		// Setup
+		CData::ByteCount	rowOffset = pixelDataOffset + ((height < 0) ? y : (rowCount - 1 - y)) * rowByteCount;
+		UInt8*				pixelBytePtr = bitmapBytePtr + (CData::ByteCount) y * bitmapBytesPerRow;
+
+		// Loop horizontally
+		for (SInt32 x = 0; x < width; x++) {
+			// Get color
+			UInt8	r = 0, g = 0, b = 0, a = 0xFF;
+			if (isPalettized) {
+				// Palette index
+				CData::ByteCount	bitOffset = (CData::ByteCount) x * bitsPerPixel;
+				UInt32				index =
+											(bytePtr[rowOffset + bitOffset / 8] >>
+															(8 - bitsPerPixel - (UInt32) (bitOffset % 8))) &
+													(maxPaletteEntryCount - 1);
+				if (index < paletteEntryCount) {
+					// In palette
+					CData::ByteCount	paletteEntryOffset =
+												paletteOffset + (CData::ByteCount) index * paletteEntryByteCount;
+					b = bytePtr[paletteEntryOffset];
+					g = bytePtr[paletteEntryOffset + 1];
+					r = bytePtr[paletteEntryOffset + 2];
+				}
+			} else if (bitsPerPixel == 24) {
+				// BGR
+				CData::ByteCount	pixelOffset = rowOffset + (CData::ByteCount) x * 3;
+				b = bytePtr[pixelOffset];
+				g = bytePtr[pixelOffset + 1];
+				r = bytePtr[pixelOffset + 2];
+			} else {
+				// Masked
+				UInt32	pixel = readPixel(rowOffset, x);
+				r = red.get(pixel, 0);
+				g = green.get(pixel, 0);
+				b = blue.get(pixel, 0);
+				a = alpha.get(pixel, 0xFF);
+			}
+
+			// Store
+			*pixelBytePtr++ = r;
+			*pixelBytePtr++ = g;
+			*pixelBytePtr++ = b;
+			if (hasAlpha)
+				*pixelBytePtr++ = a;
+		}
+	}
+
+	return TVResult<CBitmap>(bitmap);
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<CBitmap> sDecodeJPEGData(const CData& data)

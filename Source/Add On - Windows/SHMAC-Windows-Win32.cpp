@@ -4,8 +4,10 @@
 
 #include "SHMAC.h"
 
+#undef Delete
 #include <Windows.h>
 #include <bcrypt.h>
+#define Delete(x)	{ delete x; x = nil; }
 
 #pragma comment(lib, "bcrypt.lib")
 
