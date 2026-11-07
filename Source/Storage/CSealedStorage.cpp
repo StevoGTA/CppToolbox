@@ -58,24 +58,28 @@ CSealedStorage::Value CSealedStorage::read(const CString& keyName, const CCreden
 									storeString->components(CString::mVerticalBar) : TNArray<CString>();
 	bool			storeIsValid = storeComponents.getCount() == componentCount;
 
-	// Read sealed file
-	TVResult<CData>	fileData = CFileDataSource::readData(fileInfo.getFile());
-	OV<CString>		fileString =
-							!fileData.hasError() ?
-									OV<CString>(CString(*fileData, CString::kEncodingUTF8)) : OV<CString>();
-	TArray<CString>	fileComponents =
-							fileString.hasValue() ? fileString->components(CString::mVerticalBar) : TNArray<CString>();
-	bool			fileIsValid =
-							(fileComponents.getCount() == (componentCount + 1)) &&
-									(fileComponents.getLast() ==
-											sComposeSeal(keyName,
-													fileString->getSubString(0,
-															fileString->getLength() -
-																	fileComponents.getLast().getLength() - 1),
-													fileInfo.getSealKey()));
+	// Read sealed file, if present
+	OV<TArray<CString> >	fileComponents;
+	bool					fileIsValid = false;
+	if (fileInfo.getFile().doesExist()) {
+		// Read
+		TVResult<CData>	fileData = CFileDataSource::readData(fileInfo.getFile());
+		if (!fileData.hasError()) {
+			// Have contents
+			CString	fileString(*fileData, CString::kEncodingUTF8);
+			fileComponents.setValue(fileString.components(CString::mVerticalBar));
+			fileIsValid =
+					(fileComponents->getCount() == (componentCount + 1)) &&
+							(fileComponents->getLast() ==
+									sComposeSeal(keyName,
+											fileString.getSubString(0,
+													fileString.getLength() - fileComponents->getLast().getLength() - 1),
+											fileInfo.getSealKey()));
+		}
+	}
 
 	// Check if present
-	if (!storeString.hasValue() && !fileString.hasValue())
+	if (!storeString.hasValue() && !fileComponents.hasValue())
 		// Not present
 		return Value(OV<TArray<CString> >(), false);
 
@@ -84,7 +88,7 @@ CSealedStorage::Value CSealedStorage::read(const CString& keyName, const CCreden
 		// Compare
 		for (CArray::ItemIndex i = 0; i < componentCount; i++) {
 			// Check component
-			if (storeComponents[i] != fileComponents[i])
+			if (storeComponents[i] != (*fileComponents)[i])
 				// Differ
 				return Value(OV<TArray<CString> >(), true);
 		}
