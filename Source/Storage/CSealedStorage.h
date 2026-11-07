@@ -34,14 +34,14 @@ class CSealedStorage {
 			// Methods
 			public:
 												// Lifecycle methods
-												Value(const OV<TArray<CString> >& components, bool isTampered) :
-													TV2(components, isTampered)
+												Value(const OV<TArray<CString> >& components, bool isDamaged) :
+													TV2(components, isDamaged)
 													{}
 
 												// Instance methods
 				const	OV<TArray<CString> >&	getComponents() const
 													{ return getA(); }
-						bool					isTampered() const
+						bool					isDamaged() const
 													{ return getB(); }
 		};
 

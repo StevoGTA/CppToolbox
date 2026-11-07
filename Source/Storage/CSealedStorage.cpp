@@ -91,7 +91,7 @@ CSealedStorage::Value CSealedStorage::read(const CString& keyName, const CCreden
 
 		return Value(OV<TArray<CString> >(storeComponents), false);
 	} else
-		// A copy is missing or has been tampered with
+		// A copy is missing, or the copies do not agree
 		return Value(OV<TArray<CString> >(), true);
 }
 

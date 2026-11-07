@@ -255,6 +255,63 @@ template <typename A, typename B, typename C, typename D, typename E, typename F
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - TV11
+
+template <typename A, typename B, typename C, typename D, typename E, typename F, typename G, typename H, typename I,
+		typename J, typename K>
+		struct TV11 {
+	// Methods
+	public:
+					// Lifecycle methods
+					TV11(const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g, const H& h,
+							const I& i, const J& j, const K& k) :
+						mA(a), mB(b), mC(c), mD(d), mE(e), mF(f), mG(g), mH(h), mI(i), mJ(j), mK(k)
+						{}
+					TV11(const TV11& other) :
+						mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD), mE(other.mE), mF(other.mF),
+								mG(other.mG), mH(other.mH), mI(other.mI), mJ(other.mJ), mK(other.mK)
+						{}
+
+					// Instance methods
+		const	A&	getA() const
+						{ return mA; }
+		const	B&	getB() const
+						{ return mB; }
+		const	C&	getC() const
+						{ return mC; }
+		const	D&	getD() const
+						{ return mD; }
+		const	E&	getE() const
+						{ return mE; }
+		const	F&	getF() const
+						{ return mF; }
+		const	G&	getG() const
+						{ return mG; }
+		const	H&	getH() const
+						{ return mH; }
+		const	I&	getI() const
+						{ return mI; }
+		const	J&	getJ() const
+						{ return mJ; }
+		const	K&	getK() const
+						{ return mK; }
+
+	// Properties
+	private:
+		A	mA;
+		B	mB;
+		C	mC;
+		D	mD;
+		E	mE;
+		F	mF;
+		G	mG;
+		H	mH;
+		I	mI;
+		J	mJ;
+		K	mK;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TRCR
 
 template <typename A, typename B> struct TRCR {
