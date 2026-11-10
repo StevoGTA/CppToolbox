@@ -15,7 +15,7 @@ class CPCMDecodeAudioCodec : public CDecodeAudioCodec {
 	public:
 										// Lifecycle methods
 										CPCMDecodeAudioCodec(const I<CRandomAccessDataSource>& randomAccessDataSource,
-												UInt64 startByteOffset, UInt64 byteCount, UInt8 frameByteCount,
+												UInt64 startByteOffset, UInt64 byteCount, UInt16 frameByteCount,
 												CPCMAudioCodec::Format format) :
 											mFrameSource(randomAccessDataSource, startByteOffset, byteCount,
 															frameByteCount),

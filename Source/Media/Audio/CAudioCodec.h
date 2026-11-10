@@ -53,7 +53,7 @@ class CDecodeAudioCodec : public CAudioCodec {
 												// Lifecycle methods
 												FrameSource(const I<CRandomAccessDataSource>& randomAccessDataSource,
 														UInt64 startByteOffset, UInt64 byteCount,
-														UInt8 frameByteCount) :
+														UInt16 frameByteCount) :
 													mRandomAccessDataSource(randomAccessDataSource),
 															mStartByteOffset(startByteOffset), mByteCount(byteCount),
 															mFrameByteCount(frameByteCount),
@@ -61,7 +61,7 @@ class CDecodeAudioCodec : public CAudioCodec {
 													{}
 
 												// Instance methods
-				UInt8							getFrameByteCount() const
+				UInt16							getFrameByteCount() const
 													{ return mFrameByteCount; }
 
 				void							seek(UInt64 frameIndex)
@@ -140,7 +140,7 @@ class CDecodeAudioCodec : public CAudioCodec {
 				I<CRandomAccessDataSource>	mRandomAccessDataSource;
 				UInt64						mStartByteOffset;
 				UInt64						mByteCount;
-				UInt8						mFrameByteCount;
+				UInt16						mFrameByteCount;
 
 				UInt64						mCurrentPosition;
 		};
