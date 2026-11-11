@@ -14,7 +14,6 @@ template <typename T> struct TIResult {
 					TIResult(const T& instance) : mInstance(OI<T>(instance)) {}
 					TIResult(const OI<T>& instance) : mInstance(instance) {}
 					TIResult(const SError& error) : mError(OV<SError>(error)) {}
-					TIResult(const TIResult& other) : mInstance(other.mInstance), mError(other.mError) {}
 
 					// Instance Methods
 			bool	hasInstance() const
@@ -46,7 +45,6 @@ template <typename T> struct TVResult {
 					// Lifecycle Methods
 					TVResult(const T value) : mValue(OV<T>(value)) {}
 					TVResult(const SError& error) : mError(OV<SError>(error)) {}
-					TVResult(const TVResult& other) : mValue(other.mValue), mError(other.mError) {}
 
 					// Instance Methods
 			bool	hasValue() const
@@ -78,7 +76,6 @@ template <typename T> struct TOVResult {
 					TOVResult(const T value) : mValue(OV<T>(value)) {}
 					TOVResult(const OV<T>& value) : mValue(value) {}
 					TOVResult(const SError& error) : mError(OV<SError>(error)) {}
-					TOVResult(const TOVResult& other) : mValue(other.mValue), mError(other.mError) {}
 
 					// Instance Methods
 			bool	hasValue() const

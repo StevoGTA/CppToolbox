@@ -13,7 +13,6 @@ template <typename T> struct TIndexRange {
 
 	// Lifecycle methods
 	TIndexRange(T start, T end) : mStart(start), mEnd(end) {}
-	TIndexRange(const TIndexRange<T>& other) : mStart(other.mStart), mEnd(other.mEnd) {}
 
 	// Properties
 	T	mStart;

@@ -5,6 +5,7 @@
 #include "CMediaEngine.h"
 
 #include "CAudioChannelMapper.h"
+#include "CAudioChannelMixer.h"
 #include "CAudioDecoder.h"
 #include "CAudioDeinterleaver.h"
 #include "CAudioInterleaver.h"
@@ -154,7 +155,8 @@ SAudio::ProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudio
 											audioDestinationFirstAudioProcessingSetup.getChannelMapInfo().getValue();
 		if (audioSourceChannelMap.hasUnspecifiedOrder() || destinationAudioChannelMap.hasUnspecifiedOrder() ||
 				(audioSourceChannelMap == destinationAudioChannelMap) ||
-				CAudioChannelMapper::canPerform(audioSourceChannelMap, destinationAudioChannelMap))
+				CAudioChannelMapper::canPerform(audioSourceChannelMap, destinationAudioChannelMap) ||
+				(destinationAudioChannelMap.getChannelCount() == 1))
 			// Use source
 			audioChannelMap = audioSourceChannelMap;
 		else {
@@ -200,7 +202,8 @@ SAudio::ProcessingFormat CMediaEngine::composeAudioProcessingFormat(const CAudio
 
 //----------------------------------------------------------------------------------------------------------------------
 TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor>& audioProcessorSource,
-		const I<CAudioProcessor>& audioProcessorDestination, const SAudio::ProcessingFormat& audioProcessingFormat) const
+		const I<CAudioProcessor>& audioProcessorDestination, const SAudio::ProcessingFormat& audioProcessingFormat)
+		const
 //----------------------------------------------------------------------------------------------------------------------
 {
 /*
@@ -209,6 +212,8 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 	May require Audio Converter if bits or sample rate don't match
 		Audio Converters always support interleaved, but may not support non-interleaved
 	May require Audio Channel Mapper if Audio Channel Maps don't match
+	May require Audio Channel Mixer instead if channels must be summed
+		Audio Channel Mixers are Float32, so may require an Audio Converter on either side
 
 	Possible scenarios
 		Converter supports non-interleaved
@@ -243,6 +248,12 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 			Source (interleaved) -> Channel Mapper -> Deinterleaver -> Destination (non-interleaved)
 			Source (non-interleaved) -> Channel Mapper -> Interleaver -> Destination (interleaved)
 			Source (non-interleaved) -> Channel Mapper -> Destination (non-interleaved)
+
+		Channel Mixer (with an Interleaver and Deinterleaver around each Converter as above)
+			Source -> Channel Mixer -> Destination
+			Source -> Converter -> Channel Mixer -> Destination
+			Source -> Channel Mixer -> Converter -> Destination
+			Source -> Converter -> Channel Mixer -> Converter -> Destination
  */
 
 	// Setup
@@ -252,8 +263,10 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 
 	// Determine if can connect directly
 	OV<SAudio::ProcessingFormat>	commonAudioProcessingFormat =
-										sDetermineCommonAudioProcessingFormat(audioProcessorSourceAudioProcessingSetups,
-												audioProcessorDestinationAudioProcessingSetups, audioProcessingFormat);
+											sDetermineCommonAudioProcessingFormat(
+													audioProcessorSourceAudioProcessingSetups,
+													audioProcessorDestinationAudioProcessingSetups,
+													audioProcessingFormat);
 	if (commonAudioProcessingFormat.hasValue()) {
 		// Connect directly
 		OV<SError>	error = audioProcessorSource->setOutputFormat(*commonAudioProcessingFormat);
@@ -274,6 +287,73 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 	I<CAudioProcessor>			currentAudioProcessor(audioProcessorDestination);
 	SAudio::ProcessingFormat	currentAudioProcessingFormat(audioProcessingFormats.mDestinationAudioProcessingFormat);
 	OV<SError>					error;
+
+	// Check if need Audio Channel Mixer
+	if ((audioProcessingFormats.mDestinationAudioProcessingFormat.getChannelMap().getChannelCount() == 1) &&
+			(audioProcessingFormats.mSourceAudioProcessingFormat.getChannelMap().getChannelCount() > 1)) {
+		// Add an Audio Channel Mixer
+		if ((currentAudioProcessingFormat.getBits() != 32) || !currentAudioProcessingFormat.getIsFloat() ||
+				(currentAudioProcessingFormat.getEndian() != SAudio::ProcessingFormat::kEndianNative) ||
+				!audioProcessingFormats.doSampleRatesMatch()) {
+			// Requires Audio Converter
+			I<CAudioConverter>	audioConverter = createAudioConverter();
+
+			// Check if need Audio Deinterleaver
+			if (!currentAudioProcessingFormat.getIsInterleaved() && !audioConverter->supportsNoninterleaved()) {
+				// Create Audio Deinterleaver
+				I<CAudioProcessor>	audioDeinterleaver(new CAudioDeinterleaver());
+
+				// Connect Audio Deinterleaver
+				error = currentAudioProcessor->connectInput(audioDeinterleaver, currentAudioProcessingFormat);
+				ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
+
+				// Update
+				currentAudioProcessor = audioDeinterleaver;
+				currentAudioProcessingFormat =
+						SAudio::ProcessingFormat(currentAudioProcessingFormat.getBits(),
+								currentAudioProcessingFormat.getSampleRate(),
+								currentAudioProcessingFormat.getChannelMap(),
+								currentAudioProcessingFormat.getSampleType(),
+								currentAudioProcessingFormat.getEndian(), SAudio::ProcessingFormat::kInterleaved);
+			}
+
+			// Connect Audio Converter
+			error =
+					currentAudioProcessor->connectInput((I<CAudioProcessor>&) audioConverter,
+							currentAudioProcessingFormat);
+			ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
+
+			// Update
+			currentAudioProcessor = (I<CAudioProcessor>&) audioConverter;
+			currentAudioProcessingFormat =
+					SAudio::ProcessingFormat(32, audioProcessingFormats.mSourceAudioProcessingFormat.getSampleRate(),
+							currentAudioProcessingFormat.getChannelMap(), SAudio::ProcessingFormat::kSampleTypeFloat,
+							SAudio::ProcessingFormat::kEndianNative, currentAudioProcessingFormat.getInterleaved());
+		}
+
+		// Create Audio Channel Mixer
+		I<CAudioProcessor>	audioChannelMixer(
+									new CAudioChannelMixer(
+											CAudioChannelMixer::Matrix::getMatrixForMono(
+													audioProcessingFormats.mSourceAudioProcessingFormat.getChannelMap()
+															.getChannelCount())));
+
+		// Connect Audio Channel Mixer
+		error = currentAudioProcessor->connectInput(audioChannelMixer, currentAudioProcessingFormat);
+		ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
+
+		// Update
+		currentAudioProcessor = audioChannelMixer;
+		currentAudioProcessingFormat =
+				SAudio::ProcessingFormat(32, audioProcessingFormats.mSourceAudioProcessingFormat.getSampleRate(),
+						audioProcessingFormats.mSourceAudioProcessingFormat.getChannelMap(),
+						SAudio::ProcessingFormat::kSampleTypeFloat, SAudio::ProcessingFormat::kEndianNative,
+						audioProcessingFormats.mSourceAudioProcessingFormat.getInterleaved());
+		audioProcessingFormats =
+				SAudioProcessingFormats(audioProcessingFormats.mSourceAudioProcessingFormat,
+						currentAudioProcessingFormat);
+	}
+
 	if (!audioProcessingFormats.doBitsMatch() || !audioProcessingFormats.doSampleRatesMatch() ||
 			!audioProcessingFormats.doSampleTypesMatch() || !audioProcessingFormats.doEndiansMatch()) {
 		// Requires Audio Converter
@@ -287,7 +367,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 
 			// Connect Audio Deinterleaver
 			error = currentAudioProcessor->connectInput(audioDeinterleaver, currentAudioProcessingFormat);
-			if (error.hasValue()) return TVResult<SAudio::ProcessingFormat>(*error);
+			ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
 			// Update
 			currentAudioProcessor = audioDeinterleaver;
@@ -301,7 +381,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 
 		// Connect Audio Converter
 		error = currentAudioProcessor->connectInput((I<CAudioProcessor>&) audioConverter, currentAudioProcessingFormat);
-		if (error.hasValue()) return TVResult<SAudio::ProcessingFormat>(*error);
+		ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
 		// Update
 		currentAudioProcessor = (I<CAudioProcessor>&) audioConverter;
@@ -323,7 +403,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 
 			// Connect Audio Interleaver
 			error = currentAudioProcessor->connectInput(audioInterleaver, currentAudioProcessingFormat);
-			if (error.hasValue()) return TVResult<SAudio::ProcessingFormat>(*error);
+			ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
 			// Update
 			currentAudioProcessor = audioInterleaver;
@@ -339,13 +419,18 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 	// Check if need Audio Channel Mapper
 	if (!audioProcessingFormats.doAudioChannelMapsMatch()) {
 		// Requires channel mapper
-		I<CAudioChannelMapper>	audioChannelMapper(new CAudioChannelMapper());
+		I<CAudioChannelMapper>	audioChannelMapper(
+										new CAudioChannelMapper(
+												CAudioChannelMapper::Map::getMap(
+														audioProcessingFormats.mSourceAudioProcessingFormat
+																.getChannelMap(),
+														currentAudioProcessingFormat.getChannelMap())));
 
 		// Connect
 		error =
 				currentAudioProcessor->connectInput((I<CAudioProcessor>&) audioChannelMapper,
 						currentAudioProcessingFormat);
-		if (error.hasValue()) return TVResult<SAudio::ProcessingFormat>(*error);
+		ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
 		// Update
 		currentAudioProcessor = (I<CAudioProcessor>&) audioChannelMapper;
@@ -366,7 +451,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 
 		// Connect Audio Interleaver
 		error = currentAudioProcessor->connectInput(audioInterleaver, currentAudioProcessingFormat);
-		if (error.hasValue()) return TVResult<SAudio::ProcessingFormat>(*error);
+		ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
 		// Update
 		currentAudioProcessor = audioInterleaver;
@@ -386,7 +471,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 
 		// Connect Audio Deinterleaver
 		error = currentAudioProcessor->connectInput(audioDeinterleaver, currentAudioProcessingFormat);
-		if (error.hasValue()) return TVResult<SAudio::ProcessingFormat>(*error);
+		ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
 		// Update
 		currentAudioProcessor = audioDeinterleaver;
@@ -400,7 +485,7 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 
 	// Connect source
 	error = currentAudioProcessor->connectInput(audioProcessorSource, currentAudioProcessingFormat);
-	if (error.hasValue()) return TVResult<SAudio::ProcessingFormat>(*error);
+	ReturnValueIfError(error, TVResult<SAudio::ProcessingFormat>(*error));
 
 	return TVResult<SAudio::ProcessingFormat>(audioProcessingFormats.mSourceAudioProcessingFormat);
 }

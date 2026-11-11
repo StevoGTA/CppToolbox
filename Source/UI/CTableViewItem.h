@@ -31,11 +31,6 @@ class CTableViewItem {
 											mDisplayString(displayString), mDisplayColor(displayColor),
 													mToolTipString(displayString)
 											{}
-										Content(const Content& other) :
-											mValue(other.mValue), mDisplayString(other.mDisplayString),
-													mDisplayColor(other.mDisplayColor),
-													mToolTipString(other.mToolTipString)
-											{}
 
 										// Instance methods
 				const	OV<SValue>&		getValue() const

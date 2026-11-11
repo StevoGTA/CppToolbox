@@ -22,9 +22,6 @@ class CGPURenderObject2D : public CGPURenderObject {
 			Item(const S2DRectF32& screenRect, const S2DRectF32& textureRect) :
 				mScreenRect(screenRect), mTextureRect(textureRect), mTextureIndex(0)
 				{}
-			Item(const Item& other) :
-				mScreenRect(other.mScreenRect), mTextureRect(other.mTextureRect), mTextureIndex(other.mTextureIndex)
-				{}
 
 			// Properties
 			S2DRectF32	mScreenRect;

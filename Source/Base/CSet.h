@@ -92,11 +92,6 @@ template <typename T> class TSet : public CSet {
 									mIteratorInfo(iteratorInfo),
 									mCurrentItem((T*) iteratorInfo->getCurrentItem())
 							{}
-						Iterator(const Iterator& other) :
-							CIterator(other),
-									mIteratorInfo(other.mIteratorInfo),
-									mCurrentItem(other.mCurrentItem)
-							{}
 
 						// CIterator methods
 				bool	isValid() const
@@ -124,9 +119,6 @@ template <typename T> class TSet : public CSet {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									TSet(const TSet<T>& other) : CSet(other) {}
-
 									// Instance methods
 						bool		contains(const T& item) const
 										{ return CSet::contains(item); }

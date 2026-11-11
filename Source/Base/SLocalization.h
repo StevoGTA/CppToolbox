@@ -27,11 +27,6 @@ struct SLocalization {
 
 			// Methods
 			public:
-													// Lifecycle methods
-													Currency(const Currency& other) :
-														mISO4217Code(other.mISO4217Code), mIsCommon(other.mIsCommon)
-														{}
-
 													// Instance methods
 						const	CString&			getISO4217Code() const
 														{ return mISO4217Code; }
@@ -72,11 +67,6 @@ struct SLocalization {
 		struct Language {
 			// Methods
 			public:
-													// Lifecycle methods
-													Language(const Language& other) :
-														mISO639_2_Code(other.mISO639_2_Code), mIsCommon(other.mIsCommon)
-														{}
-
 													// Instance methods
 								OSType				getISO639_2_Code() const
 														{ return mISO639_2_Code; }

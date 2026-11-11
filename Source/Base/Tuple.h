@@ -12,7 +12,6 @@ template <typename A, typename B> struct TV2 {
 	public:
 					// Lifecycle methods
 					TV2(const A& a, const B& b) : mA(a), mB(b) {}
-					TV2(const TV2& other) : mA(other.mA), mB(other.mB) {}
 
 					// Instamce methods
 		const	A&	getA() const
@@ -34,7 +33,6 @@ template <typename A, typename B, typename C> struct TV3 {
 	public:
 					// Lifecycle methods
 					TV3(const A& a, const B& b, const C& c) : mA(a), mB(b), mC(c) {}
-					TV3(const TV3& other) : mA(other.mA), mB(other.mB), mC(other.mC) {}
 
 					// Instamce methods
 		const	A&	getA() const
@@ -59,7 +57,6 @@ template <typename A, typename B, typename C, typename D> struct TV4 {
 	public:
 					// Lifecycle methods
 					TV4(const A& a, const B& b, const C& c, const D& d) : mA(a), mB(b), mC(c), mD(d) {}
-					TV4(const TV4& other) : mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD) {}
 
 					// Instamce methods
 		const	A&	getA() const
@@ -89,7 +86,6 @@ template <typename A, typename B, typename C, typename D, typename E> struct TV5
 					TV5(const A& a, const B& b, const C& c, const D& d, const E& e) :
 						mA(a), mB(b), mC(c), mD(d), mE(e)
 						{}
-					TV5(const TV5& other) : mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD), mE(other.mE) {}
 
 					// Instance methods
 		const	A&	getA() const
@@ -122,9 +118,6 @@ template <typename A, typename B, typename C, typename D, typename E, typename F
 					TV6(const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) :
 						mA(a), mB(b), mC(c), mD(d), mE(e), mF(f)
 						{}
-					TV6(const TV6& other) :
-						mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD), mE(other.mE), mF(other.mF)
-						{}
 
 					// Instance methods
 		const	A&	getA() const
@@ -151,6 +144,44 @@ template <typename A, typename B, typename C, typename D, typename E, typename F
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - TV7
+
+template <typename A, typename B, typename C, typename D, typename E, typename F, typename G> struct TV7 {
+	// Methods
+	public:
+					// Lifecycle methods
+					TV7(const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) :
+						mA(a), mB(b), mC(c), mD(d), mE(e), mF(f), mG(g)
+						{}
+
+					// Instance methods
+		const	A&	getA() const
+						{ return mA; }
+		const	B&	getB() const
+						{ return mB; }
+		const	C&	getC() const
+						{ return mC; }
+		const	D&	getD() const
+						{ return mD; }
+		const	E&	getE() const
+						{ return mE; }
+		const	F&	getF() const
+						{ return mF; }
+		const	G&	getG() const
+						{ return mG; }
+
+	// Properties
+	private:
+		A	mA;
+		B	mB;
+		C	mC;
+		D	mD;
+		E	mE;
+		F	mF;
+		G	mG;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TV9
 
 template <typename A, typename B, typename C, typename D, typename E, typename F, typename G, typename H, typename I>
@@ -161,10 +192,6 @@ template <typename A, typename B, typename C, typename D, typename E, typename F
 					TV9(const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g, const H& h,
 							const I& i) :
 						mA(a), mB(b), mC(c), mD(d), mE(e), mF(f), mG(g), mH(h), mI(i)
-						{}
-					TV9(const TV9& other) :
-						mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD), mE(other.mE), mF(other.mF),
-								mG(other.mG), mH(other.mH), mI(other.mI)
 						{}
 
 					// Instance methods
@@ -212,10 +239,6 @@ template <typename A, typename B, typename C, typename D, typename E, typename F
 					TV10(const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g, const H& h,
 							const I& i, const J& j) :
 						mA(a), mB(b), mC(c), mD(d), mE(e), mF(f), mG(g), mH(h), mI(i), mJ(j)
-						{}
-					TV10(const TV10& other) :
-						mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD), mE(other.mE), mF(other.mF),
-								mG(other.mG), mH(other.mH), mI(other.mI), mJ(other.mJ)
 						{}
 
 					// Instance methods
@@ -267,10 +290,6 @@ template <typename A, typename B, typename C, typename D, typename E, typename F
 							const I& i, const J& j, const K& k) :
 						mA(a), mB(b), mC(c), mD(d), mE(e), mF(f), mG(g), mH(h), mI(i), mJ(j), mK(k)
 						{}
-					TV11(const TV11& other) :
-						mA(other.mA), mB(other.mB), mC(other.mC), mD(other.mD), mE(other.mE), mF(other.mF),
-								mG(other.mG), mH(other.mH), mI(other.mI), mJ(other.mJ), mK(other.mK)
-						{}
 
 					// Instance methods
 		const	A&	getA() const
@@ -319,7 +338,6 @@ template <typename A, typename B> struct TRCR {
 	public:
 					// Lifecycle methods
 					TRCR(A& a, const B& b) : mA(a), mB(b) {}
-					TRCR(const TRCR& other) : mA(other.mA), mB(other.mB) {}
 
 					// Instamce methods
 				A&	getA() const
@@ -342,7 +360,6 @@ template <typename A, typename B> struct TOV2 {
 						// Lifecycle methods
 						TOV2() {}
 						TOV2(const A& a, const B& b) : mA(a), mB(b) {}
-						TOV2(const TOV2& other) : mA(other.mA), mB(other.mB) {}
 
 						// Instamce methods
 		const	OV<A>&	getA() const

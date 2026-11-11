@@ -23,12 +23,6 @@ class CAACAudioCodec {
 														mAudioTrackChannelMap(audioChannelMap),
 														mMagicCookie(magicCookie), mStartCodes(startCodes)
 												{}
-											Info(const Info& other) :
-												mCodecID(other.mCodecID), mSampleRate(other.mSampleRate),
-														mAudioTrackChannelMap(other.mAudioTrackChannelMap),
-														mMagicCookie(other.mMagicCookie),
-														mStartCodes(other.mStartCodes)
-												{}
 
 											// Instance methods
 						OSType				getCodecID() const

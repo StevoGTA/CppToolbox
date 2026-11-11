@@ -19,10 +19,6 @@ class CAtomReader : public CByteReader {
 						Atom(OSType type, UInt64 payloadPosition, UInt64 payloadByteCount) :
 							mType(type), mPayloadPosition(payloadPosition), mPayloadByteCount(payloadByteCount)
 							{}
-						Atom(const Atom& other) :
-							mType(other.mType), mPayloadPosition(other.mPayloadPosition),
-									mPayloadByteCount(other.mPayloadByteCount)
-							{}
 
 						// Instance mehtods
 				OSType	getType() const
@@ -46,7 +42,6 @@ class CAtomReader : public CByteReader {
 			public:
 											// Lifecycle methods
 											ContainerAtom(const TArray<Atom>& atoms) : mAtoms(atoms) {}
-											ContainerAtom(const ContainerAtom& other) : mAtoms(other.mAtoms) {}
 
 											// Instance methods
 					TArray<Atom>::Iterator	getIterator() const

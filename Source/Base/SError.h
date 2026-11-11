@@ -27,11 +27,6 @@ struct SError {
 										mInternalDescription(internalDescription)
 								{}
 							SError(const CDictionary& storageInfo);
-							SError(const SError& other) :
-								mDomain(other.mDomain), mCode(other.mCode),
-										mLocalizationInfo(other.mLocalizationInfo),
-										mInternalDescription(other.mInternalDescription)
-								{}
 
 							// Instance methods
 		const	CString&	getDomain() const

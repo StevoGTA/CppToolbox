@@ -26,12 +26,6 @@ class CCodec {
 								mDecodeNameLocalizationKey(decodeNameLocalizationKey),
 								mEncodeNameLocalizationKey(encodeNameLocalizationKey)
 						{}
-					Info(const Info& other) :
-						mID(other.mID), mDecodeName(other.mDecodeName), mEncodeName(other.mEncodeName),
-								mNameLocalizationGroup(other.mNameLocalizationGroup),
-								mDecodeNameLocalizationKey(other.mDecodeNameLocalizationKey),
-								mEncodeNameLocalizationKey(other.mEncodeNameLocalizationKey)
-						{}
 
 					// Instance methods
 			OSType	getID() const

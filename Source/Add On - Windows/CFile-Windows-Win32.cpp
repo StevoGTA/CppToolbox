@@ -184,3 +184,76 @@ UniversalTime CFile::getModificationUniversalTime() const
 		// Error
 		CFileReportErrorAndReturnValue(SErrorFromWindowsGetLastError(), CString(OSSTR("GetFileAttributexEx")), 0);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<CData> CFile::getExtendedAttributeAsData(const CString& name) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Open the alternate data stream
+	HANDLE	handle =
+					::CreateFileW((getFilesystemPath().getString() + CString(OSSTR(":")) + name).getOSString(),
+							GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (handle == INVALID_HANDLE_VALUE)
+		// Not present or can't be read
+		return OV<CData>();
+
+	// Read
+	OV<CData>		data;
+	LARGE_INTEGER	byteCount;
+	if (::GetFileSizeEx(handle, &byteCount)) {
+		// Read
+		CData	buffer((CData::ByteCount) byteCount.QuadPart, 0);
+		DWORD	bytesRead;
+		if (::ReadFile(handle, *buffer.getMutableBuffer(0, byteCount.QuadPart), (DWORD) byteCount.QuadPart,
+				&bytesRead, NULL) && (bytesRead == byteCount.QuadPart))
+			// Success
+			data.setValue(buffer);
+	}
+
+	// Cleanup
+	::CloseHandle(handle);
+
+	return data;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFile::setExtendedAttribute(const CString& name, const CData& data) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Open the alternate data stream
+	HANDLE	handle =
+					::CreateFileW((getFilesystemPath().getString() + CString(OSSTR(":")) + name).getOSString(),
+							GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (handle == INVALID_HANDLE_VALUE)
+		// Error
+		CFileReportErrorAndReturnError(SErrorFromWindowsGetLastError(),
+				CString(OSSTR("opening extended attribute")));
+
+	// Write
+	DWORD	bytesWritten;
+	if (!::WriteFile(handle, *data.getUInt8Buffer(), (DWORD) data.getByteCount(), &bytesWritten, NULL)) {
+		// Error
+		SError	error = SErrorFromWindowsGetLastError();
+		::CloseHandle(handle);
+		CFileReportErrorAndReturnError(error, CString(OSSTR("writing extended attribute")));
+	}
+
+	// Cleanup
+	::CloseHandle(handle);
+
+	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFile::removeExtendedAttribute(const CString& name) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Remove the alternate data stream
+	if (!::DeleteFileW((getFilesystemPath().getString() + CString(OSSTR(":")) + name).getOSString()) &&
+			(::GetLastError() != ERROR_FILE_NOT_FOUND))
+		// Error
+		CFileReportErrorAndReturnError(SErrorFromWindowsGetLastError(),
+				CString(OSSTR("removing extended attribute")));
+
+	return OV<SError>();
+}

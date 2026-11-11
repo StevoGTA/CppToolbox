@@ -33,15 +33,6 @@ struct CGPU::Procs {
 												mGetCurrentRenderPassDescriptorProc(getCurrentRenderPassDescriptorProc),
 												mUserData(userData)
 										{}
-									Procs(const Procs& other) :
-										mGetDeviceProc(other.mGetDeviceProc),
-												mGetCurrentDrawableProc(other.mGetCurrentDrawableProc),
-												mGetPixelFormatProc(other.mGetPixelFormatProc),
-												mGetSampleCountProc(other.mGetSampleCountProc),
-												mGetCurrentRenderPassDescriptorProc(
-														other.mGetCurrentRenderPassDescriptorProc),
-												mUserData(other.mUserData)
-										{}
 
 									// Instance methods
 		id<MTLDevice>				getDevice() const

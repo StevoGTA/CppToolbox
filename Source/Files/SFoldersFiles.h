@@ -19,9 +19,6 @@ struct SFoldersFiles {
 								SFoldersFiles(const TArray<CFile>& files) :
 									mFiles(files)
 									{}
-								SFoldersFiles(const SFoldersFiles& other) :
-									mFolders(other.mFolders), mFiles(other.mFiles)
-									{}
 
 								// Instance methods
 	const	TArray<CFolder>&	getFolders() const

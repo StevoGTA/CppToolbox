@@ -5,6 +5,7 @@
 #include "CFilesystem.h"
 
 #include "CLogServices.h"
+#include "CUUID.h"
 #include "SError-Windows.h"
 
 #include <shellapi.h>
@@ -26,6 +27,18 @@
 																									\
 					return value;																	\
 				}
+#define	CFilesystemReportFilesErrorAndReturnError(error, message, file1, file2)										\
+				{																									\
+					CLogServices::logError(error, message,															\
+							CString(__FILE__, sizeof(__FILE__), CString::kEncodingUTF8),							\
+							CString(__func__, sizeof(__func__), CString::kEncodingUTF8), __LINE__);					\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + file1.getFilesystemPath().getString());	\
+					CLogServices::logError(																			\
+							CString::mSpaceX4 + CString(OSSTR("File: ")) + file2.getFilesystemPath().getString());	\
+																													\
+					return OV<SError>(error);																		\
+				}
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
@@ -42,16 +55,26 @@ static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& f
 		// Error
 		return TVResult<CFilesystem::VolumeInfo>(SErrorFromWindowsGetLastError());
 
-	// Get the filesystem name ("NTFS", "exFAT", "FAT32", ...) and the flags carrying read-only
+	// Get the filesystem name ("NTFS", "exFAT", "FAT32", ...), the serial number, and the flags carrying read-only
+	//	and hard link support
 	WCHAR	filesystemName[MAX_PATH];
-	DWORD	filesystemFlags;
-	if (!::GetVolumeInformationW(volumePath, NULL, 0, NULL, NULL, &filesystemFlags, filesystemName, MAX_PATH))
+	DWORD	serialNumber, filesystemFlags;
+	if (!::GetVolumeInformationW(volumePath, NULL, 0, &serialNumber, NULL, &filesystemFlags, filesystemName,
+			MAX_PATH))
+		// Error
+		return TVResult<CFilesystem::VolumeInfo>(SErrorFromWindowsGetLastError());
+
+	// Get the cluster size
+	DWORD	sectorsPerCluster, bytesPerSector;
+	if (!::GetDiskFreeSpaceW(volumePath, &sectorsPerCluster, &bytesPerSector, NULL, NULL))
 		// Error
 		return TVResult<CFilesystem::VolumeInfo>(SErrorFromWindowsGetLastError());
 
 	return TVResult<CFilesystem::VolumeInfo>(
-			CFilesystem::VolumeInfo(CString(filesystemName), ::GetDriveTypeW(volumePath) != DRIVE_REMOTE,
-					(filesystemFlags & FILE_READ_ONLY_VOLUME) != 0));
+			CFilesystem::VolumeInfo(CString(filesystemName), serialNumber,
+					CFolder(CFilesystemPath(CString(volumePath))), sectorsPerCluster * bytesPerSector,
+					::GetDriveTypeW(volumePath) != DRIVE_REMOTE, (filesystemFlags & FILE_READ_ONLY_VOLUME) != 0,
+					(filesystemFlags & FILE_SUPPORTS_HARD_LINKS) != 0));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -205,19 +228,76 @@ TVResult<CFilesystem::VolumeInfo> CFilesystem::getVolumeInfo(const CFolder& fold
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TVResult<CFolder> CFilesystem::createTempFolder(const VolumeInfo& volumeInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Get the volume of the user's temporary folder
+	TVResult<VolumeInfo>	tempVolumeInfo = getVolumeInfo(CFolder::temp());
+	ReturnValueIfResultError(tempVolumeInfo, TVResult<CFolder>(tempVolumeInfo.getError()));
+
+	// Windows has no temporary folder on each volume.  Use the user's temporary folder when it is on the volume, and a
+	//	folder at the root of the volume otherwise.
+	CFolder		tempFolder =
+						((tempVolumeInfo->getIdentifier() == volumeInfo.getIdentifier()) ?
+										CFolder::temp() :
+										volumeInfo.getRootFolder().getChildFolder(CString(OSSTR(".TemporaryItems"))))
+								.getChildFolder(CUUID().getHexString());
+	OV<SError>	error = tempFolder.create(true);
+	ReturnValueIfError(error, TVResult<CFolder>(*error));
+
+	return TVResult<CFolder>(tempFolder);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFilesystem::copy(const CFile& file, const CFolder& destinationFolder)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Setup
+	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
+
+	// Copy
+	if (::CopyFileW(file.getFilesystemPath().getString().getOSString(),
+			destinationFile.getFilesystemPath().getString().getOSString(), FALSE))
+		// Success
+		return OV<SError>();
+	else
+		// Error
+		CFilesystemReportFilesErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("copying file")),
+				file, destinationFile);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	AssertFailUnimplemented();
-return OV<SError>();
+	// Replace
+	if (::ReplaceFileW(destinationFile.getFilesystemPath().getString().getOSString(),
+			sourceFile.getFilesystemPath().getString().getOSString(), NULL, REPLACEFILE_IGNORE_MERGE_ERRORS, NULL,
+			NULL))
+		// Success
+		return OV<SError>();
+	else
+		// Error
+		CFilesystemReportFilesErrorAndReturnError(SErrorFromWindowsGetLastError(), CString(OSSTR("replacing file")),
+				sourceFile, destinationFile);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFilesystem::createHardLink(const CFile& file, const CFolder& destinationFolder)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
+
+	// Create hard link
+	if (::CreateHardLinkW(destinationFile.getFilesystemPath().getString().getOSString(),
+			file.getFilesystemPath().getString().getOSString(), NULL))
+		// Success
+		return OV<SError>();
+	else
+		// Error
+		CFilesystemReportFilesErrorAndReturnError(SErrorFromWindowsGetLastError(),
+				CString(OSSTR("creating hard link")), file, destinationFile);
 }
 
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)

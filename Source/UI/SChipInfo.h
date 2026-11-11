@@ -36,10 +36,6 @@ struct SChipInfo {
 							SChipInfo(const CString& text, Style style, Symbol symbol = kSymbolNone) :
 								mText(text), mStyle(style), mSymbol(symbol)
 								{}
-							SChipInfo(const SChipInfo& other) :
-								mText(other.mText), mStyle(other.mStyle), mSymbol(other.mSymbol),
-										mColor(other.mColor)
-								{}
 
 							// Instance methods
 		const	CString&	getText() const

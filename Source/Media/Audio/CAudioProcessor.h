@@ -17,7 +17,6 @@ class CAudioProcessor {
 		struct SourceInfo {
 										// Lifecycle methods
 										SourceInfo(UniversalTimeInterval timeInterval) : mTimeInterval(timeInterval) {}
-										SourceInfo(const SourceInfo& other) : mTimeInterval(other.mTimeInterval) {}
 
 										// Instance methods
 				UniversalTimeInterval	getTimeInterval() const
@@ -47,6 +46,8 @@ class CAudioProcessor {
 
 		virtual	void							setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 		virtual	void							seek(UniversalTimeInterval timeInterval);
+
+		virtual	TNumberArray<Float32>			setChannelGains(const TNumberArray<Float32>& channelGains);
 
 		virtual	TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
 

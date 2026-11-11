@@ -41,10 +41,6 @@ class CMediaPlaybackQueue {
 						mItemPrepareStartedProc(itemPrepareStartedProc),
 								mItemPrepareCompletedProc(itemPrepareCompletedProc), mUserData(userData)
 						{}
-					Info(const Info& other) :
-						mItemPrepareStartedProc(other.mItemPrepareStartedProc),
-								mItemPrepareCompletedProc(other.mItemPrepareCompletedProc), mUserData(other.mUserData)
-						{}
 
 					// Instance methods
 			void	itemPrepareStarted(const I<Item>& item)

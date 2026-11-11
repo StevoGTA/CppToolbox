@@ -34,11 +34,6 @@ class CTableColumn {
 							mNoteContentChangedProc(noteContentChangedProc),
 									mNoteTitleChangedProc(noteTitleChangedProc), mUserData(userData)
 							{}
-						Procs(const Procs& other) :
-							mNoteContentChangedProc(other.mNoteContentChangedProc),
-									mNoteTitleChangedProc(other.mNoteTitleChangedProc),
-									mUserData(other.mUserData)
-							{}
 
 						// Instance methods
 				void	noteContentChanged(const CTableColumn& tableColumn) const

@@ -25,9 +25,6 @@ class CSRSWBIPQueue : public CEquatable {
 					// Lifecycle methods
 					ReadBufferInfo(const void* buffer, UInt32 byteCount) : mBuffer(buffer), mByteCount(byteCount) {}
 					ReadBufferInfo() : mBuffer(nil), mByteCount(0) {}
-					ReadBufferInfo(const ReadBufferInfo& other) :
-						mBuffer(other.mBuffer), mByteCount(other.mByteCount)
-						{}
 
 					// Instance methods
 			bool	hasBuffer() const
@@ -42,9 +39,6 @@ class CSRSWBIPQueue : public CEquatable {
 					// Lifecycle methods
 					WriteBufferInfo(void* buffer, UInt32 byteCount) : mBuffer(buffer), mByteCount(byteCount) {}
 					WriteBufferInfo() : mBuffer(nil), mByteCount(0) {}
-					WriteBufferInfo(const WriteBufferInfo& other) :
-						mBuffer(other.mBuffer), mByteCount(other.mByteCount)
-						{}
 
 					// Instance methods
 			bool	hasBuffer() const
@@ -152,9 +146,6 @@ class CSRSWBIPSegmentedQueue {
 						mBuffer(buffer), mSegmentByteCount(segmentByteCount), mByteCount(byteCount)
 						{}
 					ReadBufferInfo() : mBuffer(nil), mSegmentByteCount(0), mByteCount(0) {}
-					ReadBufferInfo(const ReadBufferInfo& other) :
-						mBuffer(other.mBuffer), mSegmentByteCount(other.mSegmentByteCount), mByteCount(other.mByteCount)
-						{}
 
 					// Instance methods
 			bool	hasBuffer() const
@@ -174,9 +165,6 @@ class CSRSWBIPSegmentedQueue {
 						mBuffer(buffer), mSegmentByteCount(segmentByteCount), mByteCount(byteCount)
 						{}
 					WriteBufferInfo() : mBuffer(nil), mSegmentByteCount(0), mByteCount(0) {}
-					WriteBufferInfo(const WriteBufferInfo& other) :
-						mBuffer(other.mBuffer), mSegmentByteCount(other.mSegmentByteCount), mByteCount(other.mByteCount)
-						{}
 
 					// Instance methods
 			bool	hasBuffer() const
@@ -274,7 +262,6 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 	public:
 						// Lifecycle methods
 						CSRSWMessageQueue(UInt32 byteCount);
-						CSRSWMessageQueue(const CSRSWMessageQueue& other);
 
 						// Instance methods
 				void	handleAll();

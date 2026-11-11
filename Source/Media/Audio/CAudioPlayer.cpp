@@ -16,33 +16,9 @@ static	CPreferences::UniversalTimeIntervalPref	sPlaybackBufferDurationPref(
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayer
+// MARK: - CAudioPlayer::BufferThread::Internals
 
-// MARK: Properties
-
-const	UniversalTimeInterval	CAudioPlayer::mPreviewDuration = 0.1;
-
-// MARK: Class methods
-
-//----------------------------------------------------------------------------------------------------------------------
-UniversalTimeInterval CAudioPlayer::getPlaybackBufferDuration()
-//----------------------------------------------------------------------------------------------------------------------
-{
-	return CPreferences::shared().getUniversalTimeInterval(sPlaybackBufferDurationPref);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::setPlaybackBufferDuration(UniversalTimeInterval playbackBufferDuration)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	CPreferences::shared().set(sPlaybackBufferDurationPref, playbackBufferDuration);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerBufferThread::Internals
-
-class CAudioPlayerBufferThread::Internals {
+class CAudioPlayer::BufferThread::Internals {
 	public:
 		enum State {
 			kStateStarting,
@@ -51,13 +27,12 @@ class CAudioPlayerBufferThread::Internals {
 		};
 
 				Internals(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
-						UInt32 bytesPerFrame, UInt32 maxOutputFrames, CAudioPlayerBufferThread::ErrorProc errorProc,
+						UInt32 bytesPerFrame, UInt32 maxOutputFrames, BufferThread::ErrorProc errorProc,
 						void* procsUserData) :
 					mAudioPlayer(audioPlayer), mErrorProc(errorProc), mQueue(queue), mBytesPerFrame(bytesPerFrame),
 							mMaxOutputFrames(maxOutputFrames), mProcsUserData(procsUserData),
-							mPauseRequested(false), mResumeRequested(false),
-							mShutdownRequested(false), mPerformedFirstFill(false), mReachedEnd(false),
-							mState(kStateStarting)
+							mPauseRequested(false), mResumeRequested(false), mShutdownRequested(false),
+							mReachedEnd(false), mState(kStateStarting)
 					{}
 
 		bool	tryFill()
@@ -80,14 +55,9 @@ class CAudioPlayerBufferThread::Internals {
 
 						// Perform read
 						CAudioFrames		audioFrames(writeBufferInfo.mBuffer, mQueue.getSegmentCount(),
-													writeBufferInfo.mSegmentByteCount,
-													!mPerformedFirstFill ?
-															framesToRequest :
-															writeBufferInfo.mByteCount / mBytesPerFrame,
-													mBytesPerFrame);
+													writeBufferInfo.mSegmentByteCount, framesToRequest, mBytesPerFrame);
 
-						// If we have not performed the first fill, we queue 2 * max output frames to get us started.
-						//	Subsequently, we try to fill the buffer as much as possible.
+						// Each fill queues 2 * max output frames.  The thread keeps filling until the queue is full.
 						TVResult<CAudioProcessor::SourceInfo>	audioProcessorSourceInfo =
 																		mAudioPlayer.performInto(audioFrames);
 						if (audioProcessorSourceInfo.hasValue()) {
@@ -107,31 +77,30 @@ class CAudioPlayerBufferThread::Internals {
 						}
 					}
 
-		CAudioPlayer&						mAudioPlayer;
-		CAudioPlayerBufferThread::ErrorProc	mErrorProc;
-		CSemaphore							mSemaphore;
-		CSRSWBIPSegmentedQueue&				mQueue;
-		UInt32								mBytesPerFrame;
-		UInt32								mMaxOutputFrames;
-		void*								mProcsUserData;
-		OV<CAudioFrames::Requirements>		mRequirements;
+		CAudioPlayer&					mAudioPlayer;
+		ErrorProc						mErrorProc;
+		CSemaphore						mSemaphore;
+		CSRSWBIPSegmentedQueue&			mQueue;
+		UInt32							mBytesPerFrame;
+		UInt32							mMaxOutputFrames;
+		void*							mProcsUserData;
+		OV<CAudioFrames::Requirements>	mRequirements;
 
-		std::atomic<bool>					mPauseRequested;
-		std::atomic<bool>					mResumeRequested;
-		std::atomic<bool>					mShutdownRequested;
-		bool								mPerformedFirstFill;
-		std::atomic<bool>					mReachedEnd;
-		std::atomic<State>					mState;
+		std::atomic<bool>				mPauseRequested;
+		std::atomic<bool>				mResumeRequested;
+		std::atomic<bool>				mShutdownRequested;
+		std::atomic<bool>				mReachedEnd;
+		std::atomic<State>				mState;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerBufferThread
+// MARK: - CAudioPlayer::BufferThread
 
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayerBufferThread::CAudioPlayerBufferThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
+CAudioPlayer::BufferThread::BufferThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue,
 		UInt32 bytesPerFrame, UInt32 maxOutputFrames, ErrorProc errorProc, void* procsUserData) :
 	CThread(CString(OSSTR("Audio Reader - ")) + audioPlayer.getIdentifier())
 //----------------------------------------------------------------------------------------------------------------------
@@ -144,7 +113,7 @@ CAudioPlayerBufferThread::CAudioPlayerBufferThread(CAudioPlayer& audioPlayer, CS
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioPlayerBufferThread::~CAudioPlayerBufferThread()
+CAudioPlayer::BufferThread::~BufferThread()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	Delete(mInternals);
@@ -153,7 +122,7 @@ CAudioPlayerBufferThread::~CAudioPlayerBufferThread()
 // MARK: CThread methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerBufferThread::run()
+void CAudioPlayer::BufferThread::run()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Run until shutdown
@@ -188,7 +157,7 @@ void CAudioPlayerBufferThread::run()
 // MARK: Instance methods
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerBufferThread::pause()
+void CAudioPlayer::BufferThread::pause()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Request pause
@@ -201,12 +170,11 @@ void CAudioPlayerBufferThread::pause()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerBufferThread::resume()
+void CAudioPlayer::BufferThread::resume()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Update
 	mInternals->mResumeRequested = true;
-	mInternals->mPerformedFirstFill = false;
 	mInternals->mReachedEnd = false;
 	mInternals->mPauseRequested = false;
 
@@ -215,7 +183,7 @@ void CAudioPlayerBufferThread::resume()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerBufferThread::noteQueueReadComplete()
+void CAudioPlayer::BufferThread::noteQueueReadComplete()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Signal
@@ -223,14 +191,14 @@ void CAudioPlayerBufferThread::noteQueueReadComplete()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-bool CAudioPlayerBufferThread::getDidReachEnd() const
+bool CAudioPlayer::BufferThread::getDidReachEnd() const
 //----------------------------------------------------------------------------------------------------------------------
 {
 	return mInternals->mReachedEnd;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayerBufferThread::shutdown()
+void CAudioPlayer::BufferThread::shutdown()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Request shutdown
@@ -244,4 +212,28 @@ void CAudioPlayerBufferThread::shutdown()
 		// Sleep
 		CThread::sleepFor(0.001);
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioPlayer
+
+// MARK: Properties
+
+const	UniversalTimeInterval	CAudioPlayer::mPreviewDuration = 0.1;
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+UniversalTimeInterval CAudioPlayer::getPlaybackBufferDuration()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	return CPreferences::shared().getUniversalTimeInterval(sPlaybackBufferDurationPref);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioPlayer::setPlaybackBufferDuration(UniversalTimeInterval playbackBufferDuration)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	CPreferences::shared().set(sPlaybackBufferDurationPref, playbackBufferDuration);
 }

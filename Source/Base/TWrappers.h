@@ -239,7 +239,6 @@ template <typename T> struct OP {
 				// Lifecycle methods
 				OP() : mProc(nil) {}
 				OP(T proc) : mProc(proc) {}
-				OP(const OP& other) : mProc(other.mProc) {}
 
 				// Instamce methods
 		bool	hasProc() const
@@ -263,7 +262,6 @@ template <typename T> struct R {
 	public:
 				// Lifecycle methods
 				R(T& reference) : mReference(&reference) {}
-				R(const R<T>& other) : mReference(other.mReference) {}
 
 				// Instamce methods
 		T&		operator*() const
@@ -301,7 +299,6 @@ template <typename T> struct OR {
 				// Lifecycle methods
 				OR() : mReference(nil) {}
 				OR(T& reference) : mReference(&reference) {}
-				OR(const OR& other) : mReference(other.mReference) {}
 
 				// Instamce methods
 		bool	hasReference() const

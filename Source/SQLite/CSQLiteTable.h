@@ -33,9 +33,6 @@ class CSQLiteTable {
 												const CSQLiteTableColumn& tableColumn) :
 											mTable(table), mTableColumn(tableColumn)
 											{}
-										TableAndTableColumn(const TableAndTableColumn& other) :
-											mTable(other.mTable), mTableColumn(other.mTableColumn)
-											{}
 
 										// Instance methods
 			const	CSQLiteTable&		getTable() const
@@ -82,9 +79,6 @@ class CSQLiteTable {
 											TableColumnAndValue(const CSQLiteTableColumn& tableColumn,
 													const SValue& value) :
 												mTableColumn(tableColumn), mValue(value)
-												{}
-											TableColumnAndValue(const TableColumnAndValue& other) :
-												mTableColumn(other.mTableColumn), mValue(other.mValue)
 												{}
 
 											// Instance methods

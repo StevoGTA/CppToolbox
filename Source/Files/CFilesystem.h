@@ -24,7 +24,6 @@ class CFilesystem {
 			public:
 								// Lifecycle methods
 								FileResult(const CFile& file, const SError& error) : TV2(file, error) {}
-								FileResult(const FileResult& other) : TV2(other) {}
 
 								// Instamce methods
 				const	CFile&	getFile() const { return getA(); }
@@ -57,22 +56,32 @@ class CFilesystem {
 
 	// VolumeInfo
 	public:
-		struct VolumeInfo : public TV3<CString, bool, bool> {
+		struct VolumeInfo : public TV7<CString, UInt64, CFolder, UInt32, bool, bool, bool> {
 			// Methods
 			public:
 									// Lifecycle methods
-									VolumeInfo(const CString& filesystemTypeName, bool isLocal, bool isReadOnly) :
-										TV3(filesystemTypeName, isLocal, isReadOnly)
+									VolumeInfo(const CString& filesystemTypeName, UInt64 identifier,
+											const CFolder& rootFolder, UInt32 blockByteCount, bool isLocal,
+											bool isReadOnly, bool supportsHardLinks) :
+										TV7(filesystemTypeName, identifier, rootFolder, blockByteCount, isLocal,
+												isReadOnly, supportsHardLinks)
 										{}
-									VolumeInfo(const VolumeInfo& other) : TV3(other) {}
 
 									// Instance methods
 				const	CString&	getFilesystemTypeName() const
 										{ return getA(); }
-						bool		isLocal() const
+						UInt64		getIdentifier() const
 										{ return getB(); }
-						bool		isReadOnly() const
+				const	CFolder&	getRootFolder() const
 										{ return getC(); }
+						UInt32		getBlockByteCount() const
+										{ return getD(); }
+						bool		isLocal() const
+										{ return getE(); }
+						bool		isReadOnly() const
+										{ return getF(); }
+						bool		supportsHardLinks() const
+										{ return getG(); }
 		};
 
 	// Methods
@@ -90,6 +99,9 @@ class CFilesystem {
 		static	TVResult<VolumeInfo>			getVolumeInfo(const CFile& file);
 		static	TVResult<VolumeInfo>			getVolumeInfo(const CFolder& folder);
 
+												// Creates a new, uniquely named temporary folder on the volume
+		static	TVResult<CFolder>				createTempFolder(const VolumeInfo& volumeInfo);
+
 												// Will copy sourceFolder *into* destinationFolder
 		static	OV<SError>						copy(const CFolder& sourceFolder, const CFolder& destinationFolder);
 
@@ -101,6 +113,9 @@ class CFilesystem {
 
 												// Will replace destinationFile with sourceFile and remove sourceFile
 		static	OV<SError>						replace(const CFile& sourceFile, const CFile& destinationFile);
+
+												// Will create a hard link to file *in* destinationFolder
+		static	OV<SError>						createHardLink(const CFile& file, const CFolder& destinationFolder);
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 		static	CCoreFoundation::O<CFURLRef>	getURLRefFor(const CFolder& folder);

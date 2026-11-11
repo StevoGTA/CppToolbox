@@ -105,6 +105,32 @@ bool CFolder::doesExist() const
 	return (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+const CFolder& CFolder::temp()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	static	CFolder*	sFolder = nil;
+
+	if (sFolder == nil) {
+		// Setup
+		WCHAR	path[MAX_PATH + 1];
+		DWORD	length = ::GetTempPathW(MAX_PATH + 1, path);
+		if (length > 0) {
+			// Success
+			path[length - 1] = 0;	// Remove trailing path separator
+			sFolder = new CFolder(CFilesystemPath(CString(path)));
+		} else
+			// Error
+			CLogServices::logError(
+					CString(OSSTR("GetTempPathW() returned ")) +
+							SErrorFromWindowsGetLastError().getInternalDescription());
+	}
+
+	return *sFolder;
+}
+
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 //----------------------------------------------------------------------------------------------------------------------
 const CFolder& CFolder::userDesktop()

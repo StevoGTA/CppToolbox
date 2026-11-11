@@ -43,9 +43,6 @@ class CVideoProcessor {
 																mResult(timeInterval), mVideoFrame(videoFrame)
 																{}
 															PerformResult(const SError& error) : mResult(error) {}
-															PerformResult(const PerformResult& other) :
-																mResult(other.mResult), mVideoFrame(other.mVideoFrame)
-															{}
 
 															// Instance methods
 				const	TVResult<UniversalTimeInterval>&	getResult() const

@@ -8,6 +8,7 @@
 #include "SError-POSIX.h"
 
 #include <sys/stat.h>
+#include <sys/xattr.h>
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: Macros
@@ -56,6 +57,53 @@ OV<SError> CFile::setLocked(bool lockFile) const
 	if (::chflags(*getFilesystemPath().getString().getUTF8String(), statInfo.st_flags) != 0)
 		// Error
 		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting locked")));
+
+	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<CData> CFile::getExtendedAttributeAsData(const CString& name) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CString::C	path = getFilesystemPath().getString().getUTF8String();
+	CString::C	nameC = name.getUTF8String();
+
+	// Get size
+	ssize_t	byteCount = ::getxattr(*path, *nameC, nil, 0, 0, 0);
+	if (byteCount < 0)
+		// Not present or can't be read
+		return OV<CData>();
+
+	// Read
+	CData	data((CData::ByteCount) byteCount, 0);
+
+	return (::getxattr(*path, *nameC, *data.getMutableBuffer(0, byteCount), byteCount, 0, 0) == byteCount) ?
+			OV<CData>(data) : OV<CData>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFile::setExtendedAttribute(const CString& name, const CData& data) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Write
+	if (::setxattr(*getFilesystemPath().getString().getUTF8String(), *name.getUTF8String(), *data.getUInt8Buffer(),
+			data.getByteCount(), 0, 0) != 0)
+		// Error
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("setting extended attribute")));
+
+	return OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFile::removeExtendedAttribute(const CString& name) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Remove
+	if ((::removexattr(*getFilesystemPath().getString().getUTF8String(), *name.getUTF8String(), 0) != 0) &&
+			(errno != ENOATTR))
+		// Error
+		CFileReportErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("removing extended attribute")));
 
 	return OV<SError>();
 }

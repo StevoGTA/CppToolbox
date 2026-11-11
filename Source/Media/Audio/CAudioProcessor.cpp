@@ -86,6 +86,15 @@ void CAudioProcessor::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNumberArray<Float32> CAudioProcessor::setChannelGains(const TNumberArray<Float32>& channelGains)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check for instance
+	return mInternals->mAudioProcessor.hasValue() ?
+			(*mInternals->mAudioProcessor)->setChannelGains(channelGains) : channelGains;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TVResult<CAudioProcessor::SourceInfo> CAudioProcessor::performInto(CAudioFrames& audioFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {

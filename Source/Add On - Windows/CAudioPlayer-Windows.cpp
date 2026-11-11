@@ -278,6 +278,7 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 									mMaxPeriodInFrames(audioClient.mMaxPeriodInFrames),
 									mMixFormat(audioClient.mMixFormat), mIsPlaying(false), mIsSeeking(false),
 									mLastSeekTimeInterval(0.0), mCurrentPlaybackTimeInterval(0.0), mGain(1.0),
+									mChannelGains(audioClient.mMixFormat->nChannels),
 									mOnFillBufferShouldSendFrames(true), mOnFillBufferIsSendingFrames(false),
 									mOnFillBufferIsReadingQueue(false), mOnFillBufferShouldNotifyEndOfData(false),
 									mOnFillBufferPreviousFrameCount(0), mOnFillBufferFrameIndex(0),
@@ -285,6 +286,10 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 							{
 								// Setup
 								HRESULT	result;
+
+								for (UInt32 i = 0; i < mMixFormat->nChannels; i++)
+									// Start with no change
+									mChannelGains[i] = 1.0f;
 
 								// Check sample ready event
 								if (mFillBufferEvent == nullptr)
@@ -401,9 +406,7 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 										for (UInt32 channelIndex = 0; channelIndex < mMixFormat->nChannels;
 												channelIndex++) {
 											// Setup
-											Float32		gain =
-																(channelIndex < mChannelGains.getCount()) ?
-																		mChannelGains[channelIndex] : mGain;
+											Float32		gain = mGain * mChannelGains[channelIndex];
 											Float32*	samplePtr = (Float32*) data + channelIndex;
 
 											// Iterate samples
@@ -566,6 +569,20 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 								MFShutdown();
 							}
 
+				void	waitForOnFillBufferToStopReadingQueue()
+							{
+								// Wait for onFillBuffer to stop reading the queue.  If the output is no longer
+								//	calling onFillBuffer, nothing is reading the queue, so stop waiting.
+								UniversalTime	deadline =
+														SUniversalTime::getCurrent() +
+																CAudioPlayer::getPlaybackBufferDuration();
+								while (mOnFillBufferIsReadingQueue && (SUniversalTime::getCurrent() < deadline))
+									// Sleep
+									CThread::sleepFor(0.001);
+
+								mOnFillBufferIsReadingQueue = false;
+							}
+
 				void	processHRESULT(HRESULT result, OSStringType method)
 							{
 								// Check result
@@ -605,7 +622,7 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 		IMFAsyncResult*									mFillBufferAsyncResult;
 		ISimpleAudioVolume*								mSimpleAudioVolume;
 		MFWORKITEM_KEY									mFillBufferKey;
-		OI<CAudioPlayerBufferThread>					mAudioPlayerBufferThread;
+		OI<CAudioPlayer::BufferThread>					mAudioPlayerBufferThread;
 		OI<CSRSWBIPSegmentedQueue>						mQueue;
 		State											mState;
 		TMFAsyncCallback<CAudioPlayerImplementation>	mFillBufferAsyncCallback;
@@ -620,8 +637,8 @@ class CAudioPlayerImplementation : public RuntimeClass<RuntimeClassFlags<Classic
 		OV<SMedia::Segment>								mMediaSegment;
 		UniversalTimeInterval							mLastSeekTimeInterval;
 		std::atomic<UniversalTimeInterval>				mCurrentPlaybackTimeInterval;
-		Float32											mGain;
-		TNumberArray<Float32>							mChannelGains;
+		std::atomic<Float32>							mGain;
+		TBuffer<std::atomic<Float32> >					mChannelGains;
 
 		std::atomic<bool>								mOnFillBufferShouldSendFrames;
 		bool											mOnFillBufferIsSendingFrames;
@@ -685,9 +702,7 @@ CAudioPlayer::~CAudioPlayer()
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsReadingQueue)
-		// Sleep
-		CThread::sleepFor(0.001);
+	mInternals->mImplementation->waitForOnFillBufferToStopReadingQueue();
 
 	// Reset
 	mInternals->mImplementation->reset();
@@ -717,8 +732,8 @@ OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 			OI<CSRSWBIPSegmentedQueue>(
 					new CSRSWBIPSegmentedQueue(1, frameCount * mInternals->mImplementation->mMixFormat->nBlockAlign));
 	mInternals->mImplementation->mAudioPlayerBufferThread =
-			OI<CAudioPlayerBufferThread>(
-					new CAudioPlayerBufferThread(*this, *mInternals->mImplementation->mQueue,
+			OI<BufferThread>(
+					new BufferThread(*this, *mInternals->mImplementation->mQueue,
 							mInternals->mImplementation->mMixFormat->nBlockAlign,
 							mInternals->mImplementation->mMaxPeriodInFrames, Internals::readerThreadError, mInternals));
 
@@ -757,9 +772,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsReadingQueue)
-		// Sleep
-		CThread::sleepFor(0.001);
+	mInternals->mImplementation->waitForOnFillBufferToStopReadingQueue();
 
 	// Pause Reader Thread
 	mInternals->mImplementation->mAudioPlayerBufferThread->pause();
@@ -796,14 +809,27 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNumberArray<Float32> CAudioPlayer::setChannelGains(const TNumberArray<Float32>& channelGains)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNumberArray<Float32>	channelGains_ = CAudioDestination::setChannelGains(channelGains);
+
+	// Store
+	for (UInt32 i = 0; i < mInternals->mImplementation->mMixFormat->nChannels; i++)
+		// Store gain for this channel
+		mInternals->mImplementation->mChannelGains[i] = (i < channelGains_.getCount()) ? channelGains_[i] : 1.0f;
+
+	return TNumberArray<Float32>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::stop()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsReadingQueue)
-		// Sleep
-		CThread::sleepFor(0.001);
+	mInternals->mImplementation->waitForOnFillBufferToStopReadingQueue();
 
 	// Reset
 	mInternals->mImplementation->reset();
@@ -857,14 +883,6 @@ void CAudioPlayer::setGain(Float32 gain)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mImplementation->mGain = gain;
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::setGain(const TNumberArray<Float32>& channelGains)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Store
-	mInternals->mImplementation->mChannelGains = channelGains;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -924,9 +942,7 @@ void CAudioPlayer::finishSeek()
 {
 	// Stop sending frames
 	mInternals->mImplementation->mOnFillBufferShouldSendFrames = false;
-	while (mInternals->mImplementation->mOnFillBufferIsReadingQueue)
-		// Sleep
-		CThread::sleepFor(0.001);
+	mInternals->mImplementation->waitForOnFillBufferToStopReadingQueue();
 
 	// Pause Reader Thread
 	mInternals->mImplementation->mAudioPlayerBufferThread->pause();

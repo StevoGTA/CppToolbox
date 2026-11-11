@@ -26,10 +26,6 @@ class CChunkReader : public CByteReader {
 								mUUID(uuid), mByteCount(byteCount), mThisChunkPos(thisChunkPos),
 										mNextChunkPos(nextChunkPos)
 								{}
-							ChunkInfo(const ChunkInfo& other) :
-								mID(other.mID), mUUID(other.mUUID), mByteCount(other.mByteCount),
-										mThisChunkPos(other.mThisChunkPos), mNextChunkPos(other.mNextChunkPos)
-								{}
 
 							// Instance methods
 					bool	hasID() const { return mID.hasValue(); }
@@ -57,10 +53,6 @@ class CChunkReader : public CByteReader {
 								{}
 							Chunk(const CUUID& uuid, const CData& payloadData, UInt64 nextChunkPos) :
 								mUUID(uuid), mPayloadData(payloadData), mNextChunkPos(nextChunkPos)
-								{}
-							Chunk(const Chunk& other) :
-								mID(other.mID), mUUID(other.mUUID), mPayloadData(other.mPayloadData),
-										mNextChunkPos(other.mNextChunkPos)
 								{}
 
 							// Instance methods

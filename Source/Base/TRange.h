@@ -14,7 +14,6 @@ template <typename T> struct TRange {
 	public:
 		// Lifecycle methods
 		TRange(T start, T length) : mStart(start), mLength(length) {}
-		TRange(const TRange<T>& other) : mStart(other.mStart), mLength(other.mLength) {}
 
 			// Instance methods
 		T	getStart() const

@@ -323,9 +323,6 @@ class CPreferences {
 									Reference(CFStringRef applicationIDStringRef) :
 										mApplicationIDStringRef(applicationIDStringRef)
 										{}
-									Reference(const Reference& other) :
-										mApplicationIDStringRef(other.mApplicationIDStringRef)
-										{}
 
 									// Instance methods
 				const	CFStringRef	getApplicationIDStringRef() const
@@ -339,7 +336,6 @@ class CPreferences {
 			public:
 				// Lifecycle methods
 				Reference(UInt32 dummy) {}
-				Reference(const Reference& other) {}
 #endif
 		};
 

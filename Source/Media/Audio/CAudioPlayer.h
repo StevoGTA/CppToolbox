@@ -33,10 +33,6 @@ class CAudioPlayer : public CAudioDestination {
 						mPositionUpdatedProc(positionUpdatedProc), mEndOfDataProc(endOfDataProc), mErrorProc(errorProc),
 								mUserData(userData)
 						{}
-					Info(const Info& other) :
-						mPositionUpdatedProc(other.mPositionUpdatedProc), mEndOfDataProc(other.mEndOfDataProc),
-								mErrorProc(other.mErrorProc), mUserData(other.mUserData)
-						{}
 
 					// Instance methods
 			void	positionUpdated(const CAudioPlayer& audioPlayer, UniversalTimeInterval position)
@@ -52,6 +48,41 @@ class CAudioPlayer : public CAudioDestination {
 				EndOfDataProc		mEndOfDataProc;
 				ErrorProc			mErrorProc;
 				void*				mUserData;
+		};
+
+	// BufferThread
+	public:
+		class BufferThread : public CThread {
+			// Procs
+			public:
+				typedef	void	(*ErrorProc)(const SError& error, void* userData);
+
+			// Classes
+			private:
+				class Internals;
+
+			// Methods
+			public:
+						// Lifecycle methods
+						BufferThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue, UInt32 bytesPerFrame,
+								UInt32 maxOutputFrames, ErrorProc errorProc, void* procsUserData);
+						~BufferThread();
+
+						// CThread methods
+				void	run();
+
+						// Instance methods
+				void	pause();
+				void	resume();
+
+				void	noteQueueReadComplete();
+				bool	getDidReachEnd() const;
+
+				void	shutdown();
+
+			// Properties
+			private:
+				Internals*	mInternals;
 		};
 
 	// Classes
@@ -71,6 +102,8 @@ class CAudioPlayer : public CAudioDestination {
 						void						setMediaSegment(const OV<SMedia::Segment>& mediaSegment);
 						void						seek(UniversalTimeInterval timeInterval);
 
+						TNumberArray<Float32>		setChannelGains(const TNumberArray<Float32>& channelGains);
+
 						void						stop();
 
 													// CAudioDestination methods
@@ -79,9 +112,7 @@ class CAudioPlayer : public CAudioDestination {
 													// Instance methods
 				const	CString&					getIdentifier() const;
 
-													// gain applies to any channel not referenced by channelGains
 						void						setGain(Float32 gain);
-						void						setGain(const TNumberArray<Float32>& channelGains);
 
 						void						play();
 						void						pause();
@@ -113,40 +144,4 @@ class CAudioPlayer : public CAudioDestination {
 
 	private:
 						Internals*				mInternals;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - CAudioPlayerBufferThread
-
-class CAudioPlayerBufferThread : public CThread {
-	// Procs
-	public:
-		typedef	void	(*ErrorProc)(const SError& error, void* userData);
-
-	// Classes
-	private:
-		class Internals;
-
-	// Methods
-	public:
-				// Lifecycle methods
-				CAudioPlayerBufferThread(CAudioPlayer& audioPlayer, CSRSWBIPSegmentedQueue& queue, UInt32 bytesPerFrame,
-						UInt32 maxOutputFrames, ErrorProc errorProc, void* procsUserData);
-				~CAudioPlayerBufferThread();
-
-				// CThread methods
-		void	run();
-
-				// Instance methods
-		void	pause();
-		void	resume();
-
-		void	noteQueueReadComplete();
-		bool	getDidReachEnd() const;
-
-		void	shutdown();
-
-	// Properties
-	private:
-		Internals*	mInternals;
 };

@@ -41,9 +41,6 @@ class CDynamicLibrary {
 												mState(kStateNewerOSRequired), mRequiredOSVersion(requiredOSVersion)
 												{}
 											Loadability(State state) : mState(state) {}
-											Loadability(const Loadability& other) :
-												mState(other.mState), mRequiredOSVersion(other.mRequiredOSVersion)
-												{}
 
 											// Instance methods
 								State		getState() const

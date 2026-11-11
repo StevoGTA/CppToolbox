@@ -20,9 +20,6 @@ class CSQLiteWhere {
 												ValueGroup(const CString& string, const TArray<SSQLiteValue>& values) :
 													mString(string), mValues(values)
 													{}
-												ValueGroup(const ValueGroup& other) :
-													mString(other.mString), mValues(other.mValues)
-													{}
 
 												// Instance methods
 				const	CString&				getString() const

@@ -162,11 +162,6 @@ struct SGregorianDate {
 													Components(UInt32 year, UInt8 month) : mYear(year), mMonth(month) {}
 													Components(UInt32 year) : mYear(year) {}
 													Components(const CDictionary& storageInfo);
-													Components(const Components& other) :
-														mYear(other.mYear), mMonth(other.mMonth), mDay(other.mDay),
-																mHour(other.mHour), mMinute(other.mMinute),
-																mSecond(other.mSecond)
-														{}
 
 													// Instance methods
 									bool			hasYear() const

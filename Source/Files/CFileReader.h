@@ -20,7 +20,6 @@ class CFileReader {
 													UInt64 resourceByteCount) :
 												TV2(appleMetadatas, resourceByteCount)
 												{}
-											AppleMetadataInfo(const AppleMetadataInfo& other) : TV2(other) {}
 
 											// Instance methods
 				const	FileAppleMetadatas&	getAppleMetadatas() const

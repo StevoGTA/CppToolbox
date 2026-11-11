@@ -49,21 +49,6 @@ struct CGPU::Procs {
 #endif
 									mUserData(userData)
 							{}
-						Procs(const Procs& other) :
-							mAcquireContextProc(other.mAcquireContextProc),
-									mTryAcquireContextProc(other.mTryAcquireContextProc),
-									mReleaseContextProc(other.mReleaseContextProc), mGetSizeProc(other.mGetSizeProc),
-									mGetScaleProc(other.mGetScaleProc),
-#if defined(TARGET_OS_IOS)
-									mGetRenderBufferStorageContextProc(other.mGetRenderBufferStorageContextProc),
-									mGetContextProc(other.mGetContextProc),
-#endif
-#if defined(TARGET_OS_MACOS)
-									mGetContextProc(other.mGetContextProc),
-									mGetPixelFormatProc(other.mGetPixelFormatProc),
-#endif
-									mUserData(other.mUserData)
-							{}
 
 						// Instance methods
 	void				acquireContext() const

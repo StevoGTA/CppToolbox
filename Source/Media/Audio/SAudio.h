@@ -38,7 +38,6 @@ struct SAudio {
 										// Lifecycle methods
 										ChannelMap(UInt8 channelCount) : mValue(channelCount) {}
 										ChannelMap(UInt16 rawValue) : mValue(rawValue) {}
-										ChannelMap(const ChannelMap& other) : mValue(other.mValue) {}
 
 										// Instance methods
 							bool		hasUnspecifiedOrder() const
@@ -174,11 +173,6 @@ struct SAudio {
 										mCodecID(other.mCodecID), mBits(other.mBits), mSampleRate(other.mSampleRate),
 												mChannelMap(channelMap)
 										{}
-									Format(const Format& other) :
-										mCodecID(other.mCodecID), mBits(other.mBits), mSampleRate(other.mSampleRate),
-												mEffectiveSampleRate(other.mEffectiveSampleRate),
-												mChannelMap(other.mChannelMap)
-										{}
 
 									// Instance methods
 					OSType			getCodecID() const
@@ -265,11 +259,6 @@ struct SAudio {
 														(channelMap == ChannelMap::_1_0()) ? kInterleaved : interleaved)
 										{}
 									ProcessingFormat(const CDictionary& storageInfo);
-									ProcessingFormat(const ProcessingFormat& other) :
-										mBits(other.mBits), mSampleRate(other.mSampleRate),
-												mChannelMap(other.mChannelMap), mSampleType(other.mSampleType),
-												mEndian(other.mEndian), mInterleaved(other.mInterleaved)
-										{}
 
 									// Instance methods
 				UInt8				getBits() const
@@ -331,19 +320,6 @@ struct SAudio {
 										}
 
 				CDictionary			getStorageInfo() const;
-
-				ProcessingFormat&	operator=(const ProcessingFormat& other)
-										{
-											// Store
-											mBits = other.mBits;
-											mSampleRate = other.mSampleRate;
-											mChannelMap = other.mChannelMap;
-											mSampleType = other.mSampleType;
-											mEndian = other.mEndian;
-											mInterleaved = other.mInterleaved;
-
-											return *this;
-										}
 
 		// Properties
 		private:
@@ -549,6 +525,11 @@ struct SAudio {
 							InterleavedOption		mInterleavedOption;
 	};
 
+	// Sample24Bits
+	struct Sample24Bits {
+		// Properties
+		UInt8	mBytes[3];
+	};
 
 	// Methods
 	public:

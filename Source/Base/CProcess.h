@@ -49,10 +49,6 @@ class CChildProcess {
 									Result(Termination termination, const CData& outputData) :
 										mTermination(termination), mCode(0), mOutputData(outputData)
 										{}
-									Result(const Result& other) :
-										mTermination(other.mTermination), mCode(other.mCode),
-												mOutputData(other.mOutputData)
-										{}
 
 									// Instance methods
 						Termination	getTermination() const

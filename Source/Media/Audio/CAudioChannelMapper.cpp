@@ -5,143 +5,91 @@
 #include "CAudioChannelMapper.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: CAudioChannelMapper::Internals
+// MARK: CAudioChannelMapper::Map
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioChannelMapper::Map CAudioChannelMapper::Map::getMap(const SAudio::ChannelMap& fromAudioChannelMap,
+		const SAudio::ChannelMap& toAudioChannelMap)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt8	inputChannelCount = fromAudioChannelMap.getChannelCount();
+	UInt8	outputChannelCount = toAudioChannelMap.getChannelCount();
+	AssertFailIf((outputChannelCount == 1) && (inputChannelCount > 1));
+
+	// Check situation
+	TNArray<OV<UInt8> >	inputChannelIndexes;
+	if ((inputChannelCount == 1) && (outputChannelCount == 2))
+		// Mono -> Stereo, duplicate the channel
+		inputChannelIndexes += TNArray<OV<UInt8> >(OV<UInt8>(0), 2);
+	else
+		// Fewer -> More copies the channels and leaves the extra ones silent; More -> Fewer keeps the first channels
+		for (UInt8 i = 0; i < outputChannelCount; i++)
+			// Add channel
+			inputChannelIndexes += (i < inputChannelCount) ? OV<UInt8>(i) : OV<UInt8>();
+
+	return Map(inputChannelCount, inputChannelIndexes);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioChannelMapper::Map CAudioChannelMapper::Map::getMapForAddingChannels(UInt8 channelCount, UInt8 addedChannelCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Copy existing channels, added channels are silent
+	TNArray<OV<UInt8> >	inputChannelIndexes;
+	for (UInt8 i = 0; i < channelCount + addedChannelCount; i++)
+		// Add channel
+		inputChannelIndexes += (i < channelCount) ? OV<UInt8>(i) : OV<UInt8>();
+
+	return Map(channelCount, inputChannelIndexes);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CAudioChannelMapper::Map CAudioChannelMapper::Map::getMapForRemovingChannels(UInt8 channelCount,
+		const CBits& channelsToRemove)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Copy kept channels in order
+	TNArray<OV<UInt8> >	inputChannelIndexes;
+	for (UInt8 i = 0; i < channelCount; i++) {
+		// Check if kept
+		if (!channelsToRemove.get(i))
+			// Add channel
+			inputChannelIndexes += OV<UInt8>(i);
+	}
+
+	return Map(channelCount, inputChannelIndexes);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+// MARK: - CAudioChannelMapper::Internals
 
 class CAudioChannelMapper::Internals {
 	public:
-		typedef	void	(*PerformProc)(const CAudioFrames& sourceAudioFrames, CAudioFrames& destinationAudioFrames,
-								UInt32 sourceBytesPerFrame, UInt32 destinationBytesPerFrame);
+		typedef	void	(*CopySamplesProc)(const UInt8* sourcePtr, UInt32 sourceStride, UInt8* destinationPtr,
+								UInt32 destinationStride, UInt32 frameCount);
 
-						Internals() : mPerformProc(nil) {}
+												Internals(const Map& map) : mMap(map), mCopySamplesProc(nil) {}
 
-		static	void	performCopyCommon(const CAudioFrames& sourceAudioFrames,
-								CAudioFrames& destinationAudioFrames, UInt32 sourceBytesPerFrame,
-								UInt32 destinationBytesPerFrame)
-							{
-								// Setup
-								CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
-								CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
+		template <typename T>	static	void	copySamples(const UInt8* sourcePtr, UInt32 sourceStride,
+														UInt8* destinationPtr, UInt32 destinationStride,
+														UInt32 frameCount)
+													{
+														// Copy each sample
+														for (UInt32 i = 0; i < frameCount;
+																i++, sourcePtr += sourceStride,
+																destinationPtr += destinationStride)
+															// Copy sample
+															*((T*) destinationPtr) = *((const T*) sourcePtr);
+													}
 
-								// Check interleaved
-								if (readInfo.getSegmentCount() == 1) {
-									// Interleaved
-									const	UInt8*	sourcePtr = (const UInt8*) readInfo.getSegment(0);
-											UInt8*	destinationPtr = (UInt8*) writeInfo.getSegment(0);
-									for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
-										// Copy frame
-										::memcpy(destinationPtr, sourcePtr, destinationBytesPerFrame);
-										sourcePtr += sourceBytesPerFrame;
-										destinationPtr += destinationBytesPerFrame;
-									}
-								} else {
-									// Non-interleaved
-									for (UInt32 i = 0; i < writeInfo.getSegmentCount(); i++)
-										// Copy
-										::memcpy(writeInfo.getSegment(i), readInfo.getSegment(i),
-												readInfo.getSegmentByteCount());
-								}
-
-								// Complete
-								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
-							}
-		static	void	performSilenceExtra(const CAudioFrames& sourceAudioFrames,
-								CAudioFrames& destinationAudioFrames, UInt32 sourceBytesPerFrame,
-								UInt32 destinationBytesPerFrame)
-							{
-							}
-
-		static	void	performMonoToStereo(const CAudioFrames& sourceAudioFrames, CAudioFrames& destinationAudioFrames,
-								UInt32 sourceBytesPerSample, UInt32 destinationBytesPerSample)
-							{
-								// Setup
-								CAudioFrames::Info	readInfo = sourceAudioFrames.getReadInfo();
-								CAudioFrames::Info	writeInfo = destinationAudioFrames.getWriteInfo();
-
-								// Check interleaved
-								if (readInfo.getSegmentCount() == 1) {
-									// Interleaved
-									switch (sourceBytesPerSample) {
-										case 8: {
-											// 8 bytes per sample
-											const	UInt64*	sourcePtr = (const UInt64*) readInfo.getSegment(0);
-													UInt64*	destinationPtr = (UInt64*) writeInfo.getSegment(0);
-
-											// Perform
-											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
-												// Copy sample
-												(*destinationPtr++) = *sourcePtr;
-												(*destinationPtr++) = (*sourcePtr++);
-											}
-											} break;
-
-										case 4: {
-											// 4 bytes per sample
-											const	UInt32*	sourcePtr = (const UInt32*) readInfo.getSegment(0);
-													UInt32*	destinationPtr = (UInt32*) writeInfo.getSegment(0);
-
-											// Perform
-											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
-												// Copy sample
-												(*destinationPtr++) = *sourcePtr;
-												(*destinationPtr++) = (*sourcePtr++);
-											}
-											} break;
-
-										case 3: {
-											// 3 bytes per sample
-											const	UInt8*	sourcePtr = (const UInt8*) readInfo.getSegment(0);
-													UInt8*	destinationPtr = (UInt8*) writeInfo.getSegment(0);
-
-											// Perform
-											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
-												// Copy sample
-												(*destinationPtr++) = *sourcePtr;
-												(*destinationPtr++) = *(sourcePtr + 1);
-												(*destinationPtr++) = *(sourcePtr + 2);
-												(*destinationPtr++) = (*sourcePtr++);
-												(*destinationPtr++) = (*sourcePtr++);
-												(*destinationPtr++) = (*sourcePtr++);
-											}
-											} break;
-
-										case 2: {
-											// 2 bytes per sample
-											const	UInt16*	sourcePtr = (const UInt16*) readInfo.getSegment(0);
-													UInt16*	destinationPtr = (UInt16*) writeInfo.getSegment(0);
-
-											// Perform
-											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
-												// Copy sample
-												(*destinationPtr++) = *sourcePtr;
-												(*destinationPtr++) = (*sourcePtr++);
-											}
-											} break;
-
-										case 1: {
-											// 1 byte per sample
-											const	UInt8*	sourcePtr = (const UInt8*) readInfo.getSegment(0);
-													UInt8*	destinationPtr = (UInt8*) writeInfo.getSegment(0);
-
-											// Perform
-											for (UInt32 i = 0; i < readInfo.getFrameCount(); i++) {
-												// Copy sample
-												(*destinationPtr++) = *sourcePtr;
-												(*destinationPtr++) = (*sourcePtr++);
-											}
-											} break;
-									}
-								} else {
-									// Non-interleaved
-									AssertFailUnimplemented();
-								}
-
-								// Complete
-								destinationAudioFrames.completeWrite(readInfo.getFrameCount());
-							}
-
+		Map								mMap;
 		OV<SAudio::ProcessingFormat>	mInputAudioProcessingFormat;
 		OI<CAudioFrames>				mInputAudioFrames;
-		PerformProc						mPerformProc;
+		CopySamplesProc					mCopySamplesProc;
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -151,10 +99,10 @@ class CAudioChannelMapper::Internals {
 // MARK: Lifecycle methods
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioChannelMapper::CAudioChannelMapper() : CBasicAudioProcessor()
+CAudioChannelMapper::CAudioChannelMapper(const Map& map) : CBasicAudioProcessor()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals = new Internals();
+	mInternals = new Internals(map);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -175,26 +123,37 @@ OV<SError> CAudioChannelMapper::connectInput(const I<CAudioProcessor>& audioProc
 	mInternals->mInputAudioProcessingFormat.setValue(audioProcessingFormat);
 
 	// Setup
-	if ((mInternals->mInputAudioProcessingFormat->getChannelMap() == SAudio::ChannelMap::_1_0()) &&
-			(mOutputAudioProcessingFormat->getChannelMap() == SAudio::ChannelMap::_2_0_Option1())) {
-		// Mono -> Stereo
-		if ((audioProcessingFormat.getBits() == 64) || (audioProcessingFormat.getBits() == 32) ||
-				(audioProcessingFormat.getBits() == 24) || (audioProcessingFormat.getBits() == 16) ||
-				(audioProcessingFormat.getBits() == 8))
-			// Supported bits
-			mInternals->mPerformProc = Internals::performMonoToStereo;
-		else
+	switch (audioProcessingFormat.getBytesPerSample()) {
+		case 1:
+			// 1 byte per sample
+			mInternals->mCopySamplesProc = Internals::copySamples<UInt8>;
+			break;
+
+		case 2:
+			// 2 bytes per sample
+			mInternals->mCopySamplesProc = Internals::copySamples<UInt16>;
+			break;
+
+		case 3:
+			// 3 bytes per sample
+			mInternals->mCopySamplesProc = Internals::copySamples<SAudio::Sample24Bits>;
+			break;
+
+		case 4:
+			// 4 bytes per sample
+			mInternals->mCopySamplesProc = Internals::copySamples<UInt32>;
+			break;
+
+		case 8:
+			// 8 bytes per sample
+			mInternals->mCopySamplesProc = Internals::copySamples<UInt64>;
+			break;
+
+		default:
 			// Unsupported bits
 			AssertFailUnimplemented();
-	} else if (mInternals->mInputAudioProcessingFormat->getChannelMap().getChannelCount() >
-			mOutputAudioProcessingFormat->getChannelMap().getChannelCount())
-		// More -> Less
-		mInternals->mPerformProc = Internals::performCopyCommon;
-	else
-		// Less -> More
-		mInternals->mPerformProc = Internals::performSilenceExtra;
+	}
 
-	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
 }
 
@@ -217,6 +176,28 @@ TArray<CString> CAudioChannelMapper::getSetupDescription(const CString& indent)
 							CString::mDoubleQuote;
 
 	return setupDescriptions;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+TNumberArray<Float32> CAudioChannelMapper::setChannelGains(const TNumberArray<Float32>& channelGains)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	TNumberArray<Float32>	channelGains_ = CAudioProcessor::setChannelGains(channelGains);
+
+	// Each output channel has the gain of the input channel it takes
+	TNumberArray<Float32>	outputChannelGains;
+	for (UInt8 i = 0; i < mInternals->mMap.getOutputChannelCount(); i++) {
+		// Setup
+		const	OV<UInt8>&	inputChannelIndex = mInternals->mMap.getInputChannelIndex(i);
+
+		// Add gain
+		outputChannelGains +=
+				(inputChannelIndex.hasValue() && (*inputChannelIndex < channelGains_.getCount())) ?
+						channelGains_[*inputChannelIndex] : 1.0f;
+	}
+
+	return outputChannelGains;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -248,10 +229,52 @@ TVResult<CAudioProcessor::SourceInfo> CAudioChannelMapper::performInto(CAudioFra
 	TVResult<SourceInfo>	sourceInfo = CAudioProcessor::performInto(*mInternals->mInputAudioFrames);
 	ReturnValueIfResultError(sourceInfo, sourceInfo);
 
-	// Perform
-	mInternals->mPerformProc(*mInternals->mInputAudioFrames, audioFrames,
-			mInternals->mInputAudioProcessingFormat->getBytesPerFrame(),
-			mOutputAudioProcessingFormat->getBytesPerFrame());
+	// Setup
+	const	Map&				map = mInternals->mMap;
+			CAudioFrames::Info	readInfo = mInternals->mInputAudioFrames->getReadInfo();
+			CAudioFrames::Info	writeInfo = audioFrames.getWriteInfo();
+			UInt32				frameCount = readInfo.getFrameCount();
+			UInt32				bytesPerSample = mInternals->mInputAudioProcessingFormat->getBytesPerSample();
+
+	// Check interleaved
+	if (mInternals->mInputAudioProcessingFormat->getIsInterleaved()) {
+		// Interleaved
+		UInt32	inputBytesPerFrame = bytesPerSample * map.getInputChannelCount();
+		UInt32	outputBytesPerFrame = bytesPerSample * map.getOutputChannelCount();
+		for (UInt8 i = 0; i < map.getOutputChannelCount(); i++) {
+			// Setup
+			const	OV<UInt8>&	inputChannelIndex = map.getInputChannelIndex(i);
+					UInt8*		destinationPtr = (UInt8*) writeInfo.getSegment(0) + i * bytesPerSample;
+
+			// Check if have input channel
+			if (inputChannelIndex.hasValue())
+				// Copy samples
+				mInternals->mCopySamplesProc(
+						(const UInt8*) readInfo.getSegment(0) + *inputChannelIndex * bytesPerSample, inputBytesPerFrame,
+						destinationPtr, outputBytesPerFrame, frameCount);
+			else
+				// Silence
+				for (UInt32 frameIndex = 0; frameIndex < frameCount;
+						frameIndex++, destinationPtr += outputBytesPerFrame)
+					// Clear sample
+					::memset(destinationPtr, 0, bytesPerSample);
+		}
+	} else {
+		// Non-interleaved
+		for (UInt8 i = 0; i < map.getOutputChannelCount(); i++) {
+			// Check if have input channel
+			const	OV<UInt8>&	inputChannelIndex = map.getInputChannelIndex(i);
+			if (inputChannelIndex.hasValue())
+				// Copy segment
+				::memcpy(writeInfo.getSegment(i), readInfo.getSegment(*inputChannelIndex), frameCount * bytesPerSample);
+			else
+				// Silence
+				::memset(writeInfo.getSegment(i), 0, frameCount * bytesPerSample);
+		}
+	}
+
+	// Complete
+	audioFrames.completeWrite(frameCount);
 
 	return sourceInfo;
 }
@@ -290,12 +313,8 @@ bool CAudioChannelMapper::canPerform(const SAudio::ChannelMap& fromAudioChannelM
 		const SAudio::ChannelMap& toAudioChannelMap)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	return
-			// Mono -> Stereo
-			((fromAudioChannelMap == SAudio::ChannelMap::_1_0()) &&
-					(toAudioChannelMap == SAudio::ChannelMap::_2_0_Option1())) ||
-
-			// Stereo -> Mono
-			((fromAudioChannelMap == SAudio::ChannelMap::_2_0_Option1()) &&
-					(toAudioChannelMap == SAudio::ChannelMap::_1_0()));
+	// Mapping is by position, so at least one channel map must have unspecified order
+	return (fromAudioChannelMap.getChannelCount() > 0) && (toAudioChannelMap.getChannelCount() > 0) &&
+			(fromAudioChannelMap.hasUnspecifiedOrder() || toAudioChannelMap.hasUnspecifiedOrder()) &&
+			!((toAudioChannelMap.getChannelCount() == 1) && (fromAudioChannelMap.getChannelCount() > 1));
 }

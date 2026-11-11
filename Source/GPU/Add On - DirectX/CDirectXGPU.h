@@ -40,16 +40,6 @@ struct CGPU::Procs {
 											mHandledDeviceValidationProc(handledDeviceValidationProc),
 											mUserData(userData)
 									{}
-								Procs(const Procs& other) :
-									mGetCoreWindowProc(other.mGetCoreWindowProc),
-											mGetDisplaySupportInfoProc(other.mGetDisplaySupportInfoProc),
-											mGetFPSProc(other.mGetFPSProc),  mGetDPIProc(other.mGetDPIProc),
-											mGetSizeProc(other.mGetSizeProc),
-											mGetOrientationProc(other.mGetOrientationProc),
-											mRequiresDeviceValidationProc(other.mRequiresDeviceValidationProc),
-											mHandledDeviceValidationProc(other.mHandledDeviceValidationProc),
-											mUserData(other.mUserData)
-									{}
 
 								// Instance methods
 	CoreWindow^					getCoreWindow() const

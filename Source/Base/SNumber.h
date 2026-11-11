@@ -86,7 +86,6 @@ template <typename T> class TNumber : public CHashable {
 	public:
 				// Lifecycle methods
 				TNumber(T value) : mValue(value) {}
-				TNumber(const TNumber<T>& other) : mValue(other.mValue) {}
 
 				// CEquatable methods
 		bool	operator==(const CEquatable& other) const

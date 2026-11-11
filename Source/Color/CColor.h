@@ -72,9 +72,6 @@ class CColor : public CEquatable {
 										mBlue((Float32) blue / (Float32) 255.0),
 										mAlpha((Float32) alpha / (Float32) 255.0)
 								{}
-							RGBValues(const RGBValues& other) :
-								mRed(other.mRed), mGreen(other.mGreen), mBlue(other.mBlue), mAlpha(other.mAlpha)
-								{}
 
 							// Instance methods
 				Float32		getRed() const
@@ -164,9 +161,6 @@ class CColor : public CEquatable {
 						// Lifecycle methods
 						HSVValues(Float32 hue, Float32 saturation, Float32 value, Float32 alpha = 1.0) :
 							mHue(hue), mSaturation(saturation), mValue(value), mAlpha(alpha)
-							{}
-						HSVValues(const HSVValues& other) :
-							mHue(other.mHue), mSaturation(other.mSaturation), mValue(other.mValue), mAlpha(other.mAlpha)
 							{}
 
 						// Instance methods

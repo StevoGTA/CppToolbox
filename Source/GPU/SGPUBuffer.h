@@ -13,7 +13,6 @@
 struct SGPUBuffer {
 	// Lifecycle methods
 	SGPUBuffer(void* platformReference) : mPlatformReference(platformReference) {}
-	SGPUBuffer(const SGPUBuffer& other) : mPlatformReference(other.mPlatformReference) {}
 
 	// Properties
 	void*	mPlatformReference;
@@ -26,10 +25,6 @@ struct SGPUVertexBuffer : SGPUBuffer {
 	// Lifecycle methods
 	SGPUVertexBuffer(UInt32 perVertexByteCount, void* platformReference) :
 		SGPUBuffer(platformReference), mPerVertexByteCount(perVertexByteCount)
-		{}
-	SGPUVertexBuffer(const SGPUVertexBuffer& other) :
-		SGPUBuffer(other),
-				mPerVertexByteCount(other.mPerVertexByteCount)
 		{}
 
 	// Properties

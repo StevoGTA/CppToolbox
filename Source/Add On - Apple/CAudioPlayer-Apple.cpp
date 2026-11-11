@@ -30,7 +30,8 @@ class CAudioEngine {
 
 				void						setMaxAudioPlayers(UInt32 maxAudioPlayers);
 				OV<UInt32>					addAudioPlayer(AURenderCallback inputProc, void* userData);
-				void						setAudioPlayerGain(UInt32 index, Float32 gain);
+				void						setAudioPlayerGains(UInt32 index, Float32 gain,
+													const TNumberArray<Float32>& channelGains);
 				void						play();
 				void						removeAudioPlayer(UInt32 index);
 
@@ -196,13 +197,34 @@ OV<UInt32> CAudioEngine::addAudioPlayer(AURenderCallback inputProc, void* userDa
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CAudioEngine::setAudioPlayerGain(UInt32 index, Float32 gain)
+void CAudioEngine::setAudioPlayerGains(UInt32 index, Float32 gain, const TNumberArray<Float32>& channelGains)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Set gain
-	OSStatus	status =
-						::AudioUnitSetParameter(mMixerAudioUnit, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input,
-								index, gain, 0);
+	// Get output format
+	AudioStreamBasicDescription	outputASBD;
+	UInt32						size = sizeof(AudioStreamBasicDescription);
+	OSStatus					status =
+										::AudioUnitGetProperty(mMixerAudioUnit, kAudioUnitProperty_StreamFormat,
+												kAudioUnitScope_Output, 0, &outputASBD, &size);
+	LogOSStatusIfFailedAndReturn(status, CString(OSSTR("AudioUnitGetProperty(MixerAudioUnit, Output StreamFormat)")));
+
+	// Compose matrix levels.  Each input channel goes to the same output channel at gain * its channel gain.
+	TBuffer<Float32>	matrixLevels(mASBD.mChannelsPerFrame * outputASBD.mChannelsPerFrame);
+	for (UInt32 i = 0; (i < mASBD.mChannelsPerFrame) && (i < outputASBD.mChannelsPerFrame); i++)
+		// Set level
+		matrixLevels[i * outputASBD.mChannelsPerFrame + i] =
+				gain * ((i < channelGains.getCount()) ? channelGains[i] : 1.0f);
+
+	// Set matrix levels
+	status =
+			::AudioUnitSetProperty(mMixerAudioUnit, kAudioUnitProperty_MatrixLevels, kAudioUnitScope_Input, index,
+					*matrixLevels, (UInt32) matrixLevels.getByteCount());
+	LogOSStatusIfFailed(status, CString(OSSTR("AudioUnitSetProperty(MixerAudioUnit, MatrixLevels)")));
+
+	// Set volume.  An input's volume starts at 0 and multiplies with its matrix levels.
+	status =
+			::AudioUnitSetParameter(mMixerAudioUnit, kMultiChannelMixerParam_Volume, kAudioUnitScope_Input, index, 1.0,
+					0);
 	LogOSStatusIfFailed(status, CString(OSSTR("AudioUnitSetParameter(MixerAudioUnit, Volume)")));
 }
 
@@ -259,6 +281,20 @@ class CAudioPlayer::Internals {
 										mRenderProcFrameIndex(0), mRenderProcFrameCount(~0)
 								{}
 
+				void		waitForRenderProcToStopReadingQueue()
+								{
+									// Wait for the render proc to stop reading the queue.  If the output is no longer
+									//	calling the render proc, nothing is reading the queue, so stop waiting.
+									UniversalTime	deadline =
+															SUniversalTime::getCurrent() +
+																	CAudioPlayer::getPlaybackBufferDuration();
+									while (mRenderProcIsReadingQueue && (SUniversalTime::getCurrent() < deadline))
+										// Sleep
+										CThread::sleepFor(0.001);
+
+									mRenderProcIsReadingQueue = false;
+								}
+
 		static	void		readerThreadError(const SError& error, Internals* internals)
 								{ internals->mInfo.error(internals->mAudioPlayer, error); }
 
@@ -298,7 +334,7 @@ class CAudioPlayer::Internals {
 													internals.mCurrentPlaybackTimeInterval);
 
 										// Notify queue read complete
-										internals.mAudioPlayerBufferThread->noteQueueReadComplete();
+										internals.mBufferThread->noteQueueReadComplete();
 									}
 
 									// Check if should send frames
@@ -372,7 +408,7 @@ class CAudioPlayer::Internals {
 													// Fulfilled the requirements, but did not fill a buffer.  Must be
 													//	seeking
 													internals.mRenderProcIsSendingFrames = true;
-												else if (!internals.mAudioPlayerBufferThread->getDidReachEnd()) {
+												else if (!internals.mBufferThread->getDidReachEnd()) {
 													// Have a discontinuity in the queued frames
 													CLogServices::logError(
 															CString(OSSTR("CAudioPlayer ")) + internals.mIdentifier +
@@ -400,25 +436,6 @@ class CAudioPlayer::Internals {
 												// Update
 												internals.mRenderProcIsSendingFrames = true;
 										}
-
-										// Check if have frames
-										if (internals.mRenderProcPreviousFrameCount > 0) {
-											// Iterate channels
-											for (UInt32 channelIndex = 0; channelIndex < ioData->mNumberBuffers;
-													channelIndex++) {
-												// Setup
-												Float32		gain =
-																	(channelIndex < internals.mChannelGains.getCount()) ?
-																			internals.mChannelGains[channelIndex] :
-																			internals.mGain;
-												Float32*	samplePtr = (Float32*) ioData->mBuffers[channelIndex].mData;
-
-												// Apply
-												for (UInt32 sampleIndex = 0;
-														sampleIndex < internals.mRenderProcPreviousFrameCount;
-														sampleIndex++, *(samplePtr++) *= gain) ;
-											}
-										}
 									} else {
 										// Not sending frames
 										*inActionFlags = kAudioUnitRenderAction_OutputIsSilence;
@@ -437,7 +454,7 @@ class CAudioPlayer::Internals {
 		CString								mIdentifier;
 		CAudioPlayer::Info					mInfo;
 
-		OI<CAudioPlayerBufferThread>		mAudioPlayerBufferThread;
+		OI<BufferThread>					mBufferThread;
 		OI<CSRSWBIPSegmentedQueue>			mQueue;
 		OV<UInt32>							mAudioEngineIndex;
 		OV<SAudio::ProcessingFormat>		mAudioProcessingFormat;
@@ -482,9 +499,7 @@ CAudioPlayer::~CAudioPlayer()
 {
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsReadingQueue)
-		// Sleep
-		CThread::sleepFor(0.001);
+	mInternals->waitForRenderProcToStopReadingQueue();
 
 	// Remove from engine
 	if (mInternals->mAudioEngineIndex.hasValue())
@@ -492,9 +507,9 @@ CAudioPlayer::~CAudioPlayer()
 		CAudioEngine::mShared.removeAudioPlayer(*mInternals->mAudioEngineIndex);
 
 	// Stop threads
-	if (mInternals->mAudioPlayerBufferThread.hasInstance())
+	if (mInternals->mBufferThread.hasInstance())
 		// Shutdown
-		mInternals->mAudioPlayerBufferThread->shutdown();
+		mInternals->mBufferThread->shutdown();
 
 	// Cleanup
 	Delete(mInternals);
@@ -529,11 +544,11 @@ OV<SError> CAudioPlayer::connectInput(const I<CAudioProcessor>& audioProcessor,
 	mInternals->mQueue =
 			OI<CSRSWBIPSegmentedQueue>(
 					new CSRSWBIPSegmentedQueue(segmentCount, frameCount * *mInternals->mBytesPerFrame));
-	mInternals->mAudioPlayerBufferThread =
-			OI<CAudioPlayerBufferThread>(
-					new CAudioPlayerBufferThread(*this, *mInternals->mQueue, *mInternals->mBytesPerFrame,
+	mInternals->mBufferThread =
+			OI<BufferThread>(
+					new BufferThread(*this, *mInternals->mQueue, *mInternals->mBytesPerFrame,
 							CAudioEngine::mShared.getMaxOutputFrames(),
-							(CAudioPlayerBufferThread::ErrorProc) Internals::readerThreadError, mInternals));
+							(BufferThread::ErrorProc) Internals::readerThreadError, mInternals));
 
 	// Do super
 	return CAudioProcessor::connectInput(audioProcessor, audioProcessingFormat);
@@ -576,17 +591,16 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 			// No available slots
 			return;
 
-		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
+		CAudioEngine::mShared.setAudioPlayerGains(*mInternals->mAudioEngineIndex, mInternals->mGain,
+				mInternals->mChannelGains);
 	}
 
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsReadingQueue)
-		// Sleep
-		CThread::sleepFor(0.001);
+	mInternals->waitForRenderProcToStopReadingQueue();
 
 	// Pause Reader Thread
-	mInternals->mAudioPlayerBufferThread->pause();
+	mInternals->mBufferThread->pause();
 
 	// Reset buffer
 	mInternals->mQueue->reset();
@@ -604,7 +618,7 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 			!mInternals->mIsPlaying ? (UInt32) (*mInternals->mSampleRate * CAudioPlayer::mPreviewDuration) : ~0;
 
 	// Resume
-	mInternals->mAudioPlayerBufferThread->resume();
+	mInternals->mBufferThread->resume();
 
 	// Send frames
 	mInternals->mRenderProcShouldSendFrames = true;
@@ -617,14 +631,28 @@ void CAudioPlayer::seek(UniversalTimeInterval timeInterval)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TNumberArray<Float32> CAudioPlayer::setChannelGains(const TNumberArray<Float32>& channelGains)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Store
+	mInternals->mChannelGains = CAudioDestination::setChannelGains(channelGains);
+
+	// Check if have audio engine index
+	if (mInternals->mAudioEngineIndex.hasValue())
+		// Update
+		CAudioEngine::mShared.setAudioPlayerGains(*mInternals->mAudioEngineIndex, mInternals->mGain,
+				mInternals->mChannelGains);
+
+	return TNumberArray<Float32>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CAudioPlayer::stop()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsReadingQueue)
-		// Sleep
-		CThread::sleepFor(0.001);
+	mInternals->waitForRenderProcToStopReadingQueue();
 
 	// Remove from engine
 	if (mInternals->mAudioEngineIndex.hasValue()) {
@@ -637,7 +665,7 @@ void CAudioPlayer::stop()
 	mInternals->mIsPlaying = false;
 
 	// Pause Reader Thread
-	mInternals->mAudioPlayerBufferThread->pause();
+	mInternals->mBufferThread->pause();
 
 	// Reset buffer
 	mInternals->mQueue->reset();
@@ -654,7 +682,7 @@ void CAudioPlayer::stop()
 	mInternals->mRenderProcFrameCount = ~0;
 
 	// Resume
-	mInternals->mAudioPlayerBufferThread->resume();
+	mInternals->mBufferThread->resume();
 }
 
 // MARK: CAudioDestination methods
@@ -663,7 +691,7 @@ void CAudioPlayer::stop()
 void CAudioPlayer::setupComplete()
 //----------------------------------------------------------------------------------------------------------------------
 {
-	mInternals->mAudioPlayerBufferThread->resume();
+	mInternals->mBufferThread->resume();
 }
 
 // MARK: Instance methods
@@ -681,14 +709,12 @@ void CAudioPlayer::setGain(Float32 gain)
 {
 	// Store
 	mInternals->mGain = gain;
-}
 
-//----------------------------------------------------------------------------------------------------------------------
-void CAudioPlayer::setGain(const TNumberArray<Float32>& channelGains)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Store
-	mInternals->mChannelGains = channelGains;
+	// Check if have audio engine index
+	if (mInternals->mAudioEngineIndex.hasValue())
+		// Update
+		CAudioEngine::mShared.setAudioPlayerGains(*mInternals->mAudioEngineIndex, mInternals->mGain,
+				mInternals->mChannelGains);
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -703,7 +729,8 @@ void CAudioPlayer::play()
 			// No available slots
 			return;
 
-		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
+		CAudioEngine::mShared.setAudioPlayerGains(*mInternals->mAudioEngineIndex, mInternals->mGain,
+				mInternals->mChannelGains);
 	}
 
 	// We are now playing
@@ -749,7 +776,8 @@ void CAudioPlayer::startSeek()
 			// No available slots
 			return;
 
-		CAudioEngine::mShared.setAudioPlayerGain(*mInternals->mAudioEngineIndex, 1.0);
+		CAudioEngine::mShared.setAudioPlayerGains(*mInternals->mAudioEngineIndex, mInternals->mGain,
+				mInternals->mChannelGains);
 	}
 
 	// Stop sending frames
@@ -770,12 +798,10 @@ void CAudioPlayer::finishSeek()
 {
 	// Stop sending frames
 	mInternals->mRenderProcShouldSendFrames = false;
-	while (mInternals->mRenderProcIsReadingQueue)
-		// Sleep
-		CThread::sleepFor(0.001);
+	mInternals->waitForRenderProcToStopReadingQueue();
 
 	// Pause Reader Thread
-	mInternals->mAudioPlayerBufferThread->pause();
+	mInternals->mBufferThread->pause();
 
 	// Reset buffer
 	mInternals->mQueue->reset();
@@ -791,7 +817,7 @@ void CAudioPlayer::finishSeek()
 	mInternals->mRenderProcFrameCount = ~0;
 
 	// Resume
-	mInternals->mAudioPlayerBufferThread->resume();
+	mInternals->mBufferThread->resume();
 
 	// Begin sending frames again
 	mInternals->mRenderProcShouldNotifyEndOfData = true;

@@ -15,7 +15,6 @@ struct SMedia {
 	struct Packet {
 				// Lifecycle methods
 				Packet(UInt32 duration, UInt32 byteCount) : mDuration(duration), mByteCount(byteCount) {}
-				Packet(const Packet& other) : mDuration(other.mDuration), mByteCount(other.mByteCount) {}
 
 				// Instance methods
 		UInt32	getDuration() const
@@ -74,7 +73,6 @@ struct SMedia {
 							mDuration(duration), mData(*data, data.getByteCount())
 							{}
 						PacketData(UInt32 duration, const CData& data) : mDuration(duration), mData(data) {}
-						PacketData(const PacketData& other) : mDuration(other.mDuration), mData(other.mData) {}
 
 						// Instance methods
 				UInt32	getDuration() const
@@ -110,10 +108,6 @@ struct SMedia {
 																	startTimeInterval + durationTimeInterval +
 																			outHandleTimeInterval) - mStartTimeInterval)
 											{}
-										Segment(const Segment& other) :
-											mStartTimeInterval(other.mStartTimeInterval),
-													mDurationTimeInterval(other.mDurationTimeInterval)
-											{}
 
 										// Instance methods
 				UniversalTimeInterval	getStartTimeInterval() const
@@ -128,15 +122,6 @@ struct SMedia {
 				bool					contains(UniversalTimeInterval timeInterval) const
 											{ return (timeInterval >= mStartTimeInterval) &&
 													(timeInterval < getEndTimeInterval()); }
-
-				Segment&				operator=(const Segment& other)
-											{
-												// Store
-												mStartTimeInterval = other.mStartTimeInterval;
-												mDurationTimeInterval = other.mDurationTimeInterval;
-
-												return *this;
-											}
 
 			// Properties
 			private:
@@ -156,9 +141,6 @@ struct SMedia {
 										SegmentInfo(UniversalTimeInterval duration, UInt64 byteCount) :
 											mDuration(duration),
 													mBitrate((UInt32) ((Float32) byteCount * 8 / (Float32) duration))
-											{}
-										SegmentInfo(const SegmentInfo& other) :
-											mDuration(other.mDuration), mBitrate(other.mBitrate)
 											{}
 
 										// Instance methods

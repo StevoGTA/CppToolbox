@@ -18,7 +18,6 @@ class C2DRenderer {
 			// Methods
 									// Lifecycle methods
 									Font(const CString& name, Float32 size) : mName(name), mSize(size) {}
-									Font(const Font& other) : mName(other.mName), mSize(other.mSize) {}
 
 									// Instance methods
 				const	CString&	getName() const

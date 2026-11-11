@@ -128,11 +128,6 @@ template <typename T> class TNumberArray : public CArray {
 									mIteratorInfo(iteratorInfo),
 									mCurrentValue((TNumber<T>*) iteratorInfo->getCurrentItem())
 							{}
-						Iterator(const Iterator& other) :
-							CIterator(other),
-									mIteratorInfo(other.mIteratorInfo),
-									mCurrentValue(other.mCurrentValue)
-							{}
 
 						// CIterator methods
 				bool	isValid() const
@@ -189,7 +184,6 @@ template <typename T> class TNumberArray : public CArray {
 												// Add
 												TNumberArray<T>::add((T) *iterator);
 										}
-									TNumberArray(const TNumberArray<T>& other) : CArray(other) {}
 
 									// CArray methods
 				TNumberArray<T>&	add(T value)
@@ -321,11 +315,6 @@ template <typename T> class TArray : public CArray {
 									mIteratorInfo(iteratorInfo),
 									mCurrentItem((T*) iteratorInfo->getCurrentItem())
 							{}
-						Iterator(const Iterator& other) :
-							CIterator(other),
-									mIteratorInfo(other.mIteratorInfo),
-									mCurrentItem(other.mCurrentItem)
-							{}
 
 						// CIterator methods
 				bool	isValid() const
@@ -353,9 +342,6 @@ template <typename T> class TArray : public CArray {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								TArray(const TArray<T>& other) : CArray(other) {}
-
 								// CArray methods
 		bool					contains(const T& item) const
 									{ return getIndexOf(item).hasValue(); }

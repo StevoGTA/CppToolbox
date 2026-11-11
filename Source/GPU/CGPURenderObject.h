@@ -34,6 +34,5 @@ class CGPURenderObject {
 	public:
 				// Lifecycle methods
 				CGPURenderObject() {}
-				CGPURenderObject(const CGPURenderObject& other) {}
 		virtual	~CGPURenderObject() {}
 };

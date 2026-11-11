@@ -557,6 +557,16 @@ void CMediaPlayer::setAudioGain(Float32 audioGain)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CMediaPlayer::setAudioChannelGains(const TNumberArray<Float32>& audioChannelGains)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate all audio tracks
+	for (UInt32 i = 0; i < getAudioTrackCount(); i++)
+		// Set channel gains to this audio track
+		getAudioDestination(i)->setChannelGains(audioChannelGains);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 I<CVideoFrameStore> CMediaPlayer::newVideoFrameStore(const CString& identifier, UInt32 trackIndex)
 //----------------------------------------------------------------------------------------------------------------------
 {

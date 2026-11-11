@@ -26,7 +26,6 @@ class CFile : public CHashable {
 											Identity(OSType fileType, const OV<OSType>& fileCreator) :
 												TV2(fileType, fileCreator)
 												{}
-											Identity(const Identity& other) : TV2(other) {}
 
 											// Instance methods
 								OSType		getFileType() const
@@ -51,9 +50,6 @@ class CFile : public CHashable {
 												mResourceForkData(resourceForkData)
 												{}
 											AppleMetadata(const Identity& identity) : mIdentity(identity) {}
-											AppleMetadata(const AppleMetadata& other) :
-												mResourceForkData(other.mResourceForkData), mIdentity(other.mIdentity)
-												{}
 
 											// Instance methods
 				const	OV<CData>&			getResourceForkData() const
@@ -174,6 +170,10 @@ class CFile : public CHashable {
 
 						bool					getLocked() const;
 						OV<SError>				setLocked(bool lockFile) const;
+
+						OV<CData>				getExtendedAttributeAsData(const CString& name) const;
+						OV<SError>				setExtendedAttribute(const CString& name, const CData& data) const;
+						OV<SError>				removeExtendedAttribute(const CString& name) const;
 
 						UniversalTime			getCreationUniversalTime() const;
 						UniversalTime			getModificationUniversalTime() const;

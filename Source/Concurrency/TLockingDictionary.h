@@ -54,7 +54,6 @@ template <typename T> class TLockingDictionary : public CDictionary {
 			public:
 					// Lifecycle methods
 					Iterator(const I<IteratorInfo>& iteratorInfo) : CDictionary::Iterator(iteratorInfo) {}
-					Iterator(const Iterator& other) : CDictionary::Iterator(other) {}
 
 					// Instance methods
 				T&	getValue() const
@@ -68,7 +67,6 @@ template <typename T> class TLockingDictionary : public CDictionary {
 			public:
 					// Lifecycle methods
 					ValueIterator(const I<IteratorInfo>& iteratorInfo) : CDictionary::ValueIterator(iteratorInfo) {}
-					ValueIterator(const ValueIterator& other) : CDictionary::ValueIterator(other) {}
 
 					// Instance methods
 				T&	operator*() const

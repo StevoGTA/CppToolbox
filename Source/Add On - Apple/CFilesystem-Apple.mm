@@ -10,6 +10,7 @@
 #import "SError-POSIX.h"
 
 #import <Foundation/Foundation.h>
+#import <sys/attr.h>
 #import <sys/mount.h>
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -63,9 +64,31 @@ static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& f
 		// Error
 		return TVResult<CFilesystem::VolumeInfo>(SErrorFromPOSIXerror(errno));
 
+	// Get volume capabilities.  Volume attributes must be requested from the volume's mount point.  A volume that
+	//	can't report its capabilities is treated as not supporting hard links.
+	struct attrlist	attributeList = {0};
+	attributeList.bitmapcount = ATTR_BIT_MAP_COUNT;
+	attributeList.volattr = ATTR_VOL_INFO | ATTR_VOL_CAPABILITIES;
+
+	struct {
+		UInt32					mByteCount;
+		vol_capabilities_attr_t	mCapabilities;
+	} __attribute__((aligned(4), packed))	capabilitiesInfo;
+
+	bool	supportsHardLinks =
+					(::getattrlist(statfsInfo.f_mntonname, &attributeList, &capabilitiesInfo,
+									sizeof(capabilitiesInfo), 0) == 0) &&
+							((capabilitiesInfo.mCapabilities.capabilities[VOL_CAPABILITIES_FORMAT] &
+									capabilitiesInfo.mCapabilities.valid[VOL_CAPABILITIES_FORMAT] &
+											VOL_CAP_FMT_HARDLINKS) != 0);
+
 	return TVResult<CFilesystem::VolumeInfo>(
-			CFilesystem::VolumeInfo(CString(statfsInfo.f_fstypename, MFSTYPENAMELEN, CString::kEncodingUTF8),
-					(statfsInfo.f_flags & MNT_LOCAL) != 0, (statfsInfo.f_flags & MNT_RDONLY) != 0));
+			CFilesystem::VolumeInfo(
+					CString(statfsInfo.f_fstypename, MFSTYPENAMELEN, CString::kEncodingUTF8),
+					((UInt64) (UInt32) statfsInfo.f_fsid.val[0] << 32) | (UInt32) statfsInfo.f_fsid.val[1],
+					CFolder(CFilesystemPath(CString(statfsInfo.f_mntonname, MAXPATHLEN, CString::kEncodingUTF8))),
+					statfsInfo.f_bsize, (statfsInfo.f_flags & MNT_LOCAL) != 0, (statfsInfo.f_flags & MNT_RDONLY) != 0,
+					supportsHardLinks));
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -330,6 +353,23 @@ TVResult<CFilesystem::VolumeInfo> CFilesystem::getVolumeInfo(const CFolder& fold
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+TVResult<CFolder> CFilesystem::createTempFolder(const VolumeInfo& volumeInfo)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Create.  macOS removes these folders when they are left behind.
+	NSError*	error;
+	NSURL*		url =
+						[NSFileManager.defaultManager URLForDirectory:NSItemReplacementDirectory
+								inDomain:NSUserDomainMask
+								appropriateForURL:(__bridge NSURL*) *getURLRefFor(volumeInfo.getRootFolder())
+								create:YES error:&error];
+
+	return (url != nil) ?
+			TVResult<CFolder>(CFolder(CFilesystemPath(CString((__bridge CFStringRef) url.path)))) :
+			TVResult<CFolder>(SErrorFromNSError(error));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinationFile)
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -348,6 +388,24 @@ OV<SError> CFilesystem::replace(const CFile& sourceFile, const CFile& destinatio
 		// Error
 		CFilesystemReportFilesErrorAndReturnError(SErrorFromNSError(error), CString(OSSTR("replacing file")),
 				sourceFile, destinationFile);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+OV<SError> CFilesystem::createHardLink(const CFile& file, const CFolder& destinationFolder)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CFile	destinationFile(destinationFolder.getFilesystemPath().appendingComponent(file.getName()));
+
+	// Create hard link
+	if (::link(*file.getFilesystemPath().getString().getUTF8String(),
+			*destinationFile.getFilesystemPath().getString().getUTF8String()) == 0)
+		// Success
+		return OV<SError>();
+	else
+		// Error
+		CFilesystemReportFilesErrorAndReturnError(SErrorFromPOSIXerror(errno), CString(OSSTR("creating hard link")),
+				file, destinationFile);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -15,7 +15,6 @@ template <typename T> struct TCIResult {
 					TCIResult(T* instance) : mInstance(OCI<T>(instance)) {}
 					TCIResult(const OCI<T>& instance) : mInstance(instance) {}
 					TCIResult(const SError& error) : mError(OV<SError>(error)) {}
-					TCIResult(const TCIResult& other) : mInstance(other.mInstance), mError(other.mError) {}
 
 					// Instance Methods
 			bool	hasInstance() const

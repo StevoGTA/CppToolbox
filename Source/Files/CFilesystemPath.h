@@ -103,7 +103,6 @@ struct SFilesystemPathAndError : public TV2<CFilesystemPath, SError> {
 											const SError& error) :
 										TV2(filesystemPath, error)
 										{}
-									SFilesystemPathAndError(const SFilesystemPathAndError& other) : TV2(other) {}
 
 									// Instance methods
 		const	CFilesystemPath&	getFilesystemPath() const

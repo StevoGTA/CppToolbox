@@ -177,14 +177,6 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 								mVideoFrameUpdatedProc(videoFrameUpdatedProc), mVideoErrorProc(videoErrorProc),
 								mFinishedProc(finishedProc), mUserData(userData)
 						{}
-					Info(const Info& other) :
-						mAudioPositionUpdatedProc(other.mAudioPositionUpdatedProc),
-								mAudioErrorProc(other.mAudioErrorProc),
-								mVideoFrameUpdatedProc(other.mVideoFrameUpdatedProc),
-								mVideoErrorProc(other.mVideoErrorProc),
-								mFinishedProc(other.mFinishedProc),
-								mUserData(other.mUserData)
-						{}
 
 					// Instance methods
 			void	audioPositionUpdated(UniversalTimeInterval position) const
@@ -261,6 +253,8 @@ class CMediaPlayer : public TMediaDestination<CAudioPlayer, CVideoFrameStore> {
 													// Instance methods
 		virtual			TVResult<I<CAudioPlayer> >	newAudioPlayer(const CString& identifier, UInt32 trackIndex);
 		virtual			void						setAudioGain(Float32 audioGain);
+		virtual			void						setAudioChannelGains(
+															const TNumberArray<Float32>& audioChannelGains);
 
 		virtual			I<CVideoFrameStore>			newVideoFrameStore(const CString& identifier, UInt32 trackIndex);
 

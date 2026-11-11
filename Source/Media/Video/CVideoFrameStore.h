@@ -22,10 +22,6 @@ class CVideoFrameStore : public CVideoDestination {
 					Info(CurrentFrameUpdatedProc currentFrameUpdatedProc, ErrorProc errorProc, void* userData) :
 						mCurrentFrameUpdatedProc(currentFrameUpdatedProc), mErrorProc(errorProc), mUserData(userData)
 						{}
-					Info(const Info& other) :
-						mCurrentFrameUpdatedProc(other.mCurrentFrameUpdatedProc), mErrorProc(other.mErrorProc),
-								mUserData(other.mUserData)
-						{}
 
 					// Instance methods
 			void	currentFrameUpdated(const CVideoFrameStore& videoFrameStore, const CVideoFrame& videoFrame) const

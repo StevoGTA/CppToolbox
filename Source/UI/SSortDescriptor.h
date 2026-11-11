@@ -17,7 +17,6 @@ struct SSortDescriptor : public TV2<CString, bool> {
 												SSortDescriptor(const CString& identifier, bool isAscending) :
 													TV2(identifier, isAscending)
 													{}
-												SSortDescriptor(const SSortDescriptor& other) : TV2(other) {}
 
 												// Instance methods
 				const	CString&				getIdentifier() const

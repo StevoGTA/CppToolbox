@@ -67,7 +67,6 @@ class CDictionary : public CEquatable {
 			public:
 									// Lifecycle methods
 									Iterator(const I<IteratorInfo>& iteratorInfo);
-									Iterator(const Iterator& other);
 
 									// CIterator methods
 							bool	isValid() const;
@@ -88,7 +87,6 @@ class CDictionary : public CEquatable {
 			public:
 									// Lifecycle methods
 									KeyIterator(const I<IteratorInfo>& iteratorInfo) : Iterator(iteratorInfo) {}
-									KeyIterator(const KeyIterator& other) : Iterator(other) {}
 
 									// Instance methods
 				const	CString&	operator*() const
@@ -100,7 +98,6 @@ class CDictionary : public CEquatable {
 			public:
 						// Lifecycle methods
 						ValueIterator(const I<IteratorInfo>& iteratorInfo) : Iterator(iteratorInfo) {}
-						ValueIterator(const ValueIterator& other) : Iterator(other) {}
 
 						// Instance methods
 				SValue&	operator*() const
@@ -143,8 +140,6 @@ class CDictionary : public CEquatable {
 															SValue::OpaqueEqualsProc opaqueEqualsProc = nil,
 															SValue::OpaqueDisposeProc opaqueDisposeProc = nil);
 													CDictionary(const I<Backing>& backing);
-													CDictionary(const CDictionary& other);
-		virtual										~CDictionary();
 
 													// CEquatable methods
 						bool						operator==(const CEquatable& other) const
@@ -539,7 +534,6 @@ class CDictionary : public CEquatable {
 						ValueIterator				getValueIterator() const;
 
 				const	OR<SValue>					operator[](const CString& key) const;
-						CDictionary&				operator=(const CDictionary& other);
 						CDictionary					operator+(const CDictionary& other) const;
 						CDictionary&				operator+=(const CDictionary& other);
 
@@ -566,7 +560,6 @@ template <typename T> class TDictionary : public CDictionary {
 			public:
 					// Lifecycle methods
 					Iterator(const I<IteratorInfo>& iteratorInfo) : CDictionary::Iterator(iteratorInfo) {}
-					Iterator(const Iterator& other) : CDictionary::Iterator(other) {}
 
 					// Instance methods
 				T&	getValue() const
@@ -580,7 +573,6 @@ template <typename T> class TDictionary : public CDictionary {
 			public:
 					// Lifecycle methods
 					ValueIterator(const I<IteratorInfo>& iteratorInfo) : CDictionary::ValueIterator(iteratorInfo) {}
-					ValueIterator(const ValueIterator& other) : CDictionary::ValueIterator(other) {}
 
 					// Instance methods
 				T&	operator*() const
@@ -796,7 +788,6 @@ template <typename T> class TReferenceDictionary : public CDictionary {
 	public:
 						// Lifecycle methods
 						TReferenceDictionary() : CDictionary() {}
-						TReferenceDictionary(const TReferenceDictionary& dictionary) : CDictionary(dictionary) {}
 
 						// Instance methods
 		const	OR<T>	get(const CString& key) const
@@ -824,7 +815,6 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public TNDic
 			public:
 					// Lifecycle methods
 					Iterator(const I<CDictionary::IteratorInfo>& iteratorInfo) : CDictionary::Iterator(iteratorInfo) {}
-					Iterator(const Iterator& other) : CDictionary::Iterator(other) {}
 
 					// Instance methods
 				K	getKey() const
@@ -851,7 +841,6 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public TNDic
 					KeyIterator(const I<CDictionary::IteratorInfo>& iteratorInfo) :
 						CDictionary::KeyIterator(iteratorInfo)
 						{}
-					KeyIterator(const KeyIterator& other) : CDictionary::KeyIterator(other) {}
 
 					// Instance methods
 				K	operator*() const
@@ -877,7 +866,6 @@ template <typename K, typename T> class TKeyConvertibleDictionary : public TNDic
 					ValueIterator(const I<CDictionary::IteratorInfo>& iteratorInfo) :
 						CDictionary::ValueIterator(iteratorInfo)
 						{}
-					ValueIterator(const ValueIterator& other) : CDictionary::ValueIterator(other) {}
 
 					// Instance methods
 				T&	operator*() const

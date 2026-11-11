@@ -425,6 +425,20 @@ void CAudioFrames::completeWrite(UInt32 frameCount, void* const* sampleBufferPtr
 	mInternals->mCurrentFrameCount += frameCount;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::completeWriteWithSilence(UInt32 frameCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Clear frames in each segment
+	Info	writeInfo = getWriteInfo();
+	for (UInt32 i = 0; i < writeInfo.getSegmentCount(); i++)
+		// Clear
+		::memset(writeInfo.getSegment(i), 0, frameCount * mInternals->mBytesPerFramePerSegment);
+
+	// Complete write
+	completeWrite(frameCount);
+}
+
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 //----------------------------------------------------------------------------------------------------------------------
 UInt32 CAudioFrames::getAsRead(AudioBufferList& audioBufferList) const
@@ -484,6 +498,13 @@ void CAudioFrames::limit(UInt32 maxFrames)
 //----------------------------------------------------------------------------------------------------------------------
 {
 	mInternals->mCurrentFrameCount = std::min<UInt32>(mInternals->mCurrentFrameCount, maxFrames);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::clear()
+//----------------------------------------------------------------------------------------------------------------------
+{
+	::memset(mInternals->mBuffer, 0, mInternals->mBufferByteCount);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

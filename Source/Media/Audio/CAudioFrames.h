@@ -43,11 +43,6 @@ class CAudioFrames {
 											mBuffer(buffer), mSegmentCount(segmentCount),
 													mSegmentByteCount(segmentByteCount), mFrameCount(frameCount)
 											{}
-										Info(const Info& other) :
-											mBuffer(other.mBuffer), mSegmentCount(other.mSegmentCount),
-													mSegmentByteCount(other.mSegmentByteCount),
-													mFrameCount(other.mFrameCount)
-											{}
 
 										// Instance methods
 				UInt32					getFrameCount() const
@@ -76,9 +71,6 @@ class CAudioFrames {
 						// Lifecycle methods
 						Requirements(UInt32 frameCountInterval, UInt32 frameCountMinimum) :
 							mFrameCountInterval(frameCountInterval), mFrameCountMinimum(frameCountMinimum)
-							{}
-						Requirements(const Requirements& other) :
-							mFrameCountInterval(other.mFrameCountInterval), mFrameCountMinimum(other.mFrameCountMinimum)
 							{}
 
 						// Instance methods
@@ -152,6 +144,7 @@ class CAudioFrames {
 		void	completeWrite(UInt32 frameCount);
 		void	completeWrite(UInt32 frameCount, const Info& info);
 		void	completeWrite(UInt32 frameCount, void* const* sampleBufferPtrs, UInt32 sampleBufferCount);
+		void	completeWriteWithSilence(UInt32 frameCount);
 
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
 				// Apple methods
@@ -162,6 +155,8 @@ class CAudioFrames {
 #endif
 
 		void	limit(UInt32 maxFrames);
+
+		void	clear();
 
 		void	toggleEndianness(UInt8 bits);
 		void	toggle8BitSignedUnsigned();

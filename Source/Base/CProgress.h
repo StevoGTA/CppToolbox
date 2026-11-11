@@ -23,9 +23,6 @@ class CProgress {
 						UpdateInfo(Proc proc, void* userData) :
 							mProc(proc), mUserData(userData)
 							{}
-						UpdateInfo(const UpdateInfo& other) :
-							mProc(other.mProc), mUserData(other.mUserData)
-							{}
 
 						// Instance methods
 				void	notify(const CProgress& progress) const

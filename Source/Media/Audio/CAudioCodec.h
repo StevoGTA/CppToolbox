@@ -156,10 +156,6 @@ class CDecodeAudioCodec : public CAudioCodec {
 																UInt64 frameCount) :
 															mAudioFormat(audioFormat), mFrameCount(frameCount)
 															{}
-														SourceInfo(const SourceInfo& other) :
-															mAudioFormat(other.mAudioFormat),
-																	mFrameCount(other.mFrameCount)
-															{}
 				virtual									~SourceInfo() {}
 
 														// Instance methods
@@ -188,11 +184,6 @@ class CDecodeAudioCodec : public CAudioCodec {
 					SourceInfo(audioFormat, frameCount),
 							mRandomAccessDataSource(randomAccessDataSource),
 							mMediaPacketAndLocations(mediaPacketAndLocations)
-					{}
-				PacketSourceInfo(const PacketSourceInfo& other) :
-					SourceInfo(other),
-							mRandomAccessDataSource(other.mRandomAccessDataSource),
-							mMediaPacketAndLocations(other.mMediaPacketAndLocations)
 					{}
 
 			// Properties

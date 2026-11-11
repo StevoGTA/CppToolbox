@@ -32,10 +32,6 @@ struct SMediaSource {
 					mID(id), mNameLocalizationGroup(nameLocalizationGroup), mNameLocalizationKey(nameLocalizationKey)
 					{}
 				Identity(OSType id, const CString& name) : mID(id), mName(name) {}
-				Identity(const Identity& other) :
-					mID(other.mID), mName(other.mName), mNameLocalizationGroup(other.mNameLocalizationGroup),
-							mNameLocalizationKey(other.mNameLocalizationKey)
-					{}
 
 		OSType	getID() const
 					{ return mID; }
@@ -61,13 +57,6 @@ struct SMediaSource {
 														mFileAppleMetadatas(fileAppleMetadatas), mOptions(options),
 														mAudioTrackIndexes(audioTrackIndexes),
 														mVideoTrackIndexes(videoTrackIndexes)
-												{}
-											ImportSetup(const ImportSetup& other) :
-												mRandomAccessDataSource(other.mRandomAccessDataSource),
-														mFileAppleMetadatas(other.mFileAppleMetadatas),
-														mOptions(other.mOptions),
-														mAudioTrackIndexes(other.mAudioTrackIndexes),
-														mVideoTrackIndexes(other.mVideoTrackIndexes)
 												{}
 
 											// Instance methods
@@ -108,11 +97,6 @@ struct SMediaSource {
 												mMediaTrackFormat(mediaTrackFormat),
 														mMediaSegmentInfo(mediaSegmentInfo), mDecodeCodec(decodeCodec)
 												{}
-											Track(const Track<MTF, DC>& other) :
-												mMediaTrackFormat(other.mMediaTrackFormat),
-														mMediaSegmentInfo(other.mMediaSegmentInfo),
-														mDecodeCodec(other.mDecodeCodec)
-												{}
 
 											// Instance methods
 			const	MTF&					getMediaTrackFormat() const
@@ -141,9 +125,6 @@ struct SMediaSource {
 
 										// Lifecycle methods
 										Tracks() {}
-										Tracks(const Tracks& other) :
-											mAudioTracks(other.mAudioTracks), mVideoTracks(other.mVideoTracks)
-											{}
 
 										// Instance methods
 		const	TArray<AudioTrack>&		getAudioTracks() const
@@ -239,10 +220,6 @@ struct SMediaSource {
 								SMediaSource(const Identity& identity, const TArray<CString>& extensions,
 										ImportProc importProc) :
 									mIdentities(identity), mExtensions(extensions), mImportProc(importProc)
-									{}
-								SMediaSource(const SMediaSource& other) :
-									mIdentities(other.mIdentities), mExtensions(other.mExtensions),
-											mImportProc(other.mImportProc)
 									{}
 
 								// Instance methods

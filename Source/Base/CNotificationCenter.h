@@ -19,7 +19,6 @@ class CNotificationCenter {
 			public:
 								// Lifecycle methods
 								Sender() : CReferenceCountable() {}
-								Sender(const Sender& other) : CReferenceCountable(other) {}
 
 								// Instance methods
 				virtual	Sender*	copy() const = 0;
@@ -66,7 +65,6 @@ class CNotificationCenter {
 			public:
 						// Lifecycle methods
 						RSender(T& t) : Sender(), mT(t) {}
-						RSender(const RSender& other) : Sender(other), mT(other.mT) {}
 
 						// TReferenceCountable methods
 				void	cleanup()
@@ -96,7 +94,6 @@ class CNotificationCenter {
 			public:
 								// Lifecycle methods
 								VSender(const T& t) : Sender(), mT(t) {}
-								VSender(const VSender& other) : Sender(other), mT(other.mT) {}
 
 								// TReferenceCountable methods
 						void	cleanup()
@@ -131,9 +128,6 @@ class CNotificationCenter {
 
 					// Lifecycle methods
 					Observer(Ref ref, Proc proc, void* userData) : mRef(ref), mProc(proc), mUserData(userData) {}
-					Observer(const Observer& other) :
-						mRef(other.mRef), mProc(other.mProc), mUserData(other.mUserData)
-						{}
 
 					// Instance methods
 			void	callProc(const CString& notificationName, const OR<Sender>& sender, const CDictionary& info) const
