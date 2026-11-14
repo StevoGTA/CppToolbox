@@ -54,3 +54,5 @@ struct SChipInfo {
 		Symbol		mSymbol;
 		OV<CColor>	mColor;
 };
+
+using SChipInfos = TArray<SChipInfo>;
