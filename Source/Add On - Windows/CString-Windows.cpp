@@ -754,12 +754,16 @@ CString CString::replacingSubStrings(const CString& subStringToReplace, const CS
 	// Setup
 	CString								string(*this);
 	std::basic_string<TCHAR>::size_type	substringToReplaceLength = subStringToReplace.mString.length();
-
-	// Iterate all substrings
-	size_t	offset;
-	while ((offset = string.mString.find(subStringToReplace.mString.c_str(), 0)) != std::basic_string<TCHAR>::npos)
-		// Replace this substring
-		string.mString.replace(offset, substringToReplaceLength, replacementString.mString.c_str());
+	std::basic_string<TCHAR>::size_type	replacementStringLength = replacementString.mString.length();
+	if (substringToReplaceLength > 0) {
+		// Iterate all substrings
+		std::basic_string<TCHAR>::size_type	offset = 0;
+		while ((offset = string.mString.find(subStringToReplace.mString, offset)) != std::basic_string<TCHAR>::npos) {
+			// Replace this substring
+			string.mString.replace(offset, substringToReplaceLength, replacementString.mString);
+			offset += replacementStringLength;
+		}
+	}
 
 	return string;
 }
