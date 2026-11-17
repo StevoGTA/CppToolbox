@@ -4,8 +4,10 @@
 
 #include "CTCPConnection.h"
 
+#undef Delete
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#define Delete(x)	{ delete x; x = nil; }
 
 #include "SError-Windows.h"
 
