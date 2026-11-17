@@ -8,49 +8,49 @@
 // MARK: CI (COM Instance)
 
 template <typename T> struct CI {
-			// Lifecycle methods
-			CI(T* instance) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
-			CI(const CI<T>& other) :
-				mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
-				{ (*mReferenceCount)++; }
-			~CI()
-				{
-					// One less reference
-					if (--(*mReferenceCount) == 0) {
-						// All done
-						mInstance->Release();
-						Delete(mReferenceCount);
-					}
-				}
+						// Lifecycle methods
+	explicit			CI(T* instance) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
+						CI(const CI<T>& other) :
+							mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
+							{ (*mReferenceCount)++; }
+						~CI()
+							{
+								// One less reference
+								if (--(*mReferenceCount) == 0) {
+									// All done
+									mInstance->Release();
+									Delete(mReferenceCount);
+								}
+							}
 
-	CI<T>&	operator=(const CI<T>& other)
-				{
-					// Check if assignment to self
-					if (this == &other)
-						return *this;
+				CI<T>&	operator=(const CI<T>& other)
+							{
+								// Check if assignment to self
+								if (this == &other)
+									return *this;
 
-					// Check for instance
-					if (--(*mReferenceCount) == 0) {
-						// All done
-						mInstance->Release();
-						Delete(mReferenceCount);
-					}
+								// Check for instance
+								if (--(*mReferenceCount) == 0) {
+									// All done
+									mInstance->Release();
+									Delete(mReferenceCount);
+								}
 
-					// Copy
-					mInstance = other.mInstance;
-					mReferenceCount = other.mReferenceCount;
+								// Copy
+								mInstance = other.mInstance;
+								mReferenceCount = other.mReferenceCount;
 
-					// Additional reference
-					(*mReferenceCount)++;
+								// Additional reference
+								(*mReferenceCount)++;
 
-					return *this;
-				}
+								return *this;
+							}
 
-			// Instamce methods
-	T*		operator*() const
-				{ return mInstance; }
-	T*		operator->() const
-				{ return mInstance; }
+						// Instamce methods
+				T*		operator*() const
+							{ return mInstance; }
+				T*		operator->() const
+							{ return mInstance; }
 
 	// Properties
 	private:
@@ -62,63 +62,63 @@ template <typename T> struct CI {
 // MARK: OCI (Optional COM Instance)
 
 template <typename T> struct OCI {
-			// Lifecycle methods
-			OCI(T* instance = nullptr) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
-			OCI(const OCI<T>& other) :
-				mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
-				{
-					// One more reference
-					(*mReferenceCount)++;
-				}
-			~OCI()
-				{
-					// One less reference
-					if (--(*mReferenceCount) == 0) {
-						// All done
-						if (mInstance != nullptr)
-							// Release instance
-							mInstance->Release();
+						// Lifecycle methods
+	explicit			OCI(T* instance = nullptr) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
+						OCI(const OCI<T>& other) :
+							mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
+							{
+								// One more reference
+								(*mReferenceCount)++;
+							}
+						~OCI()
+							{
+								// One less reference
+								if (--(*mReferenceCount) == 0) {
+									// All done
+									if (mInstance != nullptr)
+										// Release instance
+										mInstance->Release();
 
-						// Cleanup
-						Delete(mReferenceCount);
-					}
-				}
+									// Cleanup
+									Delete(mReferenceCount);
+								}
+							}
 
-	OCI<T>&	operator=(const OCI<T>& other)
-				{
-					// Check if assignment to self
-					if (this == &other)
-						return *this;
+				OCI<T>&	operator=(const OCI<T>& other)
+							{
+								// Check if assignment to self
+								if (this == &other)
+									return *this;
 
-					// One less reference
-					if (--(*mReferenceCount) == 0) {
-						// All done
-						if (mInstance != nullptr)
-							// Release instance
-							mInstance->Release();
+								// One less reference
+								if (--(*mReferenceCount) == 0) {
+									// All done
+									if (mInstance != nullptr)
+										// Release instance
+										mInstance->Release();
 
-						// Cleanup
-						Delete(mReferenceCount);
-					}
+									// Cleanup
+									Delete(mReferenceCount);
+								}
 
-					// Copy
-					mInstance = other.mInstance;
-					mReferenceCount = other.mReferenceCount;
+								// Copy
+								mInstance = other.mInstance;
+								mReferenceCount = other.mReferenceCount;
 
-					// One more reference
-					(*mReferenceCount)++;
+								// One more reference
+								(*mReferenceCount)++;
 
-					return *this;
-				}
+								return *this;
+							}
 
-			// Instamce methods
-	bool	hasInstance() const
-				{ return mInstance != nullptr; }
+						// Instamce methods
+				bool	hasInstance() const
+							{ return mInstance != nullptr; }
 
-	T*		operator*() const
-				{ AssertFailIf(mInstance == nullptr); return mInstance; }
-	T*		operator->() const
-				{ AssertFailIf(mInstance == nullptr); return mInstance; }
+				T*		operator*() const
+							{ AssertFailIf(mInstance == nullptr); return mInstance; }
+				T*		operator->() const
+							{ AssertFailIf(mInstance == nullptr); return mInstance; }
 
 	// Properties
 	private:

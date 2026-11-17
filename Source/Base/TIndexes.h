@@ -5,36 +5,24 @@
 #pragma once
 
 #include "CBits.h"
+#include "TRange.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-// MARK: TIndexRange
-
-template <typename T> struct TIndexRange {
-
-	// Lifecycle methods
-	TIndexRange(T start, T end) : mStart(start), mEnd(end) {}
-
-	// Properties
-	T	mStart;
-	T	mEnd;
-};
-
-//----------------------------------------------------------------------------------------------------------------------
-// MARK: - TIndexes
+// MARK: TIndexes
 
 template <typename T> class TIndexes : CBits {
 	// Methods
 	public:
 										// Instance methods
-				void					add(T index)
+					void				add(T index)
 											{ set(index); }
-				void					remove(T index)
+					void				remove(T index)
 											{ clear(index); }
 
-				TArray<TIndexRange<T> >	getRanges() const
+					TArray<TRange<T> >	getRanges() const
 											{
 												// Setup
-												TNArray<TIndexRange<T> >	ranges;
+												TNArray<TRange<T> >	ranges;
 
 												// Iterate all bits
 												OV<T>	start;
@@ -51,7 +39,7 @@ template <typename T> class TIndexes : CBits {
 														end.setValue(i);
 													} else if (start.hasValue()) {
 														// Add range
-														ranges += TIndexRange<T>(*start, *end);
+														ranges += TRange<T>(*start, *end - *start + 1);
 														start.removeValue();
 													}
 												}
@@ -59,15 +47,15 @@ template <typename T> class TIndexes : CBits {
 												// Check for one more range
 												if (start.hasValue())
 													// Add last range
-													ranges += TIndexRange<T>(*start, *end);
+													ranges += TRange<T>(*start, *end - *start + 1);
 
 												return ranges;
 											}
 
 										// Class methods
-		static	TIndexes<T>				withCount(UInt32 count)
+		static		TIndexes<T>			withCount(UInt32 count)
 											{ return TIndexes<T>(count); }
-		static	TIndexes<T>				forIndex(T index)
+		static		TIndexes<T>			forIndex(T index)
 											{
 												TIndexes<T>	indexes(1);
 												indexes.add(index);
@@ -77,5 +65,5 @@ template <typename T> class TIndexes : CBits {
 
 	private:
 										// Lifecycle methods
-										TIndexes(UInt32 count) : CBits(count) {}
+		explicit						TIndexes(UInt32 count) : CBits(count) {}
 };

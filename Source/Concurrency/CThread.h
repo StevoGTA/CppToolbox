@@ -37,42 +37,40 @@ class CThread {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								CThread(ThreadProc threadProc, void* userData = nil,
-										const CString& name = CString::mEmpty, Options options = kOptionsNone);
-				virtual			~CThread();
+							// Lifecycle methods
+		explicit			CThread(ThreadProc threadProc, void* userData = nil,
+									const CString& name = CString::mEmpty, Options options = kOptionsNone);
+		virtual				~CThread();
 
-								// Instance methods
-						Ref		getRef() const;
+							// Instance methods
+					Ref		getRef() const;
 
-						void	start();
-						bool	isRunning() const;
-						void	waitUntilFinished() const
-									{ while (isRunning()) sleepFor(0.001); }
+					void	start();
+					bool	isRunning() const;
+					void	waitUntilFinished() const
+								{ while (isRunning()) sleepFor(0.001); }
 
-								// Class methods
-		static			Ref		getCurrentRef();
-		static			CString	getCurrentRefAsString()
-									{
+							// Class methods
+		static		Ref		getCurrentRef();
+		static		CString	getCurrentRefAsString()
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS) || defined(TARGET_OS_WATCHOS)
-										return CString(getCurrentRef());
+								{	return CString(getCurrentRef()); }
 #elif defined(TARGET_OS_WINDOWS)
-										return CString(getCurrentRef(), false);
+								{	return CString(getCurrentRef(), false); }
 #endif
-									}
-		static			void	sleepFor(UniversalTimeInterval universalTimeInterval);
+		static		void	sleepFor(UniversalTimeInterval universalTimeInterval);
 
 	protected:
-								// Lifecycle methods
-								CThread(const CString& name = CString::mEmpty, Options options = kOptionsNone);
+							// Lifecycle methods
+		explicit			CThread(const CString& name = CString::mEmpty, Options options = kOptionsNone);
 
-								// Subclass methods
-				virtual	void	run()
-									{}
+							// Subclass methods
+		virtual		void	run() {}
 
 	private:
-		static			void	runThreadProc(CThread& thread, void* userData)
-									{ thread.run(); }
+							// Class methods
+		static		void	runThreadProc(CThread& thread, void* userData)
+								{ thread.run(); }
 
 	// Properties
 	private:

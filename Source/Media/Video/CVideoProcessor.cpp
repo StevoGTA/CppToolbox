@@ -130,7 +130,7 @@ void CVideoSource::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 	// Check if need seek
 	if (performSeek)
 		// Seek
-		seek(mInternals->mMediaSegment->getStartTimeInterval());
+		seek(mInternals->mMediaSegment->getTimeIntervalRange().getStart());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -140,8 +140,8 @@ void CVideoSource::seek(UniversalTimeInterval timeInterval)
 	// Bound the given time
 	if (mInternals->mMediaSegment.hasValue()) {
 		// Limit to within start and end
-		timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getStartTimeInterval());
-		timeInterval = std::min<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getEndTimeInterval());
+		timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getTimeIntervalRange().getStart());
+		timeInterval = std::min<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getTimeIntervalRange().getEnd());
 	}
 
 	// Update

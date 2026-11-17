@@ -1275,7 +1275,7 @@ SMediaSource::Tracks::AudioTrack sComposePCMAudioTrackInfo(const CQuickTimeMedia
 															OV<UInt32>(1), OV<UInt32>(bytesPerFrame));
 			SAudio::Format						audioFormat =
 														CPCMAudioCodec::composeAudioFormat(isFloat, bits, sampleRate,
-																channels);
+																SAudio::ChannelMap(channels));
 			SMedia::SegmentInfo					mediaSegmentInfo =
 														SAudio::composeMediaSegmentInfo(audioFormat, duration, 1,
 																bytesPerFrame);

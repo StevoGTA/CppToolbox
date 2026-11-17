@@ -38,7 +38,7 @@ class CFileDataSource::Internals {
 				extendedParameters.dwFileFlags = FILE_FLAG_RANDOM_ACCESS;
 				mFileHandle =
 						::CreateFile2(file.getFilesystemPath().getString().getOSString(), GENERIC_READ,
-								FILE_SHARE_READ, OPEN_EXISTING, &extendedParameters);
+								FILE_SHARE_READ | FILE_SHARE_DELETE, OPEN_EXISTING, &extendedParameters);
 				if (mFileHandle == INVALID_HANDLE_VALUE) {
 					// Unable to open
 					mError.setValue(SErrorFromWindowsGetLastError());

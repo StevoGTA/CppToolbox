@@ -21,70 +21,66 @@ template <typename T> struct T2DUtilities {
 template <typename T> struct T2DAffineTransform;
 template <typename t> struct T2DOffset;
 template <typename T> struct T2DPoint {
-						// Lifecycle methods
-						T2DPoint() : mX(0), mY(0) {}
-						T2DPoint(T x, T y) : mX(x), mY(y) {}
-						T2DPoint(const CString& string)
-							{
-								// "{0.0,0.0}" => ",0.0,0.0}" => ["", "0.0", "0.0}"]
-								TArray<CString>	array =
-														string.replacingSubStrings(CString(OSSTR("{")),
-																		CString(OSSTR(",")))
-																.components(CString(OSSTR(",")));
-								if (array.getCount() >= 3) {
-									// Extract values
-									mX = array[1].getFloat32();
-									mY = array[2].getFloat32();
-								} else {
-									// Use default values
-									mX = 0;
-									mY = 0;
+							// Lifecycle methods
+							T2DPoint() : mX(0), mY(0) {}
+							T2DPoint(T x, T y) : mX(x), mY(y) {}
+	explicit				T2DPoint(const CString& string)
+								{
+									// "{0.0,0.0}" => ",0.0,0.0}" => ["", "0.0", "0.0}"]
+									TArray<CString>	array =
+															string.replacingSubStrings(CString(OSSTR("{")),
+																			CString(OSSTR(",")))
+																	.components(CString(OSSTR(",")));
+									if (array.getCount() >= 3) {
+										// Extract values
+										mX = array[1].getFloat32();
+										mY = array[2].getFloat32();
+									} else {
+										// Use default values
+										mX = 0;
+										mY = 0;
+									}
 								}
-							}
 
-						// Instance methods
-	inline	T2DPoint	offset(const T2DOffset<T>& offset) const
-							{ return T2DPoint(mX + offset.mDX, mY + offset.mDY); }
-	inline	T2DPoint	offset(const T x, const T y) const
-							{ return T2DPoint(mX + x, mY + y); }
-	inline	T2DPoint	midpoint(const T2DPoint& point, T ratio) const
-							{ return T2DPoint(mX + (point.mX - mX) * ratio, mY + (point.mY - mY) * ratio); }
-	inline	T2DPoint	reflectedBy(const T2DPoint& anchorPoint) const
-							{
-								return T2DPoint(anchorPoint.mX + (anchorPoint.mX - mX),
-										anchorPoint.mY + (anchorPoint.mY - mY));
-							}
-	inline	T			distanceTo(const T2DPoint& point) const
-							{ return sqrt(distanceSquaredTo(point)); }
-	inline	T			distanceSquaredTo(const T2DPoint& point) const
-							{
-								T	dx = point.mX - mX;
-								T	dy = point.mY - mY;
+							// Instance methods
+	inline		T2DPoint	offset(const T2DOffset<T>& offset) const
+								{ return T2DPoint(mX + offset.mDX, mY + offset.mDY); }
+	inline		T2DPoint	offset(const T x, const T y) const
+								{ return T2DPoint(mX + x, mY + y); }
+	inline		T2DPoint	midpoint(const T2DPoint& point, T ratio) const
+								{ return T2DPoint(mX + (point.mX - mX) * ratio, mY + (point.mY - mY) * ratio); }
+	inline		T2DPoint	reflectedBy(const T2DPoint& anchorPoint) const
+								{ return T2DPoint(anchorPoint.mX + (anchorPoint.mX - mX),
+											anchorPoint.mY + (anchorPoint.mY - mY)); }
+	inline		T			distanceTo(const T2DPoint& point) const
+								{ return sqrt(distanceSquaredTo(point)); }
+	inline		T			distanceSquaredTo(const T2DPoint& point) const
+								{
+									T	dx = point.mX - mX;
+									T	dy = point.mY - mY;
 
-								return dx * dx + dy * dy;
-							}
+									return dx * dx + dy * dy;
+								}
 
-	inline	T2DPoint&	applyTransform(const T2DAffineTransform<T>& affineTransform)
-							{
-								T	x = mX * affineTransform.mA + mY * affineTransform.mC + affineTransform.mTX;
-								T	y = mX * affineTransform.mB + mY * affineTransform.mD + affineTransform.mTY;
+	inline		T2DPoint&	applyTransform(const T2DAffineTransform<T>& affineTransform)
+								{
+									T	x = mX * affineTransform.mA + mY * affineTransform.mC + affineTransform.mTX;
+									T	y = mX * affineTransform.mB + mY * affineTransform.mD + affineTransform.mTY;
 
-								mX = x;
-								mY = y;
-								
-								return *this;
-							}
+									mX = x;
+									mY = y;
 
-	inline	CString		asString() const
-							{
-								return CString(OSSTR("{")) + CString(mX, 5, 3) + CString(OSSTR(",")) + CString(mY, 5, 3)
-										+ CString(OSSTR("}"));
-							}
+									return *this;
+								}
 
-	inline	bool		operator==(const T2DPoint& other) const
-							{ return (mX == other.mX) && (mY == other.mY); }
-	inline	bool		operator!=(const T2DPoint& other) const
-							{ return (mX != other.mX) || (mY != other.mY); }
+	inline		CString		asString() const
+								{ return CString(OSSTR("{")) + CString(mX, 5, 3) + CString(OSSTR(",")) +
+										CString(mY, 5, 3) + CString(OSSTR("}")); }
+
+	inline		bool		operator==(const T2DPoint& other) const
+								{ return (mX == other.mX) && (mY == other.mY); }
+	inline		bool		operator!=(const T2DPoint& other) const
+								{ return (mX != other.mX) || (mY != other.mY); }
 
 	// Properties
 	T	mX;
@@ -129,65 +125,63 @@ typedef	T2DOffset<Float32>	S2DOffsetF32;
 // MARK: - T2DSize
 
 template <typename T> struct T2DSize {
-						// Lifecycle methods
-						T2DSize() : mWidth(0), mHeight(0) {}
-						T2DSize(T width, T height) : mWidth(width), mHeight(height) {}
-						T2DSize(const CString& string)
-							{
-								// "{0.0,0.0}" => ",0.0,0.0}" => ["", "0.0", "0.0}"]
-								TArray<CString>	array =
-														string.replacingSubStrings(CString(OSSTR("{")),
-																		CString(OSSTR(",")))
-																.components(CString(OSSTR(",")));
-								if (array.getCount() >= 3) {
-									// Extract values
-									mWidth = array[1].getFloat32();
-									mHeight = array[2].getFloat32();
-								} else {
-									// Use default values
-									mWidth = 0;
-									mHeight = 0;
+							// Lifecycle methods
+							T2DSize() : mWidth(0), mHeight(0) {}
+							T2DSize(T width, T height) : mWidth(width), mHeight(height) {}
+	explicit				T2DSize(const CString& string)
+								{
+									// "{0.0,0.0}" => ",0.0,0.0}" => ["", "0.0", "0.0}"]
+									TArray<CString>	array =
+															string.replacingSubStrings(CString(OSSTR("{")),
+																			CString(OSSTR(",")))
+																	.components(CString(OSSTR(",")));
+									if (array.getCount() >= 3) {
+										// Extract values
+										mWidth = array[1].getFloat32();
+										mHeight = array[2].getFloat32();
+									} else {
+										// Use default values
+										mWidth = 0;
+										mHeight = 0;
+									}
 								}
-							}
 
-						// Instance methods
-	inline	T2DSize		offset(const T2DOffset<T>& offset) const
-							{ return T2DSize(mWidth + offset.mDX, mHeight + offset.mDY); }
-	inline	T2DSize		offset(const T w, const T h) const
-							{ return T2DSize(mWidth + w, mHeight + h); }
+							// Instance methods
+	inline		T2DSize		offset(const T2DOffset<T>& offset) const
+								{ return T2DSize(mWidth + offset.mDX, mHeight + offset.mDY); }
+	inline		T2DSize		offset(const T w, const T h) const
+								{ return T2DSize(mWidth + w, mHeight + h); }
 
-	inline	T			aspectRatio() const
-							{ return (mHeight != 0) ? mWidth / mHeight : 0; }
-	inline	T2DSize<T>	aspectFitIn(const T2DSize& size)
-							{
-								// Setup
-								Float32	widthFactor = (Float32) size.mWidth / (Float32) mWidth;
-								Float32	heightFactor = (Float32) size.mHeight / (Float32) mHeight;
+	inline		T			aspectRatio() const
+								{ return (mHeight != 0) ? mWidth / mHeight : 0; }
+	inline		T2DSize<T>	aspectFitIn(const T2DSize& size)
+								{
+									// Setup
+									Float32	widthFactor = (Float32) size.mWidth / (Float32) mWidth;
+									Float32	heightFactor = (Float32) size.mHeight / (Float32) mHeight;
 
-								// Check which dimension is more constrained
-								if (widthFactor < heightFactor) {
-									// Width constrained
-									T	scaledHeight = widthFactor * (Float32) mHeight;
+									// Check which dimension is more constrained
+									if (widthFactor < heightFactor) {
+										// Width constrained
+										T	scaledHeight = widthFactor * (Float32) mHeight;
 
-									return T2DSize<T>(size.mWidth, scaledHeight);
-								} else {
-									// Height constrained
-									T	scaledWidth = heightFactor * (Float32) mWidth;
+										return T2DSize<T>(size.mWidth, scaledHeight);
+									} else {
+										// Height constrained
+										T	scaledWidth = heightFactor * (Float32) mWidth;
 
-									return T2DSize<T>(scaledWidth, size.mHeight);
+										return T2DSize<T>(scaledWidth, size.mHeight);
+									}
 								}
-							}
 
-	inline	CString		asString() const
-							{
-								return CString(OSSTR("{")) + CString(mWidth, 5, 3) + CString(OSSTR(",")) +
-										CString(mHeight, 5, 3) + CString(OSSTR("}"));
-							}
+	inline		CString		asString() const
+								{ return CString(OSSTR("{")) + CString(mWidth, 5, 3) + CString(OSSTR(",")) +
+										CString(mHeight, 5, 3) + CString(OSSTR("}")); }
 
-	inline	bool		operator==(const T2DSize& other) const
-							{ return (mWidth == other.mWidth) && (mHeight == other.mHeight); }
-	inline	bool		operator!=(const T2DSize& other) const
-							{ return (mWidth != other.mWidth) || (mHeight != other.mHeight); }
+	inline		bool		operator==(const T2DSize& other) const
+								{ return (mWidth == other.mWidth) && (mHeight == other.mHeight); }
+	inline		bool		operator!=(const T2DSize& other) const
+								{ return (mWidth != other.mWidth) || (mHeight != other.mHeight); }
 
 	// Properties
 	T	mWidth;
@@ -253,127 +247,123 @@ typedef	T2DVector<SInt32>	S2DVectorS32;
 // MARK: - T2DRect
 
 template <typename T> struct T2DRect {
-						// Lifecycle methods
-						T2DRect() : mOrigin(0, 0), mSize(0, 0) {}
-						T2DRect(T x, T y, T width, T height) : mOrigin(x, y), mSize(width, height) {}
-						T2DRect(const T2DPoint<T>& origin, const T2DSize<T>& size) : mOrigin(origin), mSize(size) {}
-						T2DRect(const CString& string)
-							{
-								// "{{0.0,0.0},{0.0,0.0}}" => ",,0.0,0.0},,0.0,0.0}}" => ["", "", "0.0", "0.0", "", "0.0", "0.0}}"]
-								TArray<CString>	array =
-														string.replacingSubStrings(CString(OSSTR("{")),
-																		CString(OSSTR(",")))
-																.components(CString(OSSTR(",")));
-								if (array.getCount() >= 7) {
-									// Extract values
-									mOrigin.mX = array[2].getFloat32();
-									mOrigin.mY = array[3].getFloat32();
-									mSize.mWidth = array[5].getFloat32();
-									mSize.mHeight = array[6].getFloat32();
-								} else {
-									// Use default values
-									mOrigin.mX = 0;
-									mOrigin.mY = 0;
-									mSize.mWidth = 0;
-									mSize.mHeight = 0;
+							// Lifecycle methods
+							T2DRect() : mOrigin(0, 0), mSize(0, 0) {}
+							T2DRect(T x, T y, T width, T height) : mOrigin(x, y), mSize(width, height) {}
+							T2DRect(const T2DPoint<T>& origin, const T2DSize<T>& size) : mOrigin(origin), mSize(size) {}
+	explicit				T2DRect(const CString& string)
+								{
+									// "{{0.0,0.0},{0.0,0.0}}" =>
+									//		",,0.0,0.0},,0.0,0.0}}" =>
+									//		["", "", "0.0", "0.0", "", "0.0", "0.0}}"]
+									TArray<CString>	array =
+															string.replacingSubStrings(CString(OSSTR("{")),
+																			CString(OSSTR(",")))
+																	.components(CString(OSSTR(",")));
+									if (array.getCount() >= 7) {
+										// Extract values
+										mOrigin.mX = array[2].getFloat32();
+										mOrigin.mY = array[3].getFloat32();
+										mSize.mWidth = array[5].getFloat32();
+										mSize.mHeight = array[6].getFloat32();
+									} else {
+										// Use default values
+										mOrigin.mX = 0;
+										mOrigin.mY = 0;
+										mSize.mWidth = 0;
+										mSize.mHeight = 0;
+									}
 								}
-							}
 
-						// Instance methods
-	inline	bool		isEmpty() const
-							{ return (mSize.mWidth == 0) && (mSize.mHeight == 0); }
+							// Instance methods
+	inline		bool		isEmpty() const
+								{ return (mSize.mWidth == 0) && (mSize.mHeight == 0); }
 
-	inline	T			getMinX() const
-							{ return mOrigin.mX; }
-	inline	T			getMidX() const
-							{ return mOrigin.mX + mSize.mWidth / 2; }
-	inline	T			getMaxX() const
-							{ return mOrigin.mX + mSize.mWidth; }
-	inline	T			getMinY() const
-							{ return mOrigin.mY; }
-	inline	T			getMidY() const
-							{ return mOrigin.mY + mSize.mHeight / 2; }
-	inline	T			getMaxY() const
-							{ return mOrigin.mY + mSize.mHeight; }
-	inline	T			getWidth() const
-							{ return mSize.mWidth; }
-	inline	T			getHeight() const
-							{ return mSize.mHeight; }
+	inline		T			getMinX() const
+								{ return mOrigin.mX; }
+	inline		T			getMidX() const
+								{ return mOrigin.mX + mSize.mWidth / 2; }
+	inline		T			getMaxX() const
+								{ return mOrigin.mX + mSize.mWidth; }
+	inline		T			getMinY() const
+								{ return mOrigin.mY; }
+	inline		T			getMidY() const
+								{ return mOrigin.mY + mSize.mHeight / 2; }
+	inline		T			getMaxY() const
+								{ return mOrigin.mY + mSize.mHeight; }
+	inline		T			getWidth() const
+								{ return mSize.mWidth; }
+	inline		T			getHeight() const
+								{ return mSize.mHeight; }
 
-	inline	T2DPoint<T>	getTopLeft() const
-							{ return T2DPoint<T>(getMinX(), getMinY()); }
-	inline	T2DPoint<T>	getTopMid() const
-							{ return T2DPoint<T>(getMidX(), getMinY()); }
-	inline	T2DPoint<T>	getTopRight() const
-							{ return T2DPoint<T>(getMaxX(), getMinY()); }
-	inline	T2DPoint<T>	getBottomLeft() const
-							{ return T2DPoint<T>(getMinX(), getMaxY()); }
-	inline	T2DPoint<T>	getBottomMid() const
-							{ return T2DPoint<T>(getMidX(), getMaxY()); }
-	inline	T2DPoint<T>	getBottomRight() const
-							{ return T2DPoint<T>(getMaxX(), getMaxY()); }
-	inline	T2DPoint<T>	getMidLeft() const
-							{ return T2DPoint<T>(getMinX(), getMidY()); }
-	inline	T2DPoint<T>	getMidRight() const
-							{ return T2DPoint<T>(getMaxX(), getMidY()); }
-	inline	T2DPoint<T>	getCenter() const
-							{ return T2DPoint<T>(getMidX(), getMidY()); }
+	inline		T2DPoint<T>	getTopLeft() const
+								{ return T2DPoint<T>(getMinX(), getMinY()); }
+	inline		T2DPoint<T>	getTopMid() const
+								{ return T2DPoint<T>(getMidX(), getMinY()); }
+	inline		T2DPoint<T>	getTopRight() const
+								{ return T2DPoint<T>(getMaxX(), getMinY()); }
+	inline		T2DPoint<T>	getBottomLeft() const
+								{ return T2DPoint<T>(getMinX(), getMaxY()); }
+	inline		T2DPoint<T>	getBottomMid() const
+								{ return T2DPoint<T>(getMidX(), getMaxY()); }
+	inline		T2DPoint<T>	getBottomRight() const
+								{ return T2DPoint<T>(getMaxX(), getMaxY()); }
+	inline		T2DPoint<T>	getMidLeft() const
+								{ return T2DPoint<T>(getMinX(), getMidY()); }
+	inline		T2DPoint<T>	getMidRight() const
+								{ return T2DPoint<T>(getMaxX(), getMidY()); }
+	inline		T2DPoint<T>	getCenter() const
+								{ return T2DPoint<T>(getMidX(), getMidY()); }
 
-	inline	T2DRect<T>	inset(T value) const
-							{ return T2DRect<T>(mOrigin.mX + value, mOrigin.mY + value, mSize.mWidth - value * 2,
-									mSize.mHeight - value * 2); }
-	inline	T2DRect<T>	inset(T x, T y) const
-							{ return T2DRect<T>(mOrigin.mX + x, mOrigin.mY + y, mSize.mWidth - x * 2,
-									mSize.mHeight - y * 2); }
+	inline		T2DRect<T>	inset(T value) const
+								{ return T2DRect<T>(mOrigin.mX + value, mOrigin.mY + value, mSize.mWidth - value * 2,
+										mSize.mHeight - value * 2); }
+	inline		T2DRect<T>	inset(T x, T y) const
+								{ return T2DRect<T>(mOrigin.mX + x, mOrigin.mY + y, mSize.mWidth - x * 2,
+										mSize.mHeight - y * 2); }
 
-	inline	bool		contains(const T2DPoint<T>& point) const
-							{
-								return (point.mX >= getMinX()) && (point.mX < getMaxX()) &&
-										(point.mY >= getMinY()) && (point.mY < getMaxY());
-							}
-	inline	bool		intersects(const T2DRect& rect) const
-							{
-								return !((getMaxX() < rect.getMinX()) ||
-										 (getMinX() > rect.getMaxX()) ||
-										 (getMaxY() < rect.getMinY()) ||
-										 (getMinY() > rect.getMaxY()));
-							}
+	inline		bool		contains(const T2DPoint<T>& point) const
+								{ return (point.mX >= getMinX()) && (point.mX < getMaxX()) &&
+											(point.mY >= getMinY()) && (point.mY < getMaxY()); }
+	inline		bool		intersects(const T2DRect& rect) const
+								{ return !((getMaxX() < rect.getMinX()) ||
+											 (getMinX() > rect.getMaxX()) ||
+											 (getMaxY() < rect.getMinY()) ||
+											 (getMinY() > rect.getMaxY())); }
 
-	inline	T2DRect<T>	aspectFitIn(const T2DRect& rect)
-							{
-								// Setup
-								Float32	widthFactor = (Float32) rect.mSize.mWidth / (Float32) mSize.mWidth;
-								Float32	heightFactor = (Float32) rect.mSize.mHeight / (Float32) mSize.mHeight;
+	inline		T2DRect<T>	aspectFitIn(const T2DRect& rect)
+								{
+									// Setup
+									Float32	widthFactor = (Float32) rect.mSize.mWidth / (Float32) mSize.mWidth;
+									Float32	heightFactor = (Float32) rect.mSize.mHeight / (Float32) mSize.mHeight;
 
-								// Check which dimension is more constrained
-								if (widthFactor < heightFactor) {
-									// Width constrained
-									T	scaledHeight = widthFactor * (Float32) mSize.mHeight;
+									// Check which dimension is more constrained
+									if (widthFactor < heightFactor) {
+										// Width constrained
+										T	scaledHeight = widthFactor * (Float32) mSize.mHeight;
 
-									return T2DRect<T>(rect.mOrigin.mX,
-											rect.mOrigin.mY + (rect.getHeight() - scaledHeight) / 2, rect.mSize.mWidth,
-											scaledHeight);
-								} else {
-									// Height constrained
-									T	scaledWidth = heightFactor * (Float32) mSize.mWidth;
+										return T2DRect<T>(rect.mOrigin.mX,
+												rect.mOrigin.mY + (rect.getHeight() - scaledHeight) / 2, rect.mSize.mWidth,
+												scaledHeight);
+									} else {
+										// Height constrained
+										T	scaledWidth = heightFactor * (Float32) mSize.mWidth;
 
-									return T2DRect<T>(rect.mOrigin.mX + (rect.getWidth() - scaledWidth) / 2,
-											rect.mOrigin.mY, scaledWidth, rect.mSize.mHeight);
+										return T2DRect<T>(rect.mOrigin.mX + (rect.getWidth() - scaledWidth) / 2,
+												rect.mOrigin.mY, scaledWidth, rect.mSize.mHeight);
+									}
 								}
-							}
 
-	inline	CString		asString() const
-							{
-								return CString(OSSTR("{{")) + CString(mOrigin.mX, 5, 3) + CString(OSSTR(",")) +
-										CString(mOrigin.mY, 5, 3) + CString(OSSTR("},{")) +
-										CString(mSize.mWidth, 5, 3) + CString(OSSTR(",")) +
-										CString(mSize.mHeight, 5, 3) + CString(OSSTR("}}"));
-							}
+	inline		CString		asString() const
+								{ return CString(OSSTR("{{")) + CString(mOrigin.mX, 5, 3) + CString(OSSTR(",")) +
+											CString(mOrigin.mY, 5, 3) + CString(OSSTR("},{")) +
+											CString(mSize.mWidth, 5, 3) + CString(OSSTR(",")) +
+											CString(mSize.mHeight, 5, 3) + CString(OSSTR("}}")); }
 
-	inline	bool		operator==(const T2DRect& other) const
-							{ return (mOrigin == other.mOrigin) && (mSize == other.mSize); }
-	inline	bool		operator!=(const T2DRect& other) const
-							{ return (mOrigin != other.mOrigin) || (mSize != other.mSize); }
+	inline		bool		operator==(const T2DRect& other) const
+								{ return (mOrigin == other.mOrigin) && (mSize == other.mSize); }
+	inline		bool		operator!=(const T2DRect& other) const
+								{ return (mOrigin != other.mOrigin) || (mSize != other.mSize); }
 
 	// Properties
 	T2DPoint<T>	mOrigin;

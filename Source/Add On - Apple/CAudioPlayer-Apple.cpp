@@ -672,11 +672,11 @@ void CAudioPlayer::stop()
 
 	// Seek to the start of the segment if present, or start
 	CAudioDestination::seek(
-			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0);
+			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getTimeIntervalRange().getStart() : 0.0);
 
 	// Reset
 	mInternals->mCurrentPlaybackTimeInterval =
-			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0;
+			mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getTimeIntervalRange().getStart() : 0.0;
 
 	mInternals->mRenderProcFrameIndex = 0;
 	mInternals->mRenderProcFrameCount = ~0;

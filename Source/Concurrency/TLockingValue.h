@@ -12,59 +12,59 @@
 struct SLockingBoolean {
 	// Methods
 	public:
-				// Lifecycle methods
-				SLockingBoolean(bool initialValue = false) : mValueInternal(initialValue) {}
+							// Lifecycle methods
+	explicit				SLockingBoolean(bool initialValue = false) : mValueInternal(initialValue) {}
 
-				// Instance methods
-		void	set(bool value = true)
-					{
-						// Lock
-						mLock.lockForWriting();
+							// Instance methods
+					void	set(bool value = true)
+								{
+									// Lock
+									mLock.lockForWriting();
 
-						// Update value
-						mValueInternal = value;
+									// Update value
+									mValueInternal = value;
 
-						// Check if have semaphore
-						if (mSemaphore.hasInstance())
-							// Signal
-							mSemaphore->signal();
+									// Check if have semaphore
+									if (mSemaphore.hasInstance())
+										// Signal
+										mSemaphore->signal();
 
-						// Unlock
-						mLock.unlockForWriting();
-					}
+									// Unlock
+									mLock.unlockForWriting();
+								}
 
-		void	wait(bool value = true)
-					{
-						// Setup
-						mSemaphore.setInstance(new CSemaphore());
+					void	wait(bool value = true)
+								{
+									// Setup
+									mSemaphore.setInstance(new CSemaphore());
 
-						// Check value
-						while (**this != value)
-							// Wait
-							mSemaphore->waitFor();
+									// Check value
+									while (**this != value)
+										// Wait
+										mSemaphore->waitFor();
 
-						// Cleanup
-						mSemaphore.setInstance();
-					}
+									// Cleanup
+									mSemaphore.setInstance();
+								}
 
-		bool	operator*() const
-					{
-						// Setup
-						bool value;
+					bool	operator*() const
+								{
+									// Setup
+									bool value;
 
-						// Lock
-						mLock.lockForReading();
+									// Lock
+									mLock.lockForReading();
 
-						// Copy value
-						value = mValueInternal;
+									// Copy value
+									value = mValueInternal;
 
-						// Unlock
-						mLock.unlockForReading();
+									// Unlock
+									mLock.unlockForReading();
 
-						return value;
-					}
-		void	operator=(bool value)
-					{ set(value); }
+									return value;
+								}
+					void	operator=(bool value)
+								{ set(value); }
 
 	// Properties
 	private:
@@ -79,97 +79,97 @@ struct SLockingBoolean {
 template <typename T> struct TLockingNumeric {
 	// Methods
 	public:
-				// Lifecycle methods
-				TLockingNumeric(T initialValue = 0) : mValueInternal(initialValue) {}
+							// Lifecycle methods
+	explicit				TLockingNumeric(T initialValue = 0) : mValueInternal(initialValue) {}
 
-				// Instance methods
-		void	set(T value)
-					{
-						// Lock
-						mLock.lockForWriting();
+							// Instance methods
+					void	set(T value)
+								{
+									// Lock
+									mLock.lockForWriting();
 
-						// Update value
-						mValueInternal = value;
+									// Update value
+									mValueInternal = value;
 
-						// Check if have semaphore
-						if (mSemaphore.hasInstance())
-							// Signal
-							mSemaphore->signal();
+									// Check if have semaphore
+									if (mSemaphore.hasInstance())
+										// Signal
+										mSemaphore->signal();
 
-						// Unlock
-						mLock.unlockForWriting();
-					}
-		T		add(T value)
-					{
-						// Lock
-						mLock.lockForWriting();
+									// Unlock
+									mLock.unlockForWriting();
+								}
+					T		add(T value)
+								{
+									// Lock
+									mLock.lockForWriting();
 
-						// Update value
-						mValueInternal += value;
-						T	newValue = mValueInternal;
+									// Update value
+									mValueInternal += value;
+									T	newValue = mValueInternal;
 
-						// Check if have semaphore
-						if (mSemaphore.hasInstance())
-							// Signal
-							mSemaphore->signal();
+									// Check if have semaphore
+									if (mSemaphore.hasInstance())
+										// Signal
+										mSemaphore->signal();
 
-						// Unlock
-						mLock.unlockForWriting();
+									// Unlock
+									mLock.unlockForWriting();
 
-						return newValue;
-					}
-		T		subtract(T value)
-					{
-						// Lock
-						mLock.lockForWriting();
+									return newValue;
+								}
+					T		subtract(T value)
+								{
+									// Lock
+									mLock.lockForWriting();
 
-						// Update value
-						mValueInternal -= value;
-						T	newValue = mValueInternal;
+									// Update value
+									mValueInternal -= value;
+									T	newValue = mValueInternal;
 
-						// Check if have semaphore
-						if (mSemaphore.hasInstance())
-							// Signal
-							mSemaphore->signal();
+									// Check if have semaphore
+									if (mSemaphore.hasInstance())
+										// Signal
+										mSemaphore->signal();
 
-						// Unlock
-						mLock.unlockForWriting();
+									// Unlock
+									mLock.unlockForWriting();
 
-						return newValue;
-					}
+									return newValue;
+								}
 
-		void	wait(T value = 0)
-					{
-						// Setup
-						mSemaphore.setInstance(new CSemaphore());
+					void	wait(T value = 0)
+								{
+									// Setup
+									mSemaphore.setInstance(new CSemaphore());
 
-						// Check value
-						while (**this != value)
-							// Wait
-							mSemaphore->waitFor();
+									// Check value
+									while (**this != value)
+										// Wait
+										mSemaphore->waitFor();
 
-						// Cleanup
-						mSemaphore.setInstance();
-					}
+									// Cleanup
+									mSemaphore.setInstance();
+								}
 
-		T		operator*() const
-					{
-						// Setup
-						T value;
+					T		operator*() const
+								{
+									// Setup
+									T value;
 
-						// Lock
-						mLock.lockForReading();
+									// Lock
+									mLock.lockForReading();
 
-						// Copy value
-						value = mValueInternal;
+									// Copy value
+									value = mValueInternal;
 
-						// Unlock
-						mLock.unlockForReading();
+									// Unlock
+									mLock.unlockForReading();
 
-						return value;
-					}
-		void	operator=(T value)
-					{ set(value); }
+									return value;
+								}
+					void	operator=(T value)
+								{ set(value); }
 
 	// Properties
 	private:
@@ -184,50 +184,50 @@ template <typename T> struct TLockingNumeric {
 template <typename T> struct TLockingValue {
 	// Methods
 	public:
-				// Lifecycle methods
-				TLockingValue(const T& initialValue) : mValueInternal(initialValue) {}
+							// Lifecycle methods
+		explicit			TLockingValue(const T& initialValue) : mValueInternal(initialValue) {}
 
-				// Instance methods
-		void	set(const T& value)
-					{
-						// Lock
-						mLock.lockForWriting();
+							// Instance methods
+					void	set(const T& value)
+								{
+									// Lock
+									mLock.lockForWriting();
 
-						// Update value
-						mValueInternal = value;
+									// Update value
+									mValueInternal = value;
 
-						// Unlock
-						mLock.unlockForWriting();
-					}
+									// Unlock
+									mLock.unlockForWriting();
+								}
 
-		T		operator*() const
-					{
-						// Lock
-						mLock.lockForReading();
+					T		operator*() const
+								{
+									// Lock
+									mLock.lockForReading();
 
-						// Copy value
-						T	value(mValueInternal);
+									// Copy value
+									T	value(mValueInternal);
 
-						// Unlock
-						mLock.unlockForReading();
+									// Unlock
+									mLock.unlockForReading();
 
-						return value;
-					}
-		bool	operator==(const T& value) const
-					{
-						// Lock
-						mLock.lockForReading();
+									return value;
+								}
+					bool	operator==(const T& value) const
+								{
+									// Lock
+									mLock.lockForReading();
 
-						// Compare
-						bool	isEqual = mValueInternal == value;
+									// Compare
+									bool	isEqual = mValueInternal == value;
 
-						// Unlock
-						mLock.unlockForReading();
+									// Unlock
+									mLock.unlockForReading();
 
-						return isEqual;
-					}
-		void	operator=(const T& value)
-					{ set(value); }
+									return isEqual;
+								}
+					void	operator=(const T& value)
+								{ set(value); }
 
 	// Properties
 	private:

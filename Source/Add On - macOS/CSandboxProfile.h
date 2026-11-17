@@ -16,12 +16,12 @@ class CSandboxProfile {
 
 	// Methods
 	public:
-					// Lifecycle methods
-					CSandboxProfile(const CString& name);
-					~CSandboxProfile();
+								// Lifecycle methods
+		explicit				CSandboxProfile(const CString& name);
+								~CSandboxProfile();
 
-					// Instance methods
-		OV<bool>	canAccess(const CFilesystemPath& filesystemPath) const;
+								// Instance methods
+					OV<bool>	canAccess(const CFilesystemPath& filesystemPath) const;
 
 	// Properties
 	private:

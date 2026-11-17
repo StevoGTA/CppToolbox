@@ -209,191 +209,201 @@ class CString : public CHashable {
 
 	// Methods
 	public:
-											// Lifecycle methods
-											CString();
-											CString(const CString& other);
-											CString(OSStringVar(initialString));
-											CString(const char chars[], CString::Length maxLength, Encoding encoding);
-											CString(const void* ptr, UInt64 byteCount, Encoding encoding);
-											CString(const TBuffer<const UInt8>& buffer, Encoding encoding);
-											CString(const TBuffer<UInt8>& buffer, Encoding encoding);
-											CString(const TBuffer<UTF32Char>& buffer);
+												// Lifecycle methods
+												CString();
+												CString(const CString& other);
+												CString(OSStringVar(initialString));
+												CString(const char chars[], CString::Length maxLength,
+														Encoding encoding);
+												CString(const void* ptr, UInt64 byteCount, Encoding encoding);
+												CString(const TBuffer<const UInt8>& buffer, Encoding encoding);
+												CString(const TBuffer<UInt8>& buffer, Encoding encoding);
+		explicit								CString(const TBuffer<UTF32Char>& buffer);
 
-											CString(Float32 value, UInt32 fieldSize = 0,
-													UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
-											CString(Float64 value, UInt32 fieldSize = 0,
-													UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
-											CString(SInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false);
-											CString(SInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false);
-											CString(SInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false);
-											CString(SInt64 value, UInt32 fieldSize = 0, bool padWithZeros = false);
-											CString(UInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false,
-													bool makeHex = false);
-											CString(UInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false,
-													bool makeHex = false);
-											CString(UInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false,
-													bool makeHex = false);
-											CString(UInt64 value, UInt32 fieldSize = 0, bool padWithZeros = false,
-													bool makeHex = false);
-											CString(OSType osType, bool isOSType, bool includeQuotes = true);
-											CString(UInt64 value, SpecialFormattingOptions specialFormattingOptions);
-											CString(const void* pointer);
+		explicit								CString(Float32 value, UInt32 fieldSize = 0,
+														UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
+		explicit								CString(Float64 value, UInt32 fieldSize = 0,
+														UInt32 digitsAfterDecimalPoint = 10, bool padWithZeros = false);
+		explicit								CString(SInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false);
+		explicit								CString(SInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false);
+		explicit								CString(SInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false);
+		explicit								CString(SInt64 value, UInt32 fieldSize = 0, bool padWithZeros = false);
+		explicit								CString(UInt8 value, UInt32 fieldSize = 0, bool padWithZeros = false,
+														bool makeHex = false);
+		explicit								CString(UInt16 value, UInt32 fieldSize = 0, bool padWithZeros = false,
+														bool makeHex = false);
+		explicit								CString(UInt32 value, UInt32 fieldSize = 0, bool padWithZeros = false,
+														bool makeHex = false);
+		explicit								CString(UInt64 value, UInt32 fieldSize = 0, bool padWithZeros = false,
+														bool makeHex = false);
+												CString(OSType osType, bool isOSType, bool includeQuotes = true);
+												CString(UInt64 value,
+														SpecialFormattingOptions specialFormattingOptions);
+		explicit								CString(const void* pointer);
 
-											CString(const CData& data, Encoding encoding);
+												CString(const CData& data, Encoding encoding);
 
-											CString(const TArray<CString>& components,
-													const CString& separator = CString(OSSTR(", ")));
+		explicit								CString(const TArray<CString>& components,
+														const CString& separator = CString(OSSTR(", ")));
 
-											CString(const CString& localizationGroup, const CString& localizationKey,
-													const CString& replacementString, const SValue& replacementValue);
-											CString(const CString& localizationGroup, const CString& localizationKey,
-													const CDictionary& localizationInfo);
-											CString(const CString& localizationGroup, const CString& localizationKey);
+												CString(const CString& localizationGroup,
+														const CString& localizationKey,
+														const CString& replacementString,
+														const SValue& replacementValue);
+												CString(const CString& localizationGroup,
+														const CString& localizationKey,
+														const CDictionary& localizationInfo);
+												CString(const CString& localizationGroup,
+														const CString& localizationKey);
 
-											~CString();
+												~CString();
 
-											// CEquatable methods
-						bool				operator==(const CEquatable& other) const
-												{ return equals((const CString&) other); }
+												// CEquatable methods
+							bool				operator==(const CEquatable& other) const
+													{ return equals((const CString&) other); }
 
-											// CHashable methods
-						void				hashInto(CHashable::HashCollector& hashableHashCollector) const
-												{ getUTF8String().hashInto(hashableHashCollector); }
+												// CHashable methods
+							void				hashInto(CHashable::HashCollector& hashableHashCollector) const
+													{ getUTF8String().hashInto(hashableHashCollector); }
 
-											// Instance methods
-						OSStringType		getOSString() const;
-				const	C					getUTF8String() const;
-						Length				getLength() const;
-						bool				isEmpty() const
-												{ return getLength() == 0; }
+												// Instance methods
+							OSStringType		getOSString() const;
+					const	C					getUTF8String() const;
+							Length				getLength() const;
+							bool				isEmpty() const
+													{ return getLength() == 0; }
 
-						Float32				getFloat32() const;
-						void				getValue(Float32& value) const
-												{ value = getFloat32(); }
-						OV<Float32>			getOVFloat32() const;
-						Float64				getFloat64() const;
-						void				getValue(Float64& value) const
-												{ value = getFloat64(); }
-						OV<Float64>			getOVFloat64() const;
-						SInt8				getSInt8(UInt8 base = 10) const;
-						void				getValue(SInt8& value, UInt8 base = 10) const
-												{ value = getSInt8(base); }
-						OV<SInt8>			getOVSInt8() const;
-						SInt16				getSInt16(UInt8 base = 10) const;
-						void				getValue(SInt16& value, UInt8 base = 10) const
-												{ value = getSInt16(base); }
-						OV<SInt16>			getOVSInt16() const;
-						SInt32				getSInt32(UInt8 base = 10) const;
-						void				getValue(SInt32& value, UInt8 base = 10) const
-												{ value = getSInt32(base); }
-						OV<SInt32>			getOVSInt32() const;
-						SInt64				getSInt64(UInt8 base = 10) const;
-						void				getValue(SInt64& value, UInt8 base = 10) const
-												{ value = getSInt64(base); }
-						OV<SInt64>			getOVSInt64() const;
-						UInt8				getUInt8(UInt8 base = 10) const;
-						void				getValue(UInt8& value, UInt8 base = 10) const
-												{ value = getUInt8(base); }
-						OV<UInt8>			getOVUInt8() const;
-						UInt16				getUInt16(UInt8 base = 10) const;
-						void				getValue(UInt16& value, UInt8 base = 10) const
-												{ value = getUInt16(base); }
-						OV<UInt16>			getOVUInt16() const;
-						UInt32				getUInt32(UInt8 base = 10) const;
-						void				getValue(UInt32& value, UInt8 base = 10) const
-												{ value = getUInt32(base); }
-						OV<UInt32>			getOVUInt32() const;
-						OSType				getOSType() const;
-						UInt64				getUInt64(UInt8 base = 10) const;
-						void				getValue(UInt64& value, UInt8 base = 10) const
-												{ value = getUInt64(base); }
-						OV<UInt64>			getOVUInt64() const;
-						UInt64				getAsByteCount() const;
-						
-						TBuffer<char>		getUTF8Chars() const;
-						TBuffer<UTF32Char>	getUTF32Chars() const;
-						OV<CData>			getData(Encoding encoding, bool okToFail = false) const;
-						CData				getUTF8Data() const;
+							Float32				getFloat32() const;
+							void				getValue(Float32& value) const
+													{ value = getFloat32(); }
+							OV<Float32>			getOVFloat32() const;
+							Float64				getFloat64() const;
+							void				getValue(Float64& value) const
+													{ value = getFloat64(); }
+							OV<Float64>			getOVFloat64() const;
+							SInt8				getSInt8(UInt8 base = 10) const;
+							void				getValue(SInt8& value, UInt8 base = 10) const
+													{ value = getSInt8(base); }
+							OV<SInt8>			getOVSInt8() const;
+							SInt16				getSInt16(UInt8 base = 10) const;
+							void				getValue(SInt16& value, UInt8 base = 10) const
+													{ value = getSInt16(base); }
+							OV<SInt16>			getOVSInt16() const;
+							SInt32				getSInt32(UInt8 base = 10) const;
+							void				getValue(SInt32& value, UInt8 base = 10) const
+													{ value = getSInt32(base); }
+							OV<SInt32>			getOVSInt32() const;
+							SInt64				getSInt64(UInt8 base = 10) const;
+							void				getValue(SInt64& value, UInt8 base = 10) const
+													{ value = getSInt64(base); }
+							OV<SInt64>			getOVSInt64() const;
+							UInt8				getUInt8(UInt8 base = 10) const;
+							void				getValue(UInt8& value, UInt8 base = 10) const
+													{ value = getUInt8(base); }
+							OV<UInt8>			getOVUInt8() const;
+							UInt16				getUInt16(UInt8 base = 10) const;
+							void				getValue(UInt16& value, UInt8 base = 10) const
+													{ value = getUInt16(base); }
+							OV<UInt16>			getOVUInt16() const;
+							UInt32				getUInt32(UInt8 base = 10) const;
+							void				getValue(UInt32& value, UInt8 base = 10) const
+													{ value = getUInt32(base); }
+							OV<UInt32>			getOVUInt32() const;
+							OSType				getOSType() const;
+							UInt64				getUInt64(UInt8 base = 10) const;
+							void				getValue(UInt64& value, UInt8 base = 10) const
+													{ value = getUInt64(base); }
+							OV<UInt64>			getOVUInt64() const;
+							UInt64				getAsByteCount() const;
 
-						CString				getSubString(CharIndex startIndex, OV<Length> length = OV<Length>()) const;
-						CString				getSubString(CharIndex startIndex, Length length) const
-												{ return getSubString(startIndex, OV<Length>(length)); }
-						CString				replacingSubStrings(const CString& subStringToReplace,
-													const CString& replacementString = CString::mEmpty) const;
-						CString				replacingCharacters(CharIndex startIndex = 0,
-													OV<Length> length = OV<Length>(),
-													const CString& replacementString = CString::mEmpty) const;
+							TBuffer<char>		getUTF8Chars() const;
+							TBuffer<UTF32Char>	getUTF32Chars() const;
+							OV<CData>			getData(Encoding encoding, bool okToFail = false) const;
+							CData				getUTF8Data() const;
 
-						OV<SRange32>		findSubString(const CString& subString, CharIndex startIndex = 0,
-													const OV<Length>& length = OV<Length>()) const;
-						
-						CString				lowercased() const;
-						CString				uppercased() const;
-						CString				capitalizingFirstLetter() const;
-						CString				removingLeadingAndTrailingWhitespace() const;
-						CString				removingAllWhitespace() const;
-						CString				removingLeadingAndTrailingQuotes() const;
-						CString				percentEncodedForURLQuery(bool encodePlusCharacter = false) const;
+							CString				getSubString(CharIndex startIndex, OV<Length> length = OV<Length>())
+														const;
+							CString				getSubString(CharIndex startIndex, Length length) const
+													{ return getSubString(startIndex, OV<Length>(length)); }
+							CString				replacingSubStrings(const CString& subStringToReplace,
+														const CString& replacementString = CString::mEmpty) const;
+							CString				replacingCharacters(CharIndex startIndex = 0,
+														OV<Length> length = OV<Length>(),
+														const CString& replacementString = CString::mEmpty) const;
 
-						bool				isValidEmailAddress() const;
-						CString				getCommonPrefix(const CString& other) const;
-					
-						TArray<CString>		components(const CString& separator, bool includeEmptyComponents = true)
-													const;
-						TArray<CString>		componentsRespectingQuotes(const CString& separator) const;
+							OV<SRange32>		findSubString(const CString& subString, CharIndex startIndex = 0,
+														const OV<Length>& length = OV<Length>()) const;
 
-						bool				compareTo(const CString& other,
-													CompareToOptions compareToOptions = kCompareToOptionsDefault) const;
-						bool				hasPrefix(const CString& other) const;
-						bool				hasSuffix(const CString& other) const;
-						bool				contains(const CString& other,
-													ContainsOptions containsOptions = kContainsOptionsDefault) const;
-						bool				equals(const CString& other,
-													ContainsOptions containsOptions = kContainsOptionsDefault) const;
+							CString				lowercased() const;
+							CString				uppercased() const;
+							CString				capitalizingFirstLetter() const;
+							CString				removingLeadingAndTrailingWhitespace() const;
+							CString				removingAllWhitespace() const;
+							CString				removingLeadingAndTrailingQuotes() const;
+							CString				percentEncodedForURLQuery(bool encodePlusCharacter = false) const;
 
-						bool				containsOnly(CharacterSet characterSet) const;
-						CString				filteredUsing(CharacterSet characterSet) const;
+							bool				isValidEmailAddress() const;
+							CString				getCommonPrefix(const CString& other) const;
 
-						void				toPascal(UInt8 buffer[], UInt8 bufferByteCount) const;
+							TArray<CString>		components(const CString& separator, bool includeEmptyComponents = true)
+														const;
+							TArray<CString>		componentsRespectingQuotes(const CString& separator) const;
 
-						bool				operator==(const CString& other) const
-												{ return equals(other); }
-						CString&			operator=(const CString& other);
-						CString&			operator+=(const CString& other);
-						CString				operator+(const CString& other) const;
-												
-											// Class methods
-		static			Float32				getFloat32(const void* string, void* userData)
-												{ return ((const CString*) string)->getFloat32(); }
-		static			UInt32				getUInt32(const void* string, void* userData)
-												{ return ((const CString*) string)->getUInt32(); }
-		static			UInt64				getUInt64(const void* string, void* userData)
-												{ return ((const CString*) string)->getUInt64(); }
+							bool				compareTo(const CString& other,
+														CompareToOptions compareToOptions = kCompareToOptionsDefault)
+														const;
+							bool				hasPrefix(const CString& other) const;
+							bool				hasSuffix(const CString& other) const;
+							bool				contains(const CString& other,
+														ContainsOptions containsOptions = kContainsOptionsDefault)
+														const;
+							bool				equals(const CString& other,
+														ContainsOptions containsOptions = kContainsOptionsDefault)
+														const;
 
-		static			bool				compare(const CString& string1, const CString& string2,
-													void* compareToOptions);
+							bool				containsOnly(CharacterSet characterSet) const;
+							CString				filteredUsing(CharacterSet characterSet) const;
 
-		static			CString				lowercase(const CString* string, void* userData);
-		static			CString				uppercase(const CString* string, void* userData);
+							void				toPascal(UInt8 buffer[], UInt8 bufferByteCount) const;
 
-		static			CString				fromPascal(const UInt8* ptr)
-												{ return CString(ptr + 1, ptr[0], kEncodingMacRoman); }
-		static			CString				fromPascal(const CData& data);
-		static			CString				make(OSStringType format, ...);
-		static			CString				make(OSStringType format, va_list args);
+							bool				operator==(const CString& other) const
+													{ return equals(other); }
+							CString&			operator=(const CString& other);
+							CString&			operator+=(const CString& other);
+							CString				operator+(const CString& other) const;
 
-		static			bool				isEmpty(const CString& string, void* userData);
-		static			bool				isNotEmpty(const CString& string, void* userData);
+												// Class methods
+		static				Float32				getFloat32(const void* string, void* userData)
+													{ return ((const CString*) string)->getFloat32(); }
+		static				UInt32				getUInt32(const void* string, void* userData)
+													{ return ((const CString*) string)->getUInt32(); }
+		static				UInt64				getUInt64(const void* string, void* userData)
+													{ return ((const CString*) string)->getUInt64(); }
+
+		static				bool				compare(const CString& string1, const CString& string2,
+														void* compareToOptions);
+
+		static				CString				lowercase(const CString* string, void* userData);
+		static				CString				uppercase(const CString* string, void* userData);
+
+		static				CString				fromPascal(const UInt8* ptr)
+													{ return CString(ptr + 1, ptr[0], kEncodingMacRoman); }
+		static				CString				fromPascal(const CData& data);
+		static				CString				make(OSStringType format, ...);
+		static				CString				make(OSStringType format, va_list args);
+
+		static				bool				isEmpty(const CString& string, void* userData);
+		static				bool				isNotEmpty(const CString& string, void* userData);
 
 #if defined(TARGET_OS_WINDOWS)
-		static			void				setupLocalization(const CData& stringsFileData);
+		static				void				setupLocalization(const CData& stringsFileData);
 #endif
-		static			bool				hasLocalizationFor(const CString& localizationGroup,
-													const CString& localizationKey);
+		static				bool				hasLocalizationFor(const CString& localizationGroup,
+														const CString& localizationKey);
 
 	protected:
-											// Internal methods
-						void				init();
+												// Internal methods
+							void				init();
 
 	// Properties
 	public:

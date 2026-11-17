@@ -40,22 +40,22 @@ class CAudioChannelMixer : public CBasicAudioProcessor {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CAudioChannelMixer(const Matrix& matrix);
-										~CAudioChannelMixer();
+													// Lifecycle methods
+		explicit									CAudioChannelMixer(const Matrix& matrix);
+													~CAudioChannelMixer();
 
-										// CAudioProcessor methods
-		OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-												const SAudio::ProcessingFormat& audioProcessingFormat);
-		TArray<CString>					getSetupDescription(const CString& indent);
+													// CAudioProcessor methods
+					OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
+															const SAudio::ProcessingFormat& audioProcessingFormat);
+					TArray<CString>					getSetupDescription(const CString& indent);
 
-		TNumberArray<Float32>			setChannelGains(const TNumberArray<Float32>& channelGains);
+					TNumberArray<Float32>			setChannelGains(const TNumberArray<Float32>& channelGains);
 
-		TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
+					TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
 
-		TArray<SAudio::ProcessingSetup>	getInputSetups() const;
+					TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 
-		TArray<SAudio::ProcessingSetup>	getOutputSetups() const;
+					TArray<SAudio::ProcessingSetup>	getOutputSetups() const;
 
 	// Properties
 	private:

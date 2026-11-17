@@ -18,24 +18,27 @@ class CBits {
 
 	// Methods
 	public:
-					// Lifecycle methods
-					CBits(UInt32 count = 8, bool initialValue = false);
-					CBits(const CDictionary& storageInfo);
-					CBits(const CBits& other);
-					~CBits();
+								// Lifecycle methods
+		explicit				CBits(UInt32 count = 8, bool initialValue = false);
+		explicit				CBits(const CDictionary& storageInfo);
+								CBits(const CBits& other);
+								~CBits();
 
-					// Instance methods
-		UInt32		getCount() const;
-		bool		get(UInt32 index) const;
-		CBits&		set(UInt32 index, bool value = true);
-		CBits&		clear(UInt32 index)
-						{ return set(index, false); }
+								// Instance methods
+					UInt32		getCount() const;
+					UInt32		getSetCount() const;
 
-		CDictionary	getStorageInfo() const;
+					bool		get(UInt32 index) const;
+					CBits&		set(UInt32 index, bool value = true);
+					CBits&		clear(UInt32 index)
+									{ return set(index, false); }
+					CBits		inverting() const;
 
-		CBits&		operator=(const CBits& other);
-		bool		operator[](UInt32 index)
-						{ return get(index); }
+					CDictionary	getStorageInfo() const;
+
+					CBits&		operator=(const CBits& other);
+					bool		operator[](UInt32 index)
+									{ return get(index); }
 
 	// Properties
 	private:

@@ -13,19 +13,21 @@
 
 class RowWriterRGBA8888 : public CBitmap::RowWriter {
 	public:
-				RowWriterRGBA8888(void* bytePtr) : RowWriter(), mPixelData((CBitmap::PixelDataRGBA8888*) bytePtr) {}
+		explicit			RowWriterRGBA8888(void* bytePtr) :
+								RowWriter(), mPixelData((CBitmap::PixelDataRGBA8888*) bytePtr)
+								{}
 
-		void	write(const CBitmap::PixelDataRGB888& pixelData)
-					{
-						// Store
-						mPixelData->mComponents.mR = pixelData.mR;
-						mPixelData->mComponents.mG = pixelData.mG;
-						mPixelData->mComponents.mB = pixelData.mB;
-						mPixelData->mComponents.mA = 0xFF;
+					void	write(const CBitmap::PixelDataRGB888& pixelData)
+								{
+									// Store
+									mPixelData->mComponents.mR = pixelData.mR;
+									mPixelData->mComponents.mG = pixelData.mG;
+									mPixelData->mComponents.mB = pixelData.mB;
+									mPixelData->mComponents.mA = 0xFF;
 
-						// Update
-						mPixelData++;
-					}
+									// Update
+									mPixelData++;
+								}
 
 	private:
 		CBitmap::PixelDataRGBA8888*	mPixelData;

@@ -55,8 +55,8 @@ static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& f
 		// Error
 		return TVResult<CFilesystem::VolumeInfo>(SErrorFromWindowsGetLastError());
 
-	// Get the filesystem name ("NTFS", "exFAT", "FAT32", ...), the serial number, and the flags carrying read-only
-	//	and hard link support
+	// Get the filesystem name ("NTFS", "exFAT", "FAT32", ...), the serial number, and the flags carrying read-only,
+	//	hard link support and alternate data stream (extended attribute) support
 	WCHAR	filesystemName[MAX_PATH];
 	DWORD	serialNumber, filesystemFlags;
 	if (!::GetVolumeInformationW(volumePath, NULL, 0, &serialNumber, NULL, &filesystemFlags, filesystemName,
@@ -74,7 +74,7 @@ static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& f
 			CFilesystem::VolumeInfo(CString(filesystemName), serialNumber,
 					CFolder(CFilesystemPath(CString(volumePath))), sectorsPerCluster * bytesPerSector,
 					::GetDriveTypeW(volumePath) != DRIVE_REMOTE, (filesystemFlags & FILE_READ_ONLY_VOLUME) != 0,
-					(filesystemFlags & FILE_SUPPORTS_HARD_LINKS) != 0));
+					(filesystemFlags & FILE_SUPPORTS_HARD_LINKS) != 0, (filesystemFlags & FILE_NAMED_STREAMS) != 0));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

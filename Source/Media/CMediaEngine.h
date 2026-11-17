@@ -31,6 +31,11 @@ class CMediaEngine {
 															const I<CAudioProcessor>& audioProcessorDestination,
 															const SAudio::ProcessingFormat& audioProcessingFormat)
 															const;
+				OV<SError>							connect(const I<CAudioSource>& audioSource,
+															const CAudioProcessors& audioProcessors,
+															const I<CAudioDestination>& audioDestination,
+															const SAudio::ProcessingFormat& audioProcessingFormat)
+															const;
 				TVResult<TBuffer<Float32> >			loadFrames(const SMediaSource::Tracks::AudioTrack& audioTrack,
 															Float32 sampleRate, const SAudio::ChannelMap& channelMap)
 															const;

@@ -16,9 +16,9 @@ class CLogFile : public CFile {
 
 	// Methods
 	public:
-		// Lifecycle methods
-		CLogFile(const CFilesystemPath& filesystemPath);
-		~CLogFile();
+					// Lifecycle methods
+		explicit	CLogFile(const CFilesystemPath& filesystemPath);
+					~CLogFile();
 
 	// Properties
 	private:

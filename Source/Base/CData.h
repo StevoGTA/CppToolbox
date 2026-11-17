@@ -25,89 +25,89 @@ class CData {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CData(ByteCount preallocatedByteCount = 1024);
-										CData(ByteCount byteCount, UInt8 fillValue);
-										CData(const void* buffer, ByteCount bufferByteCount,
-												bool copySourceData = true);
-										CData(const CData& other);
-										~CData();
+											// Lifecycle methods
+		explicit							CData(ByteCount preallocatedByteCount = 1024);
+											CData(ByteCount byteCount, UInt8 fillValue);
+											CData(const void* buffer, ByteCount bufferByteCount,
+													bool copySourceData = true);
+											CData(const CData& other);
+											~CData();
 
-										// Instance methods
-				ByteCount				getByteCount() const;
-				bool					isEmpty() const
-											{ return getByteCount() == 0; }
+											// Instance methods
+					ByteCount				getByteCount() const;
+					bool					isEmpty() const
+												{ return getByteCount() == 0; }
 
-				void					copyBytes(void* destinationBuffer, ByteIndex startByteIndex,
-												ByteCount byteCount) const;
-				void					copyBytes(void* destinationBuffer, ByteCount byteCount) const
-											{ copyBytes(destinationBuffer, 0, byteCount); }
-				void					copyBytes(void* destinationBuffer) const
-											{ copyBytes(destinationBuffer, 0, getByteCount()); }
+					void					copyBytes(void* destinationBuffer, ByteIndex startByteIndex,
+													ByteCount byteCount) const;
+					void					copyBytes(void* destinationBuffer, ByteCount byteCount) const
+												{ copyBytes(destinationBuffer, 0, byteCount); }
+					void					copyBytes(void* destinationBuffer) const
+												{ copyBytes(destinationBuffer, 0, getByteCount()); }
 
-				bool					compareBytes(const void* buffer, ByteCount byteCount,
-												ByteIndex startByteIndex = 0) const;
-				bool					hasPrefix(const void* buffer, ByteCount byteCount) const
-											{ return compareBytes(buffer, byteCount); }
+					bool					compareBytes(const void* buffer, ByteCount byteCount,
+													ByteIndex startByteIndex = 0) const;
+					bool					hasPrefix(const void* buffer, ByteCount byteCount) const
+												{ return compareBytes(buffer, byteCount); }
 
-				CString					getBase64String(bool prettyPrint = false) const;
-				CString					getHexString(bool uppercase = false) const;
+					CString					getBase64String(bool prettyPrint = false) const;
+					CString					getHexString(bool uppercase = false) const;
 
-				TBuffer<const SInt8>	getSInt8Buffer(ByteIndex byteIndex, ByteCount byteCount) const;
-				TBuffer<const SInt8>	getSInt8Buffer(ByteIndex byteIndex = 0) const;
-				TBuffer<const UInt8>	getUInt8Buffer(ByteIndex byteIndex, ByteCount byteCount) const;
-				TBuffer<const UInt8>	getUInt8Buffer(ByteIndex byteIndex = 0) const;
+					TBuffer<const SInt8>	getSInt8Buffer(ByteIndex byteIndex, ByteCount byteCount) const;
+					TBuffer<const SInt8>	getSInt8Buffer(ByteIndex byteIndex = 0) const;
+					TBuffer<const UInt8>	getUInt8Buffer(ByteIndex byteIndex, ByteCount byteCount) const;
+					TBuffer<const UInt8>	getUInt8Buffer(ByteIndex byteIndex = 0) const;
 
-				CData					subData(ByteIndex byteIndex, ByteCount byteCount) const;
-				CData					subData(ByteIndex byteIndex) const;
-				OV<SRange64>			findSubData(const CData& subData, ByteIndex startIndex = 0,
-												const OV<ByteCount>& byteCount = OV<ByteCount>()) const;
+					CData					subData(ByteIndex byteIndex, ByteCount byteCount) const;
+					CData					subData(ByteIndex byteIndex) const;
+					OV<SRange64>			findSubData(const CData& subData, ByteIndex startIndex = 0,
+													const OV<ByteCount>& byteCount = OV<ByteCount>()) const;
 
-				TBuffer<UInt8>			getMutableBuffer(ByteIndex byteIndex, ByteCount byteCount);
-				TBuffer<UInt8>			getMutableBuffer(ByteCount byteCount);
-				CData&					append(const void* buffer, ByteCount bufferByteCount);
-				CData&					append(const CData& data);
-				CData&					append(SInt16 value)
-											{ return append(&value, sizeof(SInt16)); }
-				CData&					append(UInt8 value)
-											{ return append(&value, sizeof(UInt8)); }
-				CData&					append(UInt16 value)
-											{ return append(&value, sizeof(UInt16)); }
-				CData&					append(UInt32 value)
-											{ return append(&value, sizeof(UInt32)); }
-				CData&					append(UInt64 value)
-											{ return append(&value, sizeof(UInt64)); }
-				CData&					appendFill(ByteCount byteCount, UInt8 fillValue = 0);
-				CData&					replace(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer,
-												ByteCount bufferByteCount);
-				CData&					replace(ByteIndex startByteIndex, const CData& data);
-				CData&					replace(ByteIndex startByteIndex, UInt32 value)
-											{ return replace(startByteIndex, sizeof(UInt32), &value,
-													sizeof(UInt32)); }
+					TBuffer<UInt8>			getMutableBuffer(ByteIndex byteIndex, ByteCount byteCount);
+					TBuffer<UInt8>			getMutableBuffer(ByteCount byteCount);
+					CData&					append(const void* buffer, ByteCount bufferByteCount);
+					CData&					append(const CData& data);
+					CData&					append(SInt16 value)
+												{ return append(&value, sizeof(SInt16)); }
+					CData&					append(UInt8 value)
+												{ return append(&value, sizeof(UInt8)); }
+					CData&					append(UInt16 value)
+												{ return append(&value, sizeof(UInt16)); }
+					CData&					append(UInt32 value)
+												{ return append(&value, sizeof(UInt32)); }
+					CData&					append(UInt64 value)
+												{ return append(&value, sizeof(UInt64)); }
+					CData&					appendFill(ByteCount byteCount, UInt8 fillValue = 0);
+					CData&					replace(ByteIndex startByteIndex, ByteCount byteCount, const void* buffer,
+													ByteCount bufferByteCount);
+					CData&					replace(ByteIndex startByteIndex, const CData& data);
+					CData&					replace(ByteIndex startByteIndex, UInt32 value)
+												{ return replace(startByteIndex, sizeof(UInt32), &value,
+														sizeof(UInt32)); }
 
-				CData&					operator=(const CData& other);
-				bool					operator==(const CData& other) const;
-				bool					operator!=(const CData& other) const
-											{ return !operator==(other); }
-				CData					operator+(const CData& other) const;
-				CData&					operator+=(const CData& other);
+					CData&					operator=(const CData& other);
+					bool					operator==(const CData& other) const;
+					bool					operator!=(const CData& other) const
+												{ return !operator==(other); }
+					CData					operator+(const CData& other) const;
+					CData&					operator+=(const CData& other);
 
-										// Class methods
-		static	CData					fromBase64String(const CString& base64String);
-		static	CData					fromBase64StringPtr(const CString* base64StringPtr, void* userData = nil)
-											{ return fromBase64String(*base64StringPtr); }
-		static	CString					toBase64String(const CData* data, void* userData = nil);
+											// Class methods
+		static		CData					fromBase64String(const CString& base64String);
+		static		CData					fromBase64StringPtr(const CString* base64StringPtr, void* userData = nil)
+												{ return fromBase64String(*base64StringPtr); }
+		static		CString					toBase64String(const CData* data, void* userData = nil);
 
-		static	CData					storing(SInt32 value, bool copyValue = true)
-											{ return CData(&value, sizeof(SInt32), copyValue); }
-		static	CData					storing(SInt8 value, bool copyValue = true)
-											{ return CData(&value, sizeof(SInt8), copyValue); }
-		static	CData					storing(UInt8 value, bool copyValue = true)
-											{ return CData(&value, sizeof(UInt8), copyValue); }
-		static	CData					storing(UInt16 value, bool copyValue = true)
-											{ return CData(&value, sizeof(UInt16), copyValue); }
-		static	CData					storing(UInt32 value, bool copyValue = true)
-											{ return CData(&value, sizeof(UInt32), copyValue); }
+		static		CData					storing(SInt32 value, bool copyValue = true)
+												{ return CData(&value, sizeof(SInt32), copyValue); }
+		static		CData					storing(SInt8 value, bool copyValue = true)
+												{ return CData(&value, sizeof(SInt8), copyValue); }
+		static		CData					storing(UInt8 value, bool copyValue = true)
+												{ return CData(&value, sizeof(UInt8), copyValue); }
+		static		CData					storing(UInt16 value, bool copyValue = true)
+												{ return CData(&value, sizeof(UInt16), copyValue); }
+		static		CData					storing(UInt32 value, bool copyValue = true)
+												{ return CData(&value, sizeof(UInt32), copyValue); }
 
 	// Properties
 	public:

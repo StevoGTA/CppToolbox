@@ -10,60 +10,58 @@
 // MARK: T3DPoint
 
 template <typename T> struct T3DPoint {
-						// Lifecycle methods
-						T3DPoint() : mX(0.0), mY(0.0), mZ(0.0) {}
-						T3DPoint(T x, T y, T z) : mX(x), mY(y), mZ(z) {}
-						T3DPoint(const CString& string)
-							{
-								// "{0.0,0.0,0.0}" => ",0.0,0.0,0.0}" => ["", "0.0", "0.0", "0.0}"]
-								TArray<CString>	array =
-														string.replacingSubStrings(CString::mBraceOpen, CString::mComma)
-																.components(CString::mComma);
-								if (array.getCount() >= 4) {
-									// Extract values
-									mX = array[1].getFloat32();
-									mY = array[2].getFloat32();
-									mZ = array[3].getFloat32();
-								} else {
-									// Use default values
-									mX = 0.0;
-									mY = 0.0;
-									mZ = 0.0;
+							// Lifecycle methods
+							T3DPoint() : mX(0.0), mY(0.0), mZ(0.0) {}
+							T3DPoint(T x, T y, T z) : mX(x), mY(y), mZ(z) {}
+	explicit				T3DPoint(const CString& string)
+								{
+									// "{0.0,0.0,0.0}" => ",0.0,0.0,0.0}" => ["", "0.0", "0.0", "0.0}"]
+									TArray<CString>	array =
+															string.replacingSubStrings(CString::mBraceOpen,
+																			CString::mComma)
+																	.components(CString::mComma);
+									if (array.getCount() >= 4) {
+										// Extract values
+										mX = array[1].getFloat32();
+										mY = array[2].getFloat32();
+										mZ = array[3].getFloat32();
+									} else {
+										// Use default values
+										mX = 0.0;
+										mY = 0.0;
+										mZ = 0.0;
+									}
 								}
-							}
 
 						// Instance methods
-	inline	T3DPoint	offset(T offsetX, T offsetY, T offsetZ) const
-							{ return T3DPoint(mX + offsetX, mY + offsetY, mZ + offsetZ); }
-	inline	T3DPoint	midpoint(const T3DPoint& point, T ratio) const
-							{ return T3DPoint(mX + (point.mX - mX) * ratio, mY + (point.mY - mY) * ratio,
-									mZ + (point.mZ - mZ) * ratio); }
-	inline	T3DPoint	reflectedBy(const T3DPoint& anchorPoint) const
-							{
-								return T3DPoint(anchorPoint.mX + (anchorPoint.mX - mX),
-										anchorPoint.mY + (anchorPoint.mY - mY), anchorPoint.mZ + (anchorPoint.mZ - mZ));
-							}
-	inline	T			distanceTo(const T3DPoint& point) const
-							{ return sqrt(distanceSquaredTo(point)); }
-	inline	T			distanceSquaredTo(const T3DPoint& point) const
-							{
-								T	dx = point.mX - mX;
-								T	dy = point.mY - mY;
-								T	dz = point.mZ - mZ;
+	inline		T3DPoint	offset(T offsetX, T offsetY, T offsetZ) const
+								{ return T3DPoint(mX + offsetX, mY + offsetY, mZ + offsetZ); }
+	inline		T3DPoint	midpoint(const T3DPoint& point, T ratio) const
+								{ return T3DPoint(mX + (point.mX - mX) * ratio, mY + (point.mY - mY) * ratio,
+										mZ + (point.mZ - mZ) * ratio); }
+	inline		T3DPoint	reflectedBy(const T3DPoint& anchorPoint) const
+								{ return T3DPoint(anchorPoint.mX + (anchorPoint.mX - mX),
+											anchorPoint.mY + (anchorPoint.mY - mY),
+											anchorPoint.mZ + (anchorPoint.mZ - mZ)); }
+	inline		T			distanceTo(const T3DPoint& point) const
+								{ return sqrt(distanceSquaredTo(point)); }
+	inline		T			distanceSquaredTo(const T3DPoint& point) const
+								{
+									T	dx = point.mX - mX;
+									T	dy = point.mY - mY;
+									T	dz = point.mZ - mZ;
 
-								return dx * dx + dy * dy + dz * dz;
-							}
+									return dx * dx + dy * dy + dz * dz;
+								}
 
-	inline	bool		operator==(const T3DPoint& other) const
-							{ return (mX == other.mX) && (mY == other.mY) && (mZ == other.mZ); }
-	inline	bool		operator!=(const T3DPoint& other) const
-							{ return (mX != other.mX) || (mY != other.mY) || (mZ != other.mZ); }
+	inline		bool		operator==(const T3DPoint& other) const
+								{ return (mX == other.mX) && (mY == other.mY) && (mZ == other.mZ); }
+	inline		bool		operator!=(const T3DPoint& other) const
+								{ return (mX != other.mX) || (mY != other.mY) || (mZ != other.mZ); }
 
-	inline	CString		asString() const
-							{
-								return CString::mBraceOpen + CString(mX, 5, 3) + CString::mComma + CString(mY, 5, 3) +
-										CString::mComma + CString(mZ, 5, 3) + CString::mBraceClose;
-							}
+	inline		CString		asString() const
+								{ return CString::mBraceOpen + CString(mX, 5, 3) + CString::mComma + CString(mY, 5, 3) +
+											CString::mComma + CString(mZ, 5, 3) + CString::mBraceClose; }
 
 	// Properties
 					T			mX;

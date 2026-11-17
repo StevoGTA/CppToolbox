@@ -60,16 +60,16 @@ class CDataDataSource : public CRandomAccessDataSource {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CDataDataSource(const CData& data);
-										~CDataDataSource();
+													// Lifecycle methods
+		explicit									CDataDataSource(const CData& data);
+													~CDataDataSource();
 
-										// CRandomAccessDataSource methods
-		UInt64							getByteCount() const;
+													// CRandomAccessDataSource methods
+					UInt64							getByteCount() const;
 
-		OV<SError>						read(UInt64 position, void* buffer, UInt64 byteCount);
-		TVResult<CData>					readData(UInt64 position, CData::ByteCount byteCount);
-		TVResult<TBuffer<const UInt8> >	readUInt8Buffer(UInt64 position, UInt64 byteCount);
+					OV<SError>						read(UInt64 position, void* buffer, UInt64 byteCount);
+					TVResult<CData>					readData(UInt64 position, CData::ByteCount byteCount);
+					TVResult<TBuffer<const UInt8> >	readUInt8Buffer(UInt64 position, UInt64 byteCount);
 
 	// Properties
 	private:

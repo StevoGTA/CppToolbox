@@ -141,6 +141,7 @@ class CAudioFrames {
 		Info	getWriteInfo();
 		void	completeWrite(const CAudioFrames& other)
 					{ completeWrite(other.getCurrentFrameCount(), other.getReadInfo()); }
+		void	completeWrite(const CAudioFrames& other, UInt32 frameIndex, UInt32 frameCount);
 		void	completeWrite(UInt32 frameCount);
 		void	completeWrite(UInt32 frameCount, const Info& info);
 		void	completeWrite(UInt32 frameCount, void* const* sampleBufferPtrs, UInt32 sampleBufferCount);

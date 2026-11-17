@@ -15,94 +15,103 @@ template <typename T> struct TBuffer {
 
 	// Methods
 	public:
-					// Lifecycle methods
-					TBuffer(UInt64 count)
-						{
-							// Setup
-							mStorage = new T[count]();
-							mByteCount = count * sizeof(T);
+								// Lifecycle methods
+		explicit				TBuffer(UInt64 count)
+									{
+										// Setup
+										mStorage = new T[count]();
+										mByteCount = count * sizeof(T);
 
-							mReferenceCount = new std::atomic<UInt32>(1);
-						}
-					TBuffer(T* buffer, UInt64 count) :
-						mStorage(buffer), mByteCount(count * sizeof(T)), mReferenceCount(nil)
-						{}
-					TBuffer(const TBuffer<T>& other, UInt64 count) :
-						mStorage(other.mStorage), mByteCount(count * sizeof(T)), mReferenceCount(other.mReferenceCount)
-						{
-							// Check
-							AssertFailIf(mByteCount > other.mByteCount);
+										mReferenceCount = new std::atomic<UInt32>(1);
+									}
+								TBuffer(T* buffer, UInt64 count) :
+									mStorage(buffer), mByteCount(count * sizeof(T)), mReferenceCount(nil)
+									{}
+								TBuffer(const TBuffer<T>& other, UInt64 count) :
+									mStorage(other.mStorage), mByteCount(count * sizeof(T)), mReferenceCount(other.mReferenceCount)
+									{
+										// Check
+										AssertFailIf(mByteCount > other.mByteCount);
 
-							// Check for reference count
-							if (mReferenceCount != nil)
-								// Add reference
-								(*mReferenceCount)++;
-						}
-					TBuffer(const TBuffer<T>& other) :
-						mStorage(other.mStorage), mByteCount(other.mByteCount), mReferenceCount(other.mReferenceCount)
-						{
-							// Check for reference count
-							if (mReferenceCount != nil)
-								// Add reference
-								(*mReferenceCount)++;
-						}
+										// Check for reference count
+										if (mReferenceCount != nil)
+											// Add reference
+											(*mReferenceCount)++;
+									}
+								TBuffer(const TBuffer<T>& other) :
+									mStorage(other.mStorage), mByteCount(other.mByteCount), mReferenceCount(other.mReferenceCount)
+									{
+										// Check for reference count
+										if (mReferenceCount != nil)
+											// Add reference
+											(*mReferenceCount)++;
+									}
 
-					template <typename U> TBuffer(const TBuffer<U>& other) :
-						mStorage(other.mStorage), mByteCount(other.mByteCount), mReferenceCount(other.mReferenceCount)
-						{
-							// Check for reference count
-							if (mReferenceCount != nil)
-								// Add reference
-								(*mReferenceCount)++;
-						}
+								template <typename U>
+								TBuffer(const TBuffer<U>& other) :
+									mStorage(other.mStorage), mByteCount(other.mByteCount), mReferenceCount(other.mReferenceCount)
+									{
+										// Check for reference count
+										if (mReferenceCount != nil)
+											// Add reference
+											(*mReferenceCount)++;
+									}
 
-					~TBuffer()
-						{
-							// Check if need to cleanup
-							if ((mReferenceCount != nil) && (--(*mReferenceCount) == 0)) {
-								// Cleanup
-								DeleteArray(mStorage);
-								Delete(mReferenceCount);
-							}
-						}
+								~TBuffer()
+									{
+										// Check if need to cleanup
+										if ((mReferenceCount != nil) && (--(*mReferenceCount) == 0)) {
+											// Cleanup
+											DeleteArray(mStorage);
+											Delete(mReferenceCount);
+										}
+									}
 
-					// Instance methods
-		UInt64		getCount() const
-						{ return mByteCount / sizeof(T); }
-		UInt64		getByteCount() const
-						{ return mByteCount; }
-		void		clear()
-						{ ::memset(mStorage, 0, mByteCount); }
+								// Instance methods
+					UInt64		getCount() const
+									{ return mByteCount / sizeof(T); }
+					UInt64		getByteCount() const
+									{ return mByteCount; }
+					void		clear()
+									{ ::memset(mStorage, 0, mByteCount); }
+					void		toggleEndianness()
+									{
+										// Reverse the bytes of each element
+										UInt8*	bytePtr = (UInt8*) mStorage;
+										for (UInt64 i = 0; i < getCount(); i++, bytePtr += sizeof(T))
+											// Reverse
+											std::reverse(bytePtr, bytePtr + sizeof(T));
+									}
 
-		T*			operator*() const
-						{ return mStorage; }
-		T&			operator[](UInt64 index) const
-						{ return mStorage[index]; }
-		TBuffer<T>&	operator=(const TBuffer<T>& other)
-						{
-							// Check if assignment to self
-							if (this == &other)
-								return *this;
+					T*			operator*() const
+									{ return mStorage; }
+					T&			operator[](UInt64 index) const
+									{ return mStorage[index]; }
+					TBuffer<T>&	operator=(const TBuffer<T>& other)
+									{
+										// Check if assignment to self
+										if (this == &other)
+											return *this;
 
-							// Check if need to cleanup
-							if ((mReferenceCount != nil) && (--(*mReferenceCount) == 0)) {
-								// Cleanup
-								DeleteArray(mStorage);
-								Delete(mReferenceCount);
-							}
+										// Check if need to cleanup
+										if ((mReferenceCount != nil) && (--(*mReferenceCount) == 0)) {
+											// Cleanup
+											DeleteArray(mStorage);
+											Delete(mReferenceCount);
+										}
 
-							// Copy values
-							mStorage = other.mStorage;
-							mByteCount = other.mByteCount;
-							mReferenceCount = other.mReferenceCount;
+										// Copy values
+										mStorage = other.mStorage;
+										mByteCount = other.mByteCount;
+										mReferenceCount = other.mReferenceCount;
 
-							// Check for reference count
-							if (mReferenceCount != nil)
-								// Add reference
-								(*mReferenceCount)++;
+										// Check for reference count
+										if (mReferenceCount != nil)
+											// Add reference
+											(*mReferenceCount)++;
 
-							return *this;
-						}
+										return *this;
+									}
 
 	// Properties
 	private:

@@ -32,135 +32,138 @@ struct SSQLiteValue {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												SSQLiteValue(const CData& data) : mType(kTypeData), mValue(data) {}
-												SSQLiteValue(Float64 float64) : mType(kTypeFloat64), mValue(float64) {}
-												SSQLiteValue(SInt64 sInt64) : mType(kTypeSInt64), mValue(sInt64) {}
-												SSQLiteValue(UInt32 uInt32) :
-													mType(kTypeSInt64), mValue((SInt64) uInt32)
-													{}
-												SSQLiteValue(const CString& string) :
-													mType(kTypeString), mValue(string)
-													{}
-												SSQLiteValue(const SValue& value) : mValue((SInt64) 0)
-													{
-														// Check value type
-														if (value.getType() == SValue::kTypeData) {
-															// Data
-															mType = kTypeData;
-															mValue.mData = new CData(value.getData());
-														} else if (value.getType() == SValue::kTypeString) {
-															// String
-															mType = kTypeString;
-															mValue.mString = new CString(value.getString());
-														} else if ((value.getType() == SValue::kTypeFloat32) ||
-																(value.getType() == SValue::kTypeFloat64)) {
-															// Float64
-															mType = kTypeFloat64;
-															mValue.mFloat64 = value.getFloat64();
-														} else if (value.canCoerceToType(SValue::kTypeSInt64)) {
-															// SInt64
-															mType = kTypeSInt64;
-															mValue.mSInt64 = value.getSInt64();
-														} else
-															// Null
-															mType = kTypeNull;
-													}
-												SSQLiteValue(NonValueTypeKind nonValueTypeKind) : mValue((SInt64) 0)
-													{
-														// Check kind
-														switch (nonValueTypeKind) {
-															case kNonValueTypeKindLastInsertRowID:
-																// Last Insert Row ID
-																mType = kTypeLastInsertRowID;
-																break;
-
-															case kNonValueTypeKindNull:
+													// Lifecycle methods
+													SSQLiteValue(const CData& data) : mType(kTypeData), mValue(data) {}
+													SSQLiteValue(Float64 float64) :
+														mType(kTypeFloat64), mValue(float64)
+														{}
+													SSQLiteValue(SInt64 sInt64) : mType(kTypeSInt64), mValue(sInt64) {}
+													SSQLiteValue(UInt32 uInt32) :
+														mType(kTypeSInt64), mValue((SInt64) uInt32)
+														{}
+													SSQLiteValue(const CString& string) :
+														mType(kTypeString), mValue(string)
+														{}
+													SSQLiteValue(const SValue& value) : mValue((SInt64) 0)
+														{
+															// Check value type
+															if (value.getType() == SValue::kTypeData) {
+																// Data
+																mType = kTypeData;
+																mValue.mData = new CData(value.getData());
+															} else if (value.getType() == SValue::kTypeString) {
+																// String
+																mType = kTypeString;
+																mValue.mString = new CString(value.getString());
+															} else if ((value.getType() == SValue::kTypeFloat32) ||
+																	(value.getType() == SValue::kTypeFloat64)) {
+																// Float64
+																mType = kTypeFloat64;
+																mValue.mFloat64 = value.getFloat64();
+															} else if (value.canCoerceToType(SValue::kTypeSInt64)) {
+																// SInt64
+																mType = kTypeSInt64;
+																mValue.mSInt64 = value.getSInt64();
+															} else
 																// Null
 																mType = kTypeNull;
-																break;
 														}
-													}
-												SSQLiteValue(const SSQLiteValue& other) :
-													mType(other.mType), mValue(other.mValue)
-													{
-														if (mType == kTypeString)
-															// String
-															mValue.mString = new CString(*mValue.mString);
-														else if (mType == kTypeData)
-															// Data
-															mValue.mData = new CData(*mValue.mData);
-													}
-												~SSQLiteValue()
-													{
-														// Check type
-														if (mType == kTypeString) {
-															// String
-															Delete(mValue.mString);
-														} else if (mType == kTypeData) {
-															// Data
-															Delete(mValue.mData);
+		explicit									SSQLiteValue(NonValueTypeKind nonValueTypeKind) : mValue((SInt64) 0)
+														{
+															// Check kind
+															switch (nonValueTypeKind) {
+																case kNonValueTypeKindLastInsertRowID:
+																	// Last Insert Row ID
+																	mType = kTypeLastInsertRowID;
+																	break;
+
+																case kNonValueTypeKindNull:
+																	// Null
+																	mType = kTypeNull;
+																	break;
+															}
 														}
-													}
-
-												// Instance methods
-						Type					getType() const
-													{ return mType; }
-				const	CData&					getData() const
-													{ return *mValue.mData; }
-						Float64					getFloat64() const
-													{ return mValue.mFloat64; }
-						SInt64					getSInt64() const
-													{ return mValue.mSInt64; }
-				const	CString&				getString() const
-													{ return *mValue.mString; }
-
-						CString					getString()
-													{
-														// Check type
-														switch (mType) {
-															case kTypeFloat64:	return CString(mValue.mFloat64);
-															case kTypeSInt64:	return CString(mValue.mSInt64);
-															case kTypeString:	return *mValue.mString;
-															case kTypeNull:		return CString(OSSTR("NULL"));
-															default:			AssertFail();	return CString::mEmpty;
+													SSQLiteValue(const SSQLiteValue& other) :
+														mType(other.mType), mValue(other.mValue)
+														{
+															if (mType == kTypeString)
+																// String
+																mValue.mString = new CString(*mValue.mString);
+															else if (mType == kTypeData)
+																// Data
+																mValue.mData = new CData(*mValue.mData);
 														}
-													}
+													~SSQLiteValue()
+														{
+															// Check type
+															if (mType == kTypeString) {
+																// String
+																Delete(mValue.mString);
+															} else if (mType == kTypeData) {
+																// Data
+																Delete(mValue.mData);
+															}
+														}
 
-												// Class methods
-		static			TArray<SSQLiteValue>	valuesFrom(const TArray<CString>& values)
-													{
-														// Convert array
-														TNArray<SSQLiteValue>	sqliteValues;
-														CArray::ItemCount		count = values.getCount();
-														for (CArray::ItemIndex i = 0; i < count; i++)
-															// Add value
-															sqliteValues += SSQLiteValue(values[i]);
+													// Instance methods
+							Type					getType() const
+														{ return mType; }
+					const	CData&					getData() const
+														{ return *mValue.mData; }
+							Float64					getFloat64() const
+														{ return mValue.mFloat64; }
+							SInt64					getSInt64() const
+														{ return mValue.mSInt64; }
+					const	CString&				getString() const
+														{ return *mValue.mString; }
 
-														return sqliteValues;
-													}
-		static			TArray<SSQLiteValue>	valuesFrom(const TNumberArray<SInt64>& values)
-													{
-														// Convert array
-														TNArray<SSQLiteValue>	sqliteValues;
-														CArray::ItemCount		count = values.getCount();
-														for (CArray::ItemIndex i = 0; i < count; i++)
-															// Add value
-															sqliteValues += SSQLiteValue(values[i]);
+							CString					getString()
+														{
+															// Check type
+															switch (mType) {
+																case kTypeFloat64:	return CString(mValue.mFloat64);
+																case kTypeSInt64:	return CString(mValue.mSInt64);
+																case kTypeString:	return *mValue.mString;
+																case kTypeNull:		return CString(OSSTR("NULL"));
+																default:			AssertFail(); return CString::mEmpty;
+															}
+														}
 
-														return sqliteValues;
-													}
-		static			TArray<SSQLiteValue>	valuesFrom(const TSet<CString>& values)
-													{
-														// Convert array
-														TNArray<SSQLiteValue>	sqliteValues;
-														for (TSet<CString>::Iterator iterator = values.getIterator();
-																iterator; iterator++)
-															// Add value
-															sqliteValues += SSQLiteValue(*iterator);
+													// Class methods
+		static				TArray<SSQLiteValue>	valuesFrom(const TArray<CString>& values)
+														{
+															// Convert array
+															TNArray<SSQLiteValue>	sqliteValues;
+															CArray::ItemCount		count = values.getCount();
+															for (CArray::ItemIndex i = 0; i < count; i++)
+																// Add value
+																sqliteValues += SSQLiteValue(values[i]);
 
-														return sqliteValues;
-													}
+															return sqliteValues;
+														}
+		static				TArray<SSQLiteValue>	valuesFrom(const TNumberArray<SInt64>& values)
+														{
+															// Convert array
+															TNArray<SSQLiteValue>	sqliteValues;
+															CArray::ItemCount		count = values.getCount();
+															for (CArray::ItemIndex i = 0; i < count; i++)
+																// Add value
+																sqliteValues += SSQLiteValue(values[i]);
+
+															return sqliteValues;
+														}
+		static				TArray<SSQLiteValue>	valuesFrom(const TSet<CString>& values)
+														{
+															// Convert array
+															TNArray<SSQLiteValue>	sqliteValues;
+															for (TSet<CString>::Iterator iterator =
+																			values.getIterator();
+																	iterator; iterator++)
+																// Add value
+																sqliteValues += SSQLiteValue(*iterator);
+
+															return sqliteValues;
+														}
 
 	// Properties
 	private:

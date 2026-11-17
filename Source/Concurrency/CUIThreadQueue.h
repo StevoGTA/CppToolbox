@@ -28,17 +28,17 @@ class CUIThreadQueue {
 
 	// Methods
 	public:
-				// Lifecycle methods
+							// Lifecycle methods
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-				CUIThreadQueue();
+							CUIThreadQueue();
 #elif defined(TARGET_OS_WINDOWS)
-				CUIThreadQueue(const DispatcherQueue& dispatcherQueue);
+		explicit			CUIThreadQueue(const DispatcherQueue& dispatcherQueue);
 #endif
-				~CUIThreadQueue();
+							~CUIThreadQueue();
 
-				// Instance methods
-		void	add(Proc proc, void* userData = nil, bool isRequired = false);
-		void	add(const std::function<void()>& proc, bool isRequired = false);
+							// Instance methods
+					void	add(Proc proc, void* userData = nil, bool isRequired = false);
+					void	add(const std::function<void()>& proc, bool isRequired = false);
 
 	// Properties
 	private:

@@ -22,24 +22,24 @@ class CSQLiteResultsRow {
 
 	// Methods
 	public:
-					// Lifecycle methods
-					CSQLiteResultsRow(sqlite3_stmt* statement);
-					~CSQLiteResultsRow();
+								// Lifecycle methods
+		explicit				CSQLiteResultsRow(sqlite3_stmt* statement);
+								~CSQLiteResultsRow();
 
-					// Instance methods
-		bool		moveToNext() const;
+								// Instance methods
+					bool		moveToNext() const;
 
-		OV<SInt64>	getInteger(const CSQLiteTableColumn& tableColumn) const;
-		OV<UInt32>	getUInt32(const CSQLiteTableColumn& tableColumn) const
-						{
-							// Setup
-							OV<SInt64>	value = getInteger(tableColumn);
+					OV<SInt64>	getInteger(const CSQLiteTableColumn& tableColumn) const;
+					OV<UInt32>	getUInt32(const CSQLiteTableColumn& tableColumn) const
+									{
+										// Setup
+										OV<SInt64>	value = getInteger(tableColumn);
 
-							return value.hasValue() ? OV<UInt32>((UInt32) *value) : OV<UInt32>();
-						}
-		OV<Float64>	getReal(const CSQLiteTableColumn& tableColumn) const;
-		OV<CString>	getText(const CSQLiteTableColumn& tableColumn) const;
-		OV<CData>	getBlob(const CSQLiteTableColumn& tableColumn) const;
+										return value.hasValue() ? OV<UInt32>((UInt32) *value) : OV<UInt32>();
+									}
+					OV<Float64>	getReal(const CSQLiteTableColumn& tableColumn) const;
+					OV<CString>	getText(const CSQLiteTableColumn& tableColumn) const;
+					OV<CData>	getBlob(const CSQLiteTableColumn& tableColumn) const;
 
 	// Properties
 	private:

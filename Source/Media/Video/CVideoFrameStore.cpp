@@ -299,7 +299,7 @@ void CVideoFrameStore::stop()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Seek to the begining of the media segment, or beginning beginning
-	seek(mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getStartTimeInterval() : 0.0);
+	seek(mInternals->mMediaSegment.hasValue() ? mInternals->mMediaSegment->getTimeIntervalRange().getStart() : 0.0);
 }
 
 // MARK: CVideoDestination methods

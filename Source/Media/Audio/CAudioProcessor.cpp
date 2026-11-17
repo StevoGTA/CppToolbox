@@ -151,7 +151,7 @@ void CAudioSource::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 	// Check if need to perform a seek to stay in the specified media segment
 	if (performSeek)
 		// Seek
-		seek(mInternals->mMediaSegment->getStartTimeInterval());
+		seek(mInternals->mMediaSegment->getTimeIntervalRange().getStart());
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -161,8 +161,8 @@ void CAudioSource::seek(UniversalTimeInterval timeInterval)
 	// Check if have a media segment
 	if (mInternals->mMediaSegment.hasValue()) {
 		// Bound to the media segment
-		timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getStartTimeInterval());
-		timeInterval = std::min<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getEndTimeInterval());
+		timeInterval = std::max<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getTimeIntervalRange().getStart());
+		timeInterval = std::min<UniversalTimeInterval>(timeInterval, mInternals->mMediaSegment->getTimeIntervalRange().getEnd());
 	}
 
 	// Update
@@ -213,7 +213,7 @@ TVResult<UInt32> CAudioSource::calculateMaxFrames(Float32 sampleRate) const
 		//	last delivered frame is guaranteed to fall strictly inside (never at/after) the segment end.  The current
 		//	position is itself a Float64 accumulation of frameCount / sampleRate, but its drift stays far below half a
 		//	frame, so rounding recovers the exact cumulative frame index.
-		SInt64	endFrame = (SInt64) (mInternals->mMediaSegment->getEndTimeInterval() * sampleRate + 0.5);
+		SInt64	endFrame = (SInt64) (mInternals->mMediaSegment->getTimeIntervalRange().getEnd() * sampleRate + 0.5);
 		SInt64	currentFrame = (SInt64) (mInternals->mCurrentTimeInterval * sampleRate + 0.5);
 
 		return (currentFrame >= endFrame) ?

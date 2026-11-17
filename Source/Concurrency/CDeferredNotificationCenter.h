@@ -22,21 +22,21 @@ class CDeferredNotificationCenter : public CNotificationCenter {
 
 	// Methods
 	public:
-				// Lifecycle methods
+							// Lifecycle methods
 #if defined(TARGET_OS_IOS) || defined(TARGET_OS_MACOS) || defined(TARGET_OS_TVOS)
-				CDeferredNotificationCenter();
+							CDeferredNotificationCenter();
 #elif defined(TARGET_OS_WINDOWS)
-				CDeferredNotificationCenter(const DispatcherQueue& dispatcherQueue);
+		explicit			CDeferredNotificationCenter(const DispatcherQueue& dispatcherQueue);
 #endif
-				~CDeferredNotificationCenter();
+							~CDeferredNotificationCenter();
 
-				// CNotificationCenter methods
-		void	post(const CString& notificationName, const Sender& sender, const CDictionary& info);
-		void	post(const CString& notificationName, const Sender& sender)
-					{ CNotificationCenter::post(notificationName, sender); }
-		void	post(const CString& notificationName, const CDictionary& info);
-		void	post(const CString& notificationName)
-					{ CNotificationCenter::post(notificationName); }
+							// CNotificationCenter methods
+					void	post(const CString& notificationName, const Sender& sender, const CDictionary& info);
+					void	post(const CString& notificationName, const Sender& sender)
+								{ CNotificationCenter::post(notificationName, sender); }
+					void	post(const CString& notificationName, const CDictionary& info);
+					void	post(const CString& notificationName)
+								{ CNotificationCenter::post(notificationName); }
 
 	// Properties
 	private:

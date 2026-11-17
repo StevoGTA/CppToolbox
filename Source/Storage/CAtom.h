@@ -29,10 +29,10 @@ class CAtom : public CData {
 
 	// Methods
 	public:
-				// Lifecycle methods
-				CAtom(OSType type);
-				CAtom(OSType type, const CData& payload);
+							// Lifecycle methods
+		explicit			CAtom(OSType type);
+							CAtom(OSType type, const CData& payload);
 
-				// Instance methods
-		CAtom&	operator+=(const CAtom& atom);
+							// Instance methods
+					CAtom&	operator+=(const CAtom& atom);
 };

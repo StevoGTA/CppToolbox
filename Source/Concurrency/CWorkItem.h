@@ -35,42 +35,42 @@ class CWorkItem : public CHashable {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CWorkItem(const CString& id = CUUID().getBase64String(),
-												const OV<CString>& reference = OV<CString>(),
-												CompletedProc completedProc = nil, CancelledProc cancelledProc = nil,
-												void* userData = nil);
-		virtual							~CWorkItem();
+											// Lifecycle methods
+		explicit							CWorkItem(const CString& id = CUUID().getBase64String(),
+													const OV<CString>& reference = OV<CString>(),
+													CompletedProc completedProc = nil, CancelledProc cancelledProc = nil,
+													void* userData = nil);
+		virtual								~CWorkItem();
 
-										// CEquatable methods
-						bool			operator==(const CEquatable& other) const
-											{ return getID() == ((const CWorkItem&) other).getID(); }
+											// CEquatable methods
+							bool			operator==(const CEquatable& other) const
+												{ return getID() == ((const CWorkItem&) other).getID(); }
 
-										// CHashable methods
-						void			hashInto(CHashable::HashCollector& hashableHashCollector) const
-											{ getID().hashInto(hashableHashCollector); }
+											// CHashable methods
+							void			hashInto(CHashable::HashCollector& hashableHashCollector) const
+												{ getID().hashInto(hashableHashCollector); }
 
-										// Instance methods
-				const	CString&		getID() const;
-				const	OV<CString>&	getReference() const;
+											// Instance methods
+					const	CString&		getID() const;
+					const	OV<CString>&	getReference() const;
 
-						State			getState() const;
-						bool			isWaiting() const;
-						bool			isActive() const;
-						bool			isCompleted() const;
-						bool			isCancelled() const;
+							State			getState() const;
+							bool			isWaiting() const;
+							bool			isActive() const;
+							bool			isCompleted() const;
+							bool			isCancelled() const;
 
-										// Subclass methods
-		virtual			void			perform(const I<CWorkItem>& workItem) = 0;
+											// Subclass methods
+		virtual				void			perform(const I<CWorkItem>& workItem) = 0;
 
-										// Internal-use only methods
-						void			transitionTo(State state);
-						void			cancel();
+											// Internal-use only methods
+							void			transitionTo(State state);
+							void			cancel();
 
 	protected:
-										// Subclass methods
-		virtual			void			completed() const {}
-		virtual			void			cancelled() const {}
+											// Subclass methods
+		virtual				void			completed() const {}
+		virtual				void			cancelled() const {}
 
 	// Properties
 	private:

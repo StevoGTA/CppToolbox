@@ -248,34 +248,34 @@ class CColor : public CEquatable {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									CColor(const RGBValues& rgbValues);
-									CColor(const HSVValues& hsvValues);
-									CColor(const CString& rgbHexString);
-									CColor(const CDictionary& storageInfo);
-									CColor(const CColor& other);
-									~CColor();
+										// Lifecycle methods
+		explicit						CColor(const RGBValues& rgbValues);
+		explicit						CColor(const HSVValues& hsvValues);
+		explicit						CColor(const CString& rgbHexString);
+		explicit						CColor(const CDictionary& storageInfo);
+										CColor(const CColor& other);
+										~CColor();
 
-									// CEquatable methods
-				bool				operator==(const CEquatable& other) const;
+										// CEquatable methods
+					bool				operator==(const CEquatable& other) const;
 
-									// Instance methods
-				RGBValues			getRGBValues() const;
-				HSVValues			getHSVValues() const;
+										// Instance methods
+					RGBValues			getRGBValues() const;
+					HSVValues			getHSVValues() const;
 
-				CDictionary			getStorageInfo() const;
+					CDictionary			getStorageInfo() const;
 
-				CColor				operator*(const RGBColorTransform& transform) const
-										{ return CColor(transform.apply(getRGBValues())); }
-				CColor				operator*(const HSVColorTransform& transform) const
-										{ return CColor(transform.apply(getHSVValues())); }
-				CColor&				operator=(const CColor& other);
+					CColor				operator*(const RGBColorTransform& transform) const
+											{ return CColor(transform.apply(getRGBValues())); }
+					CColor				operator*(const HSVColorTransform& transform) const
+											{ return CColor(transform.apply(getHSVValues())); }
+					CColor&				operator=(const CColor& other);
 
-									// Class methods
-		static	OR<const CColor>	colorForName(const CString& colorName);
+										// Class methods
+		static		OR<const CColor>	colorForName(const CString& colorName);
 
-		static	bool				areEqual(const CColor& color1, const CColor& color2)
-										{ return color1 == color2; }
+		static		bool				areEqual(const CColor& color1, const CColor& color2)
+											{ return color1 == color2; }
 
 	// Properties
 	public:

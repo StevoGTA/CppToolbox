@@ -5,6 +5,7 @@
 #pragma once
 
 #include "SMedia.h"
+#include "Tuple.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: SAudio
@@ -35,117 +36,118 @@ struct SAudio {
 	struct ChannelMap {
 		// Methods
 		public:
-										// Lifecycle methods
-										ChannelMap(UInt8 channelCount) : mValue(channelCount) {}
-										ChannelMap(UInt16 rawValue) : mValue(rawValue) {}
+											// Lifecycle methods
+			explicit						ChannelMap(UInt8 channelCount) : mValue(channelCount) {}
+			explicit						ChannelMap(UInt16 rawValue) : mValue(rawValue) {}
 
-										// Instance methods
-							bool		hasUnspecifiedOrder() const
-											{ return (mValue & 0xFF00) == 0x0000; }
-							UInt8		getChannelCount() const
-											{ return mValue & 0x00FF; }
-							CString		getDisplayString() const;
-							CString		getChannelsDisplayString() const;
+											// Instance methods
+								bool		hasUnspecifiedOrder() const
+												{ return (mValue & 0xFF00) == 0x0000; }
+								UInt8		getChannelCount() const
+												{ return mValue & 0x00FF; }
+								CString		getDisplayString() const;
+								CString		getChannelsDisplayString() const;
 
-							UInt16		getRawValue() const
-											{ return mValue; }
+								UInt16		getRawValue() const
+												{ return mValue; }
 
-							bool		operator==(const ChannelMap& other) const
-											{ return mValue == other.mValue; }
-							bool		operator!=(const ChannelMap& other) const
-											{ return mValue != other.mValue; }
+								bool		operator==(const ChannelMap& other) const
+												{ return mValue == other.mValue; }
+								bool		operator!=(const ChannelMap& other) const
+												{ return mValue != other.mValue; }
 
-										// Class methods
-			static			UInt8		channelCountFromRawValue(UInt16 rawValue)
-											{ return rawValue & 0x00FF; }
-			static			CString		getChannelsDisplayString(const TNumberArray<UInt8>& channelCounts);
+											// Class methods
+			static				UInt8		channelCountFromRawValue(UInt16 rawValue)
+												{ return rawValue & 0x00FF; }
+			static				CString		getChannelsDisplayString(const TNumberArray<UInt8>& channelCounts);
 
-			static			bool		compare(const ChannelMap& testChannelMap, void* channelMap)
-											{ return testChannelMap == *((const ChannelMap*) channelMap); }
-			static			bool		compareValue(const ChannelMap& channelMap1,
-												const ChannelMap& channelMap2, void* userData);
-			static			void		sort(TMArray<ChannelMap>& channelMaps)
-											{ channelMaps.sort((TMArray<ChannelMap>::CompareProc) compareValue, nil); }
+			static				bool		compare(const ChannelMap& testChannelMap, void* channelMap)
+												{ return testChannelMap == *((const ChannelMap*) channelMap); }
+			static				bool		compareValue(const ChannelMap& channelMap1,
+													const ChannelMap& channelMap2, void* userData);
+			static				void		sort(TMArray<ChannelMap>& channelMaps)
+												{ channelMaps.sort((TMArray<ChannelMap>::CompareProc) compareValue,
+														nil); }
 
-										// 1 Channel
-			static	const	ChannelMap&	_1_0();				// C
+											// 1 Channel
+			static		const	ChannelMap&	_1_0();				// C
 
-										// 2 Channels
-			static	const	ChannelMap&	_2_0_Option1();		// L R
-			static	const	ChannelMap&	_1_1_Option1();		// C LFE
-			static	const	ChannelMap&	_2_0_Option2();		// Ls Rs
-			static	const	ChannelMap&	_2_0_Option3();		// Lt Rt (Matrix encoded stereo stream)
-//			static	const	ChannelMap&	_2_0_Option4();		// Mide/Side
-//			static	const	ChannelMap&	_2_0_Option5();		// Coincident Mic Pair (often 2 figure 8s)
-//			static	const	ChannelMap&	_2_0_Option6();		// Binaural Stereo (L R)
+											// 2 Channels
+			static		const	ChannelMap&	_2_0_Option1();		// L R
+			static		const	ChannelMap&	_1_1_Option1();		// C LFE
+			static		const	ChannelMap&	_2_0_Option2();		// Ls Rs
+			static		const	ChannelMap&	_2_0_Option3();		// Lt Rt (Matrix encoded stereo stream)
+//			static		const	ChannelMap&	_2_0_Option4();		// Mide/Side
+//			static		const	ChannelMap&	_2_0_Option5();		// Coincident Mic Pair (often 2 figure 8s)
+//			static		const	ChannelMap&	_2_0_Option6();		// Binaural Stereo (L R)
 
-										// 3 Channels
-			static	const	ChannelMap&	_3_0_Unspecified();	// Unspecified
-			static	const	ChannelMap&	_2_1_Option1();		// L R LFE
-			static	const	ChannelMap&	_3_0_Option1();		// L R C
-			static	const	ChannelMap&	_3_0_Option2();		// C L R
-			static	const	ChannelMap&	_3_0_Option3();		// L R Cs
-			static	const	ChannelMap&	_3_0_Option4();		// L C R
+											// 3 Channels
+			static		const	ChannelMap&	_3_0_Unspecified();	// Unspecified
+			static		const	ChannelMap&	_2_1_Option1();		// L R LFE
+			static		const	ChannelMap&	_3_0_Option1();		// L R C
+			static		const	ChannelMap&	_3_0_Option2();		// C L R
+			static		const	ChannelMap&	_3_0_Option3();		// L R Cs
+			static		const	ChannelMap&	_3_0_Option4();		// L C R
 
-										// 4 Channels
-			static	const	ChannelMap&	_4_0_Unspecified();	// Unspecified
-			static	const	ChannelMap&	_3_1_Option1();		// L R LFE Cs
-			static	const	ChannelMap&	_3_1_Option2();		// L R C LFE
-			static	const	ChannelMap&	_3_1_Option3();		// L C R LFE
-			static	const	ChannelMap&	_3_1_Option4();		// L R Cs LFE
-			static	const	ChannelMap&	_4_0_Option1();		// L R Ls Rs (Quadraphonic)
-			static	const	ChannelMap&	_4_0_Option2();		// L R C Cs
-			static	const	ChannelMap&	_4_0_Option3();		// C L R Cs
-			static	const	ChannelMap&	_4_0_Option4();		// L C R Cs
-//			static	const	ChannelMap&	_4_0_Option5();		// Ambisonic B (W X Y Z)
+											// 4 Channels
+			static		const	ChannelMap&	_4_0_Unspecified();	// Unspecified
+			static		const	ChannelMap&	_3_1_Option1();		// L R LFE Cs
+			static		const	ChannelMap&	_3_1_Option2();		// L R C LFE
+			static		const	ChannelMap&	_3_1_Option3();		// L C R LFE
+			static		const	ChannelMap&	_3_1_Option4();		// L R Cs LFE
+			static		const	ChannelMap&	_4_0_Option1();		// L R Ls Rs (Quadraphonic)
+			static		const	ChannelMap&	_4_0_Option2();		// L R C Cs
+			static		const	ChannelMap&	_4_0_Option3();		// C L R Cs
+			static		const	ChannelMap&	_4_0_Option4();		// L C R Cs
+//			static		const	ChannelMap&	_4_0_Option5();		// Ambisonic B (W X Y Z)
 
-										// 5 Channels
-			static	const	ChannelMap&	_5_0_Unspecified();	// Unspecified
-			static	const	ChannelMap&	_4_1_Option1();		// L R LFE Ls Rs
-			static	const	ChannelMap&	_4_1_Option2();		// L R C LFE Cs
-			static	const	ChannelMap&	_4_1_Option3();		// L R Ls Rs LFE
-			static	const	ChannelMap&	_4_1_Option4();		// L C R Cs LFE
-			static	const	ChannelMap&	_5_0_Option1();		// L R C Ls Rs
-			static	const	ChannelMap&	_5_0_Option2();		// L R Ls Rs C (Pentagonal)
-			static	const	ChannelMap&	_5_0_Option3();		// L C R Ls Rs
-			static	const	ChannelMap&	_5_0_Option4();		// C L R Ls Rs
+											// 5 Channels
+			static		const	ChannelMap&	_5_0_Unspecified();	// Unspecified
+			static		const	ChannelMap&	_4_1_Option1();		// L R LFE Ls Rs
+			static		const	ChannelMap&	_4_1_Option2();		// L R C LFE Cs
+			static		const	ChannelMap&	_4_1_Option3();		// L R Ls Rs LFE
+			static		const	ChannelMap&	_4_1_Option4();		// L C R Cs LFE
+			static		const	ChannelMap&	_5_0_Option1();		// L R C Ls Rs
+			static		const	ChannelMap&	_5_0_Option2();		// L R Ls Rs C (Pentagonal)
+			static		const	ChannelMap&	_5_0_Option3();		// L C R Ls Rs
+			static		const	ChannelMap&	_5_0_Option4();		// C L R Ls Rs
 
-										// 6 Channels
-			static	const	ChannelMap&	_6_0_Unspecified();	// Unspecified
-			static	const	ChannelMap&	_5_1_Option1();		// L R C LFE Ls Rs
-			static	const	ChannelMap&	_5_1_Option2();		// L R Ls Rs C LFE
-			static	const	ChannelMap&	_5_1_Option3();		// L C R Ls Rs LFE
-			static	const	ChannelMap&	_5_1_Option4();		// C L R Ls Rs LFE
-			static	const	ChannelMap&	_6_0_Option1();		// L R Ls Rs C Cs (Hexagonal)
-			static	const	ChannelMap&	_6_0_Option2();		// C L R Ls Rs Cs
+											// 6 Channels
+			static		const	ChannelMap&	_6_0_Unspecified();	// Unspecified
+			static		const	ChannelMap&	_5_1_Option1();		// L R C LFE Ls Rs
+			static		const	ChannelMap&	_5_1_Option2();		// L R Ls Rs C LFE
+			static		const	ChannelMap&	_5_1_Option3();		// L C R Ls Rs LFE
+			static		const	ChannelMap&	_5_1_Option4();		// C L R Ls Rs LFE
+			static		const	ChannelMap&	_6_0_Option1();		// L R Ls Rs C Cs (Hexagonal)
+			static		const	ChannelMap&	_6_0_Option2();		// C L R Ls Rs Cs
 
-										// 7 Channels
-			static	const	ChannelMap&	_7_0_Unspecified();	// Unspecified
-			static	const	ChannelMap&	_6_1_Option1();		// L R C LFE Ls Rs Cs
-			static	const	ChannelMap&	_6_1_Option2();		// C L R Ls Rs Cs LFE
-			static	const	ChannelMap&	_6_1_Option3();		// L C R Ls Cs Rs LFE
-			static	const	ChannelMap&	_7_0_Option1();		// L R Ls Rs C Rls Rrs
-			static	const	ChannelMap&	_7_0_Option2();		// C L R Ls Rs Rls Rrs
-			static	const	ChannelMap&	_7_0_Option3();		// L R Ls Rs C Lc Rc
+											// 7 Channels
+			static		const	ChannelMap&	_7_0_Unspecified();	// Unspecified
+			static		const	ChannelMap&	_6_1_Option1();		// L R C LFE Ls Rs Cs
+			static		const	ChannelMap&	_6_1_Option2();		// C L R Ls Rs Cs LFE
+			static		const	ChannelMap&	_6_1_Option3();		// L C R Ls Cs Rs LFE
+			static		const	ChannelMap&	_7_0_Option1();		// L R Ls Rs C Rls Rrs
+			static		const	ChannelMap&	_7_0_Option2();		// C L R Ls Rs Rls Rrs
+			static		const	ChannelMap&	_7_0_Option3();		// L R Ls Rs C Lc Rc
 
-										// 8 Channels
-			static	const	ChannelMap&	_8_0_Unspecified();	// Unspecified
-			static	const	ChannelMap&	_7_1_Option1();		// L R C LFE Ls Rs Lc Rc
-			static	const	ChannelMap&	_7_1_Option2();		// C Lc Rc L R Ls Rs LFE (doc: IS-13818-7 MPEG2-AAC Table 3.1)
-			static	const	ChannelMap&	_7_1_Option3();		// L R C LFE Ls Rs Rls Rrs
-			static	const	ChannelMap&	_7_1_Option4();		// L R Ls Rs C LFE Lc Rc (Emagic Default 7.1)
-			static	const	ChannelMap&	_7_1_Option5();		// L R C LFE Ls Rs Lt Rt (SMPTE DTV)
-			static	const	ChannelMap&	_7_1_Option6();		// L Lc C Rc R Ls Rs LFE
-			static	const	ChannelMap&	_7_1_Option7();		// C L R Ls Rs LFE Lt Rt (From Fotokem)
-			static	const	ChannelMap&	_8_0_Option1();		// L R Ls Rs C Cs Lw Rw (Octagonal)
-			static	const	ChannelMap&	_8_0_Option2();		// C L R Ls Rs Rls Rrs Cs
-//			static	const	ChannelMap&	_8_0_Option2();		// L R Ls Rs topLeft topRight topRearLeft topRearRight (Cube)
+											// 8 Channels
+			static		const	ChannelMap&	_8_0_Unspecified();	// Unspecified
+			static		const	ChannelMap&	_7_1_Option1();		// L R C LFE Ls Rs Lc Rc
+			static		const	ChannelMap&	_7_1_Option2();		// C Lc Rc L R Ls Rs LFE (doc: IS-13818-7 MPEG2-AAC Table 3.1)
+			static		const	ChannelMap&	_7_1_Option3();		// L R C LFE Ls Rs Rls Rrs
+			static		const	ChannelMap&	_7_1_Option4();		// L R Ls Rs C LFE Lc Rc (Emagic Default 7.1)
+			static		const	ChannelMap&	_7_1_Option5();		// L R C LFE Ls Rs Lt Rt (SMPTE DTV)
+			static		const	ChannelMap&	_7_1_Option6();		// L Lc C Rc R Ls Rs LFE
+			static		const	ChannelMap&	_7_1_Option7();		// C L R Ls Rs LFE Lt Rt (From Fotokem)
+			static		const	ChannelMap&	_8_0_Option1();		// L R Ls Rs C Cs Lw Rw (Octagonal)
+			static		const	ChannelMap&	_8_0_Option2();		// C L R Ls Rs Rls Rrs Cs
+//			static		const	ChannelMap&	_8_0_Option2();		// L R Ls Rs topLeft topRight topRearLeft topRearRight (Cube)
 
-										// 9 Channels
-			static	const	ChannelMap&	_9_0_Unspecified();	// Unspecified
+											// 9 Channels
+			static		const	ChannelMap&	_9_0_Unspecified();	// Unspecified
 
-										// 10 Channels
-			static	const	ChannelMap&	_10_0_Unspecified();// Unspecified
+											// 10 Channels
+			static		const	ChannelMap&	_10_0_Unspecified();// Unspecified
 
 		// Properties
 		private:
@@ -249,77 +251,81 @@ struct SAudio {
 
 		// Methods
 		public:
-									// Lifecycle methods
-									ProcessingFormat(UInt8 bits, Float32 sampleRate, const ChannelMap& channelMap,
-											SampleType sampleType = kSampleTypeSignedInteger,
-											Endian endian = kEndianNative, Interleaved interleaved = kInterleaved) :
-										mBits(bits), mSampleRate(sampleRate), mChannelMap(channelMap),
-												mSampleType(sampleType), mEndian(endian),
-												mInterleaved(
-														(channelMap == ChannelMap::_1_0()) ? kInterleaved : interleaved)
-										{}
-									ProcessingFormat(const CDictionary& storageInfo);
+													// Lifecycle methods
+													ProcessingFormat(UInt8 bits, Float32 sampleRate,
+															const ChannelMap& channelMap,
+															SampleType sampleType = kSampleTypeSignedInteger,
+															Endian endian = kEndianNative,
+															Interleaved interleaved = kInterleaved) :
+														mBits(bits), mSampleRate(sampleRate), mChannelMap(channelMap),
+																mSampleType(sampleType), mEndian(endian),
+																mInterleaved(
+																		(channelMap == ChannelMap::_1_0()) ?
+																				kInterleaved : interleaved)
+														{}
+			explicit								ProcessingFormat(const CDictionary& storageInfo);
 
-									// Instance methods
-				UInt8				getBits() const
-										{ return mBits; }
+													// Instance methods
+								UInt8				getBits() const
+														{ return mBits; }
 
-				Float32				getSampleRate() const
-										{ return mSampleRate; }
+								Float32				getSampleRate() const
+														{ return mSampleRate; }
 
-		const	ChannelMap&			getChannelMap() const
-										{ return mChannelMap; }
+						const	ChannelMap&			getChannelMap() const
+														{ return mChannelMap; }
 
-				bool				getIsFloat() const
-										{ return mSampleType == kSampleTypeFloat; }
-				bool				getIsSignedInteger() const
-										{ return mSampleType == kSampleTypeSignedInteger; }
-				SampleType			getSampleType() const
-										{ return mSampleType; }
+								bool				getIsFloat() const
+														{ return mSampleType == kSampleTypeFloat; }
+								bool				getIsSignedInteger() const
+														{ return mSampleType == kSampleTypeSignedInteger; }
+								SampleType			getSampleType() const
+														{ return mSampleType; }
 
-				bool				getIsBigEndian() const
-										{ return mEndian == kEndianBig; }
-				Endian				getEndian() const
-										{ return mEndian; }
+								bool				getIsBigEndian() const
+														{ return mEndian == kEndianBig; }
+								Endian				getEndian() const
+														{ return mEndian; }
 
-				bool				getIsInterleaved() const
-										{ return mInterleaved == kInterleaved; }
-				Interleaved			getInterleaved() const
-										{ return mInterleaved; }
+								bool				getIsInterleaved() const
+														{ return mInterleaved == kInterleaved; }
+								Interleaved			getInterleaved() const
+														{ return mInterleaved; }
 
-				UInt32				getBytesPerSample() const
-										{ return mBits / 8; }
-				UInt32				getBytesPerFrame() const
-										{ return mBits / 8 * mChannelMap.getChannelCount(); }
+								UInt32				getBytesPerSample() const
+														{ return mBits / 8; }
+								UInt32				getBytesPerFrame() const
+														{ return mBits / 8 * mChannelMap.getChannelCount(); }
 
-				CString				getDescription() const
-										{
-											// Compose description
-											CString	description;
-											description +=
-													CString(mBits) +
-															((mSampleType == kSampleTypeFloat) ?
-																	CString(OSSTR(" (Float), ")) :
-																	CString(OSSTR(" (Signed Integer), ")));
-											description += CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
-											description +=
-													CString(mChannelMap.getChannelCount()) +
-															CString(OSSTR(" (")) +
-															mChannelMap.getDisplayString() +
-															CString(OSSTR("), "));
-											description +=
-													(mEndian == kEndianBig) ?
-															CString(OSSTR("Big Endian, ")) :
-															CString(OSSTR("Little Endian, "));
-											description +=
-													(mInterleaved == kInterleaved) ?
-															CString(OSSTR("Interleaved")) :
-															CString(OSSTR("Non-Interleaved"));
+								CString				getDescription() const
+														{
+															// Compose description
+															CString	description;
+															description +=
+																	CString(mBits) +
+																			((mSampleType == kSampleTypeFloat) ?
+																					CString(OSSTR(" (Float), ")) :
+																					CString(OSSTR(" (Signed Integer), ")));
+															description +=
+																	CString(mSampleRate, 0, 0) + CString(OSSTR("Hz, "));
+															description +=
+																	CString(mChannelMap.getChannelCount()) +
+																			CString(OSSTR(" (")) +
+																			mChannelMap.getDisplayString() +
+																			CString(OSSTR("), "));
+															description +=
+																	(mEndian == kEndianBig) ?
+																			CString(OSSTR("Big Endian, ")) :
+																			CString(OSSTR("Little Endian, "));
+															description +=
+																	(mInterleaved == kInterleaved) ?
+																			CString(OSSTR("Interleaved")) :
+																			CString(OSSTR("Non-Interleaved"));
 
-											return description;
-										}
+															return description;
+														}
 
-				CDictionary			getStorageInfo() const;
+								CDictionary			getStorageInfo() const;
 
 		// Properties
 		private:
@@ -344,20 +350,20 @@ struct SAudio {
 
 			// Methods
 			public:
-					// Lifecycle methods
-					BitsInfo(UInt8 bits) : mOption(kSpecified), mValue(bits) {}
+								// Lifecycle methods
+				explicit		BitsInfo(UInt8 bits) : mOption(kSpecified), mValue(bits) {}
 
-					// Instance methods
-			Option	getOption() const
-						{ return mOption; }
-			bool	isSpecified() const
-						{ return mOption == kSpecified; }
-			UInt8	getValue() const
-						{ AssertFailIf(!mValue.hasValue()); return *mValue; }
+								// Instance methods
+						Option	getOption() const
+									{ return mOption; }
+						bool	isSpecified() const
+									{ return mOption == kSpecified; }
+						UInt8	getValue() const
+									{ AssertFailIf(!mValue.hasValue()); return *mValue; }
 
 			private:
-					// Lifecycle methods
-					BitsInfo(Option option) : mOption(option) {}
+								// Lifecycle methods
+				explicit		BitsInfo(Option option) : mOption(option) {}
 
 			// Properties
 			public:
@@ -380,20 +386,20 @@ struct SAudio {
 
 			// Methods
 			public:
-					// Lifecycle methods
-					SampleRateInfo(Float32 sampleRate) : mOption(kSpecified), mValue(sampleRate) {}
+									// Lifecycle methods
+				explicit			SampleRateInfo(Float32 sampleRate) : mOption(kSpecified), mValue(sampleRate) {}
 
-					// Instance methods
-			Option	getOption() const
-						{ return mOption; }
-			bool	isSpecified() const
-						{ return mOption == kSpecified; }
-			Float32	getValue() const
-						{ AssertFailIf(!mValue.hasValue()); return *mValue; }
+									// Instance methods
+							Option	getOption() const
+										{ return mOption; }
+							bool	isSpecified() const
+										{ return mOption == kSpecified; }
+							Float32	getValue() const
+										{ AssertFailIf(!mValue.hasValue()); return *mValue; }
 
 			private:
-					// Lifecycle methods
-					SampleRateInfo(Option option) : mOption(option) {}
+									// Lifecycle methods
+				explicit			SampleRateInfo(Option option) : mOption(option) {}
 
 			// Properties
 			public:
@@ -416,22 +422,22 @@ struct SAudio {
 
 			// Methods
 			public:
-									// Lifecycle methods
-									ChannelMapInfo(const ChannelMap& channelMap) :
-										mOption(kSpecified), mValue(channelMap)
-										{}
+												// Lifecycle methods
+				explicit						ChannelMapInfo(const ChannelMap& channelMap) :
+													mOption(kSpecified), mValue(channelMap)
+													{}
 
-									// Instance methods
-						Option		getOption() const
-										{ return mOption; }
-						bool		isSpecified() const
-										{ return mOption == kSpecified; }
-				const	ChannelMap&	getValue() const
-										{ AssertFailIf(!mValue.hasValue()); return *mValue; }
+												// Instance methods
+									Option		getOption() const
+													{ return mOption; }
+									bool		isSpecified() const
+													{ return mOption == kSpecified; }
+							const	ChannelMap&	getValue() const
+													{ AssertFailIf(!mValue.hasValue()); return *mValue; }
 
-						private:
-									// Lifecycle methods
-									ChannelMapInfo(Option option) : mOption(option) {}
+			private:
+												// Lifecycle methods
+				explicit						ChannelMapInfo(Option option) : mOption(option) {}
 
 			// Properties
 			public:
@@ -523,6 +529,52 @@ struct SAudio {
 							SampleTypeOption		mSampleTypeOption;
 							EndianOption			mEndianOption;
 							InterleavedOption		mInterleavedOption;
+	};
+
+	// FramePeak
+	struct FramePeak : public TV2<UInt64, Float32> {
+		// Methods
+		public:
+					// Lifecycle methods
+					FramePeak(UInt64 frameIndex, Float32 peak) : TV2(frameIndex, peak) {}
+
+					// Instance methods
+			UInt64	getFrameIndex() const
+						{ return getA(); }
+			Float32	getPeak() const
+						{ return getB(); }
+	};
+
+	// Levels
+	struct Levels : public TV2<Float32, Float32> {
+		// Methods
+		public:
+					// Lifecycle methods
+					Levels(Float32 min, Float32 max) : TV2(min, max) {}
+					Levels() : TV2(0.0, 0.0) {}
+
+					// Instance methods
+			Float32	getMin() const
+						{ return getA(); }
+			Float32	getMax() const
+						{ return getB(); }
+
+			Float32	getPeak() const
+						{ return std::max<Float32>(::fabsf(getMin()), ::fabsf(getMax())); }
+	};
+
+	// RangePeak
+	struct RangePeak : public TV2<SRange64, Float32> {
+		// Methods
+		public:
+								// Lifecycle methods
+								RangePeak(const SRange64& range, Float32 peak) : TV2(range, peak) {}
+
+								// Instance methods
+			const	SRange64&	getRange() const
+									{ return getA(); }
+					Float32		getPeak() const
+									{ return getB(); }
 	};
 
 	// Sample24Bits

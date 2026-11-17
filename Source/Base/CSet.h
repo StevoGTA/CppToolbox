@@ -40,30 +40,30 @@ class CSet {
 
 	// Methods
 	public:
-										// Instance methods
-						ItemCount		getCount() const;
-						bool			isEmpty() const
-											{ return getCount() == 0; }
+											// Instance methods
+							ItemCount		getCount() const;
+							bool			isEmpty() const
+												{ return getCount() == 0; }
 
-						bool			contains(const CHashable& hashable) const;
+							bool			contains(const CHashable& hashable) const;
 
 	protected:
-										// Lifecycle methods
-										CSet(CopyProc copyProc = nil, DisposeProc disposeProc = nil);
-										CSet(const CSet& other);
-		virtual							~CSet();
+											// Lifecycle methods
+		explicit							CSet(CopyProc copyProc = nil, DisposeProc disposeProc = nil);
+											CSet(const CSet& other);
+		virtual								~CSet();
 
-										// Instance methods
-						CSet&			insert(const CHashable& hashable);
+											// Instance methods
+							CSet&			insert(const CHashable& hashable);
 
-						CSet&			remove(const CHashable& hashable);
-						CSet&			removeAll();
+							CSet&			remove(const CHashable& hashable);
+							CSet&			removeAll();
 
-				const	OR<CHashable>	getAny() const;
+					const	OR<CHashable>	getAny() const;
 
-						I<IteratorInfo>	getIteratorInfo() const;
+							I<IteratorInfo>	getIteratorInfo() const;
 
-						CSet&			operator=(const CSet& other);
+							CSet&			operator=(const CSet& other);
 
 	// Properties
 	private:
@@ -165,11 +165,11 @@ template <typename T> class TSet : public CSet {
 template <typename T> class TSSet : public TSet<T> {
 	// Methods
 	public:
-		// Lifecycle methods
-		TSSet(const T& item) : TSet<T>(nil, nil) { CSet::insert(item); }
-		TSSet(const T items[], UInt32 itemCount) :
-			TSet<T>(nil, nil)
-			{ for (UInt32 i = 0; i < itemCount; CSet::insert(items[i++])) ; }
+					// Lifecycle methods
+		explicit	TSSet(const T& item) : TSet<T>(nil, nil) { CSet::insert(item); }
+					TSSet(const T items[], UInt32 itemCount) :
+						TSet<T>(nil, nil)
+						{ for (UInt32 i = 0; i < itemCount; CSet::insert(items[i++])) ; }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -256,102 +256,102 @@ template <typename T> class TNSet : public TMSet<T> {
 
 	// Methods
 	public:
-							// Lifecycle methods
-							TNSet() : TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose) {}
-							TNSet(const T& item) :
-								TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
-								{ CSet::insert(item); }
-							TNSet(const TArray<T>& array) :
-								TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
-								{
-									// Iterate all
-									for (typename TArray<T>::Iterator iterator = array.getIterator(); iterator;
-											iterator++)
-										// Insert
-										CSet::insert(*iterator);
-								}
-							TNSet(const CArray& array, ArrayMapProc arrayMapProc) :
-								TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
-								{
-									// Iterate all items
-									ItemCount	count = array.getCount();
-									for (CArray::ItemIndex i = 0; i < count; i++)
-										// Insert mapped item
-										CSet::insert(arrayMapProc(array.getItemAt(i)));
-								}
-							TNSet(const TSet<T>& other) :
-								TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
-								{ TNSet<T>::insertFrom(other); }
-							TNSet(const TSet<T>& other, typename TSet<T>::IsIncludedProc isIncludedProc,
-									void* userData) :
-								TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
-								{
-									// Iterate all items
-									for (typename TSet<T>::Iterator iterator = other.getIterator(); iterator;
-											iterator++) {
-										// Call proc
-										if (isIncludedProc(*iterator, userData))
+								// Lifecycle methods
+								TNSet() : TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose) {}
+		explicit				TNSet(const T& item) :
+									TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+									{ CSet::insert(item); }
+		explicit				TNSet(const TArray<T>& array) :
+									TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+									{
+										// Iterate all
+										for (typename TArray<T>::Iterator iterator = array.getIterator(); iterator;
+												iterator++)
 											// Insert
 											CSet::insert(*iterator);
 									}
-								}
-
-				TNArray<T>	getArray() const
-								{
-									// Setup
-									TNArray<T>	array;
-
-									// Iterate all hashables
-									for (typename TSet<T>::Iterator iterator = TSet<T>::getIterator(); iterator;
-											iterator++)
-										// Add
-										array += *iterator;
-
-									return array;
-								}
-
-				TNSet<T>	getIntersection(const TSet<T>& other) const
-								{
-									// Setup
-									TNSet<T>	items;
-
-									// Iterate values
-									for (typename TSet<T>::Iterator iterator = other.getIterator(); iterator;
-											iterator++) {
-										// Check if have value
-										if (CSet::contains(*iterator))
-											// Has value
-											items += *iterator;
+								TNSet(const CArray& array, ArrayMapProc arrayMapProc) :
+									TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+									{
+										// Iterate all items
+										ItemCount	count = array.getCount();
+										for (CArray::ItemIndex i = 0; i < count; i++)
+											// Insert mapped item
+											CSet::insert(arrayMapProc(array.getItemAt(i)));
+									}
+								TNSet(const TSet<T>& other) :
+									TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+									{ TNSet<T>::insertFrom(other); }
+								TNSet(const TSet<T>& other, typename TSet<T>::IsIncludedProc isIncludedProc,
+										void* userData) :
+									TMSet<T>((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+									{
+										// Iterate all items
+										for (typename TSet<T>::Iterator iterator = other.getIterator(); iterator;
+												iterator++) {
+											// Call proc
+											if (isIncludedProc(*iterator, userData))
+												// Insert
+												CSet::insert(*iterator);
+										}
 									}
 
-									return items;
-								}
-				TNSet<T>	getDifference(const TSet<T>& other) const
-								{
-									// Setup
-									TNSet<T>	items;
+					TNArray<T>	getArray() const
+									{
+										// Setup
+										TNArray<T>	array;
 
-									// Iterate values
-									for (typename TSet<T>::Iterator iterator = TSet<T>::getIterator(); iterator;
-											iterator++) {
-										// Check if have value
-										if (!other.contains(*iterator))
-											// Has value
-											items += *iterator;
+										// Iterate all hashables
+										for (typename TSet<T>::Iterator iterator = TSet<T>::getIterator(); iterator;
+												iterator++)
+											// Add
+											array += *iterator;
+
+										return array;
 									}
 
-									return items;
-								}
+					TNSet<T>	getIntersection(const TSet<T>& other) const
+									{
+										// Setup
+										TNSet<T>	items;
 
-				TMSet<T>	operator+(const TSet<T>& other) const
-								{ TNSet<T>	set(*this); set += other; return set; }
+										// Iterate values
+										for (typename TSet<T>::Iterator iterator = other.getIterator(); iterator;
+												iterator++) {
+											// Check if have value
+											if (CSet::contains(*iterator))
+												// Has value
+												items += *iterator;
+										}
+
+										return items;
+									}
+					TNSet<T>	getDifference(const TSet<T>& other) const
+									{
+										// Setup
+										TNSet<T>	items;
+
+										// Iterate values
+										for (typename TSet<T>::Iterator iterator = TSet<T>::getIterator(); iterator;
+												iterator++) {
+											// Check if have value
+											if (!other.contains(*iterator))
+												// Has value
+												items += *iterator;
+										}
+
+										return items;
+									}
+
+					TMSet<T>	operator+(const TSet<T>& other) const
+									{ TNSet<T>	set(*this); set += other; return set; }
 
 	private:
-							// Class methods
-		static	T*			copy(const CHashable& hashable)
-								{ return new T(*((T*) &hashable)); }
-		static	void		dispose(const CHashable* hashable)
-								{ T* t = (T*) hashable; Delete(t); }
+								// Class methods
+		static		T*			copy(const CHashable& hashable)
+									{ return new T(*((T*) &hashable)); }
+		static		void		dispose(const CHashable* hashable)
+									{ T* t = (T*) hashable; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -364,54 +364,56 @@ template <typename T> class TNumberSet : public TMSet<TNumber<T> > {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								TNumberSet() : TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose) {}
-								TNumberSet(T value) :
-									TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
-									{ TMSet<TNumber<T> >::insert(TNumber<T>(value)); }
-								TNumberSet(const CArray& array, ArrayMapProc arrayMapProc) :
-									TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
-									{
-										// Iterate items
-										ItemCount	count = array.getCount();
-										for (CArray::ItemIndex i = 0; i < count; i++)
-											// Insert
-											insert(arrayMapProc(array.getItemAt(i)));
-									}
+									// Lifecycle methods
+									TNumberSet() :
+										TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+										{}
+		explicit					TNumberSet(T value) :
+										TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+										{ TMSet<TNumber<T> >::insert(TNumber<T>(value)); }
+									TNumberSet(const CArray& array, ArrayMapProc arrayMapProc) :
+										TMSet<TNumber<T> >((CSet::CopyProc) copy, (CSet::DisposeProc) dispose)
+										{
+											// Iterate items
+											ItemCount	count = array.getCount();
+											for (CArray::ItemIndex i = 0; i < count; i++)
+												// Insert
+												insert(arrayMapProc(array.getItemAt(i)));
+										}
 
-								// Instance methods
-				bool			contains(T value) const
-									{ return TMSet<TNumber<T> >::contains(TNumber<T>(value)); }
+									// Instance methods
+					bool			contains(T value) const
+										{ return TMSet<TNumber<T> >::contains(TNumber<T>(value)); }
 
-				TNumberSet<T>&	insert(T value)
-									{ TMSet<TNumber<T> >::insert(TNumber<T>(value)); return *this; }
-				TNumberSet<T>&	remove(T value)
-									{ TMSet<TNumber<T> >::remove(TNumber<T>(value)); return *this; }
+					TNumberSet<T>&	insert(T value)
+										{ TMSet<TNumber<T> >::insert(TNumber<T>(value)); return *this; }
+					TNumberSet<T>&	remove(T value)
+										{ TMSet<TNumber<T> >::remove(TNumber<T>(value)); return *this; }
 
-				TNumberArray<T>	getNumberArray() const
-									{
-										// Setup
-										TNumberArray<T>	array;
+					TNumberArray<T>	getNumberArray() const
+										{
+											// Setup
+											TNumberArray<T>	array;
 
-										// Iterate all hashables
-										for (typename TSet<TNumber<T> >::Iterator iterator =
-														TSet<TNumber<T> >::getIterator();
-												iterator; iterator++)
-											// Add
-											array += **iterator;
+											// Iterate all hashables
+											for (typename TSet<TNumber<T> >::Iterator iterator =
+															TSet<TNumber<T> >::getIterator();
+													iterator; iterator++)
+												// Add
+												array += **iterator;
 
-										return array;
-									}
+											return array;
+										}
 
-				TNumberSet<T>&	operator+=(T value)
-									{ return insert(value); }
-				TNumberSet<T>&	operator-=(T value)
-									{ return remove(value); }
+					TNumberSet<T>&	operator+=(T value)
+										{ return insert(value); }
+					TNumberSet<T>&	operator-=(T value)
+										{ return remove(value); }
 
 	private:
-								// Class methods
-		static	TNumber<T>*		copy(const CHashable& hashable)
-									{ return new TNumber<T>(*((TNumber<T>*) &hashable)); }
-		static	void			dispose(const CHashable* hashable)
-									{ TNumber<T>* t = (TNumber<T>*) hashable; Delete(t); }
+									// Class methods
+		static		TNumber<T>*		copy(const CHashable& hashable)
+										{ return new TNumber<T>(*((TNumber<T>*) &hashable)); }
+		static		void			dispose(const CHashable* hashable)
+										{ TNumber<T>* t = (TNumber<T>*) hashable; Delete(t); }
 };

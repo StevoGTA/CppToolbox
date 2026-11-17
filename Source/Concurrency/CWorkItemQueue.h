@@ -85,37 +85,37 @@ class CWorkItemQueue {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								CWorkItemQueue(const OR<CItemsProgress>& itemsProgress = OR<CItemsProgress>(),
-										SInt32 maximumConcurrentWorkItems = ~0);
-								CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue,
-										const OR<CItemsProgress>& itemsProgress = OR<CItemsProgress>(),
-										UInt32 maximumConcurrentWorkItems = ~0);
-		virtual					~CWorkItemQueue();
-		
-								// Instance methods
-				void			add(const I<CWorkItem>& workItem,
-										CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
-				I<CWorkItem>	add(CWorkItem::Proc proc, void* userData, const OV<CString>& reference = OV<CString>(),
-										CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
+									// Lifecycle methods
+		explicit					CWorkItemQueue(const OR<CItemsProgress>& itemsProgress = OR<CItemsProgress>(),
+											SInt32 maximumConcurrentWorkItems = ~0);
+									CWorkItemQueue(CWorkItemQueue& targetWorkItemQueue,
+											const OR<CItemsProgress>& itemsProgress = OR<CItemsProgress>(),
+											UInt32 maximumConcurrentWorkItems = ~0);
+		virtual						~CWorkItemQueue();
 
-				void			cancel(const I<CWorkItem>& workItem);
-				void			cancel(const TSet<CString>& workItemIDs);
-				void			cancelAll(const TSet<CString>& workItemReferences);
-				void			cancelAll();
+									// Instance methods
+					void			add(const I<CWorkItem>& workItem,
+											CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
+					I<CWorkItem>	add(CWorkItem::Proc proc, void* userData, const OV<CString>& reference = OV<CString>(),
+											CWorkItem::Priority priority = CWorkItem::kPriorityNormal);
 
-				void			pause();
-				void			resume();
+					void			cancel(const I<CWorkItem>& workItem);
+					void			cancel(const TSet<CString>& workItemIDs);
+					void			cancelAll(const TSet<CString>& workItemReferences);
+					void			cancelAll();
 
-				void			wait() const;
+					void			pause();
+					void			resume();
 
-								// Class methods
-		static	CWorkItemQueue&	main();
+					void			wait() const;
+
+									// Class methods
+		static		CWorkItemQueue&	main();
 
 	protected:
-								// Subclass methods
-		virtual	void			noteEmpty()
-									{}
+									// Subclass methods
+		virtual		void			noteEmpty()
+										{}
 
 	// Properties
 	private:

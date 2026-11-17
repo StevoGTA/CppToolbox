@@ -16,13 +16,13 @@ class CURL {
 
 	// Methods
 	public:
-				// Lifecycle methods
-				CURL(const CString& string);
-				CURL(const CURL& other);
-				~CURL();
+							// Lifecycle methods
+		explicit			CURL(const CString& string);
+							CURL(const CURL& other);
+							~CURL();
 
-				// Instance methods
-		CString	getString() const;
+							// Instance methods
+					CString	getString() const;
 
 	// Properties
 	private:

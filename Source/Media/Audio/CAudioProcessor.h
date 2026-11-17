@@ -130,25 +130,27 @@ class CAudioDestination : public CAudioProcessor {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CAudioDestination(
-														const TArray<SAudio::ProcessingSetup>& audioProcessingSetups);
-												CAudioDestination(
-														const SAudio::ProcessingSetup& audioProcessingSetup);
-												~CAudioDestination();
+													// Lifecycle methods
+		explicit									CAudioDestination(
+															const TArray<SAudio::ProcessingSetup>&
+																	audioProcessingSetups);
+		explicit									CAudioDestination(
+															const SAudio::ProcessingSetup& audioProcessingSetup);
+													~CAudioDestination();
 
-												// CAudioProcessor methods
-				TArray<SAudio::ProcessingSetup>	getInputSetups() const;
+													// CAudioProcessor methods
+					TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 
-				TArray<SAudio::ProcessingSetup>	getOutputSetups() const
-													{ AssertFailUnimplemented();
-															return TNArray<SAudio::ProcessingSetup>(); }
-				OV<SError>						setOutputFormat(const SAudio::ProcessingFormat& audioProcessingFormat)
-													{ AssertFailUnimplemented(); return OV<SError>(); }
+					TArray<SAudio::ProcessingSetup>	getOutputSetups() const
+														{ AssertFailUnimplemented();
+																return TNArray<SAudio::ProcessingSetup>(); }
+					OV<SError>						setOutputFormat(
+															const SAudio::ProcessingFormat& audioProcessingFormat)
+														{ AssertFailUnimplemented(); return OV<SError>(); }
 
-												// Instance methods
-		virtual	void							setupComplete()
-													{}
+													// Instance methods
+		virtual		void							setupComplete()
+														{}
 
 	// Properties
 	private:

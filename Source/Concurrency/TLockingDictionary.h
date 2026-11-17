@@ -77,82 +77,86 @@ template <typename T> class TLockingDictionary : public CDictionary {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								TLockingDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
-										SValue::OpaqueEqualsProc opaqueEqualsProc = nil,
-										SValue::OpaqueDisposeProc opaqueDisposeProc = nil) :
-									CDictionary(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
-									{}
-								TLockingDictionary(const TLockingDictionary<T>& other) : CDictionary(other) {}
+											// Lifecycle methods
+		explicit							TLockingDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
+													SValue::OpaqueEqualsProc opaqueEqualsProc = nil,
+													SValue::OpaqueDisposeProc opaqueDisposeProc = nil) :
+												CDictionary(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
+												{}
+											TLockingDictionary(const TLockingDictionary<T>& other) :
+												CDictionary(other)
+												{}
 
-								// CDictionary methods
-				Count			getCount() const
-									{
-										// Get
-										mLock.lockForReading();
-										Count	count = CDictionary::getCount();
-										mLock.unlockForReading();
+											// CDictionary methods
+							Count			getCount() const
+												{
+													// Get
+													mLock.lockForReading();
+													Count	count = CDictionary::getCount();
+													mLock.unlockForReading();
 
-										return count;
-									}
-				TSet<CString>	getKeys() const
-									{
-										// Get
-										mLock.lockForReading();
-										TSet<CString>	keys = CDictionary::getKeys();
-										mLock.unlockForReading();
+													return count;
+												}
+							TSet<CString>	getKeys() const
+												{
+													// Get
+													mLock.lockForReading();
+													TSet<CString>	keys = CDictionary::getKeys();
+													mLock.unlockForReading();
 
-										return keys;
-									}
+													return keys;
+												}
 
-				bool			contains(const CString& key) const
-									{
-										// Get
-										mLock.lockForReading();
-										bool	contains = CDictionary::contains(key);
-										mLock.unlockForReading();
+							bool			contains(const CString& key) const
+												{
+													// Get
+													mLock.lockForReading();
+													bool	contains = CDictionary::contains(key);
+													mLock.unlockForReading();
 
-										return contains;
-									}
+													return contains;
+												}
 
-		const	OR<T>			get(const CString& key) const
-									{
-										// Get
-										mLock.lockForReading();
-										OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
-										OR<T>				value =
-																	opaque.hasValue() ?
-																			OR<T>(*((T*) *opaque)) : OR<T>();
-										mLock.unlockForReading();
+					const	OR<T>			get(const CString& key) const
+												{
+													// Get
+													mLock.lockForReading();
+													OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+													OR<T>				value =
+																				opaque.hasValue() ?
+																						OR<T>(*((T*) *opaque)) :
+																						OR<T>();
+													mLock.unlockForReading();
 
-										return value;
-									}
-				T				get(const CString& key, const T& defaultValue) const
-									{
-										// Get
-										mLock.lockForReading();
-										OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
-										OR<T>				value =
-																	opaque.hasValue() ?
-																			OR<T>(*((T*) *opaque)) : OR<T>();
-										mLock.unlockForReading();
+													return value;
+												}
+							T				get(const CString& key, const T& defaultValue) const
+												{
+													// Get
+													mLock.lockForReading();
+													OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+													OR<T>				value =
+																				opaque.hasValue() ?
+																						OR<T>(*((T*) *opaque)) :
+																						OR<T>();
+													mLock.unlockForReading();
 
-										return value.hasReference() ? *value : defaultValue;
-									}
+													return value.hasReference() ? *value : defaultValue;
+												}
 
-				Iterator		getIterator() const
-									{ return Iterator(
-											I<IteratorInfo>(
-													new LockingIteratorInfo(getIteratorInfo(),
-															(CReadPreferringLock&) mLock))); }
-				ValueIterator	getValueIterator() const
-									{ return ValueIterator(
-											I<IteratorInfo>(
-													new LockingIteratorInfo(getIteratorInfo(),
-															(CReadPreferringLock&) mLock))); }
+							Iterator		getIterator() const
+												{ return Iterator(
+														I<IteratorInfo>(
+																new LockingIteratorInfo(getIteratorInfo(),
+																		(CReadPreferringLock&) mLock))); }
+							ValueIterator	getValueIterator() const
+												{ return ValueIterator(
+														I<IteratorInfo>(
+																new LockingIteratorInfo(getIteratorInfo(),
+																		(CReadPreferringLock&) mLock))); }
 
-		const	OR<T>			operator[](const CString& key) const
-									{ return get(key); }
+					const	OR<T>			operator[](const CString& key) const
+												{ return get(key); }
 
 	// Properties
 	protected:
@@ -169,100 +173,100 @@ template <typename T> class TNLockingDictionary : public TLockingDictionary<T> {
 	
 	// Methods
 	public:
-										// Lifecycle methods
-										TNLockingDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
-											TLockingDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc,
-													dispose)
-											{}
+											// Lifecycle methods
+		explicit							TNLockingDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+												TLockingDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc,
+														dispose)
+												{}
 
-										// Instance methods
-				TNSet<T>				getValues() const
-											{
-												// Setup
-												TNSet<T>	values;
+											// Instance methods
+					TNSet<T>				getValues() const
+												{
+													// Setup
+													TNSet<T>	values;
 
-												// Iterate values
-												for (typename TLockingDictionary<T>::ValueIterator iterator =
-																TLockingDictionary<T>::getValueIterator();
-														iterator; iterator++)
-													// Add value
-													values += *iterator;
+													// Iterate values
+													for (typename TLockingDictionary<T>::ValueIterator iterator =
+																	TLockingDictionary<T>::getValueIterator();
+															iterator; iterator++)
+														// Add value
+														values += *iterator;
 
-												return values;
-											}
+													return values;
+												}
 
-				void					set(const CString& key, const T& item)
-											{
-												// Store
-												TLockingDictionary<T>::mLock.lockForWriting();
-												CDictionary::set(key, new T(item));
-												TLockingDictionary<T>::mLock.unlockForWriting();
-											}
-
-				void					update(const CString& key, UpdateProc updateProc, void* userData)
-											{
-												// Update
-												TLockingDictionary<T>::mLock.lockForWriting();
-												OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
-												OV<T>				updatedValue =
-																			updateProc(
-																					opaque.hasValue() ?
-																							OR<T>(*((T*) *opaque)) :
-																							OR<T>(),
-																					userData);
-												if (updatedValue.hasValue())
+					void					set(const CString& key, const T& item)
+												{
 													// Store
-													CDictionary::set(key, new T(*updatedValue));
-												else
-													// Remove
-													CDictionary::remove(key);
-												TLockingDictionary<T>::mLock.unlockForWriting();
-											}
+													TLockingDictionary<T>::mLock.lockForWriting();
+													CDictionary::set(key, new T(item));
+													TLockingDictionary<T>::mLock.unlockForWriting();
+												}
 
-				void					remove(const CString& key)
-											{
-												// Remove
-												TLockingDictionary<T>::mLock.lockForWriting();
-												CDictionary::remove(key);
-												TLockingDictionary<T>::mLock.unlockForWriting();
-											}
-				void					remove(const TArray<CString>& keys)
-											{
-												// Remove
-												TLockingDictionary<T>::mLock.lockForWriting();
-												CDictionary::remove(keys);
-												TLockingDictionary<T>::mLock.unlockForWriting();
-											}
-				void					remove(const TSet<CString>& keys)
-											{
-												// Remove
-												TLockingDictionary<T>::mLock.lockForWriting();
-												CDictionary::remove(keys);
-												TLockingDictionary<T>::mLock.unlockForWriting();
-											}
-
-				TNLockingDictionary<T>&	operator+=(const TDictionary<T>& other)
-											{
-												// Setup
-												TSet<CString>	keys = other.getKeys();
-
-												// Update
-												TLockingDictionary<T>::mLock.lockForWriting();
-												for (TSet<CString>::Iterator iterator = keys.getIterator(); iterator;
-														iterator++)
+					void					update(const CString& key, UpdateProc updateProc, void* userData)
+												{
 													// Update
-													CDictionary::set(*iterator, new T(*other[*iterator]));
-												TLockingDictionary<T>::mLock.unlockForWriting();
+													TLockingDictionary<T>::mLock.lockForWriting();
+													OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+													OV<T>				updatedValue =
+																				updateProc(
+																						opaque.hasValue() ?
+																								OR<T>(*((T*) *opaque)) :
+																								OR<T>(),
+																						userData);
+													if (updatedValue.hasValue())
+														// Store
+														CDictionary::set(key, new T(*updatedValue));
+													else
+														// Remove
+														CDictionary::remove(key);
+													TLockingDictionary<T>::mLock.unlockForWriting();
+												}
 
-												return *this;
-											}
+					void					remove(const CString& key)
+												{
+													// Remove
+													TLockingDictionary<T>::mLock.lockForWriting();
+													CDictionary::remove(key);
+													TLockingDictionary<T>::mLock.unlockForWriting();
+												}
+					void					remove(const TArray<CString>& keys)
+												{
+													// Remove
+													TLockingDictionary<T>::mLock.lockForWriting();
+													CDictionary::remove(keys);
+													TLockingDictionary<T>::mLock.unlockForWriting();
+												}
+					void					remove(const TSet<CString>& keys)
+												{
+													// Remove
+													TLockingDictionary<T>::mLock.lockForWriting();
+													CDictionary::remove(keys);
+													TLockingDictionary<T>::mLock.unlockForWriting();
+												}
+
+					TNLockingDictionary<T>&	operator+=(const TDictionary<T>& other)
+												{
+													// Setup
+													TSet<CString>	keys = other.getKeys();
+
+													// Update
+													TLockingDictionary<T>::mLock.lockForWriting();
+													for (TSet<CString>::Iterator iterator = keys.getIterator();
+															iterator; iterator++)
+														// Update
+														CDictionary::set(*iterator, new T(*other[*iterator]));
+													TLockingDictionary<T>::mLock.unlockForWriting();
+
+													return *this;
+												}
 
 	private:
-										// Class methods
-		static	T*						copy(SValue::Opaque opaque)
-											{ return new T(*((T*) opaque)); }
-		static	void					dispose(SValue::Opaque opaque)
-											{ T* t = (T*) opaque; Delete(t); }
+											// Class methods
+		static		T*						copy(SValue::Opaque opaque)
+												{ return new T(*((T*) opaque)); }
+		static		void					dispose(SValue::Opaque opaque)
+												{ T* t = (T*) opaque; Delete(t); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -271,11 +275,12 @@ template <typename T> class TNLockingDictionary : public TLockingDictionary<T> {
 template <typename T> class TLockingArrayDictionary : public TLockingDictionary<TNArray<T> > {
 	// Methods
 	public:
-		// Lifecycle methods
-		TLockingArrayDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
-				SValue::OpaqueEqualsProc opaqueEqualsProc = nil, SValue::OpaqueDisposeProc opaqueDisposeProc = nil) :
-			TLockingDictionary<TNArray<T> >(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
-			{}
+					// Lifecycle methods
+		explicit	TLockingArrayDictionary(SValue::OpaqueCopyProc opaqueCopyProc = nil,
+						SValue::OpaqueEqualsProc opaqueEqualsProc = nil,
+						SValue::OpaqueDisposeProc opaqueDisposeProc = nil) :
+					TLockingDictionary<TNArray<T> >(opaqueCopyProc, opaqueEqualsProc, opaqueDisposeProc)
+					{}
 };
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -284,74 +289,74 @@ template <typename T> class TLockingArrayDictionary : public TLockingDictionary<
 template <typename T> class TNLockingArrayDictionary : public TLockingArrayDictionary<T> {
 	// Methods
 	public:
-				// Lifecycle methods
-				TNLockingArrayDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
-					TLockingArrayDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc, dispose)
-					{}
+							// Lifecycle methods
+		explicit			TNLockingArrayDictionary(SValue::OpaqueEqualsProc opaqueEqualsProc = nil) :
+								TLockingArrayDictionary<T>((SValue::OpaqueCopyProc) copy, opaqueEqualsProc, dispose)
+								{}
 
-				// Instance methods
-		void	add(const CString& key, const T& item)
-					{
-						// Lock
-						TLockingDictionary<TNArray<T> >::mLock.lockForWriting();
+							// Instance methods
+					void	add(const CString& key, const T& item)
+								{
+									// Lock
+									TLockingDictionary<TNArray<T> >::mLock.lockForWriting();
 
-						// Update
-						OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
-						if (opaque.hasValue())
-							// Already have array
-							*((TNArray<T>*) *opaque) += item;
-						else
-							// First one
-							CDictionary::set(key, new TNArray<T>(item));
+									// Update
+									OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+									if (opaque.hasValue())
+										// Already have array
+										*((TNArray<T>*) *opaque) += item;
+									else
+										// First one
+										CDictionary::set(key, new TNArray<T>(item));
 
-						// Unlock
-						TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
-					}
-		void	add(const CString& key, const TArray<T>& items)
-					{
-						// Lock
-						TLockingDictionary<TNArray<T> >::mLock.lockForWriting();
+									// Unlock
+									TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
+								}
+					void	add(const CString& key, const TArray<T>& items)
+								{
+									// Lock
+									TLockingDictionary<TNArray<T> >::mLock.lockForWriting();
 
-						// Update
-						OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
-						if (opaque.hasValue())
-							// Already have array
-							*((TNArray<T>*) *opaque) += items;
-						else
-							// First one
-							CDictionary::set(key, new TNArray<T>(items));
+									// Update
+									OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+									if (opaque.hasValue())
+										// Already have array
+										*((TNArray<T>*) *opaque) += items;
+									else
+										// First one
+										CDictionary::set(key, new TNArray<T>(items));
 
-						// Unlock
-						TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
-					}
-		void	remove(const CString& key, const T& item)
-					{
-						// Lock
-						TLockingDictionary<TNArray<T> >::mLock.lockForWriting();
+									// Unlock
+									TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
+								}
+					void	remove(const CString& key, const T& item)
+								{
+									// Lock
+									TLockingDictionary<TNArray<T> >::mLock.lockForWriting();
 
-						// Update
-						OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
-						if (opaque.hasValue()) {
-							// Already have array
-							TNArray<T>&	array = *((TNArray<T>*) *opaque);
-							array -= item;
+									// Update
+									OV<SValue::Opaque>	opaque = CDictionary::getOpaque(key);
+									if (opaque.hasValue()) {
+										// Already have array
+										TNArray<T>&	array = *((TNArray<T>*) *opaque);
+										array -= item;
 
-							// Check if empty
-							if (array.isEmpty())
-								// Array is now empty!
-								CDictionary::remove(key);
-						}
+										// Check if empty
+										if (array.isEmpty())
+											// Array is now empty!
+											CDictionary::remove(key);
+									}
 
-						// Unlock
-						TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
-					}
+									// Unlock
+									TLockingDictionary<TNArray<T> >::mLock.unlockForWriting();
+								}
 
 	private:
-								// Class methods
-		static	TNArray<T>*		copy(SValue::Opaque opaque)
-									{ return new TNArray<T>(*((TNArray<T>*) opaque)); }
-		static	void			dispose(SValue::Opaque opaque)
-									{ TNArray<T>* array = (TNArray<T>*) opaque; Delete(array); }
+									// Class methods
+		static		TNArray<T>*		copy(SValue::Opaque opaque)
+										{ return new TNArray<T>(*((TNArray<T>*) opaque)); }
+		static		void			dispose(SValue::Opaque opaque)
+										{ TNArray<T>* array = (TNArray<T>*) opaque; Delete(array); }
 };
 
 //----------------------------------------------------------------------------------------------------------------------

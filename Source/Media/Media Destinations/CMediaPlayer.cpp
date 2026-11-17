@@ -451,7 +451,7 @@ void CMediaPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 	if (mInternals->mInteractionState != Internals::kInteractionStateChangingMediaSegment) {
 		// Apply change immediately - check situation
 		OV<SMedia::Segment>	mediaSegmentUse =
-									(mediaSegment.hasValue() && (mediaSegment->getDurationTimeInterval() > 0.0)) ?
+									(mediaSegment.hasValue() && (mediaSegment->getTimeIntervalRange().getLength() > 0.0)) ?
 											mediaSegment : OV<SMedia::Segment>();
 		
 		// Check situation
@@ -460,12 +460,12 @@ void CMediaPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 			CMediaDestination::setMediaSegment(mediaSegmentUse);
 
 			// Seek to media segment start
-			seek(mediaSegmentUse->getStartTimeInterval());
+			seek(mediaSegmentUse->getTimeIntervalRange().getStart());
 		} else if (mediaSegment.hasValue()) {
 			// A zero-duration segment could be the start of a selection , or a discrete playhead seek.  We don't know
 			//	at this time, but we want to preview regardless.
 			CMediaDestination::setMediaSegment(OV<SMedia::Segment>());
-			seek(mediaSegment->getStartTimeInterval());
+			seek(mediaSegment->getTimeIntervalRange().getStart());
 		} else
 			// No segment: clear, keeping the current position.
 			CMediaDestination::setMediaSegment(OV<SMedia::Segment>());
@@ -479,13 +479,15 @@ void CMediaPlayer::setMediaSegment(const OV<SMedia::Segment>& mediaSegment)
 		// Check situation
 		if (mediaSegment.hasValue() &&
 				(!previousPendingMediaSegment.hasValue() ||
-						(previousPendingMediaSegment->getStartTimeInterval() !=
-								mediaSegment->getStartTimeInterval()))) {
+						(previousPendingMediaSegment->getTimeIntervalRange().getStart() !=
+								mediaSegment->getTimeIntervalRange().getStart()))) {
 			// The media segment start is changing - preview the new start.
-			mInternals->mCurrentTimeInterval = mediaSegment->getStartTimeInterval();
+			mInternals->mCurrentTimeInterval = mediaSegment->getTimeIntervalRange().getStart();
 
 			// Prepare to update all audio and video destinations
-			SMedia::Segment	previewMediaSegment(mInternals->mCurrentTimeInterval, CAudioPlayer::mPreviewDuration);
+			SMedia::Segment	previewMediaSegment(
+									SUniversalTimeIntervalRange(mInternals->mCurrentTimeInterval,
+											CAudioPlayer::mPreviewDuration));
 
 			// Update all audio destinations
 			for (UInt32 i = 0; i < getAudioTrackCount(); i++) {
@@ -700,7 +702,7 @@ void CMediaPlayer::mediaSegmentDidChange()
 	//	leaving a spurious empty selection.
 	CMediaDestination::setMediaSegment(
 			(mInternals->mPendingMediaSegment.hasValue() &&
-							(mInternals->mPendingMediaSegment->getDurationTimeInterval() > 0.0)) ?
+							(mInternals->mPendingMediaSegment->getTimeIntervalRange().getLength() > 0.0)) ?
 					mInternals->mPendingMediaSegment : OV<SMedia::Segment>());
 
 	// End the interaction: the commit changed the source scope, so re-seek to the auditioned start, then restore
@@ -726,7 +728,7 @@ void CMediaPlayer::stop()
 
 	// Update internals
 	mInternals->mCurrentTimeInterval =
-			getMediaSegment().hasValue() ? getMediaSegment()->getStartTimeInterval() : 0.0;
+			getMediaSegment().hasValue() ? getMediaSegment()->getTimeIntervalRange().getStart() : 0.0;
 	mInternals->mCurrentFrameIndex.removeValue();
 	mInternals->mEndOfDataCount = 0;
 
@@ -739,5 +741,5 @@ void CMediaPlayer::restart()
 //----------------------------------------------------------------------------------------------------------------------
 {
 	// Seek to the begining of the media segment, or beginning beginning
-	seek(getMediaSegment().hasValue() ? getMediaSegment()->getStartTimeInterval() : 0.0);
+	seek(getMediaSegment().hasValue() ? getMediaSegment()->getTimeIntervalRange().getStart() : 0.0);
 }

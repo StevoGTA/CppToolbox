@@ -91,42 +91,49 @@ struct SMedia {
 		struct Segment {
 			// Methods
 			public:
-										// Lifecycle methods
-										Segment(UniversalTimeInterval startTimeInterval,
-												UniversalTimeInterval durationTimeInterval) :
-											mStartTimeInterval(startTimeInterval),
-													mDurationTimeInterval(durationTimeInterval)
-											{}
-										Segment(UniversalTimeInterval startTimeInterval,
-												UniversalTimeInterval durationTimeInterval,
-												UniversalTimeInterval inHandleTimeInterval,
-												UniversalTimeInterval outHandleTimeInterval,
-												UniversalTimeInterval totalDurationTimeInterval) :
-											mStartTimeInterval(std::max(0.0, startTimeInterval - inHandleTimeInterval)),
-													mDurationTimeInterval(
-															std::min(totalDurationTimeInterval,
-																	startTimeInterval + durationTimeInterval +
-																			outHandleTimeInterval) - mStartTimeInterval)
-											{}
+																	// Lifecycle methods
+																	Segment(
+																			const SUniversalTimeIntervalRange&
+																					timeIntervalRange,
+																			UniversalTimeInterval inHandleTimeInterval,
+																			UniversalTimeInterval outHandleTimeInterval,
+																			UniversalTimeInterval
+																					totalDurationTimeInterval) :
+																		mTimeIntervalRange(
+																				std::max(0.0,
+																						timeIntervalRange.getStart() -
+																								inHandleTimeInterval),
+																				std::min(totalDurationTimeInterval,
+																								timeIntervalRange
+																												.getEnd() +
+																										outHandleTimeInterval) -
+																						std::max(0.0,
+																								timeIntervalRange
+																												.getStart() -
+																										inHandleTimeInterval))
+																		{}
+				explicit											Segment(
+																			const SUniversalTimeIntervalRange&
+																					timeIntervalRange) :
+																		mTimeIntervalRange(timeIntervalRange)
+																		{}
 
-										// Instance methods
-				UniversalTimeInterval	getStartTimeInterval() const
-											{ return mStartTimeInterval; }
-				UniversalTimeInterval	getDurationTimeInterval() const
-											{ return mDurationTimeInterval; }
-				UniversalTimeInterval	getMidDurationTimeInterval() const
-											{ return mStartTimeInterval + mDurationTimeInterval / 2.0; }
-				UniversalTimeInterval	getEndTimeInterval() const
-											{ return mStartTimeInterval + mDurationTimeInterval; }
+																	// Instance methods
+							const	SUniversalTimeIntervalRange&	getTimeIntervalRange() const
+																		{ return mTimeIntervalRange; }
+							UniversalTimeInterval					getMidDurationTimeInterval() const
+																		{ return mTimeIntervalRange.getStart() +
+																				mTimeIntervalRange.getLength() / 2.0; }
 
-				bool					contains(UniversalTimeInterval timeInterval) const
-											{ return (timeInterval >= mStartTimeInterval) &&
-													(timeInterval < getEndTimeInterval()); }
+							bool									contains(UniversalTimeInterval timeInterval) const
+																		{ return (timeInterval >=
+																						mTimeIntervalRange.getStart()) &&
+																				(timeInterval <
+																						mTimeIntervalRange.getEnd()); }
 
 			// Properties
 			private:
-				UniversalTimeInterval	mStartTimeInterval;
-				UniversalTimeInterval	mDurationTimeInterval;
+				SUniversalTimeIntervalRange	mTimeIntervalRange;
 		};
 
 	// SegmentInfo

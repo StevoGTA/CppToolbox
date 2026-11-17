@@ -34,33 +34,28 @@ CAudioChannelMapper::Map CAudioChannelMapper::Map::getMap(const SAudio::ChannelM
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-CAudioChannelMapper::Map CAudioChannelMapper::Map::getMapForAddingChannels(UInt8 channelCount, UInt8 addedChannelCount)
+CAudioChannelMapper::Map CAudioChannelMapper::Map::getMap(const CBits& fromChannels, const CBits& toChannels)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Copy existing channels, added channels are silent
+	// Setup
+	UInt8	fromChannelCount = (UInt8) fromChannels.getCount();
+
+	// Compose input channel indexes
 	TNArray<OV<UInt8> >	inputChannelIndexes;
-	for (UInt8 i = 0; i < channelCount + addedChannelCount; i++)
+	UInt8	inputChannelIndex = 0;
+	for (UInt8 i = 0; i < (UInt8) toChannels.getCount(); i++) {
+		// Find the next from channel
+		while ((inputChannelIndex < fromChannelCount) && !fromChannels.get(inputChannelIndex))
+			// Next
+			inputChannelIndex++;
+
 		// Add channel
-		inputChannelIndexes += (i < channelCount) ? OV<UInt8>(i) : OV<UInt8>();
-
-	return Map(channelCount, inputChannelIndexes);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-CAudioChannelMapper::Map CAudioChannelMapper::Map::getMapForRemovingChannels(UInt8 channelCount,
-		const CBits& channelsToRemove)
-//----------------------------------------------------------------------------------------------------------------------
-{
-	// Copy kept channels in order
-	TNArray<OV<UInt8> >	inputChannelIndexes;
-	for (UInt8 i = 0; i < channelCount; i++) {
-		// Check if kept
-		if (!channelsToRemove.get(i))
-			// Add channel
-			inputChannelIndexes += OV<UInt8>(i);
+		inputChannelIndexes +=
+				(toChannels.get(i) && (inputChannelIndex < fromChannelCount)) ?
+						OV<UInt8>(inputChannelIndex++) : OV<UInt8>();
 	}
 
-	return Map(channelCount, inputChannelIndexes);
+	return Map(fromChannelCount, inputChannelIndexes);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

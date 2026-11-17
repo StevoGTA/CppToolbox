@@ -40,21 +40,21 @@ class CProgress {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CProgress(const UpdateInfo& updateInfo);
-		virtual							~CProgress();
+											// Lifecycle methods
+		explicit							CProgress(const UpdateInfo& updateInfo);
+		virtual								~CProgress();
 
-										// Instance methods
-				const	CString&		getMessage() const;
-						void			setMessage(const CString& message);
+											// Instance methods
+					const	CString&		getMessage() const;
+							void			setMessage(const CString& message);
 
-				const	OV<Float32>&	getValue() const;
-						void			setValue(Float32 value);
-						void			removeValue();
+					const	OV<Float32>&	getValue() const;
+							void			setValue(Float32 value);
+							void			removeValue();
 
 	protected:
-										// Lifecycle methods
-										CProgress(const UpdateInfo& updateInfo, Float32 initialValue);
+											// Lifecycle methods
+											CProgress(const UpdateInfo& updateInfo, Float32 initialValue);
 
 	// Properties
 	private:
@@ -78,19 +78,19 @@ class CItemsProgress : public CProgress {
 
 	// Methods
 	public:
-					// Lifecycle methods
-					CItemsProgress(const UpdateInfo& updateInfo, UInt32 initialTotalItemsCount);
-					CItemsProgress(const UpdateInfo& updateInfo);
-					~CItemsProgress();
+								// Lifecycle methods
+								CItemsProgress(const UpdateInfo& updateInfo, UInt32 initialTotalItemsCount);
+		explicit				CItemsProgress(const UpdateInfo& updateInfo);
+								~CItemsProgress();
 
-					// Instance methods
-		void		addTotalItemsCount(UInt32 itemsCount);
-		OV<UInt32>	getTotalItemsCount() const;
+								// Instance methods
+					void		addTotalItemsCount(UInt32 itemsCount);
+					OV<UInt32>	getTotalItemsCount() const;
 
-		void		addCompletedItemsCount(UInt32 itemsCount);
-		UInt32		getCompletedItemsCount() const;
+					void		addCompletedItemsCount(UInt32 itemsCount);
+					UInt32		getCompletedItemsCount() const;
 
-		void		reset();
+					void		reset();
 
 	// Properties
 	private:
@@ -134,13 +134,13 @@ class CAggregateTimeIntervalProgress : public CProgress {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								CAggregateTimeIntervalProgress(const UpdateInfo& updateInfo);
-								~CAggregateTimeIntervalProgress();
+											// Lifecycle methods
+		explicit							CAggregateTimeIntervalProgress(const UpdateInfo& updateInfo);
+											~CAggregateTimeIntervalProgress();
 
-								// Instance methods
-		CTimeIntervalProgress&	addTimeIntervalProgress(UniversalTimeInterval totalTimeInterval);
-		void					reset();
+											// Instance methods
+					CTimeIntervalProgress&	addTimeIntervalProgress(UniversalTimeInterval totalTimeInterval);
+					void					reset();
 
 	// Properties
 	private:

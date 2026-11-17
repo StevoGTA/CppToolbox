@@ -25,69 +25,69 @@ class CFolder : public CHashable {
 
 	// Methods
 	public:
-											// Lifecycle methods
-											CFolder(const CFilesystemPath& filesystemPath);
-											CFolder(const CFolder& other);
-											~CFolder();
+												// Lifecycle methods
+		explicit								CFolder(const CFilesystemPath& filesystemPath);
+												CFolder(const CFolder& other);
+												~CFolder();
 
-											// CEquatable methods
-								bool		operator==(const CEquatable& other) const
-												{ return equals((const CFolder&) other); }
+												// CEquatable methods
+									bool		operator==(const CEquatable& other) const
+													{ return equals((const CFolder&) other); }
 
-											// CHashable methods
-								void		hashInto(CHashable::HashCollector& hashableHashCollector) const
-												{ getFilesystemPath().hashInto(hashableHashCollector); }
+												// CHashable methods
+									void		hashInto(CHashable::HashCollector& hashableHashCollector) const
+													{ getFilesystemPath().hashInto(hashableHashCollector); }
 
-											// Instance methods
-				const	CFilesystemPath&	getFilesystemPath() const;
+												// Instance methods
+					const	CFilesystemPath&	getFilesystemPath() const;
 
-						CString				getName() const;
-						CString				getNameForDisplay() const;
-						OV<SError>			rename(const CString& string);
+							CString				getName() const;
+							CString				getNameForDisplay() const;
+							OV<SError>			rename(const CString& string);
 
-						OV<SError>			create(bool createIntermediateFolders = false) const;
-						OV<SError>			remove() const;
-						bool				doesExist() const;
+							OV<SError>			create(bool createIntermediateFolders = false) const;
+							OV<SError>			remove() const;
+							bool				doesExist() const;
 
-						CFolder				getParentFolder() const;
+							CFolder				getParentFolder() const;
 
-						CFolder				getChildFolder(const CString& name) const;
-						CFile				getFile(const CString& name) const;
+							CFolder				getChildFolder(const CString& name) const;
+							CFile				getFile(const CString& name) const;
 
 #if defined(TARGET_OS_MACOS)
-						bool				isPackage() const;
+							bool				isPackage() const;
 #endif
 
-						bool				equals(const CFolder& other) const;
+							bool				equals(const CFolder& other) const;
 
-						CFolder&			operator=(const CFolder& other);
+							CFolder&			operator=(const CFolder& other);
 
-											// Class methods
-		static	const	CFolder&			temp();
+												// Class methods
+		static		const	CFolder&			temp();
 
 #if defined(TARGET_OS_MACOS)
-		static	const	CFolder&			systemApplicationSupport();
-		static	const	CFolder&			systemAudioPlugins();
-		static	const	CFolder&			systemAudioPresets();
-		static	const	CFolder&			systemFrameworks();
-		static	const	CFolder&			systemLibrary();
-		static	const	CFolder&			userApplicationSupport();
-		static	const	CFolder&			userAudioPlugins();
-		static	const	CFolder&			userAudioPresets();
-		static	const	CFolder&			userDesktop();
-		static	const	CFolder&			userHome();
-		static	const	CFolder&			userLibrary();
-		static	const	CFolder&			userLogs();
-		static	const	CFolder&			userMusic();
+		static		const	CFolder&			systemApplicationSupport();
+		static		const	CFolder&			systemAudioPlugins();
+		static		const	CFolder&			systemAudioPresets();
+		static		const	CFolder&			systemFrameworks();
+		static		const	CFolder&			systemLibrary();
+		static		const	CFolder&			userApplicationSupport();
+		static		const	CFolder&			userAudioPlugins();
+		static		const	CFolder&			userAudioPresets();
+		static		const	CFolder&			userDesktop();
+		static		const	CFolder&			userHome();
+		static		const	CFolder&			userLibrary();
+		static		const	CFolder&			userLogs();
+		static		const	CFolder&			userMusic();
 #elif defined(TARGET_OS_WINDOWS)
 	#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-		static	const	CFolder&			userDesktop();
-		static	const	CFolder&			userDocuments();
-		static	const	CFolder&			localApplicationData();
-		static	const	CFolder&			programData();
+		static		const	CFolder&			userDesktop();
+		static		const	CFolder&			userDocuments();
+		static		const	CFolder&			localApplicationData();
+		static		const	CFolder&			programData();
 	#endif
 	#if WINAPI_FAMILY == WINAPI_FAMILY_PC_APP
-		static	const	CFolder&			applicationFolder();
+		static		const	CFolder&			applicationFolder();
 	#endif
 #endif
 

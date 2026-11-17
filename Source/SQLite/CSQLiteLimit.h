@@ -16,13 +16,13 @@ class CSQLiteLimit {
 
 	// Methods
 	public:
-							// Lifecycle methods
-							CSQLiteLimit(const OV<UInt32> limit, UInt32 offset);
-							CSQLiteLimit(const OV<UInt32> limit);
-							~CSQLiteLimit();
+										// Lifecycle methods
+										CSQLiteLimit(const OV<UInt32> limit, UInt32 offset);
+		explicit						CSQLiteLimit(const OV<UInt32> limit);
+										~CSQLiteLimit();
 
-							// Instance methods
-		const	CString&	getString() const;
+										// Instance methods
+					const	CString&	getString() const;
 
 	// Properties
 	private:

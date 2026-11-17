@@ -61,19 +61,18 @@ class CAtomReader : public CByteReader {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								CAtomReader(const I<CRandomAccessDataSource>& randomAccessDataSource) :
-									CByteReader(randomAccessDataSource, true)
-									{}
+											// Lifecycle methods
+		explicit							CAtomReader(const I<CRandomAccessDataSource>& randomAccessDataSource) :
+												CByteReader(randomAccessDataSource, true)
+												{}
 
-								// Instance methods
-		TVResult<Atom>			readAtom() const;
-		TVResult<Atom>			readAtom(const Atom& atom, SInt64 offset) const;
-		TVResult<CData>			readAtomPayload(const Atom& atom) const;
-		TVResult<CData>			readAtomPayload(const OR<Atom>& atom) const;
-		TVResult<ContainerAtom>	readContainerAtom() const;
-		TVResult<ContainerAtom>	readContainerAtom(const Atom& atom) const;
-		TVResult<ContainerAtom>	readContainerAtom(const OR<Atom>& atom) const;
-		OV<SError>				seekToNextAtom(const Atom& atom) const;
+											// Instance methods
+					TVResult<Atom>			readAtom() const;
+					TVResult<Atom>			readAtom(const Atom& atom, SInt64 offset) const;
+					TVResult<CData>			readAtomPayload(const Atom& atom) const;
+					TVResult<CData>			readAtomPayload(const OR<Atom>& atom) const;
+					TVResult<ContainerAtom>	readContainerAtom() const;
+					TVResult<ContainerAtom>	readContainerAtom(const Atom& atom) const;
+					TVResult<ContainerAtom>	readContainerAtom(const OR<Atom>& atom) const;
+					OV<SError>				seekToNextAtom(const Atom& atom) const;
 };
-

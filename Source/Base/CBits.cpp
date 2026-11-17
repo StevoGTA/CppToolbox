@@ -127,6 +127,19 @@ UInt32 CBits::getCount() const
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+UInt32 CBits::getSetCount() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Count
+	UInt32	count = 0;
+	for (UInt32 i = 0; i < mInternals->mUsed; i++)
+		// Add
+		count += get(i) ? 1 : 0;
+
+	return count;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 bool CBits::get(UInt32 index) const
 //----------------------------------------------------------------------------------------------------------------------
 {
@@ -147,6 +160,27 @@ CBits& CBits::set(UInt32 index, bool value)
 	mInternals->set(index, value);
 
 	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CBits CBits::inverting() const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	CBits	bits(*this);
+	Internals::prepareForWrite(&bits.mInternals);
+
+	// Invert whole bytes
+	for (UInt32 i = 0; i < bits.mInternals->mUsed / 8; i++)
+		// Invert
+		bits.mInternals->mStorage[i] = ~bits.mInternals->mStorage[i];
+
+	// Invert remaining bits
+	if ((bits.mInternals->mUsed % 8) > 0)
+		// Invert
+		bits.mInternals->mStorage[bits.mInternals->mUsed / 8] ^= (UInt8) ((1 << (bits.mInternals->mUsed % 8)) - 1);
+
+	return bits;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

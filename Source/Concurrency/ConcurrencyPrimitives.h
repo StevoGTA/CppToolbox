@@ -89,13 +89,13 @@ class CSharedResource {
 
 	// Methods
 	public:
-				// Lifecycle methods
-				CSharedResource(UInt32 count);
-				~CSharedResource();
+							// Lifecycle methods
+		explicit			CSharedResource(UInt32 count);
+							~CSharedResource();
 
-				// Instance methods
-		void	consume() const;
-		void	release() const;
+							// Instance methods
+					void	consume() const;
+					void	release() const;
 
 	// Properties
 	private:

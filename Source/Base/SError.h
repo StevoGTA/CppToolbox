@@ -12,44 +12,46 @@
 struct SError {
 	// Methods
 	public:
-							// Lifecycle methods
-							SError(const CString& domain, SInt32 code, const CDictionary& localizationInfo,
-									const CString& internalDescription) :
-								mDomain(domain), mCode(code), mLocalizationInfo(localizationInfo),
-										mInternalDescription(internalDescription)
-								{}
-							SError(const CString& domain, SInt32 code,
-									const CDictionary& localizationInfo = CDictionary::mEmpty) :
-								mDomain(domain), mCode(code), mLocalizationInfo(localizationInfo)
-								{}
-							SError(const CString& domain, SInt32 code, const CString& internalDescription) :
-								mDomain(domain), mCode(code),
-										mInternalDescription(internalDescription)
-								{}
-							SError(const CDictionary& storageInfo);
+										// Lifecycle methods
+										SError(const CString& domain, SInt32 code, const CDictionary& localizationInfo,
+												const CString& internalDescription) :
+											mDomain(domain), mCode(code), mLocalizationInfo(localizationInfo),
+													mInternalDescription(internalDescription)
+											{}
+										SError(const CString& domain, SInt32 code,
+												const CDictionary& localizationInfo = CDictionary::mEmpty) :
+											mDomain(domain), mCode(code), mLocalizationInfo(localizationInfo)
+											{}
+										SError(const CString& domain, SInt32 code, const CString& internalDescription) :
+											mDomain(domain), mCode(code),
+													mInternalDescription(internalDescription)
+											{}
+		explicit						SError(const CDictionary& storageInfo);
 
-							// Instance methods
-		const	CString&	getDomain() const
-								{ return mDomain; }
-				SInt32		getCode() const
-								{ return mCode; }
-				CString		getLocalizedDescription() const
-								{ return CString::hasLocalizationFor(mDomain, CString(mCode)) ?
-										CString(mDomain, CString(mCode), mLocalizationInfo) : *mInternalDescription; }
+										// Instance methods
+					const	CString&	getDomain() const
+											{ return mDomain; }
+							SInt32		getCode() const
+											{ return mCode; }
+							CString		getLocalizedDescription() const
+											{ return CString::hasLocalizationFor(mDomain, CString(mCode)) ?
+													CString(mDomain, CString(mCode), mLocalizationInfo) :
+													*mInternalDescription; }
 
-				CString		getInternalDescription() const
-								{ return mDomain + CString(OSSTR("/")) + CString(mCode) + CString(OSSTR(" (")) +
-										(mInternalDescription.hasValue() ?
-												*mInternalDescription :
-												CString(mDomain, CString(mCode), mLocalizationInfo)) +
-										CString(OSSTR(")")); }
+							CString		getInternalDescription() const
+											{ return mDomain + CString(OSSTR("/")) + CString(mCode) +
+													CString(OSSTR(" (")) +
+													(mInternalDescription.hasValue() ?
+															*mInternalDescription :
+															CString(mDomain, CString(mCode), mLocalizationInfo)) +
+													CString(OSSTR(")")); }
 
-				CDictionary	getStorageInfo() const;
+							CDictionary	getStorageInfo() const;
 
-				bool		operator==(const SError& other) const
-								{ return (mDomain == other.mDomain) && (mCode == other.mCode); }
-				bool		operator!=(const SError& other) const
-								{ return (mDomain != other.mDomain) || (mCode != other.mCode); }
+							bool		operator==(const SError& other) const
+											{ return (mDomain == other.mDomain) && (mCode == other.mCode); }
+							bool		operator!=(const SError& other) const
+											{ return (mDomain != other.mDomain) || (mCode != other.mCode); }
 
 	// Properties
 	public:

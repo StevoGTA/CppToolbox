@@ -182,6 +182,48 @@ template <typename A, typename B, typename C, typename D, typename E, typename F
 };
 
 //----------------------------------------------------------------------------------------------------------------------
+// MARK: - TV8
+
+template <typename A, typename B, typename C, typename D, typename E, typename F, typename G, typename H> struct TV8 {
+	// Methods
+	public:
+					// Lifecycle methods
+					TV8(const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g,
+							const H& h) :
+						mA(a), mB(b), mC(c), mD(d), mE(e), mF(f), mG(g), mH(h)
+						{}
+
+					// Instance methods
+		const	A&	getA() const
+						{ return mA; }
+		const	B&	getB() const
+						{ return mB; }
+		const	C&	getC() const
+						{ return mC; }
+		const	D&	getD() const
+						{ return mD; }
+		const	E&	getE() const
+						{ return mE; }
+		const	F&	getF() const
+						{ return mF; }
+		const	G&	getG() const
+						{ return mG; }
+		const	H&	getH() const
+						{ return mH; }
+
+	// Properties
+	private:
+		A	mA;
+		B	mB;
+		C	mC;
+		D	mD;
+		E	mE;
+		F	mF;
+		G	mG;
+		H	mH;
+};
+
+//----------------------------------------------------------------------------------------------------------------------
 // MARK: - TV9
 
 template <typename A, typename B, typename C, typename D, typename E, typename F, typename G, typename H, typename I>

@@ -299,6 +299,19 @@ CAudioFrames::Info CAudioFrames::getWriteInfo()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+void CAudioFrames::completeWrite(const CAudioFrames& other, UInt32 frameIndex, UInt32 frameCount)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check
+	AssertFailIf((frameIndex + frameCount) > other.mInternals->mCurrentFrameCount);
+
+	// Complete write from the frame range
+	completeWrite(frameCount,
+			Info((UInt8*) other.mInternals->mBuffer + frameIndex * other.mInternals->mBytesPerFramePerSegment,
+					other.mInternals->mSegmentCount, other.mInternals->mSegmentByteCount, frameCount));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 void CAudioFrames::completeWrite(UInt32 frameCount)
 //----------------------------------------------------------------------------------------------------------------------
 {

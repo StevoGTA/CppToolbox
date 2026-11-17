@@ -56,15 +56,15 @@ class CFilesystem {
 
 	// VolumeInfo
 	public:
-		struct VolumeInfo : public TV7<CString, UInt64, CFolder, UInt32, bool, bool, bool> {
+		struct VolumeInfo : public TV8<CString, UInt64, CFolder, UInt32, bool, bool, bool, bool> {
 			// Methods
 			public:
 									// Lifecycle methods
 									VolumeInfo(const CString& filesystemTypeName, UInt64 identifier,
 											const CFolder& rootFolder, UInt32 blockByteCount, bool isLocal,
-											bool isReadOnly, bool supportsHardLinks) :
-										TV7(filesystemTypeName, identifier, rootFolder, blockByteCount, isLocal,
-												isReadOnly, supportsHardLinks)
+											bool isReadOnly, bool supportsHardLinks, bool supportsExtendedAttributes) :
+										TV8(filesystemTypeName, identifier, rootFolder, blockByteCount, isLocal,
+												isReadOnly, supportsHardLinks, supportsExtendedAttributes)
 										{}
 
 									// Instance methods
@@ -82,6 +82,8 @@ class CFilesystem {
 										{ return getF(); }
 						bool		supportsHardLinks() const
 										{ return getG(); }
+						bool		supportsExtendedAttributes() const
+										{ return getH(); }
 		};
 
 	// Methods

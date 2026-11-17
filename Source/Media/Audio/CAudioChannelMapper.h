@@ -27,8 +27,7 @@ class CAudioChannelMapper : public CBasicAudioProcessor {
 									// Class methods
 				static	Map			getMap(const SAudio::ChannelMap& fromAudioChannelMap,
 											const SAudio::ChannelMap& toAudioChannelMap);
-				static	Map			getMapForAddingChannels(UInt8 channelCount, UInt8 addedChannelCount);
-				static	Map			getMapForRemovingChannels(UInt8 channelCount, const CBits& channelsToRemove);
+				static	Map			getMap(const CBits& fromChannels, const CBits& toChannels);
 
 			private:
 									// Lifecycle methods
@@ -43,26 +42,26 @@ class CAudioChannelMapper : public CBasicAudioProcessor {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CAudioChannelMapper(const Map& map);
-												~CAudioChannelMapper();
+													// Lifecycle methods
+		explicit									CAudioChannelMapper(const Map& map);
+													~CAudioChannelMapper();
 
-												// CAudioProcessor methods
-				OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
-														const SAudio::ProcessingFormat& audioProcessingFormat);
-				TArray<CString>					getSetupDescription(const CString& indent);
+													// CAudioProcessor methods
+					OV<SError>						connectInput(const I<CAudioProcessor>& audioProcessor,
+															const SAudio::ProcessingFormat& audioProcessingFormat);
+					TArray<CString>					getSetupDescription(const CString& indent);
 
-				TNumberArray<Float32>			setChannelGains(const TNumberArray<Float32>& channelGains);
+					TNumberArray<Float32>			setChannelGains(const TNumberArray<Float32>& channelGains);
 
-				TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
+					TVResult<SourceInfo>			performInto(CAudioFrames& audioFrames);
 
-				TArray<SAudio::ProcessingSetup>	getInputSetups() const;
+					TArray<SAudio::ProcessingSetup>	getInputSetups() const;
 
-				TArray<SAudio::ProcessingSetup>	getOutputSetups() const;
+					TArray<SAudio::ProcessingSetup>	getOutputSetups() const;
 
-												// Class methods
-		static	bool							canPerform(const SAudio::ChannelMap& fromAudioChannelMap,
-														const SAudio::ChannelMap& toAudioChannelMap);
+													// Class methods
+		static		bool							canPerform(const SAudio::ChannelMap& fromAudioChannelMap,
+															const SAudio::ChannelMap& toAudioChannelMap);
 
 	// Properties
 	private:

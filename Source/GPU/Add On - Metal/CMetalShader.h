@@ -17,22 +17,22 @@ class CMetalVertexShader : public CGPUVertexShader {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CMetalVertexShader(const CString& name);
-												~CMetalVertexShader();
+													// Lifecycle methods
+		explicit									CMetalVertexShader(const CString& name);
+													~CMetalVertexShader();
 
-												// Instance methods
-				const	CString&				getName() const;
+													// Instance methods
+					const	CString&				getName() const;
 
-						void					setModelMatrix(const SMatrix4x4_32& modelMatrix);
-				const	SMatrix4x4_32&			getModelMatrix() const;
+							void					setModelMatrix(const SMatrix4x4_32& modelMatrix);
+					const	SMatrix4x4_32&			getModelMatrix() const;
 
-												// Subclass methods
-		virtual			bool					requiresDepthTest() const = 0;
-		virtual			MTLVertexDescriptor*	getVertexDescriptor() const = 0;
-		virtual			void					setup(id<MTLRenderCommandEncoder> renderCommandEncoder,
-														id<MTLBuffer> vertexBuffer, MetalBufferCache* metalBufferCache)
-														const = 0;
+													// Subclass methods
+		virtual				bool					requiresDepthTest() const = 0;
+		virtual				MTLVertexDescriptor*	getVertexDescriptor() const = 0;
+		virtual				void					setup(id<MTLRenderCommandEncoder> renderCommandEncoder,
+															id<MTLBuffer> vertexBuffer,
+															MetalBufferCache* metalBufferCache) const = 0;
 
 	// Properties
 	private:
@@ -49,16 +49,16 @@ class CMetalFragmentShader : public CGPUFragmentShader {
 
 	// Methods
 	public:
-									// Lifecycle methods
-									CMetalFragmentShader(const CString& name);
-									~CMetalFragmentShader();
+										// Lifecycle methods
+		explicit						CMetalFragmentShader(const CString& name);
+										~CMetalFragmentShader();
 
-									// Instance methods
-				const	CString&	getName() const;
+										// Instance methods
+					const	CString&	getName() const;
 
-									// Subclass methods
-		virtual			void		setup(id<MTLRenderCommandEncoder> renderCommandEncoder,
-											MetalBufferCache* metalBufferCache) const = 0;
+										// Subclass methods
+		virtual				void		setup(id<MTLRenderCommandEncoder> renderCommandEncoder,
+												MetalBufferCache* metalBufferCache) const = 0;
 
 	// Properties
 	private:

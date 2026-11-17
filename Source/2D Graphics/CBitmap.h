@@ -120,33 +120,33 @@ class CBitmap {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1),
-												Format format = kFormatRGBA8888,
-												const OV<UInt16>& bytesPerRow = OV<UInt16>());
-										CBitmap(const S2DSizeS32& size, Format format, const TBuffer<UInt8>& pixelData,
-												UInt16 bytesPerRow);
-										CBitmap(const CBitmap& other, Format format);
-										CBitmap(const CBitmap& other, RotationOperation rotationOperation);
-										CBitmap(const CBitmap& other);
-		virtual							~CBitmap();
+											// Lifecycle methods
+		explicit							CBitmap(const S2DSizeS32& size = S2DSizeS32(1, 1),
+													Format format = kFormatRGBA8888,
+													const OV<UInt16>& bytesPerRow = OV<UInt16>());
+											CBitmap(const S2DSizeS32& size, Format format,
+													const TBuffer<UInt8>& pixelData, UInt16 bytesPerRow);
+											CBitmap(const CBitmap& other, Format format);
+											CBitmap(const CBitmap& other, RotationOperation rotationOperation);
+											CBitmap(const CBitmap& other);
+		virtual								~CBitmap();
 
-										// Instance methods
-				const	S2DSizeS32&		getSize() const;
+											// Instance methods
+					const	S2DSizeS32&		getSize() const;
 
-						TBuffer<UInt8>&	getPixelData() const;
-						Format			getFormat() const;
-						UInt16			getBytesPerRow() const;
-						UInt16			getBytesPerPixel() const;
+							TBuffer<UInt8>&	getPixelData() const;
+							Format			getFormat() const;
+							UInt16			getBytesPerRow() const;
+							UInt16			getBytesPerPixel() const;
 
-						I<RowWriter>	getRowWriter(SInt32 y) const;
+							I<RowWriter>	getRowWriter(SInt32 y) const;
 
-						void			clearPixels()
-											{ clearPixels(S2DRectS32(S2DPointS32(), getSize())); }
-						void			clearPixels(const S2DRectS32& rect);
+							void			clearPixels()
+												{ clearPixels(S2DRectS32(S2DPointS32(), getSize())); }
+							void			clearPixels(const S2DRectS32& rect);
 
-						void			setPixel(const S2DPointS32& point, const CColor& color);	// Set one pixel to the one pixel's worth of given data
-						void			setPixels(const S2DRectS32& rect, const CColor& color);		// Set all pixels to the one pixel's worth of given data
+							void			setPixel(const S2DPointS32& point, const CColor& color);	// Set one pixel to the one pixel's worth of given data
+							void			setPixels(const S2DRectS32& rect, const CColor& color);		// Set all pixels to the one pixel's worth of given data
 
 	// Properties
 	private:

@@ -65,7 +65,7 @@ static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& f
 		return TVResult<CFilesystem::VolumeInfo>(SErrorFromPOSIXerror(errno));
 
 	// Get volume capabilities.  Volume attributes must be requested from the volume's mount point.  A volume that
-	//	can't report its capabilities is treated as not supporting hard links.
+	//	can't report its capabilities is treated as supporting neither hard links nor extended attributes.
 	struct attrlist	attributeList = {0};
 	attributeList.bitmapcount = ATTR_BIT_MAP_COUNT;
 	attributeList.volattr = ATTR_VOL_INFO | ATTR_VOL_CAPABILITIES;
@@ -75,12 +75,19 @@ static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& f
 		vol_capabilities_attr_t	mCapabilities;
 	} __attribute__((aligned(4), packed))	capabilitiesInfo;
 
+	bool	hasCapabilities =
+					::getattrlist(statfsInfo.f_mntonname, &attributeList, &capabilitiesInfo, sizeof(capabilitiesInfo),
+							0) == 0;
 	bool	supportsHardLinks =
-					(::getattrlist(statfsInfo.f_mntonname, &attributeList, &capabilitiesInfo,
-									sizeof(capabilitiesInfo), 0) == 0) &&
+					hasCapabilities &&
 							((capabilitiesInfo.mCapabilities.capabilities[VOL_CAPABILITIES_FORMAT] &
 									capabilitiesInfo.mCapabilities.valid[VOL_CAPABILITIES_FORMAT] &
 											VOL_CAP_FMT_HARDLINKS) != 0);
+	bool	supportsExtendedAttributes =
+					hasCapabilities &&
+							((capabilitiesInfo.mCapabilities.capabilities[VOL_CAPABILITIES_INTERFACES] &
+									capabilitiesInfo.mCapabilities.valid[VOL_CAPABILITIES_INTERFACES] &
+											VOL_CAP_INT_EXTENDED_ATTR) != 0);
 
 	return TVResult<CFilesystem::VolumeInfo>(
 			CFilesystem::VolumeInfo(
@@ -88,7 +95,7 @@ static TVResult<CFilesystem::VolumeInfo> sGetVolumeInfo(const CFilesystemPath& f
 					((UInt64) (UInt32) statfsInfo.f_fsid.val[0] << 32) | (UInt32) statfsInfo.f_fsid.val[1],
 					CFolder(CFilesystemPath(CString(statfsInfo.f_mntonname, MAXPATHLEN, CString::kEncodingUTF8))),
 					statfsInfo.f_bsize, (statfsInfo.f_flags & MNT_LOCAL) != 0, (statfsInfo.f_flags & MNT_RDONLY) != 0,
-					supportsHardLinks));
+					supportsHardLinks, supportsExtendedAttributes));
 }
 
 //----------------------------------------------------------------------------------------------------------------------

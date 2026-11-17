@@ -17,16 +17,16 @@ class CCredentialStore {
 
 	// Methods
 	public:
-							// Lifecycle methods
-							CCredentialStore(const CString& service, const CString& group);
-							CCredentialStore(const CString& service);
-							~CCredentialStore();
+										// Lifecycle methods
+										CCredentialStore(const CString& service, const CString& group);
+		explicit						CCredentialStore(const CString& service);
+										~CCredentialStore();
 
-							// Instance methods
-		OV<CString>			getString(const CString& key) const;
-		OV<UniversalTime>	getCreationTime(const CString& key) const;
-		OV<SError>			set(const CString& key, const CString& string);
-		OV<SError>			remove(const CString& key);
+										// Instance methods
+					OV<CString>			getString(const CString& key) const;
+					OV<UniversalTime>	getCreationTime(const CString& key) const;
+					OV<SError>			set(const CString& key, const CString& string);
+					OV<SError>			remove(const CString& key);
 
 	// Properties
 	private:

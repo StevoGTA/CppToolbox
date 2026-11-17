@@ -491,6 +491,32 @@ TVResult<SAudio::ProcessingFormat> CMediaEngine::connect(const I<CAudioProcessor
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+OV<SError> CMediaEngine::connect(const I<CAudioSource>& audioSource, const CAudioProcessors& audioProcessors,
+		const I<CAudioDestination>& audioDestination, const SAudio::ProcessingFormat& audioProcessingFormat) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Iterate audio processors
+	I<CAudioProcessor>	audioProcessor = (const I<CAudioProcessor>&) audioDestination;
+	for (CArray::ItemIndex i = audioProcessors.getCount(); i > 0; i--) {
+		// Connect audio processor
+		TVResult<SAudio::ProcessingFormat>	connectResult =
+													connect(audioProcessors[i - 1], audioProcessor,
+															audioProcessingFormat);
+		ReturnErrorIfResultError(connectResult);
+
+		// Update
+		audioProcessor = audioProcessors[i - 1];
+	}
+
+	// Connect audio source
+	TVResult<SAudio::ProcessingFormat>	connectResult =
+												connect((const I<CAudioProcessor>&) audioSource, audioProcessor,
+														audioProcessingFormat);
+
+	return connectResult.hasError() ? OV<SError>(connectResult.getError()) : OV<SError>();
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 TVResult<TBuffer<Float32> > CMediaEngine::loadFrames(const SMediaSource::Tracks::AudioTrack& audioTrack,
 		Float32 sampleRate, const SAudio::ChannelMap& channelMap) const
 //----------------------------------------------------------------------------------------------------------------------

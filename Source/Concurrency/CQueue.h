@@ -55,24 +55,24 @@ class CSRSWBIPQueue : public CEquatable {
 
 	// Methods
 	public:
-								// CEquatable methods
-				bool			operator==(const CEquatable& other) const
-									{ return this == &other; }
+									// CEquatable methods
+					bool			operator==(const CEquatable& other) const
+										{ return this == &other; }
 
 	protected:
-								// Lifecycle methods
-								CSRSWBIPQueue(UInt32 byteCount);
-								CSRSWBIPQueue(const CSRSWBIPQueue& other);
-		virtual					~CSRSWBIPQueue();
+									// Lifecycle methods
+		explicit					CSRSWBIPQueue(UInt32 byteCount);
+									CSRSWBIPQueue(const CSRSWBIPQueue& other);
+		virtual						~CSRSWBIPQueue();
 
-								// Instance methods
-				ReadBufferInfo	requestRead() const;
-		virtual	void			commitRead(UInt32 byteCount);
+									// Instance methods
+					ReadBufferInfo	requestRead() const;
+		virtual		void			commitRead(UInt32 byteCount);
 
-				WriteBufferInfo	requestWrite(UInt32 requiredByteCount) const;
-		virtual	void			commitWrite(UInt32 byteCount);
+					WriteBufferInfo	requestWrite(UInt32 requiredByteCount) const;
+		virtual		void			commitWrite(UInt32 byteCount);
 
-				void			reset();
+					void			reset();
 
 	// Properties
 	private:
@@ -85,48 +85,50 @@ class CSRSWBIPQueue : public CEquatable {
 template <typename T> class TSRSWBIPQueue : protected CSRSWBIPQueue {
 	// Methods
 	public:
-								// Lifecycle methods
-								TSRSWBIPQueue(UInt32 elementCount) :
-									CSRSWBIPQueue(elementCount * sizeof(T)), mReadBuffer(nil, 0), mWriteBuffer(nil, 0)
-									{}
+											// Lifecycle methods
+		explicit							TSRSWBIPQueue(UInt32 elementCount) :
+												CSRSWBIPQueue(elementCount * sizeof(T)), mReadBuffer(nil, 0),
+														mWriteBuffer(nil, 0)
+												{}
 
-								// Instance methods
-		OR<const TBuffer<T> >	requestRead()
-									{
-										// Check situation
-										ReadBufferInfo	readBufferInfo = CSRSWBIPQueue::requestRead();
-										if (readBufferInfo.hasBuffer()) {
-											// Can read
-											mReadBuffer =
-													TBuffer<T>((T*) readBufferInfo.mBuffer,
-															readBufferInfo.mByteCount / sizeof(T));
+											// Instance methods
+					OR<const TBuffer<T> >	requestRead()
+												{
+													// Check situation
+													ReadBufferInfo	readBufferInfo = CSRSWBIPQueue::requestRead();
+													if (readBufferInfo.hasBuffer()) {
+														// Can read
+														mReadBuffer =
+																TBuffer<T>((T*) readBufferInfo.mBuffer,
+																		readBufferInfo.mByteCount / sizeof(T));
 
-											return OR<const TBuffer<T> >(mReadBuffer);
-										} else
-											// Nothing to read
-											return OR<const TBuffer<T> >();
-									}
-		void					commitRead(UInt32 elementCount)
-									{ CSRSWBIPQueue::commitRead(elementCount * sizeof(T)); }
+														return OR<const TBuffer<T> >(mReadBuffer);
+													} else
+														// Nothing to read
+														return OR<const TBuffer<T> >();
+												}
+					void					commitRead(UInt32 elementCount)
+												{ CSRSWBIPQueue::commitRead(elementCount * sizeof(T)); }
 
-		OR<TBuffer<T> >			requestWrite(UInt32 elementCount)
-									{
-										// Check situation
-										WriteBufferInfo	writeBufferInfo =
-																CSRSWBIPQueue::requestWrite(elementCount * sizeof(T));
-										if (writeBufferInfo.hasBuffer()) {
-											// Can write
-											mWriteBuffer =
-													TBuffer<T>((T*) writeBufferInfo.mBuffer,
-															writeBufferInfo.mByteCount / sizeof(T));
+					OR<TBuffer<T> >			requestWrite(UInt32 elementCount)
+												{
+													// Check situation
+													WriteBufferInfo	writeBufferInfo =
+																			CSRSWBIPQueue::requestWrite(
+																					elementCount * sizeof(T));
+													if (writeBufferInfo.hasBuffer()) {
+														// Can write
+														mWriteBuffer =
+																TBuffer<T>((T*) writeBufferInfo.mBuffer,
+																		writeBufferInfo.mByteCount / sizeof(T));
 
-											return OR<TBuffer<T> >(mWriteBuffer);
-										} else
-											// Not enough space
-											return OR<TBuffer<T> >();
-									}
-		void					commitWrite(UInt32 elementCount)
-									{ CSRSWBIPQueue::commitWrite(elementCount * sizeof(T)); }
+														return OR<TBuffer<T> >(mWriteBuffer);
+													} else
+														// Not enough space
+														return OR<TBuffer<T> >();
+												}
+					void					commitWrite(UInt32 elementCount)
+												{ CSRSWBIPQueue::commitWrite(elementCount * sizeof(T)); }
 
 	// Properties
 	private:
@@ -260,16 +262,16 @@ class CSRSWMessageQueue : public CSRSWBIPQueue {
 
 	// Methods
 	public:
-						// Lifecycle methods
-						CSRSWMessageQueue(UInt32 byteCount);
+							// Lifecycle methods
+		explicit			CSRSWMessageQueue(UInt32 byteCount);
 
-						// Instance methods
-				void	handleAll();
+							// Instance methods
+					void	handleAll();
 
-		virtual	void	submit(const Message& message);
+		virtual		void	submit(const Message& message);
 
-						// Subclass methods
-		virtual	void	handle(const Message& message);
+							// Subclass methods
+		virtual		void	handle(const Message& message);
 };
 
 //----------------------------------------------------------------------------------------------------------------------

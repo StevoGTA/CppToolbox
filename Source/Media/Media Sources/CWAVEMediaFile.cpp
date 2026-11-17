@@ -92,7 +92,8 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 
 			audioFormat.setValue(
 					CPCMAudioCodec::composeAudioFormat(false, (UInt8) sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannelCount()));
+							(Float32) waveFormat.getSamplesPerSecond(),
+							SAudio::ChannelMap((UInt8) waveFormat.getChannelCount())));
 			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
 			if (importSetup.isCreatingAudioDecoder(0))
 				// Create
@@ -113,7 +114,8 @@ I<SMediaSource::ImportResult> CWAVEMediaFile::import(const SMediaSource::ImportS
 
 			audioFormat.setValue(
 					CPCMAudioCodec::composeAudioFormat(true, (UInt8) sampleSize,
-							(Float32) waveFormat.getSamplesPerSecond(), (UInt8) waveFormat.getChannelCount()));
+							(Float32) waveFormat.getSamplesPerSecond(),
+							SAudio::ChannelMap((UInt8) waveFormat.getChannelCount())));
 			mediaSegmentInfo.setValue(CPCMAudioCodec::composeMediaSegmentInfo(*audioFormat, dataChunkByteCount));
 			if (importSetup.isCreatingAudioDecoder(0))
 				// Create

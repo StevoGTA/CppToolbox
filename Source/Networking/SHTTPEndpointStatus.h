@@ -84,20 +84,20 @@ struct SHTTPEndpointStatus {
 
 	// Methods
 	public:
-				// Lifecycle methods
-				SHTTPEndpointStatus(UInt32 code) : mCode(code) {}
+							// Lifecycle methods
+		explicit			SHTTPEndpointStatus(UInt32 code) : mCode(code) {}
 
-				// Instance methods
-		UInt32	getCode() const
-					{ return mCode; }
-		bool	isSuccess() const
-					{ return (mCode >= 200) && (mCode < 300); }
-		CString	getDescription() const;
+							// Instance methods
+					UInt32	getCode() const
+								{ return mCode; }
+					bool	isSuccess() const
+								{ return (mCode >= 200) && (mCode < 300); }
+					CString	getDescription() const;
 
-		bool	operator==(Code code) const
-					{ return mCode == (UInt32) code; }
-		bool	operator!=(Code code) const
-					{ return mCode != (UInt32) code; }
+					bool	operator==(Code code) const
+								{ return mCode == (UInt32) code; }
+					bool	operator!=(Code code) const
+								{ return mCode != (UInt32) code; }
 
 	// Properties
 	private:

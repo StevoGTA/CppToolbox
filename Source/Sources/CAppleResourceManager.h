@@ -18,29 +18,29 @@ class CAppleResourceManager {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												CAppleResourceManager();
-												~CAppleResourceManager();
+													// Lifecycle methods
+													CAppleResourceManager();
+													~CAppleResourceManager();
 
-												// Instance methods
-				OR<CData>						get(OSType resourceType, UInt16 resourceID) const;
-				OV<CString>						getPascalString(OSType resourceType, UInt16 resourceID) const;
+													// Instance methods
+					OR<CData>						get(OSType resourceType, UInt16 resourceID) const;
+					OV<CString>						getPascalString(OSType resourceType, UInt16 resourceID) const;
 
-				void							set(OSType resourceType, UInt16 resourceID, const CString& name,
-														const CData& data);
-				OV<SError>						set(OSType resourceType, UInt16 resourceID, const CString& name,
-														const CString& pascalString);
+					void							set(OSType resourceType, UInt16 resourceID, const CString& name,
+															const CData& data);
+					OV<SError>						set(OSType resourceType, UInt16 resourceID, const CString& name,
+															const CString& pascalString);
 
-				TVResult<CData>					getAsData();
+					TVResult<CData>					getAsData();
 
-												// Class methods
-		static	TIResult<CAppleResourceManager>	from(const CData& data);
-		static	TIResult<CAppleResourceManager>	from(const I<CRandomAccessDataSource>& randomAccessDataSource);
+													// Class methods
+		static		TIResult<CAppleResourceManager>	from(const CData& data);
+		static		TIResult<CAppleResourceManager>	from(const I<CRandomAccessDataSource>& randomAccessDataSource);
 
 	private:
-												// Lifecycle methods
-												CAppleResourceManager(
-														const TNDictionary<TNArray<Resource> >& resourceMap);
+													// Lifecycle methods
+		explicit									CAppleResourceManager(
+															const TNDictionary<TNArray<Resource> >& resourceMap);
 
 	// Properties
 	private:

@@ -12,19 +12,17 @@
 
 struct SFoldersFiles {
 
-								// Lifecycle methods
-								SFoldersFiles(const TArray<CFolder>& folders, const TArray<CFile>& files) :
-									mFolders(folders), mFiles(files)
-									{}
-								SFoldersFiles(const TArray<CFile>& files) :
-									mFiles(files)
-									{}
+											// Lifecycle methods
+											SFoldersFiles(const TArray<CFolder>& folders, const TArray<CFile>& files) :
+												mFolders(folders), mFiles(files)
+												{}
+	explicit								SFoldersFiles(const TArray<CFile>& files) : mFiles(files) {}
 
-								// Instance methods
-	const	TArray<CFolder>&	getFolders() const
-									{ return mFolders; }
-	const	TArray<CFile>&		getFiles() const
-									{ return mFiles; }
+											// Instance methods
+				const	TArray<CFolder>&	getFolders() const
+												{ return mFolders; }
+				const	TArray<CFile>&		getFiles() const
+												{ return mFiles; }
 
 	// Properties
 	private:

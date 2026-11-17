@@ -36,24 +36,24 @@ class COpenGLBufferInfo {
 class COpenGLIndexBufferInfo : COpenGLBufferInfo {
 	// Methods
 	public:
-				// Lifecycle methods
-				COpenGLIndexBufferInfo(const CData& data) : COpenGLBufferInfo()
-					{
-						// Setup
-						glGenBuffers(1, &mIndexDataBuffer);
-						glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexDataBuffer);
-						glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.getByteCount(), *data.getUInt8Buffer(),
-								GL_STATIC_DRAW);
-					}
-				~COpenGLIndexBufferInfo()
-					{
-						// Cleanup
-						glDeleteBuffers(1, &mIndexDataBuffer);
-					}
+							// Lifecycle methods
+		explicit			COpenGLIndexBufferInfo(const CData& data) : COpenGLBufferInfo()
+								{
+									// Setup
+									glGenBuffers(1, &mIndexDataBuffer);
+									glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexDataBuffer);
+									glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.getByteCount(), *data.getUInt8Buffer(),
+											GL_STATIC_DRAW);
+								}
+							~COpenGLIndexBufferInfo()
+								{
+									// Cleanup
+									glDeleteBuffers(1, &mIndexDataBuffer);
+								}
 
-				// Instance methods
-		void	makeCurrent() const
-					{ glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexDataBuffer); }
+							// Instance methods
+					void	makeCurrent() const
+								{ glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexDataBuffer); }
 
 	// Properties
 	private:
@@ -66,31 +66,32 @@ class COpenGLIndexBufferInfo : COpenGLBufferInfo {
 class COpenGLVertexBufferInfo : COpenGLBufferInfo {
 	// Methods
 	public:
-				// Lifecycle methods
-				COpenGLVertexBufferInfo(const CData& data) : COpenGLBufferInfo()
-					{
-						// Setup
-						glGenVertexArrays(1, &mVertexArray);
-						glBindVertexArray(mVertexArray);
+							// Lifecycle methods
+		explicit			COpenGLVertexBufferInfo(const CData& data) : COpenGLBufferInfo()
+								{
+									// Setup
+									glGenVertexArrays(1, &mVertexArray);
+									glBindVertexArray(mVertexArray);
 
-						glGenBuffers(1, &mVertexDataBuffer);
-						glBindBuffer(GL_ARRAY_BUFFER, mVertexDataBuffer);
-						glBufferData(GL_ARRAY_BUFFER, data.getByteCount(), *data.getUInt8Buffer(), GL_STATIC_DRAW);
-					}
-				~COpenGLVertexBufferInfo()
-					{
-						// Cleanup
-						glDeleteBuffers(1, &mVertexDataBuffer);
-						glDeleteVertexArrays(1, &mVertexArray);
-					}
+									glGenBuffers(1, &mVertexDataBuffer);
+									glBindBuffer(GL_ARRAY_BUFFER, mVertexDataBuffer);
+									glBufferData(GL_ARRAY_BUFFER, data.getByteCount(), *data.getUInt8Buffer(),
+											GL_STATIC_DRAW);
+								}
+							~COpenGLVertexBufferInfo()
+								{
+									// Cleanup
+									glDeleteBuffers(1, &mVertexDataBuffer);
+									glDeleteVertexArrays(1, &mVertexArray);
+								}
 
-				// Instance methods
-		void	makeCurrent() const
-					{
-						// Make current
-						glBindVertexArray(mVertexArray);
-						glBindBuffer(GL_ARRAY_BUFFER, mVertexDataBuffer);
-					}
+							// Instance methods
+					void	makeCurrent() const
+								{
+									// Make current
+									glBindVertexArray(mVertexArray);
+									glBindBuffer(GL_ARRAY_BUFFER, mVertexDataBuffer);
+								}
 
 	// Properties
 	private:

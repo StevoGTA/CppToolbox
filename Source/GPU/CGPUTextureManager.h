@@ -17,25 +17,26 @@ class CGPUTextureReference : public CEquatable {
 
 	// Methods
 	public:
-										// Lifecycle methods
-										CGPUTextureReference(Internals& internals);
-										CGPUTextureReference(const CGPUTextureReference& other);
-										~CGPUTextureReference();
+													// Lifecycle methods
+		explicit									CGPUTextureReference(Internals& internals);
+													CGPUTextureReference(const CGPUTextureReference& other);
+													~CGPUTextureReference();
 
-										// CEquatable methods
-				bool					operator==(const CEquatable& other) const
-											{ return mInternals == ((const CGPUTextureReference&) other).mInternals; }
+													// CEquatable methods
+							bool					operator==(const CEquatable& other) const
+														{ return mInternals ==
+																((const CGPUTextureReference&) other).mInternals; }
 
-										// Instance methods
-		const	OV<CString>&			getReference() const;
+													// Instance methods
+					const	OV<CString>&			getReference() const;
 
-				void					load() const;
-				void					finishLoading() const;
-				void					unload() const;
+							void					load() const;
+							void					finishLoading() const;
+							void					unload() const;
 
-		const	I<CGPUTexture>&			getGPUTexture() const;
+					const	I<CGPUTexture>&			getGPUTexture() const;
 
-				CGPUTextureReference&	operator=(const CGPUTextureReference& other);
+							CGPUTextureReference&	operator=(const CGPUTextureReference& other);
 
 	// Properties
 	private:
@@ -63,32 +64,35 @@ class CGPUTextureManager {
 
 	// Methods
 	public:
-								// Lifecycle methods
-								CGPUTextureManager(CGPU& gpu);
-								CGPUTextureManager(const CGPUTextureManager& other);
-								~CGPUTextureManager();
+											// Lifecycle methods
+		explicit							CGPUTextureManager(CGPU& gpu);
+											CGPUTextureManager(const CGPUTextureManager& other);
+											~CGPUTextureManager();
 
-								// Instance methods
-		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, const CString& reference,
-										ReferenceOptions referenceOptions = kReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, CGPUTexture::DataFormat gpuTextureDataFormat,
-										const CString& reference,
-										ReferenceOptions referenceOptions = kReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
-										const CString& reference,
-										ReferenceOptions referenceOptions = kReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
-										CGPUTexture::DataFormat gpuTextureDataFormat, const CString& reference,
-										ReferenceOptions referenceOptions = kReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, S2DSizeU16 dimensions,
-										CGPUTexture::DataFormat gpuTextureDataFormat, const CString& reference,
-										ReferenceOptions referenceOptions = kReferenceOptionsNone);
-		CGPUTextureReference	gpuTextureReference(const I<CGPUTexture>& gpuTexture);
+											// Instance methods
+					CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap, const CString& reference,
+													ReferenceOptions referenceOptions = kReferenceOptionsNone);
+					CGPUTextureReference	gpuTextureReference(const CBitmap& bitmap,
+													CGPUTexture::DataFormat gpuTextureDataFormat,
+													const CString& reference,
+													ReferenceOptions referenceOptions = kReferenceOptionsNone);
+					CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
+													const CString& reference,
+													ReferenceOptions referenceOptions = kReferenceOptionsNone);
+					CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, BitmapProc bitmapProc,
+													CGPUTexture::DataFormat gpuTextureDataFormat,
+													const CString& reference,
+													ReferenceOptions referenceOptions = kReferenceOptionsNone);
+					CGPUTextureReference	gpuTextureReference(const I<CDataSource>& dataSource, S2DSizeU16 dimensions,
+													CGPUTexture::DataFormat gpuTextureDataFormat,
+													const CString& reference,
+													ReferenceOptions referenceOptions = kReferenceOptionsNone);
+					CGPUTextureReference	gpuTextureReference(const I<CGPUTexture>& gpuTexture);
 
-		void					loadAll();
-		void					pauseLoading();
-		void					resumeLoading();
-		void					unloadAll();
+					void					loadAll();
+					void					pauseLoading();
+					void					resumeLoading();
+					void					unloadAll();
 
 	// Properties
 	private:

@@ -85,111 +85,113 @@ struct SValue {
 
 	// Methods
 	public:
-												// Lifecycle methods
-												SValue(const TArray<CDictionary>& value);
-												SValue(const TArray<CString>& value);
-												SValue(const TNumberArray<Float32>& value);
-												SValue(const TNumberArray<UInt8>& value);
-												SValue(const TNumberArray<UInt16>& value);
-												SValue(const TNumberArray<UInt32>& value);
-												SValue(const TNumberArray<UInt64>& value);
-												SValue(bool value);
-												SValue(const CData& value);
-												SValue(const CDictionary& value);
-												SValue(const CString& value);
-												SValue(Float32 value);
-												SValue(Float64 value);
-												SValue(SInt8 value);
-												SValue(SInt16 value);
-												SValue(SInt32 value);
-												SValue(SInt64 value);
-												SValue(UInt8 value);
-												SValue(UInt16 value);
-												SValue(UInt32 value);
-												SValue(UInt64 value);
-												SValue(Opaque value);
-												SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc = nil);
+													// Lifecycle methods
+													SValue(const TArray<CDictionary>& value);
+													SValue(const TArray<CString>& value);
+													SValue(const TNumberArray<Float32>& value);
+													SValue(const TNumberArray<UInt8>& value);
+													SValue(const TNumberArray<UInt16>& value);
+													SValue(const TNumberArray<UInt32>& value);
+													SValue(const TNumberArray<UInt64>& value);
+													SValue(bool value);
+													SValue(const CData& value);
+													SValue(const CDictionary& value);
+													SValue(const CString& value);
+													SValue(Float32 value);
+													SValue(Float64 value);
+													SValue(SInt8 value);
+													SValue(SInt16 value);
+													SValue(SInt32 value);
+													SValue(SInt64 value);
+													SValue(UInt8 value);
+													SValue(UInt16 value);
+													SValue(UInt32 value);
+													SValue(UInt64 value);
+													SValue(Opaque value);
+													SValue(const SValue& other, OpaqueCopyProc opaqueCopyProc = nil);
 
-												// Instance methods
-						Type					getType() const
-													{ return mType; }
-						bool					canCoerceToType(Type type) const;
+													// Instance methods
+							Type					getType() const
+														{ return mType; }
+							bool					canCoerceToType(Type type) const;
 
-				const	TArray<CDictionary>&	getArrayOfDictionaries(
-														const TArray<CDictionary>& defaultValue =
-																TNArray<CDictionary>()) const;
-				const	TArray<CString>&		getArrayOfStrings(
-														const TArray<CString>& defaultValue = TNArray<CString>()) const;
-				const	TNumberArray<Float32>&	getArrayOfFloat32s(
-														const TNumberArray<Float32>& defaultValue =
-																TNumberArray<Float32>()) const;
-						TNumberArray<UInt8>		getArrayOfUInt8s(
-														const TNumberArray<UInt8>& defaultValue =
-																TNumberArray<UInt8>()) const;
-						TNumberArray<UInt16>	getArrayOfUInt16s(
-														const TNumberArray<UInt16>& defaultValue =
-																TNumberArray<UInt16>()) const;
-						TNumberArray<UInt32>	getArrayOfUInt32s(
-														const TNumberArray<UInt32>& defaultValue =
-																TNumberArray<UInt32>()) const;
-						TNumberArray<UInt64>	getArrayOfUInt64s(
-														const TNumberArray<UInt64>& defaultValue =
-																TNumberArray<UInt64>()) const;
-						bool					getBool(bool defaultValue = false) const;
-						void					getValue(bool& value, bool defaultValue = false) const
-													{ value = getBool(defaultValue); }
-				const	CData&					getData(const CData& defaultValue = CData::mEmpty) const;
-				const	CDictionary&			getDictionary(const CDictionary& defaultValue = getEmptyDictionary())
-														const;
-				const	CString&				getString(const CString& defaultValue = CString::mEmpty) const;
-						Float32					getFloat32(Float32 defaultValue = 0.0) const;
-						void					getValue(Float32& value, Float32 defaultValue = 0.0) const
-													{ value = getFloat32(defaultValue); }
-						Float64					getFloat64(Float64 defaultValue = 0.0) const;
-						void					getValue(Float64& value, Float64 defaultValue = 0.0) const
-													{ value = getFloat64(defaultValue); }
-						SInt8					getSInt8(SInt8 defaultValue = 0) const;
-						void					getValue(SInt8& value, SInt8 defaultValue = 0) const
-													{ value = getSInt8(defaultValue); }
-						SInt16					getSInt16(SInt16 defaultValue = 0) const;
-						void					getValue(SInt16& value, SInt16 defaultValue = 0) const
-													{ value = getSInt16(defaultValue); }
-						SInt32					getSInt32(SInt32 defaultValue = 0) const;
-						void					getValue(SInt32& value, SInt32 defaultValue = 0) const
-													{ value = getSInt32(defaultValue); }
-						SInt64					getSInt64(SInt64 defaultValue = 0) const;
-						void					getValue(SInt64& value, SInt64 defaultValue = 0) const
-													{ value = getSInt64(defaultValue); }
-						UInt8					getUInt8(UInt8 defaultValue = 0) const;
-						void					getValue(UInt8& value, UInt8 defaultValue = 0) const
-													{ value = getUInt8(defaultValue); }
-						UInt16					getUInt16(UInt16 defaultValue = 0) const;
-						void					getValue(UInt16& value, UInt16 defaultValue = 0) const
-													{ value = getUInt16(defaultValue); }
-						UInt32					getUInt32(UInt32 defaultValue = 0) const;
-						void					getValue(UInt32& value, UInt32 defaultValue = 0) const
-													{ value = getUInt32(defaultValue); }
-						UInt64					getUInt64(UInt64 defaultValue = 0) const;
-						void					getValue(UInt64& value, UInt64 defaultValue = 0) const
-													{ value = getUInt64(defaultValue); }
-						Opaque					getOpaque() const;
+					const	TArray<CDictionary>&	getArrayOfDictionaries(
+															const TArray<CDictionary>& defaultValue =
+																	TNArray<CDictionary>()) const;
+					const	TArray<CString>&		getArrayOfStrings(
+															const TArray<CString>& defaultValue = TNArray<CString>())
+															const;
+					const	TNumberArray<Float32>&	getArrayOfFloat32s(
+															const TNumberArray<Float32>& defaultValue =
+																	TNumberArray<Float32>()) const;
+							TNumberArray<UInt8>		getArrayOfUInt8s(
+															const TNumberArray<UInt8>& defaultValue =
+																	TNumberArray<UInt8>()) const;
+							TNumberArray<UInt16>	getArrayOfUInt16s(
+															const TNumberArray<UInt16>& defaultValue =
+																	TNumberArray<UInt16>()) const;
+							TNumberArray<UInt32>	getArrayOfUInt32s(
+															const TNumberArray<UInt32>& defaultValue =
+																	TNumberArray<UInt32>()) const;
+							TNumberArray<UInt64>	getArrayOfUInt64s(
+															const TNumberArray<UInt64>& defaultValue =
+																	TNumberArray<UInt64>()) const;
+							bool					getBool(bool defaultValue = false) const;
+							void					getValue(bool& value, bool defaultValue = false) const
+														{ value = getBool(defaultValue); }
+					const	CData&					getData(const CData& defaultValue = CData::mEmpty) const;
+					const	CDictionary&			getDictionary(
+															const CDictionary& defaultValue = getEmptyDictionary())
+															const;
+					const	CString&				getString(const CString& defaultValue = CString::mEmpty) const;
+							Float32					getFloat32(Float32 defaultValue = 0.0) const;
+							void					getValue(Float32& value, Float32 defaultValue = 0.0) const
+														{ value = getFloat32(defaultValue); }
+							Float64					getFloat64(Float64 defaultValue = 0.0) const;
+							void					getValue(Float64& value, Float64 defaultValue = 0.0) const
+														{ value = getFloat64(defaultValue); }
+							SInt8					getSInt8(SInt8 defaultValue = 0) const;
+							void					getValue(SInt8& value, SInt8 defaultValue = 0) const
+														{ value = getSInt8(defaultValue); }
+							SInt16					getSInt16(SInt16 defaultValue = 0) const;
+							void					getValue(SInt16& value, SInt16 defaultValue = 0) const
+														{ value = getSInt16(defaultValue); }
+							SInt32					getSInt32(SInt32 defaultValue = 0) const;
+							void					getValue(SInt32& value, SInt32 defaultValue = 0) const
+														{ value = getSInt32(defaultValue); }
+							SInt64					getSInt64(SInt64 defaultValue = 0) const;
+							void					getValue(SInt64& value, SInt64 defaultValue = 0) const
+														{ value = getSInt64(defaultValue); }
+							UInt8					getUInt8(UInt8 defaultValue = 0) const;
+							void					getValue(UInt8& value, UInt8 defaultValue = 0) const
+														{ value = getUInt8(defaultValue); }
+							UInt16					getUInt16(UInt16 defaultValue = 0) const;
+							void					getValue(UInt16& value, UInt16 defaultValue = 0) const
+														{ value = getUInt16(defaultValue); }
+							UInt32					getUInt32(UInt32 defaultValue = 0) const;
+							void					getValue(UInt32& value, UInt32 defaultValue = 0) const
+														{ value = getUInt32(defaultValue); }
+							UInt64					getUInt64(UInt64 defaultValue = 0) const;
+							void					getValue(UInt64& value, UInt64 defaultValue = 0) const
+														{ value = getUInt64(defaultValue); }
+							Opaque					getOpaque() const;
 
-						bool					equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc = nil)
-														const;
+							bool					equals(const SValue& other, OpaqueEqualsProc opaqueEqualsProc = nil)
+															const;
 
-						void					dispose(OpaqueDisposeProc opaqueDisposeProc);
+							void					dispose(OpaqueDisposeProc opaqueDisposeProc);
 
-						SValue&					operator=(const SValue& other);
+							SValue&					operator=(const SValue& other);
 
-												// Class methods
-		static			SValue					emptyArray();
+													// Class methods
+		static				SValue					emptyArray();
 
 	private:
-												// Lifecycle methods
-												SValue(Type type = kTypeEmpty);
+													// Lifecycle methods
+		explicit									SValue(Type type = kTypeEmpty);
 
-												// Class methods
-		static	const	CDictionary&			getEmptyDictionary();
+													// Class methods
+		static		const	CDictionary&			getEmptyDictionary();
 
 	// Properties
 	public:

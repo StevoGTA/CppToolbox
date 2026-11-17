@@ -33,63 +33,63 @@
 template <typename T> class I : public CHashable {
 	// Methods
 	public:
-						// Lifecycle methods
-						I(T* instance) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
-						I(const I<T>& other) :
-							mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
-							{ (*mReferenceCount)++; }
-						~I()
-							{
-								// One less reference
-								if (--(*mReferenceCount) == 0) {
-									// All done
-									Delete(mInstance);
-									Delete(mReferenceCount);
+							// Lifecycle methods
+		explicit			I(T* instance) : mInstance(instance), mReferenceCount(new std::atomic<UInt32>(1)) {}
+							I(const I<T>& other) :
+								mInstance(other.mInstance), mReferenceCount(other.mReferenceCount)
+								{ (*mReferenceCount)++; }
+							~I()
+								{
+									// One less reference
+									if (--(*mReferenceCount) == 0) {
+										// All done
+										Delete(mInstance);
+										Delete(mReferenceCount);
+									}
 								}
-							}
 
-						// CEquatable methods
-				bool	operator==(const CEquatable& other) const
-							{ return mInstance == ((const I&) other).mInstance; }
+							// CEquatable methods
+					bool	operator==(const CEquatable& other) const
+								{ return mInstance == ((const I&) other).mInstance; }
 
-						// CHashable methods
-				void	hashInto(CHashable::HashCollector& hashableHashCollector) const
-							{ hashableHashCollector.add((const UInt8*) &mInstance, sizeof(T*)); }
+							// CHashable methods
+					void	hashInto(CHashable::HashCollector& hashableHashCollector) const
+								{ hashableHashCollector.add((const UInt8*) &mInstance, sizeof(T*)); }
 
-						// Instance methods
-				UInt32	getReferenceCount() const
-							{ return mReferenceCount->load(); }
+							// Instance methods
+					UInt32	getReferenceCount() const
+								{ return mReferenceCount->load(); }
 
-				T&		operator*() const
-							{ return *mInstance; }
-				T*		operator->() const
-							{ return mInstance; }
+					T&		operator*() const
+								{ return *mInstance; }
+					T*		operator->() const
+								{ return mInstance; }
 
-				I<T>&	operator=(const I<T>& other)
-							{
-								// Check if assignment to self
-								if (this == &other)
+					I<T>&	operator=(const I<T>& other)
+								{
+									// Check if assignment to self
+									if (this == &other)
+										return *this;
+
+									// Check for instance
+									if (--(*mReferenceCount) == 0) {
+										// All done
+										Delete(mInstance);
+										Delete(mReferenceCount);
+									}
+
+									// Copy
+									mInstance = other.mInstance;
+									mReferenceCount = other.mReferenceCount;
+
+									// Additional reference
+									(*mReferenceCount)++;
+
 									return *this;
-
-								// Check for instance
-								if (--(*mReferenceCount) == 0) {
-									// All done
-									Delete(mInstance);
-									Delete(mReferenceCount);
 								}
 
-								// Copy
-								mInstance = other.mInstance;
-								mReferenceCount = other.mReferenceCount;
-
-								// Additional reference
-								(*mReferenceCount)++;
-
-								return *this;
-							}
-
-		static	bool	doesInstanceMatch(const I<T>& reference, T* instance)
-							{ return reference.mInstance == instance; }
+		static		bool	doesInstanceMatch(const I<T>& reference, T* instance)
+								{ return reference.mInstance == instance; }
 
 	// Properties
 	private:

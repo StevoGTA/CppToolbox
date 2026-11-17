@@ -31,6 +31,8 @@ const	UniversalTimeInterval	kUniversalTimeInterval1601To2001	= 12622780800.0;
 const	UniversalTimeInterval	kUniversalTimeInterval1904To2001	= 3061152000.0;
 const	UniversalTimeInterval	kUniversalTimeInterval1970To2001	= 978307200.0;
 
+typedef	TRange<UniversalTimeInterval>	SUniversalTimeIntervalRange;
+
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - SUniversalTime
 
@@ -235,77 +237,77 @@ struct SGregorianDate {
 	// Methods
 	public:
 
-										// Lifecycle methods
-										SGregorianDate(UInt32 year, UInt8 month = 1, UInt8 day = 1, UInt8 hour = 0,
-												UInt8 minute = 0, Float32 second = 0.0, UInt8 dayOfWeek = 0) :
-											mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute),
-													mSecond(second), mDayOfWeek(dayOfWeek)
-											{}
-										SGregorianDate(const Components& components) :
-											mYear(components.getYear().getValue(1970)),
-													mMonth(components.getMonth().getValue(1)),
-													mDay(components.getDay().getValue(1)),
-													mHour(components.getHour().getValue(0)),
-													mMinute(components.getMinute().getValue(0)),
-													mSecond(components.getSecond().getValue(0.0)), mDayOfWeek(0)
-											{}
-										SGregorianDate(UniversalTime time = SUniversalTime::getCurrent());
+											// Lifecycle methods
+		explicit							SGregorianDate(UInt32 year, UInt8 month = 1, UInt8 day = 1, UInt8 hour = 0,
+													UInt8 minute = 0, Float32 second = 0.0, UInt8 dayOfWeek = 0) :
+												mYear(year), mMonth(month), mDay(day), mHour(hour), mMinute(minute),
+														mSecond(second), mDayOfWeek(dayOfWeek)
+												{}
+		explicit							SGregorianDate(const Components& components) :
+												mYear(components.getYear().getValue(1970)),
+														mMonth(components.getMonth().getValue(1)),
+														mDay(components.getDay().getValue(1)),
+														mHour(components.getHour().getValue(0)),
+														mMinute(components.getMinute().getValue(0)),
+														mSecond(components.getSecond().getValue(0.0)), mDayOfWeek(0)
+												{}
+		explicit							SGregorianDate(UniversalTime time = SUniversalTime::getCurrent());
 
-										// Instance methods
-				UInt32					getYear() const
-											{ return mYear; }
-				UInt8					getMonth() const
-											{ return mMonth; }
-				UInt8					getDay() const
-											{ return mDay; }
-				UInt8					getHour() const
-											{ return mHour; }
-				UInt8					getMinute() const
-											{ return mMinute; }
-				Float32					getSecond() const
-											{ return mSecond; }
-				UInt8					getDayOfWeek() const
-											{ return mDayOfWeek; }
+											// Instance methods
+					UInt32					getYear() const
+												{ return mYear; }
+					UInt8					getMonth() const
+												{ return mMonth; }
+					UInt8					getDay() const
+												{ return mDay; }
+					UInt8					getHour() const
+												{ return mHour; }
+					UInt8					getMinute() const
+												{ return mMinute; }
+					Float32					getSecond() const
+												{ return mSecond; }
+					UInt8					getDayOfWeek() const
+												{ return mDayOfWeek; }
 
-				Components				getComponents() const
-											{ return Components(mYear, mMonth, mDay, mHour, mMinute, mSecond); }
-				UniversalTime			getUniversalTime() const;
+					Components				getComponents() const
+												{ return Components(mYear, mMonth, mDay, mHour, mMinute, mSecond); }
+					UniversalTime			getUniversalTime() const;
 
-				CString					getMonthString(bool abbrieviated = false) const
-											{ return getMonthString(mMonth, abbrieviated); }
-				CString					getDayOfWeekString(bool abbrieviated = false) const;
-				CString					getHourString(bool use24HourFormat = false) const;
-				CString					getString(DateStyle dateStyle, TimeStyle timeStyle) const;
-				CString					getString(StringStyle stringStyle = kStringStyleRFC339Extended) const;
+					CString					getMonthString(bool abbrieviated = false) const
+												{ return getMonthString(mMonth, abbrieviated); }
+					CString					getDayOfWeekString(bool abbrieviated = false) const;
+					CString					getHourString(bool use24HourFormat = false) const;
+					CString					getString(DateStyle dateStyle, TimeStyle timeStyle) const;
+					CString					getString(StringStyle stringStyle = kStringStyleRFC339Extended) const;
 
-				bool					operator==(const SGregorianDate& other) const
-											{ return (mYear == other.mYear) && (mMonth == other.mMonth) &&
-													(mDay == other.mDay) && (mHour == other.mHour) &&
-													(mMinute == other.mMinute) && (mSecond == other.mSecond); }
-				bool					operator!=(const SGregorianDate& other) const
-											{ return (mYear != other.mYear) || (mMonth != other.mMonth) ||
-													(mDay != other.mDay) || (mHour != other.mHour) ||
-													(mMinute != other.mMinute) || (mSecond != other.mSecond); }
-				SGregorianDate			operator+(const Units& units) const;
-				SGregorianDate&			operator+=(const Units& units)
-											{ *this = *this + units; return *this; }
+					bool					operator==(const SGregorianDate& other) const
+												{ return (mYear == other.mYear) && (mMonth == other.mMonth) &&
+														(mDay == other.mDay) && (mHour == other.mHour) &&
+														(mMinute == other.mMinute) && (mSecond == other.mSecond); }
+					bool					operator!=(const SGregorianDate& other) const
+												{ return (mYear != other.mYear) || (mMonth != other.mMonth) ||
+														(mDay != other.mDay) || (mHour != other.mHour) ||
+														(mMinute != other.mMinute) || (mSecond != other.mSecond); }
+					SGregorianDate			operator+(const Units& units) const;
+					SGregorianDate&			operator+=(const Units& units)
+												{ *this = *this + units; return *this; }
 
-										// Class methods
-		static	UInt8					getMaxDays(UInt8 month);
+											// Class methods
+		static		UInt8					getMaxDays(UInt8 month);
 
-		static	CString					getMonthString(UInt8 month, bool abbrieviated = false);
-		static	CString					getAMString();
-		static	CString					getPMString();
+		static		CString					getMonthString(UInt8 month, bool abbrieviated = false);
+		static		CString					getAMString();
+		static		CString					getPMString();
 
-		static	OV<SGregorianDate>		getFrom(const CString& string,
-												StringStyle stringStyle = kStringStyleRFC339Extended);
-		static	OV<SGregorianDate>		getFrom(const OR<CString>& string,
-												StringStyle stringStyle = kStringStyleRFC339Extended)
-											{ return (string.hasReference()) ?
-													getFrom(*string, stringStyle) : OV<SGregorianDate>(); }
+		static		OV<SGregorianDate>		getFrom(const CString& string,
+													StringStyle stringStyle = kStringStyleRFC339Extended);
+		static		OV<SGregorianDate>		getFrom(const OR<CString>& string,
+													StringStyle stringStyle = kStringStyleRFC339Extended)
+												{ return (string.hasReference()) ?
+														getFrom(*string, stringStyle) : OV<SGregorianDate>(); }
 
-		static	CString					getCurrentTimeZoneName();
-		static	UniversalTimeInterval	getCurrentTimeZoneOffset();
+		static		CString					getCurrentTimeZoneName();
+		static		UniversalTimeInterval	getCurrentTimeZoneOffset();
 
 	// Properties
 	private:

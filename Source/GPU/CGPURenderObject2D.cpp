@@ -275,15 +275,12 @@ void CGPURenderObject2D::render(const Indexes& indexes, const RenderInfo& render
 	CGPURenderState		renderState(CGPURenderState::kMode2D, vertexShader, fragmentShader);
 
 	// Iterate index ranges
-	for (TArray<TIndexRange<UInt16> >::Iterator	iterator = indexes.getRanges().getIterator(); iterator; iterator++) {
-		// Get index range
-		const	TIndexRange<UInt16>&	indexRange = *iterator;
-
+	for (TArray<TRange<UInt16> >::Iterator	iterator = indexes.getRanges().getIterator(); iterator; iterator++) {
 		// Setup and render
 		renderState.setModelMatrix(modelMatrix);
 		renderState.setVertexBuffer(mInternals->mGPUVertexBuffer);
 		renderState.setTextures(gpuTextures);
 		mInternals->mGPU.render(renderState, CGPU::kRenderTypeTriangleStrip,
-				(indexRange.mEnd - indexRange.mStart) * 6 + 2 + 2, indexRange.mStart * 6 + 1);
+				(iterator->getLength() - 1) * 6 + 2 + 2, iterator->getStart() * 6 + 1);
 	}
 }
