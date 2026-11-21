@@ -843,6 +843,25 @@ void CSQLiteTable::update(const TArray<TableColumnAndValue>& tableColumnAndValue
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CSQLiteTable& CSQLiteTable::operator=(const CSQLiteTable& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
+// MARK: Class methods
+
+//----------------------------------------------------------------------------------------------------------------------
 TArray<CSQLiteTable> CSQLiteTable::getAll(CSQLiteStatementPerformer& statementPerformer)
 //----------------------------------------------------------------------------------------------------------------------
 {

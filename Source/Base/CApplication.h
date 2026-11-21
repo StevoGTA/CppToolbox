@@ -39,6 +39,8 @@ class CApplication {
 
 				TVResult<CData>		getStorageData() const;
 
+				CApplication&		operator=(const CApplication& other);
+
 									// Class methods
 		static	CApplication		getCurrent();
 

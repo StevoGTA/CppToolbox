@@ -81,6 +81,8 @@ class CFileWriter {
 
 							OV<SError>		close() const;
 
+							CFileWriter&	operator=(const CFileWriter& other);
+
 											// Class methods
 		static				OV<SError>		write(const CFile& file, const CData& data);
 		static				OV<SError>		write(const CFile& file, const CFile::AppleMetadata& appleMetadata);

@@ -300,6 +300,9 @@ class CSQLiteTable {
 														{ update(TSArray<TableColumnAndValue>(tableColumnAndValue),
 																where); }
 
+						CSQLiteTable&				operator=(const CSQLiteTable& other);
+
+													// Class methods
 		static			TArray<CSQLiteTable>		getAll(CSQLiteStatementPerformer& statementPerformer);
 
 	private:

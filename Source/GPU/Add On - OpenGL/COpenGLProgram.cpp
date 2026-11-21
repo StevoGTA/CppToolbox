@@ -125,3 +125,22 @@ void COpenGLProgram::prepare(const SMatrix4x4_32& projectionMatrix, const SMatri
 	mInternals->mVertexShader.setUniforms(mInternals->mUniformInfo, projectionMatrix, viewMatrix, modelMatrix);
 	mInternals->mFragmentShader.setUniforms(mInternals->mUniformInfo);
 }
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+COpenGLProgram& COpenGLProgram::operator=(const COpenGLProgram& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

@@ -841,3 +841,20 @@ void CBitmap::setPixel(const S2DPointS32& point, const CColor& color)
 		}
 	}
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CBitmap& CBitmap::operator=(const CBitmap& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

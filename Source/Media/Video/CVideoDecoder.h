@@ -18,18 +18,21 @@ class CVideoDecoder : public CVideoSource {
 
 	// Methods
 	public:
-							// Lifecycle methods
-							CVideoDecoder(const SVideo::Format& videoFormat, const I<CDecodeVideoCodec>& videoCodec,
-									const CVideoProcessor::Format& videoProcessorFormat, const CString& identifier);
-							CVideoDecoder(const CVideoDecoder& other);
-							~CVideoDecoder();
+						// Lifecycle methods
+						CVideoDecoder(const SVideo::Format& videoFormat, const I<CDecodeVideoCodec>& videoCodec,
+								const CVideoProcessor::Format& videoProcessorFormat, const CString& identifier);
+						CVideoDecoder(const CVideoDecoder& other);
+						~CVideoDecoder();
 
-							// CVideoProcessor methods
-		TArray<CString>		getSetupDescription(const CString& indent);
+						// CVideoProcessor methods
+		TArray<CString>	getSetupDescription(const CString& indent);
 
-		void				seek(UniversalTimeInterval timeInterval);
+		void			seek(UniversalTimeInterval timeInterval);
 
-		PerformResult		perform();
+		PerformResult	perform();
+
+						// Instance methods
+		CVideoDecoder&	operator=(const CVideoDecoder& other);
 
 	// Properties
 	private:

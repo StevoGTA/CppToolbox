@@ -800,3 +800,20 @@ void CGPUTextureManager::unloadAll()
 		// Unload
 		iterator->unload();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPUTextureManager& CGPUTextureManager::operator=(const CGPUTextureManager& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

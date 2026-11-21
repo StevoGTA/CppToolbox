@@ -106,3 +106,22 @@ CVideoProcessor::PerformResult CVideoDecoder::perform()
 
 	return PerformResult(currentTimeInterval, *videoFrame);
 }
+
+// MARK: Instance methods
+
+//----------------------------------------------------------------------------------------------------------------------
+CVideoDecoder& CVideoDecoder::operator=(const CVideoDecoder& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

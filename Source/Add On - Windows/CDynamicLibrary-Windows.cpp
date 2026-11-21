@@ -92,6 +92,23 @@ OV<void*> CDynamicLibrary::getSymbolAddress(const CString& name) const
 	return (address != NULL) ? OV<void*>((void*) address) : OV<void*>();
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CDynamicLibrary& CDynamicLibrary::operator=(const CDynamicLibrary& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------

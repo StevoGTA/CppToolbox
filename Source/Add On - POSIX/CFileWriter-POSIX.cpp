@@ -378,3 +378,20 @@ OV<SError> CFileWriter::close() const
 {
 	return mInternals->close();
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CFileWriter& CFileWriter::operator=(const CFileWriter& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

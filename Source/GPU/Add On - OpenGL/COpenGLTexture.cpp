@@ -364,3 +364,20 @@ bool COpenGLTexture::hasTransparency() const
 {
 	return mInternals->mHasTransparency;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+COpenGLTexture& COpenGLTexture::operator=(const COpenGLTexture& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

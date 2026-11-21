@@ -15,37 +15,43 @@
 //		queried as the currentPoint.
 
 class C2DPath {
+	// Classes
+	private:
+		class	Internals;
+
 	// Methods
 	public:
-						// Lifecycle methods
-						C2DPath();
-						C2DPath(const C2DPath& other);
-		virtual			~C2DPath();
+							// Lifecycle methods
+							C2DPath();
+							C2DPath(const C2DPath& other);
+		virtual				~C2DPath();
+
+							// Instance methods
+				C2DPath&	operator=(const C2DPath& other);
 
 	protected:
-						// Instance methods
-				void	addMoveTo(const CData& data);
-				void	addLineTo(const CData& data);
-				void	addQuadCurveTo(const CData& data);
-				void	addCubicCurveTo(const CData& data);
-				void	addSmallerArcCounterclockwiseTo(const CData& data);
-				void	addSmallerArcClockwiseTo(const CData& data);
-				void	addLargerArcCounterclockwiseTo(const CData& data);
-				void	addLargerArcClockwiseTo(const CData& data);
-				void	iterateSegments(bool constructing);
-				CData	getInitialSegmentData() const;
-		virtual	UInt32	iterateMoveTo(bool constructing, const CData& data) { return 0; }
-		virtual	UInt32	iterateLineTo(bool constructing, const CData& data) { return 0; }
-		virtual	UInt32	iterateQuadCurveTo(bool constructing, const CData& data) { return 0; }
-		virtual	UInt32	iterateCubicCurveTo(bool constructing, const CData& data) { return 0; }
-		virtual	UInt32	iterateSmallerArcCounterclockwiseTo(bool constructing, const CData& data) { return 0; }
-		virtual	UInt32	iterateSmallerArcClockwiseTo(bool constructing, const CData& data) { return 0; }
-		virtual	UInt32	iterateLargerArcCounterclockwiseTo(bool constructing, const CData& data) { return 0; }
-		virtual	UInt32	iterateLargerArcClockwiseTo(bool constructing, const CData& data) { return 0; }
+							// Instance methods
+				void		addMoveTo(const CData& data);
+				void		addLineTo(const CData& data);
+				void		addQuadCurveTo(const CData& data);
+				void		addCubicCurveTo(const CData& data);
+				void		addSmallerArcCounterclockwiseTo(const CData& data);
+				void		addSmallerArcClockwiseTo(const CData& data);
+				void		addLargerArcCounterclockwiseTo(const CData& data);
+				void		addLargerArcClockwiseTo(const CData& data);
+				void		iterateSegments(bool constructing);
+				CData		getInitialSegmentData() const;
+		virtual	UInt32		iterateMoveTo(bool constructing, const CData& data) { return 0; }
+		virtual	UInt32		iterateLineTo(bool constructing, const CData& data) { return 0; }
+		virtual	UInt32		iterateQuadCurveTo(bool constructing, const CData& data) { return 0; }
+		virtual	UInt32		iterateCubicCurveTo(bool constructing, const CData& data) { return 0; }
+		virtual	UInt32		iterateSmallerArcCounterclockwiseTo(bool constructing, const CData& data) { return 0; }
+		virtual	UInt32		iterateSmallerArcClockwiseTo(bool constructing, const CData& data) { return 0; }
+		virtual	UInt32		iterateLargerArcCounterclockwiseTo(bool constructing, const CData& data) { return 0; }
+		virtual	UInt32		iterateLargerArcClockwiseTo(bool constructing, const CData& data) { return 0; }
 
 	// Properties
 	private:
-		class	Internals;
 		Internals*	mInternals;
 };
 

@@ -98,6 +98,8 @@ class CSQLiteTableColumn : public CEquatable {
 						Options				getOptions() const;
 						OV<SSQLiteValue>	getDefaultValue() const;
 
+						CSQLiteTableColumn&	operator=(const CSQLiteTableColumn& other);
+
 											// Class methods
 		static	bool						isInteger(Kind kind)
 												{ return kind == kKindInteger; }

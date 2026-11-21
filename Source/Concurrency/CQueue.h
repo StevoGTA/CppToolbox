@@ -74,6 +74,8 @@ class CSRSWBIPQueue : public CEquatable {
 
 					void			reset();
 
+					CSRSWBIPQueue&	operator=(const CSRSWBIPQueue& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

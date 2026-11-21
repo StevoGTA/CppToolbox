@@ -54,6 +54,8 @@ class CBitReader {
 		TVResult<SInt32>	readSEExpGolombCode() const;
 		TVResult<UInt32>	readUEExpGolombCode() const;
 
+		CBitReader&			operator=(const CBitReader& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

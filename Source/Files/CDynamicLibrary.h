@@ -78,6 +78,8 @@ class CDynamicLibrary {
 															return address.hasValue() ? OV<T>((T) *address) : OV<T>();
 														}
 
+						CDynamicLibrary&			operator=(const CDynamicLibrary& other);
+
 													// Class methods
 #if defined(TARGET_OS_MACOS)
 		static			OV<CFile>					getExecutableFile(const CFolder& bundleFolder);

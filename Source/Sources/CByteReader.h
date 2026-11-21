@@ -55,6 +55,8 @@ class CByteReader {
 				TVResult<OSType>			readOSType() const;
 				TVResult<CUUID>				readUUID() const;
 
+				CByteReader&				operator=(const CByteReader& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

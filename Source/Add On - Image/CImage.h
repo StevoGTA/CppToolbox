@@ -36,6 +36,8 @@ class CImage {
 					TVResult<CBitmap>	getBitmap() const;
 					OV<SError>			decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const;
 
+					CImage&				operator=(const CImage& other);
+
 										// Class methods
 		static		OV<Type>			getTypeFromResourceName(const CString& resourceName);
 		static		OV<Type>			getTypeFromMIMEType(const CString& MIMEType);

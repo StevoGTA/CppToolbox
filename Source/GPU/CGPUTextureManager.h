@@ -94,6 +94,8 @@ class CGPUTextureManager {
 					void					resumeLoading();
 					void					unloadAll();
 
+					CGPUTextureManager&		operator=(const CGPUTextureManager& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

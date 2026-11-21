@@ -9,6 +9,7 @@
 
 #include <appmodel.h>
 #include <shellapi.h>
+#include <winrt/Windows.ApplicationModel.h>
 
 #pragma comment(lib, "shell32")
 #pragma comment(lib, "version")
@@ -177,6 +178,23 @@ TVResult<CData> CApplication::getStorageData() const
 	return TVResult<CData>(*mInternals->mFilesystemPath.getString().getData(CString::kEncodingUTF8));
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CApplication& CApplication::operator=(const CApplication& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Copy
+	mInternals->mFilesystemPath = other.mInternals->mFilesystemPath;
+	mInternals->mDisplayName = other.mInternals->mDisplayName;
+	mInternals->mVersion = other.mInternals->mVersion;
+	mInternals->mCopyright = other.mInternals->mCopyright;
+
+	return *this;
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -190,17 +208,23 @@ CApplication CApplication::getCurrent()
 	CString			modulePathString(modulePath);
 	CFilesystemPath	filesystemPath(modulePathString);
 
-	// Compose display name from the executable filename
+	// Compose display name from the executable's FileDescription, falling back to its filename
+	CString		fileDescription = Internals::getVersionResourceString(modulePathString, L"FileDescription");
 	OV<CString>	lastComponent = filesystemPath.getLastComponentDeletingExtension();
-	CString		displayName = lastComponent.hasValue() ? *lastComponent : CString::mEmpty;
+	CString		displayName =
+						!fileDescription.isEmpty() ?
+								fileDescription : (lastComponent.hasValue() ? *lastComponent : CString::mEmpty);
 
-	// Compose version from the package identity (when running with package identity)
+	// Compose display name and version from the package identity (when running with package identity)
 	CString	version;
 	UINT32	packageIDByteCount = 0;
 	if (::GetCurrentPackageId(&packageIDByteCount, nil) == ERROR_INSUFFICIENT_BUFFER) {
 		// Get package id
 		TBuffer<UInt8>	packageIDBuffer((UInt64) packageIDByteCount);
 		if (::GetCurrentPackageId(&packageIDByteCount, *packageIDBuffer) == ERROR_SUCCESS) {
+			// Compose display name - the manifest's, which reads as the product is named
+			displayName = CString(winrt::Windows::ApplicationModel::Package::Current().DisplayName().data());
+
 			// Compose version
 			PACKAGE_ID*	packageID = (PACKAGE_ID*) *packageIDBuffer;
 			version =
@@ -213,7 +237,11 @@ CApplication CApplication::getCurrent()
 		// Fall back to the executable's version resource when not running with package identity
 		version = Internals::getVersionResourceString(modulePathString, L"ProductVersion");
 
-	return CApplication(filesystemPath, displayName, version, OV<CString>());
+	// Compose copyright from the executable's version resource
+	CString	copyright = Internals::getVersionResourceString(modulePathString, L"LegalCopyright");
+
+	return CApplication(filesystemPath, displayName, version,
+			!copyright.isEmpty() ? OV<CString>(copyright) : OV<CString>());
 }
 
 //----------------------------------------------------------------------------------------------------------------------

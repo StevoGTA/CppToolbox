@@ -58,6 +58,8 @@ class COpenGLTexture : public CGPUTexture {
 				void			bind() const;
 				bool			hasTransparency() const;
 
+				COpenGLTexture&	operator=(const COpenGLTexture& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

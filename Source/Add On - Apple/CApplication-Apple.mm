@@ -190,6 +190,26 @@ TVResult<CData> CApplication::getStorageData() const
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CApplication& CApplication::operator=(const CApplication& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Release URL
+	::CFRelease(mInternals->mURLRef);
+
+	// Copy
+	mInternals->mURLRef = (CFURLRef) ::CFRetain(other.mInternals->mURLRef);
+	mInternals->mDisplayName = other.mInternals->mDisplayName;
+	mInternals->mVersion = other.mInternals->mVersion;
+	mInternals->mCopyright = other.mInternals->mCopyright;
+
+	return *this;
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------

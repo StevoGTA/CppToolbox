@@ -106,3 +106,20 @@ void CGPURenderObject3D::render() const
 	// Render
 	mInternals->mGPU.renderIndexed(renderState, CGPU::kRenderTypeTriangleList, mInternals->mIndexCount, 0);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPURenderObject3D& CGPURenderObject3D::operator=(const CGPURenderObject3D& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

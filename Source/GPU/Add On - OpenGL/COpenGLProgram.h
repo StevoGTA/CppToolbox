@@ -16,14 +16,16 @@ class COpenGLProgram {
 
 	// Methods
 	public:
-				// Lifecycle methods
-				COpenGLProgram(COpenGLVertexShader& vertexShader, COpenGLFragmentShader& fragmentShader);
-				COpenGLProgram(const COpenGLProgram& other);
-				~COpenGLProgram();
+						// Lifecycle methods
+						COpenGLProgram(COpenGLVertexShader& vertexShader, COpenGLFragmentShader& fragmentShader);
+						COpenGLProgram(const COpenGLProgram& other);
+						~COpenGLProgram();
 
-				// Instance methods
-		void	prepare(const SMatrix4x4_32& projectionMatrix, const SMatrix4x4_32& viewMatrix,
-						const SMatrix4x4_32& modelMatrix) const;
+						// Instance methods
+		void			prepare(const SMatrix4x4_32& projectionMatrix, const SMatrix4x4_32& viewMatrix,
+								const SMatrix4x4_32& modelMatrix) const;
+
+		COpenGLProgram&	operator=(const COpenGLProgram& other);
 
 	// Properties
 	private:

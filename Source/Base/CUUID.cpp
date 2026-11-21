@@ -154,6 +154,23 @@ bool CUUID::equals(const CUUID& other) const
 	return ::memcmp(&mInternals->mBytes, &other.mInternals->mBytes, sizeof(Bytes)) == 0;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CUUID& CUUID::operator=(const CUUID& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------

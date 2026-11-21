@@ -298,3 +298,20 @@ TVResult<CUUID> CByteReader::readUUID() const
 
 	return TVResult<CUUID>(CUUID(uuidBytes));
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CByteReader& CByteReader::operator=(const CByteReader& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

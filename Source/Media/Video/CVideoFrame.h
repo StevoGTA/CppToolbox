@@ -88,6 +88,8 @@ class CVideoFrame {
 						IMFSample*						getSample() const;
 #endif
 
+						CVideoFrame&					operator=(const CVideoFrame& other);
+
 														// Class methods
 		static			bool							comparePresentationTimeInterval(const CVideoFrame& videoFrame1,
 																const CVideoFrame& videoFrame2, void* userData);

@@ -284,3 +284,20 @@ void CGPURenderObject2D::render(const Indexes& indexes, const RenderInfo& render
 				(iterator->getLength() - 1) * 6 + 2 + 2, iterator->getStart() * 6 + 1);
 	}
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CGPURenderObject2D& CGPURenderObject2D::operator=(const CGPURenderObject2D& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

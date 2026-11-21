@@ -29,6 +29,8 @@ class CTextReader {
 
 		TVResult<CString>	readStringToEOL();
 
+		CTextReader&		operator=(const CTextReader& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

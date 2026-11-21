@@ -44,6 +44,8 @@ class CDirectXTexture : public CGPUTexture {
 		const	TArray<CI<ID3D11ShaderResourceView> >&	getShaderResourceViews() const;
 				bool									hasTransparency() const;
 
+				CDirectXTexture&						operator=(const CDirectXTexture& other);
+
 	// Properties
 	private:
 		Internals* mInternals;

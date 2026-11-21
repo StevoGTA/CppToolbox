@@ -216,6 +216,23 @@ OV<SError> CImage::decodeInto(CBitmap& bitmap, const S2DRectS32& rect) const
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CImage& CImage::operator=(const CImage& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------

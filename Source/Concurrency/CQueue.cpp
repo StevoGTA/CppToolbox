@@ -188,6 +188,23 @@ void CSRSWBIPQueue::reset()
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+CSRSWBIPQueue& CSRSWBIPQueue::operator=(const CSRSWBIPQueue& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------
 // MARK: - CSRSWBIPSegmentedQueue::Internals
 

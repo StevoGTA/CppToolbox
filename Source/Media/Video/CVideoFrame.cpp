@@ -291,6 +291,23 @@ IMFSample* CVideoFrame::getSample() const
 }
 #endif
 
+//----------------------------------------------------------------------------------------------------------------------
+CVideoFrame& CVideoFrame::operator=(const CVideoFrame& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------

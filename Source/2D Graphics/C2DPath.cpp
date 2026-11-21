@@ -220,3 +220,17 @@ CData C2DPath::getInitialSegmentData() const
 		// No data
 		return CData::mEmpty;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+C2DPath& C2DPath::operator=(const C2DPath& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Copy
+	mInternals->mPathSegmentData = other.mInternals->mPathSegmentData;
+
+	return *this;
+}

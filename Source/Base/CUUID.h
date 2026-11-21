@@ -54,6 +54,8 @@ class CUUID : public CHashable {
 
 						bool	equals(const CUUID& other) const;
 
+						CUUID&	operator=(const CUUID& other);
+
 								// Class methods
 		static		OV<CUUID>	getFrom(const CString& string);
 

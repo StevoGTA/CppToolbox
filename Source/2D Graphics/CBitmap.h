@@ -148,6 +148,8 @@ class CBitmap {
 							void			setPixel(const S2DPointS32& point, const CColor& color);	// Set one pixel to the one pixel's worth of given data
 							void			setPixels(const S2DRectS32& rect, const CColor& color);		// Set all pixels to the one pixel's worth of given data
 
+							CBitmap&		operator=(const CBitmap& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

@@ -24,6 +24,8 @@ class CURL {
 							// Instance methods
 					CString	getString() const;
 
+					CURL&	operator=(const CURL& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

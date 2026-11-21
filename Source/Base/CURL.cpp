@@ -51,3 +51,20 @@ CString CURL::getString() const
 {
 	return mInternals->mString;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CURL& CURL::operator=(const CURL& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

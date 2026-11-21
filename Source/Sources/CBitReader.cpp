@@ -424,3 +424,20 @@ TVResult<UInt32> CBitReader::readUEExpGolombCode() const
 
 	return TVResult<UInt32>((1U << leadingZeroBits) - 1 + *value);
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+CBitReader& CBitReader::operator=(const CBitReader& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}

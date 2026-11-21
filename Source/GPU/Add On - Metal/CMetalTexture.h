@@ -40,6 +40,8 @@ class CMetalTexture : public CGPUTexture {
 				id<MTLTexture>	getMetalTexture() const;
 				bool			hasTransparency() const;
 
+				CMetalTexture&	operator=(const CMetalTexture& other);
+
 	// Properties
 	private:
 		Internals*	mInternals;

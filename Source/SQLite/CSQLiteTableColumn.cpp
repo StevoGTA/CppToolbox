@@ -85,6 +85,23 @@ OV<SSQLiteValue> CSQLiteTableColumn::getDefaultValue() const
 	return mInternals->mDefaultValue;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+CSQLiteTableColumn& CSQLiteTableColumn::operator=(const CSQLiteTableColumn& other)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Check if assignment to self
+	if (this == &other)
+		return *this;
+
+	// Remove reference to ourselves
+	mInternals->removeReference();
+
+	// Add reference to other
+	mInternals = other.mInternals->addReference();
+
+	return *this;
+}
+
 // MARK: Class methods
 
 //----------------------------------------------------------------------------------------------------------------------
