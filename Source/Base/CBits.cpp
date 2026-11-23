@@ -49,7 +49,7 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						free(mStorage);
 					}
 
-		void	set(UInt32 index, bool value)
+		void	prepareForIndex(UInt32 index)
 					{
 						// Update storage if necessary
 						if (index >= mAvailable) {
@@ -60,7 +60,15 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 							mAvailable = bytes * 8;
 						}
 
+						// Update used
+						if (index >= mUsed)
+							mUsed = index + 1;
+					}
+		void	set(UInt32 index, bool value)
+					{
 						// Setup
+						prepareForIndex(index);
+
 						UInt32	byteIndex = index / 8;
 						UInt32	bitIndex = index % 8;
 
@@ -70,10 +78,14 @@ class CBits::Internals : public TCopyOnWriteReferenceCountable<Internals> {
 						else
 							// Clear
 							mStorage[byteIndex] &= ~(1 << bitIndex);
+					}
+		void	toggle(UInt32 index)
+					{
+						// Setup
+						prepareForIndex(index);
 
-						// Update used
-						if (index >= mUsed)
-							mUsed = index + 1;
+						// Toggle
+						mStorage[index / 8] ^= 1 << (index % 8);
 					}
 
 		UInt8*	mStorage;
@@ -143,10 +155,16 @@ UInt32 CBits::getSetCount() const
 bool CBits::get(UInt32 index) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	UInt32	byteIndex = index / 8;
-	UInt32	bitIndex = index % 8;
+	// Check if beyond what has been allocated
+	if (index < mInternals->mAvailable) {
+		// Setup
+		UInt32	byteIndex = index / 8;
+		UInt32	bitIndex = index % 8;
 
-	return mInternals->mStorage[byteIndex] & (1 << bitIndex);
+		return mInternals->mStorage[byteIndex] & (1 << bitIndex);
+	} else
+		// Beyond what has been allocatied
+		return false;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -158,6 +176,37 @@ CBits& CBits::set(UInt32 index, bool value)
 
 	// Set
 	mInternals->set(index, value);
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CBits& CBits::toggle(UInt32 index)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
+	// Toggle
+	mInternals->toggle(index);
+
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+CBits& CBits::setAll(bool value)
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Prepare for write
+	Internals::prepareForWrite(&mInternals);
+
+	// Set whole bytes
+	::memset(mInternals->mStorage, value ? 0xFF : 0x00, mInternals->mUsed / 8);
+
+	// Set remaining bits
+	if ((mInternals->mUsed % 8) > 0)
+		// Set
+		mInternals->mStorage[mInternals->mUsed / 8] = value ? (UInt8) ((1 << (mInternals->mUsed % 8)) - 1) : 0;
 
 	return *this;
 }

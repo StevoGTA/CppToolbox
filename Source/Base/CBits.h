@@ -32,6 +32,8 @@ class CBits {
 					CBits&		set(UInt32 index, bool value = true);
 					CBits&		clear(UInt32 index)
 									{ return set(index, false); }
+					CBits&		toggle(UInt32 index);
+					CBits&		setAll(bool value = true);
 					CBits		inverting() const;
 
 					CDictionary	getStorageInfo() const;
