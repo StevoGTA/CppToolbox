@@ -154,22 +154,20 @@ void CCoreGraphicsRenderer::strokeLine(const S2DPointF32& startPoint, const S2DP
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-void CCoreGraphicsRenderer::strokeLines(const S2DPointF32* points, UInt32 count, bool antiAlias, Float32 lineWidth)
-		const
+void CCoreGraphicsRenderer::strokeLines(const TBuffer<S2DPointF32>& points, bool antiAlias, Float32 lineWidth) const
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Preflight
-	AssertNotNil(points);
-	if (points == nil)
-		return;
+	// Setup
+	UInt64	count = points.getCount();
 
+	// Preflight
 	AssertFailIf(count <= 1);
 	if (count <= 1)
 		return;
 
 	// Setup
 	CGPoint	pointsUse[count];
-	for (UInt32 i = 0; i < count; i++)
+	for (UInt64 i = 0; i < count; i++)
 		pointsUse[i] = CGPointMake(points[i].mX, points[i].mY);
 
 	// Stroke lines
@@ -177,6 +175,30 @@ void CCoreGraphicsRenderer::strokeLines(const S2DPointF32* points, UInt32 count,
 	::CGContextSetAllowsAntialiasing(mInternals->mContextRef, antiAlias);
 	::CGContextSetLineWidth(mInternals->mContextRef, lineWidth);
 	::CGContextStrokePath(mInternals->mContextRef);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+void CCoreGraphicsRenderer::strokeLineSegments(const TBuffer<S2DPointF32>& points, bool antiAlias,
+		Float32 lineWidth) const
+//----------------------------------------------------------------------------------------------------------------------
+{
+	// Setup
+	UInt64	count = points.getCount();
+
+	// Preflight
+	AssertFailIf(count <= 1);
+	if (count <= 1)
+		return;
+
+	// Setup
+	CGPoint	pointsUse[count];
+	for (UInt64 i = 0; i < count; i++)
+		pointsUse[i] = CGPointMake(points[i].mX, points[i].mY);
+
+	// Stroke line segments
+	::CGContextSetAllowsAntialiasing(mInternals->mContextRef, antiAlias);
+	::CGContextSetLineWidth(mInternals->mContextRef, lineWidth);
+	::CGContextStrokeLineSegments(mInternals->mContextRef, pointsUse, count);
 }
 
 //----------------------------------------------------------------------------------------------------------------------

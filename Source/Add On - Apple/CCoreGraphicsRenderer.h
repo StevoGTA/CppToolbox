@@ -28,7 +28,9 @@ class CCoreGraphicsRenderer : public C2DRenderer {
 
 					void		strokeLine(const S2DPointF32& startPoint, const S2DPointF32& endPoint,
 										bool antiAlias = true, Float32 lineWidth = 1.0) const;
-					void		strokeLines(const S2DPointF32* points, UInt32 count, bool antiAlias = true,
+					void		strokeLines(const TBuffer<S2DPointF32>& points, bool antiAlias = true,
+										Float32 lineWidth = 1.0) const;
+					void		strokeLineSegments(const TBuffer<S2DPointF32>& points, bool antiAlias = true,
 										Float32 lineWidth = 1.0) const;
 
 					void		fillRect(const S2DRectF32& rect) const;

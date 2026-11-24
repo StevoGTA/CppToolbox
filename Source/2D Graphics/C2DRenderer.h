@@ -76,7 +76,10 @@ class C2DRenderer {
 
 		virtual	void		strokeLine(const S2DPointF32& startPoint, const S2DPointF32& endPoint,
 									bool antiAlias = true, Float32 lineWidth = 1.0) const = 0;
-		virtual	void		strokeLines(const S2DPointF32* points, UInt32 count, bool antiAlias = true,
+		virtual	void		strokeLines(const TBuffer<S2DPointF32>& points, bool antiAlias = true,
+									Float32 lineWidth = 1.0) const = 0;
+
+		virtual	void		strokeLineSegments(const TBuffer<S2DPointF32>& points, bool antiAlias = true,
 									Float32 lineWidth = 1.0) const = 0;
 
 		virtual	void		fillRect(const S2DRectF32& rect) const = 0;
