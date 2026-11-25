@@ -121,11 +121,11 @@ struct SMedia {
 																	// Instance methods
 							const	SUniversalTimeIntervalRange&	getTimeIntervalRange() const
 																		{ return mTimeIntervalRange; }
-							UniversalTimeInterval					getMidDurationTimeInterval() const
+									UniversalTimeInterval			getMidDurationTimeInterval() const
 																		{ return mTimeIntervalRange.getStart() +
 																				mTimeIntervalRange.getLength() / 2.0; }
 
-							bool									contains(UniversalTimeInterval timeInterval) const
+									bool							contains(UniversalTimeInterval timeInterval) const
 																		{ return (timeInterval >=
 																						mTimeIntervalRange.getStart()) &&
 																				(timeInterval <

@@ -20,6 +20,8 @@ template <typename T> struct TRange {
 							{ return mStart; }
 		T				getLength() const
 							{ return mLength; }
+		T				getMid() const
+							{ return mStart + mLength / 2; }
 		T				getEnd() const
 							{ return mStart + mLength; }
 
