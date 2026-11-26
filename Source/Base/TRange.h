@@ -67,6 +67,9 @@ template <typename T> struct TRange {
 								}
 							}
 
+		bool			operator==(const TRange<T>& other) const
+							{ return (mStart == other.mStart) && (mLength == other.mLength); }
+
 	// Properties
 	private:
 		T	mStart;
