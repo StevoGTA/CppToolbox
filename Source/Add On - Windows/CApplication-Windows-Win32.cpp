@@ -222,7 +222,7 @@ CApplication CApplication::getCurrent()
 		// Get package id
 		TBuffer<UInt8>	packageIDBuffer((UInt64) packageIDByteCount);
 		if (::GetCurrentPackageId(&packageIDByteCount, *packageIDBuffer) == ERROR_SUCCESS) {
-			// Compose display name - the manifest's, which reads as the product is named
+			// Compose display name
 			displayName = CString(winrt::Windows::ApplicationModel::Package::Current().DisplayName().data());
 
 			// Compose version
