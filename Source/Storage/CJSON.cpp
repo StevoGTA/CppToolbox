@@ -75,6 +75,13 @@ TVResult<TArray<CDictionary> > CJSON::arrayOfDictionariesFrom(const CData& data)
 	// Setup
 	const SInt8*	ptr = *data.getSInt8Buffer();
 
+	// Validate start token
+	OV<SError>	error = sValidateToken(ptr, '[', true);
+	ReturnValueIfError(error, TVResult<TArray<CDictionary> >(*error));
+
+	// Skip whitespace
+	sSkipWhitespace(ptr);
+
 	return sReadArrayOfDictionaries(ptr);
 }
 
@@ -447,12 +454,19 @@ void sAddString(CData& data, const CString& string)
 TVResult<TArray<CDictionary> > sReadArrayOfDictionaries(const SInt8*& charPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Validate start token
-	OV<SError>	error = sValidateToken(charPtr, '[', true);
-	ReturnValueIfError(error, TVResult<TArray<CDictionary> >(*error));
+	// Check for empty array (charPtr is past the opening [ and any whitespace)
+	TNArray<CDictionary>	array;
+	if (*charPtr == ']') {
+		// End of array
+		charPtr++;
+
+		// Skip whitespace
+		sSkipWhitespace(charPtr);
+
+		return TVResult<TArray<CDictionary> >(array);
+	}
 
 	// Compose array
-	TNArray<CDictionary>	array;
 	while (true) {
 		// Read dictionary
 		TVResult<CDictionary>	result = sReadDictionary(charPtr);
