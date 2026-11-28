@@ -454,7 +454,7 @@ void sAddString(CData& data, const CString& string)
 TVResult<TArray<CDictionary> > sReadArrayOfDictionaries(const SInt8*& charPtr)
 //----------------------------------------------------------------------------------------------------------------------
 {
-	// Check for empty array (charPtr is past the opening [ and any whitespace)
+	// Check for empty array
 	TNArray<CDictionary>	array;
 	if (*charPtr == ']') {
 		// End of array
